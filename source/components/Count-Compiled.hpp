@@ -6,7 +6,8 @@ namespace Langulus::Anyness::Components
 
    template<auto COUNT>
    struct CountCompiled {
-      static constexpr bool CTTI_ComponentTag = true;
+      using CTTI_Component = Yes;
+
       static_assert(COUNT > 0, "Can't have a container of zero or negative count");
 
       consteval auto GetCount() {

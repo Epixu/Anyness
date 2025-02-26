@@ -6,24 +6,13 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include "CT.hpp"
 #include <tuple>
 #include <type_traits>
 
 
 namespace Langulus
 {
-   namespace CT
-   {
-      template<class...T>
-      concept Typelist = ((T::CTTI_TypeListTag) and ...);
-      template<class...T>
-      concept NotTypelist = ((not Typelist<T>) and ...);
-
-      template<class...T>
-      concept Void = ((::std::is_void_v<T>) and ...);
-      template<class...T>
-      concept NotVoid = ((not ::std::is_void_v<T>) and ...);
-   }
 
    ///                                                                        
    ///   Compile-time type list                                               
@@ -50,7 +39,9 @@ namespace Langulus
    /// Type list, that contains only one void item - a canonical empty list   
    template<>
    struct Types<void> {
-      static constexpr bool CTTI_TypeListTag = true;
+      using CTTI_Typelist = Yes;
+      using CTTI_Void     = Yes;
+
       static constexpr bool Empty = true;
       static constexpr size_t Count = 0;
 
@@ -72,7 +63,8 @@ namespace Langulus
    /// Type list that contains exactly one type, which isn't void             
    template<CT::NotTypelist T>
    struct Types<T> {
-      static constexpr bool CTTI_TypeListTag = true;
+      using CTTI_Typelist = Yes;
+
       static constexpr bool Empty = false;
       static constexpr size_t Count = 1;
       using First = T;
@@ -159,7 +151,8 @@ namespace Langulus
    /// Type list that contains multiple non-void types                        
    template<CT::NotTypelist T1, CT::NotTypelist T2, CT::NotTypelist...TN>
    struct Types<T1, T2, TN...> {
-      static constexpr bool CTTI_TypeListTag = true;
+      using CTTI_Typelist = Yes;
+
       static constexpr bool Empty = false;
       static constexpr size_t Count = sizeof...(TN) + 2;
       using First = T1;

@@ -347,3 +347,43 @@
 
 /// Checks if a feature is enabled                                            
 #define LANGULUS_FEATURE(a) LANGULUS_FEATURE_##a()
+
+/// Checks if code is executed at compile-time                                
+///   @attention must be followed by {...}                                    
+/// TODO when we transition to C++23, we should replace                       
+/// if (std::is_constant_evaluated()) statements with `if consteval` ones     
+/// unfortunately MSVC is lagging behind a lot                                
+#define IF_CONSTEXPR() if (::std::is_constant_evaluated())
+#define IF_NOT_CONSTEXPR() if (not ::std::is_constant_evaluated())
+
+/// No-op for empty macros, forces coder to add a semicolon to avoid          
+/// obscure errors                                                            
+#define LANGULUS_NOOP() ((void)0)
+
+#if LANGULUS_COMPILER(MSVC)
+   /// Force no inlining                                                      
+   #define LANGULUS_NOINLINE() __declspec(noinline)
+
+   /// Force inlining, even on debug builds                                   
+   #define LANGULUS_ALWAYS_INLINED() __forceinline
+
+   #if LANGULUS(DEBUG)
+      #define LANGULUS_INLINED() inline
+   #else
+      /// Force always inlining - significantly increases build time!         
+      #define LANGULUS_INLINED() __forceinline
+   #endif
+#else
+   /// Force no inlining                                                      
+   #define LANGULUS_NOINLINE() __attribute__((noinline))
+
+   /// Force inlining, even on debug builds                                   
+   #define LANGULUS_ALWAYS_INLINED() __attribute__((always_inline)) inline
+
+   #if LANGULUS(DEBUG)
+      #define LANGULUS_INLINED() inline
+   #else
+      /// Force always inlining - significantly increases build time!         
+      #define LANGULUS_INLINED() __attribute__((always_inline)) inline
+   #endif
+#endif

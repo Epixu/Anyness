@@ -6,7 +6,7 @@ namespace Langulus::Anyness::Components
 
    template<class T, unsigned ID, unsigned HEAP_ID>
    struct CountHeap {
-      static constexpr bool CTTI_ComponentTag = true;
+      using CTTI_Component = Yes;
 
       template<class Self>
       T GetCount(this const Self& self) noexcept {

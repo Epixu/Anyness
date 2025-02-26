@@ -14,6 +14,8 @@ namespace Langulus::Anyness
 
    struct Own : Detail::Container<
       Components::CountCompiled<1>
-   >;
+   > {
 
-}
+   };
+
+} // namespace Langulus::Anyness

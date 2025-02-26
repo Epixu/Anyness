@@ -10,7 +10,7 @@ namespace Langulus::Anyness::Components
       T mCount;
 
    public:
-      static constexpr bool CTTI_ComponentTag = true;
+      using CTTI_Component = Yes;
 
       constexpr T GetCount() const noexcept {
          return mCount;
