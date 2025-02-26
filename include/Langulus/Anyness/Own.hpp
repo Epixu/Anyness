@@ -6,4 +6,14 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/one/Own.inl"
+#include "../../../source/Container.hpp"
+#include "../../../source/components/Count-Compiled.hpp"
+
+namespace Langulus::Anyness
+{
+
+   struct Own : Detail::Container<
+      Components::CountCompiled<1>
+   >;
+
+}

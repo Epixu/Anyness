@@ -6,5 +6,4 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/many/Construct.inl"
-#include "../../../source/text/Text.inl"
+#include "../../../source/Container.hpp"

@@ -4,7 +4,13 @@ file(GLOB_RECURSE
 	*.cpp
 )
 
+fetch_external_module(
+    Catch2
+    GIT_REPOSITORY  https://github.com/catchorg/Catch2.git
+    GIT_TAG         ee1450f268dfd5c13aa8670ba97e93cabaf2e15d #v2.x
+)
+
 add_langulus_test(LangulusAnynessTest
 	SOURCES		${LANGULUS_ANYNESS_TEST_SOURCES}
-	LIBRARIES	LangulusAnyness
+	LIBRARIES	Catch2 LangulusAnyness
 )

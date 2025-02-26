@@ -9,7 +9,8 @@
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
 #include <Langulus/Anyness/Many.hpp>
-#include <Langulus/Testing.hpp>
+#include <Langulus/Typenav.hpp>
+#include "Main.hpp"
 
 using namespace Anyness;
 
