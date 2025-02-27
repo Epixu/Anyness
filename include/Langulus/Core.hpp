@@ -264,6 +264,7 @@
 
 /// Macro that generates a literal with the function name, file, and line     
 #define LANGULUS_LOCATION() __FILE__ ":" LANGULUS_STRINGIFY(__LINE__)
+#define HERE() LANGULUS_LOCATION()
 
 #define LANGULUS_OS(a) LANGULUS_OS_##a()
 

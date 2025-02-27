@@ -11,9 +11,15 @@ namespace Langulus
    };
 
    /// Equivalent to Yes, but also carries a constant                         
-   template<auto CONSTANT>
+   /*template<auto CONSTANT>
    struct YesVal {
       static constexpr auto Constant = CONSTANT;
+      static constexpr bool Value = true;
+   };*/
+
+   template<const char* CONSTANT>
+   struct YesVal {
+      static constexpr const char* Constant = CONSTANT;
       static constexpr bool Value = true;
    };
 
@@ -81,4 +87,36 @@ namespace Langulus::CTTI
       static constexpr bool Value = false;
    };
 
+   /// Can be used in two ways to satisfy CT::Aggregate<T>:                   
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Aggregate = Yes;` in T                     
+   template<class T>
+   struct Aggregate {
+      static constexpr bool Value = ::std::is_aggregate_v<T>;
+   };
+   
+   /// Can be used in two ways to satisfy CT::Fundamental<T>:                 
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Fundamental = Yes;` in T                   
+   template<class T>
+   struct Fundamental {
+      static constexpr bool Value = ::std::is_fundamental_v<T>;
+   };
+   
+   /// Can be used in two ways to satisfy CT::Constant<T>:                    
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Constant = Yes;` in T                      
+   template<class T>
+   struct Constant {
+      static constexpr bool Value = ::std::is_const_v<T>;
+   };
+   
+   /// Can be used in two ways to satisfy CT::Volatile<T>:                    
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Volatile = Yes;` in T                      
+   template<class T>
+   struct Volatile {
+      static constexpr bool Value = ::std::is_volatile_v<T>;
+   };
+   
 } // namespace Langulus::CTTI

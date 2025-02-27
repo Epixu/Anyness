@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <type_traits>
+#include <concepts>
 
 
 namespace Langulus
@@ -47,5 +48,25 @@ namespace Langulus
    /// Remove an array extent from a type                                     
    template<class T>
    using Deext = ::std::remove_extent_t<Deref<T>>;
+   
+   namespace Inner
+   {
+
+      template<class T>
+      consteval auto NestedDecay() {
+         using Stripped = Decvq<Deptr<Deext<T>>>;
+         if constexpr (::std::same_as<T, Stripped>)
+            return static_cast<Stripped*>(nullptr);
+         else
+            return NestedDecay<Stripped>();
+      }
+
+   } // namespace Langulus::Inner
+
+   /// Strip a typename to its origin type, removing qualifiers/pointers/etc. 
+   /// This strongly guarantees, that it strips EVERYTHING, including nested  
+   /// pointers, extents, etc.                                                
+   template<class T>
+   using Decay = Deptr<decltype(Inner::NestedDecay<T>())>;
 
 } // namespace Langulus

@@ -11,6 +11,9 @@
 #include <Langulus/Anyness/Many.hpp>
 #include <Langulus/Typenav.hpp>
 #include <Langulus/TypeOf.hpp>
+#include <Langulus/Intent.hpp>
+#include <Langulus/CT/Referenced.hpp>
+#include <Langulus/CT/Destroyable.hpp>
 #include "Main.hpp"
 
 using namespace Anyness;
@@ -162,7 +165,7 @@ void DestroyPair(auto& pair) {
             using V = typename P::Value;
 
             if constexpr (CT::Sparse<K>) {
-               if constexpr (CT::Referencable<Deptr<K>>)
+               if constexpr (CT::Referenced<Deptr<K>>)
                   REQUIRE(pair.GetKey()->Reference(-1) == 0);
                if constexpr (CT::Destroyable<Decay<K>>)
                   pair.GetKey()->~Decay<K>();
@@ -172,7 +175,7 @@ void DestroyPair(auto& pair) {
                DecvqCast(pair.GetKey()).Reset();
 
             if constexpr (CT::Sparse<V>) {
-               if constexpr (CT::Referencable<Deptr<V>>)
+               if constexpr (CT::Referenced<Deptr<V>>)
                   REQUIRE(pair.GetValue()->Reference(-1) == 0);
                if constexpr (CT::Destroyable<Decay<V>>)
                   pair.GetValue()->~Decay<V>();
@@ -209,7 +212,7 @@ void DestroyPair(auto& pair) {
          using V = decltype(pair.second);
 
          if constexpr (CT::Sparse<K>) {
-            if constexpr (CT::Referencable<Deptr<K>>)
+            if constexpr (CT::Referenced<Deptr<K>>)
                REQUIRE(pair.first->Reference(-1) == 0);
             if constexpr (CT::Destroyable<Decay<K>>)
                pair.first->~Decay<K>();
@@ -219,7 +222,7 @@ void DestroyPair(auto& pair) {
             DecvqCast(pair.first).Reset();
 
          if constexpr (CT::Sparse<V>) {
-            if constexpr (CT::Referencable<Deptr<V>>)
+            if constexpr (CT::Referenced<Deptr<V>>)
                REQUIRE(pair.second->Reference(-1) == 0);
             if constexpr (CT::Destroyable<Decay<V>>)
                pair.second->~Decay<V>();
@@ -270,7 +273,9 @@ public:
 
 /// Default-constructible, but only privately                                 
 class PrivatelyConstructible {
-   LANGULUS(POD) false;
+public:
+   using CTTI_POD = No;
+
 private:
    PrivatelyConstructible() = default;
    PrivatelyConstructible(const PrivatelyConstructible&) = default;
@@ -280,8 +285,9 @@ private:
 /// Has no explicit intent constructors and assigners                         
 /// Has only implicit refer & move constructors and assigners                 
 class NonIntentConstructible {
-   LANGULUS(POD) false;
 public:
+   using CTTI_POD = No;
+
    NonIntentConstructible(CT::NoIntent auto&&) {}
 };
 
@@ -300,7 +306,8 @@ public:
 /// happens                                                                   
 class AllIntentConstructible {
 public:
-   LANGULUS(POD) false;
+   using CTTI_POD = No;
+
    explicit AllIntentConstructible(CT::Intent auto&&) {}
 };
 
@@ -309,14 +316,16 @@ public:
 /// Making constructor implicit also allows for intent assignments            
 class AllIntentConstructibleImplicit {
 public:
-   LANGULUS(POD) false;
+   using CTTI_POD = No;
+
    AllIntentConstructibleImplicit(CT::Intent auto&&) {}
 };
 
 /// Has all intnet constructors and assigners + implicit refer & move ones    
 class AllIntentConstructibleAndAssignable {
 public:
-   LANGULUS(POD) false;
+   using CTTI_POD = No;
+
    AllIntentConstructibleAndAssignable(CT::Intent auto&&) {}
    AllIntentConstructibleAndAssignable& operator = (CT::Intent auto&&) { return *this; }
 };
@@ -357,20 +366,21 @@ namespace Verbs
    /// A testing verb, similar to the ones used in Langulus::Flow             
    ///                                                                        
    struct Create : public Flow::Verb {
-      LANGULUS(POSITIVE_VERB) "Create";
-      LANGULUS(NEGATIVE_VERB) "Destroy";
-      LANGULUS(POSITIVE_OPERATOR) " + ";
-      LANGULUS(NEGATIVE_OPERATOR) " - ";
-      LANGULUS(PRECEDENCE) 5;
-      LANGULUS(INFO)
+      using CTTI_PositiveVerb = YesVal<"Create">;
+      using CTTI_NegativeVerb = YesVal<"Destroy">;
+      using CTTI_PositiveOperator = YesVal<" + ">;
+      using CTTI_NegativeOperator = YesVal<" - ">;
+      using CTTI_Precedence = YesVal<5>;
+      using CTTI_Info = YesVal<
          "Used for allocating new elements. "
          "If the type you're creating has	a producer, "
          "you need to execute the verb in a matching producer, "
-         "or that producer will be created automatically for you, if possible";
+         "or that producer will be created automatically for you, if possible"
+      >;
 
       /// Check if the verb is available in a type, and with given arguments  
       ///   @return true if verb is available in T with arguments A...        
-      template<CT::Data T, CT::Data... A>
+      template<CT::NotVoid T, CT::NotVoid... A>
       static constexpr bool AvailableFor() noexcept {
          if constexpr (sizeof...(A) == 0)
             return requires (T & t, Verb & v) { t.Create(v); };
@@ -380,7 +390,7 @@ namespace Verbs
 
       /// Get the verb functor for the given type and arguments               
       ///   @return the function, or nullptr if not available                 
-      template<CT::Data T, CT::Data... A>
+      template<CT::NotVoid T, CT::NotVoid... A>
       static constexpr auto Of() noexcept {
          if constexpr (!Create::AvailableFor<T, A...>()) {
             return nullptr;
@@ -399,7 +409,7 @@ namespace Verbs
          }
       }
 
-      template<CT::Data T>
+      template<CT::NotVoid T>
       static bool ExecuteIn(T&, Verb&);
 
       static bool ExecuteDefault(const Anyness::Block<>&, Verb&) {
