@@ -6,9 +6,54 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include <type_traits>
+#include "CTTI.hpp"
 #include <concepts>
 
+
+/// A namespace for defining compile-time type information tags               
+/// Specializing <type_traits> is generally undefined behavior, but here      
+/// we have alternatives that are more flexible, using type_traits as the     
+/// ground truth and building on top of on them                               
+/// Read more: https://stackoverflow.com/questions/25345486                   
+namespace Langulus::CTTI
+{
+      
+   /// Can be used in two ways to satisfy CT::Array<T>:                       
+   /// 1. Specialize for T/concept with Value == true                         
+   /// 2. Add a public `using CTTI_Array = Yes;` in T                         
+   template<class T>
+   struct Array {
+      static constexpr bool Value = ::std::is_bounded_array_v<T>;
+   };
+   
+   /// Can be used in two ways to satisfy CT::Sparse<T>:                      
+   /// 1. Specialize for T/concept with Value == true                         
+   /// 2. Add a public `using CTTI_Sparse = Yes;` in T                        
+   template<class T>
+   struct Sparse {
+      static constexpr bool Value = ::std::is_pointer_v<T>;
+   };
+
+   /// Can be used in two ways to satisfy CT::Constant<T>:                    
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Constant = Yes;` in T                      
+   template<class T>
+   struct Constant {
+      static constexpr bool Value = ::std::is_const_v<T>;
+   };
+   
+   /// Can be used in two ways to satisfy CT::Volatile<T>:                    
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Volatile = Yes;` in T                      
+   template<class T>
+   struct Volatile {
+      static constexpr bool Value = ::std::is_volatile_v<T>;
+   };
+   
+} // namespace Langulus::CTTI
+
+LANGULUS_CTTI_CONCEPT(Array);
+LANGULUS_CTTI_CONCEPT(Volatile);
 
 namespace Langulus
 {
@@ -30,6 +75,9 @@ namespace Langulus
    using Deref = ::std::remove_reference_t<T>;
 
    /// Remove a pointer from type                                             
+   ///   @attention a type can still be CT::Sparse after being Deptr,         
+   ///      when using custom packed pointer types for example. Deptr         
+   ///      removes only indirections that are part of the C++ syntax.        
    template<class T>
    using Deptr = ::std::remove_pointer_t<T>;
 
@@ -51,7 +99,8 @@ namespace Langulus
    
    namespace Inner
    {
-
+      /// Nest-strip any qualifiers, extents and indirections                 
+      /// Returns a pointer to the stripped T                                 
       template<class T>
       consteval auto NestedDecay() {
          using Stripped = Decvq<Deptr<Deext<T>>>;
@@ -63,10 +112,63 @@ namespace Langulus
 
    } // namespace Langulus::Inner
 
-   /// Strip a typename to its origin type, removing qualifiers/pointers/etc. 
+   /// Strip a typename to its identity, removing qualifiers/pointers/etc.    
    /// This strongly guarantees, that it strips EVERYTHING, including nested  
-   /// pointers, extents, etc.                                                
+   /// pointers and extents                                                   
    template<class T>
    using Decay = Deptr<decltype(Inner::NestedDecay<T>())>;
+   
+   namespace CT
+   {
 
+      /// Check if all T are sparse                                           
+      ///   @attention this also includes non-pointer types that are tagged   
+      ///      as custom packed pointers                                      
+      template<class...T>
+      concept Sparse = ((CTTI::Sparse<T>::Value or T::CTTI_Sparse::Value) and ...);
+
+      /// Check if all T are dense                                            
+      template<class...T>
+      concept Dense = ((not Sparse<T>) and ...);
+
+      /// Check if all T are constant-qualified                               
+      template<class...T>
+      concept Constant = ((CTTI::Constant<T>::Value or T::CTTI_Constant::Value) and ...);
+
+      /// Check if all T are not constant-qualified                           
+      template<class...T>
+      concept Mutable = ((not Constant<T>) and ...);
+
+      /// Check if all T are either const- and/or volatile-qualified          
+      template<class...T>
+      concept Convoluted = ((Constant<T> or Volatile<T>) and ...);
+
+      /// Check if none of T are const- and/or volatile-qualified             
+      template<class...T>
+      concept NotConvoluted = ((not Convoluted<T>) and ...);
+
+      /// Check if all T are reference types                                  
+      template<class...T>
+      concept Reference = (::std::is_reference_v<T> and ...);
+
+      /// Check if all T are not reference types                              
+      template<class...T>
+      concept NotReference = ((not Reference<T>) and ...);
+
+      /// Check if types have no reference/pointer/extent/qualifiers          
+      ///   @attention a type can still be CT::Sparse while being CT::Decayed,
+      ///      when using custom packed pointer types for example. Decaying   
+      ///      removes only indirections that are part of the C++ syntax      
+      template<class...T>
+      concept Decayed = ((not ::std::is_bounded_array_v<T>
+          and not ::std::is_pointer_v<T>
+          and not Reference<T>
+          and not Convoluted<T>
+        ) and ...);
+   
+      /// Check if types have reference/pointer/extent/const/volatile         
+      template<class...T>
+      concept NotDecayed = ((not Decayed<T>) and ...);
+
+   } // namespace Langulus::CT
 } // namespace Langulus

@@ -118,8 +118,6 @@ void DumpResults(const INPUT& in, const OUTPUT& out, const REQUIRED& required) {
 #define ALL_TYPES             UNSIGNED_TYPES, SIGNED_TYPES
 
 
-#ifdef LANGULUS_LIBRARY_ANYNESS
-
 /// Just a bank container, used to contain owned items                        
 extern Anyness::TMany<Anyness::Many> BANK;
 
@@ -265,5 +263,3 @@ struct RT : Referenced {
       return data;
    }
 };
-
-#endif

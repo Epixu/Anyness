@@ -6,10 +6,24 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "CT.hpp"
+#include "CTTI.hpp"
 #include <tuple>
-#include <type_traits>
 
+
+namespace Langulus::CTTI
+{
+
+   /// Can be used in two ways to satisfy CT::Typelist<T>:                    
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Typelist = Yes;` in T                      
+   template<class T>
+   struct Typelist {
+      static constexpr bool Value = false;
+   };
+
+} // namespace Langulus::CTTI
+
+LANGULUS_CTTI_CONCEPT(Typelist);
 
 namespace Langulus
 {

@@ -9,7 +9,7 @@
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
 #include <Langulus/Anyness/Many.hpp>
-#include <Langulus/Typenav.hpp>
+#include <Langulus/TypeNav.hpp>
 #include <Langulus/TypeOf.hpp>
 #include <Langulus/Intent.hpp>
 #include <Langulus/CT/Referenced.hpp>
@@ -366,12 +366,12 @@ namespace Verbs
    /// A testing verb, similar to the ones used in Langulus::Flow             
    ///                                                                        
    struct Create : public Flow::Verb {
-      using CTTI_PositiveVerb = YesVal<"Create">;
-      using CTTI_NegativeVerb = YesVal<"Destroy">;
-      using CTTI_PositiveOperator = YesVal<" + ">;
-      using CTTI_NegativeOperator = YesVal<" - ">;
-      using CTTI_Precedence = YesVal<5>;
-      using CTTI_Info = YesVal<
+      using CTTI_PositiveVerb     = YesText<"Create">;
+      using CTTI_NegativeVerb     = YesText<"Destroy">;
+      using CTTI_PositiveOperator = YesText<" + ">;
+      using CTTI_NegativeOperator = YesText<" - ">;
+      using CTTI_Precedence       = YesValue<5>;
+      using CTTI_Info             = YesText<
          "Used for allocating new elements. "
          "If the type you're creating has	a producer, "
          "you need to execute the verb in a matching producer, "
@@ -428,10 +428,12 @@ namespace Verbs
 }
 
 struct ImplicitlyReflectedData {
-   LANGULUS(POD) true;
-   LANGULUS(FILES) "ASE";
+   enum Named { One, Two, Three };
 
-   enum Named {One, Two, Three};
+   using CTTI_POD   = Yes;
+   using CTTI_Files = YesText<"ASE">;
+   using CTTI_Typed = Named;
+
    LANGULUS_NAMED_VALUES(One, Two, Three);
    LANGULUS(TYPED) Named;
 

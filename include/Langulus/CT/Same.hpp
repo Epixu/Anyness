@@ -1,5 +1,5 @@
 #pragma once
-#include "../Typenav.hpp"
+#include "../TypeNav.hpp"
 
 
 namespace Langulus::CT
@@ -61,5 +61,5 @@ namespace Langulus::CT
    /// density and cv-qualifications                                          
    template<class T1, class...TN>
    concept ExactAsOneOf = (::std::same_as<T1, TN> or ...);
-
+   
 } // namespace Langulus::CT

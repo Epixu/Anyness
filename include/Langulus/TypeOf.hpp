@@ -6,11 +6,23 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Typenav.hpp"
-#include "CT.hpp"
+#include "TypeNav.hpp"
 #include "Types.hpp"
 #include "Core.hpp"
 
+
+namespace Langulus::CTTI
+{
+
+   /// Can be used in two ways to satisfy CT::Typed<T>:                       
+   /// 1. Specialize for T/concept having non-void Type                       
+   /// 2. Add a public `using CTTI_Typed = non_void_type;` in T               
+   template<class T>
+   struct Typed {
+      using Type = void;
+   };
+
+} // namespace Langulus::CTTI
 
 namespace Langulus::CT::Inner
 {

@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include "Literal.hpp"
 
 
 namespace Langulus
@@ -10,16 +11,17 @@ namespace Langulus
       static constexpr bool Value = true;
    };
 
-   /// Equivalent to Yes, but also carries a constant                         
-   /*template<auto CONSTANT>
-   struct YesVal {
-      static constexpr auto Constant = CONSTANT;
+   /// Equivalent to Yes, but also carries a string literal                   
+   template<Literal TEXT>
+   struct YesText {
+      static constexpr Literal Constant = TEXT;
       static constexpr bool Value = true;
-   };*/
+   };
 
-   template<const char* CONSTANT>
-   struct YesVal {
-      static constexpr const char* Constant = CONSTANT;
+   /// Equivalent to Yes, but also carries a constant of any type             
+   template<auto VALUE>
+   struct YesValue {
+      static constexpr auto Constant = VALUE;
       static constexpr bool Value = true;
    };
 
@@ -34,7 +36,7 @@ namespace Langulus
 /// A namespace for defining compile-time type information tags               
 /// Specializing <type_traits> is generally undefined behavior, but here      
 /// we have alternatives that are more flexible, using type_traits as the     
-/// ground truth and building on top of on them.                              
+/// ground truth and building on top of on them                               
 /// Read more: https://stackoverflow.com/questions/25345486                   
 namespace Langulus::CTTI
 {
@@ -47,14 +49,6 @@ namespace Langulus::CTTI
       static constexpr bool Value = ::std::is_void_v<T>;
    };
    
-   /// Can be used in two ways to satisfy CT::Array<T>:                       
-   /// 1. Specialize for T/concept with Value == true                         
-   /// 2. Add a public `using CTTI_Array = Yes;` in T                         
-   template<class T>
-   struct Array {
-      static constexpr bool Value = ::std::is_bounded_array_v<T>;
-   };
-   
    /// Can be used in two ways to satisfy CT::Enum<T>:                        
    /// 1. Specialize for T/concept with Value == true                         
    /// 2. Add a public `using CTTI_Enum = Yes;` in T                          
@@ -63,30 +57,6 @@ namespace Langulus::CTTI
       static constexpr bool Value = ::std::is_enum_v<T>;
    };
    
-   /// Can be used in two ways to satisfy CT::Sparse<T>:                      
-   /// 1. Specialize for T/concept with Value == true                         
-   /// 2. Add a public `using CTTI_Sparse = Yes;` in T                        
-   template<class T>
-   struct Sparse {
-      static constexpr bool Value = ::std::is_pointer_v<T> or Array<T>::Value;
-   };
-
-   /// Can be used in two ways to satisfy CT::Typed<T>:                       
-   /// 1. Specialize for T/concept having non-void Type                       
-   /// 2. Add a public `using CTTI_Typed = non_void_type;` in T               
-   template<class T>
-   struct Typed {
-      using Type = void;
-   };
-
-   /// Can be used in two ways to satisfy CT::Typelist<T>:                    
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Typelist = Yes;` in T                      
-   template<class T>
-   struct Typelist {
-      static constexpr bool Value = false;
-   };
-
    /// Can be used in two ways to satisfy CT::Aggregate<T>:                   
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Aggregate = Yes;` in T                     
@@ -103,20 +73,19 @@ namespace Langulus::CTTI
       static constexpr bool Value = ::std::is_fundamental_v<T>;
    };
    
-   /// Can be used in two ways to satisfy CT::Constant<T>:                    
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Constant = Yes;` in T                      
-   template<class T>
-   struct Constant {
-      static constexpr bool Value = ::std::is_const_v<T>;
-   };
-   
-   /// Can be used in two ways to satisfy CT::Volatile<T>:                    
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Volatile = Yes;` in T                      
-   template<class T>
-   struct Volatile {
-      static constexpr bool Value = ::std::is_volatile_v<T>;
-   };
    
 } // namespace Langulus::CTTI
+
+
+#define LANGULUS_CTTI_CONCEPT(NAME) \
+   namespace Langulus::CT { \
+      template<class...T> \
+      concept NAME = ((CTTI::NAME<T>::Value or T::CTTI_##NAME::Value) and ...); \
+      template<class...T> \
+      concept Not##NAME = ((not NAME<T>) and ...); \
+   }
+
+LANGULUS_CTTI_CONCEPT(Void);
+LANGULUS_CTTI_CONCEPT(Enum);
+LANGULUS_CTTI_CONCEPT(Aggregate);
+LANGULUS_CTTI_CONCEPT(Fundamental);

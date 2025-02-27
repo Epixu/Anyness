@@ -1,5 +1,5 @@
 #pragma once
-#include <Langulus/CT.hpp>
+#include <Langulus/CTTI.hpp>
 
 
 namespace Langulus::CTTI
@@ -25,6 +25,7 @@ namespace Langulus::CTTI
 
 LANGULUS_CTTI_CONCEPT(Component);
 LANGULUS_CTTI_CONCEPT(Container);
+
 
 namespace Langulus::Anyness::Detail
 {
