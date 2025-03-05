@@ -23,7 +23,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Array = Yes;` in T                         
    template<class T>
    struct Array {
-      static constexpr bool Value = ::std::is_bounded_array_v<T>;
+      static constexpr bool Enabled = ::std::is_bounded_array_v<T>;
    };
    
    /// Can be used in two ways to satisfy CT::Sparse<T>:                      
@@ -31,7 +31,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Sparse = Yes;` in T                        
    template<class T>
    struct Sparse {
-      static constexpr bool Value = ::std::is_pointer_v<T>;
+      static constexpr bool Enabled = ::std::is_pointer_v<T>;
    };
 
    /// Can be used in two ways to satisfy CT::Constant<T>:                    
@@ -39,7 +39,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Constant = Yes;` in T                      
    template<class T>
    struct Constant {
-      static constexpr bool Value = ::std::is_const_v<T>;
+      static constexpr bool Enabled = ::std::is_const_v<T>;
    };
    
    /// Can be used in two ways to satisfy CT::Volatile<T>:                    
@@ -47,7 +47,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Volatile = Yes;` in T                      
    template<class T>
    struct Volatile {
-      static constexpr bool Value = ::std::is_volatile_v<T>;
+      static constexpr bool Enabled = ::std::is_volatile_v<T>;
    };
    
 } // namespace Langulus::CTTI
@@ -57,6 +57,14 @@ LANGULUS_CTTI_CONCEPT(Volatile);
 
 namespace Langulus
 {
+
+   /// Get the extent of an array type, or 1 if T is not an array             
+   template<class T>
+   constexpr ::std::size_t ExtentOf = ::std::is_bounded_array_v<T> ? ::std::extent_v<T> : 1;
+
+   /// Get the extent of an array argument, or 1 if T is not an array         
+   template<class T>
+   consteval ::std::size_t GetExtentOf(T&&) { return ExtentOf<T>; }
 
    /// Same as ::std::declval, but more humanely named                        
    template<class T>
@@ -99,6 +107,7 @@ namespace Langulus
    
    namespace Inner
    {
+
       /// Nest-strip any qualifiers, extents and indirections                 
       /// Returns a pointer to the stripped T                                 
       template<class T>
@@ -125,7 +134,7 @@ namespace Langulus
       ///   @attention this also includes non-pointer types that are tagged   
       ///      as custom packed pointers                                      
       template<class...T>
-      concept Sparse = ((CTTI::Sparse<T>::Value or T::CTTI_Sparse::Value) and ...);
+      concept Sparse = ((CTTI::Sparse<T>::Enabled or T::CTTI_Sparse::Enabled) and ...);
 
       /// Check if all T are dense                                            
       template<class...T>
@@ -133,7 +142,7 @@ namespace Langulus
 
       /// Check if all T are constant-qualified                               
       template<class...T>
-      concept Constant = ((CTTI::Constant<T>::Value or T::CTTI_Constant::Value) and ...);
+      concept Constant = ((CTTI::Constant<T>::Enabled or T::CTTI_Constant::Enabled) and ...);
 
       /// Check if all T are not constant-qualified                           
       template<class...T>

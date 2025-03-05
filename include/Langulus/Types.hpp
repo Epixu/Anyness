@@ -18,7 +18,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Typelist = Yes;` in T                      
    template<class T>
    struct Typelist {
-      static constexpr bool Value = false;
+      static constexpr bool Enabled = false;
    };
 
 } // namespace Langulus::CTTI

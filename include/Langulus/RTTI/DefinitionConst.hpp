@@ -1,36 +1,38 @@
 #pragma once
 #include "Definition.hpp"
+#include "Meta.hpp"
 
-
-namespace Langulus::CTTI
-{
-   
-   /// Can be used in two ways to satisfy CT::DefineConstant<T>:              
-   /// 1. Specialize for T/concept having Value as true and a unique Name     
-   /// 2. Add a public `using CTTI_DefineConstant = YesText<"ConstID">;` in T 
-   template<class T>
-   struct DefineConstant {
-      static constexpr Literal Name = "<not a constant>";
-      static constexpr bool Value = false;
-   };
-
-} // namespace Langulus::CTTI
-
-LANGULUS_CTTI_CONCEPT(DefineConstant);
 
 namespace Langulus::RTTI
 {
 
-   class MetaConst;
+   struct MetaConst;
    using CMeta = MetaConst;
    
 
    ///                                                                        
-   /// A constant definition                                                  
+   /// A constant value definition                                            
    ///                                                                        
-   class DefinitionConst : public Definition {
-      // A sanitized last token (with a lower first letter)             
-      ::std::string mTokenSanitized;
+   class DefinitionConst : public Inner::Definition {
+   public:
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using Handle = Inner::MetaPacked<2>;
+   #else
+      using Handle = Inner::MetaNaked;
+   #endif
+
+   protected:
+      friend struct MetaConst;
+      DefinitionConst(const Token& cppname) : Definition {cppname} {}
+
+      // A unique handle that may or may not be compressed              
+      Handle mHandle;
+
+   public:
+      template<auto>
+      static CMeta Reflect();
    };
 
 } // namespace Langulus::RTTI
+
+#include "DefinitionConst.inl"

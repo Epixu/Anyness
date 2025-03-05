@@ -8,26 +8,26 @@ namespace Langulus
 
    /// Equivalent to ::std::true_type, but without the silly nomenclature     
    struct Yes {
-      static constexpr bool Value = true;
+      static constexpr bool Enabled = true;
    };
 
    /// Equivalent to Yes, but also carries a string literal                   
    template<Literal TEXT>
    struct YesText {
       static constexpr Literal Constant = TEXT;
-      static constexpr bool Value = true;
+      static constexpr bool Enabled = true;
    };
 
    /// Equivalent to Yes, but also carries a constant of any type             
    template<auto VALUE>
    struct YesValue {
       static constexpr auto Constant = VALUE;
-      static constexpr bool Value = true;
+      static constexpr bool Enabled = true;
    };
 
    /// Equivalent to ::std::false_type, but without the silly nomenclature    
    struct No {
-      static constexpr bool Value = false;
+      static constexpr bool Enabled = false;
    };
 
 } // namespace Langulus
@@ -46,7 +46,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Void = Yes;` in T                          
    template<class T>
    struct Void {
-      static constexpr bool Value = ::std::is_void_v<T>;
+      static constexpr bool Enabled = ::std::is_void_v<T>;
    };
    
    /// Can be used in two ways to satisfy CT::Enum<T>:                        
@@ -54,7 +54,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Enum = Yes;` in T                          
    template<class T>
    struct Enum {
-      static constexpr bool Value = ::std::is_enum_v<T>;
+      static constexpr bool Enabled = ::std::is_enum_v<T>;
    };
    
    /// Can be used in two ways to satisfy CT::Aggregate<T>:                   
@@ -62,7 +62,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Aggregate = Yes;` in T                     
    template<class T>
    struct Aggregate {
-      static constexpr bool Value = ::std::is_aggregate_v<T>;
+      static constexpr bool Enabled = ::std::is_aggregate_v<T>;
    };
    
    /// Can be used in two ways to satisfy CT::Fundamental<T>:                 
@@ -70,17 +70,15 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Fundamental = Yes;` in T                   
    template<class T>
    struct Fundamental {
-      static constexpr bool Value = ::std::is_fundamental_v<T>;
+      static constexpr bool Enabled = ::std::is_fundamental_v<T>;
    };
-   
-   
-} // namespace Langulus::CTTI
 
+} // namespace Langulus::CTTI
 
 #define LANGULUS_CTTI_CONCEPT(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = ((CTTI::NAME<T>::Value or T::CTTI_##NAME::Value) and ...); \
+      concept NAME = ((CTTI::NAME<T>::Enabled or T::CTTI_##NAME::Enabled) and ...); \
       template<class...T> \
       concept Not##NAME = ((not NAME<T>) and ...); \
    }
@@ -89,3 +87,14 @@ LANGULUS_CTTI_CONCEPT(Void);
 LANGULUS_CTTI_CONCEPT(Enum);
 LANGULUS_CTTI_CONCEPT(Aggregate);
 LANGULUS_CTTI_CONCEPT(Fundamental);
+
+namespace Langulus::CT
+{
+
+   /// Check if all T are function signatures                                 
+   ///   @attention std::function, lambdas, classes with overloaded           
+   ///      operator() and pointers to functions don't count as function types
+   template<class...T>
+   concept Function = (::std::is_function_v<T> and ...);
+
+} // namespace Langulus::CT

@@ -6,6 +6,7 @@ namespace Langulus::CT
 {
    namespace Inner
    {
+
       /// Check if T has BASE                                                 
       template<class T, class BASE>
       consteval bool DerivedFrom() {
@@ -16,7 +17,9 @@ namespace Langulus::CT
             // T has to be complete                                     
             return ::std::derived_from<Decay<T>, Decay<BASE>>;
       }
+
    } // namespace Langulus::CT::Inner
+
 
    /// Check if the origin T publicly inherits (or is) all the BASE(s)        
    /// Compensates for std::derived_from not returning true for the same      

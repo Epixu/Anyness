@@ -19,7 +19,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Intent = Yes/No;` in T                     
    template<class T>
    struct Intent {
-      static constexpr bool Value = false;
+      static constexpr bool Enabled = false;
    };
    
 } // namespace Langulus::CTTI
@@ -27,7 +27,7 @@ namespace Langulus::CTTI
 namespace Langulus::CT
 {
    template<class...T>
-   concept Intent = ((CTTI::Intent<T>::Value or T::CTTI_Intent::Value) and ...);
+   concept Intent = ((CTTI::Intent<T>::Enabled or T::CTTI_Intent::Enabled) and ...);
 
    template<class...T>
    concept NoIntent = ((not Intent<T>) and ...);

@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include <cstdint>   // INTPTR_MAX == INT64_MAX can't work without it   
+#include <cstdint>
 
 /// Sorry, Langulus is designed for at least C++20, will move to C++23        
 /// when full compiler support is provided                                    
@@ -183,15 +183,6 @@
    #define LANGULUS_FEATURE_ENCRYPTION()  0
    #define IF_LANGULUS_ENCRYPTION(a)      LANGULUS(NOOP)
    #define IF_NOT_LANGULUS_ENCRYPTION(a)  a
-#endif
-
-/// Detect architecture                                                       
-#if INTPTR_MAX == INT64_MAX
-   #define LANGULUS_BITNESS() 64
-#elif INTPTR_MAX == INT32_MAX
-   #define LANGULUS_BITNESS() 32
-#else
-   #error Unknown pointer size
 #endif
 
 /// Detect compiler                                                           
@@ -388,3 +379,34 @@
       #define LANGULUS_INLINED() __attribute__((always_inline)) inline
    #endif
 #endif
+
+#ifndef LANGULUS_ALIGNMENT
+   #define LANGULUS_ALIGNMENT 16
+#endif
+
+namespace Langulus
+{
+   
+   /// Similar to std::isalpha, but constexpr                                 
+   LANGULUS(ALWAYS_INLINED)
+   constexpr char IsAlpha(char a) noexcept {
+      return (a >= 'a' and a <= 'z')
+          or (a >= 'A' and a <= 'Z');
+   }
+
+   LANGULUS(ALWAYS_INLINED)
+   constexpr bool IsPowerOfTwo(auto n) noexcept {
+      return n != 0 && (n & (n - 1)) == 0;
+   }
+
+   /// The size of a void* in bytes, depends on architecture                  
+   constexpr int Byteness = sizeof(void*);
+
+   /// The size of a void* in bits, depends on architecture                   
+   constexpr int Bitness = Byteness * 8;
+
+   /// The default alignment, depends on configuration and enabled SIMD       
+   constexpr int Alignment = LANGULUS_ALIGNMENT;
+   static_assert(IsPowerOfTwo(Alignment), "Alignment must be a power-of-two");
+
+} // namespace Langulus

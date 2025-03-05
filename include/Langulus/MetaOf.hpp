@@ -16,58 +16,64 @@ namespace Langulus
 {
 
    /// Get the meta definition of a type, deducing whether it's a data, verb, 
-   /// constant, or trait. Note: anything can be data, so meta-data is given  
-   /// only if not evaluated to be a trait/constant/verb                      
+   /// or trait. Note: anything can be data, so meta-data is given only if    
+   /// not evaluated to be a trait or verb                                    
    ///   @tparam T - type to get meta definition of                           
    ///   @return the meta definition of the provided type                     
    template<class T>
    auto MetaOf() {
-      if constexpr (CT::Decayed<T> and CT::DefineTrait<T>)
-         return RTTI::MetaTrait::Of<T>();
-      else if constexpr (CT::Decayed<T> and CT::DefineConstant<T>)
-         return RTTI::MetaConst::Of<T>();
-      else if constexpr (CT::Decayed<T> and CT::DefineVerb<T>)
-         return RTTI::MetaVerb::Of<T>();
+      if constexpr (CT::DefineTrait<Decay<T>>)
+         return RTTI::DefinitionTrait::Reflect<T>();
+      else if constexpr (CT::DefineVerb<Decay<T>>)
+         return RTTI::DefinitionVerb::Reflect<T>();
       else
-         return RTTI::MetaData::Of<T>();
+         return RTTI::DefinitionData::Reflect<T>();
+   }
+
+   /// Get the meta definition of a constant, like an enum                    
+   ///   @tparam E - constant to get meta definition of                       
+   ///   @return the meta definition of the provided constant                 
+   template<auto E>
+   auto MetaOf() {
+      return RTTI::DefinitionConst::Reflect<E>();
    }
 
    /// Data definition retrieval                                              
    /// Some types, like traits/verbs for example, can be represented both as  
    /// DMeta and TMeta/VMeta, and this is useful to state a clear intent      
-   ///   @tparam T - type to get meta data definition of                      
-   ///   @return the meta definition of the provided type                     
+   ///   @tparam T - type to get data definition from                         
+   ///   @return the definition                                               
    template<class T>
    auto MetaDataOf() {
-      return RTTI::MetaData::Of<T>();
+      return RTTI::DefinitionData::Reflect<T>();
    }
 
    /// Trait definition retrieval                                             
    /// Some types, like traits for example, can be represented both as DMeta  
    /// and TMeta, and this is useful to state a clear intent                  
-   ///   @tparam T - type to get meta trait definition of                     
-   ///   @return the meta definition of the provided trait                    
+   ///   @tparam T - type to get trait definition from                        
+   ///   @return the definition                                               
    template<class T>
    auto MetaTraitOf() {
-      return RTTI::MetaTrait::Of<T>();
+      return RTTI::DefinitionTrait::Reflect<T>();
    }
 
    /// Verb definition retrieval                                              
    /// Some types, like verbs for example, can be represented both as DMeta   
    /// and VMeta, and this is useful to state a clear intent                  
-   ///   @tparam T - type to get meta trait definition of                     
-   ///   @return the meta definition of the provided verb                     
+   ///   @tparam T - type to get verb definition from                         
+   ///   @return the definition                                               
    template<class T>
    auto MetaVerbOf() {
-      return RTTI::MetaVerb::Of<T>();
+      return RTTI::DefinitionVerb::Reflect<T>();
    }
 
    /// Constant definition retrieval                                          
-   ///   @tparam T - type to get meta constant definition of                  
-   ///   @return the meta definition of the provided constant                 
-   template<class T>
+   ///   @tparam E - constant to get definition from                          
+   ///   @return the definition                                               
+   template<auto E>
    auto MetaConstOf() {
-      return RTTI::MetaConst::Of<T>();
+      return RTTI::DefinitionConst::Reflect<E>();
    }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

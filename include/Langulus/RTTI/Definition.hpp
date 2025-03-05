@@ -7,17 +7,14 @@
 ///                                                                           
 #pragma once
 #include "../HashOf.hpp"
+#include "../NameOf.hpp"
 #include <string_view>
 #include <algorithm>
 #include <iterator>
 
 
-namespace Langulus::RTTI
+namespace Langulus::RTTI::Inner
 {
-   
-   using Lowercase = ::std::string;
-   using Token     = ::std::string_view;
-
 
    /// Convert a token to a lowercase string                                  
    ///   @param token - the token to lowercase                                
@@ -38,20 +35,20 @@ namespace Langulus::RTTI
    ///                                                                        
    class Definition {
    protected:
-      // Each reflected type has an unique hash                         
+      // Each reflected type has an unique hash based on C++ name       
       // First for immediate access                                     
       const Hash mHash;
 
-      // Each reflection primitive has a unique token, but that         
-      // uniqueness is checked only if MANAGED_REFLECTION feature is    
-      // enabled                                                        
-      const Token mToken;
+      // Original name of the type as it appears in C++                 
+      const Token mCppName;
+
+      // The original reflected token used in scripting                 
+      Token mToken;
+      // Sanitized mToken, with proper capitalization                   
+      std::string mTokenSanitized;
 
       // Each reflection may or may not have some info                  
       Token mInfo = "<no info provided>";
-
-      // Original name of the type                                      
-      Token mCppName;
 
       // Major version                                                  
       unsigned mVersionMajor = 1;
@@ -59,22 +56,20 @@ namespace Langulus::RTTI
       // Minor version                                                  
       unsigned mVersionMinor = 0;
 
-      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         // The shared library that defined the module, used to unload  
-         // definitions when module is unloaded                         
-         Token mLibraryName;
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      // The shared library that defined the module, used to unload     
+      // definitions when module is unloaded                            
+      Token mLibraryName;
 
-         LANGULUS_API(RTTI)
-         Token GetShortestUnambiguousToken() const;
-      #endif
+      LANGULUS_API(RTTI)
+      Token GetShortestUnambiguousToken() const;
+   #endif
 
-   public:
       Definition() = delete;
+      Definition(const Token&);
 
-      LANGULUS(INLINED)
-      Definition(const Token& name)
-         : mHash  {HashOf(name)}
-         , mToken {name} {}
+      template<CT::Decayed>
+      void ReflectCommon();
    };
    
-} // namespace Langulus::RTTI
+} // namespace Langulus::RTTI::Inner

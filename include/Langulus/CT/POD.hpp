@@ -17,11 +17,8 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_POD = Yes;` in T                           
    template<class T>
    struct POD {
-      static constexpr bool Value = not Abstract<T>::Value and (
-         Fundamental<T>::Value or Sparse<T>::Value
-         or (   ::std::is_trivial_v<T>
-            and ::std::is_standard_layout_v<T>
-            and ::std::is_destructible_v<T>)
+      static constexpr bool Enabled = not Abstract<T>::Enabled and (
+         sizeof(T) == 1 or Sparse<T>::Enabled or Fundamental<T>::Enabled
       );
    };
    

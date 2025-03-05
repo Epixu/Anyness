@@ -1,10 +1,10 @@
 #pragma once
 
 
-namespace Langulus::Anyness::Components
+namespace Langulus::Anyness::Component
 {
 
-   template<class T, unsigned ID, unsigned HEAP_ID>
+   template<class T = ::std::size_t, unsigned ID = 0, unsigned HEAP_ID = 0>
    struct CountHeap {
       using CTTI_Component = Yes;
 
@@ -14,4 +14,4 @@ namespace Langulus::Anyness::Components
       }
    };
 
-} // namespace Langulus::Anyness::Components
+} // namespace Langulus::Anyness::Component

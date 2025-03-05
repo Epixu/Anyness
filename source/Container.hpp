@@ -5,6 +5,14 @@
 namespace Langulus::CTTI
 {
 
+   /// Can be used in two ways to satisfy CT::State<T>:                       
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_State = Yes;` in T                         
+   template<class T>
+   struct State {
+      static constexpr bool Value = false;
+   };
+   
    /// Can be used in two ways to satisfy CT::Component<T>:                   
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Component = Yes;` in T                     
@@ -23,6 +31,7 @@ namespace Langulus::CTTI
 
 } // namespace Langulus::CTTI
 
+LANGULUS_CTTI_CONCEPT(State);
 LANGULUS_CTTI_CONCEPT(Component);
 LANGULUS_CTTI_CONCEPT(Container);
 
@@ -33,6 +42,17 @@ namespace Langulus::Anyness::Detail
    template<CT::Component...COMPONENTS>
    struct Container : COMPONENTS... {
       using CTTI_Container = Yes;
+   };
+
+} // namespace Langulus::Anyness::Detail
+
+namespace Langulus::Anyness::State
+{
+
+   enum StateValue {
+      Variable = 0,
+      Enabled = 1,
+      Disabled = 2
    };
 
 } // namespace Langulus::Anyness::Detail

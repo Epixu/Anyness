@@ -17,7 +17,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Abstract = Yes;` in T                      
    template<class T>
    struct Abstract {
-      static constexpr bool Value = ::std::is_abstract_v<T>;
+      static constexpr bool Enabled = ::std::is_abstract_v<T>;
    };
    
 } // namespace Langulus::CTTI

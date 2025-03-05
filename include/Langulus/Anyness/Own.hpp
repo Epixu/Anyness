@@ -7,15 +7,20 @@
 ///                                                                           
 #pragma once
 #include "../../../source/Container.hpp"
-#include "../../../source/components/Count-Compiled.hpp"
+#include "../../../source/components/Stack.hpp"
+#include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/Typed-Static.hpp"
+
 
 namespace Langulus::Anyness
 {
-
+   
+   /// A statically typed stack-based container of size 1                     
+   template<CT::NotVoid T>
    struct Own : Detail::Container<
-      Components::CountCompiled<1>
-   > {
-
-   };
+      Component::Stack<T>,             // Element on the stack          
+      Component::TypedStatic<T>,       // Statically typed              
+      Component::CountStatic<1>        // Statically sized to 1         
+   > {};
 
 } // namespace Langulus::Anyness

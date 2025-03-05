@@ -10,8 +10,8 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Destroyable = Yes/No;` in T                
    template<class T>
    struct Destroyable {
-      static constexpr bool Value = not ::std::is_trivially_destructible_v<T>
-                                    and ::std::is_destructible_v<T>;
+      static constexpr bool Enabled = not ::std::is_trivially_destructible_v<T>
+                                      and ::std::is_destructible_v<T>;
    };
    
 } // namespace Langulus::CTTI

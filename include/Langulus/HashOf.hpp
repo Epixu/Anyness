@@ -7,7 +7,11 @@
 ///                                                                           
 #pragma once
 #include "Core.hpp"
-#include "CTTI.hpp"
+#include "TypeNav.hpp"
+#include "TypeOf.hpp"
+#include "CT/Support.hpp"
+#include "CT/POD.hpp"
+#include "CT/Same.hpp"
 
 
 namespace Langulus
@@ -79,7 +83,6 @@ namespace Langulus
       ///   @tparam SEED - the seed for the hash algorithm                    
       ///   @param key - the memory to hash                                   
       ///   @param len - the number of bytes in the key                       
-      ///   @param seed - the seed for the hash                               
       ///   @param out - [out] the hash goes here (must be 4 bytes)           
       template<bool TAIL = true, uint32_t SEED = DefaultHashSeed>
       void MurmurHash3_x86_32(const void* key, int len, void* out) {
@@ -135,7 +138,6 @@ namespace Langulus
       ///   @tparam SEED - the seed for the hash algorithm                    
       ///   @param key - the memory to hash                                   
       ///   @param len - the number of bytes in the key                       
-      ///   @param seed - the seed for the hash                               
       ///   @param out - [out] the hash goes here (must be 16 bytes)          
       template<bool TAIL = true, uint32_t SEED = DefaultHashSeed>
       void MurmurHash3_x86_128(const void* key, const int len, void* out) {
@@ -307,7 +309,6 @@ namespace Langulus
       ///   @tparam SEED - the seed for the hash algorithm                    
       ///   @param key - the memory to hash                                   
       ///   @param len - the number of bytes in the key                       
-      ///   @param seed - the seed for the hash                               
       ///   @param out - [out] the hash goes here (must be 8 bytes)           
       template<bool TAIL = true, uint32_t SEED = DefaultHashSeed>
       void MurmurHash2_x64_64(const void* key, int len, void* out) {
@@ -367,7 +368,6 @@ namespace Langulus
       ///   @tparam SEED - the seed for the hash algorithm                    
       ///   @param key - the memory to hash                                   
       ///   @param len - the number of bytes in the key                       
-      ///   @param seed - the seed for the hash                               
       ///   @param out - [out] the hash goes here (must be 16 bytes)          
       template<bool TAIL = true, uint32_t SEED = DefaultHashSeed>
       void MurmurHash3_x64_128(const void* key, const int len, void* out) {
@@ -505,124 +505,119 @@ namespace Langulus
       return result;
    }
 
-   namespace CT::Inner
+   template<bool FAKE = false, uint32_t SEED = DefaultHashSeed, class T, class...MORE>
+   auto HashOf(const T&, const MORE&...);
+
+   namespace CT
    {
+
+      /// Check if the origin T can be hashed using HashOf                    
+      template<class...T>
+      concept Hashable = requires (T&...a) {
+         { (HashOf<true>(a), ...) } -> Supported;
+      };
 
       /// Check if T has a GetHash() method                                   
       /// It is always preferred when hashing data                            
-      template<class T>
-      concept HasGetHashMethod = Complete<T> and requires (T& a) {
-         {a.GetHash()} -> Same<Hash>;
+      template<class...T>
+      concept HasGetHashMethod = requires (T&...a) {
+         { (a.GetHash(), ...) } -> Similar<Hash>;
       };
+      
+      /// Check if T has a GetHash() method                                   
+      /// It is always preferred when hashing data                            
+      template<class...T>
+      concept HasStdHasher = requires (::std::hash<T>...h, T...a) { (h(a), ...); };
 
    } // namespace Langulus::CT
 
 
-   /// Hash any hashable data, including fundamental types                    
+   /// Hash any hashable data, including fundamental/POD/range types          
    ///   @tparam FAKE - for internal use - if FAKE and evaluated to fail, it  
-   ///                  will return CT::Unsupported; otherwise it will screm  
-   ///                  a compile-time error at you                           
+   ///      will return CT::Unsupported; otherwise it will scream a compile   
+   ///      error at you                                                      
    ///   @tparam SEED - the seed for the hash algorithm                       
-   ///   @tparam T - first type to hash (deducible)                           
-   ///   @tparam MORE... - the rest of the hashed types (deducible)           
    ///   @param head, rest... - the data to hash                              
    ///   @return the hash                                                     
-   template<bool FAKE = false, uint32_t SEED = DefaultHashSeed, class T, class... MORE>
-   auto HashOf(const T& head, const MORE&... rest) {
-      if constexpr (CT::Unsupported<T, MORE...>)
+   template<bool FAKE, uint32_t SEED, class T, class...MORE>
+   auto HashOf(const T& head, const MORE&...rest) {
+      if constexpr (CT::Unsupported<T, MORE...>) {
+         // If any of the types isn't supported abort the entire hash   
          return Unsupported {};
+      }
       else if constexpr (sizeof...(MORE)) {
          // Combine all data into a single array of hashes, and then    
          // hash that array as a whole                                  
-         alignas(Bitness/8) const Hash coalesced[1 + sizeof...(MORE)] {
+         alignas(Byteness) const Hash coal[1 + sizeof...(MORE)] {
             HashOf<FAKE, SEED>(head),
             HashOf<FAKE, SEED>(rest)...
          };
-         return HashBytes<SEED, false>(
-            coalesced, static_cast<int>(sizeof(coalesced))
-         );
+         return HashBytes<SEED, false>(coal, static_cast<int>(sizeof(coal)));
       }
-      else if constexpr (CT::Sparse<T>) {
-         if constexpr (CT::Array<T>) {
-            if constexpr (ExtentOf<T> == 1) {
-               // Only one element in array, just use the first hash    
-               return HashOf<FAKE, SEED>(head[0]);
-            }
-            else if constexpr (sizeof(Deext<T>) == 1 or ::std::is_fundamental_v<Deext<T>>) {
-               // Array is made of POD-like elements, batch-hash them   
-               return HashBytes<SEED>(head, static_cast<int>(sizeof(T)));
-            }
-            else {
-               // Hash each element of the array individually, and then 
-               // hash that array of hashes as a whole                  
-               alignas(Bitness / 8) Hash coalesced[ExtentOf<T>];
-               for (Count i = 0; i < ExtentOf<T>; ++i)
-                  coalesced[i] = HashOf<FAKE, SEED>(head[i]);
-               return HashBytes<SEED, false>(
-                  coalesced, static_cast<int>(sizeof(coalesced))
-               );
-            }
+      else if constexpr (CT::Array<T>) {
+         // Combine the hashes of each element inside an array          
+         if constexpr (ExtentOf<T> == 1) {
+            // Only one element in array, just use the first            
+            return HashOf<FAKE, SEED>(head[0]);
+         }
+         else if constexpr (CT::POD<Deext<T>>) {
+            // Array is made of POD elements, batch-hash the array      
+            return HashBytes<SEED>(head, static_cast<int>(sizeof(T)));
          }
          else {
-            // Hash pointer, never dereference it                       
-            if (head == nullptr)
-               return Hash {};
-
-            return HashBytes<SEED, false>(
-               DecvqCast(&head),
-               static_cast<int>(sizeof(T))
-            );
+            // Hash each element of the array individually, and then    
+            // hash that array of hashes as a whole                     
+            alignas(Byteness) Hash coal[ExtentOf<T>];
+            for (::std::size_t i = 0; i < ExtentOf<T>; ++i)
+               coal[i] = HashOf<FAKE, SEED>(head[i]);
+            return HashBytes<SEED, false>(coal, static_cast<int>(sizeof(coal)));
          }
       }
-      else if constexpr (CT::Exact<T, Hash>) {
+      else if constexpr (CT::Sparse<T>) {
+         // Hash pointer, never dereference it                          
+         if (head == nullptr)
+            return Hash {};
+         return HashBytes<SEED, false>(DecvqCast(&head), static_cast<int>(sizeof(T)));
+      }
+      else if constexpr (CT::Similar<T, Hash>) {
          // Provided type is already a hash, just propagate it          
          return head;
       }
-      else if constexpr (CT::Inner::HasGetHashMethod<T>) {
+      else if constexpr (CT::HasGetHashMethod<T>) {
          // Hashable via a member GetHash() function                    
+         // Allows for caching the hash                                 
          return head.GetHash();
       }
-      else if constexpr (CT::StdContainer<T>
-      and requires (TypeOf<T>& a) {{HashOf<true, SEED>(a)} -> CT::Supported; }) {
-         // Anything that contiguously iteratable is carried through    
-         // HashOf for consistency, because different std library       
-         // implementations might have different hashing algorithms.    
-         // This should include string_view, string, vector, span, etc. 
-         // @attention shouldn't use POD instead of is_fundamental_v    
-         using TT = TypeOf<T>;
-         if constexpr (CT::StdContiguousContainer<T>
-         and (sizeof(TT) == 1 or ::std::is_fundamental_v<TT>)) {
-            return HashBytes<SEED>(
-               head.data(),
-               static_cast<int>(head.size() * sizeof(TT))
-            );
-         }
-         else {
-            // Hash each individual element, then combine all hashes    
-            ::std::vector<Hash> coalesced;
-            for (auto& i : head)
-               coalesced.emplace_back(HashOf<FAKE, SEED>(i));
-
-            return HashBytes<SEED>(
-               coalesced.data(),
-               static_cast<int>(coalesced.size() * sizeof(Hash))
-            );
-         }
-      }
       else if constexpr (CT::POD<T>) {
-         // Explicitly marked POD types are always hashable, but be     
+         // Explicitly marked POD item is always hashable, but be       
          // careful for POD types with padding - the junk inbetween     
          // members can interfere with the hash, giving unique          
          // hashes where the same hashes should be produced. In such    
          // cases it is recommended you add a custom GetHash() method   
          // to your type, or #pragma pack, in order to circumvent issue 
-         // Warning: some types like std::string_view are actually      
-         // qualified as POD by Langulus standards, and that's why POD  
-         // is after the ::std::ranges::range<T> case                   
-         return HashBytes<SEED, (alignof(T) < Bitness/8)> (
-            &head, static_cast<int>(sizeof(T)));
+         return HashBytes<SEED, (alignof(T) < Byteness)>(&head, static_cast<int>(sizeof(T)));
       }
-      else if constexpr (requires (::std::hash<T> h, const T& i) { h(i); }) {
+      else if constexpr (::std::ranges::range<T> and CT::Typed<T> and CT::Hashable<TypeOf<T>>) {
+         // Anything that is range-iteratable and typed is carried      
+         // through HashOf for consistency, because different std       
+         // library implementations might have different hashing        
+         // algorithms. This should include string_view, string, vector,
+         // array, span, etc.                                           
+         using InnerT = TypeOf<T>;
+
+         if constexpr (::std::ranges::contiguous_range<T> and CT::POD<InnerT>) {
+            // Batch-hash contiguous containers with POD contents       
+            return HashBytes<SEED>(head.data(), static_cast<int>(head.size() * sizeof(InnerT)));
+         }
+         else {
+            // Hash each individual element, then combine all hashes    
+            ::std::vector<Hash> coal;
+            for (auto& i : head)
+               coal.emplace_back(HashOf<FAKE, SEED>(i));
+            return HashBytes<SEED>(coal.data(), static_cast<int>(coal.size() * sizeof(Hash)));
+         }
+      }      
+      else if constexpr (CT::HasStdHasher<T>) {
          // Hashable via std::hash (fallback for std containers)        
          // Beware, hashing functions coming from std::hash may have    
          // different implementations for different compilers, which    
@@ -632,6 +627,7 @@ namespace Langulus
          return Hash {hasher(head)};
       }
       else {
+         // Handle failure statically                                   
          if constexpr (FAKE)
             return Unsupported {};
          else
@@ -641,35 +637,15 @@ namespace Langulus
 
 } // namespace Langulus
 
-namespace Langulus::CT
-{
-
-   /// Check if the origin T can be hashed using HashOf                       
-   template<class...T>
-   concept Hashable = requires (T&...a) {
-      {(HashOf<true>(a), ...)} -> Supported;
-   };
-
-} // namespace Langulus::CT
-
 namespace std
 {
 
-   /// Extend std to capable of hashing anything with GetHash method          
-   template<::Langulus::CT::Inner::HasGetHashMethod H>
+   /// Extend std to capable of hashing anything with a GetHash method        
+   template<::Langulus::CT::HasGetHashMethod H>
    struct hash<H> {
       LANGULUS(INLINED)
       size_t operator()(const H& what) const noexcept {
          return what.GetHash().mHash;
-      }
-   };
-
-   /// Make vectors of DMeta hashable                                         
-   template<>
-   struct hash<vector<::Langulus::RTTI::DMeta>> {
-      LANGULUS(INLINED)
-      size_t operator()(const vector<::Langulus::RTTI::DMeta>& k) const noexcept {
-         return Langulus::HashOf(k).mHash;
       }
    };
 

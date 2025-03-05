@@ -130,10 +130,10 @@ T CreateElement(const auto& e) {
    T element;
    if constexpr (CT::Same<T, decltype(e)>)
       element = e;
-   else if constexpr (not CT::Same<T, Anyness::Block<>>)
+   else if constexpr (not CT::Same<T, Anyness::ManyView>)
       element = Decay<T> {e};
    else {
-      element = Anyness::Block<> {};
+      element = Anyness::ManyView {};
       element.Insert(e);
    }
    return element;
@@ -153,21 +153,21 @@ T CreateElement(const auto& e) {
       // memory manager. Notice we don't use 'new' operator here,       
       // because it is weakly linked, and can be overriden to use our   
       // memory manager.                                                
-      if constexpr (not CT::Same<T, Anyness::Block<>>) {
+      if constexpr (not CT::Same<T, Anyness::ManyView>) {
          element = malloc(sizeof(Decay<T>));
          new (element) Decay<T> {e};
       }
       else {
-         element = malloc(sizeof(Anyness::Block<>));
-         new (element) Anyness::Block<> {};
-         static_cast<Anyness::Block<>*>(element)->Insert(e);
+         element = malloc(sizeof(Anyness::ManyView));
+         new (element) Anyness::ManyView {};
+         static_cast<Anyness::ManyView*>(element)->Insert(e);
       }
    }
    else {
       // Create a pointer owned by the memory manager                   
       auto& container = BANK.Emplace(Anyness::IndexBack);
 
-      if constexpr (not CT::Same<T, Anyness::Block<>>) {
+      if constexpr (not CT::Same<T, Anyness::ManyView>) {
          container << Decay<T> {e};
          element = container.GetRaw();
       }
@@ -185,7 +185,7 @@ void DestroyElement(auto& e) {
    using E = Deref<decltype(e)>;
    if constexpr (not MANAGED) {
       if constexpr (CT::Sparse<E>) {
-         if constexpr (CT::Referencable<Deptr<E>>)
+         if constexpr (CT::Referenced<Deptr<E>>)
             e->Reference(-1);
 
          if constexpr (CT::Destroyable<Decay<E>>)

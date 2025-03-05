@@ -1,8 +1,8 @@
 /out
+/build
 /.vs
 /external
-/docs
+/Testing
 *.user
 *.bak
 *.hint
-*.TMP

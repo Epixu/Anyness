@@ -412,11 +412,11 @@ namespace Verbs
       template<CT::NotVoid T>
       static bool ExecuteIn(T&, Verb&);
 
-      static bool ExecuteDefault(const Anyness::Block<>&, Verb&) {
+      static bool ExecuteDefault(const Anyness::ManyView&, Verb&) {
          return true;
       }
 
-      static bool ExecuteDefault(Anyness::Block<>&, Verb&) {
+      static bool ExecuteDefault(Anyness::ManyView&, Verb&) {
          return false;
       }
 
@@ -435,7 +435,6 @@ struct ImplicitlyReflectedData {
    using CTTI_Typed = Named;
 
    LANGULUS_NAMED_VALUES(One, Two, Three);
-   LANGULUS(TYPED) Named;
 
    Named v = One;
 
@@ -465,19 +464,18 @@ public:
    explicit ImplicitlyReflectedDataWithTraits(Pi)
       : member {314} {}
 
-   LANGULUS(NAME) "MyType";
-   LANGULUS(INFO) "Info about MyType";
-   LANGULUS(FILES) "txt, pdf";
-   LANGULUS(VERSION_MAJOR) 2;
-   LANGULUS(VERSION_MINOR) 1;
-   LANGULUS(DEEP) true;
-   LANGULUS(POD) true;
-   LANGULUS(NULLIFIABLE) true;
-   LANGULUS(POOL_TACTIC) RTTI::PoolTactic::Size;
-   LANGULUS(CONCRETE) ImplicitlyReflectedData;
-   LANGULUS(ACT_AS) void;
-   LANGULUS(ALLOCATION_PAGE) 250;
-   LANGULUS(ABSTRACT) true;
+   using CTTI_Named     = YesText<"MyType">;
+   using CTTI_Info      = YesText<"Info about MyType">;
+   using CTTI_Files     = YesText<"txt, pdf">;
+   using CTTI_Version   = Version<2, 1>;
+   using CTTI_Deep      = Yes;
+   using CTTI_POD       = Yes;
+   using CTTI_Nullifiable = Yes;
+   using CTTI_Pooled    = PooledBySize<250>;
+   using CTTI_Concrete  = ImplicitlyReflectedData;
+   using CTTI_ReflectAs = void;
+   using CTTI_Abstract  = Yes;
+
    LANGULUS_BASES(ImplicitlyReflectedData);
    LANGULUS_VERBS(Verbs::Create);
    LANGULUS_CONVERTS_TO(int);
@@ -497,17 +495,15 @@ public:
 /// but not abandon-assignable                                                
 class alignas(128) Complex {
 public:
-   int member;
+   int  member;
    bool anotherMember {};
-   int anotherMemberArray [12] {};
+   int  anotherMemberArray [12] {};
    int* sparseMember {};
 
-   LANGULUS(NAME) "ComplexType";
-   LANGULUS(INFO) "Info about ComplexType";
-   LANGULUS(VERSION_MAJOR) 2;
-   LANGULUS(VERSION_MINOR) 1;
-   LANGULUS(POOL_TACTIC) RTTI::PoolTactic::Size;
-   LANGULUS(ALLOCATION_PAGE) 250;
+   using CTTI_Named   = YesText<"ComplexType">;
+   using CTTI_Info    = YesText<"Info about ComplexType">;
+   using CTTI_Version = Version<2, 1>;
+   using CTTI_Pooled  = PooledBySize<250>;
 
    using Self = Complex;
    LANGULUS_MEMBERS(
@@ -533,7 +529,7 @@ public:
 struct AnotherTypeWithSimilarilyNamedValues {
    enum Named {One = 501, Two, Three};
    LANGULUS_NAMED_VALUES(One, Two, Three);
-   LANGULUS(NAME) "YetAnotherNamedType";
+   using CTTI_Named = YesText<"YetAnotherNamedType">;
 
    int v = One;
 
@@ -541,7 +537,7 @@ struct AnotherTypeWithSimilarilyNamedValues {
 };
 
 struct CheckingWhatGetsInherited : ImplicitlyReflectedDataWithTraits {
-   LANGULUS(NAME) "CheckingWhatGetsInherited";
+   using CTTI_Named = YesText<"CheckingWhatGetsInherited">;
 
    using ImplicitlyReflectedDataWithTraits::ImplicitlyReflectedDataWithTraits;
 };
@@ -564,7 +560,7 @@ struct AggregateThatCanBeConfusedWithDescriptorMakable {
 };
 
 class ForcefullyPod {
-   LANGULUS(POD) true;
+   using CTTI_POD = Yes;
    Complex mData;
 };
 

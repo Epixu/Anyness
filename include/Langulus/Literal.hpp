@@ -13,7 +13,7 @@ namespace Langulus
    ///                                                                        
    /// String literal                                                         
    /// You can use it as a template parameter                                 
-   /// Should be introduced in C++26, supposedly                              
+   /// Should be introduced in C++26 as std::fixed_string, supposedly         
    ///                                                                        
    template<class T, ::std::size_t N, class TRAITS = ::std::char_traits<T>>
    struct TLiteral {
@@ -134,7 +134,7 @@ namespace Langulus
       using same_with_other_size = TLiteral<value_type, M, traits_type>;
 
       template<size_type pos, size_type count, size_type size>
-      constexpr static size_type calculate_substr_size() {
+      consteval static size_type calculate_substr_size() {
          if constexpr (pos >= size)
             return 0;
 
@@ -249,7 +249,7 @@ namespace Langulus
       constexpr size_type find_first_not_of(const same_with_other_size<M>& str, size_type pos = 0) const noexcept {
          if constexpr (M > N)
             return npos;
-         return sv().find_first_of(str.sv(), pos);
+         return sv().find_first_not_of(str.sv(), pos);
       }
       constexpr size_type find_first_not_of(view_type sv, size_type pos = 0) const noexcept {
          return sv().find_first_not_of(sv, pos);
@@ -269,7 +269,7 @@ namespace Langulus
       constexpr size_type find_last_not_of(const same_with_other_size<M>& str, size_type pos = npos) const noexcept {
          if constexpr (M > N)
             return npos;
-         return sv().find_last_of(str.sv(), pos);
+         return sv().find_last_not_of(str.sv(), pos);
       }
       constexpr size_type find_last_not_of(view_type sv, size_type pos = npos) const noexcept {
          return sv().find_last_not_of(sv, pos);

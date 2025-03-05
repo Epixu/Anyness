@@ -6,9 +6,9 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include "Core.hpp"
 #include "TypeNav.hpp"
 #include "Types.hpp"
-#include "Core.hpp"
 
 
 namespace Langulus::CTTI
@@ -32,12 +32,12 @@ namespace Langulus::CT::Inner
       if constexpr (NotVoid<typename CTTI::Typed<T>::Type>)
          // Checked externally, T doesn't have to be complete           
          return true;
-      else if constexpr (NotVoid<typename T::CTTI_Typed>)
+      else if constexpr (requires { typename T::CTTI_Typed; })
          // Checked internally, T has to be a complete type             
-         return true;
-      else if constexpr (NotVoid<typename T::value_type>)
+         return NotVoid<typename T::CTTI_Typed>;
+      else if constexpr (requires { typename T::value_type; })
          // Checked internally, T has to be a complete type             
-         return true;
+         return NotVoid<typename T::value_type>;
       else
          return false;
    }
@@ -45,15 +45,15 @@ namespace Langulus::CT::Inner
    template<class T>
    consteval CT::Typelist auto GetUnderlyingType() {
       if constexpr (Array<T>)
-         return Types<Deref<Deext<T>>> {};
+         return Types<Deext<T>> {};
       else {
          if constexpr (NotVoid<typename CTTI::Typed<T>::Type>)
             // Checked externally, T doesn't have to be complete        
             return Types<typename CTTI::Typed<T>::Type> {};
-         else if constexpr (NotVoid<typename T::CTTI_Typed>)
+         else if constexpr (requires { typename T::CTTI_Typed; })
             // Checked internally, T has to be a complete type          
             return Types<typename T::CTTI_Typed> {};
-         else if constexpr (NotVoid<typename T::value_type>)
+         else if constexpr (requires { typename T::value_type; })
             // Checked internally, T has to be a complete type          
             return Types<typename T::value_type> {};
          else if constexpr (Enum<T>)
