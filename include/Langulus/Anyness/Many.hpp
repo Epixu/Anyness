@@ -19,6 +19,7 @@
 #include "../../../source/components/Hash-Stack.hpp"
 #include "../../../source/components/Descriptor.hpp"
 #include "../../../source/components/State-Stack.hpp"
+#include "../../../source/components/Insert.hpp"
 #include "../../../source/states/Future.hpp"
 #include "../../../source/states/Past.hpp"
 #include "../../../source/states/Compressed.hpp"
@@ -39,6 +40,7 @@ namespace Langulus::Anyness
       Component::Ownership,            // Allocation is referenced      
       Component::DeepOwnership,        // Referenced indirections       
       Component::Continuous,           // Heap memory is continuous     
+      Component::Insert,               // Allows insertion              
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStack<>,         // Variable count                
       Component::CapacityStack<>,      // Variable capacity             
@@ -63,6 +65,7 @@ namespace Langulus::Anyness
       Component::Ownership,            // Allocation is referenced      
       Component::DeepOwnership,        // Referenced indirections       
       Component::Continuous,           // Heap memory is continuous     
+      Component::Insert,               // Allows insertion              
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::TypedStatic<T>,       // Statically typed              
       Component::CountStack<>,         // Variable count                
