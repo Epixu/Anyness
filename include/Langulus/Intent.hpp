@@ -53,9 +53,12 @@ namespace Langulus
 
    public:
       using CTTI_Typed = T;
-      using CTTI_ActAs = void;
+      using CTTI_ReflectAs = void;
       using CTTI_Abstract = Yes;
       using CTTI_Unallocatable = Yes;
+      using CTTI_Intent = Yes;
+      using CTTI_Sheddable = Yes;
+
       static constexpr bool Shallow = true;
       static constexpr bool Keep = true;
       static constexpr bool Move = false;
@@ -167,9 +170,12 @@ namespace Langulus
 
    public:
       using CTTI_Typed = T;
-      using CTTI_ActAs = void;
+      using CTTI_ReflectAs = void;
       using CTTI_Abstract = Yes;
       using CTTI_Unallocatable = Yes;
+      using CTTI_Intent = Yes;
+      using CTTI_Sheddable = Yes;
+
       static constexpr bool Shallow = true;
       static constexpr bool Keep = true;
       static constexpr bool Move = false;
@@ -279,9 +285,12 @@ namespace Langulus
 
    public:
       using CTTI_Typed = T;
-      using CTTI_ActAs = void;
+      using CTTI_ReflectAs = void;
       using CTTI_Abstract = Yes;
       using CTTI_Unallocatable = Yes;
+      using CTTI_Intent = Yes;
+      using CTTI_Sheddable = Yes;
+
       static constexpr bool Shallow = true;
       static constexpr bool Keep = true;
       static constexpr bool Move = true;
@@ -407,9 +416,12 @@ namespace Langulus
 
    public:
       using CTTI_Typed = T;
-      using CTTI_ActAs = void;
+      using CTTI_ReflectAs = void;
       using CTTI_Abstract = Yes;
       using CTTI_Unallocatable = Yes;
+      using CTTI_Intent = Yes;
+      using CTTI_Sheddable = Yes;
+
       static constexpr bool Shallow = true;
       static constexpr bool Keep = false;
       static constexpr bool Move = true;
@@ -528,9 +540,12 @@ namespace Langulus
 
    public:
       using CTTI_Typed = T;
-      using CTTI_ActAs = void;
+      using CTTI_ReflectAs = void;
       using CTTI_Abstract = Yes;
       using CTTI_Unallocatable = Yes;
+      using CTTI_Intent = Yes;
+      using CTTI_Sheddable = Yes;
+
       static constexpr bool Shallow = true;
       static constexpr bool Keep = false;
       static constexpr bool Move = false;
@@ -641,9 +656,12 @@ namespace Langulus
 
    public:
       using CTTI_Typed = T;
-      using CTTI_ActAs = void;
+      using CTTI_ReflectAs = void;
       using CTTI_Abstract = Yes;
       using CTTI_Unallocatable = Yes;
+      using CTTI_Intent = Yes;
+      using CTTI_Sheddable = Yes;
+
       static constexpr bool Shallow = false;
       static constexpr bool Keep = true;
       static constexpr bool Move = false;
@@ -721,8 +739,9 @@ namespace Langulus
 
 
    ///                                                                        
-   /// Descriptor intermediate type, use in constructors to enable descriptor 
-   /// construction. The inner type is always a type-erased container         
+   /// Descriptor intermediate type, used in constructors and assignment      
+   /// operators to enable descriptor construction/assignment. The inner type 
+   /// is always a reference to a type-erased container.                      
    struct Describe {
    protected:
       using Many = Anyness::Many;
@@ -730,7 +749,7 @@ namespace Langulus
 
    public:
       using CTTI_Typed = Many;
-      using CTTI_ActAs = void;
+      using CTTI_ReflectAs = void;
       using CTTI_Abstract = Yes;
       using CTTI_Unallocatable = Yes;
 

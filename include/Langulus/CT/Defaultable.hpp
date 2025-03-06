@@ -17,7 +17,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Defaultable = Yes;` in T                   
    template<class T>
    struct Defaultable {
-      static constexpr bool Enabled = not Abstract<T>::Enabled and requires { T {}; };
+      static constexpr bool Enabled = not CT::Abstract<T> and requires { T {}; };
    };
    
 } // namespace Langulus::CTTI

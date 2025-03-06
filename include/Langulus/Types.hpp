@@ -6,13 +6,21 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "CTTI.hpp"
+#include "Core.hpp"
 #include <tuple>
 
 
 namespace Langulus::CTTI
 {
-
+   
+   /// Can be used in two ways to satisfy CT::Void<T>:                        
+   /// 1. Specialize for T/concept with Value == true                         
+   /// 2. Add a public `using CTTI_Void = Yes;` in T                          
+   template<class T>
+   struct Void {
+      static constexpr bool Enabled = ::std::is_void_v<T>;
+   };
+   
    /// Can be used in two ways to satisfy CT::Typelist<T>:                    
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Typelist = Yes;` in T                      
@@ -23,7 +31,24 @@ namespace Langulus::CTTI
 
 } // namespace Langulus::CTTI
 
-LANGULUS_CTTI_CONCEPT(Typelist);
+namespace Langulus::CT
+{
+
+   /// Check if all T are marked void                                         
+   template<class...T>
+   concept Void = ((CTTI::Void<T>::Enabled or T::CTTI_Void::Enabled) and ...);
+
+   template<class...T>
+   concept NotVoid = ((not Void<T>) and ...);
+
+   /// Check if all T are typelists                                           
+   template<class...T>
+   concept Typelist = ((CTTI::Typelist<T>::Enabled or T::CTTI_Typelist::Enabled) and ...);
+
+   template<class...T>
+   concept NotTypelist = ((not Typelist<T>) and ...);
+
+} // namespace Langulus::CT
 
 namespace Langulus
 {
@@ -32,6 +57,7 @@ namespace Langulus
    ///   Compile-time type list                                               
    ///                                                                        
    /// It doesn't really carry any data, it's just a useful compile-time tool 
+   /// Can be used to generate more complex types or tuples of data           
    ///                                                                        
    template<class...T>
    struct Types;
@@ -51,6 +77,7 @@ namespace Langulus
    
    ///                                                                        
    /// Type list, that contains only one void item - a canonical empty list   
+   /// Satisfies CT::Void and is considered 'void'                            
    template<>
    struct Types<void> {
       using CTTI_Typelist = Yes;
@@ -143,7 +170,7 @@ namespace Langulus
             return Types<R> {};
       }
 
-      using Tuple = std::tuple<T>;
+      using Tuple = ::std::tuple<T>;
 
       static constexpr Tuple GenerateData(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
@@ -289,7 +316,7 @@ namespace Langulus
          return Inner::GenerateTypes<Types<void>, T1, T2, TN...>(lambda);
       }
 
-      using Tuple = std::tuple<T1, T2, TN...>;
+      using Tuple = ::std::tuple<T1, T2, TN...>;
 
       static constexpr Tuple GenerateData(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },

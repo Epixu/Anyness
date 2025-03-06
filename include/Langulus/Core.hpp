@@ -8,11 +8,12 @@
 #pragma once
 #include <cstdint>
 
-/// Sorry, Langulus is designed for at least C++20, will move to C++23        
-/// when full compiler support is provided                                    
-#if __cplusplus <= 201703L and not defined(_MSC_VER)
-   #error Langulus requires at least a C++20 compliant compiler in order to build
+
+/// Sorry, Langulus is designed for at least C++23                            
+#if __cplusplus < 202300L// and not defined(_MSC_VER)
+   #error Langulus requires at least a C++23 compliant compiler in order to build
 #endif
+
 
 /// Safe mode enables assumption checks all over the code                     
 /// High overhead, usually enabled only when testing in debug builds          
@@ -384,6 +385,8 @@
    #define LANGULUS_ALIGNMENT 16
 #endif
 
+#include "Literal.hpp"
+
 namespace Langulus
 {
    
@@ -408,5 +411,29 @@ namespace Langulus
    /// The default alignment, depends on configuration and enabled SIMD       
    constexpr int Alignment = LANGULUS_ALIGNMENT;
    static_assert(IsPowerOfTwo(Alignment), "Alignment must be a power-of-two");
+   
+   /// Equivalent to ::std::true_type, but without the silly nomenclature     
+   struct Yes {
+      static constexpr bool Enabled = true;
+   };
+
+   /// Equivalent to Yes, but also carries a string literal                   
+   template<Literal TEXT>
+   struct YesText {
+      static constexpr Literal Constant = TEXT;
+      static constexpr bool Enabled = true;
+   };
+
+   /// Equivalent to Yes, but also carries a constant of any type             
+   template<auto VALUE>
+   struct YesValue {
+      static constexpr auto Constant = VALUE;
+      static constexpr bool Enabled = true;
+   };
+
+   /// Equivalent to ::std::false_type, but without the silly nomenclature    
+   struct No {
+      static constexpr bool Enabled = false;
+   };
 
 } // namespace Langulus

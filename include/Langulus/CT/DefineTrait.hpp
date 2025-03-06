@@ -21,7 +21,7 @@ LANGULUS_CTTI_CONCEPT(DefineTrait);
 namespace Langulus::RTTI
 {
 
-   /// Get the name of CTTI_DefineTrait at compile-time                       
+   /// Get the name of a trait definition at compile-time                     
    ///   @tparam T - the trait to get the name of                             
    ///   @return the name                                                     
    template<CT::DefineTrait T>

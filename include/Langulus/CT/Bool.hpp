@@ -6,22 +6,20 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Abstract.hpp"
+#include "../CTTI.hpp"
 
 
 namespace Langulus::CTTI
 {
 
-   /// Can be used in two ways to satisfy CT::POD<T>:                         
+   /// Can be used in two ways to satisfy CT::Bool<T>:                        
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_POD = Yes;` in T                           
+   /// 2. Add a public `using CTTI_Bool = Yes;` in T                          
    template<class T>
-   struct POD {
-      static constexpr bool Enabled = not CT::Abstract<T> and (
-         sizeof(T) == 1 or CT::Sparse<T> or CT::Fundamental<T>
-      );
+   struct Bool {
+      static constexpr bool Enabled = ::std::same_as<T, bool>;
    };
    
 } // namespace Langulus::CTTI
 
-LANGULUS_CTTI_CONCEPT(POD);
+LANGULUS_CTTI_CONCEPT(Bool);
