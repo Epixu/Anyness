@@ -10,8 +10,8 @@
 #include "../../../source/Allocator.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/Continuous.hpp"
-#include "../../../source/components/Indexed-Static.hpp"
+#include "../../../source/components/Contiguous.hpp"
+#include "../../../source/components/Indexed-Linear.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
@@ -19,7 +19,7 @@
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Capacity-Heap.hpp"
+#include "../../../source/components/Reserve-Heap.hpp"
 #include "../../../source/components/Hash-Stack.hpp"
 #include "../../../source/components/State-Stack.hpp"
 #include "../../../source/states/Compressed.hpp"
@@ -33,11 +33,11 @@ namespace Langulus::Anyness
    using DMeta = RTTI::DMeta;
 
    /// A continuous byte container of variable size                           
-   struct Bytes : Detail::Container<
+   struct Bytes : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
       Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::Continuous,           // Heap memory is continuous     
-      Component::IndexedStatic<>,      // Indexed directly              
+      Component::Contiguous,           // Heap memory is continuous     
+      Component::IndexedLinear<>,      // Indexed directly              
       Component::Insertion,            // Allows insertion              
       Component::Emplacement,          // Allows emplacement            
       Component::InsertionOperators,   // << and >> insertion           
@@ -45,7 +45,7 @@ namespace Langulus::Anyness
       Component::Assignment,           // Allows assignment             
       Component::TypedStatic<DMeta, Byte>, // Type-constrained          
       Component::CountStack<>,         // Variable count                
-      Component::CapacityHeap<>,       // Variable capacity             
+      Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
       Component::StateStack<           // Variable state                
          State::Compressed<>,          // Adds 'compressed' state       
@@ -58,17 +58,17 @@ namespace Langulus::Anyness
       using  PickMut = Byte&;
 
       // Range selections                                               
-      struct PickRange : Detail::Container<
+      struct PickRange : Container<
          Component::HeapMovable<>,
-         Component::Continuous,
-         Component::IndexedStatic<>,
+         Component::Contiguous,
+         Component::IndexedLinear<>,
          Component::TypedStatic<DMeta, Byte>,
          Component::CountStack<>
       > {};
-      struct PickRangeMut : Detail::Container<
+      struct PickRangeMut : Container<
          Component::HeapMovable<>,
-         Component::Continuous,
-         Component::IndexedStatic<>,
+         Component::Contiguous,
+         Component::IndexedLinear<>,
          Component::Assignment,
          Component::TypedStatic<DMeta, Byte>,
          Component::CountStack<>

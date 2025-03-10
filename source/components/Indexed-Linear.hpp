@@ -87,13 +87,11 @@ namespace Langulus::Anyness::Component
 
    ///                                                                        
    /// Provides random element access based on a linear index, that is        
-   /// mapped directly onto continuous memory                                 
+   /// mapped directly onto contiguous memory                                 
    ///   @tparam T - constrain the type of allowed indices. Leave as 'void'   
-   ///      to allow for all the usual integer types. A map would use the     
-   ///      'key' type instead                                                
-   ///                                                                        
+   ///      to allow for all the usual integer types                          
    template<class T = void>
-   struct IndexedStatic {
+   struct IndexedLinear {
       using CTTI_Component = Yes;
       static constexpr bool Indexed = true;
    };

@@ -597,7 +597,7 @@ namespace Langulus
          // to your type, or #pragma pack, in order to circumvent issue 
          return HashBytes<SEED, (alignof(T) < Byteness)>(&head, static_cast<int>(sizeof(T)));
       }
-      else if constexpr (::std::ranges::range<T> and CT::Typed<T> and CT::Hashable<TypeOf<T>>) {
+      else if constexpr (::std::ranges::range<T> and CT::Hashable<TypeOf<T>>) {
          // Anything that is range-iteratable and typed is carried      
          // through HashOf for consistency, because different std       
          // library implementations might have different hashing        

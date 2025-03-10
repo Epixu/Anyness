@@ -304,15 +304,15 @@
 #ifdef LANGULUS_SHARED_LIBRARIES
    #if LANGULUS_COMPILER(GCC) or LANGULUS_COMPILER(CLANG) or LANGULUS_COMPILER(WASM)
       #if LANGULUS_OS(WINDOWS)
-	      #define LANGULUS_EXPORT() __attribute__ ((dllexport))
-	      #define LANGULUS_IMPORT() __attribute__ ((dllimport))
+         #define LANGULUS_EXPORT() __attribute__ ((dllexport))
+         #define LANGULUS_IMPORT() __attribute__ ((dllimport))
       #else
-	      #define LANGULUS_EXPORT() __attribute__ ((visibility("default")))
-	      #define LANGULUS_IMPORT() // requires -fvisibility=hidden      
+         #define LANGULUS_EXPORT() __attribute__ ((visibility("default")))
+         #define LANGULUS_IMPORT() // requires -fvisibility=hidden      
       #endif
    #elif LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(MINGW)
-	   #define LANGULUS_EXPORT() __declspec(dllexport)
-	   #define LANGULUS_IMPORT() __declspec(dllimport)
+      #define LANGULUS_EXPORT() __declspec(dllexport)
+      #define LANGULUS_IMPORT() __declspec(dllimport)
    #else 
       #error Compiler not implemented
    #endif
@@ -394,6 +394,15 @@
 namespace Langulus
 {
    
+   /// The default floating point type, depends on configuration              
+   #if defined(LANGULUS_FPU_FLOAT)
+      using Real = float;
+   #elif defined(LANGULUS_FPU_DOUBLE)
+      using Real = double;
+   #else
+      using Real = float;
+   #endif
+
    /// Similar to std::isalpha, but constexpr                                 
    LANGULUS(ALWAYS_INLINED)
    constexpr char IsAlpha(char a) noexcept {

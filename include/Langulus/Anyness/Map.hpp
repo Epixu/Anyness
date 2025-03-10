@@ -7,3 +7,82 @@
 ///                                                                           
 #pragma once
 #include "../../../source/Container.hpp"
+#include "../../../source/components/Heap-Movable.hpp"
+#include "../../../source/components/Ownership-Stack.hpp"
+#include "../../../source/components/DeepOwnership.hpp"
+#include "../../../source/components/Indexed-Hash.hpp"
+#include "../../../source/components/Insertion.hpp"
+#include "../../../source/components/InsertionOperators.hpp"
+#include "../../../source/components/Emplacement.hpp"
+#include "../../../source/components/Removal.hpp"
+#include "../../../source/components/Assignment.hpp"
+#include "../../../source/components/Typed-Stack.hpp"
+#include "../../../source/components/Count-Stack.hpp"
+#include "../../../source/components/Reserve-Stack.hpp"
+#include "../../../source/components/State-Stack.hpp"
+#include "../../../source/states/Sorted.hpp"
+#include "../../../source/states/Compressed.hpp"
+#include "../../../source/states/Encrypted.hpp"
+#include "../../../source/states/Tracked.hpp"
+
+
+namespace Langulus::Anyness
+{
+
+   ///                                                                        
+   /// Unsorted type-erased map                                               
+   ///                                                                        
+   struct Map : Container<
+      Component::HeapMovable<0>,       // Heap for keys                 
+      Component::HeapMovable<1>,       // Heap for values               
+      Component::OwnershipStack<0>,    // Keys allocation is referenced 
+      Component::OwnershipStack<1>,    // Vals allocation is referenced 
+      Component::DeepOwnership<0>,     // Sparse keys are referenced    
+      Component::DeepOwnership<1>,     // Sparse vals are referenced    
+      Component::IndexedHash<>,        // Indexed directly              
+      Component::Insertion,            // Allows insertion              
+      Component::InsertionOperators,   // << and >> insertion           
+      Component::Emplacement,          // Allows emplacement            
+      Component::Removal,              // Allows removal                
+      Component::Assignment,           // Allows assignment             
+      Component::TypedStack<DMeta, void, 0>,    // Key type             
+      Component::TypedStack<DMeta, void, 1>,    // Value type           
+      Component::CountStack<>,         // Variable count                
+      Component::ReserveStack<>,       // Variable capacity             
+      Component::StateStack<           // Variable state                
+         State::Sorted<State::Disabled>,        // Always unsorted      
+         State::Compressed<>,          // Adds 'compressed' state       
+         State::Encrypted<>,           // Adds 'encrypted' state        
+         State::Tracked<>              // Adds 'tracked' state          
+      >
+   > {};
+   
+   ///                                                                        
+   /// Sorted type-erased map                                                 
+   ///                                                                        
+   struct Map : Container<
+      Component::HeapMovable<0>,       // Heap for keys                 
+      Component::HeapMovable<1>,       // Heap for values               
+      Component::OwnershipStack<0>,    // Keys allocation is referenced 
+      Component::OwnershipStack<1>,    // Vals allocation is referenced 
+      Component::DeepOwnership<0>,     // Sparse keys are referenced    
+      Component::DeepOwnership<1>,     // Sparse vals are referenced    
+      Component::IndexedHash<>,        // Indexed directly              
+      Component::Insertion,            // Allows insertion              
+      Component::InsertionOperators,   // << and >> insertion           
+      Component::Emplacement,          // Allows emplacement            
+      Component::Removal,              // Allows removal                
+      Component::Assignment,           // Allows assignment             
+      Component::TypedStack<DMeta, void, 0>,    // Key type             
+      Component::TypedStack<DMeta, void, 1>,    // Value type           
+      Component::CountStack<>,         // Variable count                
+      Component::ReserveStack<>,       // Variable capacity             
+      Component::StateStack<           // Variable state                
+         State::Sorted<State::Enabled>,         // Always sorted        
+         State::Compressed<>,          // Adds 'compressed' state       
+         State::Encrypted<>,           // Adds 'encrypted' state        
+         State::Tracked<>              // Adds 'tracked' state          
+      >
+   > {};
+
+} // namespace Langulus::Anyness

@@ -18,6 +18,7 @@
 #include <Langulus/CT/Values.hpp>
 #include <Langulus/CT/Members.hpp>
 #include <Langulus/CT/Pooled.hpp>
+#include <Langulus/CT/Version.hpp>
 #include <Langulus/Tag.hpp>
 #include "Main.hpp"
 
@@ -62,82 +63,6 @@ struct HashTest {
    using Key = K;
    using Value = V;
 };
-
-
-/// Create a dense element, on the stack                                      
-///   @tparam T - type of element we're creating                              
-///   @param e - the data we'll use to initialize an instance of T            
-///   @return the new instance of T                                           
-/*template<CT::Dense T, bool = false>
-T CreateElement(const auto& e) {
-   T element;
-   if constexpr (CT::Same<T, decltype(e)>)
-      element = e;
-   else if constexpr (not CT::Same<T, Block<>>)
-      element = Decay<T> {e};
-   else {
-      element = Block<> {};
-      element.Insert(e);
-   }
-
-   return element;
-}*/
-
-/// Create a sparse element, on the heap                                      
-///   @tparam T - type of element we're creating                              
-///   @tparam MANAGED - whether we'll have authority over the pointer or not  
-///   @param e - the data we'll use to initialize an instance of T            
-///   @return pointer to the new instance of T                                
-/*template<CT::Sparse T, bool MANAGED = false>
-T CreateElement(const auto& e) {
-   void* element;
-
-   if constexpr (not MANAGED) {
-      // Create a pointer that is guaranteed to not be owned by the     
-      // memory manager. Notice we don't use 'new' operator here,       
-      // because it is weakly linked, and can be overriden to use our   
-      // memory manager.                                                
-      if constexpr (not CT::Same<T, Block<>>) {
-         element = malloc(sizeof(Decay<T>));
-         new (element) Decay<T> {e};
-      }
-      else {
-         element = malloc(sizeof(Block<>));
-         new (element) Block<> {};
-         static_cast<Block<>*>(element)->Insert(e);
-      }
-   }
-   else {
-      // Create a pointer owned by the memory manager                   
-      auto& container = BANK.Emplace(IndexBack);
-
-      if constexpr (not CT::Same<T, Block<>>) {
-         container << Decay<T> {e};
-         element = container.GetRaw();
-      }
-      else {
-         container << e;
-         element = &container;
-      }
-   }
-
-   return static_cast<T>(element);
-}
-
-template<bool MANAGED = false>
-void DestroyElement(auto e) {
-   using E = decltype(e);
-   if constexpr (CT::Sparse<E>) {
-      if constexpr (CT::Referencable<Deptr<E>>)
-         e->Reference(-1);
-
-      if constexpr (CT::Destroyable<Decay<E>>)
-         e->~Decay<E>();
-
-      if constexpr (not MANAGED)
-         free(e);
-   }
-}*/
 
 /// Create a test pair                                                        
 ///   @tparam P - the pair type                                               

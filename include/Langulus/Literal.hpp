@@ -10,6 +10,8 @@
 namespace Langulus
 {
 
+   using Token = ::std::string_view;
+
    ///                                                                        
    /// String literal                                                         
    /// You can use it as a template parameter                                 
@@ -17,6 +19,8 @@ namespace Langulus
    ///                                                                        
    template<class T, ::std::size_t N, class TRAITS = ::std::char_traits<T>>
    struct TLiteral {
+      static constexpr bool CTTI_StringLiteral = true;
+
       using storage_type = std::array<T, N + 1>;
       storage_type _data{};
 

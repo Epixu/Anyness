@@ -1,19 +1,20 @@
 #pragma once
+#include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
 
    ///                                                                        
-   /// A static capacity                                                      
+   /// A static reserve                                                       
    ///                                                                        
-   template<auto CAPACITY>
-   struct CapacityStatic {
+   template<auto SIZE>
+   struct ReserveStatic {
       using CTTI_Component = Yes;
 
-      static_assert(CAPACITY > 0, "Can't have a container of zero or negative capacity");
+      static_assert(SIZE > 0, "Can't have a container of zero or negative capacity");
 
-      consteval auto GetCapacity() { return CAPACITY; }
+      consteval auto GetReserved() { return SIZE; }
    };
 
 } // namespace Langulus::Anyness::Component

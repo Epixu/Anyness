@@ -1,16 +1,24 @@
 #pragma once
+#include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
 
-   template<class T = ::std::size_t, unsigned ID = 0, unsigned HEAP_ID = 0>
+   template<unsigned ID = 0, class T = ::std::size_t>
    struct CountHeap {
       using CTTI_Component = Yes;
 
-      template<class Self>
-      T GetCount(this const Self& self) noexcept {
-         return self.GetHeap<HEAP_ID>().GetElement<T, ID>();
+      T GetCount(this const auto& self) noexcept {
+         return self.GetHeap<ID>().GetElement<T>();
+      }
+
+      bool IsEmpty(this const auto& self) noexcept {
+         return self.GetCount() == 0;
+      }
+
+      explicit operator bool(this const auto& self) noexcept {
+         return self.GetCount() != 0;
       }
    };
 

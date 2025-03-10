@@ -13,21 +13,6 @@ namespace Langulus::CT::Inner
 {
 
    template<class T>
-   consteval bool IsTyped() {
-      if constexpr (NotVoid<typename CTTI::Typed<T>::Type>)
-         // Checked externally, T doesn't have to be complete           
-         return true;
-      else if constexpr (requires { typename T::CTTI_Typed; })
-         // Checked internally, T has to be a complete type             
-         return NotVoid<typename T::CTTI_Typed>;
-      else if constexpr (requires { typename T::value_type; })
-         // Checked internally, T has to be a complete type             
-         return NotVoid<typename T::value_type>;
-      else
-         return false;
-   }
-
-   template<class T>
    consteval CT::Typelist auto GetUnderlyingType() {
       if constexpr (Array<T>)
          return Types<Deext<T>> {};
@@ -44,7 +29,7 @@ namespace Langulus::CT::Inner
          else if constexpr (Enum<T>)
             return Types<::std::underlying_type_t<T>> {};
          else
-            return Types<T> {};
+            return Types {};
       }
    };
 
@@ -59,7 +44,7 @@ namespace Langulus
    ///   - if T is an array -> return the type (remove extents and refs)      
    ///   - if T has CTTI_Typed/value_type -> return the inner type            
    ///   - if T is an enum -> return the underlying type                      
-   ///   - otherwise just return T                                            
+   ///   - otherwise just return a void type                                  
    template<class T>
    using TypeOf = typename decltype(CT::Inner::GetUnderlyingType<Deref<T>>())::First;
 
@@ -71,7 +56,7 @@ namespace Langulus
       ///   @attention the inner type must not be 'void', in order for T to   
       ///      be considered 'typed' (as opposed to 'type-erased')            
       template<class...T>
-      concept Typed = (Inner::IsTyped<Deref<T>>() and ...);
+      concept Typed = (NotVoid<TypeOf<Deref<T>>> and ...);
 
       /// Check if all T have no underlying types defined                     
       template<class...T>

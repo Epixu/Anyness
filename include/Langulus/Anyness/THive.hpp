@@ -13,9 +13,10 @@
 #include "../../../source/components/DeepOwnership.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Removal.hpp"
+#include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Capacity-Heap.hpp"
+#include "../../../source/components/Reserve-Heap.hpp"
 
 
 namespace Langulus::Anyness
@@ -26,20 +27,20 @@ namespace Langulus::Anyness
    /// A statically-typed non-continuous container of variable size that      
    /// guarantees elements will never move in memory                          
    template<CT::NotVoid T>
-   struct THive : Detail::Container<
+   struct THive : Container<
       Component::HeapImmovable<>,      // Immovable heap memory         
       Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership,        // Referenced indirections       
+      Component::DeepOwnership<>,      // Referenced indirections       
       Component::Emplacement,          // Allows emplacement            
       Component::Removal,              // Allows removal                
       Component::TypedStatic<DMeta, T>,// Statically typed              
       Component::CountStack<>,         // Variable count                
-      Component::CapacityHeap<>        // Variable capacity             
+      Component::ReserveHeap<>         // Variable capacity             
    > {
       // Single element selections                                      
       using  PickDenseMut  = T&;
       using  PickDense     = T const&;
-      struct PickSparseMut : Detail::Container<
+      struct PickSparseMut : Container<
          Component::HeapMovable<>,
          Component::OwnershipStack<>,
          Component::Assignment,

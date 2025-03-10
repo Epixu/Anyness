@@ -6,39 +6,19 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/Container.hpp"
-#include "../../../source/components/Heap-Movable.hpp"
-#include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership.hpp"
-#include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Contiguous.hpp"
-#include "../../../source/components/Indexed-Linear.hpp"
-#include "../../../source/components/Typed-Stack.hpp"
-#include "../../../source/components/Reserve-Stack.hpp"
-#include "../../../source/components/Hash-Stack.hpp"
-#include "../../../source/components/Descriptor.hpp"
-#include "../../../source/components/State-Stack.hpp"
-#include "../../../source/components/Insertion.hpp"
-#include "../../../source/components/Emplacement.hpp"
-#include "../../../source/components/InsertionOperators.hpp"
-#include "../../../source/components/Removal.hpp"
-#include "../../../source/components/Assignment.hpp"
-#include "../../../source/states/Future.hpp"
-#include "../../../source/states/Past.hpp"
-#include "../../../source/states/Compressed.hpp"
-#include "../../../source/states/Encrypted.hpp"
-#include "../../../source/states/Or.hpp"
-#include "../../../source/states/Tracked.hpp"
-#include "../../../source/rtti/MetaData.hpp"
+#include "Many.hpp"
+#include "../../../source/components/Typed-Static.hpp"
 
 
 namespace Langulus::Anyness
 {
 
    using DMeta = RTTI::DMeta;
-
-   /// A universal type-erased continuous container of variable size          
-   struct Many : Container<
+   
+   /// A statically-typed continuous container of variable size that is       
+   /// binary-compatible with the type-erased alternative above               
+   template<CT::NotVoid T>
+   struct TMany : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
       Component::OwnershipStack<>,     // Allocation is referenced      
       Component::DeepOwnership<>,      // Referenced indirections       
@@ -49,7 +29,7 @@ namespace Langulus::Anyness
       Component::InsertionOperators,   // << and >> insertion           
       Component::Removal,              // Allows removal                
       Component::Assignment,           // Allows assignment             
-      Component::TypedStack<DMeta>,    // Variable type                 
+      Component::TypedStack<DMeta, T>, // Type-constrained              
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
@@ -62,18 +42,57 @@ namespace Langulus::Anyness
          State::Or<>,                  // Adds 'or' state               
          State::Tracked<>              // Adds 'tracked' state          
       >
-   > {};
-   
-   using Messy = Many;
+   > {
+      using CTTI_ReflectAs = Many;
 
-   /// A universal type-erased continuous container view of variable size     
+      // Single element selections                                      
+      using  PickDenseMut  = T&;
+      using  PickDense     = T const&;
+      struct PickSparseMut : Container<
+         Component::HeapMovable<>,
+         Component::OwnershipStack<>,
+         Component::Assignment,
+         Component::TypedStatic<DMeta, T>
+      > {};
+      using  PickSparse = T;
+      using  Pick       = ::std::conditional_t<CT::Sparse<T>, PickSparse,    PickDense>;
+      using  PickMut    = ::std::conditional_t<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
+
+      // Range selections                                               
+      struct PickRangeDenseMut : Container<
+         Component::HeapMovable<>,
+         Component::Contiguous,
+         Component::IndexedLinear<>,
+         Component::Assignment,
+         Component::TypedStatic<DMeta, T>,
+         Component::CountStack<>
+      > {};
+      using  PickRangeDense = PickRangeDenseMut;
+      struct PickRangeSparseMut : Container<
+         Component::HeapMovable<>,
+         Component::NoOwnershipStack<>,
+         Component::DeepOwnership<>,
+         Component::Contiguous,
+         Component::IndexedLinear<>,
+         Component::Assignment,
+         Component::TypedStatic<DMeta, T>,
+         Component::CountStack<>,
+         Component::ReserveStack<>
+      > {};
+      using  PickRangeSparse = PickRangeSparseMut;
+      using  PickRange       = ::std::conditional_t<CT::Sparse<T>, PickRangeSparse,    PickRangeDense>;
+      using  PickRangeMut    = ::std::conditional_t<CT::Sparse<T>, PickRangeSparseMut, PickRangeDenseMut>;
+   };
+   
+   /// A statically-typed continuous container view of variable size          
    /// Doesn't have ownership, and binary-compatible with the container above 
-   struct ManyView : Container<
+   template<CT::NotVoid T>
+   struct TManyView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
       Component::NoOwnershipStack<>,   // Pointer to an allocation      
       Component::Contiguous,           // Heap memory is continuous     
       Component::IndexedLinear<>,      // Indexed directly              
-      Component::TypedStack<DMeta>,    // Variable type                 
+      Component::TypedStack<DMeta, T>, // Type-constrained              
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
@@ -86,6 +105,8 @@ namespace Langulus::Anyness
          State::Or<>,                  // Adds 'or' state               
          State::Tracked<>              // Adds 'tracked' state          
       >
-   > {};
-   
+   > {
+      using CTTI_ReflectAs = ManyView;
+   };
+
 } // namespace Langulus::Anyness

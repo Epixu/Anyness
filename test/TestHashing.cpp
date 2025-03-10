@@ -9,7 +9,6 @@
 #include <Langulus/Anyness/Path.hpp>
 #include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/TSet.hpp>
-#include <Langulus/Anyness/Trait.hpp>
 #include "Common.hpp"
 
 

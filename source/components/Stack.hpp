@@ -4,9 +4,14 @@
 namespace Langulus::Anyness::Component
 {
 
-   template<class T = ::std::size_t, unsigned ID = 0>
+   ///                                                                        
+   /// Adds a variable to a container                                         
+   /// Increases the container's bytesize                                     
+   ///   @tparam T - type of the variable                                     
+   ///   @tparam ID - multiple variables are supported                        
+   template<CT::NotVoid T, unsigned ID = 0>
    struct Stack {
-   private:
+   protected:
       T mStack;
 
    public:

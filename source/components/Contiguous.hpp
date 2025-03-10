@@ -1,10 +1,11 @@
 #pragma once
+#include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
 
-   struct Continuous {
+   struct Contiguous {
       using CTTI_Component = Yes;
    };
 

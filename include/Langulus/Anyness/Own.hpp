@@ -19,7 +19,7 @@ namespace Langulus::Anyness
    /// A statically typed stack-based container of size 1                     
    /// Mainly serves to transfer values and/or pointers on move               
    template<CT::NotVoid T>
-   struct Own : Detail::Container<
+   struct Own : Container<
       Component::Stack<T>,             // Element on the stack          
       Component::TypedStatic<DMeta, T>,// Statically typed              
       Component::Assignment            // Allows for assignment         

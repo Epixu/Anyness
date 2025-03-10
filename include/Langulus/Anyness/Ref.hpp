@@ -20,7 +20,7 @@ namespace Langulus::Anyness
    /// A statically typed shared pointer                                      
    ///                                                                        
    template<CT::NotVoid T>
-   struct Ref : Detail::Container<
+   struct Ref : Container<
       Component::HeapMovable<>,        // Data on the heap              
       Component::OwnershipStack<>,     // Allocation is referenced      
       Component::DeepOwnership,        // Referenced indirections       

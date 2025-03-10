@@ -1,6 +1,9 @@
 #pragma once
 #include <Langulus/CTTI.hpp>
 
+/// Make the rest of the code aware, that Langulus::Anyness has been included 
+#define LANGULUS_LIBRARY_ANYNESS() 1
+
 
 namespace Langulus::CTTI
 {
@@ -35,7 +38,7 @@ LANGULUS_CTTI_CONCEPT(State);
 LANGULUS_CTTI_CONCEPT(Component);
 LANGULUS_CTTI_CONCEPT(Container);
 
-namespace Langulus::Anyness::Detail
+namespace Langulus::Anyness
 {
 
    ///                                                                        

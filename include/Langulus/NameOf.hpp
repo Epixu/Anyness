@@ -14,7 +14,6 @@ namespace Langulus::RTTI
 {
 
    using Lowercase = ::std::string;
-   using Token     = ::std::string_view;
 
    namespace Inner
    {

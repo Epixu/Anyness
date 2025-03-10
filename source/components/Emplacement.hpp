@@ -1,6 +1,6 @@
 #pragma once
 #include "../Container.hpp"
-#include "Indexed-Static.hpp"
+#include "Indexed-Linear.hpp"
 
 
 namespace Langulus::Anyness::Component

@@ -4,7 +4,7 @@
 namespace Langulus::Anyness::Component
 {
 
-   template<class T = ::std::size_t, unsigned ID = 0>
+   template<unsigned ID = 0, class T = ::std::size_t>
    struct CountStack {
    private:
       T mCount;
@@ -12,7 +12,9 @@ namespace Langulus::Anyness::Component
    public:
       using CTTI_Component = Yes;
 
-      constexpr T GetCount() const noexcept { return mCount; }
+      constexpr bool IsEmpty()  const noexcept      { return mCount == 0; }
+      constexpr auto GetCount() const noexcept -> T { return mCount; }
+      explicit operator bool()  const noexcept      { return mCount != 0; }
    };
 
 } // namespace Langulus::Anyness::Component

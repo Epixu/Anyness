@@ -1,5 +1,6 @@
 #pragma once
 #include "../Container.hpp"
+#include <Langulus/Intent.hpp>
 
 
 namespace Langulus::Anyness::Component

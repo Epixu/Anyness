@@ -26,7 +26,6 @@ using namespace Langulus;
    #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #endif
 
-
 #include <catch2/catch.hpp>
 
 #if LANGULUS(BENCHMARK)
@@ -44,14 +43,18 @@ CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception const& ex) {
    return fmt::format("{}", ex);
 }
 
+#ifdef LANGULUS_LIBRARY_ANYNESS
+#include <Langulus/Anyness/Text.hpp>
+#include <Langulus/Anyness/TMany.hpp>
+#endif
 
 namespace Catch
 {
 
    #ifdef LANGULUS_LIBRARY_ANYNESS
 
-      /// Save catch2 from doing infinite recursions with Block types         
-      template<CT::Block T>
+      /// Save catch2 from doing infinite recursions with containers          
+      template<CT::Container T>
       struct is_range<T> {
          static const bool value = false;
       };
@@ -61,8 +64,8 @@ namespace Catch
 
       template<StringifiableButNotRange T>
       struct StringMaker<T> {
-         static std::string convert(T const& value) {
-            return ::std::string {Token {static_cast<Anyness::Text>(value)}};
+         static ::std::string convert(T const& value) {
+            return ::std::string {::std::string_view {static_cast<Anyness::Text>(value)}};
          }
       };
 
@@ -70,22 +73,22 @@ namespace Catch
 
    template<>
    struct StringMaker<char8_t> {
-      static std::string convert(char8_t const& value) {
-         return std::to_string(static_cast<int>(value));
+      static ::std::string convert(char8_t const& value) {
+         return ::std::to_string(static_cast<int>(value));
       }
    };
 
    template<>
    struct StringMaker<char16_t> {
-      static std::string convert(char16_t const& value) {
-         return std::to_string(static_cast<int>(value));
+      static ::std::string convert(char16_t const& value) {
+         return ::std::to_string(static_cast<int>(value));
       }
    };
 
    template<>
    struct StringMaker<wchar_t> {
-      static std::string convert(wchar_t const& value) {
-         return std::to_string(static_cast<int>(value));
+      static ::std::string convert(wchar_t const& value) {
+         return ::std::to_string(static_cast<int>(value));
       }
    };
 
@@ -117,6 +120,7 @@ void DumpResults(const INPUT& in, const OUTPUT& out, const REQUIRED& required) {
 #define SIGNED_TYPES          SIGNED_INTEGER_TYPES, REAL_TYPES
 #define ALL_TYPES             UNSIGNED_TYPES, SIGNED_TYPES
 
+#ifdef LANGULUS_LIBRARY_ANYNESS
 
 /// Just a bank container, used to contain owned items                        
 extern Anyness::TMany<Anyness::Many> BANK;
@@ -199,6 +203,7 @@ void DestroyElement(auto& e) {
    }
    else BANK.Reset();
 }
+#endif
 
 /// Simple type for testing Referenced types                                  
 struct RT : Referenced {

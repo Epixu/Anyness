@@ -7,7 +7,6 @@
 ///                                                                           
 #include <Langulus/Anyness/Text.hpp>
 #include <Langulus/Anyness/Path.hpp>
-#include <Langulus/Anyness/Trait.hpp>
 #include "Common.hpp"
 
 

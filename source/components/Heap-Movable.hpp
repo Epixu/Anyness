@@ -26,10 +26,12 @@ namespace Langulus::Anyness::Component
       /// Get a direct access to the heap memory                              
       ///   @returns the memory pointer                                       
       template<CT::Container C>
-      constexpr auto GetRaw(this C&& self) noexcept {
+      auto GetRaw(this C&& self) noexcept {
          using T = TypeOf<C>;
-         if constexpr (CT::Mutable<C>) return static_cast<const T*>(self.mHeap);
-         else                          return static_cast<      T*>(self.mHeap);
+         if constexpr (CT::Mutable<C>)
+            return reinterpret_cast<const T*>(self.mHeap);
+         else
+            return reinterpret_cast<      T*>(self.mHeap);
       }
    };
 
