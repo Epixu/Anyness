@@ -70,5 +70,17 @@ namespace Langulus::CT
    ///      example, and not unfold it down to pairs                          
    template<class T, class UNLESS = void>
    using Unfold = typename decltype(Inner::Unfold<T, UNLESS>())::First;
+   
+   /// Check if a T is constructible with each of the provided arguments,     
+   /// either directly or by being unfolded                                   
+   template<class T, class...A>
+   concept UnfoldConstructible = ((::std::constructible_from<T, A>
+                                or ::std::constructible_from<T, Unfold<A>>) and ...);
+
+   /// Check if a T is assignable with each of the provided arguments,        
+   /// either directly or by being unfolded                                   
+   template<class T, class...A>
+   concept UnfoldAssignable = ((::std::assignable_from<T&, A>
+                             or ::std::assignable_from<T&, Unfold<A>>) and ...);
 
 } // namespace Langulus::CT

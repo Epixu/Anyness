@@ -1,10 +1,9 @@
 #pragma once
 #include "DefinitionData.hpp"
-#include "MetaData.hpp"
-#include "../CT/ReflectAs.hpp"
-#include "../CT/DefineTrait.hpp"
-#include "../CT/DefineVerb.hpp"
-#include "../Logger.hpp"
+#include <Langulus/CT/ReflectAs.hpp>
+#include <Langulus/CT/DefineTag.hpp>
+#include <Langulus/CT/DefineVerb.hpp>
+#include <Langulus/Logger.hpp>
 #include <optional>
 
 
@@ -32,8 +31,8 @@ namespace Langulus::RTTI
          "This could also be triggered due to an incomplete member in T");
       static_assert(CT::Reflectable<T>,
          "Can't reflect data that was explicitly marked unreflectable");
-      static_assert(not CT::DefineTrait<T>,
-         "Can't reflect trait as data");
+      static_assert(not CT::DefineTag<T>,
+         "Can't reflect tag as data");
       static_assert(not CT::DefineVerb<T>,
          "Can't reflect constant as data");
 
@@ -90,14 +89,14 @@ namespace Langulus::RTTI
          " (ID: ", definition.mHandle, ") ", Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
+      return definition.mHandle;
    #else
       Logger::Verbose(
          "Data ", Logger::Cyan, definition.mToken, Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
-   #endif
-
       return DMeta {&definition};
+   #endif
    }
 
 } // namespace Langulus::RTTI

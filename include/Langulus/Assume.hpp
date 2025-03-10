@@ -253,7 +253,3 @@ namespace Langulus
 
 /// Convenience macro for specifying temporary lazyness                       
 #define TODO() ::Langulus::Assert(false, HERE(), "Unfinished code")
-
-/// Adds the appropriate noexcept specifiers for functions that throw only    
-/// in safe builds                                                            
-#define has_assumptions IF_UNSAFE(noexcept)

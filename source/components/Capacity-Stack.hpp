@@ -4,10 +4,15 @@
 namespace Langulus::Anyness::Component
 {
 
+   ///                                                                        
+   /// A dynamic capacity, stored as a member variable                        
+   ///   @tparam T - type of the counter                                      
+   ///   @tparam ID - ID of the heap/stack to track capacity for              
+   ///                                                                        
    template<class T = ::std::size_t, unsigned ID = 0>
    struct CapacityStack {
    private:
-      T mCapacity;
+      T mCapacity = 0;
 
    public:
       using CTTI_Component = Yes;

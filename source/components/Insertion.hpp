@@ -1,51 +1,18 @@
 #pragma once
 #include "../Container.hpp"
-#include <Langulus/CT/Defaultable.hpp>
 #include <Langulus/CT/Unfold.hpp>
 
-
-namespace Langulus::CT
-{
-
-   /// Check if a T is constructible with each of the provided arguments,     
-   /// either directly or by being unfolded                                   
-   template<class T, class...A>
-   concept UnfoldConstructible = ((::std::constructible_from<T, A>
-                                or ::std::constructible_from<T, Unfold<A>>) and ...);
-
-   /// Check if a T is assignable with each of the provided arguments,        
-   /// either directly or by being unfolded                                   
-   template<class T, class...A>
-   concept UnfoldAssignable = ((::std::assignable_from<T&, A>
-                             or ::std::assignable_from<T&, Unfold<A>>) and ...);
-
-} // namespace Langulus::CT
 
 namespace Langulus::Anyness::Component
 {
    
-   /// Check if container's elements are emplaceable using the provided       
-   /// argument list. Use empty list to test if default-constructible         
-   ///   @attention type-erased elements are always emplaceable, because      
-   ///      all arguments will be encapsulated in a descriptor, and will fail 
-   ///      at runtime if not reflected as descriptor-constructible           
-   template<class SELF, class...A>
-   concept RangeEmplaceable = SELF::TypeErased
-                         or ::std::constructible_from<TypeOf<SELF>, A...>;
-
    /// Check if container's elements are unfold-constructible                 
    ///   @attention type-erased elements are always insertable, and will fail 
    ///      at runtime if not reflected as such                               
-   template<class SELF, class T1, class...TN>
-   concept RangeInsertable = SELF::TypeErased
-                         or CT::UnfoldConstructible<TypeOf<SELF>, T1, TN...>;
-
-   /// Check if container's elements are unfold-assignable                    
-   ///   @attention type-erased elements are always assignable, and will fail 
-   ///      at runtime if not reflected as such                               
-   template<class SELF, class A>
-   concept RangeAssignable = SELF::TypeErased
-                         or CT::UnfoldAssignable<TypeOf<SELF>, A>;
+   template<class C, class T1, class...TN>
+   concept RangeInsertable = CT::Container<C> and (
+      C::TypeErased or CT::UnfoldConstructible<TypeOf<C>, T1, TN...>
+   );
 
 
    ///                                                                        
@@ -68,9 +35,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using State = typename C::StateType;
       template<CT::Container C>
-      using RangeView = typename C::RangeViewType;
-      template<CT::Container C>
-      using ItemView  = typename C::ItemViewType;
+      using PickRangeMut = typename C::PickRangeMut;
 
    public:
       /// Insertion at specific index                                         
@@ -81,10 +46,6 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class FORCE = Deep<C>>
       auto InsertRangeAt(this C&, CT::Index auto, CT::Container auto&&)
          -> Count<C> requires C::Indexed;
-
-      template<CT::Container C, class...A>
-      auto EmplaceAt(this C&, CT::Index auto, A&&...)
-         -> ItemView<C> requires (C::Indexed and RangeEmplaceable<C, A...>);
 
       template<CT::Container C, bool CONCAT = true, class FORCE = Deep<C>>
       auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {})
@@ -99,10 +60,6 @@ namespace Langulus::Anyness::Component
       auto InsertRange(this C&, CT::Container auto&&)
          -> Count<C>;
 
-      template<CT::Container C, class...A>
-      auto Emplace(this C&, A&&...)
-         -> ItemView<C> requires RangeEmplaceable<C, A...>;
-
       template<CT::Container C, bool CONCAT = true, class FORCE = Deep<C>>
       auto SmartPush(this C&, auto&&, State<C> = {})
          -> Count<C>;
@@ -113,11 +70,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       void Null(this C&, Count<C>);
 
-      template<CT::Container C, class A>
-      void Fill(this C&, A&&) requires RangeAssignable<C, A>;
-
       template<CT::Container C, class...A>
-      auto Extend(this C&, Count<C> = 1, A&&...) -> RangeView<C>;
+      auto Extend(this C&, Count<C> = 1, A&&...) -> PickRangeMut<C>;
    };
 
 } // namespace Langulus::Anyness::Component

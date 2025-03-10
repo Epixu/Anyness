@@ -1,9 +1,11 @@
 #pragma once
-#include "DefinitionConst.hpp"
+#include "Meta.hpp"
 
 
 namespace Langulus::RTTI
 {
+
+   class DefinitionConst;
 
    ///                                                                        
    ///   Constant ID                                                          
@@ -11,16 +13,18 @@ namespace Langulus::RTTI
    /// Can be a naked pointer to a definition, or packed to a smaller size    
    /// - all this is configurable.                                            
    ///                                                                        
-   struct MetaConst : DefinitionConst::Handle {
+   struct MetaConst
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      : Inner::MetaPacked<2>
+   #else
+      : Inner::MetaNaked
+   #endif
+   {
       constexpr MetaConst() noexcept = default;
       constexpr MetaConst(::std::nullptr_t) noexcept {}
-
-      LANGULUS(ALWAYS_INLINED)
-      constexpr MetaConst(const DefinitionConst* definition) noexcept {
-         if (not definition)
-            return;
-         DefinitionData::Handle::operator = (definition->mHandle);
-      }
+      constexpr MetaConst(const DefinitionConst*) noexcept;
    };
+
+   using CMeta = MetaConst;
 
 } // namespace Langulus::RTTI

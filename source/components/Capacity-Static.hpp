@@ -4,6 +4,9 @@
 namespace Langulus::Anyness::Component
 {
 
+   ///                                                                        
+   /// A static capacity                                                      
+   ///                                                                        
    template<auto CAPACITY>
    struct CapacityStatic {
       using CTTI_Component = Yes;

@@ -1,40 +1,39 @@
 #pragma once
-#include "DefinitionTrait.hpp"
-#include "MetaTrait.hpp"
-#include "../CT/ReflectAs.hpp"
-#include "../CT/DefineTrait.hpp"
-#include "../CT/DefineVerb.hpp"
-#include "../Logger.hpp"
+#include "DefinitionTag.hpp"
+#include <Langulus/CT/ReflectAs.hpp>
+#include <Langulus/CT/DefineTag.hpp>
+#include <Langulus/CT/DefineVerb.hpp>
+#include <Langulus/Logger.hpp>
 #include <optional>
 
 
 namespace Langulus::RTTI
 {
 
-   /// Reflect or return an already reflected trait                           
+   /// Reflect or return an already reflected tag                             
    /// Definition is generated only on decayed types to avoid static variable 
    /// duplication                                                            
-   ///   @attention when making a shared library and reflecting your types    
+   ///   @attention when making a shared library and reflecting your tags     
    ///      at library initialization, it is recommended you mark all other   
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the decayed trait to reflect                             
    template<CT::Decayed T> LANGULUS(NOINLINE)
-   TMeta DefinitionTrait::Reflect() {
+   TMeta DefinitionTag::Reflect() {
       static_assert(not CT::Function<T>,
-         "Can't reflect this function signature as a trait");
+         "Can't reflect this function signature as a tag");
       static_assert(CT::Complete<T>,
-         "Can't reflect incomplete trait - "
+         "Can't reflect incomplete tag - "
          "make sure you have included the corresponding headers "
          "before the point of reflection. "
          "This could also be triggered due to an incomplete member in T");
       static_assert(CT::Reflectable<T>,
-         "Can't reflect trait that was explicitly marked unreflectable");
-      static_assert(CT::DefineTrait<T>,
-         "Type is not reflected as a trait definition");
+         "Can't reflect tag that was explicitly marked unreflectable");
+      static_assert(CT::DefineTag<T>,
+         "Type is not reflected as a tag definition");
       static_assert(not CT::DefineVerb<T>,
-         "Can't reflect a verb as a trait");
+         "Can't reflect a verb as a tag");
 
       constexpr auto cppname = CppNameOf<T>();
 
@@ -48,17 +47,17 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         TMeta meta = Registry.GetMetaTrait(cppname, RTTI::Boundary);
+         TMeta meta = Registry.GetMetaTag(cppname, RTTI::Boundary);
          if (meta)
             return meta;
 
-         auto& definition = Registry.RegisterTrait(cppname, RTTI::Boundary);
+         auto& definition = Registry.RegisterTag(cppname, RTTI::Boundary);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
          // for each translation unit, and rely on runtime checks to    
          // make sure that definitions match between those.             
-         static constinit std::optional<DefinitionTrait> s_definition;
+         static constinit std::optional<DefinitionTag> s_definition;
          if (s_definition.has_value())
             return TMeta {&s_definition.value()};
 
@@ -68,9 +67,9 @@ namespace Langulus::RTTI
 
       //                                                                
       // If this is reached, then trait is not defined yet              
-      constexpr auto token = NameOfTrait<T>();
-      static_assert(token != "", "Invalid trait token is not allowed - "
-         "you have equipped your type (or its base) with an empty CTTI_DefineTrait");
+      constexpr auto token = NameOfTag<T>();
+      static_assert(token != "", "Invalid tag token is not allowed - "
+         "you have equipped your type (or its base) with an empty CTTI_DefineTag");
       definition.mToken = token;
       definition.mTokenSanitized = Inner::ToLowercase(token.substr(Inner::FindLastToken(token)));
 
@@ -84,18 +83,18 @@ namespace Langulus::RTTI
       definition.mHandle = Registry.GenerateHandle(&definition);
 
       Logger::Verbose(
-         "Trait ", Logger::Purple, definition.mToken,
+         "Tag ", Logger::Purple, definition.mToken,
          " (ID: ", definition.mHandle, ") ", Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
+      return definition.mHandle;
    #else
       Logger::Verbose(
-         "Trait ", Logger::Purple, definition.mToken, Logger::Green,
+         "Tag ", Logger::Purple, definition.mToken, Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
-   #endif
-
       return TMeta {&definition};
+   #endif
    }
 
 } // namespace Langulus::RTTI

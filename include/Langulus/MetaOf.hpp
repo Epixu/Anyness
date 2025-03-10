@@ -6,24 +6,25 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "RTTI/DefinitionData.hpp"
-#include "RTTI/DefinitionTrait.hpp"
-#include "RTTI/DefinitionConst.hpp"
-#include "RTTI/DefinitionVerb.hpp"
+#include "../source/rtti/DefinitionData.hpp"
+#include "../source/rtti/DefinitionTag.hpp"
+#include "../source/rtti/DefinitionConst.hpp"
+#include "../source/rtti/DefinitionVerb.hpp"
 
 
 namespace Langulus
 {
 
    /// Get the meta definition of a type, deducing whether it's a data, verb, 
-   /// or trait. Note: anything can be data, so meta-data is given only if    
-   /// not evaluated to be a trait or verb                                    
+   /// or tag. Note: anything can be data, so meta-data is given only if      
+   /// not evaluated to be a tag or verb, which might not be desired. Use one 
+   /// of the alternatives below to explicitly state your intent.             
    ///   @tparam T - type to get meta definition of                           
    ///   @return the meta definition of the provided type                     
    template<class T>
    auto MetaOf() {
-      if constexpr (CT::DefineTrait<Decay<T>>)
-         return RTTI::DefinitionTrait::Reflect<T>();
+      if constexpr (CT::DefineTag<Decay<T>>)
+         return RTTI::DefinitionTag::Reflect<T>();
       else if constexpr (CT::DefineVerb<Decay<T>>)
          return RTTI::DefinitionVerb::Reflect<T>();
       else
@@ -39,7 +40,7 @@ namespace Langulus
    }
 
    /// Data definition retrieval                                              
-   /// Some types, like traits/verbs for example, can be represented both as  
+   /// Some types, like tags/verbs for example, can be represented both as    
    /// DMeta and TMeta/VMeta, and this is useful to state a clear intent      
    ///   @tparam T - type to get data definition from                         
    ///   @return the definition                                               
@@ -48,14 +49,14 @@ namespace Langulus
       return RTTI::DefinitionData::Reflect<T>();
    }
 
-   /// Trait definition retrieval                                             
-   /// Some types, like traits for example, can be represented both as DMeta  
+   /// Tag definition retrieval                                               
+   /// Some types, like tags for example, can be represented both as DMeta    
    /// and TMeta, and this is useful to state a clear intent                  
-   ///   @tparam T - type to get trait definition from                        
+   ///   @tparam T - type to get tag definition from                          
    ///   @return the definition                                               
    template<class T>
-   auto MetaTraitOf() {
-      return RTTI::DefinitionTrait::Reflect<T>();
+   auto MetaTagOf() {
+      return RTTI::DefinitionTag::Reflect<T>();
    }
 
    /// Verb definition retrieval                                              
@@ -85,7 +86,7 @@ namespace Langulus
 
    LANGULUS(INLINED)
    RTTI::TMeta operator ""_tmeta(const char* token, ::std::size_t size) noexcept {
-      return RTTI::GetMetaTrait(Token {token, size});
+      return RTTI::GetMetaTag(Token {token, size});
    }
 
    LANGULUS(INLINED)

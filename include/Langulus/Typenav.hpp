@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "CTTI.hpp"
 #include <concepts>
 
 
@@ -51,9 +50,6 @@ namespace Langulus::CTTI
    };
    
 } // namespace Langulus::CTTI
-
-LANGULUS_CTTI_CONCEPT(Array);
-LANGULUS_CTTI_CONCEPT(Volatile);
 
 namespace Langulus
 {
@@ -129,6 +125,14 @@ namespace Langulus
    
    namespace CT
    {
+
+      /// Check if all T are bounded arrays                                   
+      template<class...T>
+      concept Array = ((CTTI::Array<T>::Enabled or T::CTTI_Array::Enabled) and ...);
+
+      /// Check if all T are volatile-qualified                               
+      template<class...T>
+      concept Volatile = ((CTTI::Volatile<T>::Enabled or T::CTTI_Volatile::Enabled) and ...);
 
       /// Check if all T are sparse                                           
       ///   @attention this also includes non-pointer types that are tagged   

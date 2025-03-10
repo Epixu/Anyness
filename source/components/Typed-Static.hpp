@@ -5,11 +5,17 @@
 namespace Langulus::Anyness::Component
 {
 
-   template<CT::NotVoid T>
+   ///                                                                        
+   /// Defines the contained type at compile-time                             
+   /// Doesn't allow for type-erasure and doesn't take up space               
+   ///   @tparam T    - the type of the variable                              
+   ///   @tparam TYPE - static type, can't be void                            
+   ///   @tparam ID   - multiple type variables are supported                 
+   template<class T, CT::NotVoid TYPE, unsigned ID = 0>
    struct TypedStatic {
       using CTTI_Component = Yes;
 
-      RTTI::DMeta GetType() const noexcept { return MetaDataOf<T>(); }
+      T GetType() const noexcept { return MetaOf<TYPE>(); }
    };
 
 } // namespace Langulus::Anyness::Component

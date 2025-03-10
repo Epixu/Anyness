@@ -4,13 +4,19 @@
 namespace Langulus::Anyness::Component
 {
 
-   template<class T = ::std::size_t, unsigned ID = 0, unsigned HEAP_ID = 0>
+   ///                                                                        
+   /// A dynamic capacity derived from the heap directly                      
+   ///   @tparam T - type of the counter                                      
+   ///   @tparam ID - ID of the heap to track capacity for                    
+   ///                                                                        
+   template<class T = ::std::size_t, unsigned ID = 0>
    struct CapacityHeap {
       using CTTI_Component = Yes;
 
-      template<class Self>
-      T GetCapacity(this const Self& self) noexcept {
-         return self.GetHeap<HEAP_ID>().GetElement<T, ID>();
+      template<CT::Container C>
+      T GetCapacity(this const C& self) noexcept {
+         auto heap = self.GetHeap<ID>();
+         return heap ? heap->GetCapacity() : 0;
       }
    };
 

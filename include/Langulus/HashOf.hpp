@@ -19,8 +19,8 @@ namespace Langulus
    
    /// Type that holds a hash - size depends on architecture                  
    struct Hash {
-      using CTTI_POD         = Yes;
-      using CTTI_Nullifiable = Yes;
+      using CTTI_POD      = Yes;
+      using CTTI_Nullable = Yes;
 
       ::std::size_t mHash = 0;
 

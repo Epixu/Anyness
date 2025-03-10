@@ -1,10 +1,10 @@
 #pragma once
 #include "DefinitionVerb.hpp"
 #include "MetaVerb.hpp"
-#include "../CT/ReflectAs.hpp"
-#include "../CT/DefineTrait.hpp"
-#include "../CT/DefineVerb.hpp"
-#include "../Logger.hpp"
+#include <Langulus/CT/ReflectAs.hpp>
+#include <Langulus/CT/DefineTag.hpp>
+#include <Langulus/CT/DefineVerb.hpp>
+#include <Langulus/Logger.hpp>
 #include <optional>
 
 
@@ -33,8 +33,8 @@ namespace Langulus::RTTI
          "Can't reflect verb that was explicitly marked unreflectable");
       static_assert(CT::DefineVerb<T>,
          "Type is not reflected as a verb definition");
-      static_assert(not CT::DefineTrait<T>,
-         "Can't reflect a trait as a verb");
+      static_assert(not CT::DefineTag<T>,
+         "Can't reflect a tag as a verb");
 
       constexpr auto cppname = CppNameOf<T>();
 
@@ -138,6 +138,7 @@ namespace Langulus::RTTI
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
+      return definition.mHandle;
    #else
       if (definition.mOperator.size()) {
          const auto op1 = IsolateOperator(definition.mOperator);
@@ -167,9 +168,8 @@ namespace Langulus::RTTI
             Logger::Green, " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
-   #endif
-
       return VMeta {&definition};
+   #endif
    }
 
 } // namespace Langulus::RTTI

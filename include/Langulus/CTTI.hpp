@@ -1,5 +1,6 @@
 #pragma once
 #include "Types.hpp"
+#include "TypeNav.hpp"
 #include <type_traits>
 
 
@@ -64,10 +65,10 @@ namespace Langulus::CT
    /// these checks will act as if the sheddable type doesn't exist at all    
    /// The concept relies on CTTI::Typed for getting into the inner type      
    template<class...T>
-   concept Sheddable = ((CTTI::Sheddable<T>::Enabled or T::CTTI_Sheddable::Enabled) and ...);
+   concept Sheddable = ((CTTI::Sheddable<Deref<T>>::Enabled or Deref<T>::CTTI_Sheddable::Enabled) and ...);
 
    template<class...T>
-   concept NotSheddable = ((not Sheddable<T>) and ...);
+   concept NotSheddable = ((not Sheddable<Deref<T>>) and ...);
 
    namespace Inner
    {
@@ -91,7 +92,7 @@ namespace Langulus::CT
    } // namespace Langulus::CT::Inner
 
    template<class T>
-   using Shed = typename decltype(Inner::GetSheddedType<T>())::First;
+   using Shed = typename decltype(Inner::GetSheddedType<Deref<T>>())::First;
 
 } // namespace Langulus::CT
 
@@ -102,9 +103,9 @@ namespace Langulus::CT
 #define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = ((CTTI::NAME<T>::Enabled or T::CTTI_##NAME::Enabled) and ...); \
+      concept NAME = ((CTTI::NAME<Deref<T>>::Enabled or Deref<T>::CTTI_##NAME::Enabled) and ...); \
       template<class...T> \
-      concept Not##NAME = ((not NAME<T>) and ...); \
+      concept Not##NAME = ((not NAME<Deref<T>>) and ...); \
    }
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   

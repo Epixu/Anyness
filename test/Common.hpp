@@ -12,8 +12,13 @@
 #include <Langulus/TypeNav.hpp>
 #include <Langulus/TypeOf.hpp>
 #include <Langulus/Intent.hpp>
+#include <Langulus/CT/Describable.hpp>
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/CT/Destroyable.hpp>
+#include <Langulus/CT/Values.hpp>
+#include <Langulus/CT/Members.hpp>
+#include <Langulus/CT/Pooled.hpp>
+#include <Langulus/Tag.hpp>
 #include "Main.hpp"
 
 using namespace Anyness;
@@ -392,7 +397,7 @@ namespace Verbs
       ///   @return the function, or nullptr if not available                 
       template<CT::NotVoid T, CT::NotVoid... A>
       static constexpr auto Of() noexcept {
-         if constexpr (!Create::AvailableFor<T, A...>()) {
+         if constexpr (not Create::AvailableFor<T, A...>()) {
             return nullptr;
          }
          else if constexpr (CT::Constant<T>) {
@@ -430,11 +435,10 @@ namespace Verbs
 struct ImplicitlyReflectedData {
    enum Named { One, Two, Three };
 
-   using CTTI_POD   = Yes;
-   using CTTI_Files = YesText<"ASE">;
-   using CTTI_Typed = Named;
-
-   LANGULUS_NAMED_VALUES(One, Two, Three);
+   using CTTI_POD    = Yes;
+   using CTTI_Files  = YesText<"ASE">;
+   using CTTI_Typed  = Named;
+   using CTTI_Values = Values<One, Two, Three>;
 
    Named v = One;
 
@@ -444,7 +448,7 @@ struct ImplicitlyReflectedData {
 class alignas(128) ImplicitlyReflectedDataWithTraits : public ImplicitlyReflectedData {
 public:
    int member {664};
-   RTTI::Tag<bool, Traits::Name> anotherMember {};
+   Tags::Name<bool> anotherMember {};
    int anotherMemberArray [12] {};
    int* sparseMember {};
 
@@ -470,25 +474,24 @@ public:
    using CTTI_Version   = Version<2, 1>;
    using CTTI_Deep      = Yes;
    using CTTI_POD       = Yes;
-   using CTTI_Nullifiable = Yes;
+   using CTTI_Nullable  = Yes;
    using CTTI_Pooled    = PooledBySize<250>;
    using CTTI_Concrete  = ImplicitlyReflectedData;
    using CTTI_ReflectAs = void;
    using CTTI_Abstract  = Yes;
-
-   LANGULUS_BASES(ImplicitlyReflectedData);
-   LANGULUS_VERBS(Verbs::Create);
-   LANGULUS_CONVERTS_TO(int);
-   LANGULUS_CONVERTS_FROM(Pi);
-   LANGULUS_NAMED_VALUES();
+   using CTTI_Bases     = ImplicitlyReflectedData;
+   using CTTI_Verbs     = Verbs::Create;
+   using CTTI_MapsOnto  = int;
+   using CTTI_MapsFrom  = Pi;
+   using CTTI_Values    = No;
 
    using Self = ImplicitlyReflectedDataWithTraits;
-   LANGULUS_MEMBERS(
+   using CTTI_Members   = Members<
       &Self::member,
       &Self::anotherMember,
       &Self::anotherMemberArray,
       &Self::sparseMember
-   );
+   >;
 };
 
 /// Doesn't have implicit copy/move, so it is abandon-makable by explicit move
@@ -506,12 +509,12 @@ public:
    using CTTI_Pooled  = PooledBySize<250>;
 
    using Self = Complex;
-   LANGULUS_MEMBERS(
+   using CTTI_Members = Members<
       &Self::member,
       &Self::anotherMember,
       &Self::anotherMemberArray,
       &Self::sparseMember
-   );
+   >;
 
    Complex(const Complex& s)
       : member(s.member) {}
@@ -528,8 +531,8 @@ public:
 
 struct AnotherTypeWithSimilarilyNamedValues {
    enum Named {One = 501, Two, Three};
-   LANGULUS_NAMED_VALUES(One, Two, Three);
-   using CTTI_Named = YesText<"YetAnotherNamedType">;
+   using CTTI_Values = Values<One, Two, Three>;
+   using CTTI_Named  = YesText<"YetAnotherNamedType">;
 
    int v = One;
 
@@ -567,7 +570,7 @@ class ForcefullyPod {
 struct Type {};
 
 struct TypeErasedContainer {
-   LANGULUS(TYPED) void;
+   using CTTI_Typed = void;
 };
 
 namespace N1 {

@@ -85,6 +85,7 @@ namespace Langulus
 
       static constexpr bool Empty = true;
       static constexpr size_t Count = 0;
+      using First = void;
 
       static constexpr void ForEach   (auto&&) noexcept { }
       static constexpr bool ForEachAnd(auto&&) noexcept { return false; }

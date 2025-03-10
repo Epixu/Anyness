@@ -146,7 +146,7 @@ T CreateElement(const auto& e) {
 ///   @return pointer to the new instance of T                                
 template<CT::Sparse T, bool MANAGED = false>
 T CreateElement(const auto& e) {
-   void* element;
+   T element;
 
    if constexpr (not MANAGED) {
       // Create a pointer that is guaranteed to not be owned by the     
@@ -154,13 +154,13 @@ T CreateElement(const auto& e) {
       // because it is weakly linked, and can be overriden to use our   
       // memory manager.                                                
       if constexpr (not CT::Same<T, Anyness::Many>) {
-         element = malloc(sizeof(Decay<T>));
-         new (element) Decay<T> {e};
+         element = malloc(sizeof(Deptr<T>));
+         new (element) Deptr<T> {e};
       }
       else {
          element = malloc(sizeof(Anyness::Many));
          new (element) Anyness::Many {};
-         static_cast<Anyness::Many*>(element)->Insert(e);
+         element->Insert(e);
       }
    }
    else {
@@ -168,7 +168,7 @@ T CreateElement(const auto& e) {
       auto& container = BANK.EmplaceAt(Anyness::Index::Back);
 
       if constexpr (not CT::Same<T, Anyness::Many>) {
-         container << Decay<T> {e};
+         container << Deptr<T> {e};
          element = container.GetRaw();
       }
       else {
@@ -177,7 +177,7 @@ T CreateElement(const auto& e) {
       }
    }
 
-   return static_cast<T>(element);
+   return element;
 }
 
 template<bool MANAGED = false>

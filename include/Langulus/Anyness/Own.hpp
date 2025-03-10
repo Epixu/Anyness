@@ -8,19 +8,21 @@
 #pragma once
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Stack.hpp"
-#include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 
 
 namespace Langulus::Anyness
 {
    
+   ///                                                                        
    /// A statically typed stack-based container of size 1                     
+   /// Mainly serves to transfer values and/or pointers on move               
    template<CT::NotVoid T>
    struct Own : Detail::Container<
       Component::Stack<T>,             // Element on the stack          
-      Component::TypedStatic<T>,       // Statically typed              
-      Component::CountStatic<1>        // Statically sized to 1         
+      Component::TypedStatic<DMeta, T>,// Statically typed              
+      Component::Assignment            // Allows for assignment         
    > {};
 
 } // namespace Langulus::Anyness

@@ -11,8 +11,9 @@ namespace Langulus::CTTI
    /// they're binary incompatible, in which case a runtime error will occur  
    /// when reflected (if MANAGED_REFLECTION is enabled)                      
    /// Can be used in two ways to satisfy CT::Named<T>:                       
-   /// 1. Specialize for T/concept having Enabled as true and an unique name  
+   /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Named = YesText<"DataID">;` in T           
+
    template<class T>
    struct Named {
       static constexpr Literal Name = "<will use C++ name>";
@@ -24,6 +25,12 @@ namespace Langulus::CTTI
       static constexpr Literal Name = "<will use C++ name>";
       static constexpr bool Enabled = false;
    };
+
+   ///   @important                                                           
+   /// When reflecting enums inside your classes/structs, it is recommended   
+   /// to use Values.hpp instead, as it is 2 levels above this pattern.       
+   /// the Named pattern instructs how NameOf works, which is in turn used by 
+   /// NamedValues to instruct how such constants are reflected.              
 
 } // namespace Langulus::CTTI
 

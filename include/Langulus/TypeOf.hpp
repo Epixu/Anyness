@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "TypeNav.hpp"
+#include "CTTI.hpp"
 
 
 namespace Langulus::CT::Inner
@@ -61,7 +61,7 @@ namespace Langulus
    ///   - if T is an enum -> return the underlying type                      
    ///   - otherwise just return T                                            
    template<class T>
-   using TypeOf = typename decltype(CT::Inner::GetUnderlyingType<T>())::First;
+   using TypeOf = typename decltype(CT::Inner::GetUnderlyingType<Deref<T>>())::First;
 
    namespace CT
    {
@@ -71,11 +71,11 @@ namespace Langulus
       ///   @attention the inner type must not be 'void', in order for T to   
       ///      be considered 'typed' (as opposed to 'type-erased')            
       template<class...T>
-      concept Typed = (Inner::IsTyped<T>() and ...);
+      concept Typed = (Inner::IsTyped<Deref<T>>() and ...);
 
       /// Check if all T have no underlying types defined                     
       template<class...T>
-      concept Untyped = ((not Typed<T>) and ...);
+      concept Untyped = ((not Typed<Deref<T>>) and ...);
 
    } // namespace Langulus::CT
 

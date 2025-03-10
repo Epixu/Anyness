@@ -1,9 +1,10 @@
 #pragma once
-#include "DefinitionVerb.hpp"
+#include "Meta.hpp"
 
 
 namespace Langulus::RTTI
 {
+
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    namespace Inner
    {
@@ -15,38 +16,52 @@ namespace Langulus::RTTI
       /// general it is likely to avoid an indirection altogether at the      
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
-      struct MetaVerbStructured_8_8 : MetaPacked<1> {
+      struct MetaDataStructured_8_8 : MetaPacked<1> {
 
       };
 
-      struct MetaVerbStructured_16_8 : MetaPacked<2> {
+      struct MetaDataStructured_16_16 : MetaPacked<2> {
 
       };
 
-      struct MetaVerbStructured_24_8 : MetaPacked<3> {
+      struct MetaDataStructured_24_8 : MetaPacked<3> {
+
+      };
+
+      struct MetaDataStructured_32_8 : MetaPacked<4> {
+
+      };
+
+      struct MetaDataStructured_32_16 : MetaPacked<4> {
 
       };
 
    } // namespace Langulus::RTTI::Inner
 #endif
+    
+   class DefinitionData;
 
    ///                                                                        
-   ///   Verb type ID                                                         
+   ///   Data type ID                                                         
    ///                                                                        
    /// Can be a naked pointer to a definition, or a structured ID that is     
    /// either packed to a smaller size, or carry a lot of meta information    
    /// in the ID itself to avoid indirection - all this is configurable.      
    ///                                                                        
-   struct MetaVerb : DefinitionVerb::Handle {
-      constexpr MetaVerb() noexcept = default;
-      constexpr MetaVerb(::std::nullptr_t) noexcept {}
+   struct MetaData
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      : Inner::MetaDataStructured_16_16
+   #else
+      : Inner::MetaNaked
+   #endif
+   {
+      constexpr MetaData() noexcept = default;
+      constexpr MetaData(::std::nullptr_t) noexcept {}
+      constexpr MetaData(const DefinitionData*) noexcept;
 
-      LANGULUS(ALWAYS_INLINED)
-      constexpr MetaVerb(const DefinitionVerb* definition) noexcept {
-         if (not definition)
-            return;
-         DefinitionVerb::Handle::operator = (definition->mHandle);
-      }
+      ::std::size_t GetMinAllocation() const noexcept;
    };
+
+   using DMeta = MetaData;
 
 } // namespace Langulus::RTTI

@@ -96,13 +96,6 @@ namespace Langulus::Fractalloc
       return a >= blockStart and a < blockStart + mAllocatedBytes;
    }
 
-   /// Get the start of the entry as a given type                             
-   ///   @return a pointer to the first element                               
-   template<class T> LANGULUS(ALWAYS_INLINED)
-   T* Allocation::As() const noexcept {
-      return reinterpret_cast<T*>(const_cast<Allocation*>(this)->GetBlockStart());
-   }
-
    /// Reference the entry 'c' times                                          
    ///   @param c - the number of references to add                           
    LANGULUS(ALWAYS_INLINED)

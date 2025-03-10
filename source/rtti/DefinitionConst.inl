@@ -1,9 +1,9 @@
 #pragma once
 #include "DefinitionConst.hpp"
 #include "MetaConst.hpp"
-#include "../CT/Info.hpp"
-#include "../CT/Version.hpp"
-#include "../Logger.hpp"
+#include <Langulus/CT/Info.hpp>
+#include <Langulus/CT/Version.hpp>
+#include <Langulus/Logger.hpp>
 #include <optional>
 
 
@@ -87,14 +87,14 @@ namespace Langulus::RTTI
          " (ID: ", definition.mHandle, ") ", Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
+      return definition.mHandle;
    #else
       Logger::Verbose(
          "Constant ", Logger::Yellow, definition.mToken, Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
-   #endif
-
       return CMeta {&definition};
+   #endif
    }
 
 } // namespace Langulus::RTTI

@@ -6,11 +6,34 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../HashOf.hpp"
-#include "../NameOf.hpp"
+#include <Langulus/HashOf.hpp>
+#include <Langulus/NameOf.hpp>
 #include <string_view>
 #include <algorithm>
 #include <iterator>
+
+
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   /// The Langulus::RTTI::Boundary symbol is intentionally left undefined,   
+   /// so that it is mandatory for you to define it inside your executables   
+   /// or mods. It's a simple compile-time string, that is attached upon data 
+   /// reflection, so that RTTI can track from which library a type was       
+   /// reflected, and thus unregister it when shared object is unloaded.      
+   /// The boundary also affects pooling tactics, because if boundary is not  
+   /// equal exactly to RTTI::MainBoundary, pooling will be PoolTactic::Type  
+   /// by default, so that allocation that happen from external libraries can 
+   /// be easily tracked                                                      
+   #define LANGULUS_RTTI_BOUNDARY(a) \
+      namespace Langulus::RTTI { Token Boundary = a; }
+
+   namespace Langulus::RTTI
+   {
+      /// The main boundary indentifier token                                 
+      constexpr Token MainBoundary = "MAIN";
+   }
+#else
+   #define LANGULUS_RTTI_BOUNDARY(a)
+#endif
 
 
 namespace Langulus::RTTI::Inner
@@ -57,12 +80,8 @@ namespace Langulus::RTTI::Inner
       unsigned mVersionMinor = 0;
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      // The shared library that defined the module, used to unload     
-      // definitions when module is unloaded                            
-      Token mLibraryName;
-
-      LANGULUS_API(RTTI)
-      Token GetShortestUnambiguousToken() const;
+      // Populated to be LANGULUS_RTTI_BOUNDARY on reflection-time      
+      Token mBoundary;
    #endif
 
       Definition() = delete;
