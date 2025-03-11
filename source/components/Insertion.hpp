@@ -1,9 +1,9 @@
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Unfold.hpp>
+#include <Langulus/CT/Index.hpp>
 
-
-namespace Langulus::Anyness::Component
+namespace Langulus::Anyness
 {
    
    /// Check if container's elements are unfold-constructible                 
@@ -14,10 +14,16 @@ namespace Langulus::Anyness::Component
       C::TypeErased or CT::UnfoldConstructible<TypeOf<C>, T1, TN...>
    );
 
+} // namespace Langulus::Anyness
 
+namespace Langulus::Anyness::Component
+{
+   
    ///                                                                        
    /// Implements insertion for containers                                    
-   ///                                                                        
+   ///   @tparam AS - type to serialize as before inserting. Useful for byte  
+   ///      and text containers. Use void to insert without serialization     
+   template<class AS = void>
    struct Insertion {
       using CTTI_Component = Yes;
 
@@ -43,10 +49,6 @@ namespace Langulus::Anyness::Component
       auto InsertAt(this C&, CT::Index auto, A1&&, AN&&...)
          -> Count<C> requires (C::Indexed and RangeInsertable<C, A1, AN...>);
 
-      template<CT::Container C, class FORCE = Deep<C>>
-      auto InsertRangeAt(this C&, CT::Index auto, CT::Container auto&&)
-         -> Count<C> requires C::Indexed;
-
       template<CT::Container C, bool CONCAT = true, class FORCE = Deep<C>>
       auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {})
          -> Count<C> requires C::Indexed;
@@ -55,10 +57,6 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class FORCE = Deep<C>, class A1, class...AN>
       auto Insert(this C&, A1&&, AN&&...)
          -> Count<C> requires RangeInsertable<C, A1, AN...>;
-
-      template<CT::Container C, class FORCE = Deep<C>>
-      auto InsertRange(this C&, CT::Container auto&&)
-         -> Count<C>;
 
       template<CT::Container C, bool CONCAT = true, class FORCE = Deep<C>>
       auto SmartPush(this C&, auto&&, State<C> = {})

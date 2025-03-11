@@ -1,5 +1,6 @@
 #pragma once
 #include "../Container.hpp"
+#include <Langulus/HashOf.hpp>
 
 
 namespace Langulus::Anyness::Component

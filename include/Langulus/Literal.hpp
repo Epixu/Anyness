@@ -18,7 +18,7 @@ namespace Langulus
    /// Should be introduced in C++26 as std::fixed_string, supposedly         
    ///                                                                        
    template<class T, ::std::size_t N, class TRAITS = ::std::char_traits<T>>
-   struct TLiteral {
+   struct Literal {
       static constexpr bool CTTI_StringLiteral = true;
 
       using storage_type = std::array<T, N + 1>;
@@ -42,13 +42,13 @@ namespace Langulus
       static constexpr bool Empty = N == 0;
       static constexpr auto Count = N;
 
-      constexpr TLiteral() noexcept = default;
+      constexpr Literal() noexcept = default;
 
-      constexpr TLiteral(const value_type(&array)[N + 1]) noexcept {
+      constexpr Literal(const value_type(&array)[N + 1]) noexcept {
          std::copy(std::begin(array), std::end(array), _data.begin());
       }
 
-      constexpr TLiteral& operator = (const value_type(&array)[N + 1]) noexcept {
+      constexpr Literal& operator = (const value_type(&array)[N + 1]) noexcept {
          std::copy(std::begin(array), std::end(array), _data.begin());
          return *this;
       }
@@ -96,10 +96,10 @@ namespace Langulus
       ///                                                                     
       /// Encapsulation                                                       
       ///                                                                     
-      constexpr auto size()     const noexcept { return Count; }
-      constexpr auto length()   const noexcept { return Count; }
-      constexpr auto max_size() const noexcept { return Count; }
-      constexpr auto empty()    const noexcept { return Empty; }
+      consteval auto size()     const noexcept { return Count; }
+      consteval auto length()   const noexcept { return Count; }
+      consteval auto max_size() const noexcept { return Count; }
+      consteval auto empty()    const noexcept { return Empty; }
 
       ///                                                                     
       /// Access                                                              
@@ -135,7 +135,7 @@ namespace Langulus
 
    private:
       template<size_t M>
-      using same_with_other_size = TLiteral<value_type, M, traits_type>;
+      using same_with_other_size = Literal<value_type, M, traits_type>;
 
       template<size_type pos, size_type count, size_type size>
       consteval static size_type calculate_substr_size() {
@@ -341,7 +341,7 @@ namespace Langulus
          return find(s) != npos;
       }
 
-      void swap(TLiteral& other) noexcept(std::is_nothrow_swappable_v<storage_type>) {
+      void swap(Literal& other) noexcept(std::is_nothrow_swappable_v<storage_type>) {
          _data.swap(other._data);
       }
 
@@ -355,16 +355,16 @@ namespace Langulus
 
    template <typename TChar, typename TTraits, size_t N>
    void swap(
-      TLiteral<TChar, N, TTraits>& lhs,
-      TLiteral<TChar, N, TTraits>& rhs
+      Literal<TChar, N, TTraits>& lhs,
+      Literal<TChar, N, TTraits>& rhs
    ) noexcept(noexcept(lhs.swap(rhs))) {
       lhs.swap(rhs);
    }
 
    template <typename TChar, typename TTraits, size_t M1, size_t M2>
    consteval bool operator == (
-      const TLiteral<TChar, M1, TTraits>& lhs,
-      const TLiteral<TChar, M2, TTraits>& rhs
+      const Literal<TChar, M1, TTraits>& lhs,
+      const Literal<TChar, M2, TTraits>& rhs
    ) {
       if constexpr (M1 != M2)
          return false;
@@ -376,7 +376,7 @@ namespace Langulus
 
    template <typename TChar, typename TTraits, size_t N>
    consteval bool operator == (
-      const TLiteral<TChar, N, TTraits>& lhs,
+      const Literal<TChar, N, TTraits>& lhs,
       std::basic_string_view<TChar, TTraits> rhs
    ) {
       using lhs_type = std::decay_t<decltype(lhs)>;
@@ -387,7 +387,7 @@ namespace Langulus
    template <typename TChar, typename TTraits, size_t N>
    consteval bool operator == (
       std::basic_string_view<TChar, TTraits> lhs,
-      const TLiteral<TChar, N, TTraits>& rhs
+      const Literal<TChar, N, TTraits>& rhs
    ) {
       using rhs_type = std::decay_t<decltype(rhs)>;
       using sv_type = typename rhs_type::string_view_type;
@@ -396,8 +396,8 @@ namespace Langulus
 
    template <typename TChar, typename TTraits, size_t M1, size_t M2>
    consteval auto operator <=> (
-      const TLiteral<TChar, M1, TTraits>& lhs,
-      const TLiteral<TChar, M2, TTraits>& rhs
+      const Literal<TChar, M1, TTraits>& lhs,
+      const Literal<TChar, M2, TTraits>& rhs
    ) {
       using lhs_type = std::decay_t<decltype(lhs)>;
       using sv_type = typename lhs_type::string_view_type;
@@ -406,7 +406,7 @@ namespace Langulus
 
    template <typename TChar, typename TTraits, size_t N>
    consteval auto operator <=> (
-      const TLiteral<TChar, N, TTraits>& lhs,
+      const Literal<TChar, N, TTraits>& lhs,
       std::basic_string_view<TChar, TTraits> rhs
    ) {
       using lhs_type = std::decay_t<decltype(lhs)>;
@@ -417,7 +417,7 @@ namespace Langulus
    template <typename TChar, typename TTraits, size_t N>
    consteval auto operator <=> (
       std::basic_string_view<TChar, TTraits> lhs,
-      const TLiteral<TChar, N, TTraits>& rhs
+      const Literal<TChar, N, TTraits>& rhs
    ) {
       using rhs_type = std::decay_t<decltype(rhs)>;
       using sv_type = typename rhs_type::string_view_type;
@@ -425,10 +425,10 @@ namespace Langulus
    }
 
    template<class TChar, size_t N>
-   TLiteral(const TChar(&)[N]) -> TLiteral<TChar, N - 1>;
+   Literal(const TChar(&)[N]) -> Literal<TChar, N - 1>;
 
    /// char literal                                                           
-   template<size_t N>
+   /*template<size_t N>
    struct Literal : TLiteral<char, N> {
       using TLiteral<char, N>::TLiteral;
    };
@@ -470,7 +470,7 @@ namespace Langulus
    };
 
    template<std::size_t N>
-   Literalw(const wchar_t(&)[N]) -> Literalw<N - 1>;
+   Literalw(const wchar_t(&)[N]) -> Literalw<N - 1>;*/
 
 
    ///                                                                        
@@ -478,30 +478,30 @@ namespace Langulus
    ///                                                                        
    template<typename TChar, size_t N, size_t M, typename TTraits>
    consteval auto operator + (
-      const TLiteral<TChar, N, TTraits>& lhs,
-      const TLiteral<TChar, M, TTraits>& rhs
+      const Literal<TChar, N, TTraits>& lhs,
+      const Literal<TChar, M, TTraits>& rhs
    ) {
-      TLiteral<TChar, N + M, TTraits> result;
+      Literal<TChar, N + M, TTraits> result;
       std::copy(lhs.begin(), lhs.end(), result.begin());
       std::copy(rhs.begin(), rhs.end(), result.begin() + N);
       return result;
    }
 
    template<typename TChar, size_t N, size_t M, typename TTraits>
-   consteval TLiteral<TChar, N - 1 + M, TTraits> operator + (
+   consteval Literal<TChar, N - 1 + M, TTraits> operator + (
       const TChar(&lhs)[N],
-      const TLiteral<TChar, M, TTraits>& rhs
+      const Literal<TChar, M, TTraits>& rhs
    ) {
-      TLiteral lhs2 = lhs;
+      Literal lhs2 = lhs;
       return lhs2 + rhs;
    }
 
    template<typename TChar, size_t N, size_t M, typename TTraits>
-   consteval TLiteral<TChar, N + M - 1, TTraits> operator + (
-      const TLiteral<TChar, N, TTraits>& lhs,
+   consteval Literal<TChar, N + M - 1, TTraits> operator + (
+      const Literal<TChar, N, TTraits>& lhs,
       const TChar(&rhs)[M]
    ) {
-      TLiteral rhs2 = rhs;
+      Literal rhs2 = rhs;
       return lhs + rhs2;
    }
 
@@ -510,7 +510,7 @@ namespace Langulus
 
       template<class T>
       consteval auto from_char(T ch) {
-         TLiteral<T, 1> fs;
+         Literal<T, 1> fs;
          fs[0] = ch;
          return fs;
       }
@@ -518,16 +518,16 @@ namespace Langulus
    } // namespace Langulus::Inner
 
    template<class TChar, size_t N, class TTraits>
-   consteval TLiteral<TChar, N + 1, TTraits> operator + (
+   consteval Literal<TChar, N + 1, TTraits> operator + (
       TChar lhs,
-      const TLiteral<TChar, N, TTraits>& rhs
+      const Literal<TChar, N, TTraits>& rhs
    ) {
       return Inner::from_char(lhs) + rhs;
    }
 
    template<class TChar, size_t N, class TTraits>
-   consteval TLiteral<TChar, N + 1, TTraits> operator + (
-      const TLiteral<TChar, N, TTraits>& lhs,
+   consteval Literal<TChar, N + 1, TTraits> operator + (
+      const Literal<TChar, N, TTraits>& lhs,
       TChar rhs
    ) {
       return lhs + Inner::from_char(rhs);
@@ -536,7 +536,7 @@ namespace Langulus
    template<class TChar, size_t N, class TTraits>
    auto& operator << (
       std::basic_ostream<TChar, TTraits>& out,
-      const TLiteral<TChar, N, TTraits>& str
+      const Literal<TChar, N, TTraits>& str
    ) {
       out << str.data();
       return out;
@@ -551,9 +551,9 @@ namespace std
    ///                                                                        
    /// Hash support                                                           
    ///                                                                        
-   template<size_t N>
-   struct hash<Langulus::Literal<N>> {
-      using argument_type = Langulus::Literal<N>;
+   template<class TChar, size_t N>
+   struct hash<Langulus::Literal<TChar, N>> {
+      using argument_type = Langulus::Literal<TChar, N>;
 
       size_t operator()(const argument_type& str) const {
          using sv_t = typename argument_type::string_view_type;
@@ -561,7 +561,7 @@ namespace std
       }
    };
 
-   template<size_t N>
+   /*template<size_t N>
    struct hash<Langulus::Literal8<N>> {
       using argument_type = Langulus::Literal8<N>;
 
@@ -599,6 +599,6 @@ namespace std
          using sv_t = typename argument_type::string_view_type;
          return std::hash<sv_t>()(static_cast<sv_t>(str));
       }
-   };
+   };*/
 
 } // namespace std

@@ -169,7 +169,7 @@ T CreateElement(const auto& e) {
    }
    else {
       // Create a pointer owned by the memory manager                   
-      auto& container = BANK.EmplaceAt(Anyness::Index::Back);
+      auto& container = BANK.EmplaceAt(Index::Back);
 
       if constexpr (not CT::Same<T, Anyness::Many>) {
          container << Deptr<T> {e};

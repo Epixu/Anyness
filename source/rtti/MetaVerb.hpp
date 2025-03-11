@@ -44,7 +44,7 @@ namespace Langulus::RTTI
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       : Inner::MetaVerbStructured_8_8
    #else
-      : Inner::MetaNaked
+      : Inner::MetaNaked<DefinitionVerb>
    #endif
    {
       constexpr MetaVerb() noexcept = default;

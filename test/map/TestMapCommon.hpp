@@ -8,8 +8,6 @@
 
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
-#include <Langulus/Anyness/Text.hpp>
-#include <Langulus/Anyness/Trait.hpp>
 #include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/Map.hpp>
 #include <unordered_map>

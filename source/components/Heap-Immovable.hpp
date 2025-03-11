@@ -18,8 +18,12 @@ namespace Langulus::Anyness::Component
    protected:
       using Byte = ::std::uint8_t;
 
-      // The raw pointer                                                
-      Byte* mHeap = nullptr;
+      // A heap of heaps - the inner ones are immovable                 
+      Byte** mHeap = nullptr;
+
+      // The start of the reusable chain, in the first heap that has    
+      // a free cell                                                    
+      Byte* mReusable = nullptr;
 
    public:
       using CTTI_Component = Yes;
@@ -29,9 +33,16 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
          using T = TypeOf<C>;
-         if constexpr (CT::Mutable<C>) return static_cast<const T*>(self.mHeap);
-         else                          return static_cast<      T*>(self.mHeap);
+         if constexpr (CT::Mutable<C>)
+            return static_cast<const T*>(self.mHeap);
+         else
+            return static_cast<      T*>(self.mHeap);
       }
+
+   #if LANGULUS(TESTING)
+      auto GetReusable() const noexcept { return mReusable; }
+      auto GetFrames()   const noexcept { return mHeap;     }
+   #endif
    };
 
 } // namespace Langulus::Anyness::Component

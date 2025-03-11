@@ -7,7 +7,9 @@ namespace Langulus::Anyness::Component
    
    ///                                                                        
    /// Adds operators for front (>>) and back (<<) insertion                  
-   ///                                                                        
+   ///   @tparam AS - type to serialize as before inserting. Useful for byte  
+   ///      and text containers. Use void to insert without serialization     
+   template<class AS = void>
    struct InsertionOperators {
       using CTTI_Component = Yes;
 

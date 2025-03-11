@@ -17,6 +17,8 @@ namespace Langulus::Anyness::Component
 
    public:
       using CTTI_Component = Yes;
+
+      const Allocation* GetAllocation() const noexcept { return mAllocation; }
    };
    
    ///                                                                        
@@ -31,6 +33,8 @@ namespace Langulus::Anyness::Component
 
    public:
       using CTTI_Component = Yes;
+
+      const Allocation* GetAllocation() const noexcept { return mAllocation; }
    };
 
 } // namespace Langulus::Anyness::Component

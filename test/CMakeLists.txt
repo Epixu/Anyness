@@ -14,3 +14,5 @@ add_langulus_test(LangulusAnynessTest
 	SOURCES		${LANGULUS_ANYNESS_TEST_SOURCES}
 	LIBRARIES	Catch2 LangulusAnyness
 )
+
+target_compile_definitions(LangulusAnynessTest PRIVATE LANGULUS_TESTING)

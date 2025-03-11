@@ -4,8 +4,6 @@
 namespace Langulus::RTTI::Inner
 {
 
-   class Definition;
-
    ///                                                                        
    ///   Meta ID                                                              
    ///                                                                        
@@ -17,8 +15,9 @@ namespace Langulus::RTTI::Inner
 
    /// A naked pointer to a definition, probably the fastest, but most        
    /// memory-inefficient on 64bit systems                                    
+   template<class T>
    struct MetaNaked {
-      const Definition* mDefinition;
+      const T* mDefinition;
    };
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

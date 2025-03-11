@@ -41,12 +41,12 @@ namespace Langulus::Anyness
       Component::OwnershipStack<>,     // Allocation is referenced      
       Component::Contiguous,           // Heap memory is continuous     
       Component::IndexedLinear<>,      // Indexed directly              
-      Component::Insertion,            // Allows insertion              
       Component::Emplacement,          // Allows emplacement            
-      Component::InsertionOperators,   // << and >> insertion           
+      Component::Insertion<Text>,            // Serialize + insert      
+      Component::InsertionOperators<Text>,   // << and >> insertion     
       Component::Removal,              // Allows removal                
       Component::Assignment,           // Allows assignment             
-      Component::TypedStatic<DMeta, char>, // Type-constrained          
+      Component::TypedStatic<DMeta, char>,   // Type-constrained        
       Component::CountStack<>,         // Variable count                
       Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
@@ -57,6 +57,9 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_Text = Yes;
+
+      template<class A1, class...AN> requires RangeInsertable<Text, A1, AN...>
+      Text(A1&&, AN&&...);
 
       // Single element selections                                      
       using  Pick    = char const&;

@@ -40,7 +40,7 @@ SCENARIO("Byte manipulation", "[bytes]") {
 
       REQUIRE(data.GetCount() == 5 * sizeof(int));
       REQUIRE(data.GetReserved() >= 5 * sizeof(int));
-      REQUIRE(data.template IsExact<Byte>());
+      REQUIRE(data.IsExact<Byte>());
       REQUIRE(data.GetRaw() != nullptr);
       REQUIRE(data.GetAllocation());
 

@@ -11,10 +11,11 @@ namespace Langulus::Anyness::Component
 
    public:
       using CTTI_Component = Yes;
+      using CountType = T;
 
-      constexpr bool IsEmpty()  const noexcept      { return mCount == 0; }
-      constexpr auto GetCount() const noexcept -> T { return mCount; }
-      explicit operator bool()  const noexcept      { return mCount != 0; }
+      constexpr bool IsEmpty()  const noexcept { return mCount == 0; }
+      constexpr auto GetCount() const noexcept { return mCount; }
+      explicit operator bool()  const noexcept { return mCount != 0; }
    };
 
 } // namespace Langulus::Anyness::Component

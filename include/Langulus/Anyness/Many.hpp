@@ -18,8 +18,8 @@
 #include "../../../source/components/Hash-Stack.hpp"
 #include "../../../source/components/Descriptor.hpp"
 #include "../../../source/components/State-Stack.hpp"
-#include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/Emplacement.hpp"
+#include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Assignment.hpp"
@@ -44,9 +44,9 @@ namespace Langulus::Anyness
       Component::DeepOwnership<>,      // Referenced indirections       
       Component::Contiguous,           // Heap memory is continuous     
       Component::IndexedLinear<>,      // Indexed directly              
-      Component::Insertion,            // Allows insertion              
+      Component::Insertion<>,          // Allows insertion              
       Component::Emplacement,          // Allows emplacement            
-      Component::InsertionOperators,   // << and >> insertion           
+      Component::InsertionOperators<>, // << and >> insertion           
       Component::Removal,              // Allows removal                
       Component::Assignment,           // Allows assignment             
       Component::TypedStack<DMeta>,    // Variable type                 

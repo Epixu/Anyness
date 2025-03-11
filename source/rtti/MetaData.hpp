@@ -52,7 +52,7 @@ namespace Langulus::RTTI
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       : Inner::MetaDataStructured_16_16
    #else
-      : Inner::MetaNaked
+      : Inner::MetaNaked<DefinitionData>
    #endif
    {
       constexpr MetaData() noexcept = default;

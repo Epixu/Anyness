@@ -17,7 +17,7 @@ namespace Langulus::RTTI
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       : Inner::MetaPacked<2>
    #else
-      : Inner::MetaNaked
+      : Inner::MetaNaked<DefinitionConst>
    #endif
    {
       constexpr MetaConst() noexcept = default;

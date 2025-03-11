@@ -6,4 +6,42 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/Container.hpp"
+#include "Text.hpp"
+
+
+namespace Langulus::Anyness
+{
+
+   ///                                                                        
+   /// File path                                                              
+   ///                                                                        
+   struct Path : Text {
+      using CTTI_Bases    = Text;
+      using CTTI_MapsFrom = Text;
+
+      static constexpr char Separator = '/';
+
+      using Text::Text;
+
+      Path(const Text&);
+      Path(Text&&);
+
+      auto GetExtension() const -> Text;
+      auto GetDirectory() const -> Path;
+      auto GetFilename()  const -> Path;
+
+      auto operator /  (const Text&) const -> Path;
+      auto operator /= (const Text&) -> Path&;
+
+   private:
+      using Text::SerializationRules;
+   };
+
+} // namespace Langulus::Anyness
+
+namespace Langulus
+{
+
+   Anyness::Path operator ""_path(const char*, ::std::size_t);
+
+} // namespace Langulus

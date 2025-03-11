@@ -29,8 +29,10 @@
 namespace Langulus::Anyness
 {
 
+   using DMeta = RTTI::DMeta;
+
    ///                                                                        
-   /// Unsorted type-erased map                                               
+   /// Type-erased map of unspecified state                                   
    ///                                                                        
    struct Map : Container<
       Component::HeapMovable<0>,       // Heap for keys                 
@@ -40,8 +42,36 @@ namespace Langulus::Anyness
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
       Component::IndexedHash<>,        // Indexed directly              
-      Component::Insertion,            // Allows insertion              
-      Component::InsertionOperators,   // << and >> insertion           
+      Component::Insertion<>,          // Allows insertion              
+      Component::InsertionOperators<>, // << and >> insertion           
+      Component::Emplacement,          // Allows emplacement            
+      Component::Removal,              // Allows removal                
+      Component::Assignment,           // Allows assignment             
+      Component::TypedStack<DMeta, void, 0>,    // Key type             
+      Component::TypedStack<DMeta, void, 1>,    // Value type           
+      Component::CountStack<>,         // Variable count                
+      Component::ReserveStack<>,       // Variable capacity             
+      Component::StateStack<           // Variable state                
+         State::Sorted<>,                       // Maybe unsorted       
+         State::Compressed<>,          // Adds 'compressed' state       
+         State::Encrypted<>,           // Adds 'encrypted' state        
+         State::Tracked<>              // Adds 'tracked' state          
+      >
+   > {};
+   
+   ///                                                                        
+   /// Unsorted type-erased map                                               
+   ///                                                                        
+   struct MapUnsorted : Container<
+      Component::HeapMovable<0>,       // Heap for keys                 
+      Component::HeapMovable<1>,       // Heap for values               
+      Component::OwnershipStack<0>,    // Keys allocation is referenced 
+      Component::OwnershipStack<1>,    // Vals allocation is referenced 
+      Component::DeepOwnership<0>,     // Sparse keys are referenced    
+      Component::DeepOwnership<1>,     // Sparse vals are referenced    
+      Component::IndexedHash<>,        // Indexed directly              
+      Component::Insertion<>,          // Allows insertion              
+      Component::InsertionOperators<>, // << and >> insertion           
       Component::Emplacement,          // Allows emplacement            
       Component::Removal,              // Allows removal                
       Component::Assignment,           // Allows assignment             
@@ -55,12 +85,14 @@ namespace Langulus::Anyness
          State::Encrypted<>,           // Adds 'encrypted' state        
          State::Tracked<>              // Adds 'tracked' state          
       >
-   > {};
+   > {
+      using CTTI_ReflectAs = Map;
+   };
    
    ///                                                                        
    /// Sorted type-erased map                                                 
    ///                                                                        
-   struct Map : Container<
+   struct MapSorted : Container<
       Component::HeapMovable<0>,       // Heap for keys                 
       Component::HeapMovable<1>,       // Heap for values               
       Component::OwnershipStack<0>,    // Keys allocation is referenced 
@@ -68,8 +100,8 @@ namespace Langulus::Anyness
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
       Component::IndexedHash<>,        // Indexed directly              
-      Component::Insertion,            // Allows insertion              
-      Component::InsertionOperators,   // << and >> insertion           
+      Component::Insertion<>,          // Allows insertion              
+      Component::InsertionOperators<>, // << and >> insertion           
       Component::Emplacement,          // Allows emplacement            
       Component::Removal,              // Allows removal                
       Component::Assignment,           // Allows assignment             
@@ -83,6 +115,8 @@ namespace Langulus::Anyness
          State::Encrypted<>,           // Adds 'encrypted' state        
          State::Tracked<>              // Adds 'tracked' state          
       >
-   > {};
+   > {
+      using CTTI_ReflectAs = Map;
+   };
 
 } // namespace Langulus::Anyness

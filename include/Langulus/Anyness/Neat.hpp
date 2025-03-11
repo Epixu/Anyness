@@ -39,20 +39,19 @@ namespace Langulus::Anyness
       // Traits are ordered first by their trait type, then by their    
       // order of appearance. Duplicate trait types are allowed         
       // Trait contents may or may not also be normalized               
-      TMapUnordered<TMeta, TailList> mTraits;
+      TMapUnsorted<TMeta, TailList> mTraits;
 
       // Subconstructs are sorted first by the construct type, and then 
       // by their order of appearance. Their contents may or may not    
       // also be normalized                                             
-      TMapUnordered<DMeta, ConstructList> mConstructs;
+      TMapUnsorted<DMeta, ConstructList> mConstructs;
 
       // Any other block type that doesn't fit in the above is sorted   
       // first by the block type, then by the order of appearance       
       // These sub-blocks' contents may or may not be normalized        
-      TMapUnordered<DMeta, TailList> mAnythingElse;
+      TMapUnsorted<DMeta, TailList> mAnythingElse;
 
    public:
-      static constexpr bool Ownership = true;
       static constexpr bool CTTI_Container = true;
 
       ///                                                                     
@@ -65,8 +64,8 @@ namespace Langulus::Anyness
       template<template<class> class S> requires CT::Intent<S<Neat>>
       Neat(S<Neat>&&);
 
-      template<class T1, class...TN> requires CT::UnfoldInsertable<T1, TN...>
-      Neat(T1&&, TN&&...);
+      template<class A1, class...AN>
+      Neat(A1&&, AN&&...) requires RangeInsertable<Many, A1, AN...>;
 
       ///                                                                     
       ///   Assignment                                                        

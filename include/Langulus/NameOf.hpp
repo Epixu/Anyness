@@ -200,7 +200,7 @@ namespace Langulus::RTTI
          if constexpr (not found)
             return source;
          else {
-            Literal<source.size() - found*what.size() + found*with.size()> result;
+            Literal<char, source.size() - found*what.size() + found*with.size()> result;
             std::size_t fill = 0;
             std::size_t prev = 0;
             std::size_t curr = 0;

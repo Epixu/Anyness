@@ -24,9 +24,9 @@ namespace Langulus::Anyness
       Component::DeepOwnership<>,      // Referenced indirections       
       Component::Contiguous,           // Heap memory is continuous     
       Component::IndexedLinear<>,      // Indexed directly              
-      Component::Insertion,            // Allows insertion              
       Component::Emplacement,          // Allows emplacement            
-      Component::InsertionOperators,   // << and >> insertion           
+      Component::Insertion<>,          // Allows insertion              
+      Component::InsertionOperators<>, // << and >> insertion           
       Component::Removal,              // Allows removal                
       Component::Assignment,           // Allows assignment             
       Component::TypedStack<DMeta, T>, // Type-constrained              
