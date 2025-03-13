@@ -45,11 +45,11 @@ SCENARIO("Test hives", "[hive]") {
          REQUIRE(p2);
 
          REQUIRE(hive.GetCount() == 2);
-         REQUIRE(hive.GetFrames().GetCount() == 1);
-         REQUIRE(hive.GetReusable() == hive.GetFrames()[0].GetRaw() + 2);
+         REQUIRE(hive.GetFrames() == 1);
+         REQUIRE(hive.GetReusable() == hive.GetFrame(0) + 2*sizeof(Producible));
          REQUIRE(hive.GetType() == MetaOf<Producible>());
-         REQUIRE(hive.GetFrames()[0].GetRaw()[0].mData == one);
-         REQUIRE(hive.GetFrames()[0].GetRaw()[1].mData == two);
+         REQUIRE(*reinterpret_cast<Producible*>(hive.GetFrame(0)) == one);
+         REQUIRE(*reinterpret_cast<Producible*>(hive.GetFrame(0) + sizeof(Producible)) == two);
       }
    }
 

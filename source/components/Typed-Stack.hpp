@@ -1,5 +1,6 @@
 #pragma once
 #include "../Container.hpp"
+#include <Langulus/CT/Same.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -17,47 +18,130 @@ namespace Langulus::Anyness::Component
       // The type                                                       
       T mType;
 
+      using Count = ::std::size_t;
+
    public:
       using CTTI_Component = Yes;
       using CTTI_Typed     = TYPE;
+
       static constexpr bool TypeErased = CT::Void<TYPE>;
 
+      /// Get the contained type                                              
+      ///   @return the contained type                                        
       constexpr T GetType() const noexcept { return mType; }
 
-      template<CT::Data, CT::Data...>
-      constexpr bool Is() const noexcept;
-      bool Is(DMeta) const noexcept;
-      bool Is(const CT::Block auto&) const noexcept;
+      /// Check if type origin is the same as one of the provided types       
+      /// This can potentially happen at compile-time                         
+      ///   @attention ignores sparsity and cv-qualifiers                     
+      ///   @tparam A1, AN... - the types to compare against                  
+      ///   @return true if origin type is same to at least one of the types  
+      template<CT::NotVoid A1, CT::NotVoid...AN>
+      constexpr bool Is() const noexcept {
+         if constexpr (TypeErased)
+            return mType.template Is<A1, AN...>();
+         else
+            return CT::SameAsOneOf<TYPE, A1, AN...>;
+      }
 
-      template<CT::Data, CT::Data...>
-      constexpr bool IsSimilar() const noexcept;
-      bool IsSimilar(DMeta) const noexcept;
-      bool IsSimilar(const CT::Block auto&) const noexcept;
+      /// Check if type origin is the same as another                         
+      ///   @attention ignores sparsity and cv-qualifiers                     
+      ///   @param type - the type to check for                               
+      ///   @return true if this container has similar data                   
+      bool Is(T type) const noexcept {
+         return mType.Is(type);
+      }
 
-      template<CT::Data, CT::Data...>
-      constexpr bool IsExact() const noexcept;
-      bool IsExact(DMeta) const noexcept;
-      bool IsExact(const CT::Block auto&) const noexcept;
+      /// Check if type origin is the same as another container's type        
+      /// This can potentially happen at compile-time                         
+      ///   @attention ignores sparsity and cv-qualifiers                     
+      ///   @param other - the type to check for                              
+      ///   @return true if this container has similar data                   
+      template<CT::Container C>
+      constexpr bool Is(C const& other) const noexcept {
+         if constexpr (TypeErased or C::TypeErased)
+            return mType.Is(other.mType);
+         else
+            return CT::Same<TYPE, TypeOf<C>>;
+      }
+
+      /// Check if unqualified type is the same as one of the provided types  
+      /// This can potentially happen at compile-time                         
+      ///   @attention ignores only cv-qualifiers                             
+      ///   @tparam A1, AN... - the types to compare against                  
+      ///   @return true if data type is similar to at least one of the types 
+      template<CT::NotVoid A1, CT::NotVoid...AN>
+      constexpr bool IsSimilar() const noexcept {
+         if constexpr (TypeErased)
+            return mType.template IsSimilar<A1, AN...>();
+         else
+            return CT::SimilarAsOneOf<TYPE, A1, AN...>;
+      }
+
+      /// Check if unqualified type is the same as another                    
+      ///   @attention ignores only cv-qualifiers                             
+      ///   @param type - the type to check for                               
+      ///   @return true if this block contains similar data                  
+      bool IsSimilar(T type) const noexcept {
+         return mType.IsSimilar(type);
+      }
+
+      /// Check if unqualified type is the same as another container's type   
+      /// This can potentially happen at compile-time                         
+      ///   @attention ignores only cv-qualifiers                             
+      ///   @param other - the container to check for                         
+      ///   @return true if this container has similar data                   
+      template<CT::Container C>
+      constexpr bool IsSimilar(C const& other) const noexcept {
+         if constexpr (TypeErased or C::TypeErased)
+            return mType.IsSimilar(other.mType);
+         else
+            return CT::Similar<TYPE, TypeOf<C>>;
+      }
+
+      /// Check if this type is exactly one of the provided types             
+      /// This can potentially happen at compile-time                         
+      ///   @tparam T1, TN... - the types to compare against                  
+      ///   @return true if data type matches at least one type               
+      template<CT::NotVoid A1, CT::NotVoid...AN>
+      constexpr bool IsExact() const noexcept {
+         if constexpr (TypeErased)
+            return mType.template IsExact<A1, AN...>();
+         else
+            return CT::ExactAsOneOf<TYPE, A1, AN...>;
+      }
+
+      /// Check if this type is exactly another                               
+      ///   @param type - the type to match                                   
+      ///   @return true if data type matches type exactly                    
+      bool IsExact(T type) const noexcept {
+         return mType.IsExact(type);
+      }
+
+      /// Check if this type is exactly another container's type              
+      /// This can potentially happen at compile-time                         
+      ///   @param other - the block to match                                 
+      ///   @return true if data type matches type exactly                    
+      template<CT::Container C>
+      constexpr bool IsExact(C const& other) const noexcept {
+         if constexpr (TypeErased or C::TypeErased)
+            return mType.IsExact(other.mType);
+         else
+            return CT::Exact<TYPE, TypeOf<C>>;
+      }
 
       template<bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
-      bool CastsToMeta(DMeta) const;
+      bool CastsToMeta(T) const;
       template<bool BINARY_COMPATIBLE = false>
-      bool CastsToMeta(DMeta, Count) const;
+      bool CastsToMeta(T, Count) const;
 
-      template<CT::Data, bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
+      template<CT::NotVoid, bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
       bool CastsTo() const;
-      template<CT::Data, bool BINARY_COMPATIBLE = false>
+      template<CT::NotVoid, bool BINARY_COMPATIBLE = false>
       bool CastsTo(Count) const;
 
-      template<bool CONSTRAIN = false>
-      void SetType(DMeta) requires TypeErased;
-      template<CT::Data, bool CONSTRAIN = false>
-      void SetType() requires TypeErased;
-
-      template<CT::Container C>
-      constexpr decltype(auto) Get(this C&& self) {
-
-      }
+      template<CT::NotVoid>
+      void SetType()  requires TypeErased;
+      void SetType(T) requires TypeErased;
    };
 
 } // namespace Langulus::Anyness::Component

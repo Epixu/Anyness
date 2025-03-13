@@ -66,10 +66,10 @@ namespace Langulus::Anyness
       Bytes(Bytes&&) noexcept;
 
       template<template<class> class I> requires CT::Intent<I<Bytes>>
-      explicit Bytes(I<Bytes>&&) noexcept;
+      Bytes(I<Bytes>&&) noexcept;
 
       template<class A1, class...AN>
-      explicit Bytes(A1&&, AN&&...) requires RangeInsertable<Bytes, A1, AN...>;
+      Bytes(A1&&, AN&&...) requires RangeInsertable<Bytes, A1, AN...>;
 
       // Single element selections                                      
       using Pick    = Byte const&;

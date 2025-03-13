@@ -4,11 +4,11 @@
 
 namespace Langulus::RTTI
 {
+   class DefinitionVerb;
 
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
    namespace Inner
    {
-
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       /// Relies on the definition limits to pack an ID into the smallest     
       /// possible space, but also uses some additional bits to encode some   
       /// often used information about the definition. The handle still has   
@@ -27,11 +27,27 @@ namespace Langulus::RTTI
       struct MetaVerbStructured_24_8 : MetaPacked<3> {
 
       };
+   #endif
+
+      /// A naked pointer to a definition. Probably the fastest, but most     
+      /// memory-inefficient on 64bit systems                                 
+      struct MetaVerbNaked {
+      private:
+         const DefinitionVerb* mDefinition;
+
+      public:
+         template<class, class...>
+         bool IsExact() const noexcept;
+         bool IsExact(const MetaVerbNaked&) const noexcept;
+
+         /// Compare if two tags match exactly                                
+         bool operator == (const MetaVerbNaked& rhs) const noexcept {
+            return IsExact(rhs);
+         }
+      };
 
    } // namespace Langulus::RTTI::Inner
-#endif
 
-   class DefinitionVerb;
 
    ///                                                                        
    ///   Verb type ID                                                         
@@ -44,7 +60,7 @@ namespace Langulus::RTTI
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       : Inner::MetaVerbStructured_8_8
    #else
-      : Inner::MetaNaked<DefinitionVerb>
+      : Inner::MetaVerbNaked
    #endif
    {
       constexpr MetaVerb() noexcept = default;

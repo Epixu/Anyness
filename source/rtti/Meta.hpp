@@ -1,4 +1,5 @@
 #pragma once
+#include <Langulus/Core.hpp>
 
 
 namespace Langulus::RTTI::Inner
@@ -13,26 +14,12 @@ namespace Langulus::RTTI::Inner
    /// indirections - all this is configurable                                
    ///                                                                        
 
-   /// A naked pointer to a definition, probably the fastest, but most        
-   /// memory-inefficient on 64bit systems                                    
-   template<class T>
-   struct MetaNaked {
-      const T* mDefinition;
-
-      /// Compare if two data types match exactly                             
-      ///   @attention includes qualifiers and sparsity                       
-      bool operator == (const MetaNaked& rhs) const noexcept {
-         return mDefinition == rhs.mDefinition
-            or (mDefinition and mDefinition->IsExact(rhs->mDefinition));
-      }
-   };
-
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    /// Relies on the definition limits to pack an ID into the smallest        
    /// possible space. We would never have 64bit worth of type definitions    
-   /// in a program either way. If somehow you do, then you're                
-   /// probably doing something wrong. The handle has to be transformed       
-   /// into a pointer, so this requires an additional level of indirection    
+   /// in a program either way. If somehow you do, then you're probably doing 
+   /// something wrong. The handle has to be transformed into a pointer, so   
+   /// this requires an additional level of indirection                       
    ///   @tparam BYTESIZE - the size of the handle in bytes                   
    template<unsigned BYTESIZE>
    struct MetaPacked {

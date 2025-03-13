@@ -4,11 +4,11 @@
 
 namespace Langulus::RTTI
 {
+   class DefinitionData;
 
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
    namespace Inner
    {
-
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       /// Relies on the definition limits to pack an ID into the smallest     
       /// possible space, but also uses some additional bits to encode some   
       /// often used information about the definition. The handle still has   
@@ -35,11 +35,38 @@ namespace Langulus::RTTI
       struct MetaDataStructured_32_16 : MetaPacked<4> {
 
       };
+   #endif
+
+      /// A naked pointer to a definition. Probably the fastest, but most     
+      /// memory-inefficient on 64bit systems                                 
+      struct MetaDataNaked {
+      private:
+         const DefinitionData* mDefinition;
+
+      public:
+         template<class, class...>
+         bool Is() const noexcept;
+         bool Is(const MetaDataNaked&) const noexcept;
+
+         template<class, class...>
+         bool IsSimilar() const noexcept;
+         bool IsSimilar(const MetaDataNaked&) const noexcept;
+
+         template<class, class...>
+         bool IsExact() const noexcept;
+         bool IsExact(const MetaDataNaked&) const noexcept;
+
+         /// Compare if two data types match exactly                          
+         ///   @attention includes qualifiers and sparsity                    
+         bool operator == (const MetaDataNaked& rhs) const noexcept {
+            return IsExact(rhs);
+         }
+
+         ::std::size_t GetMinAllocation() const noexcept;
+      };
 
    } // namespace Langulus::RTTI::Inner
-#endif
-    
-   class DefinitionData;
+   
 
    ///                                                                        
    ///   Data type ID                                                         
@@ -52,14 +79,12 @@ namespace Langulus::RTTI
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       : Inner::MetaDataStructured_16_16
    #else
-      : Inner::MetaNaked<DefinitionData>
+      : Inner::MetaDataNaked
    #endif
    {
       constexpr MetaData() noexcept = default;
       constexpr MetaData(::std::nullptr_t) noexcept {}
       constexpr MetaData(const DefinitionData*) noexcept;
-
-      ::std::size_t GetMinAllocation() const noexcept;
    };
 
    using DMeta = MetaData;

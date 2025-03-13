@@ -4,8 +4,30 @@
 
 namespace Langulus::RTTI
 {
-
    class DefinitionTag;
+
+   namespace Inner
+   {
+      
+      /// A naked pointer to a definition. Probably the fastest, but most     
+      /// memory-inefficient on 64bit systems                                 
+      struct MetaTagNaked {
+      private:
+         const DefinitionTag* mDefinition;
+
+      public:
+         template<class, class...>
+         bool IsExact() const noexcept;
+         bool IsExact(const MetaTagNaked&) const noexcept;
+
+         /// Compare if two tags match exactly                                
+         bool operator == (const MetaTagNaked& rhs) const noexcept {
+            return IsExact(rhs);
+         }
+      };
+
+   } // namespace Langulus::RTTI::Inner
+
 
    ///                                                                        
    ///   Tag ID                                                               
@@ -17,7 +39,7 @@ namespace Langulus::RTTI
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       : Inner::MetaPacked<2>
    #else
-      : Inner::MetaNaked<DefinitionTag>
+      : Inner::MetaTagNaked
    #endif
    {
       constexpr MetaTag() noexcept = default;

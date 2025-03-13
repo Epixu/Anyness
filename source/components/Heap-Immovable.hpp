@@ -20,6 +20,8 @@ namespace Langulus::Anyness::Component
 
       // A heap of heaps - the inner ones are immovable                 
       Byte** mHeap = nullptr;
+      // Number of allocated heaps - each new heap is twice as big      
+      ::std::uint8_t mHeapCount = 0;
 
       // The start of the reusable chain, in the first heap that has    
       // a free cell                                                    
@@ -28,20 +30,10 @@ namespace Langulus::Anyness::Component
    public:
       using CTTI_Component = Yes;
 
-      /// Get a direct access to the heap memory                              
-      ///   @returns the memory pointer                                       
-      template<CT::Container C>
-      constexpr auto GetRaw(this C&& self) noexcept {
-         using T = TypeOf<C>;
-         if constexpr (CT::Mutable<C>)
-            return static_cast<const T*>(self.mHeap);
-         else
-            return static_cast<      T*>(self.mHeap);
-      }
-
    #if LANGULUS(TESTING)
-      auto GetReusable() const noexcept { return mReusable; }
-      auto GetFrames()   const noexcept { return mHeap;     }
+      auto GetReusable()      const noexcept { return mReusable;  }
+      auto GetFrames()        const noexcept { return mHeapCount; }
+      auto GetFrame(int idx)  const noexcept { return mHeap[idx]; }
    #endif
    };
 

@@ -38,15 +38,24 @@ namespace Langulus::Inner
 
 } // namespace Langulus::Inner
 
+namespace Langulus::Anyness
+{
+   struct Many;
+
+   template<class T = Anyness::Many>
+   struct Tag;
+
+} // namespace Langulus::Anyness
+
 namespace Langulus::Tags
 {
 
-   template<class T>
+   template<class T = Anyness::Many>
    struct Name : Inner::Tag<T> {
       using CTTI_DefineTag = YesText<"Name">;
    };
 
-   template<class T>
+   template<class T = Anyness::Many>
    struct Count : Inner::Tag<T> {
       using CTTI_DefineTag = YesText<"Count">;
    };

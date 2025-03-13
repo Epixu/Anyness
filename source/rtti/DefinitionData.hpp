@@ -11,13 +11,13 @@ namespace Langulus::RTTI
    ///                                                                        
    class DefinitionData : public Inner::Definition {
    protected:
-      friend struct MetaData;
-      DefinitionData(const Token& cppname) : Definition {cppname} {}
-
       // A unique handle that may or may not be compressed              
       MetaData mHandle;
 
    public:
+      friend struct MetaData;
+      DefinitionData(const Token& cppname) : Definition {cppname} {}
+
       template<CT::Decayed>
       static DMeta Reflect();
    };

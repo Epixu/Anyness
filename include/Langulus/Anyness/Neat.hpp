@@ -39,10 +39,10 @@ namespace Langulus::Anyness
       // Kept as first member, in order to quickly access it            
       mutable Hash mHash;
 
-      // Traits are ordered first by their trait type, then by their    
-      // order of appearance. Duplicate trait types are allowed         
-      // Trait contents may or may not also be normalized               
-      TMapUnsorted<TMeta, TailList> mTraits;
+      // Tags are ordered first by their tag type, then by their        
+      // order of appearance. Duplicate tag types are allowed           
+      // Tag contents may or may not also be normalized                 
+      TMapUnsorted<TMeta, TailList> mTags;
 
       // Subconstructs are sorted first by the construct type, and then 
       // by their order of appearance. Their contents may or may not    
@@ -134,11 +134,11 @@ namespace Langulus::Anyness
       auto ExtractDataAs(CT::NotVoid auto&) const -> Count;
 
       template<CT::Tag>
-      auto GetTrait(Offset = 0)        const -> const Trait*;
-      auto GetTrait(TMeta, Offset = 0) const -> const Trait*;
+      auto GetTag(Offset = 0)        const -> const Tag<>*;
+      auto GetTag(TMeta, Offset = 0) const -> const Tag<>*;
 
    protected:
-      template<CT::Trait>
+      template<CT::Tag>
       bool ExtractTraitInner(CT::NotVoid auto&...) const;
       template<Offset...IDX>
       bool ExtractTraitInner(const TraitList&, ExpandedSequence<IDX...>, CT::NotVoid auto&...) const;

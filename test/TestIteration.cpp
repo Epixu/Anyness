@@ -10,13 +10,13 @@
 
 
 SCENARIO("Iterating containers", "[iteration]") {
+   using Count = typename TMany<int>::CountType;
+
    GIVEN("Templated Any with some POD items") {
       TMany<int> dense;
       dense << int(1) << int(2) << int(3) << int(4) << int(5);
       TMany<int*> sparse;
       sparse << new int(6) << new int(7) << new int(8) << new int(9) << new int(10);
-
-      using Count = typename TMany<int>::CountType;
 
       WHEN("Dense-iterating a dense pack (shallow)") {
          int it = 0;
@@ -381,7 +381,7 @@ SCENARIO("Iterating containers", "[iteration]") {
       Many sparse_any = new float(sf);
 
       WHEN("Dense-iterating a dense any (shallow)") {
-         Count it {};
+         Count it = 0;
          dense_any.ForEach([&](float& i) {
             REQUIRE(i == df + float(it));
             ++it;
@@ -390,7 +390,7 @@ SCENARIO("Iterating containers", "[iteration]") {
          REQUIRE(it == dense_any.GetCount());
 
          it = 0;
-         dense_any.ForEach<true>([&](float& i) {
+         dense_any.ForEachRev([&](float& i) {
             REQUIRE(i == df + float(it));
             ++it;
             return true;
@@ -407,7 +407,7 @@ SCENARIO("Iterating containers", "[iteration]") {
       }
 
       WHEN("Dense-iterating a sparse any (shallow)") {
-         Count it {};
+         Count it = 0;
          sparse_any.ForEach([&](float& i) {
             REQUIRE(i == sf + float(it));
             ++it;
@@ -416,7 +416,7 @@ SCENARIO("Iterating containers", "[iteration]") {
          REQUIRE(it == sparse_any.GetCount());
 
          it = 0;
-         sparse_any.ForEach<true>([&](float& i) {
+         sparse_any.ForEachRev([&](float& i) {
             REQUIRE(i == sf + float(it));
             ++it;
             return true;
@@ -536,7 +536,7 @@ SCENARIO("Iterating containers", "[iteration]") {
       }
 
       WHEN("Deep-iterated with the intent to remove specific subpacks (without skipping intermediate groups)") {
-         pack.template ForEachDeep<false, false>([&](Many& subcontent) {
+         pack.ForEachDeep<false>([&](Many& subcontent) {
             if (subcontent == subpack1)
                return Loop::Discard;
             return Loop::Continue;

@@ -63,6 +63,9 @@ namespace Langulus::Anyness
       template<class A1, class...AN> requires RangeInsertable<Text, A1, AN...>
       Text(A1&&, AN&&...);
 
+      static Text From(CT::Text auto&&, CountType);
+      static Text FromNumber(CT::Number auto&&, int precision = 0);
+
       // Single element selections                                      
       using  Pick    = char const&;
       using  PickMut = char&;

@@ -17,7 +17,7 @@ namespace Langulus::CT
    /// Check if all T are literals or bounded character arrays                
    template<class...T>
    concept TextLiteral = ((
-         T::CTTI_StringLiteral or (Array<T> and Character<TypeOf<T>>)
+         FixedString<T> or (Array<T> and Character<TypeOf<T>>)
       ) and ...);
 
    /// Check if all T are string pointers, hopefully null-terminated          

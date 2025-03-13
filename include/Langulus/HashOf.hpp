@@ -28,6 +28,8 @@ namespace Langulus
       explicit constexpr operator bool() const noexcept {
          return mHash != 0;
       }
+
+      constexpr bool operator == (const Hash&) const noexcept = default;
    };
 
    /// Default hash seed used in Langulus                                     
