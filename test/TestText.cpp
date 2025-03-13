@@ -20,7 +20,7 @@
 
 /// A type that is reflected, as convertible to Text                          
 struct StringifiableConst {
-   LANGULUS_CONVERTS_TO(Text);
+   using CTTI_MapsTo = Text;
    
    explicit operator Text() const {
       return "Stringifiable converted to Text";
@@ -223,7 +223,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE(text.GetCount() == 0);
          REQUIRE(text.GetReserved() == 0);
          REQUIRE(text.GetRaw() == nullptr);
-         REQUIRE(text.GetType() == MetaOf<Letter>());
+         REQUIRE(text.GetType() == MetaOf<char>());
          REQUIRE_FALSE(text.GetAllocation());
          REQUIRE(text != "test");
       }
@@ -243,7 +243,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
             REQUIRE(text.GetRaw() == memory);
          #endif
          REQUIRE(text.GetAllocation());
-         REQUIRE(text.template Is<Letter>());
+         REQUIRE(text.template Is<char>());
       }
 
       WHEN("More capacity is reserved") {
@@ -286,7 +286,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE(text.GetReserved() >= 5);
          REQUIRE(text.GetRaw() == memory);
          REQUIRE(text.GetAllocation());
-         REQUIRE(text.template Is<Letter>());
+         REQUIRE(text.template Is<char>());
       }
 
       WHEN("Text is reset") {
@@ -295,7 +295,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE(text.GetCount() == 0);
          REQUIRE(text.GetReserved() == 0);
          REQUIRE_FALSE(text.GetRaw());
-         REQUIRE(text.template Is<Letter>());
+         REQUIRE(text.template Is<char>());
       }
 
       WHEN("Text is copied shallowly") {
@@ -331,7 +331,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE(text.GetCount() == 5);
          REQUIRE(text.GetReserved() >= 5);
          REQUIRE(text.GetAllocation());
-         REQUIRE(text.template Is<Letter>());
+         REQUIRE(text.template Is<char>());
       }
 
       WHEN("Texts are compared") {
@@ -359,7 +359,7 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
 
       REQUIRE((*text).GetCount() == 2);
       REQUIRE((*text).GetReserved() >= 2);
-      REQUIRE((*text).template Is<Letter>());
+      REQUIRE((*text).template Is<char>());
       REQUIRE((*text).GetRaw());
       REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "66");
@@ -372,7 +372,7 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
 
       REQUIRE((*text).GetCount() == 2);
       REQUIRE((*text).GetReserved() >= 2);
-      REQUIRE((*text).template Is<Letter>());
+      REQUIRE((*text).template Is<char>());
       REQUIRE((*text).GetRaw());
       REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "66");
@@ -397,7 +397,7 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]", int8_t, int16_t, i
 
       REQUIRE((*text).GetCount() == 3);
       REQUIRE((*text).GetReserved() >= 3);
-      REQUIRE((*text).template Is<Letter>());
+      REQUIRE((*text).template Is<char>());
       REQUIRE((*text).GetRaw());
       REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "-66");
@@ -410,7 +410,7 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]", int8_t, int16_t, i
 
       REQUIRE((*text).GetCount() == 3);
       REQUIRE((*text).GetReserved() >= 3);
-      REQUIRE((*text).template Is<Letter>());
+      REQUIRE((*text).template Is<char>());
       REQUIRE((*text).GetRaw());
       REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "-66");

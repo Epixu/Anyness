@@ -34,13 +34,16 @@ namespace Langulus::Anyness
       Component::ReserveStack<>,       // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
       Component::Descriptor,           // Descriptor interface          
+      Component::IterationForEach,     // ForEach iteration             
+      Component::Comparison,           // Allows for comparison         
       Component::StateStack<           // Variable state                
-         State::Future<>,              // Adds a 'missing future' state 
-         State::Past<>,                // Adds a 'missing past' state   
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Or<>,                  // Adds 'or' state               
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Typed<State::Enabled>, // Always type-constrained 
+         DefineState::Future<>,        // Adds a 'missing future' state 
+         DefineState::Past<>,          // Adds a 'missing past' state   
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Or<>,            // Adds 'or' state               
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
       using CTTI_ReflectAs = Many;
@@ -97,13 +100,16 @@ namespace Langulus::Anyness
       Component::ReserveStack<>,       // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
       Component::Descriptor,           // Descriptor interface          
+      Component::IterationForEach,     // ForEach iteration             
+      Component::Comparison,           // Allows for comparison         
       Component::StateStack<           // Variable state                
-         State::Future<>,              // Adds a 'missing future' state 
-         State::Past<>,                // Adds a 'missing past' state   
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Or<>,                  // Adds 'or' state               
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Typed<State::Enabled>, // Always type-constrained 
+         DefineState::Future<>,        // Adds a 'missing future' state 
+         DefineState::Past<>,          // Adds a 'missing past' state   
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Or<>,            // Adds 'or' state               
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
       using CTTI_ReflectAs = ManyView;

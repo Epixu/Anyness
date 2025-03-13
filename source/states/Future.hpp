@@ -2,14 +2,21 @@
 #include "../Container.hpp"
 
 
+namespace Langulus::Anyness::DefineState
+{
+
+   template<State::StateValue V = State::Variable>
+   struct Future {
+      using CTTI_State = Yes;
+      static constexpr bool Static = V != State::Variable;
+      static constexpr bool Enable = V == State::Enabled;
+   };
+
+} // namespace Langulus::Anyness::DefineState
+
 namespace Langulus::Anyness::State
 {
 
-   template<StateValue V = Variable>
-   struct Future {
-      using CTTI_State = Yes;
-      static constexpr bool Static = V != Variable;
-      static constexpr bool Enable = V == Enable;
-   };
+   constexpr DefineState::Future Future = {};
 
-} // namespace Langulus::Anyness::Component
+} // namespace Langulus::Anyness::State

@@ -9,6 +9,29 @@
 #include "Core.hpp"
 
 
+namespace Langulus::CTTI
+{
+
+   /// Can be used in two ways to satisfy CT::Exception<T>:                   
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Exception = Yes/No;` in T                  
+   template<class T>
+   struct Exception {
+      static constexpr bool Enabled = false;
+   };
+
+} // namespace Langulus::CTTI
+
+namespace Langulus::CT
+{
+
+   template<class...T>
+   concept Exception = ((CTTI::Exception<Deref<T>>::Enabled or Deref<T>::CTTI_Exception::Enabled) and ...);
+   template<class...T> \
+   concept NotException = ((not Exception<Deref<T>>) and ...);
+
+} // namespace Langulus::CT
+
 namespace Langulus
 {
 
@@ -19,6 +42,7 @@ namespace Langulus
    /// for debug builds, like message and location strings                    
    ///                                                                        
    struct Exception {
+      using CTTI_Exception = Yes;
       static constexpr const char* DefaultMessage  = "<no information provided>";
       static constexpr const char* DefaultLocation = "<unknown location>";
 

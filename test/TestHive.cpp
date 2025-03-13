@@ -17,6 +17,8 @@ struct Producible : Referenced {
    bool operator == (const Producible& a) const noexcept {
       return v == a.v;
    }
+
+   explicit operator bool() const noexcept { return v != 0; }
 };
 
 SCENARIO("Test hives", "[hive]") {
@@ -36,8 +38,8 @@ SCENARIO("Test hives", "[hive]") {
       }
 
       WHEN("Two elements produced") {
-         auto p1 = hive.New(1);
-         auto p2 = hive.New(2);
+         auto p1 = hive.Emplace(1);
+         auto p2 = hive.Emplace(2);
 
          REQUIRE(p1);
          REQUIRE(p2);

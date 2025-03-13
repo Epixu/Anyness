@@ -16,6 +16,8 @@ SCENARIO("Iterating containers", "[iteration]") {
       TMany<int*> sparse;
       sparse << new int(6) << new int(7) << new int(8) << new int(9) << new int(10);
 
+      using Count = typename TMany<int>::CountType;
+
       WHEN("Dense-iterating a dense pack (shallow)") {
          int it = 0;
          dense.ForEach([&](int& i) {
@@ -26,7 +28,7 @@ SCENARIO("Iterating containers", "[iteration]") {
          REQUIRE(Count(it) == dense.GetCount());
 
          it = 0;
-         dense.ForEach<true>([&](int& i) {
+         dense.ForEachRev([&](int& i) {
             REQUIRE(i == 5 - it);
             ++it;
             return true;
@@ -52,7 +54,7 @@ SCENARIO("Iterating containers", "[iteration]") {
          REQUIRE(Count(it) == sparse.GetCount());
 
          it = 0;
-         sparse.ForEach<true>([&](int& i) {
+         sparse.ForEachRev([&](int& i) {
             REQUIRE(i == 10 - it);
             ++it;
             return true;

@@ -9,6 +9,7 @@
 #include "TMany.hpp"
 #include "TMap.hpp"
 #include "Construct.hpp"
+#include <Langulus/Tag.hpp>
 
 
 namespace Langulus::Anyness
@@ -31,6 +32,8 @@ namespace Langulus::Anyness
    class Neat {
       using ConstructList = TMany<Construct>;
       using TailList      = TMany<Messy>;
+      using Count         = ::std::size_t;
+      using Offset        = ::std::size_t;
 
       // The hash of the container                                      
       // Kept as first member, in order to quickly access it            
@@ -52,7 +55,7 @@ namespace Langulus::Anyness
       TMapUnsorted<DMeta, TailList> mAnythingElse;
 
    public:
-      static constexpr bool CTTI_Container = true;
+      using CTTI_Container = Yes;
 
       ///                                                                     
       ///   Construction                                                      
@@ -94,53 +97,53 @@ namespace Langulus::Anyness
 
       explicit operator bool() const noexcept;
 
-      template<CT::Trait>
-      auto GetTraits() -> TraitList*;
+      template<CT::Tag>
+      auto GetTags() -> TailList*;
 
-      template<CT::Trait>
-      auto GetTraits()      const -> const TraitList*;
-      auto GetTraits(TMeta)       ->       TraitList*;
-      auto GetTraits(TMeta) const -> const TraitList*;
+      template<CT::Tag>
+      auto GetTraits()      const -> const TailList*;
+      auto GetTraits(TMeta)       ->       TailList*;
+      auto GetTraits(TMeta) const -> const TailList*;
 
-      template<CT::Data>
+      template<CT::NotVoid>
       auto GetData() -> TailList*;
 
-      template<CT::Data>
+      template<CT::NotVoid>
       auto GetData()      const -> const TailList*;
       auto GetData(DMeta)       ->       TailList*;
       auto GetData(DMeta) const -> const TailList*;
       
-      template<CT::Data>
+      template<CT::NotVoid>
       auto GetConstructs() -> ConstructList*;
 
-      template<CT::Data>
+      template<CT::NotVoid>
       auto FindType()      const -> DMeta;
       auto FindType(DMeta) const -> DMeta;
 
-      template<CT::Data>
+      template<CT::NotVoid>
       auto GetConstructs()      const -> const ConstructList*;
       auto GetConstructs(DMeta)       ->       ConstructList*;
       auto GetConstructs(DMeta) const -> const ConstructList*;
 
-      template<CT::Trait>
-      void SetDefaultTrait(CT::Data auto&&);
+      template<CT::Tag>
+      void SetDefaultTrait(CT::NotVoid auto&&);
 
-      template<CT::Trait...>
-      bool ExtractTrait(CT::Data auto&...) const;
-      auto ExtractData(CT::Data auto&) const -> Count;
-      auto ExtractDataAs(CT::Data auto&) const -> Count;
+      template<CT::Tag...>
+      bool ExtractTrait(CT::NotVoid auto&...) const;
+      auto ExtractData(CT::NotVoid auto&) const -> Count;
+      auto ExtractDataAs(CT::NotVoid auto&) const -> Count;
 
-      template<CT::Trait>
+      template<CT::Tag>
       auto GetTrait(Offset = 0)        const -> const Trait*;
       auto GetTrait(TMeta, Offset = 0) const -> const Trait*;
 
    protected:
       template<CT::Trait>
-      bool ExtractTraitInner(CT::Data auto&...) const;
+      bool ExtractTraitInner(CT::NotVoid auto&...) const;
       template<Offset...IDX>
-      bool ExtractTraitInner(const TraitList&, ExpandedSequence<IDX...>, CT::Data auto&...) const;
+      bool ExtractTraitInner(const TraitList&, ExpandedSequence<IDX...>, CT::NotVoid auto&...) const;
       template<Offset>
-      bool ExtractTraitInnerInner(const TraitList&, CT::Data auto&) const;
+      bool ExtractTraitInnerInner(const TraitList&, CT::NotVoid auto&) const;
 
    public:
       ///                                                                     
@@ -178,7 +181,7 @@ namespace Langulus::Anyness
       template<class T1, class...TN>
       Count Insert(T1&&, TN&&...);
       void  Merge(const Neat&);
-      Neat& SetTrait(CT::TraitBased auto&&, Offset = 0);
+      Neat& SetTrait(CT::Tag auto&&, Offset = 0);
 
       Neat& operator <<  (auto&&);
       Neat& operator <<= (auto&&);
@@ -195,12 +198,12 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Removal                                                           
       ///                                                                     
-      template<CT::Data, bool EMPTY_TOO = false>
+      template<CT::NotVoid, bool EMPTY_TOO = false>
       Count RemoveData();
-      template<CT::Data>
+      template<CT::NotVoid>
       Count RemoveConstructs();
-      template<CT::Trait, bool EMPTY_TOO = false>
-      Count RemoveTrait();
+      template<CT::Tag, bool EMPTY_TOO = false>
+      Count RemoveTag();
 
       ///                                                                     
       ///   Conversion                                                        

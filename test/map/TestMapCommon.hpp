@@ -10,6 +10,7 @@
 /// Include this file once in each cpp file, after all other headers          
 #include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/Map.hpp>
+#include <Langulus/CT/Deep.hpp>
 #include <unordered_map>
 #include "../Common.hpp"
 

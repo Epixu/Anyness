@@ -18,7 +18,13 @@ namespace Langulus::Anyness::Component
    public:
       using CTTI_Component = Yes;
 
-      const Allocation* GetAllocation() const noexcept { return mAllocation; }
+      auto GetAllocation() const noexcept -> const Allocation* {
+         return mAllocation;
+      }
+
+      auto GetUses() const noexcept {
+         return mAllocation ? mAllocation->GetUses() : 0;
+      }
    };
    
    ///                                                                        

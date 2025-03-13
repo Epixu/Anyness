@@ -18,6 +18,13 @@ namespace Langulus::RTTI::Inner
    template<class T>
    struct MetaNaked {
       const T* mDefinition;
+
+      /// Compare if two data types match exactly                             
+      ///   @attention includes qualifiers and sparsity                       
+      bool operator == (const MetaNaked& rhs) const noexcept {
+         return mDefinition == rhs.mDefinition
+            or (mDefinition and mDefinition->IsExact(rhs->mDefinition));
+      }
    };
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

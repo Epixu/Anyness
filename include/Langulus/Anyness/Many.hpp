@@ -23,12 +23,15 @@
 #include "../../../source/components/InsertionOperators.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Assignment.hpp"
+#include "../../../source/components/Iteration-ForEach.hpp"
+#include "../../../source/components/Comparison.hpp"
 #include "../../../source/states/Future.hpp"
 #include "../../../source/states/Past.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Or.hpp"
 #include "../../../source/states/Tracked.hpp"
+#include "../../../source/states/Typed.hpp"
 #include "../../../source/rtti/MetaData.hpp"
 
 
@@ -54,15 +57,28 @@ namespace Langulus::Anyness
       Component::ReserveStack<>,       // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
       Component::Descriptor,           // Descriptor interface          
+      Component::IterationForEach,     // ForEach iteration             
+      Component::Comparison,           // Allows for comparison         
       Component::StateStack<           // Variable state                
-         State::Future<>,              // Adds a 'missing future' state 
-         State::Past<>,                // Adds a 'missing past' state   
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Or<>,                  // Adds 'or' state               
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Typed<>,         // Can be type-constrained       
+         DefineState::Future<>,        // Adds a 'missing future' state 
+         DefineState::Past<>,          // Adds a 'missing past' state   
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Or<>,            // Adds 'or' state               
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
-   > {};
+   > {
+      constexpr Many() = default;
+      Many(const Many&) noexcept;
+      Many(Many&&) noexcept;
+
+      template<template<class> class I> requires CT::Intent<I<Many>>
+      explicit Many(I<Many>&&) noexcept;
+
+      template<class A1, class...AN>
+      Many(A1&&, AN&&...) requires RangeInsertable<Many, A1, AN...>;
+   };
    
    using Messy = Many;
 
@@ -78,13 +94,16 @@ namespace Langulus::Anyness
       Component::ReserveStack<>,       // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
       Component::Descriptor,           // Descriptor interface          
+      Component::IterationForEach,     // ForEach iteration             
+      Component::Comparison,           // Allows for comparison         
       Component::StateStack<           // Variable state                
-         State::Future<>,              // Adds a 'missing future' state 
-         State::Past<>,                // Adds a 'missing past' state   
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Or<>,                  // Adds 'or' state               
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Typed<>,         // Can be type-constrained       
+         DefineState::Future<>,        // Adds a 'missing future' state 
+         DefineState::Past<>,          // Adds a 'missing past' state   
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Or<>,            // Adds 'or' state               
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {};
    

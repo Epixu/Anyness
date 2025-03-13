@@ -19,6 +19,7 @@
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
+#include "../../../source/states/Typed.hpp"
 
 
 namespace Langulus::Anyness
@@ -33,6 +34,7 @@ namespace Langulus::Anyness
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStatic<1>,       // Statically sized to 1         
       Component::StateStack<           // Variable state                
+         State::Typed<>,               // Can be type-constrained       
          State::Future<>,              // Adds a 'missing future' state 
          State::Past<>,                // Adds a 'missing past' state   
          State::Compressed<>,          // Adds 'compressed' state       
@@ -49,6 +51,7 @@ namespace Langulus::Anyness
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStatic<1>,       // Statically sized to 1         
       Component::StateStack<           // Variable state                
+         State::Typed<>,               // Can be type-constrained       
          State::Future<>,              // Adds a 'missing future' state 
          State::Past<>,                // Adds a 'missing past' state   
          State::Compressed<>,          // Adds 'compressed' state       

@@ -27,6 +27,7 @@
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
+#include "../../../source/states/Typed.hpp"
 
 
 namespace Langulus::Anyness
@@ -54,21 +55,25 @@ namespace Langulus::Anyness
       Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
       Component::StateStack<           // Variable state                
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Typed<State::Enabled>, // Always type-constrained 
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
       constexpr Bytes() = default;
       Bytes(const Bytes&) noexcept;
       Bytes(Bytes&&) noexcept;
 
+      template<template<class> class I> requires CT::Intent<I<Bytes>>
+      explicit Bytes(I<Bytes>&&) noexcept;
+
       template<class A1, class...AN>
-      Bytes(A1&&, AN&&...) requires RangeInsertable<Bytes, A1, AN...>;
+      explicit Bytes(A1&&, AN&&...) requires RangeInsertable<Bytes, A1, AN...>;
 
       // Single element selections                                      
-      using  Pick    = Byte const&;
-      using  PickMut = Byte&;
+      using Pick    = Byte const&;
+      using PickMut = Byte&;
 
       // Range selections                                               
       struct PickRange : Container<

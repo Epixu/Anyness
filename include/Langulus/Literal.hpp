@@ -92,7 +92,6 @@ namespace Langulus
          return _data.crend();
       }
 
-   public:
       ///                                                                     
       /// Encapsulation                                                       
       ///                                                                     
@@ -133,7 +132,10 @@ namespace Langulus
          return _data.data();
       }
 
-   private:
+   protected:
+      template<class, ::std::size_t, class>
+      friend struct Literal;
+
       template<size_t M>
       using same_with_other_size = Literal<value_type, M, traits_type>;
 
@@ -148,6 +150,8 @@ namespace Langulus
 
       template <size_type pos, size_type count>
       using substr_result_type = same_with_other_size<calculate_substr_size<pos, count, N>()>;
+
+      constexpr view_type sv() const { return *this; }
 
    public:
       /// Implicit cast to a string view                                      
@@ -344,9 +348,6 @@ namespace Langulus
       void swap(Literal& other) noexcept(std::is_nothrow_swappable_v<storage_type>) {
          _data.swap(other._data);
       }
-
-   private:
-      constexpr view_type sv() const { return *this; }
    };
 
 
@@ -427,51 +428,6 @@ namespace Langulus
    template<class TChar, size_t N>
    Literal(const TChar(&)[N]) -> Literal<TChar, N - 1>;
 
-   /// char literal                                                           
-   /*template<size_t N>
-   struct Literal : TLiteral<char, N> {
-      using TLiteral<char, N>::TLiteral;
-   };
-
-   template<std::size_t N>
-   Literal(const char(&)[N]) -> Literal<N - 1>;
-
-   /// char8_t literal                                                        
-   template<size_t N>
-   struct Literal8 : TLiteral<char8_t, N> {
-      using TLiteral<char8_t, N>::TLiteral;
-   };
-
-   template<std::size_t N>
-   Literal8(const char8_t(&)[N]) -> Literal8<N - 1>;
-
-   /// char16_t literal                                                       
-   template<size_t N>
-   struct Literal16 : TLiteral<char16_t, N> {
-      using TLiteral<char16_t, N>::TLiteral;
-   };
-
-   template<std::size_t N>
-   Literal16(const char16_t(&)[N]) -> Literal16<N - 1>;
-
-   /// char32_t literal                                                       
-   template<size_t N>
-   struct Literal32 : TLiteral<char32_t, N> {
-      using TLiteral<char32_t, N>::TLiteral;
-   };
-
-   template<std::size_t N>
-   Literal32(const char32_t(&)[N]) -> Literal32<N - 1>;
-
-   /// wchar_t literal                                                        
-   template<size_t N>
-   struct Literalw : TLiteral<wchar_t, N> {
-      using TLiteral<wchar_t, N>::TLiteral;
-   };
-
-   template<std::size_t N>
-   Literalw(const wchar_t(&)[N]) -> Literalw<N - 1>;*/
-
 
    ///                                                                        
    /// Concatenation                                                          
@@ -548,6 +504,7 @@ namespace Langulus
 
 namespace std
 {
+
    ///                                                                        
    /// Hash support                                                           
    ///                                                                        
@@ -560,45 +517,5 @@ namespace std
          return std::hash<sv_t>()(static_cast<sv_t>(str));
       }
    };
-
-   /*template<size_t N>
-   struct hash<Langulus::Literal8<N>> {
-      using argument_type = Langulus::Literal8<N>;
-
-      size_t operator()(const argument_type& str) const {
-         using sv_t = typename argument_type::string_view_type;
-         return std::hash<sv_t>()(static_cast<sv_t>(str));
-      }
-   };
-
-   template<size_t N>
-   struct hash<Langulus::Literal16<N>> {
-      using argument_type = Langulus::Literal16<N>;
-
-      size_t operator()(const argument_type& str) const {
-         using sv_t = typename argument_type::string_view_type;
-         return std::hash<sv_t>()(static_cast<sv_t>(str));
-      }
-   };
-
-   template<size_t N>
-   struct hash<Langulus::Literal32<N>> {
-      using argument_type = Langulus::Literal32<N>;
-
-      size_t operator()(const argument_type& str) const {
-         using sv_t = typename argument_type::string_view_type;
-         return std::hash<sv_t>()(static_cast<sv_t>(str));
-      }
-   };
-
-   template<size_t N>
-   struct hash<Langulus::Literalw<N>> {
-      using argument_type = Langulus::Literalw<N>;
-
-      size_t operator()(const argument_type& str) const {
-         using sv_t = typename argument_type::string_view_type;
-         return std::hash<sv_t>()(static_cast<sv_t>(str));
-      }
-   };*/
 
 } // namespace std

@@ -1,19 +1,35 @@
 #pragma once
 #include "../Container.hpp"
-#include <bitset>
+#include "../states/Default.hpp"
+#include <utility>
 
 
 namespace Langulus::Anyness::Component
 {
 
+   ///                                                                        
+   /// Adds a variable state to a container                                   
+   /// Increases the container's bytesize to the smallest possible integer    
+   /// capable of containing all state bits                                   
+   ///   @tparam STATES... - the possible states                              
    template<CT::State...STATES>
-   struct StateStack {
+   struct StateStack : STATES... {
       using CTTI_Component = Yes;
-      static constexpr ::std::size_t Count = sizeof...(STATES);
-      using State = ::std::bitset<Count>;
+      static constexpr auto StateCount = sizeof...(STATES);
+      using StateType = ::std::conditional_t<StateCount <= 8, uint8_t, uint16_t>;
+      static_assert(StateCount <= 16, "Too many states");
 
-   private:
-      State mState;
+   protected:
+      // The bitfield capable of containing all states                  
+      StateType mState;
+
+      /// Get the value of a speicific state                                  
+      template<CT::State S>
+      static consteval StateType GetStateBit() {
+         return []<StateType...I>(::std::integer_sequence<StateType, I...>) {
+            return ((::std::same_as<S, STATES> * (StateType {1} << I)) | ...);
+         }(::std::make_integer_sequence<StateType, StateCount>());
+      }
 
    public:
       constexpr auto GetState() const noexcept { return mState; }

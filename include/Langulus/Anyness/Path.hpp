@@ -32,9 +32,6 @@ namespace Langulus::Anyness
 
       auto operator /  (const Text&) const -> Path;
       auto operator /= (const Text&) -> Path&;
-
-   private:
-      using Text::SerializationRules;
    };
 
 } // namespace Langulus::Anyness

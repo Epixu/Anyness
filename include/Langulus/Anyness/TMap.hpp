@@ -34,10 +34,10 @@ namespace Langulus::Anyness
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
       Component::StateStack<           // Variable state                
-         State::Sorted<>,                       // Maybe unsorted       
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Sorted<>,        // Maybe unsorted                
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
       using CTTI_ReflectAs = Map;
@@ -65,10 +65,10 @@ namespace Langulus::Anyness
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
       Component::StateStack<           // Variable state                
-         State::Sorted<State::Disabled>,        // Always unsorted      
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Sorted<State::Disabled>,  // Always unsorted      
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
       using CTTI_ReflectAs = Map;
@@ -96,10 +96,10 @@ namespace Langulus::Anyness
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
       Component::StateStack<           // Variable state                
-         State::Sorted<State::Enabled>,         // Always sorted        
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Sorted<State::Enabled>,   // Always sorted        
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
       using CTTI_ReflectAs = Map;

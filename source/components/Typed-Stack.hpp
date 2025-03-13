@@ -24,6 +24,36 @@ namespace Langulus::Anyness::Component
 
       constexpr T GetType() const noexcept { return mType; }
 
+      template<CT::Data, CT::Data...>
+      constexpr bool Is() const noexcept;
+      bool Is(DMeta) const noexcept;
+      bool Is(const CT::Block auto&) const noexcept;
+
+      template<CT::Data, CT::Data...>
+      constexpr bool IsSimilar() const noexcept;
+      bool IsSimilar(DMeta) const noexcept;
+      bool IsSimilar(const CT::Block auto&) const noexcept;
+
+      template<CT::Data, CT::Data...>
+      constexpr bool IsExact() const noexcept;
+      bool IsExact(DMeta) const noexcept;
+      bool IsExact(const CT::Block auto&) const noexcept;
+
+      template<bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
+      bool CastsToMeta(DMeta) const;
+      template<bool BINARY_COMPATIBLE = false>
+      bool CastsToMeta(DMeta, Count) const;
+
+      template<CT::Data, bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
+      bool CastsTo() const;
+      template<CT::Data, bool BINARY_COMPATIBLE = false>
+      bool CastsTo(Count) const;
+
+      template<bool CONSTRAIN = false>
+      void SetType(DMeta) requires TypeErased;
+      template<CT::Data, bool CONSTRAIN = false>
+      void SetType() requires TypeErased;
+
       template<CT::Container C>
       constexpr decltype(auto) Get(this C&& self) {
 

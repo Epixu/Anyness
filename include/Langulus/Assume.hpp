@@ -8,6 +8,7 @@
 #pragma once
 #include "Except.hpp"
 #include "Logger.hpp"
+#include "NameOf.hpp"
 
 
 namespace Langulus
@@ -253,3 +254,30 @@ namespace Langulus
 
 /// Convenience macro for specifying temporary lazyness                       
 #define TODO() ::Langulus::Assert(false, HERE(), "Unfinished code")
+
+namespace fmt
+{
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging any exception                      
+   ///                                                                        
+   template<::Langulus::CT::Exception T>
+   struct formatter<T> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT> LANGULUS(INLINED)
+      auto format(T const& e, CONTEXT& ctx) const {
+         constexpr auto name = ::Langulus::NameOf<T>();
+         #if LANGULUS(DEBUG)
+            return ::fmt::format_to(ctx.out(), "{}({} at {})",
+               static_cast<::Langulus::Token>(name), e.mMessage, e.mLocation);
+         #else
+            return ::fmt::format_to(ctx.out(), "{}", static_cast<::Langulus::Token>(name));
+         #endif
+      }
+   };
+
+} // namespace fmt

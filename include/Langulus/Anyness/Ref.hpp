@@ -23,7 +23,7 @@ namespace Langulus::Anyness
    struct Ref : Container<
       Component::HeapMovable<>,        // Data on the heap              
       Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership,        // Referenced indirections       
+      Component::DeepOwnership<>,      // Referenced indirections       
       Component::TypedStatic<DMeta, T> // Statically typed              
    > {};
 

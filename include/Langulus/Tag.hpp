@@ -1,5 +1,5 @@
 #pragma once
-#include <Langulus/CTTI.hpp>
+#include "CT/DefineTag.hpp"
 
 
 namespace Langulus::Inner
@@ -46,4 +46,19 @@ namespace Langulus::Tags
       using CTTI_DefineTag = YesText<"Name">;
    };
 
+   template<class T>
+   struct Count : Inner::Tag<T> {
+      using CTTI_DefineTag = YesText<"Count">;
+   };
+
 } // namespace Langulus::Tags
+
+namespace Langulus::CT
+{
+
+   template<class...T>
+   concept Tag = DefineTag<T...>;
+   template<class...T>
+   concept NotTag = NotDefineTag<T...>;
+
+} // namespace Langulus::CT

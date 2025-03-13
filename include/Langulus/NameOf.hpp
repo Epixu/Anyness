@@ -158,9 +158,7 @@ namespace Langulus::RTTI
       ///   @param lhs - start of the region                                  
       ///   @param rhs - end of the region                                    
       ///   @return true if a transition occurs at both points                
-      consteval bool IsTransition(
-         const Token& source, std::size_t lhs, std::size_t rhs
-      ) {
+      constexpr bool IsTransition(auto source, std::size_t lhs, std::size_t rhs) {
          return (
                // Test left side for transition                         
                lhs == 0
@@ -168,7 +166,7 @@ namespace Langulus::RTTI
                or     IsAlpha(source[lhs]) != IsAlpha(source[lhs-1])
             ) and (
                // Test right side for transition                        
-               rhs == source.size()
+               rhs >= source.size()
                or not IsAlpha(source[rhs-1])
                or     IsAlpha(source[rhs-1]) != IsAlpha(source[rhs])
             );
@@ -176,51 +174,66 @@ namespace Langulus::RTTI
       
       /// Count the number of found tokens, if separated by non-alphabetical  
       /// symbols                                                             
-      consteval std::size_t CountOccurences(const auto& lhs, const auto& rhs) {
-         if constexpr (rhs.size() > lhs.size())
+      ///   @tparam LHS - what are we checking?                               
+      ///   @tparam RHS - what are we searching for?                          
+      template<Literal LHS, Literal RHS>
+      consteval std::size_t CountOccurences() {
+         if constexpr (RHS.size() > LHS.size() or RHS.size() == 0)
             return 0;
-         std::size_t occurences = 0;
-         std::size_t cookie = 0;
-         while ((cookie = lhs.find(rhs, cookie)) != lhs.npos) {
-            if (IsTransition(lhs, cookie, cookie + rhs.size()))
-               ++occurences;
+         else {
+            ::std::size_t occurences = 0;
+            ::std::size_t cookie = 0;
+            while (cookie + RHS.size() <= LHS.size()) {
+               ::std::size_t scan = 0;
+               while (LHS[cookie + scan] == RHS[scan])
+                  ++scan;
+               
+               if (scan != RHS.size()) {
+                  ++cookie;
+                  continue;
+               }
+
+               if (IsTransition(LHS, cookie, cookie + RHS.size())) {
+                  cookie += RHS.size();
+                  ++occurences;
+               }
+            }
+            return occurences;
          }
-         return occurences;
       }
 
       /// Replace all occurences of a substring at compile-time               
-      ///   @param source - what are we checking?                             
-      ///   @param what - what are we replacing?                              
-      ///   @param what - what are we replacing with?                         
+      ///   @tparam SOURCE - what are we checking?                            
+      ///   @tparam WHAT - what are we replacing?                             
+      ///   @tparam WITH - what are we replacing with?                        
       ///   @return new literal                                               
-      consteval auto Replace(
-         const auto& source, const auto& what, const auto& with
-      ) {
-         constexpr auto found = CountOccurences(source, what);
+      template<Literal SOURCE, Literal WHAT, Literal WITH>
+      consteval auto Replace() {
+         constexpr auto found = CountOccurences<SOURCE, WHAT>();
          if constexpr (not found)
-            return source;
+            return SOURCE;
          else {
-            Literal<char, source.size() - found*what.size() + found*with.size()> result;
+            Literal<char, SOURCE.size() - found*WHAT.size() + found*WITH.size()> result;
             std::size_t fill = 0;
             std::size_t prev = 0;
             std::size_t curr = 0;
-            while ((curr = source.find(what, prev)) != source.npos) {
+            while ((curr = SOURCE.find(WHAT, prev)) != SOURCE.npos) {
                while (curr > prev) {
                   // Copy anything we've skipped                        
-                  result[fill++] = source[prev++];
+                  result[fill++] = SOURCE[prev++];
                }
 
-               if (IsTransition(source, curr, curr + what.size())) {
+               if (IsTransition(SOURCE, curr, curr + WHAT.size())) {
                   // Replace                                            
-                  for (auto& c : with)
+                  for (auto& c : WITH)
                      result[fill++] = c;
-                  prev += what.size();
+                  prev += WHAT.size();
                }
             }
 
-            while (prev < source.size()) {
+            while (prev < SOURCE.size()) {
                // Copy any remaining trailing data                      
-               result[fill++] = source[prev++];
+               result[fill++] = SOURCE[prev++];
             }
 
             return result;
@@ -228,33 +241,34 @@ namespace Langulus::RTTI
       }
       
       /// Normalize a type/enum/function name                                 
-      ///   @param src - the literal to normalize                             
+      ///   @tparam SRC - the literal to normalize                            
       ///   @return new literal                                               
-      consteval auto Normalize(const auto& src) {
+      template<Literal SRC>
+      consteval auto Normalize() {
          // Replace these patterns when normalizing names               
          // @attention when having similar tokens to replace, order     
          //    them correctly, with longer ones replaced first          
          // @attention replacement will not commence, if IsTransition   
          //    isn't satisifed                                          
-         auto a01 = Replace(src, Literal {"*const "}, Literal {"* const"});
-         auto a02 = Replace(a01, Literal {" *const"}, Literal {"* const"});
-         auto a03 = Replace(a02, Literal {" *"     }, Literal {"*"      });
-         auto a04 = Replace(a03, Literal {" &"     }, Literal {"&"      });
-         auto a05 = Replace(a04, Literal {" >"     }, Literal {">"      });
-         auto a06 = Replace(a05, IsolateTypename<::std::int8_t>(),   Literal {"int8"  });
-         auto a07 = Replace(a06, IsolateTypename<::std::int16_t>(),  Literal {"int16" });
-         auto a08 = Replace(a07, IsolateTypename<::std::int32_t>(),  Literal {"int32" });
-         auto a09 = Replace(a08, IsolateTypename<::std::int64_t>(),  Literal {"int64" });
-         auto a10 = Replace(a09, IsolateTypename<::std::uint8_t>(),  Literal {"uint8" });
-         auto a11 = Replace(a10, IsolateTypename<::std::uint16_t>(), Literal {"uint16"});
-         auto a12 = Replace(a11, IsolateTypename<::std::uint32_t>(), Literal {"uint32"});
-         auto a13 = Replace(a12, IsolateTypename<::std::uint64_t>(), Literal {"uint64"});
-         auto a14 = Replace(a13, Literal {"class "      }, Literal {""});
-         auto a15 = Replace(a14, Literal {"struct "     }, Literal {""});
-         auto a16 = Replace(a15, Literal {"enum "       }, Literal {""});
-         auto a17 = Replace(a16, Literal {"Langulus::"  }, Literal {""});
-         auto a18 = Replace(a17, Literal {"(__cdecl *)" }, Literal {""});
-         auto a19 = Replace(a18, Literal {" (*)"        }, Literal {""});
+         constexpr Literal a01 = Replace<SRC, Literal {"*const "     },           Literal {"* const"}>();
+         constexpr Literal a02 = Replace<a01, Literal {" *const"     },           Literal {"* const"}>();
+         constexpr Literal a03 = Replace<a02, Literal {" *"          },           Literal {"*"      }>();
+         constexpr Literal a04 = Replace<a03, Literal {" &"          },           Literal {"&"      }>();
+         constexpr Literal a05 = Replace<a04, Literal {" >"          },           Literal {">"      }>();
+         constexpr Literal a06 = Replace<a05, IsolateTypename<::std::int8_t>(),   Literal {"int8"   }>();
+         constexpr Literal a07 = Replace<a06, IsolateTypename<::std::int16_t>(),  Literal {"int16"  }>();
+         constexpr Literal a08 = Replace<a07, IsolateTypename<::std::int32_t>(),  Literal {"int32"  }>();
+         constexpr Literal a09 = Replace<a08, IsolateTypename<::std::int64_t>(),  Literal {"int64"  }>();
+         constexpr Literal a10 = Replace<a09, IsolateTypename<::std::uint8_t>(),  Literal {"uint8"  }>();
+         constexpr Literal a11 = Replace<a10, IsolateTypename<::std::uint16_t>(), Literal {"uint16" }>();
+         constexpr Literal a12 = Replace<a11, IsolateTypename<::std::uint32_t>(), Literal {"uint32" }>();
+         constexpr Literal a13 = Replace<a12, IsolateTypename<::std::uint64_t>(), Literal {"uint64" }>();
+         constexpr Literal a14 = Replace<a13, Literal {"class "      },           Literal {""       }>();
+         constexpr Literal a15 = Replace<a14, Literal {"struct "     },           Literal {""       }>();
+         constexpr Literal a16 = Replace<a15, Literal {"enum "       },           Literal {""       }>();
+         constexpr Literal a17 = Replace<a16, Literal {"Langulus::"  },           Literal {""       }>();
+         constexpr Literal a18 = Replace<a17, Literal {"(__cdecl *)" },           Literal {""       }>();
+         constexpr Literal a19 = Replace<a18, Literal {" (*)"        },           Literal {""       }>();
          return a19;
       }
 
@@ -262,21 +276,22 @@ namespace Langulus::RTTI
       ///   @return the normalized token for T at compile-time                
       template<class T>
       consteval auto NameOfFunction() {
-         return "Function<" + Normalize(IsolateTypename<T>()) + ">*";
+         return "Function<" + Normalize<IsolateTypename<T>()>() + ">*";
       }
       
       /// Get the normalized name of a type                                   
       ///   @return the normalized token for T at compile-time                
       template<class T>
       consteval auto NameOfType() {
-         return Normalize(IsolateTypename<T>());
+         return Normalize<IsolateTypename<T>()>();
       }
       
       /// Get the normalized name of a constant                               
       ///   @return the normalized token for T at compile-time                
       template<auto T>
       consteval auto NameOfConstant() {
-         constexpr auto fullEnumName = Normalize(IsolateConstant<T>());
+         constexpr auto name = IsolateConstant<T>();
+         constexpr auto fullEnumName = Normalize<name>();
          constexpr auto lastNamespace = fullEnumName.find_last_of(':');
          if constexpr (lastNamespace != fullEnumName.npos) {
             constexpr auto lastEnumName = fullEnumName.substr(lastNamespace);

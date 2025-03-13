@@ -25,6 +25,7 @@
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
+#include "../../../source/states/Typed.hpp"
 #include <Langulus/CT/Text.hpp>
 
 
@@ -51,9 +52,10 @@ namespace Langulus::Anyness
       Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
       Component::StateStack<           // Variable state                
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Typed<State::Enabled>, // Always type-constrained 
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
       using CTTI_Text = Yes;

@@ -10,7 +10,6 @@
 
 TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) {
    static Allocator::State memoryState;
-   static_assert(sizeof(A::Block) == sizeof(Block<>));
    using E = TestType;
 
    const E darray[10] {
@@ -48,7 +47,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       REQUIRE(subpack2.GetUses() == 3);
       REQUIRE(subpack3.GetUses() == 2);
 
-      pack.MakeTypeConstrained();
+      pack.EnableTypeConstrained();
 
       auto memory = pack.GetRaw<Many>();
 
