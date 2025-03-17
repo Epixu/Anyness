@@ -53,17 +53,17 @@ void Map_Helper_TestType(const auto& map) {
    REQUIRE_FALSE(map.IsValueUntyped());
 
    REQUIRE      (map.GetKeyType() == MetaDataOf<K>());
-   REQUIRE      (map.GetKeyType()->template IsSimilar<const K>());
-   REQUIRE      (map.GetKeyType()->template IsExact<K>());
-   REQUIRE      (map.GetKeyType()->template Is<K*>());
+   REQUIRE      (map.GetKeyType()->IsSimilar<const K>());
+   REQUIRE      (map.GetKeyType()->IsExact<K>());
+   REQUIRE      (map.GetKeyType()->Is<K*>());
    REQUIRE      (map.IsKeyDense() == CT::Dense<K>);
    REQUIRE      (map.IsKeySparse() == CT::Sparse<K>);
    REQUIRE      (map.IsKeyDeep() == CT::Deep<Decay<K>>);
 
    REQUIRE      (map.GetValueType() == MetaDataOf<V>());
-   REQUIRE      (map.GetValueType()->template IsSimilar<const V>());
-   REQUIRE      (map.GetValueType()->template IsExact<V>());
-   REQUIRE      (map.GetValueType()->template Is<V*>());
+   REQUIRE      (map.GetValueType()->IsSimilar<const V>());
+   REQUIRE      (map.GetValueType()->IsExact<V>());
+   REQUIRE      (map.GetValueType()->Is<V*>());
    REQUIRE      (map.IsValueDense() == CT::Dense<V>);
    REQUIRE      (map.IsValueSparse() == CT::Sparse<V>);
    REQUIRE      (map.IsValueDeep() == CT::Deep<Decay<V>>);
@@ -90,8 +90,8 @@ void Map_CheckState_Default(const auto& map) {
       static_assert(CT::Exact<typename T::Key, K>);
       static_assert(CT::Exact<typename T::Value, V>);
       Map_Helper_TestType<K, V>(map);
-      REQUIRE      (map.GetKeyState() == DataState::Typed);
-      REQUIRE      (map.GetValueState() == DataState::Typed);
+      REQUIRE      (map.GetKeyState() == State::Typed);
+      REQUIRE      (map.GetValueState() == State::Typed);
    }
    else {
       REQUIRE_FALSE(map.IsKeyTyped());
@@ -104,8 +104,8 @@ void Map_CheckState_Default(const auto& map) {
       REQUIRE      (map.IsValueDense());
       REQUIRE_FALSE(map.IsKeySparse());
       REQUIRE_FALSE(map.IsValueSparse());
-      REQUIRE      (map.GetKeyState() == DataState::Default);
-      REQUIRE      (map.GetValueState() == DataState::Default);
+      REQUIRE      (map.GetKeyState() == State::Default);
+      REQUIRE      (map.GetValueState() == State::Default);
       REQUIRE_FALSE(map.IsKeyDeep());
       REQUIRE_FALSE(map.IsValueDeep());
    }

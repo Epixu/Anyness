@@ -79,7 +79,7 @@ namespace Langulus::RTTI
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       // Save the boundary at time of reflection                        
-      definition.mLibraryName = RTTI::Boundary;
+      definition.mBoundary = RTTI::Boundary;
 
       // After all properties have been set - generate a unique handle  
       definition.mHandle = Registry.GenerateHandle(&definition);
@@ -87,13 +87,13 @@ namespace Langulus::RTTI
       Logger::Verbose(
          "Data ", Logger::Cyan, definition.mToken,
          " (ID: ", definition.mHandle, ") ", Logger::Green,
-         " registered (LIB: ", definition.mLibraryName, ")"
+         " registered (LIB: ", definition.mBoundary, ")"
       );
       return definition.mHandle;
    #else
       Logger::Verbose(
          "Data ", Logger::Cyan, definition.mToken, Logger::Green,
-         " registered (LIB: ", definition.mLibraryName, ")"
+         " registered (LIB: ", definition.mBoundary, ")"
       );
       return DMeta {&definition};
    #endif

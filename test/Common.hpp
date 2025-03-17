@@ -8,18 +8,18 @@
 
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
-#include <Langulus/Anyness/Many.hpp>
 #include <Langulus/TypeNav.hpp>
 #include <Langulus/TypeOf.hpp>
 #include <Langulus/Intent.hpp>
 #include <Langulus/CT/Describable.hpp>
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/CT/Destroyable.hpp>
-#include <Langulus/CT/Values.hpp>
+#include <Langulus/CT/DefineConst.hpp>
 #include <Langulus/CT/Members.hpp>
 #include <Langulus/CT/Pooled.hpp>
 #include <Langulus/CT/Version.hpp>
-#include <Langulus/Tag.hpp>
+#include <Langulus/Anyness/Many.hpp>
+#include <Langulus/Anyness/Tag.hpp>
 #include "Main.hpp"
 
 using namespace Anyness;
@@ -363,7 +363,7 @@ struct ImplicitlyReflectedData {
    using CTTI_POD    = Yes;
    using CTTI_Files  = YesText<"ASE">;
    using CTTI_Typed  = Named;
-   using CTTI_Values = Values<One, Two, Three>;
+   using CTTI_Values = Constants<One, Two, Three>;
 
    Named v = One;
 
@@ -373,7 +373,7 @@ struct ImplicitlyReflectedData {
 class alignas(128) ImplicitlyReflectedDataWithTraits : public ImplicitlyReflectedData {
 public:
    int member {664};
-   Tags::Name<bool> anotherMember {};
+   Tags::TName<bool> anotherMember {};
    int anotherMemberArray [12] {};
    int* sparseMember {};
 
@@ -456,7 +456,7 @@ public:
 
 struct AnotherTypeWithSimilarilyNamedValues {
    enum Named {One = 501, Two, Three};
-   using CTTI_Values = Values<One, Two, Three>;
+   using CTTI_Values = Constants<One, Two, Three>;
    using CTTI_Named  = YesText<"YetAnotherNamedType">;
 
    int v = One;

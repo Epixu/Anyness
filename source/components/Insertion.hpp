@@ -1,10 +1,12 @@
 #pragma once
 #include "../Container.hpp"
+#include "../rtti/Intent.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/Index.hpp>
+#include <Langulus/CT/ReflectAs.hpp>
 
 
-namespace Langulus::Anyness
+namespace Langulus::CT
 {
    
    /// Check if container's elements are unfold-constructible                 
@@ -15,7 +17,53 @@ namespace Langulus::Anyness
       C::TypeErased or CT::UnfoldConstructible<TypeOf<C>, T1, TN...>
    );
 
-} // namespace Langulus::Anyness
+   namespace Inner
+   {
+
+      /// Test whether a container is constructible with the given arguments  
+      ///   @tparam T - the contained type                                    
+      ///   @tparam ...A - the arguments to test                              
+      ///   @return true if container is constructible using {A...}           
+      template<CT::Container C, class...A>
+      consteval bool DeepConstructible() noexcept {
+         using FA = FirstOf<A...>;
+         using SA = IntentOf<FA>;
+         using T  = TypeOf<C>;
+
+         if constexpr (C::TypeErased) {
+            // Type-erased containers accept almost any type - they     
+            // will report errors at runtime instead, if any            
+            return CT::Reflectable<A...>;
+         }
+         else if constexpr (sizeof...(A) == 1 and CT::Container<FA>) {
+            // If only one A provided, it HAS to be a container         
+            if constexpr (SA::Shallow) {
+               // Generally, shallow intents are always supported,      
+               // but copying will call element constructors, so we     
+               // have to check if the contained type supports it       
+               if constexpr (CT::Copied<SA>)
+                  return CT::ReferConstructible<T>;
+               else
+                  return true;
+            }
+            else {
+               // Cloning always calls element constructors, and        
+               // we have to check whether contained elements can       
+               // do it                                                 
+               return CT::IntentConstructible<Langulus::Cloned, T>;
+            }
+         }
+         else return CT::UnfoldConstructible<T, A...>;
+      };
+
+   } // namespace Langulus::CT::Inner
+
+   /// Concept for recognizing arguments, with which a statically typed       
+   /// container can be constructed                                           
+   template<class C, class...A>
+   concept DeepConstructible = Inner::DeepConstructible<C, A...>();
+
+} // namespace Langulus::CT
 
 namespace Langulus::Anyness::Component
 {
@@ -48,7 +96,7 @@ namespace Langulus::Anyness::Component
       /// Insertion at specific index                                         
       template<bool FORCE = true, class A1, class...AN, CT::Container C>
       auto InsertAt(this C&, CT::Index auto, A1&&, AN&&...)
-         -> Count<C> requires (C::Indexed and RangeInsertable<C, A1, AN...>);
+         -> Count<C> requires (C::Indexed and CT::RangeInsertable<C, A1, AN...>);
 
       template<bool CONCAT = true, bool FORCE = true, CT::Container C>
       auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {})
@@ -57,7 +105,7 @@ namespace Langulus::Anyness::Component
       /// Generic insertion                                                   
       template<bool FORCE = true, class A1, class...AN, CT::Container C>
       auto Insert(this C&, A1&&, AN&&...)
-         -> Count<C> requires RangeInsertable<C, A1, AN...>;
+         -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
 
       template<bool CONCAT = true, bool FORCE = true, CT::Container C>
       auto SmartPush(this C&, auto&&, State<C> = {})

@@ -17,11 +17,14 @@
 
 template<class T, class E>
 decltype(auto) FromHelper() {
-   if constexpr (CT::Untyped<T>) {
-      if constexpr (CT::Tag<T>)
-         return T::template From<E>();
-      else
-         return Tags::Count<T>::template From<E>();
+   if constexpr (not CT::Typed<T>) {
+      if constexpr (CT::Tag<T>) {
+         if constexpr (CT::DefineTag<T>)
+            return T::template OfType<E>();
+         else
+            return T::template From<Tags::Count, E>();
+      }
+      else return T::template From<E>();
    }
    else return T {};
 }

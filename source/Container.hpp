@@ -13,7 +13,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_State = Yes/No;` in T                      
    template<class T>
    struct State {
-      static constexpr bool Value = false;
+      static constexpr bool Enabled = false;
    };
    
    /// Can be used in two ways to satisfy CT::Component<T>:                   
@@ -21,7 +21,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Component = Yes/No;` in T                  
    template<class T>
    struct Component {
-      static constexpr bool Value = false;
+      static constexpr bool Enabled = false;
    };
    
    /// Can be used in two ways to satisfy CT::Container<T>:                   
@@ -29,7 +29,23 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Container = Yes/No;` in T                  
    template<class T>
    struct Container {
-      static constexpr bool Value = false;
+      static constexpr bool Enabled = false;
+   };
+   
+   /// Can be used in two ways to satisfy CT::Map<T>:                         
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Map = Yes/No;` in T                        
+   template<class T>
+   struct Map {
+      static constexpr bool Enabled = false;
+   };
+   
+   /// Can be used in two ways to satisfy CT::Pair<T>:                        
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Pair = Yes/No;` in T                       
+   template<class T>
+   struct Pair {
+      static constexpr bool Enabled = false;
    };
 
 } // namespace Langulus::CTTI
@@ -37,6 +53,8 @@ namespace Langulus::CTTI
 LANGULUS_CTTI_CONCEPT(State);
 LANGULUS_CTTI_CONCEPT(Component);
 LANGULUS_CTTI_CONCEPT(Container);
+LANGULUS_CTTI_CONCEPT(Map);
+LANGULUS_CTTI_CONCEPT(Pair);
 
 namespace Langulus::Anyness
 {

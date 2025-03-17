@@ -22,11 +22,13 @@
 #include "../../../source/components/Reserve-Heap.hpp"
 #include "../../../source/components/Hash-Stack.hpp"
 #include "../../../source/components/State-Stack.hpp"
+#include "../../../source/components/Comparison.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
 #include "../../../source/states/Typed.hpp"
 #include <Langulus/CT/Text.hpp>
+#include <Langulus/CT/Number.hpp>
 
 
 namespace Langulus::Anyness
@@ -51,6 +53,7 @@ namespace Langulus::Anyness
       Component::CountStack<>,         // Variable count                
       Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
+      Component::Comparison,           // Comparisons                   
       Component::StateStack<           // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Compressed<>,    // Adds 'compressed' state       
@@ -60,7 +63,8 @@ namespace Langulus::Anyness
    > {
       using CTTI_Text = Yes;
 
-      template<class A1, class...AN> requires RangeInsertable<Text, A1, AN...>
+      constexpr Text() noexcept = default;
+      template<class A1, class...AN> requires CT::RangeInsertable<Text, A1, AN...>
       Text(A1&&, AN&&...);
 
       static Text From(CT::Text auto&&, CountType);
@@ -123,3 +127,14 @@ namespace Langulus::CT
                           or Inner::StringifiableByConstructor<T>) and ...);
 
 } // namespace Langulus::CT
+
+namespace Langulus
+{
+
+   /// Make a text literal                                                    
+   LANGULUS(INLINED)
+   Anyness::Text operator ""_text(const char* text, ::std::size_t size) {
+      return Anyness::Text::From(Disown(text), size);
+   }
+
+} // namespace Langulus

@@ -11,10 +11,13 @@
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/DeepOwnership.hpp"
 #include "../../../source/components/Typed-Static.hpp"
+#include "../../../source/rtti/MetaData.hpp"
 
 
 namespace Langulus::Anyness
 {
+
+   using DMeta = RTTI::DMeta;
 
    ///                                                                        
    /// A statically typed shared pointer                                      

@@ -41,6 +41,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Map;
+      using CTTI_Map = Yes;
    };
    
    ///                                                                        
@@ -72,6 +73,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Map;
+      using CTTI_Map = Yes;
    };
    
    ///                                                                        
@@ -103,6 +105,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Map;
+      using CTTI_Map = Yes;
    };
 
 } // namespace Langulus::Anyness

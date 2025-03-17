@@ -6,13 +6,15 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include <Langulus/Anyness/Many.hpp>
+#include <Langulus/CT/Defaultable.hpp>
+#include <Langulus/CT/Referenced.hpp>
 #include "Common.hpp"
 
 
 /// Create a dense or sparse container by providing simple arguments          
 template<class T, class...FROM>
 TMany<T> CreateManagedElements(FROM&&...from) {
-   static_assert(CT::MakableFrom<Decay<T>, Decay<FROM>...>);
+   static_assert(CT::ConstructibleFrom<Decay<T>, Decay<FROM>...>);
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    TMany<Decay<T>> base {TypedCast(from)...};
    if constexpr (CT::Similar<T, Decay<T>>)
@@ -39,7 +41,7 @@ TMany<T> CreateManagedElements(FROM&&...from) {
 /// Create a dense or sparse local handle by providing simple arguments       
 template<class T, class FROM>
 HandleLocal<T> CreateHandle(FROM&& from) {
-   static_assert(CT::MakableFrom<Decay<T>, Decay<FROM>>);
+   static_assert(CT::ConstructibleFrom<Decay<T>, Decay<FROM>>);
 
    if constexpr (CT::Similar<T, Decay<T>>)
       return {Forward<FROM>(from)};
@@ -57,7 +59,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
 ) {
    static Allocator::State memoryState;
 
-   using T = TestType;
+   using T  = TestType;
    using HE = Handle<T>;
    using HL = HandleLocal<T>;
 
@@ -65,7 +67,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
    static_assert(not CT::Defaultable<HL>);
 
    static constexpr bool SPARSE = CT::Sparse<T>;
-   static constexpr bool REFERENCABLE = CT::Referencable<Deptr<T>>;
+   static constexpr bool REFERENCABLE = CT::Referenced<Deptr<T>>;
 
 
    GIVEN("A statically typed sequential container") {
@@ -103,12 +105,12 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       }
 
       const T h0p = h0.Get();
-      const Allocation* const h0e = h0.GetEntry();
+      auto const h0e = h0.GetEntry();
 
       WHEN("An element is taken out of the container and assigned into another") {
          TMany<T> next = CreateManagedElements<T>(0);
          Handle<T> n = next.GetHandle(0);
-         const Allocation* const n0e = n.GetEntry();
+         auto const n0e = n.GetEntry();
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));
 
          n.AssignWithIntent(Move(h0));
@@ -162,7 +164,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
          TMany<T> next = CreateManagedElements<T>(0);
          Handle<T> n = next.GetHandle(0);
          T const n0p = n.Get();
-         const Allocation* const n0e = n.GetEntry();
+         auto const n0e = n.GetEntry();
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));
 
          n.Swap(h0);
@@ -230,7 +232,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
          TMany<T> next = CreateManagedElements<T>(0);
          HandleLocal<T> n = next[0];
          T const n0p = n.Get();
-         const Allocation* const n0e = n.GetEntry();
+         auto const n0e = n.GetEntry();
 
          if constexpr (SPARSE)
             IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 2));
@@ -305,7 +307,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       WHEN("An element is taken out of the container and swapped with a unmanaged local") {
          HandleLocal<T> n = CreateHandle<T>(42);
          T const n0p = n.Get();
-         const Allocation* const n0e = n.GetEntry();
+         auto const n0e = n.GetEntry();
          REQUIRE(n0e == nullptr);
 
          n.Swap(h0);
@@ -439,11 +441,11 @@ TEMPLATE_TEST_CASE("Managed handle swapping", "[handle]", RT*, RT, int, int*) {
    using T = TestType;
    static Allocator::State memoryState;
 
-   constexpr bool sparse = CT::Sparse<T> and LANGULUS_FEATURE(MANAGED_MEMORY);
-   constexpr bool referenced = sparse and CT::Referencable<Deptr<T>>;
-   constexpr Count refs1 = CT::Sparse<T> and LANGULUS_FEATURE(MANAGED_MEMORY) ? 10 : 1;
-   constexpr Count refs1_1 = CT::Sparse<T> and LANGULUS_FEATURE(MANAGED_MEMORY) ? 11 : 1;
-   constexpr Count refs2 = CT::Sparse<T> and LANGULUS_FEATURE(MANAGED_MEMORY) ? 2 : 1;
+   constexpr bool sparse     = CT::Sparse<T> and LANGULUS_FEATURE(MANAGED_MEMORY);
+   constexpr bool referenced = sparse and CT::Referenced<Deptr<T>>;
+   constexpr Count refs1     = CT::Sparse<T> and LANGULUS_FEATURE(MANAGED_MEMORY) ? 10 : 1;
+   constexpr Count refs1_1   = CT::Sparse<T> and LANGULUS_FEATURE(MANAGED_MEMORY) ? 11 : 1;
+   constexpr Count refs2     = CT::Sparse<T> and LANGULUS_FEATURE(MANAGED_MEMORY) ?  2 : 1;
 
    GIVEN("A stack-based swapper") {
       TMany<T> factory1 = CreateManagedElements<T>(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);

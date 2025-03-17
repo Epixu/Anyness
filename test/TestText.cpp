@@ -359,7 +359,7 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
 
       REQUIRE((*text).GetCount() == 2);
       REQUIRE((*text).GetReserved() >= 2);
-      REQUIRE((*text).template Is<char>());
+      REQUIRE((*text).Is<char>());
       REQUIRE((*text).GetRaw());
       REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "66");
@@ -372,7 +372,7 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
 
       REQUIRE((*text).GetCount() == 2);
       REQUIRE((*text).GetReserved() >= 2);
-      REQUIRE((*text).template Is<char>());
+      REQUIRE((*text).Is<char>());
       REQUIRE((*text).GetRaw());
       REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "66");
@@ -397,7 +397,7 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]", int8_t, int16_t, i
 
       REQUIRE((*text).GetCount() == 3);
       REQUIRE((*text).GetReserved() >= 3);
-      REQUIRE((*text).template Is<char>());
+      REQUIRE((*text).Is<char>());
       REQUIRE((*text).GetRaw());
       REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "-66");
@@ -410,7 +410,7 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]", int8_t, int16_t, i
 
       REQUIRE((*text).GetCount() == 3);
       REQUIRE((*text).GetReserved() >= 3);
-      REQUIRE((*text).template Is<char>());
+      REQUIRE((*text).Is<char>());
       REQUIRE((*text).GetRaw());
       REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "-66");
@@ -432,12 +432,10 @@ TEMPLATE_TEST_CASE("Logging text containers", "[text]", Text, Path) {
 
    WHEN("Logging") {
       TestType text {"some text"};
-      Logger::Info() << "You should see " << text;
       Logger::Info("You should also see ", text);
    }
 
    WHEN("Logging literal") {
-      Logger::Info() << "You should see " << "some text"_text;
       Logger::Info("You should also see ", "some text"_text);
    }
 
@@ -563,8 +561,8 @@ TEMPLATE_TEST_CASE("Containing literals", "[text]",
          TestType text {"one"};
 
          REQUIRE(text.GetCount() == 1);
-         REQUIRE(text.template IsExact<Text>());
-         REQUIRE(text.template As<Text>() == "one");
+         REQUIRE(text.IsExact<Text>());
+         REQUIRE(text.As<Text>() == "one");
       }
 
       WHEN("Assigned") {
@@ -572,8 +570,8 @@ TEMPLATE_TEST_CASE("Containing literals", "[text]",
          text = "two";
 
          REQUIRE(text.GetCount() == 1);
-         REQUIRE(text.template IsExact<Text>());
-         REQUIRE(text.template As<Text>() == "two");
+         REQUIRE(text.IsExact<Text>());
+         REQUIRE(text.As<Text>() == "two");
       }
 
       WHEN("Concatenated (destructively)") {
@@ -581,9 +579,9 @@ TEMPLATE_TEST_CASE("Containing literals", "[text]",
          text += TestType {"two"};
 
          REQUIRE(text.GetCount() == 2);
-         REQUIRE(text.template IsExact<Text>());
-         REQUIRE(text.template As<Text>(0) == "one");
-         REQUIRE(text.template As<Text>(1) == "two");
+         REQUIRE(text.IsExact<Text>());
+         REQUIRE(text.As<Text>(0) == "one");
+         REQUIRE(text.As<Text>(1) == "two");
       }
 
       WHEN("Concatenated") {
@@ -592,11 +590,11 @@ TEMPLATE_TEST_CASE("Containing literals", "[text]",
 
          REQUIRE(text.GetCount() == 1);
          REQUIRE(text2.GetCount() == 2);
-         REQUIRE(text.template IsExact<Text>());
-         REQUIRE(text2.template IsExact<Text>());
-         REQUIRE(text.template As<Text>() == "one");
-         REQUIRE(text2.template As<Text>(0) == "one");
-         REQUIRE(text2.template As<Text>(1) == "two");
+         REQUIRE(text.IsExact<Text>());
+         REQUIRE(text2.IsExact<Text>());
+         REQUIRE(text.As<Text>() == "one");
+         REQUIRE(text2.As<Text>(0) == "one");
+         REQUIRE(text2.As<Text>(1) == "two");
       }
    }
 
@@ -627,7 +625,7 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<Letter>());
-   REQUIRE      (text.template Is<Letter>());
+   REQUIRE      (text.Is<Letter>());
    REQUIRE      (text.IsNow());
    REQUIRE_FALSE(text.IsFuture());
    REQUIRE_FALSE(text.IsPast());
@@ -665,7 +663,7 @@ void Text_CheckState_OwnedEmpty(const Text& text) {
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<Letter>());
-   REQUIRE      (text.template Is<Letter>());
+   REQUIRE      (text.Is<Letter>());
    REQUIRE      (text.IsNow());
    REQUIRE_FALSE(text.IsFuture());
    REQUIRE_FALSE(text.IsPast());
@@ -703,7 +701,7 @@ void Text_CheckState_OwnedFull(const Text& text) {
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<Letter>());
-   REQUIRE      (text.template Is<Letter>());
+   REQUIRE      (text.Is<Letter>());
    REQUIRE      (text.IsNow());
    REQUIRE_FALSE(text.IsFuture());
    REQUIRE_FALSE(text.IsPast());
@@ -741,7 +739,7 @@ void Text_CheckState_DisownedFullConst(const Text& text) {
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<Letter>());
-   REQUIRE      (text.template Is<Letter>());
+   REQUIRE      (text.Is<Letter>());
    REQUIRE      (text.IsNow());
    REQUIRE_FALSE(text.IsFuture());
    REQUIRE_FALSE(text.IsPast());

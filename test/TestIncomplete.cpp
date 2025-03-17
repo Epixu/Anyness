@@ -9,6 +9,7 @@
 #include <Langulus/Anyness/Own.hpp>
 #include <Langulus/Anyness/Ref.hpp>
 #include <Langulus/Anyness/TMap.hpp>
+#include <Langulus/Anyness/Tag.hpp>
 #include "Common.hpp"
 
 
@@ -18,22 +19,21 @@ struct Resolvable {
 };
 
 class Unit;
-
-using UnitMap = TUnorderedMap<DMeta, TMany<Unit*>>;
-using TraitMap = TUnorderedMap<TMeta, TMany<Trait>>;
+using UnitMap = TMapUnsorted<DMeta, TMany<Unit*>>;
+using TagsMap = TMapUnsorted<TMeta, TMany<Tag>>;
 
 struct Thing final : Resolvable {
-   LANGULUS(ABSTRACT) false;
-   LANGULUS(PRODUCER) Thing;
-   LANGULUS_BASES(Resolvable);
+   using CTTI_Abstract = No;
+   using CTTI_Producer = Thing;
+   using CTTI_Bases    = Resolvable;
 
    Thing();
 
-   Own<Thing*> mOwned;
-   Ref<Thing> mOwner;
+   Own<Thing*>   mOwned;
+   Ref<Thing>    mOwner;
    TMany<Thing*> mChildren;
-   UnitMap mUnits;
-   TraitMap mTraits;
+   UnitMap       mUnits;
+   TagsMap       mTags;
 };
 
 Thing::Thing() : Resolvable {MetaOf<Thing>()} {}
@@ -44,7 +44,7 @@ SCENARIO("Testing incomplete type hierarchy", "[incomplete]") {
    static_assert(CT::Complete<Ref<Thing>>);
    static_assert(CT::Complete<TMany<Thing*>>);
    static_assert(CT::Complete<UnitMap>);
-   static_assert(CT::Complete<TraitMap>);
+   static_assert(CT::Complete<TagsMap>);
    static_assert(CT::Complete<Thing>);
 
    GIVEN("A thing instance") {

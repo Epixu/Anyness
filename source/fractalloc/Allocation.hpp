@@ -93,6 +93,15 @@ namespace Langulus::Fractalloc
       bool Contains(const void*) const noexcept;
       void Keep(int = 1) noexcept;
       void Free(int = 1) noexcept;
+
+      /// A simple request for allocating memory                              
+      /// It is used as optimization to avoid divisions by stride             
+      struct Request {
+         Size mByteSize IF_SAFE(= 0);
+         Size mElementCount IF_SAFE(= 0);
+
+         IF_UNSAFE(constexpr Request() {})
+      };
    };
 
 } // namespace Langulus::Fractalloc

@@ -9,18 +9,18 @@
 
 
 TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
-   (TypePair<Many, Tags::Count<>>),
-   (TypePair<Tag<>, Text>),
-   (TypePair<Tags::Name<>, Text>),
+   (TypePair<Many, Tags::Count>),
+   (TypePair<Tag, Text>),
+   (TypePair<Tags::Name, Text>),
 
    (TypePair<TMany<int>, int>),
-   (TypePair<TMany<Tag<>>, Tag<>>),
-   (TypePair<TMany<Tags::Count<>>, Tags::Count<>>),
+   (TypePair<TMany<Tag>, Tag>),
+   (TypePair<TMany<Tags::Count>, Tags::Count>),
    (TypePair<TMany<Many>, Many>),
    (TypePair<TMany<Text>, Text>),
 
    (TypePair<Many, int>),
-   (TypePair<Many, Tag<>>),
+   (TypePair<Many, Tag>),
    (TypePair<Many, Many>),
    (TypePair<Many, Text>)
 ) {
@@ -50,12 +50,12 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
       // be thrown as exceptions at runtime                             
-      static_assert(CT::CopyMakable<T>);
-      static_assert(CT::ReferMakable<T>);
-      static_assert(CT::AbandonMakable<T>);
-      static_assert(CT::MoveMakable<T>);
-      static_assert(CT::CloneMakable<T>);
-      static_assert(CT::DisownMakable<T>);
+      static_assert(CT::CopyConstructible<T>);
+      static_assert(CT::ReferConstructible<T>);
+      static_assert(CT::AbandonConstructible<T>);
+      static_assert(CT::MoveConstructible<T>);
+      static_assert(CT::CloneConstructible<T>);
+      static_assert(CT::DisownConstructible<T>);
 
       static_assert(CT::CopyAssignable<T>);
       static_assert(CT::ReferAssignable<T>);

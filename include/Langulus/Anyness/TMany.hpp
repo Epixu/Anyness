@@ -14,7 +14,9 @@ namespace Langulus::Anyness
 {
 
    using DMeta = RTTI::DMeta;
-   
+   template<CT::NotVoid> struct TMany;
+   template<CT::NotVoid> struct TManyView;
+
    /// A statically-typed continuous container of variable size that is       
    /// binary-compatible with the type-erased alternative above               
    template<CT::NotVoid T>
@@ -48,6 +50,12 @@ namespace Langulus::Anyness
    > {
       using CTTI_ReflectAs = Many;
 
+      // View                                                           
+      using  ViewType = TManyView<T>;
+
+      // Deep type                                                      
+      using  DeepType = Many;
+
       // Single element selections                                      
       using  PickDenseMut  = T&;
       using  PickDense     = T const&;
@@ -58,8 +66,8 @@ namespace Langulus::Anyness
          Component::TypedStatic<DMeta, T>
       > {};
       using  PickSparse = T;
-      using  Pick       = ::std::conditional_t<CT::Sparse<T>, PickSparse,    PickDense>;
-      using  PickMut    = ::std::conditional_t<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
+      using  Pick       = Tif<CT::Sparse<T>, PickSparse,    PickDense>;
+      using  PickMut    = Tif<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
 
       // Range selections                                               
       struct PickRangeDenseMut : Container<
@@ -83,8 +91,8 @@ namespace Langulus::Anyness
          Component::ReserveStack<>
       > {};
       using  PickRangeSparse = PickRangeSparseMut;
-      using  PickRange       = ::std::conditional_t<CT::Sparse<T>, PickRangeSparse,    PickRangeDense>;
-      using  PickRangeMut    = ::std::conditional_t<CT::Sparse<T>, PickRangeSparseMut, PickRangeDenseMut>;
+      using  PickRange       = Tif<CT::Sparse<T>, PickRangeSparse,    PickRangeDense>;
+      using  PickRangeMut    = Tif<CT::Sparse<T>, PickRangeSparseMut, PickRangeDenseMut>;
    };
    
    /// A statically-typed continuous container view of variable size          

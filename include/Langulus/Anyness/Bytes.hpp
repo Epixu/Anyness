@@ -24,6 +24,7 @@
 #include "../../../source/components/Reserve-Heap.hpp"
 #include "../../../source/components/Hash-Stack.hpp"
 #include "../../../source/components/State-Stack.hpp"
+#include "../../../source/components/Comparison.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
@@ -34,6 +35,8 @@ namespace Langulus::Anyness
 {
 
    using DMeta = RTTI::DMeta;
+   struct Bytes;
+   struct BytesView;
 
    ///                                                                        
    /// A continuous byte container of variable size                           
@@ -54,6 +57,7 @@ namespace Langulus::Anyness
       Component::CountStack<>,         // Variable count                
       Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
+      Component::Comparison,           // Comparisons                   
       Component::StateStack<           // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Compressed<>,    // Adds 'compressed' state       
@@ -71,9 +75,12 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       Bytes(A1&&, AN&&...) requires RangeInsertable<Bytes, A1, AN...>;
 
+      // View                                                           
+      using  ViewType = BytesView;
+
       // Single element selections                                      
-      using Pick    = Byte const&;
-      using PickMut = Byte&;
+      using  Pick     = Byte const&;
+      using  PickMut  = Byte&;
 
       // Range selections                                               
       struct PickRange : Container<
@@ -91,6 +98,31 @@ namespace Langulus::Anyness
          Component::TypedStatic<DMeta, Byte>,
          Component::CountStack<>
       > {};
+   };
+
+   
+   ///                                                                        
+   /// A continuous byte container view of variable size, that is binary      
+   /// compatible with the container above                                    
+   ///                                                                        
+   struct BytesView : Container<
+      Component::HeapMovable<>,        // Pointer to heap memory        
+      Component::NoOwnershipStack<>,   // Allocation is referenced      
+      Component::Contiguous,           // Heap memory is continuous     
+      Component::IndexedLinear<>,      // Indexed directly              
+      Component::TypedStatic<DMeta, Byte>,   // Type-constrained        
+      Component::CountStack<>,         // Variable count                
+      Component::ReserveHeap<>,        // Variable capacity             
+      Component::HashStack<>,          // Variable hash (cached)        
+      Component::Comparison,           // Comparisons                   
+      Component::StateStack<           // Variable state                
+         DefineState::Typed<State::Enabled>, // Always type-constrained 
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
+      >
+   > {
+      using CTTI_ReflectAs = Bytes;
    };
 
 } // namespace Langulus::Anyness

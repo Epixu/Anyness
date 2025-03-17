@@ -6,25 +6,21 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../CTTI.hpp"
+#include "Integer.hpp"
+#include "Real.hpp"
 
 
 namespace Langulus::CTTI
 {
 
-   /// Can be used in two ways to satisfy CT::Character<T>:                   
+   /// Can be used in two ways to satisfy CT::Number<T>:                      
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Character = Yes;` in T                     
+   /// 2. Add a public `using CTTI_Number = Yes/No;` in T                     
    template<class T>
-   struct Character {
-      static constexpr bool Enabled =
-            ::std::same_as<Decvq<Deref<T>>, char>
-         or ::std::same_as<Decvq<Deref<T>>, wchar_t>
-         or ::std::same_as<Decvq<Deref<T>>, char8_t>
-         or ::std::same_as<Decvq<Deref<T>>, char16_t>
-         or ::std::same_as<Decvq<Deref<T>>, char32_t>;
+   struct Number {
+      static constexpr bool Enabled = CT::Integer<T> or CT::Real<T>;
    };
    
 } // namespace Langulus::CTTI
 
-LANGULUS_CTTI_CONCEPT(Character);
+LANGULUS_CTTI_CONCEPT(Number);

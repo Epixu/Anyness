@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include <Langulus/Anyness/Neat.hpp>
+#include <Langulus/Anyness/TPair.hpp>
 #include "Common.hpp"
 
 
@@ -18,77 +19,73 @@ SCENARIO("Data normalization", "[neat]") {
    static_assert(not CT::Abstract<TPair<TMeta, TMany<Many>>>);
 
    Many test1aa;
-   Many test2aa {Clone(test1aa)};
-   Many test3aa {Copy(test1aa)};
-   Many test4aa {Refer(test1aa)};
+   Many test2aa {Clone (test1aa)};
+   Many test3aa {Copy  (test1aa)};
+   Many test4aa {Refer (test1aa)};
 
-   IntentNew(&test3aa, Copy(test1aa));
-   IntentNew(&test3aa, Clone(test1aa));
-   IntentNew(&test3aa, Refer(test1aa));
+   IntentNew(&test3aa, Copy  (test1aa));
+   IntentNew(&test3aa, Clone (test1aa));
+   IntentNew(&test3aa, Refer (test1aa));
 
    static_assert(CT::Complete<Many>);
 
-   static_assert(CT::IntentMakable<Copied, Many>);
-   static_assert(CT::IntentMakable<Referred, Many>);
-
-   static_assert(CT::DeepMakable<Many, Cloned<TMany<Many>>>);
-   static_assert(CT::CopyMakable<Many>);
-   static_assert(CT::ReferMakable<Many>);
-   static_assert(CT::CloneMakable<Many>);
-
-   static_assert(CT::CopyMakable<TMeta>);
-   static_assert(CT::ReferMakable<TMeta>);
-   static_assert(CT::CloneMakable<TMeta>);
-
-   static_assert( CT::CopyMakable<TMany<Many>>);
-   static_assert(CT::ReferMakable<TMany<Many>>);
-   static_assert(CT::CloneMakable<TMany<Many>>);
+   static_assert(CT::IntentConstructible <Copied,   Many>);
+   static_assert(CT::IntentConstructible <Referred, Many>);
+                                         
+   static_assert(CT::DeepConstructible   <Many, Cloned<TMany<Many>>>);
+   static_assert(CT::CopyConstructible   <Many>);
+   static_assert(CT::ReferConstructible  <Many>);
+   static_assert(CT::CloneConstructible  <Many>);
+                                         
+   static_assert(CT::CopyConstructible   <TMeta>);
+   static_assert(CT::ReferConstructible  <TMeta>);
+   static_assert(CT::CloneConstructible  <TMeta>);
+                                         
+   static_assert(CT::CopyConstructible   <TMany<Many>>);
+   static_assert(CT::ReferConstructible  <TMany<Many>>);
+   static_assert(CT::CloneConstructible  <TMany<Many>>);
 
    TMany<Many> test1a;
-   TMany<Many> test2a {Clone(test1a)};
-   TMany<Many> test3a {Copy(test1a)};
-   TMany<Many> test4a {Refer(test1a)};
+   TMany<Many> test2a {Clone (test1a)};
+   TMany<Many> test3a {Copy  (test1a)};
+   TMany<Many> test4a {Refer (test1a)};
 
    TPair<TMeta, TMany<Many>> test1;
-   TPair<TMeta, TMany<Many>> test2 {Clone(test1)};
-   TPair<TMeta, TMany<Many>> test3 {Copy(test1)};
-   TPair<TMeta, TMany<Many>> test4 {Refer(test1)};
+   TPair<TMeta, TMany<Many>> test2 {Clone (test1)};
+   TPair<TMeta, TMany<Many>> test3 {Copy  (test1)};
+   TPair<TMeta, TMany<Many>> test4 {Refer (test1)};
 
 
 
-   static_assert(CT::Exact<typename IntentOf<Cloned<const int>>::template
-      As<float>, Cloned<float>>);
-   static_assert(CT::Exact<typename IntentOf<Cloned<const int>&>::template
-      As<float>, Cloned<float>>);
-   static_assert(CT::Exact<typename IntentOf<Cloned<const int>&&>::template
-      As<float>, Cloned<float>>);
-   static_assert(CT::Exact<typename IntentOf<const Cloned<const int>&>::template
-      As<float>, Cloned<float>>);
+   static_assert(CT::Exact<typename IntentOf<Cloned<const int>       >::template As<float>, Cloned<float>>);
+   static_assert(CT::Exact<typename IntentOf<Cloned<const int>&      >::template As<float>, Cloned<float>>);
+   static_assert(CT::Exact<typename IntentOf<Cloned<const int>&&     >::template As<float>, Cloned<float>>);
+   static_assert(CT::Exact<typename IntentOf<Cloned<const int> const&>::template As<float>, Cloned<float>>);
 
    static_assert(CT::Pair<Deint<Cloned<TPair<TMeta, TMany<Many>>>>>);
    static_assert(CT::PairMakable<TMeta, TMany<Many>, Cloned<TPair<TMeta, TMany<Many>>>>);
    static_assert(CT::PairAssignable<TMeta, TMany<Many>, Cloned<TPair<TMeta, TMany<Many>>>>);
 
-   static_assert(CT::IntentMakableAlt<Copied<TMeta>>);
-   static_assert(CT::IntentMakableAlt<Referred<TMeta>>);
-   static_assert(CT::IntentMakableAlt<Cloned<TMeta>>);
+   static_assert(CT::IntentConstructibleAlt <Copied   <TMeta>>);
+   static_assert(CT::IntentConstructibleAlt <Referred <TMeta>>);
+   static_assert(CT::IntentConstructibleAlt <Cloned   <TMeta>>);
+                                                      
+   static_assert(CT::IntentConstructibleAlt <Copied   <TMany<Many>>>);
+   static_assert(CT::IntentConstructibleAlt <Referred <TMany<Many>>>);
+   static_assert(CT::IntentConstructibleAlt <Cloned   <TMany<Many>>>);
+                                                      
+   static_assert(CT::IntentConstructibleAlt <Copied   <TPair<TMeta, TMany<Many>>>>);
+   static_assert(CT::IntentConstructibleAlt <Referred <TPair<TMeta, TMany<Many>>>>);
+   static_assert(CT::IntentConstructibleAlt <Cloned   <TPair<TMeta, TMany<Many>>>>);
 
-   static_assert(CT::IntentMakableAlt<Copied<TMany<Many>>>);
-   static_assert(CT::IntentMakableAlt<Referred<TMany<Many>>>);
-   static_assert(CT::IntentMakableAlt<Cloned<TMany<Many>>>);
+   static_assert(CT::CopyConstructible  <TMapUnsorted<TMeta, TMany<Many>>>);
+   static_assert(CT::ReferConstructible <TMapUnsorted<TMeta, TMany<Many>>>);
+   static_assert(CT::CloneConstructible <TMapUnsorted<TMeta, TMany<Many>>>);
 
-   static_assert(CT::IntentMakableAlt<Copied<TPair<TMeta, TMany<Many>>>>);
-   static_assert(CT::IntentMakableAlt<Referred<TPair<TMeta, TMany<Many>>>>);
-   static_assert(CT::IntentMakableAlt<Cloned<TPair<TMeta, TMany<Many>>>>);
-
-   static_assert(CT::CopyMakable<TUnorderedMap<TMeta, TMany<Many>>>);
-   static_assert(CT::ReferMakable<TUnorderedMap<TMeta, TMany<Many>>>);
-   static_assert(CT::CloneMakable<TUnorderedMap<TMeta, TMany<Many>>>);
-
-   static_assert(CT::MoveMakable<TPair<TMeta, TMany<Many>>>);
-   static_assert(CT::CopyMakable<TPair<TMeta, TMany<Many>>>);
-   static_assert(CT::ReferMakable<TPair<TMeta, TMany<Many>>>);
-   static_assert(CT::CloneMakable<TPair<TMeta, TMany<Many>>>);
+   static_assert(CT::MoveConstructible  <TPair<TMeta, TMany<Many>>>);
+   static_assert(CT::CopyConstructible  <TPair<TMeta, TMany<Many>>>);
+   static_assert(CT::ReferConstructible <TPair<TMeta, TMany<Many>>>);
+   static_assert(CT::CloneConstructible <TPair<TMeta, TMany<Many>>>);
 
 	GIVEN("An empty messy descriptor") {
       Many descriptor;
@@ -206,18 +203,18 @@ SCENARIO("Data normalization", "[neat]") {
       };
 
       Neat neat {
-         Traits::Name {"Root"},
+         Tags::Name {"Root"},
          Construct::From<int>(),
          Construct::From<float>(),
          Construct::From<double>(),
          Construct::From<ComplexStuff>(
-            Traits::Name {"Child1"},
+            Tags::Name {"Child1"},
             Construct::From<int>(),
             Construct::From<float>(),
-            Construct::From<ComplexStuff>(Traits::Name {"GrandChild1"}),
-            Construct::From<ComplexStuff>(Traits::Name {"GrandChild2"})
+            Construct::From<ComplexStuff>(Tags::Name {"GrandChild1"}),
+            Construct::From<ComplexStuff>(Tags::Name {"GrandChild2"})
          ),
-         Construct::From<ComplexStuff>(Traits::Name {"Child2"})
+         Construct::From<ComplexStuff>(Tags::Name {"Child2"})
       };
 
       WHEN("Copied") {

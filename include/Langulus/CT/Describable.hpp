@@ -67,18 +67,25 @@ namespace Langulus
 
 } // namespace Langulus
 
-namespace Langulus::CTTI
+namespace Langulus::CT
 {
 
-   /// Can be used in three ways to satisfy CT::Describable<T>:               
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Describable = Yes;` in T                   
-   /// 3. Just add a T(Describe&&) constructor                                
-   template<class T>
-   struct Describable {
-      static constexpr bool Enabled = not CT::Abstract<T> and requires { T {}; };
-   };
+   /// Check if the T is descriptor-constructible                             
+   /// It has to have the T (Describe&&) constructor in order to be so        
+   template<class...T>
+   concept DescribeConstructible = not Abstract<T...>
+       and not Enum<T...> and not Aggregate<T...>
+       and requires (const Anyness::Many& a) {
+         (T (Describe {a}), ...);
+       };
    
-} // namespace Langulus::CTTI
+   /// Check if the T is descriptor-assignable                                
+   /// It has to have the T::operator = (Describe&&) constructor              
+   template<class...T>
+   concept DescribeAssignable = not Abstract<T...>
+       and not Enum<T...> and not Aggregate<T...>
+       and requires (T&...lhs, const Anyness::Many& rhs) {
+         ((lhs = Describe {rhs}), ...);
+       };
 
-LANGULUS_CTTI_CONCEPT(Describable);
+} // namespace Langulus::CT

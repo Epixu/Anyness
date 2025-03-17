@@ -358,16 +358,20 @@ namespace Langulus
       }
    };
 
+   /// CTAD                                                                   
+   template<class TChar, size_t N>
+   Literal(const TChar(&)[N]) -> Literal<TChar, N - 1>;
 
-
-
-
+   /// Swap two literals                                                      
    template<CT::FixedString S>
    void swap(S& lhs, S& rhs) noexcept(noexcept(lhs.swap(rhs))) {
       lhs.swap(rhs);
    }
 
-   /*consteval bool operator == (
+
+   ///                                                                        
+   /// Literal == Literal                                                     
+   consteval bool operator == (
       const CT::FixedString auto& lhs,
       const CT::FixedString auto& rhs
    ) {
@@ -375,65 +379,75 @@ namespace Langulus
          return false;
       else {
          using lhs_type = std::decay_t<decltype(lhs)>;
-         using sv_type = typename lhs_type::string_view_type;
+         using sv_type = typename lhs_type::view_type;
          return static_cast<sv_type>(lhs) == rhs;
       }
    }
 
+   /// Literal == View                                                        
    template<CT::FixedString S>
    consteval bool operator == (const S& lhs, typename S::view_type rhs) {
-      using lhs_type = std::decay_t<decltype(lhs)>;
-      using sv_type = typename lhs_type::string_view_type;
-      return static_cast<sv_type>(lhs) == rhs;
+      return static_cast<typename S::view_type>(lhs) == rhs;
    }
 
+   /// View == Literal                                                        
    template<CT::FixedString S>
    consteval bool operator == (typename S::view_type lhs, const S& rhs) {
-      using rhs_type = std::decay_t<decltype(rhs)>;
-      using sv_type = typename rhs_type::string_view_type;
-      return lhs == static_cast<sv_type>(rhs);
-   }*/
+      return lhs == static_cast<typename S::view_type>(rhs);
+   }
 
+   /// Literal == Array                                                       
+   template<CT::FixedString S, ::std::size_t N>
+   consteval bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {
+      using sv_type = typename S::view_type;
+      return static_cast<sv_type>(lhs) == sv_type {rhs};
+   }
+
+   /// Array == Literal                                                       
+   template<CT::FixedString S, ::std::size_t N>
+   consteval bool operator == (const typename S::value_type(&lhs)[N], const S& rhs) {
+      using sv_type = typename S::view_type;
+      return sv_type {lhs} == static_cast<sv_type>(rhs);
+   }
+
+
+   ///                                                                        
+   /// Literal <=> Literal                                                    
    consteval auto operator <=> (
       const CT::FixedString auto& lhs,
       const CT::FixedString auto& rhs
    ) {
       using lhs_type = std::decay_t<decltype(lhs)>;
-      using sv_type = typename lhs_type::string_view_type;
+      using sv_type = typename lhs_type::view_type;
       return static_cast<sv_type>(lhs) <=> rhs;
    }
 
+   /// Literal <=> View                                                       
    template<CT::FixedString S>
    consteval auto operator <=> (const S& lhs, const typename S::view_type& rhs) {
-      using lhs_type = std::decay_t<decltype(lhs)>;
-      using sv_type = typename lhs_type::string_view_type;
-      return static_cast<sv_type>(lhs) <=> rhs;
+      return static_cast<typename S::view_type>(lhs) <=> rhs;
    }
    
+   /// View <=> Literal                                                       
    template<CT::FixedString S>
    consteval auto operator <=> (const typename S::view_type& lhs, const S& rhs) {
-      using rhs_type = std::decay_t<decltype(rhs)>;
-      using sv_type = typename rhs_type::string_view_type;
-      return lhs <=> static_cast<sv_type>(rhs);
+      return lhs <=> static_cast<typename S::view_type>(rhs);
    }
    
-   /*template<CT::FixedString S, ::std::size_t N>
+   /// Literal <=> Array                                                      
+   template<CT::FixedString S, ::std::size_t N>
    consteval auto operator <=> (const S& lhs, const typename S::value_type(&rhs)[N]) {
-      using lhs_type = std::decay_t<decltype(lhs)>;
-      using sv_type = typename lhs_type::string_view_type;
+      using sv_type = typename S::view_type;
       return static_cast<sv_type>(lhs) <=> sv_type {rhs};
    }
    
+   /// Array <=> Literal                                                      
    template<CT::FixedString S, ::std::size_t N>
    consteval auto operator <=> (const typename S::value_type(&lhs)[N], const S& rhs) {
-      using rhs_type = std::decay_t<decltype(rhs)>;
-      using sv_type = typename rhs_type::string_view_type;
+      using sv_type = typename S::view_type;
       return sv_type {lhs} <=> static_cast<sv_type>(rhs);
-   }*/
+   }
    
-   template<class TChar, size_t N>
-   Literal(const TChar(&)[N]) -> Literal<TChar, N - 1>;
-
 
    ///                                                                        
    /// Concatenation                                                          

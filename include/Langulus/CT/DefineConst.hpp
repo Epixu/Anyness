@@ -8,7 +8,7 @@ namespace Langulus
    {
 
       template<auto E>
-      struct ValueReflector {
+      struct ConstReflector {
          static constexpr Literal Name  = NameOf<E>();
          static constexpr auto    Value = E;
       };
@@ -17,13 +17,13 @@ namespace Langulus
 
 
    /// Can be used to reflect named values inside your T like so:             
-   /// public: using CTTI_Values = Values<One, Two, Three>;                   
+   /// public: using CTTI_Values = Constants<One, Two, Three>;                
    /// They will be reflected as meta constants on MetaOf<T>                  
    template<auto E1, auto...EN>
-   struct Values {
+   struct Constants {
       using List = Types<
-         Inner::ValueReflector<E1>,
-         Inner::ValueReflector<EN>...
+         Inner::ConstReflector<E1>,
+         Inner::ConstReflector<EN>...
       >;
    };
 

@@ -12,19 +12,14 @@
 namespace Langulus::CTTI
 {
 
-   /// Can be used in two ways to satisfy CT::Character<T>:                   
+   /// Can be used in two ways to satisfy CT::Real<T>:                        
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Character = Yes;` in T                     
+   /// 2. Add a public `using CTTI_Real = Yes;` in T                          
    template<class T>
-   struct Character {
-      static constexpr bool Enabled =
-            ::std::same_as<Decvq<Deref<T>>, char>
-         or ::std::same_as<Decvq<Deref<T>>, wchar_t>
-         or ::std::same_as<Decvq<Deref<T>>, char8_t>
-         or ::std::same_as<Decvq<Deref<T>>, char16_t>
-         or ::std::same_as<Decvq<Deref<T>>, char32_t>;
+   struct Real {
+      static constexpr bool Enabled = ::std::floating_point<T>;
    };
    
 } // namespace Langulus::CTTI
 
-LANGULUS_CTTI_CONCEPT(Character);
+LANGULUS_CTTI_CONCEPT(Real);

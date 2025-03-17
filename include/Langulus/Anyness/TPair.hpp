@@ -7,3 +7,64 @@
 ///                                                                           
 #pragma once
 #include "../../../source/Container.hpp"
+#include "../../../source/components/Stack.hpp"
+#include "../../../source/components/Assignment.hpp"
+#include "../../../source/components/Typed-Static.hpp"
+
+
+namespace Langulus::CT
+{
+
+   /// Concept for recognizing arguments, with which a statically typed       
+   /// pair can be constructed                                                
+   template<class K, class V, class A>
+   concept PairMakable = Pair<Deint<A>> and NotReference<K, V>
+       and (IntentOf<A>::Shallow or (
+            IntentConstructibleAlt<typename IntentOf<A>::template As<K>>
+        and IntentConstructibleAlt<typename IntentOf<A>::template As<V>>));
+
+   /// Concept for recognizing argument, with which a statically typed        
+   /// pair can be assigned                                                   
+   template<class K, class V, class A>
+   concept PairAssignable = Pair<Deint<A>> and NotReference<K, V>
+       and (IntentOf<A>::Shallow or (
+            IntentAssignableAlt<typename IntentOf<A>::template As<K>>
+        and IntentAssignableAlt<typename IntentOf<A>::template As<V>>));
+
+   /// Concept for recognizing argument, against which a pair can be compared 
+   template<class K, class V, class A>
+   concept PairComparable = Pair<A>
+       and Comparable<K, typename A::Key>
+       and Comparable<V, typename A::Value>;
+
+} // namespace Langulus::CT
+
+namespace Langulus::Anyness
+{
+   
+   ///                                                                        
+   ///   A helper structure for pairing keys and values of any type           
+   ///                                                                        
+   ///   This is the statically typed pair, and it can be used with           
+   /// references, as well as dense or sparse values. When key or value types 
+   /// are references, the TPair acts as a simple intermediate type, often    
+   /// used to access elements inside maps.                                   
+   ///   @attention TPair is not binary-compatible with its type-erased       
+   ///      counterpart Pair                                                  
+   ///                                                                        
+   template<CT::NotVoid K, CT::NotVoid V>
+   struct TPair : Container<
+      Component::Stack<K, 0>,                // Key on the stack        
+      Component::Stack<V, 1>,                // Value on the stack      
+      Component::TypedStatic<DMeta, K, 0>,   // Statically typed key    
+      Component::TypedStatic<DMeta, V, 1>,   // Statically typed value  
+      Component::Assignment                  // Allows for assignment   
+   > {
+      using CTTI_Typed = Types<K, V>;
+      using CTTI_Pair  = Yes;
+
+      using Key = K;
+      using Val = V;
+   };
+
+} // namespace Langulus::Anyness

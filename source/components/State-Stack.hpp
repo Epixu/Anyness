@@ -1,6 +1,8 @@
 #pragma once
 #include "../Container.hpp"
 #include "../states/Default.hpp"
+#include "../states/Typed.hpp"
+#include <Langulus/Sequence.hpp>
 #include <utility>
 
 
@@ -15,20 +17,28 @@ namespace Langulus::Anyness::Component
    template<CT::State...STATES>
    struct StateStack : STATES... {
       using CTTI_Component = Yes;
-      static constexpr auto StateCount = sizeof...(STATES);
-      using StateType = ::std::conditional_t<StateCount <= 8, uint8_t, uint16_t>;
+      using StateType = Tif<sizeof...(STATES) <= 8, uint8_t, uint16_t>;
+      static constexpr StateType StateCount = sizeof...(STATES);
+      static_assert(StateCount  >  0, "Can't have zero states");
       static_assert(StateCount <= 16, "Too many states");
 
    protected:
+      template<State::StateValue>
+      friend struct DefineState::Typed;
+
       // The bitfield capable of containing all states                  
       StateType mState;
 
       /// Get the value of a speicific state                                  
       template<CT::State S>
       static consteval StateType GetStateBit() {
-         return []<StateType...I>(::std::integer_sequence<StateType, I...>) {
+         return LANGULUS_SEQUENCE(StateCount, {
             return ((::std::same_as<S, STATES> * (StateType {1} << I)) | ...);
-         }(::std::make_integer_sequence<StateType, StateCount>());
+         });
+
+         /*return []<StateType...I>(::std::integer_sequence<StateType, I...>) {
+            return ((::std::same_as<S, STATES> * (StateType {1} << I)) | ...);
+         }(::std::make_integer_sequence<StateType, StateCount>());*/
       }
 
    public:

@@ -9,11 +9,10 @@
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
 #include <Langulus/Anyness/Text.hpp>
-#include <Langulus/Anyness/Trait.hpp>
 #include <Langulus/Anyness/Pair.hpp>
 #include <Langulus/Anyness/TPair.hpp>
-#include <unordered_map>
 #include "../many/TestManyCommon.hpp"
+#include <unordered_map>
 
 
 ///                                                                           
@@ -48,35 +47,35 @@ void Pair_CheckState_Abandoned(const auto&);
 template<class K, class V>
 void Pair_CheckState_Default(const auto& pair) {
    if constexpr (CT::Typed<decltype(pair)>) {
-      Any_CheckState_DisownedFullConst<K>(pair.GetKeyBlock());
-      Any_CheckState_DisownedFullConst<V>(pair.GetValueBlock());
+      Many_CheckState_DisownedFullConst<K>(pair.GetKeyBlock());
+      Many_CheckState_DisownedFullConst<V>(pair.GetValueBlock());
    }
    else {
-      Any_CheckState_Default<K>(pair.GetKeyBlock());
-      Any_CheckState_Default<V>(pair.GetValueBlock());
+      Many_CheckState_Default<K>(pair.GetKeyBlock());
+      Many_CheckState_Default<V>(pair.GetValueBlock());
    }
 }
 
 template<class K, class V>
 void Pair_CheckState_OwnedFull(const auto& pair) {
    if constexpr (CT::Typed<decltype(pair)>) {
-      Any_CheckState_DisownedFullConst<K>(pair.GetKeyBlock());
-      Any_CheckState_DisownedFullConst<V>(pair.GetValueBlock());
+      Many_CheckState_DisownedFullConst<K>(pair.GetKeyBlock());
+      Many_CheckState_DisownedFullConst<V>(pair.GetValueBlock());
    }
    else {
-      Any_CheckState_OwnedFull<K>(pair.GetKeyBlock());
-      Any_CheckState_OwnedFull<V>(pair.GetValueBlock());
+      Many_CheckState_OwnedFull<K>(pair.GetKeyBlock());
+      Many_CheckState_OwnedFull<V>(pair.GetValueBlock());
    }
 }
 
 template<class K, class V>
 void Pair_CheckState_OwnedEmpty(const auto& pair) {
    if constexpr (CT::Typed<decltype(pair)>) {
-      Any_CheckState_DisownedFullConst<K>(pair.GetKeyBlock());
-      Any_CheckState_DisownedFullConst<V>(pair.GetValueBlock());
+      Many_CheckState_DisownedFullConst<K>(pair.GetKeyBlock());
+      Many_CheckState_DisownedFullConst<V>(pair.GetValueBlock());
    }
    else {
-      Any_CheckState_OwnedEmpty<K>(pair.GetKeyBlock());
-      Any_CheckState_OwnedEmpty<V>(pair.GetValueBlock());
+      Many_CheckState_OwnedEmpty<K>(pair.GetKeyBlock());
+      Many_CheckState_OwnedEmpty<V>(pair.GetValueBlock());
    }
 }

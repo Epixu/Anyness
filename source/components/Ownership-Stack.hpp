@@ -13,14 +13,12 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct OwnershipStack {
    private:
-      Allocation* mAllocation;
+      AllocationPtr mAllocation;
 
    public:
       using CTTI_Component = Yes;
 
-      auto GetAllocation() const noexcept -> const Allocation* {
-         return mAllocation;
-      }
+      auto GetAllocation() const noexcept { return mAllocation; }
 
       auto GetUses() const noexcept {
          return mAllocation ? mAllocation->GetUses() : 0;
@@ -35,12 +33,12 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct NoOwnershipStack {
    private:
-      Allocation* mAllocation;
+      AllocationPtr mAllocation;
 
    public:
       using CTTI_Component = Yes;
 
-      const Allocation* GetAllocation() const noexcept { return mAllocation; }
+      auto GetAllocation() const noexcept { return mAllocation; }
    };
 
 } // namespace Langulus::Anyness::Component

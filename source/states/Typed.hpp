@@ -16,7 +16,7 @@ namespace Langulus::Anyness::DefineState
       static constexpr bool Dynamic = V == State::Variable;
       static constexpr bool Enable  = V == State::Enabled;
 
-      consteval bool IsTypeConstrained() const requires Static {
+      constexpr bool IsTypeConstrained() const requires Static {
          return Enable;
       }
 
@@ -26,13 +26,15 @@ namespace Langulus::Anyness::DefineState
       }
 
       template<CT::Container C>
-      void EnableTypeConstrained(this C& self) noexcept requires Dynamic {
+      auto EnableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
          self.mState |= C::template GetStateBit<Typed>();
+         return self;
       }
 
       template<CT::Container C>
-      void DisableTypeConstrained(this C& self) noexcept requires Dynamic {
+      auto DisableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
          self.mState &= ~C::template GetStateBit<Typed>();
+         return self;
       }
    };
 

@@ -15,11 +15,11 @@ namespace Langulus::Anyness::Component
 
       /// Push back                                                           
       template<CT::Container C, class A>
-      C& operator << (this C&, A&&) requires RangeInsertable<C, A>;
+      C& operator << (this C&, A&&) requires CT::RangeInsertable<C, A>;
 
       /// Push front                                                          
       template<CT::Container C, class A>
-      C& operator >> (this C&, A&&) requires RangeInsertable<C, A>;
+      C& operator >> (this C&, A&&) requires CT::RangeInsertable<C, A>;
    };
 
 } // namespace Langulus::Anyness::Component

@@ -16,43 +16,106 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes;
       using CTTI_Typed     = TYPE;
 
+      static constexpr bool TypeErased = false;
+      static constexpr bool Sparse     = CT::Sparse<TYPE>;
+      static constexpr bool Dense      = CT::Dense<TYPE>;
+
       /// Get the type definition                                             
       ///   @return the definition                                            
-      T GetType() const noexcept {
-         return MetaOf<TYPE>();
+      T GetType() const noexcept { return MetaOf<TYPE>(); }
+
+      /// Statically typed containers are always typed                        
+      constexpr bool IsTyped()   const noexcept { return true;  }
+      constexpr bool IsUntyped() const noexcept { return false; }
+
+      /// Check if type origin is the same as one of the provided types       
+      /// Always happens at compile-time                                      
+      ///   @attention ignores sparsity and cv-qualifiers                     
+      ///   @tparam A1, AN... - the types to compare against                  
+      ///   @return true if origin type is same to at least one of the types  
+      template<CT::NotVoid A1, CT::NotVoid...AN>
+      constexpr bool Is() const noexcept {
+         return CT::SameAsOneOf<TYPE, A1, AN...>;
       }
 
+      /// Check if type origin is the same as another                         
+      ///   @attention ignores sparsity and cv-qualifiers                     
+      ///   @param type - the type to check for                               
+      ///   @return true if this container has similar data                   
       bool Is(T type) const noexcept {
          return GetType().Is(type);
       }
-
-      template<CT::NotVoid T1, CT::NotVoid...TN>
-      consteval bool Is() const noexcept {
-         return CT::SameAsOneOf<TYPE, T1, TN...>;
+      
+      /// Check if type origin is the same as another container's type        
+      /// This can potentially happen at compile-time                         
+      ///   @attention ignores sparsity and cv-qualifiers                     
+      ///   @param other - the type to check for                              
+      ///   @return true if this container has similar data                   
+      template<CT::Container C>
+      constexpr bool Is(C const& other) const noexcept {
+         if constexpr (C::TypeErased)
+            return GetType().Is(other.GetType());
+         else
+            return CT::Same<TYPE, TypeOf<C>>;
       }
 
+      /// Check if unqualified type is the same as one of the provided types  
+      /// Always happens at compile-time                                      
+      ///   @attention ignores only cv-qualifiers                             
+      ///   @tparam A1, AN... - the types to compare against                  
+      ///   @return true if data type is similar to at least one of the types 
+      template<CT::NotVoid A1, CT::NotVoid...AN>
+      constexpr bool IsSimilar() const noexcept {
+          return CT::SimilarAsOneOf<TYPE, A1, AN...>;
+      }
+
+      /// Check if unqualified type is the same as another                    
+      ///   @attention ignores only cv-qualifiers                             
+      ///   @param type - the type to check for                               
+      ///   @return true if this block contains similar data                  
       bool IsSimilar(T type) const noexcept {
          return GetType().IsSimilar(type);
       }
 
-      template<CT::NotVoid T1, CT::NotVoid...TN>
-      consteval bool IsSimilar() const noexcept {
-         return CT::SimilarAsOneOf<TYPE, T1, TN...>;
+      /// Check if unqualified type is the same as another container's type   
+      /// This can potentially happen at compile-time                         
+      ///   @attention ignores only cv-qualifiers                             
+      ///   @param other - the container to check for                         
+      ///   @return true if this container has similar data                   
+      template<CT::Container C>
+      constexpr bool IsSimilar(C const& other) const noexcept {
+         if constexpr (C::TypeErased)
+            return GetType().IsSimilar(other.GetType());
+         else
+            return CT::Similar<TYPE, TypeOf<C>>;
       }
 
-      /// Check if this type is exactly like another                          
+      /// Check if this type is exactly one of the provided types             
+      /// Always happens at compile-time                                      
+      ///   @tparam T1, TN... - the types to compare against                  
+      ///   @return true if data type matches at least one type               
+      template<CT::NotVoid A1, CT::NotVoid...AN>
+      constexpr bool IsExact() const noexcept {
+         return CT::ExactAsOneOf<TYPE, A1, AN...>;
+      }
+
+      /// Check if this type is exactly another                               
       ///   @param type - the type to match                                   
       ///   @return true if data type matches type exactly                    
       bool IsExact(T type) const noexcept {
          return GetType().IsExact(type);
       }
 
-      /// Check if this type is exactly one of the provided types             
-      ///   @tparam T1, TN... - the types to compare against                  
-      ///   @return true if data type matches at least one type               
-      template<CT::NotVoid T1, CT::NotVoid...TN>
-      consteval bool IsExact() const {
-         return CT::ExactAsOneOf<TYPE, T1, TN...>;
+      /// Check if this type is exactly another container's type              
+      /// This can potentially happen at compile-time                         
+      ///   @param other - the block to match                                 
+      ///   @return true if data type matches type exactly                    
+      template<CT::Container C>
+      constexpr bool IsExact(C const& other) const noexcept {
+         if constexpr (C::TypeErased)
+            return GetType().IsExact(other.GetType());
+         else
+            return CT::Exact<TYPE, TypeOf<C>>;
       }
    };
 

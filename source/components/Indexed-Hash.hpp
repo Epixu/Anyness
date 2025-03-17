@@ -13,7 +13,6 @@ namespace Langulus::Anyness::Component
    template<class T = void, class HASH = Hash>
    struct IndexedHash {
       using CTTI_Component = Yes;
-      static constexpr bool Indexed = true;
    };
 
 } // namespace Langulus::Anyness::Component

@@ -21,19 +21,27 @@ namespace Langulus::Index
 {
    namespace Inner
    {
-      struct All      { using CTTI_Index = Yes; };
-      struct Many     { using CTTI_Index = Yes; };
-      struct Single   { using CTTI_Index = Yes; };
-      struct None     { using CTTI_Index = Yes; };
-      struct Front    { using CTTI_Index = Yes; };
-      struct Middle   { using CTTI_Index = Yes; };
-      struct Back     { using CTTI_Index = Yes; };
-      struct Mode     { using CTTI_Index = Yes; };
-      struct Biggest  { using CTTI_Index = Yes; };
-      struct Smallest { using CTTI_Index = Yes; };
-      struct Random   { using CTTI_Index = Yes; };
-      struct First    { using CTTI_Index = Yes; };
-      struct Last     { using CTTI_Index = Yes; };
+      template<bool VALID>
+      struct Common {
+         using CTTI_Index = Yes;
+         constexpr explicit operator bool() const noexcept {
+            return VALID;
+         }
+      };
+
+      struct All      : Common<true>  {};
+      struct Many     : Common<true>  {};
+      struct Single   : Common<true>  {};
+      struct None     : Common<false> {};
+      struct Front    : Common<true>  {};
+      struct Middle   : Common<true>  {};
+      struct Back     : Common<true>  {};
+      struct Mode     : Common<true>  {};
+      struct Biggest  : Common<true>  {};
+      struct Smallest : Common<true>  {};
+      struct Random   : Common<true>  {};
+      struct First    : Common<true>  {};
+      struct Last     : Common<true>  {};
 
    } // namespace Langulus::Anyness::Index::Inner
 
@@ -78,5 +86,18 @@ namespace Langulus::Index
 
    /// Equivalent to size-1 for continuous memory                             
    constexpr auto Last = Inner::Last {};
+
+   /// An arithmetic index that is evaluated to false if equal to npos        
+   /// in order to easily use it in if statements instead of constantly       
+   /// comparing against npos like a chump                                    
+   template<class T>
+   struct At {
+      T index;
+
+      constexpr explicit operator bool() const noexcept {
+         return index != ::std::numeric_limits<T>::max();
+      }
+   };
+   template<class T> At(T&&) -> At<T>;
 
 } // namespace Langulus::Index

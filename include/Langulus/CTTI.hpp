@@ -65,7 +65,7 @@ namespace Langulus::CT
    /// these checks will act as if the sheddable type doesn't exist at all    
    /// The concept relies on CTTI::Typed for getting into the inner type      
    template<class...T>
-   concept Sheddable = ((CTTI::Sheddable<Deref<T>>::Enabled or Deref<T>::CTTI_Sheddable::Enabled) and ...);
+   concept Sheddable = ((CTTI::Sheddable<Deref<T>>::Enabled or (CT::Dense<T> and Decay<T>::CTTI_Sheddable::Enabled)) and ...);
 
    template<class...T>
    concept NotSheddable = ((not Sheddable<Deref<T>>) and ...);
@@ -103,7 +103,7 @@ namespace Langulus::CT
 #define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = ((CTTI::NAME<Deref<T>>::Enabled or Deref<T>::CTTI_##NAME::Enabled) and ...); \
+      concept NAME = ((CTTI::NAME<Deref<T>>::Enabled or (CT::Dense<T> and Decay<T>::CTTI_##NAME::Enabled)) and ...); \
       template<class...T> \
       concept Not##NAME = ((not NAME<Deref<T>>) and ...); \
    }
@@ -114,7 +114,7 @@ namespace Langulus::CT
 #define LANGULUS_CTTI_CONCEPT(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = ((CTTI::NAME<Shed<T>>::Enabled or Shed<T>::CTTI_##NAME::Enabled) and ...); \
+      concept NAME = ((CTTI::NAME<Deref<Shed<T>>>::Enabled or (CT::Dense<Shed<T>> and Decay<Shed<T>>::CTTI_##NAME::Enabled)) and ...); \
       template<class...T> \
       concept Not##NAME = ((not NAME<T>) and ...); \
    }

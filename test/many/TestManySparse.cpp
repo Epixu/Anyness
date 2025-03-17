@@ -11,23 +11,23 @@
 /// The main test for Many/TMany containers, with all kinds of items, from    
 /// sparse to dense, from trivial to complex, from flat to deep               
 TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
-   (TypePair<Trait, RT*>),
+   (TypePair<Tag<>, RT*>),
 
-   (TypePair<TMany<Trait*>, Trait*>),
-   (TypePair<Many, Traits::Count*>),
-   (TypePair<Trait, Text*>),
+   (TypePair<TMany<Tag<>*>, Tag<>*>),
+   (TypePair<Many, Tags::Count<>*>),
+   (TypePair<Tag<>, Text*>),
 
-   (TypePair<Traits::Name, Text*>),
-   (TypePair<Traits::Name, RT*>),
+   (TypePair<Tags::Name<>, Text*>),
+   (TypePair<Tags::Name<>, RT*>),
 
    (TypePair<TMany<int*>, int*>),
-   (TypePair<TMany<Traits::Count*>, Traits::Count*>),
+   (TypePair<TMany<Tags::Count<>*>, Tags::Count<>*>),
    (TypePair<TMany<Many*>, Many*>),
    (TypePair<TMany<Text*>, Text*>),
    (TypePair<TMany<RT*>, RT*>),
 
    (TypePair<Many, int*>),
-   (TypePair<Many, Trait*>),
+   (TypePair<Many, Tag<>*>),
    (TypePair<Many, Many*>),
    (TypePair<Many, Text*>),
    (TypePair<Many, RT*>)
@@ -61,12 +61,12 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instaed  
       // be thrown as exceptions at runtime                             
-      static_assert(CT::CopyMakable<T>);
-      static_assert(CT::ReferMakable<T>);
-      static_assert(CT::AbandonMakable<T>);
-      static_assert(CT::MoveMakable<T>);
-      static_assert(CT::CloneMakable<T>);
-      static_assert(CT::DisownMakable<T>);
+      static_assert(CT::CopyConstructible<T>);
+      static_assert(CT::ReferConstructible<T>);
+      static_assert(CT::AbandonConstructible<T>);
+      static_assert(CT::MoveConstructible<T>);
+      static_assert(CT::CloneConstructible<T>);
+      static_assert(CT::DisownConstructible<T>);
 
       static_assert(CT::CopyAssignable<T>);
       static_assert(CT::ReferAssignable<T>);
@@ -79,7 +79,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
    GIVEN("Default constructed container") {
       T pack;
 
-      Any_CheckState_Default<E>(pack);
+      Many_CheckState_Default<E>(pack);
 
       #ifdef LANGULUS_STD_BENCHMARK
          BENCHMARK_ADVANCED("default construction") (timer meter) {
@@ -107,8 +107,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Assigned value by implicit copy") {
          pack = element;
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, element);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
@@ -137,23 +137,23 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Assigned value by explicit copy") {
          pack = Copy(element);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, element);
       }
       
       WHEN("Assigned value by refer") {
          pack = element;
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, element);
       }
       
       WHEN("Assigned value by implicit move") {
          auto movable = element;
          pack = ::std::move(movable);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, element);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
@@ -183,15 +183,15 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          auto movable = element;
          pack = Move(movable);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, element);
       }
 
       WHEN("Assigned disowned value") {
          pack = Disown(element);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, element);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
@@ -221,7 +221,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          WHEN("Assigned cloned value") {
             pack = Clone(element);
 
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
 
             REQUIRE(pack.GetCount() == 1);
             REQUIRE(pack.GetUses() == 1);
@@ -263,8 +263,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          auto movable = element;
          pack = Abandon(movable);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, element);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
@@ -293,7 +293,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Assigned empty self") {
          pack = pack;
 
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
@@ -325,8 +325,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             const auto created = pack.New(3, darray2[0]);
             REQUIRE(created == 3);
 
-            Any_CheckState_OwnedFull<E>(pack);
-            Any_CheckState_ContainsN(3, pack, darray2[0]);
+            Many_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_ContainsN(3, pack, darray2[0]);
          }
       }
 
@@ -337,8 +337,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
               << darray2[3]
               << darray2[4];
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsArray(pack, darray2);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsArray(pack, darray2);
          
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial copies)") (timer meter) {
@@ -371,8 +371,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
               >> darray2[1]
               >> darray2[0];
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsArray(pack, darray2);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsArray(pack, darray2);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial copies)") (timer meter) {
@@ -401,8 +401,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Shallow-copy an array to the back") {
          pack.Insert(IndexBack, darray2);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsArray(pack, darray2);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsArray(pack, darray2);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexBack> (5 trivial copies)") (timer meter) {
@@ -426,8 +426,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Shallow-copy an array to the front") {
          pack.Insert(IndexFront, darray2);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsArray(pack, darray2);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsArray(pack, darray2);
          
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexFront> (5 trivial copies)") (timer meter) {
@@ -472,8 +472,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             << ::std::move(darray3[3])
             << ::std::move(darray3[4]);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsArray(pack, darray3backup);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsArray(pack, darray3backup);
          
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial moves)") (timer meter) {
@@ -531,8 +531,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             >> ::std::move(darray3[1])
             >> ::std::move(darray3[0]);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsArray(pack, darray3backup);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsArray(pack, darray3backup);
          
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial moves)") (timer meter) {
@@ -573,7 +573,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          if constexpr (CT::Typed<T>) {
             auto instance = pack.Emplace(IndexFront, ::std::move(i666));
 
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.GetCount() == 1);
             REQUIRE(pack.GetReserved() >= 1);
             REQUIRE(pack[0] == i666backup);
@@ -616,7 +616,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          if constexpr (CT::Typed<T>) {
             auto instance = pack.Emplace(IndexBack, ::std::move(i666));
 
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.GetCount() == 1);
             REQUIRE(pack.GetReserved() >= 1);
             REQUIRE(pack[0] == i666backup);
@@ -656,40 +656,40 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          const auto removed9 = pack.Remove(darray2[3]);
 
          REQUIRE(removed9 == 0);
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
       }    
 
       WHEN("More capacity is reserved in an empty container") {
          if constexpr (CT::Typed<T>) {
             pack.Reserve(20);
 
-            Any_CheckState_OwnedEmpty<E>(pack);
+            Many_CheckState_OwnedEmpty<E>(pack);
             REQUIRE(pack.GetCount() == 0);
             REQUIRE(pack.GetReserved() >= 20);
          }
          else {
             REQUIRE_THROWS(pack.Reserve(20));
-            Any_CheckState_Default<E>(pack);
+            Many_CheckState_Default<E>(pack);
          }
       }
 
       WHEN("Empty pack is cleared") {
          pack.Clear();
 
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Empty pack is reset") {
          pack.Reset();
 
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Empty pack with state is shallow-copied") {
          pack.MakeOr();
          auto copy = pack;
 
-         Any_Helper_TestSame(copy, pack);
+         Many_Helper_TestSame(copy, pack);
          REQUIRE(copy.GetState() == pack.GetState());
          REQUIRE(copy.GetUses() == 0);
       }
@@ -699,7 +699,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             pack.MakeOr();
             T clone = Clone(pack);
 
-            Any_Helper_TestSame(clone, pack);
+            Many_Helper_TestSame(clone, pack);
             REQUIRE(clone.GetState() == pack.GetState());
             REQUIRE(clone.GetUses() == 0);
          }
@@ -710,8 +710,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          T movable = pack;
          const T moved = ::std::move(movable);
 
-         Any_CheckState_Default<E>(movable);
-         Any_Helper_TestSame(moved, pack);
+         Many_CheckState_Default<E>(movable);
+         Many_Helper_TestSame(moved, pack);
       }
 
       WHEN("Packs are compared") {
@@ -760,7 +760,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Merge-copy an element to the back, if not found (<<=)") {
          pack <<= darray2[3];
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
@@ -789,7 +789,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Merge-copy an element to the front, if not found (>>=)") {
          pack >>= darray2[3];
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
@@ -819,7 +819,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          auto moved = darray2[3];
          pack <<= ::std::move(moved);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
@@ -849,7 +849,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          auto moved = darray2[3];
          pack >>= ::std::move(moved);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
          REQUIRE(pack[0] == darray2[3]);
@@ -878,7 +878,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("ForEach flat dense element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEach(
             [&](const int&)   {FAIL();},
-            [&](const Trait&) {FAIL();},
+            [&](const Tag<>&) {FAIL();},
             [&](const Many&)  {FAIL();}
          );
 
@@ -888,7 +888,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("ForEach flat dense element (mutable)") {
          const auto foreachit = const_cast<T&>(pack).ForEach(
             [&](int&)         {FAIL(); },
-            [&](Trait&)       {FAIL(); },
+            [&](Tag<>&)       {FAIL(); },
             [&](Many&)        {FAIL(); }
          );
 
@@ -898,7 +898,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("ForEach flat sparse element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEach(
             [&](const int*)   {FAIL(); },
-            [&](const Trait*) {FAIL(); },
+            [&](const Tag<>*) {FAIL(); },
             [&](const Many*)  {FAIL(); }
          );
 
@@ -908,7 +908,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("ForEach flat sparse element (mutable)") {
          const auto foreachit = const_cast<T&>(pack).ForEach(
             [&](int*)         {FAIL(); },
-            [&](Trait*)       {FAIL(); },
+            [&](Tag<>*)       {FAIL(); },
             [&](Many*)        {FAIL(); }
          );
 
@@ -918,7 +918,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("ForEachRev flat dense element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEachRev(
             [&](const int&)   {FAIL(); },
-            [&](const Trait&) {FAIL(); },
+            [&](const Tag<>&) {FAIL(); },
             [&](const Many&)  {FAIL(); }
          );
 
@@ -928,7 +928,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("ForEachRev flat dense element (mutable)") {
          const auto foreachit = pack.ForEachRev(
             [&](const int&)   {FAIL(); },
-            [&](const Trait&) {FAIL(); },
+            [&](const Tag<>&) {FAIL(); },
             [&](const Many&)  {FAIL(); }
          );
 
@@ -938,7 +938,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("ForEachRev flat sparse element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEachRev(
             [&](const int*)   {FAIL(); },
-            [&](const Trait*) {FAIL(); },
+            [&](const Tag<>*) {FAIL(); },
             [&](const Many*)  {FAIL(); }
          );
 
@@ -948,7 +948,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("ForEachRev flat sparse element (mutable)") {
          const auto foreachit = pack.ForEachRev(
             [&](const int*)   {FAIL(); },
-            [&](const Trait*) {FAIL(); },
+            [&](const Tag<>*) {FAIL(); },
             [&](const Many*)  {FAIL(); }
          );
 
@@ -963,8 +963,8 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          const T source {element};
          T pack {source};
 
-         Any_CheckState_OwnedFull<E>(pack);
-         REQUIRE(pack.template As<DenseE>() == denseValue);
+         Many_CheckState_OwnedFull<E>(pack);
+         REQUIRE( pack.template As<DenseE>() == denseValue);
          REQUIRE(*pack.template As<DenseE*>() == denseValue);
          REQUIRE(pack.GetUses() == 2);
 
@@ -1006,10 +1006,10 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       else {
          T pack {element};
 
-         Any_CheckState_OwnedFull<E>(pack);
-         REQUIRE(pack.template As<DenseE>() == denseValue);
+         Many_CheckState_OwnedFull<E>(pack);
+         REQUIRE( pack.template As<DenseE>() == denseValue);
          REQUIRE(*pack.template As<DenseE*>() == denseValue);
-         REQUIRE(pack.GetUses() == 1);
+         REQUIRE( pack.GetUses() == 1);
 
          if constexpr (not CT::Typed<T>) {
             REQUIRE_THROWS(pack.template As<float>() == 0.0f);
@@ -1042,11 +1042,11 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          WHEN("Assigned compatible value by copy") {
             pack = element;
 
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(&pack.template As<DenseE>() == sparseValue);
-            REQUIRE(pack.template As<DenseE>() == denseValue);
+            REQUIRE( pack.template As<DenseE>() == denseValue);
             REQUIRE(*pack.template As<DenseE*>() == denseValue);
-            REQUIRE(pack.GetUses() == 1);
+            REQUIRE( pack.GetUses() == 1);
             REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
             IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
 
@@ -1083,11 +1083,11 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             auto movable = element;
             pack = ::std::move(movable);
 
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(&pack.template As<DenseE>() == sparseValue);
-            REQUIRE(pack.template As<DenseE>() == denseValue);
+            REQUIRE( pack.template As<DenseE>() == denseValue);
             REQUIRE(*pack.template As<DenseE*>() == denseValue);
-            REQUIRE(pack.GetUses() == 1);
+            REQUIRE( pack.GetUses() == 1);
             REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
             IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
 
@@ -1123,11 +1123,11 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          WHEN("Assigned compatible disowned value") {
             pack = Disown(element);
 
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(&pack.template As<DenseE>() == sparseValue);
-            REQUIRE(pack.template As<DenseE>() == denseValue);
+            REQUIRE( pack.template As<DenseE>() == denseValue);
             REQUIRE(*pack.template As<DenseE*>() == denseValue);
-            REQUIRE(pack.GetUses() == 1);
+            REQUIRE( pack.GetUses() == 1);
             REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
             IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
 
@@ -1164,11 +1164,11 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             auto movable = element;
             pack = Abandon(movable);
 
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(&pack.template As<DenseE>() == sparseValue);
-            REQUIRE(pack.template As<DenseE>() == denseValue);
+            REQUIRE( pack.template As<DenseE>() == denseValue);
             REQUIRE(*pack.template As<DenseE*>() == denseValue);
-            REQUIRE(pack.GetUses() == 1);
+            REQUIRE( pack.GetUses() == 1);
             REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
             IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
 
@@ -1204,7 +1204,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          WHEN("Assigned compatible empty self") {
             pack = T {};
 
-            Any_CheckState_Default<E>(pack);
+            Many_CheckState_Default<E>(pack);
 
             #ifdef LANGULUS_STD_BENCHMARK
                BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
@@ -1234,7 +1234,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             pack = element;
             pack = pack;
 
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.GetUses() == 1);
 
          #ifdef LANGULUS_STD_BENCHMARK
@@ -1267,17 +1267,17 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       if constexpr (CT::Deep<E> && CT::Typed<T>) {
          E movable = element;
          REQUIRE_THROWS(T {::std::move(movable)});
-         Any_CheckState_OwnedFull<E>(movable);
+         Many_CheckState_OwnedFull<E>(movable);
       }
       else {
          E movable = element;
          T pack {::std::move(movable)};
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(&pack.template As<DenseE>() == sparseValue);
-         REQUIRE(pack.template As<DenseE>() == denseValue);
+         REQUIRE( pack.template As<DenseE>() == denseValue);
          REQUIRE(*pack.template As<DenseE*>() == denseValue);
-         REQUIRE(pack.GetUses() == 1);
+         REQUIRE( pack.GetUses() == 1);
          REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
 
@@ -1317,11 +1317,11 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       else {
          T pack {Disown(element)};
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(&pack.template As<DenseE>() == sparseValue);
-         REQUIRE(pack.template As<DenseE>() == denseValue);
+         REQUIRE( pack.template As<DenseE>() == denseValue);
          REQUIRE(*pack.template As<DenseE*>() == denseValue);
-         REQUIRE(pack.GetUses() == 1);
+         REQUIRE( pack.GetUses() == 1);
          REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
 
@@ -1364,11 +1364,11 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          E movable = element;
          T pack {Abandon(movable)};
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(&pack.template As<DenseE>() == sparseValue);
-         REQUIRE(pack.template As<DenseE>() == denseValue);
+         REQUIRE( pack.template As<DenseE>() == denseValue);
          REQUIRE(*pack.template As<DenseE*>() == denseValue);
-         REQUIRE(pack.GetUses() == 1);
+         REQUIRE( pack.GetUses() == 1);
          REQUIRE(*pack.template GetRaw<const DenseE*>() == sparseValue);
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == nullptr));
 
@@ -1406,7 +1406,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       if constexpr (not CT::Typed<T>) {
          const T pack {element, element};
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 2);
          REQUIRE(pack.GetReserved() >= 2);
          for (auto& e : pack) {
@@ -1419,7 +1419,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       if constexpr (not CT::Typed<T>) {
          const T pack {denseValue, sparseValue};
 
-         Any_CheckState_OwnedFull<Many>(pack);
+         Many_CheckState_OwnedFull<Many>(pack);
          REQUIRE(pack.GetCount() == 2);
          REQUIRE(pack.GetReserved() >= 2);
          REQUIRE(pack[0] == Many {denseValue});

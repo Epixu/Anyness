@@ -9,6 +9,7 @@
 #include "TypeOf.hpp"
 #include "CT/Derived.hpp"
 #include "CT/POD.hpp"
+#include <utility>
 
 
 namespace Langulus::CTTI
@@ -27,37 +28,95 @@ namespace Langulus::CTTI
 namespace Langulus::CT
 {
    template<class...T>
-   concept Intent = ((CTTI::Intent<T>::Enabled or T::CTTI_Intent::Enabled) and ...);
+   concept Intent = ((CTTI::Intent<Deref<T>>::Enabled or (Dense<T> and Decay<T>::CTTI_Intent::Enabled)) and ...);
 
    template<class...T>
-   concept NoIntent = ((not Intent<T>) and ...);
+   concept NoIntent = ((not Intent<Deref<T>>) and ...);
+   
+   /// All intents are defined in terms of three properties, and the          
+   /// combinations between them:                                             
+   ///   int  Depth - decides whether the semantic is deep or shallow         
+   ///   bool Keep  - decides whether to exercise ownership or not            
+   ///   bool Move  - decides whether it's a move semantic or not             
+
+   /// Checks if all T are shallow intents                                    
+   /// Shallow intents are propagated through mostly a single indirection     
+   template<class...T>
+   concept ShallowIntent = ((Intent<Deref<T>> and Decay<T>::Depth < 2) and ...);
+
+   /// Checks if all T are deep intents                                       
+   /// Deep intents propagate through all levels of indirection               
+   template<class...T>
+   concept DeepIntent = ((Intent<Deref<T>> and Decay<T>::Depth > 1) and ...);
+
+   /// Check if all T are refer intents                                       
+   /// Does a shallow-copy without delving into any indirections, while       
+   /// exercising ownership of managed data                                   
+   template<class...T>
+   concept Referred = ((Intent<Deref<T>> and Decay<T>::Depth == 0 and Decay<T>::Keep and not Decay<T>::Move) and ...);
+      
+   /// Check if all T are copy intents                                        
+   /// Does a shallow-copy, while cloning only the first indirection level    
+   template<class...T>
+   concept Copied = ((Intent<Deref<T>> and Decay<T>::Depth == 1 and Decay<T>::Keep and not Decay<T>::Move) and ...);
+
+   /// Check if all T are move intents                                        
+   /// Moves by leaving the moved instances reusable                          
+   template<class...T>
+   concept Moved = ((Intent<Deref<T>> and Decay<T>::Depth == 0 and Decay<T>::Keep and Decay<T>::Move) and ...);
+
+   /// Check if all T are abandon intents                                     
+   /// Moves by leaving the moved instances no longer usable                  
+   template<class...T>
+   concept Abandoned = ((Intent<Deref<T>> and Decay<T>::Depth == 0 and not Decay<T>::Keep and Decay<T>::Move) and ...);
+
+   /// Check if all T are disown intents                                      
+   /// Does a shallow-copy without delving into any indirections, without     
+   /// exercising any ownership                                               
+   template<class...T>
+   concept Disowned = ((Intent<Deref<T>> and Decay<T>::Depth == 0 and not Decay<T>::Keep and not Decay<T>::Move) and ...);
+
+   /// Check if all T are clone intents                                       
+   /// Does a deep-copy throughout all levels of indirection                  
+   template<class...T>
+   concept Cloned = ((Intent<Deref<T>> and Decay<T>::Depth > 1 and Decay<T>::Keep and not Decay<T>::Move) and ...);
 
 } // namespace Langulus::CT
 
 namespace Langulus
 {
+   namespace Inner
+   {
+
+      template<int DEPTH, bool KEEP, bool MOVE>
+      struct CommonIntent {
+         using CTTI_ReflectAs = void;
+         using CTTI_Abstract = Yes;
+         using CTTI_Unallocatable = Yes;
+         using CTTI_Intent = Yes;
+         using CTTI_Sheddable = Yes;
+
+         static constexpr int  Depth = DEPTH;
+         static constexpr bool Keep  = KEEP;
+         static constexpr bool Move  = MOVE;
+         static constexpr bool ResetsOnMove = Keep and Move;
+         static constexpr bool Shallow = Depth < 2;
+      };
+
+   } // namespace Langulus::Inner
+
 
    ///                                                                        
    /// Referred value intermediate type, use in constructors and assignments  
    /// to refer to data explicitly                                            
    ///   @tparam T - the type to refer                                        
    template<class T>
-   struct Referred {
+   struct Referred : Inner::CommonIntent<0, true, false> {
    private:
       const T& mValue;
 
    public:
-      using CTTI_Typed = T;
-      using CTTI_ReflectAs = void;
-      using CTTI_Abstract = Yes;
-      using CTTI_Unallocatable = Yes;
-      using CTTI_Intent = Yes;
-      using CTTI_Sheddable = Yes;
-
-      static constexpr bool Shallow = true;
-      static constexpr bool Keep = true;
-      static constexpr bool Move = false;
-      static constexpr bool ResetsOnMove = Keep and Move;
+      using CTTI_Typed = decltype(mValue);
 
       Referred() = delete;
       explicit constexpr Referred(const Referred&) noexcept = default;
@@ -113,7 +172,7 @@ namespace Langulus
       }
 
       template<class ALT>
-      using As = ::std::conditional_t<CT::Intent<ALT>, Referred<TypeOf<ALT>>, Referred<ALT>>;
+      using As = Tif<CT::Intent<ALT>, Referred<TypeOf<ALT>>, Referred<ALT>>;
 
       LANGULUS(ALWAYS_INLINED)
       const T& operator * () const noexcept { return mValue; }
@@ -159,22 +218,12 @@ namespace Langulus
    /// to shallow-copy container explicitly                                   
    ///   @tparam T - the type to copy                                         
    template<class T>
-   struct Copied {
+   struct Copied : Inner::CommonIntent<1, true, false> {
    private:
       const T& mValue;
 
    public:
-      using CTTI_Typed = T;
-      using CTTI_ReflectAs = void;
-      using CTTI_Abstract = Yes;
-      using CTTI_Unallocatable = Yes;
-      using CTTI_Intent = Yes;
-      using CTTI_Sheddable = Yes;
-
-      static constexpr bool Shallow = true;
-      static constexpr bool Keep = true;
-      static constexpr bool Move = false;
-      static constexpr bool ResetsOnMove = Keep and Move;
+      using CTTI_Typed = decltype(mValue);
 
       Copied() = delete;
       constexpr Copied(const Copied&) noexcept = default;
@@ -230,7 +279,7 @@ namespace Langulus
       }
 
       template<class ALT>
-      using As = ::std::conditional_t<CT::Intent<ALT>, Copied<TypeOf<ALT>>, Copied<ALT>>;
+      using As = Tif<CT::Intent<ALT>, Copied<TypeOf<ALT>>, Copied<ALT>>;
 
       LANGULUS(ALWAYS_INLINED)
       const T& operator * () const noexcept { return mValue; }
@@ -274,22 +323,12 @@ namespace Langulus
    /// to move data explicitly                                                
    ///   @tparam T - the type to move                                         
    template<class T>
-   struct Moved {
+   struct Moved : Inner::CommonIntent<0, true, true> {
    protected:
       T&& mValue;
 
    public:
-      using CTTI_Typed = T;
-      using CTTI_ReflectAs = void;
-      using CTTI_Abstract = Yes;
-      using CTTI_Unallocatable = Yes;
-      using CTTI_Intent = Yes;
-      using CTTI_Sheddable = Yes;
-
-      static constexpr bool Shallow = true;
-      static constexpr bool Keep = true;
-      static constexpr bool Move = true;
-      static constexpr bool ResetsOnMove = Keep and Move;
+      using CTTI_Typed = decltype(mValue);
 
       Moved() = delete;
       constexpr Moved(const Moved& r) noexcept
@@ -352,7 +391,7 @@ namespace Langulus
       }
 
       template<class ALT>
-      using As = ::std::conditional_t<CT::Intent<ALT>, Moved<TypeOf<ALT>>, Moved<ALT>>;
+      using As = Tif<CT::Intent<ALT>, Moved<TypeOf<ALT>>, Moved<ALT>>;
 
       LANGULUS(ALWAYS_INLINED)
       T& operator * () const noexcept { return mValue; }
@@ -405,22 +444,12 @@ namespace Langulus
    /// mEntry reset, instead of the entire container.                         
    ///   @tparam T - the type to abandon                                      
    template<class T>
-   struct Abandoned {
+   struct Abandoned : Inner::CommonIntent<0, false, true> {
    protected:
       T&& mValue;
 
    public:
-      using CTTI_Typed = T;
-      using CTTI_ReflectAs = void;
-      using CTTI_Abstract = Yes;
-      using CTTI_Unallocatable = Yes;
-      using CTTI_Intent = Yes;
-      using CTTI_Sheddable = Yes;
-
-      static constexpr bool Shallow = true;
-      static constexpr bool Keep = false;
-      static constexpr bool Move = true;
-      static constexpr bool ResetsOnMove = Keep and Move;
+      using CTTI_Typed = decltype(mValue);
 
       Abandoned() = delete;
       constexpr Abandoned(const Abandoned& r) noexcept
@@ -483,7 +512,7 @@ namespace Langulus
       }
 
       template<class ALT>
-      using As = ::std::conditional_t<CT::Intent<ALT>, Abandoned<TypeOf<ALT>>, Abandoned<ALT>>;
+      using As = Tif<CT::Intent<ALT>, Abandoned<TypeOf<ALT>>, Abandoned<ALT>>;
 
       LANGULUS(ALWAYS_INLINED)
       T& operator * () const noexcept { return mValue; }
@@ -529,22 +558,12 @@ namespace Langulus
    /// to copy container without gaining ownership                            
    ///   @tparam T - the type to disown                                       
    template<class T>
-   struct Disowned {
+   struct Disowned : Inner::CommonIntent<0, false, false> {
    protected:
       const T& mValue;
 
    public:
-      using CTTI_Typed = T;
-      using CTTI_ReflectAs = void;
-      using CTTI_Abstract = Yes;
-      using CTTI_Unallocatable = Yes;
-      using CTTI_Intent = Yes;
-      using CTTI_Sheddable = Yes;
-
-      static constexpr bool Shallow = true;
-      static constexpr bool Keep = false;
-      static constexpr bool Move = false;
-      static constexpr bool ResetsOnMove = Keep and Move;
+      using CTTI_Typed = decltype(mValue);
 
       Disowned() = delete;
       constexpr Disowned(const Disowned&) noexcept = default;
@@ -601,7 +620,7 @@ namespace Langulus
       }
 
       template<class ALT>
-      using As = ::std::conditional_t<CT::Intent<ALT>, Disowned<TypeOf<ALT>>, Disowned<ALT>>;
+      using As = Tif<CT::Intent<ALT>, Disowned<TypeOf<ALT>>, Disowned<ALT>>;
       
       LANGULUS(ALWAYS_INLINED)
       const T& operator * () const noexcept { return mValue; }
@@ -645,22 +664,12 @@ namespace Langulus
    /// to clone container, doing a deep copy instead of default shallow one   
    ///   @tparam T - the type to clone                                        
    template<class T>
-   struct Cloned {
+   struct Cloned : Inner::CommonIntent<::std::numeric_limits<int>::max(), true, false> {
    protected:
       const T& mValue;
 
    public:
-      using CTTI_Typed = T;
-      using CTTI_ReflectAs = void;
-      using CTTI_Abstract = Yes;
-      using CTTI_Unallocatable = Yes;
-      using CTTI_Intent = Yes;
-      using CTTI_Sheddable = Yes;
-
-      static constexpr bool Shallow = false;
-      static constexpr bool Keep = true;
-      static constexpr bool Move = false;
-      static constexpr bool ResetsOnMove = Keep and Move;
+      using CTTI_Typed = decltype(mValue);
 
       Cloned() = delete;
       constexpr Cloned(const Cloned&) noexcept = default;
@@ -693,7 +702,7 @@ namespace Langulus
       }
 
       template<class ALT>
-      using As = ::std::conditional_t<CT::Intent<ALT>, Cloned<TypeOf<ALT>>, Cloned<ALT>>;
+      using As = Tif<CT::Intent<ALT>, Cloned<TypeOf<ALT>>, Cloned<ALT>>;
       
       LANGULUS(ALWAYS_INLINED)
       const T& operator * () const noexcept { return mValue; }
@@ -748,97 +757,95 @@ namespace Langulus
       ///   @tparam S - the intent                                            
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
-      concept HasIntentConstructor = Complete<T...> and Intent<S<T>...>
-          and requires (S<T>&&...a) { (T (Forward<S<T>>(a)), ...); };
+      concept HasIntentConstructor = Intent<S<T>...>
+          and requires (S<T>&&...a) { (T (a), ...); };
 
       /// Check if all TypeOf<S> have intent constructors for S               
       ///   @tparam S - the intent and type                                   
       template<class...S>
-      concept HasIntentConstructorAlt = Complete<TypeOf<S>...> and Intent<S...>
-          and requires (S&&...a) { (TypeOf<S> (Forward<S>(a)), ...); };
+      concept HasIntentConstructorAlt = Intent<Deref<S>...>
+          and requires (S&&...a) { (TypeOf<S> (a), ...); };
 
       /// Check if all T have a disown-constructor                            
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       template<class...T>
-      concept HasDisownConstructor = (HasIntentConstructor<Disowned, T> and ...);
+      concept HasDisownConstructor = (HasIntentConstructor<::Langulus::Disowned, T> and ...);
 
       /// Check if all Decay<T> have a clone-constructor                      
       /// Does a deep copy                                                    
       template<class...T>
-      concept HasCloneConstructor = (HasIntentConstructor<Cloned, T> and ...);
+      concept HasCloneConstructor = (HasIntentConstructor<::Langulus::Cloned, T> and ...);
 
       /// Check if all T have a abandon-constructor                           
       /// Does a move, but doesn't fully reset source (optimization)          
       template<class...T>
-      concept HasAbandonConstructor = (HasIntentConstructor<Abandoned, T> and ...);
+      concept HasAbandonConstructor = (HasIntentConstructor<::Langulus::Abandoned, T> and ...);
 
       /// Check if all T have a refer-constructor                             
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership.                                                          
       /// T has refer-constructor as long as it is std::copy_constuctible     
       template<class...T>
-      concept HasReferConstructor = Complete<T...>
-          and ((HasIntentConstructor<Referred, T>
+      concept HasReferConstructor = ((HasIntentConstructor<::Langulus::Referred, T>
            or ::std::copy_constructible<T>) and ...);
       
       /// Check if all T have a copy-constructor (don't mistake it for a      
       /// std::copy_constructible!)                                           
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       template<class...T>
-      concept HasCopyConstructor = (HasIntentConstructor<Copied, T> and ...);
+      concept HasCopyConstructor = (HasIntentConstructor<::Langulus::Copied, T> and ...);
 
       /// Check if all T have a move-constructor                              
       /// Does a move, fully resetting source                                 
       /// T has move-constructor as long as it is std::move_constuctible      
       template<class...T>
-      concept HasMoveConstructor = Complete<T...> and ((Sparse<T>
-           or HasIntentConstructor<Moved, T>
+      concept HasMoveConstructor = ((Sparse<T>
+           or HasIntentConstructor<::Langulus::Moved, T>
            or ::std::move_constructible<T>) and ...);
 
       /// Check if all T have an intent-assigner for S                        
       ///   @tparam S - the intent                                            
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
-      concept HasIntentAssign = Complete<T...> and ((Intent<S<T>>
+      concept HasIntentAssign = ((Intent<S<T>>
           and ::std::assignable_from<T&, S<T>&&>) and ...);
 
       /// Check if all TypeOf<S> has intent-assigner for S                    
       ///   @tparam S - the intent and type                                   
       template<class...S>
-      concept HasIntentAssignAlt = Complete<TypeOf<S>...> and ((Intent<S>
+      concept HasIntentAssignAlt = ((Intent<Deref<S>>
           and ::std::assignable_from<TypeOf<S>&, S&&>) and ...);
 
       /// Check if all T have a disown-assigner                               
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       template<class...T>
-      concept HasDisownAssign = (HasIntentAssign<Disowned, T> and ...);
+      concept HasDisownAssign = (HasIntentAssign<::Langulus::Disowned, T> and ...);
 
       /// Check if all Decay<T> have a clone-assigner                         
       /// Does a deep copy                                                    
       template<class...T>
-      concept HasCloneAssign = (HasIntentAssign<Cloned, T> and ...);
+      concept HasCloneAssign = (HasIntentAssign<::Langulus::Cloned, T> and ...);
 
       /// Check if all T have an abandon-assigner                             
       /// Does a move, but doesn't fully reset source (optimization)          
       template<class...T>
-      concept HasAbandonAssign = (HasIntentAssign<Abandoned, T> and ...);
+      concept HasAbandonAssign = (HasIntentAssign<::Langulus::Abandoned, T> and ...);
 
       /// Check if all T have refer-assigner                                  
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership.                                                          
       /// T has a refer-assigner as long as std::copy_assignable<T> holds     
       template<class...T>
-      concept HasReferAssign = Complete<T...>
-          and ((HasIntentAssign<Referred, T>
+      concept HasReferAssign = ((HasIntentAssign<::Langulus::Referred, T>
            or ::std::assignable_from<T&, const T&>) and ...);
       
       /// Check if all T have a copy-assigner (don't mistake it for a         
       /// std::copy_assignable!)                                              
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       template<class...T>
-      concept HasCopyAssign = (HasIntentAssign<Copied, T> and ...);
+      concept HasCopyAssign = (HasIntentAssign<::Langulus::Copied, T> and ...);
 
       /// Check if all T have a move-assigner                                 
       /// Does a move, fully resetting source                                 
@@ -847,8 +854,7 @@ namespace Langulus
       /// which the compiler falls back to. In that case move-assignment is   
       /// the same as refer-assignment.                                       
       template<class...T>
-      concept HasMoveAssign = Complete<T...>
-          and ((HasIntentAssign<Moved, T>
+      concept HasMoveAssign = ((HasIntentAssign<::Langulus::Moved, T>
            or ::std::assignable_from<T&, T&&>) and ...);
 
    } // namespace Langulus::CT
@@ -857,21 +863,18 @@ namespace Langulus
    /// Deduce the proper intent, based on whether T already has a             
    /// specified intent, is an rvalue (&&), or none of those                  
    /// If it has one of those, then we get move intent; if it isn't - we      
-   /// get refer intent (which can fallback to copy semantics)                
+   /// get refer intent (which in turn can fallback to copy semantics)        
    template<class T>
-   using IntentOf = ::std::conditional_t<
-         CT::Intent<T>,
-         Decay<T>,
-         ::std::conditional_t<
-            ::std::is_rvalue_reference_v<T> and CT::Mutable<Deref<T>>,
+   using IntentOf = Tif<CT::Intent<Deref<T>>,
+         Deref<T>,
+         Tif<::std::is_rvalue_reference_v<T> and CT::Mutable<Deref<T>>,
             Moved<Deref<T>>,
             Referred<Deref<T>>
-         >
-      >;
+      >>;
 
    /// Shed the intent from a type, if any                                    
    template<class T>
-   using Deint = ::std::conditional_t<CT::Intent<T>, TypeOf<T>, T>;
+   using Deint = Tif<CT::Intent<Deref<T>>, TypeOf<T>, T>;
 
    /// Decay an intent to the contained data                                  
    ///   @param what - the instance to decay                                  
@@ -880,7 +883,7 @@ namespace Langulus
    constexpr auto& DeintCast(auto&& what) noexcept {
       using T = decltype(what);
       if constexpr (CT::Intent<T>)
-         return TypedCast(Forward<T>(what));
+         return TypedCast(::std::forward<T>(what));
       else
          return what;
    }

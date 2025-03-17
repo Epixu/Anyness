@@ -57,7 +57,9 @@ namespace Langulus::Anyness
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
-   > {};
+   > {
+      using CTTI_Map = Yes;
+   };
    
    ///                                                                        
    /// Unsorted type-erased map                                               
@@ -87,6 +89,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Map;
+      using CTTI_Map = Yes;
    };
    
    ///                                                                        
@@ -117,6 +120,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Map;
+      using CTTI_Map = Yes;
    };
 
 } // namespace Langulus::Anyness

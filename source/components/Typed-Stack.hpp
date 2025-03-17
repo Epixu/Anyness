@@ -30,6 +30,24 @@ namespace Langulus::Anyness::Component
       ///   @return the contained type                                        
       constexpr T GetType() const noexcept { return mType; }
 
+      /// Check if block has a data type                                      
+      ///   @return true if data contained in this pack is specified          
+      constexpr bool IsTyped() const noexcept {
+         if constexpr (TypeErased)
+            return static_cast<bool>(mType);
+         else
+            return true;
+      }
+
+      /// Check if block has a data type                                      
+      ///   @return true if data contained in this pack is unspecified        
+      constexpr bool IsUntyped() const noexcept {
+         if constexpr (TypeErased)
+            return not static_cast<bool>(mType);
+         else
+            return false;
+      }
+
       /// Check if type origin is the same as one of the provided types       
       /// This can potentially happen at compile-time                         
       ///   @attention ignores sparsity and cv-qualifiers                     

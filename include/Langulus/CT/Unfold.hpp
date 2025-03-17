@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Same.hpp"
+#include "Comparable.hpp"
 #include "../TypeNav.hpp"
 #include "../Types.hpp"
 #include "../Intent.hpp"
@@ -82,5 +83,10 @@ namespace Langulus::CT
    template<class T, class...A>
    concept UnfoldAssignable = ((::std::assignable_from<T&, A>
                              or ::std::assignable_from<T&, Unfold<A>>) and ...);
+   
+   /// Check if a T is comparable with each of the provided arguments,        
+   /// either directly or by being unfolded                                   
+   template<class T, class...A>
+   concept UnfoldComparable = ((Comparable<T, A> or Comparable<T, Unfold<A>>) and ...);
 
 } // namespace Langulus::CT

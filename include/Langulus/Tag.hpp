@@ -19,55 +19,45 @@ namespace Langulus::Inner
    /// used in descriptor-construction, when seeking data, and more.          
    ///   @tparam T - the data behind the tag                                  
    ///                                                                        
-   template<class T>
+   template<CT::NotVoid T>
    struct Tag;
 
-   /// Since we can't inherit from fundamental types, we have to wrap them    
-   /// inside the tag                                                         
-   template<CT::Fundamental T>
+   /// Since we can't inherit from fundamental types or references/pointers,  
+   /// we have to wrap them inside the tag                                    
+   template<CT::NotVoid T> requires (CT::NotDecayed<T> or CT::Fundamental<T>)
    struct Tag<T> {
-      using CTTI_Typed = T;
+      static constexpr bool CTTI_Tag = true;
       T value;
    };
    
    /// We can inherit from all the rest                                       
-   template<CT::NotFundamental T>
+   template<CT::NotVoid T> requires (CT::Decayed<T> and CT::NotFundamental<T>)
    struct Tag<T> : T {
-      using CTTI_Typed = T;
+      static constexpr bool CTTI_Tag = true;
+      using T::T;
    };
 
 } // namespace Langulus::Inner
 
 namespace Langulus::Anyness
 {
-   struct Many;
 
-   template<class T = Anyness::Many>
+   /// A type-erased dynamic tag, that depends on Anyness::Many               
+   /// If incomplete, include <Langulus/Anyness/Tag.hpp>                      
    struct Tag;
 
+   /// A statically typed dynamic tag                                         
+   template<CT::NotVoid>
+   struct TTag;
+
 } // namespace Langulus::Anyness
-
-namespace Langulus::Tags
-{
-
-   template<class T = Anyness::Many>
-   struct Name : Inner::Tag<T> {
-      using CTTI_DefineTag = YesText<"Name">;
-   };
-
-   template<class T = Anyness::Many>
-   struct Count : Inner::Tag<T> {
-      using CTTI_DefineTag = YesText<"Count">;
-   };
-
-} // namespace Langulus::Tags
 
 namespace Langulus::CT
 {
 
    template<class...T>
-   concept Tag = DefineTag<T...>;
+   concept Tag = (T::CTTI_Tag and ...);
    template<class...T>
-   concept NotTag = NotDefineTag<T...>;
+   concept NotTag = ((not Tag<T>) and ...);
 
 } // namespace Langulus::CT

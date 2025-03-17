@@ -536,7 +536,7 @@ SCENARIO("Iterating containers", "[iteration]") {
       }
 
       WHEN("Deep-iterated with the intent to remove specific subpacks (without skipping intermediate groups)") {
-         pack.ForEachDeep<false>([&](Many& subcontent) {
+         pack.ForEachDeepNoskip([&](Many& subcontent) {
             if (subcontent == subpack1)
                return Loop::Discard;
             return Loop::Continue;

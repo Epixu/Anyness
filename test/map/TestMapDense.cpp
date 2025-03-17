@@ -13,26 +13,26 @@
 /// to complex, from flat to deep                                             
 TEMPLATE_TEST_CASE(
    "Dense TOrderedMap/TUnorderedMap/OrderedMap/UnorderedMap", "[map]",
-   (MapTest<UnorderedMap, Text, int>),
 
-   (MapTest<TUnorderedMap<Text, int>, Text, int>),
-   (MapTest<TUnorderedMap<Text, Trait>, Text, Trait>),
-   (MapTest<TUnorderedMap<Text, Traits::Count>, Text, Traits::Count>),
-   (MapTest<TUnorderedMap<Text, Many>, Text, Many>),
+   (MapTest<TMapUnsorted <Text, int>,         Text, int>),
+   (MapTest<TMapUnsorted <Text, Tag>,         Text, Tag>),
+   (MapTest<TMapUnsorted <Text, Tags::Count>, Text, Tags::Count>),
+   (MapTest<TMapUnsorted <Text, Many>,        Text, Many>),
+                         
+   (MapTest<TMapSorted   <Text, int>,         Text, int>),
+   (MapTest<TMapSorted   <Text, Tag>,         Text, Tag>),
+   (MapTest<TMapSorted   <Text, Tags::Count>, Text, Tags::Count>),
+   (MapTest<TMapSorted   <Text, Many>,        Text, Many>),
 
-   (MapTest<TOrderedMap<Text, int>, Text, int>),
-   (MapTest<TOrderedMap<Text, Trait>, Text, Trait>),
-   (MapTest<TOrderedMap<Text, Traits::Count>, Text, Traits::Count>),
-   (MapTest<TOrderedMap<Text, Many>, Text, Many>),
+   (MapTest<MapUnsorted, Text, int>),
+   (MapTest<MapUnsorted, Text, Tag>),
+   (MapTest<MapUnsorted, Text, Tags::Count>),
+   (MapTest<MapUnsorted, Text, Many>),
 
-   (MapTest<UnorderedMap, Text, Trait>),
-   (MapTest<UnorderedMap, Text, Traits::Count>),
-   (MapTest<UnorderedMap, Text, Many>),
-
-   (MapTest<OrderedMap, Text, int>),
-   (MapTest<OrderedMap, Text, Trait>),
-   (MapTest<OrderedMap, Text, Traits::Count>),
-   (MapTest<OrderedMap, Text, Many>)
+   (MapTest<MapSorted,   Text, int>),
+   (MapTest<MapSorted,   Text, Tag>),
+   (MapTest<MapSorted,   Text, Tags::Count>),
+   (MapTest<MapSorted,   Text, Many>)
 ) {
    static Allocator::State memoryState;
 
@@ -46,12 +46,12 @@ TEMPLATE_TEST_CASE(
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
       // be thrown as exceptions at runtime                             
-      static_assert(CT::CopyMakable<T>);
-      static_assert(CT::ReferMakable<T>);
-      static_assert(CT::AbandonMakable<T>);
-      static_assert(CT::MoveMakable<T>);
-      static_assert(CT::CloneMakable<T>);
-      static_assert(CT::DisownMakable<T>);
+      static_assert(CT::CopyConstructible<T>);
+      static_assert(CT::ReferConstructible<T>);
+      static_assert(CT::AbandonConstructible<T>);
+      static_assert(CT::MoveConstructible<T>);
+      static_assert(CT::CloneConstructible<T>);
+      static_assert(CT::DisownConstructible<T>);
 
       static_assert(CT::CopyAssignable<T>);
       static_assert(CT::ReferAssignable<T>);

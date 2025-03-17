@@ -39,6 +39,8 @@ namespace Langulus::Anyness
 {
 
    using DMeta = RTTI::DMeta;
+   struct Many;
+   struct ManyView;
 
    /// A universal type-erased continuous container of variable size          
    struct Many : Container<
@@ -69,6 +71,46 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
+      // View                                                           
+      using  ViewType = ManyView;
+
+      // Deep type                                                      
+      using  DeepType = Many;
+
+      // Single element selections                                      
+      struct PickMut : Container<
+         Component::HeapMovable<>,
+         Component::OwnershipStack<>,
+         Component::Assignment,
+         Component::TypedStack<DMeta>
+      > {};
+      struct Pick : Container<
+         Component::HeapMovable<>,
+         Component::TypedStack<DMeta>
+      > {};
+
+      // Range selections                                               
+      struct PickRangeMut : Container<
+         Component::HeapMovable<>,
+         Component::NoOwnershipStack<>,
+         Component::DeepOwnership<>,
+         Component::Contiguous,
+         Component::IndexedLinear<>,
+         Component::Assignment,
+         Component::TypedStack<DMeta>,
+         Component::CountStack<>,
+         Component::ReserveStack<>
+      > {};
+      struct PickRange : Container<
+         Component::HeapMovable<>,
+         Component::NoOwnershipStack<>,
+         Component::Contiguous,
+         Component::IndexedLinear<>,
+         Component::TypedStack<DMeta>,
+         Component::CountStack<>,
+         Component::ReserveStack<>
+      > {};
+
       constexpr Many() = default;
       Many(const Many&) noexcept;
       Many(Many&&) noexcept;
@@ -77,7 +119,7 @@ namespace Langulus::Anyness
       explicit Many(I<Many>&&) noexcept;
 
       template<class A1, class...AN>
-      Many(A1&&, AN&&...) requires RangeInsertable<Many, A1, AN...>;
+      Many(A1&&, AN&&...) requires CT::RangeInsertable<Many, A1, AN...>;
    };
    
    using Messy = Many;

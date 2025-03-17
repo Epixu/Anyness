@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include <concepts>
+#include "../CTTI.hpp"
 
 
 namespace Langulus::CTTI
@@ -40,17 +40,12 @@ namespace Langulus::CTTI
    
 } // namespace Langulus::CTTI
 
+LANGULUS_CTTI_CONCEPT(Signed);
+
 namespace Langulus::CT
 {
 
-   /// Check if all T are signed                                              
-   ///   @attention doesn't apply to numbers only, but anything negatable     
    template<class...T>
-   concept Signed = ((CTTI::Signed<Shed<T>>::Enabled or Shed<T>::CTTI_Signed::Enabled) and ...);
-
-   /// Check if all T are unsigned                                            
-   ///   @attention doesn't apply to numbers only, but anything negatable     
-   template<class...T>
-   concept Unsigned = ((not Signed<T>) and ...);
+   concept Unsigned = NotSigned<T>..>;
 
 } // namespace Langulus::CT

@@ -22,16 +22,12 @@ namespace Langulus::CTTI
    
 } // namespace Langulus::CTTI
 
+LANGULUS_CTTI_CONCEPT(Deep);
+
 namespace Langulus::CT
 {
    
-   /// Deep types are reflected as iteratable, and functions are executed in  
-   /// each of their contained items instead on the container itself          
    template<class...T>
-   concept Deep = ((CTTI::Deep<Shed<T>>::Enabled or Shed<T>::CTTI_Deep::Enabled) and ...);
-
-   /// Flat types are reflected as non-iteratable                             
-   template<class...T>
-   concept Flat = ((not Deep<T>) and ...);
+   concept Flat = NotDeep<T...>;
 
 } // namespace Langulus::CT

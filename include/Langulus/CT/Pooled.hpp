@@ -46,6 +46,47 @@ namespace Langulus::CTTI
       static constexpr bool     Enabled  = false;
    };
 
+   /// Specialize for all fundamental types                                   
+   template<CT::Fundamental T>
+   struct Pooled<T> {
+      static constexpr unsigned MinAlloc = Alignment;
+      static constexpr unsigned MinPool  = 1024 * 1024;
+      static constexpr bool     Enabled  = true;
+   };
+
 } // namespace Langulus::CTTI
 
 LANGULUS_CTTI_CONCEPT(Pooled);
+
+namespace Langulus::CT
+{
+
+   template<class T>
+   consteval auto GetMinAlloc() {
+      if constexpr (requires { CTTI::Pooled<Shed<T>>::Enabled; }) {
+         constexpr auto minalloc = CTTI::Pooled<Shed<T>>::MinAlloc;
+         return minalloc < Alignment ? Alignment : minalloc;
+      }
+      else if constexpr (Dense<Shed<T>> and requires { Decay<Shed<T>>::CTTI_Pooled::Enabled; }) {
+         constexpr auto minalloc = Decay<Shed<T>>::CTTI_Pooled::MinAlloc;
+         return minalloc < Alignment ? Alignment : minalloc;
+      }
+      else return sizeof(T) < Alignment ? Alignment : sizeof(T);
+   }
+   
+   template<class T>
+   consteval auto GetMinPool() {
+      if constexpr (requires { CTTI::Pooled<Shed<T>>::Enabled; }) {
+         constexpr auto minpool = Roof2(CTTI::Pooled<Shed<T>>::MinPool);
+         constexpr auto minallo = Roof2(GetMinAlloc<T>());
+         return minpool < minallo ? minallo : minpool;
+      }
+      else if constexpr (Dense<Shed<T>> and requires { Decay<Shed<T>>::CTTI_Pooled::Enabled; }) {
+         constexpr auto minpool = Roof2(Decay<Shed<T>>::CTTI_Pooled::MinPool);
+         constexpr auto minallo = Roof2(GetMinAlloc<T>());
+         return minpool < minallo ? minallo : minpool;
+      }
+      else return Roof2(GetMinAlloc<T>() * 256);
+   }
+
+} // namespace Langulus::CT

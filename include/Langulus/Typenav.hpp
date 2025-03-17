@@ -146,11 +146,11 @@ namespace Langulus
 
       /// Check if all T are constant-qualified                               
       template<class...T>
-      concept Constant = ((CTTI::Constant<T>::Enabled or T::CTTI_Constant::Enabled) and ...);
+      concept Constant = ((CTTI::Constant<Deref<T>>::Enabled or Deref<T>::CTTI_Constant::Enabled) and ...);
 
       /// Check if all T are not constant-qualified                           
       template<class...T>
-      concept Mutable = ((not Constant<T>) and ...);
+      concept Mutable = ((not Constant<Deref<T>>) and ...);
 
       /// Check if all T are either const- and/or volatile-qualified          
       template<class...T>
@@ -183,5 +183,38 @@ namespace Langulus
       template<class...T>
       concept NotDecayed = ((not Decayed<T>) and ...);
 
+      /// True if T is not a pointer, has no extent with [], and isn't a      
+      /// reference. T is still allowed to be cv-qualified                    
+      template<class...T>
+      concept Slab = ((Dense<T> and not Reference<T>) and ...);
+
    } // namespace Langulus::CT
+
+
+   /// I don't like how long ::std::conditional_t is to write                 
+   template<bool CONDITION, class YES, class NO>
+   using Tif = ::std::conditional_t<CONDITION, YES, NO>;
+
+   
+   /// Always returns a pointer to the argument                               
+   template<class T> LANGULUS(ALWAYS_INLINED)
+   constexpr decltype(auto) SparseCast(T&& a) noexcept {
+      if constexpr (CT::Sparse<Deref<T>>) return (a);
+      else return &a;
+   }
+
+   /// Always returns a value reference to the argument                       
+   /// If argument is an array, return a value reference to the first element 
+   template<class T> LANGULUS(ALWAYS_INLINED)
+   constexpr decltype(auto) DenseCast(T&& a) {
+      if constexpr (CT::Array<Deref<T>>)
+         return DenseCast(a[0]);
+      else if constexpr (CT::Sparse<Deref<T>>) {
+         if (a == nullptr)
+            throw Exception("Can't dereference nullptr");
+         return DenseCast(*a);
+      }
+      else return (a);
+   }
+
 } // namespace Langulus

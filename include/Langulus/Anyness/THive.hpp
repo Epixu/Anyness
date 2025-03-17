@@ -47,8 +47,8 @@ namespace Langulus::Anyness
          Component::TypedStatic<DMeta, T>
       > {};
       using  PickSparse = T;
-      using  Pick       = ::std::conditional_t<CT::Sparse<T>, PickSparse,    PickDense>;
-      using  PickMut    = ::std::conditional_t<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
+      using  Pick       = Tif<CT::Sparse<T>, PickSparse,    PickDense>;
+      using  PickMut    = Tif<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
    };
 
 } // namespace Langulus::Anyness
