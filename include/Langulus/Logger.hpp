@@ -18,6 +18,7 @@ namespace Langulus::CT
    /// You can extend this concept by specializing fmt::formatter yourself    
    template<class...T>
    concept Loggable = (::fmt::is_formattable<T>::value and ...);
+
    template<class...T>
    concept NotLoggable = ((not Loggable<T>) and ...);
 
@@ -67,138 +68,7 @@ namespace Langulus::Logger
       BlueBgr,
       PurpleBgr,
       CyanBgr,
-      WhiteBgr,
-
-      // Bits that dictate how to mix the colors                        
-      // Color is always mixed with the currently set one, unless the   
-      // 'PreviousColor' bit is on, in which case the style is popped   
-      // before applying color                                          
-      PreviousColor     = 128,
-
-      // Color is always mixed with the currently set one, unless the   
-      // 'NextColor' bit is on, in which case the style is pushed       
-      // before applying color                                          
-      NextColor         = 256,
-
-      // Colors that mix with the previous color                        
-      PopNoForeground   = NoForeground    | PreviousColor,
-      PopNoBackground   = NoBackground    | PreviousColor,
-
-      PopBlack          = Black           | PreviousColor,
-      PopDarkRed        = DarkRed         | PreviousColor,
-      PopDarkGreen      = DarkGreen       | PreviousColor,
-      PopDarkYellow     = DarkYellow      | PreviousColor,
-      PopDarkBlue       = DarkBlue        | PreviousColor,
-      PopDarkPurple     = DarkPurple      | PreviousColor,
-      PopDarkCyan       = DarkCyan        | PreviousColor,
-      PopGray           = Gray            | PreviousColor,
-
-      PopBlackBgr       = BlackBgr        | PreviousColor,
-      PopDarkRedBgr     = DarkRedBgr      | PreviousColor,
-      PopDarkGreenBgr   = DarkGreenBgr    | PreviousColor,
-      PopDarkYellowBgr  = DarkYellowBgr   | PreviousColor,
-      PopDarkBlueBgr    = DarkBlueBgr     | PreviousColor,
-      PopDarkPurpleBgr  = DarkPurpleBgr   | PreviousColor,
-      PopDarkCyanBgr    = DarkCyanBgr     | PreviousColor,
-      PopGrayBgr        = GrayBgr         | PreviousColor,
-
-      PopDarkGray       = DarkGray        | PreviousColor,
-      PopRed            = Red             | PreviousColor,
-      PopGreen          = Green           | PreviousColor,
-      PopYellow         = Yellow          | PreviousColor,
-      PopBlue           = Blue            | PreviousColor,
-      PopPurple         = Purple          | PreviousColor,
-      PopCyan           = Cyan            | PreviousColor,
-      PopWhite          = White           | PreviousColor,
-
-      PopDarkGrayBgr    = DarkGrayBgr     | PreviousColor,
-      PopRedBgr         = RedBgr          | PreviousColor,
-      PopGreenBgr       = GreenBgr        | PreviousColor,
-      PopYellowBgr      = YellowBgr       | PreviousColor,
-      PopBlueBgr        = BlueBgr         | PreviousColor,
-      PopPurpleBgr      = PurpleBgr       | PreviousColor,
-      PopCyanBgr        = CyanBgr         | PreviousColor,
-      PopWhiteBgr       = WhiteBgr        | PreviousColor,
-
-      // Colors that mix with the next color                            
-      PushNoForeground  = NoForeground    | NextColor,
-      PushNoBackground  = NoBackground    | NextColor,
-
-      PushBlack         = Black           | NextColor,
-      PushDarkRed       = DarkRed         | NextColor,
-      PushDarkGreen     = DarkGreen       | NextColor,
-      PushDarkYellow    = DarkYellow      | NextColor,
-      PushDarkBlue      = DarkBlue        | NextColor,
-      PushDarkPurple    = DarkPurple      | NextColor,
-      PushDarkCyan      = DarkCyan        | NextColor,
-      PushGray          = Gray            | NextColor,
-
-      PushBlackBgr      = BlackBgr        | NextColor,
-      PushDarkRedBgr    = DarkRedBgr      | NextColor,
-      PushDarkGreenBgr  = DarkGreenBgr    | NextColor,
-      PushDarkYellowBgr = DarkYellowBgr   | NextColor,
-      PushDarkBlueBgr   = DarkBlueBgr     | NextColor,
-      PushDarkPurpleBgr = DarkPurpleBgr   | NextColor,
-      PushDarkCyanBgr   = DarkCyanBgr     | NextColor,
-      PushGrayBgr       = GrayBgr         | NextColor,
-
-      PushDarkGray      = DarkGray        | NextColor,
-      PushRed           = Red             | NextColor,
-      PushGreen         = Green           | NextColor,
-      PushYellow        = Yellow          | NextColor,
-      PushBlue          = Blue            | NextColor,
-      PushPurple        = Purple          | NextColor,
-      PushCyan          = Cyan            | NextColor,
-      PushWhite         = White           | NextColor,
-
-      PushDarkGrayBgr   = DarkGrayBgr     | NextColor,
-      PushRedBgr        = RedBgr          | NextColor,
-      PushGreenBgr      = GreenBgr        | NextColor,
-      PushYellowBgr     = YellowBgr       | NextColor,
-      PushBlueBgr       = BlueBgr         | NextColor,
-      PushPurpleBgr     = PurpleBgr       | NextColor,
-      PushCyanBgr       = CyanBgr         | NextColor,
-      PushWhiteBgr      = WhiteBgr        | NextColor,
-
-      // Colors that reset to previous color, push and mix              
-      PopAndPushNoForeground  = NoForeground    | NextColor | PreviousColor,
-      PopAndPushNoBackground  = NoBackground    | NextColor | PreviousColor,
-
-      PopAndPushBlack         = Black           | NextColor | PreviousColor,
-      PopAndPushDarkRed       = DarkRed         | NextColor | PreviousColor,
-      PopAndPushDarkGreen     = DarkGreen       | NextColor | PreviousColor,
-      PopAndPushDarkYellow    = DarkYellow      | NextColor | PreviousColor,
-      PopAndPushDarkBlue      = DarkBlue        | NextColor | PreviousColor,
-      PopAndPushDarkPurple    = DarkPurple      | NextColor | PreviousColor,
-      PopAndPushDarkCyan      = DarkCyan        | NextColor | PreviousColor,
-      PopAndPushGray          = Gray            | NextColor | PreviousColor,
-
-      PopAndPushBlackBgr      = BlackBgr        | NextColor | PreviousColor,
-      PopAndPushDarkRedBgr    = DarkRedBgr      | NextColor | PreviousColor,
-      PopAndPushDarkGreenBgr  = DarkGreenBgr    | NextColor | PreviousColor,
-      PopAndPushDarkYellowBgr = DarkYellowBgr   | NextColor | PreviousColor,
-      PopAndPushDarkBlueBgr   = DarkBlueBgr     | NextColor | PreviousColor,
-      PopAndPushDarkPurpleBgr = DarkPurpleBgr   | NextColor | PreviousColor,
-      PopAndPushDarkCyanBgr   = DarkCyanBgr     | NextColor | PreviousColor,
-      PopAndPushGrayBgr       = GrayBgr         | NextColor | PreviousColor,
-
-      PopAndPushDarkGray      = DarkGray        | NextColor | PreviousColor,
-      PopAndPushRed           = Red             | NextColor | PreviousColor,
-      PopAndPushGreen         = Green           | NextColor | PreviousColor,
-      PopAndPushYellow        = Yellow          | NextColor | PreviousColor,
-      PopAndPushBlue          = Blue            | NextColor | PreviousColor,
-      PopAndPushPurple        = Purple          | NextColor | PreviousColor,
-      PopAndPushCyan          = Cyan            | NextColor | PreviousColor,
-      PopAndPushWhite         = White           | NextColor | PreviousColor,
-
-      PopAndPushDarkGrayBgr   = DarkGrayBgr     | NextColor | PreviousColor,
-      PopAndPushRedBgr        = RedBgr          | NextColor | PreviousColor,
-      PopAndPushGreenBgr      = GreenBgr        | NextColor | PreviousColor,
-      PopAndPushYellowBgr     = YellowBgr       | NextColor | PreviousColor,
-      PopAndPushBlueBgr       = BlueBgr         | NextColor | PreviousColor,
-      PopAndPushPurpleBgr     = PurpleBgr       | NextColor | PreviousColor,
-      PopAndPushCyanBgr       = CyanBgr         | NextColor | PreviousColor,
-      PopAndPushWhiteBgr      = WhiteBgr        | NextColor | PreviousColor
+      WhiteBgr
    };
 
    /// Some formatting styles, consistent with fmt::emphasis                  
@@ -310,15 +180,12 @@ namespace Langulus::Logger
 
 
 
-
-
-
-
    ///                                                                        
    /// Implementation details                                                 
    ///                                                                        
    namespace Detail
    {
+
       /// Write styling escape sequence to stdout                             
       LANGULUS(INLINED)
       void FmtPrintStyle(const Style& style) noexcept {
@@ -357,7 +224,8 @@ namespace Langulus::Logger
          catch (...) { fmt::print("<stringification error>"); }
          fflush(stdout);
       }
-   }
+
+   } // namespace Langulus::Logger::Detail
 
    /// A general new-line write function that continues the last intent/style 
    ///   @tparam ...T - a sequence of elements to log (deducible)             
@@ -582,3 +450,41 @@ namespace Langulus::Logger
    }
 
 } // namespace Langulus::Logger
+
+namespace fmt
+{
+   
+   ///                                                                        
+   /// Extend FMT to be capable of logging Logger::Color                      
+   ///                                                                        
+   template<>
+   struct formatter<::Langulus::Logger::Color> {
+      using Color = ::Langulus::Logger::Color;
+
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT> LANGULUS(INLINED)
+      auto format(Color const& c, CONTEXT& ctx) const {
+         text_style style = {};
+
+         if (c == Color::NoForeground or c == Color::NoBackground) {
+            return ctx.out();
+         }
+         else if ((c >= Color::Black    and c < Color::BlackBgr)
+               or (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
+            // Create a new foreground color style                      
+            style = fg(static_cast<terminal_color>(c));
+            return format_to(ctx.out(), "{}", detail::make_foreground_color<char>(style.get_foreground()));
+         }
+         else {
+            // Create a new background color style                      
+            style = bg(static_cast<terminal_color>(static_cast<uint8_t>(c) - 10));
+            return format_to(ctx.out(), "{}", detail::make_background_color<char>(style.get_background()));
+         }
+      }
+   };
+
+} // namespace fmt

@@ -36,14 +36,20 @@ namespace Langulus::CT
 
    /// Check if all T are marked void                                         
    template<class...T>
-   concept Void = ((CTTI::Void<T>::Enabled or T::CTTI_Void::Enabled) and ...);
+   concept Void = ((CTTI::Void<::std::remove_reference_t<T>>::Enabled
+        or (not ::std::is_pointer_v<::std::remove_reference_t<T>>
+            and ::std::decay_t<T>::CTTI_Void::Enabled
+        )) and ...);
 
    template<class...T>
    concept NotVoid = ((not Void<T>) and ...);
 
    /// Check if all T are typelists                                           
    template<class...T>
-   concept Typelist = ((CTTI::Typelist<T>::Enabled or T::CTTI_Typelist::Enabled) and ...);
+   concept Typelist = ((CTTI::Typelist<::std::remove_reference_t<T>>::Enabled
+        or (not ::std::is_pointer_v<::std::remove_reference_t<T>>
+            and ::std::decay_t<T>::CTTI_Typelist::Enabled
+        )) and ...);
 
    template<class...T>
    concept NotTypelist = ((not Typelist<T>) and ...);

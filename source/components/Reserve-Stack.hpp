@@ -1,4 +1,5 @@
 #pragma once
+#include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -17,8 +18,15 @@ namespace Langulus::Anyness::Component
 
    public:
       using CTTI_Component = Yes;
+      using ReserveType = T;
 
-      constexpr T GetReserved() const noexcept { return mReserved; }
+      /// Get the number of reserved (maybe uninitialized) elements           
+      ///   @return the number of reserved (maybe uninitialized) elements     
+      constexpr auto GetReserved() const noexcept { return mReserved; }
+
+   protected:
+      /// Set number of reserved elements                                     
+      constexpr void SetReserved(ReserveType r) noexcept { mReserved = r;    }
    };
 
 } // namespace Langulus::Anyness::Component

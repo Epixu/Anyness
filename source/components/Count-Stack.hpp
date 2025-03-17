@@ -25,7 +25,7 @@ namespace Langulus::Anyness::Component
       explicit operator bool()  const noexcept { return mCount != 0; }
 
       T GetCountDeep() const noexcept;
-      T GetCountElementsDeep() const noexcept;
+      T GetCountItemsDeep() const noexcept;
    };
 
 } // namespace Langulus::Anyness::Component

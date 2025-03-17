@@ -29,8 +29,6 @@
 namespace Langulus::Anyness
 {
 
-   using DMeta = RTTI::DMeta;
-
    ///                                                                        
    /// Type-erased map of unspecified state                                   
    ///                                                                        

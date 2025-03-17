@@ -22,15 +22,19 @@ namespace Langulus::Anyness::Component
       friend struct ReserveHeap;
 
       using Byte = ::std::uint8_t;
-
-      // The raw pointer                                                
-      Byte* mHeap = nullptr;
-      
       template<CT::Container C>
       using View = typename C::ViewType;
       template<CT::Container C>
       using Count = typename C::CountType;
+      template<CT::Container C>
+      static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
+      template<CT::Container C>
+      using Deep = typename Deref<C>::DeepType;
+      template<CT::Container C>
+      using Pick = Tif<CT::Mutable<C>, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
 
+      // The raw pointer                                                
+      Byte* mHeap = nullptr;
       
       /// Get a size based on reflected allocation page and count             
       ///   @param count - the number of elements to request                  
@@ -264,6 +268,30 @@ namespace Langulus::Anyness::Component
          else
             return reinterpret_cast<      T*>(self.mHeap);
       }
+      
+      template<CT::Container C>
+      auto Get(this C&&) has_assumptions -> Pick<C>;
+
+      template<CT::NotVoid AS, CT::Container C>
+      auto As(this C&& self) -> Pick<C>;
+
+      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
+      auto AsCast(this C const& self) -> AS;
+
+      template<CT::Container C>
+      auto GetItem(this C&&) has_assumptions->Deep<C>;
+
+      template<CT::Container C>
+      auto GetDeep(this C&&) noexcept -> Deep<C>*;
+
+      template<CT::Container C>
+      auto GetResolved(this C&&) -> Deep<C>;
+
+      template<CT::Container C>
+      auto GetDense(this C&&, Count<C> = CountMax<C>) -> Deep<C>;
+
+      template<CT::Container C>
+      auto operator * (this C&&) -> Deep<C>;
    };
 
 } // namespace Langulus::Anyness::Component

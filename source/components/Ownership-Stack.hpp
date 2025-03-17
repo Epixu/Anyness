@@ -23,6 +23,14 @@ namespace Langulus::Anyness::Component
       auto GetUses() const noexcept {
          return mAllocation ? mAllocation->GetUses() : 0;
       }
+
+   protected:
+      template<unsigned>
+      friend struct HeapMovable;
+
+      void SetAllocation(AllocationPtr a) noexcept {
+         mAllocation = a;
+      }
    };
    
    ///                                                                        

@@ -22,8 +22,6 @@
 namespace Langulus::Anyness
 {
 
-   using DMeta = RTTI::DMeta;
-      
    /// A statically-typed non-continuous container of variable size that      
    /// guarantees elements will never move in memory                          
    template<CT::NotVoid T>

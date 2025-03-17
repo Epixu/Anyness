@@ -4,6 +4,7 @@
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/Lambda.hpp>
 #include <Langulus/Tag.hpp>
+#include <Langulus/Assume.hpp>
 
 
 namespace Langulus
@@ -285,14 +286,18 @@ namespace Langulus::Anyness::Component
          static_assert(CT::Complete<Decay<A>> or CT::Sparse<A>,
             "Can't iterate with incomplete type, use pointer instead");
 
-         AssumeDev(self.IsTyped(), "Block is not typed");
-         AssumeDev(not self.IsEmpty(), "Block is empty (of type `", self.GetType(), "`)");
-         AssumeDev(self.IsSparse() == CT::Sparse<A>, "Sparseness mismatch (`",
-            self.GetType(), "` compared against `", MetaDataOf<A>(), "`)");
+         AssumeDev(self.IsTyped(), HERE(),
+            "Block is not typed");
+         AssumeDev(not self.IsEmpty(), HERE(),
+            "Block is empty (of type `", self.GetType(), "`)");
+         AssumeDev(self.IsSparse() == CT::Sparse<A>, HERE(),
+            "Sparseness mismatch (`", self.GetType(),
+            "` compared against `", MetaDataOf<A>(), "`)");
 
          if constexpr (CT::Dense<A>) {
-            AssumeDev(CastsTo<A, true>(), "Incompatible iterator type", " `",
-               MetaDataOf<A>(), "` (iterating block of type `", self.GetType(), "`)");
+            AssumeDev(CastsTo<A, true>(), HERE(),
+               "Incompatible iterator type", " `", MetaDataOf<A>(), 
+               "` (iterating block of type `", self.GetType(), "`)");
          }
 
          // Prepare for the loop                                        

@@ -1,7 +1,16 @@
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Same.hpp>
+#include <Langulus/MetaOf.hpp>
 
+
+namespace Langulus::Anyness
+{
+
+   using DMeta = RTTI::DMeta;
+   using TMeta = RTTI::TMeta;
+
+} // namespace Langulus::Anyness
 
 namespace Langulus::Anyness::Component
 {

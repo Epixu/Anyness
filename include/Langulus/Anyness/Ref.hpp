@@ -17,8 +17,6 @@
 namespace Langulus::Anyness
 {
 
-   using DMeta = RTTI::DMeta;
-
    ///                                                                        
    /// A statically typed shared pointer                                      
    ///                                                                        

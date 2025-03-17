@@ -92,8 +92,7 @@ namespace Langulus::RTTI
       return definition.mHandle;
    #else
       Logger::Verbose(
-         "Data ", Logger::Cyan, definition.mToken, Logger::Green,
-         " registered (LIB: ", definition.mBoundary, ")"
+         "Data ", Logger::Cyan, definition.mToken, Logger::Green, " registered)"
       );
       return DMeta {&definition};
    #endif

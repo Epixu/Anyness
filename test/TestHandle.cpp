@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include <Langulus/Anyness/Many.hpp>
+#include <Langulus/Anyness/Handle.hpp>
 #include <Langulus/CT/Defaultable.hpp>
 #include <Langulus/CT/Referenced.hpp>
 #include "Common.hpp"

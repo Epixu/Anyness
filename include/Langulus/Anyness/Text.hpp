@@ -34,8 +34,6 @@
 namespace Langulus::Anyness
 {
 
-   using DMeta = RTTI::DMeta;
-
    ///                                                                        
    /// A continuous text container of variable size                           
    ///                                                                        

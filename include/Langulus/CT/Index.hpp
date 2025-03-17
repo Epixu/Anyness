@@ -92,6 +92,8 @@ namespace Langulus::Index
    /// comparing against npos like a chump                                    
    template<class T>
    struct At {
+      using CTTI_Index = Yes;
+
       T index;
 
       constexpr explicit operator bool() const noexcept {

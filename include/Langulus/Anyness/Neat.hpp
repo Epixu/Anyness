@@ -15,9 +15,6 @@
 namespace Langulus::Anyness
 {
 
-   using DMeta = RTTI::DMeta;
-   using TMeta = RTTI::TMeta;
-   
    ///                                                                        
    ///   Neat - a normalized data container                                   
    ///                                                                        

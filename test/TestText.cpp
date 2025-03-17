@@ -552,7 +552,7 @@ TEMPLATE_TEST_CASE("Text container conversion at runtime", "[text]",
 }
 
 TEMPLATE_TEST_CASE("Containing literals", "[text]",
-   Many, Trait
+   Many, Tag
 ) {
    static Allocator::State memoryState;
 
@@ -561,8 +561,8 @@ TEMPLATE_TEST_CASE("Containing literals", "[text]",
          TestType text {"one"};
 
          REQUIRE(text.GetCount() == 1);
-         REQUIRE(text.IsExact<Text>());
-         REQUIRE(text.As<Text>() == "one");
+         REQUIRE(text.template IsExact<Text>());
+         REQUIRE(text.template As<Text>() == "one");
       }
 
       WHEN("Assigned") {
@@ -570,8 +570,8 @@ TEMPLATE_TEST_CASE("Containing literals", "[text]",
          text = "two";
 
          REQUIRE(text.GetCount() == 1);
-         REQUIRE(text.IsExact<Text>());
-         REQUIRE(text.As<Text>() == "two");
+         REQUIRE(text.template IsExact<Text>());
+         REQUIRE(text.template As<Text>() == "two");
       }
 
       WHEN("Concatenated (destructively)") {
@@ -579,9 +579,9 @@ TEMPLATE_TEST_CASE("Containing literals", "[text]",
          text += TestType {"two"};
 
          REQUIRE(text.GetCount() == 2);
-         REQUIRE(text.IsExact<Text>());
-         REQUIRE(text.As<Text>(0) == "one");
-         REQUIRE(text.As<Text>(1) == "two");
+         REQUIRE(text.template IsExact<Text>());
+         REQUIRE(text.template AsAt<Text>(0) == "one");
+         REQUIRE(text.template AsAt<Text>(1) == "two");
       }
 
       WHEN("Concatenated") {
@@ -590,11 +590,11 @@ TEMPLATE_TEST_CASE("Containing literals", "[text]",
 
          REQUIRE(text.GetCount() == 1);
          REQUIRE(text2.GetCount() == 2);
-         REQUIRE(text.IsExact<Text>());
-         REQUIRE(text2.IsExact<Text>());
-         REQUIRE(text.As<Text>() == "one");
-         REQUIRE(text2.As<Text>(0) == "one");
-         REQUIRE(text2.As<Text>(1) == "two");
+         REQUIRE(text.template IsExact<Text>());
+         REQUIRE(text2.template IsExact<Text>());
+         REQUIRE(text.template As<Text>() == "one");
+         REQUIRE(text2.template AsAt<Text>(0) == "one");
+         REQUIRE(text2.template AsAt<Text>(1) == "two");
       }
    }
 

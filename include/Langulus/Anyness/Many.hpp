@@ -38,7 +38,6 @@
 namespace Langulus::Anyness
 {
 
-   using DMeta = RTTI::DMeta;
    struct Many;
    struct ManyView;
 
@@ -115,8 +114,8 @@ namespace Langulus::Anyness
       Many(const Many&) noexcept;
       Many(Many&&) noexcept;
 
-      template<template<class> class I> requires CT::Intent<I<Many>>
-      explicit Many(I<Many>&&) noexcept;
+      //template<template<class> class I> requires CT::Intent<I<Many>>
+      //explicit Many(I<Many>&&) noexcept;
 
       template<class A1, class...AN>
       Many(A1&&, AN&&...) requires CT::RangeInsertable<Many, A1, AN...>;

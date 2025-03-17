@@ -13,7 +13,6 @@
 namespace Langulus::Anyness
 {
 
-   using DMeta = RTTI::DMeta;
    template<CT::NotVoid> struct TMany;
    template<CT::NotVoid> struct TManyView;
 

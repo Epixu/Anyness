@@ -11,10 +11,17 @@ namespace Langulus::Anyness::Component
    template<auto SIZE>
    struct ReserveStatic {
       using CTTI_Component = Yes;
+      using ReserveType = decltype(SIZE);
 
       static_assert(SIZE > 0, "Can't have a container of zero or negative capacity");
 
-      consteval auto GetReserved() { return SIZE; }
+      /// Get the number of reserved (maybe uninitialized) elements           
+      ///   @return the number of reserved (maybe uninitialized) elements     
+      constexpr auto GetReserved() const noexcept { return SIZE; }
+
+   protected:
+      /// Set number of reserved elements is impossible - it's at compile-time
+      constexpr void SetReserved(ReserveType) const noexcept { LANGULUS(NOOP); }
    };
 
 } // namespace Langulus::Anyness::Component

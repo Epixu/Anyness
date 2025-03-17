@@ -20,8 +20,8 @@ namespace Langulus::Anyness::Component
       ///   @return the number of reserved (maybe uninitialized) elements     
       template<CT::Container C>
       T GetReserved(this const C& self) noexcept {
-         auto heap = self.GetAllocation();
-         return heap ? heap->GetReserved() : 0;
+         auto allocation = self.GetAllocation();
+         return allocation ? allocation->GetReserved() : 0;
       }
 
       /// Reserve a number of elements without initializing them              
@@ -36,6 +36,11 @@ namespace Langulus::Anyness::Component
             self.AllocateMore(count);
          return self;
       }
+      
+   protected:
+      /// Set number of reserved elements is impossible - we always use what  
+      /// the allocation says                                                 
+      constexpr void SetReserved(ReserveType) const noexcept { LANGULUS(NOOP); }
    };
 
 } // namespace Langulus::Anyness::Component

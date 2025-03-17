@@ -34,7 +34,6 @@
 namespace Langulus::Anyness
 {
 
-   using DMeta = RTTI::DMeta;
    struct Bytes;
    struct BytesView;
 
@@ -73,7 +72,7 @@ namespace Langulus::Anyness
       Bytes(I<Bytes>&&) noexcept;
 
       template<class A1, class...AN>
-      Bytes(A1&&, AN&&...) requires RangeInsertable<Bytes, A1, AN...>;
+      Bytes(A1&&, AN&&...) requires CT::RangeInsertable<Bytes, A1, AN...>;
 
       // View                                                           
       using  ViewType = BytesView;

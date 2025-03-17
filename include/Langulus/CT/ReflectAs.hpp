@@ -30,8 +30,10 @@ namespace Langulus::CT
 
       /// Convenience function that checks if ReflectAs is not void, which    
       /// would mean that the type is not reflectable at all                  
-      template<class T>
+      template<CT::NotReference T>
       consteval auto IsReflectable() {
+         using DT = Decay<T>;
+
          if constexpr (Void<T>) {
             // Void is never reflectable                                
             return (void*) nullptr;
@@ -48,14 +50,14 @@ namespace Langulus::CT
                return (AS*) nullptr;
             }
          }
-         else if constexpr (requires { typename T::CTTI_ReflectAs; }) {
+         else if constexpr (Dense<T> and requires { typename DT::CTTI_ReflectAs; }) {
             // T is checked for safety, so it has to be complete        
-            using AS = typename T::CTTI_ReflectAs;
+            using AS = typename DT::CTTI_ReflectAs;
 
             if constexpr (Void<AS>)
                return (void*) nullptr;
             else {
-               static_assert(sizeof(T) == sizeof(AS),
+               static_assert(sizeof(DT) == sizeof(AS),
                   "Provided ReflectAs type must be binary compatible");
                return (AS*) nullptr;
             }
@@ -67,13 +69,13 @@ namespace Langulus::CT
 
    /// Check if all of the types are reflectable                              
    template<class...T>
-   concept Reflectable = (CT::NotVoid<Deptr<decltype(Inner::IsReflectable<T>())>> and ...);
+   concept Reflectable = (CT::NotVoid<Deptr<decltype(Inner::IsReflectable<Deref<T>>())>> and ...);
 
    /// Get the type a given type is reflected as. This is very useful as a    
    /// a build-time optimization, because many type-erased containers are     
    /// binary-compatible with their templated equivalents, and the use of     
    /// CTTI_ReflectAs can drastically lower build time for meta generation    
    template<class T>
-   using ReflectedAs = Deptr<decltype(Inner::IsReflectable<T>())>;
+   using ReflectedAs = Deptr<decltype(Inner::IsReflectable<Deref<T>>())>;
 
 } // namespace Langulus::CT

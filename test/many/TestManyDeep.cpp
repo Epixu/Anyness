@@ -58,25 +58,25 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
 
       WHEN("Getting deep elements") {
          REQUIRE(pack.GetCountDeep() == 6);
-         REQUIRE(pack.GetCountElementsDeep() == 20);
-         REQUIRE(pack.GetBlockDeep(0));
-         REQUIRE(pack.GetBlockDeep(1));
-         REQUIRE(pack.GetBlockDeep(2));
-         REQUIRE(pack.GetBlockDeep(3));
-         REQUIRE(pack.GetBlockDeep(4));
-         REQUIRE(pack.GetBlockDeep(5));
-         REQUIRE(pack.GetBlockDeep(666) == nullptr);
-         REQUIRE(*pack.GetBlockDeep(0) == pack);
-         REQUIRE(*pack.GetBlockDeep(1) == subpack1);
-         REQUIRE(*pack.GetBlockDeep(2) == subpack2);
-         REQUIRE(*pack.GetBlockDeep(3) == subpack3);
-         REQUIRE(*pack.GetBlockDeep(4) == subpack1);
-         REQUIRE(*pack.GetBlockDeep(5) == subpack2);
+         REQUIRE(pack.GetCountItemsDeep() == 20);
+         REQUIRE(pack.GetDeepAt(0));
+         REQUIRE(pack.GetDeepAt(1));
+         REQUIRE(pack.GetDeepAt(2));
+         REQUIRE(pack.GetDeepAt(3));
+         REQUIRE(pack.GetDeepAt(4));
+         REQUIRE(pack.GetDeepAt(5));
+         REQUIRE(pack.GetDeepAt(666) == nullptr);
+         REQUIRE(*pack.GetDeepAt(0) == pack);
+         REQUIRE(*pack.GetDeepAt(1) == subpack1);
+         REQUIRE(*pack.GetDeepAt(2) == subpack2);
+         REQUIRE(*pack.GetDeepAt(3) == subpack3);
+         REQUIRE(*pack.GetDeepAt(4) == subpack1);
+         REQUIRE(*pack.GetDeepAt(5) == subpack2);
          for (int i = 0; i < 10; ++i) {
-            REQUIRE(pack.GetElementDeep(i) == darray[i]);
-            REQUIRE(pack.GetElementDeep(i + 10) == darray[i]);
+            REQUIRE(pack.GetItemAtDeep(i) == darray[i]);
+            REQUIRE(pack.GetItemAtDeep(i + 10) == darray[i]);
          }
-         REQUIRE(pack.GetElementDeep(666).IsEmpty());
+         REQUIRE(pack.GetItemAtDeep(666).IsEmpty());
       }
 
       WHEN("Push more stuff") {
@@ -93,8 +93,8 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          pack.RemoveAt(0);
 
          REQUIRE(pack.GetCount() == 2);
-         REQUIRE(pack.As<Many>(0) == subpack2);
-         REQUIRE(pack.As<Many>(1) == subpack3);
+         REQUIRE(pack.AsAt<Many>(0) == subpack2);
+         REQUIRE(pack.AsAt<Many>(1) == subpack3);
          REQUIRE(pack.GetReserved() >= 3);
          REQUIRE(pack.Is<Many>());
          REQUIRE(pack.GetRaw() == memory);
@@ -109,8 +109,8 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          pack.RemoveAt(1);
 
          REQUIRE(pack.GetCount() == 2);
-         REQUIRE(pack.As<Many>(0) == subpack1);
-         REQUIRE(pack.As<Many>(1) == subpack3);
+         REQUIRE(pack.AsAt<Many>(0) == subpack1);
+         REQUIRE(pack.AsAt<Many>(1) == subpack3);
          REQUIRE(pack.GetReserved() >= 3);
          REQUIRE(pack.Is<Many>());
          REQUIRE(pack.GetRaw() == memory);
@@ -125,8 +125,8 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          pack.RemoveAt(2);
 
          REQUIRE(pack.GetCount() == 2);
-         REQUIRE(pack.As<Many>(0) == subpack1);
-         REQUIRE(pack.As<Many>(1) == subpack2);
+         REQUIRE(pack.AsAt<Many>(0) == subpack1);
+         REQUIRE(pack.AsAt<Many>(1) == subpack2);
          REQUIRE(pack.GetReserved() >= 3);
          REQUIRE(pack.Is<Many>());
          REQUIRE(pack.GetRaw() == memory);
@@ -141,7 +141,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          pack.RemoveAt(0);
          pack.RemoveAt(0);
 
-         REQUIRE(!pack);
+         REQUIRE(not pack);
          REQUIRE(pack.GetReserved() > 0);
          REQUIRE(pack.Is<Many>());
          REQUIRE(pack.IsTypeConstrained());
@@ -156,8 +156,8 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          pack.RemoveAt(pack.Find(subpack1));
 
          REQUIRE(pack.GetCount() == 2);
-         REQUIRE(pack.As<Many>(0) == subpack2);
-         REQUIRE(pack.As<Many>(1) == subpack3);
+         REQUIRE(pack.AsAt<Many>(0) == subpack2);
+         REQUIRE(pack.AsAt<Many>(1) == subpack3);
          REQUIRE(pack.GetReserved() >= 3);
          REQUIRE(pack.Is<Many>());
          REQUIRE(pack.GetRaw() != nullptr);
@@ -183,8 +183,8 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       }
 
       WHEN("Pack is shallow-copied") {
-         pack.As<Many>(2).As<Many>(1).MakeOr();
-         pack.As<Many>(0).MakeOr();
+         pack.AsAt<Many>(2).AsAt<Many>(1).MakeOr();
+         pack.AsAt<Many>(0).MakeOr();
 
          auto copy = pack;
 
@@ -194,29 +194,29 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          REQUIRE(copy.GetState() == pack.GetState());
          REQUIRE(copy.GetType() == pack.GetType());
          REQUIRE(copy.GetUses() == 2);
-         REQUIRE(copy.As<Many>(0).GetRaw() == subpack1.GetRaw());
-         REQUIRE(copy.As<Many>(0).IsOr());
-         REQUIRE(copy.As<Many>(0).GetCount() == subpack1.GetCount());
-         REQUIRE(copy.As<Many>(0).GetUses() == 3);
-         REQUIRE(copy.As<Many>(1).GetRaw() == subpack2.GetRaw());
-         REQUIRE(copy.As<Many>(1).GetState() == State::Default);
-         REQUIRE(copy.As<Many>(1).GetCount() == subpack2.GetCount());
-         REQUIRE(copy.As<Many>(1).GetUses() == 3);
-         REQUIRE(copy.As<Many>(2).GetRaw() == subpack3.GetRaw());
-         REQUIRE(copy.As<Many>(2).GetState() == State::Default);
-         REQUIRE(copy.As<Many>(2).GetCount() == subpack3.GetCount());
-         REQUIRE(copy.As<Many>(2).GetUses() == 2);
-         REQUIRE(copy.As<Many>(2).As<Many>(0).GetRaw() == subpack1.GetRaw());
-         REQUIRE(copy.As<Many>(2).As<Many>(0).GetState() == State::Default);
-         REQUIRE(copy.As<Many>(2).As<Many>(0).GetCount() == subpack1.GetCount());
-         REQUIRE(copy.As<Many>(2).As<Many>(1).GetRaw() == subpack2.GetRaw());
-         REQUIRE(copy.As<Many>(2).As<Many>(1).IsOr());
-         REQUIRE(copy.As<Many>(2).As<Many>(1).GetCount() == subpack2.GetCount());
+         REQUIRE(copy.AsAt<Many>(0).GetRaw() == subpack1.GetRaw());
+         REQUIRE(copy.AsAt<Many>(0).IsOr());
+         REQUIRE(copy.AsAt<Many>(0).GetCount() == subpack1.GetCount());
+         REQUIRE(copy.AsAt<Many>(0).GetUses() == 3);
+         REQUIRE(copy.AsAt<Many>(1).GetRaw() == subpack2.GetRaw());
+         REQUIRE(copy.AsAt<Many>(1).GetState() == State::Default);
+         REQUIRE(copy.AsAt<Many>(1).GetCount() == subpack2.GetCount());
+         REQUIRE(copy.AsAt<Many>(1).GetUses() == 3);
+         REQUIRE(copy.AsAt<Many>(2).GetRaw() == subpack3.GetRaw());
+         REQUIRE(copy.AsAt<Many>(2).GetState() == State::Default);
+         REQUIRE(copy.AsAt<Many>(2).GetCount() == subpack3.GetCount());
+         REQUIRE(copy.AsAt<Many>(2).GetUses() == 2);
+         REQUIRE(copy.AsAt<Many>(2).AsAt<Many>(0).GetRaw() == subpack1.GetRaw());
+         REQUIRE(copy.AsAt<Many>(2).AsAt<Many>(0).GetState() == State::Default);
+         REQUIRE(copy.AsAt<Many>(2).AsAt<Many>(0).GetCount() == subpack1.GetCount());
+         REQUIRE(copy.AsAt<Many>(2).AsAt<Many>(1).GetRaw() == subpack2.GetRaw());
+         REQUIRE(copy.AsAt<Many>(2).AsAt<Many>(1).IsOr());
+         REQUIRE(copy.AsAt<Many>(2).AsAt<Many>(1).GetCount() == subpack2.GetCount());
       }
 
       WHEN("Pack is cloned") {
-         pack.As<Many>(2).As<Many>(1).MakeOr();
-         pack.As<Many>(0).MakeOr();
+         pack.AsAt<Many>(2).AsAt<Many>(1).MakeOr();
+         pack.AsAt<Many>(0).MakeOr();
 
          Many clone = Clone(pack);
 
@@ -227,31 +227,31 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          REQUIRE(clone.GetType() == pack.GetType());
          REQUIRE(clone.GetUses() == 1);
          REQUIRE(pack.GetUses() == 1);
-         REQUIRE(clone.As<Many>(0).GetRaw() != subpack1.GetRaw());
-         REQUIRE(clone.As<Many>(0).IsOr());
-         REQUIRE(clone.As<Many>(0).GetCount() == subpack1.GetCount());
-         REQUIRE(clone.As<Many>(0).GetUses() == 1);
-         REQUIRE( pack.As<Many>(0).GetUses() == 3);
-         REQUIRE(clone.As<Many>(1).GetRaw() != subpack2.GetRaw());
-         REQUIRE(clone.As<Many>(1).GetState() == State::Default);
-         REQUIRE(clone.As<Many>(1).GetCount() == subpack2.GetCount());
-         REQUIRE(clone.As<Many>(1).GetUses() == 1);
-         REQUIRE( pack.As<Many>(1).GetUses() == 3);
-         REQUIRE(clone.As<Many>(2).GetRaw() != subpack3.GetRaw());
-         REQUIRE(clone.As<Many>(2).GetState() == DataState::Default);
-         REQUIRE(clone.As<Many>(2).GetCount() == subpack3.GetCount());
-         REQUIRE(clone.As<Many>(2).GetUses() == 1);
-         REQUIRE( pack.As<Many>(2).GetUses() == 2);
-         REQUIRE(clone.As<Many>(2).As<Many>(0).GetRaw() != subpack1.GetRaw());
-         REQUIRE(clone.As<Many>(2).As<Many>(0).GetState() == State::Default);
-         REQUIRE(clone.As<Many>(2).As<Many>(0).GetCount() == subpack1.GetCount());
-         REQUIRE(clone.As<Many>(2).As<Many>(0).GetUses() == 1);
-         REQUIRE( pack.As<Many>(2).As<Many>(0).GetUses() == 3);
-         REQUIRE(clone.As<Many>(2).As<Many>(1).GetRaw() != subpack2.GetRaw());
-         REQUIRE(clone.As<Many>(2).As<Many>(1).IsOr());
-         REQUIRE(clone.As<Many>(2).As<Many>(1).GetCount() == subpack2.GetCount());
-         REQUIRE(clone.As<Many>(2).As<Many>(1).GetUses() == 1);
-         REQUIRE( pack.As<Many>(2).As<Many>(1).GetUses() == 3);
+         REQUIRE(clone.AsAt<Many>(0).GetRaw() != subpack1.GetRaw());
+         REQUIRE(clone.AsAt<Many>(0).IsOr());
+         REQUIRE(clone.AsAt<Many>(0).GetCount() == subpack1.GetCount());
+         REQUIRE(clone.AsAt<Many>(0).GetUses() == 1);
+         REQUIRE( pack.AsAt<Many>(0).GetUses() == 3);
+         REQUIRE(clone.AsAt<Many>(1).GetRaw() != subpack2.GetRaw());
+         REQUIRE(clone.AsAt<Many>(1).GetState() == State::Default);
+         REQUIRE(clone.AsAt<Many>(1).GetCount() == subpack2.GetCount());
+         REQUIRE(clone.AsAt<Many>(1).GetUses() == 1);
+         REQUIRE( pack.AsAt<Many>(1).GetUses() == 3);
+         REQUIRE(clone.AsAt<Many>(2).GetRaw() != subpack3.GetRaw());
+         REQUIRE(clone.AsAt<Many>(2).GetState() == DataState::Default);
+         REQUIRE(clone.AsAt<Many>(2).GetCount() == subpack3.GetCount());
+         REQUIRE(clone.AsAt<Many>(2).GetUses() == 1);
+         REQUIRE( pack.AsAt<Many>(2).GetUses() == 2);
+         REQUIRE(clone.AsAt<Many>(2).AsAt<Many>(0).GetRaw() != subpack1.GetRaw());
+         REQUIRE(clone.AsAt<Many>(2).AsAt<Many>(0).GetState() == State::Default);
+         REQUIRE(clone.AsAt<Many>(2).AsAt<Many>(0).GetCount() == subpack1.GetCount());
+         REQUIRE(clone.AsAt<Many>(2).AsAt<Many>(0).GetUses() == 1);
+         REQUIRE( pack.AsAt<Many>(2).AsAt<Many>(0).GetUses() == 3);
+         REQUIRE(clone.AsAt<Many>(2).AsAt<Many>(1).GetRaw() != subpack2.GetRaw());
+         REQUIRE(clone.AsAt<Many>(2).AsAt<Many>(1).IsOr());
+         REQUIRE(clone.AsAt<Many>(2).AsAt<Many>(1).GetCount() == subpack2.GetCount());
+         REQUIRE(clone.AsAt<Many>(2).AsAt<Many>(1).GetUses() == 1);
+         REQUIRE( pack.AsAt<Many>(2).AsAt<Many>(1).GetUses() == 3);
       }
 
       WHEN("Smart pushing different type without retainment") {
@@ -269,8 +269,8 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          REQUIRE(result == 1);
          REQUIRE(deepened.IsDeep());
          REQUIRE(deepened.GetCount() == 2);
-         REQUIRE(deepened.As<Many>(0).GetCount() == 5);
-         REQUIRE(deepened.As<Many>(1).GetCount() == 1);
+         REQUIRE(deepened.AsAt<Many>(0).GetCount() == 5);
+         REQUIRE(deepened.AsAt<Many>(1).GetCount() == 1);
       }
 
       WHEN("Smart pushing an empty container (but not stateless) with retainment") {
@@ -282,9 +282,9 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          REQUIRE(result == 1);
          REQUIRE(deepened.IsDeep());
          REQUIRE(deepened.GetCount() == 2);
-         REQUIRE(deepened.As<Many>(0).GetCount() == 5);
-         REQUIRE(deepened.As<Many>(1).GetCount() == 0);
-         REQUIRE(deepened.As<Many>(1).GetState() == State::Missing);
+         REQUIRE(deepened.AsAt<Many>(0).GetCount() == 5);
+         REQUIRE(deepened.AsAt<Many>(1).GetCount() == 0);
+         REQUIRE(deepened.AsAt<Many>(1).GetState() == State::Missing);
       }
 
       WHEN("Smart pushing an empty container (but not stateless) with retainment to another empty container") {
@@ -313,8 +313,8 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
 
          REQUIRE(result == 1);
          REQUIRE(pushed.IsOr());
-         REQUIRE(!pushed.As<Many>(0).IsOr());
-         REQUIRE(!pushed.As<Many>(1).IsOr());
+         REQUIRE(not pushed.AsAt<Many>(0).IsOr());
+         REQUIRE(not pushed.AsAt<Many>(1).IsOr());
       }
 
       WHEN("ForEachDeep with dense flat element (immutable, skipping)") {
@@ -453,9 +453,9 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          pack.Optimize();
 
          REQUIRE(pack.GetCount() == 3);
-         REQUIRE(pack.As<Many>(0) == subpack1);
-         REQUIRE(pack.As<Many>(1) == subpack2);
-         REQUIRE(pack.As<Many>(2) == subpack1);
+         REQUIRE(pack.AsAt<Many>(0) == subpack1);
+         REQUIRE(pack.AsAt<Many>(1) == subpack2);
+         REQUIRE(pack.AsAt<Many>(2) == subpack1);
          REQUIRE(pack.GetUses() == 1);
          REQUIRE(subpack1.GetUses() == 3);
          REQUIRE(subpack2.GetUses() == 2);
