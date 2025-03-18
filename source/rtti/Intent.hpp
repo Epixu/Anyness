@@ -46,41 +46,39 @@ namespace Langulus
          else
             static_assert(false, "Can't IntentNew at a reference");
       }
-      else if constexpr (S::Move) {
-         if constexpr (not S::Keep) {
-            // Abandon                                                  
-            if constexpr (CT::HasAbandonConstructor<T>)
-               return new (placement) T (S::Nest(value));
-            else if constexpr (CT::POD<T>) {
-               if constexpr (CT::HasMoveConstructor<T>)
-                  return new (placement) T (Move(*value));
-               else {
-                  ::std::memmove(placement, (const void*) &*value, sizeof(T));
-                  return static_cast<T*>(placement);
-               }
-            }
-            else if constexpr (FAKE)
-               return Unsupported {};
-            else
-               static_assert(false,
-                  "Can't abandon-construct destructible type"
-                  " - explicit abandon-constructor is required");
-         }
-         else {
-            // Move                                                     
+      else if constexpr (CT::Abandoned<S>) {
+         // Abandon                                                     
+         if constexpr (CT::HasAbandonConstructor<T>)
+            return new (placement) T (S::Nest(value));
+         else if constexpr (CT::POD<T>) {
             if constexpr (CT::HasMoveConstructor<T>)
-               return new (placement) T (S::Nest(value));
-            else if constexpr (CT::POD<T>) {
+               return new (placement) T (Move(*value));
+            else {
                ::std::memmove(placement, (const void*) &*value, sizeof(T));
                return static_cast<T*>(placement);
             }
-            else if constexpr (FAKE)
-               return Unsupported {};
-            else
-               static_assert(false, "Can't move-construct type");
          }
+         else if constexpr (FAKE)
+            return Unsupported {};
+         else
+            static_assert(false,
+               "Can't abandon-construct destructible type"
+               " - explicit abandon-constructor is required");
       }
-      else if constexpr (not S::Shallow) {
+      else if constexpr (CT::Moved<S>) {
+         // Move                                                        
+         if constexpr (CT::HasMoveConstructor<T>)
+            return new (placement) T (S::Nest(value));
+         else if constexpr (CT::POD<T>) {
+            ::std::memmove(placement, (const void*) &*value, sizeof(T));
+            return static_cast<T*>(placement);
+         }
+         else if constexpr (FAKE)
+            return Unsupported {};
+         else
+            static_assert(false, "Can't move-construct type");
+      }
+      else if constexpr (CT::Cloned<S>) {
          // Clone                                                       
          using DT = Decay<T>;
 
@@ -105,7 +103,7 @@ namespace Langulus
          else
             static_assert(false, "Can't clone-construct a void type");
       }
-      else if constexpr (not S::Keep) {
+      else if constexpr (CT::Disowned<S>) {
          // Disown                                                      
          if constexpr (CT::HasDisownConstructor<T>)
             return new (placement) T (S::Nest(value));
@@ -152,7 +150,7 @@ namespace Langulus
          else
             static_assert(false, "Can't refer-construct type");
       }
-      else static_assert(false, "Unsupported shallow intent");
+      else static_assert(false, "Unsupported intent");
    }
 
    /// Assign new value to an instance of T, using the provided intent        
@@ -181,49 +179,47 @@ namespace Langulus
          else
             static_assert(false, "Can't IntentAssign at a reference");
       }
-      else if constexpr (SS::Move) {
-         if constexpr (not SS::Keep) {
-            // Abandon                                                  
-            if constexpr (CT::HasAbandonAssign<T>)
-               return (lhs = rhs.Forward());
-            else if constexpr (CT::HasReferAssign<T> and CT::HasAbandonConstructor<T>)
-               // This is required because G++ doesn't detect implicit  
-               // abandon-assignment otherwise                          
-               return (lhs = Decvq<T> {rhs.Forward()});
-            else if constexpr (CT::POD<T>) {
-               if constexpr (CT::HasIntentAssign<Langulus::Moved, T>)
-                  return (lhs = Move(*rhs));
-               else if constexpr (::std::assignable_from<T&, T&&>)
-                  return (lhs = static_cast<T&&>(rhs));
-               else {
-                  ::std::memmove((void*) &lhs, (const void*) &*rhs, sizeof(T));
-                  return (lhs);
-               }
-            }
-            else if constexpr (FAKE)
-               return Unsupported {};
-            else
-               static_assert(false,
-                  "Can't abandon-assign destructible type"
-                  " - explicit abandon-assigner is required");
-         }
-         else {
-            // Move                                                     
+      else if constexpr (CT::Abandoned<SS>) {
+         // Abandon                                                     
+         if constexpr (CT::HasAbandonAssign<T>)
+            return (lhs = rhs.Forward());
+         else if constexpr (CT::HasReferAssign<T> and CT::HasAbandonConstructor<T>)
+            // This is required because G++ doesn't detect implicit     
+            // abandon-assignment otherwise                             
+            return (lhs = Decvq<T> {rhs.Forward()});
+         else if constexpr (CT::POD<T>) {
             if constexpr (CT::HasIntentAssign<Langulus::Moved, T>)
-               return (lhs = rhs.Forward());
+               return (lhs = Move(*rhs));
             else if constexpr (::std::assignable_from<T&, T&&>)
                return (lhs = static_cast<T&&>(rhs));
-            else if constexpr (CT::POD<T>) {
+            else {
                ::std::memmove((void*) &lhs, (const void*) &*rhs, sizeof(T));
                return (lhs);
             }
-            else if constexpr (FAKE)
-               return Unsupported {};
-            else
-               static_assert(false, "Can't move-assign type");
          }
+         else if constexpr (FAKE)
+            return Unsupported {};
+         else
+            static_assert(false,
+               "Can't abandon-assign destructible type"
+               " - explicit abandon-assigner is required");
       }
-      else if constexpr (not SS::Shallow) {
+      else if constexpr (CT::Moved<SS>) {
+         // Move                                                        
+         if constexpr (CT::HasIntentAssign<Langulus::Moved, T>)
+            return (lhs = rhs.Forward());
+         else if constexpr (::std::assignable_from<T&, T&&>)
+            return (lhs = static_cast<T&&>(rhs));
+         else if constexpr (CT::POD<T>) {
+            ::std::memmove((void*) &lhs, (const void*) &*rhs, sizeof(T));
+            return (lhs);
+         }
+         else if constexpr (FAKE)
+            return Unsupported {};
+         else
+            static_assert(false, "Can't move-assign type");
+      }
+      else if constexpr (CT::Cloned<SS>) {
          // Clone                                                       
          using DT = Decay<T>;
 
@@ -254,7 +250,7 @@ namespace Langulus
          else
             static_assert(false, "Can't clone-assign void or incomplete type");
       }
-      else if constexpr (not SS::Keep) {
+      else if constexpr (CT::Disowned<SS>) {
          // Disown                                                      
          if constexpr (CT::HasDisownAssign<T>)
             return (lhs = rhs.Forward());
@@ -301,7 +297,7 @@ namespace Langulus
          else
             static_assert(false, "Can't refer-assign type");
       }
-      else static_assert(false, "Unsupported shallow intent");
+      else static_assert(false, "Unsupported intent");
    }
 
    namespace CT

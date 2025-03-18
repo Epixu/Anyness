@@ -21,18 +21,18 @@ namespace Langulus::Anyness::DefineState
 
       template<CT::Container C>
       constexpr bool IsPast(this const C& self) noexcept requires Dynamic {
-         return self.mState & C::template GetStateBit<Past>();
+         return self.mState & Past {};
       }
 
       template<CT::Container C>
       auto EnablePast(this C& self) noexcept -> C& requires Dynamic {
-         self.mState |= C::template GetStateBit<Past>();
+         self.mState += Past {};
          return self;
       }
 
       template<CT::Container C>
       auto DisablePast(this C& self) noexcept -> C& requires Dynamic {
-         self.mState &= ~C::template GetStateBit<Past>();
+         self.mState -= Past {};
          return self;
       }
    };

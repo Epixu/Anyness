@@ -25,18 +25,18 @@ namespace Langulus::Anyness::DefineState
 
       template<CT::Container C>
       constexpr bool IsTracked(this const C& self) noexcept requires Dynamic {
-         return self.mState & C::template GetStateBit<Tracked>();
+         return self.mState & Tracked {};
       }
 
       template<CT::Container C>
       auto EnableTracking(this C& self) noexcept -> C& requires Dynamic {
-         self.mState |= C::template GetStateBit<Tracked>();
+         self.mState += Tracked {};
          return self;
       }
 
       template<CT::Container C>
       auto DisableTracking(this C& self) noexcept -> C& requires Dynamic {
-         self.mState &= ~C::template GetStateBit<Tracked>();
+         self.mState -= Tracked {};
          return self;
       }
    };

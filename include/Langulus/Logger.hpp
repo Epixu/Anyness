@@ -477,12 +477,14 @@ namespace fmt
                or (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
             // Create a new foreground color style                      
             style = fg(static_cast<terminal_color>(c));
-            return format_to(ctx.out(), "{}", detail::make_foreground_color<char>(style.get_foreground()));
+            const auto ansi = detail::make_foreground_color<char>(style.get_foreground());
+            return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
          }
          else {
             // Create a new background color style                      
             style = bg(static_cast<terminal_color>(static_cast<uint8_t>(c) - 10));
-            return format_to(ctx.out(), "{}", detail::make_background_color<char>(style.get_background()));
+            const auto ansi = detail::make_background_color<char>(style.get_background());
+            return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
          }
       }
    };

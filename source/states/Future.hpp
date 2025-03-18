@@ -21,18 +21,18 @@ namespace Langulus::Anyness::DefineState
 
       template<CT::Container C>
       constexpr bool IsFuture(this const C& self) noexcept requires Dynamic {
-         return self.mState & C::template GetStateBit<Future>();
+         return self.mState & Future {};
       }
 
       template<CT::Container C>
       auto EnableFuture(this C& self) noexcept -> C& requires Dynamic {
-         self.mState |= C::template GetStateBit<Future>();
+         self.mState += Future {};
          return self;
       }
 
       template<CT::Container C>
       auto DisableFuture(this C& self) noexcept -> C& requires Dynamic {
-         self.mState &= ~C::template GetStateBit<Future>();
+         self.mState -= Future {};
          return self;
       }
    };

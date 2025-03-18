@@ -22,18 +22,18 @@ namespace Langulus::Anyness::DefineState
 
       template<CT::Container C>
       constexpr bool IsOr(this const C& self) noexcept requires Dynamic {
-         return self.mState & C::template GetStateBit<Or>();
+         return self.mState & Or {};
       }
 
       template<CT::Container C>
       auto EnableOr(this C& self) noexcept -> C& requires Dynamic {
-         self.mState |= C::template GetStateBit<Or>();
+         self.mState += Or {};
          return self;
       }
 
       template<CT::Container C>
       auto DisableOr(this C& self) noexcept -> C& requires Dynamic {
-         self.mState &= ~C::template GetStateBit<Or>();
+         self.mState -= Or {};
          return self;
       }
    };

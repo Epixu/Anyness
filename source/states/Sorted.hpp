@@ -21,18 +21,18 @@ namespace Langulus::Anyness::DefineState
 
       template<CT::Container C>
       constexpr bool IsSorted(this const C& self) noexcept requires Dynamic {
-         return self.mState & C::template GetStateBit<Sorted>();
+         return self.mState & Sorted {};
       }
 
       template<CT::Container C>
       auto EnableSorting(this C& self) noexcept -> C& requires Dynamic {
-         self.mState |= C::template GetStateBit<Sorted>();
+         self.mState += Sorted {};
          return self;
       }
 
       template<CT::Container C>
       auto DisableSorting(this C& self) noexcept -> C& requires Dynamic {
-         self.mState &= ~C::template GetStateBit<Sorted>();
+         self.mState -= Sorted {};
          return self;
       }
    };

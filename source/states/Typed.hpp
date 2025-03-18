@@ -22,18 +22,18 @@ namespace Langulus::Anyness::DefineState
 
       template<CT::Container C>
       constexpr bool IsTypeConstrained(this const C& self) noexcept requires Dynamic {
-         return self.mState & C::template GetStateBit<Typed>();
+         return self.mState & Typed {};
       }
 
       template<CT::Container C>
       auto EnableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
-         self.mState |= C::template GetStateBit<Typed>();
+         self.mState += Typed {};
          return self;
       }
 
       template<CT::Container C>
       auto DisableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
-         self.mState &= ~C::template GetStateBit<Typed>();
+         self.mState -= Typed {};
          return self;
       }
    };

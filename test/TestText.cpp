@@ -613,8 +613,6 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
    REQUIRE_FALSE(text.IsEncrypted());
-   REQUIRE_FALSE(text.IsMissing());
-   REQUIRE_FALSE(text.IsOr());
    REQUIRE_FALSE(text.IsStatic());
    REQUIRE      (text.IsTyped());
    REQUIRE_FALSE(text.IsUntyped());
@@ -624,11 +622,8 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE      (text.IsEmpty());
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
-   REQUIRE      (text.GetType() == MetaOf<Letter>());
-   REQUIRE      (text.Is<Letter>());
-   REQUIRE      (text.IsNow());
-   REQUIRE_FALSE(text.IsFuture());
-   REQUIRE_FALSE(text.IsPast());
+   REQUIRE      (text.GetType() == MetaOf<char>());
+   REQUIRE      (text.Is<char>());
    REQUIRE      (text.IsDense());
    REQUIRE      (text.GetCount() == 0);
    REQUIRE      (text.GetReserved() == 0);

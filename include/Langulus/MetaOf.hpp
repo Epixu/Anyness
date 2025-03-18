@@ -24,11 +24,11 @@ namespace Langulus
    template<class T>
    auto MetaOf() {
       if constexpr (CT::DefineTag<Decay<T>>)
-         return RTTI::DefinitionTag::Reflect<T>();
+         return RTTI::DefinitionTag::Reflect<Decay<T>>();
       else if constexpr (CT::DefineVerb<Decay<T>>)
-         return RTTI::DefinitionVerb::Reflect<T>();
+         return RTTI::DefinitionVerb::Reflect<Decay<T>>();
       else
-         return RTTI::DefinitionData::Reflect<T>();
+         return RTTI::DefinitionData::Reflect<Deref<T>>();
    }
 
    /// Get the meta definition of a constant, like an enum                    
@@ -46,7 +46,7 @@ namespace Langulus
    ///   @return the definition                                               
    template<class T>
    auto MetaDataOf() {
-      return RTTI::DefinitionData::Reflect<T>();
+      return RTTI::DefinitionData::Reflect<Deref<T>>();
    }
 
    /// Tag definition retrieval                                               
@@ -56,7 +56,7 @@ namespace Langulus
    ///   @return the definition                                               
    template<class T>
    auto MetaTagOf() {
-      return RTTI::DefinitionTag::Reflect<T>();
+      return RTTI::DefinitionTag::Reflect<Decay<T>>();
    }
 
    /// Verb definition retrieval                                              
@@ -66,7 +66,7 @@ namespace Langulus
    ///   @return the definition                                               
    template<class T>
    auto MetaVerbOf() {
-      return RTTI::DefinitionVerb::Reflect<T>();
+      return RTTI::DefinitionVerb::Reflect<Decay<T>>();
    }
 
    /// Constant definition retrieval                                          

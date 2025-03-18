@@ -58,7 +58,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[Ref]",
          REQUIRE(*pointer == 5);
          REQUIRE(pointer.GetAllocation());
          REQUIRE(pointer.GetUses() == 1);
-         if constexpr (CT::Referencable<TT>)
+         if constexpr (CT::Referenced<TT>)
             REQUIRE(pointer->GetReferences() == 1);
       }
 
@@ -73,7 +73,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[Ref]",
          REQUIRE(pointer2.GetAllocation());
          REQUIRE(pointer.GetUses() == 2);
          REQUIRE(pointer2.GetUses() == 2);
-         if constexpr (CT::Referencable<TT>)
+         if constexpr (CT::Referenced<TT>)
             REQUIRE(pointer->GetReferences() == 2);
       }
 
@@ -88,7 +88,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[Ref]",
          REQUIRE(pointer2.GetAllocation());
          REQUIRE(pointer.GetUses() == 0);
          REQUIRE(pointer2.GetUses() == 1);
-         if constexpr (CT::Referencable<TT>)
+         if constexpr (CT::Referenced<TT>)
             REQUIRE(pointer2->GetReferences() == 1);
       }
 
@@ -108,7 +108,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[Ref]",
          REQUIRE(pointer2.GetAllocation());
          REQUIRE(pointer.GetAllocation());
          REQUIRE(pointer.GetUses() == 2);
-         if constexpr (CT::Referencable<TT>)
+         if constexpr (CT::Referenced<TT>)
             REQUIRE(pointer->GetReferences() == 2);
       }
 
@@ -126,7 +126,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[Ref]",
             REQUIRE(pointer.GetReferences() == 2);
          #else
             REQUIRE_FALSE(pointer.GetAllocation());
-            if constexpr (CT::Referencable<TT>)
+            if constexpr (CT::Referenced<TT>)
                REQUIRE(pointer->GetReferences() == 1);
          #endif
       }
@@ -163,13 +163,13 @@ TEMPLATE_TEST_CASE("Shared pointer", "[Ref]",
             REQUIRE(pointer.GetReferences() == 2);
          #else
             REQUIRE_FALSE(pointer.GetAllocation());
-            if constexpr (CT::Referencable<TT>)
+            if constexpr (CT::Referenced<TT>)
                REQUIRE(pointer->GetReferences() == 1);
          #endif
       }
 
       #if not LANGULUS_FEATURE(NEWDELETE)
-         if constexpr (CT::Referencable<Deptr<TT>>)
+         if constexpr (CT::Referenced<Deptr<TT>>)
             raw->Reference(-1);
          delete raw;
       #endif

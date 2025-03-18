@@ -295,7 +295,7 @@ namespace Langulus::Anyness::Component
             "` compared against `", MetaDataOf<A>(), "`)");
 
          if constexpr (CT::Dense<A>) {
-            AssumeDev(CastsTo<A, true>(), HERE(),
+            AssumeDev(self.template CastsTo<A, true>(), HERE(),
                "Incompatible iterator type", " `", MetaDataOf<A>(), 
                "` (iterating block of type `", self.GetType(), "`)");
          }

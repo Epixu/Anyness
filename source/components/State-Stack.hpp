@@ -33,9 +33,41 @@ namespace Langulus::Anyness::Component
       template<State::StateValue> friend struct DefineState::Encrypted;
       template<State::StateValue> friend struct DefineState::Compressed;
 
-      // The bitfield capable of containing all states                  
+      /// The bitfield capable of containing all variable states              
       struct StateWrapper {
          StateType mState;
+
+         template<CT::State S>
+         StateWrapper& operator += (S&&) noexcept {
+            mState |= StateStack::template GetStateBit<S>();
+            return *this;
+         }
+         
+         template<CT::State S>
+         StateWrapper& operator -= (S&&) noexcept {
+            mState &= ~StateStack::template GetStateBit<S>();
+            return *this;
+         }
+         
+         template<CT::State S>
+         constexpr bool operator & (S&&) const noexcept {
+            return mState & StateStack::template GetStateBit<S>();
+         }
+         
+         constexpr bool operator & (DefineState::Missing&&) const noexcept {
+            return mState & StateStack::template GetStateBit<DefineState::Past>()
+                or mState & StateStack::template GetStateBit<DefineState::Future>();
+         }
+         
+         constexpr bool operator == (DefineState::Default&&) const noexcept {
+            return mState == 0;
+         }
+         
+         template<CT::State S>
+         constexpr bool operator == (S&&) const noexcept {
+            return mState == (mState & StateStack::template GetStateBit<S>());
+         }
+
       } mState;
 
       /// Get the value of a speicific state                                  
@@ -52,7 +84,7 @@ namespace Langulus::Anyness::Component
    public:
       constexpr auto GetState() const noexcept { return mState; }
 
-      /// Check if block is marked as missing past/future                     
+      /// Check if container is marked as missing past/future                 
       ///   @return true if this container is marked as missing               
       constexpr bool IsMissing() const noexcept requires (
             Contains<DefineState::Past   <State::Variable>>
@@ -64,8 +96,8 @@ namespace Langulus::Anyness::Component
             Contains<DefineState::Past   <State::Enabled >>
          or Contains<DefineState::Future <State::Enabled >>
          ) return true;
-         else return mState & GetStateBit<DefineState::Past  >()
-                  or mState & GetStateBit<DefineState::Future>();
+         else return mState & DefineState::Past   {}
+                  or mState & DefineState::Future {};
       }
    };
 

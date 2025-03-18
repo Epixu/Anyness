@@ -21,18 +21,18 @@ namespace Langulus::Anyness::DefineState
 
       template<CT::Container C>
       constexpr bool IsEncrypted(this const C& self) noexcept requires Dynamic {
-         return self.mState & C::template GetStateBit<Encrypted>();
+         return self.mState & Encrypted {};
       }
 
       template<CT::Container C>
       auto EnableEncrypted(this C& self) noexcept -> C& requires Dynamic {
-         self.mState |= C::template GetStateBit<Encrypted>();
+         self.mState += Encrypted {};
          return self;
       }
 
       template<CT::Container C>
       auto DisableEncrypted(this C& self) noexcept -> C& requires Dynamic {
-         self.mState &= ~C::template GetStateBit<Encrypted>();
+         self.mState -= Encrypted {};
          return self;
       }
    };
