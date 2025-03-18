@@ -82,3 +82,19 @@ namespace Langulus::Anyness::State
    };
 
 } // namespace Langulus::Anyness::Detail
+
+namespace Langulus::Anyness::DefineState
+{
+
+   struct Default;
+   struct Missing;
+   template<State::StateValue> struct Compressed;
+   template<State::StateValue> struct Encrypted;
+   template<State::StateValue> struct Future;
+   template<State::StateValue> struct Or;
+   template<State::StateValue> struct Past;
+   template<State::StateValue> struct Sorted;
+   template<State::StateValue> struct Tracked;
+   template<State::StateValue> struct Typed;
+
+} // namespace Langulus::Anyness::DefineState

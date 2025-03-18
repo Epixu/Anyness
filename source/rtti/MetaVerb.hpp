@@ -63,6 +63,9 @@ namespace Langulus::RTTI
       : Inner::MetaVerbNaked
    #endif
    {
+      using CTTI_POD      = Yes;
+      using CTTI_Nullable = Yes;
+
       constexpr MetaVerb() noexcept = default;
       constexpr MetaVerb(::std::nullptr_t) noexcept {}
       constexpr MetaVerb(const DefinitionVerb*) noexcept;

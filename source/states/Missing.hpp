@@ -1,19 +1,21 @@
 #pragma once
 #include "../Container.hpp"
+#include "Past.hpp"
+#include "Future.hpp"
 
 
 namespace Langulus::Anyness::DefineState
 {
 
    ///                                                                        
-   /// Checks whether state is default                                        
-   struct Default {};
+   /// Used to check for past/future state                                    
+   struct Missing {};
 
 } // namespace Langulus::Anyness::DefineState
 
 namespace Langulus::Anyness::State
 {
 
-   constexpr DefineState::Default Default = {};
+   constexpr DefineState::Missing Missing = {};
 
 } // namespace Langulus::Anyness::State

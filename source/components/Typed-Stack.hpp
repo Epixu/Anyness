@@ -2,6 +2,7 @@
 #include "../Container.hpp"
 #include <Langulus/CT/Same.hpp>
 #include <Langulus/MetaOf.hpp>
+#include <Langulus/CT/Deep.hpp>
 
 
 namespace Langulus::Anyness
@@ -154,6 +155,51 @@ namespace Langulus::Anyness::Component
             return mType.IsExact(other.mType);
          else
             return CT::Exact<TYPE, TypeOf<C>>;
+      }
+      
+      /// Check if container contains dense data                              
+      ///   @returns true if this container refers to dense memory            
+      constexpr bool IsDense() const noexcept {
+         if constexpr (TypeErased)
+            return mType.IsDense();
+         else
+            return CT::Dense<TYPE>;
+      }
+
+      /// Check if container contains pointers                                
+      ///   @return true if the block contains pointers                       
+      constexpr bool IsSparse() const noexcept {
+         if constexpr (TypeErased)
+            return mType.IsSparse();
+         else
+            return CT::Sparse<TYPE>;
+      }
+      
+      /// Check if block is constant                                          
+      ///   @return true if the contents are constant                         
+      constexpr bool IsConstant() const noexcept {
+         if constexpr (TypeErased)
+            return mType.IsConstant();
+         else
+            return CT::Constant<TYPE>;
+      }
+
+      /// Check if block is mutable                                           
+      ///   @return true if the contents are mutable                          
+      constexpr bool IsMutable() const noexcept {
+         if constexpr (TypeErased)
+            return mType.IsMutable();
+         else
+            return CT::Mutable<TYPE>;
+      }
+
+      /// Check if container is made of other containers                      
+      ///   @return true if the container is deep                             
+      constexpr bool IsDeep() const noexcept {
+         if constexpr (TypeErased)
+            return mType.IsDeep();
+         else
+            return CT::Deep<Decay<TYPE>>;
       }
 
       template<bool BINARY_COMPATIBLE = false, bool ADVANCED = false>

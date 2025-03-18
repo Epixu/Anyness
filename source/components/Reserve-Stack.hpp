@@ -25,6 +25,9 @@ namespace Langulus::Anyness::Component
       constexpr auto GetReserved() const noexcept { return mReserved; }
 
    protected:
+      template<unsigned>
+      friend struct HeapMovable;
+
       /// Set number of reserved elements                                     
       constexpr void SetReserved(ReserveType r) noexcept { mReserved = r;    }
    };

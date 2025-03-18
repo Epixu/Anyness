@@ -82,6 +82,9 @@ namespace Langulus::RTTI
       : Inner::MetaDataNaked
    #endif
    {
+      using CTTI_POD      = Yes;
+      using CTTI_Nullable = Yes;
+
       constexpr MetaData() noexcept = default;
       constexpr MetaData(::std::nullptr_t) noexcept {}
       constexpr MetaData(const DefinitionData*) noexcept;

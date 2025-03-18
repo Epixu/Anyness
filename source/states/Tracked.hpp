@@ -1,15 +1,44 @@
 #pragma once
 #include "../Container.hpp"
 
+#if not LANGULUS(DEBUG)
+#error This state shouldn't be included in release builds
+#endif
+
 
 namespace Langulus::Anyness::DefineState
 {
 
+   ///                                                                        
+   /// If enabled, data is tracked while changing - useful for debugging      
+   ///   @tparam V - decides whether state is dynamic or static               
    template<State::StateValue V = State::Variable>
    struct Tracked {
       using CTTI_State = Yes;
-      static constexpr bool Static = V != State::Variable;
-      static constexpr bool Enable = V == State::Enabled;
+      static constexpr bool Static  = V != State::Variable;
+      static constexpr bool Dynamic = V == State::Variable;
+      static constexpr bool Enable  = V == State::Enabled;
+
+      constexpr bool IsTracked() const requires Static {
+         return Enable;
+      }
+
+      template<CT::Container C>
+      constexpr bool IsTracked(this const C& self) noexcept requires Dynamic {
+         return self.mState & C::template GetStateBit<Tracked>();
+      }
+
+      template<CT::Container C>
+      auto EnableTracking(this C& self) noexcept -> C& requires Dynamic {
+         self.mState |= C::template GetStateBit<Tracked>();
+         return self;
+      }
+
+      template<CT::Container C>
+      auto DisableTracking(this C& self) noexcept -> C& requires Dynamic {
+         self.mState &= ~C::template GetStateBit<Tracked>();
+         return self;
+      }
    };
 
 } // namespace Langulus::Anyness::DefineState

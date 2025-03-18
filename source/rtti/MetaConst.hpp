@@ -42,6 +42,9 @@ namespace Langulus::RTTI
       : Inner::MetaConstNaked
    #endif
    {
+      using CTTI_POD      = Yes;
+      using CTTI_Nullable = Yes;
+
       constexpr MetaConst() noexcept = default;
       constexpr MetaConst(::std::nullptr_t) noexcept {}
       constexpr MetaConst(const DefinitionConst*) noexcept;

@@ -31,7 +31,7 @@ namespace Langulus::CT
          if constexpr (C::TypeErased) {
             // Type-erased containers accept almost any type - they     
             // will report errors at runtime instead, if any            
-            return CT::Reflectable<A>;
+            return CT::Reflectable<Deint<A>>;
          }
          else if constexpr (CT::Container<A>) {
             if constexpr (SA::Shallow) {

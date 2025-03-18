@@ -104,6 +104,9 @@ namespace Langulus
 
       template<class N>
       using Cat = decltype(Concat(Fake<N&&>()));
+
+      template<CT::NotTypelist N>
+      static constexpr bool Contains = false;
    };
 
 
@@ -192,6 +195,9 @@ namespace Langulus
 
       template<class N>
       using Cat = decltype(Concat(Fake<N&&>()));
+
+      template<CT::NotTypelist N>
+      static constexpr bool Contains = ::std::same_as<N, T>;
    };
 
 
@@ -231,17 +237,17 @@ namespace Langulus
       }
 
       /// Doesn't generate code for further loops if lambda returns           
-      /// std::true_type instead of std::false_type                           
+      /// Yes instead of No                                                   
       /// (utilizes a compile-time short-circuit)                             
       static constexpr bool ForEachConstOr(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::same_as<::std::true_type>;  }
-                    or requires{ {lambda.template operator()<T1>()} -> ::std::same_as<::std::false_type>; },
-            "Provided argument is not a lambda of the form []<class> -> ::std::true_type or ::std::false_type");
-         if constexpr (::std::same_as<::std::true_type, decltype(lambda.template operator()<T1>())>) {
+         static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::same_as<Yes>;  }
+                    or requires{ {lambda.template operator()<T1>()} -> ::std::same_as<No>; },
+            "Provided argument is not a lambda of the form []<class> -> Yes/No");
+         if constexpr (::std::same_as<Yes, decltype(lambda.template operator()<T1>())>) {
             lambda.template operator()<T1>();
             return true;
          }
-         else if constexpr (::std::same_as<::std::true_type, decltype(lambda.template operator()<T2>())>) {
+         else if constexpr (::std::same_as<Yes, decltype(lambda.template operator()<T2>())>) {
             lambda.template operator()<T2>();
             return true;
          }
@@ -342,6 +348,14 @@ namespace Langulus
 
       template<class N>
       using Cat = decltype(Concat(Fake<N&&>()));
+
+      template<CT::NotTypelist N>
+      static constexpr bool Contains = ForEachConstOr([]<class A> {
+         if constexpr (::std::same_as<N, A>)
+            return Yes {};
+         else
+            return No {};
+      });
    };
 
    #define LangulusTypegen(TYPES, LAMBDA) decltype(TYPES::GenerateTypes(LAMBDA));

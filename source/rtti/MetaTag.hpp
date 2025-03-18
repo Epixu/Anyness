@@ -42,9 +42,14 @@ namespace Langulus::RTTI
       : Inner::MetaTagNaked
    #endif
    {
+      using CTTI_POD      = Yes;
+      using CTTI_Nullable = Yes;
+
       constexpr MetaTag() noexcept = default;
       constexpr MetaTag(::std::nullptr_t) noexcept {}
       constexpr MetaTag(const DefinitionTag*) noexcept;
+      constexpr MetaTag(const MetaTag&) noexcept = default;
+      constexpr MetaTag(MetaTag&&) noexcept = default;
    };
 
    using TMeta = MetaTag;

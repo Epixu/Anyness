@@ -133,11 +133,7 @@ namespace Langulus::Anyness::Component
                   // Memory didn't move, but reserved count changed     
                   if constexpr (C::Sparse) {
                      // Move entry data to its new place                
-                     MoveMemory(
-                        GetEntries(),
-                        previous.GetEntries(),
-                        self.GetCount()
-                     );
+                     MoveMemory(GetEntries(), previous.GetEntries(), self.GetCount());
                   }
                }
 

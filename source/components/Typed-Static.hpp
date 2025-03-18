@@ -1,5 +1,6 @@
 #pragma once
 #include <Langulus/MetaOf.hpp>
+#include <Langulus/CT/Deep.hpp>
 
 
 namespace Langulus::Anyness
@@ -124,6 +125,36 @@ namespace Langulus::Anyness::Component
             return GetType().IsExact(other.GetType());
          else
             return CT::Exact<TYPE, TypeOf<C>>;
+      }
+      
+      /// Check if container contains dense data                              
+      ///   @returns true if this container refers to dense memory            
+      constexpr bool IsDense() const noexcept {
+         return CT::Dense<TYPE>;
+      }
+
+      /// Check if container contains pointers                                
+      ///   @return true if the block contains pointers                       
+      constexpr bool IsSparse() const noexcept {
+         return CT::Sparse<TYPE>;
+      }
+      
+      /// Check if contained data is constant                                 
+      ///   @return true if the contents are constant                         
+      constexpr bool IsConstant() const noexcept {
+         return CT::Constant<TYPE>;
+      }
+
+      /// Check if constained data is mutable                                 
+      ///   @return true if the contents are mutable                          
+      constexpr bool IsMutable() const noexcept {
+         return CT::Mutable<TYPE>;
+      }
+
+      /// Check if container is made of other containers                      
+      ///   @return true if the container is deep                             
+      constexpr bool IsDeep() const noexcept {
+         return CT::Deep<Decay<TYPE>>;
       }
    };
 

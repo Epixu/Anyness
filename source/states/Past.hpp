@@ -5,11 +5,36 @@
 namespace Langulus::Anyness::DefineState
 {
 
+   ///                                                                        
+   /// If enabled, data is marked as a missing past                           
+   ///   @tparam V - decides whether state is dynamic or static               
    template<State::StateValue V = State::Variable>
    struct Past {
       using CTTI_State = Yes;
-      static constexpr bool Static = V != State::Variable;
-      static constexpr bool Enable = V == State::Enabled;
+      static constexpr bool Static  = V != State::Variable;
+      static constexpr bool Dynamic = V == State::Variable;
+      static constexpr bool Enable  = V == State::Enabled;
+
+      constexpr bool IsPast() const requires Static {
+         return Enable;
+      }
+
+      template<CT::Container C>
+      constexpr bool IsPast(this const C& self) noexcept requires Dynamic {
+         return self.mState & C::template GetStateBit<Past>();
+      }
+
+      template<CT::Container C>
+      auto EnablePast(this C& self) noexcept -> C& requires Dynamic {
+         self.mState |= C::template GetStateBit<Past>();
+         return self;
+      }
+
+      template<CT::Container C>
+      auto DisablePast(this C& self) noexcept -> C& requires Dynamic {
+         self.mState &= ~C::template GetStateBit<Past>();
+         return self;
+      }
    };
 
 } // namespace Langulus::Anyness::DefineState

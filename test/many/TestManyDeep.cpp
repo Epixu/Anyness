@@ -183,8 +183,8 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       }
 
       WHEN("Pack is shallow-copied") {
-         pack.AsAt<Many>(2).AsAt<Many>(1).MakeOr();
-         pack.AsAt<Many>(0).MakeOr();
+         pack.AsAt<Many>(2).AsAt<Many>(1).EnableOr();
+         pack.AsAt<Many>(0).EnableOr();
 
          auto copy = pack;
 
@@ -215,8 +215,8 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       }
 
       WHEN("Pack is cloned") {
-         pack.AsAt<Many>(2).AsAt<Many>(1).MakeOr();
-         pack.AsAt<Many>(0).MakeOr();
+         pack.AsAt<Many>(2).AsAt<Many>(1).EnableOr();
+         pack.AsAt<Many>(0).EnableOr();
 
          Many clone = Clone(pack);
 
@@ -226,7 +226,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          REQUIRE(clone.GetState() == pack.GetState());
          REQUIRE(clone.GetType() == pack.GetType());
          REQUIRE(clone.GetUses() == 1);
-         REQUIRE(pack.GetUses() == 1);
+         REQUIRE( pack.GetUses() == 1);
          REQUIRE(clone.AsAt<Many>(0).GetRaw() != subpack1.GetRaw());
          REQUIRE(clone.AsAt<Many>(0).IsOr());
          REQUIRE(clone.AsAt<Many>(0).GetCount() == subpack1.GetCount());
