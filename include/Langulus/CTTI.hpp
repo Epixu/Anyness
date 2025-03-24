@@ -12,6 +12,14 @@
 namespace Langulus::CTTI
 {
 
+   /// Can be used in two ways to satisfy CT::Null<T>:                        
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Null = Yes/No;` in T                       
+   template<class T>
+   struct Null {
+      static constexpr bool Enabled = ::std::is_null_pointer_v<T>;
+   };
+   
    /// Can be used in two ways to satisfy CT::Enum<T>:                        
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Enum = Yes/No;` in T                       
@@ -119,6 +127,7 @@ namespace Langulus::CT
       concept Not##NAME = ((not NAME<T>) and ...); \
    }
 
+LANGULUS_CTTI_CONCEPT(Null);
 LANGULUS_CTTI_CONCEPT(Enum);
 LANGULUS_CTTI_CONCEPT(Aggregate);
 LANGULUS_CTTI_CONCEPT(Fundamental);

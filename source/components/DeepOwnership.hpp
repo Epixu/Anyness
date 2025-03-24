@@ -16,6 +16,9 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes;
 
    protected:
+      template<unsigned>
+      friend struct HeapMovable;
+
       template<CT::Container C>
       using View = typename C::ViewType;
       template<CT::Container C>
@@ -25,7 +28,7 @@ namespace Langulus::Anyness::Component
       ///   @attention entries exist only for sparse containers               
       ///   @return the array of entries                                      
       template<CT::Container C>
-      auto GetEntries(this C&& self) has_assumptions -> AllocationPtr* {
+      auto GetEntry(this C&& self) has_assumptions -> AllocationPtr* {
          AssumeDev(self.IsSparse(), HERE(),
             "Entries do not exist for dense container");
          AssumeDev(self.GetAllocation(), HERE(),
@@ -45,7 +48,7 @@ namespace Langulus::Anyness::Component
 
          if constexpr (C::Sparse) {
             // Move entry data to its new place                         
-            MoveMemory(self.GetEntries(), oldv.GetEntries(), self.GetCount());
+            MoveMemory(self.GetEntry(), oldv.GetEntry(), self.GetCount());
          }
       }
    };
