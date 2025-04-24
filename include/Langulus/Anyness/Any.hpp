@@ -14,6 +14,7 @@
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/State-Stack.hpp"
+#include "../../../source/components/Conversion.hpp"
 #include "../../../source/states/Future.hpp"
 #include "../../../source/states/Past.hpp"
 #include "../../../source/states/Compressed.hpp"
@@ -31,6 +32,7 @@ namespace Langulus::Anyness
       Component::OwnershipStack<>,     // Allocation is referenced      
       Component::DeepOwnership,        // Sparse elements are referenced
       Component::Assignment,           // Allows assignment             
+      Component::Conversion,           // Allows conversion             
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStatic<1>,       // Statically sized to 1         
       Component::StateStack<           // Variable state                
@@ -48,6 +50,7 @@ namespace Langulus::Anyness
    struct AnyView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
       Component::NoOwnershipStack<>,   // Pointer to an allocation      
+      Component::Conversion,           // Allows conversion             
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStatic<1>,       // Statically sized to 1         
       Component::StateStack<           // Variable state                

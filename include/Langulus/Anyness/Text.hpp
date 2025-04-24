@@ -94,6 +94,11 @@ namespace Langulus::Anyness
       operator Token() const noexcept {
          return {GetRaw(), GetCount()};
       }
+
+      /// Comparing against nullptr_t checks if text is empty                 
+      constexpr bool operator == (::std::nullptr_t) const noexcept {
+         return GetCount() == 0;
+      }
    };
 
 } // namespace Langulus::Anyness

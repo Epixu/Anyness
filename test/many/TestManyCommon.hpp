@@ -120,7 +120,6 @@ void Many_CheckState_Default(const auto& many) {
    REQUIRE_FALSE(many.IsStatic());
    REQUIRE_FALSE(many.IsValid());
    REQUIRE      (many.IsInvalid());
-   REQUIRE_FALSE(many.IsAllocated());
    REQUIRE_FALSE(many.GetAllocation());
    REQUIRE      (many.IsNow());
    REQUIRE_FALSE(many.IsFuture());
@@ -147,7 +146,6 @@ void Many_CheckState_OwnedEmpty(const auto& many) {
    REQUIRE_FALSE(many.IsStatic());
    REQUIRE_FALSE(many.IsValid());
    REQUIRE      (many.IsInvalid());
-   REQUIRE      (many.IsAllocated());
    REQUIRE      (many.GetAllocation());
    REQUIRE      (many.IsEmpty());
    REQUIRE      (many.GetCount() == 0);
@@ -171,7 +169,6 @@ void Many_CheckState_OwnedFull(const auto& many) {
    REQUIRE      (many.IsValid());
    REQUIRE_FALSE(many.IsInvalid());
    REQUIRE_FALSE(many.IsStatic());
-   REQUIRE      (many.IsAllocated());
    REQUIRE      (many.GetAllocation());
    REQUIRE_FALSE(many.IsEmpty());
    REQUIRE      (many.GetCount() > 0);
@@ -195,7 +192,6 @@ void Many_CheckState_DisownedFull(const auto& many) {
    REQUIRE      (many.IsValid());
    REQUIRE_FALSE(many.IsInvalid());
    REQUIRE      (many.IsStatic());
-   REQUIRE      (many.IsAllocated());
    REQUIRE_FALSE(many.GetAllocation());
    REQUIRE_FALSE(many.IsEmpty());
    REQUIRE      (many.GetCount() > 0);
@@ -219,7 +215,6 @@ void Many_CheckState_DisownedFullConst(const auto& many) {
    REQUIRE      (many.IsValid());
    REQUIRE_FALSE(many.IsInvalid());
    REQUIRE      (many.IsStatic());
-   REQUIRE      (many.IsAllocated());
    REQUIRE_FALSE(many.GetAllocation());
    REQUIRE_FALSE(many.IsEmpty());
    REQUIRE      (many.GetCount() > 0);

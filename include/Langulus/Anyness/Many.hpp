@@ -25,6 +25,7 @@
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Iteration-ForEach.hpp"
 #include "../../../source/components/Comparison.hpp"
+#include "../../../source/components/Conversion.hpp"
 #include "../../../source/states/Future.hpp"
 #include "../../../source/states/Past.hpp"
 #include "../../../source/states/Compressed.hpp"
@@ -60,6 +61,7 @@ namespace Langulus::Anyness
       Component::Descriptor,           // Descriptor interface          
       Component::IterationForEach,     // ForEach iteration             
       Component::Comparison,           // Allows for comparison         
+      Component::Conversion,           // Allows conversion             
       Component::StateStack<           // Variable state                
          DefineState::Typed<>,         // Can be type-constrained       
          DefineState::Future<>,        // Adds a 'missing future' state 
@@ -137,6 +139,7 @@ namespace Langulus::Anyness
       Component::Descriptor,           // Descriptor interface          
       Component::IterationForEach,     // ForEach iteration             
       Component::Comparison,           // Allows for comparison         
+      Component::Conversion,           // Allows conversion             
       Component::StateStack<           // Variable state                
          DefineState::Typed<>,         // Can be type-constrained       
          DefineState::Future<>,        // Adds a 'missing future' state 

@@ -97,7 +97,7 @@ SCENARIO("Data normalization", "[neat]") {
 
 	GIVEN("A messy descriptor with byte contents") {
       TMany<Byte> data;
-      data.New(8192);
+      data.Emplace(8192);
 
       WHEN("Filled with contents") {
          Neat normalized {data};

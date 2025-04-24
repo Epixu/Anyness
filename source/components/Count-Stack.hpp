@@ -7,7 +7,10 @@ namespace Langulus::Anyness::Component
 {
 
    ///                                                                        
-   /// Defines count as a member, increasing container bytesize               
+   /// Defines count as a member                                              
+   /// Count shows how many elements inside a container are initialized       
+   /// Stack-based counting increases the container size, but doesn't require 
+   /// indirections, making count lookup faster and more cache-friendly.      
    ///   @tparam ID - the heap/stack ID to keep count of                      
    ///   @tparam T - the count type                                           
    template<unsigned ID = 0, class T = ::std::size_t>
@@ -20,9 +23,14 @@ namespace Langulus::Anyness::Component
       using CountType = T;
       using IndexType = Index::At<T>;
 
-      constexpr bool IsEmpty()  const noexcept { return mCount == 0; }
-      constexpr T    GetCount() const noexcept { return mCount; }
-      explicit operator bool()  const noexcept { return mCount != 0; }
+      /// Check if there are no initialized elements                          
+      constexpr bool IsEmpty() const noexcept { return mCount == 0; }
+
+      /// Get the number of initialized elements                              
+      constexpr T GetCount() const noexcept { return mCount; }
+
+      /// Explicit boolean conversion to allow using containers in ifs        
+      explicit operator bool() const noexcept { return mCount != 0; }
 
       T GetCountDeep() const noexcept;
       T GetCountItemsDeep() const noexcept;

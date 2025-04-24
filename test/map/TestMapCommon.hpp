@@ -122,7 +122,6 @@ void Map_CheckState_Default(const auto& map) {
    REQUIRE_FALSE(map.IsValueMissing());
    REQUIRE_FALSE(map.IsValid());
    REQUIRE      (map.IsInvalid());
-   REQUIRE_FALSE(map.IsAllocated());
    REQUIRE_FALSE(map.GetKeys().GetAllocation());
    REQUIRE_FALSE(map.GetVals().GetAllocation());
    REQUIRE      (map.IsEmpty());
@@ -154,7 +153,6 @@ void Map_CheckState_OwnedEmpty(const auto& map) {
    REQUIRE_FALSE(map.IsValueMissing());
    REQUIRE_FALSE(map.IsValid());
    REQUIRE      (map.IsInvalid());
-   REQUIRE      (map.IsAllocated());
    REQUIRE      (map.GetKeys().GetAllocation());
    REQUIRE      (map.GetVals().GetAllocation());
    REQUIRE      (map.IsEmpty());
@@ -186,7 +184,6 @@ void Map_CheckState_OwnedFull(const auto& map) {
    REQUIRE_FALSE(map.IsValueMissing());
    REQUIRE      (map.IsValid());
    REQUIRE_FALSE(map.IsInvalid());
-   REQUIRE      (map.IsAllocated());
    REQUIRE      (map.GetKeys().GetAllocation());
    REQUIRE      (map.GetVals().GetAllocation());
    REQUIRE_FALSE(map.IsEmpty());

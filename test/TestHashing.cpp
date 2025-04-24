@@ -9,6 +9,7 @@
 #include <Langulus/Anyness/Path.hpp>
 #include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/TSet.hpp>
+#include <Langulus/Anyness/Tag.hpp>
 #include "Common.hpp"
 
 
@@ -44,15 +45,15 @@ SCENARIO("Hashing different kinds of containers", "[hash]") {
 /// Cross-container consistency tests                                         
 TEMPLATE_TEST_CASE(
    "Cross-container consistency tests for TOrderedMap/TUnorderedMap/OrderedMap/UnorderedMap", "[map]",
-   (HashTest<Text, Trait*>),
+   (HashTest<Text, Tag*>),
 
    (HashTest<Text, int>),
-   (HashTest<Text, Trait>),
-   (HashTest<Text, Traits::Count>),
+   (HashTest<Text, Tag>),
+   (HashTest<Text, Tags::Count>),
    (HashTest<Text, Many>),
 
    (HashTest<Text, int*>),
-   (HashTest<Text, Traits::Count*>),
+   (HashTest<Text, Tags::Count*>),
    (HashTest<Text, Many*>)
 ) {
    using K = typename TestType::Key;
@@ -99,8 +100,8 @@ TEMPLATE_TEST_CASE(
 /// Cross-container consistency tests                                         
 TEMPLATE_TEST_CASE(
    "Cross-container consistency tests for TOrderedSet/TUnorderedSet/OrderedSet/UnorderedSet", "[set]",
-   int,  Trait,  Traits::Count,  Many,
-   int*, Trait*, Traits::Count*, Many*
+   int,  Tag,  Tags::Count,  Many,
+   int*, Tag*, Tags::Count*, Many*
 ) {
    Allocator::State memoryState;
 

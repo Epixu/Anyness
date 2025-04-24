@@ -617,7 +617,6 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE_FALSE(text.IsUntyped());
    REQUIRE_FALSE(text.IsValid());
    REQUIRE      (text.IsInvalid());
-   REQUIRE_FALSE(text.IsAllocated());
    REQUIRE      (text.IsEmpty());
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
@@ -652,7 +651,6 @@ void Text_CheckState_OwnedEmpty(const Text& text) {
    REQUIRE_FALSE(text.IsUntyped());
    REQUIRE_FALSE(text.IsValid());
    REQUIRE      (text.IsInvalid());
-   REQUIRE      (text.IsAllocated());
    REQUIRE      (text.IsEmpty());
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
@@ -690,7 +688,6 @@ void Text_CheckState_OwnedFull(const Text& text) {
    REQUIRE      (text.IsValid());
    REQUIRE_FALSE(text.IsInvalid());
    REQUIRE_FALSE(text.IsStatic());
-   REQUIRE      (text.IsAllocated());
    REQUIRE_FALSE(text.IsEmpty());
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
@@ -728,7 +725,6 @@ void Text_CheckState_DisownedFullConst(const Text& text) {
    REQUIRE      (text.IsValid());
    REQUIRE_FALSE(text.IsInvalid());
    REQUIRE      (text.IsStatic());
-   REQUIRE      (text.IsAllocated());
    REQUIRE_FALSE(text.IsEmpty());
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());

@@ -26,7 +26,7 @@ TEMPLATE_TEST_CASE("Converting to text", "[many]",
 
       WHEN("Converted to texts using a templated destination") {
          TMany<Text> converted;
-         pack.Convert(converted);
+         pack.ConvertTo(converted);
 
          REQUIRE(converted.GetCount() == 3);
          REQUIRE(converted[0] == "double");

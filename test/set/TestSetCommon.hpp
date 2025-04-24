@@ -98,7 +98,6 @@ void Set_CheckState_Default(const auto& set) {
    REQUIRE_FALSE(set.IsMissing());
    REQUIRE_FALSE(set.IsValid());
    REQUIRE      (set.IsInvalid());
-   REQUIRE_FALSE(set.IsAllocated());
    REQUIRE_FALSE(set.GetAllocation());
    REQUIRE      (set.IsEmpty());
    REQUIRE      (set.GetCount() == 0);
@@ -122,7 +121,6 @@ void Set_CheckState_OwnedEmpty(const auto& set) {
    REQUIRE_FALSE(set.IsMissing());
    REQUIRE_FALSE(set.IsValid());
    REQUIRE      (set.IsInvalid());
-   REQUIRE      (set.IsAllocated());
    REQUIRE      (set.GetAllocation());
    REQUIRE      (set.IsEmpty());
    REQUIRE      (set.GetCount() == 0);
@@ -146,7 +144,6 @@ void Set_CheckState_OwnedFull(const auto& set) {
    REQUIRE_FALSE(set.IsMissing());
    REQUIRE      (set.IsValid());
    REQUIRE_FALSE(set.IsInvalid());
-   REQUIRE      (set.IsAllocated());
    REQUIRE      (set.GetAllocation());
    REQUIRE_FALSE(set.IsEmpty());
    REQUIRE      (set.GetCount() > 0);

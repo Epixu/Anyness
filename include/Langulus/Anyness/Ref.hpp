@@ -14,6 +14,19 @@
 #include "../../../source/rtti/MetaData.hpp"
 
 
+namespace Langulus::Anyness::Inner
+{
+
+   template<CT::NotVoid T>
+   using RefBase = Container<
+      Component::HeapMovable<>,        // Data on the heap              
+      Component::OwnershipStack<>,     // Allocation is referenced      
+      Component::DeepOwnership<>,      // Referenced indirections       
+      Component::TypedStatic<DMeta, T> // Statically typed              
+   >;
+
+} // namespace Langulus::Anyness::Inner
+
 namespace Langulus::Anyness
 {
 
@@ -21,23 +34,23 @@ namespace Langulus::Anyness
    /// A statically typed shared pointer                                      
    ///                                                                        
    template<CT::NotVoid T>
-   struct Ref : Container<
-      Component::HeapMovable<>,        // Data on the heap              
-      Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership<>,      // Referenced indirections       
-      Component::TypedStatic<DMeta, T> // Statically typed              
-   > {
+   struct Ref : Inner::RefBase<T> {
+      using Base = Inner::RefBase<T>;
+
       constexpr Ref() noexcept = default;
-      explicit constexpr Ref(const Ref&);
-      explicit constexpr Ref(Ref&&);
+      explicit constexpr Ref(const Ref&) noexcept = default;
+      explicit constexpr Ref(Ref&&) noexcept = default;
 
       template<template<class> class S> requires CT::IntentConstructible<S, T*>
-      explicit constexpr Ref(S<Ref>&&);
+      explicit constexpr Ref(S<Ref>&& other)
+         : Base {other.template Forward<Base>()} {}
 
       template<class A> requires CT::ConstructibleFrom<T*, A>
-      constexpr Ref(A&&);
+      constexpr Ref(A&& pointer) {
+         EmplaceWithIntent(::std::forward<A>(pointer));
+      }
 
-      constexpr ~Ref();
+      constexpr ~Ref() = default;
    };
 
 } // namespace Langulus::Anyness

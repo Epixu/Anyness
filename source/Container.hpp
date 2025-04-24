@@ -68,9 +68,10 @@ namespace Langulus::Anyness
    struct Container : COMPONENTS... {
       using CTTI_Container = Yes;
       using Components = Types<COMPONENTS...>;
+      using ContainerType = Container<COMPONENTS...>;
    };
 
-} // namespace Langulus::Anyness::Detail
+} // namespace Langulus::Anyness
 
 namespace Langulus::Anyness::State
 {
@@ -81,7 +82,7 @@ namespace Langulus::Anyness::State
       Disabled = 2
    };
 
-} // namespace Langulus::Anyness::Detail
+} // namespace Langulus::Anyness::State
 
 namespace Langulus::Anyness::DefineState
 {

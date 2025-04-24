@@ -43,33 +43,33 @@ namespace Langulus::Anyness::Component
          StateType mState;
 
          template<CT::State S>
-         constexpr StateWrapper& operator += (S&&) noexcept {
+         constexpr StateWrapper& operator += (S) noexcept {
             mState |= StateStack::template GetStateBit<S>();
             return *this;
          }
          
          template<CT::State S>
-         constexpr StateWrapper& operator -= (S&&) noexcept {
+         constexpr StateWrapper& operator -= (S) noexcept {
             mState &= ~StateStack::template GetStateBit<S>();
             return *this;
          }
          
          template<CT::State S>
-         constexpr bool operator & (S&&) const noexcept {
+         constexpr bool operator & (S) const noexcept {
             return mState & StateStack::template GetStateBit<S>();
          }
          
-         constexpr bool operator & (DefineState::Missing&&) const noexcept {
+         constexpr bool operator & (DefineState::Missing) const noexcept {
             return mState & StateStack::template GetStateBit<DefineState::Past>()
                 or mState & StateStack::template GetStateBit<DefineState::Future>();
          }
          
-         constexpr bool operator == (DefineState::Default&&) const noexcept {
+         constexpr bool operator == (DefineState::Default) const noexcept {
             return mState == 0;
          }
          
          template<CT::State S>
-         constexpr bool operator == (S&&) const noexcept {
+         constexpr bool operator == (S) const noexcept {
             return mState == (mState & StateStack::template GetStateBit<S>());
          }
 
@@ -77,6 +77,9 @@ namespace Langulus::Anyness::Component
             return mState == rhs.mState;
          }
 
+         constexpr explicit operator bool() const noexcept {
+            return mState != 0;
+         }
       } mState;
 
       /// Get the value of a speicific state                                  

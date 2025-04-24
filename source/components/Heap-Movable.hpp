@@ -114,27 +114,14 @@ namespace Langulus::Anyness::Component
                self.SetReserved(request.mElementCount);
 
                if (self.GetAllocation() != previous.GetAllocation()) {
-                  if (not previous.GetCount()) {
-                     // Memory moved, but nothing was initialized, so   
-                     // just update heap pointer                        
-                     self.mHeap = self.GetAllocation()->GetBlockStart();
-                  }
-                  else {
+                  self.mHeap = self.GetAllocation()->GetBlockStart();
+
+                  if (previous.GetCount()) {
                      // Memory moved, and we should move all elements   
                      // in it. We're moving to new memory, so no reverse
                      // is required                                     
-                     if constexpr (CT::AbandonConstructible<T>
-                                or CT::MoveConstructible<T>
-                                or CT::ReferConstructible<T>
-                                or CT::CopyConstructible<T>
-                     ) {
-                        self.mHeap = self.GetAllocation()->GetBlockStart();
-                        self.CreateWithIntent(Abandon(previous));
-                        previous.Free();
-                     }
-                     else throw Exception {
-                        "Memory moved, but T is not move-constructible", HERE()
-                     };
+                     self.CreateWithIntent(Abandon(previous));
+                     previous.Free();
                   }
                }
                else {
@@ -249,13 +236,14 @@ namespace Langulus::Anyness::Component
          #endif
       }
 
-      /// Instantiate anything at the handle, with or without an intent       
+      /// Emplace a new item at the first element, with or without an intent  
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
-      ///   @param where - pointer to the place of instantiation              
-      ///   @param rhs_with_intent - what are we instantiating?               
+      ///   @param rhs_with_intent - constructor argument. If this container  
+      ///      is statically typed, this can be any constructor argument,     
+      ///      otherwise it has to be an instance of the container type       
       template<CT::Container C>
-      void EmplaceWithIntent(this C& self, Byte* where, auto&& rhs_with_intent) {
+      void EmplaceWithIntent(this C& self, auto&& rhs_with_intent) {
          using S  = IntentOf<decltype(rhs_with_intent)>;
          using ST = TypeOf<S>;
          AssumeDev(self.IsTyped(), HERE(), "Invalid type");
@@ -381,13 +369,12 @@ namespace Langulus::Anyness::Component
          }
       }
       
-      /// Instantiate anything at the handle, with or without an intent       
+      /// Reassign new value to the first element, with or without an intent  
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
-      ///   @param where - pointer to the place of instantiation              
-      ///   @param rhs_with_intent - what are we instantiating?               
+      ///   @param rhs_with_intent - container to assign from?                
       template<CT::Container C>
-      void TransferWithIntent(this C& self, Byte* where, CT::Container auto&& rhs_with_intent) {
+      void AssignWithIntent(this C& self, CT::Container auto&& rhs_with_intent) {
          using S  = IntentOf<decltype(rhs_with_intent)>;
          using ST = TypeOf<S>;
          using STT = TypeOf<ST>;
