@@ -9,7 +9,7 @@ namespace Langulus::Anyness::DefineState
    /// If enabled, data won't ever change type - useful for templated packs   
    /// Used to constrain the memory manipulations for safety                  
    ///   @tparam V - decides whether state is dynamic or static               
-   template<State::StateValue V = State::Variable>
+   template<State::StateValue V>
    struct Typed {
       using CTTI_State = Yes;
       static constexpr bool Static  = V != State::Variable;
@@ -43,6 +43,6 @@ namespace Langulus::Anyness::DefineState
 namespace Langulus::Anyness::State
 {
 
-   constexpr DefineState::Typed Typed = {};
+   constexpr DefineState::Typed<> Typed = {};
 
 } // namespace Langulus::Anyness::State

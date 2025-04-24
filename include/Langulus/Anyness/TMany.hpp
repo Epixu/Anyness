@@ -92,6 +92,16 @@ namespace Langulus::Anyness
       using  PickRangeSparse = PickRangeSparseMut;
       using  PickRange       = Tif<CT::Sparse<T>, PickRangeSparse,    PickRangeDense>;
       using  PickRangeMut    = Tif<CT::Sparse<T>, PickRangeSparseMut, PickRangeDenseMut>;
+
+      constexpr TMany() = default;
+      TMany(const TMany&) noexcept;
+      TMany(TMany&&) noexcept;
+
+      //template<template<class> class I> requires CT::Intent<I<Many>>
+      //explicit Many(I<Many>&&) noexcept;
+
+      template<class A1, class...AN>
+      TMany(A1&&, AN&&...) requires CT::RangeInsertable<TMany, A1, AN...>;
    };
    
    /// A statically-typed continuous container view of variable size          

@@ -26,6 +26,18 @@ namespace Langulus::Anyness
       Component::OwnershipStack<>,     // Allocation is referenced      
       Component::DeepOwnership<>,      // Referenced indirections       
       Component::TypedStatic<DMeta, T> // Statically typed              
-   > {};
+   > {
+      constexpr Ref() noexcept = default;
+      explicit constexpr Ref(const Ref&);
+      explicit constexpr Ref(Ref&&);
+
+      template<template<class> class S> requires CT::IntentConstructible<S, T*>
+      explicit constexpr Ref(S<Ref>&&);
+
+      template<class A> requires CT::ConstructibleFrom<T*, A>
+      constexpr Ref(A&&);
+
+      constexpr ~Ref();
+   };
 
 } // namespace Langulus::Anyness

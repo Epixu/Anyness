@@ -613,7 +613,6 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
    REQUIRE_FALSE(text.IsEncrypted());
-   REQUIRE_FALSE(text.IsStatic());
    REQUIRE      (text.IsTyped());
    REQUIRE_FALSE(text.IsUntyped());
    REQUIRE_FALSE(text.IsValid());

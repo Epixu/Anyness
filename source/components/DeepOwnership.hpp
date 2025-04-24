@@ -14,6 +14,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct DeepOwnership {
       using CTTI_Component = Yes;
+      static constexpr bool DeeplyOwned = true;
 
    protected:
       template<unsigned>
@@ -51,6 +52,106 @@ namespace Langulus::Anyness::Component
             MoveMemory(self.GetEntry(), oldv.GetEntry(), self.GetCount());
          }
       }
+
+      /// Reference the first pointer in the container                        
+      ///   @attention assumes that *self.mSparseHeap has been set prior      
+      ///   @tparam S - the intent used                                       
+      template<CT::Intent S, CT::Container C>
+      void DeepKeep(this C& self) {
+         using ST = TypeOf<S>;
+         using DT = Deptr<ST>;
+         static_assert(S::Shallow);
+         static_assert(CT::Sparse<ST>);
+         static_assert(not CT::Null<ST>);
+
+         // Raw pointers are always referenced, even when moved, as     
+         // long as it's a keeper intent                                
+         if constexpr (C::TypeErased) {
+            AssumeDev(self.IsSparse() and (CT::Void<DT> or self.template IsSimilar<ST>()),
+               HERE(), "Type mismatch");
+
+            if constexpr (S::Keep and CT::Allocatable<DT>) {
+               auto found = Allocator::Find(self.mType, *self.mSparseHeap);
+               if (found) {
+                  *self.GetEntry() = found;
+                  found->Keep();
+                  self.mType.Keep(*self.mSparseHeap, 1);
+               }
+               else *self.GetEntry() = nullptr;
+            }
+            else *self.GetEntry() = nullptr;
+         }
+         else if constexpr (CT::ConstructibleFrom<TypeOf<C>, ST>) {
+            if constexpr (S::Keep and CT::Allocatable<DT>) {
+               auto found = Allocator::Find(self.GetType(), *self.mSparseHeap);
+               if (found) {
+                  *self.GetEntry() = found;
+                  found->Keep();
+                  if constexpr (CT::Referenced<DT>)
+                     (*self.GetRaw())->Reference(1);
+               }
+               else *self.GetEntry() = nullptr;
+            }
+            else *self.GetEntry() = nullptr;
+         }
+      }
+
+      /// Reference the first pointer in the container                        
+      ///   @attention assumes that *self.mSparseHeap and entry have been set 
+      ///   @tparam S - the intent used                                       
+      template<CT::Intent S, CT::Container C>
+      void DeepKeep(this C& self, auto allocation) {
+         using ST = TypeOf<S>;
+         using DT = Deptr<ST>;
+         using AL = decltype(allocation);
+         static_assert(S::Shallow);
+         static_assert(CT::Sparse<ST>);
+         static_assert(not CT::Null<ST>);
+
+         if constexpr (C::TypeErased) {
+            AssumeDev(self.IsSparse() and (CT::Void<DT> or self.template IsSimilar<ST>()),
+               HERE(), "Type mismatch");
+
+            if constexpr (S::Keep or S::Move) {
+               if constexpr (CT::NotNull<AL>) {
+                  // Entry is already available, no need to search      
+                  if constexpr (not S::Move) {
+                     if (*self.GetEntry()) {
+                        self.GetEntry()->Keep();
+                        self.mType.Keep(*self.mSparseHeap, 1);
+                     }
+                  }
+               }
+               else {
+                  // Entry is not available yet - search for it         
+                  auto found = Allocator::Find(self.mType, *self.mSparseHeap);
+                  if (found) {
+                     *self.GetEntry() = found;
+                     found->Keep();
+                     self.mType.Keep(*self.mSparseHeap, 1);
+                  }
+                  else *self.GetEntry() = nullptr;
+               }
+            }
+            else *self.GetEntry() = nullptr;
+         }
+         else if constexpr (CT::ConstructibleFrom<TypeOf<C>, ST>) {
+            if constexpr (S::Keep and CT::Allocatable<DT>) {
+               auto found = Allocator::Find(self.GetType(), *self.mSparseHeap);
+               if (found) {
+                  *self.GetEntry() = found;
+                  found->Keep();
+                  if constexpr (CT::Referenced<DT>)
+                     (*self.GetRaw())->Reference(1);
+               }
+               else *self.GetEntry() = nullptr;
+            }
+            else *self.GetEntry() = nullptr;
+         }
+      }
    };
+
+   template<class T1, class...TN>
+   concept DeeplyOwned = T1::DeeplyOwned and (TN::DeeplyOwned and ...);
 
 } // namespace Langulus::Anyness::Component

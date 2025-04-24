@@ -65,6 +65,21 @@ namespace Langulus::Anyness
 
       using Key = K;
       using Val = V;
+
+      constexpr TPair() = default;
+      constexpr TPair(TPair const&) = default;
+      constexpr TPair(TPair&&) = default;
+
+      template<class P> requires CT::PairMakable<K, V, P>
+      TPair(P&&);
+
+      template<class K1, class V1>
+      requires (CT::ConstructibleFrom<K, K1>
+           and  CT::ConstructibleFrom<V, V1>
+           and  CT::NotReference<K, V>)
+      TPair(K1&&, V1&&);
+
+      TPair(K&&, V&&) noexcept requires CT::Reference<K, V>;
    };
 
 } // namespace Langulus::Anyness

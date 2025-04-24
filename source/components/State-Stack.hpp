@@ -2,6 +2,10 @@
 #include "../Container.hpp"
 #include "../states/Default.hpp"
 #include "../states/Missing.hpp"
+#include "../states/Typed.hpp"
+#if LANGULUS(DEBUG)
+   #include "../states/Tracked.hpp"
+#endif
 #include <Langulus/Sequence.hpp>
 #include <utility>
 
@@ -20,7 +24,7 @@ namespace Langulus::Anyness::Component
       using StateList = Types<STATES...>;
       using StateType = Tif<sizeof...(STATES) <= 8, uint8_t, uint16_t>;
       static constexpr StateType StateCount = sizeof...(STATES);
-      static_assert(StateCount  >  0, "Can't have zero states");
+      static_assert(StateCount  >  0, "Has to have at least one state");
       static_assert(StateCount <= 16, "Too many states");
 
    protected:
@@ -33,18 +37,19 @@ namespace Langulus::Anyness::Component
       template<State::StateValue> friend struct DefineState::Encrypted;
       template<State::StateValue> friend struct DefineState::Compressed;
 
+      ///                                                                     
       /// The bitfield capable of containing all variable states              
       struct StateWrapper {
          StateType mState;
 
          template<CT::State S>
-         StateWrapper& operator += (S&&) noexcept {
+         constexpr StateWrapper& operator += (S&&) noexcept {
             mState |= StateStack::template GetStateBit<S>();
             return *this;
          }
          
          template<CT::State S>
-         StateWrapper& operator -= (S&&) noexcept {
+         constexpr StateWrapper& operator -= (S&&) noexcept {
             mState &= ~StateStack::template GetStateBit<S>();
             return *this;
          }
@@ -68,6 +73,10 @@ namespace Langulus::Anyness::Component
             return mState == (mState & StateStack::template GetStateBit<S>());
          }
 
+         constexpr bool operator == (const StateWrapper& rhs) const noexcept {
+            return mState == rhs.mState;
+         }
+
       } mState;
 
       /// Get the value of a speicific state                                  
@@ -84,6 +93,17 @@ namespace Langulus::Anyness::Component
    public:
       constexpr auto GetState() const noexcept { return mState; }
 
+      /// Get the relevant state when relaying one block	to another           
+      /// Relevant states exclude size and type constraints, as well as       
+      /// tracking in order to avoid changes in behavior due to debugging     
+      ///   @return the current unconstrained block state                     
+      constexpr auto GetUnconstrainedState() const noexcept {
+         auto r = mState;
+         r -= State::Typed;
+         DEBUGGERY(r -= State::Tracked);
+         return r;
+      }
+
       /// Check if container is marked as missing past/future                 
       ///   @return true if this container is marked as missing               
       constexpr bool IsMissing() const noexcept requires (
@@ -93,11 +113,25 @@ namespace Langulus::Anyness::Component
          or Contains<DefineState::Future <State::Enabled >>
       ) {
          if constexpr (
-            Contains<DefineState::Past   <State::Enabled >>
-         or Contains<DefineState::Future <State::Enabled >>
+               Contains<DefineState::Past   <State::Enabled >>
+            or Contains<DefineState::Future <State::Enabled >>
          ) return true;
-         else return mState & DefineState::Past   {}
-                  or mState & DefineState::Future {};
+         else return mState & State::Past or mState & State::Future;
+      }
+
+      /// Check if container has either created elements, or a relevant state 
+      ///   @return true if either contains state, or has stuff inserted      
+      template<CT::Container C>
+      constexpr bool IsValid(this const C& self) noexcept {
+         if constexpr (requires { self.GetCount(); })
+            return self.GetCount() or self.GetUnconstrainedState();
+         else
+            return self.GetUnconstrainedState();
+      }
+
+      template<CT::Container C>
+      constexpr bool IsInvalid(this const C& self) noexcept {
+         return not self.IsValid();
       }
    };
 

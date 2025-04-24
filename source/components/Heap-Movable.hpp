@@ -7,6 +7,7 @@
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/CT/Resolvable.hpp>
+#include "DeepOwnership.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -252,13 +253,14 @@ namespace Langulus::Anyness::Component
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
       ///   @param where - pointer to the place of instantiation              
-      ///   @param rhs - what are we instantiating?                           
+      ///   @param rhs_with_intent - what are we instantiating?               
       template<CT::Container C>
-      void EmplaceWithIntent(this C& self, Byte* where, auto&& rhs) {
-         using S  = IntentOf<decltype(rhs)>;
+      void EmplaceWithIntent(this C& self, Byte* where, auto&& rhs_with_intent) {
+         using S  = IntentOf<decltype(rhs_with_intent)>;
          using ST = TypeOf<S>;
          AssumeDev(self.IsTyped(), HERE(), "Invalid type");
          AssumeDev(self.mHeap,     HERE(), "Invalid heap");
+         auto& rhs = DeintCast(rhs_with_intent);
 
          if constexpr (C::TypeErased) {
             //                                                          
@@ -274,7 +276,7 @@ namespace Langulus::Anyness::Component
                      // RHS is nullptr                                  
                      *self.mSparseHeap = nullptr;
 
-                     if constexpr (requires { self.GetEntry(); })
+                     if constexpr (DeeplyOwned<C>)
                         *self.GetEntry() = nullptr;
                   }
                   else {
@@ -282,22 +284,10 @@ namespace Langulus::Anyness::Component
                      AssumeDev(CT::Void<DT> or self.template IsSimilar<ST>(), HERE(),
                         "Type mismatch");
 
-                     *self.mSparseHeap = DeintCast(rhs);
+                     *self.mSparseHeap = rhs;
 
-                     if constexpr (S::Keep and CT::Allocatable<DT> and requires { self.GetEntry(); }) {
-                        // Raw pointers are always referenced, even when
-                        // moved, as long as it's a keeper intent and   
-                        // this container has the DeepOwnership         
-                        auto found = Allocator::Find(self.mType, *self.mSparseHeap);
-                        if (found) {
-                           *self.GetEntry() = found;
-                           found->Keep();
-                           self.mType.Keep(*self.mSparseHeap, 1);
-                        }
-                        else *self.GetEntry() = nullptr;
-                     }
-                     else if constexpr (requires { self.GetEntry(); })
-                        *self.GetEntry() = nullptr;
+                     if constexpr (DeeplyOwned<C>)
+                        self.template DeepKeep<S>();
                   }
                }
                else {
@@ -310,17 +300,17 @@ namespace Langulus::Anyness::Component
                AssumeDev(CT::Dense<ST>, "Sparseness mismatch");
 
                if constexpr (CT::Moved<S>)
-                  self.mType.MoveConstruct   (self.mHeap, &DeintCast(rhs));
+                  self.mType.MoveConstruct   (self.mHeap, &rhs);
                else if constexpr (CT::Abandoned<S>)
-                  self.mType.AbandonConstruct(self.mHeap, &DeintCast(rhs));
+                  self.mType.AbandonConstruct(self.mHeap, &rhs);
                else if constexpr (CT::Referred<S>)
-                  self.mType.ReferConstruct  (self.mHeap, &DeintCast(rhs));
+                  self.mType.ReferConstruct  (self.mHeap, &rhs);
                else if constexpr (CT::Copied<S>)
-                  self.mType.CopyConstruct   (self.mHeap, &DeintCast(rhs));
+                  self.mType.CopyConstruct   (self.mHeap, &rhs);
                else if constexpr (CT::Disowned<S>)
-                  self.mType.DisownConstruct (self.mHeap, &DeintCast(rhs));
+                  self.mType.DisownConstruct (self.mHeap, &rhs);
                else if constexpr (CT::Cloned<S>)
-                  self.mType.CloneConstruct  (self.mHeap, &DeintCast(rhs));
+                  self.mType.CloneConstruct  (self.mHeap, &rhs);
                else
                   static_assert(false, "Unsupported intent");
             }
@@ -337,28 +327,14 @@ namespace Langulus::Anyness::Component
                   // RHS is nullptr                                     
                   *self.mSparseHeap = nullptr;
 
-                  if constexpr (requires { self.GetEntry(); })
+                  if constexpr (DeeplyOwned<C>)
                      *self.GetEntry() = nullptr;
                }
                else if constexpr (CT::ConstructibleFrom<T, ST>) {
-                  using DT = Deptr<T>;
-                  *self.mSparseHeap = DeintCast(rhs);
+                  *self.mSparseHeap = rhs;
 
-                  if constexpr (S::Keep and CT::Allocatable<DT> and requires { self.GetEntry(); }) {
-                     // Raw pointers are always referenced, even when   
-                     // moved, as long as it's a keeper intent and      
-                     // this container has the DeepOwnership            
-                     auto found = Allocator::Find(self.GetType(), *self.mSparseHeap);
-                     if (found) {
-                        *self.GetEntry() = found;
-                        found->Keep();
-                        if constexpr (CT::Referenced<DT>)
-                           DeintCast(rhs)->Reference(1);
-                     }
-                     else *self.GetEntry() = nullptr;
-                  }
-                  else if constexpr (requires { self.GetEntry(); })
-                     *self.GetEntry() = nullptr;
+                  if constexpr (DeeplyOwned<C>)
+                     self.template DeepKeep<S>();
                }
                else static_assert(false, "Can't construct sparse T");
             }
@@ -393,7 +369,7 @@ namespace Langulus::Anyness::Component
 
                   *self.mSparseHeap = pointer;
 
-                  if constexpr (requires { self.GetEntry(); })
+                  if constexpr (DeeplyOwned<C>)
                      *self.GetEntry() = entry;
                }
             }
@@ -409,56 +385,40 @@ namespace Langulus::Anyness::Component
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
       ///   @param where - pointer to the place of instantiation              
-      ///   @param rhs - what are we instantiating?                           
+      ///   @param rhs_with_intent - what are we instantiating?               
       template<CT::Container C>
-      void TransferWithIntent(this C& self, Byte* where, CT::Container auto&& rhs) {
-         using S  = IntentOf<decltype(rhs)>;
+      void TransferWithIntent(this C& self, Byte* where, CT::Container auto&& rhs_with_intent) {
+         using S  = IntentOf<decltype(rhs_with_intent)>;
          using ST = TypeOf<S>;
+         using STT = TypeOf<ST>;
          AssumeDev(self.IsTyped(), HERE(), "Invalid type");
          AssumeDev(self.mHeap,     HERE(), "Invalid heap");
+         auto& rhs = DeintCast(rhs_with_intent);
 
          if constexpr (C::TypeErased) {
             //                                                          
             // This container is type-erased                            
             //                                                          
             if (self.mType.IsSparse()) {
-               AssumeDev(DeintCast(rhs).IsSparse(), "Sparseness mismatch");
+               AssumeDev(rhs.IsSparse(), "Sparseness mismatch");
 
                if constexpr (S::Shallow) {
                   // Do a refer/copy/disown/abandon/move sparse LHS     
-                  *self.mSparseHeap = *DeintCast(rhs).mSparseHeap;
-                  if constexpr (S::ResetsOnMove)
-                     *DeintCast(rhs).mSparseHeap = nullptr;
+                  *self.mSparseHeap = *rhs.mSparseHeap;
+                  if constexpr (DeeplyOwned<C, ST>)
+                     *self.GetEntry() = *rhs.GetEntry();
 
-                  if constexpr (requires { self.GetEntry(); }) {
-                     if constexpr (S::Keep or S::Move) {
-                        if constexpr (requires { DeintCast(rhs).GetEntry(); }) {
-                           // Entry is already available, no need to    
-                           // search for it                             
-                           *self.GetEntry() = *DeintCast(rhs).GetEntry();
+                  if constexpr (S::ResetsOnMove) {
+                     *rhs.mSparseHeap = nullptr;
+                     if constexpr (DeeplyOwned<C, ST>)
+                        *rhs.GetEntry() = nullptr;
+                  }
 
-                           if constexpr (S::ResetsOnMove)
-                              *DeintCast(rhs).GetEntry() = nullptr;
-                           else if constexpr (not S::Move) {
-                              if (*self.GetEntry()) {
-                                 self.GetEntry()->Keep();
-                                 self.mType.Keep(*self.mSparseHeap, 1);
-                              }
-                           }
-                        }
-                        else {
-                           // Entry is not available on the right side  
-                           // and we have to search for it              
-                           auto found = Allocator::Find(self.GetType(), *self.mSparseHeap);
-                           *self.GetEntry() = found ? found : nullptr;
-
-                           if (*self.GetEntry()) {
-                              self.GetEntry()->Keep();
-                              self.mType.Keep(*self.mSparseHeap, 1);
-                           }
-                        }
-                     }
-                     else *self.GetEntry() = nullptr;
+                  if constexpr (DeeplyOwned<C>) {
+                     if constexpr (DeeplyOwned<ST>)
+                        self.template DeepKeep<S>(*rhs.GetEntry());
+                     else
+                        self.template DeepKeep<S>(nullptr);
                   }
                }
                else {
@@ -467,47 +427,60 @@ namespace Langulus::Anyness::Component
                }
             }
             else {
-               // Do a copy/disown/abandon/move/clone inside a dense    
-               // handle                                                
-               TODO();
+               // Do a refer/copy/disown/abandon/move/clone dense LHS   
+               AssumeDev(CT::Dense<STT>, "Sparseness mismatch");
+
+               if constexpr (CT::Moved<S>)
+                  self.mType.MoveAssign   (self.mHeap, rhs.mHeap);
+               else if constexpr (CT::Abandoned<S>)
+                  self.mType.AbandonAssign(self.mHeap, rhs.mHeap);
+               else if constexpr (CT::Referred<S>)
+                  self.mType.ReferAssign  (self.mHeap, rhs.mHeap);
+               else if constexpr (CT::Copied<S>)
+                  self.mType.CopyAssign   (self.mHeap, rhs.mHeap);
+               else if constexpr (CT::Disowned<S>)
+                  self.mType.DisownAssign (self.mHeap, rhs.mHeap);
+               else if constexpr (CT::Cloned<S>)
+                  self.mType.CloneAssign  (self.mHeap, rhs.mHeap);
+               else
+                  static_assert(false, "Unsupported intent");
             }
          }
          else {
             //                                                          
             // This container is statically-typed                       
             //                                                          
+            using T = TypeOf<C>;
+
             if constexpr (S::Shallow and CT::Sparse<T>) {
                // Do a copy/refer/disown/abandon/move sparse RHS        
-               Get() = rhs->Get();
+               if constexpr (CT::AssignableFrom<T, STT>) {
+                  *self.mSparseHeap = *rhs.mSparseHeap;
+                  if constexpr (DeeplyOwned<C, ST>)
+                     *self.GetEntry() = *rhs.GetEntry();
 
-               if constexpr (S::Keep or S::Move)
-                  GetEntry() = rhs->GetEntry();
-               else
-                  GetEntry() = nullptr;
+                  if constexpr (S::ResetsOnMove) {
+                     *rhs.mSparseHeap = nullptr;
+                     if constexpr (DeeplyOwned<C, ST>)
+                        *rhs.GetEntry() = nullptr;
+                  }
 
-               if constexpr (S::Move) {
-                  // We're moving from an embedded RHS, so we need      
-                  // to clear it up - we're transferring ownership      
-                  if constexpr (S::Keep)
-                     rhs->Get() = nullptr;
-                  rhs->GetEntry() = nullptr;
-               }
-               else if constexpr (S::Keep and Embedded) {
-                  // Copying RHS, but keep it only if not disowning it  
-                  if (GetEntry()) {
-                     const_cast<Allocation*>(GetEntry())->Keep();
-                     if constexpr (CT::Referencable<Deptr<T>>)
-                        DecvqCast(Get())->Reference(1);
+                  if constexpr (DeeplyOwned<C>) {
+                     if constexpr (DeeplyOwned<ST>)
+                        self.template DeepKeep<S>(*rhs.GetEntry());
+                     else
+                        self.template DeepKeep<S>(nullptr);
                   }
                }
+               else static_assert(false, "Can't construct sparse T");
             }
             else if constexpr (CT::Dense<T>) {
                // Do a copy/disown/abandon/move/clone inside a dense    
                // handle                                                
-               if constexpr (CT::MakableFrom<T, TypeOf<ST>>)
-                  new ((void*) &Get()) T(S::Nest(rhs->Get()));
+               if constexpr (CT::AssignableFrom<T, typename S::template As<STT>>)
+                  *self.GetRaw() = S::Nest(*rhs.GetRaw());
                else
-                  static_assert(false, "Can't initialize dense T");
+                  static_assert(false, "Can't construct dense T");
             }
             else if constexpr (CT::Dense<Deptr<T>>) {
                // Clone sparse/dense data                               
@@ -522,11 +495,11 @@ namespace Langulus::Anyness::Component
                   auto meta = MetaDataOf<DT>();
                   auto entry = Allocator::Allocate(meta, meta->RequestSize(1).mByteSize);
                   auto pointer = entry->template As<DT>();
-                  static_assert(CT::Similar<T, TypeOf<ST>>, "Type mismatch");
-                  IntentNew(pointer, S::Nest(*rhs->Get()));
+                  IntentAssign(pointer, S::Nest(*rhs->Get()));
 
-                  Get() = pointer;
-                  GetEntry() = entry;
+                  *self.GetRaw() = pointer;
+                  if constexpr (DeeplyOwned<C>)
+                     *rhs.GetEntry() = entry;
                }
             }
             else {
@@ -571,7 +544,7 @@ namespace Langulus::Anyness::Component
       auto AsCast(this C const& self) -> AS;
 
       template<CT::Container C>
-      auto GetItem(this C&&) has_assumptions->Deep<C>;
+      auto GetItem(this C&&) has_assumptions -> Deep<C>;
 
       template<CT::Container C>
       auto GetDeep(this C&&) noexcept -> Deep<C>*;
