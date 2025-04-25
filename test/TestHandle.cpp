@@ -225,7 +225,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
             }
          }
 
-         if constexpr (CT::Referencable<T>)
+         if constexpr (CT::Referenced<T>)
             REQUIRE(const_cast<T&>(n0p).Reference(-1) == 0);
       }
 

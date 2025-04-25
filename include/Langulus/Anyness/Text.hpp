@@ -33,32 +33,39 @@
 
 namespace Langulus::Anyness
 {
+   namespace Inner
+   {
+
+      using TextBase = Container<
+         Component::HeapMovable<>,        // Pointer to heap memory     
+         Component::OwnershipStack<>,     // Allocation is referenced   
+         Component::Contiguous,           // Heap memory is continuous  
+         Component::IndexedLinear<>,      // Indexed directly           
+         Component::Emplacement,          // Allows emplacement         
+         Component::Insertion<Text>,            // Serialize + insert   
+         Component::InsertionOperators<Text>,   // << and >> insertion  
+         Component::Removal,              // Allows removal             
+         Component::Assignment,           // Allows assignment          
+         Component::TypedStatic<DMeta, char>,   // Type-constrained     
+         Component::CountStack<>,         // Variable count             
+         Component::ReserveHeap<>,        // Variable capacity          
+         Component::HashStack<>,          // Variable hash (cached)     
+         Component::Comparison,           // Comparisons                
+         Component::StateStack<           // Variable state             
+            DefineState::Typed<State::Enabled>, // Always typed         
+            DefineState::Compressed<>,    // Adds 'compressed' state    
+            DefineState::Encrypted<>,     // Adds 'encrypted' state     
+            DefineState::Tracked<>        // Adds 'tracked' state       
+         >
+      >;
+
+   } // namespace Langulus::Anyness::Inner
+
 
    ///                                                                        
    /// A continuous text container of variable size                           
    ///                                                                        
-   struct Text : Container<
-      Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::Contiguous,           // Heap memory is continuous     
-      Component::IndexedLinear<>,      // Indexed directly              
-      Component::Emplacement,          // Allows emplacement            
-      Component::Insertion<Text>,            // Serialize + insert      
-      Component::InsertionOperators<Text>,   // << and >> insertion     
-      Component::Removal,              // Allows removal                
-      Component::Assignment,           // Allows assignment             
-      Component::TypedStatic<DMeta, char>,   // Type-constrained        
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveHeap<>,        // Variable capacity             
-      Component::HashStack<>,          // Variable hash (cached)        
-      Component::Comparison,           // Comparisons                   
-      Component::StateStack<           // Variable state                
-         DefineState::Typed<State::Enabled>, // Always type-constrained 
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >
-   > {
+   struct Text : Inner::TextBase {
       using CTTI_Text = Yes;
 
       constexpr Text() noexcept = default;

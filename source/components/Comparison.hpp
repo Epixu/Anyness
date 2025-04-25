@@ -33,9 +33,8 @@ namespace Langulus::Anyness::Component
       using At = typename C::IndexType;
 
    public:
-      template<CT::Container C1, CT::Container C2>
-      bool operator == (this const C1&, const C2&);
-
+      template<CT::Container C, CT::Container C2>
+      bool operator == (this const C&, const C2&);
       template<CT::Container C, CT::NotContainer T>
       bool operator == (this const C&, const T&) requires RangeComparable<C, T>;
 

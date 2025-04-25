@@ -81,7 +81,7 @@ namespace Langulus::Anyness
 
       template<class P> requires CT::PairConstructible<K, V, P>
       constexpr TPair(P&& other)
-         : Base {other.template Forward<typename Deint<P>::Base>()} {}
+         : Base {other.template Forward<typename Decay<Deint<P>>::Base>()} {}
 
       template<class ALT_K, class ALT_V>
       requires (CT::ConstructibleFrom<K, ALT_K>

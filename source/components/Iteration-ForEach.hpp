@@ -5,6 +5,7 @@
 #include <Langulus/Lambda.hpp>
 #include <Langulus/Tag.hpp>
 #include <Langulus/Assume.hpp>
+#include <Langulus/MetaOf.hpp>
 
 
 namespace Langulus

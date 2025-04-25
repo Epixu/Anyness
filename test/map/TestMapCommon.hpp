@@ -53,17 +53,17 @@ void Map_Helper_TestType(const auto& map) {
    REQUIRE_FALSE(map.IsValueUntyped());
 
    REQUIRE      (map.GetKeyType() == MetaDataOf<K>());
-   REQUIRE      (map.GetKeyType()->IsSimilar<const K>());
-   REQUIRE      (map.GetKeyType()->IsExact<K>());
-   REQUIRE      (map.GetKeyType()->Is<K*>());
+   REQUIRE      (map.GetKeyType().IsSimilar<const K>());
+   REQUIRE      (map.GetKeyType().IsExact<K>());
+   REQUIRE      (map.GetKeyType().Is<K*>());
    REQUIRE      (map.IsKeyDense() == CT::Dense<K>);
    REQUIRE      (map.IsKeySparse() == CT::Sparse<K>);
    REQUIRE      (map.IsKeyDeep() == CT::Deep<Decay<K>>);
 
    REQUIRE      (map.GetValueType() == MetaDataOf<V>());
-   REQUIRE      (map.GetValueType()->IsSimilar<const V>());
-   REQUIRE      (map.GetValueType()->IsExact<V>());
-   REQUIRE      (map.GetValueType()->Is<V*>());
+   REQUIRE      (map.GetValueType().IsSimilar<const V>());
+   REQUIRE      (map.GetValueType().IsExact<V>());
+   REQUIRE      (map.GetValueType().Is<V*>());
    REQUIRE      (map.IsValueDense() == CT::Dense<V>);
    REQUIRE      (map.IsValueSparse() == CT::Sparse<V>);
    REQUIRE      (map.IsValueDeep() == CT::Deep<Decay<V>>);

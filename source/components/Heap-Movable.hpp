@@ -120,7 +120,7 @@ namespace Langulus::Anyness::Component
                      // Memory moved, and we should move all elements   
                      // in it. We're moving to new memory, so no reverse
                      // is required                                     
-                     self.CreateWithIntent(Abandon(previous));
+                     self.EmplaceWithIntent(Abandon(previous));
                      previous.Free();
                   }
                }
