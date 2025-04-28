@@ -37,6 +37,7 @@ namespace Langulus::Anyness
       Component::Descriptor,           // Descriptor interface          
       Component::IterationForEach,     // ForEach iteration             
       Component::Comparison,           // Allows for comparison         
+      Component::Conversion,           // Allows conversion             
       Component::StateStack<           // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Future<>,        // Adds a 'missing future' state 
@@ -119,6 +120,7 @@ namespace Langulus::Anyness
       Component::Descriptor,           // Descriptor interface          
       Component::IterationForEach,     // ForEach iteration             
       Component::Comparison,           // Allows for comparison         
+      Component::Conversion,           // Allows conversion             
       Component::StateStack<           // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Future<>,        // Adds a 'missing future' state 

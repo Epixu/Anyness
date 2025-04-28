@@ -33,6 +33,9 @@
 
 namespace Langulus::Anyness
 {
+
+   struct Text;
+
    namespace Inner
    {
 
@@ -66,6 +69,7 @@ namespace Langulus::Anyness
    /// A continuous text container of variable size                           
    ///                                                                        
    struct Text : Inner::TextBase {
+      using Base = Inner::TextBase;
       using CTTI_Text = Yes;
 
       constexpr Text() noexcept = default;
@@ -101,6 +105,8 @@ namespace Langulus::Anyness
       operator Token() const noexcept {
          return {GetRaw(), GetCount()};
       }
+
+      using Base::operator ==;
 
       /// Comparing against nullptr_t checks if text is empty                 
       constexpr bool operator == (::std::nullptr_t) const noexcept {

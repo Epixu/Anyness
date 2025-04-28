@@ -41,9 +41,13 @@ namespace Langulus::RTTI
       /// memory-inefficient on 64bit systems                                 
       struct MetaDataNaked {
       private:
-         const DefinitionData* mDefinition;
+         const DefinitionData* mDefinition = nullptr;
 
       public:
+         constexpr MetaDataNaked() noexcept = default;
+         constexpr MetaDataNaked(const DefinitionData* definition) noexcept
+            : mDefinition {definition} {}
+
          template<class, class...>
          bool Is() const noexcept;
          bool Is(const MetaDataNaked&) const noexcept;
@@ -86,8 +90,8 @@ namespace Langulus::RTTI
       using CTTI_Nullable = Yes;
 
       constexpr MetaData() noexcept = default;
-      constexpr MetaData(::std::nullptr_t) noexcept {}
-      constexpr MetaData(const DefinitionData*) noexcept;
+      constexpr MetaData(const DefinitionData* definition) noexcept
+         : MetaDataNaked {definition} {}
    };
 
    using DMeta = MetaData;

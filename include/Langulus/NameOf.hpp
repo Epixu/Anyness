@@ -158,7 +158,7 @@ namespace Langulus::RTTI
       ///   @param lhs - start of the region                                  
       ///   @param rhs - end of the region                                    
       ///   @return true if a transition occurs at both points                
-      constexpr bool IsTransition(auto source, std::size_t lhs, std::size_t rhs) {
+      consteval bool IsTransition(auto source, std::size_t lhs, std::size_t rhs) {
          return (
                // Test left side for transition                         
                lhs == 0
@@ -183,7 +183,7 @@ namespace Langulus::RTTI
          else {
             ::std::size_t occurences = 0;
             ::std::size_t cookie = 0;
-            while (cookie + RHS.size() <= LHS.size()) {
+            while (cookie + RHS.size() < LHS.size()) {
                ::std::size_t scan = 0;
                while (LHS[cookie + scan] == RHS[scan])
                   ++scan;

@@ -20,6 +20,8 @@ namespace Langulus::RTTI
 
       template<CT::Decayed>
       static DMeta Reflect();
+      template<CT::NotDecayed>
+      static DMeta Reflect();
    };
 
 } // namespace Langulus::RTTI

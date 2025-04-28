@@ -69,6 +69,10 @@ namespace Langulus::Anyness
       using CTTI_Container = Yes;
       using Components = Types<COMPONENTS...>;
       using ContainerType = Container<COMPONENTS...>;
+
+      constexpr Container() noexcept = default;
+      constexpr Container(const Container&) noexcept = default;
+      constexpr Container(Container&&) noexcept = default;
    };
 
 } // namespace Langulus::Anyness

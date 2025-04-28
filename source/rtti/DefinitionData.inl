@@ -74,7 +74,6 @@ namespace Langulus::RTTI
       definition.mToken = token;
       definition.mTokenSanitized = Inner::FindLastToken(token);
       definition.mTokenSanitized[0] = ::std::toupper(definition.mTokenSanitized[0]);
-
       definition.template ReflectCommon<T>();
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -96,6 +95,108 @@ namespace Langulus::RTTI
       );
       return DMeta {&definition};
    #endif
+   }
+
+   /// Strip references or volatiles                                          
+   /// Or reflect a pointer/constant                                          
+   template<CT::NotDecayed T> LANGULUS(NOINLINE)
+   DMeta DefinitionData::Reflect() {
+      if constexpr (CT::Dense<T>) {
+         if constexpr (CT::Reference<T> or CT::Volatile<T>)
+            return Reflect<Devq<Deref<T>>>()
+         else {
+
+         }
+      }
+      else {
+         static_assert(not CT::Array<T>,
+            "Reflecting a bounded array is forbidden");
+
+         constexpr auto cppname = CppNameOf<T>();
+         
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            DMeta meta = Registry.GetMetaData(cppname, RTTI::Boundary);
+            if (meta)
+               return meta;
+
+            auto& definition = Registry.RegisterData(cppname, RTTI::Boundary);
+         #else
+            static constinit std::optional<DefinitionData> s_definition;
+            if (s_definition.has_value())
+               return DMeta {&s_definition.value()};
+
+            auto& definition = s_definition.emplace(cppname);
+         #endif
+
+
+         //                                                             
+         // If this is reached, then data is not defined yet            
+         constexpr auto token = NameOf<T>();
+         static_assert(token != "", "Invalid data token is not allowed - "
+            "you have equipped your type (or its base) with an empty CTTI_Named");
+         definition.mToken = token;
+         definition.mTokenSanitized = Inner::FindLastToken(token);
+         definition.mTokenSanitized[0] = ::std::toupper(definition.mTokenSanitized[0]);
+
+         if constexpr (CT::Complete<Deptr<T>>) {
+            // Reflect the denser type and propagate its origin properties 
+            auto denser = MetaData::Of<Deptr<T>>();
+            generated = *denser;
+            generated.mDeptr = denser;
+
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               generated.mPool = nullptr;
+
+               // Pool tactic is always default for pointers, unless these 
+               // pointers have been registered outside RTTI::MainBoundary 
+               #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+                  if (RTTI::Boundary != RTTI::MainBoundary)
+                     generated.mPoolTactic = PoolTactic::Type;
+               #endif
+            #endif
+         }
+         else {
+            // The denser type is incomplete, so nothing really is known   
+            // about it                                                    
+            generated.mInfo = "<incomplete type pointer>";
+         }
+
+         // Set library boundary - non-origin types are always associated  
+         // with their origin type, if reflected in RTTI::MainBoundary     
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            if (RTTI::Boundary == RTTI::MainBoundary and generated.mOrigin)
+               generated.mLibraryName = generated.mOrigin->mLibraryName;
+            else
+               generated.mLibraryName = RTTI::Boundary;
+         #endif
+
+         LANGULUS_ASSERT(generated.mToken == token, Meta,
+            "Token not set");
+         LANGULUS_ASSERT(generated.mHash == HashOf(token), Meta,
+            "Hash not set");
+
+         // Overwrite pointer-specific stuff                               
+         generated.mDecvq = MetaData::Of<DecvqAll<T>>();
+         generated.mCppName = CppNameOf<T>();
+         generated.mSize = sizeof(T);
+         generated.mAlignment = alignof(T);
+         generated.mIsSparse = true;
+         generated.mIsConstant = CT::Constant<T>;
+      
+         // Calculate the allocation page and table                        
+         // It is the same for all kinds of pointers                       
+         generated.mAllocationPage = GetAllocationPageOf<void*>();
+         constexpr auto minElements = GetAllocationPageOf<void*>() / sizeof(void*);
+         for (Offset bit = 0; bit < sizeof(Offset) * 8; ++bit) {
+            const Offset threshold = Offset {1} << bit;
+            const Offset elements = threshold / sizeof(void*);
+            generated.mAllocationTable[bit] = ::std::max(minElements, elements);
+         }
+
+         VERBOSE("Data ", Logger::PushCyan, generated.mToken,
+            Logger::PopGreen, " registered (", generated.mLibraryName, ")");
+         return &generated;
+      }
    }
 
 } // namespace Langulus::RTTI

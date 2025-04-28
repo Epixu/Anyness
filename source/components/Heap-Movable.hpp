@@ -8,6 +8,7 @@
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/CT/Resolvable.hpp>
 #include "DeepOwnership.hpp"
+#include <algorithm>
 
 
 namespace Langulus::Anyness::Component

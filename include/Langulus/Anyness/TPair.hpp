@@ -55,6 +55,7 @@ namespace Langulus::Anyness
 
    } // namespace Langulus::Anyness::Inner
 
+
    ///                                                                        
    ///   A helper structure for pairing keys and values of any type           
    ///                                                                        
