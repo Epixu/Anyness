@@ -63,7 +63,7 @@ SCENARIO("Data normalization", "[neat]") {
    static_assert(CT::Exact<typename IntentOf<Cloned<const int> const&>::template As<float>, Cloned<float>>);
 
    static_assert(CT::Pair<Deint<Cloned<TPair<TMeta, TMany<Many>>>>>);
-   static_assert(CT::PairMakable<TMeta, TMany<Many>, Cloned<TPair<TMeta, TMany<Many>>>>);
+   static_assert(CT::PairConstructible<TMeta, TMany<Many>, Cloned<TPair<TMeta, TMany<Many>>>>);
    static_assert(CT::PairAssignable<TMeta, TMany<Many>, Cloned<TPair<TMeta, TMany<Many>>>>);
 
    static_assert(CT::IntentConstructibleAlt <Copied   <TMeta>>);

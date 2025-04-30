@@ -1,5 +1,6 @@
 #pragma once
 #include <Langulus/CTTI.hpp>
+#include <Langulus/Intent.hpp>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
@@ -40,6 +41,14 @@ namespace Langulus::CTTI
       static constexpr bool Enabled = false;
    };
    
+   /// Can be used in two ways to satisfy CT::Set<T>:                         
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Set = Yes/No;` in T                        
+   template<class T>
+   struct Set {
+      static constexpr bool Enabled = false;
+   };
+   
    /// Can be used in two ways to satisfy CT::Pair<T>:                        
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Pair = Yes/No;` in T                       
@@ -54,6 +63,7 @@ LANGULUS_CTTI_CONCEPT(State);
 LANGULUS_CTTI_CONCEPT(Component);
 LANGULUS_CTTI_CONCEPT(Container);
 LANGULUS_CTTI_CONCEPT(Map);
+LANGULUS_CTTI_CONCEPT(Set);
 LANGULUS_CTTI_CONCEPT(Pair);
 
 namespace Langulus::Anyness
@@ -71,8 +81,22 @@ namespace Langulus::Anyness
       using ContainerType = Container<COMPONENTS...>;
 
       constexpr Container() noexcept = default;
-      constexpr Container(const Container&) noexcept = default;
-      constexpr Container(Container&&) noexcept = default;
+      explicit constexpr Container(const Container&) noexcept = default;
+      explicit constexpr Container(Container&&) noexcept = default;
+
+      template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
+      explicit constexpr Container(I<C>&&) {
+         //TODO init all compatible components, default-init the missing ones
+      }
+
+      constexpr Container& operator = (const Container&) noexcept = default;
+      constexpr Container& operator = (Container&&) noexcept = default;
+
+      template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
+      constexpr Container& operator = (I<C>&&) {
+         //TODO init all compatible components, default-init the missing ones
+      }
+
    };
 
 } // namespace Langulus::Anyness

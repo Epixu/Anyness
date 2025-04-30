@@ -117,9 +117,10 @@ namespace Langulus::Anyness::Component
       ) {
          if constexpr (
                Contains<DefineState::Past   <State::Enabled >>
-            or Contains<DefineState::Future <State::Enabled >>
-         ) return true;
-         else return mState & State::Past or mState & State::Future;
+            or Contains<DefineState::Future <State::Enabled >>)
+            return true;
+         else
+            return mState & State::Past or mState & State::Future;
       }
 
       /// Check if container has either created elements, or a relevant state 

@@ -1,5 +1,6 @@
 #pragma once
 #include "Meta.hpp"
+#include "Intent.hpp"
 
 
 namespace Langulus::RTTI
@@ -37,8 +38,10 @@ namespace Langulus::RTTI
       };
    #endif
 
+      ///                                                                     
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
+      ///                                                                     
       struct MetaDataNaked {
       private:
          const DefinitionData* mDefinition = nullptr;
@@ -47,6 +50,10 @@ namespace Langulus::RTTI
          constexpr MetaDataNaked() noexcept = default;
          constexpr MetaDataNaked(const DefinitionData* definition) noexcept
             : mDefinition {definition} {}
+
+         explicit operator bool() const noexcept {
+            return mDefinition != nullptr;
+         }
 
          template<class, class...>
          bool Is() const noexcept;
@@ -67,7 +74,19 @@ namespace Langulus::RTTI
          }
 
          ::std::size_t GetMinAllocation() const noexcept;
+
+         bool IsDense() const noexcept;
+         bool IsSparse() const noexcept;
+         bool IsConstant() const noexcept;
+         bool IsMutable() const noexcept;
+         bool IsDeep() const noexcept;
       };
+
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using MetaDataBase = MetaDataStructured_16_16;
+   #else
+      using MetaDataBase = MetaDataNaked;
+   #endif
 
    } // namespace Langulus::RTTI::Inner
    
@@ -77,21 +96,21 @@ namespace Langulus::RTTI
    ///                                                                        
    /// Can be a naked pointer to a definition, or a structured ID that is     
    /// either packed to a smaller size, or carry a lot of meta information    
-   /// in the ID itself to avoid indirection - all this is configurable.      
+   /// in the ID itself to avoid indirection                                  
    ///                                                                        
-   struct MetaData
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      : Inner::MetaDataStructured_16_16
-   #else
-      : Inner::MetaDataNaked
-   #endif
-   {
+   struct MetaData : Inner::MetaDataBase {
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
       constexpr MetaData() noexcept = default;
+      constexpr MetaData(const MetaData&) noexcept = default;
+      constexpr MetaData(MetaData&&) noexcept = default;
+
+      constexpr MetaData(::std::nullptr_t) noexcept {}
       constexpr MetaData(const DefinitionData* definition) noexcept
-         : MetaDataNaked {definition} {}
+         : Inner::MetaDataBase {definition} {}
+      constexpr MetaData(Cloned<MetaData>&& meta) noexcept
+         : MetaData {*meta} {}
    };
 
    using DMeta = MetaData;

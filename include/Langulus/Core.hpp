@@ -390,6 +390,7 @@
 #endif
 
 #include "Literal.hpp"
+#include <concepts>
 
 namespace Langulus
 {
@@ -413,6 +414,42 @@ namespace Langulus
    LANGULUS(ALWAYS_INLINED)
    constexpr bool IsPowerOfTwo(auto n) noexcept {
       return n != 0 && (n & (n - 1)) == 0;
+   }
+   
+   /// Round to the upper power-of-two                                        
+   ///   @tparam SAFE - set to true if you want it to throw on overflow       
+   ///   @param x - the unsigned integer to round up                          
+   ///   @return the closest upper power-of-two to x                          
+   template<bool SAFE = false, std::unsigned_integral T> LANGULUS(ALWAYS_INLINED)
+   constexpr T Roof2(const T x) noexcept(not SAFE) {
+      static_assert(sizeof(T) <= 8, "Not implemented");
+
+      if constexpr (SAFE) {
+         constexpr T lastPowerOfTwo = T {1} << T {sizeof(T) * 8 - 1};
+         if (x > lastPowerOfTwo)
+            throw ::std::overflow_error {"Roof2 overflowed"};
+      }
+
+      if consteval {
+         T n = x;
+         --n;
+         n |= n >> T {1};
+         n |= n >> T {2};
+         n |= n >> T {4};
+         if constexpr (sizeof(T) > 1)
+            n |= n >> T {8};
+         if constexpr (sizeof(T) > 2)
+            n |= n >> T {16};
+         if constexpr (sizeof(T) > 4)
+            n |= n >> T {32};
+         ++n;
+         return n;
+      }
+      else {
+         return x <= T {1} ? x : static_cast<T>(
+            T {1} << static_cast<T>(sizeof(T) * 8 - ::std::countl_zero<T>(x - T {1}))
+         );
+      }
    }
 
    /// The size of a void* in bytes, depends on architecture                  

@@ -48,67 +48,6 @@ namespace Langulus::Fractalloc
       constexpr uint64_t f = 0x022fdd63cc95386dul;
       return DeBruijnBitPosition[(uint64_t {n & (0 - n)} * f) >> uint64_t {58}];
    }
-   
-   /// Check if an unsigned integer is a power of two                         
-   ///   @param n - the number to test                                        
-   ///   @return true if number has exactly one bit set                       
-   /*LANGULUS(ALWAYS_INLINED)
-   constexpr bool IsPowerOfTwo(CT::Unsigned auto n) noexcept {
-      return ::std::has_single_bit(n);
-   }
-
-   /// Returns the number of consecutive 0 bits in the value of x, starting	
-   /// from the least significant 'right' bit                                 
-   ///   @param x - the value to scan                                         
-   ///   @return the number of consecutive zero bits                          
-   LANGULUS(ALWAYS_INLINED)
-   constexpr int CountTrailingZeroes(CT::Unsigned auto x) noexcept {
-      return ::std::countr_zero(x);
-   }
-
-   /// Returns the number of consecutive 0 bits in the value of x, starting   
-   /// from the most significant 'left' bit                                   
-   ///   @param x - the value to scan                                         
-   ///   @return the number of consecutive zero bits                          
-   LANGULUS(ALWAYS_INLINED)
-   constexpr int CountLeadingZeroes(CT::Unsigned auto x) noexcept {
-      return ::std::countl_zero(x);
-   }*/
-
-   /// Round to the upper power-of-two                                        
-   ///   @tparam SAFE - set to true if you want it to throw on overflow       
-   ///   @param x - the unsigned integer to round up                          
-   ///   @return the closest upper power-of-two to x                          
-   template<bool SAFE = false, CT::Unsigned T> LANGULUS(ALWAYS_INLINED)
-   constexpr T Roof2(const T x) noexcept(not SAFE) {
-      static_assert(sizeof(T) <= 8, "Not implemented");
-
-      if constexpr (SAFE) {
-         constexpr T lastPowerOfTwo = (T {1}) << (T {sizeof(T) * 8 - 1});
-         AssumeDev(x <= lastPowerOfTwo, HERE(), "Roof2 overflowed");
-      }
-
-      if consteval {
-         T n = x;
-         --n;
-         n |= n >> 1;
-         n |= n >> 2;
-         n |= n >> 4;
-         if constexpr (sizeof(T) > 1)
-            n |= n >> 8;
-         if constexpr (sizeof(T) > 2)
-            n |= n >> 16;
-         if constexpr (sizeof(T) > 4)
-            n |= n >> 32;
-         ++n;
-         return n;
-      }
-      else {
-         return x <= 1 ? x : static_cast<T>(T {1} << 
-            static_cast<T>(sizeof(T) * 8 - ::std::countl_zero(static_cast<T>(x - 1))));
-      }
-   }
-
 
    /// Initialize a pool                                                      
    ///   @attention relies that size is a power-of-two                        

@@ -81,7 +81,7 @@ namespace Langulus::Anyness
       using  PickRangeDense = PickRangeDenseMut;
       struct PickRangeSparseMut : Container<
          Component::HeapMovable<>,
-         Component::NoOwnershipStack<>,
+         Component::OwnershipStack<0, false>,
          Component::DeepOwnership<>,
          Component::Contiguous,
          Component::IndexedLinear<>,
@@ -110,7 +110,7 @@ namespace Langulus::Anyness
    template<CT::NotVoid T>
    struct TManyView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::NoOwnershipStack<>,   // Pointer to an allocation      
+      Component::OwnershipStack<0, false>,   // Pointer to an allocation
       Component::Contiguous,           // Heap memory is continuous     
       Component::IndexedLinear<>,      // Indexed directly              
       Component::TypedStack<DMeta, T>, // Type-constrained              

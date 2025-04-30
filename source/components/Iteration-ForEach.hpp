@@ -161,7 +161,7 @@ namespace Langulus::Anyness::Component
 
          if constexpr (not TypeErased) {
             // Container is not type-erased                             
-            // Leverage any compile-time optimizations                  
+            // Leverage compile-time optimizations                      
             using T  = TypeOf<C>;
             using DT = Decay<T>;
 

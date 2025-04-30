@@ -33,6 +33,7 @@ namespace Langulus::Anyness
       Component::TypedStack<DMeta, V, 1>,       // Value type           
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
+      Component::Comparison,           // Allows for comparison         
       Component::StateStack<           // Variable state                
          DefineState::Sorted<>,        // Maybe unsorted                
          DefineState::Compressed<>,    // Adds 'compressed' state       
@@ -65,6 +66,7 @@ namespace Langulus::Anyness
       Component::TypedStack<DMeta, V, 1>,       // Value type           
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
+      Component::Comparison,           // Allows for comparison         
       Component::StateStack<           // Variable state                
          DefineState::Sorted<State::Disabled>,  // Always unsorted      
          DefineState::Compressed<>,    // Adds 'compressed' state       
@@ -97,6 +99,7 @@ namespace Langulus::Anyness
       Component::TypedStack<DMeta, V, 1>,       // Value type           
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
+      Component::Comparison,           // Allows for comparison         
       Component::StateStack<           // Variable state                
          DefineState::Sorted<State::Enabled>,   // Always sorted        
          DefineState::Compressed<>,    // Adds 'compressed' state       

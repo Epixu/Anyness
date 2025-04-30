@@ -10,8 +10,8 @@ namespace Langulus::Anyness::Component
    /// A compile-time count                                                   
    /// Count shows how many elements inside a container are initialized       
    /// Compile-time counting isn't really counting, and doesn't take up       
-   /// space, but is useful for defining single-element containers, that still
-   /// need the GetCount() API to function alongside other containers.        
+   /// space, but is useful for defining single-element containers, that      
+   /// still need the GetCount() API to function alongside other components   
    ///                                                                        
    template<auto COUNT>
    struct CountStatic {

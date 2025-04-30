@@ -64,15 +64,15 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
-      constexpr Bytes() = default;
-      Bytes(const Bytes&) noexcept;
-      Bytes(Bytes&&) noexcept;
+      constexpr Bytes() noexcept = default;
+      constexpr Bytes(const Bytes&) noexcept = default;
+      constexpr Bytes(Bytes&&) noexcept = default;
 
       template<template<class> class I> requires CT::Intent<I<Bytes>>
-      Bytes(I<Bytes>&&) noexcept;
+      constexpr Bytes(I<Bytes>&&) noexcept;
 
       template<class A1, class...AN>
-      Bytes(A1&&, AN&&...) requires CT::RangeInsertable<Bytes, A1, AN...>;
+      constexpr Bytes(A1&&, AN&&...) requires CT::RangeInsertable<Bytes, A1, AN...>;
 
       // View                                                           
       using  ViewType = BytesView;
@@ -106,7 +106,7 @@ namespace Langulus::Anyness
    ///                                                                        
    struct BytesView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::NoOwnershipStack<>,   // Allocation is referenced      
+      Component::OwnershipStack<0, false>,   // Allocation is referenced
       Component::Contiguous,           // Heap memory is continuous     
       Component::IndexedLinear<>,      // Indexed directly              
       Component::TypedStatic<DMeta, Byte>,   // Type-constrained        
@@ -122,6 +122,12 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Bytes;
+
+      constexpr BytesView() noexcept = default;
+      constexpr BytesView(const BytesView&) noexcept = default;
+      constexpr BytesView(BytesView&&) noexcept = default;
+
+      constexpr BytesView(const CT::Container auto&) noexcept;
    };
 
 } // namespace Langulus::Anyness

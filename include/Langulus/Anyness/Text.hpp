@@ -106,12 +106,20 @@ namespace Langulus::Anyness
          return {GetRaw(), GetCount()};
       }
 
+      /// Comparing with other containers or characters                       
       using Base::operator ==;
 
       /// Comparing against nullptr_t checks if text is empty                 
       constexpr bool operator == (::std::nullptr_t) const noexcept {
          return GetCount() == 0;
       }
+
+      /// Comparing against bounded character arrays and literals             
+      //constexpr bool operator == (const CT::TextLiteral auto&) const noexcept;
+      /// Comparing against null-terminated strings                           
+      constexpr bool operator == (const CT::TextPointer auto&) const noexcept;
+      /// Comparing against std containers with characters                    
+      constexpr bool operator == (const CT::TextRange auto&) const noexcept;
    };
 
 } // namespace Langulus::Anyness

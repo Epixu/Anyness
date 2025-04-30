@@ -30,18 +30,18 @@ namespace Langulus::Anyness
    struct Any : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
       Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership,        // Sparse elements are referenced
+      Component::DeepOwnership<>,      // Sparse elements are referenced
       Component::Assignment,           // Allows assignment             
       Component::Conversion,           // Allows conversion             
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStatic<1>,       // Statically sized to 1         
       Component::StateStack<           // Variable state                
-         State::Typed<>,               // Can be type-constrained       
-         State::Future<>,              // Adds a 'missing future' state 
-         State::Past<>,                // Adds a 'missing past' state   
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Typed<>,         // Can be type-constrained       
+         DefineState::Future<>,        // Adds a 'missing future' state 
+         DefineState::Past<>,          // Adds a 'missing past' state   
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {};
       
@@ -49,17 +49,17 @@ namespace Langulus::Anyness
    /// compatible with the containers above                                   
    struct AnyView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::NoOwnershipStack<>,   // Pointer to an allocation      
+      Component::OwnershipStack<0, false>,   // Pointer to an allocation
       Component::Conversion,           // Allows conversion             
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStatic<1>,       // Statically sized to 1         
       Component::StateStack<           // Variable state                
-         State::Typed<>,               // Can be type-constrained       
-         State::Future<>,              // Adds a 'missing future' state 
-         State::Past<>,                // Adds a 'missing past' state   
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Typed<>,         // Can be type-constrained       
+         DefineState::Future<>,        // Adds a 'missing future' state 
+         DefineState::Past<>,          // Adds a 'missing past' state   
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {};
    

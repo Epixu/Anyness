@@ -87,7 +87,7 @@ namespace Langulus::RTTI::Inner
       Definition() = delete;
       Definition(const Token&);
 
-      template<CT::Decayed>
+      template<class>
       void ReflectCommon();
    };
    

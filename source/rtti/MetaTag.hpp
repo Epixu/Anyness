@@ -1,5 +1,6 @@
 #pragma once
 #include "Meta.hpp"
+#include "Intent.hpp"
 
 
 namespace Langulus::RTTI
@@ -13,9 +14,17 @@ namespace Langulus::RTTI
       /// memory-inefficient on 64bit systems                                 
       struct MetaTagNaked {
       private:
-         const DefinitionTag* mDefinition;
+         const DefinitionTag* mDefinition = nullptr;
 
       public:
+         constexpr MetaTagNaked() noexcept = default;
+         constexpr MetaTagNaked(const DefinitionTag* definition) noexcept
+            : mDefinition {definition} {}
+
+         explicit operator bool() const noexcept {
+            return mDefinition != nullptr;
+         }
+
          template<class, class...>
          bool IsExact() const noexcept;
          bool IsExact(const MetaTagNaked&) const noexcept;
@@ -26,6 +35,12 @@ namespace Langulus::RTTI
          }
       };
 
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using MetaTagBase = MetaPacked<2>;
+   #else
+      using MetaTagBase = MetaTagNaked;
+   #endif
+
    } // namespace Langulus::RTTI::Inner
 
 
@@ -33,23 +48,20 @@ namespace Langulus::RTTI
    ///   Tag ID                                                               
    ///                                                                        
    /// Can be a naked pointer to a definition, or packed to a smaller size    
-   /// - all this is configurable.                                            
    ///                                                                        
-   struct MetaTag 
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      : Inner::MetaPacked<2>
-   #else
-      : Inner::MetaTagNaked
-   #endif
-   {
+   struct MetaTag : Inner::MetaTagBase {
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
       constexpr MetaTag() noexcept = default;
-      constexpr MetaTag(::std::nullptr_t) noexcept {}
-      constexpr MetaTag(const DefinitionTag*) noexcept;
       constexpr MetaTag(const MetaTag&) noexcept = default;
       constexpr MetaTag(MetaTag&&) noexcept = default;
+
+      constexpr MetaTag(::std::nullptr_t) noexcept {}
+      constexpr MetaTag(const DefinitionTag* definition) noexcept
+         : Inner::MetaTagBase {definition} {}
+      constexpr MetaTag(Cloned<MetaTag>&& meta) noexcept
+         : MetaTag {*meta} {}
    };
 
    using TMeta = MetaTag;

@@ -20,16 +20,18 @@ namespace Langulus::CT
    template<class K, class V, class P>
    concept PairConstructible = Pair<P> and NotReference<K, V>
        and (IntentOf<P>::Shallow or (
-            IntentConstructibleAlt<typename IntentOf<P>::template As<K>>
-        and IntentConstructibleAlt<typename IntentOf<P>::template As<V>>));
+               IntentConstructibleAlt<typename IntentOf<P>::template As<K>>
+           and IntentConstructibleAlt<typename IntentOf<P>::template As<V>>)
+       );
 
    /// Concept for recognizing argument, with which a statically typed        
    /// pair can be assigned                                                   
    template<class K, class V, class P>
    concept PairAssignable = Pair<P> and NotReference<K, V>
        and (IntentOf<P>::Shallow or (
-            IntentAssignableAlt<typename IntentOf<P>::template As<K>>
-        and IntentAssignableAlt<typename IntentOf<P>::template As<V>>));
+               IntentAssignableAlt<typename IntentOf<P>::template As<K>>
+           and IntentAssignableAlt<typename IntentOf<P>::template As<V>>)
+       );
 
    /// Concept for recognizing argument, against which a pair can be compared 
    template<class K, class V, class P>
@@ -76,9 +78,11 @@ namespace Langulus::Anyness
       using Val = V;
       using Value = V;
 
-      constexpr TPair() = default;
-      constexpr TPair(TPair const&) = default;
-      constexpr TPair(TPair&&) = default;
+      ///                                                                     
+      /// Construction                                                        
+      constexpr TPair() noexcept = default;
+      constexpr TPair(TPair const&) noexcept = default;
+      constexpr TPair(TPair&&) noexcept = default;
 
       template<class P> requires CT::PairConstructible<K, V, P>
       constexpr TPair(P&& other)
@@ -91,6 +95,14 @@ namespace Langulus::Anyness
       constexpr TPair(ALT_K&&, ALT_V&&);
 
       constexpr TPair(K&&, V&&) noexcept requires CT::Reference<K, V>;
+
+      ///                                                                     
+      /// Assignment                                                          
+      TPair& operator = (TPair const&) noexcept = default;
+      TPair& operator = (TPair&&) noexcept = default;
+
+      template<class P> requires CT::PairAssignable<K, V, P>
+      TPair& operator = (P&&);
    };
 
 } // namespace Langulus::Anyness

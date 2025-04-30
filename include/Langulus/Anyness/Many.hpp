@@ -93,7 +93,7 @@ namespace Langulus::Anyness
       // Range selections                                               
       struct PickRangeMut : Container<
          Component::HeapMovable<>,
-         Component::NoOwnershipStack<>,
+         Component::OwnershipStack<0, false>,
          Component::DeepOwnership<>,
          Component::Contiguous,
          Component::IndexedLinear<>,
@@ -104,7 +104,7 @@ namespace Langulus::Anyness
       > {};
       struct PickRange : Container<
          Component::HeapMovable<>,
-         Component::NoOwnershipStack<>,
+         Component::OwnershipStack<0, false>,
          Component::Contiguous,
          Component::IndexedLinear<>,
          Component::TypedStack<DMeta>,
@@ -129,7 +129,7 @@ namespace Langulus::Anyness
    /// Doesn't have ownership, and binary-compatible with the container above 
    struct ManyView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::NoOwnershipStack<>,   // Pointer to an allocation      
+      Component::OwnershipStack<0, false>,   // Pointer to an allocation
       Component::Contiguous,           // Heap memory is continuous     
       Component::IndexedLinear<>,      // Indexed directly              
       Component::TypedStack<DMeta>,    // Variable type                 

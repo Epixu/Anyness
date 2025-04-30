@@ -16,6 +16,11 @@ namespace Langulus::Anyness
 namespace Langulus::Anyness::Component
 {
 
+   struct IterationForEach;
+   template<unsigned>
+   struct HeapMovable;
+
+
    ///                                                                        
    /// Defines the contained type as a member variable, allowing the use of   
    /// type-erasure. You can optionally constrain the type                    
@@ -24,18 +29,22 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID   - which heap/stack is typed?                            
    template<class T, class TYPE = void, unsigned ID = 0>
    struct TypedStack {
-   private:
+      using CTTI_Component = Yes;
+      using CTTI_Typed     = TYPE;
+      static constexpr bool TypeErased = CT::Void<TYPE>;
+
+   protected:
+      friend struct IterationForEach;
+      template<unsigned>
+      friend struct HeapMovable;
+
       // The type                                                       
       T mType;
 
-      using Count = ::std::size_t;
+      template<CT::NotVoid>
+      void SetTypeInner() requires TypeErased;
 
    public:
-      using CTTI_Component = Yes;
-      using CTTI_Typed     = TYPE;
-
-      static constexpr bool TypeErased = CT::Void<TYPE>;
-
       /// Get the contained type                                              
       ///   @return the contained type                                        
       constexpr T GetType() const noexcept { return mType; }
@@ -205,12 +214,12 @@ namespace Langulus::Anyness::Component
       template<bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
       bool CastsToMeta(T) const;
       template<bool BINARY_COMPATIBLE = false>
-      bool CastsToMeta(T, Count) const;
+      bool CastsToMeta(T, ::std::size_t) const;
 
       template<CT::NotVoid, bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
       bool CastsTo() const;
       template<CT::NotVoid, bool BINARY_COMPATIBLE = false>
-      bool CastsTo(Count) const;
+      bool CastsTo(::std::size_t) const;
 
       template<CT::NotVoid>
       void SetType()  requires TypeErased;

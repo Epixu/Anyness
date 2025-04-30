@@ -11,23 +11,23 @@
 /// The main test for Many/TMany containers, with all kinds of items, from    
 /// sparse to dense, from trivial to complex, from flat to deep               
 TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
-   (TypePair<Tag<>, RT*>),
+   (TypePair<Tag, RT*>),
 
-   (TypePair<TMany<Tag<>*>, Tag<>*>),
-   (TypePair<Many, Tags::Count<>*>),
-   (TypePair<Tag<>, Text*>),
+   (TypePair<TMany<Tag*>, Tag*>),
+   (TypePair<Many, Tags::Count*>),
+   (TypePair<Tag, Text*>),
 
-   (TypePair<Tags::Name<>, Text*>),
-   (TypePair<Tags::Name<>, RT*>),
+   (TypePair<Tags::Name, Text*>),
+   (TypePair<Tags::Name, RT*>),
 
    (TypePair<TMany<int*>, int*>),
-   (TypePair<TMany<Tags::Count<>*>, Tags::Count<>*>),
+   (TypePair<TMany<Tags::Count*>, Tags::Count*>),
    (TypePair<TMany<Many*>, Many*>),
    (TypePair<TMany<Text*>, Text*>),
    (TypePair<TMany<RT*>, RT*>),
 
    (TypePair<Many, int*>),
-   (TypePair<Many, Tag<>*>),
+   (TypePair<Many, Tag*>),
    (TypePair<Many, Many*>),
    (TypePair<Many, Text*>),
    (TypePair<Many, RT*>)
@@ -399,7 +399,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       }
 
       WHEN("Shallow-copy an array to the back") {
-         pack.Insert(IndexBack, darray2);
+         pack.InsertAt(Index::Back, darray2);
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsArray(pack, darray2);
@@ -424,7 +424,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       }
 
       WHEN("Shallow-copy an array to the front") {
-         pack.Insert(IndexFront, darray2);
+         pack.InsertAt(Index::Front, darray2);
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsArray(pack, darray2);
@@ -571,7 +571,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          const auto i666backup = i666;
 
          if constexpr (CT::Typed<T>) {
-            auto instance = pack.Emplace(IndexFront, ::std::move(i666));
+            auto instance = pack.EmplaceAt(Index::Front, ::std::move(i666));
 
             Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.GetCount() == 1);
@@ -602,7 +602,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             #endif
          }
          else {
-            REQUIRE_THROWS(pack.Emplace(IndexFront, ::std::move(i666)));
+            REQUIRE_THROWS(pack.EmplaceAt(Index::Front, ::std::move(i666)));
             Any_CheckState_Default<E>(pack);
          }
 
@@ -614,7 +614,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          const auto i666backup = i666;
 
          if constexpr (CT::Typed<T>) {
-            auto instance = pack.Emplace(IndexBack, ::std::move(i666));
+            auto instance = pack.EmplaceAt(Index::Back, ::std::move(i666));
 
             Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.GetCount() == 1);
@@ -645,7 +645,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
             #endif
          }
          else {
-            REQUIRE_THROWS(pack.Emplace(IndexBack, ::std::move(i666)));
+            REQUIRE_THROWS(pack.EmplaceAt(Index::Back, ::std::move(i666)));
             Any_CheckState_Default<E>(pack);
          }
 
@@ -694,7 +694,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(copy.GetUses() == 0);
       }
 
-      if constexpr (CT::CloneMakable<T>) {
+      if constexpr (CT::CloneConstructible<T>) {
          WHEN("Empty pack with state is cloned") {
             pack.MakeOr();
             T clone = Clone(pack);
@@ -877,9 +877,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
       WHEN("ForEach flat dense element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEach(
-            [&](const int&)   {FAIL();},
-            [&](const Tag<>&) {FAIL();},
-            [&](const Many&)  {FAIL();}
+            [&](const int&)  {FAIL();},
+            [&](const Tag&)  {FAIL();},
+            [&](const Many&) {FAIL();}
          );
 
          REQUIRE(0 == foreachit);
@@ -887,9 +887,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
       WHEN("ForEach flat dense element (mutable)") {
          const auto foreachit = const_cast<T&>(pack).ForEach(
-            [&](int&)         {FAIL(); },
-            [&](Tag<>&)       {FAIL(); },
-            [&](Many&)        {FAIL(); }
+            [&](int&)       {FAIL(); },
+            [&](Tag&)       {FAIL(); },
+            [&](Many&)      {FAIL(); }
          );
 
          REQUIRE(0 == foreachit);
@@ -897,9 +897,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
       WHEN("ForEach flat sparse element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEach(
-            [&](const int*)   {FAIL(); },
-            [&](const Tag<>*) {FAIL(); },
-            [&](const Many*)  {FAIL(); }
+            [&](const int*)  {FAIL(); },
+            [&](const Tag*)  {FAIL(); },
+            [&](const Many*) {FAIL(); }
          );
 
          REQUIRE(0 == foreachit);
@@ -907,9 +907,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
       WHEN("ForEach flat sparse element (mutable)") {
          const auto foreachit = const_cast<T&>(pack).ForEach(
-            [&](int*)         {FAIL(); },
-            [&](Tag<>*)       {FAIL(); },
-            [&](Many*)        {FAIL(); }
+            [&](int*)    {FAIL(); },
+            [&](Tag*)    {FAIL(); },
+            [&](Many*)   {FAIL(); }
          );
 
          REQUIRE(0 == foreachit);
@@ -917,9 +917,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
       WHEN("ForEachRev flat dense element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEachRev(
-            [&](const int&)   {FAIL(); },
-            [&](const Tag<>&) {FAIL(); },
-            [&](const Many&)  {FAIL(); }
+            [&](const int&)  {FAIL(); },
+            [&](const Tag&)  {FAIL(); },
+            [&](const Many&) {FAIL(); }
          );
 
          REQUIRE(0 == foreachit);
@@ -927,9 +927,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
       WHEN("ForEachRev flat dense element (mutable)") {
          const auto foreachit = pack.ForEachRev(
-            [&](const int&)   {FAIL(); },
-            [&](const Tag<>&) {FAIL(); },
-            [&](const Many&)  {FAIL(); }
+            [&](const int&)  {FAIL(); },
+            [&](const Tag&)  {FAIL(); },
+            [&](const Many&) {FAIL(); }
          );
 
          REQUIRE(0 == foreachit);
@@ -937,9 +937,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
       WHEN("ForEachRev flat sparse element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEachRev(
-            [&](const int*)   {FAIL(); },
-            [&](const Tag<>*) {FAIL(); },
-            [&](const Many*)  {FAIL(); }
+            [&](const int*)  {FAIL(); },
+            [&](const Tag*)  {FAIL(); },
+            [&](const Many*) {FAIL(); }
          );
 
          REQUIRE(0 == foreachit);
@@ -947,9 +947,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
       WHEN("ForEachRev flat sparse element (mutable)") {
          const auto foreachit = pack.ForEachRev(
-            [&](const int*)   {FAIL(); },
-            [&](const Tag<>*) {FAIL(); },
-            [&](const Many*)  {FAIL(); }
+            [&](const int*)  {FAIL(); },
+            [&](const Tag*)  {FAIL(); },
+            [&](const Many*) {FAIL(); }
          );
 
          REQUIRE(0 == foreachit);

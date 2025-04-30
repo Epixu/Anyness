@@ -67,6 +67,7 @@ namespace Langulus::CT
 
    } // namespace Langulus::CT::Inner
 
+
    /// Check if all of the types are reflectable                              
    template<class...T>
    concept Reflectable = (CT::NotVoid<Deptr<decltype(Inner::IsReflectable<Deref<T>>())>> and ...);
@@ -74,7 +75,8 @@ namespace Langulus::CT
    /// Get the type a given type is reflected as. This is very useful as a    
    /// a build-time optimization, because many type-erased containers are     
    /// binary-compatible with their templated equivalents, and the use of     
-   /// CTTI_ReflectAs can drastically lower build time for meta generation    
+   /// CTTI_ReflectAs can drastically lower build time for meta generation,   
+   /// by reducing unnessesary template instantiations of redundant types     
    template<class T>
    using ReflectedAs = Deptr<decltype(Inner::IsReflectable<Deref<T>>())>;
 

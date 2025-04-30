@@ -21,7 +21,7 @@ namespace Langulus::RTTI::Inner
 
    /// Reflect some common type properties, like C++ name, info and version   
    ///   @tparam T - the type to reflect                                      
-   template<CT::Decayed T>
+   template<class T>
    void Definition::ReflectCommon() {
       if constexpr (CT::Info<T>) {
          // Reflected info                                              
