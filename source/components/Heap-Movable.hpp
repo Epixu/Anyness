@@ -49,7 +49,8 @@ namespace Langulus::Anyness::Component
       ///   @param count - the number of elements to request                  
       ///   @return both the provided byte size and reserved count            
       template<CT::Container C>
-      auto RequestSize(this const C& self, const Count<C> count) has_assumptions -> Allocation::Request {
+      auto RequestSize(this const C& self, const Count<C> count) has_assumptions
+      -> Allocation::Request {
          using T = TypeOf<C>;
          Allocation::Request result;
 
@@ -58,16 +59,48 @@ namespace Langulus::Anyness::Component
                "Requesting allocation size for an untyped container");
 
             // Check for reflected minimal allocation at runtime        
-            result.mByteSize = Roof2(::std::max(count * self.mType.GetSize(), self.mType.GetMinAlloc()));
+            result.mByteSize = Roof2(::std::max<Count<C>>(
+               count * self.mType.GetSize(), self.mType.GetMinAlloc()));
             result.mElementCount = result.mByteSize / self.mType.GetSize();
          }
          else {
             // Check for reflected minimal allocation at compile-time   
-            result.mByteSize = Roof2(::std::max(count * sizeof(T), CT::GetMinAlloc<T>()));
+            result.mByteSize = Roof2(::std::max<Count<C>>(
+               count * sizeof(T), CT::GetMinAlloc<T>()));
             result.mElementCount = result.mByteSize / sizeof(T);
          }
 
          return result;
+      }
+      
+      /// Allocate a fresh allocation                                         
+      ///   @attention changes allocation, heap pointer and reserve count only
+      ///   @param request - request to fulfill                               
+      template<CT::Container C>
+      void AllocateFresh(this C& self, const Allocation::Request& request) {
+         Allocation* al;
+         if constexpr (C::TypeErased) {
+            if constexpr (DeeplyOwned<C>) {
+               // Deeply owned sparse containers have additional memory 
+               // allocated for each pointer's entry                    
+               al = Allocator::Allocate(self.mType,
+                  request.mByteSize * (self.mType.IsSparse() ? 2 : 1));
+            }
+            else {
+               al = Allocator::Allocate(self.mType,
+                  request.mByteSize);
+            }
+         }
+         else {
+            // Deeply owned sparse containers have additional memory    
+            // allocated for each pointer's entry                       
+            al = Allocator::Allocate(self.GetType(),
+               request.mByteSize * (DeeplyOwned<C> and C::Sparse ? 2 : 1));
+         }
+
+         Assert(al, HERE(), "Out of memory");
+         self.SetAllocation(al);
+         self.SetReserved(request.mElementCount);
       }
 
       /// Allocate a number of elements, relying on the type of the container 
@@ -107,7 +140,7 @@ namespace Langulus::Anyness::Component
                // Reallocate                                            
                View<C> previous {self};
                auto reallocated = Allocator::Reallocate(
-                  request.mByteSize * (C::Sparse ? 2 : 1),
+                  request.mByteSize * (DeeplyOwned<C> and C::Sparse ? 2 : 1),
                   self.GetAllocation()
                );
                Assert(reallocated, HERE(), "Out of memory");
@@ -141,7 +174,9 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Allocate a fresh set of elements                      
-               self.template SetTypeInner<T>();
+               if constexpr (requires { self.mType; })
+                  self.mType = MetaDataOf<T>();
+
                self.AllocateFresh(request);
 
                if constexpr (CREATE) {
@@ -288,6 +323,9 @@ namespace Langulus::Anyness::Component
                // Do a refer/copy/disown/abandon/move/clone dense LHS   
                AssumeDev(CT::Dense<ST>, "Sparseness mismatch");
 
+               //TODO calling these shouldn't have checks inside, only assumptions are allowed
+               //because this function is often used in loops, and checking if these
+               //constructors are available can be done once before the loop begins
                if constexpr (CT::Moved<S>)
                   self.mType.MoveConstruct   (self.mHeap, &rhs);
                else if constexpr (CT::Abandoned<S>)

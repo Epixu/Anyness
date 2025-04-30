@@ -144,7 +144,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          auto movable = element;
          pack = ::std::move(movable);
 
-         if constexpr (CT::Block<E>)
+         if constexpr (CT::Container<E>)
             Many_CheckState_Default<TypeOf<E>>(movable);
 
          if constexpr (CT::Flat<E>) {

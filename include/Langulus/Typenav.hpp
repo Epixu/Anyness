@@ -138,11 +138,11 @@ namespace Langulus
       ///   @attention this also includes non-pointer types that are tagged   
       ///      as custom packed pointers                                      
       template<class...T>
-      concept Sparse = ((CTTI::Sparse<T>::Enabled or T::CTTI_Sparse::Enabled) and ...);
+      concept Sparse = ((CTTI::Sparse<Deref<T>>::Enabled or Deref<T>::CTTI_Sparse::Enabled) and ...);
 
       /// Check if all T are dense                                            
       template<class...T>
-      concept Dense = ((not Sparse<T>) and ...);
+      concept Dense = ((not Sparse<Deref<T>>) and ...);
 
       /// Check if all T are constant-qualified                               
       template<class...T>

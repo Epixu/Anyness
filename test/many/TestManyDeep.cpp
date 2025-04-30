@@ -238,7 +238,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          REQUIRE(clone.AsAt<Many>(1).GetUses() == 1);
          REQUIRE( pack.AsAt<Many>(1).GetUses() == 3);
          REQUIRE(clone.AsAt<Many>(2).GetRaw() != subpack3.GetRaw());
-         REQUIRE(clone.AsAt<Many>(2).GetState() == DataState::Default);
+         REQUIRE(clone.AsAt<Many>(2).GetState() == State::Default);
          REQUIRE(clone.AsAt<Many>(2).GetCount() == subpack3.GetCount());
          REQUIRE(clone.AsAt<Many>(2).GetUses() == 1);
          REQUIRE( pack.AsAt<Many>(2).GetUses() == 2);

@@ -18,8 +18,24 @@ namespace Langulus::RTTI
 
       public:
          constexpr MetaTagNaked() noexcept = default;
-         constexpr MetaTagNaked(const DefinitionTag* definition) noexcept
+         constexpr MetaTagNaked(const MetaTagNaked&) noexcept = default;
+         constexpr MetaTagNaked(MetaTagNaked&&) noexcept = default;
+
+         constexpr MetaTagNaked(::std::nullptr_t) noexcept {}
+
+         explicit constexpr MetaTagNaked(const DefinitionTag* definition) noexcept
             : mDefinition {definition} {}
+
+         constexpr MetaTagNaked& operator = (const MetaTagNaked&) noexcept = default;
+         constexpr MetaTagNaked& operator = (MetaTagNaked&&) noexcept = default;
+         constexpr MetaTagNaked& operator = (::std::nullptr_t) noexcept {
+            mDefinition = nullptr;
+            return *this;
+         }
+         constexpr MetaTagNaked& operator = (const DefinitionTag* definition) noexcept {
+            mDefinition = definition;
+            return *this;
+         }
 
          explicit operator bool() const noexcept {
             return mDefinition != nullptr;
@@ -53,15 +69,16 @@ namespace Langulus::RTTI
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
-      constexpr MetaTag() noexcept = default;
-      constexpr MetaTag(const MetaTag&) noexcept = default;
-      constexpr MetaTag(MetaTag&&) noexcept = default;
+      using Inner::MetaTagBase::MetaTagBase;
+      using Inner::MetaTagBase::operator =;
 
-      constexpr MetaTag(::std::nullptr_t) noexcept {}
-      constexpr MetaTag(const DefinitionTag* definition) noexcept
-         : Inner::MetaTagBase {definition} {}
-      constexpr MetaTag(Cloned<MetaTag>&& meta) noexcept
+      explicit constexpr MetaTag(Cloned<MetaTag>&& meta) noexcept
          : MetaTag {*meta} {}
+
+      constexpr MetaTag& operator = (Cloned<MetaTag>&& rhs) noexcept {
+         new (this) MetaTag {*rhs};
+         return *this;
+      }
    };
 
    using TMeta = MetaTag;

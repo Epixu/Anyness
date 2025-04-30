@@ -10,6 +10,7 @@
 #include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/TSet.hpp>
 #include <Langulus/Anyness/Tag.hpp>
+#include <Langulus/Anyness/TPair.hpp>
 #include "Common.hpp"
 
 

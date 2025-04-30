@@ -116,7 +116,7 @@ namespace Langulus::Anyness::DefineState
 {
 
    struct Default;
-   struct Missing;
+
    template<State::StateValue = State::Variable> struct Compressed;
    template<State::StateValue = State::Variable> struct Encrypted;
    template<State::StateValue = State::Variable> struct Future;

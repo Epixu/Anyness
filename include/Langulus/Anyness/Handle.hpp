@@ -23,7 +23,7 @@ namespace Langulus::Anyness
    template<CT::Dense T>
    struct Handle<T> : Container<
       Component::Stack<T&>,
-      Component::NoOwnershipStack<>,
+      Component::OwnershipStack<0, false>,
       Component::Assignment,
       Component::TypedStatic<DMeta, T>
    > {};

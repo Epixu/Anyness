@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       T GetReserved(this const C& self) noexcept {
          auto allocation = self.GetAllocation();
-         return allocation ? allocation->GetReserved() : 0;
+         return allocation ? allocation->GetFrontendSize() : 0;
       }
 
       /// Reserve a number of elements without initializing them              

@@ -41,9 +41,6 @@ namespace Langulus::Anyness::Component
       // The type                                                       
       T mType;
 
-      template<CT::NotVoid>
-      void SetTypeInner() requires TypeErased;
-
    public:
       /// Get the contained type                                              
       ///   @return the contained type                                        
@@ -209,6 +206,15 @@ namespace Langulus::Anyness::Component
             return mType.IsDeep();
          else
             return CT::Deep<Decay<TYPE>>;
+      }
+      
+      /// Get the size of the type                                            
+      ///   @return the size of a single element in bytes                     
+      constexpr bool GetStride() const noexcept {
+         if constexpr (TypeErased)
+            return mType.GetStride();
+         else
+            return sizeof(TYPE);
       }
 
       template<bool BINARY_COMPATIBLE = false, bool ADVANCED = false>

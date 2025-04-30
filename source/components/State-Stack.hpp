@@ -1,8 +1,9 @@
 #pragma once
 #include "../Container.hpp"
 #include "../states/Default.hpp"
-#include "../states/Missing.hpp"
 #include "../states/Typed.hpp"
+#include "../states/Past.hpp"
+#include "../states/Future.hpp"
 #if LANGULUS(DEBUG)
    #include "../states/Tracked.hpp"
 #endif
@@ -57,11 +58,6 @@ namespace Langulus::Anyness::Component
          template<CT::State S>
          constexpr bool operator & (S) const noexcept {
             return mState & StateStack::template GetStateBit<S>();
-         }
-         
-         constexpr bool operator & (DefineState::Missing) const noexcept {
-            return mState & StateStack::template GetStateBit<DefineState::Past>()
-                or mState & StateStack::template GetStateBit<DefineState::Future>();
          }
          
          constexpr bool operator == (DefineState::Default) const noexcept {

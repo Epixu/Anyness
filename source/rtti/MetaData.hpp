@@ -48,8 +48,24 @@ namespace Langulus::RTTI
 
       public:
          constexpr MetaDataNaked() noexcept = default;
-         constexpr MetaDataNaked(const DefinitionData* definition) noexcept
+         constexpr MetaDataNaked(const MetaDataNaked&) noexcept = default;
+         constexpr MetaDataNaked(MetaDataNaked&&) noexcept = default;
+
+         constexpr MetaDataNaked(::std::nullptr_t) noexcept {}
+
+         explicit constexpr MetaDataNaked(const DefinitionData* definition) noexcept
             : mDefinition {definition} {}
+
+         constexpr MetaDataNaked& operator = (const MetaDataNaked&) noexcept = default;
+         constexpr MetaDataNaked& operator = (MetaDataNaked&&) noexcept = default;
+         constexpr MetaDataNaked& operator = (::std::nullptr_t) noexcept {
+            mDefinition = nullptr;
+            return *this;
+         }
+         constexpr MetaDataNaked& operator = (const DefinitionData* definition) noexcept {
+            mDefinition = definition;
+            return *this;
+         }
 
          explicit operator bool() const noexcept {
             return mDefinition != nullptr;
@@ -74,6 +90,7 @@ namespace Langulus::RTTI
          }
 
          ::std::size_t GetMinAllocation() const noexcept;
+         ::std::size_t GetStride() const noexcept;
 
          bool IsDense() const noexcept;
          bool IsSparse() const noexcept;
@@ -102,15 +119,16 @@ namespace Langulus::RTTI
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
-      constexpr MetaData() noexcept = default;
-      constexpr MetaData(const MetaData&) noexcept = default;
-      constexpr MetaData(MetaData&&) noexcept = default;
+      using Inner::MetaDataBase::MetaDataBase;
+      using Inner::MetaDataBase::operator =;
 
-      constexpr MetaData(::std::nullptr_t) noexcept {}
-      constexpr MetaData(const DefinitionData* definition) noexcept
-         : Inner::MetaDataBase {definition} {}
-      constexpr MetaData(Cloned<MetaData>&& meta) noexcept
+      explicit constexpr MetaData(Cloned<MetaData>&& meta) noexcept
          : MetaData {*meta} {}
+
+      constexpr MetaData& operator = (Cloned<MetaData>&& rhs) noexcept {
+         new (this) MetaData {*rhs};
+         return *this;
+      }
    };
 
    using DMeta = MetaData;

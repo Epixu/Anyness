@@ -29,7 +29,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       auto GetUses(this const C& self) noexcept {
          auto allocation = self.GetAllocation();
-         return allocation > allocation->GetUses() : 0;
+         return allocation ? allocation->GetUses() : 0;
       }
 
    protected:
