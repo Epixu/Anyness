@@ -8,7 +8,7 @@
 
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
-#include <Langulus/TypeNav.hpp>
+#include <Langulus/Typenav.hpp>
 #include <Langulus/TypeOf.hpp>
 #include <Langulus/Intent.hpp>
 #include <Langulus/CT/Describable.hpp>
@@ -116,20 +116,16 @@ void DestroyPair(auto& pair) {
          }
          else {
             if (pair.GetKey().IsSparse()) {
-               if (pair.GetKey().GetType()->mReference)
-                  REQUIRE(pair.GetKey().GetType()->mReference(*pair.GetKey().template GetRaw<void*>(), -1) == 0);
-               if (pair.GetKey().GetType()->mDestructor)
-                  pair.GetKey().GetType()->mDestructor(*pair.GetKey().template GetRaw<void*>());
+               REQUIRE(pair.GetKey().GetType().Reference(*pair.GetKey().template GetRaw<void*>(), -1) == 0);
+               REQUIRE(pair.GetKey().GetType().Destroy(*pair.GetKey().template GetRaw<void*>()));
                free(*pair.GetKey().template GetRaw<void*>());
             }
             
             DecvqCast(pair.GetKey()).Reset();
 
             if (pair.GetValue().IsSparse()) {
-               if (pair.GetValue().GetType()->mReference)
-                  REQUIRE(pair.GetValue().GetType()->mReference(*pair.GetValue().template GetRaw<void*>(), -1) == 0);
-               if (pair.GetValue().GetType()->mDestructor)
-                  pair.GetValue().GetType()->mDestructor(*pair.GetValue().template GetRaw<void*>());
+               REQUIRE(pair.GetValue().GetType().Reference(*pair.GetValue().template GetRaw<void*>(), -1) == 0);
+               REQUIRE(pair.GetValue().GetType().Destroy(*pair.GetValue().template GetRaw<void*>()));
                free(*pair.GetValue().template GetRaw<void*>());
             }
             

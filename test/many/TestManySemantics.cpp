@@ -28,20 +28,20 @@ TEMPLATE_TEST_CASE("Testing refer-makable types", "[intents]",
    TMany<PrivatelyConstructible>
 ) {
    using T = TestType;
-   static_assert(CT::ReferMakable<T>);
-   static_assert(CT::ReferMakable<T*>);
-   static_assert(CT::IntentMakable<Referred, T>);
-   static_assert(CT::IntentMakable<Referred, T*>);
-   static_assert(CT::IntentMakableAlt<Referred<T>>);
-   static_assert(CT::IntentMakableAlt<Referred<T*>>);
+   static_assert(CT::ReferConstructible<T>);
+   static_assert(CT::ReferConstructible<T*>);
+   static_assert(CT::IntentConstructible<Referred, T>);
+   static_assert(CT::IntentConstructible<Referred, T*>);
+   static_assert(CT::IntentConstructibleAlt<Referred<T>>);
+   static_assert(CT::IntentConstructibleAlt<Referred<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mReferConstructor);
+   REQUIRE(meta1.IsReferConstructible());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mReferConstructor);
+   REQUIRE(meta2.IsReferConstructible());
 }
 
 /*TEMPLATE_TEST_CASE("Testing non-refer-makable types", "[intents]",
@@ -95,15 +95,15 @@ TEMPLATE_TEST_CASE("Testing refer-assignable types", "[intents]",
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mReferAssigner);
+   REQUIRE(meta1.IsReferAssignable());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mReferAssigner);
+   REQUIRE(meta2.IsReferAssignable());
 
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
-   REQUIRE(meta3->mReferAssigner);
+   REQUIRE(meta3.IsReferAssignable());
 }
 
 /*TEMPLATE_TEST_CASE("Testing non-refer-assignable types", "[intents]",
@@ -153,20 +153,20 @@ TEMPLATE_TEST_CASE("Testing move-makable types", "[intents]",
    TMany<PrivatelyConstructible>
 ) {
    using T = TestType;
-   static_assert(CT::MoveMakable<T>);
-   static_assert(CT::MoveMakable<T*>);
-   static_assert(CT::IntentMakable<Moved, T>);
-   static_assert(CT::IntentMakable<Moved, T*>);
-   static_assert(CT::IntentMakableAlt<Moved<T>>);
-   static_assert(CT::IntentMakableAlt<Moved<T*>>);
+   static_assert(CT::MoveConstructible<T>);
+   static_assert(CT::MoveConstructible<T*>);
+   static_assert(CT::IntentConstructible<Moved, T>);
+   static_assert(CT::IntentConstructible<Moved, T*>);
+   static_assert(CT::IntentConstructibleAlt<Moved<T>>);
+   static_assert(CT::IntentConstructibleAlt<Moved<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mMoveConstructor);
+   REQUIRE(meta1.IsMoveConstructible());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mMoveConstructor);
+   REQUIRE(meta2.IsMoveConstructible());
 }
 
 /*TEMPLATE_TEST_CASE("Testing non-move-makable types", "[intents]",
@@ -220,15 +220,15 @@ TEMPLATE_TEST_CASE("Testing move-assignable types", "[intents]",
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mMoveAssigner);
+   REQUIRE(meta1.IsMoveAssignable());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mMoveAssigner);
+   REQUIRE(meta2.IsMoveAssignable());
 
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
-   REQUIRE(meta3->mMoveAssigner);
+   REQUIRE(meta3.IsMoveAssignable());
 }
 
 /*TEMPLATE_TEST_CASE("Testing non-move-assignable types", "[intents]",
@@ -279,20 +279,20 @@ TEMPLATE_TEST_CASE("Testing copy-makable types", "[intents]",
    TMany<AggregateTypeComplex>
 ) {
    using T = TestType;
-   static_assert(CT::CopyMakable<T>);
-   static_assert(CT::CopyMakable<T*>);
-   static_assert(CT::IntentMakable<Copied, T>);
-   static_assert(CT::IntentMakable<Copied, T*>);
-   static_assert(CT::IntentMakableAlt<Copied<T>>);
-   static_assert(CT::IntentMakableAlt<Copied<T*>>);
+   static_assert(CT::CopyConstructible<T>);
+   static_assert(CT::CopyConstructible<T*>);
+   static_assert(CT::IntentConstructible<Copied, T>);
+   static_assert(CT::IntentConstructible<Copied, T*>);
+   static_assert(CT::IntentConstructibleAlt<Copied<T>>);
+   static_assert(CT::IntentConstructibleAlt<Copied<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mCopyConstructor);
+   REQUIRE(meta1.IsCopyConstructible());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mCopyConstructor);
+   REQUIRE(meta2.IsCopyConstructible());
 }
 
 TEMPLATE_TEST_CASE("Testing non-copy-makable types", "[intents]",
@@ -301,17 +301,17 @@ TEMPLATE_TEST_CASE("Testing non-copy-makable types", "[intents]",
    TMany<PrivatelyConstructible>
 ) {
    using T = TestType;
-   static_assert(not CT::CopyMakable<T>);
-   static_assert(    CT::CopyMakable<T*>);
-   static_assert(not CT::IntentMakable<Copied, T>);
-   static_assert(    CT::IntentMakable<Copied, T*>);
-   static_assert(not CT::IntentMakableAlt<Copied<T>>);
-   static_assert(    CT::IntentMakableAlt<Copied<T*>>);
+   static_assert(not CT::CopyConstructible<T>);
+   static_assert(    CT::CopyConstructible<T*>);
+   static_assert(not CT::IntentConstructible<Copied, T>);
+   static_assert(    CT::IntentConstructible<Copied, T*>);
+   static_assert(not CT::IntentConstructibleAlt<Copied<T>>);
+   static_assert(    CT::IntentConstructibleAlt<Copied<T*>>);
 
    auto meta = MetaDataOf<Conditional<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    //REQUIRE_FALSE(meta->mCopyConstructor);
-   REQUIRE(meta->mCopyConstructor); 
+   REQUIRE(meta.IsCopyConstructible()); 
    // Since the introduction of LANGULUS(ACT_AS), these are still copy-constructible, because
    // they're implicitly inserted as a plain Many type. You would still not be able to construct 
    // such a container at compile-time, so it's completely fine
@@ -350,15 +350,15 @@ TEMPLATE_TEST_CASE("Testing copy-assignable types", "[intents]",
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mCopyAssigner);
+   REQUIRE(meta1.IsCopyAssignable());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mCopyAssigner);
+   REQUIRE(meta2.IsCopyAssignable());
 
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
-   REQUIRE(meta3->mCopyAssigner);
+   REQUIRE(meta3.IsCopyAssignable());
 }
 
 TEMPLATE_TEST_CASE("Testing non-copy-assignable types", "[intents]",
@@ -383,7 +383,7 @@ TEMPLATE_TEST_CASE("Testing non-copy-assignable types", "[intents]",
    auto meta = MetaDataOf<Conditional<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    //REQUIRE_FALSE(meta->mCopyAssigner);
-   REQUIRE(meta->mCopyAssigner);
+   REQUIRE(meta.IsCopyAssignable());
    // Since the introduction of LANGULUS(ACT_AS), these are still copy-assignable, because
    // they're implicitly inserted as a plain Many type. You would still not be able to assign 
    // such a container at compile-time, so it's completely fine
@@ -404,20 +404,20 @@ TEMPLATE_TEST_CASE("Testing clone-makable types", "[intents]",
    TMany<AggregateType>
 ) {
    using T = TestType;
-   static_assert(CT::CloneMakable<T>);
-   static_assert(CT::CloneMakable<T*>);
-   static_assert(CT::IntentMakable<Cloned, T>);
-   static_assert(CT::IntentMakable<Cloned, T*>);
-   static_assert(CT::IntentMakableAlt<Cloned<T>>);
-   static_assert(CT::IntentMakableAlt<Cloned<T*>>);
+   static_assert(CT::CloneConstructible<T>);
+   static_assert(CT::CloneConstructible<T*>);
+   static_assert(CT::IntentConstructible<Cloned, T>);
+   static_assert(CT::IntentConstructible<Cloned, T*>);
+   static_assert(CT::IntentConstructibleAlt<Cloned<T>>);
+   static_assert(CT::IntentConstructibleAlt<Cloned<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mCloneConstructor);
+   REQUIRE(meta1.IsCloneConstructible());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mCloneConstructor);
+   REQUIRE(meta2.IsCloneConstructible());
 }
 
 TEMPLATE_TEST_CASE("Testing non-clone-makable types", "[intents]",
@@ -432,18 +432,18 @@ TEMPLATE_TEST_CASE("Testing non-clone-makable types", "[intents]",
    TMany<AggregateTypeComplex>
 ) {
    using T = TestType;
-   static_assert(not CT::DeepMakable<TypeOf<T>, Cloned<TestType>>);
-   static_assert(not CT::CloneMakable<T>);
-   static_assert(not CT::CloneMakable<T*>);
-   static_assert(not CT::IntentMakable<Cloned, T>);
-   static_assert(not CT::IntentMakable<Cloned, T*>);
-   static_assert(not CT::IntentMakableAlt<Cloned<T>>);
-   static_assert(not CT::IntentMakableAlt<Cloned<T*>>);
+   static_assert(not CT::DeepConstructible<TypeOf<T>, Cloned<TestType>>);
+   static_assert(not CT::CloneConstructible<T>);
+   static_assert(not CT::CloneConstructible<T*>);
+   static_assert(not CT::IntentConstructible<Cloned, T>);
+   static_assert(not CT::IntentConstructible<Cloned, T*>);
+   static_assert(not CT::IntentConstructibleAlt<Cloned<T>>);
+   static_assert(not CT::IntentConstructibleAlt<Cloned<T*>>);
 
    auto meta = MetaDataOf<Conditional<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    //REQUIRE_FALSE(meta->mCloneConstructor);
-   REQUIRE(meta->mCloneConstructor);
+   REQUIRE(meta.IsCloneConstructible());
    // Since the introduction of LANGULUS(ACT_AS), these are still clone-constructible, because
    // they're implicitly inserted as a plain Many type. You would still not be able to construct 
    // such a container at compile-time, so it's completely fine
@@ -476,15 +476,15 @@ TEMPLATE_TEST_CASE("Testing clone-assignable types", "[intents]",
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mCloneAssigner);
+   REQUIRE(meta1.IsCloneAssignable());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mCloneAssigner);
+   REQUIRE(meta2.IsCloneAssignable());
 
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
-   REQUIRE(meta3->mCloneAssigner);
+   REQUIRE(meta3.IsCloneAssignable());
 }
 
 TEMPLATE_TEST_CASE("Testing non-clone-assignable types", "[intents]",
@@ -524,7 +524,7 @@ TEMPLATE_TEST_CASE("Testing non-clone-assignable types", "[intents]",
    auto meta = MetaDataOf<Conditional<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    //REQUIRE_FALSE(meta->mCloneAssigner);
-   REQUIRE(meta->mCloneAssigner);
+   REQUIRE(meta.IsCloneAssignable());
    // Since the introduction of LANGULUS(ACT_AS), these are still clone-assignable, because
    // they're implicitly inserted as a plain Many type. You would still not be able to assign 
    // such a container at compile-time, so it's completely fine
@@ -553,20 +553,20 @@ TEMPLATE_TEST_CASE("Testing disown-makable types", "[intents]",
    TMany<AggregateTypeComplex>
 ) {
    using T = TestType;
-   static_assert(CT::DisownMakable<T>);
-   static_assert(CT::DisownMakable<T*>);
-   static_assert(CT::IntentMakable<Disowned, T>);
-   static_assert(CT::IntentMakable<Disowned, T*>);
-   static_assert(CT::IntentMakableAlt<Disowned<T>>);
-   static_assert(CT::IntentMakableAlt<Disowned<T*>>);
+   static_assert(CT::DisownConstructible<T>);
+   static_assert(CT::DisownConstructible<T*>);
+   static_assert(CT::IntentConstructible<Disowned, T>);
+   static_assert(CT::IntentConstructible<Disowned, T*>);
+   static_assert(CT::IntentConstructibleAlt<Disowned<T>>);
+   static_assert(CT::IntentConstructibleAlt<Disowned<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mDisownConstructor);
+   REQUIRE(meta1.IsDisownConstructible());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mDisownConstructor);
+   REQUIRE(meta2.IsDisownConstructible());
 }
 
 /*TEMPLATE_TEST_CASE("Testing non-disown-makable types", "[intents]",
@@ -625,15 +625,15 @@ TEMPLATE_TEST_CASE("Testing disown-assignable types", "[intents]",
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mDisownAssigner);
+   REQUIRE(meta1.IsDisownAssignable());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mDisownAssigner);
+   REQUIRE(meta2.IsDisownAssignable());
 
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
-   REQUIRE(meta3->mDisownAssigner);
+   REQUIRE(meta3.IsDisownAssignable());
 }
 
 /*TEMPLATE_TEST_CASE("Testing non-disown-assignable types", "[intents]",
@@ -689,20 +689,20 @@ TEMPLATE_TEST_CASE("Testing abandon-makable types", "[intents]",
    TMany<PrivatelyConstructible>
 ) {
    using T = TestType;
-   static_assert(CT::AbandonMakable<T>);
-   static_assert(CT::AbandonMakable<T*>);
-   static_assert(CT::IntentMakable<Abandoned, T>);
-   static_assert(CT::IntentMakable<Abandoned, T*>);
-   static_assert(CT::IntentMakableAlt<Abandoned<T>>);
-   static_assert(CT::IntentMakableAlt<Abandoned<T*>>);
+   static_assert(CT::AbandonConstructible<T>);
+   static_assert(CT::AbandonConstructible<T*>);
+   static_assert(CT::IntentConstructible<Abandoned, T>);
+   static_assert(CT::IntentConstructible<Abandoned, T*>);
+   static_assert(CT::IntentConstructibleAlt<Abandoned<T>>);
+   static_assert(CT::IntentConstructibleAlt<Abandoned<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mAbandonConstructor);
+   REQUIRE(meta1.IsAbandonConstructible());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mAbandonConstructor);
+   REQUIRE(meta2.IsAbandonConstructible());
 }
 
 /*TEMPLATE_TEST_CASE("Testing non-abandon-makable types", "[intents]",
@@ -756,15 +756,15 @@ TEMPLATE_TEST_CASE("Testing abandon-assignable types", "[intents]",
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mAbandonAssigner);
+   REQUIRE(meta1.IsAbandonAssignable());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mAbandonAssigner);
+   REQUIRE(meta2.IsAbandonAssignable());
 
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
-   REQUIRE(meta3->mAbandonAssigner);
+   REQUIRE(meta3.IsAbandonAssignable());
 }
 
 /*TEMPLATE_TEST_CASE("Testing non-abandon-assignable types", "[intents]",
@@ -803,21 +803,21 @@ TEMPLATE_TEST_CASE("Testing descriptor-makable types", "[intents]",
    TMany<DescriptorConstructible>
 ) {
    using T = TestType;
-   static_assert(    CT::DeepMakable<TypeOf<T>, Describe>);
+   static_assert(    CT::DeepConstructible<TypeOf<T>, Describe>);
    static_assert(not CT::DeepAssignable<TypeOf<T>, Describe>);
-   static_assert(    CT::DescriptorMakable<T>);
-   static_assert(not CT::DescriptorMakable<T*>);
-   static_assert(not CT::IntentMakableAlt<Describe>);
+   static_assert(    CT::DescribeConstructible<T>);
+   static_assert(not CT::DescribeConstructible<T*>);
+   static_assert(not CT::IntentConstructibleAlt<Describe>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    //REQUIRE(meta1->mDescriptorConstructor);
-   REQUIRE_FALSE(meta1->mDescriptorConstructor);
+   REQUIRE_FALSE(meta1.IsDescriptorConstructible());
 
    auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    //REQUIRE(meta2->mDescriptorConstructor);
-   REQUIRE_FALSE(meta2->mDescriptorConstructor);
+   REQUIRE_FALSE(meta2.IsDescriptorConstructible());
 
    // Since the introduction of LANGULUS(ACT_AS), these are no longer describable, because
    // they're implicitly inserted as a plain Many type
@@ -840,14 +840,14 @@ TEMPLATE_TEST_CASE("Testing non-descriptor-makable types", "[intents]",
    TMany<AggregateThatCanBeConfusedWithDescriptorMakable>
 ) {
    using T = TestType;
-   static_assert(not CT::UnfoldMakableFrom<TypeOf<T>, Describe>);
-   static_assert(not CT::DeepMakable<TypeOf<T>, Describe>);
+   static_assert(not CT::UnfoldConstructible<TypeOf<T>, Describe>);
+   static_assert(not CT::DeepConstructible<TypeOf<T>, Describe>);
    static_assert(not CT::DeepAssignable<TypeOf<T>, Describe>);
-   static_assert(not CT::DescriptorMakable<T>);
-   static_assert(not CT::DescriptorMakable<T*>);
-   static_assert(not CT::IntentMakableAlt<Describe>);
+   static_assert(not CT::DescribeConstructible<T>);
+   static_assert(not CT::DescribeConstructible<T*>);
+   static_assert(not CT::IntentConstructibleAlt<Describe>);
 
-   auto meta = MetaDataOf<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
-   REQUIRE_FALSE(meta->mDescriptorConstructor);
+   REQUIRE_FALSE(meta.IsDescriptorConstructible());
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include "../TypeNav.hpp"
+#include "../Typenav.hpp"
 
 
 namespace Langulus::CT

@@ -10,10 +10,10 @@
 
 /// Testing some corner cases encountered during the use of the container     
 TEMPLATE_TEST_CASE("Set corner cases", "[set]",
-   (SetTest<UnorderedSet, Text>),
-   (SetTest<TUnorderedSet<Text>, Text>),
-   (SetTest<TOrderedSet<Text>, Text>),
-   (SetTest<OrderedSet, Text>)
+   (SetTest<SetUnsorted, Text>),
+   (SetTest<TSetUnsorted<Text>, Text>),
+   (SetTest<TSetSorted<Text>, Text>),
+   (SetTest<SetSorted, Text>)
 ) {
    using T = typename TestType::Container;
    using K = typename TestType::Key;
@@ -35,7 +35,7 @@ TEMPLATE_TEST_CASE("Set corner cases", "[set]",
       T set {keys};
 
       WHEN("Removing around-the-end elements by value (corner case)") {
-         Count removed = 0;
+         size_t removed = 0;
          removed += set.Remove("VulkanRenderer");
          removed += set.Remove("VulkanCamera");
          removed += set.Remove("Vulkan");
@@ -68,10 +68,10 @@ TEMPLATE_TEST_CASE("Set corner cases", "[set]",
 
 /// Testing some corner cases encountered during the use of the container     
 TEMPLATE_TEST_CASE("Set of outside-referenced elements", "[set]",
-   TUnorderedSet<RT*>,
-   TOrderedSet<RT*>,
-   UnorderedSet,
-   OrderedSet
+   TSetUnsorted<RT*>,
+   TSetSorted<RT*>,
+   SetUnsorted,
+   SetSorted
 ) {
    static Allocator::State memoryState;
    using T = TestType;

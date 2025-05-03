@@ -172,6 +172,8 @@ namespace Langulus::Anyness::Component
             return Index::None;
          }
       }
+
+      bool Contains(const CT::NoIntent auto&) const;
    };
 
 } // namespace Langulus::Anyness::Component

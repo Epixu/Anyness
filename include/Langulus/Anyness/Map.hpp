@@ -29,6 +29,36 @@
 
 namespace Langulus::Anyness
 {
+   namespace Inner
+   {
+
+      ///                                                                     
+      /// Common type-erased key type                                         
+      struct KeyMut : Container<
+         Component::HeapMovable<>,
+         Component::OwnershipStack<>,
+         Component::TypedStack<DMeta>
+      > {};
+      struct Key : Container<
+         Component::HeapMovable<>,
+         Component::TypedStack<DMeta>
+      > {};
+
+      ///                                                                     
+      /// Common type-erased value type                                       
+      struct ValMut : Container<
+         Component::HeapMovable<>,
+         Component::OwnershipStack<>,
+         Component::Assignment,
+         Component::TypedStack<DMeta>
+      > {};
+      struct Val : Container<
+         Component::HeapMovable<>,
+         Component::TypedStack<DMeta>
+      > {};
+
+   } // namespace Langulus::Anyness::Inner
+
 
    ///                                                                        
    /// Type-erased map of unspecified state                                   
@@ -59,8 +89,20 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_Map = Yes;
+      using KeyMut = Inner::KeyMut;
+      using Key    = Inner::Key;
+      using ValMut = Inner::ValMut;
+      using Val    = Inner::Val;
+
+      constexpr Map() noexcept = default;
+      constexpr Map(const Map&) noexcept = default;
+      constexpr Map(Map&&) noexcept = default;
+
+      template<class A1, class...AN>
+      Map(A1&&, AN&&...) requires CT::RangeInsertable<Map, A1, AN...>;
    };
    
+
    ///                                                                        
    /// Unsorted type-erased map                                               
    ///                                                                        
@@ -90,9 +132,21 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Map;
-      using CTTI_Map = Yes;
+      using CTTI_Map       = Yes;
+      using KeyMut = Inner::KeyMut;
+      using Key    = Inner::Key;
+      using ValMut = Inner::ValMut;
+      using Val    = Inner::Val;
+
+      constexpr MapUnsorted() noexcept = default;
+      constexpr MapUnsorted(const MapUnsorted&) noexcept = default;
+      constexpr MapUnsorted(MapUnsorted&&) noexcept = default;
+
+      template<class A1, class...AN>
+      MapUnsorted(A1&&, AN&&...) requires CT::RangeInsertable<MapUnsorted, A1, AN...>;
    };
    
+
    ///                                                                        
    /// Sorted type-erased map                                                 
    ///                                                                        
@@ -122,7 +176,18 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Map;
-      using CTTI_Map = Yes;
+      using CTTI_Map       = Yes;
+      using KeyMut = Inner::KeyMut;
+      using Key    = Inner::Key;
+      using ValMut = Inner::ValMut;
+      using Val    = Inner::Val;
+
+      constexpr MapSorted() noexcept = default;
+      constexpr MapSorted(const MapSorted&) noexcept = default;
+      constexpr MapSorted(MapSorted&&) noexcept = default;
+
+      template<class A1, class...AN>
+      MapSorted(A1&&, AN&&...) requires CT::RangeInsertable<MapSorted, A1, AN...>;
    };
 
 } // namespace Langulus::Anyness

@@ -87,7 +87,7 @@ namespace Langulus::Anyness::Component
       }
 
       template<CT::State S>
-      static constexpr bool Contains = CT::SameAsOneOf<S, STATES...>;
+      static constexpr bool ContainsState = CT::SameAsOneOf<S, STATES...>;
 
    public:
       constexpr auto GetState() const noexcept { return mState; }
@@ -106,14 +106,14 @@ namespace Langulus::Anyness::Component
       /// Check if container is marked as missing past/future                 
       ///   @return true if this container is marked as missing               
       constexpr bool IsMissing() const noexcept requires (
-            Contains<DefineState::Past   <State::Variable>>
-         or Contains<DefineState::Future <State::Variable>>
-         or Contains<DefineState::Past   <State::Enabled >>
-         or Contains<DefineState::Future <State::Enabled >>
+            ContainsState<DefineState::Past   <State::Variable>>
+         or ContainsState<DefineState::Future <State::Variable>>
+         or ContainsState<DefineState::Past   <State::Enabled >>
+         or ContainsState<DefineState::Future <State::Enabled >>
       ) {
          if constexpr (
-               Contains<DefineState::Past   <State::Enabled >>
-            or Contains<DefineState::Future <State::Enabled >>)
+               ContainsState<DefineState::Past   <State::Enabled >>
+            or ContainsState<DefineState::Future <State::Enabled >>)
             return true;
          else
             return mState & State::Past or mState & State::Future;

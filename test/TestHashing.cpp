@@ -66,10 +66,10 @@ TEMPLATE_TEST_CASE(
       const auto pair = CreatePair<TPair<K, V>, K, V>(
          "five hundred", 555);
 
-      TUnorderedMap<K, V> uset1 {pair};
-      UnorderedMap uset2 {pair};
-      TOrderedMap<K, V> oset1 {pair};
-      OrderedMap oset2 {pair};
+      TMapUnsorted<K, V> uset1 {pair};
+      MapUnsorted uset2 {pair};
+      TMapSorted<K, V> oset1 {pair};
+      MapSorted oset2 {pair};
 
       WHEN("Their hashes are taken") {
          const auto elementHash = HashOf(pair);
@@ -110,10 +110,10 @@ TEMPLATE_TEST_CASE(
       const auto element = CreateElement<TestType>(555);
       const auto elementHash = HashOf(element);
 
-      TUnorderedSet<TestType> uset1 {element};
-      UnorderedSet uset2 {element};
-      TOrderedSet<TestType> oset1 {element};
-      OrderedSet oset2 {element};
+      TSetUnsorted<TestType> uset1 {element};
+      SetUnsorted uset2 {element};
+      TSetSorted<TestType> oset1 {element};
+      SetSorted oset2 {element};
 
       WHEN("Their hashes are taken") {
          REQUIRE(uset1.template IsExact<TestType>());

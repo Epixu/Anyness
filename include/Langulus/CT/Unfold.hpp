@@ -8,7 +8,7 @@
 #pragma once
 #include "Same.hpp"
 #include "Comparable.hpp"
-#include "../TypeNav.hpp"
+#include "../Typenav.hpp"
 #include "../Types.hpp"
 #include "../Intent.hpp"
 

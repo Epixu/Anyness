@@ -746,14 +746,14 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("A forward value-based search is performed on non-exitent value") {
          const auto found = pack.Find(darray2[2]);
 
-         REQUIRE(found == IndexNone);
+         REQUIRE(found == Index::None);
          REQUIRE_FALSE(found);
       }
 
       WHEN("A backward value-based search is performed on non-exitent value") {
          const auto found = pack.template Find<true>(darray2[2]);
 
-         REQUIRE(found == IndexNone);
+         REQUIRE(found == Index::None);
          REQUIRE_FALSE(found);
       }
       
@@ -1528,7 +1528,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       }
 
       WHEN("Shallow-copy an array to the back") {
-         pack.Insert(IndexBack, darray2);
+         pack.InsertAt(Index::Back, darray2);
 
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
@@ -1565,7 +1565,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       }
 
       WHEN("Shallow-copy an array to the front") {
-         pack.Insert(IndexFront, darray2);
+         pack.InsertAt(Index::Front, darray2);
 
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
@@ -1743,7 +1743,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       
       WHEN("Insert single item at a specific place by shallow-copy") {
          const auto i666 = CreateElement<E>(666);
-         pack.Insert(3, i666);
+         pack.InsertAt(3, i666);
 
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
@@ -1784,7 +1784,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       }
 
       WHEN("Insert multiple items at a specific place by shallow-copy") {
-         pack.Insert(3, darray2);
+         pack.InsertAt(3, darray2);
 
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
@@ -1829,7 +1829,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Insert single item at a specific place by move") {
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
-         pack.Insert(3, ::std::move(i666));
+         pack.InsertAt(3, ::std::move(i666));
 
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
@@ -1872,7 +1872,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Emplace item at a specific place") {
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
-         auto instance = pack.Emplace(3, ::std::move(i666));
+         auto instance = pack.EmplaceAt(3, ::std::move(i666));
 
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
@@ -1922,7 +1922,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Emplace item at the front") {
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
-         auto instance = pack.Emplace(IndexFront, ::std::move(i666));
+         auto instance = pack.EmplaceAt(Index::Front, ::std::move(i666));
 
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
@@ -1972,7 +1972,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Emplace item at the back") {
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
-         auto instance = pack.Emplace(IndexBack, ::std::move(i666));
+         auto instance = pack.EmplaceAt(Index::Back, ::std::move(i666));
 
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
@@ -2138,7 +2138,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("Pack is cloned") {
          pack.MakeOr();
 
-         if constexpr (CT::CloneMakable<E>) {
+         if constexpr (CT::CloneConstructible<E>) {
             T clone = Clone(pack);
 
             REQUIRE(clone.GetRaw() != pack.GetRaw());
@@ -2173,7 +2173,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack.GetRaw() == moved.GetRaw());
          REQUIRE(pack.GetCount() == moved.GetCount());
          REQUIRE(pack.GetReserved() == moved.GetReserved());
-         REQUIRE(pack.GetState() + DataState::Or == moved.GetState());
+         REQUIRE(pack.GetState() + State::Or == moved.GetState());
          REQUIRE(pack.GetType() == moved.GetType());
       }
 
@@ -2207,7 +2207,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("A forward value-based search is performed on non-exitent value") {
          const auto found = pack.Find(darray2[2]);
 
-         REQUIRE(found == IndexNone);
+         REQUIRE(found == Index::None);
          REQUIRE_FALSE(found);
       }
 
@@ -2221,7 +2221,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       WHEN("A backward value-based search is performed on non-exitent value") {
          const auto found = pack.template Find<true>(darray2[2]);
 
-         REQUIRE(found == IndexNone);
+         REQUIRE(found == Index::None);
          REQUIRE_FALSE(found);
       }
       
@@ -2382,7 +2382,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(i == it + 1);
                ++it;
             },
-            [&](const Trait& i) {
+            [&](const Tag& i) {
                REQUIRE(i == it + 1);
                ++it;
             },
@@ -2411,7 +2411,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(i == it + 1);
                ++it;
             },
-            [&](Trait& i) {
+            [&](Tag& i) {
                REQUIRE(i == it + 1);
                ++it;
             },
@@ -2440,7 +2440,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(*i == it + 1);
                ++it;
             },
-            [&](const Trait* i) {
+            [&](const Tag* i) {
                REQUIRE(*i == it + 1);
                ++it;
             },
@@ -2469,7 +2469,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(*i == it + 1);
                ++it;
             },
-            [&](Trait* i) {
+            [&](Tag* i) {
                REQUIRE(*i == it + 1);
                ++it;
             },
@@ -2498,7 +2498,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(i == 5 - it);
                ++it;
             },
-            [&](const Trait& i) {
+            [&](const Tag& i) {
                REQUIRE(i == 5 - it);
                ++it;
             },
@@ -2556,7 +2556,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(*i == 5 - it);
                ++it;
             },
-            [&](const Trait* i) {
+            [&](const Tag* i) {
                REQUIRE(*i == 5 - it);
                ++it;
             },
@@ -2585,7 +2585,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(*i == 5 - it);
                ++it;
             },
-            [&](Trait* i) {
+            [&](Tag* i) {
                REQUIRE(*i == 5 - it);
                ++it;
             },

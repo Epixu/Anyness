@@ -14,28 +14,28 @@
 TEMPLATE_TEST_CASE(
    "Dense TOrderedSet/TUnorderedSet/OrderedSet/UnorderedSet", "[set]",
    //(SetTest<TUnorderedSet<Text>, Text>),
-   (SetTest<TUnorderedSet<int>, int>),
-   (SetTest<TUnorderedSet<Trait>, Trait>),
-   (SetTest<TUnorderedSet<Traits::Count>, Traits::Count>),
-   (SetTest<TUnorderedSet<Many>, Many>),
+   (SetTest<TSetUnsorted<int>, int>),
+   (SetTest<TSetUnsorted<Tag>, Tag>),
+   (SetTest<TSetUnsorted<Tags::Count>, Tags::Count>),
+   (SetTest<TSetUnsorted<Many>, Many>),
 
    //(SetTest<TOrderedSet<Text>, Text>),
-   (SetTest<TOrderedSet<int>, int>),
-   (SetTest<TOrderedSet<Trait>, Trait>),
-   (SetTest<TOrderedSet<Traits::Count>, Traits::Count>),
-   (SetTest<TOrderedSet<Many>, Many>),
+   (SetTest<TSetSorted<int>, int>),
+   (SetTest<TSetSorted<Tag>, Tag>),
+   (SetTest<TSetSorted<Tags::Count>, Tags::Count>),
+   (SetTest<TSetSorted<Many>, Many>),
 
    //(SetTest<UnorderedSet, Text>),
-   (SetTest<UnorderedSet, int>),
-   (SetTest<UnorderedSet, Trait>),
-   (SetTest<UnorderedSet, Traits::Count>),
-   (SetTest<UnorderedSet, Many>),
+   (SetTest<SetUnsorted, int>),
+   (SetTest<SetUnsorted, Tag>),
+   (SetTest<SetUnsorted, Tags::Count>),
+   (SetTest<SetUnsorted, Many>),
 
    //(SetTest<OrderedSet, Text>),
-   (SetTest<OrderedSet, int>),
-   (SetTest<OrderedSet, Trait>),
-   (SetTest<OrderedSet, Traits::Count>),
-   (SetTest<OrderedSet, Many>)
+   (SetTest<SetSorted, int>),
+   (SetTest<SetSorted, Tag>),
+   (SetTest<SetSorted, Tags::Count>),
+   (SetTest<SetSorted, Many>)
 ) {
    static Allocator::State memoryState;
 
@@ -46,12 +46,12 @@ TEMPLATE_TEST_CASE(
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
       // be thrown as exceptions at runtime                             
-      static_assert(CT::CopyMakable<T>);
-      static_assert(CT::ReferMakable<T>);
-      static_assert(CT::AbandonMakable<T>);
-      static_assert(CT::MoveMakable<T>);
-      static_assert(CT::CloneMakable<T>);
-      static_assert(CT::DisownMakable<T>);
+      static_assert(CT::CopyConstructible<T>);
+      static_assert(CT::ReferConstructible<T>);
+      static_assert(CT::AbandonConstructible<T>);
+      static_assert(CT::MoveConstructible<T>);
+      static_assert(CT::CloneConstructible<T>);
+      static_assert(CT::DisownConstructible<T>);
 
       static_assert(CT::CopyAssignable<T>);
       static_assert(CT::ReferAssignable<T>);

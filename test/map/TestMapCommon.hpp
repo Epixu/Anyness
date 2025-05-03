@@ -10,6 +10,8 @@
 /// Include this file once in each cpp file, after all other headers          
 #include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/Map.hpp>
+#include <Langulus/Anyness/Pair.hpp>
+#include <Langulus/Anyness/TPair.hpp>
 #include <Langulus/CT/Deep.hpp>
 #include <unordered_map>
 #include "../Common.hpp"
@@ -53,17 +55,17 @@ void Map_Helper_TestType(const auto& map) {
    REQUIRE_FALSE(map.IsValueUntyped());
 
    REQUIRE      (map.GetKeyType() == MetaDataOf<K>());
-   REQUIRE      (map.GetKeyType().IsSimilar<const K>());
-   REQUIRE      (map.GetKeyType().IsExact<K>());
-   REQUIRE      (map.GetKeyType().Is<K*>());
+   REQUIRE      (map.GetKeyType().template IsSimilar<const K>());
+   REQUIRE      (map.GetKeyType().template IsExact<K>());
+   REQUIRE      (map.GetKeyType().template Is<K*>());
    REQUIRE      (map.IsKeyDense() == CT::Dense<K>);
    REQUIRE      (map.IsKeySparse() == CT::Sparse<K>);
    REQUIRE      (map.IsKeyDeep() == CT::Deep<Decay<K>>);
 
    REQUIRE      (map.GetValueType() == MetaDataOf<V>());
-   REQUIRE      (map.GetValueType().IsSimilar<const V>());
-   REQUIRE      (map.GetValueType().IsExact<V>());
-   REQUIRE      (map.GetValueType().Is<V*>());
+   REQUIRE      (map.GetValueType().template IsSimilar<const V>());
+   REQUIRE      (map.GetValueType().template IsExact<V>());
+   REQUIRE      (map.GetValueType().template Is<V*>());
    REQUIRE      (map.IsValueDense() == CT::Dense<V>);
    REQUIRE      (map.IsValueSparse() == CT::Sparse<V>);
    REQUIRE      (map.IsValueDeep() == CT::Deep<Decay<V>>);

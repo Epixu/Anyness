@@ -36,6 +36,7 @@ namespace Langulus::Anyness
       Component::HashStack<>,          // Variable hash (cached)        
       Component::Descriptor,           // Descriptor interface          
       Component::IterationForEach,     // ForEach iteration             
+      Component::IterationRange,       // Ranged iteration              
       Component::Comparison,           // Allows for comparison         
       Component::Conversion,           // Allows conversion             
       Component::StateStack<           // Variable state                
@@ -119,6 +120,7 @@ namespace Langulus::Anyness
       Component::HashStack<>,          // Variable hash (cached)        
       Component::Descriptor,           // Descriptor interface          
       Component::IterationForEach,     // ForEach iteration             
+      Component::IterationRange,       // ForEach iteration             
       Component::Comparison,           // Allows for comparison         
       Component::Conversion,           // Allows conversion             
       Component::StateStack<           // Variable state                

@@ -8,7 +8,7 @@
 
 namespace Langulus::CTTI
 {
-
+      
    /// Can be used in two ways to satisfy CT::State<T>:                       
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_State = Yes/No;` in T                      

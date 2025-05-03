@@ -24,6 +24,7 @@
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Iteration-ForEach.hpp"
+#include "../../../source/components/Iteration-Range.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "../../../source/components/Conversion.hpp"
 #include "../../../source/states/Future.hpp"
@@ -60,6 +61,7 @@ namespace Langulus::Anyness
       Component::HashStack<>,          // Variable hash (cached)        
       Component::Descriptor,           // Descriptor interface          
       Component::IterationForEach,     // ForEach iteration             
+      Component::IterationRange,       // Ranged iteration              
       Component::Comparison,           // Allows for comparison         
       Component::Conversion,           // Allows conversion             
       Component::StateStack<           // Variable state                
@@ -138,6 +140,7 @@ namespace Langulus::Anyness
       Component::HashStack<>,          // Variable hash (cached)        
       Component::Descriptor,           // Descriptor interface          
       Component::IterationForEach,     // ForEach iteration             
+      Component::IterationRange,       // ForEach iteration             
       Component::Comparison,           // Allows for comparison         
       Component::Conversion,           // Allows conversion             
       Component::StateStack<           // Variable state                

@@ -76,7 +76,6 @@ namespace Langulus::Anyness
       using Base = Inner::TPairBase<K, V>;
       using Key = K;
       using Val = V;
-      using Value = V;
 
       ///                                                                     
       /// Construction                                                        
@@ -103,6 +102,18 @@ namespace Langulus::Anyness
 
       template<class P> requires CT::PairAssignable<K, V, P>
       TPair& operator = (P&&);
+
+      ///                                                                     
+      ///   Capsulation                                                       
+      Hash GetHash() const;
+
+      auto& GetKey(this auto&& self) noexcept {
+         return self.Component::template Stack<K, 0>::mStack;
+      }
+
+      auto& GetVal(this auto&& self) noexcept {
+         return self.Component::template Stack<V, 1>::mStack;
+      }
    };
 
 } // namespace Langulus::Anyness

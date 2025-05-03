@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Core.hpp"
-#include "TypeNav.hpp"
+#include "Typenav.hpp"
 #include "TypeOf.hpp"
 #include "CT/Support.hpp"
 #include "CT/POD.hpp"

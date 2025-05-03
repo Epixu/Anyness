@@ -14,12 +14,12 @@ TEMPLATE_TEST_CASE("Dense TPair/Pair", "[pair]",
    (MapTest<Pair, Text, int>),
 
    (MapTest<TPair<Text, int>, Text, int>),
-   (MapTest<TPair<Text, Trait>, Text, Trait>),
-   (MapTest<TPair<Text, Traits::Count>, Text, Traits::Count>),
+   (MapTest<TPair<Text, Tag>, Text, Tag>),
+   (MapTest<TPair<Text, Tags::Count>, Text, Tags::Count>),
    (MapTest<TPair<Text, Many>, Text, Many>),
 
-   (MapTest<Pair, Text, Trait>),
-   (MapTest<Pair, Text, Traits::Count>),
+   (MapTest<Pair, Text, Tag>),
+   (MapTest<Pair, Text, Tags::Count>),
    (MapTest<Pair, Text, Many>)
 ) {
    static Allocator::State memoryState;
@@ -33,12 +33,12 @@ TEMPLATE_TEST_CASE("Dense TPair/Pair", "[pair]",
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
       // be thrown as exceptions at runtime                             
-      static_assert(CT::CopyMakable<T>);
-      static_assert(CT::ReferMakable<T>);
-      static_assert(CT::AbandonMakable<T>);
-      static_assert(CT::MoveMakable<T>);
-      static_assert(CT::CloneMakable<T>);
-      static_assert(CT::DisownMakable<T>);
+      static_assert(CT::CopyConstructible<T>);
+      static_assert(CT::ReferConstructible<T>);
+      static_assert(CT::AbandonConstructible<T>);
+      static_assert(CT::MoveConstructible<T>);
+      static_assert(CT::CloneConstructible<T>);
+      static_assert(CT::DisownConstructible<T>);
 
       static_assert(CT::CopyAssignable<T>);
       static_assert(CT::ReferAssignable<T>);
@@ -123,7 +123,7 @@ TEMPLATE_TEST_CASE("Dense TPair/Pair", "[pair]",
 
       REQUIRE(pair == lp);
       REQUIRE(pair.GetKey() == lp.GetKey());
-      REQUIRE(pair.GetValue() == lp.GetValue());
+      REQUIRE(pair.GetVal() == lp.GetVal());
    }
    
    GIVEN("Pair with some items") {
@@ -135,7 +135,7 @@ TEMPLATE_TEST_CASE("Dense TPair/Pair", "[pair]",
          Pair_CheckState_Default<K, V>(pair);
 
          REQUIRE(pair != lp);
-         REQUIRE(((pair.GetKey() != lp.GetKey()) or (pair.GetValue() != lp.GetValue())));
+         REQUIRE(((pair.GetKey() != lp.GetKey()) or (pair.GetVal() != lp.GetVal())));
       }
 
       WHEN("Pair is reset") {
@@ -152,7 +152,7 @@ TEMPLATE_TEST_CASE("Dense TPair/Pair", "[pair]",
 
          REQUIRE(copy == pair);
          REQUIRE(copy.GetKey() == pair.GetKey());
-         REQUIRE(copy.GetValue() == pair.GetValue());
+         REQUIRE(copy.GetVal() == pair.GetVal());
       }
 
       WHEN("Pair is cloned") {
@@ -163,7 +163,7 @@ TEMPLATE_TEST_CASE("Dense TPair/Pair", "[pair]",
 
          REQUIRE((clone != pair) == (CT::Sparse<K> or CT::Sparse<V>));
          REQUIRE(clone.GetKey() == pair.GetKey());
-         REQUIRE(clone.GetValue() == pair.GetValue());
+         REQUIRE(clone.GetVal() == pair.GetVal());
       }
 
       WHEN("Pair is move-constructed") {

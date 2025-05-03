@@ -79,7 +79,7 @@ void Set_CheckState_Default(const auto& set) {
    if constexpr (CT::Typed<T>) {
       static_assert(CT::Exact<TypeOf<T>, K>);
       Set_Helper_TestType<K>(set);
-      REQUIRE      (set.GetState() == DataState::Typed);
+      REQUIRE      (set.GetState() == State::Typed);
    }
    else {
       REQUIRE_FALSE(set.IsTyped());
@@ -87,7 +87,7 @@ void Set_CheckState_Default(const auto& set) {
       REQUIRE      (set.GetType() == nullptr);
       REQUIRE      (set.IsDense());
       REQUIRE_FALSE(set.IsSparse());
-      REQUIRE      (set.GetState() == DataState::Default);
+      REQUIRE      (set.GetState() == State::Default);
       REQUIRE_FALSE(set.IsDeep());
    }
 

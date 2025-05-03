@@ -398,7 +398,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Shallow-copy an array to the back") {
-         pack.Insert(IndexBack, darray2);
+         pack.InsertAt(Index::Back, darray2);
 
          Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 5);
@@ -426,7 +426,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Shallow-copy an array to the front") {
-         pack.Insert(IndexFront, darray2);
+         pack.InsertAt(Index::Front, darray2);
 
          Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 5);
@@ -578,7 +578,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          const auto i666backup = i666;
 
          if constexpr (CT::Typed<T>) {
-            auto& instance = pack.Emplace(IndexFront, ::std::move(i666));
+            auto& instance = pack.EmplaceAt(Index::Front, ::std::move(i666));
 
             Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.GetCount() == 1);
@@ -618,7 +618,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
          if constexpr (CT::Typed<T>) {
-            auto& instance = pack.Emplace(IndexBack, ::std::move(i666));
+            auto& instance = pack.EmplaceAt(Index::Back, ::std::move(i666));
 
             Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.GetCount() == 1);
@@ -649,7 +649,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             #endif
          }
          else {
-            REQUIRE_THROWS(pack.Emplace(IndexBack, ::std::move(i666)));
+            REQUIRE_THROWS(pack.EmplaceAt(Index::Back, ::std::move(i666)));
             Many_CheckState_Default<E>(pack);
          }
       }

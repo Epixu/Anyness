@@ -8,51 +8,51 @@
 #include "TestMapCommon.hpp"
 
 #define MAP_TESTS(MANAGED) \
-   (MapTest<TUnorderedMap<Text, Trait*>, Text, Trait*, MANAGED>), \
-   (MapTest<UnorderedMap, Text, RT*, MANAGED>), \
-   (MapTest<TUnorderedMap<Trait*, RT*>, Trait*, RT*, MANAGED>), \
-   (MapTest<TUnorderedMap<Text, RT*>, Text, RT*, MANAGED>), \
+   (MapTest<TMapUnsorted<Text, Tag*>, Text, Tag*, MANAGED>), \
+   (MapTest<MapUnsorted, Text, RT*, MANAGED>), \
+   (MapTest<TMapUnsorted<Tag*, RT*>, Tag*, RT*, MANAGED>), \
+   (MapTest<TMapUnsorted<Text, RT*>, Text, RT*, MANAGED>), \
  \
-   (MapTest<UnorderedMap, Trait*, RT*, MANAGED>), \
-   (MapTest<UnorderedMap, Text, int*, MANAGED>), \
+   (MapTest<MapUnsorted, Tag*, RT*, MANAGED>), \
+   (MapTest<MapUnsorted, Text, int*, MANAGED>), \
  \
-   (MapTest<TUnorderedMap<Text, int*>, Text, int*, MANAGED>), \
-   (MapTest<TUnorderedMap<Text, Traits::Count*>, Text, Traits::Count*, MANAGED>), \
-   (MapTest<TUnorderedMap<Text, Many*>, Text, Many*, MANAGED>), \
+   (MapTest<TMapUnsorted<Text, int*>, Text, int*, MANAGED>), \
+   (MapTest<TMapUnsorted<Text, Tags::Count*>, Text, Tags::Count*, MANAGED>), \
+   (MapTest<TMapUnsorted<Text, Many*>, Text, Many*, MANAGED>), \
  \
-   (MapTest<TUnorderedMap<Traits::Count*, RT*>, Traits::Count*, RT*, MANAGED>), \
-   (MapTest<TUnorderedMap<Many*, RT*>, Many*, RT*, MANAGED>), \
-   (MapTest<TUnorderedMap<RT*, RT*>, RT*, RT*, MANAGED>), \
+   (MapTest<TMapUnsorted<Tags::Count*, RT*>, Tags::Count*, RT*, MANAGED>), \
+   (MapTest<TMapUnsorted<Many*, RT*>, Many*, RT*, MANAGED>), \
+   (MapTest<TMapUnsorted<RT*, RT*>, RT*, RT*, MANAGED>), \
  \
-   (MapTest<TOrderedMap<Text, int*>, Text, int*, MANAGED>), \
-   (MapTest<TOrderedMap<Text, Trait*>, Text, Trait*, MANAGED>), \
-   (MapTest<TOrderedMap<Text, Traits::Count*>, Text, Traits::Count*, MANAGED>), \
-   (MapTest<TOrderedMap<Text, Many*>, Text, Many*, MANAGED>), \
-   (MapTest<TOrderedMap<Text, RT*>, Text, RT*, MANAGED>), \
+   (MapTest<TMapSorted<Text, int*>, Text, int*, MANAGED>), \
+   (MapTest<TMapSorted<Text, Tag*>, Text, Tag*, MANAGED>), \
+   (MapTest<TMapSorted<Text, Tags::Count*>, Text, Tags::Count*, MANAGED>), \
+   (MapTest<TMapSorted<Text, Many*>, Text, Many*, MANAGED>), \
+   (MapTest<TMapSorted<Text, RT*>, Text, RT*, MANAGED>), \
  \
-   (MapTest<TOrderedMap<Trait*, RT*>, Trait*, RT*, MANAGED>), \
-   (MapTest<TOrderedMap<Traits::Count*, RT*>, Traits::Count*, RT*, MANAGED>), \
-   (MapTest<TOrderedMap<Many*, RT*>, Many*, RT*, MANAGED>), \
-   (MapTest<TOrderedMap<RT*, RT*>, RT*, RT*, MANAGED>), \
+   (MapTest<TMapSorted<Tag*, RT*>, Tag*, RT*, MANAGED>), \
+   (MapTest<TMapSorted<Tags::Count*, RT*>, Tags::Count*, RT*, MANAGED>), \
+   (MapTest<TMapSorted<Many*, RT*>, Many*, RT*, MANAGED>), \
+   (MapTest<TMapSorted<RT*, RT*>, RT*, RT*, MANAGED>), \
  \
-   (MapTest<UnorderedMap, Text, Trait*, MANAGED>), \
-   (MapTest<UnorderedMap, Text, Traits::Count*, MANAGED>), \
-   (MapTest<UnorderedMap, Text, Many*, MANAGED>), \
+   (MapTest<MapUnsorted, Text, Tag*, MANAGED>), \
+   (MapTest<MapUnsorted, Text, Tags::Count*, MANAGED>), \
+   (MapTest<MapUnsorted, Text, Many*, MANAGED>), \
  \
-   (MapTest<UnorderedMap, Traits::Count*, RT*, MANAGED>), \
-   (MapTest<UnorderedMap, Many*, RT*, MANAGED>), \
-   (MapTest<UnorderedMap, RT*, RT*, MANAGED>), \
+   (MapTest<MapUnsorted, Tags::Count*, RT*, MANAGED>), \
+   (MapTest<MapUnsorted, Many*, RT*, MANAGED>), \
+   (MapTest<MapUnsorted, RT*, RT*, MANAGED>), \
  \
-   (MapTest<OrderedMap, Text, int*, MANAGED>), \
-   (MapTest<OrderedMap, Text, Trait*, MANAGED>), \
-   (MapTest<OrderedMap, Text, Traits::Count*, MANAGED>), \
-   (MapTest<OrderedMap, Text, Many*, MANAGED>), \
-   (MapTest<OrderedMap, Text, RT*, MANAGED>), \
+   (MapTest<MapSorted, Text, int*, MANAGED>), \
+   (MapTest<MapSorted, Text, Tag*, MANAGED>), \
+   (MapTest<MapSorted, Text, Tags::Count*, MANAGED>), \
+   (MapTest<MapSorted, Text, Many*, MANAGED>), \
+   (MapTest<MapSorted, Text, RT*, MANAGED>), \
  \
-   (MapTest<OrderedMap, Trait*, RT*, MANAGED>), \
-   (MapTest<OrderedMap, Traits::Count*, RT*, MANAGED>), \
-   (MapTest<OrderedMap, Many*, RT*, MANAGED>), \
-   (MapTest<OrderedMap, RT*, RT*, MANAGED>)
+   (MapTest<MapSorted, Tag*, RT*, MANAGED>), \
+   (MapTest<MapSorted, Tags::Count*, RT*, MANAGED>), \
+   (MapTest<MapSorted, Many*, RT*, MANAGED>), \
+   (MapTest<MapSorted, RT*, RT*, MANAGED>)
 
 
 /// The main test for TOrderedMap/TUnorderedMap/OrderedMap/UnorderedMap       
@@ -119,12 +119,12 @@ TEMPLATE_TEST_CASE(
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
       // be thrown as exceptions at runtime                             
-      static_assert(CT::CopyMakable<T>);
-      static_assert(CT::ReferMakable<T>);
-      static_assert(CT::AbandonMakable<T>);
-      static_assert(CT::MoveMakable<T>);
-      static_assert(CT::CloneMakable<T>);
-      static_assert(CT::DisownMakable<T>);
+      static_assert(CT::CopyConstructible<T>);
+      static_assert(CT::ReferConstructible<T>);
+      static_assert(CT::AbandonConstructible<T>);
+      static_assert(CT::MoveConstructible<T>);
+      static_assert(CT::CloneConstructible<T>);
+      static_assert(CT::DisownConstructible<T>);
 
       static_assert(CT::CopyAssignable<T>);
       static_assert(CT::ReferAssignable<T>);
@@ -445,12 +445,12 @@ TEMPLATE_TEST_CASE(
 
       for (int iii = 0; iii < 10; ++iii) {
       WHEN(std::string("Removing elements by value #") + std::to_string(iii)) {
-         static_assert(CT::Owned<Own<Trait*>>);
-         static_assert(CT::Owned<Ref<Trait>>);
-         static_assert(CT::NotOwned<Trait*>);
-         static_assert(CT::NotOwned<Trait>);
-         static_assert(CT::Comparable<Trait*, Own<Trait*>>);
-         static_assert(CT::Comparable<Trait*, Ref<Trait>>);
+         static_assert(CT::Owned<Own<Tag*>>);
+         static_assert(CT::Owned<Ref<Tag>>);
+         static_assert(CT::NotOwned<Tag*>);
+         static_assert(CT::NotOwned<Tag>);
+         static_assert(CT::Comparable<Tag*, Own<Tag*>>);
+         static_assert(CT::Comparable<Tag*, Ref<Tag>>);
 
          const auto removed2 = map.RemoveValue(darray1[1].GetValue());
          const auto removed4 = map.RemoveValue(darray1[3].GetValue());

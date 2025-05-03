@@ -22,6 +22,10 @@ namespace Langulus::Anyness
 
    public:
       using CTTI_Pair = Yes;
+      using CTTI_Container = Yes;
+
+      using Key = Any;
+      using Val = Any;
 
       constexpr Pair() noexcept = default;
       constexpr Pair(Pair const&) noexcept = default;
@@ -35,27 +39,17 @@ namespace Langulus::Anyness
 
       ///                                                                     
       ///   Capsulation                                                       
-      ///                                                                     
       Hash GetHash() const;
 
-      auto GetKey()        const noexcept -> Many const&;
-      auto GetKey()              noexcept -> Many&;
-      auto GetKeyBlock()   const noexcept -> Many const&;
-      auto GetKeyBlock()         noexcept -> Many&;
-
-      auto GetValue()      const noexcept -> Many const&;
-      auto GetValue()            noexcept -> Many&;
-      auto GetValueBlock() const noexcept -> Many const&;
-      auto GetValueBlock()       noexcept -> Many&;
+      auto& GetKey(this auto&& self) noexcept { return self.mKey; }
+      auto& GetVal(this auto&& self) noexcept { return self.mVal; }
 
       ///                                                                     
       ///   Comparison                                                        
-      ///                                                                     
       bool operator == (CT::Pair auto const&) const;
 
       ///                                                                     
       ///   Removal                                                           
-      ///                                                                     
       void Clear();
       void Reset();
    };
