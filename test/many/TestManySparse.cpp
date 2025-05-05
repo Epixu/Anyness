@@ -2398,7 +2398,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          );
 
          REQUIRE(static_cast<unsigned>(it) == foreachit);
-         if constexpr (CT::TextBased<Decay<E>>)
+         if constexpr (CT::Text<Decay<E>>)
             REQUIRE(it == 0);
          else
             REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
@@ -2427,7 +2427,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          );
 
          REQUIRE(static_cast<unsigned>(it) == foreachit);
-         if constexpr (CT::TextBased<Decay<E>>)
+         if constexpr (CT::Text<Decay<E>>)
             REQUIRE(it == 0);
          else
             REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
@@ -2456,7 +2456,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          );
 
          REQUIRE(static_cast<unsigned>(it) == foreachit);
-         if constexpr (CT::TextBased<Decay<E>>)
+         if constexpr (CT::Text<Decay<E>>)
             REQUIRE(it == 0);
          else
             REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
@@ -2485,7 +2485,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          );
 
          REQUIRE(static_cast<unsigned>(it) == foreachit);
-         if constexpr (CT::TextBased<Decay<E>>)
+         if constexpr (CT::Text<Decay<E>>)
             REQUIRE(it == 0);
          else
             REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
@@ -2514,7 +2514,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          );
 
          REQUIRE(static_cast<unsigned>(it) == foreachit);
-         if constexpr (CT::TextBased<Decay<E>>)
+         if constexpr (CT::Text<Decay<E>>)
             REQUIRE(it == 0);
          else
             REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
@@ -2543,7 +2543,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          );
 
          REQUIRE(static_cast<unsigned>(it) == foreachit);
-         if constexpr (CT::TextBased<Decay<E>>)
+         if constexpr (CT::Text<Decay<E>>)
             REQUIRE(it == 0);
          else
             REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
@@ -2572,7 +2572,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          );
 
          REQUIRE(static_cast<unsigned>(it) == foreachit);
-         if constexpr (CT::TextBased<Decay<E>>)
+         if constexpr (CT::Text<Decay<E>>)
             REQUIRE(it == 0);
          else
             REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
@@ -2601,7 +2601,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          );
 
          REQUIRE(static_cast<unsigned>(it) == foreachit);
-         if constexpr (CT::TextBased<Decay<E>>)
+         if constexpr (CT::Text<Decay<E>>)
             REQUIRE(it == 0);
          else
             REQUIRE(static_cast<unsigned>(it) == pack.GetCount());

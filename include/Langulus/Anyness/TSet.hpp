@@ -20,6 +20,7 @@ namespace Langulus::Anyness
       Component::HeapMovable<>,        // Heap for keys                 
       Component::OwnershipStack<>,     // Keys allocation is referenced 
       Component::DeepOwnership<>,      // Sparse keys are referenced    
+      Component::HashHeap<>,           // Keys can be hashed            
       Component::IndexedHash<>,        // Indexed directly              
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
@@ -49,6 +50,7 @@ namespace Langulus::Anyness
       Component::HeapMovable<>,        // Heap for keys                 
       Component::OwnershipStack<>,     // Keys allocation is referenced 
       Component::DeepOwnership<>,      // Sparse keys are referenced    
+      Component::HashHeap<>,           // Keys can be hashed            
       Component::IndexedHash<>,        // Indexed directly              
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
@@ -78,6 +80,7 @@ namespace Langulus::Anyness
       Component::HeapMovable<>,        // Heap for keys                 
       Component::OwnershipStack<>,     // Keys allocation is referenced 
       Component::DeepOwnership<>,      // Sparse keys are referenced    
+      Component::HashHeap<>,           // Keys can be hashed            
       Component::IndexedHash<>,        // Indexed directly              
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           

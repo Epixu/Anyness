@@ -26,7 +26,9 @@ namespace Langulus::Anyness
       Component::OwnershipStack<0, false>,
       Component::Assignment,
       Component::TypedStatic<DMeta, T>
-   > {};
+   > {
+      Handle() = delete;
+   };
    
    template<CT::Sparse T>
    struct Handle<T> : Container<
@@ -34,14 +36,18 @@ namespace Langulus::Anyness
       Component::DeepOwnership<>,
       Component::Assignment,
       Component::TypedStatic<DMeta, T>
-   > {};
+   > {
+      Handle() = delete;
+   };
    
    template<CT::Dense T>
    struct HandleLocal<T> : Container<
       Component::Stack<T>,
       Component::Assignment,
       Component::TypedStatic<DMeta, T>
-   > {};
+   > {
+      HandleLocal() = delete;
+   };
    
    template<CT::Sparse T>
    struct HandleLocal<T> : Container<
@@ -49,7 +55,9 @@ namespace Langulus::Anyness
       Component::OwnershipStack<>,
       Component::Assignment,
       Component::TypedStatic<DMeta, T>
-   > {};
+   > {
+      HandleLocal() = delete;
+   };
 
 } // namespace Langulus::Anyness
 

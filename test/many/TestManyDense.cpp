@@ -894,7 +894,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("ForEach flat dense element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEach(
             [&](const int&)    {FAIL();},
-            [&](const Trait&)  {FAIL();},
+            [&](const Tag&)    {FAIL();},
             [&](const Many&)   {FAIL();}
          );
 
@@ -904,7 +904,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("ForEach flat dense element (mutable)") {
          const auto foreachit = const_cast<T&>(pack).ForEach(
             [&](int&)         {FAIL(); },
-            [&](Trait&)       {FAIL(); },
+            [&](Tag&)         {FAIL(); },
             [&](Many&)        {FAIL(); }
          );
 
@@ -914,7 +914,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("ForEach flat sparse element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEach(
             [&](const int*)   {FAIL(); },
-            [&](const Trait*) {FAIL(); },
+            [&](const Tag*)   {FAIL(); },
             [&](const Many*)  {FAIL(); }
          );
 
@@ -924,7 +924,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("ForEach flat sparse element (mutable)") {
          const auto foreachit = const_cast<T&>(pack).ForEach(
             [&](int*)         {FAIL(); },
-            [&](Trait*)       {FAIL(); },
+            [&](Tag*)         {FAIL(); },
             [&](Many*)        {FAIL(); }
          );
 
@@ -934,7 +934,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("ForEachRev flat dense element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEachRev(
             [&](const int&)   {FAIL(); },
-            [&](const Trait&) {FAIL(); },
+            [&](const Tag&)   {FAIL(); },
             [&](const Many&)  {FAIL(); }
          );
 
@@ -944,7 +944,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("ForEachRev flat dense element (mutable)") {
          const auto foreachit = pack.ForEachRev(
             [&](const int&)   {FAIL(); },
-            [&](const Trait&) {FAIL(); },
+            [&](const Tag&)   {FAIL(); },
             [&](const Many&)  {FAIL(); }
          );
 
@@ -954,7 +954,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("ForEachRev flat sparse element (immutable)") {
          const auto foreachit = const_cast<const T&>(pack).ForEachRev(
             [&](const int*)   {FAIL(); },
-            [&](const Trait*) {FAIL(); },
+            [&](const Tag*)   {FAIL(); },
             [&](const Many*)  {FAIL(); }
          );
 
@@ -964,7 +964,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("ForEachRev flat sparse element (mutable)") {
          const auto foreachit = pack.ForEachRev(
             [&](const int*)   {FAIL(); },
-            [&](const Trait*) {FAIL(); },
+            [&](const Tag*)   {FAIL(); },
             [&](const Many*)  {FAIL(); }
          );
 

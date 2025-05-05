@@ -8,6 +8,7 @@
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/CT/Resolvable.hpp>
 #include "DeepOwnership.hpp"
+#include "Iteration-Range.hpp"
 #include <algorithm>
 
 
@@ -154,7 +155,9 @@ namespace Langulus::Anyness::Component
                      // Memory moved, and we should move all elements   
                      // in it. We're moving to new memory, so no reverse
                      // is required                                     
-                     self.EmplaceWithIntent(Abandon(previous));
+                     auto from = RangeHandle(previous).begin();
+                     for (auto to : RangeHandle(self))
+                        to.EmplaceWithIntent(Abandon(*(from++)));
                      previous.Free();
                   }
                }

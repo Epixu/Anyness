@@ -21,6 +21,7 @@
 #include "../../../source/components/Reserve-Stack.hpp"
 #include "../../../source/components/State-Stack.hpp"
 #include "../../../source/components/Comparison.hpp"
+#include "../../../source/components/Hash-Heap.hpp"
 #include "../../../source/states/Sorted.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
@@ -37,6 +38,7 @@ namespace Langulus::Anyness
       Component::HeapMovable<>,        // Heap for keys                 
       Component::OwnershipStack<>,     // Keys allocation is referenced 
       Component::DeepOwnership<>,      // Sparse keys are referenced    
+      Component::HashHeap<>,           // Can be hashed                 
       Component::IndexedHash<>,        // Indexed directly              
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
@@ -64,6 +66,7 @@ namespace Langulus::Anyness
       Component::HeapMovable<>,        // Heap for keys                 
       Component::OwnershipStack<>,     // Keys allocation is referenced 
       Component::DeepOwnership<>,      // Sparse keys are referenced    
+      Component::HashHeap<>,           // Can be hashed                 
       Component::IndexedHash<>,        // Indexed directly              
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
@@ -92,6 +95,7 @@ namespace Langulus::Anyness
       Component::HeapMovable<>,        // Heap for keys                 
       Component::OwnershipStack<>,     // Keys allocation is referenced 
       Component::DeepOwnership<>,      // Sparse keys are referenced    
+      Component::HashHeap<>,           // Can be hashed                 
       Component::IndexedHash<>,        // Indexed directly              
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           

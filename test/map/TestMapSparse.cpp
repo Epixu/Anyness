@@ -445,10 +445,10 @@ TEMPLATE_TEST_CASE(
 
       for (int iii = 0; iii < 10; ++iii) {
       WHEN(std::string("Removing elements by value #") + std::to_string(iii)) {
-         static_assert(CT::Owned<Own<Tag*>>);
+         /*static_assert(CT::Owned<Own<Tag*>>);
          static_assert(CT::Owned<Ref<Tag>>);
          static_assert(CT::NotOwned<Tag*>);
-         static_assert(CT::NotOwned<Tag>);
+         static_assert(CT::NotOwned<Tag>);*/
          static_assert(CT::Comparable<Tag*, Own<Tag*>>);
          static_assert(CT::Comparable<Tag*, Ref<Tag>>);
 

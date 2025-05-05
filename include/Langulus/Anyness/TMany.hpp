@@ -65,7 +65,9 @@ namespace Langulus::Anyness
          Component::OwnershipStack<>,
          Component::Assignment,
          Component::TypedStatic<DMeta, T>
-      > {};
+      > {
+         using CTTI_Sparse = Yes;
+      };
       using  PickSparse = T;
       using  Pick       = Tif<CT::Sparse<T>, PickSparse,    PickDense>;
       using  PickMut    = Tif<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
@@ -95,15 +97,22 @@ namespace Langulus::Anyness
       using  PickRange       = Tif<CT::Sparse<T>, PickRangeSparse,    PickRangeDense>;
       using  PickRangeMut    = Tif<CT::Sparse<T>, PickRangeSparseMut, PickRangeDenseMut>;
 
-      constexpr TMany() = default;
-      TMany(const TMany&) noexcept;
-      TMany(TMany&&) noexcept;
-
-      //template<template<class> class I> requires CT::Intent<I<Many>>
-      //explicit Many(I<Many>&&) noexcept;
+      ///                                                                     
+      /// Construction                                                        
+      constexpr TMany() noexcept = default;
+      constexpr TMany(const TMany&) noexcept;
+      constexpr TMany(TMany&&) noexcept;
 
       template<class A1, class...AN>
       TMany(A1&&, AN&&...) requires CT::RangeInsertable<TMany, A1, AN...>;
+
+      ///                                                                     
+      /// Assignment                                                          
+      TMany& operator = (TMany const&) noexcept = default;
+      TMany& operator = (TMany&&) noexcept = default;
+
+      template<class A1> requires CT::RangeAssignable<TMany, A1>
+      TMany& operator = (A1&&);
    };
    
    /// A statically-typed continuous container view of variable size          

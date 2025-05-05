@@ -72,10 +72,12 @@ namespace Langulus::RTTI
       using Inner::MetaTagBase::MetaTagBase;
       using Inner::MetaTagBase::operator =;
 
-      explicit constexpr MetaTag(Cloned<MetaTag>&& meta) noexcept
+      template<template<class> class T> requires CT::Intent<T<MetaTag>>
+      explicit constexpr MetaTag(T<MetaTag>&& meta) noexcept
          : MetaTag {*meta} {}
 
-      constexpr MetaTag& operator = (Cloned<MetaTag>&& rhs) noexcept {
+      template<template<class> class T> requires CT::Intent<T<MetaTag>>
+      constexpr MetaTag& operator = (T<MetaTag>&& rhs) noexcept {
          new (this) MetaTag {*rhs};
          return *this;
       }

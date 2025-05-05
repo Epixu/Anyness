@@ -21,7 +21,7 @@ namespace Langulus::CT
    {
 
       /// Test whether a container is constructible with the given arguments  
-      ///   @tparam T - the contained type                                    
+      ///   @tparam C - the contained type                                    
       ///   @tparam ...A - the arguments to test                              
       ///   @return true if container is constructible using {A...}           
       template<CT::Container C, class...A>

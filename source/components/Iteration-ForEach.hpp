@@ -89,10 +89,10 @@ namespace Langulus::Anyness::Component
       /// container is iterated and the function - executed for all elements. 
       /// The rest of the provided functions are ignored after the first      
       /// function with viable argument                                       
-      ///   @param calls - all potential functions to iterate with            
+      ///   @param lambdas - all potential functions to iterate with          
       ///   @return the number of executions and the control end code         
       template<CT::Container C, class...F>
-      auto ForEach(this C&& self, F&&...lambda) -> ForEachResult<C> {
+      auto ForEach(this C&& self, F&&...lambdas) -> ForEachResult<C> {
          static_assert(sizeof...(F) > 0, "No functions in ForEach");
          if (self.IsEmpty())
             return {};
@@ -100,7 +100,7 @@ namespace Langulus::Anyness::Component
          LoopControl loop = Loop::Break;
          Count<C> result = 0;
          (void)(... or (Loop::NextLoop != (
-            loop = self.template ForEachInner<false>(::std::forward<F>(lambda), result)
+            loop = self.template ForEachInner<false>(::std::forward<F>(lambdas), result)
          )));
 
          if (loop == Loop::Discard)
@@ -110,7 +110,7 @@ namespace Langulus::Anyness::Component
 
       /// Do it in reverse                                                    
       template<CT::Container C, class...F>
-      auto ForEachRev(this C&& self, F&&...lambda) -> ForEachResult<C> {
+      auto ForEachRev(this C&& self, F&&...lambdas) -> ForEachResult<C> {
          static_assert(sizeof...(F) > 0, "No functions in ForEach");
          if (self.IsEmpty())
             return {};
@@ -118,7 +118,7 @@ namespace Langulus::Anyness::Component
          LoopControl loop = Loop::Break;
          Count<C> result = 0;
          (void)(... or (Loop::NextLoop != (
-            loop = self.template ForEachInner<true>(::std::forward<F>(lambda), result)
+            loop = self.template ForEachInner<true>(::std::forward<F>(lambdas), result)
          )));
 
          if (loop == Loop::Discard)
@@ -126,15 +126,79 @@ namespace Langulus::Anyness::Component
          return {result, loop};
       }
 
-      template<CT::Container C>
-      auto ForEachDeep(this C&&, auto&&...) -> ForEachResult<C>;
-      template<CT::Container C>
-      auto ForEachDeepRev(this C&&, auto&&...) -> ForEachResult<C>;
+      /// Execute functions in each sub-block, inclusively                    
+      /// Unlike the flat variants above, this one reaches into sub-blocks.   
+      /// Each function has a distinct argument type, that is tested against  
+      /// the contained type. If argument is compatible with the type, the    
+      /// block is iterated, and F is executed for all elements. None of the  
+      /// provided functions are ignored, unless Loop::Break is returned at   
+      /// some point                                                          
+      ///   @param lambdas - all potential functions to iterate with          
+      ///   @return the number of executions                                  
+      template<CT::Container C, class...F>
+      auto ForEachDeep(this C&& self, F&&...lambdas) -> ForEachResult<C> {
+         static_assert(sizeof...(F) > 0, "No functions in ForEach");
+         if (self.IsEmpty())
+            return {};
 
-      template<CT::Container C>
-      auto ForEachDeepNoskip(this C&&, auto&&...) -> ForEachResult<C>;
-      template<CT::Container C>
-      auto ForEachDeepNoskipRev(this C&&, auto&&...) -> ForEachResult<C>;
+         LoopControl loop = Loop::Break;
+         Count<C> result = 0;
+         (void)(... or (Loop::Break == (
+            loop = self.ForEachDeepInner<false, true>(::std::forward<F>(lambdas), result)
+         )));
+
+         if (loop == Loop::Discard)
+            self.Reset();
+         return result;
+      }
+
+      /// Do it in reverse                                                    
+      template<CT::Container C, class...F>
+      auto ForEachDeepRev(this C&& self, F&&...lambdas) -> ForEachResult<C> {
+         static_assert(sizeof...(F) > 0, "No functions in ForEach");
+         if (self.IsEmpty())
+            return {};
+
+         LoopControl loop = Loop::Break;
+         Count<C> result = 0;
+         (void)(... or (Loop::Break == (
+            loop = self.ForEachDeepInner<true, true>(::std::forward<F>(lambdas), result)
+         )));
+
+         if (loop == Loop::Discard)
+            self.Reset();
+         return result;
+      }
+
+      /// Do it without skipping the intermediate containers                  
+      template<CT::Container C, class...F>
+      auto ForEachDeepNoskip(this C&& self, F&&...lambdas) -> ForEachResult<C> {
+         static_assert(sizeof...(F) > 0, "No functions in ForEach");
+         LoopControl loop = Loop::Break;
+         Count<C> result = 0;
+         (void)(... or (Loop::Break == (
+            loop = self.ForEachDeepInner<false, false>(::std::forward<F>(lambdas), result)
+         )));
+
+         if (loop == Loop::Discard)
+            self.Reset();
+         return result;
+      }
+
+      /// Do it without skipping the intermediate containers in reverse       
+      template<CT::Container C, class...F>
+      auto ForEachDeepNoskipRev(this C&& self, F&&...lambdas) -> ForEachResult<C> {
+         static_assert(sizeof...(F) > 0, "No functions in ForEach");
+         LoopControl loop = Loop::Break;
+         Count<C> result = 0;
+         (void)(... or (Loop::Break == (
+            loop = self.ForEachDeepInner<true, false>(::std::forward<F>(lambdas), result)
+         )));
+
+         if (loop == Loop::Discard)
+            self.Reset();
+         return result;
+      }
 
    protected:
       /// Iterate and execute call for each flat element, counting each       

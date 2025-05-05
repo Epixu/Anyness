@@ -25,6 +25,7 @@
 #include "../../../source/components/Hash-Stack.hpp"
 #include "../../../source/components/State-Stack.hpp"
 #include "../../../source/components/Comparison.hpp"
+#include "../../../source/components/Iteration-Range.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
@@ -36,6 +37,7 @@ namespace Langulus::Anyness
 
    struct Bytes;
    struct BytesView;
+
 
    ///                                                                        
    /// A continuous byte container of variable size                           
@@ -56,6 +58,7 @@ namespace Langulus::Anyness
       Component::CountStack<>,         // Variable count                
       Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
+      Component::IterationRange,       // Ranged iteration              
       Component::Comparison,           // Comparisons                   
       Component::StateStack<           // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
@@ -64,16 +67,6 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
-      constexpr Bytes() noexcept = default;
-      constexpr Bytes(const Bytes&) noexcept = default;
-      constexpr Bytes(Bytes&&) noexcept = default;
-
-      template<template<class> class I> requires CT::Intent<I<Bytes>>
-      constexpr Bytes(I<Bytes>&&) noexcept;
-
-      template<class A1, class...AN>
-      constexpr Bytes(A1&&, AN&&...) requires CT::RangeInsertable<Bytes, A1, AN...>;
-
       // View                                                           
       using  ViewType = BytesView;
 
@@ -97,6 +90,16 @@ namespace Langulus::Anyness
          Component::TypedStatic<DMeta, Byte>,
          Component::CountStack<>
       > {};
+
+      constexpr Bytes() noexcept = default;
+      constexpr Bytes(const Bytes&) noexcept = default;
+      constexpr Bytes(Bytes&&) noexcept = default;
+
+      //template<template<class> class I> requires CT::Intent<I<Bytes>>
+      //constexpr Bytes(I<Bytes>&&) noexcept;
+
+      template<class A1, class...AN>
+      constexpr Bytes(A1&&, AN&&...) requires CT::RangeInsertable<Bytes, A1, AN...>;
    };
 
    
@@ -113,6 +116,7 @@ namespace Langulus::Anyness
       Component::CountStack<>,         // Variable count                
       Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
+      Component::IterationRange,       // Ranged iteration              
       Component::Comparison,           // Comparisons                   
       Component::StateStack<           // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 

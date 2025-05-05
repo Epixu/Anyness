@@ -21,6 +21,7 @@
 #include "../../../source/components/Reserve-Stack.hpp"
 #include "../../../source/components/State-Stack.hpp"
 #include "../../../source/components/Comparison.hpp"
+#include "../../../source/components/Hash-Heap.hpp"
 #include "../../../source/states/Sorted.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
@@ -70,6 +71,8 @@ namespace Langulus::Anyness
       Component::OwnershipStack<1>,    // Vals allocation is referenced 
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
+      Component::HashHeap<0>,          // Keys can be hashed            
+      Component::HashHeap<1>,          // Values can be hashed          
       Component::IndexedHash<>,        // Indexed directly              
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
@@ -94,6 +97,8 @@ namespace Langulus::Anyness
       using ValMut = Inner::ValMut;
       using Val    = Inner::Val;
 
+      static constexpr bool TypeErased = true;
+
       constexpr Map() noexcept = default;
       constexpr Map(const Map&) noexcept = default;
       constexpr Map(Map&&) noexcept = default;
@@ -113,6 +118,8 @@ namespace Langulus::Anyness
       Component::OwnershipStack<1>,    // Vals allocation is referenced 
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
+      Component::HashHeap<0>,          // Keys can be hashed            
+      Component::HashHeap<1>,          // Values can be hashed          
       Component::IndexedHash<>,        // Indexed directly              
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
@@ -138,6 +145,8 @@ namespace Langulus::Anyness
       using ValMut = Inner::ValMut;
       using Val    = Inner::Val;
 
+      static constexpr bool TypeErased = true;
+
       constexpr MapUnsorted() noexcept = default;
       constexpr MapUnsorted(const MapUnsorted&) noexcept = default;
       constexpr MapUnsorted(MapUnsorted&&) noexcept = default;
@@ -157,6 +166,8 @@ namespace Langulus::Anyness
       Component::OwnershipStack<1>,    // Vals allocation is referenced 
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
+      Component::HashHeap<0>,          // Keys can be hashed            
+      Component::HashHeap<1>,          // Values can be hashed          
       Component::IndexedHash<>,        // Indexed directly              
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
@@ -181,6 +192,8 @@ namespace Langulus::Anyness
       using Key    = Inner::Key;
       using ValMut = Inner::ValMut;
       using Val    = Inner::Val;
+
+      static constexpr bool TypeErased = true;
 
       constexpr MapSorted() noexcept = default;
       constexpr MapSorted(const MapSorted&) noexcept = default;

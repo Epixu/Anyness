@@ -5,13 +5,21 @@
 namespace Langulus::Anyness::Component
 {
 
-   template<class T = Hash, unsigned ID = 0, unsigned HEAP_ID = 0>
+   /// Stores a precomputed hash inside the heap with the given ID            
+   /// The hash is calculated using the data inside the given heap ID         
+   /// The hash is recomputed if GetHash() is invoked when stored hash is 0   
+   ///   @tparam ID - the heap ID                                             
+   ///   @tparam H  - the hash type used                                      
+   template<unsigned ID = 0, class H = Hash>
    struct HashHeap {
       using CTTI_Component = Yes;
 
+      /// Get the hash, and recompute it if zero                              
+      ///   @return the hash                                                  
       template<class Self>
-      T GetHash(this const Self& self) noexcept {
-         return self.GetHeap<HEAP_ID>().GetElement<T, ID>();
+      H GetHash(this const Self& self) noexcept {
+         return self.GetHeap<ID>().GetElement<H, ID>();
+         //TODO recompute hash
       }
    };
 

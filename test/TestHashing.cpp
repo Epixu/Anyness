@@ -45,15 +45,14 @@ SCENARIO("Hashing different kinds of containers", "[hash]") {
 
 /// Cross-container consistency tests                                         
 TEMPLATE_TEST_CASE(
-   "Cross-container consistency tests for TOrderedMap/TUnorderedMap/OrderedMap/UnorderedMap", "[map]",
-   (HashTest<Text, Tag*>),
-
+   "Cross-container consistency tests for TMapUnsorted/TMapSorted/MapUnsorted/MapSorted", "[map]",
    (HashTest<Text, int>),
    (HashTest<Text, Tag>),
    (HashTest<Text, Tags::Count>),
    (HashTest<Text, Many>),
 
    (HashTest<Text, int*>),
+   (HashTest<Text, Tag*>),
    (HashTest<Text, Tags::Count*>),
    (HashTest<Text, Many*>)
 ) {
@@ -63,21 +62,20 @@ TEMPLATE_TEST_CASE(
    Allocator::State memoryState;
 
    GIVEN("A single element initialized maps of all kinds") {
-      const auto pair = CreatePair<TPair<K, V>, K, V>(
-         "five hundred", 555);
+      const auto pair = CreatePair<TPair<K, V>, K, V>("five hundred", 555);
 
-      TMapUnsorted<K, V> uset1 {pair};
-      MapUnsorted uset2 {pair};
-      TMapSorted<K, V> oset1 {pair};
-      MapSorted oset2 {pair};
+      TMapUnsorted<K, V> umap1 {pair};
+      TMapSorted<K, V>   omap1 {pair};
+      MapUnsorted        umap2 {pair};
+      MapSorted          omap2 {pair};
 
       WHEN("Their hashes are taken") {
          const auto elementHash = HashOf(pair);
 
-         const auto uhash1 = uset1.GetHash();
-         const auto uhash2 = uset2.GetHash();
-         const auto ohash1 = oset1.GetHash();
-         const auto ohash2 = oset2.GetHash();
+         const auto uhash1 = umap1.GetHash();
+         const auto uhash2 = umap2.GetHash();
+         const auto ohash1 = omap1.GetHash();
+         const auto ohash2 = omap2.GetHash();
 
          REQUIRE(uhash1 == uhash2);
          REQUIRE(ohash1 == ohash2);
@@ -100,7 +98,7 @@ TEMPLATE_TEST_CASE(
 
 /// Cross-container consistency tests                                         
 TEMPLATE_TEST_CASE(
-   "Cross-container consistency tests for TOrderedSet/TUnorderedSet/OrderedSet/UnorderedSet", "[set]",
+   "Cross-container consistency tests for TSetUnsorted/TSetSorted/SetUnsorted/SetSorted", "[set]",
    int,  Tag,  Tags::Count,  Many,
    int*, Tag*, Tags::Count*, Many*
 ) {
@@ -111,9 +109,9 @@ TEMPLATE_TEST_CASE(
       const auto elementHash = HashOf(element);
 
       TSetUnsorted<TestType> uset1 {element};
-      SetUnsorted uset2 {element};
-      TSetSorted<TestType> oset1 {element};
-      SetSorted oset2 {element};
+      TSetSorted<TestType>   oset1 {element};
+      SetUnsorted            uset2 {element};
+      SetSorted              oset2 {element};
 
       WHEN("Their hashes are taken") {
          REQUIRE(uset1.template IsExact<TestType>());

@@ -12,20 +12,37 @@
 namespace Langulus::CT::Inner
 {
 
+   /// Helper function to extract underlying type                             
+   /// Supports underlying typelists as well                                  
    template<class T>
    consteval CT::Typelist auto GetUnderlyingType() {
       if constexpr (Array<T>)
          return Types<Deext<T>> {};
       else {
-         if constexpr (NotVoid<typename CTTI::Typed<T>::Type>)
+         if constexpr (NotVoid<typename CTTI::Typed<T>::Type>) {
             // Checked externally, T doesn't have to be complete        
-            return Types<typename CTTI::Typed<T>::Type> {};
-         else if constexpr (requires { typename T::CTTI_Typed; })
+            using TLIST = typename CTTI::Typed<T>::Type;
+            if constexpr (CT::Typelist<TLIST>)
+               return TLIST {};
+            else
+               return Types<TLIST> {};
+         }
+         else if constexpr (requires { typename T::CTTI_Typed; }) {
             // Checked internally, T has to be a complete type          
-            return Types<typename T::CTTI_Typed> {};
-         else if constexpr (requires { typename T::value_type; })
+            using TLIST = typename T::CTTI_Typed;
+            if constexpr (CT::Typelist<TLIST>)
+               return TLIST {};
+            else
+               return Types<TLIST> {};
+         }
+         else if constexpr (requires { typename T::value_type; }) {
             // Checked internally, T has to be a complete type          
-            return Types<typename T::value_type> {};
+            using TLIST = typename T::value_type;
+            if constexpr (CT::Typelist<TLIST>)
+               return TLIST {};
+            else
+               return Types<TLIST> {};
+         }
          else if constexpr (Enum<T>)
             return Types<::std::underlying_type_t<T>> {};
          else
@@ -42,7 +59,7 @@ namespace Langulus
    /// as well as any bounded array, or anything with T::CTTI_Typed or        
    /// T::value_type that isn't 'void'                                        
    ///   - if T is an array -> return the type (remove extents and refs)      
-   ///   - if T has CTTI_Typed/value_type -> return the inner type            
+   ///   - if T has CTTI_Typed/value_type -> return the inner type(s)         
    ///   - if T is an enum -> return the underlying type                      
    ///   - otherwise just return a void type                                  
    template<class T>
@@ -55,6 +72,8 @@ namespace Langulus
       /// specializations, or T::CTTI_Typed / T::value_type members           
       ///   @attention the inner type must not be 'void', in order for T to   
       ///      be considered 'typed' (as opposed to 'type-erased')            
+      ///   @attention if the inner type is a typelist, that typelist will be 
+      ///      accounted for, and Ts are multiply-typed (like TPair)          
       template<class...T>
       concept Typed = (NotVoid<TypeOf<Deref<T>>> and ...);
 
@@ -83,6 +102,8 @@ namespace Langulus
 
          if constexpr (requires { what.TypedCast(); })
             return what.TypedCast();
+         else if constexpr (CT::Typelist<TT>)
+            static_assert(false , "Can't decide which type to cast to - add a TypedCast() method to disambiguate");
          else if constexpr (requires { what.operator TT&& (); })
             return what.operator TT&& ();
          else if constexpr (requires { what.operator TT& (); })

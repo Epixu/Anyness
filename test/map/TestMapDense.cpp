@@ -814,15 +814,15 @@ TEMPLATE_TEST_CASE(
 }
 
 TEMPLATE_TEST_CASE("Dense templated map stress test", "[map]",
-   (MapTest<TUnorderedMap<int, int>, int, int>),
-   (MapTest<TUnorderedMap<int, Trait>, int, Trait>),
-   (MapTest<TUnorderedMap<int, Traits::Count>, int, Traits::Count>),
-   (MapTest<TUnorderedMap<int, Many>, int, Many>),
+   (MapTest<TMapUnsorted<int, int>, int, int>),
+   (MapTest<TMapUnsorted<int, Tag>, int, Tag>),
+   (MapTest<TMapUnsorted<int, Tags::Count>, int, Tags::Count>),
+   (MapTest<TMapUnsorted<int, Many>, int, Many>),
 
-   (MapTest<TOrderedMap<int, int>, int, int>),
-   (MapTest<TOrderedMap<int, Trait>, int, Trait>),
-   (MapTest<TOrderedMap<int, Traits::Count>, int, Traits::Count>),
-   (MapTest<TOrderedMap<int, Many>, int, Many>)
+   (MapTest<TMapSorted<int, int>, int, int>),
+   (MapTest<TMapSorted<int, Tag>, int, Tag>),
+   (MapTest<TMapSorted<int, Tags::Count>, int, Tags::Count>),
+   (MapTest<TMapSorted<int, Many>, int, Many>)
 ) {
    static Allocator::State memoryState;
 
@@ -850,7 +850,7 @@ TEMPLATE_TEST_CASE("Dense templated map stress test", "[map]",
       }
 
       WHEN("Iterated") {
-         Count iterated = 0;
+         size_t iterated = 0;
          for (auto pair : map) {
             (void) pair;
             ++iterated;

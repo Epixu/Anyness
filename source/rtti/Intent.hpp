@@ -337,7 +337,7 @@ namespace Langulus
       template<template<class> class S, class...T>
       concept IntentConstructible = NotVoid<T...> and Intent<S<T>...> and (
           requires {
-             {IntentNew<true>(nullptr, Fake<S<T>&&>())} -> Supported;
+             {IntentNew<true>(nullptr, Fake<S<T>>())} -> Supported;
           } and ...);
 
       /// Check if all TypeOf<S> are intent-constructible by intent S         
@@ -347,7 +347,7 @@ namespace Langulus
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept IntentConstructibleAlt = Intent<S...> and (requires {
-             {IntentNew<true>(nullptr, Fake<S&&>())} -> Supported;
+             {IntentNew<true>(nullptr, Fake<S>())} -> Supported;
           } and ...);
 
       /// Check if all T are disown-constructible                             
@@ -403,7 +403,7 @@ namespace Langulus
       template<template<class> class S, class...T>
       concept IntentAssignable = NotVoid<T...> and Intent<S<T>...> and (
          requires {
-            {IntentAssign<true>(Fake<T&>(), Fake<S<T>&&>())} -> Supported;
+            {IntentAssign<true>(Fake<T>(), Fake<S<T>>())} -> Supported;
          } and ...);
 
       /// Check if all TypeOf<S> are intent-assignable by S                   
@@ -412,7 +412,7 @@ namespace Langulus
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept IntentAssignableAlt = Intent<S...> and (requires {
-            {IntentAssign<true>(Fake<TypeOf<S>&>(), Fake<S&&>())} -> Supported;
+            {IntentAssign<true>(Fake<TypeOf<S>>(), Fake<S>())} -> Supported;
          } and ...);
 
       /// Check if all T are disown-assignable                                

@@ -73,6 +73,7 @@ namespace Langulus::Anyness
       using CTTI_Text = Yes;
 
       constexpr Text() noexcept = default;
+
       template<class A1, class...AN> requires CT::RangeInsertable<Text, A1, AN...>
       Text(A1&&, AN&&...);
 
@@ -156,7 +157,6 @@ namespace Langulus
 {
 
    /// Make a text literal                                                    
-   LANGULUS(INLINED)
    Anyness::Text operator ""_text(const char* text, ::std::size_t size) {
       return Anyness::Text::From(Disown(text), size);
    }

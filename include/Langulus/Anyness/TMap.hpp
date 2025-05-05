@@ -58,6 +58,8 @@ namespace Langulus::Anyness
       Component::HeapMovable<1>,       // Heap for values               
       Component::OwnershipStack<0>,    // Keys allocation is referenced 
       Component::OwnershipStack<1>,    // Vals allocation is referenced 
+      Component::HashHeap<0>,          // Keys can be hashed            
+      Component::HashHeap<1>,          // Values can be hashed          
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
       Component::IndexedHash<>,        // Indexed directly              
@@ -105,6 +107,8 @@ namespace Langulus::Anyness
       Component::HeapMovable<1>,       // Heap for values               
       Component::OwnershipStack<0>,    // Keys allocation is referenced 
       Component::OwnershipStack<1>,    // Vals allocation is referenced 
+      Component::HashHeap<0>,          // Keys can be hashed            
+      Component::HashHeap<1>,          // Values can be hashed          
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
       Component::IndexedHash<>,        // Indexed directly              
@@ -152,6 +156,8 @@ namespace Langulus::Anyness
       Component::HeapMovable<1>,       // Heap for values               
       Component::OwnershipStack<0>,    // Keys allocation is referenced 
       Component::OwnershipStack<1>,    // Vals allocation is referenced 
+      Component::HashHeap<0>,          // Keys can be hashed            
+      Component::HashHeap<1>,          // Values can be hashed          
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
       Component::IndexedHash<>,        // Indexed directly              
