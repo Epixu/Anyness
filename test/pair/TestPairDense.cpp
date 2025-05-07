@@ -11,13 +11,12 @@
 /// The main test for TPair/Pair containers, with all kinds of items, from    
 /// sparse to dense, from trivial to complex, from flat to deep               
 TEMPLATE_TEST_CASE("Dense TPair/Pair", "[pair]",
-   (MapTest<Pair, Text, int>),
-
    (MapTest<TPair<Text, int>, Text, int>),
    (MapTest<TPair<Text, Tag>, Text, Tag>),
    (MapTest<TPair<Text, Tags::Count>, Text, Tags::Count>),
    (MapTest<TPair<Text, Many>, Text, Many>),
 
+   (MapTest<Pair, Text, int>),
    (MapTest<Pair, Text, Tag>),
    (MapTest<Pair, Text, Tags::Count>),
    (MapTest<Pair, Text, Many>)

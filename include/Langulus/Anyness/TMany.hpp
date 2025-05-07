@@ -63,8 +63,9 @@ namespace Langulus::Anyness
       struct PickSparseMut : Container<
          Component::HeapMovable<>,
          Component::OwnershipStack<>,
+         Component::TypedStatic<DMeta, T>,
          Component::Assignment,
-         Component::TypedStatic<DMeta, T>
+         Component::Comparison
       > {
          using CTTI_Sparse = Yes;
       };

@@ -10,6 +10,8 @@
 #include "../../../source/components/Stack.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Static.hpp"
+#include "Ref.hpp"
+#include "Any.hpp"
 
 
 namespace Langulus::CT
@@ -46,13 +48,16 @@ namespace Langulus::Anyness
    namespace Inner
    {
 
+      template<CT::NotVoid T>
+      using TPairElement = Tif<CT::Reference<T> or CT::Dense<T>, T, Ref<Deptr<T>>>;
+
       template<CT::NotVoid K, CT::NotVoid V>
       using TPairBase = Container<
-         Component::Stack<K, 0>,             // Key on the stack        
-         Component::Stack<V, 1>,             // Value on the stack      
-         Component::TypedStatic<DMeta, K, 0>,// Statically typed key    
-         Component::TypedStatic<DMeta, V, 1>,// Statically typed value  
-         Component::Assignment               // Allows for assignment   
+         Component::Stack<TPairElement<K>, 0>,  // Key on the stack     
+         Component::Stack<TPairElement<V>, 1>,  // Value on the stack   
+         Component::TypedStatic<DMeta, K, 0>,   // Statically typed key 
+         Component::TypedStatic<DMeta, V, 1>,   // Statically typed val 
+         Component::Assignment                  // Allows for assignment
       >;
 
    } // namespace Langulus::Anyness::Inner
@@ -78,12 +83,12 @@ namespace Langulus::Anyness
       using Val = V;
 
       ///                                                                     
-      /// Construction                                                        
+      ///   Construction                                                      
       constexpr TPair() noexcept = default;
       constexpr TPair(TPair const&) noexcept = default;
       constexpr TPair(TPair&&) noexcept = default;
 
-      template<class P> requires CT::PairConstructible<K, V, P>
+      template<CT::Pair P> requires CT::PairConstructible<K, V, P>
       constexpr TPair(P&& other)
          : Base {other.template Forward<typename Decay<Deint<P>>::Base>()} {}
 
@@ -93,26 +98,28 @@ namespace Langulus::Anyness
            and  CT::NotReference<K, V>)
       constexpr TPair(ALT_K&&, ALT_V&&);
 
-      constexpr TPair(K&&, V&&) noexcept requires CT::Reference<K, V>;
+      constexpr TPair(K, V) noexcept requires CT::Reference<K, V>;
 
       ///                                                                     
-      /// Assignment                                                          
+      ///   Assignment                                                        
       TPair& operator = (TPair const&) noexcept = default;
       TPair& operator = (TPair&&) noexcept = default;
 
-      template<class P> requires CT::PairAssignable<K, V, P>
+      template<CT::Pair P> requires CT::PairAssignable<K, V, P>
       TPair& operator = (P&&);
 
       ///                                                                     
       ///   Capsulation                                                       
       Hash GetHash() const;
 
+      /// Get a reference to the key                                          
       auto& GetKey(this auto&& self) noexcept {
-         return self.Component::template Stack<K, 0>::mStack;
+         return self.Component::template Stack<Inner::TPairElement<K>, 0>::mStack;
       }
 
+      /// Get a reference to the value                                        
       auto& GetVal(this auto&& self) noexcept {
-         return self.Component::template Stack<V, 1>::mStack;
+         return self.Component::template Stack<Inner::TPairElement<V>, 1>::mStack;
       }
    };
 

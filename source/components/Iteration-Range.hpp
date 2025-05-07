@@ -11,7 +11,7 @@ namespace Langulus::Anyness::Component
    ///   Reverse iteration adapter                                            
    ///                                                                        
    /// Use like this: for(auto i : RangeReverse(container)), where            
-   /// 'container' can be any range type                                      
+   /// 'container' can be any range, including a std one                      
    ///                                                                        
    template<::std::ranges::range C>
    struct RangeReverse {
@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
    /// dereferences the iterator and 'i' always ends up with the contained    
    /// type - counteract this, and make 'i' be the iterator type instead      
    /// Use like this: for(auto i : RangeIterator(container)), where           
-   /// 'container' can be any range                                           
+   /// 'container' can be any range, including a std one                      
    ///                                                                        
    template<::std::ranges::range C>
    struct RangeIterator {
@@ -70,9 +70,9 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    ///   Iterate using handles                                                
    ///                                                                        
-   /// When doing for(auto i : container), the statement always               
-   /// uses the most optimal iteration approach, but often you want to be     
-   /// able to modify values in-place while iterating.                        
+   /// When doing for(auto i : container), the statement always uses the most 
+   /// optimal iteration approach, but often you want to be able to modify    
+   /// values in-place while iterating.                                       
    /// Use like this: for(auto i : RangeHandle(container)), where             
    /// 'container' can be any anyness container                               
    ///                                                                        

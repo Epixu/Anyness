@@ -98,6 +98,8 @@ namespace Langulus::Anyness
       //template<template<class> class I> requires CT::Intent<I<Bytes>>
       //constexpr Bytes(I<Bytes>&&) noexcept;
 
+      template<class A1>
+      constexpr Bytes(A1&&) requires CT::DeepConstructible<Bytes, A1>;
       template<class A1, class...AN>
       constexpr Bytes(A1&&, AN&&...) requires CT::RangeInsertable<Bytes, A1, AN...>;
    };

@@ -40,8 +40,16 @@ namespace Langulus::Anyness
    > {
       using CTTI_ReflectAs = Set;
       using CTTI_Set = Yes;
+
+      constexpr TSet() noexcept = default;
+      constexpr TSet(const TSet&) noexcept = default;
+      constexpr TSet(TSet&&) noexcept = default;
+
+      template<class A1, class...AN>
+      TSet(A1&&, AN&&...) requires CT::RangeInsertable<TSet, A1, AN...>;
    };
    
+
    ///                                                                        
    /// Unsorted statically typed set                                          
    ///                                                                        
@@ -70,8 +78,16 @@ namespace Langulus::Anyness
    > {
       using CTTI_ReflectAs = Set;
       using CTTI_Set = Yes;
+
+      constexpr TSetUnsorted() noexcept = default;
+      constexpr TSetUnsorted(const TSetUnsorted&) noexcept = default;
+      constexpr TSetUnsorted(TSetUnsorted&&) noexcept = default;
+
+      template<class A1, class...AN>
+      TSetUnsorted(A1&&, AN&&...) requires CT::RangeInsertable<TSetUnsorted, A1, AN...>;
    };
    
+
    ///                                                                        
    /// Sorted statically typed set                                            
    ///                                                                        
@@ -100,6 +116,13 @@ namespace Langulus::Anyness
    > {
       using CTTI_ReflectAs = Set;
       using CTTI_Set = Yes;
+
+      constexpr TSetSorted() noexcept = default;
+      constexpr TSetSorted(const TSetSorted&) noexcept = default;
+      constexpr TSetSorted(TSetSorted&&) noexcept = default;
+
+      template<class A1, class...AN>
+      TSetSorted(A1&&, AN&&...) requires CT::RangeInsertable<TSetSorted, A1, AN...>;
    };
 
 } // namespace Langulus::Anyness

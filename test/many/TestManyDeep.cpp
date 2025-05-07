@@ -276,7 +276,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       WHEN("Smart pushing an empty container (but not stateless) with retainment") {
          Many deepened;
          deepened << int(1) << int(2) << int(3) << int(4) << int(5);
-         auto pushed = Many::FromMeta(nullptr, State::Missing);
+         auto pushed = Many::FromMeta(nullptr, State::Past);
          auto result = deepened.SmartPush(Index::Back, pushed);
 
          REQUIRE(result == 1);
@@ -284,17 +284,19 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          REQUIRE(deepened.GetCount() == 2);
          REQUIRE(deepened.AsAt<Many>(0).GetCount() == 5);
          REQUIRE(deepened.AsAt<Many>(1).GetCount() == 0);
-         REQUIRE(deepened.AsAt<Many>(1).GetState() == State::Missing);
+         REQUIRE(deepened.AsAt<Many>(1).GetState() == State::Past);
+         REQUIRE(deepened.AsAt<Many>(1).IsMissing());
       }
 
       WHEN("Smart pushing an empty container (but not stateless) with retainment to another empty container") {
-         auto pushed  = Many::FromMeta(nullptr, State::Missing);
+         auto pushed  = Many::FromMeta(nullptr, State::Future);
          auto pushed2 = Many::FromMeta(nullptr, State::Default);
          auto result  = pushed2.SmartPush(Index::Back, pushed);
 
          REQUIRE(result == 1);
          REQUIRE(pushed2.GetCount() == 0);
-         REQUIRE(pushed2.GetState() == State::Missing);
+         REQUIRE(pushed2.GetState() == State::Future);
+         REQUIRE(pushed2.IsMissing());
       }
 
       WHEN("Smart pushing to an empty container (concat & retain enabled)") {
@@ -319,7 +321,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
 
       WHEN("ForEachDeep with dense flat element (immutable, skipping)") {
          int it = 1;
-         Count total = 0;
+         size_t total = 0;
          const auto iterated = pack.ForEachDeep(
             [&](Conditional<CT::Sparse<E>, E, const E&> i) {
                REQUIRE(DenseCast(i) == it);
@@ -336,7 +338,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
 
       WHEN("ForEachDeep with dense flat element (mutable, skipping)") {
          int it = 1;
-         Count total = 0;
+         size_t total = 0;
          const auto iterated = pack.ForEachDeep(
             [&](Conditional<CT::Sparse<E>, E, E&> i) {
                REQUIRE(DenseCast(i) == it);
@@ -353,7 +355,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
 
       WHEN("ForEachDeep with dense flat element (immutable, non-skipping)") {
          int it = 1;
-         Count total = 0;
+         size_t total = 0;
          const auto iterated = pack.template ForEachDeep<false, false>(
             [&](Conditional<CT::Sparse<E>, E, const E&> i) {
                REQUIRE(DenseCast(i) == it);
@@ -370,7 +372,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
 
       WHEN("ForEachDeep with dense flat element (mutable, non-skipping)") {
          int it = 1;
-         Count total = 0;
+         size_t total = 0;
          const auto iterated = pack.template ForEachDeep<false, false>(
             [&](Conditional<CT::Sparse<E>, E, E&> i) {
                REQUIRE(DenseCast(i) == it);
@@ -386,7 +388,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       }
 
       WHEN("ForEachDeep with dense Block element (immutable, skipping)") {
-         Count total = 0;
+         size_t total = 0;
          const auto iterated = pack.ForEachDeep(
             [&](const Block<>& i) {
                (void)i;
@@ -399,7 +401,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       }
 
       WHEN("ForEachDeep with dense Block element (mutable, skipping)") {
-         Count total = 0;
+         size_t total = 0;
          const auto iterated = pack.ForEachDeep(
             [&](Block<>& i) {
                (void)i;
@@ -412,7 +414,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       }
 
       WHEN("ForEachDeep with dense Block element (immutable, non-skipping)") {
-         Count total = 0;
+         size_t total = 0;
          const auto iterated = pack.template ForEachDeep<false, false>(
             [&](const Block<>& i) {
                (void)i;
@@ -425,7 +427,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       }
 
       WHEN("ForEachDeep with dense Block element (mutable, non-skipping)") {
-         Count total = 0;
+         size_t total = 0;
          const auto iterated = pack.template ForEachDeep<false, false>(
             [&](Block<>& i) {
                (void)i;
@@ -507,7 +509,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 2", "[any]", int, RT, int*, RT*) 
       auto baseRange = Many::From<Block<>>();
       baseRange.Reserve(3);
 
-      for (Count e = 0; e < pack.GetCount(); ++e) {
+      for (size_t e = 0; e < pack.GetCount(); ++e) {
          auto element = pack.GetElement(e);
          RTTI::Base base;
          REQUIRE(element.GetType()->GetBase<Block<>>(0, base));

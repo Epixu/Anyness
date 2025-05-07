@@ -95,8 +95,14 @@ namespace Langulus::Anyness
       template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
       constexpr Container& operator = (I<C>&&) {
          //TODO init all compatible components, default-init the missing ones
+         return *this;
       }
 
+      template<CT::Component C>
+      static consteval unsigned GetHeapHeaderOffset() {
+         //TODO accumulate HeapHeaderSize for the provided HeapID up until base C
+         return 0;
+      }
    };
 
 } // namespace Langulus::Anyness

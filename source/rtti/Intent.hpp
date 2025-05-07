@@ -30,9 +30,17 @@ namespace Langulus
    constexpr auto IntentNew(void* placement, auto&& value) {
       using S = IntentOf<decltype(value)>;
       using T = Deref<TypeOf<S>>;
+
+      static_assert(CT::Complete<T>,
+         "T has to be complete in order to be constructed");
+      static_assert(not CT::Abstract<T>,
+         "T has to be concrete in order to be constructed");
+      static_assert(not CT::Reference<T>,
+         "T has to not be a reference in order to be constructed");
+
       AssumeDev(placement, HERE(), "Invalid placement pointer");
 
-      if constexpr (CT::Abstract<T>) {
+      /*if constexpr (CT::Abstract<T>) {
          // Can't instantiate abstract type                             
          if constexpr (FAKE)
             return Unsupported {};
@@ -46,7 +54,7 @@ namespace Langulus
          else
             static_assert(false, "Can't IntentNew at a reference");
       }
-      else if constexpr (CT::Abandoned<S>) {
+      else*/ if constexpr (CT::Abandoned<S>) {
          // Abandon                                                     
          if constexpr (CT::HasAbandonConstructor<T>)
             return new (placement) T (S::Nest(value));
@@ -161,25 +169,29 @@ namespace Langulus
    ///   @return whatever the assignment operator returns                     
    template<bool FAKE = false, template<class> class S, CT::NoIntent T>
    requires CT::Intent<S<T>> LANGULUS(INLINED)
-   constexpr decltype(auto) IntentAssign(Decq<T>& lhs, S<T>&& rhs) {
-      using MT = Decq<T>;
-      using SS = S<T>;
+   constexpr decltype(auto) IntentAssign(T& lhs, S<T>&& rhs) {
+      static_assert(CT::Mutable<T>,
+         "T has to be mutable in order to be assigned");
+      static_assert(CT::Complete<T>,
+         "T has to be complete in order to be assigned");
+      static_assert(not CT::Reference<T>,
+         "T has to not be a reference in order to be assigned");
 
-      if constexpr (not CT::Complete<MT>) {
+      /*if constexpr (not CT::Complete<T>) {
          // Can't assign to an incomplete type                          
          if constexpr (FAKE)
             return Unsupported {};
          else
-            static_assert(false, "Can't IntentAssign to an incomplete type");
+            static_assert(false, "Can't IntentAssign an incomplete type");
       }
-      else if constexpr (CT::Reference<MT>) {
+      else if constexpr (CT::Reference<T>) {
          // Can't reassign a reference                                  
          if constexpr (FAKE)
             return Unsupported {};
          else
-            static_assert(false, "Can't IntentAssign at a reference");
+            static_assert(false, "Can't IntentAssign a reference");
       }
-      else if constexpr (CT::Abandoned<SS>) {
+      else*/ if constexpr (CT::Abandoned<S<T>>) {
          // Abandon                                                     
          if constexpr (CT::HasAbandonAssign<T>)
             return (lhs = rhs.Forward());
@@ -204,7 +216,7 @@ namespace Langulus
                "Can't abandon-assign destructible type"
                " - explicit abandon-assigner is required");
       }
-      else if constexpr (CT::Moved<SS>) {
+      else if constexpr (CT::Moved<S<T>>) {
          // Move                                                        
          if constexpr (CT::HasIntentAssign<Langulus::Moved, T>)
             return (lhs = rhs.Forward());
@@ -219,7 +231,7 @@ namespace Langulus
          else
             static_assert(false, "Can't move-assign type");
       }
-      else if constexpr (CT::Cloned<SS>) {
+      else if constexpr (CT::Cloned<S<T>>) {
          // Clone                                                       
          using DT = Decay<T>;
 
@@ -250,7 +262,7 @@ namespace Langulus
          else
             static_assert(false, "Can't clone-assign void or incomplete type");
       }
-      else if constexpr (CT::Disowned<SS>) {
+      else if constexpr (CT::Disowned<S<T>>) {
          // Disown                                                      
          if constexpr (CT::HasDisownAssign<T>)
             return (lhs = rhs.Forward());
@@ -267,7 +279,7 @@ namespace Langulus
          else
             static_assert(false, "Can't disown-assign type");
       }
-      else if constexpr (CT::Copied<SS>) {
+      else if constexpr (CT::Copied<S<T>>) {
          // Copy                                                        
          if constexpr (CT::HasCopyAssign<T>)
             return (lhs = rhs.Forward());
@@ -284,7 +296,7 @@ namespace Langulus
          else
             static_assert(false, "Can't copy-assign type");
       }
-      else if constexpr (CT::Referred<SS>) {
+      else if constexpr (CT::Referred<S<T>>) {
          // Refer                                                       
          if constexpr (CT::HasReferAssign<T>)
             return (lhs = rhs.Forward());
@@ -412,7 +424,7 @@ namespace Langulus
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept IntentAssignableAlt = Intent<S...> and (requires {
-            {IntentAssign<true>(Fake<TypeOf<S>>(), Fake<S>())} -> Supported;
+            {IntentAssign<true>(Fake<Decq<Deref<TypeOf<S>>>&>(), Fake<S>())} -> Supported;
          } and ...);
 
       /// Check if all T are disown-assignable                                
