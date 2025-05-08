@@ -336,6 +336,187 @@ namespace Langulus::Anyness::Component
          return loop;
       }
       
+      /// Iterate and execute call for each deep element, counting each       
+      /// successfull execution                                               
+      ///   @tparam REVERSE - whether to iterate in reverse                   
+      ///   @tparam SKIP - whether to execute call for intermediate blocks    
+      ///   @param f - the function to execute for each element of type A     
+      ///   @param counter - [out] counts the successful executions           
+      ///   @return the last 'f' result                                       
+      template<bool REVERSE, bool SKIP, CT::Container C, class F>
+      LoopControl ForEachDeepInner(this C&& self, F&& f, Count<C>& counter) noexcept(IsNoexcept<F>) {
+         using A = ArgumentOf<F>;
+         using R = ReturnOf<F>;
+         constexpr bool TypeErased = Deref<C>::TypeErased;
+
+         static_assert(CT::Slab<A> or CT::Constant<Deptr<A>> or CT::Mutable<C>,
+            "Non-constant iterator for constant container is not allowed");
+
+         LoopControl loop = Loop::Continue;
+
+         if constexpr (TypeErased) {
+            if constexpr (CT::Deep<A>) {
+               if (not SKIP or (not self.IsDeep() and not self.Is<Neat>())) {
+                  // Always execute for intermediate/non-deep *this     
+                  ++counter;
+
+                  auto b = reinterpret_cast<Deref<A>*>(const_cast<Block*>(this));
+                  if constexpr (CT::Bool<R>) {
+                     if (not f(*b))
+                        return Loop::Break;
+                  }
+                  else if constexpr (CT::Exact<R, LoopControl>) {
+                     // Do things depending on the F's return           
+                     R loop = f(*b);
+
+                     while (loop == Loop::Repeat)
+                        loop = f(*b);
+
+                     switch (loop.mControl) {
+                     case LoopControl::Break:
+                     case LoopControl::NextLoop:
+                        return loop;
+                     case LoopControl::Continue:
+                     case LoopControl::Repeat:
+                        break;
+                     case LoopControl::Discard:
+                        if constexpr (MUTABLE) {
+                           // Discard is allowed only if THIS is mutable
+                           // You can't fully discard the topmost block,
+                           // only reset it. Now, if we reset this      
+                           // block, and then remove it up the chain, if
+                           // branching-out happens to occur, we'll end 
+                           // up with a branch that contains the empty  
+                           // element and that is bad. So defer the     
+                           // reset up the chain instead!               
+                           return Loop::Discard;
+                        }
+                        else {
+                           // ...otherwise it acts like a Loop::Continue
+                           break;
+                        }
+                     }
+                  }
+                  else call(*b);
+               }
+            }
+
+            if (self.IsDeep()) {
+               // Iterate subblocks                                     
+               Count intermediateCounterSink = 0;
+               using SubBlock = Conditional<MUTABLE, Block<>&, const Block<>&>;
+
+               loop = self.ForEachInner<REVERSE>(
+                  [&counter, &f](SubBlock group) {
+                     if constexpr (CT::Deep<Decay<A>>) {
+                        // Loop control is available only if iterator is
+                        // deep, too...                                 
+                        return DenseCast(group).template
+                           ForEachDeepInner<REVERSE, SKIP>(::std::move(f), counter);
+                     }
+                     else {
+                        // ... otherwise we have to pass through all    
+                        // deep sub-blocks                              
+                        DenseCast(group).template
+                           ForEachDeepInner<REVERSE, SKIP>(::std::move(f), counter);
+                     }
+                  },
+                  intermediateCounterSink
+               );
+            }
+            else if (self.Is<Neat>()) {
+               // Iterate normalized subblocks                          
+               using SubNeat = Conditional<MUTABLE, Neat&, const Neat&>;
+
+               loop = self.ForEachInner<REVERSE>(
+                  [&f](SubNeat neat) { return neat.ForEachDeep(::std::move(f)); },
+                  counter
+               );
+            }
+            else if constexpr (not CT::Deep<A>) {
+               // Equivalent to non-deep iteration                      
+               loop = self.ForEachInner<REVERSE>(::std::move(f), counter);
+            }
+         }
+         else {
+            using T = TypeOf<C>;
+
+            if constexpr (CT::Deep<A> and (not SKIP
+            or (not CT::Deep<Decay<T>> and not CT::Same<T, Neat>))) {
+               // Always execute for intermediate/non-deep *this        
+               ++counter;
+
+               auto b = reinterpret_cast<Deref<A>*>(const_cast<Block*>(this));
+               if constexpr (CT::Bool<R>) {
+                  if (not f(*b))
+                     return Loop::Break;
+               }
+               else if constexpr (CT::Exact<R, LoopControl>) {
+                  // Do things depending on the F's return              
+                  R loop = f(*b);
+
+                  while (loop == Loop::Repeat)
+                     loop = f(*b);
+
+                  switch (loop.mControl) {
+                  case LoopControl::Break:
+                  case LoopControl::NextLoop:
+                     return loop;
+                  case LoopControl::Continue:
+                  case LoopControl::Repeat:
+                     break;
+                  case LoopControl::Discard:
+                     if constexpr (MUTABLE) {
+                        // Discard is allowed only if THIS is mutable   
+                        // You can't fully discard the topmost block,   
+                        // only reset it. Now, if we reset this block,  
+                        // and then remove it up the chain, if          
+                        // branching-out happens to occur, we'll end up 
+                        // with a branch that contains the empty element
+                        // and that is bad. So defer the reset up the   
+                        // chain instead!                               
+                        return Loop::Discard;
+                     }
+                     else {
+                        // ...otherwise it acts like a Loop::Continue   
+                        break;
+                     }
+                  }
+               }
+               else f(*b);
+            }
+
+            if constexpr (CT::Deep<Decay<T>>) {
+               // Iterate subblocks                                     
+               Count intermediateCounterSink = 0;
+               using SubBlock = Conditional<MUTABLE, Decay<T>&, const Decay<T>&>;
+
+               loop = self.ForEachInner<REVERSE>(
+                  [&counter, &f](SubBlock group) {
+                     return DenseCast(group).template
+                        ForEachDeepInner<REVERSE, SKIP>(::std::move(f), counter);
+                  },
+                  intermediateCounterSink
+               );
+            }
+            else if constexpr (CT::Same<T, Neat>) {
+               // Iterate normalized subblocks                          
+               using SubNeat = Conditional<MUTABLE, Neat&, const Neat&>;
+
+               loop = self.ForEachInner<REVERSE>(
+                  [&f](SubNeat neat) { return neat.ForEachDeep(::std::move(f)); },
+                  counter
+               );
+            }
+            else if constexpr (not CT::Deep<A>) {
+               // Equivalent to non-deep iteration                      
+               loop = self.ForEachInner<REVERSE>(::std::move(f), counter);
+            }
+         }
+
+         return loop;
+      }
+
       /// Execute a function for each element inside container                
       /// Lowest-level element iteration function (for internal use only)     
       ///   @attention assumes A is binary compatible with the contained type 
