@@ -57,10 +57,9 @@ namespace Langulus::Anyness
 
       ///                                                                     
       ///   Construction                                                      
-      ///                                                                     
-      constexpr Neat() = default;
-      Neat(const Neat&);
-      Neat(Neat&&) noexcept;
+      constexpr Neat() noexcept = default;
+      constexpr Neat(const Neat&) noexcept = default;
+      constexpr Neat(Neat&&) noexcept = default;
 
       template<template<class> class S> requires CT::Intent<S<Neat>>
       Neat(S<Neat>&&);
@@ -70,7 +69,6 @@ namespace Langulus::Anyness
 
       ///                                                                     
       ///   Assignment                                                        
-      ///                                                                     
       Neat& operator = (const Neat&) = default;
       Neat& operator = (Neat&&) noexcept = default;
 
@@ -79,7 +77,6 @@ namespace Langulus::Anyness
 
       ///                                                                     
       ///   Comparison                                                        
-      ///                                                                     
       bool operator == (const Neat&) const;
 
       void Clear();
@@ -87,7 +84,6 @@ namespace Langulus::Anyness
 
       ///                                                                     
       ///   Encapsulation                                                     
-      ///                                                                     
       Hash GetHash() const;
       bool IsEmpty() const noexcept;
       bool IsMissingDeep() const;
@@ -134,7 +130,6 @@ namespace Langulus::Anyness
    public:
       ///                                                                     
       ///   Iteration                                                         
-      ///                                                                     
       Count ForEach          (auto&&...);
       Count ForEachTag       (auto&&);
       Count ForEachDeep      (auto&&...);
@@ -147,7 +142,6 @@ namespace Langulus::Anyness
    public:
       ///                                                                     
       ///   Insertion                                                         
-      ///                                                                     
       template<class T1, class...TN>
       Count Insert(T1&&, TN&&...);
       void  Merge(const Neat&);
@@ -167,7 +161,6 @@ namespace Langulus::Anyness
    public:
       ///                                                                     
       ///   Removal                                                           
-      ///                                                                     
       template<CT::NotVoid, bool EMPTY_TOO = false>
       Count RemoveData();
       template<CT::NotVoid>

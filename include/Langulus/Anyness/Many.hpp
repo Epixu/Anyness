@@ -43,7 +43,10 @@ namespace Langulus::Anyness
    struct Many;
    struct ManyView;
 
-   /// A universal type-erased continuous container of variable size          
+
+   ///                                                                        
+   /// A universal type-erased contiguous container of variable size          
+   ///                                                                        
    struct Many : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
       Component::OwnershipStack<>,     // Allocation is referenced      
@@ -114,9 +117,9 @@ namespace Langulus::Anyness
          Component::ReserveStack<>
       > {};
 
-      constexpr Many() = default;
-      Many(const Many&) noexcept;
-      Many(Many&&) noexcept;
+      constexpr Many() noexcept = default;
+      constexpr Many(const Many&) noexcept;
+      constexpr Many(Many&&) noexcept;
 
       //template<template<class> class I> requires CT::Intent<I<Many>>
       //explicit Many(I<Many>&&) noexcept;
@@ -127,8 +130,11 @@ namespace Langulus::Anyness
    
    using Messy = Many;
 
+
+   ///                                                                        
    /// A universal type-erased continuous container view of variable size     
    /// Doesn't have ownership, and binary-compatible with the container above 
+   ///                                                                        
    struct ManyView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
       Component::OwnershipStack<0, false>,   // Pointer to an allocation
@@ -152,6 +158,8 @@ namespace Langulus::Anyness
          DefineState::Or<>,            // Adds 'or' state               
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
-   > {};
+   > {
+      using CTTI_ReflectAs = Many;
+   };
    
 } // namespace Langulus::Anyness

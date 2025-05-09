@@ -32,21 +32,29 @@ namespace Langulus
          return mControl == Continue or mControl == Repeat;
       }
 
-      constexpr bool operator == (const LoopControl& rhs) const noexcept {
-         return mControl == rhs.mControl;
-      }
+      constexpr bool operator == (const LoopControl&) const noexcept = default;
    };
 
    namespace Loop
    {
 
+      /// Break the entire iteration as a whole                               
       constexpr LoopControl Break      = LoopControl::Break;
+      /// Continue to next element or function                                
       constexpr LoopControl Continue   = LoopControl::Continue;
+      /// Repeat the current element                                          
       constexpr LoopControl Repeat     = LoopControl::Repeat;
+      /// Remove the current element                                          
       constexpr LoopControl Discard    = LoopControl::Discard;
+      /// End this iterating function and jump immediately to the next        
       constexpr LoopControl NextLoop   = LoopControl::NextLoop;
 
    } // namespace Langulus::Loop
+
+   namespace Anyness
+   {
+      class Neat;
+   }
 
 } // namespace Langulus
 
@@ -62,7 +70,10 @@ namespace Langulus::Anyness::Component
    private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
-      
+
+      template<CT::Container C>
+      using Deep = Tif<CT::Mutable<C>, typename Deref<C>::DeepType&, const typename Deref<C>::DeepType&>;
+
       /// A helper structure that shows how ForEach iteration went            
       template<CT::Container C>
       struct ForEachResult {
@@ -230,7 +241,8 @@ namespace Langulus::Anyness::Component
             using DT = Decay<T>;
 
             if constexpr (CT::Deep<DA, DT> or (not CT::Deep<DA> and CT::DerivedFrom<T, A>)) {
-               loop = self.template IterateInner<REVERSE>(self.GetCount(),
+               loop = self.template IterateInner<REVERSE>(
+                  self.GetCount(),
                   [&index, &f](T& element) noexcept(IsNoexcept<F>) -> R {
                      ++index;
 
@@ -256,7 +268,8 @@ namespace Langulus::Anyness::Component
             if ((CT::Deep<DA> and self.IsDeep()) or (not CT::Deep<DA> and self.template CastsTo<A, true>())) {
                if (self.mType.IsSparse()) {
                   // Iterate sparse container                           
-                  loop = self.template IterateInner<REVERSE>(self.GetCount(),
+                  loop = self.template IterateInner<REVERSE>(
+                     self.GetCount(),
                      [&index, &f](void*& element) noexcept(IsNoexcept<F>) -> R {
                         ++index;
                         if constexpr (CT::Dense<A>)
@@ -270,7 +283,8 @@ namespace Langulus::Anyness::Component
                   // Iterate dense container where A is binary-         
                   // compatible to the type, but may not be it exactly  
                   AssumeDev(self.GetStride() % sizeof(DA) == 0, HERE(), "Unaligned iterator");
-                  loop = self.template IterateInner<REVERSE>(self.GetCount() * (self.GetStride() / sizeof(DA)),
+                  loop = self.template IterateInner<REVERSE>(
+                     self.GetCount() * (self.GetStride() / sizeof(DA)),
                      [&index, &f](DA& element) noexcept(IsNoexcept<F>) -> R {
                         ++index;
                         if constexpr (CT::Dense<A>)
@@ -294,7 +308,8 @@ namespace Langulus::Anyness::Component
             // those that match the definition in the argument          
             if (self.mType.IsSparse()) {
                // Iterate sparse container                              
-               loop = self.template IterateInner<REVERSE>(self.GetCount(),
+               loop = self.template IterateInner<REVERSE>(
+                  self.GetCount(),
                   [&index, &f](Identity*& element) noexcept(IsNoexcept<F>) -> R {
                      if constexpr (CT::Void<R>) {
                         if (not element->template IsTag<DA>())
@@ -314,7 +329,8 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Iterate dense container                               
-               loop = self.template IterateInner<REVERSE>(self.GetCount(),
+               loop = self.template IterateInner<REVERSE>(
+                  self.GetCount(),
                   [&index, &f](Identity& element) noexcept(IsNoexcept<F>) -> R {
                      if constexpr (CT::Void<R>) {
                         if (not element.template IsTag<DA>())
@@ -348,29 +364,32 @@ namespace Langulus::Anyness::Component
          using A = ArgumentOf<F>;
          using R = ReturnOf<F>;
          constexpr bool TypeErased = Deref<C>::TypeErased;
+         [[maybe_unused]] LoopControl loop = Loop::Continue;
 
          static_assert(CT::Slab<A> or CT::Constant<Deptr<A>> or CT::Mutable<C>,
             "Non-constant iterator for constant container is not allowed");
 
-         LoopControl loop = Loop::Continue;
-
          if constexpr (TypeErased) {
+            const bool deep = self.IsDeep();
+            using D = Deep<C>;
+
             if constexpr (CT::Deep<A>) {
-               if (not SKIP or (not self.IsDeep() and not self.Is<Neat>())) {
+               if (not SKIP or not deep) {
                   // Always execute for intermediate/non-deep *this     
                   ++counter;
 
-                  auto b = reinterpret_cast<Deref<A>*>(const_cast<Block*>(this));
+                  decltype(auto) argument = self.template ReinterpretCast<A>();
+
                   if constexpr (CT::Bool<R>) {
-                     if (not f(*b))
+                     if (not f(argument))
                         return Loop::Break;
                   }
                   else if constexpr (CT::Exact<R, LoopControl>) {
                      // Do things depending on the F's return           
-                     R loop = f(*b);
+                     R loop = f(argument);
 
                      while (loop == Loop::Repeat)
-                        loop = f(*b);
+                        loop = f(argument);
 
                      switch (loop.mControl) {
                      case LoopControl::Break:
@@ -380,7 +399,7 @@ namespace Langulus::Anyness::Component
                      case LoopControl::Repeat:
                         break;
                      case LoopControl::Discard:
-                        if constexpr (MUTABLE) {
+                        if constexpr (CT::Mutable<C>) {
                            // Discard is allowed only if THIS is mutable
                            // You can't fully discard the topmost block,
                            // only reset it. Now, if we reset this      
@@ -397,66 +416,67 @@ namespace Langulus::Anyness::Component
                         }
                      }
                   }
-                  else call(*b);
+                  else f(argument);
                }
             }
 
-            if (self.IsDeep()) {
+            if (deep) {
                // Iterate subblocks                                     
-               Count intermediateCounterSink = 0;
-               using SubBlock = Conditional<MUTABLE, Block<>&, const Block<>&>;
-
-               loop = self.ForEachInner<REVERSE>(
-                  [&counter, &f](SubBlock group) {
-                     if constexpr (CT::Deep<Decay<A>>) {
-                        // Loop control is available only if iterator is
-                        // deep, too...                                 
-                        return DenseCast(group).template
-                           ForEachDeepInner<REVERSE, SKIP>(::std::move(f), counter);
+               Count<C> intermediateCounterSink = 0;
+               loop = self.template ForEachInner<REVERSE>(
+                  [&counter, &f](D group) {
+                     if constexpr (CT::Same<A, D>) {
+                        // Loop control is available only if iterator   
+                        // is deep, too...                              
+                        return group.template ForEachDeepInner<REVERSE, SKIP>(
+                           ::std::move(f), counter);
                      }
                      else {
                         // ... otherwise we have to pass through all    
                         // deep sub-blocks                              
-                        DenseCast(group).template
-                           ForEachDeepInner<REVERSE, SKIP>(::std::move(f), counter);
+                        group.template ForEachDeepInner<REVERSE, SKIP>(
+                           ::std::move(f), counter);
                      }
                   },
                   intermediateCounterSink
                );
             }
-            else if (self.Is<Neat>()) {
-               // Iterate normalized subblocks                          
-               using SubNeat = Conditional<MUTABLE, Neat&, const Neat&>;
+            else if (self.template Is<Neat>()) {
+               // Nest inside normalized subblocks                      
+               using SubNeat = Tif<CT::Mutable<C>, Neat&, const Neat&>;
 
-               loop = self.ForEachInner<REVERSE>(
-                  [&f](SubNeat neat) { return neat.ForEachDeep(::std::move(f)); },
+               loop = self.template ForEachInner<REVERSE>(
+                  [&f](SubNeat neat) {
+                     return neat.ForEachDeep(::std::move(f));
+                  },
                   counter
                );
             }
             else if constexpr (not CT::Deep<A>) {
                // Equivalent to non-deep iteration                      
-               loop = self.ForEachInner<REVERSE>(::std::move(f), counter);
+               loop = self.template ForEachInner<REVERSE>(
+                  ::std::move(f), counter);
             }
          }
          else {
             using T = TypeOf<C>;
 
-            if constexpr (CT::Deep<A> and (not SKIP
-            or (not CT::Deep<Decay<T>> and not CT::Same<T, Neat>))) {
+            if constexpr (CT::Deep<A> and (not SKIP or not CT::Deep<Decay<T>>)) {
                // Always execute for intermediate/non-deep *this        
                ++counter;
 
-               auto b = reinterpret_cast<Deref<A>*>(const_cast<Block*>(this));
+               decltype(auto) argument = self.template ReinterpretCast<A>();
+
                if constexpr (CT::Bool<R>) {
-                  if (not f(*b))
+                  if (not f(argument))
                      return Loop::Break;
                }
                else if constexpr (CT::Exact<R, LoopControl>) {
                   // Do things depending on the F's return              
-                  R loop = f(*b);
+                  R loop = f(argument);
 
                   while (loop == Loop::Repeat)
-                     loop = f(*b);
+                     loop = f(argument);
 
                   switch (loop.mControl) {
                   case LoopControl::Break:
@@ -466,7 +486,7 @@ namespace Langulus::Anyness::Component
                   case LoopControl::Repeat:
                      break;
                   case LoopControl::Discard:
-                     if constexpr (MUTABLE) {
+                     if constexpr (CT::Mutable<C>) {
                         // Discard is allowed only if THIS is mutable   
                         // You can't fully discard the topmost block,   
                         // only reset it. Now, if we reset this block,  
@@ -483,34 +503,37 @@ namespace Langulus::Anyness::Component
                      }
                   }
                }
-               else f(*b);
+               else f(argument);
             }
 
             if constexpr (CT::Deep<Decay<T>>) {
                // Iterate subblocks                                     
-               Count intermediateCounterSink = 0;
-               using SubBlock = Conditional<MUTABLE, Decay<T>&, const Decay<T>&>;
+               Count<C> intermediateCounterSink = 0;
+               using SubBlock = Tif<CT::Mutable<C>, Decay<T>&, const Decay<T>&>;
 
-               loop = self.ForEachInner<REVERSE>(
+               loop = self.template ForEachInner<REVERSE>(
                   [&counter, &f](SubBlock group) {
-                     return DenseCast(group).template
-                        ForEachDeepInner<REVERSE, SKIP>(::std::move(f), counter);
+                     return group.template ForEachDeepInner<REVERSE, SKIP>(
+                        ::std::move(f), counter);
                   },
                   intermediateCounterSink
                );
             }
             else if constexpr (CT::Same<T, Neat>) {
                // Iterate normalized subblocks                          
-               using SubNeat = Conditional<MUTABLE, Neat&, const Neat&>;
+               using SubNeat = Tif<CT::Mutable<C>, Neat&, const Neat&>;
 
-               loop = self.ForEachInner<REVERSE>(
-                  [&f](SubNeat neat) { return neat.ForEachDeep(::std::move(f)); },
+               loop = self.template ForEachInner<REVERSE>(
+                  [&f](SubNeat neat) {
+                     return neat.ForEachDeep(::std::move(f));
+                  },
                   counter
                );
             }
             else if constexpr (not CT::Deep<A>) {
                // Equivalent to non-deep iteration                      
-               loop = self.ForEachInner<REVERSE>(::std::move(f), counter);
+               loop = self.template ForEachInner<REVERSE>(
+                  ::std::move(f), counter);
             }
          }
 

@@ -8,21 +8,26 @@
 #pragma once
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Stack.hpp"
-#include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Static.hpp"
+#include "../../../source/components/Assignment.hpp"
+#include "../../../source/components/Comparison.hpp"
+#include "../../../source/rtti/MetaData.hpp"
 
 
 namespace Langulus::Anyness
 {
-   
+
    ///                                                                        
    /// A statically typed stack-based container of size 1                     
    /// Mainly serves to transfer values and/or pointers on move               
+   /// No ownership is applied                                                
+   ///                                                                        
    template<CT::NotVoid T>
    struct Own : Container<
       Component::Stack<T>,             // Element on the stack          
       Component::TypedStatic<DMeta, T>,// Statically typed              
-      Component::Assignment            // Allows for assignment         
+      Component::Assignment,           // Allows for reassignment       
+      Component::Comparison            // Can be compared               
    > {};
 
 } // namespace Langulus::Anyness

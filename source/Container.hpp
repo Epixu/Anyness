@@ -72,7 +72,11 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A container definition using composition                               
    ///   @tparam COMPONENTS... - list of components that define the container 
-   ///      behavior                                                          
+   ///      behavior. The order doesn't matter (functionally speaking) but    
+   ///      is still enforced to match for various reasons, the main being    
+   ///      build-time optimization: too many superficially different template
+   ///      specializations will bloat code generation significantly and slow 
+   ///      down builds...                                                    
    ///                                                                        
    template<CT::Component...COMPONENTS>
    struct Container : COMPONENTS... {
@@ -103,6 +107,10 @@ namespace Langulus::Anyness
          //TODO accumulate HeapHeaderSize for the provided HeapID up until base C
          return 0;
       }
+
+      /// Check if a component is included at compile-time                    
+      template<CT::Component C>
+      static constexpr bool HasComponent = CT::SameAsOneOf<C, COMPONENTS...>;
    };
 
 } // namespace Langulus::Anyness

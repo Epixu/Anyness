@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Many.hpp"
-#include "../../../source/components/Typed-Static.hpp"
+#include "Handle.hpp"
 
 
 namespace Langulus::Anyness
@@ -16,8 +16,11 @@ namespace Langulus::Anyness
    template<CT::NotVoid> struct TMany;
    template<CT::NotVoid> struct TManyView;
 
-   /// A statically-typed continuous container of variable size that is       
+
+   ///                                                                        
+   /// A statically-typed contiguous container of variable size that is       
    /// binary-compatible with the type-erased alternative above               
+   ///                                                                        
    template<CT::NotVoid T>
    struct TMany : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
@@ -60,18 +63,10 @@ namespace Langulus::Anyness
       // Single element selections                                      
       using  PickDenseMut  = T&;
       using  PickDense     = T const&;
-      struct PickSparseMut : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<>,
-         Component::TypedStatic<DMeta, T>,
-         Component::Assignment,
-         Component::Comparison
-      > {
-         using CTTI_Sparse = Yes;
-      };
-      using  PickSparse = T;
-      using  Pick       = Tif<CT::Sparse<T>, PickSparse,    PickDense>;
-      using  PickMut    = Tif<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
+      using  PickSparseMut = Handle<T>;
+      using  PickSparse    = T;
+      using  Pick          = Tif<CT::Sparse<T>, PickSparse,    PickDense>;
+      using  PickMut       = Tif<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
 
       // Range selections                                               
       struct PickRangeDenseMut : Container<
@@ -116,8 +111,11 @@ namespace Langulus::Anyness
       TMany& operator = (A1&&);
    };
    
+
+   ///                                                                        
    /// A statically-typed continuous container view of variable size          
    /// Doesn't have ownership, and binary-compatible with the container above 
+   ///                                                                        
    template<CT::NotVoid T>
    struct TManyView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
@@ -143,7 +141,7 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
-      using CTTI_ReflectAs = ManyView;
+      using CTTI_ReflectAs = Many;
    };
 
 } // namespace Langulus::Anyness

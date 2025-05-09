@@ -7,47 +7,12 @@
 ///                                                                           
 #pragma once
 #include "Map.hpp"
+#include "Handle.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 
 
 namespace Langulus::Anyness
 {
-   namespace Inner
-   {
-
-      ///                                                                     
-      /// Common statically-typed key type                                    
-      template<CT::NotVoid K>
-      struct TKeyMut : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<>,
-         Component::TypedStatic<DMeta, K>
-      > {};
-
-      template<CT::NotVoid K>
-      struct TKey : Container<
-         Component::HeapMovable<>,
-         Component::TypedStatic<DMeta, K>
-      > {};
-
-      ///                                                                     
-      /// Common statically-typed value type                                  
-      template<CT::NotVoid V>
-      struct TValMut : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<>,
-         Component::Assignment,
-         Component::TypedStatic<DMeta, V>
-      > {};
-
-      template<CT::NotVoid V>
-      struct TVal : Container<
-         Component::HeapMovable<>,
-         Component::TypedStatic<DMeta, V>
-      > {};
-
-   } // namespace Langulus::Anyness::Inner
-
 
    ///                                                                        
    /// Statically typed map of unspecified state                              
@@ -85,14 +50,14 @@ namespace Langulus::Anyness
 
       using KeyDenseMut  = K&;
       using KeyDense     = K const&;
-      using KeySparseMut = Inner::TKeyMut<K>;
+      using KeySparseMut = Handle<K>;
       using KeySparse    = K;
       using Key          = Tif<CT::Sparse<K>, KeySparse,    KeyDense>;
       using KeyMut       = Tif<CT::Sparse<K>, KeySparseMut, KeyDenseMut>;
 
       using ValDenseMut  = V&;
       using ValDense     = V const&;
-      using ValSparseMut = Inner::TValMut<V>;
+      using ValSparseMut = Handle<V>;
       using ValSparse    = V;
       using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
@@ -148,14 +113,14 @@ namespace Langulus::Anyness
 
       using KeyDenseMut  = K&;
       using KeyDense     = K const&;
-      using KeySparseMut = Inner::TKeyMut<K>;
+      using KeySparseMut = Handle<K>;
       using KeySparse    = K;
       using Key          = Tif<CT::Sparse<K>, KeySparse,    KeyDense>;
       using KeyMut       = Tif<CT::Sparse<K>, KeySparseMut, KeyDenseMut>;
 
       using ValDenseMut  = V&;
       using ValDense     = V const&;
-      using ValSparseMut = Inner::TValMut<V>;
+      using ValSparseMut = Handle<V>;
       using ValSparse    = V;
       using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
@@ -211,14 +176,14 @@ namespace Langulus::Anyness
 
       using KeyDenseMut  = K&;
       using KeyDense     = K const&;
-      using KeySparseMut = Inner::TKeyMut<K>;
+      using KeySparseMut = Handle<K>;
       using KeySparse    = K;
       using Key          = Tif<CT::Sparse<K>, KeySparse,    KeyDense>;
       using KeyMut       = Tif<CT::Sparse<K>, KeySparseMut, KeyDenseMut>;
 
       using ValDenseMut  = V&;
       using ValDense     = V const&;
-      using ValSparseMut = Inner::TValMut<V>;
+      using ValSparseMut = Handle<V>;
       using ValSparse    = V;
       using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;

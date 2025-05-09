@@ -2,13 +2,14 @@
 #include "../Container.hpp"
 #include <Langulus/CT/Character.hpp>
 #include <Langulus/CT/Comparable.hpp>
+#include <Langulus/CT/Index.hpp>
 
 
 namespace Langulus::Anyness
 {
    
    /// Check if container's elements are comparable                           
-   ///   @attention type-erased elements are always insertable, and will fail 
+   ///   @attention type-erased elements are always insertable, but will fail 
    ///      at runtime if not reflected as such                               
    template<class C, class T1, class...TN>
    concept RangeComparable = CT::Container<C> and (

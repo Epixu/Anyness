@@ -128,11 +128,11 @@ namespace Langulus
 
       /// Check if all T are bounded arrays                                   
       template<class...T>
-      concept Array = ((CTTI::Array<T>::Enabled or T::CTTI_Array::Enabled) and ...);
+      concept Array = ((CTTI::Array<Deref<T>>::Enabled or Deref<T>::CTTI_Array::Enabled) and ...);
 
       /// Check if all T are volatile-qualified                               
       template<class...T>
-      concept Volatile = ((CTTI::Volatile<T>::Enabled or T::CTTI_Volatile::Enabled) and ...);
+      concept Volatile = ((CTTI::Volatile<Deref<T>>::Enabled or Deref<T>::CTTI_Volatile::Enabled) and ...);
 
       /// Check if all T are sparse                                           
       ///   @attention this also includes non-pointer types that are tagged   
@@ -199,7 +199,7 @@ namespace Langulus
    /// Always returns a pointer to the argument                               
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr decltype(auto) SparseCast(T&& a) noexcept {
-      if constexpr (CT::Sparse<Deref<T>>) return (a);
+      if constexpr (CT::Sparse<T>) return (a);
       else return &a;
    }
 
@@ -207,9 +207,9 @@ namespace Langulus
    /// If argument is an array, return a value reference to the first element 
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr decltype(auto) DenseCast(T&& a) {
-      if constexpr (CT::Array<Deref<T>>)
+      if constexpr (CT::Array<T>)
          return DenseCast(a[0]);
-      else if constexpr (CT::Sparse<Deref<T>>) {
+      else if constexpr (CT::Sparse<T>) {
          if (a == nullptr)
             throw Exception("Can't dereference nullptr");
          return DenseCast(*a);
