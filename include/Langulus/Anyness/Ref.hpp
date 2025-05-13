@@ -27,13 +27,16 @@ namespace Langulus::Anyness::Inner
 namespace Langulus::Anyness
 {
 
+   template<class T>
+   struct Ref;
+
    ///                                                                        
    /// A statically typed shared pointer                                      
    /// Works fine with packed pointers as well                                
    /// Has ownership                                                          
    ///                                                                        
    template<CT::Sparse T>
-   struct Ref : Inner::RefBase<T> {
+   struct Ref<T> : Inner::RefBase<T> {
       using Base = Inner::RefBase<T>;
 
       constexpr Ref() noexcept = default;
@@ -51,5 +54,9 @@ namespace Langulus::Anyness
 
       constexpr ~Ref() = default;
    };
+
+   /// A dense ref is isomorphic to a simple Own container                    
+   //template<CT::Dense T>
+   //struct Ref<T> : Own<T> {};
 
 } // namespace Langulus::Anyness

@@ -27,7 +27,7 @@ namespace Langulus::Anyness
       Component::HashHeap<1>,          // Values can be hashed          
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
-      Component::IndexedHash<>,        // Indexed directly              
+      Component::IndexedHash<0>,       // Indexed by hashing keys       
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
       Component::Emplacement,          // Allows emplacement            
@@ -90,7 +90,7 @@ namespace Langulus::Anyness
       Component::HashHeap<1>,          // Values can be hashed          
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
-      Component::IndexedHash<>,        // Indexed directly              
+      Component::IndexedHash<0>,       // Indexed by hashing keys       
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
       Component::Emplacement,          // Allows emplacement            
@@ -153,7 +153,7 @@ namespace Langulus::Anyness
       Component::HashHeap<1>,          // Values can be hashed          
       Component::DeepOwnership<0>,     // Sparse keys are referenced    
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
-      Component::IndexedHash<>,        // Indexed directly              
+      Component::IndexedHash<0>,       // Indexed by hashing keys       
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
       Component::Emplacement,          // Allows emplacement            

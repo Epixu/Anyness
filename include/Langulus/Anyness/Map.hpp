@@ -22,6 +22,8 @@
 #include "../../../source/components/State-Stack.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "../../../source/components/Hash-Heap.hpp"
+#include "../../../source/components/Iteration-ForEach.hpp"
+#include "../../../source/components/Iteration-Range.hpp"
 #include "../../../source/states/Sorted.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
@@ -73,17 +75,25 @@ namespace Langulus::Anyness
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
       Component::HashHeap<0>,          // Keys can be hashed            
       Component::HashHeap<1>,          // Values can be hashed          
-      Component::IndexedHash<>,        // Indexed directly              
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement,          // Allows emplacement            
-      Component::Removal,              // Allows removal                
+      Component::IndexedHash<0>,       // Indexed by hashing keys       
+      Component::Insertion<0>,         // Allows key insertion          
+      Component::Insertion<1>,         // Allows val insertion          
+      Component::InsertionOperators<0>,// << and >> insertion of keys   
+      Component::InsertionOperators<1>,// << and >> insertion of vals   
+      Component::Emplacement<0>,       // Allows emplacement of keys    
+      Component::Emplacement<1>,       // Allows emplacement of vals    
+      Component::Removal<0>,           // Allows removal of keys        
+      Component::Removal<1>,           // Allows removal of vals        
       Component::Assignment,           // Allows assignment             
       Component::TypedStack<DMeta, void, 0>,    // Key type             
       Component::TypedStack<DMeta, void, 1>,    // Value type           
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
       Component::Comparison,           // Allows for comparison         
+      Component::IterationForEach<0>,  // Iterate keys using lambdas    
+      Component::IterationForEach<1>,  // Iterate vals using lambdas    
+      Component::IterationRange<0>,    // Iterate keys using ranges     
+      Component::IterationRange<1>,    // Iterate vals using ranges     
       Component::StateStack<           // Variable state                
          DefineState::Sorted<>,        // Maybe unsorted                
          DefineState::Compressed<>,    // Adds 'compressed' state       
@@ -111,6 +121,13 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Capsulation                                                       
       Hash GetHash() const;
+
+      ///                                                                     
+      ///   Removal                                                           
+      auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
+      auto RemoveValue(const CT::NoIntent auto&) -> CountType;
+      auto RemovePair (const CT::Pair auto&) -> CountType;
+      auto RemoveIt   (const Iterator&) -> Iterator;
    };
    
 
@@ -126,17 +143,25 @@ namespace Langulus::Anyness
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
       Component::HashHeap<0>,          // Keys can be hashed            
       Component::HashHeap<1>,          // Values can be hashed          
-      Component::IndexedHash<>,        // Indexed directly              
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement,          // Allows emplacement            
-      Component::Removal,              // Allows removal                
+      Component::IndexedHash<0>,       // Indexed by hashing keys       
+      Component::Insertion<0>,         // Allows key insertion          
+      Component::Insertion<1>,         // Allows val insertion          
+      Component::InsertionOperators<0>,// << and >> insertion of keys   
+      Component::InsertionOperators<1>,// << and >> insertion of vals   
+      Component::Emplacement<0>,       // Allows emplacement of keys    
+      Component::Emplacement<1>,       // Allows emplacement of vals    
+      Component::Removal<0>,           // Allows removal of keys        
+      Component::Removal<1>,           // Allows removal of vals        
       Component::Assignment,           // Allows assignment             
       Component::TypedStack<DMeta, void, 0>,    // Key type             
       Component::TypedStack<DMeta, void, 1>,    // Value type           
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
       Component::Comparison,           // Allows for comparison         
+      Component::IterationForEach<0>,  // Iterate keys using lambdas    
+      Component::IterationForEach<1>,  // Iterate vals using lambdas    
+      Component::IterationRange<0>,    // Iterate keys using ranges     
+      Component::IterationRange<1>,    // Iterate vals using ranges     
       Component::StateStack<           // Variable state                
          DefineState::Sorted<State::Disabled>,  // Always unsorted      
          DefineState::Compressed<>,    // Adds 'compressed' state       
@@ -165,6 +190,13 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Capsulation                                                       
       Hash GetHash() const;
+
+      ///                                                                     
+      ///   Removal                                                           
+      auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
+      auto RemoveValue(const CT::NoIntent auto&) -> CountType;
+      auto RemovePair (const CT::Pair auto&) -> CountType;
+      auto RemoveIt   (const Iterator&) -> Iterator;
    };
    
 
@@ -180,17 +212,25 @@ namespace Langulus::Anyness
       Component::DeepOwnership<1>,     // Sparse vals are referenced    
       Component::HashHeap<0>,          // Keys can be hashed            
       Component::HashHeap<1>,          // Values can be hashed          
-      Component::IndexedHash<>,        // Indexed directly              
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement,          // Allows emplacement            
-      Component::Removal,              // Allows removal                
+      Component::IndexedHash<0>,       // Indexed by hashing keys       
+      Component::Insertion<0>,         // Allows key insertion          
+      Component::Insertion<1>,         // Allows val insertion          
+      Component::InsertionOperators<0>,// << and >> insertion of keys   
+      Component::InsertionOperators<1>,// << and >> insertion of vals   
+      Component::Emplacement<0>,       // Allows emplacement of keys    
+      Component::Emplacement<1>,       // Allows emplacement of vals    
+      Component::Removal<0>,           // Allows removal of keys        
+      Component::Removal<1>,           // Allows removal of vals        
       Component::Assignment,           // Allows assignment             
       Component::TypedStack<DMeta, void, 0>,    // Key type             
       Component::TypedStack<DMeta, void, 1>,    // Value type           
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
       Component::Comparison,           // Allows for comparison         
+      Component::IterationForEach<0>,  // Iterate keys using lambdas    
+      Component::IterationForEach<1>,  // Iterate vals using lambdas    
+      Component::IterationRange<0>,    // Iterate keys using ranges     
+      Component::IterationRange<1>,    // Iterate vals using ranges     
       Component::StateStack<           // Variable state                
          DefineState::Sorted<State::Enabled>,   // Always sorted        
          DefineState::Compressed<>,    // Adds 'compressed' state       
@@ -219,6 +259,13 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Capsulation                                                       
       Hash GetHash() const;
+
+      ///                                                                     
+      ///   Removal                                                           
+      auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
+      auto RemoveValue(const CT::NoIntent auto&) -> CountType;
+      auto RemovePair (const CT::Pair auto&) -> CountType;
+      auto RemoveIt   (const Iterator&) -> Iterator;
    };
 
 } // namespace Langulus::Anyness

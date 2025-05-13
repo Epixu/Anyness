@@ -19,7 +19,8 @@ namespace Langulus::Anyness::Component
 
    ///                                                                        
    /// Implements emplacement for containers                                  
-   ///                                                                        
+   ///   @tparam ID - heap we're inserting to                                 
+   template<unsigned ID = 0>
    struct Emplacement {
       using CTTI_Component = Yes;
 

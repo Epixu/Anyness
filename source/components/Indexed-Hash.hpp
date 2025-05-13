@@ -7,14 +7,17 @@ namespace Langulus::Anyness::Component
 {
 
    ///                                                                        
-   /// Provides random element access by hashing a value of type T            
-   ///   @tparam T - type to get hash of, use void for type-erasure           
+   /// Provides random element access by hashing a value of the provide ID    
+   /// Uses Robin Hood algorithm to manage collisions                         
+   ///   @tparam ID - the stack/heap and type ID                              
    ///   @tparam HASH - type of the hash                                      
-   template<class HASH = Hash>
+   template<unsigned ID = 0, class HASH = Hash>
    struct IndexedHash {
       using CTTI_Component = Yes;
+      using CTTI_Contiguous = No;
+      using TableType = uint8_t;
 
-   private:
+   protected:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
@@ -23,6 +26,8 @@ namespace Langulus::Anyness::Component
 
       template<CT::Container C>
       using Val = Tif<CT::Mutable<C>, typename Deref<C>::ValMut, typename Deref<C>::Val>;
+
+      TableType* mTable = nullptr;
 
    public:
       template<CT::Container C>

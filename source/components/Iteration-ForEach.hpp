@@ -63,7 +63,8 @@ namespace Langulus::Anyness::Component
 
    ///                                                                        
    /// Implements ForEach iteration interface for containers                  
-   ///                                                                        
+   ///   @tparam ID - heap/stack we're iterating                              
+   template<unsigned ID = 0>
    struct IterationForEach {
       using CTTI_Component = Yes;
 

@@ -8,7 +8,8 @@ namespace Langulus::Anyness::Component
 
    ///                                                                        
    /// Implements removal for containers                                      
-   ///                                                                        
+   ///   @tparam ID - heap we're removing from                                
+   template<unsigned ID = 0>
    struct Removal {
       using CTTI_Component = Yes;
 
@@ -32,7 +33,7 @@ namespace Langulus::Anyness::Component
       auto RemoveAt(this C&, CT::Index auto, Count<C> = 1) -> Count<C>;
 
       template<CT::Container C>
-      auto RemoveAtDeep(CT::Index auto) -> Count<C>;
+      auto RemoveAtDeep(this C&, CT::Index auto) -> Count<C>;
 
       template<CT::Container C>
       auto RemoveIt(this C&, const Iterator<C>&, Count<C> = 1) -> Iterator<C>;

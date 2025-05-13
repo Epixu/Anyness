@@ -16,7 +16,9 @@ namespace Langulus::Anyness
 namespace Langulus::Anyness::Component
 {
 
+   template<unsigned>
    struct IterationForEach;
+
    template<unsigned>
    struct HeapMovable;
 
@@ -34,6 +36,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool TypeErased = CT::Void<TYPE>;
 
    protected:
+      template<unsigned>
       friend struct IterationForEach;
       template<unsigned>
       friend struct HeapMovable;

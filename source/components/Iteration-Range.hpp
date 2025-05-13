@@ -112,7 +112,8 @@ namespace Langulus::Anyness::Component
 
    ///                                                                        
    /// Implements ranged iteration interface for containers                   
-   ///                                                                        
+   ///   @tparam ID - heap/stack we're iterating                              
+   template<unsigned ID = 0>
    struct IterationRange {
       using CTTI_Component = Yes;
 

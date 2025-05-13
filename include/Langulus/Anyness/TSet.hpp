@@ -21,7 +21,7 @@ namespace Langulus::Anyness
       Component::OwnershipStack<>,     // Keys allocation is referenced 
       Component::DeepOwnership<>,      // Sparse keys are referenced    
       Component::HashHeap<>,           // Keys can be hashed            
-      Component::IndexedHash<>,        // Indexed directly              
+      Component::IndexedHash<>,        // Indexed by hashing keys       
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
       Component::Emplacement,          // Allows emplacement            
@@ -59,7 +59,7 @@ namespace Langulus::Anyness
       Component::OwnershipStack<>,     // Keys allocation is referenced 
       Component::DeepOwnership<>,      // Sparse keys are referenced    
       Component::HashHeap<>,           // Keys can be hashed            
-      Component::IndexedHash<>,        // Indexed directly              
+      Component::IndexedHash<>,        // Indexed by hashing keys       
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
       Component::Emplacement,          // Allows emplacement            
@@ -97,7 +97,7 @@ namespace Langulus::Anyness
       Component::OwnershipStack<>,     // Keys allocation is referenced 
       Component::DeepOwnership<>,      // Sparse keys are referenced    
       Component::HashHeap<>,           // Keys can be hashed            
-      Component::IndexedHash<>,        // Indexed directly              
+      Component::IndexedHash<>,        // Indexed by hashing keys       
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
       Component::Emplacement,          // Allows emplacement            

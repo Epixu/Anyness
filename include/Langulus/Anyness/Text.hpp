@@ -44,10 +44,10 @@ namespace Langulus::Anyness
          Component::OwnershipStack<>,     // Allocation is referenced   
          Component::Contiguous,           // Heap memory is continuous  
          Component::IndexedLinear<>,      // Indexed directly           
-         Component::Emplacement,          // Allows emplacement         
-         Component::Insertion<Text>,            // Serialize + insert   
-         Component::InsertionOperators<Text>,   // << and >> insertion  
-         Component::Removal,              // Allows removal             
+         Component::Emplacement<>,        // Allows emplacement         
+         Component::Insertion<0, Text>,         // Serialize + insert   
+         Component::InsertionOperators<0, Text>,// << and >> insertion  
+         Component::Removal<>,            // Allows removal             
          Component::Assignment,           // Allows assignment          
          Component::TypedStatic<DMeta, char>,   // Type-constrained     
          Component::CountStack<>,         // Variable count             
