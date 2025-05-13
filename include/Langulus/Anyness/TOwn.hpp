@@ -20,10 +20,10 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A statically typed stack-based container of size 1                     
    /// Mainly serves to transfer values and/or pointers on move               
-   /// No ownership is applied                                                
+   /// No ownership or states are applied - if you need those use TAny instead
    ///                                                                        
    template<CT::NotVoid T>
-   struct Own : Container<
+   struct TOwn : Container<
       Component::Stack<T>,             // Element on the stack          
       Component::TypedStatic<DMeta, T>,// Statically typed              
       Component::Assignment,           // Allows for reassignment       

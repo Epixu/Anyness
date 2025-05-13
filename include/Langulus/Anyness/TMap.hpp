@@ -50,15 +50,15 @@ namespace Langulus::Anyness
 
       using KeyDenseMut  = K&;
       using KeyDense     = K const&;
-      using KeySparseMut = Handle<K>;
-      using KeySparse    = K;
+      using KeySparseMut = Handle<K&>;
+      using KeySparse    = Handle<K const&>;
       using Key          = Tif<CT::Sparse<K>, KeySparse,    KeyDense>;
       using KeyMut       = Tif<CT::Sparse<K>, KeySparseMut, KeyDenseMut>;
 
       using ValDenseMut  = V&;
       using ValDense     = V const&;
-      using ValSparseMut = Handle<V>;
-      using ValSparse    = V;
+      using ValSparseMut = Handle<V&>;
+      using ValSparse    = Handle<V const&>;
       using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
 
@@ -113,15 +113,15 @@ namespace Langulus::Anyness
 
       using KeyDenseMut  = K&;
       using KeyDense     = K const&;
-      using KeySparseMut = Handle<K>;
-      using KeySparse    = K;
+      using KeySparseMut = Handle<K&>;
+      using KeySparse    = Handle<K const&>;
       using Key          = Tif<CT::Sparse<K>, KeySparse,    KeyDense>;
       using KeyMut       = Tif<CT::Sparse<K>, KeySparseMut, KeyDenseMut>;
 
       using ValDenseMut  = V&;
       using ValDense     = V const&;
-      using ValSparseMut = Handle<V>;
-      using ValSparse    = V;
+      using ValSparseMut = Handle<V&>;
+      using ValSparse    = Handle<V const&>;
       using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
 
@@ -176,15 +176,15 @@ namespace Langulus::Anyness
 
       using KeyDenseMut  = K&;
       using KeyDense     = K const&;
-      using KeySparseMut = Handle<K>;
-      using KeySparse    = K;
+      using KeySparseMut = Handle<K&>;
+      using KeySparse    = Handle<K const&>;
       using Key          = Tif<CT::Sparse<K>, KeySparse,    KeyDense>;
       using KeyMut       = Tif<CT::Sparse<K>, KeySparseMut, KeyDenseMut>;
 
       using ValDenseMut  = V&;
       using ValDense     = V const&;
-      using ValSparseMut = Handle<V>;
-      using ValSparse    = V;
+      using ValSparseMut = Handle<V&>;
+      using ValSparse    = Handle<V const&>;
       using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
 

@@ -9,8 +9,6 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership.hpp"
-#include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Conversion.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Count-Static.hpp"
@@ -27,18 +25,12 @@ namespace Langulus::Anyness
 {
 
    ///                                                                        
-   /// A universal type-erased container of size 1                            
-   /// This is the most universal and feature-complete container, that        
-   /// supports all kinds of data states: compression, encryption, linking,   
-   /// and so on. For a slightly smaller and faster representation, consider  
-   /// using Own or Ref instead. If you want to contain a number of similar   
-   /// elements use Many instead.                                             
+   /// A universal type-erased container view (without ownership) of size 1,  
+   /// that is binary compatible with Any                                     
    ///                                                                        
-   struct Any : Container<
+   struct AnyView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership<>,      // Sparse elements are referenced
-      Component::Assignment,           // Allows assignment             
+      Component::OwnershipStack<0, false>,   // Pointer to an allocation
       Component::Conversion,           // Allows conversion             
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStatic<1>,       // Statically sized to 1         
@@ -51,5 +43,5 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {};
-      
+   
 } // namespace Langulus::Anyness

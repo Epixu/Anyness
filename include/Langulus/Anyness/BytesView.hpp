@@ -12,12 +12,6 @@
 #include "../../../source/components/Contiguous.hpp"
 #include "../../../source/components/Indexed-Linear.hpp"
 #include "../../../source/components/Emplacement.hpp"
-#include "../../../source/components/Insertion.hpp"
-#include "../../../source/components/InsertionOperators.hpp"
-#include "../../../source/components/Concatenate.hpp"
-#include "../../../source/components/ConcatenateOperators.hpp"
-#include "../../../source/components/Removal.hpp"
-#include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Count-Stack.hpp"
 #include "../../../source/components/Reserve-Heap.hpp"
@@ -34,30 +28,20 @@
 namespace Langulus::Anyness
 {
 
-   struct Bytes;
-   struct BytesView;
-
-
    ///                                                                        
-   /// A continuous byte container of variable size                           
+   /// A continuous byte container view (without ownership) of variable size, 
+   /// that is binary compatible with the container above                     
    ///                                                                        
-   struct Bytes : Container<
+   struct BytesView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<>,     // Allocation is referenced      
+      Component::OwnershipStack<0, false>,   // Allocation is referenced
       Component::Contiguous,           // Heap memory is continuous     
       Component::IndexedLinear<>,      // Indexed directly              
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Insertion<0, Bytes>,           // Serialize + insert   
-      Component::InsertionOperators<0, Bytes>,  // << and >> insertion  
-      Component::Concatenate,          // Concatenation                 
-      Component::ConcatenateOperators, // + += concatenation operators  
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment,           // Allows assignment             
       Component::TypedStatic<DMeta, Byte>,   // Type-constrained        
       Component::CountStack<>,         // Variable count                
       Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
-      Component::IterationRange<>,     // Ranged iteration              
+      Component::IterationRange,       // Ranged iteration              
       Component::Comparison,           // Comparisons                   
       Component::StateStack<           // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
@@ -66,41 +50,13 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
-      // View                                                           
-      using  ViewType = BytesView;
+      using CTTI_ReflectAs = Bytes;
 
-      // Single element selections                                      
-      using  Pick     = Byte const&;
-      using  PickMut  = Byte&;
+      constexpr BytesView() noexcept = default;
+      constexpr BytesView(const BytesView&) noexcept = default;
+      constexpr BytesView(BytesView&&) noexcept = default;
 
-      // Range selections                                               
-      struct PickRange : Container<
-         Component::HeapMovable<>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::TypedStatic<DMeta, Byte>,
-         Component::CountStack<>
-      > {};
-      struct PickRangeMut : Container<
-         Component::HeapMovable<>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::Assignment,
-         Component::TypedStatic<DMeta, Byte>,
-         Component::CountStack<>
-      > {};
-
-      constexpr Bytes() noexcept = default;
-      constexpr Bytes(const Bytes&) noexcept = default;
-      constexpr Bytes(Bytes&&) noexcept = default;
-
-      //template<template<class> class I> requires CT::Intent<I<Bytes>>
-      //constexpr Bytes(I<Bytes>&&) noexcept;
-
-      template<class A1>
-      constexpr Bytes(A1&&) requires CT::DeepConstructible<Bytes, A1>;
-      template<class A1, class...AN>
-      constexpr Bytes(A1&&, AN&&...) requires CT::RangeInsertable<Bytes, A1, AN...>;
+      constexpr BytesView(const CT::Container auto&) noexcept;
    };
 
 } // namespace Langulus::Anyness

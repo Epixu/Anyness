@@ -63,8 +63,8 @@ namespace Langulus::Anyness
       // Single element selections                                      
       using  PickDenseMut  = T&;
       using  PickDense     = T const&;
-      using  PickSparseMut = Handle<T>;
-      using  PickSparse    = T;
+      using  PickSparseMut = Handle<T&>;
+      using  PickSparse    = Handle<T const&>;
       using  Pick          = Tif<CT::Sparse<T>, PickSparse,    PickDense>;
       using  PickMut       = Tif<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
 

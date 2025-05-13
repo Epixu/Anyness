@@ -57,6 +57,14 @@ namespace Langulus::CTTI
       static constexpr bool Enabled = false;
    };
 
+   /// Can be used in two ways to satisfy CT::Handle<T>:                      
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Handle = Yes/No;` in T                     
+   template<class T>
+   struct Handle {
+      static constexpr bool Enabled = false;
+   };
+
 } // namespace Langulus::CTTI
 
 LANGULUS_CTTI_CONCEPT(State);
@@ -65,6 +73,7 @@ LANGULUS_CTTI_CONCEPT(Container);
 LANGULUS_CTTI_CONCEPT(Map);
 LANGULUS_CTTI_CONCEPT(Set);
 LANGULUS_CTTI_CONCEPT(Pair);
+LANGULUS_CTTI_CONCEPT(Handle);
 
 namespace Langulus::Anyness
 {

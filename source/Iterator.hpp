@@ -25,7 +25,7 @@ namespace Langulus::Anyness
    ///   A weightless 'end' iterator helper type                              
    ///                                                                        
    /// Used to return from container's end() methods. It only compares        
-   /// equal to other iterators, if they've reached their end marker          
+   /// equal to other iterators if they have reached their end marker         
    ///                                                                        
    struct IteratorEnd {
       using CTTI_Iterator = Yes;
@@ -113,8 +113,8 @@ namespace Langulus::Anyness
 
       // Key type is always constant, because changing it will mean     
       // rehashing the entire table, so we forbid it while iterating    
-      using Key   = const typename C::Key;
-      using Val   = Tif<Mutable, typename C::Val,   const typename C::Val>;
+      using Key   = typename C::Key;
+      using Val   = Tif<Mutable, typename C::ValMut, typename C::Val>;
       using Pair  = Tif<Mutable, typename C::PairRef, typename C::PairConstRef>;
       using KA    = Tif<TypeErased, Block<>, Key*>;
       using VA    = Tif<TypeErased, Block<>, Val*>;
@@ -130,7 +130,7 @@ namespace Langulus::Anyness
 
       friend struct BlockMap;
       const Table* mInfo = nullptr;
-      const Table* mSentinel = nullptr;
+      const Table* mEnd  = nullptr;
 
       constexpr TIteratorMap(const Table*, const Table*, const KA&, const VA&) noexcept;
 

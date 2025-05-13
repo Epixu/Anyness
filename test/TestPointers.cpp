@@ -5,17 +5,17 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include <Langulus/Anyness/Ref.hpp>
+#include <Langulus/Anyness/TRef.hpp>
 #include "Common.hpp"
 
 
-TEMPLATE_TEST_CASE("Shared pointer", "[Ref]",
-   Ref<const RT*>,
-   Ref<Many*>,
-   Ref<int*>,
-   Ref<RT*>,
-   Ref<const Many*>,
-   Ref<const int*>
+TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
+   TRef<const RT*>,
+   TRef<Many*>,
+   TRef<int*>,
+   TRef<RT*>,
+   TRef<const Many*>,
+   TRef<const int*>
 ) {
    static Allocator::State memoryState;
 

@@ -9,14 +9,8 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership.hpp"
 #include "../../../source/components/Contiguous.hpp"
 #include "../../../source/components/Indexed-Linear.hpp"
-#include "../../../source/components/Insertion.hpp"
-#include "../../../source/components/InsertionOperators.hpp"
-#include "../../../source/components/Emplacement.hpp"
-#include "../../../source/components/Removal.hpp"
-#include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Count-Stack.hpp"
 #include "../../../source/components/Reserve-Stack.hpp"
@@ -40,35 +34,22 @@
 namespace Langulus::Anyness
 {
 
-   struct Many;
-   struct ManyView;
-
-
    ///                                                                        
-   /// A universal type-erased contiguous container of variable size          
-   /// This is the most universal and feature-complete container, that        
-   /// supports all kinds of data states: compression, encryption, linking,   
-   /// and so on. If you want to contain a single element, consider using     
-   /// Any instead, for a bit shorter and faster representation.              
+   /// A universal type-erased continuous container view of variable size     
+   /// Doesn't have ownership, and binary-compatible with the container above 
    ///                                                                        
-   struct Many : Container<
+   struct ManyView : Container<
       Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership<>,      // Referenced indirections       
+      Component::OwnershipStack<0, false>,   // Pointer to an allocation
       Component::Contiguous,           // Heap memory is continuous     
       Component::IndexedLinear<>,      // Indexed directly              
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment,           // Allows assignment             
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
       Component::Descriptor,           // Descriptor interface          
       Component::IterationForEach<>,   // ForEach iteration             
-      Component::IterationRange<>,     // Ranged iteration              
+      Component::IterationRange<>,     // ForEach iteration             
       Component::Comparison,           // Allows for comparison         
       Component::Conversion,           // Allows conversion             
       Component::StateStack<           // Variable state                
@@ -81,57 +62,7 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
-      // View                                                           
-      using  ViewType = ManyView;
-
-      // Deep type                                                      
-      using  DeepType = Many;
-
-      // Single element selections                                      
-      struct PickMut : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<>,
-         Component::Assignment,
-         Component::TypedStack<DMeta>
-      > {};
-      struct Pick : Container<
-         Component::HeapMovable<>,
-         Component::TypedStack<DMeta>
-      > {};
-
-      // Range selections                                               
-      struct PickRangeMut : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<0, false>,
-         Component::DeepOwnership<>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::Assignment,
-         Component::TypedStack<DMeta>,
-         Component::CountStack<>,
-         Component::ReserveStack<>
-      > {};
-      struct PickRange : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<0, false>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::TypedStack<DMeta>,
-         Component::CountStack<>,
-         Component::ReserveStack<>
-      > {};
-
-      constexpr Many() noexcept = default;
-      constexpr Many(const Many&) noexcept;
-      constexpr Many(Many&&) noexcept;
-
-      //template<template<class> class I> requires CT::Intent<I<Many>>
-      //explicit Many(I<Many>&&) noexcept;
-
-      template<class A1, class...AN>
-      Many(A1&&, AN&&...) requires CT::RangeInsertable<Many, A1, AN...>;
+      using CTTI_ReflectAs = Many;
    };
-   
-   using Messy = Many;
    
 } // namespace Langulus::Anyness

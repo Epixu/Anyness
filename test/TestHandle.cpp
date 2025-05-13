@@ -40,8 +40,8 @@ TMany<T> CreateManagedElements(FROM&&...from) {
 }
 
 /// Create a dense or sparse local handle by providing simple arguments       
-template<class T, class FROM>
-HandleLocal<T> CreateHandle(FROM&& from) {
+template<CT::NotReference T, class FROM>
+Handle<T> CreateHandle(FROM&& from) {
    static_assert(CT::ConstructibleFrom<Decay<T>, Decay<FROM>>);
 
    if constexpr (CT::Similar<T, Decay<T>>)
@@ -61,8 +61,8 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
    static Allocator::State memoryState;
 
    using T  = TestType;
-   using HE = Handle<T>;
-   using HL = HandleLocal<T>;
+   using HE = Handle<T&>;
+   using HL = Handle<T>;
 
    static_assert(not CT::Defaultable<HE>);
    static_assert(not CT::Defaultable<HL>);
@@ -79,9 +79,9 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       REQUIRE(DenseCast(data[1]) == 666);
       REQUIRE(DenseCast(data[2]) == 667);
 
-      Handle<T> h0 = data.GetHandle(0);
-      Handle<T> h1 = data.GetHandle(1);
-      Handle<T> h2 = data.GetHandle(2);
+      Handle<T&> h0 = data.GetHandle(0);
+      Handle<T&> h1 = data.GetHandle(1);
+      Handle<T&> h2 = data.GetHandle(2);
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       REQUIRE(h0.GetEntry());
@@ -110,7 +110,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
 
       WHEN("An element is taken out of the container and assigned into another") {
          TMany<T> next = CreateManagedElements<T>(0);
-         Handle<T> n = next.GetHandle(0);
+         Handle<T&> n = next.GetHandle(0);
          auto const n0e = n.GetEntry();
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));
 
@@ -163,7 +163,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       
       WHEN("An element is taken out of the container and swapped with another") {
          TMany<T> next = CreateManagedElements<T>(0);
-         Handle<T> n = next.GetHandle(0);
+         Handle<T&> n = next.GetHandle(0);
          T const n0p = n.Get();
          auto const n0e = n.GetEntry();
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));
@@ -231,7 +231,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
 
       WHEN("An element is taken out of the container and swapped with managed local") {
          TMany<T> next = CreateManagedElements<T>(0);
-         HandleLocal<T> n = next[0];
+         Handle<T> n = next[0];
          T const n0p = n.Get();
          auto const n0e = n.GetEntry();
 
@@ -306,7 +306,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       }
 
       WHEN("An element is taken out of the container and swapped with a unmanaged local") {
-         HandleLocal<T> n = CreateHandle<T>(42);
+         Handle<T> n = CreateHandle<T>(42);
          T const n0p = n.Get();
          auto const n0e = n.GetEntry();
          REQUIRE(n0e == nullptr);
@@ -377,7 +377,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       }
 
       WHEN("An element is taken out of the container and moved into a local handle") {
-         HandleLocal<T> local = Move(h0);
+         Handle<T> local = Move(h0);
 
          if constexpr (REFERENCABLE) {
             if constexpr (SPARSE) {
@@ -459,7 +459,7 @@ TEMPLATE_TEST_CASE("Managed handle swapping", "[handle]", RT*, RT, int, int*) {
          // Create a handle to an element inside factory2               
          // The entry will be searched for in the memory manager        
          // Since we're using a local handle, the element will be reffed
-         HandleLocal<T> swapper {factory2[0]};
+         Handle<T> swapper {factory2[0]};
 
          if constexpr (sparse)
             REQUIRE(swapper.GetEntry()->GetUses() == refs2);
