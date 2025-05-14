@@ -27,7 +27,7 @@ namespace Langulus::Anyness
    /// Used to return from container's end() methods. It only compares        
    /// equal to other iterators if they have reached their end marker         
    ///                                                                        
-   struct IteratorEnd {
+   struct IteratorEnd final {
       using CTTI_Iterator = Yes;
       using CTTI_ReflectAs = void;
    };
@@ -115,9 +115,8 @@ namespace Langulus::Anyness
       // rehashing the entire table, so we forbid it while iterating    
       using Key   = typename C::Key;
       using Val   = Tif<Mutable, typename C::ValMut, typename C::Val>;
-      using Pair  = Tif<Mutable, typename C::PairRef, typename C::PairConstRef>;
-      using KA    = Tif<TypeErased, Block<>, Key*>;
-      using VA    = Tif<TypeErased, Block<>, Val*>;
+      using KA    = Tif<CT::Reference<Key>, Deref<Key>*, Key>;
+      using VA    = Tif<CT::Reference<Val>, Deref<Val>*, Val>;
       using Table = typename C::TableType;
 
       using CTTI_Typed = Types<Key, Val>;
@@ -141,13 +140,17 @@ namespace Langulus::Anyness
       constexpr TIteratorMap(IteratorEnd) noexcept;
 
       auto& GetKey(this auto&& self) noexcept {
-         if constexpr (TypeErased)  return  self.mKey;
-         else                       return *self.mKey;
+         if constexpr (CT::Reference<Key>)
+            return *self.mKey;
+         else
+            return  self.mKey;
       }
 
       auto& GetVal(this auto&& self) noexcept {
-         if constexpr (TypeErased)  return  self.mVal;
-         else                       return *self.mVal;
+         if constexpr (CT::Reference<Key>)
+            return *self.mVal;
+         else
+            return  self.mVal;
       }
       
       constexpr auto operator = (const TIteratorMap&) noexcept -> TIteratorMap& = default;
@@ -166,8 +169,9 @@ namespace Langulus::Anyness
       constexpr auto operator ++ (int) noexcept -> TIteratorMap;
 
       constexpr explicit operator bool() const noexcept;
+
       constexpr operator TIteratorMap<const C>() const noexcept requires Mutable {
-         return {mInfo, mSentinel, mKey, mVal};
+         return {mInfo, mEnd, mKey, mVal};
       }
    };
 

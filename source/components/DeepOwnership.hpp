@@ -1,6 +1,8 @@
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/Assume.hpp>
+#include <Langulus/CT/Allocatable.hpp>
+#include <Langulus/CT/Referenced.hpp>
 
 
 namespace Langulus::Anyness::Component

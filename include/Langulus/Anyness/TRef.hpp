@@ -10,6 +10,7 @@
 #include "../../../source/components/Stack.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Typed-Static.hpp"
+#include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "../../../source/rtti/MetaData.hpp"
@@ -23,7 +24,8 @@ namespace Langulus::Anyness::Inner
       Component::Stack<T>,              // Data on the heap             
       Component::OwnershipStack<>,      // Allocation is referenced     
       Component::TypedStatic<DMeta, T>, // Statically typed             
-      Component::Assignment,            // Can be reassigned            
+      Component::Emplacement<>,         // Can be emplaced              
+      Component::Assignment<>,          // Can be reassigned            
       Component::Comparison             // Can be compared              
    >;
 
@@ -40,19 +42,37 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::Sparse T>
    struct TRef : Inner::TRefBase<T> {
-      using Base = Inner::RefBase<T>;
+      using Base = Inner::TRefBase<T>;
 
-      constexpr TRef() noexcept = default;
+      ///                                                                     
+      ///   Construction                                                      
+      /// Default construction                                                
+      constexpr TRef() noexcept {
+         Component::Stack<T>::mStack = {};
+         Component::OwnershipStack<>::mAllocation = {};
+      }
+
+      /// Standard move and copy semantics                                    
       explicit constexpr TRef(const TRef&) noexcept = default;
       explicit constexpr TRef(TRef&&) noexcept = default;
 
+      /// Intent constructor                                                  
       template<template<class> class S> requires CT::IntentConstructible<S, T>
       explicit constexpr TRef(S<TRef>&& other)
          : Base {other.template Forward<Base>()} {}
 
+      /// Raw pointer constructor                                             
+      /// The allocation behind the pointer will be sought                    
+      ///   @param pointer - the pointer to initialize with                   
       template<class A> requires CT::ConstructibleFrom<T, A>
       constexpr TRef(A&& pointer) {
-         EmplaceWithIntent(::std::forward<A>(pointer));
+         if constexpr (CT::Null<A>) {
+            (void) pointer;
+            Component::Stack<T>::mStack = {};
+            Component::OwnershipStack<>::mAllocation = {};
+            return;
+         }
+         else EmplaceWithIntent(::std::forward<A>(pointer));
       }
 
       constexpr ~TRef() = default;

@@ -6,8 +6,8 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include <Langulus/Anyness/Text.hpp>
-#include <Langulus/Anyness/Own.hpp>
-#include <Langulus/Anyness/Ref.hpp>
+#include <Langulus/Anyness/TOwn.hpp>
+#include <Langulus/Anyness/TRef.hpp>
 #include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/Tag.hpp>
 #include "Common.hpp"
@@ -29,8 +29,8 @@ struct Thing final : Resolvable {
 
    Thing();
 
-   Own<Thing*>   mOwned;
-   Ref<Thing*>   mOwner;
+   TOwn<Thing*>   mOwned;
+   TRef<Thing*>   mOwner;
    TMany<Thing*> mChildren;
    UnitMap       mUnits;
    TagsMap       mTags;
@@ -40,8 +40,8 @@ Thing::Thing() : Resolvable {MetaOf<Thing>()} {}
 
 SCENARIO("Testing incomplete type hierarchy", "[incomplete]") {
    static_assert(CT::Complete<Resolvable>);
-   static_assert(CT::Complete<Own<Thing*>>);
-   static_assert(CT::Complete<Ref<Thing*>>);
+   static_assert(CT::Complete<TOwn<Thing*>>);
+   static_assert(CT::Complete<TRef<Thing*>>);
    static_assert(CT::Complete<TMany<Thing*>>);
    static_assert(CT::Complete<UnitMap>);
    static_assert(CT::Complete<TagsMap>);

@@ -34,6 +34,9 @@
 namespace Langulus::Anyness
 {
 
+   struct Many;
+
+
    ///                                                                        
    /// A universal type-erased continuous container view of variable size     
    /// Doesn't have ownership, and binary-compatible with the container above 

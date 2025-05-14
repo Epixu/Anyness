@@ -10,6 +10,7 @@
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Assignment.hpp"
+#include "../../../source/components/Comparison.hpp"
 #include "TOwn.hpp"
 #include "TRef.hpp"
 
@@ -29,13 +30,14 @@ namespace Langulus::Anyness
    struct THandle<T> : Container<
       Component::Stack<Deref<T>*>,
       Component::TypedStatic<DMeta, Deref<T>>,
-      Component::Assignment
+      Component::Assignment<>,
+      Component::Comparison
    > {
       using CTTI_Handle = Yes;
       using CTTI_Typed = Deref<T>;
       using CTTI_ReflectAs = void;
 
-      Handle() = delete;
+      THandle() = delete;
    };
    
 
@@ -47,13 +49,14 @@ namespace Langulus::Anyness
       Component::Stack<Deref<T>*>,
       Component::OwnershipStack<0, false>,
       Component::TypedStatic<DMeta, Deref<T>>,
-      Component::Assignment
+      Component::Assignment<>,
+      Component::Comparison
    > {
       using CTTI_Handle = Yes;
       using CTTI_Typed = Deref<T>;
       using CTTI_ReflectAs = void;
 
-      Handle() = delete;
+      THandle() = delete;
    };
 
 

@@ -7,17 +7,19 @@
 ///                                                                           
 #include "TestMapCommon.hpp"
 
-struct VulkanLayer {};
-struct VulkanRenderer {};
-struct VulkanCamera {};
-struct Platform {};
-struct Vulkan {};
-struct Window {};
-struct VulkanLight {};
-struct Monitor {};
-struct VulkanRenderable {};
-struct Cursor {};
-
+namespace
+{
+   struct VulkanLayer {};
+   struct VulkanRenderer {};
+   struct VulkanCamera {};
+   struct Platform {};
+   struct Vulkan {};
+   struct Window {};
+   struct VulkanLight {};
+   struct Monitor {};
+   struct VulkanRenderable {};
+   struct Cursor {};
+}
 
 /// Testing some corner cases encountered during the use of the container     
 TEMPLATE_TEST_CASE("Map corner cases", "[map]",

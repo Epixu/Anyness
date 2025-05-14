@@ -48,7 +48,7 @@ namespace Langulus::Anyness
          Component::Insertion<0, Text>,         // Serialize + insert   
          Component::InsertionOperators<0, Text>,// << and >> insertion  
          Component::Removal<>,            // Allows removal             
-         Component::Assignment,           // Allows assignment          
+         Component::Assignment<>,         // Allows assignment          
          Component::TypedStatic<DMeta, char>,   // Type-constrained     
          Component::CountStack<>,         // Variable count             
          Component::ReserveHeap<>,        // Variable capacity          
@@ -96,7 +96,7 @@ namespace Langulus::Anyness
          Component::HeapMovable<>,
          Component::Contiguous,
          Component::IndexedLinear<>,
-         Component::Assignment,
+         Component::Assignment<>,
          Component::TypedStatic<DMeta, char>,
          Component::CountStack<>
       > {};

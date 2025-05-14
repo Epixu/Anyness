@@ -7,7 +7,9 @@
 ///                                                                           
 #include <Langulus/Anyness/Text.hpp>
 #include <Langulus/Anyness/Path.hpp>
+#include <Langulus/Anyness/Map.hpp>
 #include <Langulus/Anyness/TMap.hpp>
+#include <Langulus/Anyness/Set.hpp>
 #include <Langulus/Anyness/TSet.hpp>
 #include <Langulus/Anyness/Tag.hpp>
 #include <Langulus/Anyness/TPair.hpp>

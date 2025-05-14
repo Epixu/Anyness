@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include <Langulus/Anyness/Many.hpp>
-#include <Langulus/Anyness/Handle.hpp>
+#include <Langulus/Anyness/THandle.hpp>
 #include <Langulus/CT/Defaultable.hpp>
 #include <Langulus/CT/Referenced.hpp>
 #include "Common.hpp"
@@ -41,7 +41,7 @@ TMany<T> CreateManagedElements(FROM&&...from) {
 
 /// Create a dense or sparse local handle by providing simple arguments       
 template<CT::NotReference T, class FROM>
-Handle<T> CreateHandle(FROM&& from) {
+THandle<T> CreateHandle(FROM&& from) {
    static_assert(CT::ConstructibleFrom<Decay<T>, Decay<FROM>>);
 
    if constexpr (CT::Similar<T, Decay<T>>)
@@ -61,11 +61,11 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
    static Allocator::State memoryState;
 
    using T  = TestType;
-   using HE = Handle<T&>;
-   using HL = Handle<T>;
+   using HE = THandle<T&>;
+   using HL = THandle<T>;
 
    static_assert(not CT::Defaultable<HE>);
-   static_assert(not CT::Defaultable<HL>);
+   static_assert(    CT::Defaultable<HL>);
 
    static constexpr bool SPARSE = CT::Sparse<T>;
    static constexpr bool REFERENCABLE = CT::Referenced<Deptr<T>>;
@@ -79,9 +79,9 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       REQUIRE(DenseCast(data[1]) == 666);
       REQUIRE(DenseCast(data[2]) == 667);
 
-      Handle<T&> h0 = data.GetHandle(0);
-      Handle<T&> h1 = data.GetHandle(1);
-      Handle<T&> h2 = data.GetHandle(2);
+      THandle<T&> h0 = data.GetHandle(0);
+      THandle<T&> h1 = data.GetHandle(1);
+      THandle<T&> h2 = data.GetHandle(2);
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       REQUIRE(h0.GetEntry());
@@ -110,7 +110,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
 
       WHEN("An element is taken out of the container and assigned into another") {
          TMany<T> next = CreateManagedElements<T>(0);
-         Handle<T&> n = next.GetHandle(0);
+         THandle<T&> n = next.GetHandle(0);
          auto const n0e = n.GetEntry();
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));
 
@@ -163,7 +163,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       
       WHEN("An element is taken out of the container and swapped with another") {
          TMany<T> next = CreateManagedElements<T>(0);
-         Handle<T&> n = next.GetHandle(0);
+         THandle<T&> n = next.GetHandle(0);
          T const n0p = n.Get();
          auto const n0e = n.GetEntry();
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));
@@ -231,7 +231,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
 
       WHEN("An element is taken out of the container and swapped with managed local") {
          TMany<T> next = CreateManagedElements<T>(0);
-         Handle<T> n = next[0];
+         THandle<T> n = next[0];
          T const n0p = n.Get();
          auto const n0e = n.GetEntry();
 
@@ -306,7 +306,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       }
 
       WHEN("An element is taken out of the container and swapped with a unmanaged local") {
-         Handle<T> n = CreateHandle<T>(42);
+         THandle<T> n = CreateHandle<T>(42);
          T const n0p = n.Get();
          auto const n0e = n.GetEntry();
          REQUIRE(n0e == nullptr);
@@ -377,7 +377,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       }
 
       WHEN("An element is taken out of the container and moved into a local handle") {
-         Handle<T> local = Move(h0);
+         THandle<T> local = Move(h0);
 
          if constexpr (REFERENCABLE) {
             if constexpr (SPARSE) {
@@ -459,7 +459,7 @@ TEMPLATE_TEST_CASE("Managed handle swapping", "[handle]", RT*, RT, int, int*) {
          // Create a handle to an element inside factory2               
          // The entry will be searched for in the memory manager        
          // Since we're using a local handle, the element will be reffed
-         Handle<T> swapper {factory2[0]};
+         THandle<T> swapper {factory2[0]};
 
          if constexpr (sparse)
             REQUIRE(swapper.GetEntry()->GetUses() == refs2);

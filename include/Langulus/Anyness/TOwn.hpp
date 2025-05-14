@@ -26,7 +26,7 @@ namespace Langulus::Anyness
    struct TOwn : Container<
       Component::Stack<T>,             // Element on the stack          
       Component::TypedStatic<DMeta, T>,// Statically typed              
-      Component::Assignment,           // Allows for reassignment       
+      Component::Assignment<>,         // Allows for reassignment       
       Component::Comparison            // Can be compared               
    > {};
 

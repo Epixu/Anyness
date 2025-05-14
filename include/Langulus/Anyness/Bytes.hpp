@@ -52,7 +52,7 @@ namespace Langulus::Anyness
       Component::Concatenate,          // Concatenation                 
       Component::ConcatenateOperators, // + += concatenation operators  
       Component::Removal<>,            // Allows removal                
-      Component::Assignment,           // Allows assignment             
+      Component::Assignment<>,         // Allows assignment             
       Component::TypedStatic<DMeta, Byte>,   // Type-constrained        
       Component::CountStack<>,         // Variable count                
       Component::ReserveHeap<>,        // Variable capacity             
@@ -85,7 +85,7 @@ namespace Langulus::Anyness
          Component::HeapMovable<>,
          Component::Contiguous,
          Component::IndexedLinear<>,
-         Component::Assignment,
+         Component::Assignment<>,
          Component::TypedStatic<DMeta, Byte>,
          Component::CountStack<>
       > {};

@@ -16,7 +16,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0, bool AUTO = true>
    struct OwnershipStack {
-   private:
+   protected:
       AllocationPtr mAllocation;
 
    public:

@@ -35,6 +35,7 @@
 #include "../../../source/states/Or.hpp"
 #include "../../../source/states/Tracked.hpp"
 #include "../../../source/rtti/MetaData.hpp"
+#include "Handle.hpp"
 
 
 namespace Langulus::Anyness
@@ -61,7 +62,7 @@ namespace Langulus::Anyness
       Component::InsertionOperators<>, // << and >> insertion           
       Component::Emplacement<>,        // Allows emplacement            
       Component::Removal<>,            // Allows removal                
-      Component::Assignment,           // Allows assignment             
+      Component::Assignment<>,         // Allows assignment             
       Component::TypedStack<DMeta>,    // Variable type                 
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
@@ -81,32 +82,18 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
-      // View                                                           
-      using  ViewType = ManyView;
+      using ViewType = ManyView;
+      using DeepType = Many;
+      using PickMut  = HandleMut;
+      using Pick     = Handle;
 
-      // Deep type                                                      
-      using  DeepType = Many;
-
-      // Single element selections                                      
-      struct PickMut : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<>,
-         Component::Assignment,
-         Component::TypedStack<DMeta>
-      > {};
-      struct Pick : Container<
-         Component::HeapMovable<>,
-         Component::TypedStack<DMeta>
-      > {};
-
-      // Range selections                                               
       struct PickRangeMut : Container<
          Component::HeapMovable<>,
          Component::OwnershipStack<0, false>,
          Component::DeepOwnership<>,
          Component::Contiguous,
          Component::IndexedLinear<>,
-         Component::Assignment,
+         Component::Assignment<>,
          Component::TypedStack<DMeta>,
          Component::CountStack<>,
          Component::ReserveStack<>
@@ -121,6 +108,8 @@ namespace Langulus::Anyness
          Component::ReserveStack<>
       > {};
 
+      ///                                                                     
+      /// Construction                                                        
       constexpr Many() noexcept = default;
       constexpr Many(const Many&) noexcept;
       constexpr Many(Many&&) noexcept;
@@ -130,6 +119,14 @@ namespace Langulus::Anyness
 
       template<class A1, class...AN>
       Many(A1&&, AN&&...) requires CT::RangeInsertable<Many, A1, AN...>;
+      
+      ///                                                                     
+      /// Assignment                                                          
+      Many& operator = (Many const&) noexcept = default;
+      Many& operator = (Many&&) noexcept = default;
+
+      template<class A1> requires CT::RangeAssignable<Many, A1>
+      Many& operator = (A1&&);
    };
    
    using Messy = Many;

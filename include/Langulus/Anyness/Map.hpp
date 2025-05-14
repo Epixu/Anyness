@@ -10,6 +10,7 @@
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/DeepOwnership.hpp"
+#include "../../../source/components/Hash-Heap.hpp"
 #include "../../../source/components/Indexed-Hash.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
@@ -19,49 +20,19 @@
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Count-Stack.hpp"
 #include "../../../source/components/Reserve-Stack.hpp"
-#include "../../../source/components/State-Stack.hpp"
 #include "../../../source/components/Comparison.hpp"
-#include "../../../source/components/Hash-Heap.hpp"
 #include "../../../source/components/Iteration-ForEach.hpp"
 #include "../../../source/components/Iteration-Range.hpp"
+#include "../../../source/components/State-Stack.hpp"
 #include "../../../source/states/Sorted.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
+#include "Handle.hpp"
 
 
 namespace Langulus::Anyness
 {
-   namespace Inner
-   {
-
-      ///                                                                     
-      /// Common type-erased key type                                         
-      struct KeyMut : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<>,
-         Component::TypedStack<DMeta>
-      > {};
-      struct Key : Container<
-         Component::HeapMovable<>,
-         Component::TypedStack<DMeta>
-      > {};
-
-      ///                                                                     
-      /// Common type-erased value type                                       
-      struct ValMut : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<>,
-         Component::Assignment,
-         Component::TypedStack<DMeta>
-      > {};
-      struct Val : Container<
-         Component::HeapMovable<>,
-         Component::TypedStack<DMeta>
-      > {};
-
-   } // namespace Langulus::Anyness::Inner
-
 
    ///                                                                        
    /// Type-erased map of unspecified state                                   
@@ -84,7 +55,8 @@ namespace Langulus::Anyness
       Component::Emplacement<1>,       // Allows emplacement of vals    
       Component::Removal<0>,           // Allows removal of keys        
       Component::Removal<1>,           // Allows removal of vals        
-      Component::Assignment,           // Allows assignment             
+      Component::Assignment<0>,        // Allows assignment of keys     
+      Component::Assignment<1>,        // Allows assignment of vals     
       Component::TypedStack<DMeta, void, 0>,    // Key type             
       Component::TypedStack<DMeta, void, 1>,    // Value type           
       Component::CountStack<>,         // Variable count                
@@ -102,10 +74,12 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_Map = Yes;
-      using KeyMut = Inner::KeyMut;
-      using Key    = Inner::Key;
-      using ValMut = Inner::ValMut;
-      using Val    = Inner::Val;
+
+      using KeyMut = HandleMut;
+      using Key    = Handle;
+      using ValMut = HandleMut;
+      using Val    = Handle;
+      using It     = TIteratorMap<Map>;
 
       static constexpr bool TypeErased = true;
 
@@ -125,9 +99,9 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Removal                                                           
       auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
-      auto RemoveValue(const CT::NoIntent auto&) -> CountType;
+      auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
       auto RemovePair (const CT::Pair auto&) -> CountType;
-      auto RemoveIt   (const Iterator&) -> Iterator;
+      auto RemoveIt   (const It&) -> It;
    };
    
 
@@ -152,7 +126,8 @@ namespace Langulus::Anyness
       Component::Emplacement<1>,       // Allows emplacement of vals    
       Component::Removal<0>,           // Allows removal of keys        
       Component::Removal<1>,           // Allows removal of vals        
-      Component::Assignment,           // Allows assignment             
+      Component::Assignment<0>,        // Allows assignment of keys     
+      Component::Assignment<1>,        // Allows assignment of vals     
       Component::TypedStack<DMeta, void, 0>,    // Key type             
       Component::TypedStack<DMeta, void, 1>,    // Value type           
       Component::CountStack<>,         // Variable count                
@@ -171,10 +146,12 @@ namespace Langulus::Anyness
    > {
       using CTTI_ReflectAs = Map;
       using CTTI_Map       = Yes;
-      using KeyMut = Inner::KeyMut;
-      using Key    = Inner::Key;
-      using ValMut = Inner::ValMut;
-      using Val    = Inner::Val;
+
+      using KeyMut = HandleMut;
+      using Key    = Handle;
+      using ValMut = HandleMut;
+      using Val    = Handle;
+      using It     = TIteratorMap<Map>;
 
       static constexpr bool TypeErased = true;
 
@@ -194,9 +171,9 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Removal                                                           
       auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
-      auto RemoveValue(const CT::NoIntent auto&) -> CountType;
+      auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
       auto RemovePair (const CT::Pair auto&) -> CountType;
-      auto RemoveIt   (const Iterator&) -> Iterator;
+      auto RemoveIt   (const It&) -> It;
    };
    
 
@@ -221,7 +198,8 @@ namespace Langulus::Anyness
       Component::Emplacement<1>,       // Allows emplacement of vals    
       Component::Removal<0>,           // Allows removal of keys        
       Component::Removal<1>,           // Allows removal of vals        
-      Component::Assignment,           // Allows assignment             
+      Component::Assignment<0>,        // Allows assignment of keys     
+      Component::Assignment<1>,        // Allows assignment of vals     
       Component::TypedStack<DMeta, void, 0>,    // Key type             
       Component::TypedStack<DMeta, void, 1>,    // Value type           
       Component::CountStack<>,         // Variable count                
@@ -240,10 +218,12 @@ namespace Langulus::Anyness
    > {
       using CTTI_ReflectAs = Map;
       using CTTI_Map       = Yes;
-      using KeyMut = Inner::KeyMut;
-      using Key    = Inner::Key;
-      using ValMut = Inner::ValMut;
-      using Val    = Inner::Val;
+
+      using KeyMut = HandleMut;
+      using Key    = Handle;
+      using ValMut = HandleMut;
+      using Val    = Handle;
+      using It     = TIteratorMap<Map>;
 
       static constexpr bool TypeErased = true;
 
@@ -263,9 +243,9 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Removal                                                           
       auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
-      auto RemoveValue(const CT::NoIntent auto&) -> CountType;
+      auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
       auto RemovePair (const CT::Pair auto&) -> CountType;
-      auto RemoveIt   (const Iterator&) -> Iterator;
+      auto RemoveIt   (const It&) -> It;
    };
 
 } // namespace Langulus::Anyness

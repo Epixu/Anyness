@@ -6,12 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/Container.hpp"
-#include "../../../source/components/Stack.hpp"
-#include "../../../source/components/Assignment.hpp"
-#include "../../../source/components/Typed-Static.hpp"
-#include "Ref.hpp"
-#include "Any.hpp"
+#include "THandle.hpp"
 
 
 namespace Langulus::CT
@@ -45,23 +40,6 @@ namespace Langulus::CT
 
 namespace Langulus::Anyness
 {
-   namespace Inner
-   {
-
-      template<CT::NotVoid T>
-      using TPairElement = Tif<CT::Reference<T> or CT::Dense<T>, T, Ref<T>>;
-
-      template<CT::NotVoid K, CT::NotVoid V>
-      using TPairBase = Container<
-         Component::Stack<TPairElement<K>, 0>,  // Key on the stack     
-         Component::Stack<TPairElement<V>, 1>,  // Value on the stack   
-         Component::TypedStatic<DMeta, K, 0>,   // Statically typed key 
-         Component::TypedStatic<DMeta, V, 1>,   // Statically typed val 
-         Component::Assignment                  // Allows for assignment
-      >;
-
-   } // namespace Langulus::Anyness::Inner
-
 
    ///                                                                        
    ///   A helper structure for pairing keys and values of any type           
@@ -74,11 +52,15 @@ namespace Langulus::Anyness
    ///      counterpart Pair                                                  
    ///                                                                        
    template<CT::NotVoid K, CT::NotVoid V>
-   struct TPair : Inner::TPairBase<K, V> {
+   struct TPair {
+   private:
+      THandle<K> mKey;
+      THandle<V> mVal;
+
+   public:
       using CTTI_Typed = Types<K, V>;
       using CTTI_Pair  = Yes;
 
-      using Base = Inner::TPairBase<K, V>;
       using Key = K;
       using Val = V;
 
@@ -90,7 +72,8 @@ namespace Langulus::Anyness
 
       template<CT::Pair P> requires CT::PairConstructible<K, V, P>
       constexpr TPair(P&& other)
-         : Base {other.template Forward<typename Decay<Deint<P>>::Base>()} {}
+         : mKey {IntentOf<P>::Nest(DeintCast(other).mKey)}
+         , mVal {IntentOf<P>::Nest(DeintCast(other).mVal)} {}
 
       template<class ALT_K, class ALT_V>
       requires (CT::ConstructibleFrom<K, ALT_K>
@@ -112,15 +95,8 @@ namespace Langulus::Anyness
       ///   Capsulation                                                       
       Hash GetHash() const;
 
-      /// Get a reference to the key                                          
-      auto& GetKey(this auto&& self) noexcept {
-         return self.Component::template Stack<Inner::TPairElement<K>, 0>::mStack;
-      }
-
-      /// Get a reference to the value                                        
-      auto& GetVal(this auto&& self) noexcept {
-         return self.Component::template Stack<Inner::TPairElement<V>, 1>::mStack;
-      }
+      auto& GetKey(this auto&& self) noexcept { return self.mKey; }
+      auto& GetVal(this auto&& self) noexcept { return self.mVal; }
    };
 
 } // namespace Langulus::Anyness

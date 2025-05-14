@@ -8,8 +8,8 @@
 
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
-#include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/Map.hpp>
+#include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/Pair.hpp>
 #include <Langulus/Anyness/TPair.hpp>
 #include <Langulus/CT/Deep.hpp>

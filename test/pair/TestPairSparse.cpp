@@ -162,7 +162,7 @@ TEMPLATE_TEST_CASE("Sparse TPair/Pair", "[pair]",
       }
 
       WHEN("Pair is cloned") {
-         if constexpr (CT::CloneMakable<K, V>) {
+         if constexpr (CT::CloneConstructible<K, V>) {
             T clone = Clone(pair);
 
             Pair_CheckState_OwnedFull<K, V>(pair);

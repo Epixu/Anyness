@@ -66,7 +66,8 @@ namespace Langulus::Anyness::Component
 
    ///                                                                        
    /// Implements assignment for containers                                   
-   ///                                                                        
+   ///   @tparam ID - heap we're removing from                                
+   template<unsigned ID = 0>
    struct Assignment {
       using CTTI_Component = Yes;
 

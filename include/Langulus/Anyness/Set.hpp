@@ -10,6 +10,7 @@
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/DeepOwnership.hpp"
+#include "../../../source/components/Hash-Heap.hpp"
 #include "../../../source/components/Indexed-Hash.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
@@ -19,9 +20,8 @@
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Count-Stack.hpp"
 #include "../../../source/components/Reserve-Stack.hpp"
-#include "../../../source/components/State-Stack.hpp"
 #include "../../../source/components/Comparison.hpp"
-#include "../../../source/components/Hash-Heap.hpp"
+#include "../../../source/components/State-Stack.hpp"
 #include "../../../source/states/Sorted.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
@@ -42,9 +42,9 @@ namespace Langulus::Anyness
       Component::IndexedHash<>,        // Indexed by hashing keys       
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement,          // Allows emplacement            
-      Component::Removal,              // Allows removal                
-      Component::Assignment,           // Allows assignment             
+      Component::Emplacement<>,        // Allows emplacement            
+      Component::Removal<>,            // Allows removal                
+      Component::Assignment<>,         // Allows assignment             
       Component::TypedStack<DMeta, void>,    // Key type                
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
@@ -78,9 +78,9 @@ namespace Langulus::Anyness
       Component::IndexedHash<>,        // Indexed by hashing keys       
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement,          // Allows emplacement            
-      Component::Removal,              // Allows removal                
-      Component::Assignment,           // Allows assignment             
+      Component::Emplacement<>,        // Allows emplacement            
+      Component::Removal<>,            // Allows removal                
+      Component::Assignment<>,         // Allows assignment             
       Component::TypedStack<DMeta, void>,    // Key type                
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             
@@ -115,9 +115,9 @@ namespace Langulus::Anyness
       Component::IndexedHash<>,        // Indexed by hashing keys       
       Component::Insertion<>,          // Allows insertion              
       Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement,          // Allows emplacement            
-      Component::Removal,              // Allows removal                
-      Component::Assignment,           // Allows assignment             
+      Component::Emplacement<>,        // Allows emplacement            
+      Component::Removal<>,            // Allows removal                
+      Component::Assignment<>,         // Allows assignment             
       Component::TypedStack<DMeta, void>,    // Key type                
       Component::CountStack<>,         // Variable count                
       Component::ReserveStack<>,       // Variable capacity             

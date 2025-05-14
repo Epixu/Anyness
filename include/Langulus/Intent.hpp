@@ -111,7 +111,7 @@ namespace Langulus
    /// to refer to data explicitly                                            
    ///   @tparam T - the type to refer                                        
    template<class T>
-   struct Referred : Inner::CommonIntent<0, true, false> {
+   struct Referred final : Inner::CommonIntent<0, true, false> {
    private:
       const T& mValue;
 
@@ -218,7 +218,7 @@ namespace Langulus
    /// to shallow-copy container explicitly                                   
    ///   @tparam T - the type to copy                                         
    template<class T>
-   struct Copied : Inner::CommonIntent<1, true, false> {
+   struct Copied final : Inner::CommonIntent<1, true, false> {
    private:
       const T& mValue;
 
@@ -323,7 +323,7 @@ namespace Langulus
    /// to move data explicitly                                                
    ///   @tparam T - the type to move                                         
    template<class T>
-   struct Moved : Inner::CommonIntent<0, true, true> {
+   struct Moved final : Inner::CommonIntent<0, true, true> {
    protected:
       T&& mValue;
 
@@ -444,7 +444,7 @@ namespace Langulus
    /// mEntry reset, instead of the entire container.                         
    ///   @tparam T - the type to abandon                                      
    template<class T>
-   struct Abandoned : Inner::CommonIntent<0, false, true> {
+   struct Abandoned final : Inner::CommonIntent<0, false, true> {
    protected:
       T&& mValue;
 
@@ -558,7 +558,7 @@ namespace Langulus
    /// to copy container without gaining ownership                            
    ///   @tparam T - the type to disown                                       
    template<class T>
-   struct Disowned : Inner::CommonIntent<0, false, false> {
+   struct Disowned final : Inner::CommonIntent<0, false, false> {
    protected:
       const T& mValue;
 
@@ -664,7 +664,7 @@ namespace Langulus
    /// to clone container, doing a deep copy instead of default shallow one   
    ///   @tparam T - the type to clone                                        
    template<class T>
-   struct Cloned : Inner::CommonIntent<::std::numeric_limits<int>::max(), true, false> {
+   struct Cloned final : Inner::CommonIntent<::std::numeric_limits<int>::max(), true, false> {
    protected:
       const T& mValue;
 

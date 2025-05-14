@@ -310,7 +310,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       WHEN("Smart pushing to a different container with retain enabled") {
          Many pushed;
          pushed << 666;
-         pushed.MakeOr();
+         pushed.EnableOr();
          auto result = pushed.SmartPush(Index::Back, '?');
 
          REQUIRE(result == 1);
@@ -323,7 +323,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          int it = 1;
          size_t total = 0;
          const auto iterated = pack.ForEachDeep(
-            [&](Conditional<CT::Sparse<E>, E, const E&> i) {
+            [&](Tif<CT::Sparse<E>, E, const E&> i) {
                REQUIRE(DenseCast(i) == it);
                ++total;
                if (++it == 11)
@@ -340,7 +340,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          int it = 1;
          size_t total = 0;
          const auto iterated = pack.ForEachDeep(
-            [&](Conditional<CT::Sparse<E>, E, E&> i) {
+            [&](Tif<CT::Sparse<E>, E, E&> i) {
                REQUIRE(DenseCast(i) == it);
                ++total;
                if (++it == 11)
@@ -357,7 +357,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          int it = 1;
          size_t total = 0;
          const auto iterated = pack.template ForEachDeep<false, false>(
-            [&](Conditional<CT::Sparse<E>, E, const E&> i) {
+            [&](Tif<CT::Sparse<E>, E, const E&> i) {
                REQUIRE(DenseCast(i) == it);
                ++total;
                if (++it == 11)
@@ -374,7 +374,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
          int it = 1;
          size_t total = 0;
          const auto iterated = pack.template ForEachDeep<false, false>(
-            [&](Conditional<CT::Sparse<E>, E, E&> i) {
+            [&](Tif<CT::Sparse<E>, E, E&> i) {
                REQUIRE(DenseCast(i) == it);
                ++total;
                if (++it == 11)
@@ -390,7 +390,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       WHEN("ForEachDeep with dense Block element (immutable, skipping)") {
          size_t total = 0;
          const auto iterated = pack.ForEachDeep(
-            [&](const Block<>& i) {
+            [&](const Many& i) {
                (void)i;
                ++total;
             }
@@ -403,7 +403,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       WHEN("ForEachDeep with dense Block element (mutable, skipping)") {
          size_t total = 0;
          const auto iterated = pack.ForEachDeep(
-            [&](Block<>& i) {
+            [&](Many& i) {
                (void)i;
                ++total;
             }
@@ -416,7 +416,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       WHEN("ForEachDeep with dense Block element (immutable, non-skipping)") {
          size_t total = 0;
          const auto iterated = pack.template ForEachDeep<false, false>(
-            [&](const Block<>& i) {
+            [&](const Many& i) {
                (void)i;
                ++total;
             }
@@ -429,7 +429,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       WHEN("ForEachDeep with dense Block element (mutable, non-skipping)") {
          size_t total = 0;
          const auto iterated = pack.template ForEachDeep<false, false>(
-            [&](Block<>& i) {
+            [&](Many& i) {
                (void)i;
                ++total;
             }
@@ -448,7 +448,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
       subpack1 << darray[0] << darray[1] << darray[2] << darray[3] << darray[4];
       subpack2 << darray[5] << darray[6] << darray[7] << darray[8] << darray[9];
       subpack3 << subpack1;
-      subpack3.MakeOr();
+      subpack3.EnableOr();
       pack << subpack1 << subpack2 << subpack3;
 
       WHEN("The container is optimized") {
@@ -479,7 +479,6 @@ TEMPLATE_TEST_CASE("Deep sequential containers 1", "[any]", RT*, int, RT, int*) 
 
 TEMPLATE_TEST_CASE("Deep sequential containers 2", "[any]", int, RT, int*, RT*) {
    static Allocator::State memoryState;
-   static_assert(sizeof(A::Block) == sizeof(Block<>));
    using E = TestType;
 
    const E darray[10] {
@@ -503,7 +502,7 @@ TEMPLATE_TEST_CASE("Deep sequential containers 2", "[any]", int, RT, int*, RT*) 
       subpack1 << darray[0] << darray[1] << darray[2] << darray[3] << darray[4];
       subpack2 << darray[5] << darray[6] << darray[7] << darray[8] << darray[9];
       subpack3 << subpack1;
-      subpack3.MakeOr();
+      subpack3.EnableOr();
       pack << subpack1 << subpack2 << subpack3;
 
       auto baseRange = Many::From<Block<>>();
