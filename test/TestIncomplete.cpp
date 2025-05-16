@@ -29,8 +29,8 @@ struct Thing final : Resolvable {
 
    Thing();
 
-   TOwn<Thing*>   mOwned;
-   TRef<Thing*>   mOwner;
+   TOwn<Thing*>  mOwned;
+   TRef<Thing*>  mOwner;
    TMany<Thing*> mChildren;
    UnitMap       mUnits;
    TagsMap       mTags;

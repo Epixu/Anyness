@@ -37,7 +37,18 @@ namespace Langulus::Anyness
       using CTTI_Typed = Deref<T>;
       using CTTI_ReflectAs = void;
 
+      ///                                                                     
+      /// Construction                                                        
       THandle() = delete;
+      explicit constexpr THandle(const THandle&) noexcept = default;
+      explicit constexpr THandle(THandle&&) noexcept = default;
+
+      /// Intent constructor                                                  
+      template<template<class> class S> requires CT::IntentConstructible<S, T>
+      explicit constexpr THandle(S<THandle>&& other)
+         : Component::Stack<Deref<T>*> {other.template Forward<Component::Stack<Deref<T>*>>()} {}
+
+      using Component::Comparison::operator ==;
    };
    
 
@@ -56,7 +67,18 @@ namespace Langulus::Anyness
       using CTTI_Typed = Deref<T>;
       using CTTI_ReflectAs = void;
 
+      ///                                                                     
+      /// Construction                                                        
       THandle() = delete;
+      explicit constexpr THandle(const THandle&) noexcept = default;
+      explicit constexpr THandle(THandle&&) noexcept = default;
+
+      /// Intent constructor                                                  
+      template<template<class> class S> requires CT::IntentConstructible<S, T>
+      explicit constexpr THandle(S<THandle>&& other)
+         : Component::Stack<Deref<T>*> {other.template Forward<Component::Stack<Deref<T>*>>()} {}
+
+      using Component::Comparison::operator ==;
    };
 
 

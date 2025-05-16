@@ -40,8 +40,8 @@ namespace Langulus::Anyness
    struct TIterator {
       static_assert(CT::NotReference<C> and CT::NoIntent<C>,
          "Can't iterate intents or references");
-      static_assert(CT::Contiguous<C>,
-         "This iterator is designed for contiguous containers");
+      //static_assert(CT::Contiguous<C>, //TODO circular concept, maybe move it in destructor?
+      //   "This iterator is designed for contiguous containers");
 
       static constexpr bool Mutable = CT::Mutable<C>;
       static constexpr bool TypeErased = C::TypeErased;

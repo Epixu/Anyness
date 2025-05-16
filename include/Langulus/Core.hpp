@@ -485,5 +485,11 @@ namespace Langulus
    struct No {
       static constexpr bool Enabled = false;
    };
+   
+   /// Equivalent to ::std::false_type or ::std::true_type, depending on arg  
+   template<bool VALUE>
+   struct Maybe {
+      static constexpr bool Enabled = VALUE;
+   };
 
 } // namespace Langulus

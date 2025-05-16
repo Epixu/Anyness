@@ -209,12 +209,10 @@ namespace Langulus
    constexpr decltype(auto) DenseCast(T&& a) {
       if constexpr (CT::Array<T>)
          return DenseCast(a[0]);
-      else if constexpr (CT::Sparse<T>) {
-         if (a == nullptr)
-            throw Exception("Can't dereference nullptr");
-         return DenseCast(*a);
-      }
-      else return (a);
+      else if constexpr (CT::Sparse<T>)
+         return DenseCast(*a); // Security is on you - call can throw   
+      else
+         return (a);
    }
 
 } // namespace Langulus

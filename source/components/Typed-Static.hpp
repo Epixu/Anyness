@@ -24,6 +24,7 @@ namespace Langulus::Anyness::Component
    struct TypedStatic {
       using CTTI_Component = Yes;
       using CTTI_Typed     = TYPE;
+      using CTTI_Sparse    = Maybe<CT::Sparse<TYPE>>;
 
       static constexpr bool TypeErased = false;
       static constexpr bool Sparse     = CT::Sparse<TYPE>;
@@ -155,6 +156,18 @@ namespace Langulus::Anyness::Component
       ///   @return true if the container is deep                             
       constexpr bool IsDeep() const noexcept {
          return CT::Deep<Decay<TYPE>>;
+      }
+
+      constexpr auto operator * (this auto&& self) -> Deptr<TYPE>& requires Sparse {
+         return *self.template Get<ID, TYPE>();
+      }
+
+      constexpr auto operator -> (this auto&& self) noexcept -> TYPE requires Sparse {
+         return  self.template Get<ID, TYPE>();
+      }
+
+      explicit constexpr operator bool (this const auto& self) noexcept requires Sparse {
+         return self.template Get<ID, TYPE>() != nullptr;
       }
    };
 
