@@ -1,4 +1,5 @@
 #pragma once
+#include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -9,6 +10,7 @@ namespace Langulus::Anyness::Component
    /// Increases the container's bytesize                                     
    ///   @tparam T - type of the variable                                     
    ///   @tparam ID - multiple variables are supported                        
+   ///                                                                        
    template<CT::NotVoid T, unsigned ID = 0>
    struct Stack {
    protected:

@@ -28,7 +28,7 @@ namespace Langulus::CTTI
 namespace Langulus::CT
 {
    template<class...T>
-   concept Intent = ((CTTI::Intent<Deref<T>>::Enabled or (Dense<T> and Decay<T>::CTTI_Intent::Enabled)) and ...);
+   concept Intent = ((CTTI::Intent<Deref<T>>::Enabled or (not ::std::is_pointer_v<T> and Decay<T>::CTTI_Intent::Enabled)) and ...);
 
    template<class...T>
    concept NoIntent = ((not Intent<Deref<T>>) and ...);
@@ -870,7 +870,8 @@ namespace Langulus
          Tif<::std::is_rvalue_reference_v<T> and CT::Mutable<Deref<T>>,
             Moved<Deref<T>>,
             Referred<Deref<T>>
-      >>;
+         >
+      >;
 
    /// Shed the intent from a type, if any                                    
    template<class T>
@@ -879,9 +880,8 @@ namespace Langulus
    /// Decay an intent to the contained data                                  
    ///   @param what - the instance to decay                                  
    ///   @return a reference (preferably) or a copy of the inner data         
-   LANGULUS(ALWAYS_INLINED)
-   constexpr auto& DeintCast(auto&& what) noexcept {
-      using T = decltype(what);
+   template<class T> LANGULUS(ALWAYS_INLINED)
+   constexpr auto& DeintCast(T&& what) noexcept {
       if constexpr (CT::Intent<T>)
          return TypedCast(::std::forward<T>(what));
       else

@@ -29,6 +29,7 @@
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
 #include "THandle.hpp"
+#include "TPair.hpp"
 
 
 namespace Langulus::Anyness
@@ -93,14 +94,20 @@ namespace Langulus::Anyness
       using It           = TIteratorMap<TMap>;
       using CountType    = typename Component::CountStack<>::CountType;
 
+      using PairType     = TPair<K const&, V const&>;
+      using PairTypeMut  = TPair<K const&, V&>;
+
       ///                                                                     
       ///   Construction                                                      
       constexpr TMap() noexcept = default;
       constexpr TMap(const TMap&) noexcept = default;
       constexpr TMap(TMap&&) noexcept = default;
 
-      template<class A1, class...AN>
-      TMap(A1&&, AN&&...) requires CT::RangeInsertable<TMap, A1, AN...>;
+      template<CT::Map M1, CT::Map...MN>
+      TMap(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
+      
+      template<CT::Pair P1, CT::Pair...PN>
+      TMap(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;
       
       ///                                                                     
       ///   Assignment                                                        
@@ -179,14 +186,20 @@ namespace Langulus::Anyness
       using It           = TIteratorMap<TMapUnsorted>;
       using CountType    = typename Component::CountStack<>::CountType;
 
+      using PairType     = TPair<K const&, V const&>;
+      using PairTypeMut  = TPair<K const&, V&>;
+
       ///                                                                     
       ///   Construction                                                      
       constexpr TMapUnsorted() noexcept = default;
       constexpr TMapUnsorted(const TMapUnsorted&) noexcept = default;
       constexpr TMapUnsorted(TMapUnsorted&&) noexcept = default;
 
-      template<class A1, class...AN>
-      TMapUnsorted(A1&&, AN&&...) requires CT::RangeInsertable<TMapUnsorted, A1, AN...>;
+      template<CT::Map M1, CT::Map...MN>
+      TMapUnsorted(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
+      
+      template<CT::Pair P1, CT::Pair...PN>
+      TMapUnsorted(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;
 
       ///                                                                     
       ///   Assignment                                                        
@@ -265,14 +278,20 @@ namespace Langulus::Anyness
       using It           = TIteratorMap<TMapSorted>;
       using CountType    = typename Component::CountStack<>::CountType;
 
+      using PairType     = TPair<K const&, V const&>;
+      using PairTypeMut  = TPair<K const&, V&>;
+
       ///                                                                     
       ///   Construction                                                      
       constexpr TMapSorted() noexcept = default;
       constexpr TMapSorted(const TMapSorted&) noexcept = default;
       constexpr TMapSorted(TMapSorted&&) noexcept = default;
 
-      template<class A1, class...AN>
-      TMapSorted(A1&&, AN&&...) requires CT::RangeInsertable<TMapSorted, A1, AN...>;
+      template<CT::Map M1, CT::Map...MN>
+      TMapSorted(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
+
+      template<CT::Pair P1, CT::Pair...PN>
+      TMapSorted(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;
 
       ///                                                                     
       ///   Assignment                                                        

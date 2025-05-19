@@ -14,27 +14,28 @@ namespace Langulus::CT
 
    /// Concept for recognizing arguments, with which a statically typed       
    /// pair can be constructed                                                
-   template<class K, class V, class P>
-   concept PairConstructible = Pair<P> and NotReference<K, V>
-       and (IntentOf<P>::Shallow or (
+   template<class K, class V, class...P>
+   concept PairConstructible = NotReference<K, V> and Pair<P...>
+       and ((IntentOf<P>::Shallow or (
                IntentConstructibleAlt<typename IntentOf<P>::template As<K>>
            and IntentConstructibleAlt<typename IntentOf<P>::template As<V>>)
-       );
+       ) and ...);
 
    /// Concept for recognizing argument, with which a statically typed        
    /// pair can be assigned                                                   
-   template<class K, class V, class P>
-   concept PairAssignable = Pair<P> and NotReference<K, V>
-       and (IntentOf<P>::Shallow or (
+   template<class K, class V, class...P>
+   concept PairAssignable = NotReference<K, V> and Pair<P...>
+       and ((IntentOf<P>::Shallow or (
                IntentAssignableAlt<typename IntentOf<P>::template As<K>>
            and IntentAssignableAlt<typename IntentOf<P>::template As<V>>)
-       );
+       ) and ...);
 
    /// Concept for recognizing argument, against which a pair can be compared 
-   template<class K, class V, class P>
-   concept PairComparable = Pair<P>
-       and Comparable<K, typename Deint<P>::Key>
-       and Comparable<V, typename Deint<P>::Value>;
+   template<class K, class V, class...P>
+   concept PairComparable = Pair<P...> and ((
+           Comparable<K, typename Deint<P>::Key>
+       and Comparable<V, typename Deint<P>::Value>
+      ) and ...);
 
 } // namespace Langulus::CT
 

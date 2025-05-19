@@ -41,7 +41,7 @@ namespace Langulus::Anyness
       Component::CountStack<>,         // Variable count                
       Component::ReserveHeap<>,        // Variable capacity             
       Component::HashStack<>,          // Variable hash (cached)        
-      Component::IterationRange,       // Ranged iteration              
+      Component::IterationRange<>,     // Ranged iteration              
       Component::Comparison,           // Comparisons                   
       Component::StateStack<           // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 

@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0, bool AUTO = true>
    struct OwnershipStack {
    protected:
-      AllocationPtr mAllocation;
+      AllocationPtr mAllocation = nullptr;
 
    public:
       using CTTI_Component = Yes;

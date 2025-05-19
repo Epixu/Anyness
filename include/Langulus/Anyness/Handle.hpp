@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/components/Stack.hpp"
+#include "../../../source/components/Heap-Reference.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Assignment.hpp"
@@ -21,7 +21,7 @@ namespace Langulus::Anyness
    /// It refers to a picked element inside a type-erased container           
    ///                                                                        
    struct HandleMut : Container<
-      Component::Stack<Byte*>,
+      Component::HeapReference<>,
       Component::OwnershipStack<0, false>,
       Component::TypedStack<DMeta>,
       Component::Assignment<>,
@@ -39,7 +39,7 @@ namespace Langulus::Anyness
    /// It refers to a picked element inside a type-erased container           
    ///                                                                        
    struct Handle : Container<
-      Component::Stack<Byte*>,
+      Component::HeapReference<>,
       Component::OwnershipStack<0, false>,
       Component::TypedStack<DMeta>,
       Component::Comparison

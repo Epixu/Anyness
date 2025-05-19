@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
       ///   @attention entries exist only for sparse containers               
       ///   @return the array of entries                                      
       template<CT::Container C>
-      auto GetEntry(this C&& self) has_assumptions -> AllocationPtr* {
+      auto GetEntries(this C&& self) has_assumptions -> AllocationPtr* {
          AssumeDev(self.IsSparse(), HERE(),
             "Entries do not exist for dense container");
          AssumeDev(self.GetAllocation(), HERE(),

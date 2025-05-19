@@ -16,6 +16,7 @@ namespace Langulus::CT::Inner
    /// Supports underlying typelists as well                                  
    template<class T>
    consteval CT::Typelist auto GetUnderlyingType() {
+      static_assert(CT::NotReference<T>, "Strip references");
       if constexpr (Array<T>)
          return Types<Deext<T>> {};
       else {

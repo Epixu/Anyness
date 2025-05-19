@@ -426,9 +426,90 @@ namespace Langulus::Anyness::Component
          else
             return reinterpret_cast<const T*>(self.mHeap);
       }
+
+      /// Get first element pointer or reference, depending on T              
+      /// This is a lower-level routine that does only sparseness checking    
+      /// No conversion or copying occurs, only pointer arithmetic            
+      ///   @attention assumes the container is typed                         
+      ///   @tparam T - the type of data we're accessing                      
+      ///      use void to use the type of the container, if statically typed 
+      template<class T = void, CT::Container C>
+      decltype(auto) Get(this C&& self) has_assumptions {
+         static_assert(not CT::Handle<T>, "T can't be a handle");
+         static_assert(not CT::Reference<T>, "Strip references");
+         using DC = Deref<C>;
+         using TT = Tif<CT::Void<T>, TypeOf<C>, T>;
+
+         if constexpr (DC::TypeErased) {
+            AssumeDev(self.mType, HERE(), "Block is not typed");
+
+            void* pointer;
+            if (self.mType.IsSparse())
+               pointer = *self.mSparseHeap;
+            else
+               pointer =  self.mHeap;
+
+            if constexpr (CT::Dense<TT>)
+               return *reinterpret_cast<TT*       >(pointer);
+            else
+               return  reinterpret_cast<Deptr<TT>*>(pointer);
+         }
+         else {
+            if constexpr (DC::Sparse) {
+               if constexpr (CT::Dense<TT>)
+                  return static_cast<TT&>(**self.mSparseHeap);
+               else
+                  return static_cast<TT >( *self.mSparseHeap);
+            }
+            else {
+               if constexpr (CT::Dense<TT>)
+                  return static_cast<TT&>(*self.mHeap);
+               else
+                  return static_cast<TT >( self.mHeap);
+            }
+         }
+      }
       
-      template<CT::Container C>
-      auto Get(this C&&) has_assumptions -> Pick<C>;
+      /// Return a handle to the first element                                
+      ///   @attention when this block is type-erased, T is assumed to be of  
+      ///      the same sparseness                                            
+      ///   @tparam T - the type of data we're accessing                      
+      ///      use void to use the type of the container, if statically typed 
+      template<class T = void, CT::Container C>
+      auto GetHandle(this C&& self) has_assumptions {
+         static_assert(not CT::Handle<T>, "T can't be a handle");
+         static_assert(not CT::Reference<T>, "Strip references");
+         using DC = Deref<C>;
+         using TT = Tif<CT::Void<T>, TypeOf<C>, T>;
+
+         if constexpr (CT::Void<TT>) {
+            // Type-erased handle                                       
+            return Handle {self.mHeap, self.GetAllocation(), self.GetType()};
+         }
+         else {
+            static_assert(DC::TypeErased or CT::Sparse<TypeOf<C>> == CT::Sparse<TT>,
+               "Sparseness mismatch");
+
+            if constexpr (DC::TypeErased)
+               AssumeDev(self.IsSparse() == CT::Sparse<TT>, HERE(), "Sparseness mismatch");
+
+            if constexpr (DC::DeeplyOwned) {
+               // C is deeply owned, so each sparse element is coupled  
+               // with an entry that points to its allocation           
+               if constexpr (DC::Sparse)
+                  return THandle<TT> {self.mSparseHeap, GetEntries()};
+               else
+                  return static_cast<TT*>(self.mHeap);
+            }
+            else {
+               // C isn't deeply owned, so handles are just pointers    
+               if constexpr (DC::Sparse)
+                  return static_cast<TT*>(self.mSparseHeap);
+               else
+                  return static_cast<TT*>(self.mHeap);
+            }
+         }
+      }
 
       template<CT::NotVoid AS, CT::Container C>
       auto As(this C&& self) -> Pick<C>;

@@ -158,16 +158,19 @@ namespace Langulus::Anyness::Component
          return CT::Deep<Decay<TYPE>>;
       }
 
+      /// Dereference the first pointer inside the container, if sparse       
       constexpr auto operator * (this auto&& self) -> Deptr<TYPE>& requires Sparse {
-         return *self.template Get<ID, TYPE>();
+         return *self.template GetInner<ID, TYPE>();
       }
 
+      /// Get the first pointer inside the container, if sparse               
       constexpr auto operator -> (this auto&& self) noexcept -> TYPE requires Sparse {
-         return  self.template Get<ID, TYPE>();
+         return  self.template GetInner<ID, TYPE>();
       }
 
+      /// Check if the first pointer inside the container is valid, if sparse 
       explicit constexpr operator bool (this const auto& self) noexcept requires Sparse {
-         return self.template Get<ID, TYPE>() != nullptr;
+         return self.template GetInner<ID, TYPE>() != nullptr;
       }
    };
 

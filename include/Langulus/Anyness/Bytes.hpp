@@ -104,3 +104,5 @@ namespace Langulus::Anyness
    };
 
 } // namespace Langulus::Anyness
+
+#include "BytesView.hpp"

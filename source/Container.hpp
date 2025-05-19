@@ -77,6 +77,20 @@ LANGULUS_CTTI_CONCEPT(Handle);
 
 namespace Langulus::Anyness
 {
+   namespace Component
+   {
+
+      template<unsigned>
+      struct HeapMovable;
+      template<unsigned>
+      struct HeapImmovable;
+      template<unsigned>
+      struct HeapReference;
+      template<CT::NotVoid, unsigned>
+      struct Stack;
+
+   } // namespace Langulus::Anyness::Components
+
 
    ///                                                                        
    /// A container definition using composition                               
@@ -90,7 +104,7 @@ namespace Langulus::Anyness
    template<CT::Component...COMPONENTS>
    struct Container : COMPONENTS... {
       using CTTI_Container = Yes;
-      using Components = Types<COMPONENTS...>;
+      using ComponentList = Types<COMPONENTS...>;
       using ContainerType = Container<COMPONENTS...>;
 
       constexpr Container() noexcept = default;
@@ -98,7 +112,7 @@ namespace Langulus::Anyness
       explicit constexpr Container(Container&&) noexcept = default;
 
       template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
-      explicit constexpr Container(I<C>&&) {
+      constexpr Container(I<C>&&) {
          //TODO init all compatible components, default-init the missing ones
       }
 
@@ -118,8 +132,51 @@ namespace Langulus::Anyness
       }
 
       /// Check if a component is included at compile-time                    
-      template<CT::Component C>
+      template<class C>
       static constexpr bool HasComponent = CT::SameAsOneOf<C, COMPONENTS...>;
+
+      /// Get a reference to the first element of a specific stack/heap       
+      ///   @tparam ID - the stack/heap ID                                    
+      ///   @tparam TYPE - the type of the data to get                        
+      template<unsigned ID, CT::NotVoid TYPE>
+      constexpr TYPE& GetInner() {
+         if constexpr (HasComponent<Component::HeapMovable<ID>>)
+            return Component::HeapMovable<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::HeapImmovable<ID>>)
+            return Component::HeapImmovable<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::HeapReference<ID>>)
+            return Component::HeapReference<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::Stack<TYPE, ID>>)
+            return Component::Stack<TYPE, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::Stack<TYPE&, ID>>)
+            return Component::Stack<TYPE&, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::Stack<TYPE*, ID>>)
+            return Component::Stack<TYPE*, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::Stack<TYPE**, ID>>)
+            return Component::Stack<TYPE**, ID>::template Get<TYPE>();
+         else
+            static_assert(false, "No heap/stack with that ID and/or TYPE");
+      }
+
+      template<unsigned ID, CT::NotVoid TYPE>
+      constexpr TYPE& GetInner() const {
+         if constexpr (HasComponent<Component::HeapMovable<ID>>)
+            return Component::HeapMovable<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::HeapImmovable<ID>>)
+            return Component::HeapImmovable<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::HeapReference<ID>>)
+            return Component::HeapReference<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::Stack<TYPE, ID>>)
+            return Component::Stack<TYPE, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::Stack<TYPE&, ID>>)
+            return Component::Stack<TYPE&, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::Stack<TYPE*, ID>>)
+            return Component::Stack<TYPE*, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Component::Stack<TYPE**, ID>>)
+            return Component::Stack<TYPE**, ID>::template Get<TYPE>();
+         else
+            static_assert(false, "No heap/stack with that ID and/or TYPE");
+      }
    };
 
 } // namespace Langulus::Anyness

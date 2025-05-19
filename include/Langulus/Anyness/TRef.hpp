@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../../../source/Container.hpp"
-#include "../../../source/components/Stack.hpp"
+#include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Emplacement.hpp"
@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Inner
 
    template<CT::Sparse T>
    using TRefBase = Container<
-      Component::Stack<T>,              // Data on the heap             
+      Component::HeapMovable<>,         // Data on the heap             
       Component::OwnershipStack<>,      // Allocation is referenced     
       Component::TypedStatic<DMeta, T>, // Statically typed             
       Component::Emplacement<>,         // Can be emplaced              
@@ -46,13 +46,7 @@ namespace Langulus::Anyness
 
       ///                                                                     
       ///   Construction                                                      
-      /// Default construction                                                
-      constexpr TRef() noexcept {
-         Component::Stack<T>::mStack = {};
-         Component::OwnershipStack<>::mAllocation = {};
-      }
-
-      /// Standard move and copy semantics                                    
+      constexpr TRef() noexcept = default;
       explicit constexpr TRef(const TRef&) noexcept = default;
       explicit constexpr TRef(TRef&&) noexcept = default;
 
@@ -68,8 +62,6 @@ namespace Langulus::Anyness
       constexpr TRef(A&& pointer) {
          if constexpr (CT::Null<A>) {
             (void) pointer;
-            Component::Stack<T>::mStack = {};
-            Component::OwnershipStack<>::mAllocation = {};
             return;
          }
          else EmplaceWithIntent(::std::forward<A>(pointer));
