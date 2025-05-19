@@ -66,7 +66,7 @@ namespace Langulus::Anyness::Component
                      // RHS is nullptr                                  
                      *self.mSparseHeap = nullptr;
 
-                     if constexpr (DeeplyOwned<C>)
+                     if constexpr (CT::DeeplyOwned<C>)
                         *self.GetEntry() = nullptr;
                   }
                   else {
@@ -76,7 +76,7 @@ namespace Langulus::Anyness::Component
 
                      *self.mSparseHeap = rhs;
 
-                     if constexpr (DeeplyOwned<C>)
+                     if constexpr (CT::DeeplyOwned<C>)
                         self.template DeepKeep<S>();
                   }
                }
@@ -120,13 +120,13 @@ namespace Langulus::Anyness::Component
                   // RHS is nullptr                                     
                   *self.mSparseHeap = nullptr;
 
-                  if constexpr (DeeplyOwned<C>)
+                  if constexpr (CT::DeeplyOwned<C>)
                      *self.GetEntry() = nullptr;
                }
                else if constexpr (CT::ConstructibleFrom<T, ST>) {
                   *self.mSparseHeap = rhs;
 
-                  if constexpr (DeeplyOwned<C>)
+                  if constexpr (CT::DeeplyOwned<C>)
                      self.template DeepKeep<S>();
                }
                else static_assert(false, "Can't construct sparse T");
@@ -162,7 +162,7 @@ namespace Langulus::Anyness::Component
 
                   *self.mSparseHeap = pointer;
 
-                  if constexpr (DeeplyOwned<C>)
+                  if constexpr (CT::DeeplyOwned<C>)
                      *self.GetEntry() = entry;
                }
             }

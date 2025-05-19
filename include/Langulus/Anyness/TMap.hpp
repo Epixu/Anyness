@@ -195,11 +195,14 @@ namespace Langulus::Anyness
       constexpr TMapUnsorted(const TMapUnsorted&) noexcept = default;
       constexpr TMapUnsorted(TMapUnsorted&&) noexcept = default;
 
-      template<CT::Map M1, CT::Map...MN>
+      template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
+      constexpr TMapUnsorted(I<M>&&) noexcept;
+
+      /*template<CT::Map M1, CT::Map...MN>
       TMapUnsorted(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
       
       template<CT::Pair P1, CT::Pair...PN>
-      TMapUnsorted(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;
+      TMapUnsorted(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;*/
 
       ///                                                                     
       ///   Assignment                                                        

@@ -28,18 +28,31 @@ namespace Langulus::Anyness::Component
       using Count = typename C::CountType;
 
       /// Get entry array if containing pointers                              
-      ///   @attention entries exist only for sparse containers               
+      /// If container is dense, it returns the main allocation               
       ///   @return the array of entries                                      
       template<CT::Container C>
       auto GetEntries(this C&& self) has_assumptions -> AllocationPtr* {
-         AssumeDev(self.IsSparse(), HERE(),
-            "Entries do not exist for dense container");
-         AssumeDev(self.GetAllocation(), HERE(),
-            "Entries do not exist for sparse containers which are out of jurisdiction");
-         AssumeDev(self.GetHeap(), HERE(),
-            "No memory available");
-
-         return reinterpret_cast<AllocationPtr*>(self.GetHeapEnd());
+         using DC = Deref<C>;
+         if constexpr (DC::TypeErased) {
+            if (self.IsSparse()) {
+               AssumeDev(self.GetHeap(), HERE(),
+                  "No memory available");
+               AssumeDev(self.GetAllocation(), HERE(),
+                  "Entries do not exist for sparse containers which are out of jurisdiction");
+               return reinterpret_cast<AllocationPtr*>(self.GetHeapEnd());
+            }
+            else return &self.mAllocation;
+         }
+         else {
+            if constexpr (DC::Sparse) {
+               AssumeDev(self.GetHeap(), HERE(),
+                  "No memory available");
+               AssumeDev(self.GetAllocation(), HERE(),
+                  "Entries do not exist for sparse containers which are out of jurisdiction");
+               return reinterpret_cast<AllocationPtr*>(self.GetHeapEnd());
+            }
+            else return &self.mAllocation;
+         }
       }
 
       /// This function is called for all container components when the       
@@ -153,7 +166,12 @@ namespace Langulus::Anyness::Component
       }
    };
 
+} // namespace Langulus::Anyness::Component
+
+namespace Langulus::CT
+{
+   
    template<class T1, class...TN>
    concept DeeplyOwned = T1::DeeplyOwned and (TN::DeeplyOwned and ...);
 
-} // namespace Langulus::Anyness::Component
+} // namespace Langulus::CT

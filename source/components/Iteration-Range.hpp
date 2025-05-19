@@ -105,7 +105,7 @@ namespace Langulus::Anyness::Component
       };
 
    public:
-      auto begin() { return WrapBegin {range.begin()}; }
+      auto begin() { return WrapBegin {range.GetHandle()}; }
       auto end  () { return range.end(); }
    };
 

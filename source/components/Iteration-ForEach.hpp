@@ -156,7 +156,7 @@ namespace Langulus::Anyness::Component
          LoopControl loop = Loop::Break;
          Count<C> result = 0;
          (void)(... or (Loop::Break == (
-            loop = self.ForEachDeepInner<false, true>(::std::forward<F>(lambdas), result)
+            loop = self.template ForEachDeepInner<false, true>(::std::forward<F>(lambdas), result)
          )));
 
          if (loop == Loop::Discard)
@@ -174,7 +174,7 @@ namespace Langulus::Anyness::Component
          LoopControl loop = Loop::Break;
          Count<C> result = 0;
          (void)(... or (Loop::Break == (
-            loop = self.ForEachDeepInner<true, true>(::std::forward<F>(lambdas), result)
+            loop = self.template ForEachDeepInner<true, true>(::std::forward<F>(lambdas), result)
          )));
 
          if (loop == Loop::Discard)
@@ -189,7 +189,7 @@ namespace Langulus::Anyness::Component
          LoopControl loop = Loop::Break;
          Count<C> result = 0;
          (void)(... or (Loop::Break == (
-            loop = self.ForEachDeepInner<false, false>(::std::forward<F>(lambdas), result)
+            loop = self.template ForEachDeepInner<false, false>(::std::forward<F>(lambdas), result)
          )));
 
          if (loop == Loop::Discard)
@@ -204,7 +204,7 @@ namespace Langulus::Anyness::Component
          LoopControl loop = Loop::Break;
          Count<C> result = 0;
          (void)(... or (Loop::Break == (
-            loop = self.ForEachDeepInner<true, false>(::std::forward<F>(lambdas), result)
+            loop = self.template ForEachDeepInner<true, false>(::std::forward<F>(lambdas), result)
          )));
 
          if (loop == Loop::Discard)

@@ -81,7 +81,7 @@ namespace Langulus::Anyness::Component
       void AllocateFresh(this C& self, const Allocation::Request& request) {
          Allocation* al;
          if constexpr (C::TypeErased) {
-            if constexpr (DeeplyOwned<C>) {
+            if constexpr (CT::DeeplyOwned<C>) {
                // Deeply owned sparse containers have additional memory 
                // allocated for each pointer's entry                    
                al = Allocator::Allocate(self.mType,
@@ -96,7 +96,7 @@ namespace Langulus::Anyness::Component
             // Deeply owned sparse containers have additional memory    
             // allocated for each pointer's entry                       
             al = Allocator::Allocate(self.GetType(),
-               request.mByteSize * (DeeplyOwned<C> and C::Sparse ? 2 : 1));
+               request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1));
          }
 
          Assert(al, HERE(), "Out of memory");
@@ -141,7 +141,7 @@ namespace Langulus::Anyness::Component
                // Reallocate                                            
                View<C> previous {self};
                auto reallocated = Allocator::Reallocate(
-                  request.mByteSize * (DeeplyOwned<C> and C::Sparse ? 2 : 1),
+                  request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1),
                   self.GetAllocation()
                );
                Assert(reallocated, HERE(), "Out of memory");
@@ -298,17 +298,17 @@ namespace Langulus::Anyness::Component
                if constexpr (S::Shallow) {
                   // Do a refer/copy/disown/abandon/move sparse LHS     
                   *self.mSparseHeap = *rhs.mSparseHeap;
-                  if constexpr (DeeplyOwned<C, ST>)
+                  if constexpr (CT::DeeplyOwned<C, ST>)
                      *self.GetEntry() = *rhs.GetEntry();
 
                   if constexpr (S::ResetsOnMove) {
                      *rhs.mSparseHeap = nullptr;
-                     if constexpr (DeeplyOwned<C, ST>)
+                     if constexpr (CT::DeeplyOwned<C, ST>)
                         *rhs.GetEntry() = nullptr;
                   }
 
-                  if constexpr (DeeplyOwned<C>) {
-                     if constexpr (DeeplyOwned<ST>)
+                  if constexpr (CT::DeeplyOwned<C>) {
+                     if constexpr (CT::DeeplyOwned<ST>)
                         self.template DeepKeep<S>(*rhs.GetEntry());
                      else
                         self.template DeepKeep<S>(nullptr);
@@ -349,17 +349,17 @@ namespace Langulus::Anyness::Component
                // Do a copy/refer/disown/abandon/move sparse RHS        
                if constexpr (CT::AssignableFrom<T, STT>) {
                   *self.mSparseHeap = *rhs.mSparseHeap;
-                  if constexpr (DeeplyOwned<C, ST>)
+                  if constexpr (CT::DeeplyOwned<C, ST>)
                      *self.GetEntry() = *rhs.GetEntry();
 
                   if constexpr (S::ResetsOnMove) {
                      *rhs.mSparseHeap = nullptr;
-                     if constexpr (DeeplyOwned<C, ST>)
+                     if constexpr (CT::DeeplyOwned<C, ST>)
                         *rhs.GetEntry() = nullptr;
                   }
 
-                  if constexpr (DeeplyOwned<C>) {
-                     if constexpr (DeeplyOwned<ST>)
+                  if constexpr (CT::DeeplyOwned<C>) {
+                     if constexpr (CT::DeeplyOwned<ST>)
                         self.template DeepKeep<S>(*rhs.GetEntry());
                      else
                         self.template DeepKeep<S>(nullptr);
@@ -391,7 +391,7 @@ namespace Langulus::Anyness::Component
                   IntentAssign(pointer, S::Nest(*rhs->Get()));
 
                   *self.GetRaw() = pointer;
-                  if constexpr (DeeplyOwned<C>)
+                  if constexpr (CT::DeeplyOwned<C>)
                      *rhs.GetEntry() = entry;
                }
             }
@@ -434,45 +434,55 @@ namespace Langulus::Anyness::Component
       ///   @tparam T - the type of data we're accessing                      
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
-      decltype(auto) Get(this C&& self) has_assumptions {
+      auto& Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>, "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references");
          using DC = Deref<C>;
          using TT = Tif<CT::Void<T>, TypeOf<C>, T>;
 
-         if constexpr (DC::TypeErased) {
+         if constexpr (CT::Void<TT>) {
+            // Type-erased reference, no casting                        
+            if (self.IsSparse())
+               return static_cast<void**&>(self.mSparseHeap);
+            else
+               return static_cast<void* &>(self.mHeap);
+         }
+         else if constexpr (DC::TypeErased) {
+            // Casting to a desired runtime type                        
             AssumeDev(self.mType, HERE(), "Block is not typed");
 
-            void* pointer;
-            if (self.mType.IsSparse())
-               pointer = *self.mSparseHeap;
-            else
-               pointer =  self.mHeap;
-
-            if constexpr (CT::Dense<TT>)
-               return *reinterpret_cast<TT*       >(pointer);
-            else
-               return  reinterpret_cast<Deptr<TT>*>(pointer);
-         }
-         else {
-            if constexpr (DC::Sparse) {
+            if (self.IsSparse()) {
                if constexpr (CT::Dense<TT>)
-                  return static_cast<TT&>(**self.mSparseHeap);
+                  return **static_cast<TT**>(self.mSparseHeap);
                else
-                  return static_cast<TT >( *self.mSparseHeap);
+                  return  *static_cast<TT* >(self.mSparseHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
-                  return static_cast<TT&>(*self.mHeap);
+                  return *static_cast<TT*>(self.mHeap);
                else
-                  return static_cast<TT >( self.mHeap);
+                  return  static_cast<TT&>(self.mHeap);
+            }
+         }
+         else {
+            // Casting to a desired static type                         
+            if constexpr (DC::Sparse) {
+               if constexpr (CT::Dense<TT>)
+                  return *static_cast<TT*&>(*self.mSparseHeap);
+               else
+                  return  static_cast<TT &>(*self.mSparseHeap);
+            }
+            else {
+               if constexpr (CT::Dense<TT>)
+                  return *static_cast<TT*>(self.mHeap);
+               else
+                  return  static_cast<TT&>(self.mHeap);
             }
          }
       }
       
       /// Return a handle to the first element                                
-      ///   @attention when this block is type-erased, T is assumed to be of  
-      ///      the same sparseness                                            
+      ///   @attention assumes T is of proper sparseness if not void          
       ///   @tparam T - the type of data we're accessing                      
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
@@ -484,7 +494,15 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::Void<TT>) {
             // Type-erased handle                                       
-            return Handle {self.mHeap, self.GetAllocation(), self.GetType()};
+            if constexpr (CT::DeeplyOwned<DC>) {
+               // C is deeply owned, so each sparse element is coupled  
+               // with an entry that points to its allocation           
+               return Handle {self.mHeap, self.GetEntries(), self.GetType()};
+            }
+            else {
+               // C isn't deeply owned, so handles are just pointers    
+               return HandleDisowned {self.mHeap, self.GetType()};
+            }
          }
          else {
             static_assert(DC::TypeErased or CT::Sparse<TypeOf<C>> == CT::Sparse<TT>,
@@ -493,20 +511,14 @@ namespace Langulus::Anyness::Component
             if constexpr (DC::TypeErased)
                AssumeDev(self.IsSparse() == CT::Sparse<TT>, HERE(), "Sparseness mismatch");
 
-            if constexpr (DC::DeeplyOwned) {
+            if constexpr (CT::DeeplyOwned<DC>) {
                // C is deeply owned, so each sparse element is coupled  
                // with an entry that points to its allocation           
-               if constexpr (DC::Sparse)
-                  return THandle<TT> {self.mSparseHeap, GetEntries()};
-               else
-                  return static_cast<TT*>(self.mHeap);
+               return THandle<TT> {&self.template Get<TT>(), self.GetEntries()};
             }
             else {
                // C isn't deeply owned, so handles are just pointers    
-               if constexpr (DC::Sparse)
-                  return static_cast<TT*>(self.mSparseHeap);
-               else
-                  return static_cast<TT*>(self.mHeap);
+               return THandleDisowned<TT> {&self.template Get<TT>()};
             }
          }
       }

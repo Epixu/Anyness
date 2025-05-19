@@ -77,6 +77,11 @@ LANGULUS_CTTI_CONCEPT(Handle);
 
 namespace Langulus::Anyness
 {
+
+   struct HandleMut;
+   struct Handle;
+   template<class T> struct THandle;
+
    namespace Component
    {
 
