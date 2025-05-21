@@ -29,12 +29,12 @@ namespace Langulus::Anyness
    /// that is binary compatible with Any                                     
    ///                                                                        
    struct AnyView : Container<
-      Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<0, false>,   // Pointer to an allocation
-      Component::Conversion,           // Allows conversion             
-      Component::TypedStack<DMeta>,    // Variable type                 
-      Component::CountStatic<1>,       // Statically sized to 1         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::OwnershipStack<0, false>,   // Pointer to an allocation      
+      Com::Conversion,                 // Allows conversion             
+      Com::TypedStack<DMeta>,          // Variable type                 
+      Com::CountStatic<1>,             // Statically sized to 1         
+      Com::StateStack<                 // Variable state                
          DefineState::Typed<>,         // Can be type-constrained       
          DefineState::Future<>,        // Adds a 'missing future' state 
          DefineState::Past<>,          // Adds a 'missing past' state   

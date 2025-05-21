@@ -1,7 +1,7 @@
 #pragma once
 #include "../Container.hpp"
 #include "Indexed-Linear.hpp"
-#include "DeepOwnership.hpp"
+//#include "DeepOwnership.hpp"
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/CT/Resolvable.hpp>
@@ -176,9 +176,9 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Emplacement at specific index                                       
-      template<CT::Container C, class...A>
+      template<CT::IndexedLinearly C, class...A>
       auto EmplaceAt(this C&, CT::Index auto, A&&...)
-         -> PickMut<C> requires (C::Indexed and RangeEmplaceable<C, A...>);
+         -> PickMut<C> requires RangeEmplaceable<C, A...>;
 
       /// Generic emplacement                                                 
       template<CT::Container C, class...A>

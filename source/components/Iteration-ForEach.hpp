@@ -161,7 +161,7 @@ namespace Langulus::Anyness::Component
 
          if (loop == Loop::Discard)
             self.Reset();
-         return result;
+         return {result, loop};
       }
 
       /// Do it in reverse                                                    
@@ -179,7 +179,7 @@ namespace Langulus::Anyness::Component
 
          if (loop == Loop::Discard)
             self.Reset();
-         return result;
+         return {result, loop};
       }
 
       /// Do it without skipping the intermediate containers                  
@@ -194,7 +194,7 @@ namespace Langulus::Anyness::Component
 
          if (loop == Loop::Discard)
             self.Reset();
-         return result;
+         return {result, loop};
       }
 
       /// Do it without skipping the intermediate containers in reverse       
@@ -209,7 +209,7 @@ namespace Langulus::Anyness::Component
 
          if (loop == Loop::Discard)
             self.Reset();
-         return result;
+         return {result, loop};
       }
 
    protected:

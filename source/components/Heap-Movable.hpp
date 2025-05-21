@@ -7,7 +7,8 @@
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/CT/Resolvable.hpp>
-#include "DeepOwnership.hpp"
+#include <Langulus/CT/Index.hpp>
+//#include "DeepOwnership.hpp"
 #include "Iteration-Range.hpp"
 #include <algorithm>
 
@@ -438,14 +439,14 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Handle<T>, "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references");
          using DC = Deref<C>;
-         using TT = Tif<CT::Void<T>, TypeOf<C>, T>;
+         using TT = DecvqAll<Tif<CT::Void<T>, TypeOf<C>, T>>;
 
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        
             if (self.IsSparse())
-               return static_cast<void**&>(self.mSparseHeap);
+               return reinterpret_cast<void**&>(self.mSparseHeap);
             else
-               return static_cast<void* &>(self.mHeap);
+               return reinterpret_cast<void* &>(self.mHeap);
          }
          else if constexpr (DC::TypeErased) {
             // Casting to a desired runtime type                        
@@ -453,30 +454,30 @@ namespace Langulus::Anyness::Component
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TT>)
-                  return **static_cast<TT**>(self.mSparseHeap);
+                  return **reinterpret_cast<TT**>(self.mSparseHeap);
                else
-                  return  *static_cast<TT* >(self.mSparseHeap);
+                  return  *reinterpret_cast<TT* >(self.mSparseHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
-                  return *static_cast<TT*>(self.mHeap);
+                  return *reinterpret_cast<TT*>(self.mHeap);
                else
-                  return  static_cast<TT&>(self.mHeap);
+                  return  reinterpret_cast<TT&>(self.mHeap);
             }
          }
          else {
             // Casting to a desired static type                         
             if constexpr (DC::Sparse) {
                if constexpr (CT::Dense<TT>)
-                  return *static_cast<TT*&>(*self.mSparseHeap);
+                  return **reinterpret_cast<TT**>(self.mSparseHeap);
                else
-                  return  static_cast<TT &>(*self.mSparseHeap);
+                  return  *reinterpret_cast<TT* >(self.mSparseHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
-                  return *static_cast<TT*>(self.mHeap);
+                  return *reinterpret_cast<TT*>(self.mHeap);
                else
-                  return  static_cast<TT&>(self.mHeap);
+                  return  reinterpret_cast<TT&>(self.mHeap);
             }
          }
       }
@@ -496,15 +497,19 @@ namespace Langulus::Anyness::Component
             // Type-erased handle                                       
             if constexpr (CT::DeeplyOwned<DC>) {
                // C is deeply owned, so each sparse element is coupled  
-               // with an entry that points to its allocation           
+               // with an entry that points to its allocation. Dense    
+               // elements simply refer to the container's allocation   
                return Handle {self.mHeap, self.GetEntries(), self.GetType()};
             }
             else {
                // C isn't deeply owned, so handles are just pointers    
+               // They still need to be handles, so that they have the  
+               // necessary insertion/emplacement interfaces            
                return HandleDisowned {self.mHeap, self.GetType()};
             }
          }
          else {
+            // Statically typed handle                                  
             static_assert(DC::TypeErased or CT::Sparse<TypeOf<C>> == CT::Sparse<TT>,
                "Sparseness mismatch");
 
@@ -513,14 +518,22 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::DeeplyOwned<DC>) {
                // C is deeply owned, so each sparse element is coupled  
-               // with an entry that points to its allocation           
-               return THandle<TT> {&self.template Get<TT>(), self.GetEntries()};
+               // with an entry that points to its allocation. Dense    
+               // elements simply refer to the container's allocation   
+               return THandle<TT&> {&self.template Get<TT>(), self.GetEntries()};
             }
             else {
                // C isn't deeply owned, so handles are just pointers    
-               return THandleDisowned<TT> {&self.template Get<TT>()};
+               // They still need to be handles, so that they have the  
+               // necessary insertion/emplacement interfaces            
+               return THandleDisowned<TT&> {&self.template Get<TT>()};
             }
          }
+      }
+
+      template<CT::IndexedLinearly C>
+      auto GetHandleAt(this C&& self, CT::Index auto at) has_assumptions {
+         return self.GetHandle() + at;
       }
 
       template<CT::NotVoid AS, CT::Container C>

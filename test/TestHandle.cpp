@@ -79,9 +79,9 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       REQUIRE(DenseCast(data[1]) == 666);
       REQUIRE(DenseCast(data[2]) == 667);
 
-      THandle<T&> h0 = data.GetHandle(0);
-      THandle<T&> h1 = data.GetHandle(1);
-      THandle<T&> h2 = data.GetHandle(2);
+      THandle<T&> h0 = data.GetHandleAt(0);
+      THandle<T&> h1 = data.GetHandleAt(1);
+      THandle<T&> h2 = data.GetHandleAt(2);
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       REQUIRE(h0.GetEntry());
@@ -110,7 +110,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
 
       WHEN("An element is taken out of the container and assigned into another") {
          TMany<T> next = CreateManagedElements<T>(0);
-         THandle<T&> n = next.GetHandle(0);
+         THandle<T&> n = next.GetHandle();
          auto const n0e = n.GetEntry();
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));
 
@@ -163,7 +163,7 @@ TEMPLATE_TEST_CASE("Handles from sequential containers", "[handle]",
       
       WHEN("An element is taken out of the container and swapped with another") {
          TMany<T> next = CreateManagedElements<T>(0);
-         THandle<T&> n = next.GetHandle(0);
+         THandle<T&> n = next.GetHandle();
          T const n0p = n.Get();
          auto const n0e = n.GetEntry();
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(n0e->GetUses() == 1));

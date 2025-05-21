@@ -24,10 +24,10 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid T>
    struct TOwn : Container<
-      Component::Stack<T>,             // Element on the stack          
-      Component::TypedStatic<DMeta, T>,// Statically typed              
-      Component::Assignment<>,         // Allows for reassignment       
-      Component::Comparison            // Can be compared               
+      Com::Stack<T>,                   // Element on the stack          
+      Com::TypedStatic<DMeta, T>,      // Statically typed              
+      Com::Assignment<>,               // Allows for reassignment       
+      Com::Comparison                  // Can be compared               
    > {};
 
 } // namespace Langulus::Anyness

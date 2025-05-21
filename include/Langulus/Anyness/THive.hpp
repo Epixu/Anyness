@@ -9,7 +9,7 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Immovable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership.hpp"
+#include "../../../source/components/DeepOwnership-Heap.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Typed-Static.hpp"
@@ -28,14 +28,14 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid T>
    struct THive : Container<
-      Component::HeapImmovable<>,      // Immovable heap memory         
-      Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership<>,      // Referenced indirections       
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Removal<>,            // Allows removal                
-      Component::TypedStatic<DMeta, T>,// Statically typed              
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveHeap<>         // Variable capacity             
+      Com::HeapImmovable<>,            // Immovable heap memory         
+      Com::OwnershipStack<>,           // Allocation is referenced      
+      Com::DeepOwnershipHeap<>,        // Referenced indirections       
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Removal<>,                  // Allows removal                
+      Com::TypedStatic<DMeta, T>,      // Statically typed              
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveHeap<>               // Variable capacity             
    > {
       using PickDenseMut  = T&;
       using PickDense     = T const&;

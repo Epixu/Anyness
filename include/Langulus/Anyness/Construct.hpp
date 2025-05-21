@@ -23,9 +23,9 @@ namespace Langulus::Anyness
    /// data type.                                                             
    ///                                                                        
    struct Construct : Container<
-      Component::TypedStack<DMeta>,       // What are we constructing?  
-      Component::Charge,                  // How many, when?            
-      Component::Stack<Many>              // With what data?            
+      Com::TypedStack<DMeta>,             // What are we constructing?  
+      Com::Charge,                        // How many, when?            
+      Com::Stack<Many>                    // With what data?            
    > {
       using Charge = Component::Charge;
 

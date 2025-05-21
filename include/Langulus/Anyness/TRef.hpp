@@ -21,12 +21,12 @@ namespace Langulus::Anyness::Inner
 
    template<CT::Sparse T>
    using TRefBase = Container<
-      Component::HeapMovable<>,         // Data on the heap             
-      Component::OwnershipStack<>,      // Allocation is referenced     
-      Component::TypedStatic<DMeta, T>, // Statically typed             
-      Component::Emplacement<>,         // Can be emplaced              
-      Component::Assignment<>,          // Can be reassigned            
-      Component::Comparison             // Can be compared              
+      Com::HeapMovable<>,              // Data on the heap             
+      Com::OwnershipStack<>,           // Allocation is referenced     
+      Com::TypedStatic<DMeta, T>,      // Statically typed             
+      Com::Emplacement<>,              // Can be emplaced              
+      Com::Assignment<>,               // Can be reassigned            
+      Com::Comparison                  // Can be compared              
    >;
 
 } // namespace Langulus::Anyness::Inner

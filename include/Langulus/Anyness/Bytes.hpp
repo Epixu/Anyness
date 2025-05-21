@@ -42,28 +42,28 @@ namespace Langulus::Anyness
    /// A continuous byte container of variable size                           
    ///                                                                        
    struct Bytes : Container<
-      Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::Contiguous,           // Heap memory is continuous     
-      Component::IndexedLinear<>,      // Indexed directly              
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Insertion<0, Bytes>,           // Serialize + insert   
-      Component::InsertionOperators<0, Bytes>,  // << and >> insertion  
-      Component::Concatenate,          // Concatenation                 
-      Component::ConcatenateOperators, // + += concatenation operators  
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment<>,         // Allows assignment             
-      Component::TypedStatic<DMeta, Byte>,   // Type-constrained        
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveHeap<>,        // Variable capacity             
-      Component::HashStack<>,          // Variable hash (cached)        
-      Component::IterationRange<>,     // Ranged iteration              
-      Component::Comparison,           // Comparisons                   
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,                 // Pointer to heap memory     
+      Com::OwnershipStack<>,              // Allocation is referenced   
+      Com::Contiguous,                    // Heap memory is continuous  
+      Com::IndexedLinear<>,               // Indexed directly           
+      Com::Emplacement<>,                 // Allows emplacement         
+      Com::Insertion<0, Bytes>,           // Serialize + insert         
+      Com::InsertionOperators<0, Bytes>,  // << and >> insertion        
+      Com::Concatenate,                   // Concatenation              
+      Com::ConcatenateOperators,          // + += concatenation         
+      Com::Removal<>,                     // Allows removal             
+      Com::Assignment<>,                  // Allows assignment          
+      Com::TypedStatic<DMeta, Byte>,      // Type-constrained           
+      Com::CountStack<>,                  // Variable count             
+      Com::ReserveHeap<>,                 // Variable capacity          
+      Com::HashStack<>,                   // Variable hash (cached)     
+      Com::IterationRange<>,              // Ranged iteration           
+      Com::Comparison,                    // Comparisons                
+      Com::StateStack<                    // Variable state             
          DefineState::Typed<State::Enabled>, // Always type-constrained 
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
+         DefineState::Compressed<>,       // Adds 'compressed' state    
+         DefineState::Encrypted<>,        // Adds 'encrypted' state     
+         DefineState::Tracked<>           // Adds 'tracked' state       
       >
    > {
       // View                                                           
@@ -75,19 +75,19 @@ namespace Langulus::Anyness
 
       // Range selections                                               
       struct PickRange : Container<
-         Component::HeapMovable<>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::TypedStatic<DMeta, Byte>,
-         Component::CountStack<>
+         Com::HeapMovable<>,
+         Com::Contiguous,
+         Com::IndexedLinear<>,
+         Com::TypedStatic<DMeta, Byte>,
+         Com::CountStack<>
       > {};
       struct PickRangeMut : Container<
-         Component::HeapMovable<>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::Assignment<>,
-         Component::TypedStatic<DMeta, Byte>,
-         Component::CountStack<>
+         Com::HeapMovable<>,
+         Com::Contiguous,
+         Com::IndexedLinear<>,
+         Com::Assignment<>,
+         Com::TypedStatic<DMeta, Byte>,
+         Com::CountStack<>
       > {};
 
       constexpr Bytes() noexcept = default;

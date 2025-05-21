@@ -40,21 +40,21 @@ namespace Langulus::Anyness
    {
 
       using TextBase = Container<
-         Component::HeapMovable<>,        // Pointer to heap memory     
-         Component::OwnershipStack<>,     // Allocation is referenced   
-         Component::Contiguous,           // Heap memory is continuous  
-         Component::IndexedLinear<>,      // Indexed directly           
-         Component::Emplacement<>,        // Allows emplacement         
-         Component::Insertion<0, Text>,         // Serialize + insert   
-         Component::InsertionOperators<0, Text>,// << and >> insertion  
-         Component::Removal<>,            // Allows removal             
-         Component::Assignment<>,         // Allows assignment          
-         Component::TypedStatic<DMeta, char>,   // Type-constrained     
-         Component::CountStack<>,         // Variable count             
-         Component::ReserveHeap<>,        // Variable capacity          
-         Component::HashStack<>,          // Variable hash (cached)     
-         Component::Comparison,           // Comparisons                
-         Component::StateStack<           // Variable state             
+         Com::HeapMovable<>,              // Pointer to heap memory     
+         Com::OwnershipStack<>,           // Allocation is referenced   
+         Com::Contiguous,                 // Heap memory is continuous  
+         Com::IndexedLinear<>,            // Indexed directly           
+         Com::Emplacement<>,              // Allows emplacement         
+         Com::Insertion<0, Text>,         // Serialize + insert         
+         Com::InsertionOperators<0, Text>,// << and >> insertion        
+         Com::Removal<>,                  // Allows removal             
+         Com::Assignment<>,               // Allows assignment          
+         Com::TypedStatic<DMeta, char>,   // Type-constrained           
+         Com::CountStack<>,               // Variable count             
+         Com::ReserveHeap<>,              // Variable capacity          
+         Com::HashStack<>,                // Variable hash (cached)     
+         Com::Comparison,                 // Comparisons                
+         Com::StateStack<                 // Variable state             
             DefineState::Typed<State::Enabled>, // Always typed         
             DefineState::Compressed<>,    // Adds 'compressed' state    
             DefineState::Encrypted<>,     // Adds 'encrypted' state     

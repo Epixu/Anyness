@@ -17,21 +17,21 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid K>
    struct TSet : Container<
-      Component::HeapMovable<>,        // Heap for keys                 
-      Component::OwnershipStack<>,     // Keys allocation is referenced 
-      Component::DeepOwnership<>,      // Sparse keys are referenced    
-      Component::HashHeap<>,           // Keys can be hashed            
-      Component::IndexedHash<>,        // Indexed by hashing keys       
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment<>,         // Allows assignment             
-      Component::TypedStack<DMeta, K>,       // Key type                
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::Comparison,           // Allows for comparison         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Heap for keys                 
+      Com::OwnershipStack<>,           // Keys allocation is referenced 
+      Com::DeepOwnership<>,            // Sparse keys are referenced    
+      Com::HashHeap<>,                 // Keys can be hashed            
+      Com::IndexedHash<>,              // Indexed by hashing keys       
+      Com::Insertion<>,                // Allows insertion              
+      Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Removal<>,                  // Allows removal                
+      Com::Assignment<>,               // Allows assignment             
+      Com::TypedStack<DMeta, K>,       // Key type                      
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::Comparison,                 // Allows for comparison         
+      Com::StateStack<                 // Variable state                
          DefineState::Sorted<>,        // Maybe unsorted                
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
@@ -55,21 +55,21 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid K>
    struct TSetUnsorted : Container<
-      Component::HeapMovable<>,        // Heap for keys                 
-      Component::OwnershipStack<>,     // Keys allocation is referenced 
-      Component::DeepOwnership<>,      // Sparse keys are referenced    
-      Component::HashHeap<>,           // Keys can be hashed            
-      Component::IndexedHash<>,        // Indexed by hashing keys       
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment<>,         // Allows assignment             
-      Component::TypedStack<DMeta, K>,       // Key type                
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::Comparison,           // Allows for comparison         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Heap for keys                 
+      Com::OwnershipStack<>,           // Keys allocation is referenced 
+      Com::DeepOwnership<>,            // Sparse keys are referenced    
+      Com::HashHeap<>,                 // Keys can be hashed            
+      Com::IndexedHash<>,              // Indexed by hashing keys       
+      Com::Insertion<>,                // Allows insertion              
+      Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Removal<>,                  // Allows removal                
+      Com::Assignment<>,               // Allows assignment             
+      Com::TypedStack<DMeta, K>,       // Key type                      
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::Comparison,                 // Allows for comparison         
+      Com::StateStack<                 // Variable state                
          DefineState::Sorted<State::Disabled>,  // Always unsorted      
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
@@ -93,21 +93,21 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid K>
    struct TSetSorted : Container<
-      Component::HeapMovable<>,        // Heap for keys                 
-      Component::OwnershipStack<>,     // Keys allocation is referenced 
-      Component::DeepOwnership<>,      // Sparse keys are referenced    
-      Component::HashHeap<>,           // Keys can be hashed            
-      Component::IndexedHash<>,        // Indexed by hashing keys       
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment<>,         // Allows assignment             
-      Component::TypedStack<DMeta, K>,       // Key type                
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::Comparison,           // Allows for comparison         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Heap for keys                 
+      Com::OwnershipStack<>,           // Keys allocation is referenced 
+      Com::DeepOwnership<>,            // Sparse keys are referenced    
+      Com::HashHeap<>,                 // Keys can be hashed            
+      Com::IndexedHash<>,              // Indexed by hashing keys       
+      Com::Insertion<>,                // Allows insertion              
+      Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Removal<>,                  // Allows removal                
+      Com::Assignment<>,               // Allows assignment             
+      Com::TypedStack<DMeta, K>,       // Key type                      
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::Comparison,                 // Allows for comparison         
+      Com::StateStack<                 // Variable state                
          DefineState::Sorted<State::Enabled>,   // Always sorted        
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        

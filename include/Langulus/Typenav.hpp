@@ -105,7 +105,7 @@ namespace Langulus
    {
 
       /// Nest-strip any qualifiers, extents and indirections                 
-      /// Returns a pointer to the stripped T                                 
+      ///   @return a pointer to the stripped T                               
       template<class T>
       consteval auto NestedDecay() {
          using Stripped = Decvq<Deptr<Deext<T>>>;
@@ -190,11 +190,38 @@ namespace Langulus
 
    } // namespace Langulus::CT
 
+   namespace Inner
+   {
+
+      /// Removes all const/volatile qualifiers from all indirections         
+      ///   @attention will strip references as well                          
+      ///   @return a pointer to the stripped T                               
+      template<class T>
+      consteval auto NestedDecvq() {
+         static_assert(not CT::Reference<T>, "T can't be a reference");
+         using Stripped = Decvq<T>;
+         if constexpr (::std::same_as<T, Stripped>)
+            return static_cast<Stripped*>(nullptr);
+         else if constexpr (::std::is_bounded_array_v<Stripped>)
+            return static_cast<Deptr<decltype(NestedDecvq<Deext<Stripped>>())> (*) [::std::extent_v<Stripped>]>(nullptr);
+         else if constexpr (::std::is_pointer_v<Stripped>)
+            return static_cast<decltype(NestedDecvq<Deptr<Stripped>>())*>(nullptr);
+         else
+            static_assert(false, "Shouldn't be possible");
+      }
+
+   } // namespace Langulus::Inner
+
+   /// Strip all qualifiers on all levels of indirection of a type            
+   /// const volatile void * const * const becomes void**                     
+   /// This strongly guarantees, that it strips EVERYTHING, including nested  
+   /// pointer/array constness/volatileness, etc.                             
+   template<class T>
+   using DecvqAll = Deptr<decltype(Inner::NestedDecvq<T>())>;
 
    /// I don't like how long ::std::conditional_t is to write                 
    template<bool CONDITION, class YES, class NO>
    using Tif = ::std::conditional_t<CONDITION, YES, NO>;
-
    
    /// Always returns a pointer to the argument                               
    template<class T> LANGULUS(ALWAYS_INLINED)

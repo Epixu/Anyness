@@ -66,7 +66,7 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Handle<T>, "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references");
          using DC = Deref<C>;
-         using TT = Tif<CT::Void<T>, TypeOf<C>, T>;
+         using TT = DecvqAll<Tif<CT::Void<T>, TypeOf<C>, T>>;
 
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        
@@ -96,9 +96,9 @@ namespace Langulus::Anyness::Component
             // Casting to a desired static type                         
             if constexpr (DC::Sparse) {
                if constexpr (CT::Dense<TT>)
-                  return *reinterpret_cast<TT*&>(*self.mSparseHeap);
+                  return **reinterpret_cast<TT**>(self.mSparseHeap);
                else
-                  return  reinterpret_cast<TT &>(*self.mSparseHeap);
+                  return  *reinterpret_cast<TT* >(self.mSparseHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)

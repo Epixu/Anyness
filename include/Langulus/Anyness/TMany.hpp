@@ -9,7 +9,7 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership.hpp"
+#include "../../../source/components/DeepOwnership-Heap.hpp"
 #include "../../../source/components/Contiguous.hpp"
 #include "../../../source/components/Indexed-Linear.hpp"
 #include "../../../source/components/Insertion.hpp"
@@ -52,26 +52,26 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid T>
    struct TMany : Container<
-      Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership<>,      // Referenced indirections       
-      Component::Contiguous,           // Heap memory is continuous     
-      Component::IndexedLinear<>,      // Indexed directly              
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment<>,         // Allows assignment             
-      Component::TypedStack<DMeta, T>, // Type-constrained              
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::HashStack<>,          // Variable hash (cached)        
-      Component::Descriptor,           // Descriptor interface          
-      Component::IterationForEach<>,   // ForEach iteration             
-      Component::IterationRange<>,     // Ranged iteration              
-      Component::Comparison,           // Allows for comparison         
-      Component::Conversion,           // Allows conversion             
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::OwnershipStack<>,           // Allocation is referenced      
+      Com::DeepOwnershipHeap<>,        // Referenced indirections       
+      Com::Contiguous,                 // Heap memory is continuous     
+      Com::IndexedLinear<>,            // Indexed directly              
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Insertion<>,                // Allows insertion              
+      Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Removal<>,                  // Allows removal                
+      Com::Assignment<>,               // Allows assignment             
+      Com::TypedStack<DMeta, T>,       // Type-constrained              
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::HashStack<>,                // Variable hash (cached)        
+      Com::Descriptor,                 // Descriptor interface          
+      Com::IterationForEach<>,         // ForEach iteration             
+      Com::IterationRange<>,           // Ranged iteration              
+      Com::Comparison,                 // Allows for comparison         
+      Com::Conversion,                 // Allows conversion             
+      Com::StateStack<                 // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Future<>,        // Adds a 'missing future' state 
          DefineState::Past<>,          // Adds a 'missing past' state   
@@ -99,24 +99,24 @@ namespace Langulus::Anyness
 
       // Range selections                                               
       struct PickRangeDenseMut : Container<
-         Component::HeapMovable<>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::Assignment<>,
-         Component::TypedStatic<DMeta, T>,
-         Component::CountStack<>
+         Com::HeapMovable<>,
+         Com::Contiguous,
+         Com::IndexedLinear<>,
+         Com::Assignment<>,
+         Com::TypedStatic<DMeta, T>,
+         Com::CountStack<>
       > {};
       using  PickRangeDense = PickRangeDenseMut;
       struct PickRangeSparseMut : Container<
-         Component::HeapMovable<>,
-         Component::OwnershipStack<0, false>,
-         Component::DeepOwnership<>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::Assignment<>,
-         Component::TypedStatic<DMeta, T>,
-         Component::CountStack<>,
-         Component::ReserveStack<>
+         Com::HeapMovable<>,
+         Com::OwnershipStack<0, false>,
+         Com::DeepOwnershipHeap<>,
+         Com::Contiguous,
+         Com::IndexedLinear<>,
+         Com::Assignment<>,
+         Com::TypedStatic<DMeta, T>,
+         Com::CountStack<>,
+         Com::ReserveStack<>
       > {};
       using  PickRangeSparse = PickRangeSparseMut;
       using  PickRange       = Tif<CT::Sparse<T>, PickRangeSparse,    PickRangeDense>;

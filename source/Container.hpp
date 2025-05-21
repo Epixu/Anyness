@@ -79,8 +79,12 @@ namespace Langulus::Anyness
 {
 
    struct HandleMut;
+   struct HandleDisownedMut;
    struct Handle;
+   struct HandleDisowned;
+
    template<class T> struct THandle;
+   template<class T> struct THandleDisowned;
 
    namespace Component
    {
@@ -96,6 +100,7 @@ namespace Langulus::Anyness
 
    } // namespace Langulus::Anyness::Components
 
+   namespace Com = Component;
 
    ///                                                                        
    /// A container definition using composition                               
@@ -110,7 +115,6 @@ namespace Langulus::Anyness
    struct Container : COMPONENTS... {
       using CTTI_Container = Yes;
       using ComponentList = Types<COMPONENTS...>;
-      using ContainerType = Container<COMPONENTS...>;
 
       constexpr Container() noexcept = default;
       explicit constexpr Container(const Container&) noexcept = default;
@@ -145,40 +149,40 @@ namespace Langulus::Anyness
       ///   @tparam TYPE - the type of the data to get                        
       template<unsigned ID, CT::NotVoid TYPE>
       constexpr TYPE& GetInner() {
-         if constexpr (HasComponent<Component::HeapMovable<ID>>)
-            return Component::HeapMovable<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::HeapImmovable<ID>>)
-            return Component::HeapImmovable<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::HeapReference<ID>>)
-            return Component::HeapReference<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::Stack<TYPE, ID>>)
-            return Component::Stack<TYPE, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::Stack<TYPE&, ID>>)
-            return Component::Stack<TYPE&, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::Stack<TYPE*, ID>>)
-            return Component::Stack<TYPE*, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::Stack<TYPE**, ID>>)
-            return Component::Stack<TYPE**, ID>::template Get<TYPE>();
+         if constexpr (HasComponent<Com::HeapMovable<ID>>)
+            return Com::HeapMovable<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::HeapImmovable<ID>>)
+            return Com::HeapImmovable<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::HeapReference<ID>>)
+            return Com::HeapReference<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::Stack<TYPE, ID>>)
+            return Com::Stack<TYPE, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::Stack<TYPE&, ID>>)
+            return Com::Stack<TYPE&, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::Stack<TYPE*, ID>>)
+            return Com::Stack<TYPE*, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::Stack<TYPE**, ID>>)
+            return Com::Stack<TYPE**, ID>::template Get<TYPE>();
          else
             static_assert(false, "No heap/stack with that ID and/or TYPE");
       }
 
       template<unsigned ID, CT::NotVoid TYPE>
       constexpr TYPE& GetInner() const {
-         if constexpr (HasComponent<Component::HeapMovable<ID>>)
-            return Component::HeapMovable<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::HeapImmovable<ID>>)
-            return Component::HeapImmovable<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::HeapReference<ID>>)
-            return Component::HeapReference<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::Stack<TYPE, ID>>)
-            return Component::Stack<TYPE, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::Stack<TYPE&, ID>>)
-            return Component::Stack<TYPE&, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::Stack<TYPE*, ID>>)
-            return Component::Stack<TYPE*, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Component::Stack<TYPE**, ID>>)
-            return Component::Stack<TYPE**, ID>::template Get<TYPE>();
+         if constexpr (HasComponent<Com::HeapMovable<ID>>)
+            return Com::HeapMovable<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::HeapImmovable<ID>>)
+            return Com::HeapImmovable<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::HeapReference<ID>>)
+            return Com::HeapReference<ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::Stack<TYPE, ID>>)
+            return Com::Stack<TYPE, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::Stack<TYPE&, ID>>)
+            return Com::Stack<TYPE&, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::Stack<TYPE*, ID>>)
+            return Com::Stack<TYPE*, ID>::template Get<TYPE>();
+         else if constexpr (HasComponent<Com::Stack<TYPE**, ID>>)
+            return Com::Stack<TYPE**, ID>::template Get<TYPE>();
          else
             static_assert(false, "No heap/stack with that ID and/or TYPE");
       }
@@ -212,3 +216,20 @@ namespace Langulus::Anyness::DefineState
    template<State::StateValue = State::Variable> struct Typed;
 
 } // namespace Langulus::Anyness::DefineState
+
+namespace Langulus::CT
+{
+   
+   /// Check if listed types are containers with any kind of DeepOwnership    
+   /// component                                                              
+   template<class T1, class...TN>
+   concept DeeplyOwned = Container<T1, TN...>
+       and Deref<T1>::DeeplyOwned and (Deref<TN>::DeeplyOwned and ...);
+
+   /// Check if listed types are containers with any kind of linear indexing  
+   /// component                                                              
+   template<class T1, class...TN>
+   concept IndexedLinearly = Container<T1, TN...>
+       and Deref<T1>::Indexed and (Deref<TN>::Indexed and ...);
+
+} // namespace Langulus::CT

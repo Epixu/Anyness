@@ -35,14 +35,14 @@ namespace Langulus::Anyness
    /// elements use Many instead.                                             
    ///                                                                        
    struct Any : Container<
-      Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership<>,      // Sparse elements are referenced
-      Component::Assignment<>,         // Allows assignment             
-      Component::Conversion,           // Allows conversion             
-      Component::TypedStack<DMeta>,    // Variable type                 
-      Component::CountStatic<1>,       // Statically sized to 1         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::OwnershipStack<>,           // Allocation is referenced      
+      Com::DeepOwnership<>,            // Sparse elements are referenced
+      Com::Assignment<>,               // Allows assignment             
+      Com::Conversion,                 // Allows conversion             
+      Com::TypedStack<DMeta>,          // Variable type                 
+      Com::CountStatic<1>,             // Statically sized to 1         
+      Com::StateStack<                 // Variable state                
          DefineState::Typed<>,         // Can be type-constrained       
          DefineState::Future<>,        // Adds a 'missing future' state 
          DefineState::Past<>,          // Adds a 'missing past' state   

@@ -54,9 +54,9 @@ namespace Langulus::Anyness::Component
       ///   @param item - the item to search for                              
       ///   @param cookie - resume search from a given index                  
       ///   @return the index of the found item, or 'npos' if none found      
-      template<bool REVERSE = false, CT::Container C, CT::NoIntent T>
+      template<bool REVERSE = false, CT::IndexedLinearly C, CT::NoIntent T>
       auto Find(this const C& self, const T& item, Count<C> cookie = 0) noexcept
-         -> At<C> requires (C::Indexed and RangeComparable<C, T>)
+         -> At<C> requires RangeComparable<C, T>
       {
          if constexpr (not C::TypeErased) {
             auto start = REVERSE ? self.GetRawEnd() - 1 - cookie : self.GetRaw() + cookie;
@@ -90,9 +90,9 @@ namespace Langulus::Anyness::Component
       ///   @param range - sequence of items to search for                    
       ///   @param cookie - resume search from a given index                  
       ///   @return the index of the found item, or 'npos' if not found       
-      template<bool REVERSE = false, CT::Container C1, CT::Container C2>
+      template<bool REVERSE = false, CT::IndexedLinearly C1, CT::Container C2>
       auto FindRange(this const C1& self, const C2& range, Count<C1> cookie = 0) noexcept
-         -> At<C1> requires C1::Indexed
+         -> At<C1>
       {
          if (cookie >= self.GetCount() or range.GetCount() > self.GetCount() - cookie)
             return Index::None;

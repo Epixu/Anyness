@@ -33,7 +33,12 @@ namespace Langulus::Anyness::Component
    struct TypedStack {
       using CTTI_Component = Yes;
       using CTTI_Typed     = TYPE;
+
       static constexpr bool TypeErased = CT::Void<TYPE>;
+      /// @attention valid only if not TypeErased                       
+      static constexpr bool Sparse = not TypeErased and CT::Sparse<TYPE>;
+      /// @attention valid only if not TypeErased                       
+      static constexpr bool Dense = not TypeErased and CT::Dense<TYPE>;
 
    protected:
       template<unsigned>

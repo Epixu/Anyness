@@ -95,13 +95,13 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Insertion at specific index                                         
-      template<bool FORCE = true, class A1, class...AN, CT::Container C>
+      template<bool FORCE = true, class A1, class...AN, CT::IndexedLinearly C>
       auto InsertAt(this C&, CT::Index auto, A1&&, AN&&...)
-         -> Count<C> requires (C::Indexed and CT::RangeInsertable<C, A1, AN...>);
+         -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
 
-      template<bool CONCAT = true, bool FORCE = true, CT::Container C>
+      template<bool CONCAT = true, bool FORCE = true, CT::IndexedLinearly C>
       auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {})
-         -> Count<C> requires C::Indexed;
+         -> Count<C>;
 
       /// Generic insertion                                                   
       template<bool FORCE = true, class A1, class...AN, CT::Container C>

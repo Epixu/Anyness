@@ -26,9 +26,9 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Concatenation at specific index                                     
-      template<bool FORCE = true, CT::Container C>
+      template<bool FORCE = true, CT::IndexedLinearly C>
       auto ConcatAt(this C&, CT::Index auto, CT::Container auto&&)
-         -> Count<C> requires C::Indexed;
+         -> Count<C>;
 
       /// Generic concatenation                                               
       template<bool FORCE = true, CT::Container C>

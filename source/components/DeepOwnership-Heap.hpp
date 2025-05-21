@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID - which heap are we keeping track of?                     
    ///                                                                        
    template<unsigned ID = 0>
-   struct DeepOwnership {
+   struct DeepOwnershipHeap {
       using CTTI_Component = Yes;
       static constexpr bool DeeplyOwned = true;
 
@@ -167,11 +167,3 @@ namespace Langulus::Anyness::Component
    };
 
 } // namespace Langulus::Anyness::Component
-
-namespace Langulus::CT
-{
-   
-   template<class T1, class...TN>
-   concept DeeplyOwned = T1::DeeplyOwned and (TN::DeeplyOwned and ...);
-
-} // namespace Langulus::CT

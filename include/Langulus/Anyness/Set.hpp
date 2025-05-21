@@ -9,7 +9,7 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership.hpp"
+#include "../../../source/components/DeepOwnership-Heap.hpp"
 #include "../../../source/components/Hash-Heap.hpp"
 #include "../../../source/components/Indexed-Hash.hpp"
 #include "../../../source/components/Insertion.hpp"
@@ -35,21 +35,21 @@ namespace Langulus::Anyness
    /// Type-erased set of unspecified state                                   
    ///                                                                        
    struct Set : Container<
-      Component::HeapMovable<>,        // Heap for keys                 
-      Component::OwnershipStack<>,     // Keys allocation is referenced 
-      Component::DeepOwnership<>,      // Sparse keys are referenced    
-      Component::HashHeap<>,           // Can be hashed                 
-      Component::IndexedHash<>,        // Indexed by hashing keys       
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment<>,         // Allows assignment             
-      Component::TypedStack<DMeta, void>,    // Key type                
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::Comparison,           // Allows for comparison         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Heap for keys                 
+      Com::OwnershipStack<>,           // Keys allocation is referenced 
+      Com::DeepOwnershipHeap<>,        // Sparse keys are referenced    
+      Com::HashHeap<>,                 // Can be hashed                 
+      Com::IndexedHash<>,              // Indexed by hashing keys       
+      Com::Insertion<>,                // Allows insertion              
+      Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Removal<>,                  // Allows removal                
+      Com::Assignment<>,               // Allows assignment             
+      Com::TypedStack<DMeta, void>,    // Key type                      
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::Comparison,                 // Allows for comparison         
+      Com::StateStack<                 // Variable state                
          DefineState::Sorted<>,        // Maybe unsorted                
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
@@ -71,21 +71,21 @@ namespace Langulus::Anyness
    /// Unsorted type-erased set                                               
    ///                                                                        
    struct SetUnsorted : Container<
-      Component::HeapMovable<>,        // Heap for keys                 
-      Component::OwnershipStack<>,     // Keys allocation is referenced 
-      Component::DeepOwnership<>,      // Sparse keys are referenced    
-      Component::HashHeap<>,           // Can be hashed                 
-      Component::IndexedHash<>,        // Indexed by hashing keys       
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment<>,         // Allows assignment             
-      Component::TypedStack<DMeta, void>,    // Key type                
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::Comparison,           // Allows for comparison         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Heap for keys                 
+      Com::OwnershipStack<>,           // Keys allocation is referenced 
+      Com::DeepOwnershipHeap<>,        // Sparse keys are referenced    
+      Com::HashHeap<>,                 // Can be hashed                 
+      Com::IndexedHash<>,              // Indexed by hashing keys       
+      Com::Insertion<>,                // Allows insertion              
+      Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Removal<>,                  // Allows removal                
+      Com::Assignment<>,               // Allows assignment             
+      Com::TypedStack<DMeta, void>,    // Key type                      
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::Comparison,                 // Allows for comparison         
+      Com::StateStack<                 // Variable state                
          DefineState::Sorted<State::Disabled>,  // Always unsorted      
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
@@ -108,21 +108,21 @@ namespace Langulus::Anyness
    /// Sorted type-erased set                                                 
    ///                                                                        
    struct SetSorted : Container<
-      Component::HeapMovable<>,        // Heap for keys                 
-      Component::OwnershipStack<>,     // Keys allocation is referenced 
-      Component::DeepOwnership<>,      // Sparse keys are referenced    
-      Component::HashHeap<>,           // Can be hashed                 
-      Component::IndexedHash<>,        // Indexed by hashing keys       
-      Component::Insertion<>,          // Allows insertion              
-      Component::InsertionOperators<>, // << and >> insertion           
-      Component::Emplacement<>,        // Allows emplacement            
-      Component::Removal<>,            // Allows removal                
-      Component::Assignment<>,         // Allows assignment             
-      Component::TypedStack<DMeta, void>,    // Key type                
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::Comparison,           // Allows for comparison         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Heap for keys                 
+      Com::OwnershipStack<>,           // Keys allocation is referenced 
+      Com::DeepOwnershipHeap<>,        // Sparse keys are referenced    
+      Com::HashHeap<>,                 // Can be hashed                 
+      Com::IndexedHash<>,              // Indexed by hashing keys       
+      Com::Insertion<>,                // Allows insertion              
+      Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Removal<>,                  // Allows removal                
+      Com::Assignment<>,               // Allows assignment             
+      Com::TypedStack<DMeta, void>,    // Key type                      
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::Comparison,                 // Allows for comparison         
+      Com::StateStack<                 // Variable state                
          DefineState::Sorted<State::Enabled>,   // Always sorted        
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        

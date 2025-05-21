@@ -9,7 +9,7 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership.hpp"
+#include "../../../source/components/DeepOwnership-Heap.hpp"
 #include "../../../source/components/Hash-Heap.hpp"
 #include "../../../source/components/Indexed-Hash.hpp"
 #include "../../../source/components/Insertion.hpp"
@@ -43,31 +43,31 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid K, CT::NotVoid V>
    struct TMap : Container<
-      Component::HeapMovable<0>,       // Heap for keys                 
-      Component::HeapMovable<1>,       // Heap for values               
-      Component::OwnershipStack<0>,    // Keys allocation is referenced 
-      Component::OwnershipStack<1>,    // Vals allocation is referenced 
-      Component::HashHeap<0>,          // Keys can be hashed            
-      Component::HashHeap<1>,          // Values can be hashed          
-      Component::DeepOwnership<0>,     // Sparse keys are referenced    
-      Component::DeepOwnership<1>,     // Sparse vals are referenced    
-      Component::IndexedHash<0>,       // Indexed by hashing keys       
-      Component::Insertion<0>,         // Allows insertion of keys      
-      Component::Insertion<1>,         // Allows insertion of vals      
-      Component::InsertionOperators<0>,// << and >> insertion of keys   
-      Component::InsertionOperators<1>,// << and >> insertion of vals   
-      Component::Emplacement<0>,       // Allows emplacement of keys    
-      Component::Emplacement<1>,       // Allows emplacement of vals    
-      Component::Removal<0>,           // Allows removal of keys        
-      Component::Removal<1>,           // Allows removal of vals        
-      Component::Assignment<0>,        // Allows assignment             
-      Component::Assignment<1>,        // Allows assignment             
-      Component::TypedStack<DMeta, K, 0>,       // Key type             
-      Component::TypedStack<DMeta, V, 1>,       // Value type           
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::Comparison,           // Allows for comparison         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<0>,             // Heap for keys                 
+      Com::HeapMovable<1>,             // Heap for values               
+      Com::OwnershipStack<0>,          // Keys allocation is referenced 
+      Com::OwnershipStack<1>,          // Vals allocation is referenced 
+      Com::HashHeap<0>,                // Keys can be hashed            
+      Com::HashHeap<1>,                // Values can be hashed          
+      Com::DeepOwnershipHeap<0>,       // Sparse keys are referenced    
+      Com::DeepOwnershipHeap<1>,       // Sparse vals are referenced    
+      Com::IndexedHash<0>,             // Indexed by hashing keys       
+      Com::Insertion<0>,               // Allows insertion of keys      
+      Com::Insertion<1>,               // Allows insertion of vals      
+      Com::InsertionOperators<0>,      // << and >> insertion of keys   
+      Com::InsertionOperators<1>,      // << and >> insertion of vals   
+      Com::Emplacement<0>,             // Allows emplacement of keys    
+      Com::Emplacement<1>,             // Allows emplacement of vals    
+      Com::Removal<0>,                 // Allows removal of keys        
+      Com::Removal<1>,                 // Allows removal of vals        
+      Com::Assignment<0>,              // Allows assignment             
+      Com::Assignment<1>,              // Allows assignment             
+      Com::TypedStack<DMeta, K, 0>,    // Key type                      
+      Com::TypedStack<DMeta, V, 1>,    // Value type                    
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::Comparison,                 // Allows for comparison         
+      Com::StateStack<                 // Variable state                
          DefineState::Sorted<>,        // Maybe unsorted                
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
@@ -92,7 +92,7 @@ namespace Langulus::Anyness
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
 
       using It           = TIteratorMap<TMap>;
-      using CountType    = typename Component::CountStack<>::CountType;
+      using CountType    = typename Com::CountStack<>::CountType;
 
       using PairType     = TPair<K const&, V const&>;
       using PairTypeMut  = TPair<K const&, V&>;
@@ -135,31 +135,31 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid K, CT::NotVoid V>
    struct TMapUnsorted : Container<
-      Component::HeapMovable<0>,       // Heap for keys                 
-      Component::HeapMovable<1>,       // Heap for values               
-      Component::OwnershipStack<0>,    // Keys allocation is referenced 
-      Component::OwnershipStack<1>,    // Vals allocation is referenced 
-      Component::HashHeap<0>,          // Keys can be hashed            
-      Component::HashHeap<1>,          // Values can be hashed          
-      Component::DeepOwnership<0>,     // Sparse keys are referenced    
-      Component::DeepOwnership<1>,     // Sparse vals are referenced    
-      Component::IndexedHash<0>,       // Indexed by hashing keys       
-      Component::Insertion<0>,         // Allows insertion of keys      
-      Component::Insertion<1>,         // Allows insertion of vals      
-      Component::InsertionOperators<0>,// << and >> insertion of keys   
-      Component::InsertionOperators<1>,// << and >> insertion of vals   
-      Component::Emplacement<0>,       // Allows emplacement of keys    
-      Component::Emplacement<1>,       // Allows emplacement of vals    
-      Component::Removal<0>,           // Allows removal of keys        
-      Component::Removal<1>,           // Allows removal of vals        
-      Component::Assignment<0>,        // Allows assignment             
-      Component::Assignment<1>,        // Allows assignment             
-      Component::TypedStack<DMeta, K, 0>,       // Key type             
-      Component::TypedStack<DMeta, V, 1>,       // Value type           
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::Comparison,           // Allows for comparison         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<0>,             // Heap for keys                 
+      Com::HeapMovable<1>,             // Heap for values               
+      Com::OwnershipStack<0>,          // Keys allocation is referenced 
+      Com::OwnershipStack<1>,          // Vals allocation is referenced 
+      Com::HashHeap<0>,                // Keys can be hashed            
+      Com::HashHeap<1>,                // Values can be hashed          
+      Com::DeepOwnershipHeap<0>,       // Sparse keys are referenced    
+      Com::DeepOwnershipHeap<1>,       // Sparse vals are referenced    
+      Com::IndexedHash<0>,             // Indexed by hashing keys       
+      Com::Insertion<0>,               // Allows insertion of keys      
+      Com::Insertion<1>,               // Allows insertion of vals      
+      Com::InsertionOperators<0>,      // << and >> insertion of keys   
+      Com::InsertionOperators<1>,      // << and >> insertion of vals   
+      Com::Emplacement<0>,             // Allows emplacement of keys    
+      Com::Emplacement<1>,             // Allows emplacement of vals    
+      Com::Removal<0>,                 // Allows removal of keys        
+      Com::Removal<1>,                 // Allows removal of vals        
+      Com::Assignment<0>,              // Allows assignment             
+      Com::Assignment<1>,              // Allows assignment             
+      Com::TypedStack<DMeta, K, 0>,    // Key type                      
+      Com::TypedStack<DMeta, V, 1>,    // Value type                    
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::Comparison,                 // Allows for comparison         
+      Com::StateStack<                 // Variable state                
          DefineState::Sorted<State::Disabled>,  // Always unsorted      
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
@@ -230,31 +230,31 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid K, CT::NotVoid V>
    struct TMapSorted : Container<
-      Component::HeapMovable<0>,       // Heap for keys                 
-      Component::HeapMovable<1>,       // Heap for values               
-      Component::OwnershipStack<0>,    // Keys allocation is referenced 
-      Component::OwnershipStack<1>,    // Vals allocation is referenced 
-      Component::HashHeap<0>,          // Keys can be hashed            
-      Component::HashHeap<1>,          // Values can be hashed          
-      Component::DeepOwnership<0>,     // Sparse keys are referenced    
-      Component::DeepOwnership<1>,     // Sparse vals are referenced    
-      Component::IndexedHash<0>,       // Indexed by hashing keys       
-      Component::Insertion<0>,         // Allows insertion of keys      
-      Component::Insertion<1>,         // Allows insertion of vals      
-      Component::InsertionOperators<0>,// << and >> insertion of keys   
-      Component::InsertionOperators<1>,// << and >> insertion of vals   
-      Component::Emplacement<0>,       // Allows emplacement of keys    
-      Component::Emplacement<1>,       // Allows emplacement of vals    
-      Component::Removal<0>,           // Allows removal of keys        
-      Component::Removal<1>,           // Allows removal of vals        
-      Component::Assignment<0>,        // Allows assignment             
-      Component::Assignment<1>,        // Allows assignment             
-      Component::TypedStack<DMeta, K, 0>,       // Key type             
-      Component::TypedStack<DMeta, V, 1>,       // Value type           
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::Comparison,           // Allows for comparison         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<0>,             // Heap for keys                 
+      Com::HeapMovable<1>,             // Heap for values               
+      Com::OwnershipStack<0>,          // Keys allocation is referenced 
+      Com::OwnershipStack<1>,          // Vals allocation is referenced 
+      Com::HashHeap<0>,                // Keys can be hashed            
+      Com::HashHeap<1>,                // Values can be hashed          
+      Com::DeepOwnershipHeap<0>,       // Sparse keys are referenced    
+      Com::DeepOwnershipHeap<1>,       // Sparse vals are referenced    
+      Com::IndexedHash<0>,             // Indexed by hashing keys       
+      Com::Insertion<0>,               // Allows insertion of keys      
+      Com::Insertion<1>,               // Allows insertion of vals      
+      Com::InsertionOperators<0>,      // << and >> insertion of keys   
+      Com::InsertionOperators<1>,      // << and >> insertion of vals   
+      Com::Emplacement<0>,             // Allows emplacement of keys    
+      Com::Emplacement<1>,             // Allows emplacement of vals    
+      Com::Removal<0>,                 // Allows removal of keys        
+      Com::Removal<1>,                 // Allows removal of vals        
+      Com::Assignment<0>,              // Allows assignment             
+      Com::Assignment<1>,              // Allows assignment             
+      Com::TypedStack<DMeta, K, 0>,    // Key type                      
+      Com::TypedStack<DMeta, V, 1>,    // Value type                    
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::Comparison,                 // Allows for comparison         
+      Com::StateStack<                 // Variable state                
          DefineState::Sorted<State::Enabled>,   // Always sorted        
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        

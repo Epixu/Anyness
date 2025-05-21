@@ -19,13 +19,13 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes;
 
       /// Merging at specific index                                           
-      template<bool FORCE = true, class A1, class...AN, CT::Container C>
+      template<bool FORCE = true, class A1, class...AN, CT::IndexedLinearly C>
       auto MergeAt(this C&, CT::Index auto, A1&&, AN&&...)
-         -> Count<C> requires (C::Indexed and RangeInsertable<C, A1, AN...>);
+         -> Count<C> requires RangeInsertable<C, A1, AN...>;
 
-      template<bool FORCE = true, CT::Container C>
+      template<bool FORCE = true, CT::IndexedLinearly C>
       auto MergeRangeAt(this C&, CT::Index auto, CT::Container auto&&)
-         -> Count<C> requires C::Indexed;
+         -> Count<C>;
 
       /// Generic merge                                                       
       template<bool FORCE = true, class A1, class...AN, CT::Container C>

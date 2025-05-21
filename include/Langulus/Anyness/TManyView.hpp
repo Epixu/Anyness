@@ -44,20 +44,20 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid T>
    struct TManyView : Container<
-      Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<0, false>,   // Pointer to an allocation
-      Component::Contiguous,           // Heap memory is continuous     
-      Component::IndexedLinear<>,      // Indexed directly              
-      Component::TypedStack<DMeta, T>, // Type-constrained              
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveStack<>,       // Variable capacity             
-      Component::HashStack<>,          // Variable hash (cached)        
-      Component::Descriptor,           // Descriptor interface          
-      Component::IterationForEach<>,   // ForEach iteration             
-      Component::IterationRange<>,     // ForEach iteration             
-      Component::Comparison,           // Allows for comparison         
-      Component::Conversion,           // Allows conversion             
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::OwnershipStack<0, false>,   // Pointer to an allocation      
+      Com::Contiguous,                 // Heap memory is continuous     
+      Com::IndexedLinear<>,            // Indexed directly              
+      Com::TypedStack<DMeta, T>,       // Type-constrained              
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveStack<>,             // Variable capacity             
+      Com::HashStack<>,                // Variable hash (cached)        
+      Com::Descriptor,                 // Descriptor interface          
+      Com::IterationForEach<>,         // ForEach iteration             
+      Com::IterationRange<>,           // ForEach iteration             
+      Com::Comparison,                 // Allows for comparison         
+      Com::Conversion,                 // Allows conversion             
+      Com::StateStack<                 // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Future<>,        // Adds a 'missing future' state 
          DefineState::Past<>,          // Adds a 'missing past' state   

@@ -33,17 +33,17 @@ namespace Langulus::Anyness
    /// that is binary compatible with the container above                     
    ///                                                                        
    struct BytesView : Container<
-      Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<0, false>,   // Allocation is referenced
-      Component::Contiguous,           // Heap memory is continuous     
-      Component::IndexedLinear<>,      // Indexed directly              
-      Component::TypedStatic<DMeta, Byte>,   // Type-constrained        
-      Component::CountStack<>,         // Variable count                
-      Component::ReserveHeap<>,        // Variable capacity             
-      Component::HashStack<>,          // Variable hash (cached)        
-      Component::IterationRange<>,     // Ranged iteration              
-      Component::Comparison,           // Comparisons                   
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::OwnershipStack<0, false>,   // Allocation is referenced      
+      Com::Contiguous,                 // Heap memory is continuous     
+      Com::IndexedLinear<>,            // Indexed directly              
+      Com::TypedStatic<DMeta, Byte>,   // Type-constrained              
+      Com::CountStack<>,               // Variable count                
+      Com::ReserveHeap<>,              // Variable capacity             
+      Com::HashStack<>,                // Variable hash (cached)        
+      Com::IterationRange<>,           // Ranged iteration              
+      Com::Comparison,                 // Comparisons                   
+      Com::StateStack<                 // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        

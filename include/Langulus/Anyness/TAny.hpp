@@ -16,13 +16,13 @@ namespace Langulus::Anyness
    /// the type-erased alternative above                                      
    template<CT::NotVoid T>
    struct TAny : Container<
-      Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::OwnershipStack<>,     // Allocation is referenced      
-      Component::DeepOwnership,        // Sparse elements are referenced
-      Component::Assignment,           // Allows assignment             
-      Component::TypedStack<DMeta, T>, // Type-constrained              
-      Component::CountStatic<1>,       // Statically sized to 1         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::OwnershipStack<>,           // Allocation is referenced      
+      Com::DeepOwnership,              // Sparse elements are referenced
+      Com::Assignment,                 // Allows assignment             
+      Com::TypedStack<DMeta, T>,       // Type-constrained              
+      Com::CountStatic<1>,             // Statically sized to 1         
+      Com::StateStack<                 // Variable state                
          State::Future<>,              // Adds a 'missing future' state 
          State::Past<>,                // Adds a 'missing past' state   
          State::Compressed<>,          // Adds 'compressed' state       
@@ -37,11 +37,11 @@ namespace Langulus::Anyness
    /// the type-erased alternative above                                      
    template<CT::NotVoid T>
    struct TAnyView : Container<
-      Component::HeapMovable<>,        // Pointer to heap memory        
-      Component::NoOwnershipStack<>,   // Pointer to an allocation      
-      Component::TypedStack<DMeta, T>, // Type-constrained              
-      Component::CountStatic<1>,       // Statically sized to 1         
-      Component::StateStack<           // Variable state                
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::NoOwnershipStack<>,         // Pointer to an allocation      
+      Com::TypedStack<DMeta, T>,       // Type-constrained              
+      Com::CountStatic<1>,             // Statically sized to 1         
+      Com::StateStack<                 // Variable state                
          State::Future<>,              // Adds a 'missing future' state 
          State::Past<>,                // Adds a 'missing past' state   
          State::Compressed<>,          // Adds 'compressed' state       
