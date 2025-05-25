@@ -30,12 +30,23 @@ namespace Langulus::Anyness::Component
       static constexpr bool Sparse     = CT::Sparse<TYPE>;
       static constexpr bool Dense      = CT::Dense<TYPE>;
 
+      constexpr TypedStatic() noexcept = default;
+      explicit constexpr TypedStatic(const TypedStatic&) noexcept = default;
+      explicit constexpr TypedStatic(TypedStatic&&) noexcept = default;
+      template<template<class> class I> requires CT::Intent<I<TypedStatic>>
+      constexpr TypedStatic(I<TypedStatic>&&) noexcept {}
+
+      constexpr TypedStatic& operator = (TypedStatic const&) noexcept = default;
+      constexpr TypedStatic& operator = (TypedStatic&&) noexcept = default;
+      template<template<class> class I> requires CT::Intent<I<TypedStatic>>
+      constexpr TypedStatic& operator = (I<TypedStatic>&&) {}
+
       /// Get the reflected type definition                                   
       ///   @return the definition                                            
       T GetType() const noexcept { return MetaOf<TYPE>(); }
 
       /// Get the reflected type name                                         
-      constexpr auto GetName() const noexcept { return NameOf<TYPE>(); }
+      constexpr auto GetName()   const noexcept { return NameOf<TYPE>(); }
 
       /// Statically typed containers are always typed                        
       constexpr bool IsTyped()   const noexcept { return true;  }
@@ -66,7 +77,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if this container has similar data                   
       template<CT::Container C>
       constexpr bool Is(C const& other) const noexcept {
-         if constexpr (C::TypeErased)
+         if constexpr (CT::Untyped<C>)
             return GetType().Is(other.GetType());
          else
             return CT::Same<TYPE, TypeOf<C>>;
@@ -97,7 +108,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if this container has similar data                   
       template<CT::Container C>
       constexpr bool IsSimilar(C const& other) const noexcept {
-         if constexpr (C::TypeErased)
+         if constexpr (CT::Untyped<C>)
             return GetType().IsSimilar(other.GetType());
          else
             return CT::Similar<TYPE, TypeOf<C>>;
@@ -125,7 +136,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if data type matches type exactly                    
       template<CT::Container C>
       constexpr bool IsExact(C const& other) const noexcept {
-         if constexpr (C::TypeErased)
+         if constexpr (CT::Untyped<C>)
             return GetType().IsExact(other.GetType());
          else
             return CT::Exact<TYPE, TypeOf<C>>;
@@ -169,15 +180,13 @@ namespace Langulus::Anyness::Component
       }
 
       /// Dereference the first pointer inside the container, if sparse       
-      constexpr auto operator * (this auto&& self) has_assumptions -> Deptr<TYPE>& requires Sparse {
+      constexpr TYPE& operator * (this auto&& self) has_assumptions {
          AssumeDev(not self.IsEmpty(), HERE(), "Container is empty");
-         auto ptr = self.template GetInner<ID, TYPE>();
-         AssumeDev(ptr, "Pointer is invalid");
-         return *ptr;
+         return self.template GetInner<ID, TYPE>();
       }
 
       /// Get the first pointer inside the container, if sparse               
-      constexpr auto operator -> (this auto&& self) has_assumptions -> TYPE requires Sparse {
+      constexpr TYPE& operator -> (this auto&& self) has_assumptions {
          AssumeDev(not self.IsEmpty(), HERE(), "Container is empty");
          return self.template GetInner<ID, TYPE>();
       }

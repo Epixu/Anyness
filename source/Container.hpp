@@ -1,6 +1,7 @@
 #pragma once
 #include <Langulus/CTTI.hpp>
 #include <Langulus/Intent.hpp>
+#include <Langulus/Sequence.hpp>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
@@ -115,10 +116,22 @@ namespace Langulus::Anyness
    struct Container : COMPONENTS... {
       using CTTI_Container = Yes;
       using ComponentList = Types<COMPONENTS...>;
-      class InitList {};
+      using InitList = Sequence<sizeof...(COMPONENTS)>;
+      
+      /// Maps one unfold expression onto another of different length, and    
+      /// returns a 'FALLBACK' instance if index goes out of range            
+      template<class FALLBACK, unsigned INDEX, class A1, class...AN>
+      static constexpr decltype(auto) PickArgument(A1&& a1, AN&&...aN) noexcept {
+         if constexpr (INDEX == 0)
+            return ::std::forward<A1>(a1);
+         else if constexpr (INDEX + 1 < sizeof...(AN))
+            return PickArgument<INDEX + 1>(::std::forward<AN>(aN)...);
+         else
+            return FALLBACK {};
+      }
 
       constexpr Container() noexcept = default;
-      explicit constexpr Container(const Container&) noexcept = default;
+      explicit constexpr Container(Container const&) noexcept = default;
       explicit constexpr Container(Container&&) noexcept = default;
 
       /// Intent constructor that accepts any other kind of container         
@@ -131,13 +144,14 @@ namespace Langulus::Anyness
             : other.Nest(COMPONENTS {})
          }... {}
 
+
       /// Initialization tag dispatch constructor, for manually initializing  
       /// component list                                                      
-      template<class...ARGUMENT>
-      constexpr Container(InitList, ARGUMENT&&...argument)
-         : COMPONENTS {::std::forward<ARGUMENT>(argument)}... {}
+      template<auto...IDX, class...AN>
+      constexpr Container(ExpandedSequence<IDX...>, AN&&...aN)
+         : COMPONENTS {PickArgument<COMPONENTS, IDX>(::std::forward<AN>(aN)...)}... {}
 
-      constexpr Container& operator = (const Container&) noexcept = default;
+      constexpr Container& operator = (Container const&) noexcept = default;
       constexpr Container& operator = (Container&&) noexcept = default;
 
       /// Intent assignment that accepts any other kind of container          

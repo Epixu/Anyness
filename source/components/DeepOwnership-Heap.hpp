@@ -1,5 +1,6 @@
 #pragma once
 #include "../Container.hpp"
+#include "../rtti/Intent.hpp"
 #include <Langulus/Assume.hpp>
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>

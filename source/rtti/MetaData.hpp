@@ -1,6 +1,7 @@
 #pragma once
 #include "Meta.hpp"
-#include "Intent.hpp"
+#include <Langulus/HashOf.hpp>
+#include <Langulus/Intent.hpp>
 
 
 namespace Langulus::RTTI
@@ -92,6 +93,7 @@ namespace Langulus::RTTI
          ::std::size_t GetMinAllocation() const noexcept;
          ::std::size_t GetSize() const noexcept;
          ::std::size_t GetAlignment() const noexcept;
+         Token GetName() const noexcept;
 
          bool IsDense() const noexcept;
          bool IsSparse() const noexcept;
@@ -101,11 +103,11 @@ namespace Langulus::RTTI
          bool IsPOD() const noexcept;
 
          bool HasComparer() const noexcept;
-         void RunComparer(const void*, const void*) const noexcept;
+         int  RunComparer(const void*, const void*) const noexcept;
 
          bool HasHasher() const noexcept;
          bool HasGetHashMethod() const noexcept;
-         void RunHasher(const void*) const noexcept;
+         Hash RunHasher(const void*) const noexcept;
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)

@@ -31,6 +31,17 @@ namespace Langulus::Anyness::Component
    struct Comparison {
       using CTTI_Component = Yes;
 
+      constexpr Comparison() noexcept = default;
+      explicit constexpr Comparison(const Comparison&) noexcept = default;
+      explicit constexpr Comparison(Comparison&&) noexcept = default;
+      template<template<class> class I> requires CT::Intent<I<Comparison>>
+      constexpr Comparison(I<Comparison>&&) noexcept {}
+
+      constexpr Comparison& operator = (Comparison const&) noexcept = default;
+      constexpr Comparison& operator = (Comparison&&) noexcept = default;
+      template<template<class> class I> requires CT::Intent<I<Comparison>>
+      constexpr Comparison& operator = (I<Comparison>&& other) {}
+
    private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -65,11 +76,12 @@ namespace Langulus::Anyness::Component
          );
 
          if constexpr (CT::Typed<LHS, RHS>) {
+            //                                                          
+            // Both blocks are statically typed - leverage it by using  
+            // static comparisons                                       
             using LT = TypeOf<LHS>;
             using RT = TypeOf<RHS>;
 
-            // Both blocks are statically typed - leverage it by using  
-            // static comparisons                                       
             if constexpr (not CT::Similar<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
                // Types are different                                   
                Logger::Verbose<VERBOSE>(Logger::Red, "Types differ (typed): ",
@@ -133,11 +145,12 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
+            //                                                          
+            // Both container are type-erased - all we can do is call   
+            // the reflected comparison functions                       
             const DMeta LT = lhs.GetType();
             const DMeta RT = rhs.GetType();
 
-            // Both container are type-erased - all we can do is call   
-            // the reflected comparison functions                       
             if (not LT.IsSimilar(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
                Logger::Verbose<VERBOSE>(Logger::Red, "Types differ (type-erased): ",
                   LT, " != ", RT);
@@ -176,14 +189,15 @@ namespace Langulus::Anyness::Component
             }
             else if (LT.HasComparer()) {
                // Call compare operator for each element pair           
-               auto t1 = lhs.GetRaw();
-               auto t2 = rhs.GetRaw();
+               auto t1 = lhs.template GetRawAs<uint8_t>();
+               auto t2 = rhs.template GetRawAs<uint8_t>();
+               const auto t1_start = t1;
                const auto t1end = t1 + lhs.GetBytesize();
                const auto size = LT.GetSize();
                while (t1 < t1end) {
                   if (0 != LT.RunComparer(t1, t2)) {
                      Logger::Verbose<VERBOSE>(Logger::Red,
-                        "Element #", (t1 - lhs.GetRaw()) / size, " differs (type-erased)");
+                        "Element #", (t1 - t1_start) / size, " differs (type-erased)");
                      return false;
                   }
 

@@ -22,13 +22,23 @@ namespace Langulus::Anyness::Component
 
    public:
       constexpr Stack() = default;
-      explicit constexpr Stack(const Stack&) = default;
+      explicit constexpr Stack(Stack const&) = default;
       explicit constexpr Stack(Stack&&) = default;
 
       /// Intent constructor                                                  
       template<template<class> class I> requires CT::Intent<I<Stack>>
       constexpr Stack(I<Stack>&& other)
-         : mStack {other.Nest(other.mStack)} {}
+         : mStack {other.Nest(other->mStack)} {}
+
+      constexpr Stack& operator = (Stack const&) noexcept = default;
+      constexpr Stack& operator = (Stack&&) noexcept = default;
+
+      /// Intent assignment                                                   
+      template<template<class> class I> requires CT::Intent<I<Stack>>
+      constexpr Stack& operator = (I<Stack>&& other) {
+         mStack = other.Nest(other->mStack);
+         return *this;
+      }
    };
 
 } // namespace Langulus::Anyness::Component

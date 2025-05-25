@@ -1,13 +1,13 @@
 #pragma once
 #include "Heap-Reference.hpp"
 #include "../Allocator.hpp"
+#include "../rtti/Intent.hpp"
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Pooled.hpp>
 #include <Langulus/CT/Resolvable.hpp>
 #include "Iteration-Range.hpp"
 
 /*#include "../Container.hpp"
-#include "../rtti/Intent.hpp"
 #include <Langulus/TypeOf.hpp>
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
@@ -487,9 +487,6 @@ namespace Langulus::Anyness::Component
 
       template<CT::Container C>
       auto GetDense(this C&&, Count<C> = CountMax<C>) -> Deep<C>;
-
-      template<CT::Container C>
-      auto operator * (this C&&) -> Deep<C>;
    };
 
 } // namespace Langulus::Anyness::Component

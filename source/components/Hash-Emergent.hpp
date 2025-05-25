@@ -36,7 +36,7 @@ namespace Langulus::Anyness::Component
 
             if (self.GetCount() == 1) {
                // Exactly one element means exactly one hash            
-               return HashOf(*GetRaw());
+               return HashOf(*self.GetRaw());
             }
 
             // Hashing multiple elements                                

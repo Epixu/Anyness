@@ -17,7 +17,6 @@ namespace Langulus::Anyness::Component
       using ReserveType = T;
 
       /// Get the number of reserved (maybe uninitialized) elements           
-      ///   @return the number of reserved (maybe uninitialized) elements     
       template<CT::Container C>
       T GetReserved(this const C& self) noexcept {
          auto allocation = self.GetAllocation();
@@ -29,7 +28,7 @@ namespace Langulus::Anyness::Component
       /// excess elements will be dereferenced/destroyed                      
       ///   @param count - number of elements to reserve                      
       template<CT::Container C>
-      auto Reserve(this C& self, const T count) -> C& {
+      C& Reserve(this C& self, const T count) {
          if (count < self.GetCount())
             self.AllocateLess(count);
          else

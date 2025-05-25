@@ -69,8 +69,7 @@ namespace Langulus::Anyness
 
       ///                                                                     
       /// Construction                                                        
-      //THandle() = delete;
-      explicit constexpr THandle(const THandle&) noexcept = default;
+      explicit constexpr THandle(THandle const&) noexcept = default;
       explicit constexpr THandle(THandle&&) noexcept = default;
 
       /// Intent constructor                                                  
@@ -81,7 +80,7 @@ namespace Langulus::Anyness
       /// Manual constructor                                                  
       ///   @param element - embedded element                                 
       explicit constexpr THandle(Deref<T>* data, AllocationPtr* entry) noexcept
-         : Base {data, entry} {}
+         : Base {Base::InitList::Expand, data, entry} {}
 
       using Com::Comparison::operator ==;
    };
@@ -101,8 +100,7 @@ namespace Langulus::Anyness
 
       ///                                                                     
       /// Construction                                                        
-      //THandleDisowned() = delete;
-      explicit constexpr THandleDisowned(const THandleDisowned&) noexcept = default;
+      explicit constexpr THandleDisowned(THandleDisowned const&) noexcept = default;
       explicit constexpr THandleDisowned(THandleDisowned&&) noexcept = default;
 
       /// Intent constructor                                                  
@@ -113,7 +111,7 @@ namespace Langulus::Anyness
       /// Manual constructor                                                  
       ///   @param element - embedded element                                 
       /*explicit*/ constexpr THandleDisowned(Deref<T>* element) noexcept 
-         : Base {typename Base::InitList {}, element} {}
+         : Base {Base::InitList::Expand, element} {}
 
       using Com::Comparison::operator ==;
    };

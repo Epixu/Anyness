@@ -19,7 +19,7 @@ namespace Langulus::Anyness
    struct TSet : Container<
       Com::HeapMovable<>,              // Heap for keys                 
       Com::OwnershipStack<>,           // Keys allocation is referenced 
-      Com::DeepOwnership<>,            // Sparse keys are referenced    
+      Com::DeepOwnershipHeap<>,        // Sparse keys are referenced    
       Com::HashHeap<>,                 // Keys can be hashed            
       Com::IndexedHash<>,              // Indexed by hashing keys       
       Com::Insertion<>,                // Allows insertion              
@@ -57,7 +57,7 @@ namespace Langulus::Anyness
    struct TSetUnsorted : Container<
       Com::HeapMovable<>,              // Heap for keys                 
       Com::OwnershipStack<>,           // Keys allocation is referenced 
-      Com::DeepOwnership<>,            // Sparse keys are referenced    
+      Com::DeepOwnershipHeap<>,        // Sparse keys are referenced    
       Com::HashHeap<>,                 // Keys can be hashed            
       Com::IndexedHash<>,              // Indexed by hashing keys       
       Com::Insertion<>,                // Allows insertion              
@@ -95,7 +95,7 @@ namespace Langulus::Anyness
    struct TSetSorted : Container<
       Com::HeapMovable<>,              // Heap for keys                 
       Com::OwnershipStack<>,           // Keys allocation is referenced 
-      Com::DeepOwnership<>,            // Sparse keys are referenced    
+      Com::DeepOwnershipHeap<>,        // Sparse keys are referenced    
       Com::HashHeap<>,                 // Keys can be hashed            
       Com::IndexedHash<>,              // Indexed by hashing keys       
       Com::Insertion<>,                // Allows insertion              

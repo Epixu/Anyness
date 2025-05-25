@@ -56,7 +56,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
       REQUIRE(pointer == pointer2);
 
       WHEN("Create an instance") {
-         pointer.New(5);
+         pointer.Emplace(5);
 
          REQUIRE(*pointer == 5);
          REQUIRE(pointer.GetAllocation());
@@ -66,7 +66,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
       }
 
       WHEN("Create and copy an instance") {
-         pointer.New(5);
+         pointer.Emplace(5);
          pointer2 = pointer;
 
          REQUIRE(pointer == pointer2);
@@ -81,7 +81,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
       }
 
       WHEN("Create and move an instance") {
-         pointer.New(5);
+         pointer.Emplace(5);
          pointer2 = ::std::move(pointer);
 
          REQUIRE_FALSE(pointer);
@@ -96,9 +96,9 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
       }
 
       WHEN("Overwrite an instance") {
-         pointer.New(5);
+         pointer.Emplace(5);
          IF_LANGULUS_MANAGED_MEMORY(auto backup = pointer.Get());
-         pointer2.New(6);
+         pointer2.Emplace(6);
          pointer = pointer2;
 
          REQUIRE(pointer == pointer2);

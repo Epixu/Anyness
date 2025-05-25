@@ -20,6 +20,7 @@
 namespace Langulus::Anyness::Inner
 {
 
+   ///                                                                        
    template<CT::Sparse T>
    using TRefBase = Container<
       Com::HeapMovable<>,                 // Data on the heap          
@@ -37,14 +38,17 @@ namespace Langulus::Anyness
 {
 
    ///                                                                        
-   /// A statically typed shared pointer                                      
-   /// Works fine with packed pointers as well                                
-   /// Has deep ownership, but no states are applied. You can use TAny        
-   /// instead if you want encryption/compression/linking.                    
+   ///   A statically typed shared pointer                                    
+   ///                                                                        
+   ///   Works fine with packed pointers as well. Has deep ownership, but no  
+   /// states are applied. You can use TAny instead if you want               
+   /// encryption/compression/linking.                                        
    ///                                                                        
    template<CT::Sparse T>
    struct TRef : Inner::TRefBase<T> {
-      using Base = Inner::TRefBase<T>;
+      using Base    = Inner::TRefBase<T>;
+      using Pick    = THandle<T const&>;
+      using PickMut = THandle<T&>;
 
       ///                                                                     
       ///   Construction                                                      

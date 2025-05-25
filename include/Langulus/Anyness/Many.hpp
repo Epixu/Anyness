@@ -46,8 +46,9 @@ namespace Langulus::Anyness
 
 
    ///                                                                        
-   /// A universal type-erased contiguous container of variable size          
-   /// This is the most universal and feature-complete container, that        
+   ///   A universal type-erased contiguous container of variable size        
+   ///                                                                        
+   ///   This is the most universal and feature-complete container, that      
    /// supports all kinds of data states: compression, encryption, linking,   
    /// and so on. If you want to contain a single element, consider using     
    /// Any instead, for a bit shorter and faster representation.              

@@ -76,6 +76,7 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Reference<T>, "Strip references");
          using DC = Deref<C>;
          using TT = DecvqAll<Tif<CT::Void<T>, TypeOf<C>, T>>;
+         using ST = DecvqAll<decltype(self.mHeap)>;
 
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        
@@ -84,7 +85,7 @@ namespace Langulus::Anyness::Component
             else
                return static_cast<void* &>(self.mHeap);
          }
-         else if constexpr (DC::TypeErased) {
+         else if constexpr (CT::Untyped<C>) {
             // Casting to a desired runtime type                        
             AssumeDev(self.IsTyped(), HERE(), "Block is not typed");
 
@@ -98,7 +99,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Dense<TT>)
                   return *static_cast<TT*>( self.mHeap);
                else
-                  return *static_cast<TT*>(&self.mHeap);
+                  return *reinterpret_cast<TT*>(const_cast<ST*>(&self.mHeap));
             }
          }
          else {

@@ -36,7 +36,7 @@ namespace Langulus::Anyness::Component
 
    private:
       template<CT::Container C>
-      using PickMut = typename C::PickMut;
+      using PickMut = typename Deref<C>::PickMut;
       
       /// Emplace a new item at the first element, with or without an intent  
       ///   @attention this overwrites previous handle without dereferencing  
