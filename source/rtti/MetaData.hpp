@@ -90,13 +90,22 @@ namespace Langulus::RTTI
          }
 
          ::std::size_t GetMinAllocation() const noexcept;
-         ::std::size_t GetStride() const noexcept;
+         ::std::size_t GetSize() const noexcept;
+         ::std::size_t GetAlignment() const noexcept;
 
          bool IsDense() const noexcept;
          bool IsSparse() const noexcept;
          bool IsConstant() const noexcept;
          bool IsMutable() const noexcept;
          bool IsDeep() const noexcept;
+         bool IsPOD() const noexcept;
+
+         bool HasComparer() const noexcept;
+         void RunComparer(const void*, const void*) const noexcept;
+
+         bool HasHasher() const noexcept;
+         bool HasGetHashMethod() const noexcept;
+         void RunHasher(const void*) const noexcept;
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)

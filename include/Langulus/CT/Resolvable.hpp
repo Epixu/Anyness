@@ -16,7 +16,7 @@ namespace Langulus::RTTI
 
 namespace Langulus::Anyness
 {
-   struct Many;
+   struct Any;
 }
 
 namespace Langulus::CTTI
@@ -31,7 +31,7 @@ namespace Langulus::CTTI
    struct Resolvable {
       static constexpr bool Enabled = requires (T& a) {
          { a.GetType()     } -> ::std::same_as<RTTI::MetaData>;
-         { a.GetResolved() } -> ::std::same_as<Anyness::Many>;
+         { a.GetResolved() } -> ::std::same_as<Anyness::Any>;
       };
    };
    

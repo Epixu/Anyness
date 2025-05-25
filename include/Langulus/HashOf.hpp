@@ -559,7 +559,7 @@ namespace Langulus
       else if constexpr (CT::Array<T>) {
          // Combine the hashes of each element inside an array          
          if constexpr (ExtentOf<T> == 1) {
-            // Only one element in array, just use the first            
+            // Only one element in array, just use the first element    
             return HashOf<FAKE, SEED>(head[0]);
          }
          else if constexpr (CT::POD<Deext<T>>) {

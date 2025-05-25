@@ -158,19 +158,25 @@ namespace Langulus::Anyness::Component
          return CT::Deep<Decay<TYPE>>;
       }
 
+      /// Get the size of the type times the contained elements               
+      ///   @return the size of all elements in bytes                         
+      template<CT::Container C>
+      constexpr bool GetBytesize(this C const& self) noexcept {
+         return sizeof(TYPE) * self.GetCount();
+      }
+
       /// Dereference the first pointer inside the container, if sparse       
-      constexpr auto operator * (this auto&& self) -> Deptr<TYPE>& requires Sparse {
-         return *self.template GetInner<ID, TYPE>();
+      constexpr auto operator * (this auto&& self) has_assumptions -> Deptr<TYPE>& requires Sparse {
+         AssumeDev(not self.IsEmpty(), HERE(), "Container is empty");
+         auto ptr = self.template GetInner<ID, TYPE>();
+         AssumeDev(ptr, "Pointer is invalid");
+         return *ptr;
       }
 
       /// Get the first pointer inside the container, if sparse               
-      constexpr auto operator -> (this auto&& self) noexcept -> TYPE requires Sparse {
-         return  self.template GetInner<ID, TYPE>();
-      }
-
-      /// Check if the first pointer inside the container is valid, if sparse 
-      explicit constexpr operator bool (this const auto& self) noexcept requires Sparse {
-         return self.template GetInner<ID, TYPE>() != nullptr;
+      constexpr auto operator -> (this auto&& self) has_assumptions -> TYPE requires Sparse {
+         AssumeDev(not self.IsEmpty(), HERE(), "Container is empty");
+         return self.template GetInner<ID, TYPE>();
       }
    };
 

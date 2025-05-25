@@ -31,10 +31,10 @@ namespace Langulus
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
-            DEBUGGERY(if (location) Logger::Error("At ", location));
+            DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
             // Log error message                                        
-            Logger::Error("Assertion failure: ", m1, Forward<MORE>(mn)...);
+            Logger::ErrorRaw("Assertion failure: ", m1, Forward<MORE>(mn)...);
 
             // Throw                                                    
             throw E {m1, location};
@@ -59,10 +59,10 @@ namespace Langulus
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
-            DEBUGGERY(if (location) Logger::Warning("At ", location));
+            DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
             // Log error message                                        
-            Logger::Warning("Assertion failure: ", m1, Forward<MORE>(mn)...);
+            Logger::WarningRaw("Assertion failure: ", m1, Forward<MORE>(mn)...);
          }
       }
    }
@@ -86,10 +86,10 @@ namespace Langulus
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
-               DEBUGGERY(if (location) Logger::Error("At ", location));
+               DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
                // Log error message                                     
-               Logger::Error("User assumption failure: ", m1, Forward<MORE>(mn)...);
+               Logger::ErrorRaw("User assumption failure: ", m1, Forward<MORE>(mn)...);
 
                // Throw                                                 
                throw E {m1, location};
@@ -118,10 +118,10 @@ namespace Langulus
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
-               DEBUGGERY(if (location) Logger::Warning("At ", location));
+               DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
                // Log error message                                     
-               Logger::Warning("User assumption failure: ", m1, Forward<MORE>(mn)...);
+               Logger::WarningRaw("User assumption failure: ", m1, Forward<MORE>(mn)...);
             }
          }
       }
@@ -147,10 +147,10 @@ namespace Langulus
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
-               DEBUGGERY(if (location) Logger::Error("At ", location));
+               DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
                // Log error message                                     
-               Logger::Error("Dev assumption failure: ", m1, Forward<MORE>(mn)...);
+               Logger::ErrorRaw("Dev assumption failure: ", m1, Forward<MORE>(mn)...);
 
                // Throw                                                 
                throw E {m1, location};
@@ -179,10 +179,10 @@ namespace Langulus
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
-               DEBUGGERY(if (location) Logger::Warning("At ", location));
+               DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
                // Log error message                                     
-               Logger::Warning("Dev assumption failure: ", m1, Forward<MORE>(mn)...);
+               Logger::WarningRaw("Dev assumption failure: ", m1, Forward<MORE>(mn)...);
             }
          }
       }
@@ -208,10 +208,10 @@ namespace Langulus
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
-               DEBUGGERY(if (location) Logger::Error("At ", location));
+               DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
                // Log error message                                     
-               Logger::Error("Assumption level ", LEVEL, " failure: ", m1, Forward<MORE>(mn)...);
+               Logger::ErrorRaw("Assumption level ", LEVEL, " failure: ", m1, Forward<MORE>(mn)...);
 
                // Throw                                                 
                throw E {m1, location};
@@ -240,10 +240,10 @@ namespace Langulus
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
-               DEBUGGERY(if (location) Logger::Warning("At ", location));
+               DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
                // Log error message                                     
-               Logger::Warning("Assumption level ", LEVEL, " failure: ", m1, Forward<MORE>(mn)...);
+               Logger::WarningRaw("Assumption level ", LEVEL, " failure: ", m1, Forward<MORE>(mn)...);
             }
          }
       }

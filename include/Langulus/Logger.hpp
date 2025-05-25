@@ -96,14 +96,9 @@ namespace Langulus::Logger
    enum class Command : uint8_t {
       Clear,		// Clear the console                                  
       NewLine,		// Write a new line, with a timestamp and tabulation  
-      Pop,			// Pop the style, and apply previous style            
-      Push,			// Push the current style                             
-      PopAndPush, // Pop the style and push another, don't stylize yet  
       Invert,		// Inverts background and foreground colors           
       Reset,		// Reset the style                                    
       Stylize,    // Apply the last style                               
-      Tab,			// Tab once on a new line after this command          
-      Untab,		// Untab once, again on a new line after this command 
       Time,			// Write a short timestamp                            
       ExactTime,	// Write an exhaustive timestamp                      
    };
@@ -134,7 +129,7 @@ namespace Langulus::Logger
    using enum Emphasis;
    using enum Command;
 
-   /// Can be used to specify each intent's style and search patterns         
+   /// Can be used to specify each intent's style and grep patterns           
    struct IntentProperties {
       char  prefix[5];
       Style style;
@@ -142,47 +137,27 @@ namespace Langulus::Logger
    };
 
    /// Default intent styling                                                 
-   constexpr IntentProperties DefaultIntentStyle[int(Intent::Counter)] = {
-      {"|F| ", fmt::fg(fmt::terminal_color::red)},             // FatalError  
-      {"|E| ", fmt::fg(fmt::terminal_color::bright_red)},      // Error       
-      {"|W| ", fmt::fg(fmt::terminal_color::yellow)},          // Warning     
-      {"|V| ", fmt::fg(fmt::terminal_color::bright_black)},    // Verbose     
-      {"|I| ", fmt::fg(fmt::terminal_color::white)},           // Info        
-      {"|M| ", fmt::fg(fmt::terminal_color::bright_white)},    // Message     
+   using IntentTable = ::std::array<IntentProperties, int(Intent::Counter)>;
+   constexpr IntentTable DefaultIntentStyle {{
+      {"|F| ", fmt::fg(fmt::terminal_color::red           )},  // FatalError  
+      {"|E| ", fmt::fg(fmt::terminal_color::bright_red    )},  // Error       
+      {"|W| ", fmt::fg(fmt::terminal_color::yellow        )},  // Warning     
+      {"|V| ", fmt::fg(fmt::terminal_color::bright_black  )},  // Verbose     
+      {"|I| ", fmt::fg(fmt::terminal_color::white         )},  // Info        
+      {"|M| ", fmt::fg(fmt::terminal_color::bright_white  )},  // Message     
       {"|S| ", fmt::fg(fmt::terminal_color::bright_magenta)},  // Special     
-      {"|L| ", fmt::fg(fmt::terminal_color::cyan)},            // Flow        
-      {"|N| ", fmt::fg(fmt::terminal_color::bright_blue)},     // Input       
-      {"|T| ", fmt::fg(fmt::terminal_color::bright_yellow)},   // Network     
-      {"|O| ", fmt::fg(fmt::terminal_color::blue)},            // OS          
-      {"|P| ", fmt::fg(fmt::terminal_color::bright_green)},    // Prompt      
-      {"| | ", fmt::fg(fmt::terminal_color::bright_green)}     // Ignore      
-   };
+      {"|L| ", fmt::fg(fmt::terminal_color::cyan          )},  // Flow        
+      {"|N| ", fmt::fg(fmt::terminal_color::bright_blue   )},  // Input       
+      {"|T| ", fmt::fg(fmt::terminal_color::bright_yellow )},  // Network     
+      {"|O| ", fmt::fg(fmt::terminal_color::blue          )},  // OS          
+      {"|P| ", fmt::fg(fmt::terminal_color::bright_green  )},  // Prompt      
+      {"| | ", fmt::fg(fmt::terminal_color::bright_green  )}   // Ignore      
+   }};
 
    // Tabulator color and formatting customization                      
    constexpr Intent DefaultIntent = Intent::Info;
    constexpr Style  DefaultStyle  = fmt::fg(fmt::terminal_color::bright_black);
 
-   template<class...T> void Line   (T&&...) noexcept;
-   template<class...T> void Append (T&&...) noexcept;
-
-   template<class...T> void Fatal  (T&&...) noexcept;
-   template<class...T> void Error  (T&&...) noexcept;
-   template<class...T> void Warning(T&&...) noexcept;
-   template<class...T> void Verbose(T&&...) noexcept;
-   template<class...T> void Info   (T&&...) noexcept;
-   template<class...T> void Message(T&&...) noexcept;
-   template<class...T> void Special(T&&...) noexcept;
-   template<class...T> void Flow   (T&&...) noexcept;
-   template<class...T> void Input  (T&&...) noexcept;
-   template<class...T> void Network(T&&...) noexcept;
-   template<class...T> void OS     (T&&...) noexcept;
-   template<class...T> void Prompt (T&&...) noexcept;
-
-
-
-   ///                                                                        
-   /// Implementation details                                                 
-   ///                                                                        
    namespace Detail
    {
 
@@ -227,12 +202,12 @@ namespace Langulus::Logger
 
    } // namespace Langulus::Logger::Detail
 
+
    /// A general new-line write function that continues the last intent/style 
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Line(T&&...arguments) noexcept {
-      // Clear formatting, add new line, simple time stamp, and tabs    
+   void LineRaw(T&&...arguments) noexcept {
       Detail::FmtWrite("\n            ");
       (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
    }
@@ -241,7 +216,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Append(T&&...arguments) noexcept {
+   void AppendRaw(T&&...arguments) noexcept {
       (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
    }
 
@@ -249,7 +224,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Fatal([[maybe_unused]] T&&...arguments) noexcept {
+   void FatalRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
          LANGULUS(NOOP);
       #else
@@ -266,7 +241,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Error([[maybe_unused]] T&&...arguments) noexcept {
+   void ErrorRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
          LANGULUS(NOOP);
       #else
@@ -283,7 +258,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Warning([[maybe_unused]] T&&...arguments) noexcept {
+   void WarningRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
          LANGULUS(NOOP);
       #else
@@ -300,7 +275,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Verbose([[maybe_unused]] T&&...arguments) noexcept {
+   void VerboseRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
          LANGULUS(NOOP);
       #else
@@ -317,7 +292,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Info([[maybe_unused]] T&&...arguments) noexcept {
+   void InfoRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_INFOS
          LANGULUS(NOOP);
       #else
@@ -334,7 +309,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Message([[maybe_unused]] T&&...arguments) noexcept {
+   void MessageRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
          LANGULUS(NOOP);
       #else
@@ -351,7 +326,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Special([[maybe_unused]] T&&...arguments) noexcept {
+   void SpecialRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
          LANGULUS(NOOP);
       #else
@@ -368,7 +343,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Flow([[maybe_unused]] T&&...arguments) noexcept {
+   void FlowRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
          LANGULUS(NOOP);
       #else
@@ -385,7 +360,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Input([[maybe_unused]] T&&...arguments) noexcept {
+   void InputRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
          LANGULUS(NOOP);
       #else
@@ -402,7 +377,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Network([[maybe_unused]] T&&...arguments) noexcept {
+   void NetworkRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
          LANGULUS(NOOP);
       #else
@@ -419,7 +394,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void OS([[maybe_unused]] T&&...arguments) noexcept {
+   void OSRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_OS
          LANGULUS(NOOP);
       #else
@@ -436,7 +411,7 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void Prompt([[maybe_unused]] T&&...arguments) noexcept {
+   void PromptRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
          LANGULUS(NOOP);
       #else

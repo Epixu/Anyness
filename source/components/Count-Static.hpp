@@ -7,11 +7,15 @@ namespace Langulus::Anyness::Component
 {
 
    ///                                                                        
-   /// A compile-time count                                                   
-   /// Count shows how many elements inside a container are initialized       
-   /// Compile-time counting isn't really counting, and doesn't take up       
+   ///   A compile-time count                                                 
+   ///                                                                        
+   ///   Count shows how many elements inside a container are initialized     
+   ///   Compile-time counting isn't really counting, and doesn't take up     
    /// space, but is useful for defining single-element containers, that      
-   /// still need the GetCount() API to function alongside other components   
+   /// still need the API required to function alongside other components.    
+   ///   In these cases, count is equal to COUNT if container has a heap      
+   /// component that has been allocated. If no heap component exists, then   
+   /// the count is simply always COUNT.                                      
    ///                                                                        
    template<auto COUNT>
    struct CountStatic {
@@ -21,18 +25,28 @@ namespace Langulus::Anyness::Component
       using CountType = decltype(COUNT);
       using IndexType = Index::At<CountType>;
 
+      /// Equal to COUNT if container has a heap component that has been      
+      /// allocated. If no heap component exists, then the count is simply    
+      /// always COUNT                                                        
+      template<CT::Container C>
+      constexpr auto GetCount(this C const& self) noexcept -> CountType {
+         if constexpr (CT::HeapAllocated<C>)
+            return self.GetRaw() ? COUNT : CountType {};
+         else
+            return COUNT;
+      }
+      
       /// Always returns false                                                
-      constexpr bool IsEmpty() const noexcept { return false; }
-
-      /// Get the compile-time count                                          
-      constexpr auto GetCount() const noexcept { return COUNT; }
-
-      /// Having a compile-time count also implies a compile-time capacity    
-      constexpr auto GetCapacity() const noexcept { return COUNT; }
+      template<CT::Container C>
+      constexpr bool IsEmpty(this C const& self) noexcept {
+         return self.GetCount() == CountType {};
+      }
 
       /// Explicit boolean conversion to allow using containers in ifs        
-      /// In this case, it always returns true                                
-      constexpr explicit operator bool() const noexcept { return true; }
+      template<CT::Container C>
+      constexpr explicit operator bool(this C const& self) noexcept {
+         return self.GetCount() != CountType {};
+      }
    };
 
 } // namespace Langulus::Anyness::Component

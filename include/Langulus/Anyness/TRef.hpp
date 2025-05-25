@@ -10,6 +10,7 @@
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Typed-Static.hpp"
+#include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Comparison.hpp"
@@ -21,12 +22,13 @@ namespace Langulus::Anyness::Inner
 
    template<CT::Sparse T>
    using TRefBase = Container<
-      Com::HeapMovable<>,              // Data on the heap             
-      Com::OwnershipStack<>,           // Allocation is referenced     
-      Com::TypedStatic<DMeta, T>,      // Statically typed             
-      Com::Emplacement<>,              // Can be emplaced              
-      Com::Assignment<>,               // Can be reassigned            
-      Com::Comparison                  // Can be compared              
+      Com::HeapMovable<>,                 // Data on the heap          
+      Com::OwnershipStack<>,              // Allocation is referenced  
+      Com::TypedStatic<DMeta, Deptr<T>>,  // Statically typed          
+      Com::CountStatic<1u>,               // Statically sized          
+      Com::Emplacement<>,                 // Can be emplaced           
+      Com::Assignment<>,                  // Can be reassigned         
+      Com::Comparison                     // Can be compared           
    >;
 
 } // namespace Langulus::Anyness::Inner

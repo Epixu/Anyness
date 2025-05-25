@@ -13,6 +13,9 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0>
    struct HeapReference {
+      using CTTI_Component = Yes;
+      static constexpr bool HeapAllocated = true;
+
    protected:
       using Byte = ::std::uint8_t;
       template<CT::Container C>
@@ -34,8 +37,10 @@ namespace Langulus::Anyness::Component
       };
 
    public:
-      using CTTI_Component = Yes;
-      
+      /// A heap reference can not be default-initialized to a nullptr        
+      /// It must always reference a valid heap allocation                    
+      HeapReference() = delete;
+
       /// Get a direct access to the heap memory                              
       template<CT::Container C>
       auto GetRaw(this C&& self) noexcept {
@@ -62,7 +67,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam T - the type of data we're accessing                      
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
-      auto& Get(this C&& self) has_assumptions {
+      constexpr auto& Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>, "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references");
          using DC = Deref<C>;
@@ -71,9 +76,9 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        
             if (self.IsSparse())
-               return reinterpret_cast<void**&>(self.mSparseHeap);
+               return static_cast<void**&>(self.mHeap);
             else
-               return reinterpret_cast<void* &>(self.mHeap);
+               return static_cast<void* &>(self.mHeap);
          }
          else if constexpr (DC::TypeErased) {
             // Casting to a desired runtime type                        
@@ -81,30 +86,30 @@ namespace Langulus::Anyness::Component
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TT>)
-                  return **reinterpret_cast<TT**>(self.mSparseHeap);
+                  return **static_cast<TT**>(self.mHeap);
                else
-                  return  *reinterpret_cast<TT* >(self.mSparseHeap);
+                  return  *static_cast<TT* >(self.mHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
-                  return *reinterpret_cast<TT*>(self.mHeap);
+                  return *static_cast<TT*>(self.mHeap);
                else
-                  return  reinterpret_cast<TT&>(self.mHeap);
+                  return  static_cast<TT&>(self.mHeap);
             }
          }
          else {
             // Casting to a desired static type                         
             if constexpr (DC::Sparse) {
                if constexpr (CT::Dense<TT>)
-                  return **reinterpret_cast<TT**>(self.mSparseHeap);
+                  return **static_cast<TT**>(self.mHeap);
                else
-                  return  *reinterpret_cast<TT* >(self.mSparseHeap);
+                  return  *static_cast<TT* >(self.mHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
-                  return *reinterpret_cast<TT*>(self.mHeap);
+                  return *static_cast<TT*>(self.mHeap);
                else
-                  return  reinterpret_cast<TT&>(self.mHeap);
+                  return  static_cast<TT&>(self.mHeap);
             }
          }
       }

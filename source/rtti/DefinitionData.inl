@@ -92,6 +92,15 @@ namespace Langulus::RTTI
          definition.mDeptr = Reflect<Deptr<T>>();
       }
 
+      if constexpr (CT::Hashable<T>) {
+         // Generate a hashing function                                 
+         definition.mHasGetHashMethod = CT::HasGetHashMethod<T>;
+         definition.mHasher = [](const void* at) {
+            auto self = static_cast<const T*>(at);
+            return HashOf(*self);
+         };
+      }
+
       // Calculate the allocation page and table                        
       // It is the same, regardless if T is const or not                
       definition.mAllocationPage = CT::GetMinPool<T>();
@@ -121,14 +130,14 @@ namespace Langulus::RTTI
          // After all properties have been set - generate a unique id   
          definition.mHandle = Registry.GenerateHandle(&definition);
       
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Data ", Logger::Cyan, definition.mToken,
             " (ID: ", definition.mHandle, ") ", Logger::Green,
             " registered (LIB: ", definition.mBoundary, ")"
          );
          return definition.mHandle;
       #else
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Data ", Logger::Cyan, definition.mToken, Logger::Green, " registered)"
          );
          return DMeta {&definition};

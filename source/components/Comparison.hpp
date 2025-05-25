@@ -1,8 +1,10 @@
 #pragma once
 #include "../Container.hpp"
+#include "../logger/LoggerStateful.hpp"
 #include <Langulus/CT/Character.hpp>
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/Index.hpp>
+#include <Langulus/CT/Text.hpp>
 
 
 namespace Langulus::Anyness
@@ -15,6 +17,8 @@ namespace Langulus::Anyness
    concept RangeComparable = CT::Container<C> and (
       C::TypeErased or CT::UnfoldComparable<TypeOf<C>, T1, TN...>
    );
+
+   struct Text;
 
 } // namespace Langulus::Anyness
 
@@ -29,18 +33,174 @@ namespace Langulus::Anyness::Component
 
    private:
       template<CT::Container C>
-      using Count = typename C::CountType;
+      using Count = typename Deref<C>::CountType;
       template<CT::Container C>
-      using At = typename C::IndexType;
+      using At = typename Deref<C>::IndexType;
 
    public:
-      template<CT::Container C, CT::Container RHS>
-      bool operator == (this const C&, const RHS&);
-      template<CT::Container C, CT::NotContainer RHS>
-      bool operator == (this const C&, const RHS&) requires RangeComparable<C, RHS>;
+      /// Compare with any other kind of container                            
+      ///   @return true if containers match                                  
+      template<CT::Container LHS, CT::Container RHS>
+      constexpr bool operator == (this const LHS& lhs, const RHS& rhs) {
+         return lhs.Compare(rhs) or lhs.CompareSingleValue(rhs);
+      }
 
-      template<CT::Container C1, CT::Container C2>
-      bool Compare(this const C1&, const C2&);
+      /// Compare to any non-container data                                   
+      ///   @return true if data matches contained data                       
+      template<CT::Container LHS, CT::NotContainer RHS>
+      constexpr bool operator == (this const LHS& lhs, const RHS& rhs) requires RangeComparable<LHS, RHS> {
+         return lhs.CompareSingleValue(rhs);
+      }
+
+      /// Compare two containers for equality                                 
+      ///   @return true if the two containers are identical                  
+      template<CT::Container LHS, CT::Container RHS>
+      constexpr bool Compare(this const LHS& lhs, const RHS& rhs) {
+         // Toggle logging at compile-time in this function scope       
+         constexpr bool VERBOSE = false;
+         auto tab = Logger::VerboseScoped<VERBOSE>("Comparing ",
+            Logger::White, lhs.GetCount(), "x of ", lhs.GetType(),
+            Logger::Reset, " with ",
+            Logger::White, rhs.GetCount(), "x of ", rhs.GetType()
+         );
+
+         if constexpr (CT::Typed<LHS, RHS>) {
+            using LT = TypeOf<LHS>;
+            using RT = TypeOf<RHS>;
+
+            // Both blocks are statically typed - leverage it by using  
+            // static comparisons                                       
+            if constexpr (not CT::Similar<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
+               // Types are different                                   
+               Logger::Verbose<VERBOSE>(Logger::Red, "Types differ (typed): ",
+                  NameOf<LT>(), " != ", NameOf<RT>());
+               return false;
+            }
+            else {
+               // Types are similar                                     
+               if (lhs.GetRaw() == rhs.GetRaw()) {
+                  // Containers point to the same memory, so it's a     
+                  // matter of whether they have the same count         
+                  return lhs.GetCount() == rhs.GetCount();
+               }
+               else if (lhs.GetCount() != rhs.GetCount()) {
+                  // Early failure if count differs, no point in        
+                  // comparing anything at all                          
+                  Logger::Verbose<VERBOSE>(Logger::Red, "Different count (typed): ",
+                     lhs.GetCount(), " != ", rhs.GetCount());
+                  return false;
+               }
+
+               if (not lhs.CompareHashes(rhs)) {
+                  // Early failure if valid hashes differ - no point    
+                  // in comparing anything at all                       
+                  Logger::Verbose<VERBOSE>(Logger::Red, "Different hashes (typed)");
+                  return false;
+               }
+
+               if constexpr (CT::POD<LT>) {
+                  // Batch compare POD data, including pointers         
+                  const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
+                  if (not same) {
+                     Logger::Verbose<VERBOSE>(Logger::Red,
+                        "Different POD memory after memcmp (typed)");
+                     Logger::Verbose<VERBOSE>(Logger::Red,
+                        "Most likely padding bytes filled with junk - pack your struct: ", NameOf<LT>());
+                  }
+                  return same;
+               }
+               else if constexpr (CT::Comparable<LT>) {
+                  // Use comparison operator between all elements       
+                  auto t1 = lhs.GetRaw();
+                  auto t2 = rhs.GetRaw();
+                  const auto t1end = t1 + lhs.GetCount();
+                  while (t1 < t1end and *t1 == *t2) {
+                     ++t1;
+                     ++t2;
+                  }
+
+                  if (t1 != t1end) {
+                     Logger::Verbose<VERBOSE>(Logger::Red,
+                        "Element #", t1 - lhs.GetRaw(), " differs (typed)");
+                  }
+                  return t1 == t1end;
+               }
+               else {
+                  Logger::Verbose<VERBOSE>(Logger::Red,
+                     "Type not comparable (typed): ", NameOf<LT>());
+                  return false;
+               }
+            }
+         }
+         else {
+            const DMeta LT = lhs.GetType();
+            const DMeta RT = rhs.GetType();
+
+            // Both container are type-erased - all we can do is call   
+            // the reflected comparison functions                       
+            if (not LT.IsSimilar(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
+               Logger::Verbose<VERBOSE>(Logger::Red, "Types differ (type-erased): ",
+                  LT, " != ", RT);
+               return false;
+            }
+
+            // Types are similar                                        
+            if (lhs.GetRaw() == rhs.GetRaw()) {
+               // Containers point to the same memory, so it's a        
+               // matter of whether they have the same count            
+               return lhs.GetCount() == rhs.GetCount();
+            }
+            else if (lhs.GetCount() != rhs.GetCount()) {
+               Logger::Verbose<VERBOSE>(Logger::Red, "Different count (type-erased): ",
+                  lhs.GetCount(), " != ", rhs.GetCount());
+               return false;
+            }
+
+            if (not lhs.CompareHashes(rhs)) {
+               // Early failure if valid hashes differ - no point       
+               // in comparing anything at all                          
+               Logger::Verbose<VERBOSE>(Logger::Red, "Different hashes (type-erased)");
+               return false;
+            }
+
+            if (LT.IsPOD()) {
+               // Batch-compare memory if POD or sparse                 
+               const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
+               if (not same) {
+                  Logger::Verbose<VERBOSE>(Logger::Red,
+                     "Different POD memory after memcmp (type-erased)");
+                  Logger::Verbose<VERBOSE>(Logger::Red,
+                     "Most likely padding bytes filled with junk - pack your struct: ", LT);
+               }
+               return same;
+            }
+            else if (LT.HasComparer()) {
+               // Call compare operator for each element pair           
+               auto t1 = lhs.GetRaw();
+               auto t2 = rhs.GetRaw();
+               const auto t1end = t1 + lhs.GetBytesize();
+               const auto size = LT.GetSize();
+               while (t1 < t1end) {
+                  if (0 != LT.RunComparer(t1, t2)) {
+                     Logger::Verbose<VERBOSE>(Logger::Red,
+                        "Element #", (t1 - lhs.GetRaw()) / size, " differs (type-erased)");
+                     return false;
+                  }
+
+                  t1 += size;
+                  t2 += size;
+               }
+               return true;
+            }
+            else {
+               Logger::Verbose<VERBOSE>(Logger::Red,
+                  "Type not comparable (type-erased): ", LT);
+               return false;
+            }
+            return true;
+         }
+      }
+
       template<CT::Container C1, CT::Container C2>
       auto Matches(this const C1&, const C2&) noexcept -> Count<C1>;
 
@@ -175,6 +335,71 @@ namespace Langulus::Anyness::Component
       }
 
       bool Contains(const CT::NoIntent auto&) const;
+
+   protected:
+      /// Compare with one single value, if exactly one element is contained  
+      ///   @param rhs - the value to compare against                         
+      ///   @return true if elements are the same                             
+      template<CT::Container C, CT::NoIntent RT> LANGULUS(INLINED)
+      constexpr bool CompareSingleValue(this C const& self, const RT& rhs) {
+         if (self.GetCount() != 1)
+            return false;
+
+         if constexpr (CT::Typed<C>) {
+            // Both sides are statically typed                          
+            if constexpr (CT::Comparable<TypeOf<C>, RT>)
+               return *self.GetRaw() == rhs;
+            else
+               return false;
+         }
+         else {
+            // THIS is type-erased, do runtime type checks              
+            if (self.IsUntyped())
+               return false;
+
+            if constexpr (CT::Text<RT>) {
+               // Text types can be more loosely compared               
+               if (self.template IsSimilar<Text>()) {
+                  // Implicitly make a text container                   
+                  return self.template Get<Text>() == Text {Disown(rhs)};
+               }
+            }
+
+            if constexpr (CT::Container<RT>) {
+               // Containers can be more loosely compared               
+               if (self.IsSparse() or not self.IsDeep())
+                  return false;
+               return *self.GetDeep() == rhs;
+            }
+            else if constexpr (CT::Comparable<RT, RT>) {
+               // Non-deep element compare                              
+               if (self.template IsSimilar<RT>())
+                  return *self.template GetRaw<RT>() == rhs;
+               return false;
+            }
+            else return false;
+         }
+      }
+
+      /// Compare hashes of two containers                                    
+      ///   @tparam FORCE_REHASH - force hash recomputation in case no hash   
+      ///      was yet cached at the time of comparison                       
+      ///   @return true if hashes are the same                               
+      template<bool FORCE_REHASH = false, CT::Container LHS, CT::Container RHS> LANGULUS(INLINED)
+      constexpr bool CompareHashes(this LHS const& lhs, RHS const& rhs) {
+         if constexpr (not FORCE_REHASH
+         and requires {lhs.GetHashNoRecompute(); rhs.GetHashNoRecompute(); }) {
+            const auto lh = lhs.GetHashNoRecompute();
+            const auto rh = rhs.GetHashNoRecompute();
+            return lh and lh == rh;
+         }
+         else if constexpr (requires {lhs.GetHash(); rhs.GetHash(); }) {
+            const auto lh = lhs.GetHash();
+            const auto rh = rhs.GetHash();
+            return lh == rh;
+         }
+         else return false;
+      }
    };
 
 } // namespace Langulus::Anyness::Component

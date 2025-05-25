@@ -105,7 +105,7 @@ namespace Langulus::RTTI
       if (definition.mOperator.size()) {
          Registry.RegisterVerbOperator(definition.mOperator, RTTI::Boundary);
          const auto op1 = IsolateOperator(definition.mOperator);
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op1,
             " (ID: ", definition.mHandle, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
@@ -115,7 +115,7 @@ namespace Langulus::RTTI
       if (not definition.mOperatorReverse.empty()) {
          Registry.RegisterVerbOperatorReverse(definition.mOperatorReverse, RTTI::Boundary);
          const auto op2 = IsolateOperator(definition.mOperatorReverse);
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op2,
             " (ID: ", definition.mHandle, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
@@ -124,7 +124,7 @@ namespace Langulus::RTTI
 
       Registry.RegisterVerbToken(definition.mToken, RTTI::Boundary);
       if (definition.mTokenReverse.empty()) {
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mToken,
             " (ID: ", definition.mHandle, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
@@ -132,7 +132,7 @@ namespace Langulus::RTTI
       }
       else {
          Registry.RegisterVerbTokenReverse(definition.mTokenReverse, RTTI::Boundary);
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mToken, "/", definition.mTokenReverse,
             " (ID: ", definition.mHandle, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
@@ -142,7 +142,7 @@ namespace Langulus::RTTI
    #else
       if (definition.mOperator.size()) {
          const auto op1 = IsolateOperator(definition.mOperator);
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op1, Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
@@ -150,20 +150,20 @@ namespace Langulus::RTTI
 
       if (not definition.mOperatorReverse.empty()) {
          const auto op2 = IsolateOperator(definition.mOperatorReverse);
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op2, Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
 
       if (definition.mTokenReverse.empty()) {
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mToken, Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
       else {
-         Logger::Verbose(
+         Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mToken, "/", definition.mTokenReverse,
             Logger::Green, " registered (LIB: ", definition.mLibraryName, ")"
          );

@@ -200,7 +200,7 @@ namespace Langulus
       consteval auto NestedDecvq() {
          static_assert(not CT::Reference<T>, "T can't be a reference");
          using Stripped = Decvq<T>;
-         if constexpr (::std::same_as<T, Stripped>)
+         if constexpr (CT::Decayed<Stripped>)
             return static_cast<Stripped*>(nullptr);
          else if constexpr (::std::is_bounded_array_v<Stripped>)
             return static_cast<Deptr<decltype(NestedDecvq<Deext<Stripped>>())> (*) [::std::extent_v<Stripped>]>(nullptr);
@@ -226,8 +226,10 @@ namespace Langulus
    /// Always returns a pointer to the argument                               
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr decltype(auto) SparseCast(T&& a) noexcept {
-      if constexpr (CT::Sparse<T>) return (a);
-      else return &a;
+      if constexpr (CT::Sparse<T>)
+         return (a);
+      else
+         return &a;
    }
 
    /// Always returns a value reference to the argument                       

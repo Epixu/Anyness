@@ -15,6 +15,9 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0>
    struct HeapImmovable {
+      using CTTI_Component = Yes;
+      static constexpr bool HeapAllocated = true;
+
    protected:
       using Byte = ::std::uint8_t;
 
@@ -28,8 +31,6 @@ namespace Langulus::Anyness::Component
       Byte* mReusable = nullptr;
 
    public:
-      using CTTI_Component = Yes;
-
    #if LANGULUS(TESTING)
       auto GetReusable()      const noexcept { return mReusable;  }
       auto GetFrames()        const noexcept { return mHeapCount; }

@@ -111,7 +111,7 @@ namespace Langulus::Anyness
 
       /// Manual constructor                                                  
       ///   @param element - embedded element                                 
-      explicit constexpr THandleDisowned(Deref<T>* element) noexcept {
+      /*explicit*/ constexpr THandleDisowned(Deref<T>* element) noexcept {
          Com::HeapReference<>::mHeap = reinterpret_cast<uint8_t*>(element);
       }
 

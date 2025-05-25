@@ -24,6 +24,9 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0>
    struct HeapMovable {
+      using CTTI_Component = Yes;
+      static constexpr bool HeapAllocated = true;
+
    protected:
       template<unsigned, class>
       friend struct ReserveHeap;
@@ -43,7 +46,7 @@ namespace Langulus::Anyness::Component
       // The raw pointer                                                
       union {
          char*  mReadableHeap;
-         Byte*  mHeap = nullptr;
+         void*  mHeap = nullptr;
          void** mSparseHeap;
       };
       
@@ -405,17 +408,15 @@ namespace Langulus::Anyness::Component
       }
 
    public:
-      using CTTI_Component = Yes;
-
       /// Get a direct access to the heap memory                              
       ///   @returns the memory pointer                                       
       template<CT::Container C>
-      auto GetRaw(this C&& self) noexcept {
+      constexpr auto GetRaw(this C&& self) noexcept {
          using T = TypeOf<C>;
          if constexpr (CT::Mutable<C>)
-            return reinterpret_cast<      T*>(self.mHeap);
+            return static_cast<      T*>(self.mHeap);
          else
-            return reinterpret_cast<const T*>(self.mHeap);
+            return static_cast<const T*>(self.mHeap);
       }
 
       /// Get a direct access to the heap memory as a different type          
@@ -435,7 +436,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam T - the type of data we're accessing                      
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
-      auto& Get(this C&& self) has_assumptions {
+      constexpr auto& Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>, "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references");
          using DC = Deref<C>;
@@ -444,7 +445,7 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        
             if (self.IsSparse())
-               return reinterpret_cast<void**&>(self.mSparseHeap);
+               return reinterpret_cast<void**&>(self.mHeap);
             else
                return reinterpret_cast<void* &>(self.mHeap);
          }
@@ -454,9 +455,9 @@ namespace Langulus::Anyness::Component
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TT>)
-                  return **reinterpret_cast<TT**>(self.mSparseHeap);
+                  return **reinterpret_cast<TT**>(self.mHeap);
                else
-                  return  *reinterpret_cast<TT* >(self.mSparseHeap);
+                  return  *reinterpret_cast<TT* >(self.mHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
@@ -469,9 +470,9 @@ namespace Langulus::Anyness::Component
             // Casting to a desired static type                         
             if constexpr (DC::Sparse) {
                if constexpr (CT::Dense<TT>)
-                  return **reinterpret_cast<TT**>(self.mSparseHeap);
+                  return **reinterpret_cast<TT**>(self.mHeap);
                else
-                  return  *reinterpret_cast<TT* >(self.mSparseHeap);
+                  return  *reinterpret_cast<TT* >(self.mHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
@@ -545,8 +546,17 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       auto GetItem(this C&&) has_assumptions -> Deep<C>;
 
+      /// A safe way to get the first deep entry                              
+      /// Will utilize any statically typed deep containers, if available     
+      ///   @attention ignores sparseness                                     
+      ///   @return a pointer to the first deep item, or nullptr if not deep  
       template<CT::Container C>
-      auto GetDeep(this C&&) noexcept -> Deep<C>*;
+      auto GetDeep(this C&& self) noexcept -> Deep<C>* {
+         if constexpr (self.template Is<Deep<C>>)
+            return self.template Get<Deep<C>*>();
+         else
+            return nullptr;
+      }
 
       template<CT::Container C>
       auto GetResolved(this C&&) -> Deep<C>;

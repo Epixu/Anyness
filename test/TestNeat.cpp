@@ -69,23 +69,37 @@ SCENARIO("Data normalization", "[neat]") {
    static_assert(CT::IntentConstructibleAlt <Copied   <TMeta>>);
    static_assert(CT::IntentConstructibleAlt <Referred <TMeta>>);
    static_assert(CT::IntentConstructibleAlt <Cloned   <TMeta>>);
-                                                      
+                                           
+   static_assert(CT::CopyConstructible  <TMeta>);
+   static_assert(CT::ReferConstructible <TMeta>);
+   static_assert(CT::CloneConstructible <TMeta>);
+
    static_assert(CT::IntentConstructibleAlt <Copied   <TMany<Many>>>);
    static_assert(CT::IntentConstructibleAlt <Referred <TMany<Many>>>);
    static_assert(CT::IntentConstructibleAlt <Cloned   <TMany<Many>>>);
-                                                      
+                    
+   static_assert(CT::CopyConstructible  <TMany<Many>>);
+   static_assert(CT::ReferConstructible <TMany<Many>>);
+   static_assert(CT::CloneConstructible <TMany<Many>>);
+
    static_assert(CT::IntentConstructibleAlt <Copied   <TPair<TMeta, TMany<Many>>>>);
    static_assert(CT::IntentConstructibleAlt <Referred <TPair<TMeta, TMany<Many>>>>);
    static_assert(CT::IntentConstructibleAlt <Cloned   <TPair<TMeta, TMany<Many>>>>);
-
-   static_assert(CT::CopyConstructible  <TMapUnsorted<TMeta, TMany<Many>>>);
-   static_assert(CT::ReferConstructible <TMapUnsorted<TMeta, TMany<Many>>>);
-   static_assert(CT::CloneConstructible <TMapUnsorted<TMeta, TMany<Many>>>);
 
    static_assert(CT::MoveConstructible  <TPair<TMeta, TMany<Many>>>);
    static_assert(CT::CopyConstructible  <TPair<TMeta, TMany<Many>>>);
    static_assert(CT::ReferConstructible <TPair<TMeta, TMany<Many>>>);
    static_assert(CT::CloneConstructible <TPair<TMeta, TMany<Many>>>);
+
+   static_assert(CT::Intent<Copied<TMapUnsorted<TMeta, TMany<Many>>>>);
+   static_assert(CT::NotVoid<Copied<TMapUnsorted<TMeta, TMany<Many>>>>);
+   static_assert(requires (Copied<TMapUnsorted<TMeta, TMany<Many>>>&& arg) {
+      {IntentNew<true>(nullptr, arg)} -> CT::Supported;
+   });
+
+   static_assert(CT::CopyConstructible  <TMapUnsorted<TMeta, TMany<Many>>>);
+   static_assert(CT::ReferConstructible <TMapUnsorted<TMeta, TMany<Many>>>);
+   static_assert(CT::CloneConstructible <TMapUnsorted<TMeta, TMany<Many>>>);
 
 	GIVEN("An empty messy descriptor") {
       Many descriptor;

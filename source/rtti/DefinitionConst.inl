@@ -82,14 +82,14 @@ namespace Langulus::RTTI
       // After all properties have been set - generate a unique handle  
       definition.mHandle = Registry.GenerateHandle(&definition);
 
-      Logger::Verbose(
+      Logger::VerboseRaw(
          "Constant ", Logger::Yellow, definition.mToken,
          " (ID: ", definition.mHandle, ") ", Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
       return definition.mHandle;
    #else
-      Logger::Verbose(
+      Logger::VerboseRaw(
          "Constant ", Logger::Yellow, definition.mToken, Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );

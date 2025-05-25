@@ -148,7 +148,9 @@ namespace Langulus::Anyness
       ///   @tparam ID - the stack/heap ID                                    
       ///   @tparam TYPE - the type of the data to get                        
       template<unsigned ID, CT::NotVoid TYPE>
-      constexpr TYPE& GetInner() {
+      constexpr auto& GetInner() has_assumptions {
+         AssumeDev(not IsEmpty(), HERE(), "Container is empty");
+
          if constexpr (HasComponent<Com::HeapMovable<ID>>)
             return Com::HeapMovable<ID>::template Get<TYPE>();
          else if constexpr (HasComponent<Com::HeapImmovable<ID>>)
@@ -168,7 +170,9 @@ namespace Langulus::Anyness
       }
 
       template<unsigned ID, CT::NotVoid TYPE>
-      constexpr TYPE& GetInner() const {
+      constexpr auto const& GetInner() const has_assumptions {
+         AssumeDev(not IsEmpty(), HERE(), "Container is empty");
+
          if constexpr (HasComponent<Com::HeapMovable<ID>>)
             return Com::HeapMovable<ID>::template Get<TYPE>();
          else if constexpr (HasComponent<Com::HeapImmovable<ID>>)
@@ -231,5 +235,10 @@ namespace Langulus::CT
    template<class T1, class...TN>
    concept IndexedLinearly = Container<T1, TN...>
        and Deref<T1>::Indexed and (Deref<TN>::Indexed and ...);
+   
+   /// Check if listed types are containers with any kind of heap memory      
+   template<class T1, class...TN>
+   concept HeapAllocated = Container<T1, TN...>
+       and Deref<T1>::HeapAllocated and (Deref<TN>::HeapAllocated and ...);
 
 } // namespace Langulus::CT

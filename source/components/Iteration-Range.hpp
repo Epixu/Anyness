@@ -1,7 +1,9 @@
 #pragma once
 #include "../Container.hpp"
 #include "../Iterator.hpp"
+#include <Langulus/Sequence.hpp>
 #include <ranges>
+#include <tuple>
 
 
 namespace Langulus::Anyness::Component
@@ -22,6 +24,62 @@ namespace Langulus::Anyness::Component
       auto begin()  { return range.rbegin(); }
       auto end()    { return range.rend();   }
    };
+
+   template<::std::ranges::range C>
+   RangeReverse(C&) -> RangeReverse<C>;
+
+
+   ///                                                                        
+   ///   Iterate multiple containers with the same ranged-for                 
+   ///                                                                        
+   template<::std::ranges::range...C>
+   struct RangeTogether {
+      static_assert(sizeof...(C) > 1, "RangeTogether needs at least two containers");
+      ::std::tuple<C&...> range;
+
+      RangeTogether(C&...a) : range {a...} {}
+
+      struct WrapBegin {
+      protected:
+         using Type = ::std::tuple<decltype(Fake<C>().begin())...>;
+         Type mIt;
+
+      public:
+         auto& one() { return ::std::get<0>(mIt); }
+         auto& two() { return ::std::get<2>(mIt); }
+
+         WrapBegin(const Type& it) : mIt {it} {}
+
+         bool operator == (const WrapBegin& rhs) const noexcept {
+            return mIt == rhs.mIt;
+         }
+         bool operator == (const IteratorEnd&) const noexcept {
+            return mIt == IteratorEnd {};
+         }
+
+         WrapBegin& operator *  () const noexcept { return *this; }
+         WrapBegin& operator -> () const noexcept { return *this; }
+
+         WrapBegin& operator ++ ()    noexcept { ++mIt; return *this; }
+         WrapBegin  operator ++ (int) noexcept { return mIt++; }
+      };
+
+   public:
+      WrapBegin begin() {
+         return LANGULUS_SEQUENCE(sizeof...(C), {
+            return WrapBegin {{::std::get<I>(range).begin()...}};
+         });
+      }
+
+      WrapBegin end() {
+         return LANGULUS_SEQUENCE(sizeof...(C), {
+            return WrapBegin {{::std::get<I>(range).end()...}};
+         });
+      }
+   };
+   
+   template<::std::ranges::range...C>
+   RangeTogether(C&...) -> RangeTogether<C...>;
 
 
    ///                                                                        
@@ -54,8 +112,8 @@ namespace Langulus::Anyness::Component
             return mIt == IteratorEnd {};
          }
 
-         decltype(auto) operator *  () const noexcept { return mIt; }
-         decltype(auto) operator -> () const noexcept { return mIt; }
+         Type& operator *  () const noexcept { return mIt; }
+         Type& operator -> () const noexcept { return mIt; }
 
          WrapBegin& operator ++ ()    noexcept { ++mIt; return *this; }
          WrapBegin  operator ++ (int) noexcept { return mIt++; }
@@ -65,7 +123,10 @@ namespace Langulus::Anyness::Component
       auto begin() { return WrapBegin {range.begin()}; }
       auto end  () { return range.end(); }
    };
-   
+
+   template<::std::ranges::range C>
+   RangeIterator(C&) -> RangeIterator<C>;
+
 
    ///                                                                        
    ///   Iterate using handles                                                
@@ -97,8 +158,8 @@ namespace Langulus::Anyness::Component
             return mIt == IteratorEnd {};
          }
 
-         decltype(auto) operator *  () const noexcept { return mIt; }
-         decltype(auto) operator -> () const noexcept { return mIt; }
+         Type& operator *  () const noexcept { return mIt; }
+         Type& operator -> () const noexcept { return mIt; }
 
          WrapBegin& operator ++ ()    noexcept { ++mIt; return *this; }
          WrapBegin  operator ++ (int) noexcept { return mIt++; }
@@ -106,8 +167,11 @@ namespace Langulus::Anyness::Component
 
    public:
       auto begin() { return WrapBegin {range.GetHandle()}; }
-      auto end  () { return range.end(); }
+      auto end  () { return IteratorEnd {}; }
    };
+
+   template<CT::Container C>
+   RangeHandle(C&) -> RangeHandle<C>;
 
 
    ///                                                                        

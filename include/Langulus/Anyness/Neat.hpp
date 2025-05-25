@@ -6,10 +6,11 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "Many.hpp"
 #include "TMany.hpp"
 #include "TMap.hpp"
 #include "Construct.hpp"
-#include <Langulus/Tag.hpp>
+#include "Tag.hpp"
 
 
 namespace Langulus::Anyness

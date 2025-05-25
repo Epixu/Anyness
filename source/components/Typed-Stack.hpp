@@ -220,9 +220,16 @@ namespace Langulus::Anyness::Component
       ///   @return the size of a single element in bytes                     
       constexpr bool GetStride() const noexcept {
          if constexpr (TypeErased)
-            return mType.GetStride();
+            return mType.GetSize();
          else
             return sizeof(TYPE);
+      }
+
+      /// Get the size of the type times the contained elements               
+      ///   @return the size of all elements in bytes                         
+      template<CT::Container C>
+      constexpr bool GetBytesize(this C const& self) noexcept {
+         return self.GetStride() * self.GetCount();
       }
 
       template<bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
