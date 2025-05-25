@@ -115,22 +115,40 @@ namespace Langulus::Anyness
    struct Container : COMPONENTS... {
       using CTTI_Container = Yes;
       using ComponentList = Types<COMPONENTS...>;
+      class InitList {};
 
       constexpr Container() noexcept = default;
       explicit constexpr Container(const Container&) noexcept = default;
       explicit constexpr Container(Container&&) noexcept = default;
 
+      /// Intent constructor that accepts any other kind of container         
+      /// Similar components will be constructed with the desired intent,     
+      /// the rest will be default-initialized if possible                    
       template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
-      constexpr Container(I<C>&&) {
-         //TODO init all compatible components, default-init the missing ones
-      }
+      constexpr Container(I<C>&& other)
+         : COMPONENTS {C::template HasComponent<COMPONENTS>
+            ? other.template Forward<COMPONENTS>()
+            : other.Nest(COMPONENTS {})
+         }... {}
+
+      /// Initialization tag dispatch constructor, for manually initializing  
+      /// component list                                                      
+      template<class...ARGUMENT>
+      constexpr Container(InitList, ARGUMENT&&...argument)
+         : COMPONENTS {::std::forward<ARGUMENT>(argument)}... {}
 
       constexpr Container& operator = (const Container&) noexcept = default;
       constexpr Container& operator = (Container&&) noexcept = default;
 
+      /// Intent assignment that accepts any other kind of container          
+      /// Similar components will be reassigned with the desired intent,      
+      /// the rest will be default-reassigned if possible                     
       template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
-      constexpr Container& operator = (I<C>&&) {
-         //TODO init all compatible components, default-init the missing ones
+      constexpr Container& operator = (I<C>&& other) {
+         (COMPONENTS::operator = (C::template HasComponent<COMPONENTS>
+            ? other.template Forward<COMPONENTS>()
+            : other.Nest(COMPONENTS {})
+         ), ...);
          return *this;
       }
 

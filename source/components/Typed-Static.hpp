@@ -30,9 +30,12 @@ namespace Langulus::Anyness::Component
       static constexpr bool Sparse     = CT::Sparse<TYPE>;
       static constexpr bool Dense      = CT::Dense<TYPE>;
 
-      /// Get the type definition                                             
+      /// Get the reflected type definition                                   
       ///   @return the definition                                            
       T GetType() const noexcept { return MetaOf<TYPE>(); }
+
+      /// Get the reflected type name                                         
+      constexpr auto GetName() const noexcept { return NameOf<TYPE>(); }
 
       /// Statically typed containers are always typed                        
       constexpr bool IsTyped()   const noexcept { return true;  }

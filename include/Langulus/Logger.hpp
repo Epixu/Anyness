@@ -207,33 +207,39 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void LineRaw(T&&...arguments) noexcept {
-      Detail::FmtWrite("\n            ");
-      (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+   constexpr void LineRaw(T&&...arguments) noexcept {
+      if (not ::std::is_constant_evaluated()) {
+         Detail::FmtWrite("\n            ");
+         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+      }
    }
 
    /// A general same-line write function that continues the last style/intent
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void AppendRaw(T&&...arguments) noexcept {
-      (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+   constexpr void AppendRaw(T&&...arguments) noexcept {
+      if (not ::std::is_constant_evaluated()) {
+         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+      }
    }
 
    /// Write a new-line fatal error                                           
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void FatalRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void FatalRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::FatalError)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::FatalError)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::FatalError)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::FatalError)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -241,16 +247,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void ErrorRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void ErrorRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Error)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Error)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Error)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Error)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -258,16 +266,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void WarningRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void WarningRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Warning)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Warning)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Warning)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Warning)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -275,16 +285,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void VerboseRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void VerboseRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Verbose)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Verbose)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Verbose)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Verbose)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -292,16 +304,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void InfoRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void InfoRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_INFOS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Info)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Info)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Info)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Info)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -309,16 +323,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void MessageRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void MessageRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Message)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Message)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Message)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Message)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -326,16 +342,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void SpecialRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void SpecialRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Special)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Special)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Special)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Special)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -343,16 +361,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void FlowRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void FlowRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Flow)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Flow)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Flow)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Flow)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -360,16 +380,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void InputRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void InputRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Input)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Input)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Input)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Input)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -377,16 +399,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void NetworkRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void NetworkRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Network)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Network)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Network)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Network)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -394,16 +418,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void OSRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void OSRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_OS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::OS)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::OS)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::OS)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::OS)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 
@@ -411,16 +437,18 @@ namespace Langulus::Logger
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<class...T> LANGULUS(INLINED)
-   void PromptRaw([[maybe_unused]] T&&...arguments) noexcept {
+   constexpr void PromptRaw([[maybe_unused]] T&&...arguments) noexcept {
       #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
          LANGULUS(NOOP);
       #else
-         fmt::print("\n");
-         Detail::FmtPrintStyle(DefaultStyle);
-         Detail::FmtPrintTime();
-         Detail::FmtWrite(DefaultIntentStyle[int(Intent::Prompt)].prefix);
-         Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Prompt)].style);
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         if (not ::std::is_constant_evaluated()) {
+            fmt::print("\n");
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtPrintTime();
+            Detail::FmtWrite(DefaultIntentStyle[int(Intent::Prompt)].prefix);
+            Detail::FmtPrintStyle(DefaultIntentStyle[int(Intent::Prompt)].style);
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       #endif
    }
 

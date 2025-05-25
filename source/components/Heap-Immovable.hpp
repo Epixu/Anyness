@@ -17,6 +17,7 @@ namespace Langulus::Anyness::Component
    struct HeapImmovable {
       using CTTI_Component = Yes;
       static constexpr bool HeapAllocated = true;
+      static constexpr bool HeapCanBeNull = true;
 
    protected:
       using Byte = ::std::uint8_t;

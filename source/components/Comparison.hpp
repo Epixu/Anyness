@@ -59,9 +59,9 @@ namespace Langulus::Anyness::Component
          // Toggle logging at compile-time in this function scope       
          constexpr bool VERBOSE = false;
          auto tab = Logger::VerboseScoped<VERBOSE>("Comparing ",
-            Logger::White, lhs.GetCount(), "x of ", lhs.GetType(),
+            Logger::White, lhs.GetCount(), "x of ", lhs.GetName(),
             Logger::Reset, " with ",
-            Logger::White, rhs.GetCount(), "x of ", rhs.GetType()
+            Logger::White, rhs.GetCount(), "x of ", rhs.GetName()
          );
 
          if constexpr (CT::Typed<LHS, RHS>) {
@@ -374,7 +374,7 @@ namespace Langulus::Anyness::Component
             else if constexpr (CT::Comparable<RT, RT>) {
                // Non-deep element compare                              
                if (self.template IsSimilar<RT>())
-                  return *self.template GetRaw<RT>() == rhs;
+                  return self.template Get<RT>() == rhs;
                return false;
             }
             else return false;

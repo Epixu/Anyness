@@ -1,16 +1,17 @@
 #pragma once
-#include "../Container.hpp"
+#include "Heap-Reference.hpp"
 #include "../Allocator.hpp"
+#include <Langulus/CT/Index.hpp>
+#include <Langulus/CT/Pooled.hpp>
+#include <Langulus/CT/Resolvable.hpp>
+#include "Iteration-Range.hpp"
+
+/*#include "../Container.hpp"
 #include "../rtti/Intent.hpp"
 #include <Langulus/TypeOf.hpp>
-#include <Langulus/CT/Pooled.hpp>
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
-#include <Langulus/CT/Resolvable.hpp>
-#include <Langulus/CT/Index.hpp>
-//#include "DeepOwnership.hpp"
-#include "Iteration-Range.hpp"
-#include <algorithm>
+#include <algorithm>*/
 
 
 namespace Langulus::Anyness::Component
@@ -23,33 +24,28 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID - multiple heap interfaces are supported                  
    ///                                                                        
    template<unsigned ID = 0>
-   struct HeapMovable {
-      using CTTI_Component = Yes;
-      static constexpr bool HeapAllocated = true;
+   struct HeapMovable : HeapReference<ID> {
+      static constexpr bool HeapCanBeNull = true;
 
    protected:
       template<unsigned, class>
       friend struct ReserveHeap;
 
-      using Byte = ::std::uint8_t;
-      template<CT::Container C>
-      using View = typename C::ViewType;
       template<CT::Container C>
       using Count = typename C::CountType;
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
       template<CT::Container C>
-      using Deep = typename Deref<C>::DeepType;
-      template<CT::Container C>
       using Pick = Tif<CT::Mutable<C>, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
+      template<CT::Container C>
+      using Deep = typename Deref<C>::DeepType;
 
-      // The raw pointer                                                
-      union {
-         char*  mReadableHeap;
-         void*  mHeap = nullptr;
-         void** mSparseHeap;
-      };
+      /*using Byte = ::std::uint8_t;*/
+      template<CT::Container C>
+      using View = typename C::ViewType;
       
+      
+            
       /// Get a size based on reflected allocation page and count             
       ///   @param count - the number of elements to request                  
       ///   @return both the provided byte size and reserved count            
@@ -408,81 +404,9 @@ namespace Langulus::Anyness::Component
       }
 
    public:
-      /// Get a direct access to the heap memory                              
-      ///   @returns the memory pointer                                       
-      template<CT::Container C>
-      constexpr auto GetRaw(this C&& self) noexcept {
-         using T = TypeOf<C>;
-         if constexpr (CT::Mutable<C>)
-            return static_cast<      T*>(self.mHeap);
-         else
-            return static_cast<const T*>(self.mHeap);
-      }
+      constexpr HeapMovable() noexcept
+         : HeapReference<ID> {nullptr} {}
 
-      /// Get a direct access to the heap memory as a different type          
-      ///   @returns the memory pointer                                       
-      template<class T, CT::Container C>
-      auto GetRawAs(this C&& self) noexcept {
-         if constexpr (CT::Mutable<C>)
-            return reinterpret_cast<      T*>(self.mHeap);
-         else
-            return reinterpret_cast<const T*>(self.mHeap);
-      }
-
-      /// Get first element pointer or reference, depending on T              
-      /// This is a lower-level routine that does only sparseness checking    
-      /// No conversion or copying occurs, only pointer arithmetic            
-      ///   @attention assumes the container is typed                         
-      ///   @tparam T - the type of data we're accessing                      
-      ///      use void to use the type of the container, if statically typed 
-      template<class T = void, CT::Container C>
-      constexpr auto& Get(this C&& self) has_assumptions {
-         static_assert(not CT::Handle<T>, "T can't be a handle");
-         static_assert(not CT::Reference<T>, "Strip references");
-         using DC = Deref<C>;
-         using TT = DecvqAll<Tif<CT::Void<T>, TypeOf<C>, T>>;
-
-         if constexpr (CT::Void<TT>) {
-            // Type-erased reference, no casting                        
-            if (self.IsSparse())
-               return reinterpret_cast<void**&>(self.mHeap);
-            else
-               return reinterpret_cast<void* &>(self.mHeap);
-         }
-         else if constexpr (DC::TypeErased) {
-            // Casting to a desired runtime type                        
-            AssumeDev(self.mType, HERE(), "Block is not typed");
-
-            if (self.IsSparse()) {
-               if constexpr (CT::Dense<TT>)
-                  return **reinterpret_cast<TT**>(self.mHeap);
-               else
-                  return  *reinterpret_cast<TT* >(self.mHeap);
-            }
-            else {
-               if constexpr (CT::Dense<TT>)
-                  return *reinterpret_cast<TT*>(self.mHeap);
-               else
-                  return  reinterpret_cast<TT&>(self.mHeap);
-            }
-         }
-         else {
-            // Casting to a desired static type                         
-            if constexpr (DC::Sparse) {
-               if constexpr (CT::Dense<TT>)
-                  return **reinterpret_cast<TT**>(self.mHeap);
-               else
-                  return  *reinterpret_cast<TT* >(self.mHeap);
-            }
-            else {
-               if constexpr (CT::Dense<TT>)
-                  return *reinterpret_cast<TT*>(self.mHeap);
-               else
-                  return  reinterpret_cast<TT&>(self.mHeap);
-            }
-         }
-      }
-      
       /// Return a handle to the first element                                
       ///   @attention assumes T is of proper sparseness if not void          
       ///   @tparam T - the type of data we're accessing                      

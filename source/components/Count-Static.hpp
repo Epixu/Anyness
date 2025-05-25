@@ -30,10 +30,13 @@ namespace Langulus::Anyness::Component
       /// always COUNT                                                        
       template<CT::Container C>
       constexpr auto GetCount(this C const& self) noexcept -> CountType {
-         if constexpr (CT::HeapAllocated<C>)
-            return self.GetRaw() ? COUNT : CountType {};
-         else
-            return COUNT;
+         if constexpr (CT::HeapAllocated<C>) {
+            if constexpr (C::HeapCanBeNull)
+               return self.GetRaw() ? COUNT : CountType {};
+            else
+               return COUNT;
+         }
+         else return COUNT;
       }
       
       /// Always returns false                                                

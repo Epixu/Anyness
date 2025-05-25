@@ -138,6 +138,8 @@ namespace Langulus::RTTI
          new (this) MetaData {*rhs};
          return *this;
       }
+
+      using Inner::MetaDataBase::operator bool;
    };
 
    using DMeta = MetaData;

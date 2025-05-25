@@ -54,6 +54,14 @@ namespace Langulus::Anyness::Component
       ///   @return the contained type                                        
       constexpr T GetType() const noexcept { return mType; }
 
+      /// Get the reflected type name                                         
+      constexpr auto GetName() const noexcept {
+         if constexpr (TypeErased)
+            return mType.GetName();
+         else
+            return NameOf<TYPE>();
+      }
+
       /// Check if block has a data type                                      
       ///   @return true if data contained in this pack is specified          
       constexpr bool IsTyped() const noexcept {

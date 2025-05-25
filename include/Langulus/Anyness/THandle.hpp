@@ -9,6 +9,7 @@
 #include "../../../source/components/Heap-Reference.hpp"
 #include "../../../source/components/DeepOwnership-Stack.hpp"
 #include "../../../source/components/Typed-Static.hpp"
+#include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "TOwn.hpp"
@@ -25,6 +26,7 @@ namespace Langulus::Anyness
          Com::HeapReference<>,
          Com::DeepOwnershipStack<>,
          Com::TypedStatic<DMeta, Deref<T>>,
+         Com::CountStatic<1u>,
          Com::Assignment<>,
          Com::Comparison
       >;
@@ -33,6 +35,7 @@ namespace Langulus::Anyness
       using THandleDisownedBase = Container<
          Com::HeapReference<>,
          Com::TypedStatic<DMeta, Deref<T>>,
+         Com::CountStatic<1u>,
          Com::Assignment<>,
          Com::Comparison
       >;
@@ -66,7 +69,7 @@ namespace Langulus::Anyness
 
       ///                                                                     
       /// Construction                                                        
-      THandle() = delete;
+      //THandle() = delete;
       explicit constexpr THandle(const THandle&) noexcept = default;
       explicit constexpr THandle(THandle&&) noexcept = default;
 
@@ -77,10 +80,8 @@ namespace Langulus::Anyness
 
       /// Manual constructor                                                  
       ///   @param element - embedded element                                 
-      explicit constexpr THandle(Deref<T>* data, AllocationPtr* entry) noexcept {
-         Com::HeapReference<>::mHeap = reinterpret_cast<uint8_t*>(data);
-         Com::DeepOwnershipStack<>::mEntries = entry;
-      }
+      explicit constexpr THandle(Deref<T>* data, AllocationPtr* entry) noexcept
+         : Base {data, entry} {}
 
       using Com::Comparison::operator ==;
    };
@@ -100,7 +101,7 @@ namespace Langulus::Anyness
 
       ///                                                                     
       /// Construction                                                        
-      THandleDisowned() = delete;
+      //THandleDisowned() = delete;
       explicit constexpr THandleDisowned(const THandleDisowned&) noexcept = default;
       explicit constexpr THandleDisowned(THandleDisowned&&) noexcept = default;
 
@@ -111,9 +112,8 @@ namespace Langulus::Anyness
 
       /// Manual constructor                                                  
       ///   @param element - embedded element                                 
-      /*explicit*/ constexpr THandleDisowned(Deref<T>* element) noexcept {
-         Com::HeapReference<>::mHeap = reinterpret_cast<uint8_t*>(element);
-      }
+      /*explicit*/ constexpr THandleDisowned(Deref<T>* element) noexcept 
+         : Base {typename Base::InitList {}, element} {}
 
       using Com::Comparison::operator ==;
    };
