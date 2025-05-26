@@ -31,20 +31,20 @@ namespace Langulus::RTTI
 
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
-      struct MetaVerbNaked {
-      private:
-         const DefinitionVerb* mDefinition;
+      struct MetaVerbNaked : MetaNaked<DefinitionVerb> {
+         using MetaNaked<DefinitionVerb>::MetaNaked;
+         using MetaNaked<DefinitionVerb>::operator =;
+         using MetaNaked<DefinitionVerb>::operator bool;
 
-      public:
          template<class, class...>
          bool IsExact() const noexcept;
-         bool IsExact(const MetaVerbNaked&) const noexcept;
-
-         /// Compare if two tags match exactly                                
-         bool operator == (const MetaVerbNaked& rhs) const noexcept {
-            return IsExact(rhs);
-         }
       };
+
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using MetaVerbBase = MetaVerbStructured_8_8;
+   #else
+      using MetaVerbBase = MetaVerbNaked;
+   #endif
 
    } // namespace Langulus::RTTI::Inner
 
@@ -56,19 +56,15 @@ namespace Langulus::RTTI
    /// either packed to a smaller size, or carry a lot of meta information    
    /// in the ID itself to avoid indirection - all this is configurable.      
    ///                                                                        
-   struct MetaVerb 
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      : Inner::MetaVerbStructured_8_8
-   #else
-      : Inner::MetaVerbNaked
-   #endif
-   {
+   struct MetaVerb : Inner::MetaVerbBase {
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
-      constexpr MetaVerb() noexcept = default;
-      constexpr MetaVerb(::std::nullptr_t) noexcept {}
-      constexpr MetaVerb(const DefinitionVerb*) noexcept;
+      ignore_all_intents(MetaVerb);
+
+      using Inner::MetaVerbBase::MetaVerbBase;
+      using Inner::MetaVerbBase::operator =;
+      using Inner::MetaVerbBase::operator bool;
    };
 
    using VMeta = MetaVerb;

@@ -118,6 +118,9 @@ namespace Langulus::Anyness
       using ComponentList = Types<COMPONENTS...>;
       using InitList = Sequence<sizeof...(COMPONENTS)>;
       
+      template<CT::Component...MORE_COMPONENTS>
+      using AddComponents = Container<COMPONENTS..., MORE_COMPONENTS...>;
+
       /// Maps one unfold expression onto another of different length, and    
       /// returns a 'FALLBACK' instance if index goes out of range            
       template<class FALLBACK, unsigned INDEX, class A1, class...AN>

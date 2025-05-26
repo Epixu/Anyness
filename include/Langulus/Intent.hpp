@@ -9,7 +9,7 @@
 #include "TypeOf.hpp"
 #include "CT/Derived.hpp"
 #include "CT/POD.hpp"
-#include <utility>
+//#include <utility>
 
 
 namespace Langulus::CTTI
@@ -85,6 +85,22 @@ namespace Langulus::CT
 
 namespace Langulus
 {
+   
+   /// Shed only the intent from a type, if any                               
+   template<class T>
+   using Deint = Tif<CT::Intent<Deref<T>>, TypeOf<T>, T>;
+
+   /// Decay an intent to the contained data                                  
+   ///   @param what - the instance to decay                                  
+   ///   @return a reference (preferably) or a copy of the inner data         
+   template<class T> LANGULUS(ALWAYS_INLINED)
+   constexpr decltype(auto) DeintCast(T&& what) noexcept {
+      if constexpr (CT::Intent<T>)
+         return static_cast<TypeOf<T>>(what);
+      else
+         return FWD(what);
+   }
+
    namespace Inner
    {
 
@@ -111,20 +127,25 @@ namespace Langulus
    /// to refer to data explicitly                                            
    ///   @tparam T - the type to refer                                        
    template<class T>
-   struct Referred final : Inner::CommonIntent<0, true, false> {
+   struct Refer final : Inner::CommonIntent<0, true, false> {
    private:
       const T& mValue;
 
    public:
       using CTTI_Typed = decltype(mValue);
 
-      Referred() = delete;
-      explicit constexpr Referred(const Referred&) noexcept = default;
-      explicit constexpr Referred(Referred&&) noexcept = default;
+      template<class ALT>
+      using Retype = Refer<Decq<Deref<Deint<ALT>>>>;
+
+      Refer() = delete;
 
       LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Referred(const T& value) noexcept
-         : mValue {value} {
+      explicit constexpr Refer(const T& value) noexcept : mValue {value} {
+         static_assert(CT::NoIntent<T>, "Can't nest intents");
+      }
+      
+      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      explicit constexpr Refer(I&& value) noexcept : mValue {value.mValue} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
@@ -143,74 +164,40 @@ namespace Langulus
          if constexpr (CT::Aggregate<ALT_T>)
             return static_cast<const ALT_T&>(mValue);
          else
-            return Referred<ALT_T> {mValue};
+            return Refer<ALT_T> (static_cast<const ALT_T&>(mValue));
       }
 
       /// Refer something else                                                
       ///   @param value - the value to refer (can be an intent)              
       ///   @return the referred value, disregarding previous intent          
-      LANGULUS(ALWAYS_INLINED)
-      static constexpr decltype(auto) Nest(auto&& value) noexcept {
-         using ALT = Decq<Deref<decltype(value)>>;
-
+      template<class ALT_T> LANGULUS(ALWAYS_INLINED)
+      static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
          // Aggregates don't play well with intents, so if type is an   
          // aggregate, use the standard copy semantics                  
-         if constexpr (CT::Intent<ALT>) {
-            using ALT_T = TypeOf<ALT>;
-
-            if constexpr (CT::Aggregate<ALT_T>)
-               return *value;
-            else
-               return Referred<TypeOf<ALT>> {*value};
-         }
-         else {
-            if constexpr (CT::Aggregate<ALT>)
-               return value;
-            else
-               return Referred<ALT> {value};
-         }
-      }
-
-      template<class ALT>
-      using As = Tif<CT::Intent<ALT>, Referred<TypeOf<ALT>>, Referred<ALT>>;
-
-      LANGULUS(ALWAYS_INLINED)
-      const T& operator * () const noexcept { return mValue; }
-
-      LANGULUS(ALWAYS_INLINED)
-      auto operator -> () const noexcept {
-         if constexpr (CT::Sparse<T>)
-            return mValue;
+         if constexpr (CT::Aggregate<ALT_T>)
+            return DeintCast(value);
          else
-            return &mValue;
+            return Retype<ALT_T> (DeintCast(value));
       }
+
+      LANGULUS(ALWAYS_INLINED)
+      constexpr const T& operator * () const noexcept { return mValue; }
+
+      LANGULUS(ALWAYS_INLINED)
+      constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
 
       /// Implicitly collapse the intent                                      
-      /// This way this wrapper is seamlessly integrated with the standard    
+      /// This way the wrapper is seamlessly integrated with the standard     
       /// C++20 copy semantics                                                
       LANGULUS(ALWAYS_INLINED)
-      constexpr operator const T& () const& noexcept {
-         return mValue;
-      }
-      LANGULUS(ALWAYS_INLINED)
-      constexpr operator const T& () & noexcept {
-         return mValue;
-      }
-      LANGULUS(ALWAYS_INLINED)
-      constexpr operator const T& () && noexcept {
-         return mValue;
-      }
+      constexpr operator const T& () const noexcept { return mValue; }
    };
-   
-   /// Refer a value                                                          
-   LANGULUS(ALWAYS_INLINED)
-   constexpr auto Refer(auto&& value) noexcept {
-      using ALT = Decq<Deref<decltype(value)>>;
-      if constexpr (CT::Intent<ALT>)
-         return Referred<TypeOf<ALT>> {*value};
-      else
-         return Referred<ALT> {value};
-   }
+
+   template<CT::NoIntent T>
+   Refer(const T&) -> Refer<T>;
+
+   template<CT::Intent T>
+   Refer(T&&) -> Refer<Decq<Deref<TypeOf<T>>>>;
    
    
    ///                                                                        
@@ -218,20 +205,25 @@ namespace Langulus
    /// to shallow-copy container explicitly                                   
    ///   @tparam T - the type to copy                                         
    template<class T>
-   struct Copied final : Inner::CommonIntent<1, true, false> {
+   struct Copy final : Inner::CommonIntent<1, true, false> {
    private:
       const T& mValue;
 
    public:
       using CTTI_Typed = decltype(mValue);
 
-      Copied() = delete;
-      constexpr Copied(const Copied&) noexcept = default;
-      explicit constexpr Copied(Copied&&) noexcept = default;
+      template<class ALT>
+      using Retype = Copy<Decq<Deref<Deint<ALT>>>>;
+
+      Copy() = delete;
 
       LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Copied(const T& value) noexcept
-         : mValue {value} {
+      explicit constexpr Copy(const T& value) noexcept : mValue {value} {
+         static_assert(CT::NoIntent<T>, "Can't nest intents");
+      }
+      
+      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      explicit constexpr Copy(I&& value) noexcept : mValue {value.mValue} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
@@ -250,100 +242,76 @@ namespace Langulus
          if constexpr (CT::Aggregate<ALT_T>)
             return static_cast<const ALT_T&>(mValue);
          else
-            return Copied<ALT_T> {mValue};
+            return Copy<ALT_T> {mValue};
       }
 
       /// Copy something else                                                 
       ///   @param value - the value to copy (can be an intent)               
       ///   @return the copied value, disregarding previous intent            
-      LANGULUS(ALWAYS_INLINED)
-      static constexpr decltype(auto) Nest(auto&& value) noexcept {
-         using ALT = Decq<Deref<decltype(value)>>;
-
+      template<class ALT_T> LANGULUS(ALWAYS_INLINED)
+      static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
          // Aggregates don't play well with intents, so if type is an   
          // aggregate, use the standard copy semantics                  
-         if constexpr (CT::Intent<ALT>) {
-            using ALT_T = TypeOf<ALT>;
-
-            if constexpr (CT::Aggregate<ALT_T>)
-               return *value;
-            else
-               return Copied<TypeOf<ALT>> {*value};
-         }
-         else {
-            if constexpr (CT::Aggregate<ALT>)
-               return value;
-            else
-               return Copied<ALT> {value};
-         }
-      }
-
-      template<class ALT>
-      using As = Tif<CT::Intent<ALT>, Copied<TypeOf<ALT>>, Copied<ALT>>;
-
-      LANGULUS(ALWAYS_INLINED)
-      const T& operator * () const noexcept { return mValue; }
-
-      LANGULUS(ALWAYS_INLINED)
-      auto operator -> () const noexcept {
-         if constexpr (CT::Sparse<T>)
-            return mValue;
+         if constexpr (CT::Aggregate<ALT_T>)
+            return DeintCast(value);
          else
-            return &mValue;
+            return Retype<ALT_T> (DeintCast(value));
       }
 
-      /// Implicitly collapse the intent, when applying it to POD/Sparse,     
-      /// since Refer is isomorphic to Copy in those cases                    
+      LANGULUS(ALWAYS_INLINED)
+      constexpr const T& operator * () const noexcept { return mValue; }
+
+      LANGULUS(ALWAYS_INLINED)
+      constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
+
+      /// Implicitly collapse the intent, but only when applying it to        
+      /// POD/Sparse, since Refer is isomorphic to Copy in those cases        
       LANGULUS(ALWAYS_INLINED)
       constexpr operator const T& () const noexcept
       requires (CT::POD<T> or CT::Sparse<T>) {
          return mValue;
       }
 
-      /// Used by DecayCast                                                   
+      /// Otherwise the collapse can only be explicit                         
       LANGULUS(ALWAYS_INLINED)
-      constexpr const T& TypedCast() const noexcept {
+      explicit constexpr operator const T& () const noexcept
+      requires (not CT::POD<T> and not CT::Sparse<T>) {
          return mValue;
       }
    };
+
+   template<CT::NoIntent T>
+   Copy(const T&) -> Copy<T>;
    
-   /// Copy a value                                                           
-   LANGULUS(ALWAYS_INLINED)
-   constexpr auto Copy(auto&& value) noexcept {
-      using ALT = Decq<Deref<decltype(value)>>;
-      if constexpr (CT::Intent<ALT>)
-         return Copied<TypeOf<ALT>> {*value};
-      else
-         return Copied<ALT> {value};
-   }
-   
+   template<CT::Intent T>
+   Copy(T&&) -> Copy<Decq<Deref<TypeOf<T>>>>;
+
 
    ///                                                                        
    /// Moved value intermediate type, use in constructors and assignments     
    /// to move data explicitly                                                
    ///   @tparam T - the type to move                                         
    template<class T>
-   struct Moved final : Inner::CommonIntent<0, true, true> {
+   struct Move final : Inner::CommonIntent<0, true, true> {
    protected:
+      static_assert(CT::Mutable<T>, "Constant T isn't movable");
       T&& mValue;
 
    public:
       using CTTI_Typed = decltype(mValue);
 
-      Moved() = delete;
-      constexpr Moved(const Moved& r) noexcept
-         : mValue {::std::forward<T>(r.mValue)} {}
-      explicit constexpr Moved(Moved&&) noexcept = default;
+      template<class ALT>
+      using Retype = Move<Decq<Deref<Deint<ALT>>>>;
+
+      Move() = delete;
 
       LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Moved(T& value) noexcept
-         : mValue {::std::move(value)} {
+      explicit constexpr Move(T&& value) noexcept : mValue {FWD(value)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
-
-      LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Moved(T&& value) noexcept
-         : mValue {::std::forward<T>(value)} {
+      
+      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      explicit constexpr Move(I&& value) noexcept : mValue {FWD(value.mValue)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
 
@@ -360,111 +328,74 @@ namespace Langulus
          // Aggregates don't play well with intents, so if type is an   
          // aggregate, use the standard move semantics                  
          if constexpr (CT::Aggregate<ALT_T>)
-            return ::std::forward<ALT_T>(mValue);
+            return static_cast<ALT_T&&>(mValue);
          else
-            return Moved<ALT_T> {::std::forward<ALT_T>(mValue)};
+            return Move<ALT_T> {static_cast<ALT_T&&>(mValue)};
       }
 
       /// Move something else                                                 
       ///   @param value - the value to move (can be an intent)               
       ///   @return the moved value, disregarding previous intent             
-      LANGULUS(ALWAYS_INLINED)
-      static constexpr decltype(auto) Nest(auto&& value) noexcept {
-         using ALT = Decq<Deref<decltype(value)>>;
-
+      template<class ALT_T> LANGULUS(ALWAYS_INLINED)
+      static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
          // Aggregates don't play well with intents, so if type is an   
-         // aggregate, use the standard move semantics                  
-         if constexpr (CT::Intent<ALT>) {
-            using ALT_T = TypeOf<ALT>;
-
-            if constexpr (CT::Aggregate<ALT_T>)
-               return ::std::forward<ALT_T>(*value);
-            else
-               return Moved<ALT_T> {::std::forward<ALT_T>(*value)};
-         }
-         else {
-            if constexpr (CT::Aggregate<ALT>)
-               return ::std::forward<ALT>(value);
-            else
-               return Moved<ALT> {::std::forward<ALT>(value)};
-         }
-      }
-
-      template<class ALT>
-      using As = Tif<CT::Intent<ALT>, Moved<TypeOf<ALT>>, Moved<ALT>>;
-
-      LANGULUS(ALWAYS_INLINED)
-      T& operator * () const noexcept { return mValue; }
-
-      LANGULUS(ALWAYS_INLINED)
-      auto operator -> () const noexcept {
-         if constexpr (CT::Sparse<T>)
-            return mValue;
+         // aggregate, use the standard copy semantics                  
+         if constexpr (CT::Aggregate<ALT_T>)
+            return DeintCast(FWD(value));
          else
-            return &mValue;
+            return Retype<ALT_T> (DeintCast(FWD(value)));
       }
+
+      LANGULUS(ALWAYS_INLINED)
+      constexpr T&& operator * () const noexcept { return FWD(mValue); }
+
+      LANGULUS(ALWAYS_INLINED)
+      constexpr T* operator -> () const noexcept { return SparseCast(mValue); }
 
       /// Implicitly collapse the intent                                      
-      /// This way this wrapper is seamlessly integrated with the standard    
-      /// C++20 move-semantics                                                
+      /// This way the wrapper is seamlessly integrated with the standard     
+      /// C++20 move semantics                                                
       LANGULUS(ALWAYS_INLINED)
-      constexpr operator T&& () const noexcept {
-         return ::std::forward<T>(mValue);
-      }
-
-      LANGULUS(ALWAYS_INLINED)
-      constexpr operator T&& () noexcept {
-         return ::std::forward<T>(mValue);
-      }
-
-      /// Used by DecayCast                                                   
-      LANGULUS(ALWAYS_INLINED)
-      constexpr T& TypedCast() const noexcept {
-         return mValue;
-      }
+      constexpr operator T&& () const noexcept { return FWD(mValue); }
    };
-   
-   /// Move a value                                                           
-   LANGULUS(ALWAYS_INLINED)
-   constexpr auto Move(auto&& value) noexcept {
-      using ALT = Decq<Deref<decltype(value)>>;
-      if constexpr (CT::Intent<ALT>)
-         return Moved<TypeOf<ALT>> {::std::forward<TypeOf<ALT>>(*value)};
-      else
-         return Moved<ALT> {::std::forward<ALT>(value)};
-   }
+
+   template<CT::NoIntent T>
+   Move(T&&) -> Move<Deref<T>>;
+
+   template<CT::Intent T>
+   Move(T&&) -> Move<Decq<Deref<TypeOf<T>>>>;
 
 
    ///                                                                        
    /// Abandoned value intermediate type, can be used in constructors and     
    /// assignments to provide a guarantee, that the value shall not be used   
-   /// after that function, so we can save up on resetting it fully           
+   /// after being consumed, so we can save up on resetting it fully          
    /// For example, you can construct a Many with an abandoned Many, which is 
    /// same as move-construction, but the abandoned Many shall have only its  
-   /// mEntry reset, instead of the entire container.                         
+   /// mEntry reset, instead of the entire container, leaving it in a state   
+   /// that is unfit for reuse, but also saving a lot of instructions.        
    ///   @tparam T - the type to abandon                                      
    template<class T>
-   struct Abandoned final : Inner::CommonIntent<0, false, true> {
+   struct Abandon final : Inner::CommonIntent<0, false, true> {
    protected:
+      static_assert(CT::Mutable<T>, "Constant T isn't abandonable");
       T&& mValue;
 
    public:
       using CTTI_Typed = decltype(mValue);
 
-      Abandoned() = delete;
-      constexpr Abandoned(const Abandoned& r) noexcept
-         : mValue {::std::forward<T>(r.mValue)} {}
-      explicit constexpr Abandoned(Abandoned&&) noexcept = default;
-      
+      template<class ALT>
+      using Retype = Abandon<Decq<Deref<Deint<ALT>>>>;
+
+      Abandon() = delete;
+
       LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Abandoned(T& value) noexcept
-         : mValue {::std::move(value)} {
+      explicit constexpr Abandon(T&& value) noexcept : mValue {FWD(value)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Abandoned(T&& value) noexcept
-         : mValue {::std::forward<T>(value)} {
+      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      explicit constexpr Abandon(I&& value) noexcept : mValue {FWD(value.mValue)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
@@ -481,76 +412,42 @@ namespace Langulus
          // Aggregates don't play well with intents, so if type is an   
          // aggregate, use the standard move semantics                  
          if constexpr (CT::Aggregate<ALT_T>)
-            return ::std::forward<ALT_T>(mValue);
+            return static_cast<ALT_T&&>(mValue);
          else
-            return Abandoned<ALT_T> {::std::forward<ALT_T>(mValue)};
+            return Abandon<ALT_T> {static_cast<ALT_T&&>(mValue)};
       }
 
       /// Abandon something else                                              
       ///   @param value - the value to abandon (can be an intent)            
       ///   @return the abandoned value, disregarding previous intent         
-      LANGULUS(ALWAYS_INLINED)
-      static constexpr decltype(auto) Nest(auto&& value) noexcept {
-         using ALT = Decq<Deref<decltype(value)>>;
-
+      template<class ALT_T> LANGULUS(ALWAYS_INLINED)
+      static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
          // Aggregates don't play well with intents, so if type is an   
-         // aggregate, use the standard move semantics                  
-         if constexpr (CT::Intent<ALT>) {
-            using ALT_T = TypeOf<ALT>;
-
-            if constexpr (CT::Aggregate<ALT_T>)
-               return ::std::forward<ALT_T>(*value);
-            else
-               return Abandoned<ALT_T> {::std::forward<ALT_T>(*value)};
-         }
-         else {
-            if constexpr (CT::Aggregate<ALT>)
-               return ::std::forward<ALT>(value);
-            else
-               return Abandoned<ALT> {::std::forward<ALT>(value)};
-         }
-      }
-
-      template<class ALT>
-      using As = Tif<CT::Intent<ALT>, Abandoned<TypeOf<ALT>>, Abandoned<ALT>>;
-
-      LANGULUS(ALWAYS_INLINED)
-      T& operator * () const noexcept { return mValue; }
-
-      LANGULUS(ALWAYS_INLINED)
-      auto operator -> () const noexcept {
-         if constexpr (CT::Sparse<T>)
-            return mValue;
+         // aggregate, use the standard copy semantics                  
+         if constexpr (CT::Aggregate<ALT_T>)
+            return DeintCast(FWD(value));
          else
-            return &mValue;
+            return Retype<ALT_T> (DeintCast(FWD(value)));
       }
+
+      LANGULUS(ALWAYS_INLINED)
+      constexpr T&& operator * () const noexcept { return FWD(mValue); }
+
+      LANGULUS(ALWAYS_INLINED)
+      constexpr T* operator -> () const noexcept { return SparseCast(mValue); }
 
       /// Implicitly collapse the intent                                      
-      /// This way this wrapper is seamlessly integrated with the standard    
-      /// C++20 move-semantics                                                
+      /// This way the wrapper is seamlessly integrated with the standard     
+      /// C++20 move semantics                                                
       LANGULUS(ALWAYS_INLINED)
-      constexpr operator T&& () const noexcept {
-         return ::std::forward<T>(mValue);
-      }
-
-      /// Used by DecayCast                                                   
-      LANGULUS(ALWAYS_INLINED)
-      constexpr T& TypedCast() const noexcept {
-         return mValue;
-      }
+      constexpr operator T&& () const noexcept { return FWD(mValue); }
    };
    
-   /// Abandon a value                                                        
-   /// Same as Move, but resets only mandatory data inside source after move  
-   /// essentially saving up on a couple of instructions                      
-   LANGULUS(ALWAYS_INLINED)
-   constexpr auto Abandon(auto&& value) noexcept {
-      using ALT = Decq<Deref<decltype(value)>>;
-      if constexpr (CT::Intent<ALT>)
-         return Abandoned<TypeOf<ALT>> {::std::forward<TypeOf<ALT>>(*value)};
-      else
-         return Abandoned<ALT>         {::std::forward<ALT>(value)};
-   }
+   template<CT::NoIntent T>
+   Abandon(T&&) -> Abandon<Deref<T>>;
+
+   template<CT::Intent T>
+   Abandon(T&&) -> Abandon<Decq<Deref<TypeOf<T>>>>;
 
 
    ///                                                                        
@@ -558,23 +455,27 @@ namespace Langulus
    /// to copy container without gaining ownership                            
    ///   @tparam T - the type to disown                                       
    template<class T>
-   struct Disowned final : Inner::CommonIntent<0, false, false> {
+   struct Disown final : Inner::CommonIntent<0, false, false> {
    protected:
       const T& mValue;
 
    public:
       using CTTI_Typed = decltype(mValue);
 
-      Disowned() = delete;
-      constexpr Disowned(const Disowned&) noexcept = default;
-      explicit constexpr Disowned(Disowned&&) noexcept = default;
+      template<class ALT>
+      using Retype = Disown<Decq<Deref<Deint<ALT>>>>;
+
+      Disown() = delete;
 
       LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Disowned(const T& value) noexcept
-         : mValue {value} {
+      explicit constexpr Disown(const T& value) noexcept : mValue {value} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
-
+      
+      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      explicit constexpr Disown(I&& value) noexcept : mValue {value.mValue} {
+         static_assert(CT::NoIntent<T>, "Can't nest intents");
+      }
       
       /// Forward as disowned                                                 
       ///   @tparam ALT_T - optional type to forward as                       
@@ -591,93 +492,73 @@ namespace Langulus
          if constexpr (CT::Aggregate<ALT_T>)
             return static_cast<const ALT_T&>(mValue);
          else
-            return Disowned<ALT_T> {mValue};
+            return Disown<ALT_T> {static_cast<const ALT_T&>(mValue)};
       }
 
       /// Disown something else                                               
       ///   @param value - the value to disown (can be an intent)             
       ///   @return the disowned value, disregarding previous intent          
-      LANGULUS(ALWAYS_INLINED)
-      static constexpr decltype(auto) Nest(auto&& value) noexcept {
-         using ALT = Decq<Deref<decltype(value)>>;
-
+      template<class ALT_T> LANGULUS(ALWAYS_INLINED)
+      static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
          // Aggregates don't play well with intents, so if type is an   
          // aggregate, use the standard copy semantics                  
-         if constexpr (CT::Intent<ALT>) {
-            using ALT_T = TypeOf<ALT>;
-
-            if constexpr (CT::Aggregate<ALT_T>)
-               return *value;
-            else
-               return Disowned<TypeOf<ALT>> {*value};
-         }
-         else {
-            if constexpr (CT::Aggregate<ALT>)
-               return value;
-            else
-               return Disowned<ALT> {value};
-         }
-      }
-
-      template<class ALT>
-      using As = Tif<CT::Intent<ALT>, Disowned<TypeOf<ALT>>, Disowned<ALT>>;
-      
-      LANGULUS(ALWAYS_INLINED)
-      const T& operator * () const noexcept { return mValue; }
-
-      LANGULUS(ALWAYS_INLINED)
-      auto operator -> () const noexcept {
-         if constexpr (CT::Sparse<T>)
-            return mValue;
+         if constexpr (CT::Aggregate<ALT_T>)
+            return DeintCast(value);
          else
-            return &mValue;
+            return Retype<ALT_T> (DeintCast(value));
       }
 
-      /// Implicitly collapse the intent, when applying it to PODs,           
+      LANGULUS(ALWAYS_INLINED)
+      constexpr const T& operator * () const noexcept { return mValue; }
+
+      LANGULUS(ALWAYS_INLINED)
+      constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
+
+      /// Implicitly collapse the intent, but only when applying it to PODs,  
       /// since they are never allowed to have ownership either way           
       LANGULUS(ALWAYS_INLINED)
       constexpr operator const T& () const noexcept requires CT::POD<T> {
          return mValue;
       }
 
-      /// Used by DecayCast                                                   
+      /// Otherwise the collapse can only be explicit                         
       LANGULUS(ALWAYS_INLINED)
-      constexpr const T& TypedCast() const noexcept {
+      explicit constexpr operator const T& () const noexcept requires CT::NotPOD<T> {
          return mValue;
       }
    };
    
-   /// Disown a value                                                         
-   /// Same as a shallow-copy, but never references, saving some instructions 
-   LANGULUS(ALWAYS_INLINED)
-   constexpr auto Disown(auto&& value) noexcept {
-      using ALT = Decq<Deref<decltype(value)>>;
-      if constexpr (CT::Intent<ALT>)
-         return Disowned<TypeOf<ALT>> {*value};
-      else
-         return Disowned<ALT> {value};
-   }
-   
+   template<CT::NoIntent T>
+   Disown(const T&) -> Disown<T>;
+
+   template<CT::Intent T>
+   Disown(T&&) -> Disown<Decq<Deref<TypeOf<T>>>>;
+
 
    ///                                                                        
    /// Cloned value intermediate type, used in constructors and assignments   
    /// to clone container, doing a deep copy instead of default shallow one   
    ///   @tparam T - the type to clone                                        
    template<class T>
-   struct Cloned final : Inner::CommonIntent<::std::numeric_limits<int>::max(), true, false> {
+   struct Clone final : Inner::CommonIntent<::std::numeric_limits<int>::max(), true, false> {
    protected:
       const T& mValue;
 
    public:
       using CTTI_Typed = decltype(mValue);
 
-      Cloned() = delete;
-      constexpr Cloned(const Cloned&) noexcept = default;
-      explicit constexpr Cloned(Cloned&&) noexcept = default;
+      template<class ALT>
+      using Retype = Clone<Decq<Deref<Deint<ALT>>>>;
+
+      Clone() = delete;
 
       LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Cloned(const T& value) noexcept
-         : mValue {value} {
+      explicit constexpr Clone(const T& value) noexcept : mValue {value} {
+         static_assert(CT::NoIntent<T>, "Can't nest intents");
+      }
+      
+      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      explicit constexpr Clone(I&& value) noexcept : mValue {value.mValue} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
 
@@ -688,58 +569,42 @@ namespace Langulus
             "Can't nest intents");
          static_assert(CT::DerivedFrom<T, ALT_T>,
             "Can't forward as this type");
-         return Cloned<ALT_T> {mValue};
+         return Clone<ALT_T> {mValue};
       }
 
       /// Clone something else                                                
-      LANGULUS(ALWAYS_INLINED)
-      static constexpr decltype(auto) Nest(auto&& value) noexcept {
-         using ALT = Decq<Deref<decltype(value)>>;
-         if constexpr (CT::Intent<ALT>)
-            return Cloned<TypeOf<ALT>> {*value};
-         else
-            return Cloned<ALT> {value};
+      template<class ALT_T> LANGULUS(ALWAYS_INLINED)
+      static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
+         return Retype<ALT_T> (DeintCast(value));
       }
 
-      template<class ALT>
-      using As = Tif<CT::Intent<ALT>, Cloned<TypeOf<ALT>>, Cloned<ALT>>;
-      
       LANGULUS(ALWAYS_INLINED)
-      const T& operator * () const noexcept { return mValue; }
+      constexpr const T& operator * () const noexcept { return mValue; }
 
       LANGULUS(ALWAYS_INLINED)
-      auto operator -> () const noexcept {
-         if constexpr (CT::Sparse<T>)
-            return mValue;
-         else
-            return &mValue;
-      }
+      constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
 
       /// Implicitly collapse the intent, when applying it to PODs,           
-      /// since they are always cloned upon copy (ONLY IF `T` IS DENSE)       
+      /// since they are always cloned upon copy (BUT ONLY IF `T` IS DENSE)   
       LANGULUS(ALWAYS_INLINED)
       constexpr operator const T& () const noexcept
       requires (CT::POD<T> and CT::Dense<T>) {
          return mValue;
       }
 
-      /// Used by DecayCast                                                   
+      /// Otherwise the collapse can only be explicit                         
       LANGULUS(ALWAYS_INLINED)
-      constexpr const T& TypedCast() const noexcept {
+      explicit constexpr operator const T& () const noexcept
+      requires (CT::NotPOD<T> or CT::Sparse<T>) {
          return mValue;
       }
    };
    
-   /// Clone a value                                                          
-   /// Does a deep-copy                                                       
-   LANGULUS(ALWAYS_INLINED)
-   constexpr auto Clone(auto&& value) noexcept {
-      using ALT = Decq<Deref<decltype(value)>>;
-      if constexpr (CT::Intent<ALT>)
-         return Cloned<TypeOf<ALT>> {*value};
-      else
-         return Cloned<ALT> {value};
-   }
+   template<CT::NoIntent T>
+   Clone(const T&) -> Clone<T>;
+
+   template<CT::Intent T>
+   Clone(T&&) -> Clone<Decq<Deref<TypeOf<T>>>>;
 
 
    namespace CT
@@ -758,50 +623,50 @@ namespace Langulus
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
       concept HasIntentConstructor = Intent<S<T>...>
-          and requires (S<T>&&...a) { (T (a), ...); };
+          and requires (S<T>&&...a) { (T (FWD(a)), ...); };
 
       /// Check if all TypeOf<S> have intent constructors for S               
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept HasIntentConstructorAlt = Intent<Deref<S>...>
-          and requires (S&&...a) { (TypeOf<S> (a), ...); };
+          and requires (S&&...a) { (TypeOf<S> (FWD(a)), ...); };
 
       /// Check if all T have a disown-constructor                            
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       template<class...T>
-      concept HasDisownConstructor = (HasIntentConstructor<::Langulus::Disowned, T> and ...);
+      concept HasDisownConstructor = (HasIntentConstructor<::Langulus::Disown, T> and ...);
 
       /// Check if all Decay<T> have a clone-constructor                      
       /// Does a deep copy                                                    
       template<class...T>
-      concept HasCloneConstructor = (HasIntentConstructor<::Langulus::Cloned, T> and ...);
+      concept HasCloneConstructor = (HasIntentConstructor<::Langulus::Clone, T> and ...);
 
       /// Check if all T have a abandon-constructor                           
       /// Does a move, but doesn't fully reset source (optimization)          
       template<class...T>
-      concept HasAbandonConstructor = (HasIntentConstructor<::Langulus::Abandoned, T> and ...);
+      concept HasAbandonConstructor = (HasIntentConstructor<::Langulus::Abandon, T> and ...);
 
       /// Check if all T have a refer-constructor                             
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership.                                                          
       /// T has refer-constructor as long as it is std::copy_constuctible     
       template<class...T>
-      concept HasReferConstructor = ((HasIntentConstructor<::Langulus::Referred, T>
+      concept HasReferConstructor = ((HasIntentConstructor<::Langulus::Refer, T>
            or ::std::copy_constructible<T>) and ...);
       
       /// Check if all T have a copy-constructor (don't mistake it for a      
       /// std::copy_constructible!)                                           
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       template<class...T>
-      concept HasCopyConstructor = (HasIntentConstructor<::Langulus::Copied, T> and ...);
+      concept HasCopyConstructor = (HasIntentConstructor<::Langulus::Copy, T> and ...);
 
       /// Check if all T have a move-constructor                              
       /// Does a move, fully resetting source                                 
       /// T has move-constructor as long as it is std::move_constuctible      
       template<class...T>
       concept HasMoveConstructor = ((Sparse<T>
-           or HasIntentConstructor<::Langulus::Moved, T>
+           or HasIntentConstructor<::Langulus::Move, T>
            or ::std::move_constructible<T>) and ...);
 
       /// Check if all T have an intent-assigner for S                        
@@ -821,31 +686,31 @@ namespace Langulus
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       template<class...T>
-      concept HasDisownAssign = (HasIntentAssign<::Langulus::Disowned, T> and ...);
+      concept HasDisownAssign = (HasIntentAssign<::Langulus::Disown, T> and ...);
 
       /// Check if all Decay<T> have a clone-assigner                         
       /// Does a deep copy                                                    
       template<class...T>
-      concept HasCloneAssign = (HasIntentAssign<::Langulus::Cloned, T> and ...);
+      concept HasCloneAssign = (HasIntentAssign<::Langulus::Clone, T> and ...);
 
       /// Check if all T have an abandon-assigner                             
       /// Does a move, but doesn't fully reset source (optimization)          
       template<class...T>
-      concept HasAbandonAssign = (HasIntentAssign<::Langulus::Abandoned, T> and ...);
+      concept HasAbandonAssign = (HasIntentAssign<::Langulus::Abandon, T> and ...);
 
       /// Check if all T have refer-assigner                                  
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership.                                                          
       /// T has a refer-assigner as long as std::copy_assignable<T> holds     
       template<class...T>
-      concept HasReferAssign = ((HasIntentAssign<::Langulus::Referred, T>
+      concept HasReferAssign = ((HasIntentAssign<::Langulus::Refer, T>
            or ::std::assignable_from<T&, const T&>) and ...);
       
       /// Check if all T have a copy-assigner (don't mistake it for a         
       /// std::copy_assignable!)                                              
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       template<class...T>
-      concept HasCopyAssign = (HasIntentAssign<::Langulus::Copied, T> and ...);
+      concept HasCopyAssign = (HasIntentAssign<::Langulus::Copy, T> and ...);
 
       /// Check if all T have a move-assigner                                 
       /// Does a move, fully resetting source                                 
@@ -854,38 +719,40 @@ namespace Langulus
       /// which the compiler falls back to. In that case move-assignment is   
       /// the same as refer-assignment.                                       
       template<class...T>
-      concept HasMoveAssign = ((HasIntentAssign<::Langulus::Moved, T>
+      concept HasMoveAssign = ((HasIntentAssign<::Langulus::Move, T>
            or ::std::assignable_from<T&, T&&>) and ...);
 
    } // namespace Langulus::CT
 
    
    /// Deduce the proper intent, based on whether T already has a             
-   /// specified intent, is an rvalue (&&), or none of those                  
-   /// If it has one of those, then we get move intent; if it isn't - we      
-   /// get refer intent (which in turn can fallback to copy semantics)        
+   /// specified intent (like when it is an rvalue (&&))                      
+   ///   - if it has one of those, then we get move intent (which can         
+   ///     implicitly fallback to standard move semantics);                   
+   ///   - if it isn't - we get refer intent (which in turn can fallback to   
+   ///     standard copy semantics)                                           
    template<class T>
    using IntentOf = Tif<CT::Intent<Deref<T>>,
          Deref<T>,
          Tif<::std::is_rvalue_reference_v<T> and CT::Mutable<Deref<T>>,
-            Moved<Deref<T>>,
-            Referred<Deref<T>>
+            Move<Deref<T>>,
+            Refer<Deref<T>>
          >
       >;
 
-   /// Shed the intent from a type, if any                                    
-   template<class T>
-   using Deint = Tif<CT::Intent<Deref<T>>, TypeOf<T>, T>;
-
-   /// Decay an intent to the contained data                                  
-   ///   @param what - the instance to decay                                  
-   ///   @return a reference (preferably) or a copy of the inner data         
-   template<class T> LANGULUS(ALWAYS_INLINED)
-   constexpr auto& DeintCast(T&& what) noexcept {
-      if constexpr (CT::Intent<T>)
-         return TypedCast(::std::forward<T>(what));
-      else
-         return what;
-   }
-
 } // namespace Langulus
+
+
+/// A handy constructor & assignment pattern that adds all possible intents   
+/// and collapses them for a given type. Useful when you don't want intents   
+/// to get in the way of simple types that need those reflected, but not      
+/// implemented in some particular way.                                       
+#define ignore_all_intents(FOR_TYPE) \
+   template<template<class> class I> requires ::Langulus::CT::Intent<I<FOR_TYPE>> \
+   explicit constexpr FOR_TYPE(I<FOR_TYPE>&& meta) noexcept \
+      : FOR_TYPE {*meta} {} \
+   template<template<class> class I> requires ::Langulus::CT::Intent<I<FOR_TYPE>> \
+   constexpr FOR_TYPE& operator = (I<FOR_TYPE>&& rhs) noexcept { \
+      new (this) FOR_TYPE {*rhs}; \
+      return *this; \
+   }

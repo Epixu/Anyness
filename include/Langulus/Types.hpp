@@ -70,6 +70,7 @@ namespace Langulus
 
    namespace Inner
    {
+
       template<CT::Typelist GATHERED, CT::NotTypelist HEAD, CT::NotTypelist...TAIL>
       static consteval CT::Typelist auto GenerateTypes(auto&& lambda) {
          using R = decltype(lambda.template operator()<HEAD>());
@@ -79,8 +80,9 @@ namespace Langulus
          else
             return C {};
       }
-   }
-   
+
+   } // namespace Langulus::Inner
+
    ///                                                                        
    /// Type list, that contains only one void item - a canonical empty list   
    /// Satisfies CT::Void and is considered 'void'                            

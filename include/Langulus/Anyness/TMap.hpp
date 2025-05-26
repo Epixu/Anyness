@@ -34,6 +34,72 @@
 
 namespace Langulus::Anyness
 {
+   namespace Inner
+   {
+      
+      ///                                                                     
+      template<CT::NotVoid K, CT::NotVoid V>
+      using TMapCommon = Container<
+         Com::HeapMovable<0>,          // Heap for keys                 
+         Com::HeapMovable<1>,          // Heap for values               
+         Com::OwnershipStack<0>,       // Keys allocation is referenced 
+         Com::OwnershipStack<1>,       // Vals allocation is referenced 
+         Com::HashHeap<0>,             // Keys can be hashed            
+         Com::HashHeap<1>,             // Values can be hashed          
+         Com::DeepOwnershipHeap<0>,    // Sparse keys are referenced    
+         Com::DeepOwnershipHeap<1>,    // Sparse vals are referenced    
+         Com::IndexedHash<0>,          // Indexed by hashing keys       
+         Com::Insertion<0>,            // Allows insertion of keys      
+         Com::Insertion<1>,            // Allows insertion of vals      
+         Com::InsertionOperators<0>,   // << and >> insertion of keys   
+         Com::InsertionOperators<1>,   // << and >> insertion of vals   
+         Com::Emplacement<0>,          // Allows emplacement of keys    
+         Com::Emplacement<1>,          // Allows emplacement of vals    
+         Com::Removal<0>,              // Allows removal of keys        
+         Com::Removal<1>,              // Allows removal of vals        
+         Com::Assignment<0>,           // Allows assignment             
+         Com::Assignment<1>,           // Allows assignment             
+         Com::TypedStack<DMeta, K, 0>, // Key type                      
+         Com::TypedStack<DMeta, V, 1>, // Value type                    
+         Com::CountStack<>,            // Variable count                
+         Com::ReserveStack<>,          // Variable capacity             
+         Com::Comparison               // Allows for comparison         
+      >;
+
+      ///                                                                     
+      template<CT::NotVoid K, CT::NotVoid V>
+      using TMapBase = typename TMapCommon<K, V>::template AddComponents<
+         Com::StateStack<              // Variable state                
+            DefineState::Sorted<>,     // Maybe unsorted                
+            DefineState::Compressed<>, // Adds 'compressed' state       
+            DefineState::Encrypted<>,  // Adds 'encrypted' state        
+            DefineState::Tracked<>     // Adds 'tracked' state          
+         >
+      >;
+
+      ///                                                                     
+      template<CT::NotVoid K, CT::NotVoid V>
+      using TMapUnsortedBase = typename TMapCommon<K, V>::template AddComponents<
+         Com::StateStack<              // Variable state                
+            DefineState::Sorted<State::Disabled>,  // Always unsorted   
+            DefineState::Compressed<>, // Adds 'compressed' state       
+            DefineState::Encrypted<>,  // Adds 'encrypted' state        
+            DefineState::Tracked<>     // Adds 'tracked' state          
+         >
+      >;
+      
+      ///                                                                     
+      template<CT::NotVoid K, CT::NotVoid V>
+      using TMapSortedBase = typename TMapCommon<K, V>::template AddComponents<
+         Com::StateStack<              // Variable state                
+            DefineState::Sorted<State::Enabled>,   // Always sorted     
+            DefineState::Compressed<>, // Adds 'compressed' state       
+            DefineState::Encrypted<>,  // Adds 'encrypted' state        
+            DefineState::Tracked<>     // Adds 'tracked' state          
+         >
+      >;
+
+   } // namespace Langulus::Anyness::Inner
 
    struct Map;
 
@@ -42,40 +108,10 @@ namespace Langulus::Anyness
    /// Statically typed map of unspecified state                              
    ///                                                                        
    template<CT::NotVoid K, CT::NotVoid V>
-   struct TMap : Container<
-      Com::HeapMovable<0>,             // Heap for keys                 
-      Com::HeapMovable<1>,             // Heap for values               
-      Com::OwnershipStack<0>,          // Keys allocation is referenced 
-      Com::OwnershipStack<1>,          // Vals allocation is referenced 
-      Com::HashHeap<0>,                // Keys can be hashed            
-      Com::HashHeap<1>,                // Values can be hashed          
-      Com::DeepOwnershipHeap<0>,       // Sparse keys are referenced    
-      Com::DeepOwnershipHeap<1>,       // Sparse vals are referenced    
-      Com::IndexedHash<0>,             // Indexed by hashing keys       
-      Com::Insertion<0>,               // Allows insertion of keys      
-      Com::Insertion<1>,               // Allows insertion of vals      
-      Com::InsertionOperators<0>,      // << and >> insertion of keys   
-      Com::InsertionOperators<1>,      // << and >> insertion of vals   
-      Com::Emplacement<0>,             // Allows emplacement of keys    
-      Com::Emplacement<1>,             // Allows emplacement of vals    
-      Com::Removal<0>,                 // Allows removal of keys        
-      Com::Removal<1>,                 // Allows removal of vals        
-      Com::Assignment<0>,              // Allows assignment             
-      Com::Assignment<1>,              // Allows assignment             
-      Com::TypedStack<DMeta, K, 0>,    // Key type                      
-      Com::TypedStack<DMeta, V, 1>,    // Value type                    
-      Com::CountStack<>,               // Variable count                
-      Com::ReserveStack<>,             // Variable capacity             
-      Com::Comparison,                 // Allows for comparison         
-      Com::StateStack<                 // Variable state                
-         DefineState::Sorted<>,        // Maybe unsorted                
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >
-   > {
+   struct TMap : Inner::TMapBase<K, V> {
       using CTTI_ReflectAs = Map;
       using CTTI_Map       = Yes;
+      using Base           = Inner::TMapBase<K, V>;
 
       using KeyDenseMut  = K&;
       using KeyDense     = K const&;
@@ -103,11 +139,15 @@ namespace Langulus::Anyness
       constexpr TMap(const TMap&) noexcept = default;
       constexpr TMap(TMap&&) noexcept = default;
 
-      template<CT::Map M1, CT::Map...MN>
+      template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
+      constexpr TMap(I<M>&& other) noexcept
+         : Base {other.template Forward<typename M::Base>()} {}
+
+      /*template<CT::Map M1, CT::Map...MN>
       TMap(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
       
       template<CT::Pair P1, CT::Pair...PN>
-      TMap(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;
+      TMap(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;*/
       
       ///                                                                     
       ///   Assignment                                                        
@@ -134,40 +174,10 @@ namespace Langulus::Anyness
    /// Unsorted statically typed map                                          
    ///                                                                        
    template<CT::NotVoid K, CT::NotVoid V>
-   struct TMapUnsorted : Container<
-      Com::HeapMovable<0>,             // Heap for keys                 
-      Com::HeapMovable<1>,             // Heap for values               
-      Com::OwnershipStack<0>,          // Keys allocation is referenced 
-      Com::OwnershipStack<1>,          // Vals allocation is referenced 
-      Com::HashHeap<0>,                // Keys can be hashed            
-      Com::HashHeap<1>,                // Values can be hashed          
-      Com::DeepOwnershipHeap<0>,       // Sparse keys are referenced    
-      Com::DeepOwnershipHeap<1>,       // Sparse vals are referenced    
-      Com::IndexedHash<0>,             // Indexed by hashing keys       
-      Com::Insertion<0>,               // Allows insertion of keys      
-      Com::Insertion<1>,               // Allows insertion of vals      
-      Com::InsertionOperators<0>,      // << and >> insertion of keys   
-      Com::InsertionOperators<1>,      // << and >> insertion of vals   
-      Com::Emplacement<0>,             // Allows emplacement of keys    
-      Com::Emplacement<1>,             // Allows emplacement of vals    
-      Com::Removal<0>,                 // Allows removal of keys        
-      Com::Removal<1>,                 // Allows removal of vals        
-      Com::Assignment<0>,              // Allows assignment             
-      Com::Assignment<1>,              // Allows assignment             
-      Com::TypedStack<DMeta, K, 0>,    // Key type                      
-      Com::TypedStack<DMeta, V, 1>,    // Value type                    
-      Com::CountStack<>,               // Variable count                
-      Com::ReserveStack<>,             // Variable capacity             
-      Com::Comparison,                 // Allows for comparison         
-      Com::StateStack<                 // Variable state                
-         DefineState::Sorted<State::Disabled>,  // Always unsorted      
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >
-   > {
+   struct TMapUnsorted : Inner::TMapUnsortedBase<K, V> {
       using CTTI_ReflectAs = Map;
       using CTTI_Map       = Yes;
+      using Base           = Inner::TMapUnsortedBase<K, V>;
 
       using KeyDenseMut  = K&;
       using KeyDense     = K const&;
@@ -195,8 +205,10 @@ namespace Langulus::Anyness
       constexpr TMapUnsorted(const TMapUnsorted&) noexcept = default;
       constexpr TMapUnsorted(TMapUnsorted&&) noexcept = default;
 
-      template<CT::Map M>
-      constexpr TMapUnsorted(Copied<M>&&) noexcept;
+      template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
+      constexpr TMapUnsorted(I<M>&& other) noexcept
+         : Base {FWD(other)} {}
+
       //template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
       //constexpr TMapUnsorted(I<M>&&) noexcept;
 
@@ -231,40 +243,10 @@ namespace Langulus::Anyness
    /// Sorted statically typed map                                            
    ///                                                                        
    template<CT::NotVoid K, CT::NotVoid V>
-   struct TMapSorted : Container<
-      Com::HeapMovable<0>,             // Heap for keys                 
-      Com::HeapMovable<1>,             // Heap for values               
-      Com::OwnershipStack<0>,          // Keys allocation is referenced 
-      Com::OwnershipStack<1>,          // Vals allocation is referenced 
-      Com::HashHeap<0>,                // Keys can be hashed            
-      Com::HashHeap<1>,                // Values can be hashed          
-      Com::DeepOwnershipHeap<0>,       // Sparse keys are referenced    
-      Com::DeepOwnershipHeap<1>,       // Sparse vals are referenced    
-      Com::IndexedHash<0>,             // Indexed by hashing keys       
-      Com::Insertion<0>,               // Allows insertion of keys      
-      Com::Insertion<1>,               // Allows insertion of vals      
-      Com::InsertionOperators<0>,      // << and >> insertion of keys   
-      Com::InsertionOperators<1>,      // << and >> insertion of vals   
-      Com::Emplacement<0>,             // Allows emplacement of keys    
-      Com::Emplacement<1>,             // Allows emplacement of vals    
-      Com::Removal<0>,                 // Allows removal of keys        
-      Com::Removal<1>,                 // Allows removal of vals        
-      Com::Assignment<0>,              // Allows assignment             
-      Com::Assignment<1>,              // Allows assignment             
-      Com::TypedStack<DMeta, K, 0>,    // Key type                      
-      Com::TypedStack<DMeta, V, 1>,    // Value type                    
-      Com::CountStack<>,               // Variable count                
-      Com::ReserveStack<>,             // Variable capacity             
-      Com::Comparison,                 // Allows for comparison         
-      Com::StateStack<                 // Variable state                
-         DefineState::Sorted<State::Enabled>,   // Always sorted        
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >
-   > {
+   struct TMapSorted : Inner::TMapSortedBase<K, V> {
       using CTTI_ReflectAs = Map;
       using CTTI_Map       = Yes;
+      using Base           = Inner::TMapSortedBase<K, V>;
 
       using KeyDenseMut  = K&;
       using KeyDense     = K const&;
@@ -292,11 +274,15 @@ namespace Langulus::Anyness
       constexpr TMapSorted(const TMapSorted&) noexcept = default;
       constexpr TMapSorted(TMapSorted&&) noexcept = default;
 
-      template<CT::Map M1, CT::Map...MN>
+      template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
+      constexpr TMapSorted(I<M>&& other) noexcept
+         : Base {other.template Forward<typename M::Base>()} {}
+
+      /*template<CT::Map M1, CT::Map...MN>
       TMapSorted(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
 
       template<CT::Pair P1, CT::Pair...PN>
-      TMapSorted(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;
+      TMapSorted(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;*/
 
       ///                                                                     
       ///   Assignment                                                        

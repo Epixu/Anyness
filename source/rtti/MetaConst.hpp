@@ -8,23 +8,35 @@ namespace Langulus::RTTI
    
    namespace Inner
    {
-      
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      /// Relies on the definition limits to pack an ID into the smallest     
+      /// possible space, but also uses some additional bits to encode some   
+      /// often used information about the definition. The handle still has   
+      /// to be transformed into a pointer for more advanced uses, but in     
+      /// general it is likely to avoid an indirection altogether at the      
+      /// cost of a bitwise operation, making it a bit more cache-friendly,   
+      /// and worth experimenting with                                        
+      struct MetaConstPacked_16 : MetaPacked<2> {
+
+      };
+   #endif
+
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
-      struct MetaConstNaked {
-      private:
-         const DefinitionConst* mDefinition;
+      struct MetaConstNaked : MetaNaked<DefinitionConst> {
+         using MetaNaked<DefinitionConst>::MetaNaked;
+         using MetaNaked<DefinitionConst>::operator =;
+         using MetaNaked<DefinitionConst>::operator bool;
 
-      public:
          template<class, class...>
          bool IsExact() const noexcept;
-         bool IsExact(const MetaConstNaked&) const noexcept;
-
-         /// Compare if two tags match exactly                                
-         bool operator == (const MetaConstNaked& rhs) const noexcept {
-            return IsExact(rhs);
-         }
       };
+
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using MetaConstBase = MetaConstPacked_16;
+   #else
+      using MetaConstBase = MetaConstNaked;
+   #endif
 
    } // namespace Langulus::RTTI::Inner
 
@@ -32,22 +44,19 @@ namespace Langulus::RTTI
    ///                                                                        
    ///   Constant ID                                                          
    ///                                                                        
-   /// Can be a naked pointer to a definition, or packed to a smaller size    
-   /// - all this is configurable.                                            
+   /// Can be a naked pointer to a definition, or a structured ID that is     
+   /// either packed to a smaller size, or carry a lot of meta information    
+   /// in the ID itself to avoid indirection                                  
    ///                                                                        
-   struct MetaConst
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      : Inner::MetaPacked<2>
-   #else
-      : Inner::MetaConstNaked
-   #endif
-   {
+   struct MetaConst : Inner::MetaConstBase {
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
-      constexpr MetaConst() noexcept = default;
-      constexpr MetaConst(::std::nullptr_t) noexcept {}
-      constexpr MetaConst(const DefinitionConst*) noexcept;
+      ignore_all_intents(MetaConst);
+
+      using Inner::MetaConstBase::MetaConstBase;
+      using Inner::MetaConstBase::operator =;
+      using Inner::MetaConstBase::operator bool;
    };
 
    using CMeta = MetaConst;

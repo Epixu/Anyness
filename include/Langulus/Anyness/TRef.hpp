@@ -70,7 +70,7 @@ namespace Langulus::Anyness
             (void) pointer;
             return;
          }
-         else EmplaceWithIntent(::std::forward<A>(pointer));
+         else EmplaceWithIntent(FWD(pointer));
       }
 
       constexpr ~TRef() = default;

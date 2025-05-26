@@ -13,8 +13,8 @@ namespace Langulus::CT
    ///   @attention type-erased elements are always insertable, and will fail 
    ///      at runtime if not reflected as such                               
    template<class C, class T1, class...TN>
-   concept RangeInsertable = CT::Container<C> and (
-      C::TypeErased or CT::UnfoldConstructible<TypeOf<C>, T1, TN...>
+   concept RangeInsertable = Container<C> and (
+      Untyped<C> or UnfoldConstructible<TypeOf<C>, T1, TN...>
    );
 
    namespace Inner
@@ -24,25 +24,25 @@ namespace Langulus::CT
       ///   @tparam C - the contained type                                    
       ///   @tparam ...A - the arguments to test                              
       ///   @return true if container is constructible using {A...}           
-      template<CT::Container C, class...A>
+      template<Container C, class...A>
       consteval bool DeepConstructible() noexcept {
          using FA = FirstOf<A...>;
          using SA = IntentOf<FA>;
          using T  = TypeOf<C>;
 
-         if constexpr (C::TypeErased) {
+         if constexpr (Untyped<C>) {
             // Type-erased containers accept almost any type - they     
             // will report errors at runtime instead, if any            
-            return CT::Reflectable<Deint<A>...>;
+            return Reflectable<Deint<A>...>;
          }
-         else if constexpr (sizeof...(A) == 1 and CT::Container<FA>) {
+         else if constexpr (sizeof...(A) == 1 and Container<FA>) {
             // If only one A provided, it HAS to be a container         
             if constexpr (SA::Shallow) {
                // Generally, shallow intents are always supported,      
                // but copying will call element constructors, so we     
                // have to check if the contained type supports it       
-               if constexpr (CT::Copied<SA>)
-                  return CT::ReferConstructible<T>;
+               if constexpr (Copied<SA>)
+                  return ReferConstructible<T>;
                else
                   return true;
             }
@@ -50,10 +50,10 @@ namespace Langulus::CT
                // Cloning always calls element constructors, and        
                // we have to check whether contained elements can       
                // do it                                                 
-               return CT::IntentConstructible<Langulus::Cloned, T>;
+               return IntentConstructible<Langulus::Clone, T>;
             }
          }
-         else return CT::UnfoldConstructible<T, A...>;
+         else return UnfoldConstructible<T, A...>;
       };
 
    } // namespace Langulus::CT::Inner

@@ -73,7 +73,9 @@ namespace Langulus::CT
    /// these checks will act as if the sheddable type doesn't exist at all    
    /// The concept relies on CTTI::Typed for getting into the inner type      
    template<class...T>
-   concept Sheddable = ((CTTI::Sheddable<Deref<T>>::Enabled or (not ::std::is_pointer_v<T> and Decay<T>::CTTI_Sheddable::Enabled)) and ...);
+   concept Sheddable = ((CTTI::Sheddable<Deref<T>>::Enabled
+        or (not ::std::is_pointer_v<T> and Decay<T>::CTTI_Sheddable::Enabled)
+      ) and ...);
 
    template<class...T>
    concept NotSheddable = ((not Sheddable<Deref<T>>) and ...);
@@ -99,11 +101,15 @@ namespace Langulus::CT
 
    } // namespace Langulus::CT::Inner
 
-   template<class T>
-   using Shed = typename decltype(Inner::GetSheddedType<Deref<T>>())::First;
-
 } // namespace Langulus::CT
 
+namespace Langulus
+{
+
+   template<class T>
+   using Shed = typename decltype(CT::Inner::GetSheddedType<Deref<T>>())::First;
+
+} // namespace Langulus
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          

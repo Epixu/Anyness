@@ -9,50 +9,32 @@ namespace Langulus::RTTI
 
    namespace Inner
    {
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      /// Relies on the definition limits to pack an ID into the smallest     
+      /// possible space, but also uses some additional bits to encode some   
+      /// often used information about the definition. The handle still has   
+      /// to be transformed into a pointer for more advanced uses, but in     
+      /// general it is likely to avoid an indirection altogether at the      
+      /// cost of a bitwise operation, making it a bit more cache-friendly,   
+      /// and worth experimenting with                                        
+      struct MetaTagPacked_16 : MetaPacked<2> {
+
+      };
+   #endif
       
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
-      struct MetaTagNaked {
-      private:
-         const DefinitionTag* mDefinition = nullptr;
-
-      public:
-         constexpr MetaTagNaked() noexcept = default;
-         constexpr MetaTagNaked(const MetaTagNaked&) noexcept = default;
-         constexpr MetaTagNaked(MetaTagNaked&&) noexcept = default;
-
-         constexpr MetaTagNaked(::std::nullptr_t) noexcept {}
-
-         explicit constexpr MetaTagNaked(const DefinitionTag* definition) noexcept
-            : mDefinition {definition} {}
-
-         constexpr MetaTagNaked& operator = (const MetaTagNaked&) noexcept = default;
-         constexpr MetaTagNaked& operator = (MetaTagNaked&&) noexcept = default;
-         constexpr MetaTagNaked& operator = (::std::nullptr_t) noexcept {
-            mDefinition = nullptr;
-            return *this;
-         }
-         constexpr MetaTagNaked& operator = (const DefinitionTag* definition) noexcept {
-            mDefinition = definition;
-            return *this;
-         }
-
-         explicit operator bool() const noexcept {
-            return mDefinition != nullptr;
-         }
+      struct MetaTagNaked : MetaNaked<DefinitionTag> {
+         using MetaNaked<DefinitionTag>::MetaNaked;
+         using MetaNaked<DefinitionTag>::operator =;
+         using MetaNaked<DefinitionTag>::operator bool;
 
          template<class, class...>
          bool IsExact() const noexcept;
-         bool IsExact(const MetaTagNaked&) const noexcept;
-
-         /// Compare if two tags match exactly                                
-         bool operator == (const MetaTagNaked& rhs) const noexcept {
-            return IsExact(rhs);
-         }
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaTagBase = MetaPacked<2>;
+      using MetaTagBase = MetaTagPacked_16;
    #else
       using MetaTagBase = MetaTagNaked;
    #endif
@@ -63,24 +45,19 @@ namespace Langulus::RTTI
    ///                                                                        
    ///   Tag ID                                                               
    ///                                                                        
-   /// Can be a naked pointer to a definition, or packed to a smaller size    
+   /// Can be a naked pointer to a definition, or a structured ID that is     
+   /// either packed to a smaller size, or carry a lot of meta information    
+   /// in the ID itself to avoid indirection                                  
    ///                                                                        
    struct MetaTag : Inner::MetaTagBase {
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
+      ignore_all_intents(MetaTag);
+
       using Inner::MetaTagBase::MetaTagBase;
       using Inner::MetaTagBase::operator =;
-
-      template<template<class> class T> requires CT::Intent<T<MetaTag>>
-      explicit constexpr MetaTag(T<MetaTag>&& meta) noexcept
-         : MetaTag {*meta} {}
-
-      template<template<class> class T> requires CT::Intent<T<MetaTag>>
-      constexpr MetaTag& operator = (T<MetaTag>&& rhs) noexcept {
-         new (this) MetaTag {*rhs};
-         return *this;
-      }
+      using Inner::MetaTagBase::operator bool;
    };
 
    using TMeta = MetaTag;

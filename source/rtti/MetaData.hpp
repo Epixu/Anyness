@@ -39,38 +39,12 @@ namespace Langulus::RTTI
       };
    #endif
 
-      ///                                                                     
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
-      ///                                                                     
-      struct MetaDataNaked {
-      private:
-         const DefinitionData* mDefinition = nullptr;
-
-      public:
-         constexpr MetaDataNaked() noexcept = default;
-         constexpr MetaDataNaked(const MetaDataNaked&) noexcept = default;
-         constexpr MetaDataNaked(MetaDataNaked&&) noexcept = default;
-
-         constexpr MetaDataNaked(::std::nullptr_t) noexcept {}
-
-         explicit constexpr MetaDataNaked(const DefinitionData* definition) noexcept
-            : mDefinition {definition} {}
-
-         constexpr MetaDataNaked& operator = (const MetaDataNaked&) noexcept = default;
-         constexpr MetaDataNaked& operator = (MetaDataNaked&&) noexcept = default;
-         constexpr MetaDataNaked& operator = (::std::nullptr_t) noexcept {
-            mDefinition = nullptr;
-            return *this;
-         }
-         constexpr MetaDataNaked& operator = (const DefinitionData* definition) noexcept {
-            mDefinition = definition;
-            return *this;
-         }
-
-         explicit operator bool() const noexcept {
-            return mDefinition != nullptr;
-         }
+      struct MetaDataNaked : MetaNaked<DefinitionData> {
+         using MetaNaked<DefinitionData>::MetaNaked;
+         using MetaNaked<DefinitionData>::operator =;
+         using MetaNaked<DefinitionData>::operator bool;
 
          template<class, class...>
          bool Is() const noexcept;
@@ -82,13 +56,6 @@ namespace Langulus::RTTI
 
          template<class, class...>
          bool IsExact() const noexcept;
-         bool IsExact(const MetaDataNaked&) const noexcept;
-
-         /// Compare if two data types match exactly                          
-         ///   @attention includes qualifiers and sparsity                    
-         bool operator == (const MetaDataNaked& rhs) const noexcept {
-            return IsExact(rhs);
-         }
 
          ::std::size_t GetMinAllocation() const noexcept;
          ::std::size_t GetSize() const noexcept;
@@ -130,17 +97,10 @@ namespace Langulus::RTTI
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
+      ignore_all_intents(MetaData);
+
       using Inner::MetaDataBase::MetaDataBase;
       using Inner::MetaDataBase::operator =;
-
-      explicit constexpr MetaData(Cloned<MetaData>&& meta) noexcept
-         : MetaData {*meta} {}
-
-      constexpr MetaData& operator = (Cloned<MetaData>&& rhs) noexcept {
-         new (this) MetaData {*rhs};
-         return *this;
-      }
-
       using Inner::MetaDataBase::operator bool;
    };
 

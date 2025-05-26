@@ -233,7 +233,7 @@ struct RT : Referenced {
       rhs.moved_out = true;
    }
 
-   RT(Cloned<RT>&& rhs)
+   RT(Clone<RT>&& rhs)
       : data(rhs->data), t {rhs->t}, cloned_in {true} {
    }
 

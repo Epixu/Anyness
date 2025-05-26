@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-   
    namespace Inner
    {
 
@@ -20,7 +19,7 @@ namespace Langulus::CTTI
       /// int-initializable. This one is better, because it allows tests for  
       /// float- and double-initializables as well                            
       template<class T, CT::Fundamental F>
-      consteval bool Signed() {
+      consteval bool SignedInner() {
          return ::std::constructible_from<T, F> and requires {
             T {F {-1}} < T {F {0}};
          };
@@ -33,9 +32,9 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Signed = Yes;` in T                        
    template<class T>
    struct Signed {
-      static constexpr bool Enabled = Inner::Signed<T, int>()
-                                   or Inner::Signed<T, float>()
-                                   or Inner::Signed<T, double>();
+      static constexpr bool Enabled = Inner::SignedInner<T, int>()
+                                   or Inner::SignedInner<T, float>()
+                                   or Inner::SignedInner<T, double>();
    };
    
 } // namespace Langulus::CTTI

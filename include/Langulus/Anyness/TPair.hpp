@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "THandle.hpp"
+#include <Langulus/Retype.hpp>
 
 
 namespace Langulus::CT
@@ -17,8 +18,8 @@ namespace Langulus::CT
    template<class K, class V, class...P>
    concept PairConstructible = NotReference<K, V> and Pair<P...>
        and ((IntentOf<P>::Shallow or (
-               IntentConstructibleAlt<typename IntentOf<P>::template As<K>>
-           and IntentConstructibleAlt<typename IntentOf<P>::template As<V>>)
+               IntentConstructibleAlt<Retype<IntentOf<P>, K>>
+           and IntentConstructibleAlt<Retype<IntentOf<P>, V>>)
        ) and ...);
 
    /// Concept for recognizing argument, with which a statically typed        
@@ -26,15 +27,15 @@ namespace Langulus::CT
    template<class K, class V, class...P>
    concept PairAssignable = NotReference<K, V> and Pair<P...>
        and ((IntentOf<P>::Shallow or (
-               IntentAssignableAlt<typename IntentOf<P>::template As<K>>
-           and IntentAssignableAlt<typename IntentOf<P>::template As<V>>)
+               IntentAssignableAlt<Retype<IntentOf<P>, K>>
+           and IntentAssignableAlt<Retype<IntentOf<P>, V>>)
        ) and ...);
 
    /// Concept for recognizing argument, against which a pair can be compared 
    template<class K, class V, class...P>
    concept PairComparable = Pair<P...> and ((
            Comparable<K, typename Deint<P>::Key>
-       and Comparable<V, typename Deint<P>::Value>
+       and Comparable<V, typename Deint<P>::Val>
       ) and ...);
 
 } // namespace Langulus::CT

@@ -43,9 +43,8 @@ namespace Langulus::Anyness::Component
       /*using Byte = ::std::uint8_t;*/
       template<CT::Container C>
       using View = typename C::ViewType;
-      
-      
             
+
       /// Get a size based on reflected allocation page and count             
       ///   @param count - the number of elements to request                  
       ///   @return both the provided byte size and reserved count            
@@ -155,8 +154,8 @@ namespace Langulus::Anyness::Component
                      // Memory moved, and we should move all elements   
                      // in it. We're moving to new memory, so no reverse
                      // is required                                     
-                     auto from = RangeHandle(previous).begin();
-                     for (auto to : RangeHandle(self))
+                     auto from = IterateHandles(previous).begin();
+                     for (auto to : IterateHandles(self))
                         to.EmplaceWithIntent(Abandon(*(from++)));
                      previous.Free();
                   }
@@ -404,6 +403,9 @@ namespace Langulus::Anyness::Component
       }
 
    public:
+      using HeapReference<ID>::HeapReference;
+      using HeapReference<ID>::operator =;
+
       constexpr HeapMovable() noexcept
          : HeapReference<ID> {nullptr} {}
 

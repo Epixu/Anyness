@@ -322,7 +322,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       for (int repeat = 0; repeat != 10; ++repeat) {
          WHEN(std::string("Populated using Many::New") + std::to_string(repeat)) {
             pack = FromHelper<T, E>();
-            const auto created = pack.New(3, darray2[0]);
+            const auto created = pack.EmplaceAt(3, darray2[0]);
             REQUIRE(created == 3);
 
             Many_CheckState_OwnedFull<E>(pack);
@@ -603,7 +603,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          }
          else {
             REQUIRE_THROWS(pack.EmplaceAt(Index::Front, ::std::move(i666)));
-            Any_CheckState_Default<E>(pack);
+            Many_CheckState_Default<E>(pack);
          }
 
          DestroyElement(i666);
@@ -646,7 +646,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          }
          else {
             REQUIRE_THROWS(pack.EmplaceAt(Index::Back, ::std::move(i666)));
-            Any_CheckState_Default<E>(pack);
+            Many_CheckState_Default<E>(pack);
          }
 
          DestroyElement(i666);

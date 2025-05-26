@@ -27,4 +27,44 @@ namespace Langulus::RTTI::Inner
    };
 #endif
 
+   /// A naked pointer to a definition. Probably the fastest, but most        
+   /// memory-inefficient on 64bit systems                                    
+   template<class T>
+   struct MetaNaked {
+   protected:
+      const T* mDefinition = nullptr;
+
+   public:
+      constexpr MetaNaked() noexcept = default;
+      constexpr MetaNaked(const MetaNaked&) noexcept = default;
+      constexpr MetaNaked(MetaNaked&&) noexcept = default;
+      constexpr MetaNaked(::std::nullptr_t) noexcept {}
+
+      constexpr explicit MetaNaked(const T* definition) noexcept
+         : mDefinition {definition} {}
+
+      constexpr MetaNaked& operator = (const MetaNaked&) noexcept = default;
+      constexpr MetaNaked& operator = (MetaNaked&&) noexcept = default;
+      constexpr MetaNaked& operator = (::std::nullptr_t) noexcept {
+         mDefinition = nullptr;
+         return *this;
+      }
+      constexpr MetaNaked& operator = (const T* definition) noexcept {
+         mDefinition = definition;
+         return *this;
+      }
+
+      constexpr explicit operator bool() const noexcept {
+         return mDefinition != nullptr;
+      }
+
+      constexpr bool IsExact(const MetaNaked& rhs) const noexcept {
+         return mDefinition == rhs.mDefinition;
+      }
+
+      constexpr bool operator == (const MetaNaked& rhs) const noexcept {
+         return mDefinition == rhs.mDefinition;
+      }
+   };
+
 } // namespace Langulus::RTTI::Inner

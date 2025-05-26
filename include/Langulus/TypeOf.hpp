@@ -95,28 +95,35 @@ namespace Langulus
    ///      - else if T::operator const TypeOf<T>& exists use that            
    ///      - else if T::operator TypeOf<T> exists use that                   
    ///   @param what - the instance to decay                                  
-   ///   @return a reference to the the inner data                            
+   ///   @return the inner data                                               
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr decltype(auto) TypedCast(T&& what) {
-      if constexpr (CT::Typed<T>) {
-         using TT = TypeOf<T>;
+      using TT = TypeOf<T>;
 
-         if constexpr (requires { what.TypedCast(); })
-            return what.TypedCast();
-         else if constexpr (CT::Typelist<TT>)
-            static_assert(false , "Can't decide which type to cast to - add a TypedCast() method to disambiguate");
-         else if constexpr (requires { what.operator TT&& (); })
-            return what.operator TT&& ();
-         else if constexpr (requires { what.operator TT& (); })
-            return what.operator TT& ();
-         else if constexpr (requires { what.operator const TT& (); })
-            return what.operator const TT& ();
-         else if constexpr (requires { what.operator TT (); })
-            return what.operator TT ();
-         else
-            static_assert(false, "No cast operator available for decaying to inner type");
-      }
-      else return what;
+      if constexpr (CT::Void<TT>)
+         return static_cast<T&&>(what);
+      else if constexpr (requires { what.TypedCast(); })
+         return what.TypedCast();
+      else if constexpr (CT::Typelist<TT>)
+         static_assert(false , "Can't decide which type to cast to - add a TypedCast() method to disambiguate");
+      else if constexpr (requires { what.operator TT (); })
+         return what.operator TT ();
+      else
+         static_assert(false, "No cast operator available for decaying to inner type");
    }
+
+   /// Strips all sheddable layers down to the most inner type                
+   template<class T>
+   constexpr decltype(auto) ShedCast(T&& item) noexcept {
+      if constexpr (CT::Sheddable<T>) {
+         using InnerT = TypeOf<T>;
+         static_assert(not ::std::same_as<::std::decay_t<T>, ::std::decay_t<InnerT>>,
+            "Sheddable type's inner type is the same, and will result in infinite regress");
+         static_assert(requires { static_cast<InnerT>(item); },
+            "Sheddable can't be static_cast to the inner type");
+         return ShedCast(static_cast<InnerT>(item));
+      }
+      else return static_cast<T&&>(item);
+   };
 
 } // namespace Langulus

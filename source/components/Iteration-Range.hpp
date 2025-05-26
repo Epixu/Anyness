@@ -12,32 +12,36 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    ///   Reverse iteration adapter                                            
    ///                                                                        
-   /// Use like this: for(auto i : RangeReverse(container)), where            
+   /// Use like this: for(auto i : IterateInReverse(container)), where        
    /// 'container' can be any range, including a std one                      
    ///                                                                        
    template<::std::ranges::range C>
-   struct RangeReverse {
+   struct IterateInReverse {
       C& range;
 
-      RangeReverse(C& a) : range {a} {}
+      IterateInReverse(C& a) : range {a} {}
 
       auto begin()  { return range.rbegin(); }
       auto end()    { return range.rend();   }
    };
 
    template<::std::ranges::range C>
-   RangeReverse(C&) -> RangeReverse<C>;
+   IterateInReverse(C&) -> IterateInReverse<C>;
 
 
    ///                                                                        
    ///   Iterate multiple containers with the same ranged-for                 
    ///                                                                        
+   /// Use like this: for(auto i : IterateTogether(pack1, pack2)), where      
+   /// 'packN' can be any range, including a std one. You can retrieve the    
+   /// current element by using i[N], or i.one() i.two() for the first two.   
+   ///                                                                        
    template<::std::ranges::range...C>
-   struct RangeTogether {
-      static_assert(sizeof...(C) > 1, "RangeTogether needs at least two containers");
+   struct IterateTogether {
+      static_assert(sizeof...(C) > 1, "IterateTogether needs at least two containers");
       ::std::tuple<C&...> range;
 
-      RangeTogether(C&...a) : range {a...} {}
+      IterateTogether(C&...a) : range {a...} {}
 
       struct WrapBegin {
       protected:
@@ -79,7 +83,7 @@ namespace Langulus::Anyness::Component
    };
    
    template<::std::ranges::range...C>
-   RangeTogether(C&...) -> RangeTogether<C...>;
+   IterateTogether(C&...) -> IterateTogether<C...>;
 
 
    ///                                                                        
@@ -88,14 +92,14 @@ namespace Langulus::Anyness::Component
    /// When doing for(auto i : container), the statement always               
    /// dereferences the iterator and 'i' always ends up with the contained    
    /// type - counteract this, and make 'i' be the iterator type instead      
-   /// Use like this: for(auto i : RangeIterator(container)), where           
+   /// Use like this: for(auto i : IterateNoDeref(container)), where          
    /// 'container' can be any range, including a std one                      
    ///                                                                        
    template<::std::ranges::range C>
-   struct RangeIterator {
+   struct IterateNoDeref {
       C& range;
 
-      RangeIterator(C& a) : range {a} {}
+      IterateNoDeref(C& a) : range {a} {}
 
       struct WrapBegin {
       protected:
@@ -125,7 +129,7 @@ namespace Langulus::Anyness::Component
    };
 
    template<::std::ranges::range C>
-   RangeIterator(C&) -> RangeIterator<C>;
+   IterateNoDeref(C&) -> IterateNoDeref<C>;
 
 
    ///                                                                        
@@ -134,44 +138,49 @@ namespace Langulus::Anyness::Component
    /// When doing for(auto i : container), the statement always uses the most 
    /// optimal iteration approach, but often you want to be able to modify    
    /// values in-place while iterating.                                       
-   /// Use like this: for(auto i : RangeHandle(container)), where             
+   /// Use like this: for(auto i : IterateHandles(container)), where          
    /// 'container' can be any anyness container                               
    ///                                                                        
    template<CT::Container C>
-   struct RangeHandle {
+   struct IterateHandles {
+      using H = decltype(Fake<C>().GetHandle());
+
       C& range;
 
-      RangeHandle(C& a) : range {a} {}
+      explicit IterateHandles(C& a) : range {a} {}
 
       struct WrapBegin {
       protected:
-         using Type = decltype(Fake<C>().GetHandle());
-         Type mIt;
+         H  mIt;
+         C& mRange;
 
       public:
-         WrapBegin(const Type& it) : mIt {it} {}
+         constexpr WrapBegin(C& range) noexcept
+            : mIt    {range.GetHandle()}
+            , mRange {range} {}
 
-         bool operator == (const WrapBegin& rhs) const noexcept {
-            return mIt == rhs.mIt;
-         }
-         bool operator == (const IteratorEnd&) const noexcept {
-            return mIt == IteratorEnd {};
+         constexpr bool operator == (const WrapBegin& rhs) const noexcept {
+            return mIt.GetRaw() == rhs.mIt.GetRaw();
          }
 
-         Type& operator *  () const noexcept { return mIt; }
-         Type& operator -> () const noexcept { return mIt; }
+         constexpr bool operator == (const IteratorEnd&) const noexcept {
+            return mIt.GetRaw() == mRange.GetRawEnd();
+         }
+
+         const H& operator *  () const noexcept { return  mIt; }
+         const H* operator -> () const noexcept { return &mIt; }
 
          WrapBegin& operator ++ ()    noexcept { ++mIt; return *this; }
          WrapBegin  operator ++ (int) noexcept { return mIt++; }
       };
 
    public:
-      auto begin() { return WrapBegin {range.GetHandle()}; }
-      auto end  () { return IteratorEnd {}; }
+      constexpr WrapBegin   begin() const noexcept { return {range}; }
+      constexpr IteratorEnd end  () const noexcept { return {};      }
    };
 
    template<CT::Container C>
-   RangeHandle(C&) -> RangeHandle<C>;
+   IterateHandles(C&) -> IterateHandles<C>;
 
 
    ///                                                                        

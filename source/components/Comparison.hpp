@@ -7,16 +7,21 @@
 #include <Langulus/CT/Text.hpp>
 
 
-namespace Langulus::Anyness
+namespace Langulus::CT
 {
    
    /// Check if container's elements are comparable                           
    ///   @attention type-erased elements are always insertable, but will fail 
    ///      at runtime if not reflected as such                               
    template<class C, class T1, class...TN>
-   concept RangeComparable = CT::Container<C> and (
-      C::TypeErased or CT::UnfoldComparable<TypeOf<C>, T1, TN...>
+   concept RangeComparable = Container<C> and (
+      Untyped<C> or UnfoldComparable<TypeOf<C>, T1, TN...>
    );
+
+} // namespace Langulus::CT
+
+namespace Langulus::Anyness
+{
 
    struct Text;
 
@@ -32,6 +37,9 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes;
 
       constexpr Comparison() noexcept = default;
+      ignore_all_intents(Comparison);
+
+      /*constexpr Comparison() noexcept = default;
       explicit constexpr Comparison(const Comparison&) noexcept = default;
       explicit constexpr Comparison(Comparison&&) noexcept = default;
       template<template<class> class I> requires CT::Intent<I<Comparison>>
@@ -40,7 +48,7 @@ namespace Langulus::Anyness::Component
       constexpr Comparison& operator = (Comparison const&) noexcept = default;
       constexpr Comparison& operator = (Comparison&&) noexcept = default;
       template<template<class> class I> requires CT::Intent<I<Comparison>>
-      constexpr Comparison& operator = (I<Comparison>&& other) {}
+      constexpr Comparison& operator = (I<Comparison>&& other) {}*/
 
    private:
       template<CT::Container C>
@@ -59,7 +67,7 @@ namespace Langulus::Anyness::Component
       /// Compare to any non-container data                                   
       ///   @return true if data matches contained data                       
       template<CT::Container LHS, CT::NotContainer RHS>
-      constexpr bool operator == (this const LHS& lhs, const RHS& rhs) requires RangeComparable<LHS, RHS> {
+      constexpr bool operator == (this const LHS& lhs, const RHS& rhs) requires CT::RangeComparable<LHS, RHS> {
          return lhs.CompareSingleValue(rhs);
       }
 
@@ -230,7 +238,7 @@ namespace Langulus::Anyness::Component
       ///   @return the index of the found item, or 'npos' if none found      
       template<bool REVERSE = false, CT::IndexedLinearly C, CT::NoIntent T>
       auto Find(this const C& self, const T& item, Count<C> cookie = 0) noexcept
-         -> At<C> requires RangeComparable<C, T>
+         -> At<C> requires CT::RangeComparable<C, T>
       {
          if constexpr (not C::TypeErased) {
             auto start = REVERSE ? self.GetRawEnd() - 1 - cookie : self.GetRaw() + cookie;
@@ -265,9 +273,7 @@ namespace Langulus::Anyness::Component
       ///   @param cookie - resume search from a given index                  
       ///   @return the index of the found item, or 'npos' if not found       
       template<bool REVERSE = false, CT::IndexedLinearly C1, CT::Container C2>
-      auto FindRange(this const C1& self, const C2& range, Count<C1> cookie = 0) noexcept
-         -> At<C1>
-      {
+      auto FindRange(this const C1& self, const C2& range, Count<C1> cookie = 0) noexcept -> At<C1> {
          if (cookie >= self.GetCount() or range.GetCount() > self.GetCount() - cookie)
             return Index::None;
 

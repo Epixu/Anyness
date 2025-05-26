@@ -220,8 +220,14 @@ namespace Langulus
    using DecvqAll = Deptr<decltype(Inner::NestedDecvq<T>())>;
 
    /// I don't like how long ::std::conditional_t is to write                 
+   /// Also, std::conditional_t must instantiate both paths, which is a big   
+   /// design flaw. This one adds an additional indirection to compensate     
+   /// https://reddit.com/r/cpp_questions/comments/lujzhu/template_is_instantiated_in_false_branch_of/
    template<bool CONDITION, class YES, class NO>
-   using Tif = ::std::conditional_t<CONDITION, YES, NO>;
+   using Tif = typename ::std::conditional_t<CONDITION,
+         ::std::type_identity<YES>,
+         ::std::type_identity<NO>
+      >::type;
    
    /// Always returns a pointer to the argument                               
    template<class T> LANGULUS(ALWAYS_INLINED)

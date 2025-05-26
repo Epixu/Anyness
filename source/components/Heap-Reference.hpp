@@ -42,8 +42,21 @@ namespace Langulus::Anyness::Component
       /// It must always reference a valid heap allocation                    
       HeapReference() = delete;
 
+      constexpr HeapReference(HeapReference const& other) noexcept
+         : mHeap {other.mHeap} {}
+      constexpr HeapReference(HeapReference&& other) noexcept
+         : mHeap {other.mHeap} {}
       constexpr HeapReference(void* heap) noexcept
          : mHeap {heap} {}
+
+      constexpr HeapReference& operator = (HeapReference const& other) noexcept {
+         mHeap = other.mHeap;
+         return *this;
+      }
+      constexpr HeapReference& operator = (HeapReference&& other) noexcept {
+         mHeap = other.mHeap;
+         return *this;
+      }
 
       /// Get a direct access to the heap memory                              
       template<CT::Container C>
@@ -54,7 +67,7 @@ namespace Langulus::Anyness::Component
          else
             return static_cast<const T*>(self.mHeap);
       }
-
+      
       /// Get a direct access to the heap memory as a different type          
       template<class T, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
@@ -63,7 +76,17 @@ namespace Langulus::Anyness::Component
          else
             return static_cast<const T*>(self.mHeap);
       }
-      
+
+      /// Get a direct access to the heap memory's end                        
+      /// Depends on the number of initialized elements                       
+      template<CT::Container C>
+      constexpr auto GetRawEnd(this C&& self) noexcept {
+         if constexpr (CT::Typed<C>)
+            return self.GetRaw() + self.GetCount();
+         else
+            return self.template GetRawAs<uint8_t>() + self.GetBytesize();
+      }
+    
       /// Get first element pointer or reference, depending on T              
       /// This is a lower-level routine that does only sparseness checking    
       /// No conversion or copying occurs, only pointer arithmetic            

@@ -18,10 +18,19 @@ namespace Langulus::Anyness::Component
       static constexpr bool DeeplyOwned = true;
 
    protected:
-      AllocationPtr* mEntries;
+      AllocationPtr* mEntries = nullptr;
 
       /// Get entries array                                                   
       auto GetEntries() const noexcept { return mEntries; }
+
+   public:
+      constexpr DeepOwnershipStack() noexcept = default;
+      constexpr DeepOwnershipStack(DeepOwnershipStack const& other) noexcept
+         : mEntries {other.mEntries} {}
+      constexpr DeepOwnershipStack(DeepOwnershipStack&& other) noexcept
+         : mEntries {other.mEntries} {}
+      constexpr DeepOwnershipStack(AllocationPtr* entries) noexcept
+         : mEntries {entries} {}
    };
 
 } // namespace Langulus::Anyness::Component

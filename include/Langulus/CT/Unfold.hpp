@@ -36,7 +36,7 @@ namespace Langulus::CT
 
       ///   @return a pointer of the first nested non-unfoldable type         
       template<class T, class UNLESS = void>
-      consteval Typelist auto Unfold() {
+      consteval Typelist auto UnfoldInner() {
          if constexpr (Similar<T, UNLESS> or not Unfoldable<T>) {
             // Immediately break the nesting if UNLESS condition is met 
             // Alternatively, break nesting if T is reflected as not    
@@ -45,17 +45,17 @@ namespace Langulus::CT
          }
          else if constexpr (Sheddable<T>) {
             // Shed and nest (intents end up here)                      
-            return Unfold<Shed<T>>();
+            return UnfoldInner<Shed<T>>();
          }
          else if constexpr (Array<T>) {
             // Shed array extents and nest                              
-            return Unfold<Deext<T>>();
+            return UnfoldInner<Deext<T>>();
          }
          else if constexpr (Typed<T>) {
             // This includes ::std::ranges::range as well as anything   
             // that is statically typed in Anyness, unless reflected    
             // as not Unfoldable                                        
-            return Unfold<TypeOf<T>>();
+            return UnfoldInner<TypeOf<T>>();
          }
          else Types<T> {};
       }
@@ -70,7 +70,7 @@ namespace Langulus::CT
    ///      contexts where you actually want to insert a std::map for         
    ///      example, and not unfold it down to pairs                          
    template<class T, class UNLESS = void>
-   using Unfold = typename decltype(Inner::Unfold<T, UNLESS>())::First;
+   using Unfold = typename decltype(Inner::UnfoldInner<T, UNLESS>())::First;
    
    /// Check if a T is constructible with each of the provided arguments,     
    /// either directly or by being unfolded                                   

@@ -25,6 +25,9 @@ namespace Langulus::Anyness::Component
       using CountType = decltype(COUNT);
       using IndexType = Index::At<CountType>;
 
+      constexpr CountStatic() noexcept = default;
+      ignore_all_intents(CountStatic);
+
       /// Equal to COUNT if container has a heap component that has been      
       /// allocated. If no heap component exists, then the count is simply    
       /// always COUNT                                                        

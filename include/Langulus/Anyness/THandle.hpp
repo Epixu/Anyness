@@ -28,6 +28,7 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::CountStatic<1u>,
          Com::Assignment<>,
+         Com::Emplacement<>,
          Com::Comparison
       >;
       
@@ -37,6 +38,7 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::CountStatic<1u>,
          Com::Assignment<>,
+         Com::Emplacement<>,
          Com::Comparison
       >;
 
@@ -100,8 +102,8 @@ namespace Langulus::Anyness
 
       ///                                                                     
       /// Construction                                                        
-      explicit constexpr THandleDisowned(THandleDisowned const&) noexcept = default;
-      explicit constexpr THandleDisowned(THandleDisowned&&) noexcept = default;
+      /*explicit*/ constexpr THandleDisowned(THandleDisowned const&) noexcept = default;
+      /*explicit*/ constexpr THandleDisowned(THandleDisowned&&) noexcept = default;
 
       /// Intent constructor                                                  
       template<template<class> class S> requires CT::IntentConstructible<S, T>
