@@ -92,13 +92,14 @@ void DestroyPair(auto& pair) {
          if constexpr (CT::Typed<P>) {
             // It's a statically typed langulus pair                    
             using K = typename P::Key;
-            using V = typename P::Value;
+            using V = typename P::Val;
 
             if constexpr (CT::Sparse<K>) {
                if constexpr (CT::Referenced<Deptr<K>>)
                   REQUIRE(pair.GetKey()->Reference(-1) == 0);
                if constexpr (CT::Destroyable<Decay<K>>)
                   pair.GetKey()->~Decay<K>();
+
                free(pair.GetKey());
             }
             else if constexpr (requires (K k) { k.Reset(); })
@@ -106,13 +107,14 @@ void DestroyPair(auto& pair) {
 
             if constexpr (CT::Sparse<V>) {
                if constexpr (CT::Referenced<Deptr<V>>)
-                  REQUIRE(pair.GetValue()->Reference(-1) == 0);
+                  REQUIRE(pair.GetVal()->Reference(-1) == 0);
                if constexpr (CT::Destroyable<Decay<V>>)
-                  pair.GetValue()->~Decay<V>();
-               free(pair.GetValue());
+                  pair.GetVal()->~Decay<V>();
+
+               free(pair.GetVal());
             }
             else if constexpr (requires (V v) { v.Reset(); })
-               DecvqCast(pair.GetValue()).Reset();
+               DecvqCast(pair.GetVal()).Reset();
          }
          else {
             if (pair.GetKey().IsSparse()) {
@@ -123,13 +125,13 @@ void DestroyPair(auto& pair) {
             
             DecvqCast(pair.GetKey()).Reset();
 
-            if (pair.GetValue().IsSparse()) {
-               REQUIRE(pair.GetValue().GetType().Reference(*pair.GetValue().template GetRaw<void*>(), -1) == 0);
-               REQUIRE(pair.GetValue().GetType().Destroy(*pair.GetValue().template GetRaw<void*>()));
-               free(*pair.GetValue().template GetRaw<void*>());
+            if (pair.GetVal().IsSparse()) {
+               REQUIRE(pair.GetVal().GetType().Reference(*pair.GetVal().template GetRaw<void*>(), -1) == 0);
+               REQUIRE(pair.GetVal().GetType().Destroy(*pair.GetVal().template GetRaw<void*>()));
+               free(*pair.GetVal().template GetRaw<void*>());
             }
             
-            DecvqCast(pair.GetValue()).Reset();
+            DecvqCast(pair.GetVal()).Reset();
          }
       }
       else if constexpr (requires { pair.first; }) {
@@ -142,6 +144,7 @@ void DestroyPair(auto& pair) {
                REQUIRE(pair.first->Reference(-1) == 0);
             if constexpr (CT::Destroyable<Decay<K>>)
                pair.first->~Decay<K>();
+
             free(pair.first);
          }
          else if constexpr (requires (K k) { k.Reset(); })
@@ -152,6 +155,7 @@ void DestroyPair(auto& pair) {
                REQUIRE(pair.second->Reference(-1) == 0);
             if constexpr (CT::Destroyable<Decay<V>>)
                pair.second->~Decay<V>();
+
             free(pair.second);
          }
          else if constexpr (requires (V v) { v.Reset(); })

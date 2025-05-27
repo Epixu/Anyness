@@ -167,8 +167,8 @@ namespace Langulus::Anyness::Component
             return mIt.GetRaw() == mRange.GetRawEnd();
          }
 
-         const H& operator *  () const noexcept { return  mIt; }
-         const H* operator -> () const noexcept { return &mIt; }
+         H& operator *  () const noexcept { return  mIt; }
+         H* operator -> () const noexcept { return &mIt; }
 
          WrapBegin& operator ++ ()    noexcept { ++mIt; return *this; }
          WrapBegin  operator ++ (int) noexcept { return mIt++; }

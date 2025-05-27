@@ -84,14 +84,14 @@ TEMPLATE_TEST_CASE("Testing refer-assignable types", "[intents]",
    static_assert(not CT::ReferAssignable<const T>);
    static_assert(    CT::ReferAssignable<T*>);
    static_assert(    CT::ReferAssignable<const T*>);
-   static_assert(    CT::IntentAssignable<Referred, T>);
-   static_assert(not CT::IntentAssignable<Referred, const T>);
-   static_assert(    CT::IntentAssignable<Referred, T*>);
-   static_assert(    CT::IntentAssignable<Referred, const T*>);
-   static_assert(    CT::IntentAssignableAlt<Referred<T>>);
-   static_assert(not CT::IntentAssignableAlt<Referred<const T>>);
-   static_assert(    CT::IntentAssignableAlt<Referred<T*>>);
-   static_assert(    CT::IntentAssignableAlt<Referred<const T*>>);
+   static_assert(    CT::IntentAssignable<Refer, T>);
+   static_assert(not CT::IntentAssignable<Refer, const T>);
+   static_assert(    CT::IntentAssignable<Refer, T*>);
+   static_assert(    CT::IntentAssignable<Refer, const T*>);
+   static_assert(    CT::IntentAssignableAlt<Refer<T>>);
+   static_assert(not CT::IntentAssignableAlt<Refer<const T>>);
+   static_assert(    CT::IntentAssignableAlt<Refer<T*>>);
+   static_assert(    CT::IntentAssignableAlt<Refer<const T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -155,10 +155,10 @@ TEMPLATE_TEST_CASE("Testing move-makable types", "[intents]",
    using T = TestType;
    static_assert(CT::MoveConstructible<T>);
    static_assert(CT::MoveConstructible<T*>);
-   static_assert(CT::IntentConstructible<Moved, T>);
-   static_assert(CT::IntentConstructible<Moved, T*>);
-   static_assert(CT::IntentConstructibleAlt<Moved<T>>);
-   static_assert(CT::IntentConstructibleAlt<Moved<T*>>);
+   static_assert(CT::IntentConstructible<Move, T>);
+   static_assert(CT::IntentConstructible<Move, T*>);
+   static_assert(CT::IntentConstructibleAlt<Move<T>>);
+   static_assert(CT::IntentConstructibleAlt<Move<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -209,14 +209,14 @@ TEMPLATE_TEST_CASE("Testing move-assignable types", "[intents]",
    static_assert(not CT::MoveAssignable<const T>);
    static_assert(    CT::MoveAssignable<T*>);
    static_assert(    CT::MoveAssignable<const T*>);
-   static_assert(    CT::IntentAssignable<Moved, T>);
-   static_assert(not CT::IntentAssignable<Moved, const T>);
-   static_assert(    CT::IntentAssignable<Moved, T*>);
-   static_assert(    CT::IntentAssignable<Moved, const T*>);
-   static_assert(    CT::IntentAssignableAlt<Moved<T>>);
-   static_assert(not CT::IntentAssignableAlt<Moved<const T>>);
-   static_assert(    CT::IntentAssignableAlt<Moved<T*>>);
-   static_assert(    CT::IntentAssignableAlt<Moved<const T*>>);
+   static_assert(    CT::IntentAssignable<Move, T>);
+   static_assert(not CT::IntentAssignable<Move, const T>);
+   static_assert(    CT::IntentAssignable<Move, T*>);
+   static_assert(    CT::IntentAssignable<Move, const T*>);
+   static_assert(    CT::IntentAssignableAlt<Move<T>>);
+   static_assert(not CT::IntentAssignableAlt<Move<const T>>);
+   static_assert(    CT::IntentAssignableAlt<Move<T*>>);
+   static_assert(    CT::IntentAssignableAlt<Move<const T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -281,10 +281,10 @@ TEMPLATE_TEST_CASE("Testing copy-makable types", "[intents]",
    using T = TestType;
    static_assert(CT::CopyConstructible<T>);
    static_assert(CT::CopyConstructible<T*>);
-   static_assert(CT::IntentConstructible<Copied, T>);
-   static_assert(CT::IntentConstructible<Copied, T*>);
-   static_assert(CT::IntentConstructibleAlt<Copied<T>>);
-   static_assert(CT::IntentConstructibleAlt<Copied<T*>>);
+   static_assert(CT::IntentConstructible<Copy, T>);
+   static_assert(CT::IntentConstructible<Copy, T*>);
+   static_assert(CT::IntentConstructibleAlt<Copy<T>>);
+   static_assert(CT::IntentConstructibleAlt<Copy<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -303,10 +303,10 @@ TEMPLATE_TEST_CASE("Testing non-copy-makable types", "[intents]",
    using T = TestType;
    static_assert(not CT::CopyConstructible<T>);
    static_assert(    CT::CopyConstructible<T*>);
-   static_assert(not CT::IntentConstructible<Copied, T>);
-   static_assert(    CT::IntentConstructible<Copied, T*>);
-   static_assert(not CT::IntentConstructibleAlt<Copied<T>>);
-   static_assert(    CT::IntentConstructibleAlt<Copied<T*>>);
+   static_assert(not CT::IntentConstructible<Copy, T>);
+   static_assert(    CT::IntentConstructible<Copy, T*>);
+   static_assert(not CT::IntentConstructibleAlt<Copy<T>>);
+   static_assert(    CT::IntentConstructibleAlt<Copy<T*>>);
 
    auto meta = MetaDataOf<Conditional<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
@@ -339,14 +339,14 @@ TEMPLATE_TEST_CASE("Testing copy-assignable types", "[intents]",
    static_assert(not CT::CopyAssignable<const T>);
    static_assert(    CT::CopyAssignable<T*>);
    static_assert(    CT::CopyAssignable<const T*>);
-   static_assert(    CT::IntentAssignable<Copied, T>);
-   static_assert(not CT::IntentAssignable<Copied, const T>);
-   static_assert(    CT::IntentAssignable<Copied, T*>);
-   static_assert(    CT::IntentAssignable<Copied, const T*>);
-   static_assert(    CT::IntentAssignableAlt<Copied<T>>);
-   static_assert(not CT::IntentAssignableAlt<Copied<const T>>);
-   static_assert(    CT::IntentAssignableAlt<Copied<T*>>);
-   static_assert(    CT::IntentAssignableAlt<Copied<const T*>>);
+   static_assert(    CT::IntentAssignable<Copy, T>);
+   static_assert(not CT::IntentAssignable<Copy, const T>);
+   static_assert(    CT::IntentAssignable<Copy, T*>);
+   static_assert(    CT::IntentAssignable<Copy, const T*>);
+   static_assert(    CT::IntentAssignableAlt<Copy<T>>);
+   static_assert(not CT::IntentAssignableAlt<Copy<const T>>);
+   static_assert(    CT::IntentAssignableAlt<Copy<T*>>);
+   static_assert(    CT::IntentAssignableAlt<Copy<const T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -371,14 +371,14 @@ TEMPLATE_TEST_CASE("Testing non-copy-assignable types", "[intents]",
    static_assert(not CT::CopyAssignable<const T>);
    static_assert(    CT::CopyAssignable<T*>);
    static_assert(    CT::CopyAssignable<const T*>);
-   static_assert(not CT::IntentAssignable<Copied, T>);
-   static_assert(not CT::IntentAssignable<Copied, const T>);
-   static_assert(    CT::IntentAssignable<Copied, T*>);
-   static_assert(    CT::IntentAssignable<Copied, const T*>);
-   static_assert(not CT::IntentAssignableAlt<Copied<T>>);
-   static_assert(not CT::IntentAssignableAlt<Copied<const T>>);
-   static_assert(    CT::IntentAssignableAlt<Copied<T*>>);
-   static_assert(    CT::IntentAssignableAlt<Copied<const T*>>);
+   static_assert(not CT::IntentAssignable<Copy, T>);
+   static_assert(not CT::IntentAssignable<Copy, const T>);
+   static_assert(    CT::IntentAssignable<Copy, T*>);
+   static_assert(    CT::IntentAssignable<Copy, const T*>);
+   static_assert(not CT::IntentAssignableAlt<Copy<T>>);
+   static_assert(not CT::IntentAssignableAlt<Copy<const T>>);
+   static_assert(    CT::IntentAssignableAlt<Copy<T*>>);
+   static_assert(    CT::IntentAssignableAlt<Copy<const T*>>);
 
    auto meta = MetaDataOf<Conditional<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
@@ -406,10 +406,10 @@ TEMPLATE_TEST_CASE("Testing clone-makable types", "[intents]",
    using T = TestType;
    static_assert(CT::CloneConstructible<T>);
    static_assert(CT::CloneConstructible<T*>);
-   static_assert(CT::IntentConstructible<Cloned, T>);
-   static_assert(CT::IntentConstructible<Cloned, T*>);
-   static_assert(CT::IntentConstructibleAlt<Cloned<T>>);
-   static_assert(CT::IntentConstructibleAlt<Cloned<T*>>);
+   static_assert(CT::IntentConstructible<Clone, T>);
+   static_assert(CT::IntentConstructible<Clone, T*>);
+   static_assert(CT::IntentConstructibleAlt<Clone<T>>);
+   static_assert(CT::IntentConstructibleAlt<Clone<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -432,13 +432,13 @@ TEMPLATE_TEST_CASE("Testing non-clone-makable types", "[intents]",
    TMany<AggregateTypeComplex>
 ) {
    using T = TestType;
-   static_assert(not CT::DeepConstructible<TypeOf<T>, Cloned<TestType>>);
+   static_assert(not CT::DeepConstructible<TypeOf<T>, Clone<TestType>>);
    static_assert(not CT::CloneConstructible<T>);
    static_assert(not CT::CloneConstructible<T*>);
-   static_assert(not CT::IntentConstructible<Cloned, T>);
-   static_assert(not CT::IntentConstructible<Cloned, T*>);
-   static_assert(not CT::IntentConstructibleAlt<Cloned<T>>);
-   static_assert(not CT::IntentConstructibleAlt<Cloned<T*>>);
+   static_assert(not CT::IntentConstructible<Clone, T>);
+   static_assert(not CT::IntentConstructible<Clone, T*>);
+   static_assert(not CT::IntentConstructibleAlt<Clone<T>>);
+   static_assert(not CT::IntentConstructibleAlt<Clone<T*>>);
 
    auto meta = MetaDataOf<Conditional<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
@@ -465,14 +465,14 @@ TEMPLATE_TEST_CASE("Testing clone-assignable types", "[intents]",
    static_assert(not CT::CloneAssignable<const T>);
    static_assert(    CT::CloneAssignable<T*>);
    static_assert(not CT::CloneAssignable<const T*>);
-   static_assert(    CT::IntentAssignable<Cloned, T>);
-   static_assert(not CT::IntentAssignable<Cloned, const T>);
-   static_assert(    CT::IntentAssignable<Cloned, T*>);
-   static_assert(not CT::IntentAssignable<Cloned, const T*>);
-   static_assert(    CT::IntentAssignableAlt<Cloned<T>>);
-   static_assert(not CT::IntentAssignableAlt<Cloned<const T>>);
-   static_assert(    CT::IntentAssignableAlt<Cloned<T*>>);
-   static_assert(not CT::IntentAssignableAlt<Cloned<const T*>>);
+   static_assert(    CT::IntentAssignable<Clone, T>);
+   static_assert(not CT::IntentAssignable<Clone, const T>);
+   static_assert(    CT::IntentAssignable<Clone, T*>);
+   static_assert(not CT::IntentAssignable<Clone, const T*>);
+   static_assert(    CT::IntentAssignableAlt<Clone<T>>);
+   static_assert(not CT::IntentAssignableAlt<Clone<const T>>);
+   static_assert(    CT::IntentAssignableAlt<Clone<T*>>);
+   static_assert(not CT::IntentAssignableAlt<Clone<const T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -512,14 +512,14 @@ TEMPLATE_TEST_CASE("Testing non-clone-assignable types", "[intents]",
    static_assert(not CT::CloneAssignable<const T>);
    static_assert(not CT::CloneAssignable<T*>);
    static_assert(not CT::CloneAssignable<const T*>);
-   static_assert(not CT::IntentAssignable<Cloned, T>);
-   static_assert(not CT::IntentAssignable<Cloned, const T>);
-   static_assert(not CT::IntentAssignable<Cloned, T*>);
-   static_assert(not CT::IntentAssignable<Cloned, const T*>);
-   static_assert(not CT::IntentAssignableAlt<Cloned<T>>);
-   static_assert(not CT::IntentAssignableAlt<Cloned<const T>>);
-   static_assert(not CT::IntentAssignableAlt<Cloned<T*>>);
-   static_assert(not CT::IntentAssignableAlt<Cloned<const T*>>);
+   static_assert(not CT::IntentAssignable<Clone, T>);
+   static_assert(not CT::IntentAssignable<Clone, const T>);
+   static_assert(not CT::IntentAssignable<Clone, T*>);
+   static_assert(not CT::IntentAssignable<Clone, const T*>);
+   static_assert(not CT::IntentAssignableAlt<Clone<T>>);
+   static_assert(not CT::IntentAssignableAlt<Clone<const T>>);
+   static_assert(not CT::IntentAssignableAlt<Clone<T*>>);
+   static_assert(not CT::IntentAssignableAlt<Clone<const T*>>);
 
    auto meta = MetaDataOf<Conditional<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
@@ -555,10 +555,10 @@ TEMPLATE_TEST_CASE("Testing disown-makable types", "[intents]",
    using T = TestType;
    static_assert(CT::DisownConstructible<T>);
    static_assert(CT::DisownConstructible<T*>);
-   static_assert(CT::IntentConstructible<Disowned, T>);
-   static_assert(CT::IntentConstructible<Disowned, T*>);
-   static_assert(CT::IntentConstructibleAlt<Disowned<T>>);
-   static_assert(CT::IntentConstructibleAlt<Disowned<T*>>);
+   static_assert(CT::IntentConstructible<Disown, T>);
+   static_assert(CT::IntentConstructible<Disown, T*>);
+   static_assert(CT::IntentConstructibleAlt<Disown<T>>);
+   static_assert(CT::IntentConstructibleAlt<Disown<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -614,14 +614,14 @@ TEMPLATE_TEST_CASE("Testing disown-assignable types", "[intents]",
    static_assert(not CT::DisownAssignable<const T>);
    static_assert(    CT::DisownAssignable<T*>);
    static_assert(    CT::DisownAssignable<const T*>);
-   static_assert(    CT::IntentAssignable<Disowned, T>);
-   static_assert(not CT::IntentAssignable<Disowned, const T>);
-   static_assert(    CT::IntentAssignable<Disowned, T*>);
-   static_assert(    CT::IntentAssignable<Disowned, const T*>);
-   static_assert(    CT::IntentAssignableAlt<Disowned<T>>);
-   static_assert(not CT::IntentAssignableAlt<Disowned<const T>>);
-   static_assert(    CT::IntentAssignableAlt<Disowned<T*>>);
-   static_assert(    CT::IntentAssignableAlt<Disowned<const T*>>);
+   static_assert(    CT::IntentAssignable<Disown, T>);
+   static_assert(not CT::IntentAssignable<Disown, const T>);
+   static_assert(    CT::IntentAssignable<Disown, T*>);
+   static_assert(    CT::IntentAssignable<Disown, const T*>);
+   static_assert(    CT::IntentAssignableAlt<Disown<T>>);
+   static_assert(not CT::IntentAssignableAlt<Disown<const T>>);
+   static_assert(    CT::IntentAssignableAlt<Disown<T*>>);
+   static_assert(    CT::IntentAssignableAlt<Disown<const T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -691,10 +691,10 @@ TEMPLATE_TEST_CASE("Testing abandon-makable types", "[intents]",
    using T = TestType;
    static_assert(CT::AbandonConstructible<T>);
    static_assert(CT::AbandonConstructible<T*>);
-   static_assert(CT::IntentConstructible<Abandoned, T>);
-   static_assert(CT::IntentConstructible<Abandoned, T*>);
-   static_assert(CT::IntentConstructibleAlt<Abandoned<T>>);
-   static_assert(CT::IntentConstructibleAlt<Abandoned<T*>>);
+   static_assert(CT::IntentConstructible<Abandon, T>);
+   static_assert(CT::IntentConstructible<Abandon, T*>);
+   static_assert(CT::IntentConstructibleAlt<Abandon<T>>);
+   static_assert(CT::IntentConstructibleAlt<Abandon<T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
@@ -745,14 +745,14 @@ TEMPLATE_TEST_CASE("Testing abandon-assignable types", "[intents]",
    static_assert(not CT::AbandonAssignable<const T>);
    static_assert(    CT::AbandonAssignable<T*>);
    static_assert(    CT::AbandonAssignable<const T*>);
-   static_assert(    CT::IntentAssignable<Abandoned, T>);
-   static_assert(not CT::IntentAssignable<Abandoned, const T>);
-   static_assert(    CT::IntentAssignable<Abandoned, T*>);
-   static_assert(    CT::IntentAssignable<Abandoned, const T*>);
-   static_assert(    CT::IntentAssignableAlt<Abandoned<T>>);
-   static_assert(not CT::IntentAssignableAlt<Abandoned<const T>>);
-   static_assert(    CT::IntentAssignableAlt<Abandoned<T*>>);
-   static_assert(    CT::IntentAssignableAlt<Abandoned<const T*>>);
+   static_assert(    CT::IntentAssignable<Abandon, T>);
+   static_assert(not CT::IntentAssignable<Abandon, const T>);
+   static_assert(    CT::IntentAssignable<Abandon, T*>);
+   static_assert(    CT::IntentAssignable<Abandon, const T*>);
+   static_assert(    CT::IntentAssignableAlt<Abandon<T>>);
+   static_assert(not CT::IntentAssignableAlt<Abandon<const T>>);
+   static_assert(    CT::IntentAssignableAlt<Abandon<T*>>);
+   static_assert(    CT::IntentAssignableAlt<Abandon<const T*>>);
 
    auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);

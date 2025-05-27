@@ -2,6 +2,7 @@
 #include <Langulus/CTTI.hpp>
 #include <Langulus/Intent.hpp>
 #include <Langulus/Sequence.hpp>
+#include <Langulus/CT/Defaultable.hpp>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
@@ -122,15 +123,35 @@ namespace Langulus::Anyness
       using AddComponents = Container<COMPONENTS..., MORE_COMPONENTS...>;
 
       /// Maps one unfold expression onto another of different length, and    
-      /// returns a 'FALLBACK' instance if index goes out of range            
+      /// returns a default-initialized 'FALLBACK' instance if index goes out 
+      /// of range. Some components aren't default-initializable, and this    
+      /// will result in a compile-time error hinting at bad manual construct 
       template<class FALLBACK, unsigned INDEX, class A1, class...AN>
       static constexpr decltype(auto) PickArgument(A1&& a1, AN&&...aN) noexcept {
          if constexpr (INDEX == 0)
-            return ::std::forward<A1>(a1);
+            return FWD(a1);
          else if constexpr (INDEX + 1 < sizeof...(AN))
-            return PickArgument<INDEX + 1>(::std::forward<AN>(aN)...);
-         else
+            return PickArgument<INDEX + 1>(FWD(aN)...);
+         else {
+            static_assert(CT::Defaultable<FALLBACK>,
+               "Container argument mismatch");
             return FALLBACK {};
+         }
+      }
+
+      /// Maps the components of one container onto components of another     
+      /// Mismatches are attempted to be default-initialized                  
+      /// Some components aren't default-initializable, and this will result  
+      /// in a compile-time error hinting at a container incompatiblity       
+      template<class COM, template<class> class I, CT::Container C>
+      static constexpr decltype(auto) MatchComponent(I<C>&& other) noexcept {
+         if constexpr (C::template HasComponent<COM>)
+            return other.template Forward<COM>();
+         else {
+            static_assert(CT::Defaultable<COM>,
+               "Container component mismatch");
+            return I<C>::Nest(COM {});
+         }
       }
 
       constexpr Container() noexcept = default;
@@ -142,17 +163,13 @@ namespace Langulus::Anyness
       /// the rest will be default-initialized if possible                    
       template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
       constexpr Container(I<C>&& other)
-         : COMPONENTS {C::template HasComponent<COMPONENTS>
-            ? other.template Forward<COMPONENTS>()
-            : other.Nest(COMPONENTS {})
-         }... {}
-
+         : COMPONENTS {MatchComponent<COMPONENTS>(FWD(other))}... {}
 
       /// Initialization tag dispatch constructor, for manually initializing  
       /// component list                                                      
       template<auto...IDX, class...AN>
       constexpr Container(ExpandedSequence<IDX...>, AN&&...aN)
-         : COMPONENTS {PickArgument<COMPONENTS, IDX>(::std::forward<AN>(aN)...)}... {}
+         : COMPONENTS {PickArgument<COMPONENTS, IDX>(FWD(aN)...)}... {}
 
       constexpr Container& operator = (Container const&) noexcept = default;
       constexpr Container& operator = (Container&&) noexcept = default;
@@ -162,10 +179,7 @@ namespace Langulus::Anyness
       /// the rest will be default-reassigned if possible                     
       template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
       constexpr Container& operator = (I<C>&& other) {
-         (COMPONENTS::operator = (C::template HasComponent<COMPONENTS>
-            ? other.template Forward<COMPONENTS>()
-            : other.Nest(COMPONENTS {})
-         ), ...);
+         (COMPONENTS::operator = (MatchComponent<COMPONENTS>(FWD(other))), ...);
          return *this;
       }
 

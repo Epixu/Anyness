@@ -45,8 +45,10 @@ namespace Langulus::Anyness::Component
       constexpr TypedStatic& operator = (I<TypedStatic>&&) {}*/
 
       /// Get the reflected type definition                                   
-      ///   @return the definition                                            
       T GetType() const noexcept { return MetaOf<TYPE>(); }
+
+      /// Get the size of a single element of TYPE in bytes                   
+      constexpr size_t GetStride() const noexcept { return sizeof(TYPE); }
 
       /// Get the reflected type name                                         
       constexpr auto GetName()   const noexcept { return NameOf<TYPE>(); }

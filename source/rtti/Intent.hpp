@@ -26,11 +26,9 @@ namespace Langulus
    ///   @param placement - where to place the new instance                   
    ///   @param value - the constructor argument, with or without intent      
    ///   @return the instance on the heap                                     
-   template<bool FAKE = false> LANGULUS(INLINED)
-   constexpr auto IntentNew(void* placement, auto&& value) {
-      using S = IntentOf<decltype(value)>;
-      using T = Deref<TypeOf<S>>;
-
+   template<bool FAKE = false, template<class> class S, CT::NoIntent T>
+   requires CT::Intent<S<T>> LANGULUS(INLINED)
+   constexpr auto IntentNew(void* placement, S<T>&& value) {
       static_assert(CT::Complete<T>,
          "T has to be complete in order to be constructed");
       static_assert(not CT::Abstract<T>,
@@ -40,10 +38,36 @@ namespace Langulus
 
       AssumeDev(placement, HERE(), "Invalid placement pointer");
 
-      if constexpr (CT::Abandoned<S>) {
+      if constexpr (CT::Referred<S<T>>) {
+         // Refer                                                       
+         if constexpr (CT::HasReferConstructor<T>)
+            return new (placement) T (FWD(value));
+         else if constexpr (CT::POD<T>) {
+            ::std::memcpy(placement, (const void*) &*value, sizeof(T));
+            return static_cast<T*>(placement);
+         }
+         else {
+            static_assert(FAKE, "Can't refer-construct type");
+            return Unsupported {};
+         }
+      }
+      else if constexpr (CT::Moved<S<T>>) {
+         // Move                                                        
+         if constexpr (CT::HasMoveConstructor<T>)
+            return new (placement) T (FWD(value));
+         else if constexpr (CT::POD<T>) {
+            ::std::memmove(placement, (const void*) &*value, sizeof(T));
+            return static_cast<T*>(placement);
+         }
+         else {
+            static_assert(FAKE, "Can't move-construct type");
+            return Unsupported {};
+         }
+      }
+      else if constexpr (CT::Abandoned<S<T>>) {
          // Abandon                                                     
          if constexpr (CT::HasAbandonConstructor<T>)
-            return new (placement) T (S::Nest(value));
+            return new (placement) T (FWD(value));
          else if constexpr (CT::POD<T>) {
             if constexpr (CT::HasMoveConstructor<T>)
                return new (placement) T (Move(*value));
@@ -59,22 +83,13 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Moved<S>) {
-         // Move                                                        
-         if constexpr (CT::HasMoveConstructor<T>)
-            return new (placement) T (S::Nest(value));
-         else if constexpr (CT::POD<T>) {
-            ::std::memmove(placement, (const void*) &*value, sizeof(T));
-            return static_cast<T*>(placement);
-         }
-         else {
-            static_assert(FAKE, "Can't move-construct type");
-            return Unsupported {};
-         }
-      }
-      else if constexpr (CT::Cloned<S>) {
+      else if constexpr (CT::Cloned<S<T>>) {
          // Clone                                                       
+         // @attention - assumes that all levels of indirection have    
+         //    been allocated and pointers point to valid memory        
          using DT = Decay<T>;
+
+         //TODO nest for pointers
 
          if constexpr (not CT::Void<DT>) {
             if constexpr (CT::HasCloneConstructor<DT>)
@@ -97,27 +112,10 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Disowned<S>) {
-         // Disown                                                      
-         if constexpr (CT::HasDisownConstructor<T>)
-            return new (placement) T (S::Nest(value));
-         else if constexpr (CT::POD<T>) {
-            if constexpr (::std::copy_constructible<T>)
-               return new (placement) T (*value);
-            else {
-               ::std::memcpy(placement, (const void*) &*value, sizeof(T));
-               return static_cast<T*>(placement);
-            }
-         }
-         else {
-            static_assert(FAKE, "Can't disown-construct type");
-            return Unsupported {};
-         }
-      }
-      else if constexpr (CT::Copied<S>) {
+      else if constexpr (CT::Copied<S<T>>) {
          // Copy                                                        
          if constexpr (CT::HasCopyConstructor<T>)
-            return new (placement) T (S::Nest(value));
+            return new (placement) T (FWD(value));
          else if constexpr (CT::POD<T>) {
             if constexpr (::std::copy_constructible<T>)
                return new (placement) T (*value);
@@ -131,16 +129,20 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Referred<S>) {
-         // Refer                                                       
-         if constexpr (CT::HasReferConstructor<T>)
-            return new (placement) T (S::Nest(value));
+      else if constexpr (CT::Disowned<S<T>>) {
+         // Disown                                                      
+         if constexpr (CT::HasDisownConstructor<T>)
+            return new (placement) T (FWD(value));
          else if constexpr (CT::POD<T>) {
-            ::std::memcpy(placement, (const void*) &*value, sizeof(T));
-            return static_cast<T*>(placement);
+            if constexpr (::std::copy_constructible<T>)
+               return new (placement) T (*value);
+            else {
+               ::std::memcpy(placement, (const void*) &*value, sizeof(T));
+               return static_cast<T*>(placement);
+            }
          }
          else {
-            static_assert(FAKE, "Can't refer-construct type");
+            static_assert(FAKE, "Can't disown-construct type");
             return Unsupported {};
          }
       }
@@ -163,19 +165,47 @@ namespace Langulus
       static_assert(not CT::Reference<T>,
          "T has to not be a reference in order to be assigned");
 
-      if constexpr (CT::Abandoned<S<T>>) {
+      if constexpr (CT::Referred<S<T>>) {
+         // Refer                                                       
+         if constexpr (CT::HasReferAssign<T>)
+            return (lhs = Refer(rhs));
+         else if constexpr (CT::POD<T>) {
+            ::std::memcpy((void*) &lhs, (const void*) &*rhs, sizeof(T));
+            return (lhs);
+         }
+         else {
+            static_assert(FAKE, "Can't refer-assign type");
+            return Unsupported {};
+         }
+      }
+      else if constexpr (CT::Moved<S<T>>) {
+         // Move                                                        
+         if constexpr (CT::HasIntentAssign<Langulus::Move, T>)
+            return (lhs = Move(rhs));
+         else if constexpr (::std::assignable_from<T&, T&&>)
+            return (lhs = *rhs);
+         else if constexpr (CT::POD<T>) {
+            ::std::memmove((void*) &lhs, (const void*) &*rhs, sizeof(T));
+            return (lhs);
+         }
+         else {
+            static_assert(FAKE, "Can't move-assign type");
+            return Unsupported {};
+         }
+      }
+      else if constexpr (CT::Abandoned<S<T>>) {
          // Abandon                                                     
          if constexpr (CT::HasAbandonAssign<T>)
-            return (lhs = rhs.Forward());
+            return (lhs = Abandon(rhs));
          else if constexpr (CT::HasReferAssign<T> and CT::HasAbandonConstructor<T>)
             // This is required because G++ doesn't detect implicit     
             // abandon-assignment otherwise                             
-            return (lhs = Decvq<T> {rhs.Forward()});
+            return (lhs = Decvq<T> {FWD(rhs)});
          else if constexpr (CT::POD<T>) {
             if constexpr (CT::HasIntentAssign<Langulus::Move, T>)
                return (lhs = Move(*rhs));
             else if constexpr (::std::assignable_from<T&, T&&>)
-               return (lhs = static_cast<T&&>(rhs));
+               return (lhs = *rhs);
             else {
                ::std::memmove((void*) &lhs, (const void*) &*rhs, sizeof(T));
                return (lhs);
@@ -188,27 +218,15 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Moved<S<T>>) {
-         // Move                                                        
-         if constexpr (CT::HasIntentAssign<Langulus::Move, T>)
-            return (lhs = rhs.Forward());
-         else if constexpr (::std::assignable_from<T&, T&&>)
-            return (lhs = static_cast<T&&>(rhs));
-         else if constexpr (CT::POD<T>) {
-            ::std::memmove((void*) &lhs, (const void*) &*rhs, sizeof(T));
-            return (lhs);
-         }
-         else {
-            static_assert(FAKE, "Can't move-assign type");
-            return Unsupported {};
-         }
-      }
       else if constexpr (CT::Cloned<S<T>>) {
          // Clone                                                       
+         // @attention - assumes that all levels of indirection have    
+         //    been allocated and pointers point to valid memory        
          using DT = Decay<T>;
 
+         //TODO nest for pointers
          if constexpr (CT::Complete<DT> and not CT::Void<DT>) {
-            if constexpr (CT::Mutable<decltype(DenseCast(lhs))>) {
+            if constexpr (CT::Mutable<Deptr<T>>) {
                if constexpr (CT::HasCloneAssign<DT>)
                   return (DenseCast(lhs) = Clone(DenseCast(*rhs)));
                else if constexpr (CT::POD<DT>) {
@@ -234,27 +252,10 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Disowned<S<T>>) {
-         // Disown                                                      
-         if constexpr (CT::HasDisownAssign<T>)
-            return (lhs = rhs.Forward());
-         else if constexpr (CT::POD<T>) {
-            if constexpr (::std::assignable_from<T&, const T&>)
-               return (lhs = *rhs);
-            else {
-               ::std::memcpy((void*) &lhs, (const void*) &*rhs, sizeof(T));
-               return (lhs);
-            }
-         }
-         else {
-            static_assert(FAKE, "Can't disown-assign type");
-            return Unsupported {};
-         }
-      }
       else if constexpr (CT::Copied<S<T>>) {
          // Copy                                                        
          if constexpr (CT::HasCopyAssign<T>)
-            return (lhs = rhs.Forward());
+            return (lhs = Copy(rhs));
          else if constexpr (CT::POD<T>) {
             if constexpr (::std::assignable_from<T&, const T&>)
                return (lhs = *rhs);
@@ -268,16 +269,20 @@ namespace Langulus
             return Unsupported {};
          }
       }
-      else if constexpr (CT::Referred<S<T>>) {
-         // Refer                                                       
-         if constexpr (CT::HasReferAssign<T>)
-            return (lhs = rhs.Forward());
+      else if constexpr (CT::Disowned<S<T>>) {
+         // Disown                                                      
+         if constexpr (CT::HasDisownAssign<T>)
+            return (lhs = Disown(rhs));
          else if constexpr (CT::POD<T>) {
-            ::std::memcpy((void*) &lhs, (const void*) &*rhs, sizeof(T));
-            return (lhs);
+            if constexpr (::std::assignable_from<T&, const T&>)
+               return (lhs = *rhs);
+            else {
+               ::std::memcpy((void*) &lhs, (const void*) &*rhs, sizeof(T));
+               return (lhs);
+            }
          }
          else {
-            static_assert(FAKE, "Can't refer-assign type");
+            static_assert(FAKE, "Can't disown-assign type");
             return Unsupported {};
          }
       }

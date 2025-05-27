@@ -579,7 +579,7 @@ namespace Langulus
          // Hash pointer, never dereference it                          
          if (head == nullptr)
             return Hash {};
-         return HashBytes<SEED, false>(DecvqCast(&head), static_cast<int>(sizeof(T)));
+         return HashBytes<SEED, false>(&head, static_cast<int>(sizeof(T)));
       }
       else if constexpr (CT::Similar<T, Hash>) {
          // Provided type is already a hash, just propagate it          

@@ -12,12 +12,6 @@ namespace Langulus::Anyness::Component
    struct Concatenate {
       using CTTI_Component = Yes;
 
-      template<CT::Container C>
-      static consteval bool Validate() {
-         static_assert(C::VariableCount, "You can't concatenate stuff in a "
-            "container that doesn't provide variable count");
-      }
-
    private:
       template<CT::Container C>
       using Count = typename C::CountType;

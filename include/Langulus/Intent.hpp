@@ -306,6 +306,11 @@ namespace Langulus
       Move() = delete;
 
       LANGULUS(ALWAYS_INLINED)
+      explicit constexpr Move(T& value) noexcept : mValue {MOV(value)} {
+         static_assert(CT::NoIntent<T>, "Can't nest intents");
+      }
+      
+      LANGULUS(ALWAYS_INLINED)
       explicit constexpr Move(T&& value) noexcept : mValue {FWD(value)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
@@ -388,7 +393,14 @@ namespace Langulus
       using Retype = Abandon<Decq<Deref<Deint<ALT>>>>;
 
       Abandon() = delete;
+      explicit constexpr Abandon(Abandon const&) noexcept = default;
+      explicit constexpr Abandon(Abandon&&) noexcept = default;
 
+      LANGULUS(ALWAYS_INLINED)
+      explicit constexpr Abandon(T& value) noexcept : mValue {MOV(value)} {
+         static_assert(CT::NoIntent<T>, "Can't nest intents");
+      }
+      
       LANGULUS(ALWAYS_INLINED)
       explicit constexpr Abandon(T&& value) noexcept : mValue {FWD(value)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");

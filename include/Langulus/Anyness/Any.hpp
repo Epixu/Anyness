@@ -9,7 +9,7 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership.hpp"
+#include "../../../source/components/DeepOwnership-Heap.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Conversion.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
@@ -37,7 +37,7 @@ namespace Langulus::Anyness
    struct Any : Container<
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<>,           // Allocation is referenced      
-      Com::DeepOwnership<>,            // Sparse elements are referenced
+      Com::DeepOwnershipHeap<>,        // Sparse elements are referenced
       Com::Assignment<>,               // Allows assignment             
       Com::Conversion,                 // Allows conversion             
       Com::TypedStack<DMeta>,          // Variable type                 

@@ -12,6 +12,7 @@
 #include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Comparison.hpp"
+#include "../../../source/components/Iteration-Operators.hpp"
 #include "TOwn.hpp"
 #include "TRef.hpp"
 
@@ -29,7 +30,8 @@ namespace Langulus::Anyness
          Com::CountStatic<1u>,
          Com::Assignment<>,
          Com::Emplacement<>,
-         Com::Comparison
+         Com::Comparison,
+         Com::IterationOperators<>
       >;
       
       template<CT::Reference T>
@@ -39,20 +41,14 @@ namespace Langulus::Anyness
          Com::CountStatic<1u>,
          Com::Assignment<>,
          Com::Emplacement<>,
-         Com::Comparison
+         Com::Comparison,
+         Com::IterationOperators<>
       >;
 
    } // namespace Langulus::Anyness::Inner
 
 
-   ///                                                                        
-   /// Either an embedded element with ownership, or one on the stack         
-   ///                                                                        
    template<class T> struct THandle;
-
-   ///                                                                        
-   /// Either an embedded element without ownership, or one on the stack      
-   ///                                                                        
    template<class T> struct THandleDisowned;
 
 

@@ -762,14 +762,14 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("A forward value-based search is performed on non-exitent value") {
          const auto found = pack.Find(darray2[2]);
 
-         REQUIRE(found == IndexNone);
+         REQUIRE(found == Index::None);
          REQUIRE_FALSE(found);
       }
 
       WHEN("A backward value-based search is performed on non-exitent value") {
          const auto found = pack.template Find<true>(darray2[2]);
 
-         REQUIRE(found == IndexNone);
+         REQUIRE(found == Index::None);
          REQUIRE_FALSE(found);
       }
       

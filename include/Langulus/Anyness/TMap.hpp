@@ -30,7 +30,31 @@
 #include "../../../source/states/Tracked.hpp"
 #include "THandle.hpp"
 #include "TPair.hpp"
+#include <Langulus/Retype.hpp>
 
+
+namespace Langulus::CT
+{
+
+   /// Concept for recognizing arguments, with which a statically typed       
+   /// map can be constructed                                                 
+   template<class K, class V, class...A>
+   concept DeepMapConstructible = UnfoldConstructible<Anyness::TPair<K, V>, A...>
+        or (sizeof...(A) == 1 and Map<FirstOf<A...>> and (
+               IntentOf<FirstOf<A...>>::Shallow
+            or IntentConstructibleAlt<Retype<IntentOf<FirstOf<A...>>, Anyness::TPair<K, V>>>)
+        );
+
+   /// Concept for recognizing argument, with which a statically typed        
+   /// map can be assigned                                                    
+   template<class K, class V, class A>
+   concept DeepMapAssignable = UnfoldConstructible<Anyness::TPair<K, V>, A>
+        or (Map<A> and (
+               IntentOf<A>::Shallow
+            or IntentAssignableAlt<Retype<IntentOf<A>, Anyness::TPair<K, V>>>)
+        );
+
+} // namespace Langulus::CT
 
 namespace Langulus::Anyness
 {
@@ -139,9 +163,12 @@ namespace Langulus::Anyness
       constexpr TMap(const TMap&) noexcept = default;
       constexpr TMap(TMap&&) noexcept = default;
 
-      template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
+      template<class T1, class...TN> requires CT::DeepMapConstructible<K, V, T1, TN...>
+      constexpr TMap(T1&&, TN&&...);
+
+      /*template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
       constexpr TMap(I<M>&& other) noexcept
-         : Base {other.template Forward<typename M::Base>()} {}
+         : Base {other.template Forward<typename M::Base>()} {}*/
 
       /*template<CT::Map M1, CT::Map...MN>
       TMap(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
@@ -205,9 +232,13 @@ namespace Langulus::Anyness
       constexpr TMapUnsorted(const TMapUnsorted&) noexcept = default;
       constexpr TMapUnsorted(TMapUnsorted&&) noexcept = default;
 
-      template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
+      template<class T1, class...TN> requires CT::DeepMapConstructible<K, V, T1, TN...>
+      constexpr TMapUnsorted(T1&&, TN&&...);
+
+
+      /*template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
       constexpr TMapUnsorted(I<M>&& other) noexcept
-         : Base {FWD(other)} {}
+         : Base {FWD(other)} {}*/
 
       //template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
       //constexpr TMapUnsorted(I<M>&&) noexcept;
@@ -274,9 +305,12 @@ namespace Langulus::Anyness
       constexpr TMapSorted(const TMapSorted&) noexcept = default;
       constexpr TMapSorted(TMapSorted&&) noexcept = default;
 
-      template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
+      template<class T1, class...TN> requires CT::DeepMapConstructible<K, V, T1, TN...>
+      constexpr TMapSorted(T1&&, TN&&...);
+
+      /*template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
       constexpr TMapSorted(I<M>&& other) noexcept
-         : Base {other.template Forward<typename M::Base>()} {}
+         : Base {other.template Forward<typename M::Base>()} {}*/
 
       /*template<CT::Map M1, CT::Map...MN>
       TMapSorted(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;

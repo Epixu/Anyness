@@ -72,15 +72,14 @@ namespace Langulus::Anyness
       constexpr TPair(TPair const&) noexcept = default;
       constexpr TPair(TPair&&) noexcept = default;
 
-      template<CT::Pair P> requires CT::PairConstructible<K, V, P>
-      constexpr TPair(P&& other)
-         : mKey {IntentOf<P>::Nest(DeintCast(other).mKey)}
-         , mVal {IntentOf<P>::Nest(DeintCast(other).mVal)} {}
+      constexpr TPair(CT::Pair auto&& other) requires CT::PairConstructible<K, V, decltype(other)>
+         : mKey {IntentOf<decltype(other)>::Nest(DeintCast(other).GetKey())}
+         , mVal {IntentOf<decltype(other)>::Nest(DeintCast(other).GetVal())} {}
 
       template<class ALT_K, class ALT_V>
-      requires (CT::ConstructibleFrom<K, ALT_K>
-           and  CT::ConstructibleFrom<V, ALT_V>
-           and  CT::NotReference<K, V>)
+      requires (CT::NotReference<K, V>
+           and  CT::ConstructibleFrom<K, ALT_K>
+           and  CT::ConstructibleFrom<V, ALT_V>)
       constexpr TPair(ALT_K&&, ALT_V&&);
 
       constexpr TPair(K, V) noexcept requires CT::Reference<K, V>;

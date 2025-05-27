@@ -18,6 +18,9 @@ namespace Langulus::Anyness::Component
       static constexpr bool HeapCanBeNull = false;
 
    protected:
+      template<unsigned>
+      struct IterationOperators;
+
       /*using Byte = ::std::uint8_t;
       template<CT::Container C>
       using View = typename C::ViewType;

@@ -686,7 +686,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       }
 
       WHEN("Empty pack with state is shallow-copied") {
-         pack.MakeOr();
+         pack.EnableOr();
          auto copy = pack;
 
          Many_Helper_TestSame(copy, pack);
@@ -696,7 +696,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
 
       if constexpr (CT::CloneConstructible<T>) {
          WHEN("Empty pack with state is cloned") {
-            pack.MakeOr();
+            pack.EnableOr();
             T clone = Clone(pack);
 
             Many_Helper_TestSame(clone, pack);
@@ -706,7 +706,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       }
 
       WHEN("Empty pack with state is moved") {
-         pack.MakeOr();
+         pack.EnableOr();
          T movable = pack;
          const T moved = ::std::move(movable);
 
@@ -2736,18 +2736,18 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
       }
    }
 
-   if constexpr (CT::Referencable<Deptr<E>>)
+   if constexpr (CT::Referenced<Deptr<E>>)
       element->Reference(-1);
    delete element;
 
    for (auto item : darray1) {
-      if constexpr (CT::Referencable<Deptr<E>>)
+      if constexpr (CT::Referenced<Deptr<E>>)
          item->Reference(-1);
       delete item;
    }
 
    for (auto item : darray2) {
-      if constexpr (CT::Referencable<Deptr<E>>)
+      if constexpr (CT::Referenced<Deptr<E>>)
          item->Reference(-1);
       delete item;
    }

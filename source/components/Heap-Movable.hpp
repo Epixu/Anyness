@@ -30,6 +30,8 @@ namespace Langulus::Anyness::Component
    protected:
       template<unsigned, class>
       friend struct ReserveHeap;
+      template<unsigned>
+      struct IterationOperators;
 
       template<CT::Container C>
       using Count = typename C::CountType;
@@ -112,7 +114,7 @@ namespace Langulus::Anyness::Component
       void AllocateMore(this C& self, const Count<C> elements) {
          AssumeDev(elements > self.GetCount(), HERE(), "Bad element count");
 
-         if constexpr (not C::TypeErased) {
+         if constexpr (CT::Typed<C>) {
             // Allocate/reallocate                                      
             using T = TypeOf<C>;
             const auto request = self.RequestSize(elements);
@@ -478,10 +480,9 @@ namespace Langulus::Anyness::Component
       ///   @return a pointer to the first deep item, or nullptr if not deep  
       template<CT::Container C>
       auto GetDeep(this C&& self) noexcept -> Deep<C>* {
-         if constexpr (self.template Is<Deep<C>>)
-            return self.template Get<Deep<C>*>();
-         else
+         if (not self.IsDeep())
             return nullptr;
+         return self.template Get<Deep<C>*>();
       }
 
       template<CT::Container C>

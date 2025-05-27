@@ -51,8 +51,15 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Get the contained type                                              
-      ///   @return the contained type                                        
       constexpr T GetType() const noexcept { return mType; }
+
+      /// Get the size of a single element of TYPE in bytes                   
+      constexpr size_t GetStride() const noexcept {
+         if constexpr (TypeErased)
+            return mType.GetSize();
+         else
+            return sizeof(TYPE);
+      }
 
       /// Get the reflected type name                                         
       constexpr auto GetName() const noexcept {
@@ -222,15 +229,6 @@ namespace Langulus::Anyness::Component
             return mType.IsDeep();
          else
             return CT::Deep<Decay<TYPE>>;
-      }
-      
-      /// Get the size of the type                                            
-      ///   @return the size of a single element in bytes                     
-      constexpr bool GetStride() const noexcept {
-         if constexpr (TypeErased)
-            return mType.GetSize();
-         else
-            return sizeof(TYPE);
       }
 
       /// Get the size of the type times the contained elements               

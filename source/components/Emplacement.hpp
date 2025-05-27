@@ -6,6 +6,7 @@
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/CT/Resolvable.hpp>
 
+
 namespace Langulus::CT
 {
 
@@ -23,7 +24,6 @@ namespace Langulus::CT
 
 namespace Langulus::Anyness::Component
 {
-   
 
    ///                                                                        
    /// Implements emplacement for containers                                  
@@ -37,6 +37,9 @@ namespace Langulus::Anyness::Component
       ignore_all_intents(Emplacement);
 
    protected:
+      template<unsigned>
+      friend struct HeapMovable;
+
       template<CT::Container C>
       using PickMut = typename Deref<C>::PickMut;
       

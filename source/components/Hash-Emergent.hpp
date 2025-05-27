@@ -1,10 +1,14 @@
 #pragma once
+#include "../rtti/MetaData.hpp"
 #include <Langulus/HashOf.hpp>
 #include <vector>
 
 
 namespace Langulus::Anyness::Component
 {
+
+   using DMeta = RTTI::DMeta;
+
 
    ///                                                                        
    /// Doesn't cache hash - recalculates it every time                        
