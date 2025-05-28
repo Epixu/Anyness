@@ -125,8 +125,8 @@ namespace Langulus::Anyness
       ///                                                                     
       /// Construction                                                        
       constexpr TMany() noexcept = default;
-      constexpr TMany(const TMany&) noexcept;
-      constexpr TMany(TMany&&) noexcept;
+      constexpr TMany(const TMany&) noexcept = default;
+      constexpr TMany(TMany&&) noexcept = default;
 
       template<class A1, class...AN>
       TMany(A1&&, AN&&...) requires CT::RangeInsertable<TMany, A1, AN...>;

@@ -5,6 +5,10 @@
 namespace Langulus::Anyness::Component
 {
 
+   //template<unsigned>
+   //struct IterationOperators;
+
+
    ///                                                                        
    /// Adds a variable to a container that only references a remote heap      
    /// No allocation interface is provided                                    
@@ -19,7 +23,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<unsigned>
-      struct IterationOperators;
+      friend struct IterationOperators;
 
       /*using Byte = ::std::uint8_t;
       template<CT::Container C>

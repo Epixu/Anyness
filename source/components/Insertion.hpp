@@ -37,7 +37,7 @@ namespace Langulus::CT
          }
          else if constexpr (sizeof...(A) == 1 and Container<FA>) {
             // If only one A provided, it HAS to be a container         
-            if constexpr (SA::Shallow) {
+            if constexpr (SA::IsShallow()) {
                // Generally, shallow intents are always supported,      
                // but copying will call element constructors, so we     
                // have to check if the contained type supports it       
@@ -47,9 +47,8 @@ namespace Langulus::CT
                   return true;
             }
             else {
-               // Cloning always calls element constructors, and        
-               // we have to check whether contained elements can       
-               // do it                                                 
+               // Cloning always calls decayed constructors, and        
+               // we have to check whether decayed elements can do it   
                return IntentConstructible<Langulus::Clone, T>;
             }
          }

@@ -7,6 +7,8 @@
 ///                                                                           
 #pragma once
 #include <cstdint>
+#include <stdexcept> //TODO move elsewhere, not in core
+#include <bit>       //TODO move elsewhere, not in core
 
 
 /// Sorry, Langulus is designed for at least C++23                            

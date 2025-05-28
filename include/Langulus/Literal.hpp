@@ -2,7 +2,7 @@
 #include <array>
 #include <functional>
 #include <iterator>
-#include <ostream>
+//#include <ostream>
 #include <string_view>
 #include <type_traits>
 
@@ -16,9 +16,22 @@ namespace Langulus
       template<class...T>
       concept FixedString = (T::CTTI_StringLiteral and ...);
 
+      /// Supported character types used by Literal                           
+      template<class...T>
+      concept FixedChar = ((
+              std::same_as<T, char>
+           or std::same_as<T, signed char>
+           or std::same_as<T, unsigned char>
+           or std::same_as<T, wchar_t>
+           or std::same_as<T, char8_t>
+           or std::same_as<T, char16_t>
+           or std::same_as<T, char32_t>
+         ) and ...);
+
    } // namespace Langulus::CT
 
    using Token = ::std::string_view;
+
 
    ///                                                                        
    /// String literal                                                         
@@ -46,9 +59,9 @@ namespace Langulus
       using difference_type = ptrdiff_t;
       using view_type = ::std::basic_string_view<value_type, traits_type>;
 
-      static constexpr auto npos  = view_type::npos;
-      static constexpr bool Empty = N == 0;
-      static constexpr auto Count = N;
+      static constexpr ::std::size_t npos = view_type::npos;
+      static constexpr ::std::size_t Count = N;
+      static constexpr bool Empty = (N == 0);
 
       constexpr Literal() noexcept = default;
 
@@ -140,12 +153,16 @@ namespace Langulus
          return _data.data();
       }
 
+      ///                                                                     
+      /// Retype                                                              
+      ///                                                                     
+      /// Get a resized Literal with the same properties                      
+      template<size_t M>
+      using Resized = Literal<value_type, M, traits_type>;
+
    protected:
       template<class, ::std::size_t, class>
       friend struct Literal;
-
-      template<size_t M>
-      using same_with_other_size = Literal<value_type, M, traits_type>;
 
       template<size_type pos, size_type count, size_type size>
       consteval static size_type calculate_substr_size() {
@@ -157,11 +174,12 @@ namespace Langulus
       }
 
       template <size_type pos, size_type count>
-      using substr_result_type = same_with_other_size<calculate_substr_size<pos, count, N>()>;
+      using substr_result_type = Resized<calculate_substr_size<pos, count, N>()>;
 
       constexpr view_type sv() const { return *this; }
 
    public:
+
       /// Implicit cast to a string view                                      
       constexpr operator view_type() const noexcept {
          return {data(), N };
@@ -177,36 +195,31 @@ namespace Langulus
 
       /// Find                                                                
       template <size_t M>
-      constexpr size_type find(const same_with_other_size<M>& str, size_type pos = 0) const noexcept {
+      constexpr size_type find(const Resized<M>& str, size_type pos = 0) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find(str.sv(), pos);
       }
-
       constexpr size_type find(view_type sv, size_type pos = 0) const noexcept {
          return sv().find(sv, pos);
       }
-
       constexpr size_type find(const value_type* s, size_type pos, size_type n) const {
          return sv().find(s, pos, n);
       }
-
       constexpr size_type find(const value_type* s, size_type pos = 0) const {
          return sv().find(s, pos);
       }
-
       constexpr size_type find(value_type c, size_type pos = 0) const noexcept {
          return sv().find(c, pos);
       }
 
       /// Find in reverse                                                     
       template <size_t M>
-      constexpr size_type rfind(const same_with_other_size<M>& str, size_type pos = npos) const noexcept {
+      constexpr size_type rfind(const Resized<M>& str, size_type pos = npos) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().rfind(str.sv(), pos);
       }
-
       constexpr size_type rfind(view_type sv, size_type pos = npos) const noexcept {
          return sv().rfind(sv, pos);
       }
@@ -222,7 +235,7 @@ namespace Langulus
 
       /// Find the first of                                                   
       template <size_t M>
-      constexpr size_type find_first_of(const same_with_other_size<M>& str, size_type pos = 0) const noexcept {
+      constexpr size_type find_first_of(const Resized<M>& str, size_type pos = 0) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find_first_of(str.sv(), pos);
@@ -242,7 +255,7 @@ namespace Langulus
 
       /// Find the last of                                                    
       template <size_t M>
-      constexpr size_type find_last_of(const same_with_other_size<M>& str, size_type pos = npos) const noexcept {
+      constexpr size_type find_last_of(const Resized<M>& str, size_type pos = npos) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find_last_of(str.sv(), pos);
@@ -262,7 +275,7 @@ namespace Langulus
 
       /// Find the first NOT of                                               
       template <size_t M>
-      constexpr size_type find_first_not_of(const same_with_other_size<M>& str, size_type pos = 0) const noexcept {
+      constexpr size_type find_first_not_of(const Resized<M>& str, size_type pos = 0) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find_first_not_of(str.sv(), pos);
@@ -282,7 +295,7 @@ namespace Langulus
 
       /// Find the last NOT of                                                
       template <size_t M>
-      constexpr size_type find_last_not_of(const same_with_other_size<M>& str, size_type pos = npos) const noexcept {
+      constexpr size_type find_last_not_of(const Resized<M>& str, size_type pos = npos) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find_last_not_of(str.sv(), pos);
@@ -358,9 +371,9 @@ namespace Langulus
       }
    };
 
-   /// CTAD                                                                   
    template<class TChar, size_t N>
    Literal(const TChar(&)[N]) -> Literal<TChar, N - 1>;
+
 
    /// Swap two literals                                                      
    template<CT::FixedString S>
@@ -452,32 +465,22 @@ namespace Langulus
    ///                                                                        
    /// Concatenation                                                          
    ///                                                                        
-   consteval auto operator + (
-      const CT::FixedString auto& lhs,
-      const CT::FixedString auto& rhs
-   ) {
-      using lhs_type = std::decay_t<decltype(lhs)>;
-      using concat_type = typename lhs_type::template same_with_other_size<lhs.size() + rhs.size()>;
-      concat_type result;
+   template<CT::FixedString LHS, CT::FixedString RHS>
+   consteval auto operator + (const LHS& lhs, const RHS& rhs) {
+      typename LHS::template Resized<LHS::Count + RHS::Count> result;
       std::copy(lhs.begin(), lhs.end(), result.begin());
       std::copy(rhs.begin(), rhs.end(), result.begin() + lhs.size());
       return result;
    }
 
-   template<typename TChar, size_t N, size_t M, typename TTraits>
-   consteval Literal<TChar, N - 1 + M, TTraits> operator + (
-      const TChar(&lhs)[N],
-      const Literal<TChar, M, TTraits>& rhs
-   ) {
+   template<CT::FixedChar C, size_t N>
+   consteval auto operator + (const C(&lhs)[N], const CT::FixedString auto& rhs) {
       Literal lhs2 = lhs;
       return lhs2 + rhs;
    }
 
-   template<typename TChar, size_t N, size_t M, typename TTraits>
-   consteval Literal<TChar, N + M - 1, TTraits> operator + (
-      const Literal<TChar, N, TTraits>& lhs,
-      const TChar(&rhs)[M]
-   ) {
+   template<CT::FixedChar C, size_t N>
+   consteval auto operator + (const CT::FixedString auto& lhs, const C(&rhs)[N]) {
       Literal rhs2 = rhs;
       return lhs + rhs2;
    }
@@ -494,30 +497,22 @@ namespace Langulus
 
    } // namespace Langulus::Inner
 
-   template<class TChar, size_t N, class TTraits>
-   consteval Literal<TChar, N + 1, TTraits> operator + (
-      TChar lhs,
-      const Literal<TChar, N, TTraits>& rhs
-   ) {
+   consteval auto operator + (CT::FixedChar auto lhs, const CT::FixedString auto& rhs) {
       return Inner::from_char(lhs) + rhs;
    }
 
-   template<class TChar, size_t N, class TTraits>
-   consteval Literal<TChar, N + 1, TTraits> operator + (
-      const Literal<TChar, N, TTraits>& lhs,
-      TChar rhs
-   ) {
+   consteval auto operator + (const CT::FixedString auto& lhs, CT::FixedChar auto rhs) {
       return lhs + Inner::from_char(rhs);
    }
 
-   template<class TChar, size_t N, class TTraits>
+   /*template<class TChar, size_t N, class TTraits>
    auto& operator << (
       std::basic_ostream<TChar, TTraits>& out,
       const Literal<TChar, N, TTraits>& str
    ) {
       out << str.data();
       return out;
-   }
+   }*/
 
 } // namespace Langulus
 

@@ -151,12 +151,12 @@ namespace Langulus::Anyness::Component
 
       struct WrapBegin {
       protected:
-         H  mIt;
-         C& mRange;
+         mutable H mIt;
+         C const& mRange;
 
       public:
-         constexpr WrapBegin(C& range) noexcept
-            : mIt    {range.GetHandle()}
+         constexpr WrapBegin(H&& it, const C& range) noexcept
+            : mIt    {FWD(it)}
             , mRange {range} {}
 
          constexpr bool operator == (const WrapBegin& rhs) const noexcept {
@@ -171,12 +171,12 @@ namespace Langulus::Anyness::Component
          H* operator -> () const noexcept { return &mIt; }
 
          WrapBegin& operator ++ ()    noexcept { ++mIt; return *this; }
-         WrapBegin  operator ++ (int) noexcept { return mIt++; }
+         WrapBegin  operator ++ (int) noexcept { return {mIt++, mRange}; }
       };
 
    public:
-      constexpr WrapBegin   begin() const noexcept { return {range}; }
-      constexpr IteratorEnd end  () const noexcept { return {};      }
+      constexpr WrapBegin   begin() const noexcept { return {range.GetHandle(), range}; }
+      constexpr IteratorEnd end  () const noexcept { return {}; }
    };
 
    template<CT::Container C>
@@ -202,7 +202,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       constexpr auto last(this C&& self) noexcept -> TIterator<Deref<C>>;
 
-      constexpr IteratorEnd end() const noexcept { return {}; }
+      constexpr auto end() const noexcept -> IteratorEnd { return {}; }
    };
 
 } // namespace Langulus::Anyness::Component

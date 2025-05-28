@@ -461,7 +461,7 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", /*Stringifiable,*/ S
          const auto staticallyConverted = instance.operator Text();
          
          Text rttiConverted;
-         meta->GetConverter(debugMeta)(&instance, &rttiConverted);
+         meta.GetConverter(debugMeta)(&instance, &rttiConverted);
 
          REQUIRE(staticallyConverted == rttiConverted);
          REQUIRE(staticallyConverted == "Stringifiable converted to Text");

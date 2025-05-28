@@ -29,12 +29,13 @@ namespace Langulus
    template<bool FAKE = false, template<class> class S, CT::NoIntent T>
    requires CT::Intent<S<T>> LANGULUS(INLINED)
    constexpr auto IntentNew(void* placement, S<T>&& value) {
-      static_assert(CT::Complete<T>,
-         "T has to be complete in order to be constructed");
-      static_assert(not CT::Abstract<T>,
-         "T has to be concrete in order to be constructed");
-      static_assert(not CT::Reference<T>,
-         "T has to not be a reference in order to be constructed");
+      constexpr auto TName = NameOf<T>();
+      static_assert(CT::Complete<T>, TName +
+         " has to be complete in order to be constructed");
+      static_assert(not CT::Abstract<T>, TName +
+         " has to be concrete in order to be constructed");
+      static_assert(not CT::Reference<T>, TName +
+         " can't be a reference in order to be constructed");
 
       AssumeDev(placement, HERE(), "Invalid placement pointer");
 
@@ -47,7 +48,7 @@ namespace Langulus
             return static_cast<T*>(placement);
          }
          else {
-            static_assert(FAKE, "Can't refer-construct type");
+            static_assert(FAKE, "Can't refer-construct type: " + TName);
             return Unsupported {};
          }
       }
@@ -60,7 +61,7 @@ namespace Langulus
             return static_cast<T*>(placement);
          }
          else {
-            static_assert(FAKE, "Can't move-construct type");
+            static_assert(FAKE, "Can't move-construct type: " + TName);
             return Unsupported {};
          }
       }
@@ -79,7 +80,7 @@ namespace Langulus
          else {
             static_assert(FAKE,
                "Can't abandon-construct destructible type"
-               " - explicit abandon-constructor is required");
+               " - explicit abandon-constructor is required for: " + TName);
             return Unsupported {};
          }
       }
@@ -88,6 +89,7 @@ namespace Langulus
          // @attention - assumes that all levels of indirection have    
          //    been allocated and pointers point to valid memory        
          using DT = Decay<T>;
+         constexpr auto DTName = NameOf<DT>();
 
          //TODO nest for pointers
 
@@ -103,12 +105,12 @@ namespace Langulus
                }
             }
             else {
-               static_assert(FAKE, "Can't clone-construct type");
+               static_assert(FAKE, "Can't clone-construct type: " + DTName);
                return Unsupported {};
             }
          }
          else {
-            static_assert(FAKE, "Can't clone-construct a void type");
+            static_assert(FAKE, "Can't clone-construct a void type: " + DTName);
             return Unsupported {};
          }
       }
@@ -125,7 +127,7 @@ namespace Langulus
             }
          }
          else {
-            static_assert(FAKE, "Can't copy-construct type");
+            static_assert(FAKE, "Can't copy-construct type: " + TName);
             return Unsupported {};
          }
       }
@@ -142,11 +144,11 @@ namespace Langulus
             }
          }
          else {
-            static_assert(FAKE, "Can't disown-construct type");
+            static_assert(FAKE, "Can't disown-construct type: " + TName);
             return Unsupported {};
          }
       }
-      else static_assert(false, "Unsupported intent");
+      else static_assert(false, "Intent wasn't recognized: " + NameOf<S<T>>());
    }
 
    /// Assign new value to an instance of T, using the provided intent        
@@ -158,12 +160,13 @@ namespace Langulus
    template<bool FAKE = false, template<class> class S, CT::NoIntent T>
    requires CT::Intent<S<T>> LANGULUS(INLINED)
    constexpr decltype(auto) IntentAssign(T& lhs, S<T>&& rhs) {
-      static_assert(CT::Mutable<T>,
-         "T has to be mutable in order to be assigned");
-      static_assert(CT::Complete<T>,
-         "T has to be complete in order to be assigned");
-      static_assert(not CT::Reference<T>,
-         "T has to not be a reference in order to be assigned");
+      constexpr auto TName = NameOf<T>();
+      static_assert(CT::Mutable<T>, TName +
+         " has to be mutable in order to be assigned");
+      static_assert(CT::Complete<T>, TName +
+         " has to be complete in order to be assigned");
+      static_assert(not CT::Reference<T>, TName +
+         " can't be a reference in order to be assigned");
 
       if constexpr (CT::Referred<S<T>>) {
          // Refer                                                       
@@ -174,7 +177,7 @@ namespace Langulus
             return (lhs);
          }
          else {
-            static_assert(FAKE, "Can't refer-assign type");
+            static_assert(FAKE, "Can't refer-assign type: " + TName);
             return Unsupported {};
          }
       }
@@ -189,7 +192,7 @@ namespace Langulus
             return (lhs);
          }
          else {
-            static_assert(FAKE, "Can't move-assign type");
+            static_assert(FAKE, "Can't move-assign type: " + TName);
             return Unsupported {};
          }
       }
@@ -214,7 +217,7 @@ namespace Langulus
          else {
             static_assert(FAKE,
                "Can't abandon-assign destructible type"
-               " - explicit abandon-assigner is required");
+               " - explicit abandon-assigner is required for: " + TName);
             return Unsupported {};
          }
       }
@@ -223,6 +226,7 @@ namespace Langulus
          // @attention - assumes that all levels of indirection have    
          //    been allocated and pointers point to valid memory        
          using DT = Decay<T>;
+         constexpr auto DTName = NameOf<DT>();
 
          //TODO nest for pointers
          if constexpr (CT::Complete<DT> and not CT::Void<DT>) {
@@ -238,17 +242,17 @@ namespace Langulus
                   }
                }
                else {
-                  static_assert(FAKE, "Can't clone-assign type");
+                  static_assert(FAKE, "Can't clone-assign type: " + DTName);
                   return Unsupported {};
                }
             }
             else {
-               static_assert(FAKE, "Can't clone-assign type - lhs is not mutable");
+               static_assert(FAKE, "Can't clone-assign type - lhs is not mutable: " + DTName);
                return Unsupported {};
             }
          }
          else {
-            static_assert(FAKE, "Can't clone-assign void or incomplete type");
+            static_assert(FAKE, "Can't clone-assign void or incomplete type: " + DTName);
             return Unsupported {};
          }
       }
@@ -265,7 +269,7 @@ namespace Langulus
             }
          }
          else {
-            static_assert(FAKE, "Can't copy-assign type");
+            static_assert(FAKE, "Can't copy-assign type: " + TName);
             return Unsupported {};
          }
       }
@@ -282,11 +286,11 @@ namespace Langulus
             }
          }
          else {
-            static_assert(FAKE, "Can't disown-assign type");
+            static_assert(FAKE, "Can't disown-assign type: " + TName);
             return Unsupported {};
          }
       }
-      else static_assert(false, "Unsupported intent");
+      else static_assert(false, "Intent wasn't recognized: " + NameOf<S<T>>());
    }
 
    namespace CT

@@ -11,6 +11,7 @@
 #include <string_view>
 #include <algorithm>
 #include <iterator>
+#include <cctype>
 
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

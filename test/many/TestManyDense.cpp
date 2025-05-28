@@ -243,7 +243,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          auto movable = element;
          pack = Abandon(movable);
 
-         if constexpr (CT::Block<E>)
+         if constexpr (CT::Container<E>)
             Many_CheckState_Abandoned<E>(movable);
 
          if constexpr (CT::Flat<E>) {
@@ -321,7 +321,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
 
       WHEN("Populated using Many::New") {
          pack = FromHelper<T, E>();
-         const auto created = pack.New(3, darray2[0]);
+         const auto created = pack.EmplaceAt(3, darray2[0]);
 
          Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 3);
@@ -609,7 +609,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             #endif
          }
          else {
-            REQUIRE_THROWS(pack.Emplace(IndexFront, ::std::move(i666)));
+            REQUIRE_THROWS(pack.EmplaceAt(Index::Front, ::std::move(i666)));
             Many_CheckState_Default<E>(pack);
          }
       }
@@ -688,7 +688,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Empty pack with state is shallow-copied") {
-         pack.MakeOr();
+         pack.EnableOr();
          auto copy = pack;
 
          Many_Helper_TestSame(copy, pack);
@@ -697,7 +697,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Empty pack with state is cloned") {
-         pack.MakeOr();
+         pack.EnableOr();
          T clone = Clone(pack);
 
          Many_Helper_TestSame(clone, pack);
@@ -706,7 +706,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Empty pack with state is moved") {
-         pack.MakeOr();
+         pack.EnableOr();
          T movable = pack;
          const T moved = ::std::move(movable);
 
@@ -984,14 +984,14 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       T pack {source};
 
       if constexpr (CT::Flat<E>) {
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.template As<E>() == element);
          REQUIRE(*pack.template As<E*>() == element);
          REQUIRE(pack.GetUses() == 2);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
-         Any_Helper_TestSame(pack, source);
+         Many_Helper_TestSame(pack, element);
+         Many_Helper_TestSame(pack, source);
          REQUIRE(pack.GetUses() == 3);
       }
 
@@ -1030,13 +1030,13 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       T pack {element};
 
       if constexpr (CT::Flat<E>) {
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.template As<E>() == element);
          REQUIRE(*pack.template As<E*>() == element);
          REQUIRE(pack.GetUses() == 1);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
+         Many_Helper_TestSame(pack, element);
          REQUIRE(pack.GetUses() == 2);
       }
 
@@ -1072,13 +1072,13 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          pack = element;
 
          if constexpr (CT::Flat<E>) {
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.template As<E>() == element);
             REQUIRE(*pack.template As<E*>() == element);
             REQUIRE(pack.GetUses() == 1);
          }
          else if constexpr (CT::Same<E, T>) {
-            Any_Helper_TestSame(pack, element);
+            Many_Helper_TestSame(pack, element);
             REQUIRE(pack.GetUses() == element.GetUses());
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.IsStatic() == element.IsStatic());
@@ -1119,16 +1119,16 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          pack = ::std::move(movable);
 
          if constexpr (CT::Block<E>)
-            Any_CheckState_Default<TypeOf<E>>(movable);
+            Many_CheckState_Default<TypeOf<E>>(movable);
 
          if constexpr (CT::Flat<E>) {
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.template As<E>() == element);
             REQUIRE(*pack.template As<E*>() == element);
             REQUIRE(pack.GetUses() == 1);
          }
          else if constexpr (CT::Same<E, T>) {
-            Any_Helper_TestSame(pack, element);
+            Many_Helper_TestSame(pack, element);
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.IsStatic() == element.IsStatic());
             REQUIRE(pack.GetAllocation() == element.GetAllocation());
@@ -1167,13 +1167,13 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          pack = Disown(element);
 
          if constexpr (CT::Flat<E>) {
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.template As<E>() == element);
             REQUIRE(*pack.template As<E*>() == element);
             REQUIRE(pack.GetUses() == 1);
          }
          else if constexpr (CT::Same<E, T>) {
-            Any_Helper_TestSame(pack, element);
+            Many_Helper_TestSame(pack, element);
             REQUIRE(pack.GetUses() == 0);
             REQUIRE(pack.IsStatic());
             REQUIRE_FALSE(pack.GetAllocation());
@@ -1213,16 +1213,16 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          pack = Abandon(movable);
 
          if constexpr (CT::Block<E>)
-            Any_CheckState_Abandoned<TypeOf<E>>(movable);
+            Many_CheckState_Abandoned<TypeOf<E>>(movable);
 
          if constexpr (CT::Flat<E>) {
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(pack.template As<E>() == element);
             REQUIRE(*pack.template As<E*>() == element);
             REQUIRE(pack.GetUses() == 1);
          }
          else if constexpr (CT::Same<E, T>) {
-            Any_Helper_TestSame(pack, element);
+            Many_Helper_TestSame(pack, element);
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.IsStatic() == element.IsStatic());
             REQUIRE(pack.GetAllocation() == element.GetAllocation());
@@ -1260,7 +1260,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Assigned compatible empty self") {
          pack = T {};
 
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
@@ -1291,7 +1291,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          auto packbackup = pack;
          pack = pack;
 
-         Any_Helper_TestSame(pack, packbackup);
+         Many_Helper_TestSame(pack, packbackup);
 
          REQUIRE(pack.IsTypeConstrained() == CT::Typed<T>);
          REQUIRE(pack.GetUses() == (CT::Deep<E> and CT::Same<T, E> ? 3 : 2));
@@ -1328,16 +1328,16 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       T pack {::std::move(movable)};
 
       if constexpr (CT::Block<E>)
-         Any_CheckState_Default<TypeOf<E>>(movable);
+         Many_CheckState_Default<TypeOf<E>>(movable);
 
       if constexpr (CT::Flat<E>) {
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.template As<E>() == element);
          REQUIRE(*pack.template As<E*>() == element);
          REQUIRE(pack.GetUses() == 1);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
+         Many_Helper_TestSame(pack, element);
          REQUIRE(pack.GetUses() == 2);
          REQUIRE(pack.IsStatic() == element.IsStatic());
          REQUIRE(pack.GetAllocation() == element.GetAllocation());
@@ -1395,13 +1395,13 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       T pack {Disown(element)};
 
       if constexpr (CT::Flat<E>) {
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.template As<E>() == element);
          REQUIRE(*pack.template As<E*>() == element);
          REQUIRE(pack.GetUses() == 1);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
+         Many_Helper_TestSame(pack, element);
          REQUIRE(pack.GetUses() == 0);
          REQUIRE(pack.IsStatic());
          REQUIRE_FALSE(pack.GetAllocation());
@@ -1460,16 +1460,16 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       T pack {Abandon(movable)};
 
       if constexpr (CT::Block<E>)
-         Any_CheckState_Abandoned<TypeOf<E>>(movable);
+         Many_CheckState_Abandoned<TypeOf<E>>(movable);
 
       if constexpr (CT::Flat<E>) {
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.template As<E>() == element);
          REQUIRE(*pack.template As<E*>() == element);
          REQUIRE(pack.GetUses() == 1);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
+         Many_Helper_TestSame(pack, element);
 
          REQUIRE(pack.GetUses() == 2);
          REQUIRE(pack.IsStatic() == element.IsStatic());
@@ -1528,7 +1528,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       if constexpr (CT::Untyped<T>) {
          const T pack {element, element};
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 2);
          REQUIRE(pack.GetReserved() >= 2);
          for (auto& e : pack)
@@ -1540,7 +1540,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       if constexpr (CT::Untyped<T>) {
          const T pack {element, &element};
 
-         Any_CheckState_OwnedFull<Many>(pack);
+         Many_CheckState_OwnedFull<Many>(pack);
          REQUIRE(pack.GetCount() == 2);
          REQUIRE(pack.GetReserved() >= 2);
          REQUIRE(pack[0] == Many {element});
@@ -1554,7 +1554,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       const auto previousReserved = pack.GetReserved();
       const auto memory = pack.GetRaw();
       
-      Any_CheckState_OwnedFull<E>(pack);
+      Many_CheckState_OwnedFull<E>(pack);
       REQUIRE(pack.GetCount() == 5);
       REQUIRE(pack.GetReserved() >= 5);
       REQUIRE(pack.GetRaw());
@@ -1564,7 +1564,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Shallow-copy more of the same stuff to the back (<<)") {
          pack << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
@@ -1605,7 +1605,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Shallow-copy more of the same stuff to the front (>>)") {
          pack >> darray2[0] >> darray2[1] >> darray2[2] >> darray2[3] >> darray2[4];
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
@@ -1644,9 +1644,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Shallow-copy an array to the back") {
-         pack.Insert(IndexBack, darray2);
+         pack.InsertAt(Index::Back, darray2);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
@@ -1681,9 +1681,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Shallow-copy an array to the front") {
-         pack.Insert(IndexFront, darray2);
+         pack.InsertAt(Index::Front, darray2);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
@@ -1741,7 +1741,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             << ::std::move(darray3[3])
             << ::std::move(darray3[4]);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
@@ -1807,7 +1807,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             >> ::std::move(darray3[3])
             >> ::std::move(darray3[4]);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
@@ -1851,9 +1851,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       
       WHEN("Insert single item at a specific place by shallow-copy") {
          const auto i666 = CreateElement<E>(666);
-         pack.Insert(3, i666);
+         pack.InsertAt(3, i666);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -1890,9 +1890,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Insert multiple items at a specific place by shallow-copy") {
-         pack.Insert(3, darray2);
+         pack.InsertAt(3, darray2);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -1935,9 +1935,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Insert single item at a specific place by move") {
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
-         pack.Insert(3, ::std::move(i666));
+         pack.InsertAt(3, ::std::move(i666));
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -1976,9 +1976,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Emplace item at a specific place") {
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
-         decltype(auto) instance = pack.Emplace(3, ::std::move(i666));
+         decltype(auto) instance = pack.EmplaceAt(3, ::std::move(i666));
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -2024,9 +2024,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Emplace item at the front") {
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
-         decltype(auto) instance = pack.Emplace(IndexFront, ::std::move(i666));
+         decltype(auto) instance = pack.EmplaceAt(Index::Front, ::std::move(i666));
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -2072,9 +2072,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Emplace item at the back") {
          auto i666 = CreateElement<E>(666);
          const auto i666backup = i666;
-         decltype(auto) instance = pack.Emplace(IndexBack, ::std::move(i666));
+         decltype(auto) instance = pack.EmplaceAt(Index::Back, ::std::move(i666));
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -2197,13 +2197,13 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Pack is cleared") {
          pack.Clear();
 
-         Any_CheckState_OwnedEmpty<E>(pack);
+         Many_CheckState_OwnedEmpty<E>(pack);
       }
 
       WHEN("Pack is reset") {
          pack.Reset();
 
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
       }
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -2223,7 +2223,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       #endif
 
       WHEN("Pack is shallow-copied") {
-         pack.MakeOr();
+         pack.EnableOr();
          auto copy = pack;
 
          REQUIRE(copy.GetRaw() == pack.GetRaw());
@@ -2235,7 +2235,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       }
 
       WHEN("Pack is cloned") {
-         pack.MakeOr();
+         pack.EnableOr();
          T clone = Clone(pack);
 
          REQUIRE(clone.GetRaw() != pack.GetRaw());
@@ -2254,7 +2254,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
 
       WHEN("Pack is moved") {
          T movable = pack;
-         movable.MakeOr();
+         movable.EnableOr();
          const T moved = ::std::move(movable);
 
          REQUIRE(movable.GetRaw() == nullptr);
@@ -2335,7 +2335,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Merge-copy an element to the back, if not found (<<=)") {
          pack <<= darray2[3];
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          for (unsigned i = 0; i < 5; ++i)
@@ -2371,7 +2371,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       WHEN("Merge-copy an element to the front, if not found (>>=)") {
          pack >>= darray2[3];
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          REQUIRE(pack[0] == darray2[3]);
@@ -2408,7 +2408,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          auto moved = darray2[3];
          pack <<= ::std::move(moved);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          for (unsigned i = 0; i < 5; ++i)
@@ -2445,7 +2445,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          auto moved = darray2[3];
          pack >>= ::std::move(moved);
 
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          REQUIRE(pack[0] == darray2[3]);

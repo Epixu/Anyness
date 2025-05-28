@@ -117,10 +117,18 @@ namespace Langulus::Anyness
 
       /// Comparing against bounded character arrays and literals             
       //constexpr bool operator == (const CT::TextLiteral auto&) const noexcept;
+
       /// Comparing against null-terminated strings                           
-      constexpr bool operator == (const CT::TextPointer auto&) const noexcept;
+      constexpr bool operator == (const CT::TextPointer auto& rhs) const noexcept {
+         if (rhs == nullptr or *rhs == 0)
+            return IsEmpty();
+         return operator == (Text {Disown(rhs)});
+      }
+
       /// Comparing against std containers with characters                    
-      constexpr bool operator == (const CT::TextRange auto&) const noexcept;
+      constexpr bool operator == (const CT::TextRange auto& rhs) const noexcept {
+         return operator == (Text {Disown(rhs)});
+      }
    };
 
 } // namespace Langulus::Anyness

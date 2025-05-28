@@ -51,10 +51,11 @@ namespace Langulus::Anyness::Component
       ///      otherwise it has to be an instance of the container type       
       template<CT::Container C, CT::Intent I>
       void EmplaceWithIntent(this C& self, I&& rhs_with_intent) {
+         constexpr auto IName = NameOf<I>();
          using IT = TypeOf<I>;
          AssumeDev(self.IsTyped(), HERE(), "Invalid type");
          AssumeDev(self.GetRaw(),  HERE(), "Invalid heap");
-         auto& rhs = *rhs_with_intent;
+         decltype(auto) rhs = *rhs_with_intent;
 
          if constexpr (CT::Untyped<C>) {
             //                                                          
@@ -64,7 +65,7 @@ namespace Langulus::Anyness::Component
                AssumeDev(CT::Sparse<IT>, "Sparseness mismatch");
                using DT = Deptr<IT>;
 
-               if constexpr (I::Shallow) {
+               if constexpr (I::IsShallow()) {
                   // Do a refer/copy/disown/abandon/move sparse LHS     
                   if constexpr (CT::Null<IT>) {
                      // RHS is nullptr                                  
@@ -110,7 +111,7 @@ namespace Langulus::Anyness::Component
                else if constexpr (CT::Cloned<I>)
                   T.RunCloneConstruct  (self.GetRaw(), &rhs);
                else
-                  static_assert(false, "Unsupported intent");
+                  static_assert(false, "Unrecognized intent: " + IName);
             }
          }
          else {
@@ -119,7 +120,7 @@ namespace Langulus::Anyness::Component
             //                                                          
             using T = TypeOf<C>;
 
-            if constexpr (I::Shallow and CT::Sparse<T>) {
+            if constexpr (I::IsShallow() and CT::Sparse<T>) {
                // Do a copy/refer/disown/abandon/move sparse RHS        
                if constexpr (CT::Null<IT>) {
                   // RHS is nullptr                                     
@@ -134,7 +135,7 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::DeeplyOwned<C>)
                      self.template DeepKeep<I>();
                }
-               else static_assert(false, "Can't construct sparse T");
+               else static_assert(false, "Can't emplace shallow pointer: " + IName);
             }
             else if constexpr (CT::Dense<T>) {
                // Do a copy/disown/abandon/move/clone inside a dense    
@@ -142,7 +143,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::ConstructibleFrom<T, I>)
                   new (self.GetRaw()) Decay<T> (FWD(rhs_with_intent));
                else
-                  static_assert(false, "Can't construct dense T");
+                  static_assert(false, "Can't emplace: " + IName);
             }
             else if constexpr (CT::Dense<Deptr<T>>) {
                // Clone sparse data with exactly one pointer            
@@ -153,7 +154,8 @@ namespace Langulus::Anyness::Component
                }
                else {
                   // Otherwise attempt cloning DT conventionally        
-                  static_assert(CT::Similar<T, IT>, "Type mismatch");
+                  static_assert(CT::Similar<T, IT>, "Type mismatch: "
+                     + NameOf<T>() + " is not similar to " + NameOf<IT>());
                   auto meta = MetaDataOf<Decay<T>>();
                   auto entry = Allocator::Allocate(meta, meta.RequestSize(1).mByteSize);
                   auto pointer = entry->GetBlockStart();

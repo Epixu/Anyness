@@ -63,14 +63,14 @@ namespace Langulus::Anyness
 
    public:
       constexpr TIterator() noexcept = default;
-      constexpr TIterator(const TIterator&) noexcept = default;
+      constexpr TIterator(TIterator const&) noexcept = default;
       constexpr TIterator(TIterator&&) noexcept = default;
       constexpr TIterator(IteratorEnd) noexcept;
 
-      constexpr auto operator = (const TIterator&) noexcept -> TIterator& = default;
+      constexpr auto operator = (TIterator const&) noexcept -> TIterator& = default;
       constexpr auto operator = (TIterator&&) noexcept -> TIterator& = default;
 
-      constexpr bool operator == (const TIterator&) const noexcept;
+      constexpr bool operator == (TIterator const&) const noexcept;
       constexpr bool operator == (IteratorEnd) const noexcept;
 
       constexpr decltype(auto) operator * () const noexcept {
@@ -135,7 +135,7 @@ namespace Langulus::Anyness
 
    public:
       constexpr TIteratorMap() noexcept = default;
-      constexpr TIteratorMap(const TIteratorMap&) noexcept = default;
+      constexpr TIteratorMap(TIteratorMap const&) noexcept = default;
       constexpr TIteratorMap(TIteratorMap&&) noexcept = default;
       constexpr TIteratorMap(IteratorEnd) noexcept;
 
@@ -153,7 +153,7 @@ namespace Langulus::Anyness
             return  self.mVal;
       }
       
-      constexpr auto operator = (const TIteratorMap&) noexcept -> TIteratorMap& = default;
+      constexpr auto operator = (TIteratorMap const&) noexcept -> TIteratorMap& = default;
       constexpr auto operator = (TIteratorMap&&)      noexcept -> TIteratorMap& = default;
 
       constexpr bool operator == (const TIteratorMap&) const noexcept;

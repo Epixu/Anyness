@@ -42,44 +42,44 @@ namespace Langulus::CT
    /// Checks if all T are shallow intents                                    
    /// Shallow intents are propagated through mostly a single indirection     
    template<class...T>
-   concept ShallowIntent = ((Intent<Deref<T>> and Decay<T>::Depth < 2) and ...);
+   concept ShallowIntent = ((Intent<Deref<T>> and Decay<T>::IsShallow()) and ...);
 
    /// Checks if all T are deep intents                                       
    /// Deep intents propagate through all levels of indirection               
    template<class...T>
-   concept DeepIntent = ((Intent<Deref<T>> and Decay<T>::Depth > 1) and ...);
+   concept DeepIntent = ((Intent<Deref<T>> and not Decay<T>::IsShallow()) and ...);
 
    /// Check if all T are refer intents                                       
    /// Does a shallow-copy without delving into any indirections, while       
    /// exercising ownership of managed data                                   
    template<class...T>
-   concept Referred = ((Intent<Deref<T>> and Decay<T>::Depth == 0 and Decay<T>::Keep and not Decay<T>::Move) and ...);
+   concept Referred = ((Intent<Deref<T>> and Decay<T>::Is(0, true, false)) and ...);
       
    /// Check if all T are copy intents                                        
    /// Does a shallow-copy, while cloning only the first indirection level    
    template<class...T>
-   concept Copied = ((Intent<Deref<T>> and Decay<T>::Depth == 1 and Decay<T>::Keep and not Decay<T>::Move) and ...);
+   concept Copied = ((Intent<Deref<T>> and Decay<T>::Is(1, true, false)) and ...);
 
    /// Check if all T are move intents                                        
    /// Moves by leaving the moved instances reusable                          
    template<class...T>
-   concept Moved = ((Intent<Deref<T>> and Decay<T>::Depth == 0 and Decay<T>::Keep and Decay<T>::Move) and ...);
+   concept Moved = ((Intent<Deref<T>> and Decay<T>::Is(0, true, true)) and ...);
 
    /// Check if all T are abandon intents                                     
    /// Moves by leaving the moved instances no longer usable                  
    template<class...T>
-   concept Abandoned = ((Intent<Deref<T>> and Decay<T>::Depth == 0 and not Decay<T>::Keep and Decay<T>::Move) and ...);
+   concept Abandoned = ((Intent<Deref<T>> and Decay<T>::Is(0, false, true)) and ...);
 
    /// Check if all T are disown intents                                      
    /// Does a shallow-copy without delving into any indirections, without     
    /// exercising any ownership                                               
    template<class...T>
-   concept Disowned = ((Intent<Deref<T>> and Decay<T>::Depth == 0 and not Decay<T>::Keep and not Decay<T>::Move) and ...);
+   concept Disowned = ((Intent<Deref<T>> and Decay<T>::Is(0, false, false)) and ...);
 
    /// Check if all T are clone intents                                       
    /// Does a deep-copy throughout all levels of indirection                  
    template<class...T>
-   concept Cloned = ((Intent<Deref<T>> and Decay<T>::Depth > 1 and Decay<T>::Keep and not Decay<T>::Move) and ...);
+   concept Cloned = ((DeepIntent<Deref<T>> and Decay<T>::Is(true, false)) and ...);
 
 } // namespace Langulus::CT
 
@@ -95,10 +95,8 @@ namespace Langulus
    ///   @return a reference (preferably) or a copy of the inner data         
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr decltype(auto) DeintCast(T&& what) noexcept {
-      if constexpr (CT::Intent<T>)
-         return static_cast<TypeOf<T>>(what);
-      else
-         return FWD(what);
+      if constexpr (CT::Intent<T>) return *what;
+      else return FWD(what);
    }
 
    namespace Inner
@@ -112,11 +110,17 @@ namespace Langulus
          using CTTI_Intent = Yes;
          using CTTI_Sheddable = Yes;
 
-         static constexpr int  Depth = DEPTH;
-         static constexpr bool Keep  = KEEP;
-         static constexpr bool Move  = MOVE;
-         static constexpr bool ResetsOnMove = Keep and Move;
-         static constexpr bool Shallow = Depth < 2;
+         static consteval int  GetDepth()     { return DEPTH; }
+         static consteval bool IsKept()       { return KEEP;  }
+         static consteval bool IsMoved()      { return MOVE;  }
+         static consteval bool ResetsOnMove() { return KEEP and MOVE; }
+         static consteval bool IsShallow()    { return DEPTH < 2;     }
+         static consteval bool Is(int depth, bool keep, bool move) {
+            return DEPTH == depth and KEEP == keep and MOVE == move;
+         }
+         static consteval bool Is(bool keep, bool move) {
+            return KEEP == keep and MOVE == move;
+         }
       };
 
    } // namespace Langulus::Inner

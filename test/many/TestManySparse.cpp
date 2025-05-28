@@ -2527,7 +2527,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
                REQUIRE(i == 5 - it);
                ++it;
             },
-            [&](Trait& i) {
+            [&](Tag& i) {
                REQUIRE(i == 5 - it);
                ++it;
             },
