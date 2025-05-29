@@ -17,6 +17,7 @@ namespace Langulus::CT::Inner
    template<class T>
    consteval CT::Typelist auto GetUnderlyingType() {
       static_assert(CT::NotReference<T>, "Strip references");
+
       if constexpr (Array<T>)
          return Types<Deext<T>> {};
       else {
@@ -47,7 +48,7 @@ namespace Langulus::CT::Inner
          else if constexpr (Enum<T>)
             return Types<::std::underlying_type_t<T>> {};
          else
-            return Types {};
+            return Types<void> {};
       }
    };
 
@@ -57,14 +58,16 @@ namespace Langulus
 {
 
    /// Get the type that wraps std::underlying_type_t<T> for enums,           
-   /// as well as any bounded array, or anything with T::CTTI_Typed or        
-   /// T::value_type that isn't 'void'                                        
+   /// as well as any bounded array, or anything with CTTI::Typed::Type or    
+   /// T::CTTI_Typed/T::value_type that isn't 'void'. Will result int a type  
+   /// list if inner type contains more than one type                         
    ///   - if T is an array -> return the type (remove extents and refs)      
+   ///   - if T has CTTI::Typed is specialized -> return CTTI::Typed::Type    
    ///   - if T has CTTI_Typed/value_type -> return the inner type(s)         
    ///   - if T is an enum -> return the underlying type                      
    ///   - otherwise just return a void type                                  
-   template<class T>
-   using TypeOf = typename decltype(CT::Inner::GetUnderlyingType<Deref<T>>())::First;
+   template<class T, CT::Typelist INNER = decltype(CT::Inner::GetUnderlyingType<Deref<T>>())>
+   using TypeOf = Tif<INNER::Count <= 1, typename INNER::First, INNER>;
 
    namespace CT
    {
@@ -101,7 +104,7 @@ namespace Langulus
       using TT = TypeOf<T>;
 
       if constexpr (CT::Void<TT>)
-         return static_cast<T&&>(what);
+         return FWD(what);
       else if constexpr (requires { what.TypedCast(); })
          return what.TypedCast();
       else if constexpr (CT::Typelist<TT>)
@@ -123,7 +126,7 @@ namespace Langulus
             "Sheddable can't be static_cast to the inner type");
          return ShedCast(static_cast<InnerT>(item));
       }
-      else return static_cast<T&&>(item);
+      else return FWD(item);
    };
 
 } // namespace Langulus

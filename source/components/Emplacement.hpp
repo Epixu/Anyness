@@ -51,7 +51,6 @@ namespace Langulus::Anyness::Component
       ///      otherwise it has to be an instance of the container type       
       template<CT::Container C, CT::Intent I>
       void EmplaceWithIntent(this C& self, I&& rhs_with_intent) {
-         constexpr auto IName = NameOf<I>();
          using IT = TypeOf<I>;
          AssumeDev(self.IsTyped(), HERE(), "Invalid type");
          AssumeDev(self.GetRaw(),  HERE(), "Invalid heap");
@@ -111,7 +110,7 @@ namespace Langulus::Anyness::Component
                else if constexpr (CT::Cloned<I>)
                   T.RunCloneConstruct  (self.GetRaw(), &rhs);
                else
-                  static_assert(false, "Unrecognized intent: " + IName);
+                  static_assert(false, "Unrecognized intent");
             }
          }
          else {
@@ -135,7 +134,7 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::DeeplyOwned<C>)
                      self.template DeepKeep<I>();
                }
-               else static_assert(false, "Can't emplace shallow pointer: " + IName);
+               else static_assert(false, "Can't emplace shallow pointer");
             }
             else if constexpr (CT::Dense<T>) {
                // Do a copy/disown/abandon/move/clone inside a dense    
@@ -143,7 +142,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::ConstructibleFrom<T, I>)
                   new (self.GetRaw()) Decay<T> (FWD(rhs_with_intent));
                else
-                  static_assert(false, "Can't emplace: " + IName);
+                  static_assert(false, "Can't emplace");
             }
             else if constexpr (CT::Dense<Deptr<T>>) {
                // Clone sparse data with exactly one pointer            
@@ -154,8 +153,7 @@ namespace Langulus::Anyness::Component
                }
                else {
                   // Otherwise attempt cloning DT conventionally        
-                  static_assert(CT::Similar<T, IT>, "Type mismatch: "
-                     + NameOf<T>() + " is not similar to " + NameOf<IT>());
+                  static_assert(CT::Similar<T, IT>, "Type mismatch");
                   auto meta = MetaDataOf<Decay<T>>();
                   auto entry = Allocator::Allocate(meta, meta.RequestSize(1).mByteSize);
                   auto pointer = entry->GetBlockStart();

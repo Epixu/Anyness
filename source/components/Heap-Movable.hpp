@@ -420,7 +420,7 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Handle<T>, "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references");
          using DC = Deref<C>;
-         using TT = Tif<CT::Void<T>, TypeOf<C>, T>;
+         using TT = Tif<CT::Void<T>, TypeOf<DC>, T>;
 
          if constexpr (CT::Void<TT>) {
             // Type-erased handle                                       
@@ -438,11 +438,12 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            // Statically typed handle                                  
-            static_assert(DC::TypeErased or CT::Sparse<TypeOf<C>> == CT::Sparse<TT>,
+            // Typed handle required                                    
+            static_assert(CT::NotVoid<TT>, "Logic error");
+            static_assert(CT::Untyped<DC> or CT::Sparse<TypeOf<C>> == CT::Sparse<TT>,
                "Sparseness mismatch");
 
-            if constexpr (DC::TypeErased)
+            if constexpr (CT::Untyped<DC>)
                AssumeDev(self.IsSparse() == CT::Sparse<TT>, HERE(), "Sparseness mismatch");
 
             if constexpr (CT::DeeplyOwned<DC>) {

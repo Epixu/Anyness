@@ -39,6 +39,7 @@ namespace Langulus::Anyness
    namespace Inner
    {
 
+      ///                                                                     
       using TextBase = Container<
          Com::HeapMovable<>,              // Pointer to heap memory     
          Com::OwnershipStack<>,           // Allocation is referenced   
@@ -77,7 +78,7 @@ namespace Langulus::Anyness
       template<class A1, class...AN> requires CT::RangeInsertable<Text, A1, AN...>
       Text(A1&&, AN&&...);
 
-      static Text From(CT::Text auto&&, CountType);
+      static Text FromText(CT::Text auto&&, CountType);
       static Text FromNumber(CT::Number auto&&, int precision = 0);
 
       // Single element selections                                      
@@ -86,24 +87,35 @@ namespace Langulus::Anyness
 
       // Range selections                                               
       struct PickRange : Container<
-         Component::HeapMovable<>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::TypedStatic<DMeta, char>,
-         Component::CountStack<>
+         Com::HeapMovable<>,
+         Com::Contiguous,
+         Com::IndexedLinear<>,
+         Com::TypedStatic<DMeta, char>,
+         Com::CountStack<>
       > {};
       struct PickRangeMut : Container<
-         Component::HeapMovable<>,
-         Component::Contiguous,
-         Component::IndexedLinear<>,
-         Component::Assignment<>,
-         Component::TypedStatic<DMeta, char>,
-         Component::CountStack<>
+         Com::HeapMovable<>,
+         Com::Contiguous,
+         Com::IndexedLinear<>,
+         Com::Assignment<>,
+         Com::TypedStatic<DMeta, char>,
+         Com::CountStack<>
       > {};
 
       /// Interpret text container as a string_view                           
       ///   @attention the string is null-terminated only after Terminate()   
-      operator Token() const noexcept {
+      constexpr operator Token() const noexcept {
+         //TODO moves these to tests
+         static_assert(CT::Exact<typename CTTI::Typed<Text>::Type, void>, "Wrongly typed container");
+         static_assert(CT::Typed<Text>, "Container not typed");
+         static_assert(not CT::Array<Text>, "Wrongly typed container");
+         static_assert(CTTI::Void<void>::Enabled, "Wrongly typed container");
+         static_assert(not CTTI::Void<void*>::Enabled, "Wrongly typed container");
+         static_assert(    CT::Void<typename CTTI::Typed<Text>::Type>, "Wrongly typed container");
+         static_assert(not CT::NotVoid<typename CTTI::Typed<Text>::Type>, "Wrongly typed container");
+         static_assert(requires { typename Text::CTTI_Typed; }, "Wrongly typed container");
+         static_assert(CT::Exact<decltype(CT::Inner::GetUnderlyingType<Text>()), Types<char>>, "Wrongly typed container");
+         static_assert(CT::Exact<TypeOf<Text>, char>, "Wrongly typed container");
          return {GetRaw(), GetCount()};
       }
 
@@ -166,7 +178,7 @@ namespace Langulus
 
    /// Make a text literal                                                    
    Anyness::Text operator ""_text(const char* text, ::std::size_t size) {
-      return Anyness::Text::From(Disown(text), size);
+      return Anyness::Text::FromText(Disown(text), size);
    }
 
 } // namespace Langulus

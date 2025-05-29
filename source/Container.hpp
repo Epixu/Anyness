@@ -67,6 +67,14 @@ namespace Langulus::CTTI
       static constexpr bool Enabled = false;
    };
 
+   /// Can be used in two ways to satisfy CT::Iterator<T>:                    
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Iterator = Yes/No;` in T                   
+   template<class T>
+   struct Iterator {
+      static constexpr bool Enabled = false;
+   };
+
 } // namespace Langulus::CTTI
 
 LANGULUS_CTTI_CONCEPT(State);
@@ -76,6 +84,7 @@ LANGULUS_CTTI_CONCEPT(Map);
 LANGULUS_CTTI_CONCEPT(Set);
 LANGULUS_CTTI_CONCEPT(Pair);
 LANGULUS_CTTI_CONCEPT(Handle);
+LANGULUS_CTTI_CONCEPT(Iterator);
 
 namespace Langulus::Anyness
 {

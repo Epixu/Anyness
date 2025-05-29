@@ -30,6 +30,7 @@
 #include "../../../source/states/Tracked.hpp"
 #include "THandle.hpp"
 #include "TPair.hpp"
+#include "TMany.hpp"
 #include <Langulus/Retype.hpp>
 
 
@@ -87,7 +88,9 @@ namespace Langulus::Anyness
          Com::TypedStack<DMeta, V, 1>, // Value type                    
          Com::CountStack<>,            // Variable count                
          Com::ReserveStack<>,          // Variable capacity             
-         Com::Comparison               // Allows for comparison         
+         Com::Comparison,              // Allows for comparison         
+         Com::IterationRange<0>,       // Iterate keys                  
+         Com::IterationRange<1>        // Iterate values                
       >;
 
       ///                                                                     
@@ -151,7 +154,8 @@ namespace Langulus::Anyness
       using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
 
-      using It           = TIteratorMap<TMap>;
+      using IteratorMut  = typename IterateTogether<const TMany<K>,       TMany<V>>::Iterator;
+      using Iterator     = typename IterateTogether<const TMany<K>, const TMany<V>>::Iterator;
       using CountType    = typename Com::CountStack<>::CountType;
 
       using PairType     = TPair<K const&, V const&>;
@@ -160,7 +164,7 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Construction                                                      
       constexpr TMap() noexcept = default;
-      constexpr TMap(const TMap&) noexcept = default;
+      constexpr TMap(TMap const&) noexcept = default;
       constexpr TMap(TMap&&) noexcept = default;
 
       template<class T1, class...TN> requires CT::DeepMapConstructible<K, V, T1, TN...>
@@ -193,7 +197,7 @@ namespace Langulus::Anyness
       auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
       auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
       auto RemovePair (const CT::Pair auto&)     -> CountType;
-      auto RemoveIt   (const It&) -> It;
+      void RemoveIt   (IteratorMut&);
    };
    
 
@@ -220,7 +224,8 @@ namespace Langulus::Anyness
       using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
 
-      using It           = TIteratorMap<TMapUnsorted>;
+      using IteratorMut  = typename IterateTogether<const TMany<K>,       TMany<V>>::Iterator;
+      using Iterator     = typename IterateTogether<const TMany<K>, const TMany<V>>::Iterator;
       using CountType    = typename Component::CountStack<>::CountType;
 
       using PairType     = TPair<K const&, V const&>;
@@ -229,7 +234,7 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Construction                                                      
       constexpr TMapUnsorted() noexcept = default;
-      constexpr TMapUnsorted(const TMapUnsorted&) noexcept = default;
+      constexpr TMapUnsorted(TMapUnsorted const&) noexcept = default;
       constexpr TMapUnsorted(TMapUnsorted&&) noexcept = default;
 
       template<class T1, class...TN> requires CT::DeepMapConstructible<K, V, T1, TN...>
@@ -266,7 +271,7 @@ namespace Langulus::Anyness
       auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
       auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
       auto RemovePair (const CT::Pair auto&) -> CountType;
-      auto RemoveIt   (const It&) -> It;
+      void RemoveIt   (IteratorMut&);
    };
    
 
@@ -293,7 +298,8 @@ namespace Langulus::Anyness
       using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
       using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
 
-      using It           = TIteratorMap<TMapSorted>;
+      using IteratorMut  = typename IterateTogether<const TMany<K>,       TMany<V>>::Iterator;
+      using Iterator     = typename IterateTogether<const TMany<K>, const TMany<V>>::Iterator;
       using CountType    = typename Component::CountStack<>::CountType;
 
       using PairType     = TPair<K const&, V const&>;
@@ -302,7 +308,7 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   Construction                                                      
       constexpr TMapSorted() noexcept = default;
-      constexpr TMapSorted(const TMapSorted&) noexcept = default;
+      constexpr TMapSorted(TMapSorted const&) noexcept = default;
       constexpr TMapSorted(TMapSorted&&) noexcept = default;
 
       template<class T1, class...TN> requires CT::DeepMapConstructible<K, V, T1, TN...>
@@ -335,7 +341,7 @@ namespace Langulus::Anyness
       auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
       auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
       auto RemovePair (const CT::Pair auto&) -> CountType;
-      auto RemoveIt   (const It&) -> It;
+      void RemoveIt   (IteratorMut&);
    };
 
 } // namespace Langulus::Anyness

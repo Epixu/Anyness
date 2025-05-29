@@ -3,40 +3,15 @@
 #include <Langulus/CT/Contiguous.hpp>
 
 
-namespace Langulus::CTTI
-{
-
-   /// Can be used in two ways to satisfy CT::Iterator<T>:                    
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Iterator = Yes/No;` in T                   
-   template<class T>
-   struct Iterator {
-      static constexpr bool Enabled = false;
-   };
-   
-} // namespace Langulus::CTTI
-
-LANGULUS_CTTI_CONCEPT(Iterator);
-
 namespace Langulus::Anyness
 {
    
-   ///                                                                        
-   ///   A weightless 'end' iterator helper type                              
-   ///                                                                        
-   /// Used to return from container's end() methods. It only compares        
-   /// equal to other iterators if they have reached their end marker         
-   ///                                                                        
-   struct IteratorEnd final {
-      using CTTI_Iterator = Yes;
-      using CTTI_ReflectAs = void;
-   };
 
 
    ///                                                                        
    ///   Contiguous iterator                                                  
    ///                                                                        
-   template<CT::Container C>
+   /*template<CT::Container C>
    struct TIterator {
       static_assert(CT::NotReference<C> and CT::NoIntent<C>,
          "Can't iterate intents or references");
@@ -173,6 +148,6 @@ namespace Langulus::Anyness
       constexpr operator TIteratorMap<const C>() const noexcept requires Mutable {
          return {mInfo, mEnd, mKey, mVal};
       }
-   };
+   };*/
 
 } // namespace Langulus::Anyness

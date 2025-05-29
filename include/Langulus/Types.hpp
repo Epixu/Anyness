@@ -14,8 +14,8 @@ namespace Langulus::CTTI
 {
    
    /// Can be used in two ways to satisfy CT::Void<T>:                        
-   /// 1. Specialize for T/concept with Value == true                         
-   /// 2. Add a public `using CTTI_Void = Yes;` in T                          
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Void = Yes/No;` in T                       
    template<class T>
    struct Void {
       static constexpr bool Enabled = ::std::is_void_v<T>;
@@ -23,7 +23,7 @@ namespace Langulus::CTTI
    
    /// Can be used in two ways to satisfy CT::Typelist<T>:                    
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Typelist = Yes;` in T                      
+   /// 2. Add a public `using CTTI_Typelist = Yes/No;` in T                   
    template<class T>
    struct Typelist {
       static constexpr bool Enabled = false;
@@ -34,15 +34,41 @@ namespace Langulus::CTTI
 namespace Langulus::CT
 {
 
+   namespace Inner
+   {
+
+      /// Concepts with ::std::decay_t<T>::CTTI_Void::Enabled bug out for     
+      /// some reason. Probably because T may not be an user type, and        
+      /// this isn't well handled as of yet by the compiler. I work around    
+      /// this by using if constexpr to constrain the compiler further        
+      template<class T>
+      consteval bool IsVoidInner() {
+         using DT = ::std::remove_reference_t<T>;
+         if constexpr (CTTI::Void<DT>::Enabled) {
+            // Essentially relies on ::std::is_void_v<T>, but with      
+            // the possibility for an override, so that we can have     
+            // custom void types                                        
+            return true;
+         }
+         else if constexpr (::std::is_class_v<DT>) {
+            // Access member only if T is an user type, to save the     
+            // compiler from bugging out                                
+            if constexpr (requires { ::std::decay_t<DT>::CTTI_Void::Enabled; })
+               return not ::std::is_pointer_v<DT>
+                      and ::std::decay_t<DT>::CTTI_Void::Enabled;
+            else return false;
+         }
+         else return false;
+      }
+
+   } // namespace Langulus::CT::Inner
+
    /// Check if all T are marked void                                         
    template<class...T>
-   concept Void = ((CTTI::Void<::std::remove_reference_t<T>>::Enabled
-        or (not ::std::is_pointer_v<::std::remove_reference_t<T>>
-            and ::std::decay_t<T>::CTTI_Void::Enabled
-        )) and ...);
+   concept Void = (Inner::IsVoidInner<T>() and ...);
 
    template<class...T>
-   concept NotVoid = ((not Void<T>) and ...);
+   concept NotVoid = ((not Inner::IsVoidInner<T>()) and ...);
 
    /// Check if all T are typelists                                           
    template<class...T>
@@ -52,7 +78,7 @@ namespace Langulus::CT
         )) and ...);
 
    template<class...T>
-   concept NotTypelist = ((not Typelist<T>) and ...);
+   concept NotTypelist = ((not Typelist<::std::remove_reference_t<T>>) and ...);
 
 } // namespace Langulus::CT
 
@@ -86,8 +112,8 @@ namespace Langulus
    ///                                                                        
    /// Type list, that contains only one void item - a canonical empty list   
    /// Satisfies CT::Void and is considered 'void'                            
-   template<>
-   struct Types<void> {
+   template<CT::Void T>
+   struct Types<T> {
       using CTTI_Typelist = Yes;
       using CTTI_Void     = Yes;
 
@@ -114,7 +140,7 @@ namespace Langulus
 
    ///                                                                        
    /// Type list that contains exactly one type, which isn't void             
-   template<CT::NotTypelist T>
+   template<CT::NotTypelist T> requires CT::NotVoid<T>
    struct Types<T> {
       using CTTI_Typelist = Yes;
 
@@ -205,7 +231,7 @@ namespace Langulus
 
    ///                                                                        
    /// Type list that contains multiple non-void types                        
-   template<CT::NotTypelist T1, CT::NotTypelist T2, CT::NotTypelist...TN>
+   template<CT::NotTypelist T1, CT::NotTypelist T2, CT::NotTypelist...TN> requires CT::NotVoid<T1, T2, TN...>
    struct Types<T1, T2, TN...> {
       using CTTI_Typelist = Yes;
 
@@ -372,6 +398,6 @@ namespace Langulus
 
    /// CTAD calls to constructor Types() will instantiate as an empty list    
    /// https://stackoverflow.com/questions/62847200                           
-   template<class...> Types() -> Types<void>;
+   //template<class...> Types() -> Types<void>;
 
 } // namespace Langulus

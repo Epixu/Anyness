@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../../../source/Container.hpp"
-#include "../../../source/components/Heap-Movable.hpp"
+#include "../../../source/components/Heap-Reference.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Contiguous.hpp"
 #include "../../../source/components/Indexed-Linear.hpp"
@@ -42,7 +42,7 @@ namespace Langulus::Anyness
    /// Doesn't have ownership, and binary-compatible with the container above 
    ///                                                                        
    struct ManyView : Container<
-      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::HeapReference<>,            // Pointer to heap memory        
       Com::OwnershipStack<0, false>,   // Pointer to an allocation      
       Com::Contiguous,                 // Heap memory is continuous     
       Com::IndexedLinear<>,            // Indexed directly              

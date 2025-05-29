@@ -54,13 +54,33 @@ namespace Langulus::CTTI
    
    /// Can be used in two ways to satisfy CT::Typed<T>:                       
    /// 1. Specialize for T/concept having non-void Type                       
-   /// 2. Add a public `using CTTI_Typed = <non void type>;` in T             
+   /// 2. Add a public `using CTTI_Typed = <non void type/typelist>;` in T    
    template<class T>
    struct Typed {
       using Type = void;
    };
 
 } // namespace Langulus::CTTI
+
+/// Checks for reflection traits inside types themselves                      
+/// Requires the type to be complete in order to do that                      
+///   @attention use this macro in the global namespace                       
+#define LANGULUS_CTTI_CHECK_INNER(NAME) \
+   namespace Langulus::CT::Inner { \
+      template<class T> \
+      consteval bool CTTI_TCheck_##NAME() { \
+         static_assert(not ::std::is_reference_v<T>, "T can't be a reference"); \
+         if constexpr (not ::std::is_pointer_v<T> and ::std::is_class_v<T>) { \
+            if constexpr (requires { typename ::std::decay_t<T>::CTTI_##NAME; }) \
+               return ::std::decay_t<T>::CTTI_##NAME::Enabled; \
+            else \
+               return false; \
+         } \
+         else return false; \
+      } \
+   }
+
+LANGULUS_CTTI_CHECK_INNER(Sheddable);
 
 namespace Langulus::CT
 {
@@ -74,7 +94,7 @@ namespace Langulus::CT
    /// The concept relies on CTTI::Typed for getting into the inner type      
    template<class...T>
    concept Sheddable = ((CTTI::Sheddable<Deref<T>>::Enabled
-        or (not ::std::is_pointer_v<T> and Decay<T>::CTTI_Sheddable::Enabled)
+        or Inner::CTTI_TCheck_Sheddable<Deref<T>>()
       ) and ...);
 
    template<class...T>
@@ -85,6 +105,7 @@ namespace Langulus::CT
 
       template<class T>
       consteval CT::Typelist auto GetSheddedType() {
+         static_assert(not ::std::is_reference_v<T>, "T can't be a reference");
          if constexpr (Sheddable<T>) {
             if constexpr (NotVoid<typename CTTI::Typed<T>::Type>) {
                // Checked externally, T doesn't have to be complete     
@@ -114,10 +135,12 @@ namespace Langulus
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
 /// Used to reduce boilerplate                                                
+///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(NAME) \
+   LANGULUS_CTTI_CHECK_INNER(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = ((CTTI::NAME<Deref<T>>::Enabled or (not ::std::is_pointer_v<T> and Decay<T>::CTTI_##NAME::Enabled)) and ...); \
+      concept NAME = ((CTTI::NAME<Deref<T>>::Enabled or Inner::CTTI_TCheck_##NAME<Deref<T>>()) and ...); \
       template<class...T> \
       concept Not##NAME = ((not NAME<Deref<T>>) and ...); \
    }
@@ -125,10 +148,12 @@ namespace Langulus
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
 /// It takes sheddable types into consideration. Used to reduce boilerplate   
+///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT(NAME) \
+   LANGULUS_CTTI_CHECK_INNER(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = ((CTTI::NAME<Deref<Shed<T>>>::Enabled or (not ::std::is_pointer_v<Shed<T>> and Decay<Shed<T>>::CTTI_##NAME::Enabled)) and ...); \
+      concept NAME = ((CTTI::NAME<Deref<Shed<T>>>::Enabled or Inner::CTTI_TCheck_##NAME<Deref<Shed<T>>>()) and ...); \
       template<class...T> \
       concept Not##NAME = ((not NAME<T>) and ...); \
    }
