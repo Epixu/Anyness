@@ -14,6 +14,7 @@ add_langulus_test(LangulusAnynessTest
 	SOURCES		Main.cpp 
 	      		TestAssume.cpp
 	      		TestCTTI.cpp
+	      		TestNameOf.cpp
 				#${LANGULUS_ANYNESS_TEST_SOURCES}
 	LIBRARIES	Catch2 LangulusAnyness
 )

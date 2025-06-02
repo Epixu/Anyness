@@ -163,18 +163,3 @@ LANGULUS_CTTI_CONCEPT(Null);
 LANGULUS_CTTI_CONCEPT(Enum);
 LANGULUS_CTTI_CONCEPT(Aggregate);
 LANGULUS_CTTI_CONCEPT(Fundamental);
-
-namespace Langulus::CT
-{
-
-   /// Check if all T are function signatures                                 
-   ///   @attention std::function, lambdas, classes with overloaded           
-   ///      operator() and pointers to functions don't count as function      
-   ///      signatures - use Decay<T> to get the underlying signature         
-   template<class...T>
-   concept Function = Inner::CheckSize<T...>() and (::std::is_function_v<Deref<T>> and ...);
-
-   template<class...T>
-   concept NotFunction = Inner::CheckSize<T...>() and ((not Function<Deref<T>>) and ...);
-
-} // namespace Langulus::CT

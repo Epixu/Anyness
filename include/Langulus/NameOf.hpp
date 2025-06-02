@@ -18,6 +18,64 @@ namespace Langulus::RTTI
    namespace Inner
    {
 
+      /// A fully portable constexpr alphabetical character check             
+      /// Only english alphabet and underline symbol are allowed              
+      constexpr bool IsAlphabetical(char c) noexcept {
+         switch (c) {
+         case 'A': case 'a': case 'B': case 'b': case 'C': case 'c':
+         case 'D': case 'd': case 'E': case 'e': case 'F': case 'f':
+         case 'G': case 'g': case 'H': case 'h': case 'I': case 'i':
+         case 'J': case 'j': case 'K': case 'k': case 'L': case 'l':
+         case 'M': case 'm': case 'N': case 'n': case 'O': case 'o':
+         case 'P': case 'p': case 'Q': case 'q': case 'R': case 'r':
+         case 'S': case 's': case 'T': case 't': case 'U': case 'u':
+         case 'V': case 'v': case 'W': case 'w': case 'X': case 'x':
+         case 'Y': case 'y': case 'Z': case 'z': case '_':
+            return true;
+         default:
+            return false;
+         }
+      }
+
+      /// A fully portable constexpr operator character check                 
+      /// Only operators that can occur in type names are allowed             
+      constexpr bool IsOperator(char c) noexcept {
+         switch (c) {
+         case '<': case '>': case '[': case ']': case '(': case ')':
+         case '*': case '&': case ':': case ';': case '"': case '\'':
+         case '.': case ',':
+            return true;
+         default:
+            return false;
+         }
+      }
+
+      /// A fully portable constexpr number character check                   
+      constexpr bool IsNumerical(char c) noexcept {
+         switch (c) {
+         case '0': case '1': case '2': case '3': case '4': case '5':
+         case '6': case '7': case '8': case '9':
+            return true;
+         default:
+            return false;
+         }
+      }
+      
+      /// A fully portable constexpr space character check                    
+      constexpr bool IsSpace(char c) noexcept {
+         return c == ' ';
+      }
+
+      /// Verify that a string literal is made of allowed ASCII symbols       
+      constexpr bool IsASCII(auto source) {
+         for (char c : source) {
+            if (IsAlphabetical(c) or IsOperator(c) or IsNumerical(c) or IsSpace(c))
+               continue;
+            return false;
+         }
+         return true;
+      }
+
       /// Types used for pattern matching while isolating typenames           
       /// These need to be in exactly this namespace to avoid corner cases    
       struct Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK {};
@@ -131,9 +189,9 @@ namespace Langulus::RTTI
       ///   @return the type name                                             
       template<class T>
       consteval auto IsolateTypename() {
-         constexpr auto name  = WrappedTypeName<T>();
-         constexpr auto size  = name.size();
-         constexpr auto left  = CalibratedTypeLeftOffset;
+         constexpr auto name = WrappedTypeName<T>();
+         constexpr auto size = name.size();
+         constexpr auto left = CalibratedTypeLeftOffset;
          constexpr auto right = CalibratedTypeRightOffset;
          static_assert(size > left + right, "Invalid type name");
          return name.template substr<left, size - right - left>();
@@ -162,13 +220,13 @@ namespace Langulus::RTTI
          return (
                // Test left side for transition                         
                lhs == 0
-               or not IsAlpha(source[lhs])
-               or     IsAlpha(source[lhs]) != IsAlpha(source[lhs-1])
+               or not IsAlphabetical(source[lhs])
+               or     IsAlphabetical(source[lhs]) != IsAlphabetical(source[lhs-1])
             ) and (
                // Test right side for transition                        
                rhs >= source.size()
-               or not IsAlpha(source[rhs-1])
-               or     IsAlpha(source[rhs-1]) != IsAlpha(source[rhs])
+               or not IsAlphabetical(source[rhs-1])
+               or     IsAlphabetical(source[rhs-1]) != IsAlphabetical(source[rhs])
             );
       }
       
@@ -250,25 +308,25 @@ namespace Langulus::RTTI
          //    them correctly, with longer ones replaced first          
          // @attention replacement will not commence, if IsTransition   
          //    isn't satisifed                                          
-         constexpr Literal a01 = Replace<SRC, Literal {"*const "     },           Literal {"* const"}>();
-         constexpr Literal a02 = Replace<a01, Literal {" *const"     },           Literal {"* const"}>();
-         constexpr Literal a03 = Replace<a02, Literal {" *"          },           Literal {"*"      }>();
-         constexpr Literal a04 = Replace<a03, Literal {" &"          },           Literal {"&"      }>();
-         constexpr Literal a05 = Replace<a04, Literal {" >"          },           Literal {">"      }>();
-         constexpr Literal a06 = Replace<a05, IsolateTypename<::std::int8_t>(),   Literal {"int8"   }>();
-         constexpr Literal a07 = Replace<a06, IsolateTypename<::std::int16_t>(),  Literal {"int16"  }>();
-         constexpr Literal a08 = Replace<a07, IsolateTypename<::std::int32_t>(),  Literal {"int32"  }>();
-         constexpr Literal a09 = Replace<a08, IsolateTypename<::std::int64_t>(),  Literal {"int64"  }>();
-         constexpr Literal a10 = Replace<a09, IsolateTypename<::std::uint8_t>(),  Literal {"uint8"  }>();
-         constexpr Literal a11 = Replace<a10, IsolateTypename<::std::uint16_t>(), Literal {"uint16" }>();
-         constexpr Literal a12 = Replace<a11, IsolateTypename<::std::uint32_t>(), Literal {"uint32" }>();
-         constexpr Literal a13 = Replace<a12, IsolateTypename<::std::uint64_t>(), Literal {"uint64" }>();
-         constexpr Literal a14 = Replace<a13, Literal {"class "      },           Literal {""       }>();
-         constexpr Literal a15 = Replace<a14, Literal {"struct "     },           Literal {""       }>();
-         constexpr Literal a16 = Replace<a15, Literal {"enum "       },           Literal {""       }>();
-         constexpr Literal a17 = Replace<a16, Literal {"Langulus::"  },           Literal {""       }>();
-         constexpr Literal a18 = Replace<a17, Literal {"(__cdecl *)" },           Literal {""       }>();
-         constexpr Literal a19 = Replace<a18, Literal {" (*)"        },           Literal {""       }>();
+         constexpr auto a01 = Replace<SRC, Literal {"*const "     },    Literal {"* const"}>();
+         constexpr auto a02 = Replace<a01, Literal {" *const"     },    Literal {"* const"}>();
+         constexpr auto a03 = Replace<a02, Literal {" *"          },    Literal {"*"      }>();
+         constexpr auto a04 = Replace<a03, Literal {" &"          },    Literal {"&"      }>();
+         constexpr auto a05 = Replace<a04, Literal {" >"          },    Literal {">"      }>();
+         constexpr auto a06 = Replace<a05, IsolateTypename<int8_t>(),   Literal {"int8"   }>();
+         constexpr auto a07 = Replace<a06, IsolateTypename<int16_t>(),  Literal {"int16"  }>();
+         constexpr auto a08 = Replace<a07, IsolateTypename<int32_t>(),  Literal {"int32"  }>();
+         constexpr auto a09 = Replace<a08, IsolateTypename<int64_t>(),  Literal {"int64"  }>();
+         constexpr auto a10 = Replace<a09, IsolateTypename<uint8_t>(),  Literal {"uint8"  }>();
+         constexpr auto a11 = Replace<a10, IsolateTypename<uint16_t>(), Literal {"uint16" }>();
+         constexpr auto a12 = Replace<a11, IsolateTypename<uint32_t>(), Literal {"uint32" }>();
+         constexpr auto a13 = Replace<a12, IsolateTypename<uint64_t>(), Literal {"uint64" }>();
+         constexpr auto a14 = Replace<a13, Literal {"class "      },    Literal {""       }>();
+         constexpr auto a15 = Replace<a14, Literal {"struct "     },    Literal {""       }>();
+         constexpr auto a16 = Replace<a15, Literal {"enum "       },    Literal {""       }>();
+         constexpr auto a17 = Replace<a16, Literal {"Langulus::"  },    Literal {""       }>();
+         constexpr auto a18 = Replace<a17, Literal {"(__cdecl *)" },    Literal {""       }>();
+         constexpr auto a19 = Replace<a18, Literal {" (*)"        },    Literal {""       }>();
          return a19;
       }
 
@@ -276,14 +334,18 @@ namespace Langulus::RTTI
       ///   @return the normalized token for T at compile-time                
       template<class T>
       consteval auto NameOfFunction() {
-         return "Function<" + Normalize<IsolateTypename<T>()>() + ">*";
+         constexpr auto name = Normalize<IsolateTypename<T>()>();
+         static_assert(IsASCII(name), "Function signature contains disallowed symbols");
+         return "Function<" + name + ">*";
       }
       
       /// Get the normalized name of a type                                   
       ///   @return the normalized token for T at compile-time                
       template<class T>
       consteval auto NameOfType() {
-         return Normalize<IsolateTypename<T>()>();
+         constexpr auto name = Normalize<IsolateTypename<T>()>();
+         static_assert(IsASCII(name), "Type name contains disallowed symbols");
+         return name;
       }
       
       /// Get the normalized name of a constant                               
@@ -291,6 +353,7 @@ namespace Langulus::RTTI
       template<auto T>
       consteval auto NameOfConstant() {
          constexpr auto name = IsolateConstant<T>();
+         static_assert(IsASCII(name), "Constant name contains disallowed symbols");
          constexpr auto fullEnumName = Normalize<name>();
          constexpr auto lastNamespace = fullEnumName.find_last_of(':');
          if constexpr (lastNamespace != fullEnumName.npos) {

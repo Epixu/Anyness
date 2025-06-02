@@ -22,9 +22,6 @@ namespace Langulus::RTTI
    ///   @tparam T - the decayed type to reflect                              
    template<class T> LANGULUS(NOINLINE)
    DMeta DefinitionData::Reflect() {
-      static_assert(not CT::Function<T>,
-         "Can't reflect this function signature - "
-         "make sure you're using a pointer to it instead");
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete type - "
          "make sure you have included the corresponding headers "
@@ -45,6 +42,9 @@ namespace Langulus::RTTI
       static_assert(CT::Exact<CT::ReflectedAs<T>, T>,
          "Data is marked to be reflected as something else, "
          "make sure this is respected before reaching this function");
+      static_assert(not ::std::is_function_v<T>,
+         "Can't reflect this function signature - "
+         "make sure you're using a pointer to it instead");
 
       constexpr auto cppname = CppNameOf<T>();
 

@@ -91,7 +91,7 @@ namespace Langulus::Logger
       Intent mCurrentIntent = DefaultIntent;
 
       // Intent style customization point                               
-      IntentTable mIntentStyle = DefaultIntentStyle;
+      IntentProperties mIntentStyle[int(Intent::Counter)];
 
       // Tabulator color and formatting customization                   
       Intent mDefaultIntent = DefaultIntent;

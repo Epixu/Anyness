@@ -238,7 +238,7 @@ namespace Langulus
       >::type;
    
    /// Always returns a pointer to the argument                               
-   template<class T> LANGULUS(ALWAYS_INLINED)
+   template<class T>
    constexpr decltype(auto) SparseCast(T&& a) noexcept {
       if constexpr (CT::Sparse<T>)
          return (a);
@@ -248,7 +248,7 @@ namespace Langulus
 
    /// Always returns a value reference to the argument                       
    /// If argument is an array, return a value reference to the first element 
-   template<class T> LANGULUS(ALWAYS_INLINED)
+   template<class T>
    constexpr decltype(auto) DenseCast(T&& a) {
       if constexpr (CT::Array<T>)
          return DenseCast(a[0]);

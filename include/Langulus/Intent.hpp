@@ -35,9 +35,9 @@ namespace Langulus::CT
    
    /// All intents are defined in terms of three properties, and the          
    /// combinations between them:                                             
-   ///   int  Depth - decides whether the semantic is deep or shallow         
-   ///   bool Keep  - decides whether to exercise ownership or not            
-   ///   bool Move  - decides whether it's a move semantic or not             
+   ///   unsigned Depth - decides whether the semantic is deep or shallow     
+   ///   bool     Keep  - decides whether to exercise ownership or not        
+   ///   bool     Move  - decides whether it's a move semantic or not         
 
    /// Checks if all T are shallow intents                                    
    /// Shallow intents are propagated through mostly a single indirection     
@@ -102,15 +102,19 @@ namespace Langulus
    namespace Inner
    {
 
-      template<int DEPTH, bool KEEP, bool MOVE>
+      /// Helper base that defines intent properties                          
+      ///   @tparam DEPTH - the depth of the intent, use -1 for infinite      
+      ///   @tparam KEEP - does the intent practice ownership                 
+      ///   @tparam MOVE - does the intent involve transfer of ownership      
+      template<unsigned DEPTH, bool KEEP, bool MOVE>
       struct CommonIntent {
-         using CTTI_ReflectAs = void;
-         using CTTI_Abstract = Yes;
+         using CTTI_ReflectAs     = void;
+         using CTTI_Abstract      = Yes;
          using CTTI_Unallocatable = Yes;
-         using CTTI_Intent = Yes;
-         using CTTI_Sheddable = Yes;
+         using CTTI_Intent        = Yes;
+         using CTTI_Sheddable     = Yes;
 
-         static consteval int  GetDepth()     { return DEPTH; }
+         static consteval unsigned GetDepth() { return DEPTH; }
          static consteval bool IsKept()       { return KEEP;  }
          static consteval bool IsMoved()      { return MOVE;  }
          static consteval bool ResetsOnMove() { return KEEP and MOVE; }
@@ -556,7 +560,7 @@ namespace Langulus
    /// to clone container, doing a deep copy instead of default shallow one   
    ///   @tparam T - the type to clone                                        
    template<class T>
-   struct Clone final : Inner::CommonIntent<::std::numeric_limits<int>::max(), true, false> {
+   struct Clone final : Inner::CommonIntent<static_cast<unsigned>(-1), true, false> {
    protected:
       const T& mValue;
 

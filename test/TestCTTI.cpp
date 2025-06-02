@@ -15,10 +15,13 @@ using namespace Langulus;
 ///                                                                           
 /// CT::Sheddable                                                             
 ///                                                                           
-template<class T>
-struct SheddableType { using CTTI_Sheddable = Yes; using CTTI_Typed = T; };
-struct SheddableTypeDerived : SheddableType<int&> {};
-struct NonSheddableTypeDerived : SheddableType<int&> { using CTTI_Sheddable = No; };
+namespace
+{
+   template<class T>
+   struct SheddableType { using CTTI_Sheddable = Yes; using CTTI_Typed = T; };
+   struct SheddableTypeDerived : SheddableType<int&> {};
+   struct NonSheddableTypeDerived : SheddableType<int&> { using CTTI_Sheddable = No; };
+}
 
 TEMPLATE_TEST_CASE("Testing sheddable types", "[ct]",
    SheddableType<int&>,
@@ -54,9 +57,12 @@ static_assert(not CT::NotSheddable<SheddableType<int&>*, NonSheddableTypeDerived
 ///                                                                           
 /// CT::Null                                                                  
 ///                                                                           
-struct NullType { using CTTI_Null = Yes; };
-struct NullTypeDerived : NullType {};
-struct NonNullTypeDerived : NullType { using CTTI_Null = No; };
+namespace
+{
+   struct NullType { using CTTI_Null = Yes; };
+   struct NullTypeDerived : NullType {};
+   struct NonNullTypeDerived : NullType { using CTTI_Null = No; };
+}
 
 TEMPLATE_TEST_CASE("Testing null types", "[ct]",
    SheddableType<NullType>,
@@ -95,11 +101,14 @@ static_assert(not CT::NotNull<SheddableType<NullType*>, ::std::nullptr_t*, NullT
 ///                                                                           
 /// CT::Enum                                                                  
 ///                                                                           
-struct EnumType { using CTTI_Enum = Yes; };
-struct EnumTypeDerived : EnumType {};
-struct NonEnumTypeDerived : EnumType { using CTTI_Enum = No; };
-enum ActualEnum { one, two };
-enum class ActualEnumClass { one, two };
+namespace
+{
+   struct EnumType { using CTTI_Enum = Yes; };
+   struct EnumTypeDerived : EnumType {};
+   struct NonEnumTypeDerived : EnumType { using CTTI_Enum = No; };
+   enum ActualEnum { one, two };
+   enum class ActualEnumClass { one, two };
+}
 
 TEMPLATE_TEST_CASE("Testing enum types", "[ct]",
    SheddableType<EnumType>,
@@ -143,25 +152,28 @@ static_assert(not CT::NotEnum<SheddableType<EnumType*>, NonEnumTypeDerived, Actu
 ///                                                                           
 /// CT::Aggregate                                                             
 ///                                                                           
-struct AggregateType {
-   using CTTI_Aggregate = Yes;
-   int force_not_aggregate;
+namespace
+{
+   struct AggregateType {
+      using CTTI_Aggregate = Yes;
+      int force_not_aggregate;
 
-   AggregateType()
-      : force_not_aggregate(666) {
-      --force_not_aggregate;
-   }
-};
-struct AggregateTypeDerived : AggregateType {};
-struct NonAggregateTypeDerived : AggregateType {
-   using CTTI_Aggregate = No;
+      AggregateType()
+         : force_not_aggregate(666) {
+         --force_not_aggregate;
+      }
+   };
+   struct AggregateTypeDerived : AggregateType {};
+   struct NonAggregateTypeDerived : AggregateType {
+      using CTTI_Aggregate = No;
 
-   NonAggregateTypeDerived()
-      : AggregateType() {
-      --force_not_aggregate;
-   }
-};
-struct ActualAggregate { int one; int two; };
+      NonAggregateTypeDerived()
+         : AggregateType() {
+         --force_not_aggregate;
+      }
+   };
+   struct ActualAggregate { int one; int two; };
+}
 
 TEMPLATE_TEST_CASE("Testing aggregate types", "[ct]",
    SheddableType<AggregateType>,
@@ -201,9 +213,12 @@ static_assert(not CT::NotAggregate<SheddableType<AggregateType*>, NonAggregateTy
 ///                                                                           
 /// CT::Fundamental                                                           
 ///                                                                           
-struct FundamentalType { using CTTI_Fundamental = Yes; };
-struct FundamentalTypeDerived : FundamentalType {};
-struct NonFundamentalTypeDerived : FundamentalType { using CTTI_Fundamental = No; };
+namespace
+{
+   struct FundamentalType { using CTTI_Fundamental = Yes; };
+   struct FundamentalTypeDerived : FundamentalType {};
+   struct NonFundamentalTypeDerived : FundamentalType { using CTTI_Fundamental = No; };
+}
 
 TEMPLATE_TEST_CASE("Testing fundamental types", "[ct]",
    SheddableType<FundamentalType>,
@@ -236,45 +251,3 @@ static_assert(not CT::Fundamental<SheddableType<FundamentalType>, FundamentalTyp
 //static_assert(CT::NotFundamental<>); // shouldn't compile at all
 static_assert(CT::NotFundamental<SheddableType<FundamentalType*>, NonFundamentalTypeDerived, FundamentalType*>);
 static_assert(not CT::NotFundamental<SheddableType<FundamentalType*>, NonFundamentalTypeDerived, FundamentalType>);
-
-
-///                                                                           
-/// CT::Function                                                              
-///                                                                           
-using RawFunctionType = void(*)(void*);
-using FunctionType = ::std::function<void(void*)>;
-auto LambdaType = [](void* arg) { (void)arg; return; };
-struct OperatedType { void operator() (void* arg) { (void)arg; return; } };
-
-TEMPLATE_TEST_CASE("Testing function types", "[ct]",
-   SheddableType<FunctionType>,
-   RawFunctionType,
-   FunctionType,
-   FunctionType&,
-   decltype(LambdaType),
-   decltype(LambdaType)&,
-   OperatedType,
-   OperatedType&
-) {
-   static_assert(CT::Function<TestType>);
-   static_assert(not CT::NotFunction<TestType>);
-}
-
-TEMPLATE_TEST_CASE("Testing non-fundamental types", "[ct]",
-   SheddableType<FunctionType*>,
-   RawFunctionType*,
-   FunctionType*,
-   OperatedType*,
-   int
-) {
-   static_assert(not CT::Function<TestType>);
-   static_assert(CT::NotFunction<TestType>);
-}
-
-//static_assert(CT::Fundamental<>); // shouldn't compile at all
-/*static_assert(CT::Fundamental<SheddableType<FundamentalType>, FundamentalType, int>);
-static_assert(not CT::Fundamental<SheddableType<FundamentalType>, FundamentalType, NonFundamentalTypeDerived>);
-
-//static_assert(CT::NotFundamental<>); // shouldn't compile at all
-static_assert(CT::NotFundamental<SheddableType<FundamentalType*>, NonFundamentalTypeDerived, FundamentalType*>);
-static_assert(not CT::NotFundamental<SheddableType<FundamentalType*>, NonFundamentalTypeDerived, FundamentalType>);*/

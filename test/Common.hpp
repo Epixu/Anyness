@@ -8,7 +8,7 @@
 
 /// INTENTIONALLY NOT GUARDED                                                 
 /// Include this file once in each cpp file, after all other headers          
-#include <Langulus/Typenav.hpp>
+/*#include <Langulus/Typenav.hpp>
 #include <Langulus/TypeOf.hpp>
 #include <Langulus/Intent.hpp>
 #include <Langulus/CT/Describable.hpp>
@@ -17,14 +17,18 @@
 #include <Langulus/CT/DefineConst.hpp>
 #include <Langulus/CT/Members.hpp>
 #include <Langulus/CT/Pooled.hpp>
-#include <Langulus/CT/Version.hpp>
-#include <Langulus/Anyness/Many.hpp>
-#include <Langulus/Anyness/Tag.hpp>
+#include <Langulus/CT/Version.hpp>*/
+//#include <Langulus/Anyness/Many.hpp>
+//#include <Langulus/Anyness/Tag.hpp>
 #include "Main.hpp"
+#include <Langulus/TypeOf.hpp>
+#include <Langulus/CT/Except.hpp>
+#include <Langulus/CT/Referenced.hpp>
+#include <fmt/format.h>
 
 using uint = unsigned int;
 using namespace Langulus;
-using namespace Anyness;
+//using namespace Anyness;
 
 
 #if LANGULUS(BENCHMARK)
@@ -112,9 +116,9 @@ void DumpResults(const INPUT& in, const OUTPUT& out, const REQUIRED& required) {
 }
 #endif
 
-#define UNSIGNED_TYPES        ::std::uint8_t, ::std::uint16_t, ::std::uint32_t, ::std::uint64_t
-#define REAL_TYPES            Float, Double
-#define SIGNED_INTEGER_TYPES  ::std::int8_t, ::std::int16_t, ::std::int32_t, ::std::int64_t
+#define UNSIGNED_TYPES        uint8_t, uint16_t, uint32_t, uint64_t
+#define REAL_TYPES            float, double
+#define SIGNED_INTEGER_TYPES  int8_t, int16_t, int32_t, int64_t
 #define INTEGER_TYPES         UNSIGNED_TYPES, SIGNED_INTEGER_TYPES
 #define SIGNED_TYPES          SIGNED_INTEGER_TYPES, REAL_TYPES
 #define ALL_TYPES             UNSIGNED_TYPES, SIGNED_TYPES

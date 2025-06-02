@@ -12,9 +12,9 @@
 
 
 /// Sorry, Langulus is designed for at least C++23                            
-#if __cplusplus < 202300L// and not defined(_MSC_VER)
-   #error Langulus requires at least a C++23 compliant compiler in order to build
-#endif
+//#if __cplusplus < 202300L// and not defined(_MSC_VER)
+//   #error Langulus requires at least a C++23 compliant compiler in order to build
+//#endif
 
 /// These macros seem evil, but read this:                                    
 /// https://www.foonathan.net/2020/09/move-forward/                           

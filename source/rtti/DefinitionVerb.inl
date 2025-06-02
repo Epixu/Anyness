@@ -22,8 +22,6 @@ namespace Langulus::RTTI
    ///   @tparam T - the decayed verb to reflect                              
    template<CT::Decayed T> LANGULUS(NOINLINE)
    VMeta DefinitionVerb::Reflect() {
-      static_assert(not CT::Function<T>,
-         "Can't reflect this function signature as a verb");
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete verb - "
          "make sure you have included the corresponding headers "
@@ -35,6 +33,8 @@ namespace Langulus::RTTI
          "Type is not reflected as a verb definition");
       static_assert(not CT::DefineTag<T>,
          "Can't reflect a tag as a verb");
+      static_assert(not ::std::is_function_v<T>,
+         "Can't reflect this function signature as a verb");
 
       constexpr auto cppname = CppNameOf<T>();
 
