@@ -514,6 +514,13 @@ namespace Langulus
       return out;
    }*/
 
+   /// Equivalent to Yes, but also carries a string literal                   
+   template<Literal TEXT>
+   struct YesText {
+      static constexpr Literal Constant = TEXT;
+      static constexpr bool Enabled = true;
+   };
+
 } // namespace Langulus
 
 

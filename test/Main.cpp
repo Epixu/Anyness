@@ -5,18 +5,11 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-
-/// INTENTIONALLY NOT GUARDED                                                 
-/// Include this file once in each test cpp file, after all other headers     
-#ifdef TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
-   #error Catch has already been included prior to this header
-#endif
-
-#include <Langulus/Core.hpp>
-
-
-#if LANGULUS(BENCHMARK)
-   #define CATCH_CONFIG_ENABLE_BENCHMARKING
-#endif
-
+#define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
+
+
+int main(int argc, char* argv[]) {
+   Catch::Session session;
+   return session.run(argc, argv);
+}

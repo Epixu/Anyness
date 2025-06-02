@@ -7,8 +7,8 @@
 ///                                                                           
 #pragma once
 #include <cstdint>
-#include <stdexcept> //TODO move elsewhere, not in core
-#include <bit>       //TODO move elsewhere, not in core
+//#include <stdexcept> //TODO move elsewhere, not in core
+//#include <bit>       //TODO move elsewhere, not in core
 
 
 /// Sorry, Langulus is designed for at least C++23                            
@@ -359,7 +359,8 @@
 ///   @attention must be followed by {...}                                    
 /// TODO when we transition to C++23, we should replace                       
 /// if (std::is_constant_evaluated()) statements with `if consteval` ones     
-/// unfortunately MSVC is lagging behind a lot                                
+/// unfortunately MSVC is lagging behind a lot, so this macro is here to      
+/// eventually replace and test it out when they catch up                     
 #define IF_CONSTEXPR()     if (    ::std::is_constant_evaluated())
 #define IF_NOT_CONSTEXPR() if (not ::std::is_constant_evaluated())
 
@@ -399,9 +400,13 @@
    #define LANGULUS_ALIGNMENT 16
 #endif
 
-#include "Literal.hpp"
-#include <concepts>
+//#include "Literal.hpp"
+//#include <concepts>
 
+
+///                                                                           
+///   The all-encompassing Langulus namespace                                 
+///                                                                           
 namespace Langulus
 {
    
@@ -415,7 +420,7 @@ namespace Langulus
    #endif
 
    /// Similar to std::isalpha, but constexpr                                 
-   LANGULUS(ALWAYS_INLINED)
+   /*LANGULUS(ALWAYS_INLINED)
    constexpr char IsAlpha(char a) noexcept {
       return (a >= 'a' and a <= 'z')
           or (a >= 'A' and a <= 'Z');
@@ -424,13 +429,13 @@ namespace Langulus
    LANGULUS(ALWAYS_INLINED)
    constexpr bool IsPowerOfTwo(auto n) noexcept {
       return n != 0 && (n & (n - 1)) == 0;
-   }
+   }*/
    
    /// Round to the upper power-of-two                                        
    ///   @tparam SAFE - set to true if you want it to throw on overflow       
    ///   @param x - the unsigned integer to round up                          
    ///   @return the closest upper power-of-two to x                          
-   template<bool SAFE = false, std::unsigned_integral T> LANGULUS(ALWAYS_INLINED)
+   /*template<bool SAFE = false, std::unsigned_integral T> LANGULUS(ALWAYS_INLINED)
    constexpr T Roof2(const T x) noexcept(not SAFE) {
       static_assert(sizeof(T) <= 8, "Not implemented");
 
@@ -460,7 +465,7 @@ namespace Langulus
             T {1} << static_cast<T>(sizeof(T) * 8 - ::std::countl_zero<T>(x - T {1}))
          );
       }
-   }
+   }*/
 
    /// The size of a void* in bytes, depends on architecture                  
    constexpr int Byteness = sizeof(void*);
@@ -470,17 +475,10 @@ namespace Langulus
 
    /// The default alignment, depends on configuration and enabled SIMD       
    constexpr int Alignment = LANGULUS_ALIGNMENT;
-   static_assert(IsPowerOfTwo(Alignment), "Alignment must be a power-of-two");
+   //static_assert(IsPowerOfTwo(Alignment), "Alignment must be a power-of-two");
    
    /// Equivalent to ::std::true_type, but without the silly nomenclature     
    struct Yes {
-      static constexpr bool Enabled = true;
-   };
-
-   /// Equivalent to Yes, but also carries a string literal                   
-   template<Literal TEXT>
-   struct YesText {
-      static constexpr Literal Constant = TEXT;
       static constexpr bool Enabled = true;
    };
 

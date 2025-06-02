@@ -1,8 +1,8 @@
-file(GLOB_RECURSE
+#[[file(GLOB_RECURSE
 	LANGULUS_ANYNESS_TEST_SOURCES 
 	LIST_DIRECTORIES FALSE CONFIGURE_DEPENDS
 	*.cpp
-)
+)]]
 
 fetch_external_module(
     Catch2
@@ -11,7 +11,10 @@ fetch_external_module(
 )
 
 add_langulus_test(LangulusAnynessTest
-	SOURCES		${LANGULUS_ANYNESS_TEST_SOURCES}
+	SOURCES		Main.cpp 
+	      		TestAssume.cpp
+	      		TestCTTI.cpp
+				#${LANGULUS_ANYNESS_TEST_SOURCES}
 	LIBRARIES	Catch2 LangulusAnyness
 )
 

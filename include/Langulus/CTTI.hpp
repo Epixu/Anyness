@@ -4,49 +4,49 @@
 #include <type_traits>
 
 
-/// A namespace for defining compile-time type information tags               
-/// Specializing <type_traits> is generally undefined behavior, but here      
+///                                                                           
+///   A namespace for defining compile-time type information tags             
+///                                                                           
+///   Specializing <type_traits> is generally undefined behavior, but here    
 /// we have alternatives that are more flexible, using type_traits as the     
-/// ground truth and building concepts on top of them, in Langulus::CT        
+/// ground truth and building concepts on top of them in Langulus::CT         
 /// Read more: https://stackoverflow.com/questions/25345486                   
+///   Each of the structures in this namespace correspond to a concept in     
+/// Langulus::CT. These concepts can be affected in two ways (unless          
+/// specified otherwise):                                                     
+///   1. Specialize the appropriate CTTI::<name> struct for a type/concept    
+///   2. Add a public `using CTTI_<Name> = Yes/No;` in the desired type       
+///   3. Some CTTI_<Name> tags might require types or values instead -        
+///      they should have additional documentation alongside them             
+///                                                                           
 namespace Langulus::CTTI
 {
 
-   /// Can be used in two ways to satisfy CT::Null<T>:                        
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Null = Yes/No;` in T                       
+   /// Affects CT::Null<T>:                                                   
    template<class T>
    struct Null {
       static constexpr bool Enabled = ::std::is_null_pointer_v<T>;
    };
    
-   /// Can be used in two ways to satisfy CT::Enum<T>:                        
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Enum = Yes/No;` in T                       
+   /// Affects CT::Enum<T>:                                                   
    template<class T>
    struct Enum {
       static constexpr bool Enabled = ::std::is_enum_v<T>;
    };
    
-   /// Can be used in two ways to satisfy CT::Aggregate<T>:                   
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Aggregate = Yes/No;` in T                  
+   /// Affects CT::Aggregate<T>:                                              
    template<class T>
    struct Aggregate {
       static constexpr bool Enabled = ::std::is_aggregate_v<T>;
    };
    
-   /// Can be used in two ways to satisfy CT::Fundamental<T>:                 
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Fundamental = Yes/No;` in T                
+   /// Affects CT::Fundamental<T>:                                            
    template<class T>
    struct Fundamental {
       static constexpr bool Enabled = ::std::is_fundamental_v<T>;
    };
    
-   /// Can be used in two ways to satisfy CT::Sheddable<T>:                   
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Sheddable = Yes/No;` in T                  
+   /// Affects CT::Sheddable<T>:                                              
    template<class T>
    struct Sheddable {
       static constexpr bool Enabled = false;
@@ -62,87 +62,89 @@ namespace Langulus::CTTI
 
 } // namespace Langulus::CTTI
 
-/// Checks for reflection traits inside types themselves                      
-/// Requires the type to be complete in order to do that                      
-///   @attention use this macro in the global namespace                       
-#define LANGULUS_CTTI_CHECK_INNER(NAME) \
-   namespace Langulus::CT::Inner { \
-      template<class T> \
-      consteval bool CTTI_TCheck_##NAME() { \
-         static_assert(not ::std::is_reference_v<T>, "T can't be a reference"); \
-         if constexpr (not ::std::is_pointer_v<T> and ::std::is_class_v<T>) { \
-            if constexpr (requires { typename ::std::decay_t<T>::CTTI_##NAME; }) \
-               return ::std::decay_t<T>::CTTI_##NAME::Enabled; \
-            else \
-               return false; \
-         } \
-         else return false; \
-      } \
-   }
 
-LANGULUS_CTTI_CHECK_INNER(Sheddable);
-
+///                                                                           
+///   A namespace for defining concepts                                       
+///                                                                           
+/// Most of the concepts here are affected by structure specializations in    
+/// the Langulus::CTTI namespace.                                             
+///                                                                           
 namespace Langulus::CT
 {
+   namespace Inner
+   {
+      template<class...T>
+      consteval bool CheckSize() {
+         static_assert(sizeof...(T) > 0, "No arguments provided");
+         return true;
+      }
+
+   } // namespace Langulus::CT::Inner
 
    /// Check if all T are sheddable types (like intents), that serve only to  
    /// wrap data for tag dispatching and semantics. Sheddable types don't     
-   /// carry any real data, often just a reference to the real data, and      
-   /// should be aggressively optimized out of the final binary. Marking them 
+   /// carry any real data, and are often just a reference to the real data.  
+   /// Should be aggressively optimized out of the final binary. Marking them 
    /// as sheddable means that they don't interfere with other CT checks -    
    /// these checks will act as if the sheddable type doesn't exist at all    
    /// The concept relies on CTTI::Typed for getting into the inner type      
    template<class...T>
-   concept Sheddable = ((CTTI::Sheddable<Deref<T>>::Enabled
-        or Inner::CTTI_TCheck_Sheddable<Deref<T>>()
-      ) and ...);
+   concept Sheddable = Inner::CheckSize<T...>() and ((CTTI::Sheddable<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, Sheddable)) and ...);
 
    template<class...T>
-   concept NotSheddable = ((not Sheddable<Deref<T>>) and ...);
+   concept NotSheddable = Inner::CheckSize<T...>() and ((not Sheddable<Deref<T>>) and ...);
 
    namespace Inner
    {
 
-      template<class T>
+      /// Extracts the inner type if T is marked as sheddable                 
+      /// Otherwise results in the same type                                  
+      template<CT::NotTypelist T>
       consteval CT::Typelist auto GetSheddedType() {
-         static_assert(not ::std::is_reference_v<T>, "T can't be a reference");
-         if constexpr (Sheddable<T>) {
-            if constexpr (NotVoid<typename CTTI::Typed<T>::Type>) {
+         using DT = Decvq<Deref<T>>;
+
+         if constexpr (Sheddable<DT>) {
+            using OuterT = typename CTTI::Typed<DT>::Type;
+            if constexpr (NotVoid<OuterT>) {
                // Checked externally, T doesn't have to be complete     
-               return Types<typename CTTI::Typed<T>::Type> {};
+               static_assert(not CT::Typelist<OuterT>,
+                  "T has multiple inner types, don't know which one to use after shedding");
+               return Types<OuterT> {};
             }
-            else if constexpr (requires { typename T::CTTI_Typed; }) {
+            else {
                // Checked internally, T has to be a complete type       
-               return Types<typename T::CTTI_Typed> {};
+               using InnerT = typename DT::CTTI_Typed;
+               static_assert(not CT::Void<InnerT>,
+                  "T is CT::Sheddable, but isn't CT::Typed");
+               static_assert(not CT::Typelist<InnerT>,
+                  "T has multiple inner types, don't know which one to use after shedding");
+               return Types<InnerT> {};
             }
-            else static_assert(false, "Type is marked as Sheddable, but isn't marked as Typed");
          }
          else return Types<T> {};
       };
 
    } // namespace Langulus::CT::Inner
-
 } // namespace Langulus::CT
 
 namespace Langulus
 {
 
    template<class T>
-   using Shed = typename decltype(CT::Inner::GetSheddedType<Deref<T>>())::First;
+   using Shed = typename decltype(CT::Inner::GetSheddedType<T>())::First;
 
 } // namespace Langulus
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
-/// Used to reduce boilerplate                                                
+/// Used to reduce boilerplate. Will only shed references                     
 ///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(NAME) \
-   LANGULUS_CTTI_CHECK_INNER(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = ((CTTI::NAME<Deref<T>>::Enabled or Inner::CTTI_TCheck_##NAME<Deref<T>>()) and ...); \
+      concept NAME = Inner::CheckSize<T...>() and ((CTTI::NAME<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, NAME)) and ...); \
       template<class...T> \
-      concept Not##NAME = ((not NAME<Deref<T>>) and ...); \
+      concept Not##NAME = Inner::CheckSize<T...>() and ((not NAME<Deref<T>>) and ...); \
    }
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
@@ -150,12 +152,11 @@ namespace Langulus
 /// It takes sheddable types into consideration. Used to reduce boilerplate   
 ///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT(NAME) \
-   LANGULUS_CTTI_CHECK_INNER(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = ((CTTI::NAME<Deref<Shed<T>>>::Enabled or Inner::CTTI_TCheck_##NAME<Deref<Shed<T>>>()) and ...); \
+      concept NAME = Inner::CheckSize<T...>() and ((CTTI::NAME<Deref<Shed<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, NAME)) and ...); \
       template<class...T> \
-      concept Not##NAME = ((not NAME<T>) and ...); \
+      concept Not##NAME = Inner::CheckSize<T...>() and ((not NAME<T>) and ...); \
    }
 
 LANGULUS_CTTI_CONCEPT(Null);
@@ -171,6 +172,9 @@ namespace Langulus::CT
    ///      operator() and pointers to functions don't count as function      
    ///      signatures - use Decay<T> to get the underlying signature         
    template<class...T>
-   concept Function = (::std::is_function_v<T> and ...);
+   concept Function = Inner::CheckSize<T...>() and (::std::is_function_v<Deref<T>> and ...);
+
+   template<class...T>
+   concept NotFunction = Inner::CheckSize<T...>() and ((not Function<Deref<T>>) and ...);
 
 } // namespace Langulus::CT

@@ -137,8 +137,7 @@ namespace Langulus::Logger
    };
 
    /// Default intent styling                                                 
-   using IntentTable = ::std::array<IntentProperties, int(Intent::Counter)>;
-   constexpr IntentTable DefaultIntentStyle {{
+   constexpr IntentProperties DefaultIntentStyle[int(Intent::Counter)] = {
       {"|F| ", fmt::fg(fmt::terminal_color::red           )},  // FatalError  
       {"|E| ", fmt::fg(fmt::terminal_color::bright_red    )},  // Error       
       {"|W| ", fmt::fg(fmt::terminal_color::yellow        )},  // Warning     
@@ -152,7 +151,7 @@ namespace Langulus::Logger
       {"|O| ", fmt::fg(fmt::terminal_color::blue          )},  // OS          
       {"|P| ", fmt::fg(fmt::terminal_color::bright_green  )},  // Prompt      
       {"| | ", fmt::fg(fmt::terminal_color::bright_green  )}   // Ignore      
-   }};
+   };
 
    // Tabulator color and formatting customization                      
    constexpr Intent DefaultIntent = Intent::Info;

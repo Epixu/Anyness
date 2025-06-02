@@ -71,13 +71,13 @@ namespace Langulus::Anyness
       explicit constexpr THandle(THandle&&) noexcept = default;
 
       /// Intent constructor                                                  
-      template<template<class> class S> requires CT::IntentConstructible<S, T>
+      /*template<template<class> class S> requires CT::IntentConstructible<S, T>
       explicit constexpr THandle(S<THandle>&& other)
-         : Base {other.template Forward<Base>()} {}
+         : Base {other.template Forward<Base>()} {}*/
 
       /// Manual constructor                                                  
       ///   @param element - embedded element                                 
-      explicit constexpr THandle(Deref<T>* data, AllocationPtr* entry) noexcept
+      /*explicit*/ constexpr THandle(Deref<T>* data, AllocationPtr* entry) noexcept
          : Base {Base::InitList::Expand, data, entry} {}
 
       using Com::Comparison::operator ==;

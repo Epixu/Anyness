@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Except.hpp"
+#include "CT/Except.hpp"
 #include "Logger.hpp"
 #include "NameOf.hpp"
 
@@ -20,7 +20,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(INLINED)
+   template<CT::Exception E = Exception, class...MORE> LANGULUS(INLINED)
    constexpr void Assert(
       bool condition,
       const char* location = nullptr,
@@ -34,7 +34,7 @@ namespace Langulus
             DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
             // Log error message                                        
-            Logger::ErrorRaw("Assertion failure: ", m1, Forward<MORE>(mn)...);
+            Logger::ErrorRaw("Assertion failure: ", m1, FWD(mn)...);
 
             // Throw                                                    
             throw E {m1, location};
@@ -62,7 +62,7 @@ namespace Langulus
             DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
             // Log error message                                        
-            Logger::WarningRaw("Assertion failure: ", m1, Forward<MORE>(mn)...);
+            Logger::WarningRaw("Assertion failure: ", m1, FWD(mn)...);
          }
       }
    }
@@ -74,7 +74,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(INLINED)
+   template<CT::Exception E = Exception, class...MORE> LANGULUS(INLINED)
    constexpr void AssumeUser(
       bool condition,
       const char* location = nullptr,
@@ -89,7 +89,7 @@ namespace Langulus
                DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
                // Log error message                                     
-               Logger::ErrorRaw("User assumption failure: ", m1, Forward<MORE>(mn)...);
+               Logger::ErrorRaw("User assumption failure: ", m1, FWD(mn)...);
 
                // Throw                                                 
                throw E {m1, location};
@@ -121,7 +121,7 @@ namespace Langulus
                DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
                // Log error message                                     
-               Logger::WarningRaw("User assumption failure: ", m1, Forward<MORE>(mn)...);
+               Logger::WarningRaw("User assumption failure: ", m1, FWD(mn)...);
             }
          }
       }
@@ -135,7 +135,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(INLINED)
+   template<CT::Exception E = Exception, class...MORE> LANGULUS(INLINED)
    constexpr void AssumeDev(
       bool condition,
       const char* location = nullptr,
@@ -150,7 +150,7 @@ namespace Langulus
                DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
                // Log error message                                     
-               Logger::ErrorRaw("Dev assumption failure: ", m1, Forward<MORE>(mn)...);
+               Logger::ErrorRaw("Dev assumption failure: ", m1, FWD(mn)...);
 
                // Throw                                                 
                throw E {m1, location};
@@ -182,7 +182,7 @@ namespace Langulus
                DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
                // Log error message                                     
-               Logger::WarningRaw("Dev assumption failure: ", m1, Forward<MORE>(mn)...);
+               Logger::WarningRaw("Dev assumption failure: ", m1, FWD(mn)...);
             }
          }
       }
@@ -191,12 +191,11 @@ namespace Langulus
 
    /// Custom assumption that works both at runtime and at compile-time       
    /// Enabled only if LANGULUS(SAFE) >= LEVEL                                
-   /// Will throw an exception if condition isn't met                         
    /// Will throw an exception if condition isn't met at runtime              
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<unsigned LEVEL, class E = Exception, class...MORE> LANGULUS(INLINED)
+   template<unsigned LEVEL, CT::Exception E = Exception, class...MORE> LANGULUS(INLINED)
    constexpr void Assume(
       bool condition,
       const char* location = nullptr,
@@ -211,7 +210,7 @@ namespace Langulus
                DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
                // Log error message                                     
-               Logger::ErrorRaw("Assumption level ", LEVEL, " failure: ", m1, Forward<MORE>(mn)...);
+               Logger::ErrorRaw("Assumption level ", LEVEL, " failure: ", m1, FWD(mn)...);
 
                // Throw                                                 
                throw E {m1, location};
@@ -243,7 +242,7 @@ namespace Langulus
                DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
                // Log error message                                     
-               Logger::WarningRaw("Assumption level ", LEVEL, " failure: ", m1, Forward<MORE>(mn)...);
+               Logger::WarningRaw("Assumption level ", LEVEL, " failure: ", m1, FWD(mn)...);
             }
          }
       }

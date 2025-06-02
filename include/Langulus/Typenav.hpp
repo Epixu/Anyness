@@ -9,25 +9,20 @@
 #include <concepts>
 
 
-/// A namespace for defining compile-time type information tags               
-/// Specializing <type_traits> is generally undefined behavior, but here      
-/// we have alternatives that are more flexible, using type_traits as the     
-/// ground truth and building on top of on them                               
-/// Read more: https://stackoverflow.com/questions/25345486                   
 namespace Langulus::CTTI
 {
       
    /// Can be used in two ways to satisfy CT::Array<T>:                       
-   /// 1. Specialize for T/concept with Value == true                         
-   /// 2. Add a public `using CTTI_Array = Yes;` in T                         
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Array = Yes/No;` in T                      
    template<class T>
    struct Array {
       static constexpr bool Enabled = ::std::is_bounded_array_v<T>;
    };
    
    /// Can be used in two ways to satisfy CT::Sparse<T>:                      
-   /// 1. Specialize for T/concept with Value == true                         
-   /// 2. Add a public `using CTTI_Sparse = Yes;` in T                        
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Sparse = Yes/No;` in T                     
    template<class T>
    struct Sparse {
       static constexpr bool Enabled = ::std::is_pointer_v<T>;
@@ -35,7 +30,7 @@ namespace Langulus::CTTI
 
    /// Can be used in two ways to satisfy CT::Constant<T>:                    
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Constant = Yes;` in T                      
+   /// 2. Add a public `using CTTI_Constant = Yes/No;` in T                   
    template<class T>
    struct Constant {
       static constexpr bool Enabled = ::std::is_const_v<T>;
@@ -50,6 +45,19 @@ namespace Langulus::CTTI
    };
    
 } // namespace Langulus::CTTI
+
+/// Checks for reflection traits inside types themselves                      
+/// Requires the type to be complete in order to do that                      
+/// Short-circuiting inside concepts doesn't properly work in Clang, but no   
+/// one seems to care: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54310     
+/// This is why I've wrapped it in a lambda with 'if constexpr'               
+///   @attention use this macro in the global namespace                       
+#define LANGULUS_CTTI_DELVE_IN(TYPE,NAME) ([]{ \
+      if constexpr (::std::is_class_v<::std::decay_t<TYPE>> and requires { typename ::std::decay_t<TYPE>::CTTI_##NAME; }) \
+         return ::std::decay_t<TYPE>::CTTI_##NAME::Enabled; \
+      else \
+         return false; \
+   }())
 
 namespace Langulus
 {
@@ -128,17 +136,17 @@ namespace Langulus
 
       /// Check if all T are bounded arrays                                   
       template<class...T>
-      concept Array = ((CTTI::Array<Deref<T>>::Enabled or Deref<T>::CTTI_Array::Enabled) and ...);
+      concept Array = ((CTTI::Array<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, Array)) and ...);
 
       /// Check if all T are volatile-qualified                               
       template<class...T>
-      concept Volatile = ((CTTI::Volatile<Deref<T>>::Enabled or Deref<T>::CTTI_Volatile::Enabled) and ...);
+      concept Volatile = ((CTTI::Volatile<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, Volatile)) and ...);
 
       /// Check if all T are sparse                                           
       ///   @attention this also includes non-pointer types that are tagged   
       ///      as custom packed pointers                                      
       template<class...T>
-      concept Sparse = ((CTTI::Sparse<Deref<T>>::Enabled or Deref<T>::CTTI_Sparse::Enabled) and ...);
+      concept Sparse = ((CTTI::Sparse<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, Sparse)) and ...);
 
       /// Check if all T are dense                                            
       template<class...T>
@@ -146,7 +154,7 @@ namespace Langulus
 
       /// Check if all T are constant-qualified                               
       template<class...T>
-      concept Constant = ((CTTI::Constant<Deref<T>>::Enabled or Deref<T>::CTTI_Constant::Enabled) and ...);
+      concept Constant = ((CTTI::Constant<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, Constant)) and ...);
 
       /// Check if all T are not constant-qualified                           
       template<class...T>

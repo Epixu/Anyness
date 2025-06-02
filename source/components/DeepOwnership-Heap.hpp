@@ -32,7 +32,8 @@ namespace Langulus::Anyness::Component
       /// If container is dense, it returns the main allocation               
       ///   @return the array of entries                                      
       template<CT::Container C>
-      auto GetEntries(this C&& self) has_assumptions -> AllocationPtr* {
+      auto GetEntries(this C&& self) has_assumptions
+      -> Tif<CT::Mutable<C>, AllocationPtr*, AllocationPtr const*> {
          using DC = Deref<C>;
          if constexpr (DC::TypeErased) {
             if (self.IsSparse()) {

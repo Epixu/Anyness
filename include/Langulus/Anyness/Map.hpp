@@ -77,9 +77,12 @@ namespace Langulus::Anyness
 
       using KeyMut = HandleMut;
       using Key    = Handle;
+
       using ValMut = HandleMut;
       using Val    = Handle;
-      using It     = TIteratorMap<Map>;
+
+      using IteratorMut = typename IterateTogether<const Many,       Many>::Iterator;
+      using Iterator    = typename IterateTogether<const Many, const Many>::Iterator;
 
       static constexpr bool TypeErased = true;
 
@@ -101,7 +104,7 @@ namespace Langulus::Anyness
       auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
       auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
       auto RemovePair (const CT::Pair auto&) -> CountType;
-      auto RemoveIt   (const It&) -> It;
+      void RemoveIt   (IteratorMut&);
    };
    
 
@@ -149,9 +152,12 @@ namespace Langulus::Anyness
 
       using KeyMut = HandleMut;
       using Key    = Handle;
+
       using ValMut = HandleMut;
       using Val    = Handle;
-      using It     = TIteratorMap<Map>;
+
+      using IteratorMut = typename IterateTogether<const Many,       Many>::Iterator;
+      using Iterator    = typename IterateTogether<const Many, const Many>::Iterator;
 
       static constexpr bool TypeErased = true;
 
@@ -173,7 +179,7 @@ namespace Langulus::Anyness
       auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
       auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
       auto RemovePair (const CT::Pair auto&) -> CountType;
-      auto RemoveIt   (const It&) -> It;
+      void RemoveIt   (IteratorMut&);
    };
    
 
@@ -221,9 +227,12 @@ namespace Langulus::Anyness
 
       using KeyMut = HandleMut;
       using Key    = Handle;
+
       using ValMut = HandleMut;
       using Val    = Handle;
-      using It     = TIteratorMap<Map>;
+
+      using IteratorMut = typename IterateTogether<const Many,       Many>::Iterator;
+      using Iterator    = typename IterateTogether<const Many, const Many>::Iterator;
 
       static constexpr bool TypeErased = true;
 
@@ -245,7 +254,7 @@ namespace Langulus::Anyness
       auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
       auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
       auto RemovePair (const CT::Pair auto&) -> CountType;
-      auto RemoveIt   (const It&) -> It;
+      void RemoveIt   (IteratorMut&);
    };
 
 } // namespace Langulus::Anyness

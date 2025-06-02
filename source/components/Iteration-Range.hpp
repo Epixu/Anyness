@@ -71,7 +71,10 @@ namespace Langulus::Anyness
          decltype(auto) one() noexcept { return ::std::get<0>(mIt); }
          decltype(auto) two() noexcept { return ::std::get<1>(mIt); }
 
-         explicit constexpr Iterator(const T& it) noexcept : mIt {it} {}
+         Iterator() = delete;
+         constexpr Iterator(Iterator const&) noexcept = default;
+         constexpr Iterator(Iterator&&) noexcept = default;
+         /*explicit*/ constexpr Iterator(const T& it) noexcept : mIt {it} {}
 
          bool operator == (const Iterator& rhs) const noexcept {
             return mIt == rhs.mIt;
@@ -128,7 +131,10 @@ namespace Langulus::Anyness
          T mIt;
 
       public:
-         explicit constexpr Iterator(const T& it) noexcept : mIt {it} {}
+         Iterator() = delete;
+         constexpr Iterator(Iterator const&) noexcept = default;
+         constexpr Iterator(Iterator&&) noexcept = default;
+         /*explicit*/ constexpr Iterator(const T& it) noexcept : mIt {it} {}
 
          bool operator == (const Iterator& rhs) const noexcept {
             return mIt == rhs.mIt;
@@ -184,7 +190,10 @@ namespace Langulus::Anyness
          C const& mRange;
 
       public:
-         explicit constexpr Iterator(H&& it, const C& range) noexcept
+         Iterator() = delete;
+         constexpr Iterator(Iterator const&) noexcept = default;
+         constexpr Iterator(Iterator&&) noexcept = default;
+         /*explicit*/ constexpr Iterator(H&& it, const C& range) noexcept
             : mIt    {FWD(it)}
             , mRange {range} {}
 
@@ -246,7 +255,10 @@ namespace Langulus::Anyness
          C const& mRange;
 
       public:
-         explicit constexpr Iterator(H&& it, const C& range) noexcept
+         Iterator() = delete;
+         constexpr Iterator(Iterator const&) noexcept = default;
+         constexpr Iterator(Iterator&&) noexcept = default;
+         /*explicit*/ constexpr Iterator(H&& it, const C& range) noexcept
             : mIt    {FWD(it)}
             , mRange {range} {}
 
@@ -292,7 +304,10 @@ namespace Langulus::Anyness::Component
       using Count = typename Deref<C>::CountType;
 
       template<CT::Container C>
-      using Iterator = typename IterateDefault<C>::Iterator;
+      using Iterator = typename IterateDefault<Deref<C>>::Iterator;
+
+      template<CT::Container C>
+      using IteratorRev = typename IterateInReverse<Deref<C>>::Iterator;
 
    public:
       /// Return an iterator to the first element                             
@@ -318,7 +333,7 @@ namespace Langulus::Anyness::Component
 
       /// Return a reverse iterator to the last element                       
       template<CT::Container C>
-      constexpr auto rbegin(this C&& self) noexcept -> typename IterateInReverse<Deref<C>>::Iterator {
+      constexpr auto rbegin(this C&& self) noexcept -> IteratorRev<C> {
          return self.last();
       }
 

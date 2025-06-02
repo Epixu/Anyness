@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Core.hpp"
+#include "../CTTI.hpp"
 
 
 namespace Langulus::CTTI
@@ -22,15 +22,7 @@ namespace Langulus::CTTI
 
 } // namespace Langulus::CTTI
 
-namespace Langulus::CT
-{
-
-   template<class...T>
-   concept Exception = ((CTTI::Exception<Deref<T>>::Enabled or Deref<T>::CTTI_Exception::Enabled) and ...);
-   template<class...T> \
-   concept NotException = ((not Exception<Deref<T>>) and ...);
-
-} // namespace Langulus::CT
+LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(Exception);
 
 namespace Langulus
 {
@@ -43,6 +35,7 @@ namespace Langulus
    ///                                                                        
    struct Exception {
       using CTTI_Exception = Yes;
+
       static constexpr const char* DefaultMessage  = "<no information provided>";
       static constexpr const char* DefaultLocation = "<unknown location>";
 

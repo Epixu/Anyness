@@ -153,7 +153,7 @@ namespace Langulus::CT
       /// Do types have an explicit/implicit cast operator to Text            
       template<class...T>
       concept StringifiableByOperator = (std::is_object_v<T> and ...)
-         and requires (const T&...a) {
+          and requires (const T&...a) {
             ((a.operator ::Langulus::Anyness::Text()), ...);
          };
 
@@ -178,6 +178,10 @@ namespace Langulus
 
    /// Make a text literal                                                    
    Anyness::Text operator ""_text(const char* text, ::std::size_t size) {
+      static_assert(CTTI::Sparse<const char*>::Enabled);
+      static_assert(CT::Sparse<const char*>);
+      static_assert(CT::Character<char>);
+      static_assert(CT::Text<Disown<const char*>>);
       return Anyness::Text::FromText(Disown(text), size);
    }
 
