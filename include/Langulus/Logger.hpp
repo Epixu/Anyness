@@ -232,7 +232,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::FatalError)].prefix);
@@ -251,7 +251,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Error)].prefix);
@@ -270,7 +270,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Warning)].prefix);
@@ -289,7 +289,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Verbose)].prefix);
@@ -308,7 +308,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Info)].prefix);
@@ -327,7 +327,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Message)].prefix);
@@ -346,7 +346,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Special)].prefix);
@@ -365,7 +365,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Flow)].prefix);
@@ -384,7 +384,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Input)].prefix);
@@ -403,7 +403,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Network)].prefix);
@@ -422,7 +422,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::OS)].prefix);
@@ -441,7 +441,7 @@ namespace Langulus::Logger
          LANGULUS(NOOP);
       #else
          if (not ::std::is_constant_evaluated()) {
-            fmt::print("\n");
+            Detail::FmtWrite("\n");
             Detail::FmtPrintStyle(DefaultStyle);
             Detail::FmtPrintTime();
             Detail::FmtWrite(DefaultIntentStyle[int(Intent::Prompt)].prefix);

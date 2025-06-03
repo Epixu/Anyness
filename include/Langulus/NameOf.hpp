@@ -216,7 +216,7 @@ namespace Langulus::RTTI
       ///   @param lhs - start of the region                                  
       ///   @param rhs - end of the region                                    
       ///   @return true if a transition occurs at both points                
-      consteval bool IsTransition(auto source, std::size_t lhs, std::size_t rhs) {
+      constexpr bool IsTransition(auto source, std::size_t lhs, std::size_t rhs) {
          return (
                // Test left side for transition                         
                lhs == 0
@@ -404,9 +404,9 @@ namespace Langulus
 {
    
    /// Get the name of a type, templated or not, with consistently named      
-   /// template arguments, even if nested, if such are required               
+   /// template arguments, even if nested, at compile-time                    
    ///   @tparam T - the type to get the name of                              
-   ///   @return the type name                                                
+   ///   @return a compile-time string                                        
    template<class T>
    consteval auto CppNameOf() {
       if constexpr (::std::is_function_v<Decay<T>>)
@@ -415,9 +415,9 @@ namespace Langulus
          return RTTI::Inner::NameOfType<T>();
    }
    
-   /// Same as NameOf, but removes all namespaces                             
+   /// Same as NameOf, but removes all namespaces at compile-time             
    ///   @tparam T - the type to get the name of                              
-   ///   @return the type name                                                
+   ///   @return a compile-time string                                        
    template<class T>
    consteval auto LastCppNameOf() {
       if constexpr (::std::is_function_v<Decay<T>>)
@@ -430,18 +430,18 @@ namespace Langulus
       }
    }
 
-   /// Get the name of a named constant                                       
+   /// Get the name of an enum value at compile-time                          
    ///   @tparam E - the constant to get the name of                          
-   ///   @return the name of the constant                                     
+   ///   @return a compile-time string                                        
    template<auto E>
    consteval auto CppNameOf() {
       return RTTI::Inner::NameOfConstant<E>();
    }
    
 
-   /// Same as CppNameOf, but removes all namespaces                          
+   /// Same as CppNameOf, but removes all namespaces at compile-time          
    ///   @tparam T - the enum to get the name of                              
-   ///   @return the name                                                     
+   ///   @return a compile-time string                                        
    template<auto E>
    consteval auto LastCppNameOf() {
       // Find the last ':' symbol, that is not inside <...> scope       
@@ -450,10 +450,16 @@ namespace Langulus
       return fullName.substr(lastName);
    }
 
-   ///                                                                        
-   /// NameOf that considers CTTI::Named, or fallbacks to the C++ name        
+   /// Get the name of a type at compile-time                                 
+   /// Considers CTTI::Named, or fallbacks to the C++ name                    
    /// If you want to avoid custom names, use CppNameOf directly instead      
-   ///                                                                        
+   ///   @attention similarly named types in anonymous namespaces will result 
+   ///      in the same name. If this is not desired, give them unique        
+   ///      `using CTTI_Named = YesText<"name">` for each translation unit    
+   ///      they appear in manually. Alternatively, you can also specialize   
+   ///      CTTI::Named instead, if you have no control over the types        
+   ///   @tparam T - the type to get the name of                              
+   ///   @return a compile-time string                                        
    template<class T>
    consteval auto NameOf() {
       if constexpr (CT::Named<T>) {
@@ -469,9 +475,12 @@ namespace Langulus
       else return CppNameOf<T>();
    }
    
-   ///                                                                        
-   ///   NameOf for enum types and other constants                            
-   ///                                                                        
+   /// Get the name of an enum value at compile-time                          
+   ///   @attention similarly named values in anonymous namespaces will result
+   ///      in the same name. If this is not desired, specialize CTTI::Named  
+   ///      for each translation unit they appear in manually                 
+   ///   @tparam E - the value to get the name of                             
+   ///   @return a compile-time string                                        
    template<auto E>
    consteval auto NameOf() {
       if constexpr (CT::NamedValue<E>)
