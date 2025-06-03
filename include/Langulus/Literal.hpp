@@ -384,49 +384,53 @@ namespace Langulus
 
    ///                                                                        
    /// Literal == Literal                                                     
-   consteval bool operator == (
+   constexpr bool operator == (
       const CT::FixedString auto& lhs,
       const CT::FixedString auto& rhs
    ) {
       if constexpr (lhs.size() != rhs.size())
          return false;
-      else {
-         using lhs_type = std::decay_t<decltype(lhs)>;
-         using sv_type = typename lhs_type::view_type;
-         return static_cast<sv_type>(lhs) == rhs;
+      else for (size_t i = 0; i < lhs.size(); ++i) {
+         if (lhs[i] != rhs[i])
+            return false;
       }
+      return true;
    }
 
    /// Literal == View                                                        
    template<CT::FixedString S>
-   consteval bool operator == (const S& lhs, typename S::view_type rhs) {
+   constexpr bool operator == (const S& lhs, typename S::view_type rhs) {
       return static_cast<typename S::view_type>(lhs) == rhs;
    }
 
    /// View == Literal                                                        
    template<CT::FixedString S>
-   consteval bool operator == (typename S::view_type lhs, const S& rhs) {
+   constexpr bool operator == (typename S::view_type lhs, const S& rhs) {
       return lhs == static_cast<typename S::view_type>(rhs);
    }
 
    /// Literal == Array                                                       
    template<CT::FixedString S, ::std::size_t N>
-   consteval bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {
-      using sv_type = typename S::view_type;
-      return static_cast<sv_type>(lhs) == sv_type {rhs};
+   constexpr bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {
+      if constexpr (S::Count != N - 1)
+         return false;
+      else for (size_t i = 0; i < N; ++i) {
+         if (lhs[i] != rhs[i])
+            return false;
+      }
+      return true;
    }
 
    /// Array == Literal                                                       
    template<CT::FixedString S, ::std::size_t N>
-   consteval bool operator == (const typename S::value_type(&lhs)[N], const S& rhs) {
-      using sv_type = typename S::view_type;
-      return sv_type {lhs} == static_cast<sv_type>(rhs);
+   constexpr bool operator == (const typename S::value_type(&lhs)[N], const S& rhs) {
+      return rhs == lhs;
    }
 
 
    ///                                                                        
    /// Literal <=> Literal                                                    
-   consteval auto operator <=> (
+   constexpr auto operator <=> (
       const CT::FixedString auto& lhs,
       const CT::FixedString auto& rhs
    ) {
@@ -437,26 +441,26 @@ namespace Langulus
 
    /// Literal <=> View                                                       
    template<CT::FixedString S>
-   consteval auto operator <=> (const S& lhs, const typename S::view_type& rhs) {
+   constexpr auto operator <=> (const S& lhs, const typename S::view_type& rhs) {
       return static_cast<typename S::view_type>(lhs) <=> rhs;
    }
    
    /// View <=> Literal                                                       
    template<CT::FixedString S>
-   consteval auto operator <=> (const typename S::view_type& lhs, const S& rhs) {
+   constexpr auto operator <=> (const typename S::view_type& lhs, const S& rhs) {
       return lhs <=> static_cast<typename S::view_type>(rhs);
    }
    
    /// Literal <=> Array                                                      
    template<CT::FixedString S, ::std::size_t N>
-   consteval auto operator <=> (const S& lhs, const typename S::value_type(&rhs)[N]) {
+   constexpr auto operator <=> (const S& lhs, const typename S::value_type(&rhs)[N]) {
       using sv_type = typename S::view_type;
       return static_cast<sv_type>(lhs) <=> sv_type {rhs};
    }
    
    /// Array <=> Literal                                                      
    template<CT::FixedString S, ::std::size_t N>
-   consteval auto operator <=> (const typename S::value_type(&lhs)[N], const S& rhs) {
+   constexpr auto operator <=> (const typename S::value_type(&lhs)[N], const S& rhs) {
       using sv_type = typename S::view_type;
       return sv_type {lhs} <=> static_cast<sv_type>(rhs);
    }
@@ -466,21 +470,24 @@ namespace Langulus
    /// Concatenation                                                          
    ///                                                                        
    template<CT::FixedString LHS, CT::FixedString RHS>
-   consteval auto operator + (const LHS& lhs, const RHS& rhs) {
+   constexpr auto operator + (const LHS& lhs, const RHS& rhs) {
       typename LHS::template Resized<LHS::Count + RHS::Count> result;
-      std::copy(lhs.begin(), lhs.end(), result.begin());
-      std::copy(rhs.begin(), rhs.end(), result.begin() + lhs.size());
+      size_t i = 0;
+      for (; i < LHS::Count; ++i)
+         result[i] = lhs[i];
+      for (; i < LHS::Count + RHS::Count; ++i)
+         result[i] = rhs[i - LHS::Count];
       return result;
    }
 
    template<CT::FixedChar C, size_t N>
-   consteval auto operator + (const C(&lhs)[N], const CT::FixedString auto& rhs) {
+   constexpr auto operator + (const C(&lhs)[N], const CT::FixedString auto& rhs) {
       Literal lhs2 = lhs;
       return lhs2 + rhs;
    }
 
    template<CT::FixedChar C, size_t N>
-   consteval auto operator + (const CT::FixedString auto& lhs, const C(&rhs)[N]) {
+   constexpr auto operator + (const CT::FixedString auto& lhs, const C(&rhs)[N]) {
       Literal rhs2 = rhs;
       return lhs + rhs2;
    }
@@ -489,7 +496,7 @@ namespace Langulus
    {
 
       template<class T>
-      consteval auto from_char(T ch) {
+      constexpr auto from_char(T ch) {
          Literal<T, 1> fs;
          fs[0] = ch;
          return fs;
@@ -497,11 +504,11 @@ namespace Langulus
 
    } // namespace Langulus::Inner
 
-   consteval auto operator + (CT::FixedChar auto lhs, const CT::FixedString auto& rhs) {
+   constexpr auto operator + (CT::FixedChar auto lhs, const CT::FixedString auto& rhs) {
       return Inner::from_char(lhs) + rhs;
    }
 
-   consteval auto operator + (const CT::FixedString auto& lhs, CT::FixedChar auto rhs) {
+   constexpr auto operator + (const CT::FixedString auto& lhs, CT::FixedChar auto rhs) {
       return lhs + Inner::from_char(rhs);
    }
 

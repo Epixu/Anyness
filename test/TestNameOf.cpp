@@ -38,15 +38,22 @@ namespace Langulus::Flow
 
 namespace
 {
+
+   struct Nаsty {
+      int this_type_name_contains_a_cyrillic_letter;
+   };
+
+   enum class Pi {
+      Number = 314
+   };
+
    struct IncompleteType;
 
-   using TypeDeepAlias =
-      One::Two::Three::TypeDeepIntoNamespaces;
-   using TemplatedAlias =
-      One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16_t>;
-   using VeryComplexTemplatedAlias =
-      One::Two::Three::VeryComplexTemplate<
-      One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16_t>>;
+   using TypeDeepAlias             = One::Two::Three::TypeDeepIntoNamespaces;
+   using TemplatedAlias            = One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16_t>;
+   using VeryComplexTemplatedAlias = One::Two::Three::VeryComplexTemplate<
+      One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16_t>
+   >;
 
    class A; class B; class C; class D; class E; class F; class G; class H; class I;
    class J; class K; class L; class M; class N; class O; class P; class Q; class R;
@@ -55,6 +62,8 @@ namespace
    class a; class b; class c; class d; class e; class f; class g; class h; class i;
    class j; class k; class l; class m; class n; class o; class p; class q; class r;
    class s; class t; class u; class v; class w; class x; class y; class z;
+
+   struct s_struct; struct t_struct; struct u_struct; struct v_struct; struct w_struct; struct x_struct; struct y_struct; struct z_struct;
 
    struct TypeWithSuffix { using CTTI_Suffix = YesText<"yeah">; };
    struct TypeWithoutSuffix {};
@@ -70,25 +79,18 @@ namespace
 
       ::std::size_t occurences = 0;
       ::std::size_t cookie = 0;
-      while (cookie + RHS.size() <= LHS.size()) { //TODO: <= important change
+      while (cookie + RHS.size() <= LHS.size()) {
          ::std::size_t scan = 0;
          while (scan < RHS.size()) {
-            if (LHS[cookie + scan] == RHS[scan]) { //TODO: completely new cycle
+            if (LHS[cookie + scan] == RHS[scan]) {
                ++scan;
                continue;
             }
 
-            //scan = 0;
-            //++cookie;
             break;
          }
 
-         /*if (scan != RHS.size()) {
-            ++cookie;
-            continue;
-         }*/
-
-         if (scan == RHS.size() and RTTI::Inner::IsTransition(LHS, cookie, cookie + RHS.size())) { //TODO additional check
+         if (scan == RHS.size() and RTTI::Inner::IsTransition(LHS, cookie, cookie + RHS.size())) {
             cookie += RHS.size();
             ++occurences;
          }
@@ -122,51 +124,69 @@ namespace
       return result;
    }
 
-   template<bool REGRESS_PROTECTION = false>
-   ::std::string NormalizeTypenameAtRuntime(const ::std::string& SRC) { //TODO; regress protection, handling const separately, reordering, anonymous namespace
-      ::std::string a00 = ReplaceAtRuntime(SRC, "(anonymous namespace)::", "");
+   ::std::string NormalizeTypenameAtRuntime(const ::std::string& SRC) {
+      #if LANGULUS_COMPILER(MSVC)
+         ::std::string a00 = ReplaceAtRuntime(SRC, "`anonymous-namespace'::", "");
+      #else
+         ::std::string a00 = ReplaceAtRuntime(SRC, "(anonymous namespace)::", "");
+      #endif
+
       ::std::string a01 = ReplaceAtRuntime(a00, " *", "*");
       ::std::string a02 = ReplaceAtRuntime(a01, " &", "&");
       ::std::string a03 = ReplaceAtRuntime(a02, " >", ">");
-      ::std::string a04 = ReplaceAtRuntime(a03, "class ", "");
-      ::std::string a05 = ReplaceAtRuntime(a04, "struct ", "");
-      ::std::string a06 = ReplaceAtRuntime(a05, "enum ", "");
-      ::std::string a07 = ReplaceAtRuntime(a06, "Langulus::", "");
-      ::std::string a08 = ReplaceAtRuntime(a07, "(__cdecl *)", "");
-      ::std::string a09 = ReplaceAtRuntime(a08, " (*)", "");
-      // `unsigned short` is longer than just `short`, and needs to be handled first   
-      ::std::string a10 = ReplaceAtRuntime(a09, IsolateTypenameAtRuntime<uint8_t,  REGRESS_PROTECTION>(), "uint8" );
-      ::std::string a11 = ReplaceAtRuntime(a10, IsolateTypenameAtRuntime<uint16_t, REGRESS_PROTECTION>(), "uint16");
-      ::std::string a12 = ReplaceAtRuntime(a11, IsolateTypenameAtRuntime<uint32_t, REGRESS_PROTECTION>(), "uint32");
-      ::std::string a13 = ReplaceAtRuntime(a12, IsolateTypenameAtRuntime<uint64_t, REGRESS_PROTECTION>(), "uint64");
-      ::std::string a14 = ReplaceAtRuntime(a13, IsolateTypenameAtRuntime<int8_t,   REGRESS_PROTECTION>(), "int8"  );
-      ::std::string a15 = ReplaceAtRuntime(a14, IsolateTypenameAtRuntime<int16_t,  REGRESS_PROTECTION>(), "int16" );
-      ::std::string a16 = ReplaceAtRuntime(a15, IsolateTypenameAtRuntime<int32_t,  REGRESS_PROTECTION>(), "int32" );
-      ::std::string a17 = ReplaceAtRuntime(a16, IsolateTypenameAtRuntime<int64_t,  REGRESS_PROTECTION>(), "int64" );
-      return a17;
+      ::std::string a04 = ReplaceAtRuntime(a03, " (", "(");
+      ::std::string a05 = ReplaceAtRuntime(a04, " )", ")");
+      ::std::string a06 = ReplaceAtRuntime(a05, "class ", "");
+      ::std::string a07 = ReplaceAtRuntime(a06, "struct ", "");
+      ::std::string a08 = ReplaceAtRuntime(a07, "enum ", "");
+      //::std::string a09 = ReplaceAtRuntime(a08, "Langulus::", "");
+      ::std::string a10 = ReplaceAtRuntime(a08, "(__cdecl *)", "");
+
+      ::std::string a12 = ReplaceAtRuntime(a10, IsolateTypenameAtRuntime<uint8_t,  false>(), "uint8" );
+      ::std::string a13 = ReplaceAtRuntime(a12, IsolateTypenameAtRuntime<uint16_t, false>(), "uint16");
+      ::std::string a14 = ReplaceAtRuntime(a13, IsolateTypenameAtRuntime<uint32_t, false>(), "uint32");
+      ::std::string a15 = ReplaceAtRuntime(a14, IsolateTypenameAtRuntime<uint64_t, false>(), "uint64");
+
+      ::std::string a16 = ReplaceAtRuntime(a15, IsolateTypenameAtRuntime<int8_t,   false>(), "int8"  );
+      ::std::string a17 = ReplaceAtRuntime(a16, IsolateTypenameAtRuntime<int16_t,  false>(), "int16" );
+      ::std::string a18 = ReplaceAtRuntime(a17, IsolateTypenameAtRuntime<int32_t,  false>(), "int32" );
+      ::std::string a19 = ReplaceAtRuntime(a18, IsolateTypenameAtRuntime<int64_t,  false>(), "int64" );
+
+      for (char c : a19) {
+         if (RTTI::Inner::IsAlphabetical(c)
+            or RTTI::Inner::IsOperator(c)
+            or RTTI::Inner::IsNumerical(c)
+            or RTTI::Inner::IsSpace(c))
+            continue;
+
+         Logger::ErrorRaw("Disallowed symbol: `", c, "` in `", a19, "`");
+         throw "";
+      }
+
+      return a19;
    }
 
-   template<class T, bool REGRESS_PROTECTION = false>
+   template<class T, bool NORMALIZE = true>
    ::std::string IsolateTypenameAtRuntime() {
       // Move `const` next to pointers/references at the end of type    
       // Discards `volatile` - it shouldn't matter outside compilation  
       // Helps with better sorting reflected types                      
-      if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) { //TODO handling const separately
-         auto deptr = IsolateTypenameAtRuntime<Decvq<T>, REGRESS_PROTECTION>();
+      if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
+         auto deptr = IsolateTypenameAtRuntime<Decvq<T>, NORMALIZE>();
          if constexpr (not ::std::is_const_v<T>)
             return deptr;
          else
             return deptr + " const";
       }
       else if constexpr (::std::is_reference_v<T>) {
-         auto deptr = IsolateTypenameAtRuntime<Decvq<Deref<T>>, REGRESS_PROTECTION>();
+         auto deptr = IsolateTypenameAtRuntime<Decvq<Deref<T>>, NORMALIZE>();
          if constexpr (not ::std::is_const_v<Deref<T>>)
             return deptr + "&";
          else
             return deptr + " const&";
       }
       else if constexpr (::std::is_pointer_v<T>) {
-         auto deptr = IsolateTypenameAtRuntime<Decvq<Deptr<T>>, REGRESS_PROTECTION>();
+         auto deptr = IsolateTypenameAtRuntime<Decvq<Deptr<T>>, NORMALIZE>();
          if constexpr (not ::std::is_const_v<Deptr<T>>)
             return deptr + "*";
          else
@@ -175,32 +195,42 @@ namespace
       else {
          ::std::string name = static_cast<::std::string>(RTTI::Inner::WrappedTypeName<T>());
          size_t size = name.size();
-         size_t left = RTTI::Inner::CalibratedTypeLeftOffset;
-         size_t right = RTTI::Inner::CalibratedTypeRightOffset;
+         size_t left = RTTI::Inner::CalculateTypeLeftOffset();
+         size_t right = RTTI::Inner::CalculateTypeRightOffset();
          REQUIRE(size > left + right);
-
          ::std::string isolated = name.substr(left, size - right - left);
-         for (char c : isolated) {
-            if (RTTI::Inner::IsAlphabetical(c)
-            or  RTTI::Inner::IsOperator(c)
-            or  RTTI::Inner::IsNumerical(c)
-            or  RTTI::Inner::IsSpace(c))
-               continue;
 
-            Logger::ErrorRaw("Disallowed symbol: ", c);
-            FAIL();
+         if constexpr (not NORMALIZE) {
+            if constexpr (::std::is_function_v<T>)
+               return "<" + isolated + ">";
+            else
+               return isolated;
          }
-
-         if constexpr (REGRESS_PROTECTION) //TODO regress protection
-            return isolated;
          else {
-            // Regress protection always kicks in here                  
             Logger::InfoRaw("IsolateTypenameAtRuntime: ", name, " -> ", isolated);
-            ::std::string normalized = NormalizeTypenameAtRuntime<true>(isolated);
+            ::std::string normalized = NormalizeTypenameAtRuntime(isolated);
             Logger::InfoRaw("NormalizeTypenameAtRuntime: ", isolated, " -> ", normalized);
-            return normalized;
+            if constexpr (::std::is_function_v<T>)
+               return "<" + normalized + ">";
+            else
+               return normalized;
          }
       }
+   }
+
+   template<auto T>
+   ::std::string IsolateConstantAtRuntime() {
+      ::std::string name = static_cast<::std::string>(RTTI::Inner::WrappedEnumName<T>());
+      size_t size = name.size();
+      size_t left = RTTI::Inner::CalculateEnumLeftOffset();
+      size_t right = RTTI::Inner::CalculateEnumRightOffset();
+      REQUIRE(size > left + right);
+      ::std::string isolated = name.substr(left, size - right - left);
+
+      Logger::InfoRaw("IsolateConstantAtRuntime: ", name, " -> ", isolated);
+      ::std::string normalized = NormalizeTypenameAtRuntime(isolated);
+      Logger::InfoRaw("Normalized constant: ", isolated, " -> ", normalized);
+      return normalized;
    }
 }
 
@@ -208,22 +238,15 @@ namespace
    WHEN("Taken the name of type " #WHAT) { \
       auto name_runtime = IsolateTypenameAtRuntime<WHAT>(); \
       REQUIRE(name_runtime == RESULT); \
+      STATIC_REQUIRE(NameOf<WHAT>() == RESULT); \
    }
 
 #define DEFINE_NAMEOF_CONST_TEST(WHAT, RESULT) \
    WHEN("Taken the name of constat " #WHAT) { \
       auto name_runtime = IsolateConstantAtRuntime<WHAT>(); \
       REQUIRE(name_runtime == RESULT); \
+      STATIC_REQUIRE(NameOf<WHAT>() == RESULT); \
    }
-
-/*#define DEFINE_NAMEOF_TEST(WHAT, RESULT) \
-   WHEN("Taken the name of class " #WHAT) { \
-      auto name = NameOf<::WHAT>(); \
-      auto name_runtime = IsolateTypenameAtRuntime<::WHAT>(); \
-      REQUIRE(name == RESULT); \
-      REQUIRE(name_runtime == RESULT); \
-      STATIC_REQUIRE(NameOf<::WHAT>() == RESULT); \
-   }*/
 
 SCENARIO("NameOf", "[nameof]") {
    DEFINE_NAMEOF_TYPE_TEST(uint16_t, "uint16")
@@ -290,6 +313,22 @@ SCENARIO("NameOf", "[nameof]") {
    DEFINE_NAMEOF_TYPE_TEST(y, "y")
    DEFINE_NAMEOF_TYPE_TEST(z, "z")
 
+   DEFINE_NAMEOF_TYPE_TEST(s_struct, "s_struct")
+   DEFINE_NAMEOF_TYPE_TEST(t_struct, "t_struct")
+   DEFINE_NAMEOF_TYPE_TEST(u_struct, "u_struct")
+   DEFINE_NAMEOF_TYPE_TEST(v_struct, "v_struct")
+   DEFINE_NAMEOF_TYPE_TEST(w_struct, "w_struct")
+   DEFINE_NAMEOF_TYPE_TEST(x_struct, "x_struct")
+   DEFINE_NAMEOF_TYPE_TEST(y_struct, "y_struct")
+   DEFINE_NAMEOF_TYPE_TEST(z_struct, "z_struct")
+
+   DEFINE_NAMEOF_TYPE_TEST(z, "z")
+
+   WHEN("Taken the name of type Nаsty (with cyrillic 'a')") {
+      //REQUIRE_STATIC(NameOf<Nаsty>()); // shouldn't compile at all
+      REQUIRE_THROWS(IsolateTypenameAtRuntime<Nаsty>());
+   }
+
    DEFINE_NAMEOF_TYPE_TEST(IncompleteType, "IncompleteType")
    DEFINE_NAMEOF_TYPE_TEST(IncompleteType*, "IncompleteType*")
    DEFINE_NAMEOF_TYPE_TEST(const IncompleteType*, "IncompleteType const*")
@@ -310,15 +349,15 @@ SCENARIO("NameOf", "[nameof]") {
    DEFINE_NAMEOF_TYPE_TEST(VeryComplexTemplatedAlias, "One::Two::Three::VeryComplexTemplate<One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16>>")
    DEFINE_NAMEOF_TYPE_TEST(One::Two::Three::VeryComplexTemplate<TemplatedAlias>, "One::Two::Three::VeryComplexTemplate<One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16>>")
 
-   DEFINE_NAMEOF_TYPE_TEST(Langulus::Flow::Construct, "Flow::Construct")
-   DEFINE_NAMEOF_TYPE_TEST(Langulus::Flow::Constructconst, "Flow::Constructconst")
-   DEFINE_NAMEOF_TYPE_TEST(Langulus::Flow::constConstructconst, "Flow::constConstructconst")
-   DEFINE_NAMEOF_TYPE_TEST(Langulus::Flow::constconst, "Flow::constconst")
+   DEFINE_NAMEOF_TYPE_TEST(Langulus::Flow::Construct, "Langulus::Flow::Construct")
+   DEFINE_NAMEOF_TYPE_TEST(Langulus::Flow::Constructconst, "Langulus::Flow::Constructconst")
+   DEFINE_NAMEOF_TYPE_TEST(Langulus::Flow::constConstructconst, "Langulus::Flow::constConstructconst")
+   DEFINE_NAMEOF_TYPE_TEST(Langulus::Flow::constconst, "Langulus::Flow::constconst")
+   DEFINE_NAMEOF_TYPE_TEST(Signature, "<void(void*)>*")
 
    DEFINE_NAMEOF_CONST_TEST(Pi::Number, "Pi::Number")
-   DEFINE_NAMEOF_CONST_TEST(One::Two::Three::TemplatedTypeDeepIntoNamespaces<char>::VeryDeeplyTemplatedEnum::YesYouGotThatRight, "One::Two::Three::TemplatedTypeDeepIntoNamespaces<char>::VeryDeeplyTemplatedEnum::YesYouGotThatRight")
-   DEFINE_NAMEOF_CONST_TEST(One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16_t>::VeryDeeplyTemplatedEnum::YesYouGotThatRight, "One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16>::VeryDeeplyTemplatedEnum::YesYouGotThatRight")
-   DEFINE_NAMEOF_CONST_TEST(Signature, "Function<void(void*)>*")
+   DEFINE_NAMEOF_CONST_TEST(One::Two::Three::TemplatedTypeDeepIntoNamespaces<char>::VeryDeeplyTemplatedEnum::YesYouGotThatRight, "One::Two::Three::TemplatedTypeDeepIntoNamespaces<char>::YesYouGotThatRight")
+   DEFINE_NAMEOF_CONST_TEST(One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16_t>::VeryDeeplyTemplatedEnum::YesYouGotThatRight, "One::Two::Three::TemplatedTypeDeepIntoNamespaces<uint16>::YesYouGotThatRight")
 }
 
 

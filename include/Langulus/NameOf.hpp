@@ -78,7 +78,7 @@ namespace Langulus::RTTI
 
       /// Types used for pattern matching while isolating typenames           
       /// These need to be in exactly this namespace to avoid corner cases    
-      struct Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK {};
+      class Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK {};
       enum { Oddly_Specific_EnumASDOLSAJDPAFHOAF };
 
       /// Stringifies type T by exploiting the preprocessor                   
@@ -96,105 +96,142 @@ namespace Langulus::RTTI
       /// Analyze compiler stringification and find the left offset in order  
       /// the shed the unnecessary emballage                                  
       ///   @return the number of characters to discard on the left           
-      consteval auto CalculateTypeLeftOffset() {
-         constexpr auto calibration_name = 
-            WrappedTypeName<Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK>();
-         constexpr auto start1 = calibration_name.find(
-            "Langulus::RTTI::Inner::Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK");
+      consteval size_t CalculateTypeLeftOffset() {
+         constexpr auto calibration_name
+            = WrappedTypeName<Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK>();
 
-         if constexpr (start1 != calibration_name.npos)
-            return start1;
-         else {
+         #if LANGULUS_COMPILER(MSVC)
+            // MSVC prepends "class "                                   
+            constexpr size_t start = calibration_name.find(
+               "class Langulus::RTTI::Inner::Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK");
+         #elif LANGULUS_COMPILER(GCC)
             // Most compilers include the namespaces. GCC14 in          
             // particular decided not to...                             
-            constexpr auto start2 = calibration_name.find(
+            constexpr size_t start = calibration_name.find(
                "Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK");
+         #else
+            constexpr size_t start = calibration_name.find(
+               "Langulus::RTTI::Inner::Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK");
+         #endif
 
-            static_assert(start2 != calibration_name.npos);
-            return start2;
-         }
+         static_assert(start != calibration_name.npos, "Bad NameOf adaptation");
+         return start;
       }
-      constexpr auto CalibratedTypeLeftOffset = CalculateTypeLeftOffset();
       
       /// Analyze compiler stringification and find the right offset in order 
       /// the shed the unnecessary emballage                                  
       ///   @return the number of characters to discard on the right          
-      consteval auto CalculateTypeRightOffset() {
+      consteval size_t CalculateTypeRightOffset() {
          constexpr auto calibration_name = 
             WrappedTypeName<Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK>();
-         constexpr auto start1 = calibration_name.find(
-            "Langulus::RTTI::Inner::Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK");
+         constexpr size_t start = CalculateTypeLeftOffset();
 
-         if constexpr (start1 != calibration_name.npos)
-            return calibration_name.size() - start1 - 61;
-         else {
-            // Most compilers include the namespaces. GCC14 in          
-            // particular decided not to...                             
-            constexpr auto start2 = calibration_name.find(
-               "Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK");
-
-            static_assert(start2 != calibration_name.npos);
-            return calibration_name.size() - start2 - 38;
-         }
+         #if LANGULUS_COMPILER(MSVC)
+            return calibration_name.size() - start - 67;
+         #elif LANGULUS_COMPILER(GCC)
+            return calibration_name.size() - start - 38;
+         #else
+            return calibration_name.size() - start - 61;
+         #endif
       }
-      constexpr auto CalibratedTypeRightOffset = CalculateTypeRightOffset();
 
       /// Analyze compiler stringification and find the left offset in order  
       /// the shed the unnecessary emballage                                  
       ///   @return the number of characters to discard on the left           
-      consteval auto CalculateEnumLeftOffset() {
+      consteval size_t CalculateEnumLeftOffset() {
          constexpr auto calibration_name = 
             WrappedEnumName<Oddly_Specific_EnumASDOLSAJDPAFHOAF>();
-         constexpr auto start1 = calibration_name.find(
-            "Langulus::RTTI::Inner::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
 
-         if constexpr (start1 != calibration_name.npos)
-            return start1;
-         else {
+         #if LANGULUS_COMPILER(GCC)
             // Most compilers include the namespaces. GCC14 in          
             // particular decided not to...                             
-            constexpr auto start2 = calibration_name.find(
+            constexpr size_t start = calibration_name.find(
                "Oddly_Specific_EnumASDOLSAJDPAFHOAF");
+         #else
+            constexpr size_t start = calibration_name.find(
+               "Langulus::RTTI::Inner::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
+         #endif
 
-            static_assert(start2 != calibration_name.npos);
-            return start2;
-         }
+         static_assert(start != calibration_name.npos, "Bad NameOf adaptation");
+         return start;
       }
-      constexpr auto CalibratedEnumLeftOffset = CalculateEnumLeftOffset();
 
       /// Analyze compiler stringification and find the right offset in order 
       /// the shed the unnecessary emballage                                  
       ///   @return the number of characters to discard on the right          
-      consteval auto CalculateEnumRightOffset() {
+      consteval size_t CalculateEnumRightOffset() {
          constexpr auto calibration_name = 
             WrappedEnumName<Oddly_Specific_EnumASDOLSAJDPAFHOAF>();
-         constexpr auto start1 = calibration_name.find(
-            "Langulus::RTTI::Inner::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
+         constexpr size_t start = CalculateEnumLeftOffset();
 
-         if constexpr (start1 != calibration_name.npos)
-            return calibration_name.size() - start1 - 58;
-         else {
-            // Most compilers include the namespaces. GCC14 in          
-            // particular decided not to...                             
-            constexpr auto start2 = calibration_name.find(
-               "Oddly_Specific_EnumASDOLSAJDPAFHOAF");
-
-            static_assert(start2 != calibration_name.npos);
-            return calibration_name.size() - start2 - 35;
-         }
+         #if LANGULUS_COMPILER(GCC)
+            return calibration_name.size() - start - 35;
+         #else
+            return calibration_name.size() - start - 58;
+         #endif
       }
-      constexpr auto CalibratedEnumRightOffset = CalculateEnumRightOffset();
+
+      constexpr size_t CalibratedTypeLeftOffset  = CalculateTypeLeftOffset();
+      constexpr size_t CalibratedTypeRightOffset = CalculateTypeRightOffset();
+      constexpr size_t CalibratedEnumLeftOffset  = CalculateEnumLeftOffset();
+      constexpr size_t CalibratedEnumRightOffset = CalculateEnumRightOffset();
+
+      template<Literal>
+      consteval auto Normalize();
 
       /// Skip all decorations in front and the back of a WrappedTypeName     
+      ///   @tparam T - the typename to isolate                               
+      ///   @tparam NORMALIZE - whether or not to normalize the typename to   
+      ///      Langulus specification                                         
       ///   @return the type name                                             
-      template<class T>
+      template<class T, bool NORMALIZE = true>
       consteval auto IsolateTypename() {
-         constexpr auto name = WrappedTypeName<T>();
-         constexpr auto size = name.size();
-         constexpr auto left = CalibratedTypeLeftOffset;
-         constexpr auto right = CalibratedTypeRightOffset;
-         static_assert(size > left + right, "Invalid type name");
-         return name.template substr<left, size - right - left>();
+         // Move `const` next to pointers/references at the end of type 
+         // Discards `volatile` - it shouldn't matter outside compiler  
+         // Helps with better sorting reflected types                   
+         if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
+            auto deptr = IsolateTypename<Decvq<T>, NORMALIZE>();
+            if constexpr (not ::std::is_const_v<T>)
+               return deptr;
+            else
+               return deptr + " const";
+         }
+         else if constexpr (::std::is_reference_v<T>) {
+            auto deptr = IsolateTypename<Decvq<Deref<T>>, NORMALIZE>();
+            if constexpr (not ::std::is_const_v<Deref<T>>)
+               return deptr + "&";
+            else
+               return deptr + " const&";
+         }
+         else if constexpr (::std::is_pointer_v<T>) {
+            auto deptr = IsolateTypename<Decvq<Deptr<T>>, NORMALIZE>();
+            if constexpr (not ::std::is_const_v<Deptr<T>>)
+               return deptr + "*";
+            else
+               return deptr + " const*";
+         }
+         else {
+            constexpr auto name = WrappedTypeName<T>();
+            constexpr size_t size = name.size();
+            constexpr size_t left = CalibratedTypeLeftOffset;
+            constexpr size_t right = CalibratedTypeRightOffset;
+            static_assert(size > left + right, "Invalid type name");
+
+            constexpr auto isolated = name.template substr<left, size - right - left>();
+            if constexpr (not NORMALIZE) {
+               if constexpr (::std::is_function_v<T>)
+                  return "<" + isolated + ">";
+               else
+                  return isolated;
+            }
+            else {
+               constexpr auto normalized = Normalize<isolated>();
+               if constexpr (::std::is_function_v<T>)
+                  return "<" + normalized + ">";
+               else
+                  return normalized;
+            }
+         }
       }
 
       /// Skip all decorations in front and back of a WrappedEnumName         
@@ -206,7 +243,9 @@ namespace Langulus::RTTI
          constexpr auto left  = CalibratedEnumLeftOffset;
          constexpr auto right = CalibratedEnumRightOffset;
          static_assert(size > left + right, "Invalid enum name");
-         return name.template substr<left, size - right - left>();
+
+         constexpr auto isolated = name.template substr<left, size - right - left>();
+         return Normalize<isolated>();
       }
 
       /// Check if a token transition happens at the beginning and the end of 
@@ -241,20 +280,22 @@ namespace Langulus::RTTI
          else {
             ::std::size_t occurences = 0;
             ::std::size_t cookie = 0;
-            while (cookie + RHS.size() < LHS.size()) {
+            while (cookie + RHS.size() <= LHS.size()) {
                ::std::size_t scan = 0;
-               while (LHS[cookie + scan] == RHS[scan])
-                  ++scan;
-               
-               if (scan != RHS.size()) {
-                  ++cookie;
-                  continue;
+               while (scan < RHS.size()) {
+                  if (LHS[cookie + scan] == RHS[scan]) {
+                     ++scan;
+                     continue;
+                  }
+
+                  break;
                }
 
-               if (IsTransition(LHS, cookie, cookie + RHS.size())) {
+               if (scan == RHS.size() and RTTI::Inner::IsTransition(LHS, cookie, cookie + RHS.size())) {
                   cookie += RHS.size();
                   ++occurences;
                }
+               else ++cookie;
             }
             return occurences;
          }
@@ -308,63 +349,62 @@ namespace Langulus::RTTI
          //    them correctly, with longer ones replaced first          
          // @attention replacement will not commence, if IsTransition   
          //    isn't satisifed                                          
-         constexpr auto a01 = Replace<SRC, Literal {"*const "     },    Literal {"* const"}>();
-         constexpr auto a02 = Replace<a01, Literal {" *const"     },    Literal {"* const"}>();
-         constexpr auto a03 = Replace<a02, Literal {" *"          },    Literal {"*"      }>();
-         constexpr auto a04 = Replace<a03, Literal {" &"          },    Literal {"&"      }>();
-         constexpr auto a05 = Replace<a04, Literal {" >"          },    Literal {">"      }>();
-         constexpr auto a06 = Replace<a05, IsolateTypename<int8_t>(),   Literal {"int8"   }>();
-         constexpr auto a07 = Replace<a06, IsolateTypename<int16_t>(),  Literal {"int16"  }>();
-         constexpr auto a08 = Replace<a07, IsolateTypename<int32_t>(),  Literal {"int32"  }>();
-         constexpr auto a09 = Replace<a08, IsolateTypename<int64_t>(),  Literal {"int64"  }>();
-         constexpr auto a10 = Replace<a09, IsolateTypename<uint8_t>(),  Literal {"uint8"  }>();
-         constexpr auto a11 = Replace<a10, IsolateTypename<uint16_t>(), Literal {"uint16" }>();
-         constexpr auto a12 = Replace<a11, IsolateTypename<uint32_t>(), Literal {"uint32" }>();
-         constexpr auto a13 = Replace<a12, IsolateTypename<uint64_t>(), Literal {"uint64" }>();
-         constexpr auto a14 = Replace<a13, Literal {"class "      },    Literal {""       }>();
-         constexpr auto a15 = Replace<a14, Literal {"struct "     },    Literal {""       }>();
-         constexpr auto a16 = Replace<a15, Literal {"enum "       },    Literal {""       }>();
-         constexpr auto a17 = Replace<a16, Literal {"Langulus::"  },    Literal {""       }>();
-         constexpr auto a18 = Replace<a17, Literal {"(__cdecl *)" },    Literal {""       }>();
-         constexpr auto a19 = Replace<a18, Literal {" (*)"        },    Literal {""       }>();
-         return a19;
-      }
+      #if LANGULUS_COMPILER(MSVC)
+         constexpr auto a00 = Replace<SRC, "`anonymous-namespace'::", "">();
+      #else
+         constexpr auto a00 = Replace<SRC, "(anonymous namespace)::", "">();
+      #endif
+         constexpr auto a01 = Replace<a00, " *", "*">();
+         constexpr auto a02 = Replace<a01, " &", "&">();
+         constexpr auto a03 = Replace<a02, " >", ">">();
+         constexpr auto a04 = Replace<a03, " (", "(">();
+         constexpr auto a05 = Replace<a04, " )", ")">();
+         constexpr auto a06 = Replace<a05, "class ", "">();
+         constexpr auto a07 = Replace<a06, "struct ", "">();
+         constexpr auto a08 = Replace<a07, "enum ", "">();
+         //constexpr auto a09 = Replace<a08, "Langulus::", "">();
+         constexpr auto a10 = Replace<a08, "(__cdecl *)", "">();
 
-      /// Get the normalized name of a function                               
-      ///   @return the normalized token for T at compile-time                
-      template<class T>
-      consteval auto NameOfFunction() {
-         constexpr auto name = Normalize<IsolateTypename<T>()>();
-         static_assert(IsASCII(name), "Function signature contains disallowed symbols");
-         return "Function<" + name + ">*";
+         // These types are stringified differently on some compilers   
+         // `unsigned short` is longer than just `short`, and needs to  
+         // be handled first                                            
+         constexpr auto a12 = Replace<a10, IsolateTypename<uint8_t,  false>(), "uint8" >();
+         constexpr auto a13 = Replace<a12, IsolateTypename<uint16_t, false>(), "uint16">();
+         constexpr auto a14 = Replace<a13, IsolateTypename<uint32_t, false>(), "uint32">();
+         constexpr auto a15 = Replace<a14, IsolateTypename<uint64_t, false>(), "uint64">();
+
+         constexpr auto a16 = Replace<a15, IsolateTypename<int8_t,   false>(), "int8"  >();
+         constexpr auto a17 = Replace<a16, IsolateTypename<int16_t,  false>(), "int16" >();
+         constexpr auto a18 = Replace<a17, IsolateTypename<int32_t,  false>(), "int32" >();
+         constexpr auto a19 = Replace<a18, IsolateTypename<int64_t,  false>(), "int64" >();
+         static_assert(IsASCII(a19), "Normalized typename isn't ASCII");
+         return a19;
       }
       
       /// Get the normalized name of a type                                   
       ///   @return the normalized token for T at compile-time                
       template<class T>
       consteval auto NameOfType() {
-         constexpr auto name = Normalize<IsolateTypename<T>()>();
-         static_assert(IsASCII(name), "Type name contains disallowed symbols");
-         return name;
+         return IsolateTypename<T>();
       }
       
       /// Get the normalized name of a constant                               
       ///   @return the normalized token for T at compile-time                
       template<auto T>
       consteval auto NameOfConstant() {
-         constexpr auto name = IsolateConstant<T>();
-         static_assert(IsASCII(name), "Constant name contains disallowed symbols");
-         constexpr auto fullEnumName = Normalize<name>();
-         constexpr auto lastNamespace = fullEnumName.find_last_of(':');
-         if constexpr (lastNamespace != fullEnumName.npos) {
-            constexpr auto lastEnumName = fullEnumName.substr(lastNamespace);
+         return IsolateConstant<T>();
+
+         /*constexpr auto name = IsolateConstant<T>();
+         constexpr auto lastNamespace = name.find_last_of(':');
+         if constexpr (lastNamespace != name.npos) {
+            constexpr auto lastEnumName = name.template substr<lastNamespace>();
             constexpr auto typeName = NameOfType<decltype(T)>();
             return typeName + "::" + lastEnumName;
          }
          else {
             constexpr auto typeName = NameOfType<decltype(T)>();
-            return typeName + "::" + fullEnumName;
-         }
+            return typeName + "::" + name;
+         }*/
       }
 
       /// Get the last, most relevant part of a token that may or may not     
@@ -409,10 +449,7 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<class T>
    consteval auto CppNameOf() {
-      if constexpr (::std::is_function_v<Decay<T>>)
-         return RTTI::Inner::NameOfFunction<T>();
-      else
-         return RTTI::Inner::NameOfType<T>();
+      return RTTI::Inner::NameOfType<T>();
    }
    
    /// Same as NameOf, but removes all namespaces at compile-time             
@@ -420,14 +457,10 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<class T>
    consteval auto LastCppNameOf() {
-      if constexpr (::std::is_function_v<Decay<T>>)
-         return RTTI::Inner::NameOfFunction<T>();
-      else {
-         // Find the last ':' symbol, that is not inside <...> scope    
-         auto fullName = RTTI::Inner::NameOfType<T>();
-         auto lastName = RTTI::Inner::FindLastToken(fullName);
-         return fullName.substr(lastName);
-      }
+      // Find the last ':' symbol, that is not inside <...> scope       
+      auto fullName = RTTI::Inner::NameOfType<T>();
+      auto lastName = RTTI::Inner::FindLastToken(fullName);
+      return fullName.substr(lastName);
    }
 
    /// Get the name of an enum value at compile-time                          
