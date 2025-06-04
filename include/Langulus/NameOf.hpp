@@ -354,7 +354,8 @@ namespace Langulus::RTTI
       #elif LANGULUS_COMPILER(CLANG)
          constexpr auto a00 = Replace<SRC, "(anonymous namespace)::", "">();
       #else
-         constexpr auto a00 = Replace<SRC, "{anonymous}::", "">();
+         constexpr auto b00 = Replace<SRC, "<unnamed>::", "">;
+         constexpr auto a00 = Replace<b00, "{anonymous}::", "">();
       #endif
          constexpr auto a01 = Replace<a00, " *", "*">();
          constexpr auto a02 = Replace<a01, " &", "&">();
@@ -378,6 +379,7 @@ namespace Langulus::RTTI
          constexpr auto a17 = Replace<a16, IsolateTypename<int16_t,  false>(), "int16" >();
          constexpr auto a18 = Replace<a17, IsolateTypename<int32_t,  false>(), "int32" >();
          constexpr auto a19 = Replace<a18, IsolateTypename<int64_t,  false>(), "int64" >();
+
          static_assert(IsASCII(a19), "Normalized typename isn't ASCII");
          return a19;
       }

@@ -130,7 +130,8 @@ namespace
       #elif LANGULUS_COMPILER(CLANG)
          ::std::string a00 = ReplaceAtRuntime(SRC, "(anonymous namespace)::", "");
       #else
-         ::std::string a00 = ReplaceAtRuntime(SRC, "{anonymous}::", "");
+         ::std::string b00 = ReplaceAtRuntime(SRC, "<unnamed>::", "");
+         ::std::string a00 = ReplaceAtRuntime(b00, "{anonymous}::", "");
       #endif
 
       ::std::string a01 = ReplaceAtRuntime(a00, " *", "*");
