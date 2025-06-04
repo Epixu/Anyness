@@ -351,8 +351,10 @@ namespace Langulus::RTTI
          //    isn't satisifed                                          
       #if LANGULUS_COMPILER(MSVC)
          constexpr auto a00 = Replace<SRC, "`anonymous-namespace'::", "">();
-      #else
+      #elif LANGULUS_COMPILER(CLANG)
          constexpr auto a00 = Replace<SRC, "(anonymous namespace)::", "">();
+      #else
+         constexpr auto a00 = Replace<SRC, "{anonymous}::", "">();
       #endif
          constexpr auto a01 = Replace<a00, " *", "*">();
          constexpr auto a02 = Replace<a01, " &", "&">();
@@ -362,7 +364,6 @@ namespace Langulus::RTTI
          constexpr auto a06 = Replace<a05, "class ", "">();
          constexpr auto a07 = Replace<a06, "struct ", "">();
          constexpr auto a08 = Replace<a07, "enum ", "">();
-         //constexpr auto a09 = Replace<a08, "Langulus::", "">();
          constexpr auto a10 = Replace<a08, "(__cdecl *)", "">();
 
          // These types are stringified differently on some compilers   

@@ -127,8 +127,10 @@ namespace
    ::std::string NormalizeTypenameAtRuntime(const ::std::string& SRC) {
       #if LANGULUS_COMPILER(MSVC)
          ::std::string a00 = ReplaceAtRuntime(SRC, "`anonymous-namespace'::", "");
-      #else
+      #elif LANGULUS_COMPILER(CLANG)
          ::std::string a00 = ReplaceAtRuntime(SRC, "(anonymous namespace)::", "");
+      #else
+         ::std::string a00 = ReplaceAtRuntime(SRC, "{anonymous}::", "");
       #endif
 
       ::std::string a01 = ReplaceAtRuntime(a00, " *", "*");
@@ -139,7 +141,6 @@ namespace
       ::std::string a06 = ReplaceAtRuntime(a05, "class ", "");
       ::std::string a07 = ReplaceAtRuntime(a06, "struct ", "");
       ::std::string a08 = ReplaceAtRuntime(a07, "enum ", "");
-      //::std::string a09 = ReplaceAtRuntime(a08, "Langulus::", "");
       ::std::string a10 = ReplaceAtRuntime(a08, "(__cdecl *)", "");
 
       ::std::string a12 = ReplaceAtRuntime(a10, IsolateTypenameAtRuntime<uint8_t,  false>(), "uint8" );
