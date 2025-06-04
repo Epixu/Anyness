@@ -142,17 +142,8 @@ namespace Langulus::RTTI
          constexpr auto calibration_name = 
             WrappedEnumName<Oddly_Specific_EnumASDOLSAJDPAFHOAF>();
 
-         #if LANGULUS_COMPILER(GCC)
-            // Most compilers include the namespaces. GCC14 in          
-            // particular decided not to...                             
-            // But prepends `<unnamed>::` for unnamed enums             
-            constexpr size_t start = calibration_name.find(
-               "Langulus::RTTI::Inner::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
-         #else
-            constexpr size_t start = calibration_name.find(
-               "Langulus::RTTI::Inner::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
-         #endif
-
+         constexpr size_t start = calibration_name.find(
+            "Langulus::RTTI::Inner::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
          static_assert(start != calibration_name.npos, "Bad NameOf adaptation");
          return start;
       }
@@ -164,12 +155,7 @@ namespace Langulus::RTTI
          constexpr auto calibration_name = 
             WrappedEnumName<Oddly_Specific_EnumASDOLSAJDPAFHOAF>();
          constexpr size_t start = CalculateEnumLeftOffset();
-
-         #if LANGULUS_COMPILER(GCC)
-            return calibration_name.size() - start - 46;
-         #else
-            return calibration_name.size() - start - 58;
-         #endif
+         return calibration_name.size() - start - 58;
       }
 
       constexpr size_t CalibratedTypeLeftOffset  = CalculateTypeLeftOffset();
