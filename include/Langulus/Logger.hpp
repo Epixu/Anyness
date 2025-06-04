@@ -205,29 +205,34 @@ namespace Langulus::Logger
    /// A general new-line write function that continues the last intent/style 
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void LineRaw(T&&...arguments) noexcept {
-      if (not ::std::is_constant_evaluated()) {
-         Detail::FmtWrite("\n            ");
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+      if constexpr (TOGGLE) {
+         if (not ::std::is_constant_evaluated()) {
+            Detail::FmtWrite("\n            ");
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       }
    }
 
    /// A general same-line write function that continues the last style/intent
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void AppendRaw(T&&...arguments) noexcept {
-      if (not ::std::is_constant_evaluated()) {
-         (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+      if constexpr (TOGGLE) {
+         if (not ::std::is_constant_evaluated()) {
+            (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
+         }
       }
    }
 
    /// Write a new-line fatal error                                           
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void FatalRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
          LANGULUS(NOOP);
       #else
@@ -240,13 +245,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line error                                                 
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void ErrorRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
          LANGULUS(NOOP);
       #else
@@ -259,13 +266,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line warning                                               
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void WarningRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
          LANGULUS(NOOP);
       #else
@@ -278,13 +287,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line with verbose information                              
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void VerboseRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
          LANGULUS(NOOP);
       #else
@@ -297,13 +308,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line with information                                      
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void InfoRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_INFOS
          LANGULUS(NOOP);
       #else
@@ -316,13 +329,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line with a personal message                               
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void MessageRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
          LANGULUS(NOOP);
       #else
@@ -335,13 +350,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line with special text                                     
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void SpecialRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
          LANGULUS(NOOP);
       #else
@@ -354,13 +371,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line with flow information                                 
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void FlowRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
          LANGULUS(NOOP);
       #else
@@ -373,13 +392,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line on user input                                         
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void InputRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
          LANGULUS(NOOP);
       #else
@@ -392,13 +413,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line with network message                                  
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void NetworkRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
          LANGULUS(NOOP);
       #else
@@ -411,13 +434,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line with a message from OS                                
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void OSRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_OS
          LANGULUS(NOOP);
       #else
@@ -430,13 +455,15 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
    /// Write a new-line with an input prompt                                  
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
-   template<class...T> LANGULUS(INLINED)
+   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void PromptRaw([[maybe_unused]] T&&...arguments) noexcept {
+      if constexpr (TOGGLE) {
       #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
          LANGULUS(NOOP);
       #else
@@ -449,6 +476,7 @@ namespace Langulus::Logger
             (Detail::FmtWrite(::std::forward<T>(arguments)), ...);
          }
       #endif
+      }
    }
 
 } // namespace Langulus::Logger

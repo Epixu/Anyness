@@ -371,32 +371,6 @@ namespace Langulus::RTTI
          return a19;
       }
       
-      /// Get the normalized name of a type                                   
-      ///   @return the normalized token for T at compile-time                
-      template<class T>
-      consteval auto NameOfType() {
-         return IsolateTypename<T>();
-      }
-      
-      /// Get the normalized name of a constant                               
-      ///   @return the normalized token for T at compile-time                
-      template<auto T>
-      consteval auto NameOfConstant() {
-         return IsolateConstant<T>();
-
-         /*constexpr auto name = IsolateConstant<T>();
-         constexpr auto lastNamespace = name.find_last_of(':');
-         if constexpr (lastNamespace != name.npos) {
-            constexpr auto lastEnumName = name.template substr<lastNamespace>();
-            constexpr auto typeName = NameOfType<decltype(T)>();
-            return typeName + "::" + lastEnumName;
-         }
-         else {
-            constexpr auto typeName = NameOfType<decltype(T)>();
-            return typeName + "::" + name;
-         }*/
-      }
-
       /// Get the last, most relevant part of a token that may or may not     
       /// have namespaces in it. Essentially finds last "::" that isn't       
       /// enclosed in a <template>, and skip forward to that                  
@@ -439,28 +413,28 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<class T>
    consteval auto CppNameOf() {
-      return RTTI::Inner::NameOfType<T>();
+      return RTTI::Inner::IsolateTypename<T>();
    }
    
-   /// Same as NameOf, but removes all namespaces at compile-time             
-   ///   @tparam T - the type to get the name of                              
-   ///   @return a compile-time string                                        
-   template<class T>
-   consteval auto LastCppNameOf() {
-      // Find the last ':' symbol, that is not inside <...> scope       
-      auto fullName = RTTI::Inner::NameOfType<T>();
-      auto lastName = RTTI::Inner::FindLastToken(fullName);
-      return fullName.substr(lastName);
-   }
-
    /// Get the name of an enum value at compile-time                          
    ///   @tparam E - the constant to get the name of                          
    ///   @return a compile-time string                                        
    template<auto E>
    consteval auto CppNameOf() {
-      return RTTI::Inner::NameOfConstant<E>();
+      return RTTI::Inner::IsolateConstant<E>();
    }
    
+
+   /// Same as CppNameOf, but removes all namespaces at compile-time          
+   ///   @tparam T - the type to get the name of                              
+   ///   @return a compile-time string                                        
+   template<class T>
+   consteval auto LastCppNameOf() {
+      // Find the last ':' symbol, that is not inside <...> scope       
+      auto fullName = RTTI::Inner::IsolateTypename<T>();
+      auto lastName = RTTI::Inner::FindLastToken(fullName);
+      return fullName.substr(lastName);
+   }
 
    /// Same as CppNameOf, but removes all namespaces at compile-time          
    ///   @tparam T - the enum to get the name of                              
@@ -468,10 +442,11 @@ namespace Langulus
    template<auto E>
    consteval auto LastCppNameOf() {
       // Find the last ':' symbol, that is not inside <...> scope       
-      auto fullName = RTTI::Inner::NameOfConstant<E>();
+      auto fullName = RTTI::Inner::IsolateConstant<E>();
       auto lastName = RTTI::Inner::FindLastToken(fullName);
       return fullName.substr(lastName);
    }
+
 
    /// Get the name of a type at compile-time                                 
    /// Considers CTTI::Named, or fallbacks to the C++ name                    
@@ -486,10 +461,10 @@ namespace Langulus
    template<class T>
    consteval auto NameOf() {
       if constexpr (CT::Named<T>) {
-         if constexpr (CTTI::Named<T>::Value)
+         if constexpr (CTTI::Named<T>::Enabled)
             // Checked externally, T doesn't have to be complete        
             return CTTI::Named<T>::Name;
-         else if constexpr (requires { T::CTTI_Named::Value; })
+         else if constexpr (requires { T::CTTI_Named::Constant; })
             // Checked internally, T has to be complete                 
             return T::CTTI_Named::Constant;
          else
@@ -500,8 +475,8 @@ namespace Langulus
    
    /// Get the name of an enum value at compile-time                          
    ///   @attention similarly named values in anonymous namespaces will result
-   ///      in the same name. If this is not desired, specialize CTTI::Named  
-   ///      for each translation unit they appear in manually                 
+   ///      in the same name. If this is not desired, specialize              
+   ///      CTTI::NamedValue for each translation unit they appear in         
    ///   @tparam E - the value to get the name of                             
    ///   @return a compile-time string                                        
    template<auto E>
