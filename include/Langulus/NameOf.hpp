@@ -147,7 +147,7 @@ namespace Langulus::RTTI
             // particular decided not to...                             
             // But prepends `<unnamed>::` for unnamed enums             
             constexpr size_t start = calibration_name.find(
-               "Langulus::RTTI::Inner::<unnamed>::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
+               "Langulus::RTTI::Inner::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
          #else
             constexpr size_t start = calibration_name.find(
                "Langulus::RTTI::Inner::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
