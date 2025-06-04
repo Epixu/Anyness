@@ -20,3 +20,12 @@
 #endif
 
 #include <catch2/catch.hpp>
+
+#define BOOL_TYPES            bool
+#define CHARACTER_TYPES       char, wchar_t, char8_t, char16_t, char32_t
+#define UNSIGNED_TYPES        uint8_t, uint16_t, uint32_t, uint64_t
+#define REAL_TYPES            float, double
+#define SIGNED_INTEGER_TYPES  int8_t, int16_t, int32_t, int64_t
+#define INTEGER_TYPES         UNSIGNED_TYPES, SIGNED_INTEGER_TYPES
+#define SIGNED_TYPES          SIGNED_INTEGER_TYPES, REAL_TYPES
+#define ALL_TYPES             UNSIGNED_TYPES, SIGNED_TYPES, CHARACTER_TYPES, BOOL_TYPES

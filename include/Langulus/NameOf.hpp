@@ -10,6 +10,69 @@
 #include "CT/Named.hpp"
 
 
+namespace Langulus::CTTI
+{
+
+   ///                                                                        
+   /// The following are some manual overrides that make stuff consistent     
+   /// across different compilers                                             
+   ///                                                                        
+   template<>
+   struct Named<::std::nullptr_t> {
+      static constexpr Literal Name = "null";
+      static constexpr bool Enabled = true;
+   };
+
+   template<>
+   struct Named<int8_t> {
+      static constexpr Literal Name = "int8";
+      static constexpr bool Enabled = true;
+   };
+
+   template<>
+   struct Named<int16_t> {
+      static constexpr Literal Name = "int16";
+      static constexpr bool Enabled = true;
+   };
+
+   template<>
+   struct Named<int32_t> {
+      static constexpr Literal Name = "int32";
+      static constexpr bool Enabled = true;
+   };
+
+   template<>
+   struct Named<int64_t> {
+      static constexpr Literal Name = "int64";
+      static constexpr bool Enabled = true;
+   };
+
+   template<>
+   struct Named<uint8_t> {
+      static constexpr Literal Name = "uint8";
+      static constexpr bool Enabled = true;
+   };
+
+   template<>
+   struct Named<uint16_t> {
+      static constexpr Literal Name = "uint16";
+      static constexpr bool Enabled = true;
+   };
+
+   template<>
+   struct Named<uint32_t> {
+      static constexpr Literal Name = "uint32";
+      static constexpr bool Enabled = true;
+   };
+
+   template<>
+   struct Named<uint64_t> {
+      static constexpr Literal Name = "uint64";
+      static constexpr bool Enabled = true;
+   };
+
+} // namespace Langulus::CTTI
+
 namespace Langulus::RTTI
 {
 
@@ -170,13 +233,15 @@ namespace Langulus::RTTI
       ///   @tparam T - the typename to isolate                               
       ///   @tparam NORMALIZE - whether or not to normalize the typename to   
       ///      Langulus specification                                         
-      ///   @return the type name                                             
+      ///   @return a compile-time string                                     
       template<class T, bool NORMALIZE = true>
       consteval auto IsolateTypename() {
+         if constexpr (NORMALIZE and CTTI::Named<T>::Enabled)
+            return CTTI::Named<T>::Name;
          // Move `const` next to pointers/references at the end of type 
          // Discards `volatile` - it shouldn't matter outside compiler  
          // Helps with better sorting reflected types                   
-         if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
+         else if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
             auto deptr = IsolateTypename<Decvq<T>, NORMALIZE>();
             if constexpr (not ::std::is_const_v<T>)
                return deptr;
@@ -197,6 +262,8 @@ namespace Langulus::RTTI
             else
                return deptr + " const*";
          }
+         else if constexpr (NORMALIZE and requires { T::CTTI_Named::Constant; })
+            return T::CTTI_Named::Constant;
          else {
             constexpr auto name = WrappedTypeName<T>();
             constexpr size_t size = name.size();
@@ -222,17 +289,27 @@ namespace Langulus::RTTI
       }
 
       /// Skip all decorations in front and back of a WrappedEnumName         
-      ///   @return the enum name                                             
-      template<auto T>
+      ///   @tparam T - the constant to isolate                               
+      ///   @tparam NORMALIZE - whether or not to normalize the constant to   
+      ///      Langulus specification                                         
+      ///   @return a compile-time string                                     
+      template<auto T, bool NORMALIZE = true>
       consteval auto IsolateConstant() {
-         constexpr auto name  = WrappedEnumName<T>();
-         constexpr auto size  = name.size();
-         constexpr auto left  = CalibratedEnumLeftOffset;
-         constexpr auto right = CalibratedEnumRightOffset;
-         static_assert(size > left + right, "Invalid enum name");
+         if constexpr (NORMALIZE and CT::NamedValue<T>)
+            return CTTI::NamedValue<T>::Name;
+         else {
+            constexpr auto name = WrappedEnumName<T>();
+            constexpr auto size = name.size();
+            constexpr auto left = CalibratedEnumLeftOffset;
+            constexpr auto right = CalibratedEnumRightOffset;
+            static_assert(size > left + right, "Invalid enum name");
 
-         constexpr auto isolated = name.template substr<left, size - right - left>();
-         return Normalize<isolated>();
+            constexpr auto isolated = name.template substr<left, size - right - left>();
+            if constexpr (NORMALIZE)
+               return Normalize<isolated>();
+            else
+               return isolated;
+         }
       }
 
       /// Check if a token transition happens at the beginning and the end of 
@@ -402,6 +479,7 @@ namespace Langulus::RTTI
       }
 
    } // namespace Langulus::RTTI::Inner
+
 } // namespace Langulus::RTTI
 
 namespace Langulus
@@ -413,7 +491,7 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<class T>
    consteval auto CppNameOf() {
-      return RTTI::Inner::IsolateTypename<T>();
+      return RTTI::Inner::IsolateTypename<T, false>();
    }
    
    /// Get the name of an enum value at compile-time                          
@@ -421,7 +499,7 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<auto E>
    consteval auto CppNameOf() {
-      return RTTI::Inner::IsolateConstant<E>();
+      return RTTI::Inner::IsolateConstant<E, false>();
    }
    
 
@@ -431,7 +509,7 @@ namespace Langulus
    template<class T>
    consteval auto LastCppNameOf() {
       // Find the last ':' symbol, that is not inside <...> scope       
-      auto fullName = RTTI::Inner::IsolateTypename<T>();
+      auto fullName = RTTI::Inner::IsolateTypename<T, false>();
       auto lastName = RTTI::Inner::FindLastToken(fullName);
       return fullName.substr(lastName);
    }
@@ -442,7 +520,7 @@ namespace Langulus
    template<auto E>
    consteval auto LastCppNameOf() {
       // Find the last ':' symbol, that is not inside <...> scope       
-      auto fullName = RTTI::Inner::IsolateConstant<E>();
+      auto fullName = RTTI::Inner::IsolateConstant<E, false>();
       auto lastName = RTTI::Inner::FindLastToken(fullName);
       return fullName.substr(lastName);
    }
@@ -460,17 +538,7 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<class T>
    consteval auto NameOf() {
-      if constexpr (CT::Named<T>) {
-         if constexpr (CTTI::Named<T>::Enabled)
-            // Checked externally, T doesn't have to be complete        
-            return CTTI::Named<T>::Name;
-         else if constexpr (requires { T::CTTI_Named::Constant; })
-            // Checked internally, T has to be complete                 
-            return T::CTTI_Named::Constant;
-         else
-            static_assert(false, "Type improperly named");
-      }
-      else return CppNameOf<T>();
+      return RTTI::Inner::IsolateTypename<T>();
    }
    
    /// Get the name of an enum value at compile-time                          
@@ -481,10 +549,7 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<auto E>
    consteval auto NameOf() {
-      if constexpr (CT::NamedValue<E>)
-         return CTTI::NamedValue<E>::Name;
-      else
-         return CppNameOf<E>();
+      return RTTI::Inner::IsolateConstant<E>();
    }
 
 } // namespace Langulus

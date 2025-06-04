@@ -1,5 +1,5 @@
 ///                                                                           
-/// Langulus::RTTI                                                            
+/// Langulus::Core                                                            
 /// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
 /// Part of the Langulus framework, see https://langulus.com                  
 ///                                                                           
@@ -17,12 +17,28 @@
 namespace Langulus
 {
    
-   /// Type that holds a hash - size depends on architecture                  
+   ///                                                                        
+   /// Type that holds a hash                                                 
+   /// Size is configurable using LANGULUS_HASH64 or LANGULUS_HASH32 defines  
+   ///                                                                        
+   ///   @attention missing hash always has value of 0, and a hashing function
+   ///      is very unlikely to ever result in a zero hash, so we can easily  
+   ///      detect whether a hash has been generated or not. There's however  
+   ///      a very very very small chance, that a hash will end up being      
+   ///      constantly regenerated, if it ends up as 0 after hashing          
+   ///   @attention hashing a single hash always returns the hash itself      
+   ///                                                                        
    struct Hash {
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
-      ::std::size_t mHash = 0;
+      #if not defined(LANGULUS_HASH64)
+         uint32_t mHash = 0;
+      #elif defined(LANGULUS_HASH64) and not defined(LANGULUS_HASH32)
+         uint64_t mHash = 0;
+      #else
+         #error Conflicting hash type definitions
+      #endif
 
       LANGULUS(ALWAYS_INLINED)
       explicit constexpr operator bool() const noexcept {
@@ -33,459 +49,102 @@ namespace Langulus
    };
 
    /// Default hash seed used in Langulus                                     
-   constexpr uint32_t DefaultHashSeed = 19890212;
+   constexpr Hash DefaultHashSeed {19890212};
 
    namespace Inner
    {
 
       /// MurmurHash3 was written by Austin Appleby, and is placed in the     
       /// public domain                                                       
-      /// https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp
-      /// Note - The x86 and x64 versions do _not_ produce the same results,  
+      ///                                                                     
+      /// Note1 - The x86 and x64 versions do _not_ produce the same results, 
       /// as the algorithms are optimized for their respective platforms.     
       /// You can still compile and run any of them on any platform, but your 
       /// performance with the non-native version will be less than optimal.  
+      ///                                                                     
+      /// Note2 - These are constexpr-friendly versions, made by Tamás Szelei 
+      /// and slightly modified by me                                         
+      /// https://github.com/sztomi/constexpr_murmurhash                      
+      class str_view {
+      public:
+         template <std::size_t N>
+         constexpr str_view(const char(&a)[N])
+            : p(a), sz(N - 1) {}
 
-      /// Block read - if your platform needs to do endian-swapping or can    
-      /// only handle aligned reads, do the conversion here                   
-      LANGULUS(INLINED)
-      uint32_t getblock32(const uint32_t* p, int i) {
-         return p[i];
-      }
+         constexpr char operator[](std::size_t n) const {
+            return n < sz ? p[n] : throw std::out_of_range("");
+         }
 
-      LANGULUS(INLINED)
-      uint64_t getblock64(const uint64_t* p, int i) {
-         return p[i];
-      }
+         constexpr uint32_t get_block(int idx) {
+            int i = (block_size() + idx) * 4;
+            uint32_t b0 = p[i];
+            uint32_t b1 = p[i + 1];
+            uint32_t b2 = p[i + 2];
+            uint32_t b3 = p[i + 3];
+            return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
+         }
 
-      /// Finalization mix - force all bits of a hash block to avalanche      
-      LANGULUS(INLINED)
-      uint32_t fmix32(uint32_t h) {
-         h ^= h >> 16;
-         h *= uint32_t {0x85ebca6b};
-         h ^= h >> 13;
-         h *= uint32_t {0xc2b2ae35};
-         h ^= h >> 16;
-         return h;
-      }
+         constexpr std::size_t size() const { return sz; }
 
-      LANGULUS(INLINED)
-      uint64_t fmix64(uint64_t k) {
-         k ^= k >> 33;
-         k *= uint64_t {0xff51afd7ed558ccd};
-         k ^= k >> 33;
-         k *= uint64_t {0xc4ceb9fe1a85ec53};
-         k ^= k >> 33;
-         return k;
-      }
+         constexpr std::size_t block_size() const { return sz / 4; }
 
-      /// 32-bit hasher optimized for x86                                     
-      ///   @attention key memory must be aligned to 4 bytes                  
-      ///   @tparam TAIL - set to true, if length is not aligned to 4 bytes   
-      ///   @tparam SEED - the seed for the hash algorithm                    
-      ///   @param key - the memory to hash                                   
-      ///   @param len - the number of bytes in the key                       
-      ///   @param out - [out] the hash goes here (must be 4 bytes)           
-      template<bool TAIL = true, uint32_t SEED = DefaultHashSeed>
-      void MurmurHash3_x86_32(const void* key, int len, void* out) {
-         auto data = (const uint8_t*) key;
-         const int nblocks = len / 4;
-         uint32_t h1 = SEED;
-         const uint32_t c1 {0xcc9e2d51};
-         const uint32_t c2 {0x1b873593};
-         
-         // Body                                                        
-         auto blocks = (const uint32_t*) (data + nblocks * 4);
+         constexpr char tail(const int n) const {
+            int tail_size = sz % 4;
+            return p[sz - tail_size + n];
+         }
+
+      private:
+         const char* p;
+         std::size_t sz;
+      };
+
+      constexpr uint32_t mm3_x86_32(str_view key, uint32_t seed) {
+         uint32_t h1 = seed;
+
+         const uint32_t c1 = 0xcc9e2d51;
+         const uint32_t c2 = 0x1b873593;
+
+         const int nblocks = key.size() / 4;
          for (int i = -nblocks; i; i++) {
-            auto k1 = getblock32(blocks, i);
+            uint32_t k1 = key.get_block(i);
 
             k1 *= c1;
-            k1 = ::std::rotl(k1, 15);
+            k1 = (k1 << 15) | (k1 >> (32 - 15));
             k1 *= c2;
 
             h1 ^= k1;
-            h1 = ::std::rotl(h1, 13);
+            h1 = (h1 << 13) | (h1 >> (32 - 13));
             h1 = h1 * 5 + 0xe6546b64;
          }
 
-         // Tail                                                        
-         if constexpr (TAIL) {
-            auto tail = (const uint8_t*) (data + nblocks * 4);
-            uint32_t k1 = 0;
-            switch (len & 3) {
-            case 3:
-               k1 ^= tail[2] << 16;
-               [[fallthrough]];
-            case 2:
-               k1 ^= tail[1] << 8;
-               [[fallthrough]];
-            case 1:
-               k1 ^= tail[0];
-               k1 *= c1;
-               k1 = ::std::rotl(k1, 15);
-               k1 *= c2;
-               h1 ^= k1;
-            };
-         }
+         uint32_t k1 = 0;
 
-         // Finalization                                                
-         h1 ^= len;
-         h1 = fmix32(h1);
-         *(uint32_t*) out = h1;
-      }
-
-      /// 128-bit hasher optimized for x86                                    
-      ///   @attention key memory must be aligned to 16 bytes                 
-      ///   @tparam TAIL - set to true, if length is not aligned to 16 bytes  
-      ///   @tparam SEED - the seed for the hash algorithm                    
-      ///   @param key - the memory to hash                                   
-      ///   @param len - the number of bytes in the key                       
-      ///   @param out - [out] the hash goes here (must be 16 bytes)          
-      template<bool TAIL = true, uint32_t SEED = DefaultHashSeed>
-      void MurmurHash3_x86_128(const void* key, const int len, void* out) {
-         auto data = (const uint8_t*) key;
-         const int nblocks = len / 16;
-
-         uint32_t h1 = SEED;
-         uint32_t h2 = SEED;
-         uint32_t h3 = SEED;
-         uint32_t h4 = SEED;
-
-         const uint32_t c1 {0x239b961b};
-         const uint32_t c2 {0xab0e9789};
-         const uint32_t c3 {0x38b34ae5};
-         const uint32_t c4 {0xa1e38b93};
-
-         // Body                                                        
-         auto blocks = (const uint32_t*) (data + nblocks * 16);
-         for (int i = -nblocks; i; i++) {
-            auto k1 = getblock32(blocks, i * 4 + 0);
-            auto k2 = getblock32(blocks, i * 4 + 1);
-            auto k3 = getblock32(blocks, i * 4 + 2);
-            auto k4 = getblock32(blocks, i * 4 + 3);
-
-            k1 *= c1; 
-            k1 = ::std::rotl(k1, 15);
-            k1 *= c2; 
-            h1 ^= k1;
-
-            h1 = ::std::rotl(h1, 19);
-            h1 += h2;
-            h1 = h1 * 5 + 0x561ccd1b;
-
-            k2 *= c2;
-            k2 = ::std::rotl(k2, 16);
-            k2 *= c3;
-            h2 ^= k2;
-
-            h2 = ::std::rotl(h2, 17);
-            h2 += h3;
-            h2 = h2 * 5 + 0x0bcaa747;
-
-            k3 *= c3;
-            k3 = ::std::rotl(k3, 17);
-            k3 *= c4;
-            h3 ^= k3;
-
-            h3 = ::std::rotl(h3, 15);
-            h3 += h4;
-            h3 = h3 * 5 + 0x96cd1c35;
-
-            k4 *= c4;
-            k4 = ::std::rotl(k4, 18);
-            k4 *= c1;
-            h4 ^= k4;
-
-            h4 = ::std::rotl(h4, 13);
-            h4 += h1;
-            h4 = h4 * 5 + 0x32ac3b17;
-         }
-
-         // Tail                                                        
-         if constexpr (TAIL) {
-            auto tail = (const uint8_t*) (data + nblocks * 16);
-
-            uint32_t k1 = 0;
-            uint32_t k2 = 0;
-            uint32_t k3 = 0;
-            uint32_t k4 = 0;
-
-            switch (len & 15) {
-            case 15:
-               k4 ^= tail[14] << 16;
-               [[fallthrough]];
-            case 14:
-               k4 ^= tail[13] << 8;
-               [[fallthrough]];
-            case 13:
-               k4 ^= tail[12] << 0;
-               k4 *= c4;
-               k4 = ::std::rotl(k4, 18);
-               k4 *= c1;
-               h4 ^= k4;
-               [[fallthrough]];
-            case 12:
-               k3 ^= tail[11] << 24;
-               [[fallthrough]];
-            case 11:
-               k3 ^= tail[10] << 16;
-               [[fallthrough]];
-            case 10:
-               k3 ^= tail[9] << 8;
-               [[fallthrough]];
-            case  9:
-               k3 ^= tail[8] << 0;
-               k3 *= c3;
-               k3 = ::std::rotl(k3, 17);
-               k3 *= c4;
-               h3 ^= k3;
-               [[fallthrough]];
-            case  8:
-               k2 ^= tail[7] << 24;
-               [[fallthrough]];
-            case  7:
-               k2 ^= tail[6] << 16;
-               [[fallthrough]];
-            case  6:
-               k2 ^= tail[5] << 8;
-               [[fallthrough]];
-            case  5:
-               k2 ^= tail[4] << 0;
-               k2 *= c2;
-               k2 = ::std::rotl(k2, 16);
-               k2 *= c3;
-               h2 ^= k2;
-               [[fallthrough]];
-            case  4:
-               k1 ^= tail[3] << 24;
-               [[fallthrough]];
-            case  3:
-               k1 ^= tail[2] << 16;
-               [[fallthrough]];
-            case  2:
-               k1 ^= tail[1] << 8;
-               [[fallthrough]];
-            case  1:
-               k1 ^= tail[0] << 0;
-               k1 *= c1;
-               k1 = ::std::rotl(k1, 15);
-               k1 *= c2;
-               h1 ^= k1;
-            };
-         }
-
-         // Finalization                                                
-         h1 ^= len;
-         h2 ^= len;
-         h3 ^= len;
-         h4 ^= len;
-
-         h1 += h2;
-         h1 += h3;
-         h1 += h4;
-         h2 += h1;
-         h3 += h1;
-         h4 += h1;
-
-         h1 = fmix32(h1);
-         h2 = fmix32(h2);
-         h3 = fmix32(h3);
-         h4 = fmix32(h4);
-
-         h1 += h2;
-         h1 += h3;
-         h1 += h4;
-         h2 += h1;
-         h3 += h1;
-         h4 += h1;
-
-         ((uint32_t*) out)[0] = h1;
-         ((uint32_t*) out)[1] = h2;
-         ((uint32_t*) out)[2] = h3;
-         ((uint32_t*) out)[3] = h4;
-      }
-
-      /// 64-bit hasher optimized for x86                                     
-      ///   @attention key memory must be aligned to 8 bytes                  
-      ///   @tparam TAIL - set to true, if length is not aligned to 8 bytes   
-      ///   @tparam SEED - the seed for the hash algorithm                    
-      ///   @param key - the memory to hash                                   
-      ///   @param len - the number of bytes in the key                       
-      ///   @param out - [out] the hash goes here (must be 8 bytes)           
-      template<bool TAIL = true, uint32_t SEED = DefaultHashSeed>
-      void MurmurHash2_x64_64(const void* key, int len, void* out) {
-         const uint64_t m {0xc6a4a7935bd1e995};
-         const int r = 47;
-         uint64_t h = uint64_t {SEED} ^ (len * m);
-         auto data = (const uint64_t*) key;
-         auto end  = data + (len / 8);
-
-         while (data != end) {
-            uint64_t k = *data++;
-
-            k *= m;
-            k ^= k >> r;
-            k *= m;
-
-            h ^= k;
-            h *= m;
-         }
-
-         if constexpr (TAIL) {
-            auto data2 = (const unsigned char*) data;
-            switch (len & 7) {
-            case 7:
-               h ^= uint64_t(data2[6]) << 48;
-               [[fallthrough]];
-            case 6:
-               h ^= uint64_t(data2[5]) << 40;
-               [[fallthrough]];
-            case 5:
-               h ^= uint64_t(data2[4]) << 32;
-               [[fallthrough]];
-            case 4:
-               h ^= uint64_t(data2[3]) << 24;
-               [[fallthrough]];
-            case 3:
-               h ^= uint64_t(data2[2]) << 16;
-               [[fallthrough]];
-            case 2:
-               h ^= uint64_t(data2[1]) << 8;
-               [[fallthrough]];
-            case 1:
-               h ^= uint64_t(data2[0]);
-               h *= m;
-            };
-         }
-
-         h ^= h >> r;
-         h *= m;
-         h ^= h >> r;
-         *(uint64_t*) out = h;
-      }
-
-      /// 128-bit hasher optimized for x64                                    
-      ///   @attention key memory must be aligned to 16 bytes                 
-      ///   @tparam TAIL - set to true, if length is not aligned to 16 bytes  
-      ///   @tparam SEED - the seed for the hash algorithm                    
-      ///   @param key - the memory to hash                                   
-      ///   @param len - the number of bytes in the key                       
-      ///   @param out - [out] the hash goes here (must be 16 bytes)          
-      template<bool TAIL = true, uint32_t SEED = DefaultHashSeed>
-      void MurmurHash3_x64_128(const void* key, const int len, void* out) {
-         auto data = (const uint8_t*) key;
-         const int nblocks = len / 16;
-
-         uint64_t h1 = SEED;
-         uint64_t h2 = SEED;
-
-         const uint64_t c1 {0x87c37b91114253d5};
-         const uint64_t c2 {0x4cf5ad432745937f};
-
-         // Body                                                        
-         auto blocks = (const uint64_t*) (data);
-         for (int i = 0; i < nblocks; i++) {
-            auto k1 = getblock64(blocks, i * 2 + 0);
-            auto k2 = getblock64(blocks, i * 2 + 1);
-
+         switch (key.size() & 3) {
+         case 3:
+            k1 ^= key.tail(2) << 16;
+         case 2:
+            k1 ^= key.tail(1) << 8;
+         case 1:
+            k1 ^= key.tail(0);
             k1 *= c1;
-            k1 = ::std::rotl(k1, 31);
+            k1 = (k1 << 15) | (k1 >> (32 - 15));
             k1 *= c2;
             h1 ^= k1;
+         };
 
-            h1 = ::std::rotl(h1, 27);
-            h1 += h2;
-            h1 = h1 * 5 + 0x52dce729;
+         h1 ^= key.size();
 
-            k2 *= c2;
-            k2 = ::std::rotl(k2, 33);
-            k2 *= c1;
-            h2 ^= k2;
+         h1 ^= h1 >> 16;
+         h1 *= 0x85ebca6b;
+         h1 ^= h1 >> 13;
+         h1 *= 0xc2b2ae35;
+         h1 ^= h1 >> 16;
 
-            h2 = ::std::rotl(h2, 31);
-            h2 += h1;
-            h2 = h2 * 5 + 0x38495ab5;
-         }
-
-         // Tail                                                        
-         if constexpr (TAIL) {
-            auto tail = (const uint8_t*) (data + nblocks * 16);
-            uint64_t k1 = 0;
-            uint64_t k2 = 0;
-
-            switch (len & 15) {
-            case 15:
-               k2 ^= ((uint64_t) tail[14]) << 48;
-               [[fallthrough]];
-            case 14:
-               k2 ^= ((uint64_t) tail[13]) << 40;
-               [[fallthrough]];
-            case 13:
-               k2 ^= ((uint64_t) tail[12]) << 32;
-               [[fallthrough]];
-            case 12:
-               k2 ^= ((uint64_t) tail[11]) << 24;
-               [[fallthrough]];
-            case 11:
-               k2 ^= ((uint64_t) tail[10]) << 16;
-               [[fallthrough]];
-            case 10:
-               k2 ^= ((uint64_t) tail[9]) << 8;
-               [[fallthrough]];
-            case  9:
-               k2 ^= ((uint64_t) tail[8]) << 0;
-               k2 *= c2;
-               k2 = ::std::rotl(k2, 33);
-               k2 *= c1;
-               h2 ^= k2;
-               [[fallthrough]];
-            case  8:
-               k1 ^= ((uint64_t) tail[7]) << 56;
-               [[fallthrough]];
-            case  7:
-               k1 ^= ((uint64_t) tail[6]) << 48;
-               [[fallthrough]];
-            case  6:
-               k1 ^= ((uint64_t) tail[5]) << 40;
-               [[fallthrough]];
-            case  5:
-               k1 ^= ((uint64_t) tail[4]) << 32;
-               [[fallthrough]];
-            case  4:
-               k1 ^= ((uint64_t) tail[3]) << 24;
-               [[fallthrough]];
-            case  3:
-               k1 ^= ((uint64_t) tail[2]) << 16;
-               [[fallthrough]];
-            case  2:
-               k1 ^= ((uint64_t) tail[1]) << 8;
-               [[fallthrough]];
-            case  1:
-               k1 ^= ((uint64_t) tail[0]) << 0;
-               k1 *= c1;
-               k1 = ::std::rotl(k1, 31);
-               k1 *= c2;
-               h1 ^= k1;
-            };
-         }
-
-         // Finalization                                                
-         h1 ^= len;
-         h2 ^= len;
-
-         h1 += h2;
-         h2 += h1;
-
-         h1 = fmix64(h1);
-         h2 = fmix64(h2);
-
-         h1 += h2;
-         h2 += h1;
-
-         ((uint64_t*) out)[0] = h1;
-         ((uint64_t*) out)[1] = h2;
+         return h1;
       }
-   }
+
+   } // namespace Langulus::Inner
+
 
    /// Hash a sequence of bytes                                               
    ///   @tparam SEED - the seed for the hash algorithm                       
@@ -493,7 +152,7 @@ namespace Langulus
    ///   @param ptr - memory start                                            
    ///   @param len - number of bytes to hash                                 
    ///   @return the hash                                                     
-   template<uint32_t SEED = DefaultHashSeed, bool TAIL = true>
+   template<Hash SEED = DefaultHashSeed, bool TAIL = true>
    constexpr Hash HashBytes(void const* ptr, int len) noexcept {
       Hash result;
       if constexpr (sizeof(Hash) == 4)
@@ -506,9 +165,6 @@ namespace Langulus
          static_assert(false, "Not implemented");
       return result;
    }
-
-   template<bool FAKE = false, uint32_t SEED = DefaultHashSeed, class T, class...MORE>
-   auto HashOf(const T&, const MORE&...);
 
    namespace CT
    {
@@ -529,7 +185,9 @@ namespace Langulus
       /// Check if T has a GetHash() method                                   
       /// It is always preferred when hashing data                            
       template<class...T>
-      concept HasStdHasher = requires (::std::hash<T>...h, T...a) { (h(a), ...); };
+      concept HasStdHasher = requires (::std::hash<T>...h, T...a) {
+         (h(a), ...);
+      };
 
    } // namespace Langulus::CT
 
@@ -541,8 +199,8 @@ namespace Langulus
    ///   @tparam SEED - the seed for the hash algorithm                       
    ///   @param head, rest... - the data to hash                              
    ///   @return the hash                                                     
-   template<bool FAKE, uint32_t SEED, class T, class...MORE>
-   auto HashOf(const T& head, const MORE&...rest) {
+   template<bool FAKE = false, Hash SEED = DefaultHashSeed, class T, class...MORE>
+   constexpr auto HashOf(const T& head, const MORE&...rest) {
       if constexpr (CT::Unsupported<T, MORE...>) {
          // If any of the types isn't supported abort the entire hash   
          return Unsupported {};
@@ -630,10 +288,8 @@ namespace Langulus
       }
       else {
          // Handle failure statically                                   
-         if constexpr (FAKE)
-            return Unsupported {};
-         else
-            static_assert(false, "Can't hash data");
+         static_assert(FAKE, "Can't hash data");
+         return Unsupported {};
       }
    }
 
@@ -642,7 +298,7 @@ namespace Langulus
 namespace std
 {
 
-   /// Extend std to capable of hashing anything with a GetHash method        
+   /// Extend std to be capable of hashing anything with a GetHash method     
    template<::Langulus::CT::HasGetHashMethod H>
    struct hash<H> {
       LANGULUS(INLINED)

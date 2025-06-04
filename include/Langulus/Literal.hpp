@@ -1,8 +1,14 @@
+///                                                                           
+/// Langulus::Core                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include <array>
 #include <functional>
 #include <iterator>
-//#include <ostream>
 #include <string_view>
 #include <type_traits>
 
@@ -511,15 +517,6 @@ namespace Langulus
    constexpr auto operator + (const CT::FixedString auto& lhs, CT::FixedChar auto rhs) {
       return lhs + Inner::from_char(rhs);
    }
-
-   /*template<class TChar, size_t N, class TTraits>
-   auto& operator << (
-      std::basic_ostream<TChar, TTraits>& out,
-      const Literal<TChar, N, TTraits>& str
-   ) {
-      out << str.data();
-      return out;
-   }*/
 
    /// Equivalent to Yes, but also carries a string literal                   
    template<Literal TEXT>

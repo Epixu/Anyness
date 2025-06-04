@@ -1,9 +1,9 @@
 ///                                                                           
-/// Langulus::Anyness                                                         
+/// Langulus::Core                                                            
 /// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
 /// Part of the Langulus framework, see https://langulus.com                  
 ///                                                                           
-/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+/// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/CTTI.hpp>

@@ -1,9 +1,9 @@
 ///                                                                           
-/// Langulus::Anyness                                                         
+/// Langulus::Core                                                            
 /// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
 /// Part of the Langulus framework, see https://langulus.com                  
 ///                                                                           
-/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+/// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/NameOf.hpp>
@@ -39,7 +39,7 @@ namespace Langulus::Flow
 namespace
 {
 
-   constexpr bool VERBOSE = true;
+   constexpr bool VERBOSE = false;
 
    struct NamedUsingMember {
       using CTTI_Named = YesText<"NameOverrideUsingMember">;
@@ -60,6 +60,19 @@ namespace
 
    enum {
       AnonymousNumber = 314
+   };
+
+   enum class PiButNamed {
+      Number = 314
+   };
+
+   enum PiNonClassButNamed {
+      NumberButNamed = 314
+   };
+
+   enum {
+      AnonymousNumberButNamed = 314,
+      AnonymousNumberButNotNamed = 315
    };
 
    struct IncompleteType;
@@ -182,8 +195,11 @@ namespace
 
    template<class T, bool NORMALIZE = true>
    ::std::string IsolateTypenameAtRuntime() {
-      if constexpr (CTTI::Named<T>::Enabled)
-         return CTTI::Named<T>::Name;
+      if constexpr (NORMALIZE and CTTI::Named<T>::Enabled) {
+         auto isolated = static_cast<::std::string>(CTTI::Named<T>::Name);
+         Logger::InfoRaw<VERBOSE>("Retrieved from CTTI::Named: ", isolated);
+         return isolated;
+      }
       else if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
          auto deptr = IsolateTypenameAtRuntime<Decvq<T>, NORMALIZE>();
          if constexpr (not ::std::is_const_v<T>)
@@ -205,8 +221,10 @@ namespace
          else
             return deptr + " const*";
       }
-      else if constexpr (requires { T::CTTI_Named::Constant; }) {
-         return T::CTTI_Named::Constant;
+      else if constexpr (NORMALIZE and requires { T::CTTI_Named::Constant; }) {
+         auto isolated = static_cast<::std::string>(T::CTTI_Named::Constant);
+         Logger::InfoRaw<VERBOSE>("Retrieved from CTTI_Named: ", isolated);
+         return isolated;
       }
       else {
          ::std::string name = static_cast<::std::string>(RTTI::Inner::WrappedTypeName<T>());
@@ -234,24 +252,36 @@ namespace
       }
    }
 
-   template<auto T>
+   template<auto T, bool NORMALIZE = true>
    ::std::string IsolateConstantAtRuntime() {
-      ::std::string name = static_cast<::std::string>(RTTI::Inner::WrappedEnumName<T>());
-      size_t size = name.size();
-      size_t left = RTTI::Inner::CalculateEnumLeftOffset();
-      size_t right = RTTI::Inner::CalculateEnumRightOffset();
-      REQUIRE(size > left + right);
-      ::std::string isolated = name.substr(left, size - right - left);
+      if constexpr (NORMALIZE and CT::NamedValue<T>) {
+         auto isolated = static_cast<::std::string>(CTTI::NamedValue<T>::Name);
+         Logger::InfoRaw<VERBOSE>("Retrieved from CTTI::NamedValue: ", isolated);
+         return isolated;
+      }
+      else {
+         ::std::string name = static_cast<::std::string>(RTTI::Inner::WrappedEnumName<T>());
+         size_t size = name.size();
+         size_t left = RTTI::Inner::CalculateEnumLeftOffset();
+         size_t right = RTTI::Inner::CalculateEnumRightOffset();
+         REQUIRE(size > left + right);
+         ::std::string isolated = name.substr(left, size - right - left);
 
-      Logger::InfoRaw<VERBOSE>("IsolateConstantAtRuntime: ", name, " -> ", isolated);
-      ::std::string normalized = NormalizeTypenameAtRuntime(isolated);
-      Logger::InfoRaw<VERBOSE>("Normalized constant: ", isolated, " -> ", normalized);
-      return normalized;
+         Logger::InfoRaw<VERBOSE>("IsolateConstantAtRuntime: ", name, " -> ", isolated);
+
+         if constexpr (NORMALIZE) {
+            ::std::string normalized = NormalizeTypenameAtRuntime(isolated);
+            Logger::InfoRaw<VERBOSE>("Normalized constant: ", isolated, " -> ", normalized);
+            return normalized;
+         }
+         else return isolated;
+      }
    }
 }
 
 namespace Langulus::CTTI
 {
+
    template<>
    struct Named<NamedBySpecialization> {
       static constexpr Literal Name = "NameOverridedBySpecializing_CTTI_Named";
@@ -272,23 +302,51 @@ namespace Langulus::CTTI
       static constexpr Literal Name = "<should be disabled>";
       static constexpr bool Enabled = false;
    };
-}
+
+   template<>
+   struct NamedValue<PiButNamed::Number> {
+      static constexpr Literal Name = "PiButNamedByCTTI";
+      static constexpr bool Enabled = true;
+   };
+   template<>
+   struct NamedValue<NumberButNamed> {
+      static constexpr Literal Name = "NumberButNamedByCTTI";
+      static constexpr bool Enabled = true;
+   };
+   template<>
+   struct NamedValue<AnonymousNumberButNamed> {
+      static constexpr Literal Name = "AnonymousNumberButNamedByCTTI";
+      static constexpr bool Enabled = true;
+   };
+   template<>
+   struct NamedValue<AnonymousNumberButNotNamed> {
+      static constexpr Literal Name = "<not actually named>";
+      static constexpr bool Enabled = false;
+   };
+
+} // namespace Langulus::CTTI
 
 
 #define DEFINE_NAMEOF_TYPE_TEST(WHAT, RESULT) \
    WHEN("Taken the name of type " #WHAT) { \
       auto name_runtime = IsolateTypenameAtRuntime<WHAT>(); \
       REQUIRE(name_runtime == RESULT); \
+      STATIC_REQUIRE(NameOf<WHAT>() == RESULT); \
    }
 
 #define DEFINE_NAMEOF_CONST_TEST(WHAT, RESULT) \
    WHEN("Taken the name of constat " #WHAT) { \
       auto name_runtime = IsolateConstantAtRuntime<WHAT>(); \
       REQUIRE(name_runtime == RESULT); \
+      STATIC_REQUIRE(NameOf<WHAT>() == RESULT); \
    }
-//      STATIC_REQUIRE(NameOf<WHAT>() == RESULT); \
+
 
 SCENARIO("NameOf", "[nameof]") {
+   DEFINE_NAMEOF_TYPE_TEST(void, "void")
+   DEFINE_NAMEOF_TYPE_TEST(std::nullptr_t, "null")
+   DEFINE_NAMEOF_TYPE_TEST(int32_t(&)[5], "int32[5]&")
+   DEFINE_NAMEOF_TYPE_TEST(int32_t[5], "int32[5]")
    DEFINE_NAMEOF_TYPE_TEST(uint16_t, "uint16")
    DEFINE_NAMEOF_TYPE_TEST(uint16_t&, "uint16&")
    DEFINE_NAMEOF_TYPE_TEST(const uint16_t, "uint16 const")
@@ -434,4 +492,9 @@ SCENARIO("NameOf", "[nameof]") {
    DEFINE_NAMEOF_TYPE_TEST(NamedBySpecialization*, "NameOverridedBySpecializing_CTTI_Named_Ptr")
    DEFINE_NAMEOF_TYPE_TEST(const NamedBySpecialization*, "NameOverridedBySpecializing_CTTI_Named_ConstPtr")
    DEFINE_NAMEOF_TYPE_TEST(const NamedBySpecialization**, "NameOverridedBySpecializing_CTTI_Named_ConstPtr*")
+
+   DEFINE_NAMEOF_CONST_TEST(PiButNamed::Number, "PiButNamedByCTTI")
+   DEFINE_NAMEOF_CONST_TEST(PiNonClassButNamed::NumberButNamed, "NumberButNamedByCTTI")
+   DEFINE_NAMEOF_CONST_TEST(AnonymousNumberButNamed, "AnonymousNumberButNamedByCTTI")
+   DEFINE_NAMEOF_CONST_TEST(AnonymousNumberButNotNamed, "AnonymousNumberButNotNamed")
 }

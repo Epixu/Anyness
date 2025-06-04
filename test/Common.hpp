@@ -116,13 +116,6 @@ void DumpResults(const INPUT& in, const OUTPUT& out, const REQUIRED& required) {
 }
 #endif
 
-#define UNSIGNED_TYPES        uint8_t, uint16_t, uint32_t, uint64_t
-#define REAL_TYPES            float, double
-#define SIGNED_INTEGER_TYPES  int8_t, int16_t, int32_t, int64_t
-#define INTEGER_TYPES         UNSIGNED_TYPES, SIGNED_INTEGER_TYPES
-#define SIGNED_TYPES          SIGNED_INTEGER_TYPES, REAL_TYPES
-#define ALL_TYPES             UNSIGNED_TYPES, SIGNED_TYPES
-
 #ifdef LANGULUS_LIBRARY_ANYNESS
 
 /// Just a bank container, used to contain owned items                        
