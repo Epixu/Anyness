@@ -208,18 +208,18 @@
    #define LANGULUS_COMPILER_GCC() 0
 #endif
 
-#if defined(_MSC_VER)
-   // We're on a microsoft visual c++ compiler!                         
-   #define LANGULUS_COMPILER_MSVC() 1
-#else
-   #define LANGULUS_COMPILER_MSVC() 0
-#endif
-
 #if defined(__clang__)
    // We're on a clang compiler!                                        
    #define LANGULUS_COMPILER_CLANG() 1
 #else
    #define LANGULUS_COMPILER_CLANG() 0
+#endif
+
+#if defined(_MSC_VER) and not defined(__clang__)
+   // We're on a microsoft visual c++ compiler!                         
+   #define LANGULUS_COMPILER_MSVC() 1
+#else
+   #define LANGULUS_COMPILER_MSVC() 0
 #endif
 
 #if defined(__wasm__)
@@ -499,5 +499,11 @@ namespace Langulus
    struct Maybe {
       static constexpr bool Enabled = VALUE;
    };
+   
+   /// Same as ::std::declval, but more conveniently named                    
+   template<class T>
+   T&& Fake() noexcept {
+      static_assert(false, "Calling Fake is ill-formed");
+   }
 
 } // namespace Langulus
