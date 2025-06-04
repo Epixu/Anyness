@@ -350,35 +350,35 @@ namespace Langulus::RTTI
          // @attention replacement will not commence, if IsTransition   
          //    isn't satisifed                                          
       #if LANGULUS_COMPILER(MSVC)
-         constexpr auto a00 = Replace<SRC, "`anonymous-namespace'::", "">();
+         constexpr auto a00 = Replace<SRC, Literal {"`anonymous-namespace'::"}, Literal {""}>();
       #elif LANGULUS_COMPILER(CLANG)
-         constexpr auto a00 = Replace<SRC, "(anonymous namespace)::", "">();
+         constexpr auto a00 = Replace<SRC, Literal {"(anonymous namespace)::"}, Literal {""}>();
       #else
-         constexpr auto b00 = Replace<SRC, "<unnamed>::", "">;
-         constexpr auto a00 = Replace<b00, "{anonymous}::", "">();
+         constexpr auto b00 = Replace<SRC, Literal {"<unnamed>::"},   Literal {"" }>();
+         constexpr auto a00 = Replace<b00, Literal {"{anonymous}::"}, Literal {"" }>();
       #endif
-         constexpr auto a01 = Replace<a00, " *", "*">();
-         constexpr auto a02 = Replace<a01, " &", "&">();
-         constexpr auto a03 = Replace<a02, " >", ">">();
-         constexpr auto a04 = Replace<a03, " (", "(">();
-         constexpr auto a05 = Replace<a04, " )", ")">();
-         constexpr auto a06 = Replace<a05, "class ", "">();
-         constexpr auto a07 = Replace<a06, "struct ", "">();
-         constexpr auto a08 = Replace<a07, "enum ", "">();
-         constexpr auto a10 = Replace<a08, "(__cdecl *)", "">();
+         constexpr auto a01 = Replace<a00, Literal {" *"},            Literal {"*"}>();
+         constexpr auto a02 = Replace<a01, Literal {" &"},            Literal {"&"}>();
+         constexpr auto a03 = Replace<a02, Literal {" >"},            Literal {">"}>();
+         constexpr auto a04 = Replace<a03, Literal {" ("},            Literal {"("}>();
+         constexpr auto a05 = Replace<a04, Literal {" )"},            Literal {")"}>();
+         constexpr auto a06 = Replace<a05, Literal {"class "},        Literal {"" }>();
+         constexpr auto a07 = Replace<a06, Literal {"struct "},       Literal {"" }>();
+         constexpr auto a08 = Replace<a07, Literal {"enum "},         Literal {"" }>();
+         constexpr auto a10 = Replace<a08, Literal {"(__cdecl *)"},   Literal {"" }>();
 
          // These types are stringified differently on some compilers   
          // `unsigned short` is longer than just `short`, and needs to  
          // be handled first                                            
-         constexpr auto a12 = Replace<a10, IsolateTypename<uint8_t,  false>(), "uint8" >();
-         constexpr auto a13 = Replace<a12, IsolateTypename<uint16_t, false>(), "uint16">();
-         constexpr auto a14 = Replace<a13, IsolateTypename<uint32_t, false>(), "uint32">();
-         constexpr auto a15 = Replace<a14, IsolateTypename<uint64_t, false>(), "uint64">();
+         constexpr auto a12 = Replace<a10, IsolateTypename<uint8_t,  false>(), Literal {"uint8" }>();
+         constexpr auto a13 = Replace<a12, IsolateTypename<uint16_t, false>(), Literal {"uint16"}>();
+         constexpr auto a14 = Replace<a13, IsolateTypename<uint32_t, false>(), Literal {"uint32"}>();
+         constexpr auto a15 = Replace<a14, IsolateTypename<uint64_t, false>(), Literal {"uint64"}>();
 
-         constexpr auto a16 = Replace<a15, IsolateTypename<int8_t,   false>(), "int8"  >();
-         constexpr auto a17 = Replace<a16, IsolateTypename<int16_t,  false>(), "int16" >();
-         constexpr auto a18 = Replace<a17, IsolateTypename<int32_t,  false>(), "int32" >();
-         constexpr auto a19 = Replace<a18, IsolateTypename<int64_t,  false>(), "int64" >();
+         constexpr auto a16 = Replace<a15, IsolateTypename<int8_t,   false>(), Literal {"int8"  }>();
+         constexpr auto a17 = Replace<a16, IsolateTypename<int16_t,  false>(), Literal {"int16" }>();
+         constexpr auto a18 = Replace<a17, IsolateTypename<int32_t,  false>(), Literal {"int32" }>();
+         constexpr auto a19 = Replace<a18, IsolateTypename<int64_t,  false>(), Literal {"int64" }>();
 
          static_assert(IsASCII(a19), "Normalized typename isn't ASCII");
          return a19;

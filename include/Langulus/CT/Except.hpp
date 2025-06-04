@@ -44,11 +44,13 @@ namespace Langulus
          const char* mMessage  = DefaultMessage;
          // Exception location, as a separate literal to avoid concat   
          const char* mLocation = DefaultLocation;
-      #endif
 
-      constexpr Exception(const char* message, const char* location) noexcept
-         : mMessage  {message}
-         , mLocation {location} {}
+         constexpr Exception(const char* message, const char* location) noexcept
+            : mMessage {message}
+            , mLocation {location} {}
+      #else
+         constexpr Exception(const char*, const char*) noexcept {}
+      #endif
    };
 
 } // namespace Langulus
