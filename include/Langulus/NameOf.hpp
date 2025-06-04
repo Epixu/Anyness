@@ -145,8 +145,9 @@ namespace Langulus::RTTI
          #if LANGULUS_COMPILER(GCC)
             // Most compilers include the namespaces. GCC14 in          
             // particular decided not to...                             
+            // But prepends `<unnamed>::` for unnamed enums             
             constexpr size_t start = calibration_name.find(
-               "Oddly_Specific_EnumASDOLSAJDPAFHOAF");
+               "<unnamed>::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
          #else
             constexpr size_t start = calibration_name.find(
                "Langulus::RTTI::Inner::Oddly_Specific_EnumASDOLSAJDPAFHOAF");
@@ -165,7 +166,7 @@ namespace Langulus::RTTI
          constexpr size_t start = CalculateEnumLeftOffset();
 
          #if LANGULUS_COMPILER(GCC)
-            return calibration_name.size() - start - 35;
+            return calibration_name.size() - start - 46;
          #else
             return calibration_name.size() - start - 58;
          #endif
