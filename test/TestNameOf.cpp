@@ -39,7 +39,7 @@ namespace Langulus::Flow
 namespace
 {
 
-   constexpr bool VERBOSE = true;
+   constexpr bool VERBOSE = false;
 
    struct NamedUsingMember {
       using CTTI_Named = YesText<"NameOverrideUsingMember">;
@@ -164,12 +164,14 @@ namespace
       ::std::string a03 = ReplaceAtRuntime(a02, " >", ">");
       ::std::string a04 = ReplaceAtRuntime(a03, " (", "(");
       ::std::string a05 = ReplaceAtRuntime(a04, " )", ")");
-      ::std::string a06 = ReplaceAtRuntime(a05, "class ", "");
-      ::std::string a07 = ReplaceAtRuntime(a06, "struct ", "");
-      ::std::string a08 = ReplaceAtRuntime(a07, "enum ", "");
-      ::std::string a10 = ReplaceAtRuntime(a08, "(__cdecl *)", "");
+      ::std::string a06 = ReplaceAtRuntime(a05, " [", "[");
+      ::std::string a07 = ReplaceAtRuntime(a06, " ]", "]");
+      ::std::string a08 = ReplaceAtRuntime(a07, "class ", "");
+      ::std::string a09 = ReplaceAtRuntime(a08, "struct ", "");
+      ::std::string a10 = ReplaceAtRuntime(a09, "enum ", "");
+      ::std::string a11 = ReplaceAtRuntime(a10, "(__cdecl *)", "");
 
-      ::std::string a12 = ReplaceAtRuntime(a10, IsolateTypenameAtRuntime<uint8_t,  false>(), "uint8" );
+      ::std::string a12 = ReplaceAtRuntime(a11, IsolateTypenameAtRuntime<uint8_t,  false>(), "uint8" );
       ::std::string a13 = ReplaceAtRuntime(a12, IsolateTypenameAtRuntime<uint16_t, false>(), "uint16");
       ::std::string a14 = ReplaceAtRuntime(a13, IsolateTypenameAtRuntime<uint32_t, false>(), "uint32");
       ::std::string a15 = ReplaceAtRuntime(a14, IsolateTypenameAtRuntime<uint64_t, false>(), "uint64");
@@ -331,15 +333,16 @@ namespace Langulus::CTTI
    WHEN("Taken the name of type " #WHAT) { \
       auto name_runtime = IsolateTypenameAtRuntime<WHAT>(); \
       REQUIRE(name_runtime == RESULT); \
+      STATIC_REQUIRE(NameOf<WHAT>() == RESULT); \
    }
 
 #define DEFINE_NAMEOF_CONST_TEST(WHAT, RESULT) \
    WHEN("Taken the name of constat " #WHAT) { \
       auto name_runtime = IsolateConstantAtRuntime<WHAT>(); \
       REQUIRE(name_runtime == RESULT); \
+      STATIC_REQUIRE(NameOf<WHAT>() == RESULT); \
    }
 
-//      STATIC_REQUIRE(NameOf<WHAT>() == RESULT); \
 
 SCENARIO("NameOf", "[nameof]") {
    DEFINE_NAMEOF_TYPE_TEST(void, "void")

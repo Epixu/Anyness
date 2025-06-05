@@ -426,15 +426,17 @@ namespace Langulus::RTTI
          constexpr auto a03 = Replace<a02, Literal {" >"},            Literal {">"}>();
          constexpr auto a04 = Replace<a03, Literal {" ("},            Literal {"("}>();
          constexpr auto a05 = Replace<a04, Literal {" )"},            Literal {")"}>();
-         constexpr auto a06 = Replace<a05, Literal {"class "},        Literal {"" }>();
-         constexpr auto a07 = Replace<a06, Literal {"struct "},       Literal {"" }>();
-         constexpr auto a08 = Replace<a07, Literal {"enum "},         Literal {"" }>();
-         constexpr auto a10 = Replace<a08, Literal {"(__cdecl *)"},   Literal {"" }>();
+         constexpr auto a06 = Replace<a05, Literal {" ["},            Literal {"["}>();
+         constexpr auto a07 = Replace<a06, Literal {" ]"},            Literal {"]"}>();
+         constexpr auto a08 = Replace<a07, Literal {"class "},        Literal {"" }>();
+         constexpr auto a09 = Replace<a08, Literal {"struct "},       Literal {"" }>();
+         constexpr auto a10 = Replace<a09, Literal {"enum "},         Literal {"" }>();
+         constexpr auto a11 = Replace<a10, Literal {"(__cdecl *)"},   Literal {"" }>();
 
          // These types are stringified differently on some compilers   
          // `unsigned short` is longer than just `short`, and needs to  
          // be handled first                                            
-         constexpr auto a12 = Replace<a10, IsolateTypename<uint8_t,  false>(), Literal {"uint8" }>();
+         constexpr auto a12 = Replace<a11, IsolateTypename<uint8_t,  false>(), Literal {"uint8" }>();
          constexpr auto a13 = Replace<a12, IsolateTypename<uint16_t, false>(), Literal {"uint16"}>();
          constexpr auto a14 = Replace<a13, IsolateTypename<uint32_t, false>(), Literal {"uint32"}>();
          constexpr auto a15 = Replace<a14, IsolateTypename<uint64_t, false>(), Literal {"uint64"}>();
