@@ -12,6 +12,9 @@
 #include "CT/Support.hpp"
 #include "CT/POD.hpp"
 #include "CT/Same.hpp"
+#include <bit>
+#include <type_traits>
+#include <array>
 
 
 namespace Langulus
@@ -65,11 +68,13 @@ namespace Langulus
       /// Note2 - These are constexpr-friendly versions, made by Tamás Szelei 
       /// and slightly modified by me                                         
       /// https://github.com/sztomi/constexpr_murmurhash                      
-      class str_view {
-      public:
-         template <std::size_t N>
-         constexpr str_view(const char(&a)[N])
-            : p(a), sz(N - 1) {}
+      struct data_view {
+         constexpr data_view(const char* a, size_t N) noexcept
+            : p(a), sz(N) {}
+
+         template <size_t N>
+         constexpr data_view(const ::std::array<char, N>& a) noexcept
+            : p(a.data()), sz(N) {}
 
          constexpr char operator[](std::size_t n) const {
             return n < sz ? p[n] : throw std::out_of_range("");
@@ -98,7 +103,7 @@ namespace Langulus
          std::size_t sz;
       };
 
-      constexpr uint32_t mm3_x86_32(str_view key, uint32_t seed) {
+      constexpr uint32_t mm3_x86_32(data_view key, uint32_t seed) {
          uint32_t h1 = seed;
 
          const uint32_t c1 = 0xcc9e2d51;
@@ -147,23 +152,12 @@ namespace Langulus
 
 
    /// Hash a sequence of bytes                                               
-   ///   @tparam SEED - the seed for the hash algorithm                       
-   ///   @tparam TAIL - true for a generalized hashing routine (internal)     
-   ///   @param ptr - memory start                                            
-   ///   @param len - number of bytes to hash                                 
+   ///   @param data - the data to hash                                       
+   ///   @param seed - the seed                                               
    ///   @return the hash                                                     
-   template<Hash SEED = DefaultHashSeed, bool TAIL = true>
-   constexpr Hash HashBytes(void const* ptr, int len) noexcept {
-      Hash result;
-      if constexpr (sizeof(Hash) == 4)
-         Inner::MurmurHash3_x86_32<TAIL, SEED>(ptr, len, &result);
-      else if constexpr (sizeof(Hash) == 8)
-         Inner::MurmurHash2_x64_64<TAIL, SEED>(ptr, len, &result);
-      else if constexpr (sizeof(Hash) == 16)
-         Inner::MurmurHash3_x64_128<TAIL, SEED>(ptr, len, &result);
-      else
-         static_assert(false, "Not implemented");
-      return result;
+   constexpr Hash HashBytes(Inner::data_view data, Hash seed) noexcept {
+      static_assert(sizeof(Hash) == 4, "Not implemented");
+      return Hash {Inner::mm3_x86_32(data, seed.mHash)};
    }
 
    namespace CT
@@ -208,11 +202,11 @@ namespace Langulus
       else if constexpr (sizeof...(MORE)) {
          // Combine all data into a single array of hashes, and then    
          // hash that array as a whole                                  
-         alignas(Byteness) const Hash coal[1 + sizeof...(MORE)] {
+         const Hash coal[1 + sizeof...(MORE)] {
             HashOf<FAKE, SEED>(head),
             HashOf<FAKE, SEED>(rest)...
          };
-         return HashBytes<SEED, false>(coal, static_cast<int>(sizeof(coal)));
+         return HashBytes({coal, sizeof(coal)}, SEED);
       }
       else if constexpr (CT::Array<T>) {
          // Combine the hashes of each element inside an array          
@@ -222,22 +216,22 @@ namespace Langulus
          }
          else if constexpr (CT::POD<Deext<T>>) {
             // Array is made of POD elements, batch-hash the array      
-            return HashBytes<SEED>(head, static_cast<int>(sizeof(T)));
+            return HashBytes({head, sizeof(head)}, SEED);
          }
          else {
             // Hash each element of the array individually, and then    
             // hash that array of hashes as a whole                     
-            alignas(Byteness) Hash coal[ExtentOf<T>];
+            Hash coal[ExtentOf<T>];
             for (::std::size_t i = 0; i < ExtentOf<T>; ++i)
                coal[i] = HashOf<FAKE, SEED>(head[i]);
-            return HashBytes<SEED, false>(coal, static_cast<int>(sizeof(coal)));
+            return HashBytes({coal, sizeof(coal)}, SEED);
          }
       }
       else if constexpr (CT::Sparse<T>) {
          // Hash pointer, never dereference it                          
          if (head == nullptr)
             return Hash {};
-         return HashBytes<SEED, false>(&head, static_cast<int>(sizeof(T)));
+         return HashBytes({&head, sizeof(T)}, SEED);
       }
       else if constexpr (CT::Similar<T, Hash>) {
          // Provided type is already a hash, just propagate it          
@@ -255,7 +249,21 @@ namespace Langulus
          // hashes where the same hashes should be produced. In such    
          // cases it is recommended you add a custom GetHash() method   
          // to your type, or #pragma pack, in order to circumvent issue 
-         return HashBytes<SEED, (alignof(T) < Byteness)>(&head, static_cast<int>(sizeof(T)));
+         // This turns out to be somewhat detectable using, but it's not
+         // working for float/double on clang:                          
+         //    std::has_unique_object_representations_v                 
+         // https://stackoverflow.com/questions/74137475                
+         /*static_assert(::std::has_unique_object_representations_v<T>,
+            "Trying to hash POD type which is detected to have padding. "
+            "Use #pragma pack to make sure that hashes are deterministic"
+         );*/
+         IF_CONSTEXPR() {
+            auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
+            return HashBytes(as_bytes, SEED);
+         }
+         else {
+            return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+         }
       }
       else if constexpr (::std::ranges::range<T> and CT::Hashable<TypeOf<T>>) {
          // Anything that is range-iteratable and typed is carried      
@@ -267,24 +275,24 @@ namespace Langulus
 
          if constexpr (::std::ranges::contiguous_range<T> and CT::POD<InnerT>) {
             // Batch-hash contiguous containers with POD contents       
-            return HashBytes<SEED>(head.data(), static_cast<int>(head.size() * sizeof(InnerT)));
+            return HashBytes({head.data(), head.size() * sizeof(InnerT)}, SEED);
          }
          else {
             // Hash each individual element, then combine all hashes    
             ::std::vector<Hash> coal;
             for (auto& i : head)
                coal.emplace_back(HashOf<FAKE, SEED>(i));
-            return HashBytes<SEED>(coal.data(), static_cast<int>(coal.size() * sizeof(Hash)));
+            return HashBytes({coal.data(), coal.size() * sizeof(Hash)}, SEED);
          }
       }      
       else if constexpr (CT::HasStdHasher<T>) {
          // Hashable via std::hash (fallback for std containers)        
          // Beware, hashing functions coming from std::hash may have    
          // different implementations for different compilers, which    
-         // will likely result in different ordering inside unordered   
+         // will likely result in different ordering inside unsorted    
          // containers. Nothing serious, unless you're pedantic like me 
          ::std::hash<T> hasher;
-         return Hash {hasher(head)};
+         return Hash (hasher(head));
       }
       else {
          // Handle failure statically                                   

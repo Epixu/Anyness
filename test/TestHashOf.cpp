@@ -37,8 +37,17 @@ SCENARIO("Hashing standard text containers should result in the same hashes", "[
    REQUIRE(HashOf(same2) == HashOf(same2str));
 }
 
-SCENARIO("Hashing same values of differently sized types should result in different hashes", "[hash]") {
-   auto init = GENERATE(0, 1, 100);
+template<int V>
+struct TestValue {
+   static constexpr int Value = V;
+};
+
+TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result in different hashes", "[hash]",
+   TestValue<0>,
+   TestValue<1>,
+   TestValue<2>
+) {
+   constexpr int init = TestType::Value;
    bool b = init;
    char c = init;
    wchar_t wc = init;
@@ -56,16 +65,16 @@ SCENARIO("Hashing same values of differently sized types should result in differ
    int32_t i32 = init;
    int64_t i64 = init;
 
-   if (init <= 1) {
+   if constexpr (init <= 1) {
       REQUIRE(HashOf(b) == HashOf(c));
       REQUIRE(HashOf(b) == HashOf(c8));
       REQUIRE(HashOf(b) == HashOf(u8));
       REQUIRE(HashOf(b) == HashOf(i8));
 
-      STATIC_REQUIRE(HashOf(b) == HashOf(c));
-      STATIC_REQUIRE(HashOf(b) == HashOf(c8));
-      STATIC_REQUIRE(HashOf(b) == HashOf(u8));
-      STATIC_REQUIRE(HashOf(b) == HashOf(i8));
+      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) == HashOf(static_cast<char>(init)));
+      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) == HashOf(static_cast<char8_t>(init)));
+      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) == HashOf(static_cast<uint8_t>(init)));
+      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) == HashOf(static_cast<int8_t>(init)));
    }
    else {
       REQUIRE(HashOf(b) != HashOf(c));
@@ -73,10 +82,10 @@ SCENARIO("Hashing same values of differently sized types should result in differ
       REQUIRE(HashOf(b) != HashOf(u8));
       REQUIRE(HashOf(b) != HashOf(i8));
 
-      STATIC_REQUIRE(HashOf(b) != HashOf(c));
-      STATIC_REQUIRE(HashOf(b) != HashOf(c8));
-      STATIC_REQUIRE(HashOf(b) != HashOf(u8));
-      STATIC_REQUIRE(HashOf(b) != HashOf(i8));
+      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char>(init)));
+      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char8_t>(init)));
+      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint8_t>(init)));
+      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int8_t>(init)));
    }
 
    REQUIRE(HashOf(b) != HashOf(wc));
@@ -91,17 +100,17 @@ SCENARIO("Hashing same values of differently sized types should result in differ
    REQUIRE(HashOf(b) != HashOf(f));
    REQUIRE(HashOf(b) != HashOf(d));
 
-   STATIC_REQUIRE(HashOf(b) != HashOf(wc));
-   STATIC_REQUIRE(HashOf(b) != HashOf(c16));
-   STATIC_REQUIRE(HashOf(b) != HashOf(c32));
-   STATIC_REQUIRE(HashOf(b) != HashOf(u16));
-   STATIC_REQUIRE(HashOf(b) != HashOf(u32));
-   STATIC_REQUIRE(HashOf(b) != HashOf(u64));
-   STATIC_REQUIRE(HashOf(b) != HashOf(i16));
-   STATIC_REQUIRE(HashOf(b) != HashOf(i32));
-   STATIC_REQUIRE(HashOf(b) != HashOf(i64));
-   STATIC_REQUIRE(HashOf(b) != HashOf(f));
-   STATIC_REQUIRE(HashOf(b) != HashOf(d));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<wchar_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char16_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char32_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint16_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint32_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint64_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int16_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int32_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int64_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<float>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<double>(init)));
 
    if constexpr (sizeof(wchar_t) == 2) {
       REQUIRE(HashOf(c16) == HashOf(wc));
@@ -119,20 +128,20 @@ SCENARIO("Hashing same values of differently sized types should result in differ
    REQUIRE(HashOf(c16) != HashOf(f));
    REQUIRE(HashOf(c16) != HashOf(d));
 
-   STATIC_REQUIRE(HashOf(c16) == HashOf(u16));
-   STATIC_REQUIRE(HashOf(c16) == HashOf(i16));
+   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) == HashOf(static_cast<uint16_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) == HashOf(static_cast<int16_t>(init)));
 
-   STATIC_REQUIRE(HashOf(c16) != HashOf(c32));
-   STATIC_REQUIRE(HashOf(c16) != HashOf(u32));
-   STATIC_REQUIRE(HashOf(c16) != HashOf(u64));
-   STATIC_REQUIRE(HashOf(c16) != HashOf(i32));
-   STATIC_REQUIRE(HashOf(c16) != HashOf(i64));
-   STATIC_REQUIRE(HashOf(c16) != HashOf(f));
-   STATIC_REQUIRE(HashOf(c16) != HashOf(d));
+   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<char32_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<uint32_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<uint64_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<int32_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<int64_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<float>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<double>(init)));
 
    if constexpr (sizeof(wchar_t) == 4) {
       REQUIRE(HashOf(c32) == HashOf(wc));
-      STATIC_REQUIRE(HashOf(c32) == HashOf(wc));
+      STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) == HashOf(wc));
    }
 
    REQUIRE(HashOf(c32) == HashOf(u32));
@@ -142,14 +151,14 @@ SCENARIO("Hashing same values of differently sized types should result in differ
    REQUIRE(HashOf(c32) != HashOf(u64));
    REQUIRE(HashOf(c32) != HashOf(i64));
 
-   STATIC_REQUIRE(HashOf(c32) == HashOf(u32));
-   STATIC_REQUIRE(HashOf(c32) == HashOf(i32));
+   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) == HashOf(static_cast<uint32_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) == HashOf(static_cast<int32_t>(init)));
 
-   STATIC_REQUIRE(HashOf(c32) != HashOf(c16));
-   STATIC_REQUIRE(HashOf(c32) != HashOf(u64));
-   STATIC_REQUIRE(HashOf(c32) != HashOf(i64));
+   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<char16_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<uint64_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<int64_t>(init)));
 
-   if (init == 0 and sizeof(float) == 4)
+   if constexpr (init == 0 and sizeof(float) == 4)
       REQUIRE(HashOf(c32) == HashOf(f));
    else
       REQUIRE(HashOf(c32) != HashOf(f));
@@ -164,17 +173,17 @@ SCENARIO("Hashing same values of differently sized types should result in differ
 
    REQUIRE(HashOf(i64) != HashOf(f));
 
-   STATIC_REQUIRE(HashOf(c32) != HashOf(d));
+   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<double>(init)));
 
-   STATIC_REQUIRE(HashOf(i64) == HashOf(u64));
-   STATIC_REQUIRE(HashOf(i64) != HashOf(c16));
-   STATIC_REQUIRE(HashOf(i64) != HashOf(c32));
-   STATIC_REQUIRE(HashOf(i64) != HashOf(u32));
-   STATIC_REQUIRE(HashOf(i64) != HashOf(i32));
+   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) == HashOf(static_cast<uint64_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<char16_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<char32_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<uint32_t>(init)));
+   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<int32_t>(init)));
 
-   STATIC_REQUIRE(HashOf(i64) != HashOf(f));
+   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<float>(init)));
 
-   if (init == 0 and sizeof(double) == 8)
+   if constexpr (init == 0 and sizeof(double) == 8)
       REQUIRE(HashOf(i64) == HashOf(d));
    else
       REQUIRE(HashOf(i64) != HashOf(d));
