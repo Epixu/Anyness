@@ -227,6 +227,7 @@ TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result
    int16_t i16 = init;
    int32_t i32 = init;
    int64_t i64 = init;
+   void* ptr = reinterpret_cast<void*>(static_cast<intptr_t>(init));
 
    REQUIRE(HashOf(b) != Hash {});
    REQUIRE(HashOf(c) != Hash {});
@@ -244,6 +245,7 @@ TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result
    REQUIRE(HashOf(i16) != Hash {});
    REQUIRE(HashOf(i32) != Hash {});
    REQUIRE(HashOf(i64) != Hash {});
+   REQUIRE(HashOf(ptr) != Hash {});
 
    if constexpr (init <= 1) {
       REQUIRE(HashOf(b) == HashOf(c));

@@ -211,13 +211,13 @@ namespace Langulus
       else if constexpr (sizeof...(MORE)) {
          // Combine all data into a single array of hashes, and then    
          // hash that array as a whole                                  
-         constexpr size_t C = 1 + sizeof...(MORE);
-         const Hash coal[C] {
+         const Hash coal[1 + sizeof...(MORE)] {
             HashOf<FAKE, SEED>(head),
             HashOf<FAKE, SEED>(rest)...
          };
+
          IF_CONSTEXPR() {
-            auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(Hash) * C>>(coal);
+            auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(coal)>>(coal);
             return HashBytes(as_bytes, SEED);
          }
          else return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
@@ -243,11 +243,11 @@ namespace Langulus
       }
       else if constexpr (::std::is_pointer_v<T>) {
          // Hash pointer, never dereference it                          
-         if (head == nullptr)
-            return Hash {};
-
-         auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(&head);
-         return HashBytes(as_bytes, SEED);
+         IF_CONSTEXPR() {
+            auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
+            return HashBytes(as_bytes, SEED);
+         }
+         else return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
       }
       else if constexpr (CT::Similar<T, Hash>) {
          // Provided type is already a hash, just propagate it          
@@ -279,23 +279,37 @@ namespace Langulus
          // array, span, etc.                                           
          using InnerT = TypeOf<T>;
 
-         if constexpr (::std::ranges::contiguous_range<T> and CT::POD<InnerT>) {
+         if constexpr (CT::Similar<InnerT, Hash>) {
+            // If it is just a single hash, we can directly return it   
+            if (head.size() == 1)
+               return *head.begin();
+         }
+
+         if constexpr (::std::ranges::contiguous_range<T> and CT::POD<InnerT> and not CT::HasGetHashMethod<InnerT>) {
             // Batch-hash contiguous containers with POD contents       
-            if constexpr (requires { typename ::std::array<char, std::ranges::size(head)>; }) {
-               auto as_bytes = ::std::bit_cast<::std::array<char, head.size() * sizeof(InnerT)>>(head);
-               return HashBytes(as_bytes, SEED);
+            if constexpr (requires { ::std::bit_cast<::std::array<char, sizeof(T)>>(head); }) {
+               // Constant evaluation is possible only if bit_cast      
+               // is able to do its magic                               
+               IF_CONSTEXPR() {
+                  auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
+                  return HashBytes(as_bytes, SEED);
+               }
+               else {
+                  return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+               }
             }
-            else IF_NOT_CONSTEXPR() {
+            else {
                return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
             }
-            else return Hash {}; // shouldn't ever be reached           
          }
          else {
             // Hash each individual element, then combine all hashes    
+            // Possible only at runtime                                 
             ::std::vector<Hash> coal;
             for (auto& i : head)
                coal.emplace_back(HashOf<FAKE, SEED>(i));
-            return HashBytes({coal.data(), coal.size() * sizeof(Hash)}, SEED);
+
+            return HashBytes({reinterpret_cast<const char*>(head.data()), coal.size() * sizeof(Hash)}, SEED);
          }
       }      
       else if constexpr (CT::HasStdHasher<T>) {
