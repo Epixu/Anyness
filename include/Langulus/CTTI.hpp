@@ -78,6 +78,14 @@ namespace Langulus::CTTI
 ///                                                                           
 namespace Langulus::CT
 {
+
+   /// Check if a function encapsulated in a lambda is a constexpr            
+   /// Leverages that lambda expressions can be constexpr as of C++17         
+   /// https://stackoverflow.com/questions/55288555                           
+   template<class Lambda, int = (Lambda {}(), 0)>
+   consteval bool IsConstexpr(Lambda) { return true;  }
+   consteval bool IsConstexpr(...)    { return false; }
+
    namespace Inner
    {
       template<class...T>
@@ -96,10 +104,13 @@ namespace Langulus::CT
    /// these checks will act as if the sheddable type doesn't exist at all    
    /// The concept relies on CTTI::Typed for getting into the inner type      
    template<class...T>
-   concept Sheddable = Inner::CheckSize<T...>() and ((CTTI::Sheddable<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, Sheddable)) and ...);
+   concept Sheddable = Inner::CheckSize<T...>() and (
+         (CTTI::Sheddable<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, Sheddable)
+      ) and ...);
 
    template<class...T>
-   concept NotSheddable = Inner::CheckSize<T...>() and ((not Sheddable<Deref<T>>) and ...);
+   concept NotSheddable = Inner::CheckSize<T...>()
+       and ((not Sheddable<Deref<T>>) and ...);
 
    namespace Inner
    {
@@ -132,6 +143,7 @@ namespace Langulus::CT
       };
 
    } // namespace Langulus::CT::Inner
+
 } // namespace Langulus::CT
 
 namespace Langulus

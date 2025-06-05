@@ -160,41 +160,50 @@ namespace Langulus
       return Hash {Inner::mm3_x86_32(data, seed.mHash)};
    }
 
+   /// Predeclaration required by CT::Hashable                                
+   template<bool FAKE = false, Hash SEED = DefaultHashSeed, class T, class...MORE>
+   constexpr auto HashOf(T&&, MORE&&...);
+
    namespace CT
    {
 
       /// Check if the origin T can be hashed using HashOf                    
       template<class...T>
-      concept Hashable = requires (T&...a) {
+      concept Hashable = Inner::CheckSize<T...>() and requires (Shed<T>...a) {
          { (HashOf<true>(a), ...) } -> Supported;
       };
+
+      template<class...T>
+      concept NotHashable = Inner::CheckSize<T...>() and ((not Hashable<Shed<T>>) and ...);
 
       /// Check if T has a GetHash() method                                   
       /// It is always preferred when hashing data                            
       template<class...T>
-      concept HasGetHashMethod = requires (T&...a) {
+      concept HasGetHashMethod = Inner::CheckSize<T...>() and requires (Shed<T>...a) {
          { (a.GetHash(), ...) } -> Similar<Hash>;
       };
       
       /// Check if T has a GetHash() method                                   
       /// It is always preferred when hashing data                            
       template<class...T>
-      concept HasStdHasher = requires (::std::hash<T>...h, T...a) {
-         (h(a), ...);
-      };
+      concept HasStdHasher = Inner::CheckSize<T...>()
+          and requires (::std::hash<Shed<T>>...h, Shed<T>...a) { (h(a), ...); };
 
    } // namespace Langulus::CT
 
 
    /// Hash any hashable data, including fundamental/POD/range types          
    ///   @tparam FAKE - for internal use - if FAKE and evaluated to fail, it  
-   ///      will return CT::Unsupported; otherwise it will scream a compile   
+   ///      will return CT::Unsupported; otherwise it will scream a compiler  
    ///      error at you                                                      
    ///   @tparam SEED - the seed for the hash algorithm                       
    ///   @param head, rest... - the data to hash                              
    ///   @return the hash                                                     
-   template<bool FAKE = false, Hash SEED = DefaultHashSeed, class T, class...MORE>
-   constexpr auto HashOf(const T& head, const MORE&...rest) {
+   template<bool FAKE, Hash SEED, class T, class...MORE>
+   constexpr auto HashOf(T&& head, MORE&&...rest) {
+      static_assert(not CT::Sheddable<T, MORE...>,
+         "Shed all sheddable wrappers before hashing");
+
       if constexpr (CT::Unsupported<T, MORE...>) {
          // If any of the types isn't supported abort the entire hash   
          return Unsupported {};
@@ -202,11 +211,16 @@ namespace Langulus
       else if constexpr (sizeof...(MORE)) {
          // Combine all data into a single array of hashes, and then    
          // hash that array as a whole                                  
-         const Hash coal[1 + sizeof...(MORE)] {
+         constexpr size_t C = 1 + sizeof...(MORE);
+         const Hash coal[C] {
             HashOf<FAKE, SEED>(head),
             HashOf<FAKE, SEED>(rest)...
          };
-         return HashBytes({coal, sizeof(coal)}, SEED);
+         IF_CONSTEXPR() {
+            auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(Hash) * C>>(coal);
+            return HashBytes(as_bytes, SEED);
+         }
+         else return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
       }
       else if constexpr (CT::Array<T>) {
          // Combine the hashes of each element inside an array          
@@ -227,11 +241,13 @@ namespace Langulus
             return HashBytes({coal, sizeof(coal)}, SEED);
          }
       }
-      else if constexpr (CT::Sparse<T>) {
+      else if constexpr (::std::is_pointer_v<T>) {
          // Hash pointer, never dereference it                          
          if (head == nullptr)
             return Hash {};
-         return HashBytes({&head, sizeof(T)}, SEED);
+
+         auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(&head);
+         return HashBytes(as_bytes, SEED);
       }
       else if constexpr (CT::Similar<T, Hash>) {
          // Provided type is already a hash, just propagate it          
@@ -249,21 +265,11 @@ namespace Langulus
          // hashes where the same hashes should be produced. In such    
          // cases it is recommended you add a custom GetHash() method   
          // to your type, or #pragma pack, in order to circumvent issue 
-         // This turns out to be somewhat detectable using, but it's not
-         // working for float/double on clang:                          
-         //    std::has_unique_object_representations_v                 
-         // https://stackoverflow.com/questions/74137475                
-         /*static_assert(::std::has_unique_object_representations_v<T>,
-            "Trying to hash POD type which is detected to have padding. "
-            "Use #pragma pack to make sure that hashes are deterministic"
-         );*/
          IF_CONSTEXPR() {
             auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
             return HashBytes(as_bytes, SEED);
          }
-         else {
-            return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
-         }
+         else return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
       }
       else if constexpr (::std::ranges::range<T> and CT::Hashable<TypeOf<T>>) {
          // Anything that is range-iteratable and typed is carried      
@@ -275,7 +281,14 @@ namespace Langulus
 
          if constexpr (::std::ranges::contiguous_range<T> and CT::POD<InnerT>) {
             // Batch-hash contiguous containers with POD contents       
-            return HashBytes({head.data(), head.size() * sizeof(InnerT)}, SEED);
+            if constexpr (requires { typename ::std::array<char, std::ranges::size(head)>; }) {
+               auto as_bytes = ::std::bit_cast<::std::array<char, head.size() * sizeof(InnerT)>>(head);
+               return HashBytes(as_bytes, SEED);
+            }
+            else IF_NOT_CONSTEXPR() {
+               return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+            }
+            else return Hash {}; // shouldn't ever be reached           
          }
          else {
             // Hash each individual element, then combine all hashes    
