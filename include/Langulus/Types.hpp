@@ -396,8 +396,4 @@ namespace Langulus
    template<class...T>
    using SecondOf = typename Types<T...>::Second;
 
-   /// CTAD calls to constructor Types() will instantiate as an empty list    
-   /// https://stackoverflow.com/questions/62847200                           
-   //template<class...> Types() -> Types<void>;
-
 } // namespace Langulus

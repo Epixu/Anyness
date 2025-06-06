@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <cstdint>
+#include <type_traits>
 
 
 /// Sorry, Langulus is designed for at least C++23                            
@@ -452,5 +453,15 @@ namespace Langulus
    T&& Fake() noexcept {
       static_assert(false, "Calling Fake is ill-formed");
    }
-
+   
+   /// I don't like how long ::std::conditional_t is to write                 
+   /// Also, std::conditional_t must instantiate both paths, which is a big   
+   /// design flaw. This one adds an additional indirection to compensate     
+   /// https://reddit.com/r/cpp_questions/comments/lujzhu/template_is_instantiated_in_false_branch_of/
+   template<bool CONDITION, class YES, class NO>
+   using Tif = typename ::std::conditional_t<CONDITION,
+         ::std::type_identity<YES>,
+         ::std::type_identity<NO>
+      >::type;
+   
 } // namespace Langulus

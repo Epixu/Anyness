@@ -337,6 +337,7 @@ namespace Langulus
           and ((not Reference<Shed<T>>) and ...);
 
       /// Check if types have no reference/pointer/extent/qualifiers          
+      ///   @attention this doesn't shed or remove references before check    
       ///   @attention a type can still be CT::Sparse while being CT::Decayed,
       ///      when using custom packed pointer types for example. Decaying   
       ///      removes only indirections that are part of the C++ syntax      
@@ -354,9 +355,11 @@ namespace Langulus
       concept NotDecayed = Inner::CheckSize<T...>() and ((not Decayed<T>) and ...);
 
       /// True if T is not a pointer, has no extent with [], and isn't a      
-      /// reference. T is still allowed to be cv-qualified                    
+      /// reference                                                           
+      ///   @attention still allowed to be cv-qualified                       
       template<class...T>
-      concept Slab = Inner::CheckSize<T...>() and ((Dense<T> and not Reference<T>) and ...);
+      concept Slab = Inner::CheckSize<T...>()
+          and ((not ::std::is_pointer_v<T> and not ::std::is_reference_v<T>) and ...);
 
    } // namespace Langulus::CT
 
@@ -388,37 +391,6 @@ namespace Langulus
    /// pointer/array constness/volatileness, etc.                             
    template<class T>
    using DecvqAll = Deptr<decltype(Inner::NestedDecvq<T>())>;
-
-   /// I don't like how long ::std::conditional_t is to write                 
-   /// Also, std::conditional_t must instantiate both paths, which is a big   
-   /// design flaw. This one adds an additional indirection to compensate     
-   /// https://reddit.com/r/cpp_questions/comments/lujzhu/template_is_instantiated_in_false_branch_of/
-   template<bool CONDITION, class YES, class NO>
-   using Tif = typename ::std::conditional_t<CONDITION,
-         ::std::type_identity<YES>,
-         ::std::type_identity<NO>
-      >::type;
-   
-   /// Always returns a pointer to the argument                               
-   template<class T>
-   constexpr decltype(auto) SparseCast(T&& a) noexcept {
-      if constexpr (CT::Sparse<T>)
-         return (a);
-      else
-         return &a;
-   }
-
-   /// Always returns a value reference to the argument                       
-   /// If argument is an array, return a value reference to the first element 
-   template<class T>
-   constexpr decltype(auto) DenseCast(T&& a) {
-      if constexpr (CT::Array<T>)
-         return DenseCast(a[0]);
-      else if constexpr (CT::Sparse<T>)
-         return DenseCast(*a); // Security is on you - call can throw   
-      else
-         return (a);
-   }
 
 } // namespace Langulus
 

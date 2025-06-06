@@ -212,7 +212,7 @@ SCENARIO("Hashing standard containers should result in the same hashes", "[hash]
       HashableViaConstMethod {}
    };
    REQUIRE(HashOf(vec3ca) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
-   //STATIC_REQUIRE(HashOf(vec3ca) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
+   STATIC_REQUIRE(HashOf(vec3ca) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
 
    std::vector<HashableViaConstMethod> vec1;
    vec1.emplace_back();
@@ -238,23 +238,23 @@ TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result
    TestValue<2>
 ) {
    constexpr int init = TestType::Value;
-   bool b = init;
-   char c = init;
-   wchar_t wc = init;
-   char8_t c8 = init;
-   char16_t c16 = init;
-   char32_t c32 = init;
-   uint8_t u8 = init;
-   uint16_t u16 = init;
-   uint32_t u32 = init;
-   uint64_t u64 = init;
-   float f = init;
-   double d = init;
-   int8_t i8 = init;
-   int16_t i16 = init;
-   int32_t i32 = init;
-   int64_t i64 = init;
-   void* ptr = reinterpret_cast<void*>(static_cast<intptr_t>(init));
+   bool b       = static_cast<bool>(init);
+   char c       = static_cast<char>(init);
+   wchar_t wc   = static_cast<wchar_t>(init);
+   char8_t c8   = static_cast<char8_t>(init);
+   char16_t c16 = static_cast<char16_t>(init);
+   char32_t c32 = static_cast<char32_t>(init);
+   uint8_t u8   = static_cast<uint8_t>(init);
+   uint16_t u16 = static_cast<uint16_t>(init);
+   uint32_t u32 = static_cast<uint32_t>(init);
+   uint64_t u64 = static_cast<uint64_t>(init);
+   float f      = static_cast<float>(init);
+   double d     = static_cast<double>(init);
+   int8_t i8    = static_cast<int8_t>(init);
+   int16_t i16  = static_cast<int16_t>(init);
+   int32_t i32  = static_cast<int32_t>(init);
+   int64_t i64  = static_cast<int64_t>(init);
+   void* ptr    = reinterpret_cast<void*>(static_cast<intptr_t>(init));
 
    REQUIRE(HashOf(b) != Hash {});
    REQUIRE(HashOf(c) != Hash {});

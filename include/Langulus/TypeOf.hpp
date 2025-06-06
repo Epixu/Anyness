@@ -123,10 +123,32 @@ namespace Langulus
          static_assert(not ::std::same_as<::std::decay_t<T>, ::std::decay_t<InnerT>>,
             "Sheddable type's inner type is the same, and will result in infinite regress");
          static_assert(requires { static_cast<InnerT>(item); },
-            "Sheddable can't be static_cast to the inner type");
+            "Sheddable can't be static_casted to the inner type");
          return ShedCast(static_cast<InnerT>(item));
       }
       else return FWD(item);
    };
+   
+   /// Always returns a pointer to the argument                               
+   template<class T>
+   constexpr decltype(auto) SparseCast(T&& a) noexcept {
+      if constexpr (::std::is_pointer_v<Shed<T>>)
+         return  ShedCast(FWD(a));
+      else
+         return &ShedCast(FWD(a));
+   }
+
+   /// Always returns a value reference to the argument                       
+   /// If argument is an array, return a value reference to the first element 
+   template<class T>
+   constexpr decltype(auto) DenseCast(T&& a) {
+      if constexpr (CT::Array<Shed<T>>)
+         return DenseCast(ShedCast(FWD(a))[0]);
+      else if constexpr (CT::Sparse<Shed<T>>)
+         // Security is on you - call can throw                         
+         return DenseCast(*ShedCast(FWD(a)));
+      else
+         return ShedCast(FWD(a));
+   }
 
 } // namespace Langulus
