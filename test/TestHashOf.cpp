@@ -194,6 +194,21 @@ SCENARIO("Hashing standard containers should result in the same hashes", "[hash]
 
    REQUIRE(HashOf(c_same2arr) == HashOf('S', 'a', 'm', 'e', '2'));
    STATIC_REQUIRE(HashOf(c_same2arr) == HashOf('S', 'a', 'm', 'e', '2'));
+
+   constexpr std::array<Hash, 1> c_wrappedHash = {Hash{666}};
+   STATIC_REQUIRE(HashOf(c_wrappedHash) == Hash {666});
+
+   STATIC_REQUIRE(HashOf(HashableViaConstMethod {}) == Hash {666});
+
+   std::vector<HashableViaConstMethod> vec3;
+   vec3.emplace_back();
+   vec3.emplace_back();
+   vec3.emplace_back();
+   REQUIRE(HashOf(vec3) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
+
+   std::vector<HashableViaConstMethod> vec1;
+   vec1.emplace_back();
+   REQUIRE(HashOf(vec1) == Hash {666});
 }
 
 template<int V>

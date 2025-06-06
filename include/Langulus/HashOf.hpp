@@ -279,11 +279,9 @@ namespace Langulus
          // array, span, etc.                                           
          using InnerT = TypeOf<T>;
 
-         if constexpr (CT::Similar<InnerT, Hash>) {
-            // If it is just a single hash, we can directly return it   
-            if (head.size() == 1)
-               return *head.begin();
-         }
+         // If it is just a single element, we can directly hash it     
+         if (head.size() == 1)
+            return HashOf(*head.begin());
 
          if constexpr (::std::ranges::contiguous_range<T> and CT::POD<InnerT> and not CT::HasGetHashMethod<InnerT>) {
             // Batch-hash contiguous containers with POD contents       
@@ -309,7 +307,7 @@ namespace Langulus
             for (auto& i : head)
                coal.emplace_back(HashOf<FAKE, SEED>(i));
 
-            return HashBytes({reinterpret_cast<const char*>(head.data()), coal.size() * sizeof(Hash)}, SEED);
+            return HashBytes({reinterpret_cast<const char*>(coal.data()), coal.size() * sizeof(Hash)}, SEED);
          }
       }      
       else if constexpr (CT::HasStdHasher<T>) {
