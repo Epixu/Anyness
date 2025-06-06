@@ -12,8 +12,8 @@ fetch_external_module(
 
 add_langulus_test(LangulusAnynessTest
 	SOURCES		Main.cpp 
+	      		TestTypenav.cpp
 	      		TestAssume.cpp
-	      		TestCTTI.cpp
 	      		TestNameOf.cpp
 	      		TestHashOf.cpp
 	      		#TestSuffixOf.cpp

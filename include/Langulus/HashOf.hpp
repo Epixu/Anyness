@@ -223,12 +223,14 @@ namespace Langulus
          else return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
       }
       else if constexpr (CT::Array<T>) {
+         using InnerT = Deext<T>;
+
          // Combine the hashes of each element inside an array          
          if constexpr (ExtentOf<T> == 1) {
             // Only one element in array, just use the first element    
             return HashOf<FAKE, SEED>(head[0]);
          }
-         else if constexpr (CT::POD<Deext<T>>) {
+         else if constexpr (CT::POD<InnerT> and not CT::HasGetHashMethod<InnerT>) {
             // Array is made of POD elements, batch-hash the array      
             return HashBytes({head, sizeof(head)}, SEED);
          }
@@ -238,7 +240,14 @@ namespace Langulus
             Hash coal[ExtentOf<T>];
             for (::std::size_t i = 0; i < ExtentOf<T>; ++i)
                coal[i] = HashOf<FAKE, SEED>(head[i]);
-            return HashBytes({coal, sizeof(coal)}, SEED);
+
+            IF_CONSTEXPR() {
+               auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(coal)>>(coal);
+               return HashBytes(as_bytes, SEED);
+            }
+            else {
+               return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+            }
          }
       }
       else if constexpr (::std::is_pointer_v<T>) {

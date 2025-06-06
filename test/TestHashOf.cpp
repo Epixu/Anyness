@@ -206,9 +206,21 @@ SCENARIO("Hashing standard containers should result in the same hashes", "[hash]
    vec3.emplace_back();
    REQUIRE(HashOf(vec3) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
 
+   HashableViaConstMethod vec3ca[3] = {
+      HashableViaConstMethod {},
+      HashableViaConstMethod {},
+      HashableViaConstMethod {}
+   };
+   REQUIRE(HashOf(vec3ca) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
+   //STATIC_REQUIRE(HashOf(vec3ca) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
+
    std::vector<HashableViaConstMethod> vec1;
    vec1.emplace_back();
    REQUIRE(HashOf(vec1) == Hash {666});
+
+   HashableViaConstMethod vec1ca[1] = {HashableViaConstMethod {}};
+   REQUIRE(HashOf(vec1ca) == Hash {666});
+   STATIC_REQUIRE(HashOf(vec1ca) == Hash {666});
 }
 
 template<int V>
