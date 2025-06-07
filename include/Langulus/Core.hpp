@@ -450,7 +450,7 @@ namespace Langulus
    
    /// Same as ::std::declval, but more conveniently named                    
    template<class T>
-   T&& Fake() noexcept {
+   T&& Fake() {
       static_assert(false, "Calling Fake is ill-formed");
    }
    
@@ -464,4 +464,11 @@ namespace Langulus
          ::std::type_identity<NO>
       >::type;
    
+   /// Check if a function encapsulated in a lambda is a constexpr            
+   /// Leverages that lambda expressions can be constexpr as of C++17         
+   /// https://stackoverflow.com/questions/55288555                           
+   template<class Lambda, int = (Lambda {}(), 0)>
+   consteval bool IsConstexpr(Lambda) { return true;  }
+   consteval bool IsConstexpr(...)    { return false; }
+
 } // namespace Langulus

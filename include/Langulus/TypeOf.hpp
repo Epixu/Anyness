@@ -79,11 +79,11 @@ namespace Langulus
       ///   @attention if the inner type is a typelist, that typelist will be 
       ///      accounted for, and Ts are multiply-typed (like TPair)          
       template<class...T>
-      concept Typed = (NotVoid<TypeOf<Deref<T>>> and ...);
+      concept Typed = CT::Inner::CheckSize<T...>() and (NotVoid<TypeOf<Deref<T>>> and ...);
 
       /// Check if all T have no underlying types defined                     
       template<class...T>
-      concept Untyped = ((not Typed<Deref<T>>) and ...);
+      concept Untyped = CT::Inner::CheckSize<T...>() and ((not Typed<Deref<T>>) and ...);
 
    } // namespace Langulus::CT
 

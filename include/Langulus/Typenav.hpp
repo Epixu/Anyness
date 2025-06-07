@@ -131,13 +131,6 @@ namespace Langulus::CT
       }
 
    } // namespace Langulus::CT::Inner
-
-   /// Check if a function encapsulated in a lambda is a constexpr            
-   /// Leverages that lambda expressions can be constexpr as of C++17         
-   /// https://stackoverflow.com/questions/55288555                           
-   template<class Lambda, int = (Lambda {}(), 0)>
-   consteval bool IsConstexpr(Lambda) { return true;  }
-   consteval bool IsConstexpr(...)    { return false; }
    
    /// Check if all T are sheddable types (like intents), that serve only to  
    /// wrap data for tag dispatching and semantics. Sheddable types don't     
@@ -220,28 +213,17 @@ namespace Langulus
    template<class T>
    consteval size_t GetExtentOf(T&&) { return ExtentOf<::std::remove_reference_t<Shed<T>>>; }
 
-   /// Same as ::std::declval, but more humanely named                        
-   template<class T>
-   ::std::add_rvalue_reference_t<T> Fake() noexcept {
-      static_assert(false, "Calling Fake is ill-formed");
-   }
-
-   /// Same as ::std::declval, but deduces type via argument                  
-   template<class T>
-   ::std::add_rvalue_reference_t<T> Fake(T) noexcept {
-      static_assert(false, "Calling Fake is ill-formed");
-   }
-
    /// Remove a reference from type                                           
    template<class T>
    using Deref = ::std::remove_reference_t<T>;
 
    /// Remove a pointer from type                                             
-   ///   @attention a type can still be CT::Sparse after being Deptr,         
+   ///   @attention will remove references as well                            
+   ///   @attention a type can still be CT::Sparse after being Deptr'ed,      
    ///      when using custom packed pointer types for example. Deptr         
    ///      removes only indirections that are part of the C++ syntax.        
    template<class T>
-   using Deptr = ::std::remove_pointer_t<T>;
+   using Deptr = ::std::remove_pointer_t<::std::remove_reference_t<T>>;
 
    /// Remove a const/volatile from a type                                    
    template<class T>
@@ -256,8 +238,9 @@ namespace Langulus
    using Devq = ::std::remove_volatile_t<T>;
 
    /// Remove an array extent from a type                                     
+   ///   @attention will remove references as well                            
    template<class T>
-   using Deext = ::std::remove_extent_t<Deref<T>>;
+   using Deext = ::std::remove_extent_t<::std::remove_reference_t<T>>;
    
    namespace Inner
    {
@@ -359,7 +342,10 @@ namespace Langulus
       ///   @attention still allowed to be cv-qualified                       
       template<class...T>
       concept Slab = Inner::CheckSize<T...>()
-          and ((not ::std::is_pointer_v<T> and not ::std::is_reference_v<T>) and ...);
+          and ((not ::std::is_pointer_v<T>
+            and not ::std::is_reference_v<T>
+            and not ::std::is_array_v<T>
+          ) and ...);
 
    } // namespace Langulus::CT
 
@@ -367,20 +353,20 @@ namespace Langulus
    {
 
       /// Removes all const/volatile qualifiers from all indirections         
-      ///   @attention will strip references as well                          
+      /// Preserves references                                                
       ///   @return a pointer to the stripped T                               
       template<class T>
-      consteval auto NestedDecvq() {
-         static_assert(not CT::Reference<T>, "T can't be a reference");
-         using Stripped = Decvq<T>;
-         if constexpr (CT::Decayed<Stripped>)
-            return static_cast<Stripped*>(nullptr);
-         else if constexpr (::std::is_bounded_array_v<Stripped>)
-            return static_cast<Deptr<decltype(NestedDecvq<Deext<Stripped>>())> (*) [::std::extent_v<Stripped>]>(nullptr);
-         else if constexpr (::std::is_pointer_v<Stripped>)
-            return static_cast<decltype(NestedDecvq<Deptr<Stripped>>())*>(nullptr);
+      consteval CT::Typelist auto NestedDecvq() {
+         if constexpr (::std::is_rvalue_reference_v<T>)
+            return Types<typename decltype(NestedDecvq<::std::remove_reference_t<T>>())::First&&> {};
+         else if constexpr (::std::is_lvalue_reference_v<T>)
+            return Types<typename decltype(NestedDecvq<::std::remove_reference_t<T>>())::First&> {};
+         else if constexpr (::std::is_pointer_v<T>)
+            return Types<typename decltype(NestedDecvq<::std::remove_pointer_t<T>>())::First*> {};
+         else if constexpr (::std::is_bounded_array_v<T>)
+            return Types<typename decltype(NestedDecvq<::std::remove_extent_t<T>>())::First [::std::extent_v<T>]> {};
          else
-            static_assert(false, "Shouldn't be possible");
+            return Types<::std::remove_cv_t<T>> {};
       }
 
    } // namespace Langulus::Inner
@@ -390,7 +376,7 @@ namespace Langulus
    /// This strongly guarantees, that it strips EVERYTHING, including nested  
    /// pointer/array constness/volatileness, etc.                             
    template<class T>
-   using DecvqAll = Deptr<decltype(Inner::NestedDecvq<T>())>;
+   using DecvqAll = typename decltype(Inner::NestedDecvq<T>())::First;
 
 } // namespace Langulus
 

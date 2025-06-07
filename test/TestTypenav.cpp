@@ -21,6 +21,7 @@ namespace
    struct SheddableType { using CTTI_Sheddable = Yes; using CTTI_Typed = T; };
    struct SheddableTypeDerived : SheddableType<int&> {};
    struct NonSheddableTypeDerived : SheddableType<int&> { using CTTI_Sheddable = No; };
+   struct IncompleteType;
 }
 
 TEMPLATE_TEST_CASE("Testing sheddable types", "[ct]",
@@ -37,6 +38,7 @@ TEMPLATE_TEST_CASE("Testing non-sheddable types", "[ct]",
    SheddableType<int&>*,
    NonSheddableTypeDerived,
    NonSheddableTypeDerived&,
+   IncompleteType,
    int,
    int&
 ) {
@@ -59,16 +61,13 @@ static_assert(not CT::NotSheddable<SheddableType<int&>*, NonSheddableTypeDerived
 ///                                                                           
 namespace
 {
-
    using ArrayType = int[50];
    using ArrayType2 = int[50][2];
    using ArrayTypeRef = int(&)[50];
    using ArrayTypeRef2 = int(&)[50][2];
    using PointerType = int*;
    using PointerType2 = int**;
-   struct CustomArrayType {
-      using CTTI_Array = YesValue<56>;
-   };
+   struct CustomArrayType { using CTTI_Array = YesValue<56>; };
    struct CustomNonArrayType {};
 }
 
@@ -89,6 +88,7 @@ TEMPLATE_TEST_CASE("Testing non-array types", "[ct]",
    PointerType2,
    ArrayType*,
    CustomNonArrayType,
+   IncompleteType,
    int,
    int&
 ) {
@@ -106,6 +106,7 @@ static_assert(not CT::Array<ArrayType, ArrayType2, CustomNonArrayType>);
 SCENARIO("Getting the extent of bounded array types", "[ct]") {
    static_assert(ExtentOf<SheddableType<ArrayType>> == 50);
    static_assert(ExtentOf<ArrayType> == 50);
+   static_assert(ExtentOf<ArrayType*> == 1);
    static_assert(ExtentOf<ArrayType2> == 50);
    static_assert(ExtentOf<Deext<ArrayType2>> == 2);
    static_assert(ExtentOf<ArrayTypeRef> == 50);
@@ -115,6 +116,7 @@ SCENARIO("Getting the extent of bounded array types", "[ct]") {
    static_assert(ExtentOf<PointerType2> == 1);
    static_assert(ExtentOf<CustomArrayType> == 56);
    static_assert(ExtentOf<CustomNonArrayType> == 1);
+   static_assert(ExtentOf<IncompleteType> == 1);
 }
 
 
@@ -132,6 +134,7 @@ TEMPLATE_TEST_CASE("Testing sparse types", "[ct]",
    PointerType,
    CustomPointerType,
    ::std::nullptr_t,
+   IncompleteType*,
    void**
 ) {
    static_assert(    CT::Sparse<TestType>);
@@ -141,7 +144,8 @@ TEMPLATE_TEST_CASE("Testing sparse types", "[ct]",
 TEMPLATE_TEST_CASE("Testing dense types", "[ct]",
    SheddableType<CustomNonPointerType>,
    CustomNonPointerType,
-   int, int&, void
+   int, int&, void,
+   IncompleteType
 ) {
    static_assert(not CT::Sparse<TestType>);
    static_assert(    CT::Dense<TestType>);
@@ -154,6 +158,131 @@ static_assert(not CT::Sparse<SheddableType<PointerType>, PointerType, int>);
 //static_assert(CT::Dense<>); // shouldn't compile at all
 static_assert(    CT::Dense<SheddableType<CustomNonPointerType>, CustomNonPointerType, int>);
 static_assert(not CT::Dense<SheddableType<CustomNonPointerType>, CustomNonPointerType, int*>);
+
+
+///                                                                           
+/// CT::Constant / CT::Mutable                                                
+///                                                                           
+namespace
+{
+   struct CustomConstType { using CTTI_Constant = Yes; };
+   struct CustomMutableType : CustomConstType { using CTTI_Constant = No; };
+}
+
+TEMPLATE_TEST_CASE("Testing constant types", "[ct]",
+   SheddableType<const PointerType>,
+   SheddableType<const PointerType&>,
+   PointerType* const,
+   CustomMutableType const,
+   CustomConstType,
+   CustomConstType&,
+   IncompleteType const
+) {
+   static_assert(    CT::Constant<TestType>);
+   static_assert(not CT::Mutable<TestType>);
+}
+
+TEMPLATE_TEST_CASE("Testing mutable types", "[ct]",
+   SheddableType<PointerType>,
+   SheddableType<PointerType&>,
+   SheddableType<PointerType const*>,
+   PointerType const* const*,
+   CustomMutableType,
+   CustomConstType*,
+   ::std::nullptr_t,
+   void, int,
+   IncompleteType
+) {
+   static_assert(not CT::Constant<TestType>);
+   static_assert(    CT::Mutable<TestType>);
+}
+
+//static_assert(CT::Constant<>); // shouldn't compile at all
+static_assert(    CT::Constant<SheddableType<const PointerType>, CustomConstType, CustomConstType>);
+static_assert(not CT::Constant<SheddableType<const PointerType>, CustomConstType, int>);
+
+//static_assert(CT::Mutable<>); // shouldn't compile at all
+static_assert(    CT::Mutable<SheddableType<PointerType>, SheddableType<PointerType&>, int>);
+static_assert(not CT::Mutable<SheddableType<PointerType>, SheddableType<PointerType&>, CustomConstType>);
+
+
+///                                                                           
+/// CT::Volatile                                                              
+///                                                                           
+namespace
+{
+   struct CustomVolatileType { using CTTI_Volatile = Yes; };
+   struct CustomNonVolatileType : CustomVolatileType { using CTTI_Volatile = No; };
+}
+
+TEMPLATE_TEST_CASE("Testing volatile types", "[ct]",
+   SheddableType<CustomVolatileType>,
+   SheddableType<CustomVolatileType&>,
+   CustomVolatileType,
+   volatile int&,
+   volatile int,
+   volatile IncompleteType
+) {
+   static_assert(    CT::Volatile<TestType>);
+}
+
+TEMPLATE_TEST_CASE("Testing non-volatile types", "[ct]",
+   SheddableType<CustomVolatileType*>,
+   CustomNonVolatileType,
+   int,
+   IncompleteType
+) {
+   static_assert(not CT::Volatile<TestType>);
+}
+
+//static_assert(CT::Volatile<>); // shouldn't compile at all
+static_assert(    CT::Volatile<SheddableType<CustomVolatileType>, SheddableType<CustomVolatileType&>, volatile int>);
+static_assert(not CT::Volatile<SheddableType<CustomVolatileType>, SheddableType<CustomVolatileType&>, int>);
+
+
+///                                                                           
+/// CT::Convoluted                                                            
+///                                                                           
+TEMPLATE_TEST_CASE("Testing convoluted types", "[ct]",
+   SheddableType<const PointerType>,
+   SheddableType<const PointerType&>,
+   SheddableType<volatile PointerType>,
+   SheddableType<volatile PointerType&>,
+   PointerType* const,
+   PointerType* volatile,
+   CustomMutableType const,
+   CustomVolatileType,
+   CustomConstType,
+   CustomConstType&,
+   IncompleteType const,
+   volatile IncompleteType
+) {
+   static_assert(    CT::Convoluted<TestType>);
+   static_assert(not CT::NotConvoluted<TestType>);
+}
+
+TEMPLATE_TEST_CASE("Testing non-convoluted types", "[ct]",
+   SheddableType<PointerType>,
+   SheddableType<PointerType&>,
+   SheddableType<PointerType const*>,
+   volatile PointerType const* const*,
+   CustomMutableType,
+   CustomConstType*,
+   ::std::nullptr_t,
+   void, int,
+   IncompleteType
+) {
+   static_assert(    CT::NotConvoluted<TestType>);
+   static_assert(not CT::Convoluted<TestType>);
+}
+
+//static_assert(CT::Convoluted<>); // shouldn't compile at all
+static_assert(    CT::Convoluted<SheddableType<const PointerType>, CustomConstType, CustomConstType>);
+static_assert(not CT::Convoluted<SheddableType<const PointerType>, CustomConstType, int>);
+
+//static_assert(CT::NotConvoluted<>); // shouldn't compile at all
+static_assert(    CT::NotConvoluted<SheddableType<PointerType>, SheddableType<PointerType&>, int>);
+static_assert(not CT::NotConvoluted<SheddableType<PointerType>, SheddableType<PointerType&>, CustomConstType>);
 
 
 ///                                                                           
@@ -184,6 +313,7 @@ TEMPLATE_TEST_CASE("Testing non-null types", "[ct]",
    NonNullTypeDerived,
    NonNullTypeDerived&,
    SheddableType<NonNullTypeDerived&>,
+   IncompleteType,
    int,
    int&
 ) {
@@ -235,6 +365,7 @@ TEMPLATE_TEST_CASE("Testing non-enum types", "[ct]",
    NonEnumTypeDerived,
    NonEnumTypeDerived&,
    SheddableType<NonEnumTypeDerived&>,
+   IncompleteType,
    int,
    int&
 ) {
@@ -296,6 +427,7 @@ TEMPLATE_TEST_CASE("Testing non-aggregate types", "[ct]",
    NonAggregateTypeDerived,
    NonAggregateTypeDerived&,
    SheddableType<NonAggregateTypeDerived&>,
+   //IncompleteType, // should error out, we can't know whether an incomplete type is an aggregate
    int,
    int&
 ) {
@@ -340,7 +472,8 @@ TEMPLATE_TEST_CASE("Testing non-fundamental types", "[ct]",
    FundamentalType*,
    NonFundamentalTypeDerived,
    NonFundamentalTypeDerived&,
-   SheddableType<NonFundamentalTypeDerived&>
+   SheddableType<NonFundamentalTypeDerived&>,
+   IncompleteType
 ) {
    static_assert(not CT::Fundamental<TestType>);
    static_assert(    CT::NotFundamental<TestType>);
@@ -353,3 +486,396 @@ static_assert(not CT::Fundamental<SheddableType<FundamentalType>, FundamentalTyp
 //static_assert(CT::NotFundamental<>); // shouldn't compile at all
 static_assert(    CT::NotFundamental<SheddableType<FundamentalType*>, NonFundamentalTypeDerived, FundamentalType*>);
 static_assert(not CT::NotFundamental<SheddableType<FundamentalType*>, NonFundamentalTypeDerived, FundamentalType>);
+
+
+///                                                                           
+/// CT::Reference                                                             
+///                                                                           
+TEMPLATE_TEST_CASE("Testing reference types", "[ct]",
+   SheddableType<int&>,
+   int*&,
+   int&,
+   int&&,
+   int(&)[15],
+   IncompleteType&
+) {
+   static_assert(    CT::Reference<TestType>);
+   static_assert(not CT::NotReference<TestType>);
+}
+
+TEMPLATE_TEST_CASE("Testing non-reference types", "[ct]",
+   SheddableType<int>&,
+   int*,
+   int[15],
+   IncompleteType
+) {
+   static_assert(not CT::Reference<TestType>);
+   static_assert(    CT::NotReference<TestType>);
+}
+
+//static_assert(CT::Reference<>); // shouldn't compile at all
+static_assert(    CT::Reference<SheddableType<int&>, int&, int(&)[15]>);
+static_assert(not CT::Reference<SheddableType<int&>, int&, int   [15]>);
+
+//static_assert(CT::NotReference<>); // shouldn't compile at all
+static_assert(    CT::NotReference<SheddableType<int>&, int*, IncompleteType>);
+static_assert(not CT::NotReference<SheddableType<int>&, int*, IncompleteType&>);
+
+
+///                                                                           
+/// CT::Decayed                                                               
+///                                                                           
+TEMPLATE_TEST_CASE("Testing decayed types", "[ct]",
+   SheddableType<int&>,
+   int,
+   IncompleteType
+) {
+   static_assert(    CT::Decayed<TestType>);
+   static_assert(not CT::NotDecayed<TestType>);
+}
+
+TEMPLATE_TEST_CASE("Testing non-decayed types", "[ct]",
+   SheddableType<int>&,
+   int*,
+   int[15],
+   int*&,
+   int&,
+   int&&,
+   int(&)[15],
+   IncompleteType&
+) {
+   static_assert(not CT::Decayed<TestType>);
+   static_assert(    CT::NotDecayed<TestType>);
+}
+
+//static_assert(CT::Decayed<>); // shouldn't compile at all
+static_assert(    CT::Decayed<SheddableType<int&>, int, IncompleteType>);
+static_assert(not CT::Decayed<SheddableType<int&>, int, IncompleteType&>);
+
+//static_assert(CT::NotDecayed<>); // shouldn't compile at all
+static_assert(    CT::NotDecayed<SheddableType<int>&, int*, IncompleteType&>);
+static_assert(not CT::NotDecayed<SheddableType<int>&, int*, IncompleteType>);
+
+
+///                                                                           
+/// CT::Slab                                                                  
+///                                                                           
+TEMPLATE_TEST_CASE("Testing slab types", "[ct]",
+   SheddableType<int>,
+   SheddableType<int&>,
+   int,
+   IncompleteType
+) {
+   static_assert(    CT::Slab<TestType>);
+}
+
+TEMPLATE_TEST_CASE("Testing non-volatile types", "[ct]",
+   SheddableType<int>&,
+   int*,
+   int*&,
+   int[15],
+   int(&)[15],
+   IncompleteType*
+) {
+   static_assert(not CT::Slab<TestType>);
+}
+
+//static_assert(CT::Slab<>); // shouldn't compile at all
+static_assert(    CT::Slab<SheddableType<int>, SheddableType<int&>, int>);
+static_assert(not CT::Slab<SheddableType<int>, SheddableType<int&>, int*>);
+
+
+///                                                                           
+/// IsConstexpr                                                               
+///                                                                           
+namespace
+{
+   constexpr int const_function(int x, int y) { return x + y; }
+   int nonconst_function(int x, int y) { return x + y; }
+}
+
+static_assert(    IsConstexpr([] {    const_function(1,2);}));
+static_assert(not IsConstexpr([] { nonconst_function(1,2);}));
+
+
+///                                                                           
+/// Deref                                                                     
+///                                                                           
+static_assert(::std::same_as<Deref<SheddableType<int&>>, SheddableType<int&>>); //TODO decide whether to shed
+static_assert(::std::same_as<Deref<SheddableType<int>&>, SheddableType<int>>);
+
+static_assert(::std::same_as<Deref<int>,   int>);
+static_assert(::std::same_as<Deref<int&>,  int>);
+static_assert(::std::same_as<Deref<int&&>, int>);
+static_assert(::std::same_as<Deref<int const&>,  int const>);
+static_assert(::std::same_as<Deref<int const&&>, int const>);
+static_assert(::std::same_as<Deref<const int(&)[15]>, const int[15]>);
+static_assert(::std::same_as<Deref<int(&)[15]>, int[15]>);
+
+
+///                                                                           
+/// Deptr                                                                     
+///                                                                           
+static_assert(::std::same_as<Deptr<SheddableType<int*>>, SheddableType<int*>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Deptr<SheddableType<int>*>, SheddableType<int>>);
+
+static_assert(::std::same_as<Deptr<int>,   int>);
+static_assert(::std::same_as<Deptr<int&>,  int>);
+static_assert(::std::same_as<Deptr<int&&>, int>);
+static_assert(::std::same_as<Deptr<int const&>,  int const>);
+static_assert(::std::same_as<Deptr<int const&&>, int const>);
+static_assert(::std::same_as<Deptr<int(&)[15]>, int[15]>);
+
+static_assert(::std::same_as<Deptr<int*>,   int>);
+static_assert(::std::same_as<Deptr<int*&>,  int>);
+static_assert(::std::same_as<Deptr<int*&&>, int>);
+static_assert(::std::same_as<Deptr<int const*&>,  int const>);
+static_assert(::std::same_as<Deptr<int const*&&>, int const>);
+static_assert(::std::same_as<Deptr<int(*)[15]>, int[15]>);
+static_assert(::std::same_as<Deptr<int*(*)[15]>, int*[15]>);
+static_assert(::std::same_as<Deptr<int*[15]>, int*[15]>);
+
+static_assert(::std::same_as<Deptr<int**>,   int*>);
+static_assert(::std::same_as<Deptr<int**&>,  int*>);
+static_assert(::std::same_as<Deptr<int**&&>, int*>);
+static_assert(::std::same_as<Deptr<int const**&>,  int const*>);
+static_assert(::std::same_as<Deptr<int const**&&>, int const*>);
+static_assert(::std::same_as<Deptr<int const* const*&>,  int const* const>);
+static_assert(::std::same_as<Deptr<int const* const*&&>, int const* const>);
+
+
+///                                                                           
+/// Decvq                                                                     
+///                                                                           
+static_assert(::std::same_as<Decvq<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Decvq<SheddableType<int>* const volatile>, SheddableType<int>*>);
+
+static_assert(::std::same_as<Decvq<int>,   int>);
+static_assert(::std::same_as<Decvq<int&>,  int&>);
+static_assert(::std::same_as<Decvq<int&&>, int&&>);
+static_assert(::std::same_as<Decvq<volatile int>, int>);
+static_assert(::std::same_as<Decvq<int const&>,  int const&>);
+static_assert(::std::same_as<Decvq<int const&&>, int const&&>);
+static_assert(::std::same_as<Decvq<int const>,   int>);
+static_assert(::std::same_as<Decvq<volatile int const>, int>);
+static_assert(::std::same_as<Decvq<volatile int(&)[15]>, volatile int(&)[15]>);
+static_assert(::std::same_as<Decvq<volatile const int[15]>, int[15]>);
+
+static_assert(::std::same_as<Decvq<int*>,   int*>);
+static_assert(::std::same_as<Decvq<int*&>,  int*&>);
+static_assert(::std::same_as<Decvq<int*&&>, int*&&>);
+static_assert(::std::same_as<Decvq<volatile int*>, volatile int*>);
+static_assert(::std::same_as<Decvq<int const*&>,  int const*&>);
+static_assert(::std::same_as<Decvq<int const*&&>, int const*&&>);
+static_assert(::std::same_as<Decvq<int const* const&>,  int const* const&>);
+static_assert(::std::same_as<Decvq<int const* const&&>, int const* const&&>);
+static_assert(::std::same_as<Decvq<int const* const>,   int const*>);
+static_assert(::std::same_as<Decvq<int const* const volatile>, int const*>);
+
+static_assert(::std::same_as<Decvq<int**>,   int**>);
+static_assert(::std::same_as<Decvq<int**&>,  int**&>);
+static_assert(::std::same_as<Decvq<int**&&>, int**&&>);
+static_assert(::std::same_as<Decvq<volatile int**>, volatile int**>);
+static_assert(::std::same_as<Decvq<int const**&>,  int const**&>);
+static_assert(::std::same_as<Decvq<int const**&&>, int const**&&>);
+static_assert(::std::same_as<Decvq<int const* const*&>,  int const* const*&>);
+static_assert(::std::same_as<Decvq<int const* const*&&>, int const* const*&&>);
+static_assert(::std::same_as<Decvq<int const* const* const&>,  int const* const* const&>);
+static_assert(::std::same_as<Decvq<int const* const* const&&>, int const* const* const&&>);
+static_assert(::std::same_as<Decvq<int const* const* const>,   int const* const*>);
+static_assert(::std::same_as<Decvq<int const* const* const volatile>, int const* const*>);
+
+
+///                                                                           
+/// Decq                                                                      
+///                                                                           
+static_assert(::std::same_as<Decq<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Decq<SheddableType<int>* const>, SheddableType<int>*>);
+
+static_assert(::std::same_as<Decq<int>,   int>);
+static_assert(::std::same_as<Decq<int&>,  int&>);
+static_assert(::std::same_as<Decq<int&&>, int&&>);
+static_assert(::std::same_as<Decq<volatile int>, volatile int>);
+static_assert(::std::same_as<Decq<int const&>,  int const&>);
+static_assert(::std::same_as<Decq<int const&&>, int const&&>);
+static_assert(::std::same_as<Decq<int const>,   int>);
+static_assert(::std::same_as<Decq<int const volatile>, int volatile>);
+static_assert(::std::same_as<Decq<volatile int(&)[15]>, volatile int(&)[15]>);
+static_assert(::std::same_as<Decq<volatile const int[15]>, volatile int[15]>);
+
+static_assert(::std::same_as<Decq<int*>,   int*>);
+static_assert(::std::same_as<Decq<int*&>,  int*&>);
+static_assert(::std::same_as<Decq<int*&&>, int*&&>);
+static_assert(::std::same_as<Decq<volatile int*>, volatile int*>);
+static_assert(::std::same_as<Decq<int const*&>,  int const*&>);
+static_assert(::std::same_as<Decq<int const*&&>, int const*&&>);
+static_assert(::std::same_as<Decq<int const* const&>,  int const* const&>);
+static_assert(::std::same_as<Decq<int const* const&&>, int const* const&&>);
+static_assert(::std::same_as<Decq<int const* const>,   int const*>);
+static_assert(::std::same_as<Decq<int const* const volatile>, int const* volatile>);
+
+static_assert(::std::same_as<Decq<int**>,   int**>);
+static_assert(::std::same_as<Decq<int**&>,  int**&>);
+static_assert(::std::same_as<Decq<int**&&>, int**&&>);
+static_assert(::std::same_as<Decq<volatile int**>, volatile int**>);
+static_assert(::std::same_as<Decq<int const**&>,  int const**&>);
+static_assert(::std::same_as<Decq<int const**&&>, int const**&&>);
+static_assert(::std::same_as<Decq<int const* const*&>,  int const* const*&>);
+static_assert(::std::same_as<Decq<int const* const*&&>, int const* const*&&>);
+static_assert(::std::same_as<Decq<int const* const* const&>,  int const* const* const&>);
+static_assert(::std::same_as<Decq<int const* const* const&&>, int const* const* const&&>);
+static_assert(::std::same_as<Decq<int const* const* const>,   int const* const*>);
+static_assert(::std::same_as<Decq<int const* const* const volatile>, int const* const* volatile>);
+
+
+///                                                                           
+/// Devq                                                                      
+///                                                                           
+static_assert(::std::same_as<Decq<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Decq<SheddableType<int>* const volatile>, SheddableType<int>* volatile>);
+
+static_assert(::std::same_as<Devq<int>, int>);
+static_assert(::std::same_as<Devq<int&>, int&>);
+static_assert(::std::same_as<Devq<int&&>, int&&>);
+static_assert(::std::same_as<Devq<volatile int>, int>);
+static_assert(::std::same_as<Devq<int const&>, int const&>);
+static_assert(::std::same_as<Devq<int const&&>, int const&&>);
+static_assert(::std::same_as<Devq<int const>, int const>);
+static_assert(::std::same_as<Devq<volatile int const>, int const>);
+static_assert(::std::same_as<Devq<volatile int(&)[15]>, volatile int(&)[15]>);
+static_assert(::std::same_as<Devq<volatile const int[15]>, const int[15]>);
+
+static_assert(::std::same_as<Devq<int*>, int*>);
+static_assert(::std::same_as<Devq<int*&>, int*&>);
+static_assert(::std::same_as<Devq<int*&&>, int*&&>);
+static_assert(::std::same_as<Devq<volatile int*>, volatile int*>);
+static_assert(::std::same_as<Devq<int const*&>, int const*&>);
+static_assert(::std::same_as<Devq<int const*&&>, int const*&&>);
+static_assert(::std::same_as<Devq<int const* const&>, int const* const&>);
+static_assert(::std::same_as<Devq<int const* const&&>, int const* const&&>);
+static_assert(::std::same_as<Devq<int const* const>, int const* const>);
+static_assert(::std::same_as<Devq<int const* const volatile>, int const* const>);
+
+static_assert(::std::same_as<Devq<int**>, int**>);
+static_assert(::std::same_as<Devq<int**&>, int**&>);
+static_assert(::std::same_as<Devq<int**&&>, int**&&>);
+static_assert(::std::same_as<Devq<volatile int**>, volatile int**>);
+static_assert(::std::same_as<Devq<int const**&>, int const**&>);
+static_assert(::std::same_as<Devq<int const**&&>, int const**&&>);
+static_assert(::std::same_as<Devq<int const* const*&>, int const* const*&>);
+static_assert(::std::same_as<Devq<int const* const*&&>, int const* const*&&>);
+static_assert(::std::same_as<Devq<int const* const* const&>, int const* const* const&>);
+static_assert(::std::same_as<Devq<int const* const* const&&>, int const* const* const&&>);
+static_assert(::std::same_as<Devq<int const* const* const>, int const* const* const>);
+static_assert(::std::same_as<Devq<int const* const* const volatile>, int const* const* const>);
+
+
+///                                                                           
+/// Deext                                                                     
+///                                                                           
+static_assert(::std::same_as<Deext<SheddableType<int(&)[15]>>, SheddableType<int(&)[15]>>);  //TODO decide whether to shed, because CT::Array sheds and it seems more intuitive
+static_assert(::std::same_as<Deext<SheddableType<int>(&)[15]>, SheddableType<int>>);
+
+static_assert(::std::same_as<Deext<int>, int>);
+static_assert(::std::same_as<Deext<int&>, int>);
+static_assert(::std::same_as<Deext<int&&>, int>);
+static_assert(::std::same_as<Deext<volatile int>, volatile int>);
+static_assert(::std::same_as<Deext<int const&>, int const>);
+static_assert(::std::same_as<Deext<int const&&>, int const>);
+static_assert(::std::same_as<Deext<int const>, int const>);
+static_assert(::std::same_as<Deext<volatile int(&)[15]>, volatile int>);
+static_assert(::std::same_as<Deext<volatile const int[15]>, volatile const int>);
+
+static_assert(::std::same_as<Deext<int*>, int*>);
+static_assert(::std::same_as<Deext<int*&>, int*>);
+static_assert(::std::same_as<Deext<int*&&>, int*>);
+static_assert(::std::same_as<Deext<volatile int*>, volatile int*>);
+static_assert(::std::same_as<Deext<int const*&>, int const*>);
+static_assert(::std::same_as<Deext<int const*&&>, int const*>);
+static_assert(::std::same_as<Deext<int const* const&>, int const* const>);
+static_assert(::std::same_as<Deext<int const* const&&>, int const* const>);
+static_assert(::std::same_as<Deext<int const* const>, int const* const>);
+static_assert(::std::same_as<Deext<int const* const volatile>, int const* const volatile>);
+
+
+///                                                                           
+/// Decay                                                                     
+///                                                                           
+static_assert(::std::same_as<Decay<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Decay<SheddableType<int>* const volatile>, SheddableType<int>>);
+
+static_assert(::std::same_as<Decay<int>, int>);
+static_assert(::std::same_as<Decay<int&>, int>);
+static_assert(::std::same_as<Decay<int&&>, int>);
+static_assert(::std::same_as<Decay<volatile int>, int>);
+static_assert(::std::same_as<Decay<int const&>, int>);
+static_assert(::std::same_as<Decay<int const&&>, int>);
+static_assert(::std::same_as<Decay<int const>, int>);
+static_assert(::std::same_as<Decay<volatile int(&)[15]>, int>);
+static_assert(::std::same_as<Decay<volatile const int[15]>, int>);
+
+static_assert(::std::same_as<Decay<int*>, int>);
+static_assert(::std::same_as<Decay<int*&>, int>);
+static_assert(::std::same_as<Decay<int*&&>, int>);
+static_assert(::std::same_as<Decay<volatile int*>, int>);
+static_assert(::std::same_as<Decay<int const*&>, int>);
+static_assert(::std::same_as<Decay<int const*&&>, int>);
+static_assert(::std::same_as<Decay<int const* const&>, int>);
+static_assert(::std::same_as<Decay<int const* const&&>, int>);
+static_assert(::std::same_as<Decay<int const* const>, int>);
+static_assert(::std::same_as<Decay<int const* const volatile>, int>);
+
+static_assert(::std::same_as<Decay<int**>, int>);
+static_assert(::std::same_as<Decay<int**&>, int>);
+static_assert(::std::same_as<Decay<int**&&>, int>);
+static_assert(::std::same_as<Decay<volatile int**>, int>);
+static_assert(::std::same_as<Decay<int const**&>, int>);
+static_assert(::std::same_as<Decay<int const**&&>, int>);
+static_assert(::std::same_as<Decay<int const* const*&>, int>);
+static_assert(::std::same_as<Decay<int const* const*&&>, int>);
+static_assert(::std::same_as<Decay<int const* const* const&>, int>);
+static_assert(::std::same_as<Decay<int const* const* const&&>, int>);
+static_assert(::std::same_as<Decay<int const* const* const>, int>);
+static_assert(::std::same_as<Decay<int const* const* const volatile>, int>);
+
+
+///                                                                           
+/// DecvqAll                                                                  
+///                                                                           
+static_assert(::std::same_as<DecvqAll<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<DecvqAll<SheddableType<int>* const volatile>, SheddableType<int>*>);
+
+static_assert(::std::same_as<DecvqAll<int>,   int>);
+static_assert(::std::same_as<DecvqAll<int&>,  int&>);
+static_assert(::std::same_as<DecvqAll<int&&>, int&&>);
+static_assert(::std::same_as<DecvqAll<volatile int>, int>);
+static_assert(::std::same_as<DecvqAll<int const&>,  int&>);
+static_assert(::std::same_as<DecvqAll<int const&&>, int&&>);
+static_assert(::std::same_as<DecvqAll<int const>,   int>);
+static_assert(::std::same_as<DecvqAll<volatile int const>, int>);
+static_assert(::std::same_as<DecvqAll<volatile int(&)[15]>, int(&)[15]>);
+static_assert(::std::same_as<DecvqAll<volatile const int[15]>, int[15]>);
+
+static_assert(::std::same_as<DecvqAll<int*>,   int*>);
+static_assert(::std::same_as<DecvqAll<int*&>,  int*&>);
+static_assert(::std::same_as<DecvqAll<int*&&>, int*&&>);
+static_assert(::std::same_as<DecvqAll<volatile int*>, int*>);
+static_assert(::std::same_as<DecvqAll<int const*&>,  int*&>);
+static_assert(::std::same_as<DecvqAll<int const*&&>, int*&&>);
+static_assert(::std::same_as<DecvqAll<int const* const&>,  int*&>);
+static_assert(::std::same_as<DecvqAll<int const* const&&>, int*&&>);
+static_assert(::std::same_as<DecvqAll<int const* const>,   int*>);
+static_assert(::std::same_as<DecvqAll<int const* const volatile>, int*>);
+
+static_assert(::std::same_as<DecvqAll<int**>,   int**>);
+static_assert(::std::same_as<DecvqAll<int**&>,  int**&>);
+static_assert(::std::same_as<DecvqAll<int**&&>, int**&&>);
+static_assert(::std::same_as<DecvqAll<volatile int**>, int**>);
+static_assert(::std::same_as<DecvqAll<int const**&>,  int**&>);
+static_assert(::std::same_as<DecvqAll<int const**&&>, int**&&>);
+static_assert(::std::same_as<DecvqAll<int const* const*&>,  int**&>);
+static_assert(::std::same_as<DecvqAll<int const* const*&&>, int**&&>);
+static_assert(::std::same_as<DecvqAll<int const* const* const&>,  int**&>);
+static_assert(::std::same_as<DecvqAll<int const* const* const&&>, int**&&>);
+static_assert(::std::same_as<DecvqAll<int const* const* const>,   int**>);
+static_assert(::std::same_as<DecvqAll<int const* const* const volatile>, int**>);

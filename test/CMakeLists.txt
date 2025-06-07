@@ -16,6 +16,7 @@ add_langulus_test(LangulusAnynessTest
 	      		TestAssume.cpp
 	      		TestNameOf.cpp
 	      		TestHashOf.cpp
+	      		TestTypeOf.cpp
 	      		#TestSuffixOf.cpp
 				#${LANGULUS_ANYNESS_TEST_SOURCES}
 	LIBRARIES	Catch2 LangulusAnyness
