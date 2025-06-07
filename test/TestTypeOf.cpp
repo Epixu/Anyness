@@ -20,7 +20,39 @@ using namespace Langulus;
 namespace
 {
    template<class T>
-   struct SheddableType { using CTTI_Sheddable = Yes; using CTTI_Typed = T; };
+   struct SheddableType {
+      using CTTI_Sheddable = Yes;
+      using CTTI_Typed = T;
+
+      T instance;
+
+      SheddableType(T t) : instance {FWD(t)} {}
+   };
+
+   template<class T>
+   struct SheddableTypeCastableExplicit : SheddableType<T> {
+      using SheddableType<T>::SheddableType;
+      using SheddableType<T>::instance;
+      explicit operator T () noexcept { return FWD(instance); }
+      explicit operator T () const noexcept { return FWD(const_cast<SheddableTypeCastableExplicit<T>*>(this)->instance); }
+   };
+
+   template<class T>
+   struct SheddableTypeCastableImplicit : SheddableType<T> {
+      using SheddableType<T>::SheddableType;
+      using SheddableType<T>::instance;
+      operator T () noexcept { return FWD(instance); }
+      operator T () const noexcept { return FWD(const_cast<SheddableTypeCastableImplicit<T>*>(this)->instance); }
+   };
+
+   template<class T>
+   struct SheddableTypeCastableUsingMethod : SheddableType<T> {
+      using SheddableType<T>::SheddableType;
+      using SheddableType<T>::instance;
+      T TypedCast() noexcept { return FWD(instance); }
+      T TypedCast() const noexcept { return FWD(const_cast<SheddableTypeCastableUsingMethod<T>*>(this)->instance); }
+   };
+
    struct CustomTypedType { using CTTI_Typed = int; };
    struct CustomTypedTypeDerived : CustomTypedType { };
    struct CustomUntypedType : CustomTypedType { using CTTI_Typed = void; };
@@ -29,7 +61,7 @@ namespace
    struct IncompleteType;
 }
 
-TEMPLATE_TEST_CASE("Testing typed type", "[concepts]",
+TEMPLATE_TEST_CASE("Testing typed type", "[ct]",
    std::vector<bool>,
    std::string_view,
    (std::array<double, 5>),
@@ -44,7 +76,7 @@ TEMPLATE_TEST_CASE("Testing typed type", "[concepts]",
    static_assert(not CT::Untyped<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing untyped type", "[concepts]",
+TEMPLATE_TEST_CASE("Testing untyped type", "[ct]",
    CustomUntypedType,
    IncompleteType,
    void, int
@@ -60,3 +92,57 @@ static_assert(not CT::Typed<std::vector<bool>, CustomTypedType, int>);
 //static_assert(CT::Untyped<>); // shouldn't compile at all
 static_assert(    CT::Untyped<CustomUntypedType, IncompleteType, int>);
 static_assert(not CT::Untyped<CustomUntypedType, IncompleteType, TypedEnum>);
+
+
+///                                                                           
+/// TypeOf                                                                    
+///                                                                           
+TEST_CASE("Testing TypeOf", "[ct]") {
+   static_assert(::std::same_as<TypeOf<SheddableType<int>>, int>);
+   static_assert(::std::same_as<TypeOf<SheddableType<int&>>, int&>);
+   static_assert(::std::same_as<TypeOf<SheddableType<int const* const>>, int const* const>);
+   static_assert(::std::same_as<TypeOf<CustomTypedType>, int>);
+   static_assert(::std::same_as<TypeOf<int>, void>);
+   static_assert(::std::same_as<TypeOf<void>, void>);
+   static_assert(::std::same_as<TypeOf<::std::nullptr_t>, void>);
+   static_assert(::std::same_as<TypeOf<int&>, void>);
+   static_assert(::std::same_as<TypeOf<volatile int const* const&>, void>);
+   static_assert(::std::same_as<TypeOf<TypedEnum>, int64_t>);
+   static_assert(::std::same_as<TypeOf<CustomUntypedType>, void>);
+   static_assert(::std::same_as<TypeOf<std::vector<bool>>, bool>);
+   static_assert(::std::same_as<TypeOf<std::string_view>, char>);
+   static_assert(::std::same_as<TypeOf<std::array<double, 5>>, double>);
+   static_assert(::std::same_as<TypeOf<IncompleteType>, void>);
+}
+
+
+///                                                                           
+/// TypedCast                                                                 
+///                                                                           
+TEMPLATE_TEST_CASE("Testing TypedCast", "[ct]",
+   int,
+   int&&,
+   const int&,
+   SheddableTypeCastableExplicit<int>,
+   SheddableTypeCastableExplicit<int&&>,
+   SheddableTypeCastableExplicit<const int&>,
+   SheddableTypeCastableImplicit<int>,
+   SheddableTypeCastableImplicit<int&&>,
+   SheddableTypeCastableImplicit<const int&>,
+   SheddableTypeCastableUsingMethod<const int&>,
+   const SheddableTypeCastableExplicit<int>,
+   const SheddableTypeCastableExplicit<int&&>,
+   const SheddableTypeCastableExplicit<const int&>,
+   const SheddableTypeCastableImplicit<int>,
+   const SheddableTypeCastableImplicit<int&&>,
+   const SheddableTypeCastableImplicit<const int&>,
+   const SheddableTypeCastableUsingMethod<const int&>
+) {
+   int value = 656;
+   TestType i {::std::move(value)};
+
+   if constexpr (CT::Typed<TestType>)
+      static_assert(::std::same_as<decltype(TypedCast(i)), TypeOf<TestType>>);
+   else
+      static_assert(::std::same_as<decltype(TypedCast(i)), TestType&>);
+}

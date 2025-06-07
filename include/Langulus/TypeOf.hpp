@@ -16,7 +16,7 @@ namespace Langulus::CT::Inner
    /// Supports underlying typelists as well                                  
    template<class T>
    consteval CT::Typelist auto GetUnderlyingType() {
-      static_assert(CT::NotReference<T>, "Strip references");
+      static_assert(not ::std::is_reference_v<T>, "Strip references first");
 
       if constexpr (Array<T>)
          return Types<Deext<T>> {};
@@ -103,19 +103,22 @@ namespace Langulus
    constexpr decltype(auto) TypedCast(T&& what) {
       using TT = TypeOf<T>;
 
-      if constexpr (CT::Void<TT>)
-         return FWD(what);
-      else if constexpr (requires { what.TypedCast(); })
+      if constexpr (requires { what.TypedCast(); })
          return what.TypedCast();
-      else if constexpr (CT::Typelist<TT>)
-         static_assert(false , "Can't decide which type to cast to - add a TypedCast() method to disambiguate");
+      else if constexpr (CT::Void<TT>)
+         return FWD(what);
       else if constexpr (requires { what.operator TT (); })
          return what.operator TT ();
-      else
-         static_assert(false, "No cast operator available for decaying to inner type");
+      else {
+         static_assert(false,
+            "No cast operator or TypedCast method available for casting to inner type. "
+            "Check the constness of your TypedCast() or cast operators? "
+            "Is it compatible with the contained type?"
+         );
+      }
    }
 
-   /// Strips all sheddable layers down to the most inner type                
+   /// Strips all sheddable layers down to the first non-sheddable inner type 
    template<class T>
    constexpr decltype(auto) ShedCast(T&& item) noexcept {
       if constexpr (CT::Sheddable<T>) {
@@ -123,7 +126,7 @@ namespace Langulus
          static_assert(not ::std::same_as<::std::decay_t<T>, ::std::decay_t<InnerT>>,
             "Sheddable type's inner type is the same, and will result in infinite regress");
          static_assert(requires { static_cast<InnerT>(item); },
-            "Sheddable can't be static_casted to the inner type");
+            "Sheddable can't be static_cast'ed to the inner type");
          return ShedCast(static_cast<InnerT>(item));
       }
       else return FWD(item);
