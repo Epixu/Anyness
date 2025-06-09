@@ -9,15 +9,12 @@
 #include "TypeOf.hpp"
 #include "CT/Derived.hpp"
 #include "CT/POD.hpp"
-//#include <utility>
 
 
 namespace Langulus::CTTI
 {
 
-   /// Can be used in two ways to satisfy CT::Intent<T>:                      
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Intent = Yes/No;` in T                     
+   /// Affects CT::Intent                                                     
    template<class T>
    struct Intent {
       static constexpr bool Enabled = false;
@@ -27,12 +24,20 @@ namespace Langulus::CTTI
 
 namespace Langulus::CT
 {
-   template<class...T>
-   concept Intent = ((CTTI::Intent<Deref<T>>::Enabled or (not ::std::is_pointer_v<T> and Decay<T>::CTTI_Intent::Enabled)) and ...);
 
+   /// Check if all T are sheddable intents                                   
    template<class...T>
-   concept NoIntent = ((not Intent<Deref<T>>) and ...);
+   concept Intent = Inner::CheckSize<T...>() and (
+         (CTTI::Intent<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, Intent)
+      ) and ...);
+
+   /// Check if all T are NOT sheddable intents                               
+   template<class...T>
+   concept NoIntent = Inner::CheckSize<T...>()
+       and ((not Intent<Deref<T>>) and ...);
    
+
+   ///                                                                        
    /// All intents are defined in terms of three properties, and the          
    /// combinations between them:                                             
    ///   unsigned Depth - decides whether the semantic is deep or shallow     
@@ -752,8 +757,8 @@ namespace Langulus
    ///   - if it isn't - we get refer intent (which in turn can fallback to   
    ///     standard copy semantics)                                           
    template<class T>
-   using IntentOf = Tif<CT::Intent<Deref<T>>,
-         Deref<T>,
+   using IntentOf = Tif<CT::Intent<Decvq<Deref<T>>>,
+         Decvq<Deref<T>>,
          Tif<::std::is_rvalue_reference_v<T> and CT::Mutable<Deref<T>>,
             Move<Deref<T>>,
             Refer<Deref<T>>

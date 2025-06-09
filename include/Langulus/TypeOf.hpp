@@ -101,35 +101,38 @@ namespace Langulus
    ///   @return the inner data                                               
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr decltype(auto) TypedCast(T&& what) {
-      using TT = TypeOf<T>;
-
-      if constexpr (requires { what.TypedCast(); })
+      if constexpr (requires { what.TypedCast(); }) {
+         using InnerT = decltype(what.TypedCast());
+         static_assert(not ::std::same_as<Decvq<Deref<T>>, Decvq<Deref<InnerT>>>,
+            "TypedCast() returns the same type, and will result in infinite regress");
          return what.TypedCast();
-      else if constexpr (CT::Void<TT>)
-         return FWD(what);
-      else if constexpr (requires { what.operator TT (); })
-         return what.operator TT ();
+      }
       else {
-         static_assert(false,
-            "No cast operator or TypedCast method available for casting to inner type. "
-            "Check the constness of your TypedCast() or cast operators? "
-            "Is it compatible with the contained type?"
-         );
+         using InnerT = TypeOf<T>;
+         static_assert(not ::std::same_as<Decvq<Deref<T>>, Decvq<Deref<InnerT>>>,
+            "TypeOf returns the same type, and will result in infinite regress");
+
+         if constexpr (CT::Void<InnerT>)
+            return FWD(what);
+         else if constexpr (requires { what.operator InnerT (); })
+            return what.operator InnerT ();
+         else {
+            static_assert(false,
+               "No cast operator or TypedCast method available for casting to inner type. "
+               "Check the constness of your TypedCast() or cast operators? "
+               "Is it compatible with the contained type?"
+            );
+         }
       }
    }
 
    /// Strips all sheddable layers down to the first non-sheddable inner type 
    template<class T>
    constexpr decltype(auto) ShedCast(T&& item) noexcept {
-      if constexpr (CT::Sheddable<T>) {
-         using InnerT = TypeOf<T>;
-         static_assert(not ::std::same_as<::std::decay_t<T>, ::std::decay_t<InnerT>>,
-            "Sheddable type's inner type is the same, and will result in infinite regress");
-         static_assert(requires { static_cast<InnerT>(item); },
-            "Sheddable can't be static_cast'ed to the inner type");
-         return ShedCast(static_cast<InnerT>(item));
-      }
-      else return FWD(item);
+      if constexpr (CT::Sheddable<T>)
+         return ShedCast(TypedCast(FWD(item)));
+      else
+         return FWD(item);
    };
    
    /// Always returns a pointer to the argument                               

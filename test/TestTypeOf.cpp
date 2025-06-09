@@ -49,8 +49,8 @@ namespace
    struct SheddableTypeCastableUsingMethod : SheddableType<T> {
       using SheddableType<T>::SheddableType;
       using SheddableType<T>::instance;
-      T TypedCast() noexcept { return FWD(instance); }
-      T TypedCast() const noexcept { return FWD(const_cast<SheddableTypeCastableUsingMethod<T>*>(this)->instance); }
+      auto TypedCast()       noexcept -> T&       { return instance; }
+      auto TypedCast() const noexcept -> T const& { return instance; }
    };
 
    struct CustomTypedType { using CTTI_Typed = int; };
@@ -145,4 +145,153 @@ TEMPLATE_TEST_CASE("Testing TypedCast", "[ct]",
       static_assert(::std::same_as<decltype(TypedCast(i)), TypeOf<TestType>>);
    else
       static_assert(::std::same_as<decltype(TypedCast(i)), TestType&>);
+}
+
+
+///                                                                           
+/// ShedCast                                                                  
+///                                                                           
+TEMPLATE_TEST_CASE("Testing ShedCast", "[ct]",
+   int,
+   int&&,
+   const int&,
+   SheddableTypeCastableExplicit<int>,
+   SheddableTypeCastableExplicit<int&&>,
+   SheddableTypeCastableExplicit<const int&>,
+   SheddableTypeCastableImplicit<int>,
+   SheddableTypeCastableImplicit<int&&>,
+   SheddableTypeCastableImplicit<const int&>,
+   SheddableTypeCastableUsingMethod<SheddableTypeCastableExplicit<int>>,
+   const SheddableTypeCastableExplicit<int>,
+   const SheddableTypeCastableExplicit<int&&>,
+   const SheddableTypeCastableExplicit<const int&>,
+   const SheddableTypeCastableImplicit<int>,
+   const SheddableTypeCastableImplicit<int&&>,
+   const SheddableTypeCastableImplicit<const int&>,
+   const SheddableTypeCastableUsingMethod<const SheddableTypeCastableExplicit<const int&>&>
+) {
+   int value = 656;
+   TestType i {::std::move(value)};
+
+   static_assert(not CT::Sheddable<decltype(ShedCast(i))>);
+}
+
+
+///                                                                           
+/// SparseCast                                                                
+///                                                                           
+TEMPLATE_TEST_CASE("Testing SparseCast", "[ct]",
+   int,
+   int&&,
+   const int&,
+   const int* const&,
+   const int* const* const&,
+   const int* const* const* const&,
+   const int* const* const*,
+   //SheddableTypeCastableExplicit<int>, // shouldn't compile, can't get a pointer out of rvalue
+   //SheddableTypeCastableExplicit<int&&>,// shouldn't compile, can't get a pointer out of rvalue
+   SheddableTypeCastableExplicit<const int&>,
+   SheddableTypeCastableExplicit<const int* const&>,
+   SheddableTypeCastableExplicit<const int* const* const&>,
+   SheddableTypeCastableExplicit<const int* const* const* const&>,
+   SheddableTypeCastableExplicit<const int* const* const*>,
+   SheddableTypeCastableUsingMethod<int>, // compiles, because method in test always returns a reference
+   //const SheddableTypeCastableExplicit<int>, // shouldn't compile, because operator returns temporary
+   //const SheddableTypeCastableExplicit<int&&>, // shouldn't compile, can't get a pointer out of rvalue
+   const SheddableTypeCastableExplicit<const int&>,
+   const SheddableTypeCastableExplicit<const int* const&>,
+   const SheddableTypeCastableExplicit<const int* const* const&>,
+   const SheddableTypeCastableExplicit<const int* const* const* const&>,
+   const SheddableTypeCastableExplicit<const int* const* const*>,
+   const SheddableTypeCastableUsingMethod<int> // compiles, because method in test always returns a reference
+) {
+   int value = 656;
+
+   if constexpr (CT::Dense<TestType>) {
+      TestType i {::std::move(value)};
+
+      static_assert(    CT::Sparse   <decltype(SparseCast(i))>);
+      static_assert(not CT::Sheddable<decltype(SparseCast(i))>);
+   }
+   else if constexpr (IndirectsOf<TestType> == 1) {
+      TestType i {&value};
+
+      static_assert(    CT::Sparse   <decltype(SparseCast(i))>);
+      static_assert(not CT::Sheddable<decltype(SparseCast(i))>);
+   }
+   else if constexpr (IndirectsOf<TestType> == 2) {
+      int* vp = &value;
+      TestType i {&vp};
+
+      static_assert(    CT::Sparse   <decltype(SparseCast(i))>);
+      static_assert(not CT::Sheddable<decltype(SparseCast(i))>);
+   }
+   else if constexpr (IndirectsOf<TestType> == 3) {
+      int* vp = &value;
+      int** vpp = &vp;
+      TestType i {&vpp};
+
+      static_assert(    CT::Sparse   <decltype(SparseCast(i))>);
+      static_assert(not CT::Sheddable<decltype(SparseCast(i))>);
+   }
+   else static_assert(false, "Unhandled case");
+}
+
+
+///                                                                           
+/// DenseCast                                                                 
+///                                                                           
+TEMPLATE_TEST_CASE("Testing DenseCast", "[ct]",
+   int,
+   int&&,
+   const int&,
+   const int* const&,
+   const int* const* const&,
+   const int* const* const* const&,
+   const int* const* const*,
+   SheddableTypeCastableExplicit<int>,
+   SheddableTypeCastableExplicit<int&&>,
+   SheddableTypeCastableExplicit<const int&>,
+   SheddableTypeCastableExplicit<const int* const&>,
+   SheddableTypeCastableExplicit<const int* const* const&>,
+   SheddableTypeCastableExplicit<const int* const* const* const&>,
+   SheddableTypeCastableExplicit<const int* const* const*>,
+   const SheddableTypeCastableExplicit<int>,
+   const SheddableTypeCastableExplicit<int&&>,
+   const SheddableTypeCastableExplicit<const int&>,
+   const SheddableTypeCastableExplicit<const int* const&>,
+   const SheddableTypeCastableExplicit<const int* const* const&>,
+   const SheddableTypeCastableExplicit<const int* const* const* const&>,
+   const SheddableTypeCastableExplicit<const int* const* const*>
+) {
+   int value = 656;
+
+   if constexpr (CT::Dense<TestType>) {
+      TestType i {::std::move(value)};
+
+      static_assert(    CT::Dense    <decltype(DenseCast(i))>);
+      static_assert(not CT::Sheddable<decltype(DenseCast(i))>);
+   }
+   else if constexpr (IndirectsOf<TestType> == 1) {
+      TestType i {&value};
+
+      static_assert(    CT::Dense    <decltype(DenseCast(i))>);
+      static_assert(not CT::Sheddable<decltype(DenseCast(i))>);
+   }
+   else if constexpr (IndirectsOf<TestType> == 2) {
+      int* vp = &value;
+      TestType i {&vp};
+
+      static_assert(    CT::Dense    <decltype(DenseCast(i))>);
+      static_assert(not CT::Sheddable<decltype(DenseCast(i))>);
+   }
+   else if constexpr (IndirectsOf<TestType> == 3) {
+      int* vp = &value;
+      int** vpp = &vp;
+      TestType i {&vpp};
+
+      static_assert(    CT::Dense    <decltype(DenseCast(i))>);
+      static_assert(not CT::Sheddable<decltype(DenseCast(i))>);
+   }
+   else static_assert(false, "Unhandled case");
 }

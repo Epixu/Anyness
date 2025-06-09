@@ -7,7 +7,6 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/Assume.hpp>
-#include <type_traits>
 
 using namespace Langulus;
 

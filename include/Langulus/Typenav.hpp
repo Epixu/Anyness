@@ -124,6 +124,8 @@ namespace Langulus::CT
    namespace Inner
    {
 
+      /// Makes sure an error is reported if a CT concept is tested without   
+      /// any arguments, so that failures aren't silent                       
       template<class...T>
       consteval bool CheckSize() {
          static_assert(sizeof...(T) > 0, "No arguments provided");
@@ -369,6 +371,16 @@ namespace Langulus
             return Types<::std::remove_cv_t<T>> {};
       }
 
+      /// Count the number of indirections                                    
+      ///   @return the number of pointers in a type                          
+      template<class T>
+      consteval size_t CountIndirections() {
+         if constexpr (::std::is_pointer_v<T>)
+            return 1 + CountIndirections<Deref<Shed<Deptr<T>>>>();
+         else
+            return 0;
+      }
+
    } // namespace Langulus::Inner
 
    /// Strip all qualifiers on all levels of indirection of a type            
@@ -377,6 +389,13 @@ namespace Langulus
    /// pointer/array constness/volatileness, etc.                             
    template<class T>
    using DecvqAll = typename decltype(Inner::NestedDecvq<T>())::First;
+
+   /// Count the number of indirections                                       
+   ///   @attention this considers only C+++ syntax pointers, not custom      
+   ///      pointer types                                                     
+   ///   @attention sparse sheddables will contribute to the count            
+   template<class T>
+   static constexpr size_t IndirectsOf = Inner::CountIndirections<Deref<Shed<T>>>();
 
 } // namespace Langulus
 

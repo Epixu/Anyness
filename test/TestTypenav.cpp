@@ -879,3 +879,24 @@ static_assert(::std::same_as<DecvqAll<int const* const* const&>,  int**&>);
 static_assert(::std::same_as<DecvqAll<int const* const* const&&>, int**&&>);
 static_assert(::std::same_as<DecvqAll<int const* const* const>,   int**>);
 static_assert(::std::same_as<DecvqAll<int const* const* const volatile>, int**>);
+
+
+///                                                                           
+/// IndirectsOf                                                               
+///                                                                           
+static_assert(IndirectsOf<SheddableType<int>> == 0);
+static_assert(IndirectsOf<SheddableType<int* const>> == 1);
+static_assert(IndirectsOf<SheddableType<int>* const volatile> == 1);
+static_assert(IndirectsOf<SheddableType<int*>* const volatile> == 2);
+
+static_assert(IndirectsOf<int> == 0);
+static_assert(IndirectsOf<int&> == 0);
+static_assert(IndirectsOf<int&&> == 0);
+static_assert(IndirectsOf<int(&)[15]> == 0);
+
+static_assert(IndirectsOf<int*> == 1);
+static_assert(IndirectsOf<int**> == 2);
+static_assert(IndirectsOf<int***> == 3);
+static_assert(IndirectsOf<int***&> == 3);
+static_assert(IndirectsOf<int***&&> == 3);
+static_assert(IndirectsOf<int const* const* const* const> == 3);

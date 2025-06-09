@@ -41,24 +41,6 @@ namespace Langulus
          : mValue {value} {}
 
       LANGULUS(ALWAYS_INLINED)
-      constexpr Describe&& Forward() noexcept {
-         return static_cast<Describe&&>(*this);
-      }
-
-      LANGULUS(ALWAYS_INLINED)
-      static constexpr decltype(auto) Nest(auto&& value) noexcept {
-         using ALT = Decq<Deref<decltype(value)>>;
-         if constexpr (CT::Similar<ALT, Describe>)
-            return FWD(value);
-         else if constexpr (CT::Intent<ALT> and CT::Similar<TypeOf<ALT>, Many>)
-            return Describe {*value};
-         else if constexpr (CT::Similar<ALT, Many>)
-            return Describe {value};
-         else
-            static_assert(false, "Can't nest provided type as a Describe semantic");
-      }
-
-      LANGULUS(ALWAYS_INLINED)
       const auto& operator *  () const noexcept { return  mValue; }
 
       LANGULUS(ALWAYS_INLINED)
