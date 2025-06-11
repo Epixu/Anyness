@@ -12,9 +12,7 @@
 namespace Langulus::CTTI
 {
 
-   /// Can be used in two ways to satisfy CT::POD<T>:                         
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_POD = Yes;` in T                           
+   /// Affects CT::POD<T>                                                     
    template<class T>
    struct POD {
       static constexpr bool Enabled = not CT::Abstract<T> and (

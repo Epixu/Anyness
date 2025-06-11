@@ -49,44 +49,52 @@ namespace Langulus::CT
    /// Checks if all T are shallow intents                                    
    /// Shallow intents are propagated through mostly a single indirection     
    template<class...T>
-   concept ShallowIntent = ((Intent<Deref<T>> and Decay<T>::IsShallow()) and ...);
+   concept ShallowIntent = Inner::CheckSize<T...>()
+       and ((Intent<Deref<T>> and Decay<T>::IsShallow()) and ...);
 
    /// Checks if all T are deep intents                                       
    /// Deep intents propagate through all levels of indirection               
    template<class...T>
-   concept DeepIntent = ((Intent<Deref<T>> and not Decay<T>::IsShallow()) and ...);
+   concept DeepIntent = Inner::CheckSize<T...>()
+       and ((Intent<Deref<T>> and not Decay<T>::IsShallow()) and ...);
 
    /// Check if all T are refer intents                                       
    /// Does a shallow-copy without delving into any indirections, while       
    /// exercising ownership of managed data                                   
    template<class...T>
-   concept Referred = ((Intent<Deref<T>> and Decay<T>::Is(0, true, false)) and ...);
+   concept Referred = Inner::CheckSize<T...>()
+       and ((Intent<Deref<T>> and Decay<T>::Is(0, true, false)) and ...);
       
    /// Check if all T are copy intents                                        
    /// Does a shallow-copy, while cloning only the first indirection level    
    template<class...T>
-   concept Copied = ((Intent<Deref<T>> and Decay<T>::Is(1, true, false)) and ...);
+   concept Copied = Inner::CheckSize<T...>()
+       and ((Intent<Deref<T>> and Decay<T>::Is(1, true, false)) and ...);
 
    /// Check if all T are move intents                                        
    /// Moves by leaving the moved instances reusable                          
    template<class...T>
-   concept Moved = ((Intent<Deref<T>> and Decay<T>::Is(0, true, true)) and ...);
+   concept Moved = Inner::CheckSize<T...>()
+       and ((Intent<Deref<T>> and Decay<T>::Is(0, true, true)) and ...);
 
    /// Check if all T are abandon intents                                     
    /// Moves by leaving the moved instances no longer usable                  
    template<class...T>
-   concept Abandoned = ((Intent<Deref<T>> and Decay<T>::Is(0, false, true)) and ...);
+   concept Abandoned = Inner::CheckSize<T...>()
+       and ((Intent<Deref<T>> and Decay<T>::Is(0, false, true)) and ...);
 
    /// Check if all T are disown intents                                      
    /// Does a shallow-copy without delving into any indirections, without     
    /// exercising any ownership                                               
    template<class...T>
-   concept Disowned = ((Intent<Deref<T>> and Decay<T>::Is(0, false, false)) and ...);
+   concept Disowned = Inner::CheckSize<T...>()
+       and ((Intent<Deref<T>> and Decay<T>::Is(0, false, false)) and ...);
 
    /// Check if all T are clone intents                                       
    /// Does a deep-copy throughout all levels of indirection                  
    template<class...T>
-   concept Cloned = ((DeepIntent<Deref<T>> and Decay<T>::Is(true, false)) and ...);
+   concept Cloned = Inner::CheckSize<T...>()
+       and ((DeepIntent<Deref<T>> and Decay<T>::Is(true, false)) and ...);
 
 } // namespace Langulus::CT
 
@@ -655,89 +663,99 @@ namespace Langulus
       /// Check if all TypeOf<S> have intent constructors for S               
       ///   @tparam S - the intent and type                                   
       template<class...S>
-      concept HasIntentConstructorAlt = Intent<Deref<S>...>
-          and requires (S&&...a) { (TypeOf<S> (FWD(a)), ...); };
+      concept HasIntentConstructorAlt = Intent<S...>
+          and requires (S&&...a) { (Decvq<Deref<TypeOf<S>>> (FWD(a)), ...); };
 
       /// Check if all T have a disown-constructor                            
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       template<class...T>
-      concept HasDisownConstructor = (HasIntentConstructor<::Langulus::Disown, T> and ...);
+      concept HasDisownConstructor = Inner::CheckSize<T...>()
+          and (HasIntentConstructor<::Langulus::Disown, T> and ...);
 
       /// Check if all Decay<T> have a clone-constructor                      
       /// Does a deep copy                                                    
       template<class...T>
-      concept HasCloneConstructor = (HasIntentConstructor<::Langulus::Clone, T> and ...);
+      concept HasCloneConstructor = Inner::CheckSize<T...>()
+          and (HasIntentConstructor<::Langulus::Clone, T> and ...);
 
       /// Check if all T have a abandon-constructor                           
       /// Does a move, but doesn't fully reset source (optimization)          
       template<class...T>
-      concept HasAbandonConstructor = (HasIntentConstructor<::Langulus::Abandon, T> and ...);
+      concept HasAbandonConstructor = Inner::CheckSize<T...>()
+          and (HasIntentConstructor<::Langulus::Abandon, T> and ...);
 
       /// Check if all T have a refer-constructor                             
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership.                                                          
       /// T has refer-constructor as long as it is std::copy_constuctible     
       template<class...T>
-      concept HasReferConstructor = ((HasIntentConstructor<::Langulus::Refer, T>
+      concept HasReferConstructor = Inner::CheckSize<T...>()
+          and ((HasIntentConstructor<::Langulus::Refer, T>
            or ::std::copy_constructible<T>) and ...);
       
       /// Check if all T have a copy-constructor (don't mistake it for a      
       /// std::copy_constructible!)                                           
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       template<class...T>
-      concept HasCopyConstructor = (HasIntentConstructor<::Langulus::Copy, T> and ...);
+      concept HasCopyConstructor = Inner::CheckSize<T...>()
+          and (HasIntentConstructor<::Langulus::Copy, T> and ...);
 
       /// Check if all T have a move-constructor                              
       /// Does a move, fully resetting source                                 
       /// T has move-constructor as long as it is std::move_constuctible      
       template<class...T>
-      concept HasMoveConstructor = ((Sparse<T>
-           or HasIntentConstructor<::Langulus::Move, T>
-           or ::std::move_constructible<T>) and ...);
+      concept HasMoveConstructor = Inner::CheckSize<T...>()
+          and ((Sparse<T> or HasIntentConstructor<::Langulus::Move, T>
+                          or ::std::move_constructible<T>) and ...);
 
       /// Check if all T have an intent-assigner for S                        
       ///   @tparam S - the intent                                            
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
-      concept HasIntentAssign = ((Intent<S<T>>
+      concept HasIntentAssign = Inner::CheckSize<T...>() and ((Intent<S<T>>
           and ::std::assignable_from<T&, S<T>&&>) and ...);
 
       /// Check if all TypeOf<S> has intent-assigner for S                    
       ///   @tparam S - the intent and type                                   
       template<class...S>
-      concept HasIntentAssignAlt = ((Intent<Deref<S>>
-          and ::std::assignable_from<TypeOf<S>&, S&&>) and ...);
+      concept HasIntentAssignAlt = Inner::CheckSize<S...>() and ((Intent<S>
+          and ::std::assignable_from<Decvq<Deref<TypeOf<S>>>&, S&&>) and ...);
 
       /// Check if all T have a disown-assigner                               
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       template<class...T>
-      concept HasDisownAssign = (HasIntentAssign<::Langulus::Disown, T> and ...);
+      concept HasDisownAssign = Inner::CheckSize<T...>()
+          and (HasIntentAssign<::Langulus::Disown, T> and ...);
 
       /// Check if all Decay<T> have a clone-assigner                         
       /// Does a deep copy                                                    
       template<class...T>
-      concept HasCloneAssign = (HasIntentAssign<::Langulus::Clone, T> and ...);
+      concept HasCloneAssign = Inner::CheckSize<T...>()
+          and (HasIntentAssign<::Langulus::Clone, T> and ...);
 
       /// Check if all T have an abandon-assigner                             
       /// Does a move, but doesn't fully reset source (optimization)          
       template<class...T>
-      concept HasAbandonAssign = (HasIntentAssign<::Langulus::Abandon, T> and ...);
+      concept HasAbandonAssign = Inner::CheckSize<T...>()
+          and (HasIntentAssign<::Langulus::Abandon, T> and ...);
 
       /// Check if all T have refer-assigner                                  
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership.                                                          
       /// T has a refer-assigner as long as std::copy_assignable<T> holds     
       template<class...T>
-      concept HasReferAssign = ((HasIntentAssign<::Langulus::Refer, T>
+      concept HasReferAssign = Inner::CheckSize<T...>()
+          and ((HasIntentAssign<::Langulus::Refer, T>
            or ::std::assignable_from<T&, const T&>) and ...);
       
       /// Check if all T have a copy-assigner (don't mistake it for a         
       /// std::copy_assignable!)                                              
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       template<class...T>
-      concept HasCopyAssign = (HasIntentAssign<::Langulus::Copy, T> and ...);
+      concept HasCopyAssign = Inner::CheckSize<T...>()
+          and (HasIntentAssign<::Langulus::Copy, T> and ...);
 
       /// Check if all T have a move-assigner                                 
       /// Does a move, fully resetting source                                 
@@ -746,7 +764,8 @@ namespace Langulus
       /// which the compiler falls back to. In that case move-assignment is   
       /// the same as refer-assignment.                                       
       template<class...T>
-      concept HasMoveAssign = ((HasIntentAssign<::Langulus::Move, T>
+      concept HasMoveAssign = Inner::CheckSize<T...>()
+          and ((HasIntentAssign<::Langulus::Move, T>
            or ::std::assignable_from<T&, T&&>) and ...);
 
    } // namespace Langulus::CT
@@ -816,10 +835,10 @@ namespace Langulus
          // Refer                                                       
          if constexpr (CT::HasReferConstructor<T>)
             return new (placement) T (FWD(value));
-         else if constexpr (CT::POD<T>) {
+         /*else if constexpr (CT::POD<T>) {
             ::std::memcpy(placement, (const void*) &*value, sizeof(T));
             return static_cast<T*>(placement);
-         }
+         }*/
          else {
             static_assert(FAKE, "Can't refer-construct type");
             return Unsupported {};
@@ -829,10 +848,10 @@ namespace Langulus
          // Move                                                        
          if constexpr (CT::HasMoveConstructor<T>)
             return new (placement) T (FWD(value));
-         else if constexpr (CT::POD<T>) {
+         /*else if constexpr (CT::POD<T>) {
             ::std::memmove(placement, (const void*) &*value, sizeof(T));
             return static_cast<T*>(placement);
-         }
+         }*/
          else {
             static_assert(FAKE, "Can't move-construct type");
             return Unsupported {};
@@ -842,14 +861,14 @@ namespace Langulus
          // Abandon                                                     
          if constexpr (CT::HasAbandonConstructor<T>)
             return new (placement) T (FWD(value));
-         else if constexpr (CT::POD<T>) {
-            if constexpr (CT::HasMoveConstructor<T>)
-               return new (placement) T (Move(*value));
-            else {
+         //else if constexpr (CT::POD<T>) {
+         else if constexpr (CT::HasMoveConstructor<T>)
+            return new (placement) T (Move(*value));
+            /*else {
                ::std::memmove(placement, (const void*) &*value, sizeof(T));
                return static_cast<T*>(placement);
-            }
-         }
+            }*/
+         //}
          else {
             static_assert(FAKE,
                "Can't abandon-construct destructible type"
@@ -862,19 +881,22 @@ namespace Langulus
          // @attention - assumes that all levels of indirection have    
          //    been allocated and pointers point to valid memory        
          using DT = Decay<T>;
+         static_assert(CT::Complete<DT>,
+            "Can't clone-construct an incomplete type");
+
          //TODO nest for pointers
 
-         if constexpr (not CT::Void<DT>) {
+         if constexpr (CT::NotVoid<DT>) {
             if constexpr (CT::HasCloneConstructor<DT>)
                return new (placement) DT (Clone(DenseCast(*value)));
-            else if constexpr (CT::POD<DT>) {
-               if constexpr (::std::copy_constructible<DT>)
-                  return new (placement) DT (DenseCast(*value));
-               else {
+            //else if constexpr (CT::POD<DT>) {
+            else if constexpr (CT::POD<DT> and CT::HasReferConstructor<DT>)
+               return new (placement) DT (Refer(DenseCast(*value)));
+               /*else {
                   ::std::memcpy(placement, (const void*) &*value, sizeof(DT));
                   return static_cast<T*>(placement);
-               }
-            }
+               }*/
+            //}
             else {
                static_assert(FAKE, "Can't clone-construct type");
                return Unsupported {};
@@ -889,14 +911,14 @@ namespace Langulus
          // Copy                                                        
          if constexpr (CT::HasCopyConstructor<T>)
             return new (placement) T (FWD(value));
-         else if constexpr (CT::POD<T>) {
-            if constexpr (::std::copy_constructible<T>)
-               return new (placement) T (*value);
-            else {
+         //else if constexpr (CT::POD<T>) {
+         else if constexpr (CT::POD<T> and CT::HasReferConstructor<T>)
+            return new (placement) T (Refer(*value));
+            /*else {
                ::std::memcpy(placement, (const void*) &*value, sizeof(T));
                return static_cast<T*>(placement);
-            }
-         }
+            }*/
+         //}
          else {
             static_assert(FAKE, "Can't copy-construct type");
             return Unsupported {};
@@ -906,14 +928,14 @@ namespace Langulus
          // Disown                                                      
          if constexpr (CT::HasDisownConstructor<T>)
             return new (placement) T (FWD(value));
-         else if constexpr (CT::POD<T>) {
-            if constexpr (::std::copy_constructible<T>)
-               return new (placement) T (*value);
-            else {
+         //else if constexpr (CT::POD<T>) {
+         else if constexpr (CT::POD<T> and CT::HasReferConstructor<T>)
+            return new (placement) T (Refer(*value));
+            /*else {
                ::std::memcpy(placement, (const void*) &*value, sizeof(T));
                return static_cast<T*>(placement);
-            }
-         }
+            }*/
+         //}
          else {
             static_assert(FAKE, "Can't disown-construct type");
             return Unsupported {};
@@ -941,11 +963,11 @@ namespace Langulus
       if constexpr (CT::Referred<S<T>>) {
          // Refer                                                       
          if constexpr (CT::HasReferAssign<T>)
-            return (lhs = Refer(rhs));
-         else if constexpr (CT::POD<T>) {
+            return (lhs = rhs);
+         /*else if constexpr (CT::POD<T>) {
             ::std::memcpy((void*) &lhs, (const void*) &*rhs, sizeof(T));
             return (lhs);
-         }
+         }*/
          else {
             static_assert(FAKE, "Can't refer-assign type");
             return Unsupported {};
@@ -953,14 +975,14 @@ namespace Langulus
       }
       else if constexpr (CT::Moved<S<T>>) {
          // Move                                                        
-         if constexpr (CT::HasIntentAssign<Langulus::Move, T>)
-            return (lhs = Move(rhs));
-         else if constexpr (::std::assignable_from<T&, T&&>)
+         if constexpr (CT::HasMoveAssign<T>)
+            return (lhs = FWD(rhs));
+         /*else if constexpr (::std::assignable_from<T&, T&&>)
             return (lhs = *rhs);
          else if constexpr (CT::POD<T>) {
             ::std::memmove((void*) &lhs, (const void*) &*rhs, sizeof(T));
             return (lhs);
-         }
+         }*/
          else {
             static_assert(FAKE, "Can't move-assign type");
             return Unsupported {};
@@ -969,21 +991,21 @@ namespace Langulus
       else if constexpr (CT::Abandoned<S<T>>) {
          // Abandon                                                     
          if constexpr (CT::HasAbandonAssign<T>)
-            return (lhs = Abandon(rhs));
-         else if constexpr (CT::HasReferAssign<T> and CT::HasAbandonConstructor<T>)
+            return (lhs = FWD(rhs));
+         /*else if constexpr (CT::HasReferAssign<T> and CT::HasAbandonConstructor<T>)
             // This is required because G++ doesn't detect implicit     
             // abandon-assignment otherwise                             
             return (lhs = Decvq<T> {FWD(rhs)});
-         else if constexpr (CT::POD<T>) {
-            if constexpr (CT::HasIntentAssign<Langulus::Move, T>)
-               return (lhs = Move(*rhs));
-            else if constexpr (::std::assignable_from<T&, T&&>)
+         else if constexpr (CT::POD<T>) {*/
+         else if constexpr (CT::HasMoveAssign<T>)
+            return (lhs = Move(*rhs));
+            /*else if constexpr (::std::assignable_from<T&, T&&>)
                return (lhs = *rhs);
             else {
                ::std::memmove((void*) &lhs, (const void*) &*rhs, sizeof(T));
                return (lhs);
-            }
-         }
+            }*/
+         //}
          else {
             static_assert(FAKE,
                "Can't abandon-assign destructible type"
@@ -996,21 +1018,22 @@ namespace Langulus
          // @attention - assumes that all levels of indirection have    
          //    been allocated and pointers point to valid memory        
          using DT = Decay<T>;
-         constexpr auto DTName = NameOf<DT>();
+         static_assert(CT::Complete<DT>,
+            "Can't clone-assign an incomplete type");
 
          //TODO nest for pointers
-         if constexpr (CT::Complete<DT> and not CT::Void<DT>) {
+         if constexpr (CT::NotVoid<DT>) {
             if constexpr (CT::Mutable<Deptr<T>>) {
                if constexpr (CT::HasCloneAssign<DT>)
                   return (DenseCast(lhs) = Clone(DenseCast(*rhs)));
-               else if constexpr (CT::POD<DT>) {
-                  if constexpr (::std::assignable_from<DT&, const DT&>)
-                     return (DenseCast(lhs) = DenseCast(*rhs));
-                  else {
+               //else if constexpr (CT::POD<DT>) {
+               else if constexpr (CT::POD<DT> and CT::HasReferAssign<DT>)
+                  return (DenseCast(lhs) = Refer(DenseCast(*rhs)));
+               /*else {
                      ::std::memcpy((void*) &lhs, (const void*) &*rhs, sizeof(DT));
                      return (lhs);
-                  }
-               }
+                  }*/
+               //}
                else {
                   static_assert(FAKE, "Can't clone-assign type");
                   return Unsupported {};
@@ -1029,15 +1052,15 @@ namespace Langulus
       else if constexpr (CT::Copied<S<T>>) {
          // Copy                                                        
          if constexpr (CT::HasCopyAssign<T>)
-            return (lhs = Copy(rhs));
-         else if constexpr (CT::POD<T>) {
-            if constexpr (::std::assignable_from<T&, const T&>)
-               return (lhs = *rhs);
-            else {
+            return (lhs = FWD(rhs));
+         //else if constexpr (CT::POD<T>) {
+         else if constexpr (CT::POD<T> and CT::HasReferAssign<T>)
+            return (lhs = Refer(*rhs));
+         /*else {
                ::std::memcpy((void*) &lhs, (const void*) &*rhs, sizeof(T));
                return (lhs);
-            }
-         }
+            }*/
+         //}
          else {
             static_assert(FAKE, "Can't copy-assign type");
             return Unsupported {};
@@ -1046,15 +1069,15 @@ namespace Langulus
       else if constexpr (CT::Disowned<S<T>>) {
          // Disown                                                      
          if constexpr (CT::HasDisownAssign<T>)
-            return (lhs = Disown(rhs));
-         else if constexpr (CT::POD<T>) {
-            if constexpr (::std::assignable_from<T&, const T&>)
-               return (lhs = *rhs);
-            else {
+            return (lhs = FWD(rhs));
+         //else if constexpr (CT::POD<T>) {
+         else if constexpr (CT::POD<T> and CT::HasReferAssign<T>)
+            return (lhs = Refer(*rhs));
+            /*else {
                ::std::memcpy((void*) &lhs, (const void*) &*rhs, sizeof(T));
                return (lhs);
-            }
-         }
+            }*/
+         //}
          else {
             static_assert(FAKE, "Can't disown-assign type");
             return Unsupported {};
@@ -1118,14 +1141,16 @@ namespace Langulus
       /// If POD, T can be disown-constructible even if not having the        
       /// specific disown constructor, as long as T is std::copy_constuctible 
       template<class...T>
-      concept DisownConstructible = (IntentConstructible<Langulus::Disown, T> and ...);
+      concept DisownConstructible = Inner::CheckSize<T...>()
+          and (IntentConstructible<Langulus::Disown, T> and ...);
 
       /// Check if all Decay<T> are clone-constructible                       
       /// Does a deep copy. If POD, Decay<T> can be clone-constructible even  
       /// if not having the specific clone constructor, as long as T is       
       /// std::copy_constuctible                                              
       template<class...T>
-      concept CloneConstructible = (IntentConstructible<Langulus::Clone, T> and ...);
+      concept CloneConstructible = Inner::CheckSize<T...>()
+          and (IntentConstructible<Langulus::Clone, T> and ...);
 
       /// Check if all T are abandon-constructible                            
       /// Does a move but doesn't fully reset source as an optimization -     
@@ -1134,27 +1159,31 @@ namespace Langulus
       /// abandon-constructible even if not having the specific abandon       
       /// constructor, as long as it is std::move_constuctible                
       template<class...T>
-      concept AbandonConstructible = (IntentConstructible<Langulus::Abandon, T> and ...);
+      concept AbandonConstructible = Inner::CheckSize<T...>()
+          and (IntentConstructible<Langulus::Abandon, T> and ...);
 
       /// Check if all T are refer-constructible                              
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership. T can be refer-constructible as long as T is             
       /// std::copy_constuctible                                              
       template<class...T>
-      concept ReferConstructible = (IntentConstructible<Langulus::Refer, T> and ...);
+      concept ReferConstructible = Inner::CheckSize<T...>()
+          and (IntentConstructible<Langulus::Refer, T> and ...);
       
       /// Check if all T are copy-constructible                               
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       /// If POD, T can be copy-constructible even if not having the specific 
       /// shallow-copy constructor, as long as T is std::copy_constuctible    
       template<class...T>
-      concept CopyConstructible = (IntentConstructible<Langulus::Copy, T> and ...);
+      concept CopyConstructible = Inner::CheckSize<T...>()
+          and (IntentConstructible<Langulus::Copy, T> and ...);
 
       /// Check if all T are move-constructible                               
       /// Does a move, fully resetting source into a reusable state           
       /// T is move-constructible as long as it is std::move_constuctible     
       template<class...T>
-      concept MoveConstructible = (IntentConstructible<Langulus::Move, T> and ...);
+      concept MoveConstructible = Inner::CheckSize<T...>()
+          and (IntentConstructible<Langulus::Move, T> and ...);
 
 
       /// Check if all T are intent-assignable by intent S                    
@@ -1184,35 +1213,40 @@ namespace Langulus
       /// If POD, T can be disown-assignable even if not having an explicit   
       /// disown-assignment, as long as std::copy_assignable<T> holds         
       template<class...T>
-      concept DisownAssignable = (IntentAssignable<Langulus::Disown, T> and ...);
+      concept DisownAssignable = Inner::CheckSize<T...>()
+          and (IntentAssignable<Langulus::Disown, T> and ...);
 
       /// Check if all Decay<T> are clone-assignable                          
       /// Does a deep copy                                                    
       /// If POD, Decay<T> can be clone-assignable even if not having an      
       /// explicit clone-assignment, as long as std::copy_assignable<T> holds 
       template<class...T>
-      concept CloneAssignable = (IntentAssignable<Langulus::Clone, T> and ...);
+      concept CloneAssignable = Inner::CheckSize<T...>()
+          and (IntentAssignable<Langulus::Clone, T> and ...);
 
       /// Check if all T are abandon-assignable                               
       /// Does a move, but doesn't fully reset source (optimization)          
       /// T can be abandon-assignable even if not having an explicit          
       /// abandon-assignment, as long as std::move_assignable<T> holds        
       template<class...T>
-      concept AbandonAssignable = (IntentAssignable<Langulus::Abandon, T> and ...);
+      concept AbandonAssignable = Inner::CheckSize<T...>()
+          and (IntentAssignable<Langulus::Abandon, T> and ...);
 
       /// Check if all T are refer-assignable                                 
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership.                                                          
       /// T can be refer-assignable as long as std::copy_assignable<T> holds  
       template<class...T>
-      concept ReferAssignable = (IntentAssignable<Langulus::Refer, T> and ...);
+      concept ReferAssignable = Inner::CheckSize<T...>()
+          and (IntentAssignable<Langulus::Refer, T> and ...);
       
       /// Check if all T are copy-assignable                                  
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       /// If POD, T can be copy-assignable even if not having an explicit     
       /// copy-assigner, as long as std::copy_assignable<T> holds             
       template<class...T>
-      concept CopyAssignable = (IntentAssignable<Langulus::Copy, T> and ...);
+      concept CopyAssignable = Inner::CheckSize<T...>()
+          and (IntentAssignable<Langulus::Copy, T> and ...);
 
       /// Check if all T are move-assignable                                  
       /// Does a move, fully resetting source                                 
@@ -1221,7 +1255,8 @@ namespace Langulus
       ///   destructor deleted - every time you move an instance, the old one 
       ///   has to be deleted later.                                          
       template<class...T>
-      concept MoveAssignable = (IntentAssignable<Langulus::Move, T> and ...);
+      concept MoveAssignable = Inner::CheckSize<T...>()
+          and (IntentAssignable<Langulus::Move, T> and ...);
 
    } // namespace Langulus::CT
 

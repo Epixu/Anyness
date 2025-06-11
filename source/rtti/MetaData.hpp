@@ -70,16 +70,41 @@ namespace Langulus::RTTI
          bool IsPOD() const noexcept;
 
          bool HasReferConstructor() const noexcept;
-         void RunReferConstructor(const void*, void*) const noexcept;
+         void RunReferConstructor(const void*, void*) const;
          bool HasReferAssigner() const noexcept;
-         void RunReferAssigner(const void*, void*) const noexcept;
+         void RunReferAssigner(const void*, void*) const;
+
+         bool HasMoveConstructor() const noexcept;
+         void RunMoveConstructor(void*, void*) const;
+         bool HasMoveAssigner() const noexcept;
+         void RunMoveAssigner(void*, void*) const;
+
+         bool HasAbandonConstructor() const noexcept;
+         void RunAbandonConstructor(void*, void*) const;
+         bool HasAbandonAssigner() const noexcept;
+         void RunAbandonAssigner(void*, void*) const;
+
+         bool HasDisownConstructor() const noexcept;
+         void RunDisownConstructor(const void*, void*) const;
+         bool HasDisownAssigner() const noexcept;
+         void RunDisownAssigner(const void*, void*) const;
+
+         bool HasCloneConstructor() const noexcept;
+         void RunCloneConstructor(const void*, void*) const;
+         bool HasCloneAssigner() const noexcept;
+         void RunCloneAssigner(const void*, void*) const;
+
+         bool HasCopyConstructor() const noexcept;
+         void RunCopyConstructor(const void*, void*) const;
+         bool HasCopyAssigner() const noexcept;
+         void RunCopyAssigner(const void*, void*) const;
 
          bool HasComparer() const noexcept;
-         int  RunComparer(const void*, const void*) const noexcept;
+         int  RunComparer(const void*, const void*) const;
 
          bool HasHasher() const noexcept;
          bool HasGetHashMethod() const noexcept;
-         Hash RunHasher(const void*) const noexcept;
+         Hash RunHasher(const void*) const;
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
