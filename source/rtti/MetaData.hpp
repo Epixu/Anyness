@@ -1,7 +1,7 @@
 #pragma once
 #include "Meta.hpp"
 #include <Langulus/HashOf.hpp>
-#include <Langulus/Intent.hpp>
+#include <Langulus/IntentOf.hpp>
 
 
 namespace Langulus::RTTI
@@ -68,6 +68,11 @@ namespace Langulus::RTTI
          bool IsMutable() const noexcept;
          bool IsDeep() const noexcept;
          bool IsPOD() const noexcept;
+
+         bool HasReferConstructor() const noexcept;
+         void RunReferConstructor(const void*, void*) const noexcept;
+         bool HasReferAssigner() const noexcept;
+         void RunReferAssigner(const void*, void*) const noexcept;
 
          bool HasComparer() const noexcept;
          int  RunComparer(const void*, const void*) const noexcept;

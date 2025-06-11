@@ -46,7 +46,7 @@ namespace Langulus
          const char* mLocation = DefaultLocation;
 
          constexpr Exception(const char* message, const char* location) noexcept
-            : mMessage {message}
+            : mMessage  {message}
             , mLocation {location} {}
       #else
          constexpr Exception(const char*, const char*) noexcept {}

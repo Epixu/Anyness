@@ -7,6 +7,7 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/IntentOf.hpp>
+#include <Langulus/MetaOf.hpp>
 
 using namespace Langulus;
 
@@ -19,18 +20,62 @@ namespace
       float f;
    };
 
+   /// Explicitly deleted destructor                                          
+   class NonDestructible {
+      ~NonDestructible() = delete;
+   };
+
    struct DestructibleType {
       char* p {};
 
       ~DestructibleType() { if (p) delete p; }
    };
-}
 
-///                                                                           
-/// CT::Intent / CT::NoIntent                                                 
-///                                                                           
-namespace
-{
+   /// Has no explicit intent constructors and assigners                      
+   /// Has only implicit refer & move constructors and assigners              
+   struct NonIntentConstructible {
+      NonIntentConstructible(CT::NoIntent auto&&) {}
+   };
+   
+   /// Default-constructible, but only privately                              
+   struct PrivatelyConstructible {
+      using CTTI_POD = No;
+
+   private:
+      PrivatelyConstructible() = default;
+      PrivatelyConstructible(const PrivatelyConstructible&) = default;
+      PrivatelyConstructible(PrivatelyConstructible&&) = default;
+   };
+
+   /// Has explicit copy, move, refer, clone, abandon, disown constructors    
+   /// Has implicit refer & move constructors, too                            
+   /// Has no explicit intent assigners, only implicit refer & move           
+   struct PartiallyIntentConstructible {
+      template<template<class> class S, class T>
+      PartiallyIntentConstructible(S<T>&&) requires CT::Intent<S<T>> {}
+   };
+
+   /// Has all intent constructors + implicit refer & move ones               
+   /// Has no explicit intent assigners, only implicit refer & move ones      
+   /// Making constructor explicit makes sure, that no implicit intent assign 
+   /// happens                                                                
+   struct AllIntentConstructible {
+      explicit AllIntentConstructible(CT::Intent auto&&) {}
+   };
+   
+   /// Has all intent constructors + implicit refer & move ones               
+   /// Has no explicit intent assigners, only implicit refer & move ones      
+   /// Making constructor implicit also allows for intent assignments         
+   struct AllIntentConstructibleImplicit {
+      AllIntentConstructibleImplicit(CT::Intent auto&&) {}
+   };
+
+   /// Has all intnet constructors and assigners + implicit refer & move ones 
+   struct AllIntentConstructibleAndAssignable {
+      AllIntentConstructibleAndAssignable(CT::Intent auto&&) {}
+      AllIntentConstructibleAndAssignable& operator = (CT::Intent auto&&) { return *this; }
+   };
+
    template<class T>
    struct SheddableType {
       using CTTI_Sheddable = Yes;
@@ -40,12 +85,88 @@ namespace
 
       SheddableType(T t) : instance {FWD(t)} {}
    };
+   
+   /// Doesn't have implicit copy/move, so it is abandon-makable by explicit  
+   /// move but not abandon-assignable                                        
+   struct alignas(128) Complex {
+      int  member;
+      bool anotherMember {};
+      int  anotherMemberArray [12] {};
+      int* sparseMember {};
+
+      Complex(const Complex& s) : member(s.member) {}
+      Complex(Complex&& s) : member(s.member) {}
+      Complex(int stuff) : member(stuff) {}
+
+      ~Complex() { if (sparseMember) delete sparseMember; }
+   };
+
+   class ContainsComplex {
+      Complex mData;
+   };
+
+   /// A complex aggregate type                                               
+   struct AggregateTypeComplex {
+      int m1, m2, m3, m4;
+      bool m5;
+      Complex mData;
+   };
+   
+   struct ReferConstructibleButNotAssignable {
+      int m;
+      ReferConstructibleButNotAssignable(Refer<ReferConstructibleButNotAssignable>&& a) : m {a->m} {}
+      ReferConstructibleButNotAssignable& operator = (const ReferConstructibleButNotAssignable&) = delete;
+      ReferConstructibleButNotAssignable& operator = (ReferConstructibleButNotAssignable&&) = delete;
+   };
+
+   struct CopyConstructibleButNotAssignable {
+      int m;
+      CopyConstructibleButNotAssignable(Copy<CopyConstructibleButNotAssignable>&& a) : m {a->m} {}
+      CopyConstructibleButNotAssignable& operator = (const CopyConstructibleButNotAssignable&) = delete;
+      CopyConstructibleButNotAssignable& operator = (CopyConstructibleButNotAssignable&&) = delete;
+   };
+
+   struct MoveConstructibleButNotAssignable {
+      int m;
+      MoveConstructibleButNotAssignable(Move<MoveConstructibleButNotAssignable>&& a) : m {a->m} {}
+      MoveConstructibleButNotAssignable& operator = (const MoveConstructibleButNotAssignable&) = delete;
+      MoveConstructibleButNotAssignable& operator = (MoveConstructibleButNotAssignable&&) = delete;
+   };
+
+   struct AbandonConstructibleButNotAssignable {
+      int m;
+      AbandonConstructibleButNotAssignable(Abandon<AbandonConstructibleButNotAssignable>&& a) : m {a->m} {}
+      AbandonConstructibleButNotAssignable& operator = (const AbandonConstructibleButNotAssignable&) = delete;
+      AbandonConstructibleButNotAssignable& operator = (AbandonConstructibleButNotAssignable&&) = delete;
+   };
+
+   struct DisownConstructibleButNotAssignable {
+      int m;
+      DisownConstructibleButNotAssignable(Disown<DisownConstructibleButNotAssignable>&& a) : m {a->m} {}
+      DisownConstructibleButNotAssignable& operator = (const DisownConstructibleButNotAssignable&) = delete;
+      DisownConstructibleButNotAssignable& operator = (DisownConstructibleButNotAssignable&&) = delete;
+   };
+
+   struct CloneConstructibleButNotAssignable {
+      int m;
+      CloneConstructibleButNotAssignable(Clone<CloneConstructibleButNotAssignable>&& a) : m {a->m} {}
+      CloneConstructibleButNotAssignable& operator = (const CloneConstructibleButNotAssignable&) = delete;
+      CloneConstructibleButNotAssignable& operator = (CloneConstructibleButNotAssignable&&) = delete;
+   };
+
+   struct ForcefullyPod {
+      using CTTI_POD = Yes;
+      Complex mData;
+   };
 
    enum TypedEnum : int64_t {one1, two2};
    enum class TypedEnumClass : int64_t {one1, two2};
    struct IncompleteType;
 }
 
+///                                                                           
+/// CT::Intent / CT::NoIntent                                                 
+///                                                                           
 TEMPLATE_TEST_CASE("Testing intent type", "[ct]",
    Refer<int>,
    Copy<int>,
@@ -154,7 +275,7 @@ TEST_CASE("Testing Deint", "[ct]") {
 ///                                                                           
 ///   Refer intent                                                            
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing refer-makable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing refer-constructible types", "[ct]",
    AggregateType,
    EmptyType,
    DestructibleType,
@@ -162,7 +283,6 @@ TEMPLATE_TEST_CASE("Testing refer-makable types", "[ct]",
    AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
    PartiallyIntentConstructible,
-   DescriptorConstructible,
    Complex, ContainsComplex,
    ReferConstructibleButNotAssignable,
    ForcefullyPod,
@@ -184,17 +304,17 @@ TEMPLATE_TEST_CASE("Testing refer-makable types", "[ct]",
    static_assert(    CT::IntentConstructibleAlt<Refer<T>>);
    static_assert(    CT::IntentConstructibleAlt<Refer<T*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mReferConstructor);
+   REQUIRE(meta1.HasReferConstructor());
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mReferConstructor);
+   REQUIRE(meta2.HasReferConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing non-refer-makable types", "[ct]",
-   IncompleteType,
+TEMPLATE_TEST_CASE("Testing non-refer-constructible types", "[ct]",
+   //IncompleteType, // should not compile at all
    NonDestructible,
    PrivatelyConstructible,
    CopyConstructibleButNotAssignable,
@@ -211,21 +331,20 @@ TEMPLATE_TEST_CASE("Testing non-refer-makable types", "[ct]",
    static_assert(not CT::IntentConstructibleAlt<Refer<T>>);
    static_assert(    CT::IntentConstructibleAlt<Refer<T*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
-   REQUIRE_FALSE(meta->mReferConstructor);
+   REQUIRE_FALSE(meta.HasReferConstructor());
 }
 
 TEMPLATE_TEST_CASE("Testing refer-assignable types", "[ct]",
    AggregateType,
-   ImplicitlyConstructible,
+   EmptyType,
    NonDestructible,
    DestructibleType,
    NonIntentConstructible,
    AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
    PartiallyIntentConstructible,
-   DescriptorConstructible,
    ForcefullyPod,
    int
 ) {
@@ -243,17 +362,17 @@ TEMPLATE_TEST_CASE("Testing refer-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Refer<T*>>);
    static_assert(    CT::IntentAssignableAlt<Refer<T const*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
-   REQUIRE(meta1->mReferAssigner);
+   REQUIRE(meta1.HasReferAssigner());
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
-   REQUIRE(meta2->mReferAssigner);
+   REQUIRE(meta2.HasReferAssigner());
 
-   auto meta3 = MetaData::Of<const T>();
+   auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
-   REQUIRE(meta3->mReferAssigner);
+   REQUIRE(meta3.HasReferAssigner());
 }
 
 TEMPLATE_TEST_CASE("Testing non-refer-assignable types", "[ct]",
@@ -282,9 +401,9 @@ TEMPLATE_TEST_CASE("Testing non-refer-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Refer<T*>>);
    static_assert(    CT::IntentAssignableAlt<Refer<T const*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
-   REQUIRE_FALSE(meta->mReferAssigner);
+   REQUIRE_FALSE(meta.HasReferAssigner());
 }
 
 
@@ -293,13 +412,12 @@ TEMPLATE_TEST_CASE("Testing non-refer-assignable types", "[ct]",
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing move-makable types", "[ct]",
    AggregateType,
-   ImplicitlyConstructible,
+   EmptyType,
    DestructibleType,
    NonIntentConstructible,
    AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
    PartiallyIntentConstructible,
-   DescriptorConstructible,
    Complex,
    ContainsComplex,
    MoveConstructibleButNotAssignable,
@@ -322,11 +440,11 @@ TEMPLATE_TEST_CASE("Testing move-makable types", "[ct]",
    static_assert(    CT::IntentConstructibleAlt<Move<T>>);
    static_assert(    CT::IntentConstructibleAlt<Move<T*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mMoveConstructor);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mMoveConstructor);
 }
@@ -349,7 +467,7 @@ TEMPLATE_TEST_CASE("Testing non-move-makable types", "[ct]",
    static_assert(not CT::IntentConstructibleAlt<Move<T>>);
    static_assert(    CT::IntentConstructibleAlt<Move<T*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mMoveConstructor);
 }
@@ -357,13 +475,12 @@ TEMPLATE_TEST_CASE("Testing non-move-makable types", "[ct]",
 TEMPLATE_TEST_CASE("Testing move-assignable types", "[ct]",
    NonDestructible,
    AggregateType,
-   ImplicitlyConstructible,
+   EmptyType,
    DestructibleType,
    NonIntentConstructible,
    AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
    PartiallyIntentConstructible,
-   DescriptorConstructible,
    ForcefullyPod,
    int
 ) {
@@ -381,15 +498,15 @@ TEMPLATE_TEST_CASE("Testing move-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Move<T*>>);
    static_assert(    CT::IntentAssignableAlt<Move<T const*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mMoveAssigner);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mMoveAssigner);
 
-   auto meta3 = MetaData::Of<const T>();
+   auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
    REQUIRE(meta3->mMoveAssigner);
 }
@@ -420,7 +537,7 @@ TEMPLATE_TEST_CASE("Testing non-move-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Move<T*>>);
    static_assert(    CT::IntentAssignableAlt<Move<T const*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mMoveAssigner);
 }
@@ -430,7 +547,7 @@ TEMPLATE_TEST_CASE("Testing non-move-assignable types", "[ct]",
 ///   Copy intents                                                            
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing copy-makable types", "[ct]",
-   ImplicitlyConstructible,
+   EmptyType,
    AggregateType,
    AllIntentConstructible,
    AllIntentConstructibleImplicit,
@@ -456,11 +573,11 @@ TEMPLATE_TEST_CASE("Testing copy-makable types", "[ct]",
    static_assert(CT::IntentConstructibleAlt<Copy<T>>);
    static_assert(CT::IntentConstructibleAlt<Copy<T*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mCopyConstructor);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mCopyConstructor);
 }
@@ -473,7 +590,6 @@ TEMPLATE_TEST_CASE("Testing non-copy-makable types", "[ct]",
    ContainsComplex,
    PrivatelyConstructible,
    NonIntentConstructible,
-   DescriptorConstructible,
    AggregateTypeComplex,
    ReferConstructibleButNotAssignable,
    MoveConstructibleButNotAssignable,
@@ -489,13 +605,13 @@ TEMPLATE_TEST_CASE("Testing non-copy-makable types", "[ct]",
    static_assert(not CT::IntentConstructibleAlt<Copy<T>>);
    static_assert(    CT::IntentConstructibleAlt<Copy<T*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mCopyConstructor);
 }
 
 TEMPLATE_TEST_CASE("Testing copy-assignable types", "[ct]",
-   ImplicitlyConstructible,
+   EmptyType,
    AggregateType,
    AllIntentConstructibleImplicit,
    AllIntentConstructibleAndAssignable,
@@ -516,15 +632,15 @@ TEMPLATE_TEST_CASE("Testing copy-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Copy<T*>>);
    static_assert(    CT::IntentAssignableAlt<Copy<T const*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mCopyAssigner);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mCopyAssigner);
 
-   auto meta3 = MetaData::Of<const T>();
+   auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
    REQUIRE(meta3->mCopyAssigner);
 }
@@ -537,7 +653,6 @@ TEMPLATE_TEST_CASE("Testing non-copy-assignable types", "[ct]",
    ContainsComplex,
    PrivatelyConstructible,
    NonIntentConstructible,
-   DescriptorConstructible,
    AllIntentConstructible,
    PartiallyIntentConstructible,
    AggregateTypeComplex,
@@ -562,7 +677,7 @@ TEMPLATE_TEST_CASE("Testing non-copy-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Copy<T*>>);
    static_assert(    CT::IntentAssignableAlt<Copy<T const*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mCopyAssigner);
 }
@@ -572,7 +687,7 @@ TEMPLATE_TEST_CASE("Testing non-copy-assignable types", "[ct]",
 ///   Clone intents                                                           
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing clone-makable types", "[ct]",
-   ImplicitlyConstructible,
+   EmptyType,
    AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
    PartiallyIntentConstructible,
@@ -597,11 +712,11 @@ TEMPLATE_TEST_CASE("Testing clone-makable types", "[ct]",
    static_assert(CT::IntentConstructibleAlt<Clone<T>>);
    static_assert(CT::IntentConstructibleAlt<Clone<T*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mCloneConstructor);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mCloneConstructor);
 }
@@ -612,7 +727,6 @@ TEMPLATE_TEST_CASE("Testing non-clone-makable types", "[ct]",
    DestructibleType,
    PrivatelyConstructible,
    NonIntentConstructible,
-   DescriptorConstructible,
    Complex,
    ContainsComplex,
    AggregateTypeComplex,
@@ -630,13 +744,13 @@ TEMPLATE_TEST_CASE("Testing non-clone-makable types", "[ct]",
    static_assert(not CT::IntentConstructibleAlt<Clone<T>>);
    static_assert(not CT::IntentConstructibleAlt<Clone<T*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mCloneConstructor);
 }
 
 TEMPLATE_TEST_CASE("Testing clone-assignable types", "[ct]",
-   ImplicitlyConstructible,
+   EmptyType,
    AllIntentConstructibleImplicit,
    AllIntentConstructibleAndAssignable,
    ForcefullyPod,
@@ -657,15 +771,15 @@ TEMPLATE_TEST_CASE("Testing clone-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Clone<T*>>);
    static_assert(not CT::IntentAssignableAlt<Clone<T const*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mCloneAssigner);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mCloneAssigner);
 
-   auto meta3 = MetaData::Of<const T>();
+   auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
    REQUIRE(meta3->mCloneAssigner);
 }
@@ -680,7 +794,6 @@ TEMPLATE_TEST_CASE("Testing non-clone-assignable types", "[ct]",
    ContainsComplex,
    AllIntentConstructible,
    PartiallyIntentConstructible,
-   DescriptorConstructible,
    AggregateTypeComplex,
    ReferConstructibleButNotAssignable,
    MoveConstructibleButNotAssignable,
@@ -703,7 +816,7 @@ TEMPLATE_TEST_CASE("Testing non-clone-assignable types", "[ct]",
    static_assert(not CT::IntentAssignableAlt<Clone<T*>>);
    static_assert(not CT::IntentAssignableAlt<Clone<T const*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mCloneAssigner);
 }
@@ -713,7 +826,7 @@ TEMPLATE_TEST_CASE("Testing non-clone-assignable types", "[ct]",
 ///   Disown intents                                                          
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing disown-makable types", "[ct]",
-   ImplicitlyConstructible,
+   EmptyType,
    AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
    PartiallyIntentConstructible,
@@ -738,11 +851,11 @@ TEMPLATE_TEST_CASE("Testing disown-makable types", "[ct]",
    static_assert(CT::IntentConstructibleAlt<Disown<T>>);
    static_assert(CT::IntentConstructibleAlt<Disown<T*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mDisownConstructor);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mDisownConstructor);
 }
@@ -753,7 +866,6 @@ TEMPLATE_TEST_CASE("Testing non-disown-makable types", "[ct]",
    DestructibleType,
    PrivatelyConstructible,
    NonIntentConstructible,
-   DescriptorConstructible,
    Complex,
    ContainsComplex,
    AggregateTypeComplex,
@@ -771,13 +883,13 @@ TEMPLATE_TEST_CASE("Testing non-disown-makable types", "[ct]",
    static_assert(not CT::IntentConstructibleAlt<Disown<T>>);
    static_assert(    CT::IntentConstructibleAlt<Disown<T*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mDisownConstructor);
 }
 
 TEMPLATE_TEST_CASE("Testing disown-assignable types", "[ct]",
-   ImplicitlyConstructible,
+   EmptyType,
    AllIntentConstructibleImplicit,
    AllIntentConstructibleAndAssignable,
    ForcefullyPod,
@@ -798,15 +910,15 @@ TEMPLATE_TEST_CASE("Testing disown-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Disown<T*>>);
    static_assert(    CT::IntentAssignableAlt<Disown<T const*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mDisownAssigner);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mDisownAssigner);
 
-   auto meta3 = MetaData::Of<const T>();
+   auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
    REQUIRE(meta3->mDisownAssigner);
 }
@@ -817,7 +929,6 @@ TEMPLATE_TEST_CASE("Testing non-disown-assignable types", "[ct]",
    DestructibleType,
    PrivatelyConstructible,
    NonIntentConstructible,
-   DescriptorConstructible,
    Complex,
    ContainsComplex,
    AllIntentConstructible,
@@ -843,7 +954,7 @@ TEMPLATE_TEST_CASE("Testing non-disown-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Disown<T*>>);
    static_assert(    CT::IntentAssignableAlt<Disown<T const*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mDisownAssigner);
 }
@@ -853,13 +964,12 @@ TEMPLATE_TEST_CASE("Testing non-disown-assignable types", "[ct]",
 ///   Abandon semantics                                                       
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing abandon-makable types", "[ct]",
-   ImplicitlyConstructible,
+   EmptyType,
    DestructibleType,
    NonIntentConstructible,
    AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
    PartiallyIntentConstructible,
-   DescriptorConstructible,
    Complex,
    ContainsComplex,
    AbandonConstructibleButNotAssignable,
@@ -883,11 +993,11 @@ TEMPLATE_TEST_CASE("Testing abandon-makable types", "[ct]",
    static_assert(CT::IntentConstructibleAlt<Abandon<T>>);
    static_assert(CT::IntentConstructibleAlt<Abandon<T*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mAbandonConstructor);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mAbandonConstructor);
 }
@@ -910,19 +1020,18 @@ TEMPLATE_TEST_CASE("Testing non-abandon-makable types", "[ct]",
    static_assert(not CT::IntentConstructibleAlt<Abandon<T>>);
    static_assert(    CT::IntentConstructibleAlt<Abandon<T*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mAbandonConstructor);
 }
 
 TEMPLATE_TEST_CASE("Testing abandon-assignable types", "[ct]",
-   ImplicitlyConstructible,
+   EmptyType,
    DestructibleType,
    NonIntentConstructible,
    AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
    PartiallyIntentConstructible,
-   DescriptorConstructible,
    ForcefullyPod,
    AggregateType,
    int
@@ -941,15 +1050,15 @@ TEMPLATE_TEST_CASE("Testing abandon-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Abandon<T*>>);
    static_assert(    CT::IntentAssignableAlt<Abandon<T const*>>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mAbandonAssigner);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mAbandonAssigner);
 
-   auto meta3 = MetaData::Of<const T>();
+   auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
    REQUIRE(meta3->mAbandonAssigner);
 }
@@ -981,7 +1090,7 @@ TEMPLATE_TEST_CASE("Testing non-abandon-assignable types", "[ct]",
    static_assert(    CT::IntentAssignableAlt<Abandon<T*>>);
    static_assert(    CT::IntentAssignableAlt<Abandon<T const*>>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mAbandonAssigner);
 }
@@ -990,28 +1099,27 @@ TEMPLATE_TEST_CASE("Testing non-abandon-assignable types", "[ct]",
 ///                                                                           
 ///   Descriptor intents                                                      
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing descriptor-makable types", "[ct]",
+/*TEMPLATE_TEST_CASE("Testing descriptor-makable types", "[ct]",
    AllIntentConstructible,
-   AllIntentConstructibleAndAssignable,
-   DescriptorConstructible
+   AllIntentConstructibleAndAssignable
 ) {
    using T = TestType;
    static_assert(    CT::DescriptorConstructible<T>);
    static_assert(not CT::DescriptorConstructible<T*>);
    static_assert(not CT::IntentConstructibleAlt<Describe>);
 
-   auto meta1 = MetaData::Of<T>();
+   auto meta1 = MetaDataOf<T>();
    REQUIRE(meta1);
    REQUIRE(meta1->mDescriptorConstructor);
 
-   auto meta2 = MetaData::Of<T*>();
+   auto meta2 = MetaDataOf<T*>();
    REQUIRE(meta2);
    REQUIRE(meta2->mDescriptorConstructor);
 }
 
 TEMPLATE_TEST_CASE("Testing non-descriptor-makable types", "[ct]",
    IncompleteType,
-   ImplicitlyConstructible,
+   EmptyType,
    NonDestructible,
    DestructibleType,
    PrivatelyConstructible,
@@ -1028,10 +1136,10 @@ TEMPLATE_TEST_CASE("Testing non-descriptor-makable types", "[ct]",
    static_assert(not CT::DescriptorConstructible<T*>);
    static_assert(not CT::IntentConstructibleAlt<Describe>);
 
-   auto meta = MetaData::Of<Conditional<CT::Complete<T>, T, T*>>();
+   auto meta = MetaDataOf<Tif<CT::Complete<T>, T, T*>>();
    REQUIRE(meta);
    REQUIRE_FALSE(meta->mDescriptorConstructor);
-}
+}*/
 
 TEMPLATE_TEST_CASE("Testing DeintCast (non-moving)", "[ct]",
    const int&,

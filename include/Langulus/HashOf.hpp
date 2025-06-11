@@ -193,13 +193,15 @@ namespace Langulus
 
 
    /// Hash any hashable data, including fundamental/POD/range types          
-   ///   @tparam FAKE - for internal use - if FAKE and evaluated to fail, it  
-   ///      will return CT::Unsupported; otherwise it will scream a compiler  
-   ///      error at you                                                      
+   ///   @tparam FORCE_RUNTIME - for internal use - if FORCE_RUNTIME and      
+   ///      evaluated to fail, it will return CT::Unsupported; otherwise it   
+   ///      will scream a compiler error at you. Being true also forces the   
+   ///      hash to be performed at runtime, so that it doesn't fail on       
+   ///      CT::Hashable checks at reflection time                            
    ///   @tparam SEED - the seed for the hash algorithm                       
    ///   @param head, rest... - the data to hash                              
    ///   @return the hash                                                     
-   template<bool FAKE, Hash SEED, class T, class...MORE>
+   template<bool FORCE_RUNTIME, Hash SEED, class T, class...MORE>
    constexpr auto HashOf(T&& head, MORE&&...rest) {
       static_assert(not CT::Sheddable<T, MORE...>,
          "Shed all sheddable wrappers before hashing");
@@ -212,13 +214,17 @@ namespace Langulus
          // Combine all data into a single array of hashes, and then    
          // hash that array as a whole                                  
          const Hash coal[1 + sizeof...(MORE)] {
-            HashOf<FAKE, SEED>(head),
-            HashOf<FAKE, SEED>(rest)...
+            HashOf<FORCE_RUNTIME, SEED>(head),
+            HashOf<FORCE_RUNTIME, SEED>(rest)...
          };
 
          IF_CONSTEXPR() {
-            auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(coal)>>(coal);
-            return HashBytes(as_bytes, SEED);
+            if constexpr (FORCE_RUNTIME)
+               return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+            else {
+               auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(coal)>>(coal);
+               return HashBytes(as_bytes, SEED);
+            }
          }
          else return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
       }
@@ -228,7 +234,7 @@ namespace Langulus
          // Combine the hashes of each element inside an array          
          if constexpr (ExtentOf<T> == 1) {
             // Only one element in array, just use the first element    
-            return HashOf<FAKE, SEED>(head[0]);
+            return HashOf<FORCE_RUNTIME, SEED>(head[0]);
          }
          else if constexpr (CT::POD<InnerT> and not CT::HasGetHashMethod<InnerT>) {
             // Array is made of POD elements, batch-hash the array      
@@ -239,22 +245,28 @@ namespace Langulus
             // hash that array of hashes as a whole                     
             Hash coal[ExtentOf<T>];
             for (::std::size_t i = 0; i < ExtentOf<T>; ++i)
-               coal[i] = HashOf<FAKE, SEED>(head[i]);
+               coal[i] = HashOf<FORCE_RUNTIME, SEED>(head[i]);
 
             IF_CONSTEXPR() {
-               auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(coal)>>(coal);
-               return HashBytes(as_bytes, SEED);
+               if constexpr (FORCE_RUNTIME)
+                  return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+               else {
+                  auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(coal)>>(coal);
+                  return HashBytes(as_bytes, SEED);
+               }
             }
-            else {
-               return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
-            }
+            else return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
          }
       }
       else if constexpr (::std::is_pointer_v<T>) {
          // Hash pointer, never dereference it                          
          IF_CONSTEXPR() {
-            auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
-            return HashBytes(as_bytes, SEED);
+            if constexpr (FORCE_RUNTIME)
+               return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+            else {
+               auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
+               return HashBytes(as_bytes, SEED);
+            }
          }
          else return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
       }
@@ -275,8 +287,12 @@ namespace Langulus
          // cases it is recommended you add a custom GetHash() method   
          // to your type, or #pragma pack, in order to circumvent issue 
          IF_CONSTEXPR() {
-            auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
-            return HashBytes(as_bytes, SEED);
+            if constexpr (FORCE_RUNTIME)
+               return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+            else {
+               auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
+               return HashBytes(as_bytes, SEED);
+            }
          }
          else return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
       }
@@ -298,23 +314,23 @@ namespace Langulus
                // Constant evaluation is possible only if bit_cast      
                // is able to do its magic                               
                IF_CONSTEXPR() {
-                  auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
-                  return HashBytes(as_bytes, SEED);
+                  if constexpr (FORCE_RUNTIME)
+                     return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+                  else {
+                     auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
+                     return HashBytes(as_bytes, SEED);
+                  }
                }
-               else {
-                  return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
-               }
+               else return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
             }
-            else {
-               return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
-            }
+            else return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
          }
          else {
             // Hash each individual element, then combine all hashes    
             // Possible only at runtime                                 
             ::std::vector<Hash> coal;
             for (auto& i : head)
-               coal.emplace_back(HashOf<FAKE, SEED>(i));
+               coal.emplace_back(HashOf<FORCE_RUNTIME, SEED>(i));
 
             return HashBytes({reinterpret_cast<const char*>(coal.data()), coal.size() * sizeof(Hash)}, SEED);
          }
@@ -330,7 +346,7 @@ namespace Langulus
       }
       else {
          // Handle failure statically                                   
-         static_assert(FAKE, "Can't hash data");
+         static_assert(FORCE_RUNTIME, "Can't hash data");
          return Unsupported {};
       }
    }

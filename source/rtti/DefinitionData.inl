@@ -97,7 +97,7 @@ namespace Langulus::RTTI
          definition.mHasGetHashMethod = CT::HasGetHashMethod<T>;
          definition.mHasher = [](const void* at) {
             auto self = static_cast<const T*>(at);
-            return HashOf(*self);
+            return HashOf<true>(*self);
          };
       }
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "Meta.hpp"
-#include "Intent.hpp"
+#include <Langulus/IntentOf.hpp>
 
 
 namespace Langulus::RTTI

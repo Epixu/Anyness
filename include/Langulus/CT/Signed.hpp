@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../CTTI.hpp"
+#include "../Typenav.hpp"
 
 
 namespace Langulus::CTTI
@@ -27,9 +27,7 @@ namespace Langulus::CTTI
 
    } // namespace Langulus::CT::Inner
 
-   /// Can be used in two ways to satisfy CT::Signed<T>:                      
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Signed = Yes;` in T                        
+   /// Affects CT::Signed<T>                                                  
    template<class T>
    struct Signed {
       static constexpr bool Enabled = Inner::SignedInner<T, int>()
@@ -45,6 +43,6 @@ namespace Langulus::CT
 {
 
    template<class...T>
-   concept Unsigned = NotSigned<T>..>;
+   concept Unsigned = NotSigned<T...>;
 
 } // namespace Langulus::CT

@@ -1,5 +1,6 @@
 #pragma once
-#include "../CTTI.hpp"
+#include "../Typenav.hpp"
+#include "Signed.hpp"
 
 
 namespace Langulus
@@ -31,6 +32,41 @@ namespace Langulus
       static constexpr bool     Enabled  = true;
    };
 
+   /// Round to the upper power-of-two                                        
+   ///   @tparam SAFE - set to true if you want it to throw on overflow       
+   ///   @param x - the unsigned integer to round up                          
+   ///   @return the closest upper power-of-two to x                          
+   template<bool SAFE = false, CT::Unsigned T> LANGULUS(ALWAYS_INLINED)
+   constexpr T Roof2(const T x) noexcept(not SAFE) {
+      if constexpr (SAFE) {
+         constexpr T lastPowerOfTwo = (T {1}) << (T {sizeof(T) * 8 - 1});
+         if (x > lastPowerOfTwo)
+            throw Exception("Roof2 overflowed", HERE());
+      }
+
+      IF_CONSTEXPR() {
+         T n = x;
+         --n;
+         n |= n >> 1;
+         n |= n >> 2;
+         n |= n >> 4;
+         if constexpr (sizeof(T) > 1)
+            n |= n >> 8;
+         if constexpr (sizeof(T) > 2)
+            n |= n >> 16;
+         if constexpr (sizeof(T) > 4)
+            n |= n >> 32;
+         static_assert(sizeof(T) <= 8, "Not implemented");
+
+         ++n;
+         return n;
+      }
+      else {
+         return x <= 1 ? x : static_cast<T>((T {1}) << 
+            static_cast<T>(sizeof(T) * 8 - ::std::countl_zero(static_cast<T>(x - 1))));
+      }
+   }
+
 } // namespace Langulus
 
 namespace Langulus::CTTI
@@ -61,32 +97,36 @@ LANGULUS_CTTI_CONCEPT(Pooled);
 namespace Langulus::CT
 {
 
+   ///                                                                        
    template<class T>
    consteval auto GetMinAlloc() {
-      if constexpr (requires { CTTI::Pooled<Shed<T>>::Enabled; }) {
-         constexpr auto minalloc = CTTI::Pooled<Shed<T>>::MinAlloc;
+      using ST = Shed<T>;
+      if constexpr (requires { CTTI::Pooled<ST>::Enabled; }) {
+         constexpr auto minalloc = CTTI::Pooled<ST>::MinAlloc;
          return minalloc < Alignment ? Alignment : minalloc;
       }
-      else if constexpr (Dense<Shed<T>> and requires { Decay<Shed<T>>::CTTI_Pooled::Enabled; }) {
-         constexpr auto minalloc = Decay<Shed<T>>::CTTI_Pooled::MinAlloc;
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled)) {
+         constexpr auto minalloc = Decay<ST>::CTTI_Pooled::MinAlloc;
          return minalloc < Alignment ? Alignment : minalloc;
       }
       else return sizeof(T) < Alignment ? Alignment : sizeof(T);
    }
    
+   ///                                                                        
    template<class T>
    consteval auto GetMinPool() {
-      if constexpr (requires { CTTI::Pooled<Shed<T>>::Enabled; }) {
-         constexpr auto minpool = Roof2(CTTI::Pooled<Shed<T>>::MinPool);
-         constexpr auto minallo = Roof2(GetMinAlloc<T>());
+      using ST = Shed<T>;
+      if constexpr (requires { CTTI::Pooled<ST>::Enabled; }) {
+         constexpr auto minpool = Roof2(CTTI::Pooled<ST>::MinPool);
+         constexpr auto minallo = Roof2(GetMinAlloc<ST>());
          return minpool < minallo ? minallo : minpool;
       }
-      else if constexpr (Dense<Shed<T>> and requires { Decay<Shed<T>>::CTTI_Pooled::Enabled; }) {
-         constexpr auto minpool = Roof2(Decay<Shed<T>>::CTTI_Pooled::MinPool);
-         constexpr auto minallo = Roof2(GetMinAlloc<T>());
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled)) {
+         constexpr auto minpool = Roof2(Decay<ST>::CTTI_Pooled::MinPool);
+         constexpr auto minallo = Roof2(GetMinAlloc<ST>());
          return minpool < minallo ? minallo : minpool;
       }
-      else return Roof2(GetMinAlloc<T>() * 256);
+      else return Roof2(GetMinAlloc<ST>() * 256);
    }
 
 } // namespace Langulus::CT
