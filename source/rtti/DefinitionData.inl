@@ -108,90 +108,98 @@ namespace Langulus::RTTI
          definition.mDeptr = Reflect<Deptr<T>>();
       }
 
+      using DT = Decvq<T>;
+
+      if constexpr (not ::std::same_as<T, DT>)
+         definition.mDecvq = Reflect<DT>();
+      else
+         definition.mDecvq = &definition;
 
       //                                                                
       // Constructor reflections                                        
-      if constexpr (CT::Defaultable<T>) {
+      // @note these are allowed even if T is constant                  
+      if constexpr (CT::Defaultable<DT>) {
          // Generate a default constructor                              
          definition.mDefaultConstructor =
-            [](void* at) noexcept(noexcept(T {})) {
-               auto atT = static_cast<T*>(at);
-               new (atT) T {};
+            [](void* at) noexcept(noexcept(DT {})) {
+               auto atT = static_cast<DT*>(at);
+               new (atT) DT {};
             };
       }
 
-      if constexpr (CT::CopyConstructible<T>) {
+      if constexpr (CT::CopyConstructible<DT>) {
          // Generate a copy-constructor                                 
          definition.mCopyConstructor =
             [](const void* from, void* to) {
-               auto fromT = static_cast<const T*>(from);
-               auto toT = static_cast<T*>(to);
+               auto fromT = static_cast<const DT*>(from);
+               auto toT = static_cast<DT*>(to);
                IntentNew(toT, Copy(*fromT));
             };
       }
             
-      if constexpr (CT::ReferConstructible<T>) {
+      if constexpr (CT::ReferConstructible<DT>) {
          // Generate a refer-constructor                                
          definition.mReferConstructor =
             [](const void* from, void* to) {
-               auto fromT = static_cast<const T*>(from);
-               auto toT = static_cast<T*>(to);
+               auto fromT = static_cast<const DT*>(from);
+               auto toT = static_cast<DT*>(to);
                IntentNew(toT, Refer(*fromT));
             };
       }
             
-      if constexpr (CT::CloneConstructible<T>) {
+      if constexpr (CT::CloneConstructible<DT>) {
          // Generate a clone-constructor                                
          definition.mCloneConstructor =
             [](const void* from, void* to) {
-               auto fromT = static_cast<const T*>(from);
-               auto toT = static_cast<T*>(to);
+               auto fromT = static_cast<const DT*>(from);
+               auto toT = static_cast<DT*>(to);
                IntentNew(toT, Clone(*fromT));
             };
       }
 
-      if constexpr (CT::DisownConstructible<T>) {
+      if constexpr (CT::DisownConstructible<DT>) {
          // Generate a disown-constructor                               
          definition.mDisownConstructor =
             [](const void* from, void* to) {
-               auto fromT = static_cast<const T*>(from);
-               auto toT = static_cast<T*>(to);
+               auto fromT = static_cast<const DT*>(from);
+               auto toT = static_cast<DT*>(to);
                IntentNew(toT, Disown(*fromT));
             };
       }
 
-      if constexpr (CT::MoveConstructible<T>) {
+      if constexpr (CT::MoveConstructible<DT>) {
          // Generate a move-constructor                                 
          definition.mMoveConstructor =
             [](void* from, void* to) {
-               auto fromT = static_cast<T*>(from);
-               auto toT = static_cast<T*>(to);
+               auto fromT = static_cast<DT*>(from);
+               auto toT = static_cast<DT*>(to);
                IntentNew(toT, Move(*fromT));
             };
       }
 
-      if constexpr (CT::AbandonConstructible<T>) {
+      if constexpr (CT::AbandonConstructible<DT>) {
          // Generate a abandon-constructor                              
          definition.mAbandonConstructor =
             [](void* from, void* to) {
-               auto fromT = static_cast<T*>(from);
-               auto toT = static_cast<T*>(to);
+               auto fromT = static_cast<DT*>(from);
+               auto toT = static_cast<DT*>(to);
                IntentNew(toT, Abandon(*fromT));
             };
       }
       
-      if constexpr (CT::Destroyable<T>) {
+      if constexpr (CT::Destroyable<DT>) {
          // Generate a destructor                                       
          definition.mDestructor =
             [](void* at) {
-               auto atT = static_cast<T*>(at);
-               atT->~T();
+               auto atT = static_cast<DT*>(at);
+               atT->~DT();
             };
       }
       
 
       //                                                                
       // Assignment reflections                                         
+      // @note allowed only if T is mutable                             
       if constexpr (CT::CopyAssignable<T>) {
          // Generate a copy-assigner                                    
          definition.mCopyAssigner =
@@ -255,11 +263,11 @@ namespace Langulus::RTTI
 
       //                                                                
       // Other utilities                                                
-      if constexpr (CT::Hashable<T>) {
+      if constexpr (CT::Hashable<DT>) {
          // Generate a hashing function                                 
-         definition.mHasGetHashMethod = CT::HasGetHashMethod<T>;
+         definition.mHasGetHashMethod = CT::HasGetHashMethod<DT>;
          definition.mHasher = [](const void* at) {
-            auto self = static_cast<const T*>(at);
+            auto self = static_cast<const DT*>(at);
             return HashOf<true>(*self);
          };
       }
@@ -268,30 +276,30 @@ namespace Langulus::RTTI
          // Generate a referencing function                             
          definition.mReferencer =
             [](void* at, int modifier) -> int {
-               auto atT = static_cast<T*>(at);
+               auto atT = static_cast<DT*>(at);
                return atT->Reference(modifier);
             };
       }
 
-      if constexpr (CT::Comparable<T, T>) {
+      if constexpr (CT::Comparable<DT, DT>) {
          // Generate a three-way comparison function                    
          definition.mComparer =
             [](const void* t1, const void* t2) -> Compared {
-               auto t1T = static_cast<const T*>(t1);
-               auto t2T = static_cast<const T*>(t2);
+               auto t1T = static_cast<const DT*>(t1);
+               auto t2T = static_cast<const DT*>(t2);
 
-               if constexpr (CT::Sparse<T>) {
+               if constexpr (CT::Sparse<DT>) {
                   // Pointers are either the same or not - not ordered  
                   // for security reasons                               
                   return *t1T == *t2T ? Compared::Equal : Compared::Unordered;
                }
-               else if constexpr (CT::Fundamental<T>) {
+               else if constexpr (CT::Fundamental<DT>) {
                   // Fundamental types are always strong-ordered        
                   if      (*t1T == *t2T)  return Compared::Equal;
                   else if (*t1T <  *t2T)  return Compared::Less;
                   else                    return Compared::Greater;
                }
-               else if constexpr (CT::ComparableStrong<T>) {
+               else if constexpr (CT::ComparableStrong<DT>) {
                   switch (*t1T <=> *t2T) {
                   case ::std::strong_ordering::less:        return Compared::Less;
                   case ::std::strong_ordering::equal:
@@ -299,14 +307,14 @@ namespace Langulus::RTTI
                   case ::std::strong_ordering::greater:     return Compared::Greater;
                   }
                }
-               else if constexpr (CT::ComparableWeak<T>) {
+               else if constexpr (CT::ComparableWeak<DT>) {
                   switch (*t1T <=> *t2T) {
                   case ::std::weak_ordering::less:          return Compared::Less;
                   case ::std::weak_ordering::equivalent:    return Compared::Equivalent;
                   case ::std::weak_ordering::greater:       return Compared::Greater;
                   }
                }
-               else if constexpr (CT::ComparablePartial<T>) {
+               else if constexpr (CT::ComparablePartial<DT>) {
                   switch (*t1T <=> *t2T) {
                   case ::std::partial_ordering::unordered:   return Compared::Unordered;
                   case ::std::partial_ordering::less:        return Compared::Less;
@@ -319,11 +327,11 @@ namespace Langulus::RTTI
             };
       }
 
-      if constexpr (CT::Resolvable<T>) {
+      if constexpr (CT::Resolvable<DT>) {
          // Generate a resolving function                               
          definition.mResolver =
             [](const void* at) {
-               auto atT = static_cast<const T*>(at);
+               auto atT = static_cast<const DT*>(at);
                return Anyness::Any {atT->GetResolved()};
             };
       }

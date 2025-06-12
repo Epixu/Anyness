@@ -106,7 +106,8 @@ namespace Langulus::CTTI
 /// This is why I've wrapped it in a lambda with 'if constexpr'               
 ///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_DELVE_IN(TYPE,NAME) ([]{ \
-      if constexpr (::std::is_class_v<::std::decay_t<TYPE>> and requires { typename ::std::decay_t<TYPE>::CTTI_##NAME; }) \
+      if constexpr (::std::is_class_v<::std::decay_t<TYPE>> \
+      and requires { typename ::std::decay_t<TYPE>::CTTI_##NAME; }) \
          return ::std::decay_t<TYPE>::CTTI_##NAME::Enabled; \
       else \
          return false; \
@@ -272,19 +273,22 @@ namespace Langulus
       /// Check if all T are bounded arrays                                   
       template<class...T>
       concept Array = Inner::CheckSize<T...>()
-          and ((CTTI::Array<Deref<Shed<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, Array)) and ...);
+          and ((CTTI::Array<Deref<Shed<T>>>::Enabled
+           or LANGULUS_CTTI_DELVE_IN(Shed<T>, Array)) and ...);
 
       /// Check if all T are volatile-qualified                               
       template<class...T>
       concept Volatile = Inner::CheckSize<T...>()
-          and ((CTTI::Volatile<Deref<Shed<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, Volatile)) and ...);
+          and ((CTTI::Volatile<Deref<Shed<T>>>::Enabled
+           or LANGULUS_CTTI_DELVE_IN(Shed<T>, Volatile)) and ...);
 
       /// Check if all T are sparse                                           
       ///   @attention this also includes non-pointer types that are tagged   
       ///      as custom packed pointers                                      
       template<class...T>
       concept Sparse = Inner::CheckSize<T...>()
-          and ((CTTI::Sparse<Deref<Shed<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, Sparse)) and ...);
+          and ((CTTI::Sparse<Deref<Shed<T>>>::Enabled
+           or LANGULUS_CTTI_DELVE_IN(Shed<T>, Sparse)) and ...);
 
       /// Check if all T are dense                                            
       template<class...T>
@@ -294,7 +298,8 @@ namespace Langulus
       /// Check if all T are constant-qualified                               
       template<class...T>
       concept Constant = Inner::CheckSize<T...>()
-          and ((CTTI::Constant<Deref<Shed<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, Constant)) and ...);
+          and ((CTTI::Constant<Deref<Shed<T>>>::Enabled
+           or LANGULUS_CTTI_DELVE_IN(Shed<T>, Constant)) and ...);
 
       /// Check if all T are not constant-qualified                           
       template<class...T>
