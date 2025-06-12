@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include <Langulus/Core.hpp>
 
@@ -39,8 +46,7 @@ namespace Langulus::RTTI::Inner
       constexpr MetaNaked(const MetaNaked&) noexcept = default;
       constexpr MetaNaked(MetaNaked&&) noexcept = default;
       constexpr MetaNaked(::std::nullptr_t) noexcept {}
-
-      constexpr explicit MetaNaked(const T* definition) noexcept
+      constexpr MetaNaked(const T* definition) noexcept
          : mDefinition {definition} {}
 
       constexpr MetaNaked& operator = (const MetaNaked&) noexcept = default;

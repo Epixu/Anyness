@@ -5,10 +5,6 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-#if not LANGULUS_FEATURE(MANAGED_REFLECTION)
-#error This file shouldn't be included if MANAGED_REFLECTION is disabled
-#endif
-
 #include "Registry.hpp"
 #include "MetaData.inl"
 #include "MetaVerb.inl"
@@ -17,6 +13,10 @@
 #include "Meta.inl"
 #include <Langulus/Core/Assume.hpp>
 #include <cctype>
+
+#if not LANGULUS_FEATURE(MANAGED_REFLECTION)
+#error This file shouldn't be included if MANAGED_REFLECTION is disabled
+#endif
 
 
 namespace Langulus::RTTI

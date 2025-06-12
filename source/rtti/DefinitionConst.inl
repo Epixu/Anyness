@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "DefinitionConst.hpp"
 #include "MetaConst.hpp"
@@ -18,7 +25,7 @@ namespace Langulus::RTTI
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam E - the constant to reflect                                  
    template<auto E> LANGULUS(NOINLINE)
-   CMeta DefinitionConst::Reflect() {
+   auto DefinitionConst::Reflect() -> DefinitionConst const* {
       constexpr auto cppname = CppNameOf<E>();
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -43,7 +50,7 @@ namespace Langulus::RTTI
          // make sure that definitions match between those.             
          static constinit std::optional<DefinitionConst> s_definition;
          if (s_definition.has_value())
-            return CMeta {&s_definition.value()};
+            return &s_definition.value();
 
          auto& definition = s_definition.emplace(cppname);
       #endif
@@ -80,21 +87,20 @@ namespace Langulus::RTTI
       definition.mLibraryName = RTTI::Boundary;
 
       // After all properties have been set - generate a unique handle  
-      definition.mHandle = Registry.GenerateHandle(&definition);
+      //definition.mHandle = Registry.GenerateHandle(&definition);
 
       Logger::VerboseRaw(
          "Constant ", Logger::Yellow, definition.mToken,
          " (ID: ", definition.mHandle, ") ", Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
-      return definition.mHandle;
    #else
       Logger::VerboseRaw(
          "Constant ", Logger::Yellow, definition.mToken, Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
-      return CMeta {&definition};
    #endif
+      return &definition;
    }
 
 } // namespace Langulus::RTTI

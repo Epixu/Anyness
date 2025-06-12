@@ -1,10 +1,19 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "Definition.hpp"
-#include "MetaConst.hpp"
 
 
 namespace Langulus::RTTI
 {
+
+   struct MetaConst;
+
 
    ///                                                                        
    /// A constant value definition                                            
@@ -14,12 +23,9 @@ namespace Langulus::RTTI
       friend struct MetaConst;
       DefinitionConst(const Token& cppname) : Definition {cppname} {}
 
-      // A unique handle that may or may not be compressed              
-      MetaConst mHandle;
-
    public:
       template<auto>
-      static CMeta Reflect();
+      static auto Reflect() -> DefinitionConst const*;
    };
 
 } // namespace Langulus::RTTI

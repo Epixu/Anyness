@@ -1,9 +1,22 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "DefinitionData.hpp"
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/CT/DefineTag.hpp>
 #include <Langulus/CT/DefineVerb.hpp>
 #include <Langulus/CT/Pooled.hpp>
+#include <Langulus/CT/Defaultable.hpp>
+#include <Langulus/CT/Destroyable.hpp>
+#include <Langulus/CT/Deep.hpp>
+#include <Langulus/CT/Referenced.hpp>
+#include <Langulus/CT/Resolvable.hpp>
+#include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
 #include <optional>
 
@@ -21,7 +34,9 @@ namespace Langulus::RTTI
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the decayed type to reflect                              
    template<class T> LANGULUS(NOINLINE)
-   DMeta DefinitionData::Reflect() {
+   auto DefinitionData::Reflect() -> DefinitionData const* {
+      constexpr bool VERBOSE = false;
+
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete type - "
          "make sure you have included the corresponding headers "
@@ -70,7 +85,7 @@ namespace Langulus::RTTI
          // make sure that definitions match between those.             
          static constinit std::optional<DefinitionData> s_definition;
          if (s_definition.has_value())
-            return DMeta {&s_definition.value()};
+            return &s_definition.value();
 
          auto& definition = s_definition.emplace(cppname);
       #endif
@@ -86,12 +101,160 @@ namespace Langulus::RTTI
       definition.mSize = sizeof(T);
       definition.mAlign = alignof(T);
       definition.mConst = CT::Constant<T>;
+      definition.mDeep = CT::Deep<T>;
 
       if constexpr (CT::Sparse<T> and CT::Complete<Deptr<T>>) {
          // Reflect the denser type and propagate its origin            
          definition.mDeptr = Reflect<Deptr<T>>();
       }
 
+
+      //                                                                
+      // Constructor reflections                                        
+      if constexpr (CT::Defaultable<T>) {
+         // Generate a default constructor                              
+         definition.mDefaultConstructor =
+            [](void* at) noexcept(noexcept(T {})) {
+               auto atT = static_cast<T*>(at);
+               new (atT) T {};
+            };
+      }
+
+      if constexpr (CT::CopyConstructible<T>) {
+         // Generate a copy-constructor                                 
+         definition.mCopyConstructor =
+            [](const void* from, void* to) {
+               auto fromT = static_cast<const T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentNew(toT, Copy(*fromT));
+            };
+      }
+            
+      if constexpr (CT::ReferConstructible<T>) {
+         // Generate a refer-constructor                                
+         definition.mReferConstructor =
+            [](const void* from, void* to) {
+               auto fromT = static_cast<const T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentNew(toT, Refer(*fromT));
+            };
+      }
+            
+      if constexpr (CT::CloneConstructible<T>) {
+         // Generate a clone-constructor                                
+         definition.mCloneConstructor =
+            [](const void* from, void* to) {
+               auto fromT = static_cast<const T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentNew(toT, Clone(*fromT));
+            };
+      }
+
+      if constexpr (CT::DisownConstructible<T>) {
+         // Generate a disown-constructor                               
+         definition.mDisownConstructor =
+            [](const void* from, void* to) {
+               auto fromT = static_cast<const T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentNew(toT, Disown(*fromT));
+            };
+      }
+
+      if constexpr (CT::MoveConstructible<T>) {
+         // Generate a move-constructor                                 
+         definition.mMoveConstructor =
+            [](void* from, void* to) {
+               auto fromT = static_cast<T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentNew(toT, Move(*fromT));
+            };
+      }
+
+      if constexpr (CT::AbandonConstructible<T>) {
+         // Generate a abandon-constructor                              
+         definition.mAbandonConstructor =
+            [](void* from, void* to) {
+               auto fromT = static_cast<T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentNew(toT, Abandon(*fromT));
+            };
+      }
+      
+      if constexpr (CT::Destroyable<T>) {
+         // Generate a destructor                                       
+         definition.mDestructor =
+            [](void* at) {
+               auto atT = static_cast<T*>(at);
+               atT->~T();
+            };
+      }
+      
+
+      //                                                                
+      // Assignment reflections                                         
+      if constexpr (CT::CopyAssignable<T>) {
+         // Generate a copy-assigner                                    
+         definition.mCopyAssigner =
+            [](const void* from, void* to) {
+               auto fromT = static_cast<const T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentAssign(*toT, Copy(*fromT));
+            };
+      }
+      
+      if constexpr (CT::ReferAssignable<T>) {
+         // Generate a refer-assigner                                   
+         definition.mReferAssigner =
+            [](const void* from, void* to) {
+               auto fromT = static_cast<const T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentAssign(*toT, Refer(*fromT));
+            };
+      }
+
+      if constexpr (CT::DisownAssignable<T>) {
+         // Generate a disown-assigner                                  
+         definition.mDisownAssigner =
+            [](const void* from, void* to) {
+               auto fromT = static_cast<const T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentAssign(*toT, Disown(*fromT));
+            };
+      }
+            
+      if constexpr (CT::CloneAssignable<T>) {
+         // Generate a clone-assigner                                   
+         definition.mCloneAssigner =
+            [](const void* from, void* to) {
+               auto fromT = static_cast<const T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentAssign(*toT, Clone(*fromT));
+            };
+      }
+
+      if constexpr (CT::MoveAssignable<T>) {
+         // Generate a move-assigner                                    
+         definition.mMoveAssigner =
+            [](void* from, void* to) {
+               auto fromT = static_cast<T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentAssign(*toT, Move(*fromT));
+            };
+      }
+
+      if constexpr (CT::AbandonAssignable<T>) {
+         // Generate an abandon-assigner                                
+         definition.mAbandonAssigner =
+            [](void* from, void* to) {
+               auto fromT = static_cast<T*>(from);
+               auto toT = static_cast<T*>(to);
+               IntentAssign(*toT, Abandon(*fromT));
+            };
+      }
+
+
+      //                                                                
+      // Other utilities                                                
       if constexpr (CT::Hashable<T>) {
          // Generate a hashing function                                 
          definition.mHasGetHashMethod = CT::HasGetHashMethod<T>;
@@ -99,6 +262,70 @@ namespace Langulus::RTTI
             auto self = static_cast<const T*>(at);
             return HashOf<true>(*self);
          };
+      }
+
+      if constexpr (CT::Referenced<T>) {
+         // Generate a referencing function                             
+         definition.mReferencer =
+            [](void* at, int modifier) -> int {
+               auto atT = static_cast<T*>(at);
+               return atT->Reference(modifier);
+            };
+      }
+
+      if constexpr (CT::Comparable<T, T>) {
+         // Generate a three-way comparison function                    
+         definition.mComparer =
+            [](const void* t1, const void* t2) -> Compared {
+               auto t1T = static_cast<const T*>(t1);
+               auto t2T = static_cast<const T*>(t2);
+
+               if constexpr (CT::Sparse<T>) {
+                  // Pointers are either the same or not - not ordered  
+                  // for security reasons                               
+                  return *t1T == *t2T ? Compared::Equal : Compared::Unordered;
+               }
+               else if constexpr (CT::Fundamental<T>) {
+                  // Fundamental types are always strong-ordered        
+                  if      (*t1T == *t2T)  return Compared::Equal;
+                  else if (*t1T <  *t2T)  return Compared::Less;
+                  else                    return Compared::Greater;
+               }
+               else if constexpr (CT::ComparableStrong<T>) {
+                  switch (*t1T <=> *t2T) {
+                  case ::std::strong_ordering::less:        return Compared::Less;
+                  case ::std::strong_ordering::equal:
+                  case ::std::strong_ordering::equivalent:  return Compared::Equal;
+                  case ::std::strong_ordering::greater:     return Compared::Greater;
+                  }
+               }
+               else if constexpr (CT::ComparableWeak<T>) {
+                  switch (*t1T <=> *t2T) {
+                  case ::std::weak_ordering::less:          return Compared::Less;
+                  case ::std::weak_ordering::equivalent:    return Compared::Equivalent;
+                  case ::std::weak_ordering::greater:       return Compared::Greater;
+                  }
+               }
+               else if constexpr (CT::ComparablePartial<T>) {
+                  switch (*t1T <=> *t2T) {
+                  case ::std::partial_ordering::unordered:   return Compared::Unordered;
+                  case ::std::partial_ordering::less:        return Compared::Less;
+                  case ::std::partial_ordering::equivalent:  return Compared::Equivalent;
+                  case ::std::partial_ordering::greater:     return Compared::Greater;
+                  }
+               }
+               else static_assert(false, "Unsupported comparison");
+               return Compared::Unordered;
+            };
+      }
+
+      if constexpr (CT::Resolvable<T>) {
+         // Generate a resolving function                               
+         definition.mResolver =
+            [](const void* at) {
+               auto atT = static_cast<const T*>(at);
+               return Anyness::Any {atT->GetResolved()};
+            };
       }
 
       // Calculate the allocation page and table                        
@@ -128,20 +355,20 @@ namespace Langulus::RTTI
          definition.mBoundary = RTTI::Boundary;
 
          // After all properties have been set - generate a unique id   
-         definition.mHandle = Registry.GenerateHandle(&definition);
+         //definition.mHandle = Registry.GenerateHandle(&definition);
       
-         Logger::VerboseRaw(
+         Logger::VerboseRaw<VERBOSE>(
             "Data ", Logger::Cyan, definition.mToken,
             " (ID: ", definition.mHandle, ") ", Logger::Green,
             " registered (LIB: ", definition.mBoundary, ")"
          );
-         return definition.mHandle;
       #else
-         Logger::VerboseRaw(
-            "Data ", Logger::Cyan, definition.mToken, Logger::Green, " registered)"
+         Logger::VerboseRaw<VERBOSE>(
+            Logger::Green, "Data ", Logger::Cyan, definition.mToken, Logger::Green, " reflected"
          );
-         return DMeta {&definition};
       #endif
+
+      return &definition;
    }
 
 } // namespace Langulus::RTTI

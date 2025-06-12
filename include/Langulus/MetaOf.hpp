@@ -6,10 +6,10 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../source/rtti/DefinitionData.hpp"
-#include "../source/rtti/DefinitionTag.hpp"
-#include "../source/rtti/DefinitionConst.hpp"
-#include "../source/rtti/DefinitionVerb.hpp"
+#include "../source/rtti/MetaData.hpp"
+#include "../source/rtti/MetaTag.hpp"
+#include "../source/rtti/MetaConst.hpp"
+#include "../source/rtti/MetaVerb.hpp"
 
 
 namespace Langulus
@@ -24,18 +24,18 @@ namespace Langulus
    template<class T>
    auto MetaOf() {
       if constexpr (CT::DefineTag<Decay<T>>)
-         return RTTI::DefinitionTag::Reflect<Decay<T>>();
+         return RTTI::TMeta {RTTI::DefinitionTag::Reflect<Decay<T>>()};
       else if constexpr (CT::DefineVerb<Decay<T>>)
-         return RTTI::DefinitionVerb::Reflect<Decay<T>>();
+         return RTTI::VMeta {RTTI::DefinitionVerb::Reflect<Decay<T>>()};
       else
-         return RTTI::DefinitionData::Reflect<Deref<T>>();
+         return RTTI::DMeta {RTTI::DefinitionData::Reflect<Deref<T>>()};
    }
 
    /// Get the meta definition of a constant, like an enum                    
    ///   @tparam E - constant to get meta definition of                       
    ///   @return the meta definition of the provided constant                 
    template<auto E>
-   auto MetaOf() {
+   RTTI::CMeta MetaOf() {
       return RTTI::DefinitionConst::Reflect<E>();
    }
 
@@ -45,7 +45,7 @@ namespace Langulus
    ///   @tparam T - type to get data definition from                         
    ///   @return the definition                                               
    template<class T>
-   auto MetaDataOf() {
+   RTTI::DMeta MetaDataOf() {
       return RTTI::DefinitionData::Reflect<Deref<T>>();
    }
 
@@ -55,7 +55,7 @@ namespace Langulus
    ///   @tparam T - type to get tag definition from                          
    ///   @return the definition                                               
    template<class T>
-   auto MetaTagOf() {
+   RTTI::TMeta MetaTagOf() {
       return RTTI::DefinitionTag::Reflect<Decay<T>>();
    }
 
@@ -65,7 +65,7 @@ namespace Langulus
    ///   @tparam T - type to get verb definition from                         
    ///   @return the definition                                               
    template<class T>
-   auto MetaVerbOf() {
+   RTTI::VMeta MetaVerbOf() {
       return RTTI::DefinitionVerb::Reflect<Decay<T>>();
    }
 
@@ -73,7 +73,7 @@ namespace Langulus
    ///   @tparam E - constant to get definition from                          
    ///   @return the definition                                               
    template<auto E>
-   auto MetaConstOf() {
+   RTTI::CMeta MetaConstOf() {
       return RTTI::DefinitionConst::Reflect<E>();
    }
 

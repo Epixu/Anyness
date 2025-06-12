@@ -1,11 +1,17 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "Meta.hpp"
+#include "DefinitionConst.hpp"
 
 
 namespace Langulus::RTTI
 {
-   class DefinitionConst;
-   
    namespace Inner
    {
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)

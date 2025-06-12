@@ -6,13 +6,13 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#if not LANGULUS_FEATURE(MANAGED_REFLECTION)
-#error This file shouldn't be included if MANAGED_REFLECTION is disabled
-#endif
-
 #include "Hashing.hpp"
 #include <unordered_map>
 #include <unordered_set>
+
+#if not LANGULUS_FEATURE(MANAGED_REFLECTION)
+#error This file shouldn't be included if MANAGED_REFLECTION is disabled
+#endif
 
 
 namespace Langulus::RTTI

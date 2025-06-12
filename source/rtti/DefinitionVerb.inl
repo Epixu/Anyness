@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "DefinitionVerb.hpp"
 #include "MetaVerb.hpp"
@@ -21,7 +28,7 @@ namespace Langulus::RTTI
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the decayed verb to reflect                              
    template<CT::Decayed T> LANGULUS(NOINLINE)
-   VMeta DefinitionVerb::Reflect() {
+   auto DefinitionVerb::Reflect() -> DefinitionVerb const* {
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete verb - "
          "make sure you have included the corresponding headers "
@@ -61,7 +68,7 @@ namespace Langulus::RTTI
          // make sure that definitions match between those.             
          static constinit std::optional<DefinitionVerb> s_definition;
          if (s_definition.has_value())
-            return VMeta {&s_definition.value()};
+            return &s_definition.value();
 
          auto& definition = s_definition.emplace(cppname);
       #endif
@@ -100,7 +107,7 @@ namespace Langulus::RTTI
       definition.mLibraryName = RTTI::Boundary;
 
       // After all properties have been set - generate a unique handle  
-      definition.mHandle = Registry.GenerateHandle(&definition);
+      //definition.mHandle = Registry.GenerateHandle(&definition);
 
       if (definition.mOperator.size()) {
          Registry.RegisterVerbOperator(definition.mOperator, RTTI::Boundary);
@@ -138,7 +145,6 @@ namespace Langulus::RTTI
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
-      return definition.mHandle;
    #else
       if (definition.mOperator.size()) {
          const auto op1 = IsolateOperator(definition.mOperator);
@@ -168,8 +174,8 @@ namespace Langulus::RTTI
             Logger::Green, " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
-      return VMeta {&definition};
    #endif
+      return &definition;
    }
 
 } // namespace Langulus::RTTI

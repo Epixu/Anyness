@@ -13,10 +13,16 @@ namespace Langulus::CTTI
 {
 
    /// Affects CT::POD<T>                                                     
+   ///   @note: is_trivially_destructible_v is required to strenghten the     
+   ///      is_trivial_v check on GCC/Clang due to compiler bugs; MSVC is fine
    template<class T>
    struct POD {
       static constexpr bool Enabled = not CT::Abstract<T> and (
-         sizeof(T) == 1 or CT::Sparse<T> or CT::Fundamental<T>
+         CT::Sparse<T> or CT::Fundamental<T> or (
+                ::std::is_trivial_v<T>
+            and ::std::is_standard_layout_v<T>
+            and ::std::is_trivially_destructible_v<T>
+         )
       );
    };
    

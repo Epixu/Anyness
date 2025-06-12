@@ -1,6 +1,13 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "Definition.hpp"
-#include "MetaData.hpp"
+#include <Langulus/CT/Comparable.hpp>
 
 
 namespace Langulus::Anyness
@@ -20,20 +27,26 @@ namespace Langulus::Flow
 
 namespace Langulus::RTTI
 {
+   namespace Inner
+   {
+      struct MetaDataNaked;
+   }
 
    ///                                                                        
    /// A data definition                                                      
    ///                                                                        
    class DefinitionData : public Inner::Definition {
    protected:
+      friend struct Inner::MetaDataNaked;
+
       // The origin type, with all qualifiers and sparseness removed    
       // Will be nullptr for incomplete types                           
-      MetaData mOrigin;
+      DefinitionData const* mOrigin;
       // The type, when a single pointer is removed                     
       // Will be null if data is dense                                  
-      MetaData mDeptr;
-      // A unique handle for this definition                            
-      MetaData mThis;
+      DefinitionData const* mDeptr;
+      // The type, when all qualifiers are removed down to the origin   
+      DefinitionData const* mDecvq;
 
       // Data instance size in bytes, set by sizeof()                   
       size_t mSize;
@@ -41,9 +54,14 @@ namespace Langulus::RTTI
       size_t mAlign;
       // True if data is constant, set by CT::Constant                  
       bool mConst;
+      // True if data is deep, set by CT::Deep                          
+      bool mDeep;
+      // True if data is pod, set by CT::POD                            
+      bool mPOD;
       // Minimal pool allocation, in bytes                              
       size_t mAllocationPage;
-      // Precomputed counts indexed by MSB (avoids division by stride)  
+      // Precomputed counts indexed by MSB (avoids division by stride   
+      // for that extra oompf)                                          
       size_t mAllocationTable[sizeof(size_t) * 8 + 1];
 
       //                                                                
@@ -79,22 +97,21 @@ namespace Langulus::RTTI
       FDestroy mDestructor {};
 
       // The <=> operator, wrapped in a lambda expression if available  
-      // Compares two instances for lesser (-1)/equal(0)/greater(1)     
-      using FCompare = int(*)(const void* lhs, const void* rhs);
+      using FCompare = Compared(*)(const void* lhs, const void* rhs);
       FCompare mComparer {};
 
       // The refer/copy/disown/clone assignment, wrapped in a lambda    
       using FCopyAssign = void(*)(const void* from, void* to);
-      FCopyAssign mReferAssignment {};
-      FCopyAssign mCopyAssignment {};
-      FCopyAssign mDisownAssignment {};
-      FCopyAssign mCloneAssignment {};
+      FCopyAssign mReferAssigner {};
+      FCopyAssign mCopyAssigner {};
+      FCopyAssign mDisownAssigner {};
+      FCopyAssign mCloneAssigner {};
 
       // The move/abandon-assignment operator, wrapped in a lambda      
       // expression                                                     
       using FMoveAssign = void(*)(void* from, void* to);
-      FMoveAssign mMoveAssignment {};
-      FMoveAssign mAbandonAssignment {};
+      FMoveAssign mMoveAssigner {};
+      FMoveAssign mAbandonAssigner {};
 
       // The class type function, wrapped in a lambda expression        
       // Returns a typed container with the most concrete class instance
@@ -132,11 +149,10 @@ namespace Langulus::RTTI
       using FDynamicCast = void* (*)(void*);*/
 
    public:
-      friend struct MetaData;
       DefinitionData(const Token& cppname) : Definition {cppname} {}
 
       template<class>
-      static DMeta Reflect();
+      static auto Reflect() -> DefinitionData const*;
    };
 
 } // namespace Langulus::RTTI

@@ -8,10 +8,12 @@
 #pragma once
 #include <Langulus/HashOf.hpp>
 #include <Langulus/NameOf.hpp>
-#include <string_view>
+#include <Langulus/CT/Info.hpp>
+#include <Langulus/CT/Version.hpp>
+/*#include <string_view>
 #include <algorithm>
 #include <iterator>
-#include <cctype>
+#include <cctype>*/
 
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -59,6 +61,11 @@ namespace Langulus::RTTI::Inner
    ///                                                                        
    class Definition {
    protected:
+      friend struct MetaData;
+      friend struct MetaTag;
+      friend struct MetaVerb;
+      friend struct MetaConst;
+
       // Each reflected type has an unique hash based on C++ name       
       // First for immediate access                                     
       const Hash mHash;
@@ -86,10 +93,37 @@ namespace Langulus::RTTI::Inner
    #endif
 
       Definition() = delete;
-      Definition(const Token&);
 
-      template<class>
-      void ReflectCommon();
+      /// Construct an abstract definition                                    
+      ///   @param cppname - the name of the definition, as it appears in C++ 
+      Definition(const Token& cppname)
+         : mHash    {HashOf(cppname)}
+         , mCppName {cppname} {}
+
+      /// Reflect some common type properties, like C++ name, info and version
+      ///   @tparam T - the type to reflect                                   
+      template<class T>
+      void ReflectCommon() {
+         if constexpr (CT::Info<T>) {
+            // Reflected info                                           
+            if constexpr (CTTI::Info<T>::Enabled)
+               mInfo = CTTI::Info<T>::Text;
+            else if constexpr (requires { T::CTTI_Info::Enabled; })
+               mInfo = T::CTTI_Info::Constant;
+         }
+
+         if constexpr (CT::Version<T>) {
+            // Reflected version                                        
+            if constexpr (CTTI::Version<T>::Enabled) {
+               mVersionMajor = CTTI::Version<T>::Major;
+               mVersionMinor = CTTI::Version<T>::Minor;
+            }
+            else if constexpr (requires { T::CTTI_Version::Enabled; }) {
+               mVersionMajor = T::CTTI_Version::Constant::Major;
+               mVersionMinor = T::CTTI_Version::Constant::Minor;
+            }
+         }
+      }
    };
    
 } // namespace Langulus::RTTI::Inner

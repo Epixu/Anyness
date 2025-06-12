@@ -1,16 +1,23 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "Meta.hpp"
+#include "DefinitionData.hpp"
 #include <Langulus/HashOf.hpp>
 #include <Langulus/IntentOf.hpp>
 
 
 namespace Langulus::RTTI
 {
-   class DefinitionData;
-
    namespace Inner
    {
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      ///                                                                     
       /// Relies on the definition limits to pack an ID into the smallest     
       /// possible space, but also uses some additional bits to encode some   
       /// often used information about the definition. The handle still has   
@@ -18,6 +25,7 @@ namespace Langulus::RTTI
       /// general it is likely to avoid an indirection altogether at the      
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
+      ///                                                                     
       struct MetaDataStructured_8_8 : MetaPacked<1> {
 
       };
@@ -39,72 +47,48 @@ namespace Langulus::RTTI
       };
    #endif
 
+      ///                                                                     
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
+      ///                                                                     
       struct MetaDataNaked : MetaNaked<DefinitionData> {
          using MetaNaked<DefinitionData>::MetaNaked;
          using MetaNaked<DefinitionData>::operator =;
          using MetaNaked<DefinitionData>::operator bool;
 
-         template<class, class...>
-         bool Is() const noexcept;
          bool Is(const MetaDataNaked&) const noexcept;
-
-         template<class, class...>
-         bool IsSimilar() const noexcept;
          bool IsSimilar(const MetaDataNaked&) const noexcept;
 
-         template<class, class...>
-         bool IsExact() const noexcept;
+         auto GetMinAllocation()      const noexcept -> size_t;
+         auto GetSize()               const noexcept -> size_t;
+         auto GetAlignment()          const noexcept -> size_t;
+         auto GetName()               const noexcept -> Token;
+                                      
+         bool IsDense()               const noexcept;
+         bool IsSparse()              const noexcept;
+         bool IsConstant()            const noexcept;
+         bool IsMutable()             const noexcept;
+         bool IsDeep()                const noexcept;
+         bool IsPOD()                 const noexcept;
 
-         ::std::size_t GetMinAllocation() const noexcept;
-         ::std::size_t GetSize() const noexcept;
-         ::std::size_t GetAlignment() const noexcept;
-         Token GetName() const noexcept;
-
-         bool IsDense() const noexcept;
-         bool IsSparse() const noexcept;
-         bool IsConstant() const noexcept;
-         bool IsMutable() const noexcept;
-         bool IsDeep() const noexcept;
-         bool IsPOD() const noexcept;
-
-         bool HasReferConstructor() const noexcept;
-         void RunReferConstructor(const void*, void*) const;
-         bool HasReferAssigner() const noexcept;
-         void RunReferAssigner(const void*, void*) const;
-
-         bool HasMoveConstructor() const noexcept;
-         void RunMoveConstructor(void*, void*) const;
-         bool HasMoveAssigner() const noexcept;
-         void RunMoveAssigner(void*, void*) const;
-
-         bool HasAbandonConstructor() const noexcept;
-         void RunAbandonConstructor(void*, void*) const;
-         bool HasAbandonAssigner() const noexcept;
-         void RunAbandonAssigner(void*, void*) const;
-
-         bool HasDisownConstructor() const noexcept;
-         void RunDisownConstructor(const void*, void*) const;
-         bool HasDisownAssigner() const noexcept;
-         void RunDisownAssigner(const void*, void*) const;
-
-         bool HasCloneConstructor() const noexcept;
-         void RunCloneConstructor(const void*, void*) const;
-         bool HasCloneAssigner() const noexcept;
-         void RunCloneAssigner(const void*, void*) const;
-
-         bool HasCopyConstructor() const noexcept;
-         void RunCopyConstructor(const void*, void*) const;
-         bool HasCopyAssigner() const noexcept;
-         void RunCopyAssigner(const void*, void*) const;
-
-         bool HasComparer() const noexcept;
-         int  RunComparer(const void*, const void*) const;
-
-         bool HasHasher() const noexcept;
-         bool HasGetHashMethod() const noexcept;
-         Hash RunHasher(const void*) const;
+         auto GetDestructor()         const noexcept -> DefinitionData::FDestroy;
+         auto GetReferencer()         const noexcept -> DefinitionData::FReference;
+         auto GetResolver()           const noexcept -> DefinitionData::FResolve;
+         auto GetReferConstructor()   const noexcept -> DefinitionData::FCopyConstruct;
+         auto GetReferAssigner()      const noexcept -> DefinitionData::FCopyAssign;
+         auto GetMoveConstructor()    const noexcept -> DefinitionData::FMoveConstruct;
+         auto GetMoveAssigner()       const noexcept -> DefinitionData::FMoveAssign;
+         auto GetAbandonConstructor() const noexcept -> DefinitionData::FMoveConstruct;
+         auto GetAbandonAssigner()    const noexcept -> DefinitionData::FMoveAssign;
+         auto GetDisownConstructor()  const noexcept -> DefinitionData::FCopyConstruct;
+         auto GetDisownAssigner()     const noexcept -> DefinitionData::FCopyAssign;
+         auto GetCloneConstructor()   const noexcept -> DefinitionData::FCopyConstruct;
+         auto GetCloneAssigner()      const noexcept -> DefinitionData::FCopyAssign;
+         auto GetCopyConstructor()    const noexcept -> DefinitionData::FCopyConstruct;
+         auto GetCopyAssigner()       const noexcept -> DefinitionData::FCopyAssign;
+         auto GetComparer()           const noexcept -> DefinitionData::FCompare;
+         auto GetHasher()             const noexcept -> DefinitionData::FHash;
+         bool HasGetHashMethod()      const noexcept;
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -137,3 +121,5 @@ namespace Langulus::RTTI
    using DMeta = MetaData;
 
 } // namespace Langulus::RTTI
+
+#include "MetaData.inl"

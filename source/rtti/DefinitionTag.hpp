@@ -1,14 +1,18 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "Definition.hpp"
-#include "MetaTag.hpp"
 
 
 namespace Langulus::RTTI
 {
 
-   /// Type used as a handle for a tag definition                             
    struct MetaTag;
-   using TMeta = MetaTag;
    
 
    ///                                                                        
@@ -19,12 +23,9 @@ namespace Langulus::RTTI
       friend struct MetaTag;
       DefinitionTag(const Token& cppname) : Definition {cppname} {}
 
-      // A unique handle that may or may not be compressed              
-      TMeta mHandle;
-
    public:
       template<CT::Decayed>
-      static TMeta Reflect();
+      static auto Reflect() -> DefinitionTag const*;
    };
 
 } // namespace Langulus::RTTI

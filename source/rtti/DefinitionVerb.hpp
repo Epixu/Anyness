@@ -1,10 +1,19 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "Definition.hpp"
-#include "MetaVerb.hpp"
 
 
 namespace Langulus::RTTI
 {  
+
+   struct MetaVerb;
+
 
    ///                                                                        
    /// A Verb definition                                                      
@@ -14,12 +23,9 @@ namespace Langulus::RTTI
       friend struct MetaVerb;
       DefinitionVerb(const Token& cppname) : Definition {cppname} {}
 
-      // A unique handle that may or may not be compressed              
-      VMeta mHandle;
-
    public:
       template<CT::Decayed>
-      static VMeta Reflect();
+      static auto Reflect() -> DefinitionVerb const*;
    };
 
 } // namespace Langulus::RTTI

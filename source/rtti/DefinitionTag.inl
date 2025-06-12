@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::RTTI                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "DefinitionTag.hpp"
 #include <Langulus/CT/ReflectAs.hpp>
@@ -20,7 +27,7 @@ namespace Langulus::RTTI
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the decayed trait to reflect                             
    template<CT::Decayed T> LANGULUS(NOINLINE)
-   TMeta DefinitionTag::Reflect() {
+   auto DefinitionTag::Reflect() -> DefinitionTag const* {
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete tag - "
          "make sure you have included the corresponding headers "
@@ -59,7 +66,7 @@ namespace Langulus::RTTI
          // make sure that definitions match between those.             
          static constinit std::optional<DefinitionTag> s_definition;
          if (s_definition.has_value())
-            return TMeta {&s_definition.value()};
+            return &s_definition.value();
 
          auto& definition = s_definition.emplace(cppname);
       #endif
@@ -80,7 +87,7 @@ namespace Langulus::RTTI
       definition.mLibraryName = RTTI::Boundary;
 
       // After all properties have been set - generate a unique handle  
-      definition.mHandle = Registry.GenerateHandle(&definition);
+      //definition.mHandle = Registry.GenerateHandle(&definition);
 
       Logger::VerboseRaw(
          "Tag ", Logger::Purple, definition.mToken,
@@ -93,8 +100,9 @@ namespace Langulus::RTTI
          "Tag ", Logger::Purple, definition.mToken, Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
-      return TMeta {&definition};
    #endif
+
+      return &definition;
    }
 
 } // namespace Langulus::RTTI

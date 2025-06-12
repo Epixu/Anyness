@@ -68,7 +68,7 @@ namespace Langulus
    }
    
    /// User assumption that works both at runtime and at compile-time         
-   /// Enabled only if LANGULUS(SAFE) >= 1                                    
+   /// Tested only if LANGULUS(SAFE) >= 1                                     
    /// Will throw an exception if condition isn't met at runtime              
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main error message if condition doesn't hold    
@@ -98,9 +98,17 @@ namespace Langulus
       }
       else LANGULUS(NOOP);
    }
-   
+
+   /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
+   /// test the assumption when safety is enabled, and instruct the compiler  
+   /// to generate more performant code                                       
+   #define AssumeUserAndOptimize(CONDITION, ...) \
+      AssumeUser((CONDITION), HERE(), __VA_ARGS__); \
+      [[assume(CONDITION)]];
+
+
    /// User assumption at runtime                                             
-   /// Enabled only if LANGULUS(SAFE) >= 1                                    
+   /// Tested only if LANGULUS(SAFE) >= 1                                     
    /// Doesn't throw or ruin compilation                                      
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main warning message if condition doesn't hold  
@@ -129,7 +137,7 @@ namespace Langulus
    }
 
    /// Developer assumption that works both at runtime and at compile-time    
-   /// Enabled only if LANGULUS(SAFE) >= 2                                    
+   /// Tested only if LANGULUS(SAFE) >= 2                                     
    /// Will throw an exception if condition isn't met at runtime              
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main error message if condition doesn't hold    
@@ -159,9 +167,17 @@ namespace Langulus
       }
       else LANGULUS(NOOP);
    }
-   
+
+   /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
+   /// test the assumption when safety is enabled, and instruct the compiler  
+   /// to generate more performant code                                       
+   #define AssumeDevAndOptimize(CONDITION, ...) \
+      AssumeDev((CONDITION), HERE(), __VA_ARGS__); \
+      [[assume(CONDITION)]];
+
+
    /// Developer assumption at runtime                                        
-   /// Enabled only if LANGULUS(SAFE) >= 2                                    
+   /// Tested only if LANGULUS(SAFE) >= 2                                     
    /// Doesn't throw or ruin compilation                                      
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main warning message if condition doesn't hold  
@@ -190,7 +206,7 @@ namespace Langulus
    }
 
    /// Custom assumption that works both at runtime and at compile-time       
-   /// Enabled only if LANGULUS(SAFE) >= LEVEL                                
+   /// Tested only if LANGULUS(SAFE) >= LEVEL                                 
    /// Will throw an exception if condition isn't met at runtime              
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
@@ -219,9 +235,17 @@ namespace Langulus
       }
       else LANGULUS(NOOP);
    }
+
+   /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
+   /// test the assumption when safety is enabled, and instruct the compiler  
+   /// to generate more performant code                                       
+   #define AssumeAndOptimize(LEVEL, CONDITION, ...) \
+      Assume<LEVEL>((CONDITION), HERE(), __VA_ARGS__); \
+      [[assume(CONDITION)]];
+
    
    /// Custom assumption at runtime                                           
-   /// Enabled only if LANGULUS(SAFE) >= LEVEL                                
+   /// Tested only if LANGULUS(SAFE) >= LEVEL                                 
    /// Doesn't throw or ruin compilation                                      
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main warning message if condition doesn't hold  
