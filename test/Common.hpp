@@ -472,18 +472,15 @@ public:
 
 /// Has all intent constructors + implicit refer & move ones                  
 /// Has no explicit intent assigners, only implicit refer & move ones         
-/// Making constructor explicit makes sure, that no implicit intent assign    
-/// happens                                                                   
 class AllIntentConstructible {
 public:
    using CTTI_POD = No;
 
-   explicit AllIntentConstructible(CT::Intent auto&&) {}
+   AllIntentConstructible(CT::Intent auto&&) {}
 };
 
 /// Has all intent constructors + implicit refer & move ones                  
 /// Has no explicit intent assigners, only implicit refer & move ones         
-/// Making constructor implicit also allows for intent assignments            
 class AllIntentConstructibleImplicit {
 public:
    using CTTI_POD = No;
@@ -491,7 +488,7 @@ public:
    AllIntentConstructibleImplicit(CT::Intent auto&&) {}
 };
 
-/// Has all intnet constructors and assigners + implicit refer & move ones    
+/// Has all intent constructors and assigners + implicit refer & move ones    
 class AllIntentConstructibleAndAssignable {
 public:
    using CTTI_POD = No;

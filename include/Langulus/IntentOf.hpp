@@ -380,7 +380,7 @@ namespace Langulus
       /// This way the wrapper is seamlessly integrated with the standard     
       /// C++20 move semantics                                                
       LANGULUS(ALWAYS_INLINED)
-      constexpr operator T&& () const noexcept { return FWD(mValue); }
+      constexpr operator T&& () noexcept { return FWD(mValue); }
    };
 
    template<CT::NoIntent T>
@@ -680,13 +680,13 @@ namespace Langulus
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
       concept HasIntentAssign = Inner::CheckSize<T...>() and ((Intent<S<T>>
-          and ::std::assignable_from<T&, S<T>&&>) and ...);
+          and ::std::is_assignable_v<T&, S<T>>) and ...);
 
       /// Check if all TypeOf<S> has intent-assigner for S                    
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept HasIntentAssignAlt = Inner::CheckSize<S...>() and ((Intent<S>
-          and ::std::assignable_from<Decvq<Deref<TypeOf<S>>>&, S&&>) and ...);
+          and ::std::is_assignable_v<Decvq<Deref<TypeOf<S>>>&, S>) and ...);
 
       /// Check if all T have a disown-assigner                               
       /// Disowning does a shallow copy without referencing contents,         
@@ -908,7 +908,7 @@ namespace Langulus
          // Refer                                                       
          if constexpr (CT::HasReferAssign<T>)
             return (lhs = FWD(rhs));
-         else if constexpr (::std::assignable_from<T&, const T&>)
+         else if constexpr (::std::is_copy_assignable_v<T>)
             return (lhs = *rhs);
          else {
             static_assert(FAKE, "Can't refer-assign type");
@@ -919,7 +919,7 @@ namespace Langulus
          // Move                                                        
          if constexpr (CT::HasMoveAssign<T>)
             return (lhs = FWD(rhs));
-         else if constexpr (::std::assignable_from<T&, T&&>)
+         else if constexpr (::std::is_move_assignable_v<T>)
             return (lhs = *rhs);
          else {
             static_assert(FAKE, "Can't move-assign type");
@@ -932,7 +932,7 @@ namespace Langulus
             return (lhs = FWD(rhs));
          else if constexpr (CT::HasMoveAssign<T>)
             return (lhs = Move(*rhs));
-         else if constexpr (::std::assignable_from<T&, T&&>)
+         else if constexpr (::std::is_move_assignable_v<T>)
             return (lhs = *rhs);
          else {
             static_assert(FAKE,
@@ -956,7 +956,7 @@ namespace Langulus
                   return (DenseCast(lhs) = Clone(DenseCast(*rhs)));
                else if constexpr (CT::POD<DT> and CT::HasReferAssign<DT>)
                   return (DenseCast(lhs) = Refer(DenseCast(*rhs)));
-               else if constexpr (CT::POD<DT> and ::std::assignable_from<DT&, const DT&>)
+               else if constexpr (CT::POD<DT> and ::std::is_copy_assignable_v<DT>)
                   return (DenseCast(lhs) = DenseCast(*rhs));
                else {
                   static_assert(FAKE, "Can't clone-assign type");
@@ -979,7 +979,7 @@ namespace Langulus
             return (lhs = FWD(rhs));
          else if constexpr (CT::POD<T> and CT::HasReferAssign<T>)
             return (lhs = Refer(*rhs));
-         else if constexpr (CT::POD<T> and ::std::assignable_from<T&, const T&>)
+         else if constexpr (CT::POD<T> and ::std::is_copy_assignable_v<T>)
             return (lhs = *rhs);
          else {
             static_assert(FAKE, "Can't copy-assign type");
@@ -992,7 +992,7 @@ namespace Langulus
             return (lhs = FWD(rhs));
          else if constexpr (CT::POD<T> and CT::HasReferAssign<T>)
             return (lhs = Refer(*rhs));
-         else if constexpr (CT::POD<T> and ::std::assignable_from<T&, const T&>)
+         else if constexpr (CT::POD<T> and ::std::is_copy_assignable_v<T>)
             return (lhs = *rhs);
          else {
             static_assert(FAKE, "Can't disown-assign type");
