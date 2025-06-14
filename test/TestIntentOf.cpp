@@ -252,10 +252,14 @@ namespace
       int m;
       AbandonAssignableButNotConstructible(AbandonAssignableButNotConstructible&&) = delete;
       AbandonAssignableButNotConstructible(AbandonAssignableButNotConstructible const&) = delete;
-      AbandonAssignableButNotConstructible& operator = (Abandon<AbandonAssignableButNotConstructible>&& a) {
-         m = a->m;
+      AbandonAssignableButNotConstructible& operator = (AbandonAssignableButNotConstructible&& a) {
+         m = a.m;
          return *this;
       }
+      /*AbandonAssignableButNotConstructible& operator = (Abandon<AbandonAssignableButNotConstructible>&& a) {
+         m = a->m;
+         return *this;
+      }*/
    };
    static_assert(::std::is_assignable_v<AbandonAssignableButNotConstructible, Abandon<AbandonAssignableButNotConstructible>>);
 
@@ -912,6 +916,13 @@ TEMPLATE_TEST_CASE("Testing CT::HasAbandonAssign", "[ct]",
    EmptyType, AggregateType,
    int
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   *test1 = MOV(*test2);
+   *test2 = Abandon(*test1);
+
    static_assert(CT::HasIntentAssign<Abandon, TestType>);
    static_assert(CT::HasIntentAssignAlt<Abandon<TestType>>);
    static_assert(CT::HasAbandonAssign<TestType>);
@@ -955,6 +966,7 @@ TEMPLATE_TEST_CASE("Testing CT::HasMoveAssign", "[ct]",
    PartiallyIntentConstructible,
    PartiallyIntentConstructibleButImplicitly,
    MoveAssignableButNotConstructible,
+   AbandonAssignableButNotConstructible,
    DestructibleType,
    EmptyType, AggregateType,
    int
@@ -986,7 +998,6 @@ TEMPLATE_TEST_CASE("Testing not CT::HasMoveAssign", "[ct]",
 
    CopyAssignableButNotConstructible,
    ReferAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
    DisownAssignableButNotConstructible,
    CloneAssignableButNotConstructible
 ) {

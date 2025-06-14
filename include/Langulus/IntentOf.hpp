@@ -680,13 +680,13 @@ namespace Langulus
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
       concept HasIntentAssign = Inner::CheckSize<T...>() and ((Intent<S<T>>
-          and requires (T& lhs, S<T>&& rhs) { lhs = FWD(rhs); }) and ...);// ::std::is_assignable_v<T&, S<T>>) and ...);
+          and requires (T& lhs, S<T>&& rhs) { lhs = FWD(rhs); }) and ...);
 
       /// Check if all TypeOf<S> has intent-assigner for S                    
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept HasIntentAssignAlt = Inner::CheckSize<S...>() and ((Intent<S>
-          and requires (Decvq<Deref<TypeOf<S>>>& lhs, S&& rhs) { lhs = FWD(rhs); }) and ...);// and ::std::is_assignable_v<Decvq<Deref<TypeOf<S>>>&, S>) and ...);
+          and requires (Decvq<Deref<TypeOf<S>>>& lhs, S&& rhs) { lhs = FWD(rhs); }) and ...);
 
       /// Check if all T have a disown-assigner                               
       /// Disowning does a shallow copy without referencing contents,         
@@ -840,8 +840,6 @@ namespace Langulus
          static_assert(CT::Complete<DT>,
             "Can't clone-construct an incomplete type");
 
-         //TODO nest for pointers
-
          if constexpr (CT::NotVoid<DT>) {
             if constexpr (CT::HasCloneConstructor<DT>)
                return new (placement) DT {Clone(DenseCast(*value))};
@@ -949,7 +947,6 @@ namespace Langulus
          static_assert(CT::Complete<DT>,
             "Can't clone-assign an incomplete type");
 
-         //TODO nest for pointers
          if constexpr (CT::NotVoid<DT>) {
             if constexpr (CT::Mutable<Deptr<T>>) {
                if constexpr (CT::HasCloneAssign<DT>)
