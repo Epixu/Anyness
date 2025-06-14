@@ -108,8 +108,7 @@ namespace Langulus
 
    /// This just makes sure that mutable references are forwarded properly    
    /// by attaching a deprecation warning to it                               
-   template<CT::Mutable T>
-   DEBUGGERY([[deprecated("Make sure you forward the argument")]])
+   template<CT::Mutable T> [[deprecated("Make sure you forward the argument")]]
    LANGULUS(ALWAYS_INLINED)   
    constexpr decltype(auto) DeintCast(T& what) {
       if constexpr (CT::Intent<T>) return *what;
