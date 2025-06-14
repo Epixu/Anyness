@@ -43,7 +43,7 @@ namespace Langulus::CT
    ///                                                                        
    /// All intents are defined in terms of three properties, and the          
    /// combinations between them:                                             
-   ///   unsigned Depth - decides whether the semantic is deep or shallow     
+   ///   unsigned Depth - decides whether the intent is deep or shallow       
    ///   bool     Keep  - decides whether to exercise ownership or not        
    ///   bool     Move  - decides whether it's a move semantic or not         
 
@@ -109,7 +109,7 @@ namespace Langulus
    /// This just makes sure that mutable references are forwarded properly    
    /// by attaching a deprecation warning to it                               
    template<CT::Mutable T>
-   [[deprecated("Make sure you forward the argument")]]
+   DEBUGGERY([[deprecated("Make sure you forward the argument")]])
    LANGULUS(ALWAYS_INLINED)   
    constexpr decltype(auto) DeintCast(T& what) {
       if constexpr (CT::Intent<T>) return *what;
@@ -220,11 +220,11 @@ namespace Langulus
       LANGULUS(ALWAYS_INLINED)
       constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
 
-      /// Implicitly collapse the intent                                      
+      /// Implicitly collapse the intent in some cases                        
       /// This way the wrapper is seamlessly integrated with the standard     
       /// C++20 copy semantics                                                
-      LANGULUS(ALWAYS_INLINED)
-      constexpr operator const T& () const noexcept { return mValue; }
+      //LANGULUS(ALWAYS_INLINED)
+      //explicit constexpr operator const T& () const noexcept { return mValue; }
    };
 
    template<CT::NoIntent T>
@@ -376,11 +376,11 @@ namespace Langulus
       LANGULUS(ALWAYS_INLINED)
       constexpr T* operator -> () const noexcept { return SparseCast(mValue); }
 
-      /// Implicitly collapse the intent                                      
+      /// Implicitly collapse the intent in some cases                        
       /// This way the wrapper is seamlessly integrated with the standard     
       /// C++20 move semantics                                                
-      LANGULUS(ALWAYS_INLINED)
-      constexpr operator T&& () noexcept { return FWD(mValue); }
+      //LANGULUS(ALWAYS_INLINED)
+      //explicit constexpr operator T&& () noexcept { return FWD(mValue); }
    };
 
    template<CT::NoIntent T>
@@ -467,11 +467,11 @@ namespace Langulus
       LANGULUS(ALWAYS_INLINED)
       constexpr T* operator -> () const noexcept { return SparseCast(mValue); }
 
-      /// Implicitly collapse the intent                                      
+      /// Implicitly collapse the intent in some cases                        
       /// This way the wrapper is seamlessly integrated with the standard     
       /// C++20 move semantics                                                
-      LANGULUS(ALWAYS_INLINED)
-      constexpr operator T&& () const noexcept { return FWD(mValue); }
+      //LANGULUS(ALWAYS_INLINED)
+      //explicit constexpr operator T&& () const noexcept{ return FWD(mValue); }
    };
    
    template<CT::NoIntent T>
@@ -616,118 +616,118 @@ namespace Langulus
       ///                                                                     
       ///   Intent type traits                                                
       ///                                                                     
-      ///   These concepts are strict requirements, and are true only if the  
-      /// corresponding constructors/assigners are implicitly/explicitly      
-      /// defined. No fallbacks!                                              
+      /// These concepts are strict requirements, and are true only if the    
+      /// corresponding constructors/assigners are defined. No fallbacks!     
       ///                                                                     
 
-      /// Check if all T have intent constructors for S                       
+      /// Check if all T have dedicated intent constructors for S             
       ///   @tparam S - the intent                                            
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
-      concept HasIntentConstructor = Intent<S<T>...> and not Aggregate<T...>
-          and requires (S<T>&&...a) { (T {FWD(a)}, ...); };
+      concept HasIntentConstructor = Intent<S<T>...> and not Aggregate<T...> and ((
+            /*not ::std::is_trivially_constructible_v<T, TypeOf<S<T>>>
+            and*/ requires (S<T>&& arg) { T {FWD(arg)}; }//::std::is_constructible_v<T, S<T>>
+         ) and ...);
+          //and requires (S<T>&&...a) { (T {FWD(a)}, ...); };
 
-      /// Check if all TypeOf<S> have intent constructors for S               
+      /// Check if all TypeOf<S> have a dedicated intent constructor for S    
       ///   @tparam S - the intent and type                                   
       template<class...S>
-      concept HasIntentConstructorAlt = Intent<S...> and not Aggregate<TypeOf<S>...>
-          and requires (S&&...a) { (Decvq<Deref<TypeOf<S>>> {FWD(a)}, ...); };
+      concept HasIntentConstructorAlt = Intent<S...> and not Aggregate<TypeOf<S>...> and ((
+            /*not ::std::is_trivially_constructible_v<Decvq<Deref<TypeOf<S>>>, TypeOf<S>>
+            and*/ requires (S&& arg) { Decvq<Deref<TypeOf<S>>> {FWD(arg)}; }//::std::is_constructible_v<Decvq<Deref<TypeOf<S>>>, S>
+         ) and ...);
+          //and requires (S&&...a) { (Decvq<Deref<TypeOf<S>>> {FWD(a)}, ...); };
 
-      /// Check if all T have a disown-constructor                            
+      /// Check if all T have a dedicated disown-constructor                  
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       template<class...T>
       concept HasDisownConstructor = Inner::CheckSize<T...>()
           and (HasIntentConstructor<::Langulus::Disown, T> and ...);
 
-      /// Check if all Decay<T> have a clone-constructor                      
+      /// Check if all Decay<T> have a dedicated clone-constructor            
       /// Does a deep copy                                                    
       template<class...T>
       concept HasCloneConstructor = Inner::CheckSize<T...>()
           and (HasIntentConstructor<::Langulus::Clone, T> and ...);
 
-      /// Check if all T have a abandon-constructor                           
-      /// Does a move, but doesn't fully reset source (optimization)          
+      /// Check if all T have a dedicated abandon-constructor                 
+      /// Does a move, but doesn't fully reset source (used for optimization) 
       template<class...T>
       concept HasAbandonConstructor = Inner::CheckSize<T...>()
           and (HasIntentConstructor<::Langulus::Abandon, T> and ...);
 
-      /// Check if all T have a refer-constructor                             
-      /// Refering does a shallow copy while referencing contents, providing  
-      /// ownership.                                                          
-      /// T has refer-constructor as long as it is std::copy_constuctible     
+      /// Check if all T have a dedicated refer-constructor                   
+      /// Refering does a shallow copy while referencing contents             
       template<class...T>
       concept HasReferConstructor = Inner::CheckSize<T...>()
           and (HasIntentConstructor<::Langulus::Refer, T> and ...);
       
-      /// Check if all T have a copy-constructor (don't mistake it for a      
-      /// std::copy_constructible!)                                           
-      /// Does a shallow copy _of the contents_ (like shallow cloning).       
+      /// Check if all T have a dedicated copy-constructor                    
+      /// Does a shallow copy _of the contents_ (it is like shallow cloning)  
+      ///   @attention don't mistake it for the built-in copy-semantic        
       template<class...T>
       concept HasCopyConstructor = Inner::CheckSize<T...>()
           and (HasIntentConstructor<::Langulus::Copy, T> and ...);
 
-      /// Check if all T have a move-constructor                              
+      /// Check if all T have a dedicated move-constructor                    
       /// Does a move, fully resetting source                                 
-      /// T has move-constructor as long as it is std::move_constuctible      
       template<class...T>
       concept HasMoveConstructor = Inner::CheckSize<T...>()
           and (HasIntentConstructor<::Langulus::Move, T> and ...);
 
-      /// Check if all T have an intent-assigner for S                        
+      /// Check if all T have a dedicated intent-assigner for S               
       ///   @tparam S - the intent                                            
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
       concept HasIntentAssign = Inner::CheckSize<T...>() and ((Intent<S<T>>
-          and requires (T& lhs, S<T>&& rhs) { lhs = FWD(rhs); }) and ...);
+          /*and not ::std::is_trivially_assignable_v<T&, TypeOf<S<T>>>*/
+          and requires (T& lhs, S<T>&& rhs) { lhs = FWD(rhs); } //    ::std::is_assignable_v<T&, S<T>>
+         ) and ...);
 
-      /// Check if all TypeOf<S> has intent-assigner for S                    
+      /// Check if all TypeOf<S> habe a dedicated intent-assigner for S       
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept HasIntentAssignAlt = Inner::CheckSize<S...>() and ((Intent<S>
-          and requires (Decvq<Deref<TypeOf<S>>>& lhs, S&& rhs) { lhs = FWD(rhs); }) and ...);
+          /*and not ::std::is_trivially_assignable_v<Decvq<Deref<TypeOf<S>>>&, TypeOf<S>>*/
+          and requires (Decvq<Deref<TypeOf<S>>>& lhs, S&& rhs) { lhs = FWD(rhs); } //::std::is_assignable_v<Decvq<Deref<TypeOf<S>>>&, S>
+         ) and ...);
 
-      /// Check if all T have a disown-assigner                               
+      /// Check if all T have a dedicated disown-assigner                     
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       template<class...T>
       concept HasDisownAssign = Inner::CheckSize<T...>()
           and (HasIntentAssign<::Langulus::Disown, T> and ...);
 
-      /// Check if all Decay<T> have a clone-assigner                         
+      /// Check if all Decay<T> have a dedicated clone-assigner               
       /// Does a deep copy                                                    
       template<class...T>
       concept HasCloneAssign = Inner::CheckSize<T...>()
           and (HasIntentAssign<::Langulus::Clone, T> and ...);
 
-      /// Check if all T have an abandon-assigner                             
+      /// Check if all T have a dedicated abandon-assigner                    
       /// Does a move, but doesn't fully reset source (optimization)          
       template<class...T>
       concept HasAbandonAssign = Inner::CheckSize<T...>()
           and (HasIntentAssign<::Langulus::Abandon, T> and ...);
 
-      /// Check if all T have refer-assigner                                  
-      /// Refering does a shallow copy while referencing contents, providing  
-      /// ownership.                                                          
-      /// T has a refer-assigner as long as std::copy_assignable<T> holds     
+      /// Check if all T have a dedicated refer-assigner                      
+      /// Refering does a shallow copy while referencing contents             
       template<class...T>
       concept HasReferAssign = Inner::CheckSize<T...>()
           and (HasIntentAssign<::Langulus::Refer, T> and ...);
       
-      /// Check if all T have a copy-assigner (don't mistake it for a         
-      /// std::copy_assignable!)                                              
-      /// Does a shallow copy _of the contents_ (like shallow cloning).       
+      /// Check if all T have a dedicated copy-assigner                       
+      /// Does a shallow copy _of the contents_ (it is like shallow cloning)  
+      ///   @attention don't mistake it for the built-in copy-semantic        
       template<class...T>
       concept HasCopyAssign = Inner::CheckSize<T...>()
           and (HasIntentAssign<::Langulus::Copy, T> and ...);
 
-      /// Check if all T have a move-assigner                                 
+      /// Check if all T have a dedicated move-assigner                       
       /// Does a move, fully resetting source                                 
-      /// T has a move-assigner as long as std::assignable_from<T&, T&&> holds
-      /// This includes the cases when the type has a default copy-assign to  
-      /// which the compiler falls back to. In that case move-assignment is   
-      /// the same as refer-assignment.                                       
       template<class...T>
       concept HasMoveAssign = Inner::CheckSize<T...>()
           and (HasIntentAssign<::Langulus::Move, T> and ...);
@@ -1022,7 +1022,8 @@ namespace Langulus
       /// Has*Constructor counterparts, to allow for fallbacks in places where
       /// they are required. A type may not explicitly HasAbandonConstructor, 
       /// and yet be AbandonConstructible, because it is movable by the usual 
-      /// C++20 semantics                                                     
+      /// C++20 semantics. Constructors are remarkably consistent across      
+      /// compilers. Unlike assignments, that is (see below)...               
       ///                                                                     
 
       /// Check if all T are intent-constructible by intent S                 
@@ -1098,6 +1099,38 @@ namespace Langulus
       concept MoveConstructible = Inner::CheckSize<T...>()
           and (IntentConstructible<Langulus::Move, T> and ...);
 
+
+      ///                                                                     
+      ///   Assignables                                                       
+      ///                                                                     
+      ///   These concepts are bit looser on requirements, compared to their  
+      /// Has*Assign counterparts, to allow for fallbacks in places where     
+      /// they are required. A type may not explicitly HasAbandonAssign,      
+      /// and yet be AbandonAssignable, because it is movable by the usual    
+      /// C++20 semantics.                                                    
+      /// @attention these hit a lot of compiler bugs on different compilers: 
+      /// - it causes ambiguity on Clang 19.1 for refer intents, because      
+      ///   the compiler can't decide whether to implicit-cast to && or       
+      ///   const&. I've added explicit intent assigners to compensate for    
+      ///   that                                                              
+      /// - it causes ambiguity on GCC 14.2 for move/abandon intents, because 
+      ///   the compiler can't decide how to implicit-cast to && or           
+      ///   const&. I've added explicit intent assigners to compensate for    
+      ///   that                                                              
+      /// - there is also this nasty compiler bug on MSVC v143 that affects   
+      ///   types is deleted destructors, and implicit copy/move semantics    
+      ///   https://stackoverflow.com/questions/79665049                      
+      ///                                                                     
+      /// @note these compiler defects affect only CT::HasReferAssign and     
+      ///    CT::HasMoveAssign/CT::HasAbandonAssign. On the other hand,       
+      ///    CT::ReferAssignable and CT::MoveAssignable/CT::AbandonAssignable 
+      ///    remain unaffected, so if you want consistent behavior across     
+      ///    compilers, just use the IntentAssign function instead of '='     
+      ///                                                                     
+      /// In that sense, none of these concepts here guarantees, that an      
+      /// adequate intent-assignment exists for a type, unless you use        
+      /// IntentAssign itself                                                 
+      ///                                                                     
 
       /// Check if all T are intent-assignable by intent S                    
       /// T can be intent-assignable even if not having an explicit assigner, 

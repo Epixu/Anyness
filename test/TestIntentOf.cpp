@@ -11,6 +11,13 @@
 
 using namespace Langulus;
 
+//TODO this test has been coping with a plague of compiler bugs, read   
+// comments carefully for methods to workaround issues with intents,    
+// and their interplay with built-in implicit copy and move semantics   
+// I'm hopeful, that in future compiler versions these things will be   
+// sorted out, and these tests will be free to do the real thing        
+
+
 namespace
 {
    struct EmptyType {};
@@ -31,10 +38,15 @@ namespace
    static_assert(::std::is_move_assignable_v<AggregateType>);
 
    /// Explicitly deleted destructor                                          
+   /// @attention this hits a nasty compiler bug on MSVC v143                 
+   ///   https://stackoverflow.com/questions/79665049                         
    struct NonDestructible {
       ~NonDestructible() = delete;
+
+      //auto& operator = (   Move<NonDestructible>&&) { return *this; } // fixes problem on msvc, see note above
+      //auto& operator = (Abandon<NonDestructible>&&) { return *this; } // fixes problem on msvc, see note above
    };
-   //static_assert(::std::is_trivial_v<NonDestructible>); // differs in GCC/Clang, MSVC is correct
+   //static_assert(::std::is_trivial_v<NonDestructible>); // differs: (GCC 14.2/Clang 19.1) != MSVC v143 (has been accounted for)
    static_assert(::std::is_standard_layout_v<NonDestructible>);
    static_assert(not CT::POD<NonDestructible>);
    static_assert(not ::std::is_copy_constructible_v<NonDestructible>);
@@ -81,7 +93,7 @@ namespace
    /// Has implicit refer & move constructors, and assigners too              
    struct PartiallyIntentConstructible {
       template<template<class> class S, class T>
-      explicit PartiallyIntentConstructible(S<T>&&) requires CT::Intent<S<T>> {}
+      explicit PartiallyIntentConstructible(S<T>&& a) requires CT::Intent<S<T>> {}
    };
    static_assert(not CT::POD<PartiallyIntentConstructible>);
    static_assert(::std::is_copy_constructible_v<PartiallyIntentConstructible>);
@@ -90,11 +102,26 @@ namespace
    static_assert(::std::is_move_assignable_v<PartiallyIntentConstructible>);
 
    /// Has implicit copy, move, refer, clone, abandon, disown constructors    
-   /// Because they're implicit, the type also has all intent-assigners       
+   /// Because they're implicit, the type should also have all intent-assigs  
    /// Has implicit refer & move constructors, and assigners too              
+   ///   @attention this hits a lot of compiler bugs on different compilers:  
+   ///   - it causes ambiguity on Clang 19.1 for refer intents, because       
+   ///     the compiler can't decide whether to implicit-cast to && or        
+   ///     const&. I've added explicit intent assigners to compensate for that
+   ///   - it causes ambiguity on GCC 14.2 for move/abandon intents, because  
+   ///     the compiler can't decide how to implicit-cast to && or            
+   ///     const&. I've added explicit intent assigners to compensate for that
+   ///   @note these compiler defects affect only CT::HasReferAssign and      
+   ///      CT::HasMoveAssign/CT::HasAbandonAssign. On the other hand,        
+   ///      CT::ReferAssignable and CT::MoveAssignable/CT::AbandonAssignable  
+   ///      remain unaffected, so if you want consistent behavior across      
+   ///      compilers, just use the IntentAssign function instead of '='      
    struct PartiallyIntentConstructibleButImplicitly {
       template<template<class> class S, class T>
-      PartiallyIntentConstructibleButImplicitly(S<T>&&) requires CT::Intent<S<T>> {}
+      PartiallyIntentConstructibleButImplicitly(S<T>&& a) requires CT::Intent<S<T>> {}
+
+      //auto& operator = (  Refer<PartiallyIntentConstructibleButImplicitly>&&) { return *this; } // fixes problem on clang, see note above
+      //auto& operator = (Abandon<PartiallyIntentConstructibleButImplicitly>&&) { return *this; } // fixes problem on gcc, see note above
    };
    static_assert(not CT::POD<PartiallyIntentConstructibleButImplicitly>);
    static_assert(::std::is_copy_constructible_v<PartiallyIntentConstructibleButImplicitly>);
@@ -117,7 +144,7 @@ namespace
       AllIntentConstructibleImplicit(CT::Intent auto&&) {}
    };
 
-   /// Has all intnet constructors and assigners + implicit refer & move ones 
+   /// Has all intent constructors and assigners + implicit refer & move ones 
    struct AllIntentConstructibleAndAssignable {
       AllIntentConstructibleAndAssignable(CT::Intent auto&&) {}
       AllIntentConstructibleAndAssignable& operator = (CT::Intent auto&&) { return *this; }
@@ -237,14 +264,10 @@ namespace
       int m;
       MoveAssignableButNotConstructible(MoveAssignableButNotConstructible&&) = delete;
       MoveAssignableButNotConstructible(MoveAssignableButNotConstructible const&) = delete;
-      MoveAssignableButNotConstructible& operator = (MoveAssignableButNotConstructible&& a) {
-         m = a.m;
-         return *this;
-      }
-      /*MoveAssignableButNotConstructible& operator = (Move<MoveAssignableButNotConstructible>&& a) {
+      MoveAssignableButNotConstructible& operator = (Move<MoveAssignableButNotConstructible>&& a) {
          m = a->m;
          return *this;
-      }*/
+      }
    };
    static_assert(::std::is_assignable_v<MoveAssignableButNotConstructible, Move<MoveAssignableButNotConstructible>>);
 
@@ -252,14 +275,10 @@ namespace
       int m;
       AbandonAssignableButNotConstructible(AbandonAssignableButNotConstructible&&) = delete;
       AbandonAssignableButNotConstructible(AbandonAssignableButNotConstructible const&) = delete;
-      AbandonAssignableButNotConstructible& operator = (AbandonAssignableButNotConstructible&& a) {
-         m = a.m;
-         return *this;
-      }
-      /*AbandonAssignableButNotConstructible& operator = (Abandon<AbandonAssignableButNotConstructible>&& a) {
+      AbandonAssignableButNotConstructible& operator = (Abandon<AbandonAssignableButNotConstructible>&& a) {
          m = a->m;
          return *this;
-      }*/
+      }
    };
    static_assert(::std::is_assignable_v<AbandonAssignableButNotConstructible, Abandon<AbandonAssignableButNotConstructible>>);
 
@@ -300,6 +319,7 @@ namespace
    enum class TypedEnumClass : int64_t {one1, two2};
    struct IncompleteType;
 }
+
 
 ///                                                                           
 /// CT::Intent / CT::NoIntent                                                 
@@ -413,14 +433,11 @@ TEST_CASE("Testing Deint", "[ct]") {
 /// CT::HasReferConstructor                                                   
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing CT::HasReferConstructor", "[ct]",
-   NonIntentConstructible, // has implicit refer-constructor
    AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
    PartiallyIntentConstructible,
    PartiallyIntentConstructibleButImplicitly,
-   Complex, ContainsComplex,
-   ReferConstructibleButNotAssignable,
-   int
+   ReferConstructibleButNotAssignable
 ) {
    static_assert(CT::HasIntentConstructor<Refer, TestType>);
    static_assert(CT::HasIntentConstructorAlt<Refer<TestType>>);
@@ -429,11 +446,14 @@ TEMPLATE_TEST_CASE("Testing CT::HasReferConstructor", "[ct]",
 
 TEMPLATE_TEST_CASE("Testing not CT::HasReferConstructor", "[ct]",
    //IncompleteType,             // should not compile at all
+   NonIntentConstructible, // has implicit refer-constructor
    DestructibleType,
    EmptyType, AggregateType,     // aggregates are never explicitly intent-constructible, because intents can conflict with aggregate initialization
    NonDestructible,
    PrivatelyConstructible,
    ForcefullyPod,
+   Complex, ContainsComplex,
+   int,
 
    CopyConstructibleButNotAssignable,
    MoveConstructibleButNotAssignable,
@@ -597,7 +617,6 @@ TEMPLATE_TEST_CASE("Testing not CT::HasDisownConstructor", "[ct]",
    DisownAssignableButNotConstructible,
    CloneAssignableButNotConstructible
 ) {
-   static_assert(not requires (Disown<TestType>&& a) { TestType {FWD(a)}; });
    static_assert(not CT::HasIntentConstructor<Disown, TestType>);
    static_assert(not CT::HasIntentConstructorAlt<Disown<TestType>>);
    static_assert(not CT::HasDisownConstructor<TestType>);
@@ -615,10 +634,7 @@ TEMPLATE_TEST_CASE("Testing CT::HasAbandonConstructor", "[ct]",
    AllIntentConstructibleAndAssignable,
    AbandonConstructibleButNotAssignable,
    PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   NonIntentConstructible,  // has move-constructor, and the Abandon intent can implicitly decay to it
-   Complex, ContainsComplex,// has move-constructor, and the Abandon intent can implicitly decay to it
-   int
+   PartiallyIntentConstructibleButImplicitly
 ) {
    static_assert(CT::HasIntentConstructor<Abandon, TestType>);
    static_assert(CT::HasIntentConstructorAlt<Abandon<TestType>>);
@@ -633,6 +649,9 @@ TEMPLATE_TEST_CASE("Testing not CT::HasAbandonConstructor", "[ct]",
    NonDestructible,  // modifying destructor disables implicit copy-construction
    PrivatelyConstructible,
    ForcefullyPod,
+   NonIntentConstructible,  // has move-constructor, and the Abandon intent can implicitly decay to it
+   Complex, ContainsComplex,// has move-constructor, and the Abandon intent can implicitly decay to it
+   int,
 
    ReferConstructibleButNotAssignable,
    MoveConstructibleButNotAssignable,
@@ -647,7 +666,6 @@ TEMPLATE_TEST_CASE("Testing not CT::HasAbandonConstructor", "[ct]",
    DisownAssignableButNotConstructible,
    CloneAssignableButNotConstructible
 ) {
-   static_assert(not requires (Abandon<TestType>&& a) { TestType {FWD(a)}; });
    static_assert(not CT::HasIntentConstructor<Abandon, TestType>);
    static_assert(not CT::HasIntentConstructorAlt<Abandon<TestType>>);
    static_assert(not CT::HasAbandonConstructor<TestType>);
@@ -665,10 +683,7 @@ TEMPLATE_TEST_CASE("Testing CT::HasMoveConstructor", "[ct]",
    AllIntentConstructibleAndAssignable,
    MoveConstructibleButNotAssignable,
    PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   NonIntentConstructible,  // has move-constructor, and the Move intent can implicitly decay to it
-   Complex, ContainsComplex,// has move-constructor, and the Move intent can implicitly decay to it
-   int
+   PartiallyIntentConstructibleButImplicitly
 ) {
    static_assert(CT::HasIntentConstructor<Move, TestType>);
    static_assert(CT::HasIntentConstructorAlt<Move<TestType>>);
@@ -683,6 +698,9 @@ TEMPLATE_TEST_CASE("Testing not CT::HasMoveConstructor", "[ct]",
    NonDestructible,  // modifying destructor disables implicit copy-construction
    PrivatelyConstructible,
    ForcefullyPod,
+   NonIntentConstructible,  // has move-constructor, and the Move intent can implicitly decay to it
+   Complex, ContainsComplex,// has move-constructor, and the Move intent can implicitly decay to it
+   int,
 
    ReferConstructibleButNotAssignable,
    CloneConstructibleButNotAssignable,
@@ -697,7 +715,6 @@ TEMPLATE_TEST_CASE("Testing not CT::HasMoveConstructor", "[ct]",
    DisownAssignableButNotConstructible,
    CloneAssignableButNotConstructible
 ) {
-   static_assert(not requires (Move<TestType>&& a) { TestType {FWD(a)}; });
    static_assert(not CT::HasIntentConstructor<Move, TestType>);
    static_assert(not CT::HasIntentConstructorAlt<Move<TestType>>);
    static_assert(not CT::HasMoveConstructor<TestType>);
@@ -711,17 +728,17 @@ static_assert(not CT::HasMoveConstructor<AllIntentConstructible, AllIntentConstr
 /// CT::HasReferAssign                                                        
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing CT::HasReferAssign", "[ct]",
-   NonIntentConstructible, // has implicit refer-constructor
-   AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible, // refer assignable due to implicit copy assigner
-   //PartiallyIntentConstructibleButImplicitly, // this is a super weird exception, not sure why it happens (only on clang?). it will be compensated by CT::ReferAssignable, but still weird
    ReferAssignableButNotConstructible,
-   DestructibleType,
-   EmptyType, AggregateType,
-   NonDestructible,
-   int
+   PartiallyIntentConstructibleButImplicitly // should refer assignable due to implicit copy assigner, but clang fails, so i've added it explicitly
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   //*test1 = *test2;
+   *test2 = Refer(*test1);
+
    static_assert(CT::HasIntentAssign<Refer, TestType>);
    static_assert(CT::HasIntentAssignAlt<Refer<TestType>>);
    static_assert(CT::HasReferAssign<TestType>);
@@ -729,10 +746,16 @@ TEMPLATE_TEST_CASE("Testing CT::HasReferAssign", "[ct]",
 
 TEMPLATE_TEST_CASE("Testing not CT::HasReferAssign", "[ct]",
    //IncompleteType,             // should not compile at all
+   DestructibleType,
+   EmptyType, AggregateType,
+   NonDestructible,
+   AllIntentConstructible,
+   NonIntentConstructible, // has implicit refer-constructor
+   PartiallyIntentConstructible, // refer assignable due to implicit copy assigner
    PrivatelyConstructible,
    ForcefullyPod,
    Complex, ContainsComplex,     // custom copy/move semantic constructors implicitly delete the copy/move assigners
-   PartiallyIntentConstructibleButImplicitly, // this is a super weird exception, not sure why it happens (only on clang?). it will be compensated by CT::ReferAssignable, but still weird
+   int,
 
    ReferConstructibleButNotAssignable,
    CopyConstructibleButNotAssignable,
@@ -752,8 +775,8 @@ TEMPLATE_TEST_CASE("Testing not CT::HasReferAssign", "[ct]",
    static_assert(not CT::HasReferAssign<TestType>);
 }
 
-static_assert(    CT::HasReferAssign<AllIntentConstructible, AllIntentConstructibleAndAssignable, ReferAssignableButNotConstructible>);
-static_assert(not CT::HasReferAssign<AllIntentConstructible, AllIntentConstructibleAndAssignable, PrivatelyConstructible>);
+static_assert(    CT::HasReferAssign<AllIntentConstructibleAndAssignable, ReferAssignableButNotConstructible>);
+static_assert(not CT::HasReferAssign<AllIntentConstructibleAndAssignable, PrivatelyConstructible>);
 
 
 ///                                                                           
@@ -764,6 +787,12 @@ TEMPLATE_TEST_CASE("Testing CT::HasCopyAssign", "[ct]",
    PartiallyIntentConstructibleButImplicitly,
    CopyAssignableButNotConstructible
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   *test2 = Copy(*test1);
+
    static_assert(CT::HasIntentAssign<Copy, TestType>);
    static_assert(CT::HasIntentAssignAlt<Copy<TestType>>);
    static_assert(CT::HasCopyAssign<TestType>);
@@ -812,6 +841,12 @@ TEMPLATE_TEST_CASE("Testing CT::HasCloneAssign", "[ct]",
    PartiallyIntentConstructibleButImplicitly,
    CloneAssignableButNotConstructible
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   *test2 = Clone(*test1);
+
    static_assert(CT::HasIntentAssign<Clone, TestType>);
    static_assert(CT::HasIntentAssignAlt<Clone<TestType>>);
    static_assert(CT::HasCloneAssign<TestType>);
@@ -860,6 +895,12 @@ TEMPLATE_TEST_CASE("Testing CT::HasDisownAssign", "[ct]",
    PartiallyIntentConstructibleButImplicitly,
    DisownAssignableButNotConstructible
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   *test2 = Disown(*test1);
+
    static_assert(CT::HasIntentAssign<Disown, TestType>);
    static_assert(CT::HasIntentAssignAlt<Disown<TestType>>);
    static_assert(CT::HasDisownAssign<TestType>);
@@ -904,23 +945,14 @@ static_assert(not CT::HasDisownAssign<AllIntentConstructibleAndAssignable, Priva
 /// CT::HasAbandonAssign                                                      
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing CT::HasAbandonAssign", "[ct]",
-   NonDestructible,
-   NonIntentConstructible,
-   AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
    PartiallyIntentConstructibleButImplicitly,
-   AbandonAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   DestructibleType,
-   EmptyType, AggregateType,
-   int
+   AbandonAssignableButNotConstructible
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
    auto test1 = reinterpret_cast<TestType*>(storage1);
    auto test2 = reinterpret_cast<TestType*>(storage2);
-   *test1 = MOV(*test2);
    *test2 = Abandon(*test1);
 
    static_assert(CT::HasIntentAssign<Abandon, TestType>);
@@ -930,9 +962,16 @@ TEMPLATE_TEST_CASE("Testing CT::HasAbandonAssign", "[ct]",
 
 TEMPLATE_TEST_CASE("Testing not CT::HasAbandonAssign", "[ct]",
    //IncompleteType,             // should not compile at all
-   Complex, ContainsComplex,  // custom move constructor implicitly removes implicit move assigner
+   AllIntentConstructible,
+   PartiallyIntentConstructible,
+   NonDestructible,
+   NonIntentConstructible,
+   Complex, ContainsComplex,     // custom move constructor implicitly removes implicit move assigner
    PrivatelyConstructible,
    ForcefullyPod,
+   DestructibleType,
+   EmptyType, AggregateType,
+   int,
 
    ReferConstructibleButNotAssignable,
    CopyConstructibleButNotAssignable,
@@ -941,6 +980,7 @@ TEMPLATE_TEST_CASE("Testing not CT::HasAbandonAssign", "[ct]",
    DisownConstructibleButNotAssignable,
    CloneConstructibleButNotAssignable,
 
+   MoveAssignableButNotConstructible,
    CopyAssignableButNotConstructible,
    ReferAssignableButNotConstructible,
    DisownAssignableButNotConstructible,
@@ -959,23 +999,14 @@ static_assert(not CT::HasAbandonAssign<AllIntentConstructibleAndAssignable, Priv
 /// CT::HasMoveAssign                                                         
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing CT::HasMoveAssign", "[ct]",
-   NonDestructible,
-   NonIntentConstructible,
-   AllIntentConstructible,
    AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
    MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DestructibleType,
-   EmptyType, AggregateType,
-   int
+   PartiallyIntentConstructibleButImplicitly
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
    auto test1 = reinterpret_cast<TestType*>(storage1);
    auto test2 = reinterpret_cast<TestType*>(storage2);
-   *test1 = MOV(*test2);
    *test2 = Move(*test1);
 
    static_assert(CT::HasIntentAssign<Move, TestType>);
@@ -985,9 +1016,16 @@ TEMPLATE_TEST_CASE("Testing CT::HasMoveAssign", "[ct]",
 
 TEMPLATE_TEST_CASE("Testing not CT::HasMoveAssign", "[ct]",
    //IncompleteType,             // should not compile at all
+   NonDestructible,
+   NonIntentConstructible,
+   AllIntentConstructible,
+   PartiallyIntentConstructible,
    Complex, ContainsComplex,
    PrivatelyConstructible,
    ForcefullyPod,
+   DestructibleType,
+   EmptyType, AggregateType,
+   int,
 
    ReferConstructibleButNotAssignable,
    CopyConstructibleButNotAssignable,
@@ -996,6 +1034,7 @@ TEMPLATE_TEST_CASE("Testing not CT::HasMoveAssign", "[ct]",
    DisownConstructibleButNotAssignable,
    CloneConstructibleButNotAssignable,
 
+   AbandonAssignableButNotConstructible,
    CopyAssignableButNotConstructible,
    ReferAssignableButNotConstructible,
    DisownAssignableButNotConstructible,
