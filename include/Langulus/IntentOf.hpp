@@ -680,13 +680,13 @@ namespace Langulus
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
       concept HasIntentAssign = Inner::CheckSize<T...>() and ((Intent<S<T>>
-          and ::std::is_assignable_v<T&, S<T>>) and ...);
+          and requires (T& lhs, S<T>&& rhs) { lhs = FWD(rhs); }) and ...);// ::std::is_assignable_v<T&, S<T>>) and ...);
 
       /// Check if all TypeOf<S> has intent-assigner for S                    
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept HasIntentAssignAlt = Inner::CheckSize<S...>() and ((Intent<S>
-          and ::std::is_assignable_v<Decvq<Deref<TypeOf<S>>>&, S>) and ...);
+          and requires (Decvq<Deref<TypeOf<S>>>& lhs, S&& rhs) { lhs = FWD(rhs); }) and ...);// and ::std::is_assignable_v<Decvq<Deref<TypeOf<S>>>&, S>) and ...);
 
       /// Check if all T have a disown-assigner                               
       /// Disowning does a shallow copy without referencing contents,         
