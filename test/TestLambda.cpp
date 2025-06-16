@@ -18,6 +18,20 @@ namespace
    auto testLambdaOneRef = [](int&) -> double { return 5; };
    auto testLambdaTwo    = [](int,  float)  -> double { return 5; };
    auto testLambdaTwoRef = [](int&, float&) noexcept -> double { return 5; };
+
+   struct TestingMethods {
+      double NoArgs() { return 5; }
+      double OneArg(int) { return 5; }
+      double OneArgRef(int&) { return 5; }
+      double TwoArgs(int, float) { return 5; }
+      double TwoArgsRef(int&, float&) noexcept { return 5; }
+
+      double ConstNoArgs() const { return 5; }
+      double ConstOneArg(int) const { return 5; }
+      double ConstOneArgRef(int&) const { return 5; }
+      double ConstTwoArgs(int, float) const { return 5; }
+      double ConstTwoArgsRef(int&, float&) const noexcept { return 5; }
+   };
 }
 
 
@@ -25,7 +39,7 @@ namespace
 /// ArgumentOf                                                                
 ///                                                                           
 SCENARIO("Testing ArgumentOf", "[ct]") {
-   int suppress_warnings1 = 666;
+   int   suppress_warnings1 = 666;
    float suppress_warnings2 = 666.0f;
    (void) testLambdaNoArgs();
    (void) testLambdaOne(1);
@@ -38,6 +52,18 @@ SCENARIO("Testing ArgumentOf", "[ct]") {
    static_assert(::std::same_as<ArgumentOf<decltype(testLambdaOneRef)>, int&>);
    static_assert(::std::same_as<ArgumentOf<decltype(testLambdaTwo)>,    int>);
    static_assert(::std::same_as<ArgumentOf<decltype(testLambdaTwoRef)>, int&>);
+
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::NoArgs)>,     void>);
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::OneArg)>,     int>);
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::OneArgRef)>,  int&>);
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::TwoArgs)>,    int>);
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::TwoArgsRef)>, int&>);
+
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::ConstNoArgs)>,     void>);
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::ConstOneArg)>,     int>);
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::ConstOneArgRef)>,  int&>);
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::ConstTwoArgs)>,    int>);
+   static_assert(::std::same_as<ArgumentOf<decltype(&TestingMethods::ConstTwoArgsRef)>, int&>);
 }
 
 
@@ -50,6 +76,18 @@ SCENARIO("Testing ArgumentsOf", "[ct]") {
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaOneRef)>, Types<int&>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaTwo)>,    Types<int, float>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaTwoRef)>, Types<int&, float&>>);
+
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::NoArgs)>,     Types<void>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::OneArg)>,     Types<int>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::OneArgRef)>,  Types<int&>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::TwoArgs)>,    Types<int, float>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::TwoArgsRef)>, Types<int&, float&>>);
+
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstNoArgs)>,     Types<void>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstOneArg)>,     Types<int>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstOneArgRef)>,  Types<int&>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstTwoArgs)>,    Types<int, float>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstTwoArgsRef)>, Types<int&, float&>>);
 }
 
 
@@ -62,6 +100,18 @@ SCENARIO("Testing ReturnOf", "[ct]") {
    static_assert(::std::same_as<ReturnOf<decltype(testLambdaOneRef)>, double>);
    static_assert(::std::same_as<ReturnOf<decltype(testLambdaTwo)>,    double>);
    static_assert(::std::same_as<ReturnOf<decltype(testLambdaTwoRef)>, double>);
+
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::NoArgs)>,     double>);
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::OneArg)>,     double>);
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::OneArgRef)>,  double>);
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::TwoArgs)>,    double>);
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::TwoArgsRef)>, double>);
+
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::ConstNoArgs)>,     double>);
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::ConstOneArg)>,     double>);
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::ConstOneArgRef)>,  double>);
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::ConstTwoArgs)>,    double>);
+   static_assert(::std::same_as<ReturnOf<decltype(&TestingMethods::ConstTwoArgsRef)>, double>);
 }
 
 
@@ -74,4 +124,16 @@ SCENARIO("Testing IsNoexcept", "[ct]") {
    static_assert(not IsNoexcept<decltype(testLambdaOneRef)>);
    static_assert(not IsNoexcept<decltype(testLambdaTwo)>);
    static_assert(    IsNoexcept<decltype(testLambdaTwoRef)>);
+
+   static_assert(not IsNoexcept<decltype(&TestingMethods::NoArgs)>);
+   static_assert(not IsNoexcept<decltype(&TestingMethods::OneArg)>);
+   static_assert(not IsNoexcept<decltype(&TestingMethods::OneArgRef)>);
+   static_assert(not IsNoexcept<decltype(&TestingMethods::TwoArgs)>);
+   static_assert(    IsNoexcept<decltype(&TestingMethods::TwoArgsRef)>);
+
+   static_assert(not IsNoexcept<decltype(&TestingMethods::ConstNoArgs)>);
+   static_assert(not IsNoexcept<decltype(&TestingMethods::ConstOneArg)>);
+   static_assert(not IsNoexcept<decltype(&TestingMethods::ConstOneArgRef)>);
+   static_assert(not IsNoexcept<decltype(&TestingMethods::ConstTwoArgs)>);
+   static_assert(    IsNoexcept<decltype(&TestingMethods::ConstTwoArgsRef)>);
 }
