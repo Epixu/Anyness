@@ -301,7 +301,7 @@ namespace Langulus::CTTI
    };
    template<>
    struct Named<NamedUsingMember> {
-      static constexpr Literal Name = "<should be disabled>";
+      //static constexpr Literal Name = "<should be disabled>";
       static constexpr bool Enabled = false;
    };
 
@@ -322,7 +322,7 @@ namespace Langulus::CTTI
    };
    template<>
    struct NamedValue<AnonymousNumberButNotNamed> {
-      static constexpr Literal Name = "<not actually named>";
+      //static constexpr Literal Name = "<not actually named>";
       static constexpr bool Enabled = false;
    };
 

@@ -25,6 +25,14 @@ namespace
 /// ArgumentOf                                                                
 ///                                                                           
 SCENARIO("Testing ArgumentOf", "[ct]") {
+   int suppress_warnings1 = 666;
+   float suppress_warnings2 = 666.0f;
+   (void) testLambdaNoArgs();
+   (void) testLambdaOne(1);
+   (void) testLambdaOneRef(suppress_warnings1);
+   (void) testLambdaTwo(1, 1.0f);
+   (void) testLambdaTwoRef(suppress_warnings1, suppress_warnings2);
+
    static_assert(::std::same_as<ArgumentOf<decltype(testLambdaNoArgs)>, void>);
    static_assert(::std::same_as<ArgumentOf<decltype(testLambdaOne)>,    int>);
    static_assert(::std::same_as<ArgumentOf<decltype(testLambdaOneRef)>, int&>);
