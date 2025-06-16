@@ -223,12 +223,6 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
-
-      /// Implicitly collapse the intent in some cases                        
-      /// This way the wrapper is seamlessly integrated with the standard     
-      /// C++20 copy semantics                                                
-      //LANGULUS(ALWAYS_INLINED)
-      //constexpr operator const T& () const noexcept requires (::std::is_trivial_v<T> and not ::std::is_fundamental_v<T>) { return mValue; }
    };
 
    template<CT::NoIntent T>
@@ -379,12 +373,6 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       constexpr T* operator -> () const noexcept { return SparseCast(mValue); }
-
-      /// Implicitly collapse the intent in some cases                        
-      /// This way the wrapper is seamlessly integrated with the standard     
-      /// C++20 move semantics                                                
-      //LANGULUS(ALWAYS_INLINED)
-      //explicit constexpr operator T&& () noexcept { return FWD(mValue); }
    };
 
    template<CT::NoIntent T>
@@ -468,12 +456,6 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       constexpr T* operator -> () const noexcept { return SparseCast(mValue); }
-
-      /// Implicitly collapse the intent in some cases                        
-      /// This way the wrapper is seamlessly integrated with the standard     
-      /// C++20 move semantics                                                
-      //LANGULUS(ALWAYS_INLINED)
-      //explicit constexpr operator T&& () const noexcept{ return FWD(mValue); }
    };
    
    template<CT::NoIntent T>
@@ -627,19 +609,15 @@ namespace Langulus
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
       concept HasIntentConstructor = Intent<S<T>...> and not Aggregate<T...> and ((
-            /*not ::std::is_trivially_constructible_v<T, TypeOf<S<T>>>
-            and*/ requires (S<T>&& arg) { T {FWD(arg)}; }//::std::is_constructible_v<T, S<T>>
+            requires (S<T>&& arg) { T {FWD(arg)}; }
          ) and ...);
-          //and requires (S<T>&&...a) { (T {FWD(a)}, ...); };
 
       /// Check if all TypeOf<S> have a dedicated intent constructor for S    
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept HasIntentConstructorAlt = Intent<S...> and not Aggregate<TypeOf<S>...> and ((
-            /*not ::std::is_trivially_constructible_v<Decvq<Deref<TypeOf<S>>>, TypeOf<S>>
-            and*/ requires (S&& arg) { Decvq<Deref<TypeOf<S>>> {FWD(arg)}; }//::std::is_constructible_v<Decvq<Deref<TypeOf<S>>>, S>
+            requires (S&& arg) { Decvq<Deref<TypeOf<S>>> {FWD(arg)}; }
          ) and ...);
-          //and requires (S&&...a) { (Decvq<Deref<TypeOf<S>>> {FWD(a)}, ...); };
 
       /// Check if all T have a dedicated disown-constructor                  
       /// Disowning does a shallow copy without referencing contents,         
@@ -684,16 +662,14 @@ namespace Langulus
       ///   @tparam T... - the types                                          
       template<template<class> class S, class...T>
       concept HasIntentAssign = Inner::CheckSize<T...>() and ((Intent<S<T>>
-          /*and not ::std::is_trivially_assignable_v<T&, TypeOf<S<T>>>*/
-          and requires (T& lhs, S<T>&& rhs) { lhs = FWD(rhs); } //    ::std::is_assignable_v<T&, S<T>>
+          and requires (T& lhs, S<T>&& rhs) { lhs = FWD(rhs); }
          ) and ...);
 
       /// Check if all TypeOf<S> habe a dedicated intent-assigner for S       
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept HasIntentAssignAlt = Inner::CheckSize<S...>() and ((Intent<S>
-          /*and not ::std::is_trivially_assignable_v<Decvq<Deref<TypeOf<S>>>&, TypeOf<S>>*/
-          and requires (Decvq<Deref<TypeOf<S>>>& lhs, S&& rhs) { lhs = FWD(rhs); } //::std::is_assignable_v<Decvq<Deref<TypeOf<S>>>&, S>
+          and requires (Decvq<Deref<TypeOf<S>>>& lhs, S&& rhs) { lhs = FWD(rhs); }
          ) and ...);
 
       /// Check if all T have a dedicated disown-assigner                     
@@ -1123,15 +1099,10 @@ namespace Langulus
       ///   types is deleted destructors, and implicit copy/move semantics    
       ///   https://stackoverflow.com/questions/79665049                      
       ///                                                                     
-      /// @note these compiler defects affect only CT::HasReferAssign and     
-      ///    CT::HasMoveAssign/CT::HasAbandonAssign. On the other hand,       
-      ///    CT::ReferAssignable and CT::MoveAssignable/CT::AbandonAssignable 
-      ///    remain unaffected, so if you want consistent behavior across     
-      ///    compilers, just use the IntentAssign function instead of '='     
-      ///                                                                     
       /// In that sense, none of these concepts here guarantees, that an      
       /// adequate intent-assignment exists for a type, unless you use        
-      /// IntentAssign itself                                                 
+      /// IntentAssign itself. Implicit mapping onto built-in copy/move       
+      /// semantics has been disabled to avoid all these inconsistencies      
       ///                                                                     
 
       /// Check if all T are intent-assignable by intent S                    

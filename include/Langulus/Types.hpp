@@ -109,6 +109,7 @@ namespace Langulus
 
    } // namespace Langulus::Inner
 
+
    ///                                                                        
    /// Type list, that contains only one void item - a canonical empty list   
    /// Satisfies CT::Void and is considered 'void'                            
