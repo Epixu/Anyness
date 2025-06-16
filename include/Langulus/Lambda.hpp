@@ -11,7 +11,6 @@
 
 namespace Langulus
 {
-   
    namespace Inner
    {
 
