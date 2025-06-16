@@ -66,38 +66,45 @@ namespace Langulus
 
       ///                                                                     
       template<class R, class F, class...AN>
-      auto IsNoexcept(R(F::*f)(AN...) const) -> No {
+      No IsNoexcept(R(F::*f)(AN...) const) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
+         return {};
       }
 
       template<class R, class F, class...AN>
-      auto IsNoexcept(R(F::*f)(AN...) const noexcept) -> Yes {
+      Yes IsNoexcept(R(F::*f)(AN...) const noexcept) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
+         return {};
       }
 
       template<class R, class F, class...AN>
-      auto IsNoexcept(R(F::*f)(AN...)) -> No {
+      No IsNoexcept(R(F::*f)(AN...)) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
+         return {};
       }
 
       template<class R, class F, class...AN>
-      auto IsNoexcept(R(F::*f)(AN...) noexcept) -> Yes {
+      Yes IsNoexcept(R(F::*f)(AN...) noexcept) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
+         return {};
       }
 
       template<class R, class...AN>
-      auto IsNoexcept(R(*f)(AN...)) -> No {
+      No IsNoexcept(R(*f)(AN...)) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
+         return {};
       }
 
       template<class R, class...AN>
-      auto IsNoexcept(R(*f)(AN...) noexcept) -> Yes {
+      Yes IsNoexcept(R(*f)(AN...) noexcept) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
+         return {};
       }
 
       template<class F>
       auto IsNoexcept(F) -> decltype(IsNoexcept(&F::operator())) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
+         return {};
       }
 
    } // namespace Langulus::Inner
