@@ -197,10 +197,15 @@ namespace
    /// Constructible but not assignable                                       
    struct ReferConstructibleButNotAssignable {
       int m;
+      explicit ReferConstructibleButNotAssignable(const ReferConstructibleButNotAssignable& a) : m {a.m} {}
       ReferConstructibleButNotAssignable(Refer<ReferConstructibleButNotAssignable>&& a) : m {a->m} {}
       ReferConstructibleButNotAssignable& operator = (ReferConstructibleButNotAssignable const&) = delete;
       ReferConstructibleButNotAssignable& operator = (ReferConstructibleButNotAssignable&&) = delete;
    };
+   static_assert(not ::std::is_trivially_copy_constructible_v<ReferConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_constructible_v<ReferConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_copy_assignable_v<ReferConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_assignable_v<ReferConstructibleButNotAssignable>);
 
    struct CopyConstructibleButNotAssignable {
       int m;
@@ -208,13 +213,22 @@ namespace
       CopyConstructibleButNotAssignable& operator = (CopyConstructibleButNotAssignable const&) = delete;
       CopyConstructibleButNotAssignable& operator = (CopyConstructibleButNotAssignable&&) = delete;
    };
+   static_assert(not ::std::is_trivially_copy_constructible_v<CopyConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_constructible_v<CopyConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_copy_assignable_v<CopyConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_assignable_v<CopyConstructibleButNotAssignable>);
 
    struct MoveConstructibleButNotAssignable {
       int m;
+      explicit MoveConstructibleButNotAssignable(MoveConstructibleButNotAssignable&& a) : m {a.m} {}
       MoveConstructibleButNotAssignable(Move<MoveConstructibleButNotAssignable>&& a) : m {a->m} {}
       MoveConstructibleButNotAssignable& operator = (MoveConstructibleButNotAssignable const&) = delete;
       MoveConstructibleButNotAssignable& operator = (MoveConstructibleButNotAssignable&&) = delete;
    };
+   static_assert(not ::std::is_trivially_copy_constructible_v<MoveConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_constructible_v<MoveConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_copy_assignable_v<MoveConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_assignable_v<MoveConstructibleButNotAssignable>);
 
    struct AbandonConstructibleButNotAssignable {
       int m;
@@ -222,6 +236,10 @@ namespace
       AbandonConstructibleButNotAssignable& operator = (AbandonConstructibleButNotAssignable const&) = delete;
       AbandonConstructibleButNotAssignable& operator = (AbandonConstructibleButNotAssignable&&) = delete;
    };
+   static_assert(not ::std::is_trivially_copy_constructible_v<AbandonConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_constructible_v<AbandonConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_copy_assignable_v<AbandonConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_assignable_v<AbandonConstructibleButNotAssignable>);
 
    struct DisownConstructibleButNotAssignable {
       int m;
@@ -229,6 +247,10 @@ namespace
       DisownConstructibleButNotAssignable& operator = (DisownConstructibleButNotAssignable const&) = delete;
       DisownConstructibleButNotAssignable& operator = (DisownConstructibleButNotAssignable&&) = delete;
    };
+   static_assert(not ::std::is_trivially_copy_constructible_v<DisownConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_constructible_v<DisownConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_copy_assignable_v<DisownConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_assignable_v<DisownConstructibleButNotAssignable>);
 
    struct CloneConstructibleButNotAssignable {
       int m;
@@ -236,12 +258,16 @@ namespace
       CloneConstructibleButNotAssignable& operator = (CloneConstructibleButNotAssignable const&) = delete;
       CloneConstructibleButNotAssignable& operator = (CloneConstructibleButNotAssignable&&) = delete;
    };
-   
+   static_assert(not ::std::is_trivially_copy_constructible_v<CloneConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_constructible_v<CloneConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_copy_assignable_v<CloneConstructibleButNotAssignable>);
+   static_assert(not ::std::is_trivially_move_assignable_v<CloneConstructibleButNotAssignable>);
+
    /// Assignable but not constructible                                       
    struct ReferAssignableButNotConstructible {
       int m;
-      ReferAssignableButNotConstructible(ReferAssignableButNotConstructible&&) = delete;
-      ReferAssignableButNotConstructible(ReferAssignableButNotConstructible const&) = delete;
+      //ReferAssignableButNotConstructible(ReferAssignableButNotConstructible&&) = delete;
+      //ReferAssignableButNotConstructible(ReferAssignableButNotConstructible const&) = delete;
       ReferAssignableButNotConstructible& operator = (Refer<ReferAssignableButNotConstructible>&& a) {
          m = a->m;
          return *this;
@@ -439,6 +465,12 @@ TEMPLATE_TEST_CASE("Testing CT::HasReferConstructor", "[ct]",
    PartiallyIntentConstructibleButImplicitly,
    ReferConstructibleButNotAssignable
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   new (test2) TestType {Refer(*test1)};
+
    static_assert(CT::HasIntentConstructor<Refer, TestType>);
    static_assert(CT::HasIntentConstructorAlt<Refer<TestType>>);
    static_assert(CT::HasReferConstructor<TestType>);
@@ -487,6 +519,12 @@ TEMPLATE_TEST_CASE("Testing CT::HasCopyConstructor", "[ct]",
    PartiallyIntentConstructibleButImplicitly,
    PartiallyIntentConstructible
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   new (test2) TestType {Copy(*test1)};
+
    static_assert(CT::HasIntentConstructor<Copy, TestType>);
    static_assert(CT::HasIntentConstructorAlt<Copy<TestType>>);
    static_assert(CT::HasCopyConstructor<TestType>);
@@ -537,6 +575,12 @@ TEMPLATE_TEST_CASE("Testing CT::HasCloneConstructor", "[ct]",
    PartiallyIntentConstructibleButImplicitly,
    PartiallyIntentConstructible
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   new (test2) TestType {Clone(*test1)};
+
    static_assert(CT::HasIntentConstructor<Clone, TestType>);
    static_assert(CT::HasIntentConstructorAlt<Clone<TestType>>);
    static_assert(CT::HasCloneConstructor<TestType>);
@@ -587,6 +631,12 @@ TEMPLATE_TEST_CASE("Testing CT::HasDisownConstructor", "[ct]",
    PartiallyIntentConstructibleButImplicitly,
    PartiallyIntentConstructible
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   new (test2) TestType {Disown(*test1)};
+
    static_assert(CT::HasIntentConstructor<Disown, TestType>);
    static_assert(CT::HasIntentConstructorAlt<Disown<TestType>>);
    static_assert(CT::HasDisownConstructor<TestType>);
@@ -636,6 +686,12 @@ TEMPLATE_TEST_CASE("Testing CT::HasAbandonConstructor", "[ct]",
    PartiallyIntentConstructible,
    PartiallyIntentConstructibleButImplicitly
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   new (test2) TestType {Abandon(*test1)};
+
    static_assert(CT::HasIntentConstructor<Abandon, TestType>);
    static_assert(CT::HasIntentConstructorAlt<Abandon<TestType>>);
    static_assert(CT::HasAbandonConstructor<TestType>);
@@ -685,6 +741,12 @@ TEMPLATE_TEST_CASE("Testing CT::HasMoveConstructor", "[ct]",
    PartiallyIntentConstructible,
    PartiallyIntentConstructibleButImplicitly
 ) {
+   alignas(TestType) char storage1[sizeof(TestType)] {};
+   alignas(TestType) char storage2[sizeof(TestType)] {};
+   auto test1 = reinterpret_cast<TestType*>(storage1);
+   auto test2 = reinterpret_cast<TestType*>(storage2);
+   new (test2) TestType {Move(*test1)};
+
    static_assert(CT::HasIntentConstructor<Move, TestType>);
    static_assert(CT::HasIntentConstructorAlt<Move<TestType>>);
    static_assert(CT::HasMoveConstructor<TestType>);
@@ -736,7 +798,6 @@ TEMPLATE_TEST_CASE("Testing CT::HasReferAssign", "[ct]",
    alignas(TestType) char storage2[sizeof(TestType)] {};
    auto test1 = reinterpret_cast<TestType*>(storage1);
    auto test2 = reinterpret_cast<TestType*>(storage2);
-   //*test1 = *test2;
    *test2 = Refer(*test1);
 
    static_assert(CT::HasIntentAssign<Refer, TestType>);
@@ -1093,6 +1154,12 @@ TEMPLATE_TEST_CASE("Testing refer-constructible types", "[ct]",
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
    REQUIRE(meta3.GetReferConstructor());
+
+   alignas(T) char storage1[sizeof(T)] {};
+   alignas(T) char storage2[sizeof(T)] {};
+   auto test1 = reinterpret_cast<T*>(storage1);
+   auto test2 = reinterpret_cast<T*>(storage2);
+   new (test1) T {*test2};
 }
 
 TEMPLATE_TEST_CASE("Testing non-refer-constructible types", "[ct]",
@@ -1159,6 +1226,12 @@ TEMPLATE_TEST_CASE("Testing refer-assignable types", "[ct]",
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
    REQUIRE_FALSE(meta3.GetReferAssigner());
+
+   alignas(T) char storage1[sizeof(T)] {};
+   alignas(T) char storage2[sizeof(T)] {};
+   auto test1 = reinterpret_cast<T*>(storage1);
+   auto test2 = reinterpret_cast<T*>(storage2);
+   *test1 = *test2;
 }
 
 TEMPLATE_TEST_CASE("Testing non-refer-assignable types", "[ct]",
@@ -1243,6 +1316,12 @@ TEMPLATE_TEST_CASE("Testing move-constructible types", "[ct]",
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
    REQUIRE(meta3.GetMoveConstructor());
+
+   alignas(T) char storage1[sizeof(T)] {};
+   alignas(T) char storage2[sizeof(T)] {};
+   auto test1 = reinterpret_cast<T*>(storage1);
+   auto test2 = reinterpret_cast<T*>(storage2);
+   new (test1) T {::std::move(*test2)};
 }
 
 TEMPLATE_TEST_CASE("Testing non-move-constructible types", "[ct]",
@@ -1309,6 +1388,12 @@ TEMPLATE_TEST_CASE("Testing move-assignable types", "[ct]",
    auto meta3 = MetaDataOf<const T>();
    REQUIRE(meta3);
    REQUIRE_FALSE(meta3.GetMoveAssigner());
+
+   alignas(T) char storage1[sizeof(T)] {};
+   alignas(T) char storage2[sizeof(T)] {};
+   auto test1 = reinterpret_cast<T*>(storage1);
+   auto test2 = reinterpret_cast<T*>(storage2);
+   *test1 = ::std::move(*test2);
 }
 
 TEMPLATE_TEST_CASE("Testing non-move-assignable types", "[ct]",

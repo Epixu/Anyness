@@ -173,14 +173,19 @@ namespace Langulus
       Refer() = delete;
 
       LANGULUS(ALWAYS_INLINED)
+      explicit constexpr Refer(Decvq<T>& value) noexcept : mValue {value} {
+         static_assert(CT::NoIntent<T>, "Can't nest intents");
+      }
+      
+      LANGULUS(ALWAYS_INLINED)
       explicit constexpr Refer(const T& value) noexcept : mValue {value} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
       explicit constexpr Refer(I&& value) noexcept : mValue {value.mValue} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }
+      }*/
       
       /// Forward as referred                                                 
       ///   @tparam ALT_T - optional type to forward as                       
@@ -223,7 +228,7 @@ namespace Langulus
       /// This way the wrapper is seamlessly integrated with the standard     
       /// C++20 copy semantics                                                
       //LANGULUS(ALWAYS_INLINED)
-      //explicit constexpr operator const T& () const noexcept { return mValue; }
+      //constexpr operator const T& () const noexcept requires (::std::is_trivial_v<T> and not ::std::is_fundamental_v<T>) { return mValue; }
    };
 
    template<CT::NoIntent T>
@@ -255,10 +260,10 @@ namespace Langulus
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
       explicit constexpr Copy(I&& value) noexcept : mValue {value.mValue} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }
+      }*/
       
       /// Forward as copied                                                   
       ///   @tparam ALT_T - optional type to forward as                       
@@ -333,10 +338,10 @@ namespace Langulus
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
       explicit constexpr Move(I&& value) noexcept : mValue {FWD(value.mValue)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }
+      }*/
 
       /// Forward as moved                                                    
       ///   @tparam ALT_T - optional type to forward as                       
@@ -411,8 +416,6 @@ namespace Langulus
       using Retype = Abandon<Decq<Deref<Deint<ALT>>>>;
 
       Abandon() = delete;
-      explicit constexpr Abandon(Abandon const&) noexcept = default;
-      explicit constexpr Abandon(Abandon&&) noexcept = default;
 
       LANGULUS(ALWAYS_INLINED)
       explicit constexpr Abandon(T& value) noexcept : mValue {MOV(value)} {
@@ -424,10 +427,10 @@ namespace Langulus
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
       explicit constexpr Abandon(I&& value) noexcept : mValue {FWD(value.mValue)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }
+      }*/
       
       /// Forward as abandoned                                                
       ///   @tparam ALT_T - optional type to forward as                       
@@ -502,10 +505,10 @@ namespace Langulus
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
       explicit constexpr Disown(I&& value) noexcept : mValue {value.mValue} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }
+      }*/
       
       /// Forward as disowned                                                 
       ///   @tparam ALT_T - optional type to forward as                       
@@ -574,10 +577,10 @@ namespace Langulus
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
+      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
       explicit constexpr Clone(I&& value) noexcept : mValue {value.mValue} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }
+      }*/
 
       /// Forward as cloned, never collapse                                   
       template<class ALT_T = T> LANGULUS(ALWAYS_INLINED)
