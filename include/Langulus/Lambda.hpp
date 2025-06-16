@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Types.hpp"
-
+#include <concepts>
 
 namespace Langulus
 {
@@ -66,33 +66,50 @@ namespace Langulus
 
       ///                                                                     
       template<class R, class F, class...AN>
-      void IsNoexcept(R(F::*f)(AN...) const) noexcept(noexcept((Fake<F>().*f)(Fake<AN>()...))) {
+      auto IsNoexcept(R(F::*f)(AN...) const) -> No {
          static_assert(false, "Calling IsNoexcept is ill-formed");
       }
 
       template<class R, class F, class...AN>
-      void IsNoexcept(R(F::*f)(AN...)) noexcept(noexcept((Fake<F>().*f)(Fake<AN>()...))) {
+      auto IsNoexcept(R(F::*f)(AN...) const noexcept) -> Yes {
+         static_assert(false, "Calling IsNoexcept is ill-formed");
+      }
+
+      template<class R, class F, class...AN>
+      auto IsNoexcept(R(F::*f)(AN...)) -> No {
+         static_assert(false, "Calling IsNoexcept is ill-formed");
+      }
+
+      template<class R, class F, class...AN>
+      auto IsNoexcept(R(F::*f)(AN...) noexcept) -> Yes {
          static_assert(false, "Calling IsNoexcept is ill-formed");
       }
 
       template<class R, class...AN>
-      void IsNoexcept(R(*f)(AN...)) noexcept(noexcept(f(Fake<AN>()...))) {
+      auto IsNoexcept(R(*f)(AN...)) -> No {
+         static_assert(false, "Calling IsNoexcept is ill-formed");
+      }
+
+      template<class R, class...AN>
+      auto IsNoexcept(R(*f)(AN...) noexcept) -> Yes {
          static_assert(false, "Calling IsNoexcept is ill-formed");
       }
 
       template<class F>
-      void IsNoexcept(F) noexcept(noexcept(IsNoexcept(&F::operator()))) {
+      auto IsNoexcept(F) -> decltype(IsNoexcept(&F::operator())) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
       }
 
    } // namespace Langulus::Inner
 
    /// Get the type of the first argument of a function                       
+   ///   @attention will give void if no arguments                            
    ///   @tparam F - anything invokable, like functor/member function/lambda  
    template<class F>
    using ArgumentOf = typename decltype(Inner::GetFunctionArguments(Fake<F>()))::First;
 
    /// Get a type list corresponding to the function arguments                
+   ///   @attention will give an empty type list if no arguments              
    ///   @tparam F - anything invokable, like functor/member function/lambda  
    template<class F>
    using ArgumentsOf = decltype(Inner::GetFunctionArguments(Fake<F>()));
@@ -102,8 +119,8 @@ namespace Langulus
    template<class F>
    using ReturnOf = decltype(Inner::GetFunctionReturn(Fake<F>()));
 
-   /// Check if a lambda call is noexcept                                     
+   /// Check if a function is noexcept                                        
    template<class F>
-   static constexpr bool IsNoexcept = noexcept(Inner::IsNoexcept(Fake<F>()));
+   static constexpr bool IsNoexcept = decltype(Inner::IsNoexcept(Fake<F>()))::Enabled;
 
 } // namespace Langulus
