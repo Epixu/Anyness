@@ -331,7 +331,7 @@
       "name": "windows-clang-cl-x64-debug-safe-AVX",
       "displayName": "clang-cl x64 Debug Safe AVX",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, AVX)",
-      "inherits": [ "base", "windows", "clang-cl-19", "x64", "debug", "AVX" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX2",
