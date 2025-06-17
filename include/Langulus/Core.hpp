@@ -11,9 +11,9 @@
 
 
 /// Sorry, Langulus is designed for at least C++23                            
-//#if __cplusplus < 202300L// and not defined(_MSC_VER)
-//   #error Langulus requires at least a C++23 compliant compiler in order to build
-//#endif
+#if __cplusplus < 202302L
+   #error Langulus requires at least a C++23 compliant compiler in order to build
+#endif
 
 /// These macros seem evil, but read this:                                    
 /// https://www.foonathan.net/2020/09/move-forward/                           
@@ -470,5 +470,18 @@ namespace Langulus
    template<class Lambda, int = (Lambda {}(), 0)>
    consteval bool IsConstexpr(Lambda) { return true;  }
    consteval bool IsConstexpr(...)    { return false; }
+
+   namespace CT::Inner
+   {
+
+      /// Makes sure an error is reported if a CT concept is tested without   
+      /// any arguments, so that failures aren't silent                       
+      template<class...T>
+      consteval bool CheckSize() {
+         static_assert(sizeof...(T) > 0, "No arguments provided");
+         return true;
+      }
+
+   } // namespace Langulus::CT::Inner
 
 } // namespace Langulus

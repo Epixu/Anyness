@@ -6,11 +6,11 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include "Core.hpp"
 #include <array>
 #include <functional>
 #include <iterator>
 #include <string_view>
-#include <type_traits>
 
 
 namespace Langulus
@@ -20,11 +20,11 @@ namespace Langulus
       
       /// Check if all T are Literal types                                    
       template<class...T>
-      concept FixedString = (sizeof...(T) > 0) and (T::CTTI_StringLiteral and ...);
+      concept FixedString = Inner::CheckSize<T...>() and (T::CTTI_StringLiteral and ...);
 
       /// Supported character types used by Literal                           
       template<class...T>
-      concept FixedChar = (sizeof...(T) > 0) and ((
+      concept FixedChar = Inner::CheckSize<T...>() and ((
               std::same_as<T, char>
            or std::same_as<T, wchar_t>
            or std::same_as<T, char8_t>

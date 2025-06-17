@@ -122,18 +122,6 @@ namespace Langulus::CTTI
 ///                                                                           
 namespace Langulus::CT
 {
-   namespace Inner
-   {
-
-      /// Makes sure an error is reported if a CT concept is tested without   
-      /// any arguments, so that failures aren't silent                       
-      template<class...T>
-      consteval bool CheckSize() {
-         static_assert(sizeof...(T) > 0, "No arguments provided");
-         return true;
-      }
-
-   } // namespace Langulus::CT::Inner
    
    /// Check if all T are sheddable types (like intents), that serve only to  
    /// wrap data for tag dispatching and semantics. Sheddable types don't     
