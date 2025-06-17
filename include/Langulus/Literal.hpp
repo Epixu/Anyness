@@ -20,14 +20,12 @@ namespace Langulus
       
       /// Check if all T are Literal types                                    
       template<class...T>
-      concept FixedString = (T::CTTI_StringLiteral and ...);
+      concept FixedString = (sizeof...(T) > 0) and (T::CTTI_StringLiteral and ...);
 
       /// Supported character types used by Literal                           
       template<class...T>
-      concept FixedChar = ((
+      concept FixedChar = (sizeof...(T) > 0) and ((
               std::same_as<T, char>
-           or std::same_as<T, signed char>
-           or std::same_as<T, unsigned char>
            or std::same_as<T, wchar_t>
            or std::same_as<T, char8_t>
            or std::same_as<T, char16_t>
@@ -122,10 +120,9 @@ namespace Langulus
       ///                                                                     
       /// Encapsulation                                                       
       ///                                                                     
-      consteval auto size()     const noexcept { return Count; }
-      consteval auto length()   const noexcept { return Count; }
-      consteval auto max_size() const noexcept { return Count; }
-      consteval auto empty()    const noexcept { return Empty; }
+      constexpr auto size() const noexcept { return Count; }
+      constexpr auto empty() const noexcept { return Empty; }
+      constexpr explicit operator bool () const noexcept { return Count > 0; }
 
       ///                                                                     
       /// Access                                                              
@@ -376,6 +373,8 @@ namespace Langulus
          _data.swap(other._data);
       }
    };
+
+   Literal() -> Literal<char, 0>;
 
    template<class TChar, size_t N>
    Literal(const TChar(&)[N]) -> Literal<TChar, N - 1>;

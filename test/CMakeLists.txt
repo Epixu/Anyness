@@ -19,6 +19,7 @@ add_langulus_test(LangulusAnynessTest
 	      		TestTypeOf.cpp
 	      		TestIntentOf.cpp
 	      		TestLambda.cpp
+				TestLiteral.cpp
 	      		#TestSuffixOf.cpp
 				#${LANGULUS_ANYNESS_TEST_SOURCES}
 	LIBRARIES	Catch2 LangulusAnyness
