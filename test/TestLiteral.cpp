@@ -15,11 +15,11 @@ using namespace Langulus;
 
 namespace
 {
-   Literal fixedString = "Test String";
+   constexpr Literal fixedString = "Test String";
+   constexpr const char carrayString[] = "Test String";
+   constexpr const char* cptrString = "Test String";
+   constexpr ::std::string_view viewString = "Test String";
    ::std::string justString = "Test String";
-   const char carrayString[] = "Test String";
-   const char* cptrString = "Test String";
-   ::std::string_view viewString = "Test String";
 
    template<Literal SENT_AS_TEMPLATE_ARGUMENT>
    consteval auto FixedStringAsTemplateArgument() {
@@ -94,15 +94,27 @@ TEMPLATE_TEST_CASE("Testing Literal", "[ct]",
    }
 
    WHEN("Assigned") {
-
+      Literal local = fixedString;
+      local = carrayString;
+      REQUIRE(local == "Test String");
    }
 
    WHEN("Iterated") {
+      for (int i = 0; i < fixedString.size(); ++i) {
+         REQUIRE(fixedString[i] == carrayString[i]);
+      }
 
+      std::string accumulate;
+      for (auto& c : fixedString)
+         accumulate += c;
+      REQUIRE(accumulate == "Test String");
    }
 
    WHEN("Accessed") {
-
+      volatile size_t idx = fixedString.size() + 1;
+      IF_SAFE(REQUIRE_THROWS(fixedString[idx]));
+      STATIC_REQUIRE(fixedString[0] == carrayString[0]);
+      //STATIC_REQUIRE(fixedString[fixedString.size() + 1]); // shouldn't compile
    }
 
    WHEN("Resized") {
