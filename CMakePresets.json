@@ -12,10 +12,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
-      "cacheVariables": {
-        "LANGULUS_TESTING": "ON",
-        "LANGULUS_SAFE_MODE": "ON"
-      }
+      "cacheVariables": { "LANGULUS_TESTING": "ON" }
     },
 
     //                                                                        
@@ -68,8 +65,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc-14",
         "CMAKE_CXX_COMPILER": "g++-14",
-        "CMAKE_C_FLAGS": "$env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}",
-        "CMAKE_CXX_FLAGS": "$env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}"
+        "CMAKE_C_FLAGS": "-Wall -Wextra -fvisibility=hidden -fvisibility-inlines-hidden -Wno-trigraphs $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -fvisibility=hidden -fvisibility-inlines-hidden -Wno-trigraphs $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}"
       }
     },
     {
@@ -80,8 +77,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-19",
         "CMAKE_CXX_COMPILER": "clang++-19",
-        "CMAKE_C_FLAGS": "$env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}",
-        "CMAKE_CXX_FLAGS": "$env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}"
+        "CMAKE_C_FLAGS": "-Wall -Wextra -fvisibility=hidden -fvisibility-inlines-hidden -Wno-trigraphs $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -fvisibility=hidden -fvisibility-inlines-hidden -Wno-trigraphs $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}"
       }
     },
     {
@@ -92,8 +89,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_C_FLAGS": "/EHsc $env{ARCHITECTURE_FLAGS_MSVC} $env{SIMD_FLAGS_MSVC}",
-        "CMAKE_CXX_FLAGS": "/EHsc $env{ARCHITECTURE_FLAGS_MSVC} $env{SIMD_FLAGS_MSVC}"
+        "CMAKE_C_FLAGS": "/utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS_MSVC} $env{SIMD_FLAGS_MSVC}",
+        "CMAKE_CXX_FLAGS": "/utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS_MSVC} $env{SIMD_FLAGS_MSVC}"
       }
     },
     {
@@ -104,8 +101,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-cl.exe",
         "CMAKE_CXX_COMPILER": "clang-cl.exe",
-        "CMAKE_C_FLAGS": "/EHsc $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS_MSVC}",
-        "CMAKE_CXX_FLAGS": "/EHsc $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS_MSVC}"
+        "CMAKE_C_FLAGS": "/utf-8 /W3 /bigobj /EHsc -Wno-trigraphs $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS_MSVC}",
+        "CMAKE_CXX_FLAGS": "/utf-8 /W3 /bigobj /EHsc -Wno-trigraphs $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS_MSVC}"
       }
     },
 
@@ -149,14 +146,37 @@
       "description": "A debug build",
       "inherits": "base",
       "hidden": true,
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "LANGULUS_SAFE_MODE": "ON",
+        "LANGULUS_DEBUGGING": "ON",
+        "LANGULUS_FEATURE_MEMORY_STATISTICS": "ON",
+        "LANGULUS_FEATURE_PROFILING": "ON"
+      },
+      "environment": {
+        "BUILDTYPE_FLAGS": "",
+        "BUILDTYPE_FLAGS_MSVC": ""
+      }
     },
     {
       "name": "release",
       "description": "A release build",
       "inherits": "base",
       "hidden": true,
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "LANGULUS_SAFE_MODE": "ON",
+        "LANGULUS_LOGGER_DISABLE_VERBOSE": "ON",
+        "LANGULUS_LOGGER_DISABLE_SPECIALS": "ON",
+        "LANGULUS_LOGGER_DISABLE_FLOWS": "ON",
+        "LANGULUS_LOGGER_DISABLE_INPUTS": "ON",
+        "LANGULUS_LOGGER_DISABLE_NETWORKS": "ON",
+        "LANGULUS_LOGGER_DISABLE_OS": "ON"
+      },
+      "environment": {
+        "BUILDTYPE_FLAGS": "-O2",
+        "BUILDTYPE_FLAGS_MSVC": "/O2"
+      }
     },
 
     //                                                                        

@@ -10,10 +10,6 @@
 #include <Langulus/NameOf.hpp>
 #include <Langulus/CT/Info.hpp>
 #include <Langulus/CT/Version.hpp>
-/*#include <string_view>
-#include <algorithm>
-#include <iterator>
-#include <cctype>*/
 
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -127,3 +123,13 @@ namespace Langulus::RTTI::Inner
    };
    
 } // namespace Langulus::RTTI::Inner
+
+namespace Langulus::RTTI
+{
+
+   class DefinitionConst;
+   class DefinitionData;
+   class DefinitionTag;
+   class DefinitionVerb;
+
+} // namespace Langulus::RTTI

@@ -11,31 +11,31 @@ option(LANGULUS_SHARED_LIBRARIES
     true by default" ON)
 
 if(LANGULUS_SHARED_LIBRARIES)
-	set(LANGULUS_LIBRARY_TYPE SHARED CACHE INTERNAL "" FORCE)
+    set(LANGULUS_LIBRARY_TYPE SHARED CACHE INTERNAL "" FORCE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "" FORCE)
-	message("Building Langulus as shared library")
+    message("Building Langulus as shared library")
 else()
     set(LANGULUS_LIBRARY_TYPE STATIC CACHE INTERNAL "" FORCE)
-	message("Building Langulus as static library")
+    message("Building Langulus as static library")
 endif()
 
 # Check if this project is built as standalone, or a part of something else		
 if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
-	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-	# Configure {fmt} library                                                   
-	fetch_external_module(
-		fmt
-		GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-		GIT_TAG        94ab51cb8c63c93220f0cdd1733bdeef95e77d60 # master branch	
-	)
+    # Configure {fmt} library                                                   
+    fetch_external_module(
+        fmt
+        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+        GIT_TAG        94ab51cb8c63c93220f0cdd1733bdeef95e77d60 # master branch	
+    )
 endif()
 
 file(GLOB_RECURSE
-	LANGULUS_ANYNESS_SOURCES 
-	LIST_DIRECTORIES FALSE CONFIGURE_DEPENDS
-	source/*.cpp
+    LANGULUS_ANYNESS_SOURCES 
+    LIST_DIRECTORIES FALSE CONFIGURE_DEPENDS
+    source/*.cpp
 )
 
 # Build and install Anyness library												
@@ -45,6 +45,110 @@ target_include_directories(LangulusAnyness INTERFACE include)
 target_link_libraries(LangulusAnyness INTERFACE fmt)
 
 if(LANGULUS_TESTING)
-	enable_testing()
-	add_subdirectory(test)
+    enable_testing()
+    add_subdirectory(test)
 endif()
+
+# Reflected options																
+option(LANGULUS_SAFE_MODE 
+    "Overrides additional error checking and sanity checks, \
+    incurs a serious runtime overhead, disabled by default" OFF)
+
+option(LANGULUS_PARANOIA 
+    "Make sure that any unused memory is nullified, \
+    incurs a serious runtime overhead, disabled by default" OFF)
+
+option(LANGULUS_TESTING 
+    "Builds tests, disabled by default - Langulus tests are very exhaustive \
+    and might increase your build time and RAM usage significantly" OFF)
+    
+option(LANGULUS_BENCHMARK
+    "Enable benchmarking in tests, disabled by default. Will increase test time tenfold!" OFF)
+
+option(LANGULUS_DEBUGGING 
+    "Explicitly define debug mode, in the case that default flags are \
+    not detected by some odd reason, disabled by default" OFF)
+
+option(LANGULUS_FEATURE_NEWDELETE 
+    "Overrides new/delete operators for anything statically linked to this library, \
+    or provides LANGULUS_MONOPOLIZE_MEMORY() macro for you to use to override them, if dynamically linked. \
+    This feature can be enabled only if LANGULUS_FEATURE_MANAGED_MEMORY is enabled" OFF)
+
+option(LANGULUS_FEATURE_UNICODE
+    "Provides UTF8, UTF16, UTF32 tools and conversions inside Text containers (WIP)" OFF)
+
+option(LANGULUS_FEATURE_COMPRESSION
+    "Links to zstd library and provides memory compression for use with containers (WIP)" OFF)
+
+option(LANGULUS_FEATURE_ENCRYPTION
+    "Allows for memory encryption for use with any container of your liking (WIP)" OFF)
+
+option(LANGULUS_FEATURE_PROFILING
+    "Performance measurements" OFF)
+
+option(LANGULUS_FEATURE_LOGGING
+    "Master logger switch" ON)
+
+option(LANGULUS_FEATURE_MANAGED_MEMORY
+    "Memory will be pooled and recycled when freed, and you can safely push any kind of pointer, \
+    as long as it was allocated by the memory manager, or by the overridden new/delete feature. Enabled by default" ON)
+
+option(LANGULUS_FEATURE_MANAGED_REFLECTION
+    "Reflections will be kept in a centralized location, when reflected, which speeds up \
+    type comparisons, and allows you to dynamically modify the reflection at runtime. \
+    This feature can be enabled only if LANGULUS_FEATURE_MANAGED_MEMORY is enabled. Enabled by default" ON)
+
+option(LANGULUS_FEATURE_MEMORY_STATISTICS
+    "Memory manager shall keep track of statistics, for the price of little overhead. Disabled by default" OFF)
+
+set(LANGULUS_ALIGNMENT 16 CACHE STRING "Default langulus alignment")
+message(STATUS "[FEATURE] Alignment was set to ${LANGULUS_ALIGNMENT}")
+target_compile_definitions(LangulusAnyness INTERFACE LANGULUS_ALIGNMENT=${LANGULUS_ALIGNMENT})
+
+macro(reflect_option OPTION MESSAGE)
+    if (${OPTION})
+        message(STATUS "[FEATURE] ${MESSAGE} (${OPTION})")
+        target_compile_definitions(LangulusAnyness INTERFACE "$<$<BOOL:${OPTION}>:${OPTION}>")
+    endif()
+endmacro()
+
+reflect_option(LANGULUS_SAFE_MODE                  "Safe mode enabled")
+reflect_option(LANGULUS_PARANOIA                   "Paranoid mode enabled")
+reflect_option(LANGULUS_TESTING                    "Tests enabled")
+reflect_option(LANGULUS_BENCHMARK                  "Benchmarking enabled")
+reflect_option(LANGULUS_FEATURE_LOGGING            "Logging enabled")
+reflect_option(LANGULUS_FEATURE_PROFILING          "Profiling enabled")
+reflect_option(LANGULUS_FEATURE_NEWDELETE          "New/Delete operator override enabled")
+reflect_option(LANGULUS_FEATURE_UNICODE            "Unicode text containers enabled")
+reflect_option(LANGULUS_FEATURE_COMPRESSION        "Compressable memory enabled")
+reflect_option(LANGULUS_FEATURE_ENCRYPTION		   "Encryptable memory enabled")
+reflect_option(LANGULUS_FEATURE_MANAGED_MEMORY     "Managed memory enabled")
+reflect_option(LANGULUS_FEATURE_MANAGED_REFLECTION "Managed reflection enabled")
+reflect_option(LANGULUS_FEATURE_MEMORY_STATISTICS  "Memory statistics enabled")
+reflect_option(LANGULUS_SHARED_LIBRARIES           "Building shared libraries enabled")
+
+option(LANGULUS_LOGGER_DISABLE_FATALERRORS	       "Disables fatal error logging via Logger::Fatal()" OFF)
+option(LANGULUS_LOGGER_DISABLE_ERRORS		       "Disables error logging via Logger::Error()" OFF)
+option(LANGULUS_LOGGER_DISABLE_WARNINGS		       "Disables warning logging via Logger::Warning()" OFF)
+option(LANGULUS_LOGGER_DISABLE_INFOS		       "Disables information logging via Logger::Info()" OFF)
+option(LANGULUS_LOGGER_DISABLE_MESSAGES		       "Disables message logging via Logger::Message()" OFF)
+option(LANGULUS_LOGGER_DISABLE_PROMPTS		       "Disables prompts logging via Logger::Prompt()" OFF)
+option(LANGULUS_LOGGER_DISABLE_VERBOSE		       "Disables verbose logging via Logger::Verbose()" OFF)
+option(LANGULUS_LOGGER_DISABLE_SPECIALS		       "Disables special message logging via Logger::Special()" OFF)
+option(LANGULUS_LOGGER_DISABLE_FLOWS		       "Disables flow logging via Logger::Flow()" OFF)
+option(LANGULUS_LOGGER_DISABLE_INPUTS		       "Disables input logging via Logger::Input()" OFF)
+option(LANGULUS_LOGGER_DISABLE_NETWORKS		       "Disables network logging via Logger::Network()" OFF)
+option(LANGULUS_LOGGER_DISABLE_OS			       "Disables OS logging via Logger::OS()" OFF)
+
+reflect_option(LANGULUS_LOGGER_DISABLE_FATALERRORS "Logger: fatal errors disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_ERRORS      "Logger: regular errors disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_WARNINGS    "Logger: warnings disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_INFOS       "Logger: information messages disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_MESSAGES    "Logger: user messages disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_PROMPTS     "Logger: prompts and console input disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_VERBOSE     "Logger: verbose messages disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_SPECIALS    "Logger: special messages disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_FLOWS       "Logger: flow messages disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_INPUTS      "Logger: input event messages disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_NETWORKS    "Logger: network messages disabled")
+reflect_option(LANGULUS_LOGGER_DISABLE_OS          "Logger: operating system messages disabled")

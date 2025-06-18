@@ -22,15 +22,15 @@ namespace Langulus::RTTI
       /// general it is likely to avoid an indirection altogether at the      
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
-      struct MetaVerbStructured_8_8 : MetaPacked<1> {
+      struct MetaVerbStructured_8_8 : MetaPacked<DefinitionVerb, 1> {
 
       };
 
-      struct MetaVerbStructured_16_8 : MetaPacked<2> {
+      struct MetaVerbStructured_16_8 : MetaPacked<DefinitionVerb, 2> {
 
       };
 
-      struct MetaVerbStructured_24_8 : MetaPacked<3> {
+      struct MetaVerbStructured_24_8 : MetaPacked<DefinitionVerb, 3> {
 
       };
    #endif

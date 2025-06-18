@@ -10,7 +10,6 @@
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/CT/DefineTag.hpp>
 #include <Langulus/CT/DefineVerb.hpp>
-#include <Langulus/CT/Pooled.hpp>
 #include <Langulus/CT/Defaultable.hpp>
 #include <Langulus/CT/Destroyable.hpp>
 #include <Langulus/CT/Deep.hpp>
@@ -19,6 +18,10 @@
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
 #include <optional>
+
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include "Registry.hpp"
+#endif
 
 
 namespace Langulus::RTTI
@@ -73,11 +76,11 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         DMeta meta = Registry.GetMetaData(cppname, RTTI::Boundary);
+         auto meta = Instance.GetMetaData(cppname, RTTI::Boundary);
          if (meta)
             return meta;
 
-         auto& definition = Registry.RegisterData(cppname, RTTI::Boundary);
+         auto& definition = Instance.RegisterData(cppname, RTTI::Boundary);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -347,11 +350,12 @@ namespace Langulus::RTTI
       }
       
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         definition.mPool = nullptr;
+         definition.mPoolTactic = CT::GetPoolTactic<T>();
 
-         // Pool tactic is always default for pointers, unless          
-         // these pointers have been registered outside                 
-         // RTTI::MainBoundary                                          
+         // Make sure that types registered from an external shared     
+         // library are always pooled by type, so that we're able to    
+         // unregister them and free their dedicated pools when the     
+         // shared library is unloaded                                  
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             if (RTTI::Boundary != RTTI::MainBoundary)
                definition.mPoolTactic = PoolTactic::Type;
@@ -361,9 +365,6 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Save the boundary at time of reflection                     
          definition.mBoundary = RTTI::Boundary;
-
-         // After all properties have been set - generate a unique id   
-         //definition.mHandle = Registry.GenerateHandle(&definition);
       
          Logger::VerboseRaw<VERBOSE>(
             "Data ", Logger::Cyan, definition.mToken,

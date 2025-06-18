@@ -12,30 +12,68 @@
 namespace Langulus::RTTI::Inner
 {
 
-   ///                                                                        
-   ///   Meta ID                                                              
-   ///                                                                        
-   /// Can be a naked pointer to a verb/trait/data/constant definition, or    
-   /// a structured ID to one, that is either packed to a smaller size, or    
-   /// carries a lot of meta information in the ID itself to avoid            
-   /// indirections - all this is configurable                                
-   ///                                                                        
-
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    /// Relies on the definition limits to pack an ID into the smallest        
    /// possible space. We would never have 64bit worth of type definitions    
    /// in a program either way. If somehow you do, then you're probably doing 
    /// something wrong. The handle has to be transformed into a pointer, so   
    /// this requires an additional level of indirection                       
+   ///   @tparam T - the type of the meta (data/tag/verb/const)               
    ///   @tparam BYTESIZE - the size of the handle in bytes                   
-   template<unsigned BYTESIZE>
+   #pragma pack(push, 1)
+   template<class T, unsigned BYTESIZE>
    struct MetaPacked {
-      uint8_t mHandle[BYTESIZE];
+   protected:
+      static constexpr uint8_t Zero[BYTESIZE] {0};
+      uint8_t mHandle[BYTESIZE] {0};
+
+   public:
+      constexpr MetaPacked() noexcept = default;
+      constexpr MetaPacked(const MetaPacked&) noexcept = default;
+      constexpr MetaPacked(MetaPacked&&) noexcept = default;
+      constexpr MetaPacked(::std::nullptr_t) noexcept {}
+      constexpr MetaPacked(const T* definition) noexcept {
+         if (definition) {
+            static_assert(sizeof(size_t) >= BYTESIZE);
+            size_t id = definition->GetID();
+            memcpy(mHandle, &id, BYTESIZE);
+         }
+      }
+
+      constexpr MetaPacked& operator = (const MetaPacked&) noexcept = default;
+      constexpr MetaPacked& operator = (MetaPacked&&) noexcept = default;
+      constexpr MetaPacked& operator = (::std::nullptr_t) noexcept {
+         memset(mHandle, 0, BYTESIZE);
+         return *this;
+      }
+      constexpr MetaPacked& operator = (const T* definition) noexcept {
+         if (definition) {
+            static_assert(sizeof(size_t) >= BYTESIZE);
+            size_t id = definition->GetID();
+            memcpy(mHandle, &id, BYTESIZE);
+         }
+         else memset(mHandle, 0, BYTESIZE);
+         return *this;
+      }
+
+      constexpr explicit operator bool() const noexcept {
+         return 0 == memcmp(mHandle, Zero, BYTESIZE);
+      }
+
+      constexpr bool IsExact(const MetaPacked& rhs) const noexcept {
+         return 0 == memcmp(mHandle, rhs.mHandle, BYTESIZE);
+      }
+
+      constexpr bool operator == (const MetaPacked& rhs) const noexcept {
+         return 0 == memcmp(mHandle, rhs.mHandle, BYTESIZE);
+      }
    };
+   #pragma pack(pop)
 #endif
 
    /// A naked pointer to a definition. Probably the fastest, but most        
    /// memory-inefficient on 64bit systems                                    
+   ///   @tparam T - the type of the meta (data/tag/verb/const)               
    template<class T>
    struct MetaNaked {
    protected:

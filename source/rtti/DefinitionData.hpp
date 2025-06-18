@@ -9,6 +9,10 @@
 #include "Definition.hpp"
 #include <Langulus/CT/Comparable.hpp>
 
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
+   #include <Langulus/CT/Pooled.hpp>
+#endif
+
 
 namespace Langulus::Anyness
 {
@@ -31,6 +35,7 @@ namespace Langulus::RTTI
    {
       struct MetaDataNaked;
    }
+   
 
    ///                                                                        
    /// A data definition                                                      
@@ -63,6 +68,13 @@ namespace Langulus::RTTI
       // Precomputed counts indexed by MSB (avoids division by stride   
       // for that extra oompf)                                          
       size_t mAllocationTable[sizeof(size_t) * 8 + 1];
+      
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         // The reflected pool tactic                                   
+         PoolTactic mPoolTactic = PoolTactic::Default;
+         // The start of the pool chain for the type                    
+         mutable void* mPoolChain {};
+      #endif
 
       //                                                                
       //   These methods are sought in each reflected type              

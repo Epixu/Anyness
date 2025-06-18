@@ -23,7 +23,7 @@ namespace Langulus::RTTI
       /// general it is likely to avoid an indirection altogether at the      
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
-      struct MetaTagPacked_16 : MetaPacked<2> {
+      struct MetaTagPacked_16 : MetaPacked<DefinitionTag, 2> {
 
       };
    #endif

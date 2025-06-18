@@ -26,23 +26,23 @@ namespace Langulus::RTTI
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
       ///                                                                     
-      struct MetaDataStructured_8_8 : MetaPacked<1> {
+      struct MetaDataStructured_8_8 : MetaPacked<DefinitionData, 1> {
 
       };
 
-      struct MetaDataStructured_16_16 : MetaPacked<2> {
+      struct MetaDataStructured_16_16 : MetaPacked<DefinitionData, 2> {
 
       };
 
-      struct MetaDataStructured_24_8 : MetaPacked<3> {
+      struct MetaDataStructured_24_8 : MetaPacked<DefinitionData, 3> {
 
       };
 
-      struct MetaDataStructured_32_8 : MetaPacked<4> {
+      struct MetaDataStructured_32_8 : MetaPacked<DefinitionData, 4> {
 
       };
 
-      struct MetaDataStructured_32_16 : MetaPacked<4> {
+      struct MetaDataStructured_32_16 : MetaPacked<DefinitionData, 4> {
 
       };
    #endif

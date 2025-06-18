@@ -55,11 +55,11 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         VMeta meta = Registry.GetMetaVerb(cppname, RTTI::Boundary);
+         auto meta = Instance.GetMetaVerb(cppname, RTTI::Boundary);
          if (meta)
             return meta;
 
-         auto& definition = Registry.RegisterVerb(cppname, RTTI::Boundary);
+         auto& definition = Instance.RegisterVerb(cppname, RTTI::Boundary);
 
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
@@ -110,7 +110,7 @@ namespace Langulus::RTTI
       //definition.mHandle = Registry.GenerateHandle(&definition);
 
       if (definition.mOperator.size()) {
-         Registry.RegisterVerbOperator(definition.mOperator, RTTI::Boundary);
+         Instance.RegisterVerbOperator(definition.mOperator, RTTI::Boundary);
          const auto op1 = IsolateOperator(definition.mOperator);
          Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op1,
@@ -120,7 +120,7 @@ namespace Langulus::RTTI
       }
 
       if (not definition.mOperatorReverse.empty()) {
-         Registry.RegisterVerbOperatorReverse(definition.mOperatorReverse, RTTI::Boundary);
+         Instance.RegisterVerbOperatorReverse(definition.mOperatorReverse, RTTI::Boundary);
          const auto op2 = IsolateOperator(definition.mOperatorReverse);
          Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op2,
@@ -129,7 +129,7 @@ namespace Langulus::RTTI
          );
       }
 
-      Registry.RegisterVerbToken(definition.mToken, RTTI::Boundary);
+      Instance.RegisterVerbToken(definition.mToken, RTTI::Boundary);
       if (definition.mTokenReverse.empty()) {
          Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mToken,
@@ -138,7 +138,7 @@ namespace Langulus::RTTI
          );
       }
       else {
-         Registry.RegisterVerbTokenReverse(definition.mTokenReverse, RTTI::Boundary);
+         Instance.RegisterVerbTokenReverse(definition.mTokenReverse, RTTI::Boundary);
          Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mToken, "/", definition.mTokenReverse,
             " (ID: ", definition.mHandle, ") ", Logger::Green,
