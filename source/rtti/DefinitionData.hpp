@@ -31,11 +31,6 @@ namespace Langulus::Flow
 
 namespace Langulus::RTTI
 {
-   namespace Inner
-   {
-      struct MetaDataNaked;
-   }
-   
 
    ///                                                                        
    /// A data definition                                                      
@@ -43,6 +38,15 @@ namespace Langulus::RTTI
    class DefinitionData : public Inner::Definition {
    protected:
       friend struct Inner::MetaDataNaked;
+      friend struct Inner::MetaDataStructured_8_8;
+      friend struct Inner::MetaDataStructured_16_16;
+      friend struct Inner::MetaDataStructured_24_8;
+
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         // A sequential identifier provided by the registry            
+         // Used for packing type ids                                   
+         size_t mID;
+      #endif
 
       // The origin type, with all qualifiers and sparseness removed    
       // Will be nullptr for incomplete types                           

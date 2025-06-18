@@ -13,7 +13,7 @@ using namespace Langulus;
 
 SCENARIO("Testing whether assumptions throw properly, in both constant-evaluated and not contexts", "[assume]") {
    constexpr auto test = [] {
-      IF_CONSTEXPR() {
+      if consteval {
          Assert(false, HERE(), "Message");
          AssertWarn(false, HERE(), "Message");
          AssumeUser(false, HERE(), "Message");

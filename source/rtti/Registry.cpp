@@ -15,7 +15,7 @@
 #include <cctype>
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
-#error This file shouldn't be included if MANAGED_REFLECTION is disabled
+#error "This file shouldn't be included if MANAGED_REFLECTION is disabled"
 #endif
 
 

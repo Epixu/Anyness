@@ -77,7 +77,7 @@ namespace Langulus
             throw Exception("Roof2 overflowed", HERE());
       }
 
-      IF_CONSTEXPR() {
+      if consteval {
          T n = x;
          --n;
          n |= n >> 1;

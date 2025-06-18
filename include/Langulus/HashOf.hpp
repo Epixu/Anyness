@@ -40,7 +40,7 @@ namespace Langulus
       #elif defined(LANGULUS_HASH64) and not defined(LANGULUS_HASH32)
          uint64_t mHash = 0;
       #else
-         #error Conflicting hash type definitions
+         #error "Conflicting hash type definitions"
       #endif
 
       LANGULUS(ALWAYS_INLINED)
@@ -218,7 +218,7 @@ namespace Langulus
             HashOf<FORCE_RUNTIME, SEED>(rest)...
          };
 
-         IF_CONSTEXPR() {
+         if consteval {
             if constexpr (FORCE_RUNTIME)
                return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
             else {
@@ -226,7 +226,9 @@ namespace Langulus
                return HashBytes(as_bytes, SEED);
             }
          }
-         else return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+         else {
+            return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+         }
       }
       else if constexpr (CT::Array<T>) {
          using InnerT = Deext<T>;
@@ -247,7 +249,7 @@ namespace Langulus
             for (::std::size_t i = 0; i < ExtentOf<T>; ++i)
                coal[i] = HashOf<FORCE_RUNTIME, SEED>(head[i]);
 
-            IF_CONSTEXPR() {
+            if consteval {
                if constexpr (FORCE_RUNTIME)
                   return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
                else {
@@ -255,12 +257,14 @@ namespace Langulus
                   return HashBytes(as_bytes, SEED);
                }
             }
-            else return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+            else {
+               return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+            }
          }
       }
       else if constexpr (::std::is_pointer_v<T>) {
          // Hash pointer, never dereference it                          
-         IF_CONSTEXPR() {
+         if consteval {
             if constexpr (FORCE_RUNTIME)
                return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
             else {
@@ -268,7 +272,9 @@ namespace Langulus
                return HashBytes(as_bytes, SEED);
             }
          }
-         else return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+         else {
+            return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+         }
       }
       else if constexpr (CT::Similar<T, Hash>) {
          // Provided type is already a hash, just propagate it          
@@ -286,7 +292,7 @@ namespace Langulus
          // hashes where the same hashes should be produced. In such    
          // cases it is recommended you add a custom GetHash() method   
          // to your type, or #pragma pack, in order to circumvent issue 
-         IF_CONSTEXPR() {
+         if consteval {
             if constexpr (FORCE_RUNTIME)
                return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
             else {
@@ -294,7 +300,9 @@ namespace Langulus
                return HashBytes(as_bytes, SEED);
             }
          }
-         else return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+         else {
+            return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+         }
       }
       else if constexpr (::std::ranges::range<T> and CT::Hashable<TypeOf<T>>) {
          // Anything that is range-iteratable and typed is carried      
@@ -313,7 +321,7 @@ namespace Langulus
             if constexpr (requires { ::std::bit_cast<::std::array<char, sizeof(T)>>(head); }) {
                // Constant evaluation is possible only if bit_cast      
                // is able to do its magic                               
-               IF_CONSTEXPR() {
+               if consteval {
                   if constexpr (FORCE_RUNTIME)
                      return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
                   else {
@@ -321,9 +329,13 @@ namespace Langulus
                      return HashBytes(as_bytes, SEED);
                   }
                }
-               else return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+               else {
+                  return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+               }
             }
-            else return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+            else {
+               return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+            }
          }
          else {
             // Hash each individual element, then combine all hashes    

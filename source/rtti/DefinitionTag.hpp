@@ -12,9 +12,6 @@
 namespace Langulus::RTTI
 {
 
-   struct MetaTag;
-   
-
    ///                                                                        
    /// Tag definition                                                         
    ///                                                                        

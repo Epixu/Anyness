@@ -106,14 +106,11 @@ namespace Langulus::RTTI
       // Save the boundary at time of reflection                        
       definition.mLibraryName = RTTI::Boundary;
 
-      // After all properties have been set - generate a unique handle  
-      //definition.mHandle = Registry.GenerateHandle(&definition);
-
       if (definition.mOperator.size()) {
          Instance.RegisterVerbOperator(definition.mOperator, RTTI::Boundary);
-         const auto op1 = IsolateOperator(definition.mOperator);
+         const auto op = IsolateOperator(definition.mOperator);
          Logger::VerboseRaw(
-            "Operator ", Logger::DarkGreen, op1,
+            "Operator ", Logger::DarkGreen, op,
             " (ID: ", definition.mHandle, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
@@ -121,9 +118,9 @@ namespace Langulus::RTTI
 
       if (not definition.mOperatorReverse.empty()) {
          Instance.RegisterVerbOperatorReverse(definition.mOperatorReverse, RTTI::Boundary);
-         const auto op2 = IsolateOperator(definition.mOperatorReverse);
+         const auto op = IsolateOperator(definition.mOperatorReverse);
          Logger::VerboseRaw(
-            "Operator ", Logger::DarkGreen, op2,
+            "Operator ", Logger::DarkGreen, op,
             " (ID: ", definition.mHandle, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );

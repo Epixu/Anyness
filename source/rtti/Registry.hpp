@@ -11,7 +11,7 @@
 #include <unordered_set>
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
-#error This file shouldn't be included if MANAGED_REFLECTION is disabled
+#error "This file shouldn't be included if MANAGED_REFLECTION is disabled"
 #endif
 
 #if defined(LANGULUS_EXPORT_ALL) or defined(LANGULUS_EXPORT_RTTI)
@@ -65,8 +65,13 @@ namespace Langulus::RTTI
       auto GetMeta(const auto&, const Token&, const Token&) const noexcept;
       auto GetMetaList(const auto&, const Token&, const Token&) const noexcept -> const MetaList&;
 
-      template<bool REGISTER_AMBIGUOUS = true>
-      auto Register(auto, auto&, const Lowercase&, const Token&) IF_UNSAFE(noexcept);
+   protected:
+      friend class DefinitionVerb;
+
+      void RegisterVerbOperator(const Token&, const Token& library) IF_UNSAFE(noexcept);
+      void RegisterVerbOperatorReverse(const Token&, const Token& library) IF_UNSAFE(noexcept);
+      void RegisterVerbToken(const Token&, const Token& library) IF_UNSAFE(noexcept);
+      void RegisterVerbTokenReverse(const Token&, const Token& library) IF_UNSAFE(noexcept);
 
    public:
       LANGULUS_API(RTTI)
@@ -82,34 +87,46 @@ namespace Langulus::RTTI
       auto RegisterVerb(const Token&, const Token&, const Token&, const Token&, const Token&, const Token&) -> DefinitionVerb&;
       
       LANGULUS_API(RTTI)
-      void RegisterFileExtension(const Token&, DefinitionData*, const Token&) IF_UNSAFE(noexcept);
+      void RegisterFileExtension(const Token&, DefinitionData*, const Token& library) IF_UNSAFE(noexcept);
 
    public:
       ~Registry();
 
       LANGULUS_API(RTTI)
-      auto GetMetaData(const Token&, const Token& = "") const noexcept -> DefinitionData const*;
+      auto GetMetaData(const Token&, const Token& library = "") const noexcept -> DefinitionData const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaData(const Inner::MetaDataStructured_8_8&)    const noexcept -> DefinitionData const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaData(const Inner::MetaDataStructured_16_16&)  const noexcept -> DefinitionData const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaData(const Inner::MetaDataStructured_24_8&)   const noexcept -> DefinitionData const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaTag(const Token&, const Token& = "") const noexcept -> DefinitionTag const*;
+      auto GetMetaTag(const Token&, const Token& library = "") const noexcept -> DefinitionTag const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaTag(const MetaTag&) const noexcept -> DefinitionTag const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaVerb(const Token&, const Token& = "") const noexcept -> DefinitionVerb const*;
+      auto GetMetaVerb(const Token&, const Token& library = "") const noexcept -> DefinitionVerb const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaVerb(const MetaVerb&) const noexcept -> DefinitionVerb const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaConst(const Token&, const Token& = "") const noexcept -> DefinitionConst const*;
+      auto GetMetaConst(const Token&, const Token& library = "") const noexcept -> DefinitionConst const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaConst(const MetaConst&) const noexcept -> DefinitionConst const*;
 
       LANGULUS_API(RTTI)
-      auto GetOperator(const Token&, const Token& = "") const noexcept -> DefinitionVerb const*;
+      auto GetOperator(const Token&, const Token& library = "") const noexcept -> DefinitionVerb const*;
 
       LANGULUS_API(RTTI)
-      auto GetAmbiguousMeta(const Token&, const Token& = "") const noexcept -> const MetaList&;
+      auto GetAmbiguousMeta(const Token&, const Token& library = "") const noexcept -> const MetaList&;
 
       LANGULUS_API(RTTI)
-      auto DisambiguateMeta(const Token&, const Token& = "") const -> Inner::Definition const*;
+      auto DisambiguateMeta(const Token&, const Token& library = "") const -> Inner::Definition const*;
 
       LANGULUS_API(RTTI)
-      auto ResolveFileExtension(const Token&, const Token& = "") const -> const MetaList&;
+      auto ResolveFileExtension(const Token&, const Token& library = "") const -> const MetaList&;
 
       LANGULUS_API(RTTI)
       void UnloadBoundary(const Token&);

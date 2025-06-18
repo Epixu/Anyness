@@ -27,7 +27,7 @@ namespace Langulus
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) {
-      IF_NOT_CONSTEXPR() {
+      if not consteval {
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
@@ -55,7 +55,7 @@ namespace Langulus
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
-      IF_NOT_CONSTEXPR() {
+      if not consteval {
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
@@ -82,7 +82,7 @@ namespace Langulus
       MORE&&...mn
    ) {
       if constexpr (LANGULUS(SAFE) > 0) {
-         IF_NOT_CONSTEXPR() {
+         if not consteval {
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
@@ -122,7 +122,7 @@ namespace Langulus
       MORE&&...mn
    ) noexcept {
       if constexpr (LANGULUS(SAFE) > 0) {
-         IF_NOT_CONSTEXPR() {
+         if not consteval {
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
@@ -151,7 +151,7 @@ namespace Langulus
       MORE&&...mn
    ) {
       if constexpr (LANGULUS(SAFE) > 1) {
-         IF_NOT_CONSTEXPR() {
+         if not consteval {
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
@@ -191,7 +191,7 @@ namespace Langulus
       MORE&&...mn
    ) noexcept {
       if constexpr (LANGULUS(SAFE) > 1) {
-         IF_NOT_CONSTEXPR() {
+         if not consteval {
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
@@ -219,7 +219,7 @@ namespace Langulus
       MORE&&...mn
    ) {
       if constexpr (LANGULUS(SAFE) >= LEVEL) {
-         IF_NOT_CONSTEXPR() {
+         if not consteval {
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
@@ -259,7 +259,7 @@ namespace Langulus
       MORE&&...mn
    ) noexcept {
       if constexpr (LANGULUS(SAFE) >= LEVEL) {
-         IF_NOT_CONSTEXPR() {
+         if not consteval {
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     

@@ -91,23 +91,13 @@ namespace Langulus
 
    LANGULUS(INLINED)
    RTTI::CMeta operator ""_cmeta(const char* token, ::std::size_t size) noexcept {
-      return RTTI::Instance.GetMetaConstant(Token {token, size});
+      return RTTI::Instance.GetMetaConst(Token {token, size});
    }
 
    LANGULUS(INLINED)
    RTTI::VMeta operator ""_vmeta(const char* token, ::std::size_t size) noexcept {
       return RTTI::Instance.GetMetaVerb(Token {token, size});
    }
-
-   /*LANGULUS(INLINED)
-   RTTI::AMeta operator ""_meta(const char* token, ::std::size_t size) {
-      auto& found = RTTI::GetAmbiguousMeta(Token {token, size});
-      if (found.size() == 1)
-         return *found.begin();
-      else
-         LANGULUS_THROW(Meta, "Ambiguous meta literal "
-            "- use RTTI::GetAmbiguousMeta and process the result yourself");
-   }*/
    
    /// ... as well as getting them manually                                   
    LANGULUS(INLINED)
@@ -121,17 +111,17 @@ namespace Langulus
    }
 
    LANGULUS(INLINED)
-   RTTI::VMeta GetMetaVerb(const Token& token, const Token& boundary = "") noexcept {
+   RTTI::VMeta MetaVerbOf(const Token& token, const Token& boundary = "") noexcept {
       return RTTI::Instance.GetMetaVerb(token, boundary);
    }
 
    LANGULUS(INLINED)
-   RTTI::CMeta GetMetaConstant(const Token& token, const Token& boundary = "") noexcept {
-      return RTTI::Instance.GetMetaConstant(token, boundary);
+   RTTI::CMeta MetaConstOf(const Token& token, const Token& boundary = "") noexcept {
+      return RTTI::Instance.GetMetaConst(token, boundary);
    }
 
    LANGULUS(INLINED)
-   RTTI::VMeta GetOperator(const Token& token, const Token& boundary = "") noexcept {
+   RTTI::VMeta MetaOperator(const Token& token, const Token& boundary = "") noexcept {
       return RTTI::Instance.GetOperator(token, boundary);
    }
 #endif

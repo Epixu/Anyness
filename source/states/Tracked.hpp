@@ -2,7 +2,7 @@
 #include "../Container.hpp"
 
 #if not LANGULUS(DEBUG)
-#error This state shouldn't be included in release builds
+#error "This state shouldn't be included in release builds"
 #endif
 
 

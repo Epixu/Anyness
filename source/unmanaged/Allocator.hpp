@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
-#error This file shouldn't be included if MANAGED_MEMORY is enabled
+#error "This file shouldn't be included if MANAGED_MEMORY is enabled"
 #endif
 
 #include "../fractalloc/Allocation.hpp"

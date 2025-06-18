@@ -34,6 +34,29 @@
    #define LANGULUS_RTTI_BOUNDARY(a)
 #endif
 
+namespace Langulus::RTTI
+{
+   struct MetaData;
+   struct MetaTag;
+   struct MetaVerb;
+   struct MetaConst;
+
+   class DefinitionConst;
+   class DefinitionData;
+   class DefinitionTag;
+   class DefinitionVerb;
+
+   namespace Inner
+   {
+
+      struct MetaDataNaked;
+      struct MetaDataStructured_8_8;
+      struct MetaDataStructured_16_16;
+      struct MetaDataStructured_24_8;
+
+   } // namespace Langulus::RTTI::Inner
+
+} // namespace Langulus::RTTI
 
 namespace Langulus::RTTI::Inner
 {
@@ -57,10 +80,10 @@ namespace Langulus::RTTI::Inner
    ///                                                                        
    class Definition {
    protected:
-      friend struct MetaData;
+      /*friend struct MetaData;
       friend struct MetaTag;
       friend struct MetaVerb;
-      friend struct MetaConst;
+      friend struct MetaConst;*/
 
       // Each reflected type has an unique hash based on C++ name       
       // First for immediate access                                     
@@ -123,13 +146,3 @@ namespace Langulus::RTTI::Inner
    };
    
 } // namespace Langulus::RTTI::Inner
-
-namespace Langulus::RTTI
-{
-
-   class DefinitionConst;
-   class DefinitionData;
-   class DefinitionTag;
-   class DefinitionVerb;
-
-} // namespace Langulus::RTTI

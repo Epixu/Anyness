@@ -12,9 +12,6 @@
 namespace Langulus::RTTI
 {
 
-   struct MetaConst;
-
-
    ///                                                                        
    /// A constant value definition                                            
    ///                                                                        

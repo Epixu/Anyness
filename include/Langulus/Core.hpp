@@ -12,7 +12,7 @@
 
 /// Sorry, Langulus is designed for at least C++23                            
 #if __cplusplus < 202302L
-   #error Langulus requires at least a C++23 compliant compiler in order to build
+   #error "Langulus requires at least a C++23 compliant compiler in order to build"
 #endif
 
 /// These macros seem evil, but read this:                                    
@@ -200,6 +200,19 @@
    #define IF_NOT_LANGULUS_ENCRYPTION(a)  a
 #endif
 
+/// Enable logging                                                            
+/// Depends on libfmt                                                         
+#ifdef LANGULUS_FEATURE_LOGGING
+   #undef LANGULUS_FEATURE_LOGGING
+   #define LANGULUS_FEATURE_LOGGING()  1
+   #define IF_LANGULUS_LOGGING(a)      a
+   #define IF_NOT_LANGULUS_LOGGING(a)  LANGULUS(NOOP)
+#else
+   #define LANGULUS_FEATURE_LOGGING()  0
+   #define IF_LANGULUS_LOGGING(a)      LANGULUS(NOOP)
+   #define IF_NOT_LANGULUS_LOGGING(a)  a
+#endif
+
 /// Detect compiler                                                           
 #if defined(__GNUC__) and not defined(__clang__)
    // We're on a GNUC Compiler!                                         
@@ -216,7 +229,7 @@
 #endif
 
 #if defined(_MSC_VER) and not defined(__clang__)
-   // We're on a microsoft visual c++ compiler!                         
+   // We're on a microsoft visual c++ compiler. (no enthusiasm)         
    #define LANGULUS_COMPILER_MSVC() 1
 #else
    #define LANGULUS_COMPILER_MSVC() 0
@@ -259,7 +272,7 @@
 #elif defined(__cplusplus) and (__cplusplus >= 201103)
    #define LANGULUS_FUNCTION() __func__
 #else
-   #error LANGULUS_FUNCTION not implemented
+   #error "LANGULUS_FUNCTION not implemented"
 #endif
 
 /// Utility macro, that turns its argument to a string literal (inner)        
@@ -324,7 +337,7 @@
       #define LANGULUS_EXPORT() __declspec(dllexport)
       #define LANGULUS_IMPORT() __declspec(dllimport)
    #else 
-      #error Compiler not implemented
+      #error "Compiler not implemented"
    #endif
 #else
    /// Shared library exports are disabled                                    
@@ -354,15 +367,6 @@
 
 /// Checks if a feature is enabled                                            
 #define LANGULUS_FEATURE(a) LANGULUS_FEATURE_##a()
-
-/// Checks if code is executed at compile-time                                
-///   @attention must be followed by {...}                                    
-/// TODO when we transition to C++23, we should replace                       
-/// if (std::is_constant_evaluated()) statements with `if consteval` ones     
-/// unfortunately MSVC is lagging behind a lot, so this macro is here to      
-/// eventually replace and test it out when they catch up                     
-#define IF_CONSTEXPR()     if (    ::std::is_constant_evaluated())
-#define IF_NOT_CONSTEXPR() if (not ::std::is_constant_evaluated())
 
 /// No-op for empty macros, forces coder to add a semicolon to avoid          
 /// obscure errors                                                            
@@ -413,7 +417,7 @@ namespace Langulus
    #elif defined(LANGULUS_FPU_DOUBLE) and not defined(LANGULUS_FPU_FLOAT)
       using Real = double;
    #else
-      #error Conflicting real type definitions
+      #error "Conflicting real type definitions"
    #endif
 
    /// The size of a void* in bytes, depends on architecture                  

@@ -18,7 +18,7 @@ namespace Langulus::RTTI
    {
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       ///                                                                     
-      /// Relies on the definition limits to pack an ID into the smallest     
+      /// These rely on the definition limits to pack an ID into the smallest 
       /// possible space, but also uses some additional bits to encode some   
       /// often used information about the definition. The handle still has   
       /// to be transformed into a pointer for more advanced uses, but in     
@@ -26,35 +26,144 @@ namespace Langulus::RTTI
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
       ///                                                                     
+      
+
+      #pragma pack(push, 1)
+      /// This packing tactic is useful only for small projects with up to    
+      /// 256 types (including indirections)                                  
       struct MetaDataStructured_8_8 : MetaPacked<DefinitionData, 1> {
+      private:
+         union {
+            struct {
+               // The set of the main properties                        
+               bool sparse       : 1;
+               bool constant     : 1;
+               bool deep         : 1;
+               bool pod          : 1;
+               bool nullable     : 1;
+               bool referenced   : 1;
+               bool resolvable   : 1;
+               bool dispatcher   : 1;
+            };
+            uint8_t all {};
+         };
 
+      public:
       };
+      static_assert(sizeof(MetaDataStructured_8_8) == 2);
 
+      /// This is the most commonly used packing tactic, until proven not     
+      /// sufficient. It contains the most packed properties and should be    
+      /// the fastest, due to the smallest chance of an indirection           
       struct MetaDataStructured_16_16 : MetaPacked<DefinitionData, 2> {
+      private:
+         union {
+            struct {
+               // The set of the main properties                        
+               bool sparse       : 1;
+               bool constant     : 1;
+               bool deep         : 1;
+               bool pod          : 1;
+               bool nullable     : 1;
+               bool referenced   : 1;
+               bool resolvable   : 1;
+               bool dispatcher   : 1;
 
+               // Stores the size up to 256 bytes                       
+               // A value of zero means size is bigger, and a lookup    
+               // into the definition is required. The size of the type 
+               // is probably the most used property                    
+               uint8_t size;
+            };
+            uint16_t all {};
+         };
+
+      public:
+         using Base = MetaPacked<DefinitionData, 2>;
+
+         constexpr MetaDataStructured_16_16() noexcept = default;
+         constexpr MetaDataStructured_16_16(MetaDataStructured_16_16 const&) noexcept = default;
+         constexpr MetaDataStructured_16_16(MetaDataStructured_16_16&&) noexcept = default;
+         constexpr MetaDataStructured_16_16(::std::nullptr_t) noexcept;
+         constexpr MetaDataStructured_16_16(DefinitionData const*) noexcept;
+
+         constexpr MetaDataStructured_16_16& operator = (MetaDataStructured_16_16 const&) noexcept = default;
+         constexpr MetaDataStructured_16_16& operator = (MetaDataStructured_16_16&&) noexcept = default;
+         constexpr MetaDataStructured_16_16& operator = (::std::nullptr_t) noexcept;
+         constexpr MetaDataStructured_16_16& operator = (DefinitionData const*) noexcept;
+
+         bool Is(const MetaDataStructured_16_16&) const noexcept;
+         constexpr bool IsExact(const MetaDataStructured_16_16&) const noexcept;
+         constexpr bool IsSimilar(const MetaDataStructured_16_16&) const noexcept;
+         constexpr bool operator == (const MetaDataStructured_16_16&) const noexcept;
+
+         constexpr auto GetSize()     const noexcept -> size_t;
+         auto GetMinAllocation()      const noexcept -> size_t;
+         auto GetAlignment()          const noexcept -> size_t;
+         auto GetName()               const noexcept -> Token;
+                                      
+         constexpr bool IsDense()     const noexcept;
+         constexpr bool IsSparse()    const noexcept;
+         constexpr bool IsConstant()  const noexcept;
+         constexpr bool IsMutable()   const noexcept;
+         constexpr bool IsDeep()      const noexcept;
+         constexpr bool IsPOD()       const noexcept;
+
+         auto GetDestructor()         const noexcept -> DefinitionData::FDestroy;
+         auto GetReferencer()         const noexcept -> DefinitionData::FReference;
+         auto GetResolver()           const noexcept -> DefinitionData::FResolve;
+         auto GetReferConstructor()   const noexcept -> DefinitionData::FCopyConstruct;
+         auto GetReferAssigner()      const noexcept -> DefinitionData::FCopyAssign;
+         auto GetMoveConstructor()    const noexcept -> DefinitionData::FMoveConstruct;
+         auto GetMoveAssigner()       const noexcept -> DefinitionData::FMoveAssign;
+         auto GetAbandonConstructor() const noexcept -> DefinitionData::FMoveConstruct;
+         auto GetAbandonAssigner()    const noexcept -> DefinitionData::FMoveAssign;
+         auto GetDisownConstructor()  const noexcept -> DefinitionData::FCopyConstruct;
+         auto GetDisownAssigner()     const noexcept -> DefinitionData::FCopyAssign;
+         auto GetCloneConstructor()   const noexcept -> DefinitionData::FCopyConstruct;
+         auto GetCloneAssigner()      const noexcept -> DefinitionData::FCopyAssign;
+         auto GetCopyConstructor()    const noexcept -> DefinitionData::FCopyConstruct;
+         auto GetCopyAssigner()       const noexcept -> DefinitionData::FCopyAssign;
+         auto GetComparer()           const noexcept -> DefinitionData::FCompare;
+         auto GetHasher()             const noexcept -> DefinitionData::FHash;
+         bool HasGetHashMethod()      const noexcept;
       };
+      static_assert(sizeof(MetaDataStructured_16_16) == 4);
 
+      /// This packing tactic trades less properties for more type definitions
+      /// Most useful for very large projects                                 
       struct MetaDataStructured_24_8 : MetaPacked<DefinitionData, 3> {
+      private:
+         union {
+            struct {
+               // The set of the main properties                        
+               bool sparse       : 1;
+               bool constant     : 1;
+               bool deep         : 1;
+               bool pod          : 1;
+               bool nullable     : 1;
+               bool referenced   : 1;
+               bool resolvable   : 1;
+               bool dispatcher   : 1;
+            };
+            uint8_t all {};
+         };
 
+      public:
       };
-
-      struct MetaDataStructured_32_8 : MetaPacked<DefinitionData, 4> {
-
-      };
-
-      struct MetaDataStructured_32_16 : MetaPacked<DefinitionData, 4> {
-
-      };
+      static_assert(sizeof(MetaDataStructured_24_8) == 4);
+      #pragma pack(pop)
    #endif
 
       ///                                                                     
-      /// A naked pointer to a definition. Probably the fastest, but most     
-      /// memory-inefficient on 64bit systems                                 
+      /// A naked pointer to a definition. Probably (not likely) the fastest, 
+      /// but most memory-inefficient on 64bit systems                        
       ///                                                                     
       struct MetaDataNaked : MetaNaked<DefinitionData> {
-         using MetaNaked<DefinitionData>::MetaNaked;
-         using MetaNaked<DefinitionData>::operator =;
-         using MetaNaked<DefinitionData>::operator bool;
+         using Base = MetaNaked<DefinitionData>;
+         using Base::Base;
+         using Base::operator =;
+         using Base::operator bool;
 
          bool Is(const MetaDataNaked&) const noexcept;
          bool IsSimilar(const MetaDataNaked&) const noexcept;
@@ -104,8 +213,8 @@ namespace Langulus::RTTI
    ///   Data type ID                                                         
    ///                                                                        
    /// Can be a naked pointer to a definition, or a structured ID that is     
-   /// either packed to a smaller size, or carry a lot of meta information    
-   /// in the ID itself to avoid indirection                                  
+   /// packed to a smaller size, carrying a lot of meta information in the ID 
+   /// itself to avoid indirection                                            
    ///                                                                        
    struct MetaData : Inner::MetaDataBase {
       using CTTI_POD      = Yes;
@@ -122,4 +231,8 @@ namespace Langulus::RTTI
 
 } // namespace Langulus::RTTI
 
-#include "MetaData.inl"
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include "MetaDataStructured.inl"
+#endif
+
+#include "MetaDataNaked.inl"

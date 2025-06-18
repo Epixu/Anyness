@@ -6,6 +6,9 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include "Core.hpp"
+
+#if LANGULUS_FEATURE(LOGGING)
 #include <fmt/format.h>
 #include <fmt/color.h>
 #include <fmt/chrono.h>
@@ -23,7 +26,7 @@ namespace Langulus::CT
    concept NotLoggable = ((not Loggable<T>) and ...);
 
 } // namespace Langulus::CT
-
+#endif 
 
 namespace Langulus::Logger
 {
