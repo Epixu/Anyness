@@ -15,9 +15,6 @@
       "cacheVariables": { "LANGULUS_TESTING": "ON" }
     },
 
-    //                                                                        
-    // OS LAYER                                                               
-    //                                                                        
     {
       "name": "linux",
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system",
@@ -54,9 +51,6 @@
       "vendor": { "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" } }
     },
 
-    //                                                                        
-    // COMPILER LAYER                                                         
-    //                                                                        
     {
       "name": "g++-14",
       "description": "Target the GNU compiler (has to be at least 14)",
@@ -106,9 +100,6 @@
       }
     },
 
-    //                                                                        
-    // ARCHITECTURE LAYER                                                     
-    //                                                                        
     {
       "name": "x64",
       "description": "Target x64 architecture",
@@ -138,9 +129,6 @@
       }
     },
 
-    //                                                                        
-    // BUILD TYPE LAYER                                                       
-    //                                                                        
     {
       "name": "debug",
       "description": "A debug build",
@@ -179,9 +167,6 @@
       }
     },
 
-    //                                                                        
-    // SIMD LAYER                                                             
-    //                                                                        
     {
       "name": "NoSIMD",
       "description": "Build without SIMD",
@@ -227,10 +212,6 @@
       }
     },
 
-    //                                                                        
-    // PRESETS                                                                
-    //                                                                        
-    // Linux g++ debug...
     {
       "name": "linux-g++-x64-debug-safe-noSIMD",
       "displayName": "Linux x64 G++ Debug Safe NoSIMD",
@@ -256,7 +237,6 @@
       "inherits": [ "linux", "g++-14", "x64", "debug", "AVX2" ]
     },
 
-    // Windows v143 debug...
     {
       "name": "windows-v143-x64-debug-safe-noSIMD",
       "displayName": "v143 x64 Debug Safe NoSIMD (unsupported)",
@@ -295,7 +275,6 @@
       "inherits": [ "windows", "cl-v143", "x86", "debug", "SSE2" ]
     },
 
-    // Windows v143 release...
     {
       "name": "windows-v143-x64-release-safe-noSIMD",
       "displayName": "v143 x64 Release Safe NoSIMD (unsupported)",
@@ -334,7 +313,6 @@
       "inherits": [ "windows", "cl-v143", "x86", "release", "SSE2" ]
     },
 
-    // Windows clang-cl debug...
     {
       "name": "windows-clang-cl-x64-debug-safe-noSIMD",
       "displayName": "clang-cl x64 Debug Safe NoSIMD",

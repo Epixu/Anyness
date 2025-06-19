@@ -368,7 +368,7 @@ namespace Langulus::RTTI
       
          Logger::VerboseRaw<VERBOSE>(
             "Data ", Logger::Cyan, definition.mToken,
-            " (ID: ", definition.mHandle, ") ", Logger::Green,
+            " (ID: ", definition.mID, ") ", Logger::Green,
             " registered (LIB: ", definition.mBoundary, ")"
          );
       #else

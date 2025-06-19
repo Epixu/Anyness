@@ -8,7 +8,6 @@
 #pragma once
 #include "Meta.hpp"
 #include "DefinitionTag.hpp"
-#include <Langulus/IntentOf.hpp>
 
 
 namespace Langulus::RTTI
@@ -16,6 +15,7 @@ namespace Langulus::RTTI
    namespace Inner
    {
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      ///                                                                     
       /// Relies on the definition limits to pack an ID into the smallest     
       /// possible space, but also uses some additional bits to encode some   
       /// often used information about the definition. The handle still has   
@@ -23,8 +23,22 @@ namespace Langulus::RTTI
       /// general it is likely to avoid an indirection altogether at the      
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
+      ///                                                                     
       struct MetaTagPacked_16 : MetaPacked<DefinitionTag, 2> {
+         using Base = MetaPacked<DefinitionTag, 2>;
 
+         constexpr MetaTagPacked_16() noexcept = default;
+         constexpr MetaTagPacked_16(MetaTagPacked_16 const&) noexcept = default;
+         constexpr MetaTagPacked_16(MetaTagPacked_16&&) noexcept = default;
+         constexpr MetaTagPacked_16(::std::nullptr_t) noexcept;
+         constexpr MetaTagPacked_16(DefinitionTag const*) noexcept;
+
+         constexpr MetaTagPacked_16& operator = (MetaTagPacked_16 const&) noexcept = default;
+         constexpr MetaTagPacked_16& operator = (MetaTagPacked_16&&) noexcept = default;
+         constexpr MetaTagPacked_16& operator = (::std::nullptr_t) noexcept;
+         constexpr MetaTagPacked_16& operator = (DefinitionTag const*) noexcept;
+
+         auto GetName() const noexcept -> Token;
       };
    #endif
       
@@ -35,8 +49,7 @@ namespace Langulus::RTTI
          using MetaNaked<DefinitionTag>::operator =;
          using MetaNaked<DefinitionTag>::operator bool;
 
-         template<class, class...>
-         bool IsExact() const noexcept;
+         auto GetName() const noexcept -> Token;
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -69,3 +82,9 @@ namespace Langulus::RTTI
    using TMeta = MetaTag;
 
 } // namespace Langulus::RTTI
+
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include "MetaTagStructured.inl"
+#endif
+
+#include "MetaTagNaked.inl"

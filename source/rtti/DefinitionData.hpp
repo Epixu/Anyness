@@ -165,7 +165,7 @@ namespace Langulus::RTTI
       using FDynamicCast = void* (*)(void*);*/
 
    public:
-      DefinitionData(const Token& cppname) : Definition {cppname} {}
+      explicit DefinitionData(const Token& cppname) : Definition {cppname} {}
 
       template<class>
       static auto Reflect() -> DefinitionData const*;

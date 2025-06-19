@@ -15,39 +15,82 @@ namespace Langulus::RTTI
    namespace Inner
    {
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      /// Relies on the definition limits to pack an ID into the smallest     
+      ///                                                                     
+      /// Tehse rely on the definition limits to pack an ID into the smallest 
       /// possible space, but also uses some additional bits to encode some   
       /// often used information about the definition. The handle still has   
       /// to be transformed into a pointer for more advanced uses, but in     
       /// general it is likely to avoid an indirection altogether at the      
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
-      struct MetaVerbStructured_8_8 : MetaPacked<DefinitionVerb, 1> {
+      ///                                                                     
+      
+      /// Packing strategy useful for small projects, that do not exceed      
+      /// 255 possible verbs                                                  
+      template<unsigned ID_SIZE>
+      struct MetaVerbStructured_X8 : MetaPacked<DefinitionVerb, ID_SIZE> {
+      private:
+         union {
+            struct {
+               // The set of the main properties                        
+               bool reversible   : 1;
+               bool constant     : 1;
+               bool defaultable  : 1;
+               bool stateless    : 1;
+            };
+            uint8_t all {};
+         };
 
-      };
+      public:
+         using Base = MetaPacked<DefinitionVerb, ID_SIZE>;
 
-      struct MetaVerbStructured_16_8 : MetaPacked<DefinitionVerb, 2> {
+         constexpr MetaVerbStructured_X8() noexcept = default;
+         constexpr MetaVerbStructured_X8(MetaVerbStructured_X8 const&) noexcept = default;
+         constexpr MetaVerbStructured_X8(MetaVerbStructured_X8&&) noexcept = default;
+         constexpr MetaVerbStructured_X8(::std::nullptr_t) noexcept;
+         constexpr MetaVerbStructured_X8(DefinitionVerb const*) noexcept;
 
-      };
+         constexpr MetaVerbStructured_X8& operator = (MetaVerbStructured_X8 const&) noexcept = default;
+         constexpr MetaVerbStructured_X8& operator = (MetaVerbStructured_X8&&) noexcept = default;
+         constexpr MetaVerbStructured_X8& operator = (::std::nullptr_t) noexcept;
+         constexpr MetaVerbStructured_X8& operator = (DefinitionVerb const*) noexcept;
 
-      struct MetaVerbStructured_24_8 : MetaPacked<DefinitionVerb, 3> {
+         auto GetPositiveName() const noexcept -> Token;
+         auto GetNegativeName() const noexcept -> Token;
+         auto GetPositiveOperator() const noexcept -> Token;
+         auto GetNegativeOperator() const noexcept -> Token;
 
+         constexpr bool IsReversible() const noexcept;
+         constexpr bool IsConstant() const noexcept;
+         constexpr bool IsMutable() const noexcept;
+         constexpr bool IsDefaultable() const noexcept;
+         constexpr bool IsStateless() const noexcept;
       };
    #endif
 
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
       struct MetaVerbNaked : MetaNaked<DefinitionVerb> {
-         using MetaNaked<DefinitionVerb>::MetaNaked;
-         using MetaNaked<DefinitionVerb>::operator =;
-         using MetaNaked<DefinitionVerb>::operator bool;
+         using Base = MetaNaked<DefinitionVerb>;
 
-         template<class, class...>
-         bool IsExact() const noexcept;
+         using Base::Base;
+         using Base::operator =;
+         using Base::operator bool;
+
+         auto GetPositiveName() const noexcept -> Token;
+         auto GetNegativeName() const noexcept -> Token;
+         auto GetPositiveOperator() const noexcept -> Token;
+         auto GetNegativeOperator() const noexcept -> Token;
+
+         constexpr bool IsReversible() const noexcept;
+         constexpr bool IsConstant() const noexcept;
+         constexpr bool IsMutable() const noexcept;
+         constexpr bool IsDefaultable() const noexcept;
+         constexpr bool IsStateless() const noexcept;
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaVerbBase = MetaVerbStructured_8_8;
+      using MetaVerbBase = MetaVerbStructured_X8<1>;
    #else
       using MetaVerbBase = MetaVerbNaked;
    #endif

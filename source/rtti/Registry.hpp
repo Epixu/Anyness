@@ -68,10 +68,10 @@ namespace Langulus::RTTI
    protected:
       friend class DefinitionVerb;
 
-      void RegisterVerbOperator(const Token&, const Token& library) IF_UNSAFE(noexcept);
-      void RegisterVerbOperatorReverse(const Token&, const Token& library) IF_UNSAFE(noexcept);
-      void RegisterVerbToken(const Token&, const Token& library) IF_UNSAFE(noexcept);
-      void RegisterVerbTokenReverse(const Token&, const Token& library) IF_UNSAFE(noexcept);
+      void RegisterVerbOperator(const Token&, const Token& library) has_assumptions;
+      void RegisterVerbOperatorReverse(const Token&, const Token& library) has_assumptions;
+      void RegisterVerbToken(const Token&, const Token& library) has_assumptions;
+      void RegisterVerbTokenReverse(const Token&, const Token& library) has_assumptions;
 
    public:
       LANGULUS_API(RTTI)
@@ -87,7 +87,7 @@ namespace Langulus::RTTI
       auto RegisterVerb(const Token&, const Token&, const Token&, const Token&, const Token&, const Token&) -> DefinitionVerb&;
       
       LANGULUS_API(RTTI)
-      void RegisterFileExtension(const Token&, DefinitionData*, const Token& library) IF_UNSAFE(noexcept);
+      void RegisterFileExtension(const Token&, DefinitionData*, const Token& library) has_assumptions;
 
    public:
       ~Registry();

@@ -8,8 +8,8 @@
 #pragma once
 #include "Meta.hpp"
 #include "DefinitionData.hpp"
-#include <Langulus/HashOf.hpp>
-#include <Langulus/IntentOf.hpp>
+/*#include <Langulus/HashOf.hpp>
+#include <Langulus/IntentOf.hpp>*/
 
 
 namespace Langulus::RTTI
@@ -69,7 +69,7 @@ namespace Langulus::RTTI
                bool resolvable   : 1;
                bool dispatcher   : 1;
 
-               // Stores the size up to 256 bytes                       
+               // Stores the size up to 255 bytes                       
                // A value of zero means size is bigger, and a lookup    
                // into the definition is required. The size of the type 
                // is probably the most used property                    

@@ -110,6 +110,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Pooled = PooledBySize/PooledByType;` in T  
    template<class T>
    struct Pooled {
+      static constexpr PoolTactic Tactic = PoolTactic::Default;
       static constexpr size_t MinAlloc = Alignment;
       static constexpr size_t MinPool  = 1024 * 1024;
       static constexpr bool   Enabled  = false;
@@ -118,6 +119,7 @@ namespace Langulus::CTTI
    /// Specialize for all fundamental types                                   
    template<CT::Fundamental T>
    struct Pooled<T> {
+      static constexpr PoolTactic Tactic = PoolTactic::Size;
       static constexpr size_t MinAlloc = Alignment;
       static constexpr size_t MinPool  = 1024 * 1024;
       static constexpr bool   Enabled  = true;
