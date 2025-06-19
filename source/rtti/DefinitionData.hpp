@@ -42,12 +42,6 @@ namespace Langulus::RTTI
       friend struct Inner::MetaDataStructured_16_16;
       friend struct Inner::MetaDataStructured_24_8;
 
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         // A sequential identifier provided by the registry            
-         // Used for packing type ids                                   
-         size_t mID;
-      #endif
-
       // The origin type, with all qualifiers and sparseness removed    
       // Will be nullptr for incomplete types                           
       DefinitionData const* mOrigin;
@@ -163,10 +157,9 @@ namespace Langulus::RTTI
       using FTypeRetriever = DMeta(*)();
       using FTraitRetriever = TMeta(*)(int);
       using FDynamicCast = void* (*)(void*);*/
-
-   public:
       explicit DefinitionData(const Token& cppname) : Definition {cppname} {}
 
+   public:
       template<class>
       static auto Reflect() -> DefinitionData const*;
    };

@@ -5,20 +5,11 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-#include <Langulus/Fractalloc.hpp>
-#include <Langulus/Core/Assume.hpp>
+#include "Allocator.hpp"
 #include "Pool.inl"
 #include "Allocation.inl"
 
-#if 0
-   #define VERBOSE_ENABLED() 1
-   #define VERBOSE(...)      Langulus::Logger::Info(__VA_ARGS__)
-   #define VERBOSE_TAB(...)  const auto tab = Langulus::Logger::InfoTab(__VA_ARGS__)
-#else
-   #define VERBOSE_ENABLED() 0
-   #define VERBOSE(...)      LANGULUS(NOOP)
-   #define VERBOSE_TAB(...)  LANGULUS(NOOP)
-#endif
+#define VERBOSE 0
 
 
 namespace Langulus::Fractalloc
@@ -36,7 +27,7 @@ namespace Langulus::Fractalloc
    ///   @param size - the number of client bytes to allocate                 
    ///   @return a newly allocated memory that is correctly aligned           
    template<AllocationPrimitive T>
-   T* AlignedAllocate(DMeta hint, Offset size) IF_UNSAFE(noexcept) {
+   T* AlignedAllocate(DMeta hint, size_t size) has_assumptions {
       const auto finalSize = T::GetNewAllocationSize(size) + Alignment;
       const auto base = ::std::malloc(finalSize);
       if (not base)
@@ -44,8 +35,8 @@ namespace Langulus::Fractalloc
 
       // Align pointer to the alignment LANGULUS was built with         
       auto ptr = reinterpret_cast<T*>(
-         (reinterpret_cast<Offset>(base) + Alignment)
-         & ~(Alignment - Offset {1})
+         (reinterpret_cast<uintptr_t>(base) + Alignment)
+         & ~(Alignment - uintptr_t {1})
       );
 
       // Place the entry there                                          
@@ -56,9 +47,9 @@ namespace Langulus::Fractalloc
    /// Global allocator interface                                             
    Allocator Instance {};
 
-#if VERBOSE_ENABLED()
+#if VERBOSE
    void Allocator::DumpAllocation(RTTI::DMeta hint, const Pool* pool, const Allocation* memory) noexcept {
-      VERBOSE_TAB(
+      auto tab = Logger::VerboseTab(
          "Fractalloc: ", Logger::Green, "New allocation ", Logger::Hex(memory),
          " of size ", Size {memory->mAllocatedBytes}, ", in pool ", Logger::Hex(pool)
       );
@@ -129,20 +120,20 @@ namespace Langulus::Fractalloc
    ///   @param hint - optional meta data to associate pool with              
    ///   @param size - the number of bytes to allocate                        
    ///   @return the allocation, or nullptr if out of memory                  
-   Allocation* Allocator::Allocate(RTTI::DMeta hint, Offset size) IF_UNSAFE(noexcept) {
-      LANGULUS_ASSUME(DevAssumes, size, "Zero allocation is not allowed");
+   auto Allocator::Allocate(RTTI::DMeta hint, size_t size) has_assumptions -> Allocation* {
+      AssumeDevAndOptimize(size, "Zero allocation is not allowed");
 
-      // Decide pool chain, based on hint                               
+      // Decide pool chain based on hint                                
       Pool* pool = nullptr;
       if (hint) {
-         switch (hint->mPoolTactic) {
-         case RTTI::PoolTactic::Size:
-            pool = Instance.mSizePoolChain[Inner::FastLog2(hint->mSize)];
+         switch (hint.GetPoolTactic()) {
+         case PoolTactic::Size:
+            pool = Instance.mSizePoolChain[Inner::FastLog2(hint.GetSize())];
             break;
-         case RTTI::PoolTactic::Type:
-            pool = hint->GetPool<Pool>();
+         case PoolTactic::Type:
+            pool = static_cast<Pool*>(hint.GetPoolchain());
             break;
-         case RTTI::PoolTactic::Main:
+         case PoolTactic::Main:
             pool = Instance.mMainPoolChain;
             break;
          }
@@ -159,7 +150,7 @@ namespace Langulus::Fractalloc
       }
 
       if (memory) {
-         #if VERBOSE_ENABLED()
+         #if VERBOSE
             DumpAllocation(hint, pool, memory);
          #endif
 
@@ -167,8 +158,8 @@ namespace Langulus::Fractalloc
             auto& stats = Instance.mStatistics;
             stats.mEntries += 1;
             stats.mBytesAllocatedByFrontend += memory->GetTotalSize();
-            LANGULUS_ASSUME(DevAssumes,
-               stats.mBytesAllocatedByFrontend <= stats.mBytesAllocatedByBackend,
+            AssumeDev(
+               stats.mBytesAllocatedByFrontend <= stats.mBytesAllocatedByBackend, HERE(),
                "Impossible amount of frontend allocation"
             );
          #endif
@@ -182,33 +173,33 @@ namespace Langulus::Fractalloc
       if (not pool)
          return nullptr;
 
-      VERBOSE(
+      Logger::Verbose<VERBOSE>(
          "Fractalloc: ", Logger::Cyan, "New pool ", Logger::Hex(pool),
          " of size ", Size {pool->GetAllocatedByBackend()}
       );
 
       memory = pool->Allocate(size);
 
-      #if VERBOSE_ENABLED()
+      #if VERBOSE
          DumpAllocation(hint, pool, memory);
       #endif
 
       if (hint) {
-         switch (hint->mPoolTactic) {
-         case RTTI::PoolTactic::Size: {
-            auto& sizeChain = Instance.mSizePoolChain[Inner::FastLog2(hint->mSize)];
+         switch (hint.GetPoolTactic()) {
+         case PoolTactic::Size: {
+            auto& sizeChain = Instance.mSizePoolChain[Inner::FastLog2(hint.GetSize())];
             pool->mNext = sizeChain;
             sizeChain = pool;
             break;
          }
-         case RTTI::PoolTactic::Type: {
+         case PoolTactic::Type: {
             auto& relevantPool = hint->GetPool<Pool>();
             pool->mNext = relevantPool;
             relevantPool = pool;
             Instance.mInstantiatedTypes.insert(&*hint);
             break;
          }
-         case RTTI::PoolTactic::Main:
+         case PoolTactic::Main:
             pool->mNext = Instance.mMainPoolChain;
             Instance.mMainPoolChain = pool;
             break;
@@ -219,10 +210,7 @@ namespace Langulus::Fractalloc
          Instance.mMainPoolChain = pool;
       }
 
-      #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-         Instance.mStatistics.AddPool(pool);
-      #endif
-
+      IF_LANGULUS_MEMORY_STATISTICS(Instance.mStatistics.AddPool(pool));
       return memory;
    }
 

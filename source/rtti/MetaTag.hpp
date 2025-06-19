@@ -16,13 +16,7 @@ namespace Langulus::RTTI
    {
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       ///                                                                     
-      /// Relies on the definition limits to pack an ID into the smallest     
-      /// possible space, but also uses some additional bits to encode some   
-      /// often used information about the definition. The handle still has   
-      /// to be transformed into a pointer for more advanced uses, but in     
-      /// general it is likely to avoid an indirection altogether at the      
-      /// cost of a bitwise operation, making it a bit more cache-friendly,   
-      /// and worth experimenting with                                        
+      /// Supports up to 65,535 tags                                          
       ///                                                                     
       struct MetaTagPacked_16 : MetaPacked<DefinitionTag, 2> {
          using Base = MetaPacked<DefinitionTag, 2>;
@@ -42,12 +36,16 @@ namespace Langulus::RTTI
       };
    #endif
       
+      ///                                                                     
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
+      ///                                                                     
       struct MetaTagNaked : MetaNaked<DefinitionTag> {
-         using MetaNaked<DefinitionTag>::MetaNaked;
-         using MetaNaked<DefinitionTag>::operator =;
-         using MetaNaked<DefinitionTag>::operator bool;
+         using Base = MetaNaked<DefinitionTag>;
+
+         using Base::Base;
+         using Base::operator =;
+         using Base::operator bool;
 
          auto GetName() const noexcept -> Token;
       };

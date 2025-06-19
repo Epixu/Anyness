@@ -6,31 +6,31 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "MetaTag.hpp"
+#include "MetaConst.hpp"
 
 
 namespace Langulus::RTTI::Inner
 {
 
-   constexpr MetaTagPacked_16::MetaTagPacked_16(::std::nullptr_t) noexcept
+   constexpr MetaConstPacked_16::MetaConstPacked_16(::std::nullptr_t) noexcept
       : Base {0} {}
 
-   constexpr MetaTagPacked_16::MetaTagPacked_16(DefinitionTag const* definition) noexcept
+   constexpr MetaConstPacked_16::MetaConstPacked_16(DefinitionConst const* definition) noexcept
       : Base {definition ? definition->mID : 0} {}
 
-   constexpr MetaTagPacked_16& MetaTagPacked_16::operator = (::std::nullptr_t) noexcept {
+   constexpr MetaConstPacked_16& MetaConstPacked_16::operator = (::std::nullptr_t) noexcept {
       Base::operator = (0);
       return *this;
    }
 
-   constexpr MetaTagPacked_16& MetaTagPacked_16::operator = (DefinitionTag const* definition) noexcept {
+   constexpr MetaConstPacked_16& MetaConstPacked_16::operator = (DefinitionConst const* definition) noexcept {
       Base::operator = (definition ? definition->mID : 0);
       return *this;
    }
 
    /// Get the name of the tag, the result of NameOf                          
-   auto MetaTagPacked_16::GetName() const noexcept -> Token {
-      return Instance.GetMetaTag(*this)->mToken;
+   auto MetaConstPacked_16::GetName() const noexcept -> Token {
+      return Instance.GetMetaConst(*this)->mToken;
    }
 
 } // namespace Langulus::RTTI::Inner

@@ -102,10 +102,13 @@ namespace Langulus
    /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
-   #define AssumeUserAndOptimize(CONDITION, ...) \
-      AssumeUser((CONDITION), HERE(), __VA_ARGS__); \
-      [[assume(CONDITION)]];
-
+   #if LANGULUS(SAFE) > 0
+      #define AssumeUserAndOptimize(CONDITION, ...) \
+         AssumeUser((CONDITION), HERE(), __VA_ARGS__); \
+         [[assume(CONDITION)]]
+   #else
+      #define AssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
+   #endif
 
    /// User assumption at runtime                                             
    /// Tested only if LANGULUS(SAFE) >= 1                                     
@@ -171,10 +174,13 @@ namespace Langulus
    /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
-   #define AssumeDevAndOptimize(CONDITION, ...) \
-      AssumeDev((CONDITION), HERE(), __VA_ARGS__); \
-      [[assume(CONDITION)]];
-
+   #if LANGULUS(SAFE) > 1
+      #define AssumeDevAndOptimize(CONDITION, ...) \
+         AssumeDev((CONDITION), HERE(), __VA_ARGS__); \
+         [[assume(CONDITION)]]
+   #else
+      #define AssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
+   #endif
 
    /// Developer assumption at runtime                                        
    /// Tested only if LANGULUS(SAFE) >= 2                                     

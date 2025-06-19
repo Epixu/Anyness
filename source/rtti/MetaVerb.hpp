@@ -119,3 +119,9 @@ namespace Langulus::RTTI
    using VMeta = MetaVerb;
 
 } // namespace Langulus::RTTI
+
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include "MetaVerbStructured.inl"
+#endif
+
+#include "MetaVerbNaked.inl"

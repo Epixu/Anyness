@@ -9,12 +9,14 @@
 #include "Core.hpp"
 #include "Typenav.hpp"
 #include "TypeOf.hpp"
+#include "Assume.hpp"
 #include "CT/Support.hpp"
 #include "CT/POD.hpp"
 #include "CT/Same.hpp"
 #include <bit>
 #include <type_traits>
 #include <array>
+#include <vector>
 
 
 namespace Langulus
@@ -22,7 +24,7 @@ namespace Langulus
    
    ///                                                                        
    /// Type that holds a hash                                                 
-   /// Size is configurable using LANGULUS_HASH64 or LANGULUS_HASH32 defines  
+   /// Size is configurable using LANGULUS_HASHSIZE                           
    ///                                                                        
    ///   @attention missing hash always has value of 0, and a hashing function
    ///      is very unlikely to ever result in a zero hash, so we can easily  
@@ -35,12 +37,12 @@ namespace Langulus
       using CTTI_POD      = Yes;
       using CTTI_Nullable = Yes;
 
-      #if not defined(LANGULUS_HASH64)
+      #if LANGULUS_HASHSIZE == 32
          uint32_t mHash = 0;
-      #elif defined(LANGULUS_HASH64) and not defined(LANGULUS_HASH32)
+      #elif LANGULUS_HASHSIZE == 64
          uint64_t mHash = 0;
       #else
-         #error "Conflicting hash type definitions"
+         #error "Unsupported hash size"
       #endif
 
       LANGULUS(ALWAYS_INLINED)
@@ -57,6 +59,7 @@ namespace Langulus
    namespace Inner
    {
 
+      ///                                                                     
       /// MurmurHash3 was written by Austin Appleby, and is placed in the     
       /// public domain                                                       
       ///                                                                     
@@ -66,21 +69,29 @@ namespace Langulus
       /// performance with the non-native version will be less than optimal.  
       ///                                                                     
       /// Note2 - These are constexpr-friendly versions, made by Tamás Szelei 
-      /// and slightly modified by me                                         
+      /// and slightly modified by me:                                        
       /// https://github.com/sztomi/constexpr_murmurhash                      
+      ///                                                                     
+      /// A data view that allows us to modify in blocks of 32 bits           
       struct data_view {
+      private:
+         const char* p;
+         std::size_t sz;
+
+      public:
          constexpr data_view(const char* a, size_t N) noexcept
             : p(a), sz(N) {}
 
-         template <size_t N>
+         template<size_t N>
          constexpr data_view(const ::std::array<char, N>& a) noexcept
             : p(a.data()), sz(N) {}
 
-         constexpr char operator[](std::size_t n) const {
-            return n < sz ? p[n] : throw std::out_of_range("");
+         constexpr char operator[](std::size_t n) const has_assumptions {
+            AssumeDevAndOptimize(n < sz, "Out of range");
+            return p[n];
          }
 
-         constexpr uint32_t get_block(int idx) {
+         constexpr uint32_t get_block(int idx) noexcept {
             int i = (block_size() + idx) * 4;
             uint32_t b0 = p[i];
             uint32_t b1 = p[i + 1];
@@ -89,20 +100,19 @@ namespace Langulus
             return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
          }
 
-         constexpr std::size_t size() const { return sz; }
+         constexpr std::size_t size() const noexcept { return sz; }
 
-         constexpr std::size_t block_size() const { return sz / 4; }
+         constexpr std::size_t block_size() const noexcept { return sz / 4; }
 
-         constexpr char tail(const int n) const {
+         constexpr char tail(const int n) const noexcept {
             int tail_size = sz % 4;
             return p[sz - tail_size + n];
          }
-
-      private:
-         const char* p;
-         std::size_t sz;
       };
 
+      ///                                                                     
+      /// 32-bit hasher                                                       
+      ///                                                                     
       constexpr uint32_t mm3_x86_32(data_view key, uint32_t seed) {
          uint32_t h1 = seed;
 

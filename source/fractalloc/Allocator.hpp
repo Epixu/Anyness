@@ -6,6 +6,8 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include <Langulus/Core.hpp>
+
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
 #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif

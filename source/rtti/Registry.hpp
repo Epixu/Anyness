@@ -62,7 +62,8 @@ namespace Langulus::RTTI
 
       void RegisterAmbiguous(const Token&, const Lowercase&, Inner::Definition*) noexcept;
       void UnregisterAmbiguous(const Token&, const Lowercase&, Inner::Definition*) noexcept;
-      auto GetMeta(const auto&, const Token&, const Token&) const noexcept;
+      auto GetMetaByToken(const auto&, const Token&, const Token&) const noexcept;
+      auto GetMetaByID(const auto&) const noexcept;
       auto GetMetaList(const auto&, const Token&, const Token&) const noexcept -> const MetaList&;
 
    protected:
@@ -104,17 +105,19 @@ namespace Langulus::RTTI
       LANGULUS_API(RTTI)
       auto GetMetaTag(const Token&, const Token& library = "") const noexcept -> DefinitionTag const*;
       LANGULUS_API(RTTI)
-      auto GetMetaTag(const MetaTag&) const noexcept -> DefinitionTag const*;
+      auto GetMetaTag(const Inner::MetaTagPacked_16&) const noexcept -> DefinitionTag const*;
 
       LANGULUS_API(RTTI)
       auto GetMetaVerb(const Token&, const Token& library = "") const noexcept -> DefinitionVerb const*;
       LANGULUS_API(RTTI)
-      auto GetMetaVerb(const MetaVerb&) const noexcept -> DefinitionVerb const*;
+      auto GetMetaVerb(const Inner::MetaVerbStructured_X8<1>&) const noexcept -> DefinitionVerb const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaVerb(const Inner::MetaVerbStructured_X8<3>&) const noexcept -> DefinitionVerb const*;
 
       LANGULUS_API(RTTI)
       auto GetMetaConst(const Token&, const Token& library = "") const noexcept -> DefinitionConst const*;
       LANGULUS_API(RTTI)
-      auto GetMetaConst(const MetaConst&) const noexcept -> DefinitionConst const*;
+      auto GetMetaConst(const Inner::MetaConstPacked_16&) const noexcept -> DefinitionConst const*;
 
       LANGULUS_API(RTTI)
       auto GetOperator(const Token&, const Token& library = "") const noexcept -> DefinitionVerb const*;

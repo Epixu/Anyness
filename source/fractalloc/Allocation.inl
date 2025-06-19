@@ -54,7 +54,7 @@ namespace Langulus::Fractalloc
    Size Allocation::GetNewAllocationSize(Size size) noexcept {
       const auto minimum  = Allocation::GetMinAllocation();
       const auto proposed = Allocation::GetHeaderSize() + size;
-      return ::std::max(proposed, minimum);
+      return proposed > minimum ? proposed : minimum;
    }
 
    /// User bytes + the header size                                           

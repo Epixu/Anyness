@@ -6,13 +6,11 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#if not LANGULUS_FEATURE(MANAGED_MEMORY)
-#error "This file shouldn't be included if MANAGED_MEMORY is disabled"
-#endif
-
 #include "Pool.hpp"
-#include <Langulus/CT/Signed.hpp>
-#include <Langulus/Assume.hpp>
+
+#if not LANGULUS_FEATURE(MANAGED_MEMORY)
+   #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
+#endif
 
 
 namespace Langulus::Fractalloc
@@ -70,9 +68,7 @@ namespace Langulus::Fractalloc
       mMemory = GetPoolStart();
       mMemoryEnd = mMemory + mAllocatedByBackend;
 
-      #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-         mStep = Instance.GetStatistics().mStep;
-      #endif
+      IF_LANGULUS_MEMORY_STATISTICS(mStep = Instance.GetStatistics().mStep);
 
       // Touching is mandatory for pools - without touching the         
       // memory, it might remain just a promise by the OS, making       
@@ -191,9 +187,10 @@ namespace Langulus::Fractalloc
       if (bytesWithPadding > mThresholdMin)
          mThresholdMin = Roof2(bytesWithPadding);
 
-      LANGULUS_ASSUME(DevAssumes,
+      AssumeDevAndOptimize(
          mAllocatedByFrontend + bytesWithPadding >= mAllocatedByFrontend,
-         "Frontend byte counter overflow");
+         "Frontend byte counter overflow"
+      );
       mAllocatedByFrontend += bytesWithPadding;
       IF_LANGULUS_MEMORY_STATISTICS(++mValidEntries);
       return newEntry;
@@ -203,11 +200,11 @@ namespace Langulus::Fractalloc
    ///   @attention assumes entry is valid                                    
    ///   @param entry - entry to remove                                       
    inline void Pool::Deallocate(Allocation* entry) has_assumptions {
-      LANGULUS_ASSUME(DevAssumes, entry->mReferences != 0,
+      AssumeDevAndOptimize(entry->mReferences != 0,
          "Removing an invalid entry");
-      LANGULUS_ASSUME(DevAssumes, mEntries,
+      AssumeDevAndOptimize(mEntries,
          "Bad valid entry count");
-      LANGULUS_ASSUME(DevAssumes, mAllocatedByFrontend >= entry->GetFrontendSize(),
+      AssumeDev(mAllocatedByFrontend >= entry->GetFrontendSize(), HERE(),
          "Bad frontend allocation size");
 
       mAllocatedByFrontend -= entry->GetFrontendSize();
@@ -240,8 +237,7 @@ namespace Langulus::Fractalloc
    ///   @param bytes - new number of bytes                                   
    ///   @return true if entry was enlarged without conflict                  
    inline bool Pool::Reallocate(Allocation* entry, const Size bytes) has_assumptions {
-      LANGULUS_ASSUME(DevAssumes,
-         bytes and Contains(entry) and entry and entry->GetUses(),
+      AssumeDev(bytes and Contains(entry) and entry and entry->GetUses(), HERE(),
          "Invalid reallocation");
 
       if (bytes > entry->mAllocatedBytes) {
@@ -261,8 +257,9 @@ namespace Langulus::Fractalloc
          // We're shrinking the entry                                   
          // No checks required                                          
          const auto removal = entry->mAllocatedBytes - bytes;
-         LANGULUS_ASSUME(DevAssumes, mAllocatedByFrontend >= removal,
+         AssumeDevAndOptimize(mAllocatedByFrontend >= removal,
             "Bad frontend allocation size");
+
          mAllocatedByFrontend -= removal;
 
          //TODO: keep track of size distrubution, 
@@ -302,7 +299,7 @@ namespace Langulus::Fractalloc
    /// Null the memory                                                        
    LANGULUS(INLINED)
    void Pool::Null() {
-      ZeroMemory(mMemory, mAllocatedByBackend);
+      memset(mMemory, 0, mAllocatedByBackend);
    }
 
    /// Touch unused memory                                                    
@@ -321,8 +318,7 @@ namespace Langulus::Fractalloc
    /// as possible                                                            
    LANGULUS(INLINED)
    void Pool::Trim() {
-      LANGULUS_ASSUME(DevAssumes, mEntries, "Should have at least one entry");
-
+      AssumeDevAndOptimize(mEntries, "Should have at least one entry");
       const Allocation* entry;
       Size ecounter = mEntries;
       do {
@@ -395,7 +391,7 @@ namespace Langulus::Fractalloc
    ///   @return the index                                                    
    LANGULUS(INLINED)
    Size Pool::IndexFromAddress(const void* ptr) const has_assumptions {
-      LANGULUS_ASSUME(DevAssumes, Contains(ptr), "Entry outside pool");
+      AssumeDev(Contains(ptr), HERE(), "Entry outside pool");
 
       // Credit goes to Yasen Vidolov (G1)                              
       const Size i = static_cast<const Byte*>(ptr) - mMemory;

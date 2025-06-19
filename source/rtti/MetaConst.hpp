@@ -82,3 +82,9 @@ namespace Langulus::RTTI
    using CMeta = MetaConst;
 
 } // namespace Langulus::RTTI
+
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include "MetaConstStructured.inl"
+#endif
+
+#include "MetaConstNaked.inl"

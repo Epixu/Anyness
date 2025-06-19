@@ -6,16 +6,13 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "Registry.hpp"
-#include "MetaData.inl"
-#include "MetaVerb.inl"
-#include "MetaTrait.inl"
-#include "MetaConst.inl"
-#include "Meta.inl"
-#include <Langulus/Core/Assume.hpp>
-#include <cctype>
+#include "DefinitionData.hpp"
+#include "DefinitionTag.hpp"
+#include "DefinitionConst.hpp"
+#include "DefinitionVerb.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
-#error "This file shouldn't be included if MANAGED_REFLECTION is disabled"
+   #error "This file shouldn't be compiled if MANAGED_REFLECTION is disabled"
 #endif
 
 
@@ -30,15 +27,15 @@ namespace Langulus::RTTI
       // wasn't unregistered upon mod unload. Thank me later            
       for (auto& pair : mMetaData)
          for(auto& meta : pair.second)
-            delete meta.second.mMeta;
+            delete meta.second;
 
-      for (auto& pair : mMetaTraits)
+      for (auto& pair : mMetaTags)
          for (auto& meta : pair.second)
-            delete meta.second.mMeta;
+            delete meta.second;
 
       for (auto& pair : mUniqueVerbs)
          for (auto& meta : pair.second)
-            delete meta.second.mMeta;
+            delete meta.second;
    }
 
    /// Common way to extract something from the registry                      
@@ -46,7 +43,7 @@ namespace Langulus::RTTI
    ///   @param token - the token to search for                               
    ///   @param boundary - the boundary to search in (optional)               
    ///   @return the found element, or nullptr if not found                   
-   auto Registry::GetMeta(
+   auto Registry::GetMetaByToken(
       const auto& where, const Token& token, const Token& boundary
    ) const noexcept {
       using R = decltype(where.begin()->second.begin()->second);
@@ -108,10 +105,22 @@ namespace Langulus::RTTI
 
    /// Get an existing meta data definition by its token and boundary         
    ///   @param token - the token of the data definition                      
-   ///   @param boundary - the boundary to search in (optional)               
+   ///   @param library - the boundary to search in (optional)                
    ///   @return the definition, or nullptr if not found                      
-   DMeta Registry::GetMetaData(const Token& token, const Token& boundary) const noexcept {
-      return GetMeta(mMetaData, token, boundary);
+   auto Registry::GetMetaData(const Token& token, const Token& library) const noexcept -> DefinitionData const* {
+      return GetMetaByToken(mMetaData, token, library);
+   }
+
+   auto Registry::GetMetaData(const Inner::MetaDataStructured_8_8&) const noexcept -> DefinitionData const* {
+
+   }
+
+   auto Registry::GetMetaData(const Inner::MetaDataStructured_16_16&) const noexcept -> DefinitionData const* {
+
+   }
+
+   auto Registry::GetMetaData(const Inner::MetaDataStructured_24_8&) const noexcept -> DefinitionData const* {
+
    }
 
    /// Get an existing meta constant definition by its token and boundary     

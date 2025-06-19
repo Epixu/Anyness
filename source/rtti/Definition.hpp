@@ -54,6 +54,16 @@ namespace Langulus::RTTI
       struct MetaDataStructured_16_16;
       struct MetaDataStructured_24_8;
 
+      struct MetaTagNaked;
+      struct MetaTagPacked_16;
+
+      struct MetaConstNaked;
+      struct MetaConstPacked_16;
+
+      struct MetaVerbNaked;
+      template<unsigned>
+      struct MetaVerbStructured_X8;
+
    } // namespace Langulus::RTTI::Inner
 
 } // namespace Langulus::RTTI
@@ -84,6 +94,12 @@ namespace Langulus::RTTI::Inner
       friend struct MetaTag;
       friend struct MetaVerb;
       friend struct MetaConst;*/
+
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         // A sequential identifier provided by the registry            
+         // Used for packing type ids                                   
+         size_t mID;
+      #endif
 
       // Each reflected type has an unique hash based on C++ name       
       // First for immediate access                                     

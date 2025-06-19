@@ -404,6 +404,22 @@
    #define LANGULUS_ALIGNMENT 16
 #endif
 
+#ifndef LANGULUS_HASHSIZE
+   #define LANGULUS_HASHSIZE 32
+#endif
+
+#if LANGULUS_HASHSIZE != 32 and LANGULUS_HASHSIZE != 64
+   #error "Unsupported hash size"
+#endif
+
+#ifndef LANGULUS_FPU
+   #define LANGULUS_FPU 32
+#endif
+
+#if LANGULUS_FPU == 16 or LANGULUS_FPU == 128
+   #include <stdfloat>
+#endif
+
 
 ///                                                                           
 ///   The all-encompassing Langulus namespace                                 
@@ -412,22 +428,28 @@ namespace Langulus
 {
    
    /// The default floating point type, depends on configuration              
-   #if not defined(LANGULUS_FPU_DOUBLE)
+   #if LANGULUS_FPU == 16
+      using Real = float16_t;
+   #elif LANGULUS_FPU == 32
       using Real = float;
-   #elif defined(LANGULUS_FPU_DOUBLE) and not defined(LANGULUS_FPU_FLOAT)
+      static_assert(sizeof(Real) == 4);
+   #elif LANGULUS_FPU == 64
       using Real = double;
+      static_assert(sizeof(Real) == 8);
+   #elif LANGULUS_FPU == 128
+      using Real = float128_t;
    #else
-      #error "Conflicting real type definitions"
+      #error "Unsupported real number size"
    #endif
 
    /// The size of a void* in bytes, depends on architecture                  
-   constexpr int Byteness = sizeof(void*);
+   constexpr size_t Byteness = sizeof(void*);
 
    /// The size of a void* in bits, depends on architecture                   
-   constexpr int Bitness = Byteness * 8;
+   constexpr size_t Bitness = Byteness * 8;
 
    /// The default alignment, depends on configuration and enabled SIMD       
-   constexpr int Alignment = LANGULUS_ALIGNMENT;
+   constexpr uintptr_t Alignment = LANGULUS_ALIGNMENT;
    
    /// Equivalent to ::std::true_type, but without the silly nomenclature     
    struct Yes {
@@ -452,7 +474,7 @@ namespace Langulus
       static constexpr bool Enabled = VALUE;
    };
    
-   /// Same as ::std::declval, but more conveniently named                    
+   /// Same as ::std::declval, but adequately named                           
    template<class T>
    T&& Fake() {
       static_assert(false, "Calling Fake is ill-formed");

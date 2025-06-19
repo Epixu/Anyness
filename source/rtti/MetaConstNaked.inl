@@ -6,14 +6,14 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "MetaTag.hpp"
+#include "MetaConst.hpp"
 
 
 namespace Langulus::RTTI::Inner
 {
 
-   /// Get the name of the tag, the result of NameOf                          
-   auto MetaTagNaked::GetName() const noexcept -> Token {
+   /// Get the name of the constant, the result of NameOf                     
+   auto MetaConstNaked::GetName() const noexcept -> Token {
       return mDefinition->mToken;
    }
 
