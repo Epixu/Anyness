@@ -8,9 +8,12 @@
 #pragma once
 #include "Meta.hpp"
 #include "DefinitionData.hpp"
-/*#include <Langulus/HashOf.hpp>
-#include <Langulus/IntentOf.hpp>*/
 
+
+namespace Langulus::Fractalloc
+{
+   struct Allocator;
+}
 
 namespace Langulus::RTTI
 {
@@ -78,6 +81,10 @@ namespace Langulus::RTTI
             uint16_t all {};
          };
 
+      protected:
+         friend struct Fractalloc::Allocator;
+         void SetPoolchain(void*) noexcept;
+
       public:
          using Base = MetaPacked<DefinitionData, 2>;
 
@@ -101,7 +108,9 @@ namespace Langulus::RTTI
          auto GetMinAllocation()      const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
          auto GetName()               const noexcept -> Token;
-                                      
+         auto GetPoolTactic()         const noexcept -> PoolTactic;
+         auto GetPoolchain()          const noexcept -> void*;
+
          constexpr bool IsDense()     const noexcept;
          constexpr bool IsSparse()    const noexcept;
          constexpr bool IsConstant()  const noexcept;
@@ -172,6 +181,8 @@ namespace Langulus::RTTI
          auto GetSize()               const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
          auto GetName()               const noexcept -> Token;
+         auto GetPoolTactic()         const noexcept -> PoolTactic;
+         auto GetPoolchain()          const noexcept -> void*;
                                       
          bool IsDense()               const noexcept;
          bool IsSparse()              const noexcept;

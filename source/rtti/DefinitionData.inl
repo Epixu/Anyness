@@ -76,11 +76,10 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         auto meta = Instance.GetMetaData(cppname, RTTI::Boundary);
-         if (meta)
+         if (auto meta = Instance.GetMetaData(cppname, Boundary))
             return meta;
 
-         auto& definition = Instance.RegisterData(cppname, RTTI::Boundary);
+         auto& definition = Instance.RegisterData(cppname, Boundary);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack

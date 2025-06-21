@@ -10,6 +10,10 @@
 #include "DefinitionTag.hpp"
 #include "DefinitionConst.hpp"
 #include "DefinitionVerb.hpp"
+#include <ranges>
+
+#include "MetaData.hpp"
+#include "MetaTag.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #error "This file shouldn't be compiled if MANAGED_REFLECTION is disabled"
@@ -25,17 +29,17 @@ namespace Langulus::RTTI
    Registry::~Registry() {
       // If an exception happens here on a delete, then a meta likely   
       // wasn't unregistered upon mod unload. Thank me later            
-      for (auto& pair : mMetaData)
-         for(auto& meta : pair.second)
-            delete meta.second;
+      for (auto& definitions : ::std::ranges::views::values(mMetaData))
+         for(auto& meta : ::std::ranges::views::values(definitions))
+            delete meta;
 
-      for (auto& pair : mMetaTags)
-         for (auto& meta : pair.second)
-            delete meta.second;
+      for (auto& definitions : ::std::ranges::views::values(mMetaTags))
+         for (auto& meta : ::std::ranges::views::values(definitions))
+            delete meta;
 
-      for (auto& pair : mUniqueVerbs)
-         for (auto& meta : pair.second)
-            delete meta.second;
+      for (auto& definitions : ::std::ranges::views::values(mUniqueVerbs))
+         for (auto& meta : ::std::ranges::views::values(definitions))
+            delete meta;
    }
 
    /// Common way to extract something from the registry                      
@@ -47,32 +51,32 @@ namespace Langulus::RTTI
       const auto& where, const Token& token, const Token& boundary
    ) const noexcept {
       using R = decltype(where.begin()->second.begin()->second);
-      const auto lc = ToLowercase(token);
+      const auto lc = Inner::ToLowercase(token);
       const auto foundToken = where.find(lc);
       if (foundToken == where.end())
-         return (R) nullptr;
+         return static_cast<R>(nullptr);
 
       if (not boundary.empty()) {
          // Search in a specific boundary                               
          const auto foundBoundary = foundToken->second.find(boundary);
          if (foundBoundary == foundToken->second.end())
-            return (R) nullptr;
+            return static_cast<R>(nullptr);
          return foundBoundary->second;
       }
-      else {
-         // Always prefer the main boundary if available, because it's  
-         // more persistent                                             
-         const auto foundBoundary = foundToken->second.find(RTTI::MainBoundary);
-         if (foundBoundary != foundToken->second.end())
-            return foundBoundary->second;
-         else if (not foundToken->second.empty())
-            return foundToken->second.begin()->second;
-         return (R) nullptr;
-      }
+   
+      // Always prefer the main boundary if available, because it's     
+      // more persistent                                                
+      const auto foundBoundary = foundToken->second.find(MainBoundary);
+      if (foundBoundary != foundToken->second.end())
+         return foundBoundary->second;
+      if (not foundToken->second.empty())
+         return foundToken->second.begin()->second;
+      return static_cast<R>(nullptr);
    }
 
    /// Get a list of all the interpretations for an ambiguous token           
    /// These can be data types, verbs, traits, or constants                   
+   ///   @param where - the map to search for the token in                    
    ///   @param token - the token to search for                               
    ///   @param boundary - the boundary to search in (optional)               
    ///   @return the list of associated meta definitions                      
@@ -80,7 +84,7 @@ namespace Langulus::RTTI
       const auto& where, const Token& token, const Token& boundary
    ) const noexcept -> const MetaList& {
       static const MetaList fallback {};
-      const auto lc = ToLowercase(ToLastToken(token));
+      const auto lc = Inner::ToLowercase(Inner::ToLastToken(token));
       const auto foundToken = where.find(lc);
       if (foundToken == where.end())
          return fallback;
@@ -92,15 +96,14 @@ namespace Langulus::RTTI
             return fallback;
          return foundBoundary->second;
       }
-      else {
-         // Always prefer the MAIN boundary, because it's persistent    
-         const auto foundBoundary = foundToken->second.find(RTTI::MainBoundary);
-         if (foundBoundary != foundToken->second.end())
-            return foundBoundary->second;
-         else if (not foundToken->second.empty())
-            return foundToken->second.begin()->second;
-         return fallback;
-      }
+
+      // Always prefer the MAIN boundary, because it's persistent       
+      const auto foundBoundary = foundToken->second.find(MainBoundary);
+      if (foundBoundary != foundToken->second.end())
+         return foundBoundary->second;
+      if (not foundToken->second.empty())
+         return foundToken->second.begin()->second;
+      return fallback;
    }
 
    /// Get an existing meta data definition by its token and boundary         
@@ -111,32 +114,32 @@ namespace Langulus::RTTI
       return GetMetaByToken(mMetaData, token, library);
    }
 
-   auto Registry::GetMetaData(const Inner::MetaDataStructured_8_8&) const noexcept -> DefinitionData const* {
-
+   auto Registry::GetMetaData(const Inner::MetaDataStructured_8_8& id) const noexcept -> DefinitionData const* {
+      return GetMetaByID(mMetaData, id.mHandle);
    }
 
-   auto Registry::GetMetaData(const Inner::MetaDataStructured_16_16&) const noexcept -> DefinitionData const* {
-
+   auto Registry::GetMetaData(const Inner::MetaDataStructured_16_16& id) const noexcept -> DefinitionData const* {
+      return GetMetaByID(mMetaData, id.mHandle);
    }
 
-   auto Registry::GetMetaData(const Inner::MetaDataStructured_24_8&) const noexcept -> DefinitionData const* {
-
+   auto Registry::GetMetaData(const Inner::MetaDataStructured_24_8& id) const noexcept -> DefinitionData const* {
+      return GetMetaByID(mMetaData, id.mHandle);
    }
 
    /// Get an existing meta constant definition by its token and boundary     
    ///   @param token - the token of the constant definition                  
    ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   CMeta Registry::GetMetaConstant(const Token& token, const Token& boundary) const noexcept {
-      return GetMeta(mMetaConstants, token, boundary);
+   auto Registry::GetMetaConst(const Token& token, const Token& boundary) const noexcept -> DefinitionConst const* {
+      return GetMetaByToken(mMetaConstants, token, boundary);
    }
 
    /// Get an existing meta trait definition by its token and boundary        
    ///   @param token - the token of the trait definition                     
    ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   TMeta Registry::GetMetaTrait(const Token& token, const Token& boundary) const noexcept {
-      return GetMeta(mMetaTraits, token, boundary);
+   auto Registry::GetMetaTag(const Token& token, const Token& boundary) const noexcept -> DefinitionTag const* {
+      return GetMetaByToken(mMetaTags, token, boundary);
    }
 
    /// Get an existing meta verb definition by its token and boundary         
@@ -144,8 +147,8 @@ namespace Langulus::RTTI
    ///                  you can search by positive, as well as negative token 
    ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   VMeta Registry::GetMetaVerb(const Token& token, const Token& boundary) const noexcept {
-      return GetMeta(mMetaVerbs, token, boundary);
+   auto Registry::GetMetaVerb(const Token& token, const Token& boundary) const noexcept -> DefinitionVerb const* {
+      return GetMetaByToken(mMetaVerbs, token, boundary);
    }
 
    /// Get an existing meta verb definition by its operator token and boundary
@@ -153,9 +156,9 @@ namespace Langulus::RTTI
    ///                  you can search by positive, as well as negative       
    ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   VMeta Registry::GetOperator(const Token& token, const Token& boundary) const noexcept {
+   auto Registry::GetOperator(const Token& token, const Token& boundary) const noexcept -> DefinitionVerb const* {
       const auto lc = IsolateOperator(token);
-      return GetMeta(mOperators, lc, boundary);
+      return GetMetaByToken(mOperators, lc, boundary);
    }
 
    /// Get a list of all the interpretations for an ambiguous token           
@@ -183,10 +186,11 @@ namespace Langulus::RTTI
    ///   @param keyword - the token to search for                             
    ///   @param boundary - the boundary to search in (optional)               
    ///   @return the disambiguated token; throws if not found/ambiguous       
-   AMeta Registry::DisambiguateMeta(const Token& keyword, const Token& boundary) const {
+   auto Registry::DisambiguateMeta(const Token& keyword, const Token& boundary) const -> Inner::Definition const* {
       auto& symbols = GetAmbiguousMeta(keyword, boundary);
-      LANGULUS_ASSERT(not symbols.empty(), Meta,
+      Assert(not symbols.empty(), HERE(),
          "Keyword not found", ": `", keyword, '`');
+      
       if (symbols.size() == 1) {
          // No ambiguity, just return the single result (1)             
          return *symbols.begin();
@@ -197,11 +201,11 @@ namespace Langulus::RTTI
       // keyword, but the keyword might contain hints as to which       
       // ambiguous meta to pick. Discard symbols that do not            
       // contain the provided keyword (not case sensitive)              
-      const auto lowercased = ToLowercase(keyword);
+      const auto lowercased = Inner::ToLowercase(keyword);
       MetaList origins;
       for (auto& meta : symbols) {
          LANGULUS_ASSUME(DevAssumes, meta, "Bad meta");
-         const auto meta_lc_token = ToLowercase(meta->mToken);
+         const auto meta_lc_token = Inner::ToLowercase(meta->mToken);
          if (meta_lc_token.find(lowercased) == std::string::npos)
             continue;
 
@@ -215,14 +219,14 @@ namespace Langulus::RTTI
          else origins.insert(meta);
       }
 
-      LANGULUS_ASSERT(not origins.empty(), Meta,
+      Assert(not origins.empty(), HERE(),
          "No relevant origins for keyword", ": `", keyword, '`');
 
       DMeta meta_data;
       DMeta meta_data_exact_match;
-      Count meta_data_encountered = 0;
       TMeta meta_trait;
-      Count meta_trait_encountered = 0;
+      size_t meta_data_encountered = 0;
+      size_t meta_trait_encountered = 0;
 
       if (origins.size() == 1) {
          // Candidate types reduced to a single relevant origin (1)     
@@ -231,7 +235,7 @@ namespace Langulus::RTTI
       else for (auto& candidate : origins) {
          // There's a chance, that one of the symbols matches the       
          // lowercased keyword exactly (1)                              
-         if (ToLowercase(candidate->mToken) == lowercased)
+         if (Inner::ToLowercase(candidate->mToken) == lowercased)
             meta_data_exact_match = candidate;
 
          if (candidate.Kind() == Meta::Data) {
@@ -274,7 +278,7 @@ namespace Langulus::RTTI
       }
 
       // Unfixable ambiguity reached, report error and throw (3)        
-      const auto tab = Logger::ErrorTab(
+      const auto tab = Logger::ErrorScoped(
          "Ambiguous symbol: `", keyword, "`; Could be one of: "
       );
       for (auto& meta : origins) {
@@ -301,7 +305,7 @@ namespace Langulus::RTTI
    void Registry::RegisterAmbiguous(
       const Token& boundary, const Lowercase& token, AMeta meta
    ) noexcept {
-      Lowercase ambiguous {ToLastToken(token)};
+      Lowercase ambiguous {Inner::ToLastToken(token)};
       const auto foundAmbiguous = mMetaAmbiguous.find(ambiguous);
       if (foundAmbiguous == mMetaAmbiguous.end()) {
          mMetaAmbiguous.insert({std::move(ambiguous), {{boundary, {meta}}}});
@@ -323,7 +327,7 @@ namespace Langulus::RTTI
    void Registry::UnregisterAmbiguous(
       const Token& boundary, const Lowercase& token, AMeta meta
    ) noexcept {
-      Lowercase ambiguous {ToLastToken(token)};
+      Lowercase ambiguous {Inner::ToLastToken(token)};
       const auto foundAmbiguous = mMetaAmbiguous.find(ambiguous);
       if (foundAmbiguous == mMetaAmbiguous.end())
          return;
@@ -450,7 +454,7 @@ namespace Langulus::RTTI
    ) {
       LANGULUS_ASSUME(DevAssumes, not boundary.empty(),
          "Bad boundary provided");
-      const auto cppnamelc = ToLowercase(cppname);
+      const auto cppnamelc = Inner::ToLowercase(cppname);
 
       IF_SAFE(const auto uniqueFound = mUniqueVerbs.find(cppnamelc));
       LANGULUS_ASSUME(DevAssumes, uniqueFound == mUniqueVerbs.end()

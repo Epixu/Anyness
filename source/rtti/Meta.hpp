@@ -26,6 +26,7 @@ namespace Langulus::RTTI::Inner
    template<class T, unsigned BYTESIZE>
    struct MetaPacked {
    protected:
+      friend class Registry;
       static constexpr uint8_t Zero[BYTESIZE] {0};
       uint8_t mHandle[BYTESIZE] {0};
 
@@ -72,8 +73,8 @@ namespace Langulus::RTTI::Inner
       constexpr MetaNaked() noexcept = default;
       constexpr MetaNaked(const MetaNaked&) noexcept = default;
       constexpr MetaNaked(MetaNaked&&) noexcept = default;
-      constexpr MetaNaked(::std::nullptr_t) noexcept {}
-      constexpr MetaNaked(const T* definition) noexcept
+      explicit constexpr MetaNaked(::std::nullptr_t) noexcept {}
+      explicit constexpr MetaNaked(const T* definition) noexcept
          : mDefinition {definition} {}
 
       constexpr MetaNaked& operator = (const MetaNaked&) noexcept = default;

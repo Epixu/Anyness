@@ -36,7 +36,6 @@ namespace Langulus::RTTI
    /// Available only if managed reflection feature is enabled                
    ///                                                                        
    class Registry {
-   private:
       template<class T>
       using BoundedMeta = ::std::unordered_map<Token, T>;
       template<class T>
@@ -63,7 +62,7 @@ namespace Langulus::RTTI
       void RegisterAmbiguous(const Token&, const Lowercase&, Inner::Definition*) noexcept;
       void UnregisterAmbiguous(const Token&, const Lowercase&, Inner::Definition*) noexcept;
       auto GetMetaByToken(const auto&, const Token&, const Token&) const noexcept;
-      auto GetMetaByID(const auto&) const noexcept;
+      auto GetMetaByID(const auto&, const auto&) const noexcept;
       auto GetMetaList(const auto&, const Token&, const Token&) const noexcept -> const MetaList&;
 
    protected:

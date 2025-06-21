@@ -214,6 +214,7 @@ namespace Langulus
    /// Custom assumption that works both at runtime and at compile-time       
    /// Tested only if LANGULUS(SAFE) >= LEVEL                                 
    /// Will throw an exception if condition isn't met at runtime              
+   ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
@@ -284,29 +285,25 @@ namespace Langulus
 /// Convenience macro for specifying temporary lazyness                       
 #define TODO() ::Langulus::Assert(false, HERE(), "Unfinished code")
 
-namespace fmt
-{
-   
-   ///                                                                        
-   /// Extend FMT to be capable of logging any exception                      
-   ///                                                                        
-   template<::Langulus::CT::Exception T>
-   struct formatter<T> {
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
-      }
 
-      template<class CONTEXT> LANGULUS(INLINED)
-      auto format(T const& e, CONTEXT& ctx) const {
-         constexpr auto name = ::Langulus::NameOf<T>();
-         #if LANGULUS(DEBUG)
-            return ::fmt::format_to(ctx.out(), "{}({} at {})",
-               static_cast<::Langulus::Token>(name), e.mMessage, e.mLocation);
-         #else
-            return ::fmt::format_to(ctx.out(), "{}", static_cast<::Langulus::Token>(name));
-         #endif
-      }
-   };
+///                                                                           
+/// Extend FMT to be capable of logging any exception                         
+///                                                                           
+template<::Langulus::CT::Exception T>
+struct ::fmt::formatter<T> {
+   template<class CONTEXT>
+   constexpr auto parse(CONTEXT& ctx) {
+      return ctx.begin();
+   }
 
-} // namespace fmt
+   template<class CONTEXT> LANGULUS(INLINED)
+   auto format(T const& e, CONTEXT& ctx) const {
+      constexpr auto name = ::Langulus::NameOf<T>();
+      #if LANGULUS(DEBUG)
+         return ::fmt::format_to(ctx.out(), "{}({} at {})",
+            static_cast<::Langulus::Token>(name), e.mMessage, e.mLocation);
+      #else
+         return ::fmt::format_to(ctx.out(), "{}", static_cast<::Langulus::Token>(name));
+      #endif
+   }
+};

@@ -208,7 +208,20 @@ namespace Langulus::Logger
    } // namespace Langulus::Logger::Detail
 
 #endif
-
+   
+   /// Generate hexadecimal string from a given value                         
+   ///   @param format - the template string                                  
+   ///   @param args... - the arguments                                       
+   ///   @return the instantiated template                                    
+   auto Hex(const auto& from) {
+      ::std::array<char, sizeof(from) * 2> result {};
+      auto from_bytes = reinterpret_cast<const std::byte*>(&from);
+      auto to_bytes = result.data();
+      for (size_t i = 0; i < sizeof(from); ++i)
+         ::fmt::format_to_n(to_bytes + i * 2, 2, "{:02X}", from_bytes[i]);
+      return result;
+   }
+   
    /// A general new-line write function that continues the last intent/style 
    ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
@@ -494,46 +507,160 @@ namespace Langulus::Logger
       #endif
    }
 
+   /// Gets stringified in a human readable size as KB, MB, GB, etc.          
+   struct Size {
+		size_t bytes;
+
+      std::string format() const {
+         std::ostringstream oss;
+         oss << std::setprecision(3);
+         if (bytes < 1'000LL) oss << bytes << " B";
+         else if (bytes < 1'000'000LL) oss << (bytes * 1. / 1000LL) << " KB";
+         else if (bytes < 1'000'000'000LL) oss << (bytes * 1. / 1000'000LL) << " MB";
+         else if (bytes < 1'000'000'000'000LL) oss << (bytes * 1. / 1000'000'000LL) << " GB";
+         else if (bytes < 1'000'000'000'000'000LL) oss << (bytes * 1. / 1000'000'000'000LL) << " TB";
+         else oss << (bytes * 1. / 1000'000'000'000'000LL) << " PB";
+         return oss.str();
+      }
+	};
+
+   // bytes only with integer
+   constexpr Size operator"" _B(unsigned long long int num) noexcept {
+      return {num};
+   }
+
+   // floating-point numbers, like 5.5_kB
+   constexpr Size operator"" _KiB(long double num) noexcept {
+      return {static_cast<size_t>((1LL << 10) * num)};
+   }
+
+   constexpr Size operator"" _MiB(long double num) noexcept {
+      return {static_cast<size_t>((1LL << 20) * num)};
+   }
+
+   constexpr Size operator"" _GiB(long double num) noexcept {
+      return {static_cast<size_t>((1LL << 30) * num)};
+   }
+
+   constexpr Size operator"" _TiB(long double num) noexcept {
+      return {static_cast<size_t>((1LL << 40) * num)};
+   }
+
+   constexpr Size operator"" _PiB(long double num) noexcept {
+      return {static_cast<size_t>((1LL << 50) * num)};
+   }
+
+   constexpr Size operator"" _KB(long double num) noexcept {
+      return {static_cast<size_t>(1'000LL * num)};
+   }
+
+   constexpr Size operator"" _MB(long double num) noexcept {
+      return {static_cast<size_t>(1'000'000LL * num)};
+   }
+
+   constexpr Size operator"" _GB(long double num) noexcept {
+      return {static_cast<size_t>(1'000'000'000LL * num)};
+   }
+
+   constexpr Size operator"" _TB(long double num) noexcept {
+      return {static_cast<size_t>(1'000'000'000'000LL * num)};
+   }
+
+   constexpr Size operator"" _PB(long double num) noexcept {
+      return {static_cast<size_t>(1'000'000'000'000'000LL * num)};
+   }
+
+   // repeated for integer literals so that e.g. 5_kB works
+   constexpr Size operator"" _KiB(unsigned long long int num) noexcept {
+      return {(1LL << 10) * num};
+   }
+
+   constexpr Size operator"" _MiB(unsigned long long int num) noexcept {
+      return {(1LL << 20) * num};
+   }
+
+   constexpr Size operator"" _GiB(unsigned long long int num) noexcept {
+      return {(1LL << 30) * num};
+   }
+
+   constexpr Size operator"" _TiB(unsigned long long int num) noexcept {
+      return {(1LL << 40) * num};
+   }
+
+   constexpr Size operator"" _PiB(unsigned long long int num) noexcept {
+      return {(1LL << 50) * num};
+   }
+
+   constexpr Size operator"" _KB(unsigned long long int num) noexcept {
+      return {1'000LL * num};
+   }
+
+   constexpr Size operator"" _MB(unsigned long long int num) noexcept {
+      return {1'000'000LL * num};
+   }
+
+   constexpr Size operator"" _GB(unsigned long long int num) noexcept {
+      return {1'000'000'000LL * num};
+   }
+
+   constexpr Size operator"" _TB(unsigned long long int num) noexcept {
+      return {1'000'000'000'000LL * num};
+   }
+
+   constexpr Size operator"" _PB(unsigned long long int num) noexcept {
+      return {1'000'000'000'000'000LL * num};
+   }
+
 } // namespace Langulus::Logger
 
 #if LANGULUS_FEATURE(LOGGING)
-namespace fmt
-{
-   
-   ///                                                                        
-   /// Extend FMT to be capable of logging Logger::Color                      
-   ///                                                                        
-   template<>
-   struct formatter<::Langulus::Logger::Color> {
-      using Color = ::Langulus::Logger::Color;
 
-      template<class CONTEXT>
-      constexpr auto parse(CONTEXT& ctx) {
-         return ctx.begin();
+///                                                                           
+/// Extend FMT to be capable of logging Logger::Color                         
+///                                                                           
+template<>
+struct ::fmt::formatter<::Langulus::Logger::Color> {
+   using Color = ::Langulus::Logger::Color;
+
+   template<class CONTEXT>
+   constexpr auto parse(CONTEXT& ctx) {
+      return ctx.begin();
+   }
+
+   template<class CONTEXT> LANGULUS(INLINED)
+   auto format(Color const& c, CONTEXT& ctx) const {
+      text_style style = {};
+
+      if (c == Color::NoForeground or c == Color::NoBackground) {
+         return ctx.out();
       }
-
-      template<class CONTEXT> LANGULUS(INLINED)
-      auto format(Color const& c, CONTEXT& ctx) const {
-         text_style style = {};
-
-         if (c == Color::NoForeground or c == Color::NoBackground) {
-            return ctx.out();
-         }
-         else if ((c >= Color::Black    and c < Color::BlackBgr)
-               or (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
-            // Create a new foreground color style                      
-            style = fg(static_cast<terminal_color>(c));
-            const auto ansi = detail::make_foreground_color<char>(style.get_foreground());
-            return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
-         }
-         else {
-            // Create a new background color style                      
-            style = bg(static_cast<terminal_color>(static_cast<uint8_t>(c) - 10));
-            const auto ansi = detail::make_background_color<char>(style.get_background());
-            return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
-         }
+      else if ((c >= Color::Black    and c < Color::BlackBgr)
+            or (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
+         // Create a new foreground color style                      
+         style = fg(static_cast<terminal_color>(c));
+         const auto ansi = detail::make_foreground_color<char>(style.get_foreground());
+         return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
       }
-   };
+      else {
+         // Create a new background color style                      
+         style = bg(static_cast<terminal_color>(static_cast<uint8_t>(c) - 10));
+         const auto ansi = detail::make_background_color<char>(style.get_background());
+         return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
+      }
+   }
+};
 
-} // namespace fmt
+template<>
+struct ::fmt::formatter<::Langulus::Logger::Size> {
+   template<class CONTEXT>
+   constexpr auto parse(CONTEXT& ctx) {
+      return ctx.begin();
+   }
+
+   template<class CONTEXT> LANGULUS(INLINED)
+   auto format(::Langulus::Logger::Size const& bs, CONTEXT& ctx) {
+      return format_to(ctx.out(), "{}", bs.format());
+   }
+};
+
 #endif

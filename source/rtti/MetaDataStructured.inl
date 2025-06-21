@@ -32,7 +32,7 @@ namespace Langulus::RTTI::Inner
    /// Disregards all cv-qualifiers, pointers, array extents, etc.            
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
-   bool MetaDataStructured_16_16::Is(const MetaDataStructured_16_16& other) const noexcept {
+   inline bool MetaDataStructured_16_16::Is(const MetaDataStructured_16_16& other) const noexcept {
       return Instance.GetMetaData(*this)->mOrigin
           == Instance.GetMetaData(other)->mOrigin;
    }
@@ -59,18 +59,28 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the minimal allocation page                                        
-   auto MetaDataStructured_16_16::GetMinAllocation() const noexcept -> size_t {
+   inline auto MetaDataStructured_16_16::GetMinAllocation() const noexcept -> size_t {
       return Instance.GetMetaData(*this)->mAllocationPage;
    }
 
    /// Get the alignment of the type                                          
-   auto MetaDataStructured_16_16::GetAlignment() const noexcept -> size_t {
+   inline auto MetaDataStructured_16_16::GetAlignment() const noexcept -> size_t {
       return Instance.GetMetaData(*this)->mAlign;
    }
 
    /// Get the name of the type, the result of NameOf                         
-   auto MetaDataStructured_16_16::GetName() const noexcept -> Token {
+   inline auto MetaDataStructured_16_16::GetName() const noexcept -> Token {
       return Instance.GetMetaData(*this)->mToken;
+   }
+
+   /// Get the reflected pool tactic                                          
+   inline auto MetaDataStructured_16_16::GetPoolTactic() const noexcept -> PoolTactic {
+      return Instance.GetMetaData(*this)->mPoolTactic;
+   }
+
+   /// Get the poolchain                                                      
+   inline auto MetaDataStructured_16_16::GetPoolchain() const noexcept -> void* {
+      return Instance.GetMetaData(*this)->mPoolChain;
    }
 
    /// Check if type is CT::Dense                                             
@@ -104,92 +114,92 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the reflected destructor                                           
-   auto MetaDataStructured_16_16::GetDestructor() const noexcept -> DefinitionData::FDestroy {
+   inline auto MetaDataStructured_16_16::GetDestructor() const noexcept -> DefinitionData::FDestroy {
       return Instance.GetMetaData(*this)->mDestructor;
    }
 
    /// Get the reflected referencer                                           
-   auto MetaDataStructured_16_16::GetReferencer() const noexcept -> DefinitionData::FReference {
+   inline auto MetaDataStructured_16_16::GetReferencer() const noexcept -> DefinitionData::FReference {
       return Instance.GetMetaData(*this)->mReferencer;
    }
 
    /// Get the reflected resolver                                             
-   auto MetaDataStructured_16_16::GetResolver() const noexcept -> DefinitionData::FResolve {
+   inline auto MetaDataStructured_16_16::GetResolver() const noexcept -> DefinitionData::FResolve {
       return Instance.GetMetaData(*this)->mResolver;
    }
 
    /// Get the reflected refer-constructor                                    
-   auto MetaDataStructured_16_16::GetReferConstructor() const noexcept -> DefinitionData::FCopyConstruct {
+   inline auto MetaDataStructured_16_16::GetReferConstructor() const noexcept -> DefinitionData::FCopyConstruct {
       return Instance.GetMetaData(*this)->mReferConstructor;
    }
 
    /// Get the reflected refer-assigner                                       
-   auto MetaDataStructured_16_16::GetReferAssigner() const noexcept -> DefinitionData::FCopyAssign {
+   inline auto MetaDataStructured_16_16::GetReferAssigner() const noexcept -> DefinitionData::FCopyAssign {
       return Instance.GetMetaData(*this)->mReferAssigner;
    }
 
    /// Get the reflected move-constructor                                     
-   auto MetaDataStructured_16_16::GetMoveConstructor() const noexcept -> DefinitionData::FMoveConstruct {
+   inline auto MetaDataStructured_16_16::GetMoveConstructor() const noexcept -> DefinitionData::FMoveConstruct {
       return Instance.GetMetaData(*this)->mMoveConstructor;
    }
 
    /// Get the reflected move-assigner                                        
-   auto MetaDataStructured_16_16::GetMoveAssigner() const noexcept -> DefinitionData::FMoveAssign {
+   inline auto MetaDataStructured_16_16::GetMoveAssigner() const noexcept -> DefinitionData::FMoveAssign {
       return Instance.GetMetaData(*this)->mMoveAssigner;
    }
 
    /// Get the reflected abandon-constructor                                  
-   auto MetaDataStructured_16_16::GetAbandonConstructor() const noexcept -> DefinitionData::FMoveConstruct {
+   inline auto MetaDataStructured_16_16::GetAbandonConstructor() const noexcept -> DefinitionData::FMoveConstruct {
       return Instance.GetMetaData(*this)->mAbandonConstructor;
    }
 
    /// Get the reflected abandon-assigner                                     
-   auto MetaDataStructured_16_16::GetAbandonAssigner() const noexcept -> DefinitionData::FMoveAssign {
+   inline auto MetaDataStructured_16_16::GetAbandonAssigner() const noexcept -> DefinitionData::FMoveAssign {
       return Instance.GetMetaData(*this)->mAbandonAssigner;
    }
 
    /// Get the reflected disown-constructor                                   
-   auto MetaDataStructured_16_16::GetDisownConstructor() const noexcept -> DefinitionData::FCopyConstruct {
+   inline auto MetaDataStructured_16_16::GetDisownConstructor() const noexcept -> DefinitionData::FCopyConstruct {
       return Instance.GetMetaData(*this)->mDisownConstructor;
    }
 
    /// Get the reflected disown-assigner                                      
-   auto MetaDataStructured_16_16::GetDisownAssigner() const noexcept -> DefinitionData::FCopyAssign {
+   inline auto MetaDataStructured_16_16::GetDisownAssigner() const noexcept -> DefinitionData::FCopyAssign {
       return Instance.GetMetaData(*this)->mDisownAssigner;
    }
 
    /// Get the reflected clone-constructor                                    
-   auto MetaDataStructured_16_16::GetCloneConstructor() const noexcept -> DefinitionData::FCopyConstruct {
+   inline auto MetaDataStructured_16_16::GetCloneConstructor() const noexcept -> DefinitionData::FCopyConstruct {
       return Instance.GetMetaData(*this)->mCloneConstructor;
    }
 
    /// Get the reflected clone-assigner                                       
-   auto MetaDataStructured_16_16::GetCloneAssigner() const noexcept -> DefinitionData::FCopyAssign {
+   inline auto MetaDataStructured_16_16::GetCloneAssigner() const noexcept -> DefinitionData::FCopyAssign {
       return Instance.GetMetaData(*this)->mCloneAssigner;
    }
 
    /// Get the reflected copy-constructor                                     
-   auto MetaDataStructured_16_16::GetCopyConstructor() const noexcept -> DefinitionData::FCopyConstruct {
+   inline auto MetaDataStructured_16_16::GetCopyConstructor() const noexcept -> DefinitionData::FCopyConstruct {
       return Instance.GetMetaData(*this)->mCopyConstructor;
    }
 
    /// Get the reflected copy-assigner                                        
-   auto MetaDataStructured_16_16::GetCopyAssigner() const noexcept -> DefinitionData::FCopyAssign {
+   inline auto MetaDataStructured_16_16::GetCopyAssigner() const noexcept -> DefinitionData::FCopyAssign {
       return Instance.GetMetaData(*this)->mCopyAssigner;
    }
 
    /// Get the reflected comparer                                             
-   auto MetaDataStructured_16_16::GetComparer() const noexcept -> DefinitionData::FCompare {
+   inline auto MetaDataStructured_16_16::GetComparer() const noexcept -> DefinitionData::FCompare {
       return Instance.GetMetaData(*this)->mComparer;
    }
 
    /// Get the reflected hasher                                               
-   auto MetaDataStructured_16_16::GetHasher() const noexcept -> DefinitionData::FHash {
+   inline auto MetaDataStructured_16_16::GetHasher() const noexcept -> DefinitionData::FHash {
       return Instance.GetMetaData(*this)->mHasher;
    }
 
    /// Check if type has an explicit GetHash() method                         
-   bool MetaDataStructured_16_16::HasGetHashMethod() const noexcept {
+   inline bool MetaDataStructured_16_16::HasGetHashMethod() const noexcept {
       return Instance.GetMetaData(*this)->mHasGetHashMethod;
    }
 

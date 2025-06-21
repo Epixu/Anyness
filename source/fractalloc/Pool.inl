@@ -19,8 +19,8 @@ namespace Langulus::Fractalloc
    /// Fast log2                                                              
    /// https://stackoverflow.com/questions/11376288                           
    LANGULUS(ALWAYS_INLINED)
-   constexpr Size FastLog2(const Size x) noexcept {
-      return x < 2 ? 0 : Size {8 * sizeof(Size)} - ::std::countl_zero(x) - Size {1};
+   constexpr size_t FastLog2(const size_t x) noexcept {
+      return x < 2 ? 0 : size_t {8 * sizeof(size_t)} - ::std::countl_zero(x) - size_t {1};
    }
    
    /// Get least significant bit                                              
@@ -55,10 +55,10 @@ namespace Langulus::Fractalloc
    ///   @param size - bytes of the usable block to initialize with           
    ///   @param memory - handle for use with std::free()                      
    LANGULUS(INLINED)
-   Pool::Pool(DMeta meta, Size size, void* memory) noexcept
+   Pool::Pool(DMeta meta, size_t size, void* memory) noexcept
       : mAllocatedByBackend     {size}
       , mAllocatedByBackendLog2 {FastLog2(size)}
-      , mAllocatedByBackendLSB  {LSB(size >> Size {1})}
+      , mAllocatedByBackendLSB  {LSB(size >> size_t {1})}
       , mThreshold              {size}
       , mThresholdPrevious      {size}
       , mThresholdMin           {Roof2(meta.GetMinAllocation())}
@@ -79,22 +79,22 @@ namespace Langulus::Fractalloc
    /// Get the minimum allocation for an entry inside this pool               
    ///   @return the size in bytes, always a power-of-two                     
    LANGULUS(INLINED)
-   constexpr Size Pool::GetMinAllocation() const noexcept {
+   constexpr size_t Pool::GetMinAllocation() const noexcept {
       return mThresholdMin;
    }
 
    /// Get the total byte size of the pool, including overhead                
    ///   @return the size in bytes                                            
    LANGULUS(INLINED)
-   constexpr Size Pool::GetTotalSize() const noexcept {
-      return Pool::GetSize() + mAllocatedByBackend;
+   constexpr size_t Pool::GetTotalSize() const noexcept {
+      return GetSize() + mAllocatedByBackend;
    }
 
    /// Get the max number of possible entries                                 
    /// (if all of them are as small as possible)                              
    ///   @return the size in bytes, always a power-of-two                     
    LANGULUS(INLINED)
-   constexpr Size Pool::GetMaxEntries() const noexcept {
+   constexpr size_t Pool::GetMaxEntries() const noexcept {
       return mAllocatedByBackend / GetMinAllocation();
    }
 
@@ -104,13 +104,13 @@ namespace Langulus::Fractalloc
    void Pool::FreePoolChain() {
       if (mNext)
          mNext->FreePoolChain();
-      ::std::free(mHandle);
+      free(mHandle);
    }
 
    /// Get the size of the Pool structure, rounded up for alignment           
    ///   @return the byte size of the pool, including alignment               
    LANGULUS(INLINED)
-   constexpr Size Pool::GetSize() noexcept {
+   constexpr size_t Pool::GetSize() noexcept {
       return sizeof(Pool) + Alignment - (sizeof(Pool) % Alignment);
    }
 
@@ -121,7 +121,7 @@ namespace Langulus::Fractalloc
    ///   @param size - the number of bytes to request for the pool            
    ///   @return the number of bytes to allocate for use in the pool          
    LANGULUS(INLINED)
-   constexpr Size Pool::GetNewAllocationSize(Size size) noexcept {
+   constexpr size_t Pool::GetNewAllocationSize(size_t size) noexcept {
       constexpr auto minimum = Pool::DefaultPoolSize + Pool::GetSize();
       return ::std::max(size + Pool::GetSize(), minimum);
    }
@@ -129,29 +129,29 @@ namespace Langulus::Fractalloc
    /// Get the start of the usable memory for the pool                        
    ///   @return the start of the memory                                      
    LANGULUS(INLINED)
-   auto Pool::GetPoolStart() const noexcept -> Byte* {
-      const auto poolStart = reinterpret_cast<const Byte*>(this);
-      return const_cast<Byte*>(poolStart + Pool::GetSize());
+   auto Pool::GetPoolStart() const noexcept -> uint8_t* {
+      const auto poolStart = reinterpret_cast<const uint8_t*>(this);
+      return const_cast<uint8_t*>(poolStart + Pool::GetSize());
    }
 
    /// Get the true allocation size, as bytes requested from OS               
    ///   @return bytes allocated for the pool, including alignment/overhead   
    LANGULUS(INLINED)
-   constexpr Size Pool::GetAllocatedByBackend() const noexcept {
+   constexpr size_t Pool::GetAllocatedByBackend() const noexcept {
       return mAllocatedByBackend;
    }
 
    /// Get the allocation size, as bytes requested from client                
    ///   @return bytes allocated by the client                                
    LANGULUS(INLINED)
-   constexpr Size Pool::GetAllocatedByFrontend() const noexcept {
+   constexpr size_t Pool::GetAllocatedByFrontend() const noexcept {
       return mAllocatedByFrontend;
    }
 
    /// Allocate an entry inside the pool - returned pointer is aligned        
    ///   @param bytes - number of bytes to allocate                           
    ///   @return the new allocation, or nullptr if pool is full               
-   inline auto Pool::Allocate(const Size bytes) has_assumptions -> Allocation* {
+   inline auto Pool::Allocate(const size_t bytes) has_assumptions -> Allocation* {
       // Check if we can add a new entry                                
       const auto bytesWithPadding = Allocation::GetNewAllocationSize(bytes);
       if (not CanContain(bytesWithPadding))
@@ -176,10 +176,10 @@ namespace Langulus::Fractalloc
 
          ++mEntries;
 
-         if (reinterpret_cast<Byte*>(newEntry) + mThreshold >= mMemoryEnd) {
+         if (reinterpret_cast<uint8_t*>(newEntry) + mThreshold >= mMemoryEnd) {
             // Reset carriage and shift level when it goes beyond       
             mThresholdPrevious = mThreshold;
-            mThreshold >>= Size {1};
+            mThreshold >>= size_t {1};
          }
       }
 
@@ -236,7 +236,7 @@ namespace Langulus::Fractalloc
    ///   @param entry - entry to resize                                       
    ///   @param bytes - new number of bytes                                   
    ///   @return true if entry was enlarged without conflict                  
-   inline bool Pool::Reallocate(Allocation* entry, const Size bytes) has_assumptions {
+   inline bool Pool::Reallocate(Allocation* entry, const size_t bytes) has_assumptions {
       AssumeDev(bytes and Contains(entry) and entry and entry->GetUses(), HERE(),
          "Invalid reallocation");
 
@@ -292,7 +292,7 @@ namespace Langulus::Fractalloc
    ///   @param bytes - number of bytes to check                              
    ///   @return true if bytes can be contained in a new/recycled element     
    LANGULUS(INLINED)
-   constexpr bool Pool::CanContain(Size bytes) const noexcept {
+   constexpr bool Pool::CanContain(size_t bytes) const noexcept {
       return mThreshold >= mThresholdMin and bytes <= mThreshold;
    }
 
@@ -320,7 +320,7 @@ namespace Langulus::Fractalloc
    void Pool::Trim() {
       AssumeDevAndOptimize(mEntries, "Should have at least one entry");
       const Allocation* entry;
-      Size ecounter = mEntries;
+      size_t ecounter = mEntries;
       do {
          entry = AllocationFromIndex(--ecounter); //TODO could be optimized further
          if (entry->mReferences)
@@ -356,7 +356,7 @@ namespace Langulus::Fractalloc
 
       mThreshold = ThresholdFromIndex(mEntries - 1);
       mThresholdPrevious = mThreshold != mAllocatedByBackend
-         ? Size {mThreshold * 2} : mThreshold;
+         ? size_t {mThreshold * 2} : mThreshold;
    }
 
    /// Get threshold associated with an index                                 
@@ -364,24 +364,24 @@ namespace Langulus::Fractalloc
    ///   @param index - the index                                             
    ///   @return the threshold                                                
    LANGULUS(INLINED)
-   Size Pool::ThresholdFromIndex(Size index) const noexcept {
-      return Size {1} << (mAllocatedByBackendLSB - FastLog2(index));
+   size_t Pool::ThresholdFromIndex(size_t index) const noexcept {
+      return size_t {1} << (mAllocatedByBackendLSB - FastLog2(index));
    }
 
    /// Get allocation from index                                              
    ///   @param index - the index                                             
    ///   @return the allocation (not validated and constrained)               
    LANGULUS(INLINED)
-   auto Pool::AllocationFromIndex(Size index) const noexcept -> const Allocation* {
+   auto Pool::AllocationFromIndex(size_t index) const noexcept -> const Allocation* {
       // Credit goes to Vladislav Penchev                               
       if (index == 0)
          return reinterpret_cast<const Allocation*>(mMemory);
 
-      constexpr Size one = 1;
-      const Size basePower = FastLog2(index);
-      const Size baselessIndex = index - (one << basePower);
-      const Size levelIndex = (baselessIndex << one) + one;
-      const Size levelSize = (one << (mAllocatedByBackendLSB - basePower));
+      constexpr size_t one = 1;
+      const size_t basePower = FastLog2(index);
+      const size_t baselessIndex = index - (one << basePower);
+      const size_t levelIndex = (baselessIndex << one) + one;
+      const size_t levelSize = (one << (mAllocatedByBackendLSB - basePower));
       return reinterpret_cast<const Allocation*>(mMemory + levelIndex * levelSize);
    }
 
@@ -390,17 +390,17 @@ namespace Langulus::Fractalloc
    ///   @param ptr - the address                                             
    ///   @return the index                                                    
    LANGULUS(INLINED)
-   Size Pool::IndexFromAddress(const void* ptr) const has_assumptions {
+   size_t Pool::IndexFromAddress(const void* ptr) const has_assumptions {
       AssumeDev(Contains(ptr), HERE(), "Entry outside pool");
 
       // Credit goes to Yasen Vidolov (G1)                              
-      const Size i = static_cast<const Byte*>(ptr) - mMemory;
+      const size_t i = static_cast<const uint8_t*>(ptr) - mMemory;
       if (i < mThreshold or 0 == mEntries)
          return 0;
 
       // We got the index, but it is not constrained to the pool        
-      constexpr Size one = 1;
-      Size index = ((mAllocatedByBackend + i) / (i & ~(i - one)) - one) >> one;
+      constexpr size_t one = 1;
+      size_t index = ((mAllocatedByBackend + i) / (i & ~(i - one)) - one) >> one;
       while (index >= mEntries)
          index = UpIndex(index);
       return index;
@@ -411,7 +411,7 @@ namespace Langulus::Fractalloc
    ///   @param index - index to validate                                     
    ///   @returns the valid index, or InvalidIndex if invalid                 
    LANGULUS(INLINED)
-   Size Pool::ValidateIndex(Size index) const noexcept {
+   size_t Pool::ValidateIndex(size_t index) const noexcept {
       // Pool is empty, so search is pointless                          
       if (mEntries == 0)
          return InvalidIndex;
@@ -431,9 +431,9 @@ namespace Langulus::Fractalloc
    ///   @param index                                                         
    ///   @return index above the given one                                    
    LANGULUS(INLINED)
-   Size Pool::UpIndex(const Size index) const noexcept {
+   size_t Pool::UpIndex(const size_t index) const noexcept {
       // Credit goes to Vladislav Penchev                               
-      return index >> (LSB(index) + Size {1});
+      return index >> (LSB(index) + size_t {1});
    }
 
    /// Check if a memory address resigns inside pool's range                  

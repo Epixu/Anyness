@@ -19,7 +19,7 @@ namespace Langulus::Fractalloc
    ///   @param bytes - the number of allocated bytes                         
    ///   @param pool - the pool this allocation belongs to                    
    LANGULUS(ALWAYS_INLINED)
-   Allocation::Allocation(Size bytes, Pool* pool) noexcept
+   Allocation::Allocation(size_t bytes, Pool* pool) noexcept
       : mAllocatedBytes {bytes}
       , mPool           {pool} {}
 #else
@@ -36,14 +36,14 @@ namespace Langulus::Fractalloc
 
    /// Get the size of this header, rounded for alignment                     
    ///   @return the byte size of the entry, including alignment              
-   consteval Size Allocation::GetHeaderSize() noexcept {
+   consteval size_t Allocation::GetHeaderSize() noexcept {
       return sizeof(Allocation) + Alignment - (sizeof(Allocation) % Alignment);
    }
    
    /// Get the minimum possible allocation, header included                   
    ///   @return the byte size                                                
-   consteval Size Allocation::GetMinAllocation() noexcept {
-      return Allocation::GetHeaderSize() + Alignment;
+   consteval size_t Allocation::GetMinAllocation() noexcept {
+      return GetHeaderSize() + Alignment;
    }
 
    /// Get the size required for a new entry                                  
@@ -51,38 +51,38 @@ namespace Langulus::Fractalloc
    ///   @param size - the usable number of bytes required                    
    ///   @return the byte size for a new Allocation, including padding        
    LANGULUS(ALWAYS_INLINED)
-   Size Allocation::GetNewAllocationSize(Size size) noexcept {
-      const auto minimum  = Allocation::GetMinAllocation();
-      const auto proposed = Allocation::GetHeaderSize() + size;
+   size_t Allocation::GetNewAllocationSize(size_t size) noexcept {
+      constexpr auto minimum = GetMinAllocation();
+      const auto proposed = GetHeaderSize() + size;
       return proposed > minimum ? proposed : minimum;
    }
 
    /// User bytes + the header size                                           
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
-   Size Allocation::GetBackendSize() const noexcept {
-      return Allocation::GetHeaderSize() + mAllocatedBytes;
+   size_t Allocation::GetBackendSize() const noexcept {
+      return GetHeaderSize() + mAllocatedBytes;
    }
 
    /// Get the user bytes                                                     
    ///   @return the byte size of usable memory region                        
    LANGULUS(ALWAYS_INLINED)
-   Size Allocation::GetFrontendSize() const noexcept {
+   size_t Allocation::GetFrontendSize() const noexcept {
       return mAllocatedBytes;
    }
 
    /// Return the aligned start of usable block memory (const)                
    ///   @return pointer to the entry's memory                                
    LANGULUS(ALWAYS_INLINED)
-   Byte* Allocation::GetBlockStart() const noexcept {
-      const auto entryStart = reinterpret_cast<const Byte*>(this);
-      return const_cast<Byte*>(entryStart + Allocation::GetHeaderSize());
+   uint8_t* Allocation::GetBlockStart() const noexcept {
+      const auto entryStart = reinterpret_cast<const uint8_t*>(this);
+      return const_cast<uint8_t*>(entryStart + GetHeaderSize());
    }
 
    /// Return the end of usable block memory (always const)                   
    ///   @return pointer to the entry's memory end                            
    LANGULUS(ALWAYS_INLINED)
-   Byte const* Allocation::GetBlockEnd() const noexcept {
+   uint8_t const* Allocation::GetBlockEnd() const noexcept {
       return GetBlockStart() + mAllocatedBytes;
    }
    
@@ -91,7 +91,7 @@ namespace Langulus::Fractalloc
    ///   @return true if address is inside                                    
    LANGULUS(ALWAYS_INLINED)
    bool Allocation::Contains(const void* address) const noexcept {
-      const auto a = reinterpret_cast<const Byte*>(address);
+      const auto a = static_cast<const uint8_t*>(address);
       const auto blockStart = GetBlockStart();
       return a >= blockStart and a < blockStart + mAllocatedBytes;
    }

@@ -78,12 +78,42 @@ namespace Langulus::RTTI::Inner
    Lowercase ToLowercase(const Token& token) noexcept {
       Lowercase lc;
       lc.reserve(token.size());
-      ::std::transform(token.begin(), token.end(), std::back_inserter(lc),
+      ::std::ranges::transform(token.begin(), token.end(), std::back_inserter(lc),
          [](char c) { return static_cast<char>(::std::tolower(c)); }
       );
       return lc;
    }
 
+   /// Get the last, most relevant part of a token that may or may not have   
+   /// namespaces in it. Essentially finds last "::" that isn't enclosed in   
+   /// a template <>, and skip forward to that                                
+   ///   @param token - the token to scan                                     
+   ///   @return the last token                                               
+   constexpr Token ToLastToken(const Token& token) noexcept {
+      size_t depth = 0;
+      for (size_t i = token.size() - 1; i < token.size(); --i) {
+         switch (token[i]) {
+         case ':':
+            // If no depth, then we found it                            
+            if (not depth)
+               return token.substr(i + 1, token.size() - i - 1);
+            break;
+         case '>':
+            // Open template scope                                      
+            ++depth;
+            break;
+         case '<':
+            // Close template scope                                     
+            if (depth)
+               --depth;
+            break;
+         default:
+            break;
+         }
+      }
+
+      return token;
+   }
 
    ///                                                                        
    ///   Abstract definition                                                  

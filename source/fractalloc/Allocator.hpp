@@ -9,12 +9,15 @@
 #include <Langulus/Core.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
-#error "This file shouldn't be included if MANAGED_MEMORY is disabled"
+   #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
 #include "Pool.hpp"
 #include <unordered_set>
-#include <optional>
+
+#if LANGULUS_FEATURE(MEMORY_STATISTICS)
+   #include <optional>
+#endif
 
 #if defined(LANGULUS_EXPORT_ALL) or defined(LANGULUS_EXPORT_FRACTALLOC)
    #define LANGULUS_API_FRACTALLOC() LANGULUS_EXPORT()
@@ -39,24 +42,24 @@ namespace Langulus::Fractalloc
          ///                                                                  
          struct Statistics {
             // The real allocated bytes, provided by malloc in backend  
-            Size mBytesAllocatedByBackend {};
+            size_t mBytesAllocatedByBackend {};
             // The bytes allocated by the frontend                      
-            Size mBytesAllocatedByFrontend {};
+            size_t mBytesAllocatedByFrontend {};
             // Number of registered entries                             
-            Size mEntries {};
+            size_t mEntries {};
             // Number of registered pools                               
-            Size mPools {};
+            size_t mPools {};
             // Increases with each call to State::Assert, used to       
             // diff pools                                               
-            Size mStep {};
+            size_t mStep {};
 
             #if LANGULUS_FEATURE(MANAGED_REFLECTION)
                // Number of registered meta datas                       
-               Size mDataDefinitions {};
+               size_t mDataDefinitions {};
                // Number of registered meta traits                      
-               Size mTraitDefinitions {};
+               size_t mTraitDefinitions {};
                // Number of registered meta verbs                       
-               Size mVerbDefinitions {};
+               size_t mVerbDefinitions {};
             #endif
 
             bool operator == (const Statistics&) const has_assumptions;
@@ -95,7 +98,7 @@ namespace Langulus::Fractalloc
       mutable const Pool* mLastFoundPool {};
 
       // Pool chains for types that use PoolTactic::Size                
-      static constexpr Size SizeBuckets = sizeof(Size) * 8;
+      static constexpr size_t SizeBuckets = sizeof(size_t) * 8;
       Pool* mSizePoolChain[SizeBuckets] {};
 
       // A set of types, that are currently in use                      
@@ -106,7 +109,7 @@ namespace Langulus::Fractalloc
    private:
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
          LANGULUS_API(FRACTALLOC)
-         static void DumpPool(Size, const Pool*) noexcept;
+         static void DumpPool(size_t, const Pool*) noexcept;
          
          LANGULUS_API(FRACTALLOC)
          bool IntegrityCheckChain(const Pool*);
@@ -122,10 +125,10 @@ namespace Langulus::Fractalloc
 
    public:
       LANGULUS_API(FRACTALLOC)
-      static auto Allocate(DMeta, Size) has_assumptions -> Allocation*;
+      static auto Allocate(DMeta, size_t) has_assumptions -> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
-      static auto Reallocate(Size, Allocation*) has_assumptions-> Allocation*;
+      static auto Reallocate(size_t, Allocation*) has_assumptions-> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
       static void Deallocate(Allocation*) has_assumptions;
@@ -137,7 +140,7 @@ namespace Langulus::Fractalloc
       static bool CheckAuthority(DMeta, const void*) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
-      static Pool* AllocatePool(DMeta, Size) has_assumptions;
+      static Pool* AllocatePool(DMeta, size_t) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
       static void DeallocatePool(Pool*) has_assumptions;
@@ -147,7 +150,7 @@ namespace Langulus::Fractalloc
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          LANGULUS_API(FRACTALLOC)
-         static Size CheckBoundary(const Token&) noexcept;
+         static size_t CheckBoundary(const Token&) noexcept;
       #endif
 
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)

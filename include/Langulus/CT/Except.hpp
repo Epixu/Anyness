@@ -36,8 +36,8 @@ namespace Langulus
    struct Exception {
       using CTTI_Exception = Yes;
 
-      static constexpr const char* DefaultMessage  = "<no information provided>";
-      static constexpr const char* DefaultLocation = "<unknown location>";
+      static constexpr auto DefaultMessage  = "<no information provided>";
+      static constexpr auto DefaultLocation = "<unknown location>";
 
       #if LANGULUS(DEBUG)
          // Exception message                                           
@@ -52,5 +52,6 @@ namespace Langulus
          constexpr Exception(const char*, const char*) noexcept {}
       #endif
    };
+   static_assert(CT::Exception<Exception>);
 
 } // namespace Langulus

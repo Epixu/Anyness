@@ -476,9 +476,7 @@ namespace Langulus
    
    /// Same as ::std::declval, but adequately named                           
    template<class T>
-   T&& Fake() {
-      static_assert(false, "Calling Fake is ill-formed");
-   }
+   T&& Fake() { static_assert(false, "Calling Fake is ill-formed"); }
    
    /// I don't like how long ::std::conditional_t is to write                 
    /// Also, std::conditional_t must instantiate both paths, which is a big   

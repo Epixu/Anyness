@@ -25,9 +25,6 @@ namespace Langulus::Fractalloc
       class MallocHandle;
    #endif
 
-   using Size = ::std::size_t;
-   using Byte = ::std::uint8_t;
-
 
    ///                                                                        
    ///   Memory allocation                                                    
@@ -45,7 +42,7 @@ namespace Langulus::Fractalloc
       int mReferences = 1;
 
       // Allocated bytes for this chunk                                 
-      Size mAllocatedBytes;
+      size_t mAllocatedBytes;
 
       // This pointer has three uses, depending on mReferences          
       // If mReferences > 0 and MANAGED_MEMORY is enabled, it points    
@@ -76,20 +73,20 @@ namespace Langulus::Fractalloc
       ~Allocation() = delete;
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
-      explicit Allocation(Size, Pool*) noexcept;
+      explicit Allocation(size_t, Pool*) noexcept;
    #else
       explicit Allocation(Size, MallocHandle*) noexcept;
    #endif
 
-      static consteval Size GetHeaderSize() noexcept;
-      static consteval Size GetMinAllocation() noexcept;
-      static Size GetNewAllocationSize(Size) noexcept;
+      static consteval size_t GetHeaderSize() noexcept;
+      static consteval size_t GetMinAllocation() noexcept;
+      static size_t GetNewAllocationSize(size_t) noexcept;
 
       auto GetUses() const noexcept { return mReferences; }
-      Size GetBackendSize() const noexcept;
-      Size GetFrontendSize() const noexcept;
-      auto GetBlockStart() const noexcept -> Byte*;
-      auto GetBlockEnd() const noexcept -> Byte const*;
+      auto GetBackendSize() const noexcept -> size_t;
+      auto GetFrontendSize() const noexcept -> size_t;
+      auto GetBlockStart() const noexcept -> uint8_t*;
+      auto GetBlockEnd() const noexcept -> uint8_t const*;
       bool Contains(const void*) const noexcept;
       void Keep(int = 1) noexcept;
       void Free(int = 1) noexcept;
@@ -97,9 +94,8 @@ namespace Langulus::Fractalloc
       /// A simple request for allocating memory                              
       /// It is used as optimization to avoid divisions by stride             
       struct Request {
-         Size mByteSize IF_SAFE(= 0);
-         Size mElementCount IF_SAFE(= 0);
-
+         size_t mByteSize IF_SAFE(= 0);
+         size_t mElementCount IF_SAFE(= 0);
          IF_UNSAFE(constexpr Request() {})
       };
    };

@@ -6,8 +6,10 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include <Langulus/Core.hpp>
+
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
-#error "This file shouldn't be included if MANAGED_MEMORY is disabled"
+   #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
 #include "Allocation.hpp"
@@ -27,24 +29,24 @@ namespace Langulus::Fractalloc
    friend struct Allocator;
    protected:
       // Bytes allocated by the backend                                 
-      const Size mAllocatedByBackend {};
-      const Size mAllocatedByBackendLog2 {};
-      const Size mAllocatedByBackendLSB {};
+      const size_t mAllocatedByBackend {};
+      const size_t mAllocatedByBackendLog2 {};
+      const size_t mAllocatedByBackendLSB {};
 
       // Bytes allocated by the frontend                                
-      Size mAllocatedByFrontend {};
+      size_t mAllocatedByFrontend {};
       // Number of entries that have been used overall                  
-      Size mEntries {};
+      size_t mEntries {};
       // A chain of freed entries in the range [0-mEntries)             
       Allocation* mLastFreed {};
       // Current threshold, that is, max size of a new entry            
-      Size mThreshold {};
-      Size mThresholdPrevious {};
+      size_t mThreshold {};
+      size_t mThresholdPrevious {};
       // Smallest allocation possible for the pool                      
-      Size mThresholdMin {};
+      size_t mThresholdMin {};
       // Pointer to start of usable memory                              
-      Byte* mMemory {};
-      Byte* mMemoryEnd {};
+      uint8_t* mMemory {};
+      uint8_t* mMemoryEnd {};
       // Associated meta data, when types are reflected with nondefault 
       // PoolTactic                                                     
       DMeta mMeta {};
@@ -56,8 +58,8 @@ namespace Langulus::Fractalloc
 
    #if LANGULUS_FEATURE(MEMORY_STATISTICS)
       // Acts like a timestamp of when the allocation happened          
-      Size mStep;
-      Size mValidEntries {};
+      size_t mStep;
+      size_t mValidEntries {};
    #endif
 
    public:
@@ -66,41 +68,41 @@ namespace Langulus::Fractalloc
       Pool(Pool&&) = delete;
       ~Pool() = delete;
 
-      Pool(DMeta, Size, void*) noexcept;
+      Pool(DMeta, size_t, void*) noexcept;
 
       // Default pool allocation is 1 MB                                
-      static constexpr Size DefaultPoolSize = 1024 * 1024;
-      static constexpr Size InvalidIndex = ::std::numeric_limits<Size>::max();
+      static constexpr size_t DefaultPoolSize = 1024 * 1024;
+      static constexpr size_t InvalidIndex = -1;
 
    public:
-      static constexpr Size GetSize() noexcept;
-      static constexpr Size GetNewAllocationSize(Size) noexcept;
+      static constexpr size_t GetSize() noexcept;
+      static constexpr size_t GetNewAllocationSize(size_t) noexcept;
 
-      auto GetPoolStart() const noexcept -> Byte*;
+      auto GetPoolStart() const noexcept -> uint8_t*;
 
-      constexpr Size GetMinAllocation() const noexcept;
-      constexpr Size GetTotalSize() const noexcept;
-      constexpr Size GetMaxEntries() const noexcept;
-      constexpr Size GetAllocatedByBackend() const noexcept;
-      constexpr Size GetAllocatedByFrontend() const noexcept;
+      constexpr auto GetMinAllocation() const noexcept -> size_t;
+      constexpr auto GetTotalSize() const noexcept -> size_t;
+      constexpr auto GetMaxEntries() const noexcept -> size_t;
+      constexpr auto GetAllocatedByBackend() const noexcept -> size_t;
+      constexpr auto GetAllocatedByFrontend() const noexcept -> size_t;
       constexpr bool IsInUse() const noexcept;
-      constexpr bool CanContain(Size) const noexcept;
+      constexpr bool CanContain(size_t) const noexcept;
       bool Contains(const void*) const noexcept;
       auto Find(const void*) const has_assumptions -> const Allocation*;
 
-      auto Allocate(Size) has_assumptions -> Allocation*;
-      bool Reallocate(Allocation*, Size) has_assumptions;
+      auto Allocate(size_t) has_assumptions -> Allocation*;
+      bool Reallocate(Allocation*, size_t) has_assumptions;
       void Deallocate(Allocation*) has_assumptions;
       void FreePoolChain();
       void Null();
       void Touch();
       void Trim();
 
-      Size ThresholdFromIndex(Size) const noexcept;
-      Size IndexFromAddress(const void*) const has_assumptions;
-      Size ValidateIndex(Size) const noexcept;
-      Size UpIndex(Size) const noexcept;
-      auto AllocationFromIndex(Size) const noexcept -> const Allocation*;
+      auto ThresholdFromIndex(size_t) const noexcept -> size_t;
+      auto IndexFromAddress(const void*) const has_assumptions -> size_t;
+      auto ValidateIndex(size_t) const noexcept -> size_t;
+      auto UpIndex(size_t) const noexcept -> size_t;
+      auto AllocationFromIndex(size_t) const noexcept -> const Allocation*;
       auto AllocationFromAddress(const void*) const has_assumptions -> const Allocation*;
    };
 
