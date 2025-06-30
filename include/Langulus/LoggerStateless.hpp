@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 #include <fmt/color.h>
 #include <fmt/chrono.h>
+#include <array>
 
 
 namespace Langulus::CT
@@ -21,10 +22,12 @@ namespace Langulus::CT
    /// Anything formattable by fmt is also loggable                           
    /// You can extend this concept by specializing fmt::formatter yourself    
    template<class...T>
-   concept Loggable = (::fmt::is_formattable<T>::value and ...);
+   concept Loggable = Inner::CheckSize<T...>()
+       and (::fmt::is_formattable<T>::value and ...);
 
    template<class...T>
-   concept NotLoggable = ((not Loggable<T>) and ...);
+   concept NotLoggable = Inner::CheckSize<T...>()
+       and ((not Loggable<T>) and ...);
 
 } // namespace Langulus::CT
 
@@ -222,8 +225,7 @@ namespace Langulus::Logger
       return result;
    }
    
-   /// A general new-line write function that continues the last intent/style 
-   ///   @return a reference to the logger for chaining                       
+   /// A general new-line write function that continues the last style        
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void LineRaw(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
@@ -238,9 +240,7 @@ namespace Langulus::Logger
       #endif
    }
 
-   /// A general same-line write function that continues the last style/intent
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
+   /// A general same-line write function that continues the last style       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void AppendRaw(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
@@ -255,8 +255,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line fatal error                                           
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void FatalRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_FATALERRORS) or not LANGULUS_FEATURE(LOGGING)
@@ -276,8 +274,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line error                                                 
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void ErrorRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_ERRORS) or not LANGULUS_FEATURE(LOGGING)
@@ -297,8 +293,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line warning                                               
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void WarningRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_WARNINGS) or not LANGULUS_FEATURE(LOGGING)
@@ -318,8 +312,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line with verbose information                              
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void VerboseRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_VERBOSE) or not LANGULUS_FEATURE(LOGGING)
@@ -339,8 +331,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line with information                                      
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void InfoRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_INFOS) or not LANGULUS_FEATURE(LOGGING)
@@ -360,8 +350,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line with a personal message                               
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void MessageRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_MESSAGES) or not LANGULUS_FEATURE(LOGGING)
@@ -381,8 +369,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line with special text                                     
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void SpecialRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_SPECIALS) or not LANGULUS_FEATURE(LOGGING)
@@ -402,8 +388,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line with flow information                                 
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void FlowRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_FLOWS) or not LANGULUS_FEATURE(LOGGING)
@@ -423,8 +407,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line on user input                                         
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void InputRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_INPUTS) or not LANGULUS_FEATURE(LOGGING)
@@ -444,8 +426,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line with network message                                  
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void NetworkRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_NETWORKS) or not LANGULUS_FEATURE(LOGGING)
@@ -465,8 +445,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line with a message from OS                                
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void OSRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_OS) or not LANGULUS_FEATURE(LOGGING)
@@ -486,8 +464,6 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line with an input prompt                                  
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
-   ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void PromptRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_PROMPTS) or not LANGULUS_FEATURE(LOGGING)
@@ -510,9 +486,9 @@ namespace Langulus::Logger
    struct Size {
 		size_t bytes;
 
-      std::string format() const {
-         std::ostringstream oss;
-         oss << std::setprecision(3);
+      ::std::string format() const {
+         ::std::ostringstream oss;
+         oss << ::std::setprecision(3);
          
          if (bytes < 1'000LL)
             oss << bytes << " B";
@@ -540,81 +516,63 @@ namespace Langulus::Logger
    constexpr Size operator"" _KiB(long double num) noexcept {
       return {static_cast<size_t>((1LL << 10) * num)};
    }
-
    constexpr Size operator"" _MiB(long double num) noexcept {
       return {static_cast<size_t>((1LL << 20) * num)};
    }
-
    constexpr Size operator"" _GiB(long double num) noexcept {
       return {static_cast<size_t>((1LL << 30) * num)};
    }
-
    constexpr Size operator"" _TiB(long double num) noexcept {
       return {static_cast<size_t>((1LL << 40) * num)};
    }
-
    constexpr Size operator"" _PiB(long double num) noexcept {
       return {static_cast<size_t>((1LL << 50) * num)};
    }
-
    constexpr Size operator"" _KB(long double num) noexcept {
       return {static_cast<size_t>(1'000LL * num)};
    }
-
    constexpr Size operator"" _MB(long double num) noexcept {
       return {static_cast<size_t>(1'000'000LL * num)};
    }
-
    constexpr Size operator"" _GB(long double num) noexcept {
       return {static_cast<size_t>(1'000'000'000LL * num)};
    }
-
    constexpr Size operator"" _TB(long double num) noexcept {
       return {static_cast<size_t>(1'000'000'000'000LL * num)};
    }
-
    constexpr Size operator"" _PB(long double num) noexcept {
       return {static_cast<size_t>(1'000'000'000'000'000LL * num)};
    }
 
    // repeated for integer literals so that e.g. 5_kB works
-   constexpr Size operator"" _KiB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _KiB(unsigned long long num) noexcept {
       return {(1LL << 10) * num};
    }
-
-   constexpr Size operator"" _MiB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _MiB(unsigned long long num) noexcept {
       return {(1LL << 20) * num};
    }
-
-   constexpr Size operator"" _GiB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _GiB(unsigned long long num) noexcept {
       return {(1LL << 30) * num};
    }
-
-   constexpr Size operator"" _TiB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _TiB(unsigned long long num) noexcept {
       return {(1LL << 40) * num};
    }
-
-   constexpr Size operator"" _PiB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _PiB(unsigned long long num) noexcept {
       return {(1LL << 50) * num};
    }
-
-   constexpr Size operator"" _KB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _KB(unsigned long long num) noexcept {
       return {1'000LL * num};
    }
-
-   constexpr Size operator"" _MB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _MB(unsigned long long num) noexcept {
       return {1'000'000LL * num};
    }
-
-   constexpr Size operator"" _GB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _GB(unsigned long long num) noexcept {
       return {1'000'000'000LL * num};
    }
-
-   constexpr Size operator"" _TB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _TB(unsigned long long num) noexcept {
       return {1'000'000'000'000LL * num};
    }
-
-   constexpr Size operator"" _PB(unsigned long long int num) noexcept {
+   constexpr Size operator"" _PB(unsigned long long num) noexcept {
       return {1'000'000'000'000'000LL * num};
    }
 
@@ -668,7 +626,7 @@ struct ::fmt::formatter<::Langulus::Logger::Size> {
    }
 
    template<class CONTEXT> LANGULUS(INLINED)
-   auto format(::Langulus::Logger::Size const& bs, CONTEXT& ctx) {
+   auto format(::Langulus::Logger::Size const& bs, CONTEXT& ctx) const {
       return format_to(ctx.out(), "{}", bs.format());
    }
 };
@@ -684,7 +642,7 @@ struct ::fmt::formatter<::std::array<char, N>> {
    }
 
    template<class CONTEXT> LANGULUS(INLINED)
-   auto format(::std::array<char, N> const& a, CONTEXT& ctx) {
+   auto format(::std::array<char, N> const& a, CONTEXT& ctx) const {
       return format_to(ctx.out(), "{}", ::std::string_view(a.data(), a.size()));
    }
 };

@@ -73,13 +73,29 @@ option(LANGULUS_FEATURE_MANAGED_REFLECTION
 option(LANGULUS_FEATURE_MEMORY_STATISTICS
     "Memory manager shall keep track of statistics, for the price of little overhead. Disabled by default" OFF)
 
-if(LANGULUS_SHARED_LIBRARIES)
+if (LANGULUS_SHARED_LIBRARIES)
     set(LANGULUS_LIBRARY_TYPE SHARED CACHE INTERNAL "" FORCE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "" FORCE)
     message("Building Langulus as shared library")
 else()
     set(LANGULUS_LIBRARY_TYPE STATIC CACHE INTERNAL "" FORCE)
     message("Building Langulus as static library")
+endif()
+
+# Check if this project is built as standalone, or as a part of something else	
+if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
+	# It is very important these are set before any targets are introduced		
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
+	if (LANGULUS_FEATURE_LOGGING)
+		# Configure and link {fmt} library                                      
+		fetch_external_module(
+			fmt
+			GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+			GIT_TAG        94ab51cb8c63c93220f0cdd1733bdeef95e77d60 # master	
+		)
+	endif()
 endif()
 
 # Build and install Anyness library												
@@ -93,6 +109,7 @@ add_langulus_library(LangulusAnyness ${LANGULUS_ANYNESS_SOURCES})
 target_compile_features(LangulusAnyness PUBLIC cxx_std_23)
 target_include_directories(LangulusAnyness PUBLIC include)
 target_compile_definitions(LangulusAnyness PRIVATE LANGULUS_EXPORT_ALL)
+target_link_libraries(LangulusAnyness PUBLIC $<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:fmt>)
 
 set(LANGULUS_ALIGNMENT 16 CACHE STRING "Default langulus alignment (in bytes)")
 message(STATUS "[FEATURE] Alignment was set to ${LANGULUS_ALIGNMENT} bytes")
@@ -106,24 +123,8 @@ set(LANGULUS_FPU 32 CACHE STRING "Default langulus real number size (in bits)")
 message(STATUS "[FEATURE] Real number size was set to ${LANGULUS_FPU}bit")
 target_compile_definitions(LangulusAnyness PUBLIC LANGULUS_FPU=${LANGULUS_FPU})
 
-# Check if this project is built as standalone, or as a part of something else	
-if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
-
-	if(LANGULUS_FEATURE_LOGGING)
-		# Configure and link {fmt} library                                      
-		fetch_external_module(
-			fmt
-			GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-			GIT_TAG        94ab51cb8c63c93220f0cdd1733bdeef95e77d60 # master	
-		)
-		target_link_libraries(LangulusAnyness PUBLIC fmt)
-	endif()
-endif()
-
 # Include tests																	
-if(LANGULUS_TESTING)
+if (LANGULUS_TESTING)
     enable_testing()
     add_subdirectory(test)
 endif()

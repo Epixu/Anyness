@@ -55,11 +55,11 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         auto meta = Instance.GetMetaVerb(cppname, RTTI::Boundary);
+         auto meta = Instance.GetMetaVerb(cppname, Langulus::Boundary);
          if (meta)
             return meta;
 
-         auto& definition = Instance.RegisterVerb(cppname, RTTI::Boundary);
+         auto& definition = Instance.RegisterVerb(cppname, Langulus::Boundary);
 
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
@@ -103,42 +103,39 @@ namespace Langulus::RTTI
       definition.mExecuteStateless       = VerbStateless<T>();
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      // Save the boundary at time of reflection                        
-      definition.mLibraryName = RTTI::Boundary;
-
       if (definition.mOperator.size()) {
-         Instance.RegisterVerbOperator(definition.mOperator, RTTI::Boundary);
+         Instance.RegisterVerbOperator(definition.mOperator, Langulus::Boundary);
          const auto op = IsolateOperator(definition.mOperator);
          Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op,
-            " (ID: ", definition.mHandle, ") ", Logger::Green,
+            " (ID: ", definition.mID, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
 
       if (not definition.mOperatorReverse.empty()) {
-         Instance.RegisterVerbOperatorReverse(definition.mOperatorReverse, RTTI::Boundary);
+         Instance.RegisterVerbOperatorReverse(definition.mOperatorReverse, Langulus::Boundary);
          const auto op = IsolateOperator(definition.mOperatorReverse);
          Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op,
-            " (ID: ", definition.mHandle, ") ", Logger::Green,
+            " (ID: ", definition.mID, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
 
-      Instance.RegisterVerbToken(definition.mToken, RTTI::Boundary);
+      Instance.RegisterVerbToken(definition.mToken, Langulus::Boundary);
       if (definition.mTokenReverse.empty()) {
          Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mToken,
-            " (ID: ", definition.mHandle, ") ", Logger::Green,
+            " (ID: ", definition.mID, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
       else {
-         Instance.RegisterVerbTokenReverse(definition.mTokenReverse, RTTI::Boundary);
+         Instance.RegisterVerbTokenReverse(definition.mTokenReverse, Langulus::Boundary);
          Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mToken, "/", definition.mTokenReverse,
-            " (ID: ", definition.mHandle, ") ", Logger::Green,
+            " (ID: ", definition.mID, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }

@@ -38,11 +38,11 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         auto meta = Instance.GetMetaConst(cppname, RTTI::Boundary);
+         auto meta = Instance.GetMetaConst(cppname, Langulus::Boundary);
          if (meta)
             return meta;
 
-         auto& definition = Instance.RegisterConst(cppname, RTTI::Boundary);
+         auto& definition = Instance.RegisterConst(cppname, Langulus::Boundary);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -83,15 +83,9 @@ namespace Langulus::RTTI
       definition.mData = &staticInstance;
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      // Save the boundary at time of reflection                        
-      definition.mLibraryName = RTTI::Boundary;
-
-      // After all properties have been set - generate a unique handle  
-      //definition.mHandle = Registry.GenerateHandle(&definition);
-
       Logger::VerboseRaw(
          "Constant ", Logger::Yellow, definition.mToken,
-         " (ID: ", definition.mHandle, ") ", Logger::Green,
+         " (ID: ", definition.mID, ") ", Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
    #else

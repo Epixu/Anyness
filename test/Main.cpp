@@ -5,9 +5,11 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
+#include <Langulus/Core.hpp>
+LANGULUS_BOUNDARY(Langulus::MainBoundary)
+
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
-
 
 int main(int argc, char* argv[]) {
    Catch::Session session;

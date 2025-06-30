@@ -14,6 +14,12 @@
    #error "This file shouldn't be included if MANAGED_REFLECTION is disabled"
 #endif
 
+#if defined(LANGULUS_EXPORT_ALL) or defined(LANGULUS_EXPORT_RTTI)
+   #define LANGULUS_API_RTTI() LANGULUS_EXPORT()
+#else
+   #define LANGULUS_API_RTTI() LANGULUS_IMPORT()
+#endif
+
 /// Make the rest of the code aware, that Langulus::RTTI has been included    
 #define LANGULUS_LIBRARY_RTTI() 1
 
@@ -149,20 +155,7 @@ namespace Langulus::RTTI
    ///                                                                        
    LANGULUS_API(RTTI) extern Registry Instance;
 
-
-   ///                                                                        
-   ///   Boundary identifier, local to every shared library/executable        
-   ///   It's a simple compile-time string, that is attached upon data        
-   /// reflection, so that RTTI can track from which library a type was       
-   /// reflected, and thus unregister it when shared object is unloaded.      
-   /// The boundary also affects pooling tactics, because if boundary is not  
-   /// equal exactly to RTTI::MainBoundary, pooling will be PoolTactic::Type  
-   /// by default, so that allocation that happens from external libraries    
-   /// can be easily tracked and not pollute other pools                      
-   ///                                                                        
-   extern Token Boundary;
-
-   
+      
    LANGULUS(INLINED)
    auto& GetAmbiguousMeta(const Token& token, const Token& boundary = "") noexcept {
       return Instance.GetAmbiguousMeta(token, boundary);

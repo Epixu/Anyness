@@ -420,13 +420,29 @@
    #include <stdfloat>
 #endif
 
+#define LANGULUS_BOUNDARY(a) namespace Langulus { const char* Boundary = a; }
+
 
 ///                                                                           
 ///   The all-encompassing Langulus namespace                                 
 ///                                                                           
 namespace Langulus
 {
-   
+
+   /// The Langulus::Boundary symbol is intentionally left undefined,         
+   /// so that it is mandatory for you to define it inside your executables   
+   /// and shared libraries/mods. It's a simple compile-time string, that     
+   /// is read upon data reflection, so that RTTI can track from which        
+   /// library a type was reflected, and thus unregister it when shared       
+   /// object is unloaded. The boundary also affects pooling tactics,         
+   /// because if boundary is not equal exactly to RTTI::MainBoundary,        
+   /// pooling will be PoolTactic::Type by default, and allocations           
+   /// happening from external libraries can be easily tracked.               
+   extern const char* Boundary;
+
+   /// The main boundary indentifier token                                    
+   constexpr const char* MainBoundary = "MAIN";
+
    /// The default floating point type, depends on configuration              
    #if LANGULUS_FPU == 16
       using Real = float16_t;

@@ -191,6 +191,7 @@ namespace Langulus::RTTI
          auto GetName()               const noexcept -> Token;
          auto GetCppName()            const noexcept -> Token;
          auto GetHash()               const noexcept -> Hash;
+         auto GetBoundary()           const noexcept -> Token;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetPoolTactic()         const noexcept -> PoolTactic;

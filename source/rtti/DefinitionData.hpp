@@ -41,6 +41,7 @@ namespace Langulus::RTTI
    class DefinitionData : public Inner::Definition {
    protected:
       friend class Registry;
+      friend class Inner::Definition;
       friend struct Inner::MetaDataNaked;
       friend struct Inner::MetaDataStructured_8_8;
       friend struct Inner::MetaDataStructured_16_16;

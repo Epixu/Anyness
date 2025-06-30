@@ -24,8 +24,7 @@ namespace Langulus::Logger
    /// Additional commands                                                    
    enum class CommandExt : uint8_t {
       Pop,			// Pop the style, and apply previous style            
-      Push,			// Push the current style                             
-      PopAndPush, // Pop the style and push another, don't stylize yet  
+      Push,			// Push the current style (don't stylize)             
       Tab,			// Tab once on a new line after this command          
       Untab 		// Untab once, again on a new line after this command 
    };
@@ -201,6 +200,9 @@ namespace Langulus::Logger
       virtual void Write(Style) const noexcept = 0;
       virtual void NewLine() const noexcept = 0;
       virtual void Clear() const noexcept = 0;
+
+      LANGULUS_API(LOGGER) static ::std::string GetAdvancedTime() noexcept;
+      LANGULUS_API(LOGGER) static ::std::string GetSimpleTime()   noexcept;
    };
 
 
@@ -212,9 +214,9 @@ namespace Langulus::Logger
    struct State final : Interface {
    private:
       // Style stack                                                    
-      ::std::stack<Style> mStyleStack;
+      mutable ::std::stack<Style> mStyleStack;
       // Number of tabulations                                          
-      size_t mTabulator = 0;
+      mutable size_t mTabulator = 0;
 
       // Redirectors                                                    
       ::std::list<Interface*> mRedirectors;
@@ -247,28 +249,27 @@ namespace Langulus::Logger
       LANGULUS_API(LOGGER) void Clear() const noexcept;
 
       /// Additional services                                                 
-      LANGULUS_API(LOGGER) void Write(const CT::Loggable auto&) const noexcept;
+      void Write(const CT::Loggable auto& anything) const noexcept {
+         const auto formatted = fmt::format("{}", anything);
+         return Write(::std::string_view(formatted));
+      }
+
       LANGULUS_API(LOGGER) void Write(CommandExt) const noexcept;
       LANGULUS_API(LOGGER) void Write(ColorExt) const noexcept;
-      LANGULUS_API(LOGGER) auto NewTab() const noexcept -> Scope;
+      LANGULUS_API(LOGGER) void Write(Tabs) const noexcept;
+      LANGULUS_API(LOGGER) void Write(Emphasis) const noexcept;
+      LANGULUS_API(LOGGER) void Write(Intent) const noexcept;
+      LANGULUS_API(LOGGER) auto NewScope() const noexcept -> Scope;
 
-      ///                                                                     
-      /// State changers                                                      
-      ///                                                                     
-      LANGULUS_API(LOGGER) void RunCommand(Command) noexcept;
-      LANGULUS_API(LOGGER) auto GetCurrentStyle() const noexcept -> Style;
-      LANGULUS_API(LOGGER) auto SetStyle(Style) noexcept -> const Style&;
-      LANGULUS_API(LOGGER) auto SetColor(Color) noexcept -> const Style&;
-      LANGULUS_API(LOGGER) auto SetEmphasis(Emphasis) noexcept -> const Style&;
-      LANGULUS_API(LOGGER) void SetIntent(Intent) noexcept;
+      LANGULUS_API(LOGGER) Style GetCurrentStyle() const noexcept;
 
       ///                                                                     
       /// Attachments                                                         
       ///                                                                     
-      LANGULUS_API(LOGGER) void AttachDuplicator(Interface*) noexcept;
+      LANGULUS_API(LOGGER) void AttachDuplicator (Interface*) noexcept;
       LANGULUS_API(LOGGER) void DettachDuplicator(Interface*) noexcept;
 
-      LANGULUS_API(LOGGER) void AttachRedirector(Interface*) noexcept;
+      LANGULUS_API(LOGGER) void AttachRedirector (Interface*) noexcept;
       LANGULUS_API(LOGGER) void DettachRedirector(Interface*) noexcept;
    };
 
@@ -308,9 +309,9 @@ namespace Langulus::Logger
       #endif
    }
 
-   /// Write a section on a new line, tab all consecutive lines, bold it,     
+   /// Write a section on a new line, tab all consecutive lines, underline it,
    /// and return the scoped tabs, that will be	untabbed automatically at the 
-   /// scope's end. Section color is context dependent on the current style   
+   /// scope's end. Section color is context dependent on the current intent  
    ///   @return a scoped tab, that will untab when destroyed                 
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr auto Section(T&&...arguments) noexcept {
@@ -322,10 +323,10 @@ namespace Langulus::Logger
                GlobalState.Write(GlobalState.mDefaultStyle);
                GlobalState.Write(" ");
                GlobalState.Write(currentStyle);
-               GlobalState.SetEmphasis(Underline);
+               GlobalState.Write(Underline);
                (GlobalState.Write(FWD(arguments)), ...);
                GlobalState.Write(GlobalState.mDefaultStyle);
-               return GlobalState.NewTab();
+               return GlobalState.NewScope();
             }
             else {
                return Scope {0};
@@ -346,9 +347,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::FatalError);
+                  GlobalState.Write(Intent::FatalError);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -367,13 +368,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::FatalError);
+                  GlobalState.Write(Intent::FatalError);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -393,9 +394,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Error);
+                  GlobalState.Write(Intent::Error);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -414,13 +415,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Error);
+                  GlobalState.Write(Intent::Error);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -440,9 +441,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Warning);
+                  GlobalState.Write(Intent::Warning);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -461,13 +462,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Warning);
+                  GlobalState.Write(Intent::Warning);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -487,9 +488,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Verbose);
+                  GlobalState.Write(Intent::Verbose);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -508,13 +509,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Verbose);
+                  GlobalState.Write(Intent::Verbose);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -534,9 +535,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_INFOS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Info);
+                  GlobalState.Write(Intent::Info);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -555,13 +556,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_INFOS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Info);
+                  GlobalState.Write(Intent::Info);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -581,9 +582,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Message);
+                  GlobalState.Write(Intent::Message);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -602,13 +603,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Message);
+                  GlobalState.Write(Intent::Message);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -628,9 +629,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Special);
+                  GlobalState.Write(Intent::Special);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -649,13 +650,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Special);
+                  GlobalState.Write(Intent::Special);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -675,9 +676,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Flow);
+                  GlobalState.Write(Intent::Flow);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -696,13 +697,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Flow);
+                  GlobalState.Write(Intent::Flow);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -722,9 +723,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Input);
+                  GlobalState.Write(Intent::Input);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -743,13 +744,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Input);
+                  GlobalState.Write(Intent::Input);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -769,9 +770,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Network);
+                  GlobalState.Write(Intent::Network);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -790,13 +791,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Network);
+                  GlobalState.Write(Intent::Network);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -816,9 +817,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_OS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::OS);
+                  GlobalState.Write(Intent::OS);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -837,13 +838,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_OS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::OS);
+                  GlobalState.Write(Intent::OS);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {
@@ -863,9 +864,9 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                #else
-                  GlobalState.SetIntent(Intent::Prompt);
+                  GlobalState.Write(Intent::Prompt);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
                #endif
@@ -884,13 +885,13 @@ namespace Langulus::Logger
          if constexpr (TOGGLE) {
             if not consteval {
                #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
-                  GlobalState.SetIntent(Intent::Ignore);
+                  GlobalState.Write(Intent::Ignore);
                   return UnusedScope {};
                #else
-                  GlobalState.SetIntent(Intent::Prompt);
+                  GlobalState.Write(Intent::Prompt);
                   GlobalState.NewLine();
                   (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewTab();
+                  return GlobalState.NewScope();
                #endif
             }
             else {

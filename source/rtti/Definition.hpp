@@ -12,33 +12,6 @@
 #include <Langulus/CT/Version.hpp>
 
 
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-   /// The Langulus::RTTI::Boundary symbol is intentionally left undefined,   
-   /// so that it is mandatory for you to define it inside your executables   
-   /// or mods. It's a simple compile-time string, that is attached upon data 
-   /// reflection, so that RTTI can track from which library a type was       
-   /// reflected, and thus unregister it when shared object is unloaded.      
-   /// The boundary also affects pooling tactics, because if boundary is not  
-   /// equal exactly to RTTI::MainBoundary, pooling will be PoolTactic::Type  
-   /// by default, so that allocation that happen from external libraries can 
-   /// be easily tracked                                                      
-   #define LANGULUS_RTTI_BOUNDARY(a) namespace Langulus::RTTI { Token Boundary = a; }
-
-   namespace Langulus::RTTI
-   {
-      /// The main boundary indentifier token                                 
-      constexpr Token MainBoundary = "MAIN";
-   }
-
-   #if defined(LANGULUS_EXPORT_ALL) or defined(LANGULUS_EXPORT_RTTI)
-      #define LANGULUS_API_RTTI() LANGULUS_EXPORT()
-   #else
-      #define LANGULUS_API_RTTI() LANGULUS_IMPORT()
-   #endif
-#else
-   #define LANGULUS_RTTI_BOUNDARY(a)
-#endif
-
 namespace Langulus::RTTI
 {
    struct MetaData;
@@ -174,10 +147,8 @@ namespace Langulus::RTTI::Inner
       // Minor version                                                  
       unsigned mVersionMinor = 0;
 
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       // Populated to be LANGULUS_RTTI_BOUNDARY on reflection-time      
-      Token mBoundary;
-   #endif
+      IF_LANGULUS_MANAGED_REFLECTION(Token mBoundary);
 
       /// Construct an abstract definition                                    
       ///   @param cppname - the name of the definition, as it appears in C++ 
@@ -189,6 +160,9 @@ namespace Langulus::RTTI::Inner
       ///   @tparam T - the type to reflect                                   
       template<class T>
       void ReflectCommon() {
+         // Save the boundary at time of reflection                     
+         IF_LANGULUS_MANAGED_REFLECTION(mBoundary = Langulus::Boundary);
+
          if constexpr (CT::Info<T>) {
             // Reflected info                                           
             if constexpr (CTTI::Info<T>::Enabled)
@@ -213,10 +187,6 @@ namespace Langulus::RTTI::Inner
    public:
       Definition() = delete;
       virtual ~Definition() = default;
-
-      IF_LANGULUS_MANAGED_REFLECTION(
-         LANGULUS_API(RTTI) Token GetShortestUnambiguousToken() const
-      );
    };
    
 } // namespace Langulus::RTTI::Inner

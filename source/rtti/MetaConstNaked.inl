@@ -13,7 +13,7 @@ namespace Langulus::RTTI::Inner
 {
 
    /// Get the name of the constant, the result of NameOf                     
-   auto MetaConstNaked::GetName() const noexcept -> Token {
+   inline auto MetaConstNaked::GetName() const noexcept -> Token {
       return mDefinition->mToken;
    }
 

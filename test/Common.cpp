@@ -8,6 +8,4 @@
 #include <Langulus/MetaOf.hpp>
 #include "Common.hpp"
 
-LANGULUS_RTTI_BOUNDARY(RTTI::MainBoundary)
-
 TMany<Many> BANK {};

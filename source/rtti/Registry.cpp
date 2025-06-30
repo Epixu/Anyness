@@ -796,7 +796,7 @@ namespace Langulus::RTTI
 
    /// Get the shortest possible unambiguous token                            
    ///   @return the token                                                    
-   Token Inner::Definition::GetShortestUnambiguousToken() const {
+   /*Token Inner::Definition::GetShortestUnambiguousToken() const {
       auto& ambiguous = Instance.GetAmbiguousMeta(mToken);
       if (ambiguous.size() == 1)
          return Inner::ToLastToken(mToken);
@@ -805,8 +805,8 @@ namespace Langulus::RTTI
       int datas = 0;
       int traits = 0;
       MetaList origins;
-      for (auto& meta : ambiguous) {
-         const auto dmeta = meta.As<DMeta>();
+      for (auto meta : ambiguous) {
+         auto dmeta = dynamic_cast<DefinitionData const*>(meta);
          if (dmeta and dmeta->mOrigin) {
             origins.insert(dmeta->mOrigin);
             ++datas;
@@ -816,7 +816,7 @@ namespace Langulus::RTTI
 
             if (dmeta)
                ++datas;
-            else if (meta.Kind() == Meta::Trait)
+            else if (dynamic_cast<DefinitionTag const*>(meta))
                ++traits;
          }
       }
@@ -869,6 +869,6 @@ namespace Langulus::RTTI
 
       // Full token returned as fallback                                
       return mToken;
-   }
+   }*/
 
 } // namespace Langulus::RTTI
