@@ -22,14 +22,19 @@
    /// equal exactly to RTTI::MainBoundary, pooling will be PoolTactic::Type  
    /// by default, so that allocation that happen from external libraries can 
    /// be easily tracked                                                      
-   #define LANGULUS_RTTI_BOUNDARY(a) \
-      namespace Langulus::RTTI { Token Boundary = a; }
+   #define LANGULUS_RTTI_BOUNDARY(a) namespace Langulus::RTTI { Token Boundary = a; }
 
    namespace Langulus::RTTI
    {
       /// The main boundary indentifier token                                 
       constexpr Token MainBoundary = "MAIN";
    }
+
+   #if defined(LANGULUS_EXPORT_ALL) or defined(LANGULUS_EXPORT_RTTI)
+      #define LANGULUS_API_RTTI() LANGULUS_EXPORT()
+   #else
+      #define LANGULUS_API_RTTI() LANGULUS_IMPORT()
+   #endif
 #else
    #define LANGULUS_RTTI_BOUNDARY(a)
 #endif
@@ -46,6 +51,8 @@ namespace Langulus::RTTI
    class DefinitionTag;
    class DefinitionVerb;
 
+   class Registry;
+      
    namespace Inner
    {
 
@@ -84,6 +91,24 @@ namespace Langulus::RTTI::Inner
       return lc;
    }
 
+   /// Isolate and lowercase an operator token                                
+   ///   @param token - the operator                                          
+   ///   @return the lowercased and isolated operator token                   
+   LANGULUS(INLINED)
+   Lowercase IsolateOperator(const Token& token) noexcept {
+      // Skip skippable at the front and the back of token              
+      auto l = token.data();
+      auto r = token.data() + token.size();
+      while (l < r and *l <= 32)
+         ++l;
+
+      while (r > l and *(r-1) <= 32)
+         --r;
+
+      // Lowercase the isolated token                                   
+      return ToLowercase(token.substr(l - token.data(), r - l));
+   }
+      
    /// Get the last, most relevant part of a token that may or may not have   
    /// namespaces in it. Essentially finds last "::" that isn't enclosed in   
    /// a template <>, and skip forward to that                                
@@ -120,15 +145,12 @@ namespace Langulus::RTTI::Inner
    ///                                                                        
    class Definition {
    protected:
-      /*friend struct MetaData;
-      friend struct MetaTag;
-      friend struct MetaVerb;
-      friend struct MetaConst;*/
+      friend class RTTI::Registry;
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          // A sequential identifier provided by the registry            
          // Used for packing type ids                                   
-         size_t mID;
+         size_t mID = 0;
       #endif
 
       // Each reflected type has an unique hash based on C++ name       
@@ -141,7 +163,7 @@ namespace Langulus::RTTI::Inner
       // The original reflected token used in scripting                 
       Token mToken;
       // Sanitized mToken, with proper capitalization                   
-      std::string mTokenSanitized;
+      ::std::string mTokenSanitized;
 
       // Each reflection may or may not have some info                  
       Token mInfo = "<no info provided>";
@@ -157,15 +179,13 @@ namespace Langulus::RTTI::Inner
       Token mBoundary;
    #endif
 
-      Definition() = delete;
-
       /// Construct an abstract definition                                    
       ///   @param cppname - the name of the definition, as it appears in C++ 
-      Definition(const Token& cppname)
+      explicit Definition(const Token& cppname)
          : mHash    {HashOf(cppname)}
          , mCppName {cppname} {}
 
-      /// Reflect some common type properties, like C++ name, info and version
+      /// Reflect some common type properties, like info and version          
       ///   @tparam T - the type to reflect                                   
       template<class T>
       void ReflectCommon() {
@@ -189,6 +209,14 @@ namespace Langulus::RTTI::Inner
             }
          }
       }
+
+   public:
+      Definition() = delete;
+      virtual ~Definition() = default;
+
+      IF_LANGULUS_MANAGED_REFLECTION(
+         LANGULUS_API(RTTI) Token GetShortestUnambiguousToken() const
+      );
    };
    
 } // namespace Langulus::RTTI::Inner

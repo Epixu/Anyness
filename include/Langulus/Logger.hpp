@@ -29,6 +29,142 @@ namespace Langulus::Logger
       Tab,			// Tab once on a new line after this command          
       Untab 		// Untab once, again on a new line after this command 
    };
+   using enum CommandExt;
+   
+   /// Colors combined with pushes and pop commands, for shorter code         
+   enum class ColorExt : unsigned {
+      // Bits that dictate how to mix the colors                        
+      // Color is always mixed with the currently set one, unless the   
+      // 'PreviousColor' bit is on, in which case the style is popped   
+      // before applying color                                          
+      PreviousColor           = 128,
+
+      // Color is always mixed with the currently set one, unless the   
+      // 'NextColor' bit is on, in which case the style is pushed       
+      // before applying color                                          
+      NextColor               = 256,
+
+      // Colors that mix with the previous color                        
+      PopNoForeground         = static_cast<unsigned>(NoForeground ) | PreviousColor,
+      PopNoBackground         = static_cast<unsigned>(NoBackground ) | PreviousColor,
+       
+      PopBlack                = static_cast<unsigned>(Black        ) | PreviousColor,
+      PopDarkRed              = static_cast<unsigned>(DarkRed      ) | PreviousColor,
+      PopDarkGreen            = static_cast<unsigned>(DarkGreen    ) | PreviousColor,
+      PopDarkYellow           = static_cast<unsigned>(DarkYellow   ) | PreviousColor,
+      PopDarkBlue             = static_cast<unsigned>(DarkBlue     ) | PreviousColor,
+      PopDarkPurple           = static_cast<unsigned>(DarkPurple   ) | PreviousColor,
+      PopDarkCyan             = static_cast<unsigned>(DarkCyan     ) | PreviousColor,
+      PopGray                 = static_cast<unsigned>(Gray         ) | PreviousColor,
+      
+      PopBlackBgr             = static_cast<unsigned>(BlackBgr     ) | PreviousColor,
+      PopDarkRedBgr           = static_cast<unsigned>(DarkRedBgr   ) | PreviousColor,
+      PopDarkGreenBgr         = static_cast<unsigned>(DarkGreenBgr ) | PreviousColor,
+      PopDarkYellowBgr        = static_cast<unsigned>(DarkYellowBgr) | PreviousColor,
+      PopDarkBlueBgr          = static_cast<unsigned>(DarkBlueBgr  ) | PreviousColor,
+      PopDarkPurpleBgr        = static_cast<unsigned>(DarkPurpleBgr) | PreviousColor,
+      PopDarkCyanBgr          = static_cast<unsigned>(DarkCyanBgr  ) | PreviousColor,
+      PopGrayBgr              = static_cast<unsigned>(GrayBgr      ) | PreviousColor,
+      
+      PopDarkGray             = static_cast<unsigned>(DarkGray     ) | PreviousColor,
+      PopRed                  = static_cast<unsigned>(Red          ) | PreviousColor,
+      PopGreen                = static_cast<unsigned>(Green        ) | PreviousColor,
+      PopYellow               = static_cast<unsigned>(Yellow       ) | PreviousColor,
+      PopBlue                 = static_cast<unsigned>(Blue         ) | PreviousColor,
+      PopPurple               = static_cast<unsigned>(Purple       ) | PreviousColor,
+      PopCyan                 = static_cast<unsigned>(Cyan         ) | PreviousColor,
+      PopWhite                = static_cast<unsigned>(White        ) | PreviousColor,
+      
+      PopDarkGrayBgr          = static_cast<unsigned>(DarkGrayBgr  ) | PreviousColor,
+      PopRedBgr               = static_cast<unsigned>(RedBgr       ) | PreviousColor,
+      PopGreenBgr             = static_cast<unsigned>(GreenBgr     ) | PreviousColor,
+      PopYellowBgr            = static_cast<unsigned>(YellowBgr    ) | PreviousColor,
+      PopBlueBgr              = static_cast<unsigned>(BlueBgr      ) | PreviousColor,
+      PopPurpleBgr            = static_cast<unsigned>(PurpleBgr    ) | PreviousColor,
+      PopCyanBgr              = static_cast<unsigned>(CyanBgr      ) | PreviousColor,
+      PopWhiteBgr             = static_cast<unsigned>(WhiteBgr     ) | PreviousColor,
+
+      // Colors that mix with the next color                            
+      PushNoForeground        = static_cast<unsigned>(NoForeground ) | NextColor,
+      PushNoBackground        = static_cast<unsigned>(NoBackground ) | NextColor,
+      
+      PushBlack               = static_cast<unsigned>(Black        ) | NextColor,
+      PushDarkRed             = static_cast<unsigned>(DarkRed      ) | NextColor,
+      PushDarkGreen           = static_cast<unsigned>(DarkGreen    ) | NextColor,
+      PushDarkYellow          = static_cast<unsigned>(DarkYellow   ) | NextColor,
+      PushDarkBlue            = static_cast<unsigned>(DarkBlue     ) | NextColor,
+      PushDarkPurple          = static_cast<unsigned>(DarkPurple   ) | NextColor,
+      PushDarkCyan            = static_cast<unsigned>(DarkCyan     ) | NextColor,
+      PushGray                = static_cast<unsigned>(Gray         ) | NextColor,
+      
+      PushBlackBgr            = static_cast<unsigned>(BlackBgr     ) | NextColor,
+      PushDarkRedBgr          = static_cast<unsigned>(DarkRedBgr   ) | NextColor,
+      PushDarkGreenBgr        = static_cast<unsigned>(DarkGreenBgr ) | NextColor,
+      PushDarkYellowBgr       = static_cast<unsigned>(DarkYellowBgr) | NextColor,
+      PushDarkBlueBgr         = static_cast<unsigned>(DarkBlueBgr  ) | NextColor,
+      PushDarkPurpleBgr       = static_cast<unsigned>(DarkPurpleBgr) | NextColor,
+      PushDarkCyanBgr         = static_cast<unsigned>(DarkCyanBgr  ) | NextColor,
+      PushGrayBgr             = static_cast<unsigned>(GrayBgr      ) | NextColor,
+      
+      PushDarkGray            = static_cast<unsigned>(DarkGray     ) | NextColor,
+      PushRed                 = static_cast<unsigned>(Red          ) | NextColor,
+      PushGreen               = static_cast<unsigned>(Green        ) | NextColor,
+      PushYellow              = static_cast<unsigned>(Yellow       ) | NextColor,
+      PushBlue                = static_cast<unsigned>(Blue         ) | NextColor,
+      PushPurple              = static_cast<unsigned>(Purple       ) | NextColor,
+      PushCyan                = static_cast<unsigned>(Cyan         ) | NextColor,
+      PushWhite               = static_cast<unsigned>(White        ) | NextColor,
+      
+      PushDarkGrayBgr         = static_cast<unsigned>(DarkGrayBgr  ) | NextColor,
+      PushRedBgr              = static_cast<unsigned>(RedBgr       ) | NextColor,
+      PushGreenBgr            = static_cast<unsigned>(GreenBgr     ) | NextColor,
+      PushYellowBgr           = static_cast<unsigned>(YellowBgr    ) | NextColor,
+      PushBlueBgr             = static_cast<unsigned>(BlueBgr      ) | NextColor,
+      PushPurpleBgr           = static_cast<unsigned>(PurpleBgr    ) | NextColor,
+      PushCyanBgr             = static_cast<unsigned>(CyanBgr      ) | NextColor,
+      PushWhiteBgr            = static_cast<unsigned>(WhiteBgr     ) | NextColor,
+
+      // Colors that reset to previous color, push and mix              
+      PopAndPushNoForeground  = static_cast<unsigned>(NoForeground ) | NextColor | PreviousColor,
+      PopAndPushNoBackground  = static_cast<unsigned>(NoBackground ) | NextColor | PreviousColor,
+
+      PopAndPushBlack         = static_cast<unsigned>(Black        ) | NextColor | PreviousColor,
+      PopAndPushDarkRed       = static_cast<unsigned>(DarkRed      ) | NextColor | PreviousColor,
+      PopAndPushDarkGreen     = static_cast<unsigned>(DarkGreen    ) | NextColor | PreviousColor,
+      PopAndPushDarkYellow    = static_cast<unsigned>(DarkYellow   ) | NextColor | PreviousColor,
+      PopAndPushDarkBlue      = static_cast<unsigned>(DarkBlue     ) | NextColor | PreviousColor,
+      PopAndPushDarkPurple    = static_cast<unsigned>(DarkPurple   ) | NextColor | PreviousColor,
+      PopAndPushDarkCyan      = static_cast<unsigned>(DarkCyan     ) | NextColor | PreviousColor,
+      PopAndPushGray          = static_cast<unsigned>(Gray         ) | NextColor | PreviousColor,
+
+      PopAndPushBlackBgr      = static_cast<unsigned>(BlackBgr     ) | NextColor | PreviousColor,
+      PopAndPushDarkRedBgr    = static_cast<unsigned>(DarkRedBgr   ) | NextColor | PreviousColor,
+      PopAndPushDarkGreenBgr  = static_cast<unsigned>(DarkGreenBgr ) | NextColor | PreviousColor,
+      PopAndPushDarkYellowBgr = static_cast<unsigned>(DarkYellowBgr) | NextColor | PreviousColor,
+      PopAndPushDarkBlueBgr   = static_cast<unsigned>(DarkBlueBgr  ) | NextColor | PreviousColor,
+      PopAndPushDarkPurpleBgr = static_cast<unsigned>(DarkPurpleBgr) | NextColor | PreviousColor,
+      PopAndPushDarkCyanBgr   = static_cast<unsigned>(DarkCyanBgr  ) | NextColor | PreviousColor,
+      PopAndPushGrayBgr       = static_cast<unsigned>(GrayBgr      ) | NextColor | PreviousColor,
+
+      PopAndPushDarkGray      = static_cast<unsigned>(DarkGray     ) | NextColor | PreviousColor,
+      PopAndPushRed           = static_cast<unsigned>(Red          ) | NextColor | PreviousColor,
+      PopAndPushGreen         = static_cast<unsigned>(Green        ) | NextColor | PreviousColor,
+      PopAndPushYellow        = static_cast<unsigned>(Yellow       ) | NextColor | PreviousColor,
+      PopAndPushBlue          = static_cast<unsigned>(Blue         ) | NextColor | PreviousColor,
+      PopAndPushPurple        = static_cast<unsigned>(Purple       ) | NextColor | PreviousColor,
+      PopAndPushCyan          = static_cast<unsigned>(Cyan         ) | NextColor | PreviousColor,
+      PopAndPushWhite         = static_cast<unsigned>(White        ) | NextColor | PreviousColor,
+
+      PopAndPushDarkGrayBgr   = static_cast<unsigned>(DarkGrayBgr  ) | NextColor | PreviousColor,
+      PopAndPushRedBgr        = static_cast<unsigned>(RedBgr       ) | NextColor | PreviousColor,
+      PopAndPushGreenBgr      = static_cast<unsigned>(GreenBgr     ) | NextColor | PreviousColor,
+      PopAndPushYellowBgr     = static_cast<unsigned>(YellowBgr    ) | NextColor | PreviousColor,
+      PopAndPushBlueBgr       = static_cast<unsigned>(BlueBgr      ) | NextColor | PreviousColor,
+      PopAndPushPurpleBgr     = static_cast<unsigned>(PurpleBgr    ) | NextColor | PreviousColor,
+      PopAndPushCyanBgr       = static_cast<unsigned>(CyanBgr      ) | NextColor | PreviousColor,
+      PopAndPushWhiteBgr      = static_cast<unsigned>(WhiteBgr     ) | NextColor | PreviousColor
+   };
+   using enum ColorExt;
    
    /// Tabulation marker (can be pushed to log)                               
    struct Tabs {
@@ -90,7 +226,7 @@ namespace Langulus::Logger
       Intent mCurrentIntent = DefaultIntent;
 
       // Intent style customization point                               
-      IntentProperties mIntentStyle[int(Intent::Counter)];
+      IntentProperties mIntentStyle[static_cast<int>(Intent::Counter)];
 
       // Tabulator color and formatting customization                   
       Intent mDefaultIntent = DefaultIntent;
@@ -108,8 +244,13 @@ namespace Langulus::Logger
       LANGULUS_API(LOGGER) void Write(::std::string_view const&) const noexcept;
       LANGULUS_API(LOGGER) void Write(Style) const noexcept;
       LANGULUS_API(LOGGER) void NewLine() const noexcept;
-      LANGULUS_API(LOGGER) auto NewTab() const noexcept -> Scope;
       LANGULUS_API(LOGGER) void Clear() const noexcept;
+
+      /// Additional services                                                 
+      LANGULUS_API(LOGGER) void Write(const CT::Loggable auto&) const noexcept;
+      LANGULUS_API(LOGGER) void Write(CommandExt) const noexcept;
+      LANGULUS_API(LOGGER) void Write(ColorExt) const noexcept;
+      LANGULUS_API(LOGGER) auto NewTab() const noexcept -> Scope;
 
       ///                                                                     
       /// State changers                                                      
@@ -181,13 +322,13 @@ namespace Langulus::Logger
                GlobalState.Write(GlobalState.mDefaultStyle);
                GlobalState.Write(" ");
                GlobalState.Write(currentStyle);
-               GlobalState.SetEmphasis(Emphasis::Underline);
+               GlobalState.SetEmphasis(Underline);
                (GlobalState.Write(FWD(arguments)), ...);
                GlobalState.Write(GlobalState.mDefaultStyle);
                return GlobalState.NewTab();
             }
             else {
-               return UnusedScope {};
+               return Scope {0};
             }
          }
          else return UnusedScope {};
@@ -283,7 +424,7 @@ namespace Langulus::Logger
                #endif
             }
             else {
-               return UnusedScope {};
+               return Scope {0};
             }
          }
          else return UnusedScope {};
@@ -424,7 +565,7 @@ namespace Langulus::Logger
                #endif
             }
             else {
-               return UnusedScope {};
+               return Scope {0};
             }
          }
          else return UnusedScope {};

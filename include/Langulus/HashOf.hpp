@@ -75,15 +75,15 @@ namespace Langulus
       /// A data view that allows us to modify in blocks of 32 bits           
       struct data_view {
       private:
-         const char* p;
+         const uint8_t* p;
          std::size_t sz;
 
       public:
-         constexpr data_view(const char* a, size_t N) noexcept
+         constexpr data_view(const uint8_t* a, size_t N) noexcept
             : p(a), sz(N) {}
 
          template<size_t N>
-         constexpr data_view(const ::std::array<char, N>& a) noexcept
+         constexpr data_view(const ::std::array<uint8_t, N>& a) noexcept
             : p(a.data()), sz(N) {}
 
          constexpr char operator[](std::size_t n) const has_assumptions {
@@ -91,21 +91,21 @@ namespace Langulus
             return p[n];
          }
 
-         constexpr uint32_t get_block(int idx) noexcept {
-            int i = (block_size() + idx) * 4;
-            uint32_t b0 = p[i];
-            uint32_t b1 = p[i + 1];
-            uint32_t b2 = p[i + 2];
-            uint32_t b3 = p[i + 3];
-            return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
+         constexpr uint32_t get_block(std::size_t idx) noexcept {
+            std::size_t i = (block_size() + idx) * 4z;
+            auto b0 = static_cast<uint32_t>(p[i]);
+            auto b1 = static_cast<uint32_t>(p[i + 1z]);
+            auto b2 = static_cast<uint32_t>(p[i + 2z]);
+            auto b3 = static_cast<uint32_t>(p[i + 3z]);
+            return (b3 << 24z) | (b2 << 16z) | (b1 << 8z) | b0;
          }
 
          constexpr std::size_t size() const noexcept { return sz; }
 
-         constexpr std::size_t block_size() const noexcept { return sz / 4; }
+         constexpr std::size_t block_size() const noexcept { return sz / 4z; }
 
-         constexpr char tail(const int n) const noexcept {
-            int tail_size = sz % 4;
+         constexpr uint8_t tail(const std::size_t n) const noexcept {
+            std::size_t tail_size = sz % 4z;
             return p[sz - tail_size + n];
          }
       };
@@ -116,8 +116,8 @@ namespace Langulus
       constexpr uint32_t mm3_x86_32(data_view key, uint32_t seed) {
          uint32_t h1 = seed;
 
-         const uint32_t c1 = 0xcc9e2d51;
-         const uint32_t c2 = 0x1b873593;
+         constexpr uint32_t c1 = 0xcc9e2d51;
+         constexpr uint32_t c2 = 0x1b873593;
 
          const int nblocks = key.size() / 4;
          for (int i = -nblocks; i; i++) {
@@ -145,6 +145,7 @@ namespace Langulus
             k1 = (k1 << 15) | (k1 >> (32 - 15));
             k1 *= c2;
             h1 ^= k1;
+         default:
          };
 
          h1 ^= key.size();
@@ -230,14 +231,14 @@ namespace Langulus
 
          if consteval {
             if constexpr (FORCE_RUNTIME)
-               return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+               return HashBytes({reinterpret_cast<const uint8_t*>(coal), sizeof(coal)}, SEED);
             else {
-               auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(coal)>>(coal);
+               auto as_bytes = ::std::bit_cast<::std::array<uint8_t, sizeof(coal)>>(coal);
                return HashBytes(as_bytes, SEED);
             }
          }
          else {
-            return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+            return HashBytes({reinterpret_cast<const uint8_t*>(coal), sizeof(coal)}, SEED);
          }
       }
       else if constexpr (CT::Array<T>) {
@@ -261,14 +262,14 @@ namespace Langulus
 
             if consteval {
                if constexpr (FORCE_RUNTIME)
-                  return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+                  return HashBytes({reinterpret_cast<const uint8_t*>(coal), sizeof(coal)}, SEED);
                else {
-                  auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(coal)>>(coal);
+                  auto as_bytes = ::std::bit_cast<::std::array<uint8_t, sizeof(coal)>>(coal);
                   return HashBytes(as_bytes, SEED);
                }
             }
             else {
-               return HashBytes({reinterpret_cast<const char*>(coal), sizeof(coal)}, SEED);
+               return HashBytes({reinterpret_cast<const uint8_t*>(coal), sizeof(coal)}, SEED);
             }
          }
       }
@@ -276,14 +277,14 @@ namespace Langulus
          // Hash pointer, never dereference it                          
          if consteval {
             if constexpr (FORCE_RUNTIME)
-               return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+               return HashBytes({reinterpret_cast<const uint8_t*>(&head), sizeof(T)}, SEED);
             else {
-               auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
+               auto as_bytes = ::std::bit_cast<::std::array<uint8_t, sizeof(T)>>(head);
                return HashBytes(as_bytes, SEED);
             }
          }
          else {
-            return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+            return HashBytes({reinterpret_cast<const uint8_t*>(&head), sizeof(T)}, SEED);
          }
       }
       else if constexpr (CT::Similar<T, Hash>) {
@@ -304,14 +305,14 @@ namespace Langulus
          // to your type, or #pragma pack, in order to circumvent issue 
          if consteval {
             if constexpr (FORCE_RUNTIME)
-               return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+               return HashBytes({reinterpret_cast<const uint8_t*>(&head), sizeof(T)}, SEED);
             else {
-               auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
+               auto as_bytes = ::std::bit_cast<::std::array<uint8_t, sizeof(T)>>(head);
                return HashBytes(as_bytes, SEED);
             }
          }
          else {
-            return HashBytes({reinterpret_cast<const char*>(&head), sizeof(T)}, SEED);
+            return HashBytes({reinterpret_cast<const uint8_t*>(&head), sizeof(T)}, SEED);
          }
       }
       else if constexpr (::std::ranges::range<T> and CT::Hashable<TypeOf<T>>) {
@@ -333,18 +334,18 @@ namespace Langulus
                // is able to do its magic                               
                if consteval {
                   if constexpr (FORCE_RUNTIME)
-                     return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+                     return HashBytes({reinterpret_cast<const uint8_t*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
                   else {
-                     auto as_bytes = ::std::bit_cast<::std::array<char, sizeof(T)>>(head);
+                     auto as_bytes = ::std::bit_cast<::std::array<uint8_t, sizeof(T)>>(head);
                      return HashBytes(as_bytes, SEED);
                   }
                }
                else {
-                  return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+                  return HashBytes({reinterpret_cast<const uint8_t*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
                }
             }
             else {
-               return HashBytes({reinterpret_cast<const char*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
+               return HashBytes({reinterpret_cast<const uint8_t*>(head.data()), head.size() * sizeof(InnerT)}, SEED);
             }
          }
          else {
@@ -354,7 +355,7 @@ namespace Langulus
             for (auto& i : head)
                coal.emplace_back(HashOf<FORCE_RUNTIME, SEED>(i));
 
-            return HashBytes({reinterpret_cast<const char*>(coal.data()), coal.size() * sizeof(Hash)}, SEED);
+            return HashBytes({reinterpret_cast<const uint8_t*>(coal.data()), coal.size() * sizeof(Hash)}, SEED);
          }
       }      
       else if constexpr (CT::HasStdHasher<T>) {
@@ -375,16 +376,12 @@ namespace Langulus
 
 } // namespace Langulus
 
-namespace std
-{
 
-   /// Extend std to be capable of hashing anything with a GetHash method     
-   template<::Langulus::CT::HasGetHashMethod H>
-   struct hash<H> {
-      LANGULUS(INLINED)
-      size_t operator()(const H& what) const noexcept {
-         return what.GetHash().mHash;
-      }
-   };
-
-} // namespace std
+/// Extend std to be capable of hashing anything with a GetHash method        
+template<::Langulus::CT::HasGetHashMethod H>
+struct ::std::hash<H> {
+   LANGULUS(INLINED)
+   size_t operator()(const H& what) const noexcept {
+      return what.GetHash().mHash;
+   }
+};

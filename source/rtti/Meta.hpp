@@ -9,6 +9,11 @@
 #include <Langulus/Core.hpp>
 
 
+namespace Langulus::RTTI
+{
+   class Registry;
+}
+
 namespace Langulus::RTTI::Inner
 {
 
@@ -26,7 +31,7 @@ namespace Langulus::RTTI::Inner
    template<class T, unsigned BYTESIZE>
    struct MetaPacked {
    protected:
-      friend class Registry;
+      friend class RTTI::Registry;
       static constexpr uint8_t Zero[BYTESIZE] {0};
       uint8_t mHandle[BYTESIZE] {0};
 

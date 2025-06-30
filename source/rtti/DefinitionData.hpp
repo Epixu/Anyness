@@ -16,18 +16,21 @@
 
 namespace Langulus::Anyness
 {
-
    struct Many;
    struct Any;
-
 } // namespace Langulus::Anyness
 
 namespace Langulus::Flow
 {
-
    struct Verb;
-
 } // namespace Langulus::Flow
+
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
+   namespace Langulus::Fractalloc
+   {
+      class Pool;
+   } // namespace Langulus::Fractalloc
+#endif
 
 namespace Langulus::RTTI
 {
@@ -37,6 +40,7 @@ namespace Langulus::RTTI
    ///                                                                        
    class DefinitionData : public Inner::Definition {
    protected:
+      friend class Registry;
       friend struct Inner::MetaDataNaked;
       friend struct Inner::MetaDataStructured_8_8;
       friend struct Inner::MetaDataStructured_16_16;
@@ -44,25 +48,25 @@ namespace Langulus::RTTI
 
       // The origin type, with all qualifiers and sparseness removed    
       // Will be nullptr for incomplete types                           
-      DefinitionData const* mOrigin;
+      DefinitionData const* mOrigin IF_SAFE(= nullptr);
       // The type, when a single pointer is removed                     
       // Will be null if data is dense                                  
-      DefinitionData const* mDeptr;
+      DefinitionData const* mDeptr IF_SAFE(= nullptr);
       // The type, when all qualifiers are removed down to the origin   
-      DefinitionData const* mDecvq;
+      DefinitionData const* mDecvq IF_SAFE(= nullptr);
 
       // Data instance size in bytes, set by sizeof()                   
-      size_t mSize;
+      size_t mSize IF_SAFE(= 0);
       // Data instance alignment in bytes, set by alignof()             
-      size_t mAlign;
+      size_t mAlign IF_SAFE(= Alignment);
       // True if data is constant, set by CT::Constant                  
-      bool mConst;
+      bool mConst IF_SAFE(= false);
       // True if data is deep, set by CT::Deep                          
-      bool mDeep;
+      bool mDeep IF_SAFE(= false);
       // True if data is pod, set by CT::POD                            
-      bool mPOD;
+      bool mPOD IF_SAFE(= false);
       // Minimal pool allocation, in bytes                              
-      size_t mAllocationPage;
+      size_t mAllocationPage IF_SAFE(= 0);
       // Precomputed counts indexed by MSB (avoids division by stride   
       // for that extra oompf)                                          
       size_t mAllocationTable[sizeof(size_t) * 8 + 1];
@@ -71,7 +75,7 @@ namespace Langulus::RTTI
          // The reflected pool tactic                                   
          PoolTactic mPoolTactic = PoolTactic::Default;
          // The start of the pool chain for the type                    
-         mutable void* mPoolChain {};
+         mutable Fractalloc::Pool* mPoolChain {};
       #endif
 
       //                                                                

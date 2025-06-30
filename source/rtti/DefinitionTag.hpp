@@ -17,10 +17,11 @@ namespace Langulus::RTTI
    ///                                                                        
    class DefinitionTag : public Inner::Definition {
    protected:
+      friend class Registry;
       friend struct Inner::MetaTagNaked;
       friend struct Inner::MetaTagPacked_16;
 
-      DefinitionTag(const Token& cppname) : Definition {cppname} {}
+      explicit DefinitionTag(const Token& cppname) : Definition {cppname} {}
 
    public:
       template<CT::Decayed>

@@ -14,6 +14,7 @@
 #include <fmt/color.h>
 #include <fmt/chrono.h>
 
+
 namespace Langulus::CT
 {
 
@@ -210,9 +211,8 @@ namespace Langulus::Logger
 #endif
    
    /// Generate hexadecimal string from a given value                         
-   ///   @param format - the template string                                  
-   ///   @param args... - the arguments                                       
-   ///   @return the instantiated template                                    
+   ///   @param from - the argument                                           
+   ///   @return the hex string in the form of std::array                     
    auto Hex(const auto& from) {
       ::std::array<char, sizeof(from) * 2> result {};
       auto from_bytes = reinterpret_cast<const std::byte*>(&from);
@@ -223,7 +223,6 @@ namespace Langulus::Logger
    }
    
    /// A general new-line write function that continues the last intent/style 
-   ///   @tparam ...T - a sequence of elements to log (deducible)             
    ///   @return a reference to the logger for chaining                       
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
    constexpr void LineRaw(T&&...arguments) noexcept {
@@ -507,19 +506,27 @@ namespace Langulus::Logger
       #endif
    }
 
-   /// Gets stringified in a human readable size as KB, MB, GB, etc.          
+   /// Gets a size stringified in a human readable way as KB, MB, GB, etc.    
    struct Size {
 		size_t bytes;
 
       std::string format() const {
          std::ostringstream oss;
          oss << std::setprecision(3);
-         if (bytes < 1'000LL) oss << bytes << " B";
-         else if (bytes < 1'000'000LL) oss << (bytes * 1. / 1000LL) << " KB";
-         else if (bytes < 1'000'000'000LL) oss << (bytes * 1. / 1000'000LL) << " MB";
-         else if (bytes < 1'000'000'000'000LL) oss << (bytes * 1. / 1000'000'000LL) << " GB";
-         else if (bytes < 1'000'000'000'000'000LL) oss << (bytes * 1. / 1000'000'000'000LL) << " TB";
-         else oss << (bytes * 1. / 1000'000'000'000'000LL) << " PB";
+         
+         if (bytes < 1'000LL)
+            oss << bytes << " B";
+         else if (bytes < 1'000'000LL)
+            oss << (bytes * 1. / 1000LL) << " KB";
+         else if (bytes < 1'000'000'000LL)
+            oss << (bytes * 1. / 1000'000LL) << " MB";
+         else if (bytes < 1'000'000'000'000LL)
+            oss << (bytes * 1. / 1000'000'000LL) << " GB";
+         else if (bytes < 1'000'000'000'000'000LL)
+            oss << (bytes * 1. / 1000'000'000'000LL) << " TB";
+         else
+            oss << (bytes * 1. / 1000'000'000'000'000LL) << " PB";
+         
          return oss.str();
       }
 	};
@@ -650,6 +657,9 @@ struct ::fmt::formatter<::Langulus::Logger::Color> {
    }
 };
 
+///                                                                           
+/// Extend FMT to be capable of logging Logger::Size                          
+///                                                                           
 template<>
 struct ::fmt::formatter<::Langulus::Logger::Size> {
    template<class CONTEXT>
@@ -660,6 +670,22 @@ struct ::fmt::formatter<::Langulus::Logger::Size> {
    template<class CONTEXT> LANGULUS(INLINED)
    auto format(::Langulus::Logger::Size const& bs, CONTEXT& ctx) {
       return format_to(ctx.out(), "{}", bs.format());
+   }
+};
+
+///                                                                           
+/// Extend FMT to be capable of logging std::array of characters              
+///                                                                           
+template<size_t N>
+struct ::fmt::formatter<::std::array<char, N>> {
+   template<class CONTEXT>
+   constexpr auto parse(CONTEXT& ctx) {
+      return ctx.begin();
+   }
+
+   template<class CONTEXT> LANGULUS(INLINED)
+   auto format(::std::array<char, N> const& a, CONTEXT& ctx) {
+      return format_to(ctx.out(), "{}", ::std::string_view(a.data(), a.size()));
    }
 };
 

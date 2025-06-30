@@ -20,7 +20,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<CT::Exception E = Exception, class...MORE> LANGULUS(INLINED)
+   template<class E = Exception, class...MORE> LANGULUS(INLINED)
    constexpr void Assert(
       bool condition,
       const char* location = nullptr,
@@ -37,7 +37,10 @@ namespace Langulus
             Logger::ErrorRaw("Assertion failure: ", m1, FWD(mn)...);
 
             // Throw                                                    
-            throw E {m1, location};
+            if constexpr (CT::Exception<E>)
+               throw E {m1, location};
+            else
+               throw E {m1};
          }
       }
    }
@@ -74,7 +77,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<CT::Exception E = Exception, class...MORE> LANGULUS(INLINED)
+   template<class E = Exception, class...MORE> LANGULUS(INLINED)
    constexpr void AssumeUser(
       bool condition,
       const char* location = nullptr,
@@ -92,7 +95,10 @@ namespace Langulus
                Logger::ErrorRaw("User assumption failure: ", m1, FWD(mn)...);
 
                // Throw                                                 
-               throw E {m1, location};
+               if constexpr (CT::Exception<E>)
+                  throw E {m1, location};
+               else
+                  throw E {m1};
             }
          }
       }
@@ -104,7 +110,7 @@ namespace Langulus
    /// to generate more performant code                                       
    #if LANGULUS(SAFE) > 0
       #define AssumeUserAndOptimize(CONDITION, ...) \
-         AssumeUser((CONDITION), HERE(), __VA_ARGS__); \
+         AssumeUser(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
          [[assume(CONDITION)]]
    #else
       #define AssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
@@ -146,7 +152,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<CT::Exception E = Exception, class...MORE> LANGULUS(INLINED)
+   template<class E = Exception, class...MORE> LANGULUS(INLINED)
    constexpr void AssumeDev(
       bool condition,
       const char* location = nullptr,
@@ -164,7 +170,10 @@ namespace Langulus
                Logger::ErrorRaw("Dev assumption failure: ", m1, FWD(mn)...);
 
                // Throw                                                 
-               throw E {m1, location};
+               if constexpr (CT::Exception<E>)
+                  throw E {m1, location};
+               else
+                  throw E {m1};
             }
          }
       }
@@ -176,7 +185,7 @@ namespace Langulus
    /// to generate more performant code                                       
    #if LANGULUS(SAFE) > 1
       #define AssumeDevAndOptimize(CONDITION, ...) \
-         AssumeDev((CONDITION), HERE(), __VA_ARGS__); \
+         AssumeDev(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
          [[assume(CONDITION)]]
    #else
       #define AssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
@@ -218,7 +227,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<unsigned LEVEL, CT::Exception E = Exception, class...MORE> LANGULUS(INLINED)
+   template<unsigned LEVEL, class E = Exception, class...MORE> LANGULUS(INLINED)
    constexpr void Assume(
       bool condition,
       const char* location = nullptr,
@@ -236,7 +245,10 @@ namespace Langulus
                Logger::ErrorRaw("Assumption level ", LEVEL, " failure: ", m1, FWD(mn)...);
 
                // Throw                                                 
-               throw E {m1, location};
+               if constexpr (CT::Exception<E>)
+                  throw E {m1, location};
+               else
+                  throw E {m1};
             }
          }
       }
@@ -247,7 +259,7 @@ namespace Langulus
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
    #define AssumeAndOptimize(LEVEL, CONDITION, ...) \
-      Assume<LEVEL>((CONDITION), HERE(), __VA_ARGS__); \
+      Assume<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
       [[assume(CONDITION)]];
 
    

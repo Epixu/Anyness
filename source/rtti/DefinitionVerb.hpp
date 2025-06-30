@@ -17,6 +17,7 @@ namespace Langulus::RTTI
    ///                                                                        
    class DefinitionVerb : public Inner::Definition {
    protected:
+      friend class Registry;
       friend struct Inner::MetaVerbNaked;
       template<unsigned>
       friend struct Inner::MetaVerbStructured_X8;
@@ -25,6 +26,7 @@ namespace Langulus::RTTI
       // For example, 'Destroy' is the reverse of 'Create'              
       // This is just syntax sugar - reverse token just does mass *= -1 
       const Token mTokenReverse;
+      const ::std::string mTokenReverseSanitized;
 
       // Verbs can be tokenized as operators - just syntax sugar        
       const Token mOperator;
@@ -49,7 +51,7 @@ namespace Langulus::RTTI
       using AbleList = ::std::unordered_set<DefinitionData const*>;
       AbleList mAble;
 
-      DefinitionVerb(const Token& cppname) : Definition {cppname} {}
+      explicit DefinitionVerb(const Token& cppname) : Definition {cppname} {}
 
    public:
       template<CT::Decayed>

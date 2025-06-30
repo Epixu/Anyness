@@ -81,22 +81,18 @@ namespace Langulus::RTTI
             uint16_t all {};
          };
 
-      protected:
-         friend struct Fractalloc::Allocator;
-         void SetPoolchain(void*) noexcept;
-
       public:
          using Base = MetaPacked<DefinitionData, 2>;
 
          constexpr MetaDataStructured_16_16() noexcept = default;
          constexpr MetaDataStructured_16_16(MetaDataStructured_16_16 const&) noexcept = default;
          constexpr MetaDataStructured_16_16(MetaDataStructured_16_16&&) noexcept = default;
-         constexpr MetaDataStructured_16_16(::std::nullptr_t) noexcept;
+         constexpr MetaDataStructured_16_16(nullptr_t) noexcept;
          constexpr MetaDataStructured_16_16(DefinitionData const*) noexcept;
 
          constexpr MetaDataStructured_16_16& operator = (MetaDataStructured_16_16 const&) noexcept = default;
          constexpr MetaDataStructured_16_16& operator = (MetaDataStructured_16_16&&) noexcept = default;
-         constexpr MetaDataStructured_16_16& operator = (::std::nullptr_t) noexcept;
+         constexpr MetaDataStructured_16_16& operator = (nullptr_t) noexcept;
          constexpr MetaDataStructured_16_16& operator = (DefinitionData const*) noexcept;
 
          bool Is(const MetaDataStructured_16_16&) const noexcept;
@@ -108,8 +104,14 @@ namespace Langulus::RTTI
          auto GetMinAllocation()      const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
          auto GetName()               const noexcept -> Token;
-         auto GetPoolTactic()         const noexcept -> PoolTactic;
-         auto GetPoolchain()          const noexcept -> void*;
+         auto GetCppName()            const noexcept -> Token;
+         auto GetHash()               const noexcept -> Hash;
+         auto GetBoundary()           const noexcept -> Token;
+
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            auto GetPoolTactic()         const noexcept -> PoolTactic;
+            auto GetPoolchain()          const noexcept -> Fractalloc::Pool*;
+         #endif
 
          constexpr bool IsDense()     const noexcept;
          constexpr bool IsSparse()    const noexcept;
@@ -136,6 +138,12 @@ namespace Langulus::RTTI
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          bool HasGetHashMethod()      const noexcept;
+
+      protected:
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            friend struct Fractalloc::Allocator;
+            void SetPoolchain(Fractalloc::Pool*) const noexcept;
+         #endif
       };
       static_assert(sizeof(MetaDataStructured_16_16) == 4);
 
@@ -181,8 +189,13 @@ namespace Langulus::RTTI
          auto GetSize()               const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
          auto GetName()               const noexcept -> Token;
-         auto GetPoolTactic()         const noexcept -> PoolTactic;
-         auto GetPoolchain()          const noexcept -> void*;
+         auto GetCppName()            const noexcept -> Token;
+         auto GetHash()               const noexcept -> Hash;
+
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            auto GetPoolTactic()         const noexcept -> PoolTactic;
+            auto GetPoolchain()          const noexcept -> Fractalloc::Pool*;
+         #endif
                                       
          bool IsDense()               const noexcept;
          bool IsSparse()              const noexcept;
@@ -209,6 +222,12 @@ namespace Langulus::RTTI
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          bool HasGetHashMethod()      const noexcept;
+         
+      protected:
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            friend struct Fractalloc::Allocator;
+            void SetPoolchain(Fractalloc::Pool*) const noexcept;
+         #endif
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)

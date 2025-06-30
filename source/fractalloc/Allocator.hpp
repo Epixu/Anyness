@@ -101,10 +101,9 @@ namespace Langulus::Fractalloc
       static constexpr size_t SizeBuckets = sizeof(size_t) * 8;
       Pool* mSizePoolChain[SizeBuckets] {};
 
-      // A set of types, that are currently in use                      
+      // The set of types that are currently in use                     
       // Used to detect if a shared object is safe to be unloaded       
-      // MUST BE BY POINTER, because there can be multiple definitions  
-      ::std::unordered_set<const DMeta*> mInstantiatedTypes;
+      ::std::unordered_set<DMeta> mInstantiatedTypes;
 
    private:
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
@@ -116,12 +115,12 @@ namespace Langulus::Fractalloc
       #endif
 
       LANGULUS_API(FRACTALLOC)
-      void CollectGarbageChain(Pool*&);
+      Pool* CollectGarbageChain(Pool*);
 
       auto FindInChain(const void*, const Pool*) const has_assumptions -> const Allocation*;
       bool ContainedInChain(const void*, const Pool*) const has_assumptions;
 
-      static void DumpAllocation(DMeta hint, const Pool*, const Allocation*) noexcept;
+      static void DumpAllocation(DMeta, const Pool*, const Allocation*) noexcept;
 
    public:
       LANGULUS_API(FRACTALLOC)

@@ -43,7 +43,10 @@ namespace Langulus::RTTI::Inner
    constexpr bool MetaDataStructured_16_16::IsExact(const MetaDataStructured_16_16& other) const noexcept {
       return all == other.all and Base::operator == (other);
    }
-
+   constexpr bool MetaDataStructured_16_16::operator==(const MetaDataStructured_16_16& other) const noexcept {
+      return IsExact(other);
+   }
+   
    /// Check if two meta definitions match origin and sparseness, but ignores 
    /// `const` and `volatile` qualifiers. The qualifiers aren't ignored only  
    /// on the current level of indirection, but on the entire way to origin   
@@ -79,7 +82,7 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the poolchain                                                      
-   inline auto MetaDataStructured_16_16::GetPoolchain() const noexcept -> void* {
+   inline auto MetaDataStructured_16_16::GetPoolchain() const noexcept -> Fractalloc::Pool* {
       return Instance.GetMetaData(*this)->mPoolChain;
    }
 

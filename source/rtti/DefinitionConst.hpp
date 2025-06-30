@@ -17,10 +17,11 @@ namespace Langulus::RTTI
    ///                                                                        
    class DefinitionConst : public Inner::Definition {
    protected:
+      friend class Registry;
       friend struct Inner::MetaConstNaked;
       friend struct Inner::MetaConstPacked_16;
 
-      DefinitionConst(const Token& cppname) : Definition {cppname} {}
+      explicit DefinitionConst(const Token& cppname) : Definition {cppname} {}
 
    public:
       template<auto>
