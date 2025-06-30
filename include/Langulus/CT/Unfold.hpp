@@ -10,7 +10,7 @@
 #include "Comparable.hpp"
 #include "../Typenav.hpp"
 #include "../Types.hpp"
-#include "../Intent.hpp"
+#include "../IntentOf.hpp"
 
 
 namespace Langulus::CTTI

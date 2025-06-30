@@ -91,21 +91,21 @@ namespace Langulus
             return p[n];
          }
 
-         constexpr uint32_t get_block(std::size_t idx) noexcept {
-            std::size_t i = (block_size() + idx) * 4z;
+         constexpr uint32_t get_block(std::size_t idx) const noexcept {
+            std::size_t i = (block_size() + idx) * 4u;
             auto b0 = static_cast<uint32_t>(p[i]);
-            auto b1 = static_cast<uint32_t>(p[i + 1z]);
-            auto b2 = static_cast<uint32_t>(p[i + 2z]);
-            auto b3 = static_cast<uint32_t>(p[i + 3z]);
-            return (b3 << 24z) | (b2 << 16z) | (b1 << 8z) | b0;
+            auto b1 = static_cast<uint32_t>(p[i + 1u]);
+            auto b2 = static_cast<uint32_t>(p[i + 2u]);
+            auto b3 = static_cast<uint32_t>(p[i + 3u]);
+            return (b3 << 24u) | (b2 << 16u) | (b1 << 8u) | b0;
          }
 
          constexpr std::size_t size() const noexcept { return sz; }
 
-         constexpr std::size_t block_size() const noexcept { return sz / 4z; }
+         constexpr std::size_t block_size() const noexcept { return sz / 4u; }
 
          constexpr uint8_t tail(const std::size_t n) const noexcept {
-            std::size_t tail_size = sz % 4z;
+            std::size_t tail_size = sz % 4u;
             return p[sz - tail_size + n];
          }
       };
@@ -210,7 +210,7 @@ namespace Langulus
    ///      hash to be performed at runtime, so that it doesn't fail on       
    ///      CT::Hashable checks at reflection time                            
    ///   @tparam SEED - the seed for the hash algorithm                       
-   ///   @param head, rest... - the data to hash                              
+   ///   @param head, rest - the data to hash                                 
    ///   @return the hash                                                     
    template<bool FORCE_RUNTIME, Hash SEED, class T, class...MORE>
    constexpr auto HashOf(T&& head, MORE&&...rest) {

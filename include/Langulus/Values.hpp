@@ -19,7 +19,7 @@ namespace Langulus
       using FirstType = decltype(E1);
       static constexpr auto First = E1;
       static constexpr bool Empty = false;
-      static constexpr ::std::size_t Count = sizeof...(EN) + 1;
+      static constexpr size_t Count = sizeof...(EN) + 1;
 
       template<unsigned I>
       static consteval auto AtInner() {

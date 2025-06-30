@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Types.hpp"
-#include <concepts>
+//#include <concepts>
 
 namespace Langulus
 {

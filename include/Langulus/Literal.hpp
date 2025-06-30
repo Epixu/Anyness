@@ -527,21 +527,15 @@ namespace Langulus
 } // namespace Langulus
 
 
+///                                                                           
+/// Hash support                                                              
+///                                                                           
+template<class TChar, size_t N>
+struct ::std::hash<Langulus::Literal<TChar, N>> {
+   using argument_type = Langulus::Literal<TChar, N>;
 
-namespace std
-{
-
-   ///                                                                        
-   /// Hash support                                                           
-   ///                                                                        
-   template<class TChar, size_t N>
-   struct hash<Langulus::Literal<TChar, N>> {
-      using argument_type = Langulus::Literal<TChar, N>;
-
-      size_t operator()(const argument_type& str) const {
-         using sv_t = typename argument_type::string_view_type;
-         return std::hash<sv_t>()(static_cast<sv_t>(str));
-      }
-   };
-
-} // namespace std
+   size_t operator()(const argument_type& str) const {
+      using sv_t = typename argument_type::string_view_type;
+      return hash<sv_t>()(static_cast<sv_t>(str));
+   }
+};

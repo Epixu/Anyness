@@ -319,7 +319,7 @@ namespace Langulus::RTTI
       ///   @param lhs - start of the region                                  
       ///   @param rhs - end of the region                                    
       ///   @return true if a transition occurs at both points                
-      constexpr bool IsTransition(auto source, std::size_t lhs, std::size_t rhs) {
+      constexpr bool IsTransition(auto source, size_t lhs, size_t rhs) {
          return (
                // Test left side for transition                         
                lhs == 0
@@ -338,14 +338,14 @@ namespace Langulus::RTTI
       ///   @tparam LHS - what are we checking?                               
       ///   @tparam RHS - what are we searching for?                          
       template<Literal LHS, Literal RHS>
-      consteval std::size_t CountOccurences() {
+      consteval size_t CountOccurences() {
          if constexpr (RHS.size() > LHS.size() or RHS.size() == 0)
             return 0;
          else {
-            ::std::size_t occurences = 0;
-            ::std::size_t cookie = 0;
+            size_t occurences = 0;
+            size_t cookie = 0;
             while (cookie + RHS.size() <= LHS.size()) {
-               ::std::size_t scan = 0;
+               size_t scan = 0;
                while (scan < RHS.size()) {
                   if (LHS[cookie + scan] == RHS[scan]) {
                      ++scan;
@@ -355,7 +355,7 @@ namespace Langulus::RTTI
                   break;
                }
 
-               if (scan == RHS.size() and RTTI::Inner::IsTransition(LHS, cookie, cookie + RHS.size())) {
+               if (scan == RHS.size() and Inner::IsTransition(LHS, cookie, cookie + RHS.size())) {
                   cookie += RHS.size();
                   ++occurences;
                }
@@ -377,9 +377,9 @@ namespace Langulus::RTTI
             return SOURCE;
          else {
             Literal<char, SOURCE.size() - found*WHAT.size() + found*WITH.size()> result;
-            std::size_t fill = 0;
-            std::size_t prev = 0;
-            std::size_t curr = 0;
+            size_t fill = 0;
+            size_t prev = 0;
+            size_t curr = 0;
             while ((curr = SOURCE.find(WHAT, prev)) != SOURCE.npos) {
                while (curr > prev) {
                   // Copy anything we've skipped                        
@@ -455,9 +455,9 @@ namespace Langulus::RTTI
       /// enclosed in a <template>, and skip forward to that                  
       ///   @param token - the token to scan                                  
       ///   @return the last token                                            
-      constexpr ::std::size_t FindLastToken(const Token& token) noexcept {
-         ::std::size_t depth = 0;
-         for (::std::size_t i = token.size() - 1; i < token.size(); --i) {
+      constexpr size_t FindLastToken(const Token& token) noexcept {
+         size_t depth = 0;
+         for (size_t i = token.size() - 1; i < token.size(); --i) {
             switch (token[i]) {
             case ':':
                // If no depth, then we found it                         
@@ -517,7 +517,7 @@ namespace Langulus
    }
 
    /// Same as CppNameOf, but removes all namespaces at compile-time          
-   ///   @tparam T - the enum to get the name of                              
+   ///   @tparam E - the enum to get the name of                              
    ///   @return a compile-time string                                        
    template<auto E>
    consteval auto LastCppNameOf() {

@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../CTTI.hpp"
+#include "Abstract.hpp"
 
 
 namespace Langulus

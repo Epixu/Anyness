@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../CTTI.hpp"
+#include "../Typenav.hpp"
 #include <ranges>
 
 

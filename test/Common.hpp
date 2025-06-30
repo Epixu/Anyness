@@ -633,7 +633,7 @@ public:
    using CTTI_Named     = YesText<"MyType">;
    using CTTI_Info      = YesText<"Info about MyType">;
    using CTTI_Files     = YesText<"txt, pdf">;
-   using CTTI_Version   = Version<2, 1>;
+   using CTTI_Versioned = Version<2, 1>;
    using CTTI_Deep      = Yes;
    using CTTI_POD       = Yes;
    using CTTI_Nullable  = Yes;
@@ -665,10 +665,10 @@ public:
    int  anotherMemberArray [12] {};
    int* sparseMember {};
 
-   using CTTI_Named   = YesText<"ComplexType">;
-   using CTTI_Info    = YesText<"Info about ComplexType">;
-   using CTTI_Version = Version<2, 1>;
-   using CTTI_Pooled  = PooledBySize<250>;
+   using CTTI_Named     = YesText<"ComplexType">;
+   using CTTI_Info      = YesText<"Info about ComplexType">;
+   using CTTI_Versioned = Version<2, 1>;
+   using CTTI_Pooled    = PooledBySize<250>;
 
    using Self = Complex;
    using CTTI_Members = Members<

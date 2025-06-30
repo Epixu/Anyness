@@ -9,7 +9,7 @@
 #include "DefinitionConst.hpp"
 #include "MetaConst.hpp"
 #include <Langulus/CT/Info.hpp>
-#include <Langulus/CT/Version.hpp>
+#include <Langulus/CT/Versioned.hpp>
 #include <Langulus/Logger.hpp>
 #include <optional>
 
@@ -71,10 +71,10 @@ namespace Langulus::RTTI
          definition.mInfo = CTTI::InfoValue<E>::Text;
       }
 
-      if constexpr (CT::VersionValue<E>) {
+      if constexpr (CT::VersionedValue<E>) {
          // Reflected version                                           
-         definition.mVersionMajor = CTTI::VersionValue<E>::Major;
-         definition.mVersionMinor = CTTI::VersionValue<E>::Minor;
+         definition.mVersionMajor = CTTI::VersionedValue<E>::Major;
+         definition.mVersionMinor = CTTI::VersionedValue<E>::Minor;
       }
 
       // Refer to a local copy of the data                              

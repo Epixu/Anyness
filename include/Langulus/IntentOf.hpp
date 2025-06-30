@@ -606,18 +606,16 @@ namespace Langulus
 
       /// Check if all T have dedicated intent constructors for S             
       ///   @tparam S - the intent                                            
-      ///   @tparam T... - the types                                          
+      ///   @tparam T - the types                                             
       template<template<class> class S, class...T>
-      concept HasIntentConstructor = Intent<S<T>...> and not Aggregate<T...> and ((
-            requires (S<T>&& arg) { T {FWD(arg)}; }
-         ) and ...);
+      concept HasIntentConstructor = Intent<S<T>...> and not Aggregate<T...>
+          and requires (S<T>&&...arg) { (T {FWD(arg)}, ...); };
 
       /// Check if all TypeOf<S> have a dedicated intent constructor for S    
-      ///   @tparam S - the intent and type                                   
+      ///   @tparam S - the intents and types                                 
       template<class...S>
-      concept HasIntentConstructorAlt = Intent<S...> and not Aggregate<TypeOf<S>...> and ((
-            requires (S&& arg) { Decvq<Deref<TypeOf<S>>> {FWD(arg)}; }
-         ) and ...);
+      concept HasIntentConstructorAlt = Intent<S...> and not Aggregate<TypeOf<S>...>
+          and requires (S&&...arg) { (Decvq<Deref<TypeOf<S>>> {FWD(arg)}, ...); };
 
       /// Check if all T have a dedicated disown-constructor                  
       /// Disowning does a shallow copy without referencing contents,         
@@ -659,7 +657,7 @@ namespace Langulus
 
       /// Check if all T have a dedicated intent-assigner for S               
       ///   @tparam S - the intent                                            
-      ///   @tparam T... - the types                                          
+      ///   @tparam T - the types                                             
       template<template<class> class S, class...T>
       concept HasIntentAssign = Inner::CheckSize<T...>() and ((Intent<S<T>>
           and requires (T& lhs, S<T>&& rhs) { lhs = FWD(rhs); }
@@ -990,7 +988,7 @@ namespace Langulus
 
       /// Check if T is assignable with each of the provided arguments        
       template<class T, class...A>
-      concept AssignableFrom = (requires (T t, A&& a) { t = FWD(a); } and ...);
+      concept AssignableFrom = requires (T t, A&&...a) { ((t = FWD(a)), ...); };
 
 
       ///                                                                     
@@ -1009,23 +1007,23 @@ namespace Langulus
       /// constructor, as long as T and S are compatible with standard C++20  
       /// semantics                                                           
       ///   @tparam S - the intent                                            
-      ///   @tparam T... - the types                                          
+      ///   @tparam T - the types                                             
       template<template<class> class S, class...T>
       concept IntentConstructible = NotVoid<T...> and Intent<S<T>...>
-          and (requires (S<T>&& a) {
-             {IntentNew<true>(nullptr, FWD(a))} -> Supported;
-          } and ...);
+          and requires (S<T>&&...a) {
+             {(IntentNew<true>(nullptr, FWD(a)), ...)} -> Supported;
+          };
 
       /// Check if all TypeOf<S> are intent-constructible by intent S         
       /// T can be intent-constructible even if not having the specific       
       /// constructor, as long as T and S are compatible with standard C++20  
       /// semantics                                                           
-      ///   @tparam S - the intent and type                                   
+      ///   @tparam S - the intents and types                                 
       template<class...S>
       concept IntentConstructibleAlt = Intent<S...>
-          and (requires (S&& a) {
-             {IntentNew<true>(nullptr, FWD(a))} -> Supported;
-          } and ...);
+          and requires (S&&...a) {
+             {(IntentNew<true>(nullptr, FWD(a)), ...)} -> Supported;
+          };
 
       /// Check if all T are disown-constructible                             
       /// Disowning does a shallow copy without referencing contents,         
@@ -1109,22 +1107,21 @@ namespace Langulus
       /// T can be intent-assignable even if not having an explicit assigner, 
       /// as long as T and S are compatible with the usual C++20 semantics    
       ///   @tparam S - the intent                                            
-      ///   @tparam T... - the types                                          
+      ///   @tparam T - the types                                             
       template<template<class> class S, class...T>
-      concept IntentAssignable = NotVoid<T...> and Mutable<T...> and Intent<S<Decvq<T>>...>
-          and (requires (Decvq<T> t, S<Decvq<T>>&& a) {
-            {IntentAssign<true>(t, FWD(a))} -> Supported;
-          } and ...);
+      concept IntentAssignable = NotVoid<T...> and Mutable<T...>
+          and Intent<S<Decvq<T>>...> and requires (S<Decvq<T>>&&...a) {
+            {(IntentAssign<true>(Fake<Decvq<T>&>(), FWD(a)), ...)} -> Supported;
+          };
 
       /// Check if all TypeOf<S> are intent-assignable by S                   
       /// T can be intent-assignable even if not having an explicit assigner  
       /// as long as T and S are compatible with standard C++20 semantics     
       ///   @tparam S - the intent and type                                   
       template<class...S>
-      concept IntentAssignableAlt = Intent<S...>
-          and (requires (Decq<Deref<TypeOf<S>>> t, S&& a) {
-            {IntentAssign<true>(t, FWD(a))} -> Supported;
-          } and ...);
+      concept IntentAssignableAlt = Intent<S...> and requires (S&&...a) {
+            {(IntentAssign<true>(Fake<Decq<Deref<TypeOf<S>>>&>(), FWD(a)), ...)} -> Supported;
+          };
 
       /// Check if all T are disown-assignable                                
       /// Disowning does a shallow copy without referencing contents,         

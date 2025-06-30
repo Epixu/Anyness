@@ -6,7 +6,9 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include "Core.hpp"
 #include "Values.hpp"
+#include <utility>
 
 
 namespace Langulus
@@ -57,7 +59,7 @@ namespace Langulus
 ///   return LANGULUS_SEQUENCE(StateCount, {                                  
 ///      return ((StateType {1} << I) | ...);                                 
 ///   });                                                                     
-#define LANGULUS_SEQUENCE(END, BODY)                                    \
+#define LANGULUS_SEQUENCE(END, BODY)                                     \
    [&]<decltype(END)...I>(::std::integer_sequence<decltype(END), I...>)  \
-      BODY                                                              \
+      BODY                                                               \
    (::std::make_integer_sequence<decltype(END), END> {});

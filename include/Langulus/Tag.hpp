@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "CT/DefineTag.hpp"
+#include "Typenav.hpp"
 
 
 namespace Langulus::Inner

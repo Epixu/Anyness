@@ -9,7 +9,7 @@
 #include <Langulus/HashOf.hpp>
 #include <Langulus/NameOf.hpp>
 #include <Langulus/CT/Info.hpp>
-#include <Langulus/CT/Version.hpp>
+#include <Langulus/CT/Versioned.hpp>
 
 
 namespace Langulus::RTTI
@@ -171,15 +171,15 @@ namespace Langulus::RTTI::Inner
                mInfo = T::CTTI_Info::Constant;
          }
 
-         if constexpr (CT::Version<T>) {
+         if constexpr (CT::Versioned<T>) {
             // Reflected version                                        
-            if constexpr (CTTI::Version<T>::Enabled) {
-               mVersionMajor = CTTI::Version<T>::Major;
-               mVersionMinor = CTTI::Version<T>::Minor;
+            if constexpr (CTTI::Versioned<T>::Enabled) {
+               mVersionMajor = CTTI::Versioned<T>::Major;
+               mVersionMinor = CTTI::Versioned<T>::Minor;
             }
-            else if constexpr (requires { T::CTTI_Version::Enabled; }) {
-               mVersionMajor = T::CTTI_Version::Constant::Major;
-               mVersionMinor = T::CTTI_Version::Constant::Minor;
+            else if constexpr (requires { T::CTTI_Versioned::Enabled; }) {
+               mVersionMajor = T::CTTI_Versioned::Major;
+               mVersionMinor = T::CTTI_Versioned::Minor;
             }
          }
       }

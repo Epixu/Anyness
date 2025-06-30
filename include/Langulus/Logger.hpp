@@ -193,6 +193,8 @@ namespace Langulus::Logger
    ///   The abstract logger interface - override this to define attachments  
    ///                                                                        
    struct Interface {
+      virtual ~Interface() noexcept = default;
+      
       Interface& operator = (const Interface&) = delete;
       Interface& operator = (Interface&&) = delete;
 

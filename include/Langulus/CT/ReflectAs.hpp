@@ -37,18 +37,18 @@ namespace Langulus::CT
 
          if constexpr (Void<T>) {
             // Void is never reflectable                                
-            return (void*) nullptr;
+            return static_cast<void*>(nullptr);
          }
          else if constexpr (CTTI::ReflectAs<T>::Enabled) {
             // T is checked for safety, so it has to be complete        
             using AS = typename CTTI::ReflectAs<T>::Type;
 
             if constexpr (Void<AS>)
-               return (void*) nullptr;
+               return static_cast<void*>(nullptr);
             else {
                static_assert(sizeof(T) == sizeof(AS),
                   "Provided ReflectAs type must be binary compatible");
-               return (AS*) nullptr;
+               return static_cast<AS*>(nullptr);
             }
          }
          else if constexpr (Dense<T> and requires { typename DT::CTTI_ReflectAs; }) {
@@ -56,14 +56,14 @@ namespace Langulus::CT
             using AS = typename DT::CTTI_ReflectAs;
 
             if constexpr (Void<AS>)
-               return (void*) nullptr;
+               return static_cast<void*>(nullptr);
             else {
                static_assert(sizeof(DT) == sizeof(AS),
                   "Provided ReflectAs type must be binary compatible");
-               return (AS*) nullptr;
+               return static_cast<AS*>(nullptr);
             }
          }
-         else return (T*) nullptr;
+         else return static_cast<T*>(nullptr);
       }
 
    } // namespace Langulus::CT::Inner
