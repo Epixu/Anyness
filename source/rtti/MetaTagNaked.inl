@@ -14,7 +14,7 @@ namespace Langulus::RTTI::Inner
 
    /// Get the name of the tag, the result of NameOf                          
    inline auto MetaTagNaked::GetName() const noexcept -> Token {
-      return mDefinition->mToken;
+      return mDefinition->mNameOf;
    }
 
 } // namespace Langulus::RTTI::Inner

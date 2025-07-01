@@ -377,11 +377,16 @@ namespace Langulus
 } // namespace Langulus
 
 
-/// Extend std to be capable of hashing anything with a GetHash method        
-template<::Langulus::CT::HasGetHashMethod H>
-struct ::std::hash<H> {
-   LANGULUS(INLINED)
-   size_t operator()(const H& what) const noexcept {
-      return what.GetHash().mHash;
-   }
-};
+namespace std
+{
+
+   /// Extend std to be capable of hashing anything with a GetHash method     
+   template<::Langulus::CT::HasGetHashMethod H>
+   struct hash<H> {
+      LANGULUS(INLINED)
+      size_t operator()(const H& what) const noexcept {
+         return what.GetHash().mHash;
+      }
+   };
+
+} // namespace std

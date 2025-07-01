@@ -54,7 +54,7 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         auto meta = Instance.GetMetaTag(cppname, Langulus::Boundary);
+         auto meta = Instance.GetMetaTagByCppName(cppname, Langulus::Boundary);
          if (meta)
             return meta;
 
@@ -73,25 +73,27 @@ namespace Langulus::RTTI
 
 
       //                                                                
-      // If this is reached, then trait is not defined yet              
+      // If this is reached, then tag is not defined yet                
       constexpr auto token = NameOfTag<T>();
       static_assert(token != "", "Invalid tag token is not allowed - "
          "you have equipped your type (or its base) with an empty CTTI_DefineTag");
-      definition.mToken = token;
-      definition.mTokenSanitized = Inner::ToLowercase(token.substr(Inner::FindLastToken(token)));
+
+      // Tags are canonically always lowercased                         
+      definition.mNameOf = Inner::ToLowercase(token);
+      definition.mNameOfLowercased = definition.mNameOf;
 
       definition.template ReflectCommon<T>();
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       Logger::VerboseRaw(
-         "Tag ", Logger::Purple, definition.mToken,
+         "Tag ", Logger::Purple, definition.mNameOf,
          " (ID: ", definition.mID, ") ", Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
       return definition.mHandle;
    #else
       Logger::VerboseRaw(
-         "Tag ", Logger::Purple, definition.mToken, Logger::Green,
+         "Tag ", Logger::Purple, definition.mNameOf, Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
    #endif

@@ -233,36 +233,37 @@ namespace Langulus::RTTI
       ///   @tparam T - the typename to isolate                               
       ///   @tparam NORMALIZE - whether or not to normalize the typename to   
       ///      Langulus specification                                         
+      ///   @tparam NAMED - whether or not to apply any CTTI named traits     
       ///   @return a compile-time string                                     
-      template<class T, bool NORMALIZE = true>
+      template<class T, bool NORMALIZE = true, bool NAMED = true>
       consteval auto IsolateTypename() {
-         if constexpr (NORMALIZE and CTTI::Named<T>::Enabled)
+         if constexpr (NAMED and CTTI::Named<T>::Enabled)
             return CTTI::Named<T>::Name;
          // Move `const` next to pointers/references at the end of type 
          // Discards `volatile` - it shouldn't matter outside compiler  
          // Helps with better sorting reflected types                   
          else if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
-            auto deptr = IsolateTypename<Decvq<T>, NORMALIZE>();
+            auto deptr = IsolateTypename<Decvq<T>, NORMALIZE, NAMED>();
             if constexpr (not ::std::is_const_v<T>)
                return deptr;
             else
                return deptr + " const";
          }
          else if constexpr (::std::is_reference_v<T>) {
-            auto deptr = IsolateTypename<Decvq<Deref<T>>, NORMALIZE>();
+            auto deptr = IsolateTypename<Decvq<Deref<T>>, NORMALIZE, NAMED>();
             if constexpr (not ::std::is_const_v<Deref<T>>)
                return deptr + "&";
             else
                return deptr + " const&";
          }
          else if constexpr (::std::is_pointer_v<T>) {
-            auto deptr = IsolateTypename<Decvq<Deptr<T>>, NORMALIZE>();
+            auto deptr = IsolateTypename<Decvq<Deptr<T>>, NORMALIZE, NAMED>();
             if constexpr (not ::std::is_const_v<Deptr<T>>)
                return deptr + "*";
             else
                return deptr + " const*";
          }
-         else if constexpr (NORMALIZE and requires { T::CTTI_Named::Constant; })
+         else if constexpr (NAMED and requires { T::CTTI_Named::Constant; })
             return T::CTTI_Named::Constant;
          else {
             constexpr auto name = WrappedTypeName<T>();
@@ -292,10 +293,11 @@ namespace Langulus::RTTI
       ///   @tparam T - the constant to isolate                               
       ///   @tparam NORMALIZE - whether or not to normalize the constant to   
       ///      Langulus specification                                         
+      ///   @tparam NAMED - whether or not to apply any CTTI named traits     
       ///   @return a compile-time string                                     
-      template<auto T, bool NORMALIZE = true>
+      template<auto T, bool NORMALIZE = true, bool NAMED = true>
       consteval auto IsolateConstant() {
-         if constexpr (NORMALIZE and CT::NamedValue<T>)
+         if constexpr (NAMED and CT::NamedValue<T>)
             return CTTI::NamedValue<T>::Name;
          else {
             constexpr auto name = WrappedEnumName<T>();
@@ -436,15 +438,15 @@ namespace Langulus::RTTI
          // These types are stringified differently on some compilers   
          // `unsigned short` is longer than just `short`, and needs to  
          // be handled first                                            
-         constexpr auto a12 = Replace<a11, IsolateTypename<uint8_t,  false>(), Literal {"uint8" }>();
-         constexpr auto a13 = Replace<a12, IsolateTypename<uint16_t, false>(), Literal {"uint16"}>();
-         constexpr auto a14 = Replace<a13, IsolateTypename<uint32_t, false>(), Literal {"uint32"}>();
-         constexpr auto a15 = Replace<a14, IsolateTypename<uint64_t, false>(), Literal {"uint64"}>();
+         constexpr auto a12 = Replace<a11, IsolateTypename<uint8_t,  false, false>(), Literal {"uint8" }>();
+         constexpr auto a13 = Replace<a12, IsolateTypename<uint16_t, false, false>(), Literal {"uint16"}>();
+         constexpr auto a14 = Replace<a13, IsolateTypename<uint32_t, false, false>(), Literal {"uint32"}>();
+         constexpr auto a15 = Replace<a14, IsolateTypename<uint64_t, false, false>(), Literal {"uint64"}>();
 
-         constexpr auto a16 = Replace<a15, IsolateTypename<int8_t,   false>(), Literal {"int8"  }>();
-         constexpr auto a17 = Replace<a16, IsolateTypename<int16_t,  false>(), Literal {"int16" }>();
-         constexpr auto a18 = Replace<a17, IsolateTypename<int32_t,  false>(), Literal {"int32" }>();
-         constexpr auto a19 = Replace<a18, IsolateTypename<int64_t,  false>(), Literal {"int64" }>();
+         constexpr auto a16 = Replace<a15, IsolateTypename<int8_t,   false, false>(), Literal {"int8"  }>();
+         constexpr auto a17 = Replace<a16, IsolateTypename<int16_t,  false, false>(), Literal {"int16" }>();
+         constexpr auto a18 = Replace<a17, IsolateTypename<int32_t,  false, false>(), Literal {"int32" }>();
+         constexpr auto a19 = Replace<a18, IsolateTypename<int64_t,  false, false>(), Literal {"int64" }>();
 
          static_assert(IsASCII(a19), "Normalized typename isn't ASCII");
          return a19;
@@ -493,7 +495,7 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<class T>
    consteval auto CppNameOf() {
-      return RTTI::Inner::IsolateTypename<T, false>();
+      return RTTI::Inner::IsolateTypename<T, true, false>();
    }
    
    /// Get the name of an enum value at compile-time                          
@@ -501,7 +503,7 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<auto E>
    consteval auto CppNameOf() {
-      return RTTI::Inner::IsolateConstant<E, false>();
+      return RTTI::Inner::IsolateConstant<E, true, false>();
    }
    
 
@@ -511,7 +513,7 @@ namespace Langulus
    template<class T>
    consteval auto LastCppNameOf() {
       // Find the last ':' symbol, that is not inside <...> scope       
-      auto fullName = RTTI::Inner::IsolateTypename<T, false>();
+      auto fullName = RTTI::Inner::IsolateTypename<T, true, false>();
       auto lastName = RTTI::Inner::FindLastToken(fullName);
       return fullName.substr(lastName);
    }
@@ -522,7 +524,7 @@ namespace Langulus
    template<auto E>
    consteval auto LastCppNameOf() {
       // Find the last ':' symbol, that is not inside <...> scope       
-      auto fullName = RTTI::Inner::IsolateConstant<E, false>();
+      auto fullName = RTTI::Inner::IsolateConstant<E, true, false>();
       auto lastName = RTTI::Inner::FindLastToken(fullName);
       return fullName.substr(lastName);
    }

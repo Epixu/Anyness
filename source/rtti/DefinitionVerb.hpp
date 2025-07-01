@@ -23,14 +23,13 @@ namespace Langulus::RTTI
       friend struct Inner::MetaVerbStructured_X8;
 
       // Verbs have antonyms, denoted via this 'negative' token         
-      // For example, 'Destroy' is the reverse of 'Create'              
+      // For example, 'destroy' is the reverse of 'create'              
       // This is just syntax sugar - reverse token just does mass *= -1 
-      const Token mTokenReverse;
-      const ::std::string mTokenReverseSanitized;
+      ::std::string mNameOfReverse;
 
       // Verbs can be tokenized as operators - just syntax sugar        
-      const Token mOperator;
-      const Token mOperatorReverse;
+      ::std::string mOperator;
+      ::std::string mOperatorReverse;
 
       // Verb's reflected precedence                                    
       Real mPrecedence {};

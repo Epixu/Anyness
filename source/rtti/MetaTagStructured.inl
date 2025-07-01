@@ -30,7 +30,7 @@ namespace Langulus::RTTI::Inner
 
    /// Get the name of the tag, the result of NameOf                          
    inline auto MetaTagPacked_16::GetName() const noexcept -> Token {
-      return Instance.GetMetaTag(*this)->mToken;
+      return Instance.GetMetaTagByID(*this)->mNameOf;
    }
 
 } // namespace Langulus::RTTI::Inner

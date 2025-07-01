@@ -13,11 +13,11 @@ namespace Langulus::RTTI::Inner
 {
 
    auto MetaVerbNaked::GetPositiveName() const noexcept -> Token {
-      return mDefinition->mToken;
+      return mDefinition->mNameOf;
    }
 
    auto MetaVerbNaked::GetNegativeName() const noexcept -> Token {
-      return mDefinition->mTokenReverse;
+      return mDefinition->mNameOfReverse;
    }
 
    auto MetaVerbNaked::GetPositiveOperator() const noexcept -> Token {
@@ -29,7 +29,7 @@ namespace Langulus::RTTI::Inner
    }
 
    constexpr bool MetaVerbNaked::IsReversible() const noexcept {
-      return not mDefinition->mTokenReverse.empty();
+      return not mDefinition->mNameOfReverse.empty();
    }
 
    constexpr bool MetaVerbNaked::IsConstant() const noexcept {

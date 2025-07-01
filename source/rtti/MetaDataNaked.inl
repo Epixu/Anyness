@@ -27,7 +27,7 @@ namespace Langulus::RTTI::Inner
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
    inline bool MetaDataNaked::IsSimilar(const MetaDataNaked& other) const noexcept {
-      return other and mDefinition->mDecvq == other.mDefinition->mDecvq;
+      return other and mDefinition->mDecvqAll == other.mDefinition->mDecvqAll;
    }
 
    /// Get the minimal allocation page                                        
@@ -47,12 +47,12 @@ namespace Langulus::RTTI::Inner
 
    /// Get the name of the type, the result of NameOf                         
    inline auto MetaDataNaked::GetName() const noexcept -> Token {
-      return mDefinition->mToken;
+      return mDefinition->mNameOf;
    }
    
    /// Get the name of the type as it appearch in C++                         
    inline auto MetaDataNaked::GetCppName() const noexcept -> Token {
-      return mDefinition->mCppName;
+      return mDefinition->mCppNameOf;
    }
 
    /// Get the type hash                                                      
@@ -72,7 +72,7 @@ namespace Langulus::RTTI::Inner
 
    /// Check if type is CT::Sparse                                            
    inline bool MetaDataNaked::IsSparse() const noexcept {
-      return not mDefinition->mDeptr;
+      return mDefinition->mDeptr;
    }
 
    /// Check if the type is CT::Constant                                      

@@ -55,7 +55,7 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         auto meta = Instance.GetMetaVerb(cppname, Langulus::Boundary);
+         auto meta = Instance.GetMetaVerbByCppName(cppname, Langulus::Boundary);
          if (meta)
             return meta;
 
@@ -81,15 +81,15 @@ namespace Langulus::RTTI
          "Invalid positive verb token is not allowed");
       static_assert(verbPos != verbNeg,
          "Verb can't have the same positive and negative tokens");
-      definition.mToken = verbPos;
-      definition.mTokenReverse = verbNeg;
+      definition.mNameOf        = Inner::ToLowercase(verbPos);
+      definition.mNameOfReverse = Inner::ToLowercase(verbNeg);
 
       constexpr auto opPos = OperatorOfVerb<T>();
       constexpr auto opNeg = OperatorOfVerbReverse<T>();
       static_assert(opPos != opNeg or opPos.empty(),
          "Verb can't have the same positive and negative operators");
-      definition.mOperator = opPos;
-      definition.mOperatorReverse = opNeg;
+      definition.mOperator        = Inner::ToLowercase(opPos);
+      definition.mOperatorReverse = Inner::ToLowercase(opNeg);
 
       definition.template ReflectCommon<T>();
 
@@ -123,18 +123,18 @@ namespace Langulus::RTTI
          );
       }
 
-      Instance.RegisterVerbToken(definition.mToken, Langulus::Boundary);
-      if (definition.mTokenReverse.empty()) {
+      Instance.RegisterVerbToken(definition.mNameOf, Langulus::Boundary);
+      if (definition.mNameOfReverse.empty()) {
          Logger::VerboseRaw(
-            "Verb ", Logger::DarkGreen, definition.mToken,
+            "Verb ", Logger::DarkGreen, definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
       else {
-         Instance.RegisterVerbTokenReverse(definition.mTokenReverse, Langulus::Boundary);
+         Instance.RegisterVerbTokenReverse(definition.mNameOfReverse, Langulus::Boundary);
          Logger::VerboseRaw(
-            "Verb ", Logger::DarkGreen, definition.mToken, "/", definition.mTokenReverse,
+            "Verb ", Logger::DarkGreen, definition.mNameOf, "/", definition.mNameOfReverse,
             " (ID: ", definition.mID, ") ", Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
@@ -156,15 +156,15 @@ namespace Langulus::RTTI
          );
       }
 
-      if (definition.mTokenReverse.empty()) {
+      if (definition.mNameOfReverse.empty()) {
          Logger::VerboseRaw(
-            "Verb ", Logger::DarkGreen, definition.mToken, Logger::Green,
+            "Verb ", Logger::DarkGreen, definition.mNameOf, Logger::Green,
             " registered (LIB: ", definition.mLibraryName, ")"
          );
       }
       else {
          Logger::VerboseRaw(
-            "Verb ", Logger::DarkGreen, definition.mToken, "/", definition.mTokenReverse,
+            "Verb ", Logger::DarkGreen, definition.mNameOf, "/", definition.mNameOfReverse,
             Logger::Green, " registered (LIB: ", definition.mLibraryName, ")"
          );
       }

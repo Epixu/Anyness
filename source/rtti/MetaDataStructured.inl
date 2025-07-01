@@ -39,8 +39,8 @@ namespace Langulus::RTTI::Inner
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
    inline bool MetaDataStructured_16_16::Is(const MetaDataStructured_16_16& other) const noexcept {
-      return Instance.GetMetaData(*this)->mOrigin
-          == Instance.GetMetaData(other)->mOrigin;
+      return Instance.GetMetaDataByID(*this)->mOrigin
+          == Instance.GetMetaDataByID(other)->mOrigin;
    }
 
    /// Check if two meta definitions match exactly                            
@@ -65,47 +65,47 @@ namespace Langulus::RTTI::Inner
 
    /// Get the size of the type                                               
    constexpr auto MetaDataStructured_16_16::GetSize() const noexcept -> size_t {
-      return size ? size : Instance.GetMetaData(*this)->mSize;
+      return size ? size : Instance.GetMetaDataByID(*this)->mSize;
    }
 
    /// Get the minimal allocation page                                        
    inline auto MetaDataStructured_16_16::GetMinAllocation() const noexcept -> size_t {
-      return Instance.GetMetaData(*this)->mAllocationPage;
+      return Instance.GetMetaDataByID(*this)->mAllocationPage;
    }
 
    /// Get the alignment of the type                                          
    inline auto MetaDataStructured_16_16::GetAlignment() const noexcept -> size_t {
-      return Instance.GetMetaData(*this)->mAlign;
+      return Instance.GetMetaDataByID(*this)->mAlign;
    }
 
    /// Get the name of the type, the result of NameOf                         
    inline auto MetaDataStructured_16_16::GetName() const noexcept -> Token {
-      return Instance.GetMetaData(*this)->mToken;
+      return Instance.GetMetaDataByID(*this)->mNameOf;
    }
 
    /// Get the name of the type as it appearch in C++                         
    inline auto MetaDataStructured_16_16::GetCppName() const noexcept -> Token {
-      return Instance.GetMetaData(*this)->mCppName;
+      return Instance.GetMetaDataByID(*this)->mCppNameOf;
    }
 
    /// Get the type hash                                                      
    inline auto MetaDataStructured_16_16::GetHash() const noexcept -> Hash {
-      return Instance.GetMetaData(*this)->mHash;
+      return Instance.GetMetaDataByID(*this)->mHash;
    }
    
    /// Get the type boundary                                                  
    inline auto MetaDataStructured_16_16::GetBoundary() const noexcept -> Token {
-      return Instance.GetMetaData(*this)->mBoundary;
+      return Instance.GetMetaDataByID(*this)->mBoundary;
    }
 
    /// Get the reflected pool tactic                                          
    inline auto MetaDataStructured_16_16::GetPoolTactic() const noexcept -> PoolTactic {
-      return Instance.GetMetaData(*this)->mPoolTactic;
+      return Instance.GetMetaDataByID(*this)->mPoolTactic;
    }
 
    /// Get the poolchain                                                      
    inline auto MetaDataStructured_16_16::GetPoolchain() const noexcept -> Fractalloc::Pool* {
-      return Instance.GetMetaData(*this)->mPoolChain;
+      return Instance.GetMetaDataByID(*this)->mPoolChain;
    }
 
    /// Check if type is CT::Dense                                             
@@ -141,113 +141,113 @@ namespace Langulus::RTTI::Inner
    /// Get the reflected destructor                                           
    inline auto MetaDataStructured_16_16::GetDestructor()
    const noexcept -> DefinitionData::FDestroy {
-      return Instance.GetMetaData(*this)->mDestructor;
+      return Instance.GetMetaDataByID(*this)->mDestructor;
    }
 
    /// Get the reflected referencer                                           
    inline auto MetaDataStructured_16_16::GetReferencer()
    const noexcept -> DefinitionData::FReference {
-      return Instance.GetMetaData(*this)->mReferencer;
+      return Instance.GetMetaDataByID(*this)->mReferencer;
    }
 
    /// Get the reflected resolver                                             
    inline auto MetaDataStructured_16_16::GetResolver()
    const noexcept -> DefinitionData::FResolve {
-      return Instance.GetMetaData(*this)->mResolver;
+      return Instance.GetMetaDataByID(*this)->mResolver;
    }
 
    /// Get the reflected refer-constructor                                    
    inline auto MetaDataStructured_16_16::GetReferConstructor()
    const noexcept -> DefinitionData::FCopyConstruct {
-      return Instance.GetMetaData(*this)->mReferConstructor;
+      return Instance.GetMetaDataByID(*this)->mReferConstructor;
    }
 
    /// Get the reflected refer-assigner                                       
    inline auto MetaDataStructured_16_16::GetReferAssigner()
    const noexcept -> DefinitionData::FCopyAssign {
-      return Instance.GetMetaData(*this)->mReferAssigner;
+      return Instance.GetMetaDataByID(*this)->mReferAssigner;
    }
 
    /// Get the reflected move-constructor                                     
    inline auto MetaDataStructured_16_16::GetMoveConstructor()
    const noexcept -> DefinitionData::FMoveConstruct {
-      return Instance.GetMetaData(*this)->mMoveConstructor;
+      return Instance.GetMetaDataByID(*this)->mMoveConstructor;
    }
 
    /// Get the reflected move-assigner                                        
    inline auto MetaDataStructured_16_16::GetMoveAssigner()
    const noexcept -> DefinitionData::FMoveAssign {
-      return Instance.GetMetaData(*this)->mMoveAssigner;
+      return Instance.GetMetaDataByID(*this)->mMoveAssigner;
    }
 
    /// Get the reflected abandon-constructor                                  
    inline auto MetaDataStructured_16_16::GetAbandonConstructor()
    const noexcept -> DefinitionData::FMoveConstruct {
-      return Instance.GetMetaData(*this)->mAbandonConstructor;
+      return Instance.GetMetaDataByID(*this)->mAbandonConstructor;
    }
 
    /// Get the reflected abandon-assigner                                     
    inline auto MetaDataStructured_16_16::GetAbandonAssigner()
    const noexcept -> DefinitionData::FMoveAssign {
-      return Instance.GetMetaData(*this)->mAbandonAssigner;
+      return Instance.GetMetaDataByID(*this)->mAbandonAssigner;
    }
 
    /// Get the reflected disown-constructor                                   
    inline auto MetaDataStructured_16_16::GetDisownConstructor()
    const noexcept -> DefinitionData::FCopyConstruct {
-      return Instance.GetMetaData(*this)->mDisownConstructor;
+      return Instance.GetMetaDataByID(*this)->mDisownConstructor;
    }
 
    /// Get the reflected disown-assigner                                      
    inline auto MetaDataStructured_16_16::GetDisownAssigner()
    const noexcept -> DefinitionData::FCopyAssign {
-      return Instance.GetMetaData(*this)->mDisownAssigner;
+      return Instance.GetMetaDataByID(*this)->mDisownAssigner;
    }
 
    /// Get the reflected clone-constructor                                    
    inline auto MetaDataStructured_16_16::GetCloneConstructor()
    const noexcept -> DefinitionData::FCopyConstruct {
-      return Instance.GetMetaData(*this)->mCloneConstructor;
+      return Instance.GetMetaDataByID(*this)->mCloneConstructor;
    }
 
    /// Get the reflected clone-assigner                                       
    inline auto MetaDataStructured_16_16::GetCloneAssigner()
    const noexcept -> DefinitionData::FCopyAssign {
-      return Instance.GetMetaData(*this)->mCloneAssigner;
+      return Instance.GetMetaDataByID(*this)->mCloneAssigner;
    }
 
    /// Get the reflected copy-constructor                                     
    inline auto MetaDataStructured_16_16::GetCopyConstructor()
    const noexcept -> DefinitionData::FCopyConstruct {
-      return Instance.GetMetaData(*this)->mCopyConstructor;
+      return Instance.GetMetaDataByID(*this)->mCopyConstructor;
    }
 
    /// Get the reflected copy-assigner                                        
    inline auto MetaDataStructured_16_16::GetCopyAssigner()
    const noexcept -> DefinitionData::FCopyAssign {
-      return Instance.GetMetaData(*this)->mCopyAssigner;
+      return Instance.GetMetaDataByID(*this)->mCopyAssigner;
    }
 
    /// Get the reflected comparer                                             
    inline auto MetaDataStructured_16_16::GetComparer()
    const noexcept -> DefinitionData::FCompare {
-      return Instance.GetMetaData(*this)->mComparer;
+      return Instance.GetMetaDataByID(*this)->mComparer;
    }
 
    /// Get the reflected hasher                                               
    inline auto MetaDataStructured_16_16::GetHasher()
    const noexcept -> DefinitionData::FHash {
-      return Instance.GetMetaData(*this)->mHasher;
+      return Instance.GetMetaDataByID(*this)->mHasher;
    }
 
    /// Check if type has an explicit GetHash() method                         
    inline bool MetaDataStructured_16_16::HasGetHashMethod() const noexcept {
-      return Instance.GetMetaData(*this)->mHasGetHashMethod;
+      return Instance.GetMetaDataByID(*this)->mHasGetHashMethod;
    }
 
    /// Allows the memory manager to set a new pool chain                      
    inline void MetaDataStructured_16_16::SetPoolchain(Fractalloc::Pool* pool) const noexcept {
-      Instance.GetMetaData(*this)->mPoolChain = pool;
+      Instance.GetMetaDataByID(*this)->mPoolChain = pool;
    }
 
 } // namespace Langulus::RTTI::Inner

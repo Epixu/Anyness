@@ -127,19 +127,17 @@ namespace Langulus::RTTI::Inner
       #endif
 
       // Each reflected type has an unique hash based on C++ name       
-      // First for immediate access                                     
       const Hash mHash;
 
       // Original name of the type as it appears in C++                 
-      const Token mCppName;
-
-      // The original reflected token used in scripting                 
-      Token mToken;
-      // Sanitized mToken, with proper capitalization                   
-      ::std::string mTokenSanitized;
+      const ::std::string mCppNameOf;
+      // Sanitized mToken with proper capitalization, used in scripting 
+      ::std::string mNameOf;
+      // Precomputed lowercase nameof                                   
+      Lowercase mNameOfLowercased;
 
       // Each reflection may or may not have some info                  
-      Token mInfo = "<no info provided>";
+      ::std::string mInfo = "<no info provided>";
 
       // Major version                                                  
       unsigned mVersionMajor = 1;
@@ -147,14 +145,19 @@ namespace Langulus::RTTI::Inner
       // Minor version                                                  
       unsigned mVersionMinor = 0;
 
-      // Populated to be LANGULUS_RTTI_BOUNDARY on reflection-time      
+      // Populated to be LANGULUS_BOUNDARY on reflection-time           
+      // Types can be reflected from the point of view of different     
+      // shared libraries. Each new reflection will be applied on the   
+      // top of the old one, but overwriting properties only if the     
+      // changes come from the MainBoundary. Once mBoundary becomes     
+      // the MainBoundary, the definition shall never be unregistered.  
       IF_LANGULUS_MANAGED_REFLECTION(Token mBoundary);
 
       /// Construct an abstract definition                                    
       ///   @param cppname - the name of the definition, as it appears in C++ 
       explicit Definition(const Token& cppname)
-         : mHash    {HashOf(cppname)}
-         , mCppName {cppname} {}
+         : mHash     {HashOf(cppname)}
+         , mCppNameOf{cppname} {}
 
       /// Reflect some common type properties, like info and version          
       ///   @tparam T - the type to reflect                                   

@@ -81,43 +81,43 @@ namespace Langulus
    /// Convenience literals for getting meta definitions from token...        
    LANGULUS(INLINED)
    RTTI::DMeta operator ""_dmeta(const char* token, ::std::size_t size) noexcept {
-      return RTTI::Instance.GetMetaData(Token {token, size});
+      return RTTI::Instance.GetMetaDataByToken(Token {token, size});
    }
 
    LANGULUS(INLINED)
    RTTI::TMeta operator ""_tmeta(const char* token, ::std::size_t size) noexcept {
-      return RTTI::Instance.GetMetaTag(Token {token, size});
+      return RTTI::Instance.GetMetaTagByToken(Token {token, size});
    }
 
    LANGULUS(INLINED)
    RTTI::CMeta operator ""_cmeta(const char* token, ::std::size_t size) noexcept {
-      return RTTI::Instance.GetMetaConst(Token {token, size});
+      return RTTI::Instance.GetMetaConstByToken(Token {token, size});
    }
 
    LANGULUS(INLINED)
    RTTI::VMeta operator ""_vmeta(const char* token, ::std::size_t size) noexcept {
-      return RTTI::Instance.GetMetaVerb(Token {token, size});
+      return RTTI::Instance.GetMetaVerbByToken(Token {token, size});
    }
    
    /// ... as well as getting them manually                                   
    LANGULUS(INLINED)
    RTTI::DMeta MetaDataOf(const Token& token, const Token& boundary = "") noexcept {
-      return RTTI::Instance.GetMetaData(token, boundary);
+      return RTTI::Instance.GetMetaDataByToken(token, boundary);
    }
 
    LANGULUS(INLINED)
    RTTI::TMeta MetaTagOf(const Token& token, const Token& boundary = "") noexcept {
-      return RTTI::Instance.GetMetaTag(token, boundary);
+      return RTTI::Instance.GetMetaTagByToken(token, boundary);
    }
 
    LANGULUS(INLINED)
    RTTI::VMeta MetaVerbOf(const Token& token, const Token& boundary = "") noexcept {
-      return RTTI::Instance.GetMetaVerb(token, boundary);
+      return RTTI::Instance.GetMetaVerbByToken(token, boundary);
    }
 
    LANGULUS(INLINED)
    RTTI::CMeta MetaConstOf(const Token& token, const Token& boundary = "") noexcept {
-      return RTTI::Instance.GetMetaConst(token, boundary);
+      return RTTI::Instance.GetMetaConstByToken(token, boundary);
    }
 
    LANGULUS(INLINED)

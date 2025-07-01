@@ -27,10 +27,12 @@
 namespace Langulus::RTTI
 {
 
-   using MetaList = ::std::unordered_set<Inner::Definition const*>;
+   using MetaSet = ::std::unordered_set<Inner::Definition const*>;
+
    struct MetaException : Exception {
       using Exception::Exception;
    };
+
 
    ///                                                                        
    ///   The RTTI registry                                                    
@@ -38,49 +40,50 @@ namespace Langulus::RTTI
    /// Available only if managed reflection feature is enabled                
    ///                                                                        
    class Registry {
-      // A definition per boundary                                      
+      // Definitions indexed by lowercase reflected name                
       template<class T>
-      using BoundedMeta = ::std::unordered_map<Token, T>;
-      
-      // All boundary definitions, indexed by lowercase reflected name  
-      template<class T>
-      using MetaMap = ::std::unordered_map<Lowercase, BoundedMeta<T>>;
+      using MetaMap = ::std::unordered_map<Lowercase, T>;
       
       // Definitions indexed by ID                                      
       template<class T>
       using Indexed = ::std::vector<T>;
 
       // Database for meta data definitions                             
-      MetaMap<DefinitionData*>  mMetaDataByName;
-      Indexed<DefinitionData*>  mMetaDataByID;
+      MetaMap<DefinitionData const*>  mMetaDataByName;
+      Indexed<DefinitionData const*>  mMetaDataByID;
+
       // Database for named values                                      
-      MetaMap<DefinitionConst*> mMetaConstantsByName;
-      Indexed<DefinitionConst*> mMetaConstantsByID;
+      MetaMap<DefinitionConst const*> mMetaConstantsByName;
+      Indexed<DefinitionConst const*> mMetaConstantsByID;
+
       // Database for meta trait definitions                            
-      MetaMap<DefinitionTag*>   mMetaTagsByName;
-      Indexed<DefinitionTag*>   mMetaTagsByID;
+      MetaMap<DefinitionTag const*>   mMetaTagsByName;
+      Indexed<DefinitionTag const*>   mMetaTagsByID;
+
       // Database for meta verb definitions                             
-      MetaMap<DefinitionVerb*>  mMetaVerbsByName;
-      Indexed<DefinitionVerb*>  mMetaVerbsByID;
-
+      MetaMap<DefinitionVerb const*>  mMetaVerbsByName;
+      Indexed<DefinitionVerb const*>  mMetaVerbsByID;
       // Verbs, mapped to their original C++ class name                 
-      MetaMap<DefinitionVerb*>  mUniqueVerbs;
+      MetaMap<DefinitionVerb const*>  mUniqueVerbs;
       // Database for verb definitions indexed by operator token        
-      MetaMap<DefinitionVerb*>  mOperators;
-      // Database for ambiguous tokens                                  
-      MetaMap<MetaList>         mMetaAmbiguous;
-      // Meta data definitions, indexed by file extensions              
-      MetaMap<MetaList>         mFileDatabase;
+      MetaMap<DefinitionVerb const*>  mOperators;
 
-      //auto& Register          (auto meta, auto& where, const Token& boundary) has_assumptions;
+      // Database for ambiguous tokens                                  
+      MetaMap<MetaSet> mMetaAmbiguous;
+      // Meta data definitions, indexed by file extensions              
+      MetaMap<MetaSet> mFileDatabase;
+
       void UnregisterAmbiguous(const Token&, const Lowercase&, Inner::Definition const*) noexcept;
-      auto GetMetaByCppName   (const auto& where, const Token& name, const Token& library = "") const noexcept;
-      auto GetMetaByToken     (const auto& where, const Token& name, const Token& library = "") const noexcept;
-      auto GetMetaList        (const auto& where, const Token& name, const Token& library) const noexcept -> const MetaList&;
-      auto GetMetaByID        (const auto& where, size_t id) const noexcept;
+      template<bool BY_CPPNAME>
+      auto GetMetaByName(const auto& where, const Token& name, const Token& library = "") const noexcept -> decltype(where.begin()->second);
+      auto GetMetaList  (const auto& where, const Token& name, const Token& library) const noexcept -> const MetaSet&;
+      auto GetMetaByID  (const auto& where, size_t id) const noexcept;
 
    protected:
       friend class DefinitionVerb;
+      friend class DefinitionData;
+      friend class DefinitionTag;
+      friend class DefinitionConst;
 
       void RegisterAmbiguous          (const Token&, const Lowercase&, Inner::Definition const*) noexcept;
       void RegisterVerbOperator       (const Token&, const Token& library) has_assumptions;
@@ -88,9 +91,10 @@ namespace Langulus::RTTI
       void RegisterVerbToken          (const Token&, const Token& library) has_assumptions;
       void RegisterVerbTokenReverse   (const Token&, const Token& library) has_assumptions;
 
-   public:
       LANGULUS_API(RTTI)
       auto RegisterData(const Token& name, const Token& library) -> DefinitionData&;
+      LANGULUS_API(RTTI)
+      auto ReserveDataID(DefinitionData const*) -> size_t;
 
       LANGULUS_API(RTTI)
       auto RegisterConst(const Token& name, const Token& library) -> DefinitionConst&;
@@ -108,42 +112,50 @@ namespace Langulus::RTTI
       ~Registry();
 
       LANGULUS_API(RTTI)
-      auto GetMetaData(const Token&, const Token& library = "") const noexcept -> DefinitionData const*;
+      auto GetMetaDataByCppName(const Token&, const Token& library = "") const noexcept -> DefinitionData const*;
       LANGULUS_API(RTTI)
-      auto GetMetaData(const Inner::MetaDataStructured_8_8&)    const noexcept -> DefinitionData const*;
+      auto GetMetaDataByToken(const Token&, const Token& library = "") const noexcept -> DefinitionData const*;
       LANGULUS_API(RTTI)
-      auto GetMetaData(const Inner::MetaDataStructured_16_16&)  const noexcept -> DefinitionData const*;
+      auto GetMetaDataByID(const Inner::MetaDataStructured_8_8&) const noexcept -> DefinitionData const*;
       LANGULUS_API(RTTI)
-      auto GetMetaData(const Inner::MetaDataStructured_24_8&)   const noexcept -> DefinitionData const*;
+      auto GetMetaDataByID(const Inner::MetaDataStructured_16_16&) const noexcept -> DefinitionData const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaDataByID(const Inner::MetaDataStructured_24_8&) const noexcept -> DefinitionData const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaTag(const Token&, const Token& library = "")  const noexcept -> DefinitionTag const*;
+      auto GetMetaTagByCppName(const Token&, const Token& library = "") const noexcept -> DefinitionTag const*;
       LANGULUS_API(RTTI)
-      auto GetMetaTag(const Inner::MetaTagPacked_16&)           const noexcept -> DefinitionTag const*;
+      auto GetMetaTagByToken(const Token&, const Token& library = "") const noexcept -> DefinitionTag const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaTagByID(const Inner::MetaTagPacked_16&) const noexcept -> DefinitionTag const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaVerb(const Token&, const Token& library = "") const noexcept -> DefinitionVerb const*;
+      auto GetMetaVerbByCppName(const Token&, const Token& library = "") const noexcept -> DefinitionVerb const*;
       LANGULUS_API(RTTI)
-      auto GetMetaVerb(const Inner::MetaVerbStructured_X8<1>&)  const noexcept -> DefinitionVerb const*;
+      auto GetMetaVerbByToken(const Token&, const Token& library = "") const noexcept -> DefinitionVerb const*;
       LANGULUS_API(RTTI)
-      auto GetMetaVerb(const Inner::MetaVerbStructured_X8<3>&)  const noexcept -> DefinitionVerb const*;
+      auto GetMetaVerbByID(const Inner::MetaVerbStructured_X8<1>&) const noexcept -> DefinitionVerb const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaVerbByID(const Inner::MetaVerbStructured_X8<3>&) const noexcept -> DefinitionVerb const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaConst(const Token&, const Token& library = "") const noexcept -> DefinitionConst const*;
+      auto GetMetaConstByCppName(const Token&, const Token& library = "") const noexcept -> DefinitionConst const*;
       LANGULUS_API(RTTI)
-      auto GetMetaConst(const Inner::MetaConstPacked_16&)       const noexcept -> DefinitionConst const*;
+      auto GetMetaConstByToken(const Token&, const Token& library = "") const noexcept -> DefinitionConst const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaConstByID(const Inner::MetaConstPacked_16&) const noexcept -> DefinitionConst const*;
 
       LANGULUS_API(RTTI)
       auto GetOperator(const Token&, const Token& library = "") const noexcept -> DefinitionVerb const*;
 
       LANGULUS_API(RTTI)
-      auto GetAmbiguousMeta(const Token&, const Token& library = "") const noexcept -> const MetaList&;
+      auto GetAmbiguousMeta(const Token&, const Token& library = "") const noexcept -> const MetaSet&;
 
       LANGULUS_API(RTTI)
       auto DisambiguateMeta(const Token&, const Token& library = "") const -> Inner::Definition const*;
 
       LANGULUS_API(RTTI)
-      auto ResolveFileExtension(const Token&, const Token& library = "") const -> const MetaList&;
+      auto ResolveFileExtension(const Token&, const Token& library = "") const -> const MetaSet&;
 
       LANGULUS_API(RTTI)
       void UnloadBoundary(const Token&);

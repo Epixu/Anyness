@@ -18,18 +18,18 @@ namespace Langulus::Anyness
 {
    struct Many;
    struct Any;
-} // namespace Langulus::Anyness
+}
 
 namespace Langulus::Flow
 {
    struct Verb;
-} // namespace Langulus::Flow
+}
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    namespace Langulus::Fractalloc
    {
       class Pool;
-   } // namespace Langulus::Fractalloc
+   }
 #endif
 
 namespace Langulus::RTTI
@@ -49,12 +49,24 @@ namespace Langulus::RTTI
 
       // The origin type, with all qualifiers and sparseness removed    
       // Will be nullptr for incomplete types                           
-      DefinitionData const* mOrigin IF_SAFE(= nullptr);
-      // The type, when a single pointer is removed                     
+      DefinitionData const* mOrigin = nullptr;
+      // The type, when a single level of indirection is removed        
       // Will be null if data is dense                                  
-      DefinitionData const* mDeptr IF_SAFE(= nullptr);
+      DefinitionData const* mDeptr = nullptr;
       // The type, when all qualifiers are removed down to the origin   
-      DefinitionData const* mDecvq IF_SAFE(= nullptr);
+      DefinitionData const* mDecvqAll IF_SAFE(= nullptr);
+      // The type, when шдзпдяш qualifiers are removed                  
+      DefinitionData const* mDecvqOnce IF_SAFE(= nullptr);
+
+      // The type, but with an additional level of indirection          
+      // @attention this is not null only after the pointer type has    
+      //    been reflected elsewhere at runtime                         
+      DefinitionData const* mAddPtr = nullptr;
+
+      // The type, but constant                                         
+      // @attention this is not null only after the constant type has   
+      //    been reflected elsewhere at runtime                         
+      DefinitionData const* mAddConst = nullptr;
 
       // Data instance size in bytes, set by sizeof()                   
       size_t mSize IF_SAFE(= 0);
@@ -112,11 +124,11 @@ namespace Langulus::RTTI
       FDestroy mDestructor {};
 
       // The <=> operator, wrapped in a lambda expression if available  
-      using FCompare = Compared(*)(const void* lhs, const void* rhs);
+      using FCompare = Compared(*)(void* lhs, void* rhs);
       FCompare mComparer {};
 
       // The refer/copy/disown/clone assignment, wrapped in a lambda    
-      using FCopyAssign = void(*)(const void* from, void* to);
+      using FCopyAssign = void(*)(void* from, void* to);
       FCopyAssign mReferAssigner {};
       FCopyAssign mCopyAssigner {};
       FCopyAssign mDisownAssigner {};
@@ -130,12 +142,12 @@ namespace Langulus::RTTI
 
       // The class type function, wrapped in a lambda expression        
       // Returns a typed container with the most concrete class instance
-      using FResolve = Anyness::Any(*)(const void* self);
+      using FResolve = Anyness::Any(*)(void* self);
       FResolve mResolver {};
 
       // The hash getter, wrapped in a lambda expression                
       // Takes the pointer to the instance for hashing, returns the hash
-      using FHash = Hash(*)(const void* self);
+      using FHash = Hash(*)(void* self);
       FHash mHasher {};
       // Decides whether POD data is batch-hashable or not              
       // If there's a custom GetHash() method, POD data is not batchable
@@ -151,10 +163,9 @@ namespace Langulus::RTTI
       // A custom verb dispatcher, wrapped in a lambda expression               
       // Takes the pointer to the instance that will dispatch, and a verb       
       // There is a mutable and immutable version of this                       
-      using FDispatchMutable = void(*)(void* self, Flow::Verb& verb);
-      using FDispatchConstant = void(*)(void const* self, Flow::Verb& verb);
-      FDispatchMutable mDispatcherMut {};
-      FDispatchConstant mDispatcher {};
+      using FDispatch = void(*)(void* self, Flow::Verb& verb);
+      FDispatch mDispatcherMut {};
+      FDispatch mDispatcher {};
 
 
       /*using FVerbMutable = FDispatchMutable;

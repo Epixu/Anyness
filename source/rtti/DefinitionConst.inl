@@ -38,7 +38,7 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         auto meta = Instance.GetMetaConst(cppname, Langulus::Boundary);
+         auto meta = Instance.GetMetaConstByCppName(cppname, Langulus::Boundary);
          if (meta)
             return meta;
 
@@ -62,9 +62,11 @@ namespace Langulus::RTTI
       constexpr auto token = NameOf<E>();
       static_assert(token != "", "Invalid constant token is not allowed - "
          "you have reflected your constant with an empty CTTI::NamedValue");
-      definition.mToken = token;
-      definition.mTokenSanitized = token;
-      definition.mTokenSanitized[0] = ::std::toupper(definition.mTokenSanitized[0]);
+
+      // Constants canonically begin with a capital letter              
+      definition.mNameOf = token;
+      definition.mNameOf[0] = ::std::toupper(definition.mNameOf[0]);
+      definition.mNameOfLowercased = Inner::ToLowercase(token);
 
       if constexpr (CT::InfoValue<E>) {
          // Reflected info                                              
@@ -84,13 +86,13 @@ namespace Langulus::RTTI
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       Logger::VerboseRaw(
-         "Constant ", Logger::Yellow, definition.mToken,
+         "Constant ", Logger::Yellow, definition.mNameOf,
          " (ID: ", definition.mID, ") ", Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
    #else
       Logger::VerboseRaw(
-         "Constant ", Logger::Yellow, definition.mToken, Logger::Green,
+         "Constant ", Logger::Yellow, definition.mNameOf, Logger::Green,
          " registered (LIB: ", definition.mLibraryName, ")"
       );
    #endif
