@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <cstdint>
+#include <cstddef>
 #include <type_traits>
 
 
@@ -18,7 +19,7 @@
 /// These macros seem evil, but read this:                                    
 /// https://www.foonathan.net/2020/09/move-forward/                           
 /// static_cast to rvalue reference                                           
-#define MOV(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
+#define MOV(...) static_cast<::std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
 
 /// static_cast to identity                                                   
 /// The extra && aren't necessary as discussed above, but make it more robust 
@@ -428,6 +429,8 @@
 ///                                                                           
 namespace Langulus
 {
+   
+   using ::std::size_t;
 
    /// The Langulus::Boundary symbol is intentionally left undefined,         
    /// so that it is mandatory for you to define it inside your executables   

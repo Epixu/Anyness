@@ -72,7 +72,7 @@ namespace Langulus::RTTI
       // Meta data definitions, indexed by file extensions              
       MetaMap<MetaList>         mFileDatabase;
 
-      auto& Register          (auto meta, auto& where, const Token& boundary) has_assumptions;
+      //auto& Register          (auto meta, auto& where, const Token& boundary) has_assumptions;
       void UnregisterAmbiguous(const Token&, const Lowercase&, Inner::Definition const*) noexcept;
       auto GetMetaByCppName   (const auto& where, const Token& name, const Token& library = "") const noexcept;
       auto GetMetaByToken     (const auto& where, const Token& name, const Token& library = "") const noexcept;

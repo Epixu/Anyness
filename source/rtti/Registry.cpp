@@ -418,7 +418,7 @@ namespace Langulus::RTTI
    ///   @param where - place to insert the definition                        
    ///   @param boundary - the boundary to register in                        
    ///   @return the newly defined meta for that token                        
-   auto& Registry::Register(auto meta, auto& where, const Token& boundary) has_assumptions {
+   /*auto& Registry::Register(auto meta, auto& where, const Token& boundary) has_assumptions {
       AssumeDev(not boundary.empty(), HERE(), "Bad boundary");
 
       // If reached, then not found, so insert a new definition
@@ -429,7 +429,7 @@ namespace Langulus::RTTI
       else
          foundToken->second.insert({boundary, meta});
       return *meta;
-   }
+   }*/
 
    /// Register a data definition                                             
    ///   @attention assumes type is not yet registered in the given boundary  
@@ -437,6 +437,8 @@ namespace Langulus::RTTI
    ///   @param boundary - the boundary to register in                        
    ///   @return the newly defined meta data for that name                    
    auto Registry::RegisterData(const Token& cppname, const Token& boundary) -> DefinitionData& {
+      AssumeDev(not boundary.empty(), HERE(),
+         "Bad boundary");
       AssumeDev(not GetMetaByCppName(mMetaDataByName, cppname, boundary), HERE(),
          "Data with this name is already registered: ", cppname);
       
@@ -447,7 +449,22 @@ namespace Langulus::RTTI
       Assert(not GetMetaByCppName(mMetaConstantsByName, cppname), HERE(),
          "Data name conflicts with constant: ", cppname);
 
-      return Register(new DefinitionData {cppname}, mMetaDataByName, boundary);
+      // If reached, then not found, so insert a new definition         
+      auto meta = new DefinitionData {cppname};
+      
+      // Name has to be reallocated locally, so that we make sure data  
+      // is never owned by shared libraries                             
+      const ::std::string localname {meta->mCppName};
+
+      // Index by C++ name                                              
+      const auto foundToken = mMetaDataByName.find(localname);
+      if (foundToken == mMetaDataByName.end())
+         mMetaDataByName.insert({localname, {{boundary, meta}}});
+      else
+         foundToken->second.insert({boundary, meta});
+
+      // Index by ID                                                    
+      return *meta;
    }
 
    /// Register a constant definition                                         
