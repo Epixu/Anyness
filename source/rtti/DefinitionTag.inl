@@ -54,11 +54,13 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         auto meta = Instance.GetMetaTagByCppName(cppname, Langulus::Boundary);
-         if (meta)
+         DefinitionTag const* meta = Instance.GetMetaTagByCppName(cppname);
+         if (meta and meta->IsInRelevantBoundary())
             return meta;
 
-         auto& definition = Instance.RegisterTag(cppname, Langulus::Boundary);
+         DefinitionTag& definition = meta
+            ? const_cast<DefinitionTag&>(*meta)
+            : Instance.RegisterTag(cppname, Boundary);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -68,12 +70,14 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         auto& definition = s_definition.emplace(cppname);
+         auto& definition = s_definition.emplace(cppname, "");
       #endif
 
 
       //                                                                
       // If this is reached, then tag is not defined yet                
+      definition.template ReflectCommon<T>();
+
       constexpr auto token = NameOfTag<T>();
       static_assert(token != "", "Invalid tag token is not allowed - "
          "you have equipped your type (or its base) with an empty CTTI_DefineTag");
@@ -82,19 +86,16 @@ namespace Langulus::RTTI
       definition.mNameOf = Inner::ToLowercase(token);
       definition.mNameOfLowercased = definition.mNameOf;
 
-      definition.template ReflectCommon<T>();
-
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       Logger::VerboseRaw(
          "Tag ", Logger::Purple, definition.mNameOf,
          " (ID: ", definition.mID, ") ", Logger::Green,
-         " registered (LIB: ", definition.mLibraryName, ")"
+         " registered from ", Boundary
       );
-      return definition.mHandle;
    #else
       Logger::VerboseRaw(
-         "Tag ", Logger::Purple, definition.mNameOf, Logger::Green,
-         " registered (LIB: ", definition.mLibraryName, ")"
+         "Tag ", Logger::Purple, definition.mNameOf,
+         Logger::Green, " reflected"
       );
    #endif
 

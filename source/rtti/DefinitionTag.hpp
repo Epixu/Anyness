@@ -15,13 +15,14 @@ namespace Langulus::RTTI
    ///                                                                        
    /// Tag definition                                                         
    ///                                                                        
-   class DefinitionTag : public Inner::Definition {
+   class DefinitionTag final : public Inner::Definition {
    protected:
       friend class Registry;
       friend struct Inner::MetaTagNaked;
       friend struct Inner::MetaTagPacked_16;
 
-      explicit DefinitionTag(const Token& cppname) : Definition {cppname} {}
+      DefinitionTag(const Token& cppname, const Token& boundary)
+         : Definition {cppname, boundary} {}
 
    public:
       template<CT::Decayed>

@@ -73,7 +73,7 @@ namespace Langulus::RTTI
       // Meta data definitions, indexed by file extensions              
       MetaMap<MetaSet> mFileDatabase;
 
-      void UnregisterAmbiguous(const Token&, const Lowercase&, Inner::Definition const*) noexcept;
+      //void UnregisterAmbiguous(const Token&, const Lowercase&, Inner::Definition const*) noexcept;
       template<bool BY_CPPNAME>
       auto GetMetaByName(const auto& where, const Token& name, const Token& library = "") const noexcept -> decltype(where.begin()->second);
       auto GetMetaList  (const auto& where, const Token& name, const Token& library) const noexcept -> const MetaSet&;
@@ -85,25 +85,25 @@ namespace Langulus::RTTI
       friend class DefinitionTag;
       friend class DefinitionConst;
 
-      void RegisterAmbiguous          (const Token&, const Lowercase&, Inner::Definition const*) noexcept;
+      //void RegisterAmbiguous          (const Token&, const Lowercase&, Inner::Definition const*) noexcept;
       void RegisterVerbOperator       (const Token&, const Token& library) has_assumptions;
       void RegisterVerbOperatorReverse(const Token&, const Token& library) has_assumptions;
       void RegisterVerbToken          (const Token&, const Token& library) has_assumptions;
       void RegisterVerbTokenReverse   (const Token&, const Token& library) has_assumptions;
 
       LANGULUS_API(RTTI)
-      auto RegisterData(const Token& name, const Token& library) -> DefinitionData&;
+      auto RegisterData(const Token& cppname, const Token& library) -> DefinitionData&;
       LANGULUS_API(RTTI)
       auto ReserveDataID(DefinitionData const*) -> size_t;
 
       LANGULUS_API(RTTI)
-      auto RegisterConst(const Token& name, const Token& library) -> DefinitionConst&;
+      auto RegisterConst(const Token& cppname, const Token& library) -> DefinitionConst&;
 
       LANGULUS_API(RTTI)
-      auto RegisterTag(const Token& name, const Token& library) -> DefinitionTag&;
+      auto RegisterTag(const Token& cppname, const Token& library) -> DefinitionTag&;
 
       LANGULUS_API(RTTI)
-      auto RegisterVerb(const Token&name, const Token& library) -> DefinitionVerb&;
+      auto RegisterVerb(const Token& cppname, const Token& library) -> DefinitionVerb&;
       
       LANGULUS_API(RTTI)
       void RegisterFileExtension(const Token&, DefinitionData*, const Token& library) has_assumptions;

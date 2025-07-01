@@ -94,8 +94,8 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get the type boundary                                                  
-   inline auto MetaDataStructured_16_16::GetBoundary() const noexcept -> Token {
-      return Instance.GetMetaDataByID(*this)->mBoundary;
+   inline bool MetaDataStructured_16_16::CheckBoundary(const Token& boundary) const noexcept {
+      return Instance.GetMetaDataByID(*this)->mBoundaries.contains(boundary);
    }
 
    /// Get the reflected pool tactic                                          

@@ -38,7 +38,7 @@ namespace Langulus::RTTI
    ///                                                                        
    /// A data definition                                                      
    ///                                                                        
-   class DefinitionData : public Inner::Definition {
+   class DefinitionData final : public Inner::Definition {
    protected:
       friend class Registry;
       friend class Inner::Definition;
@@ -82,8 +82,8 @@ namespace Langulus::RTTI
       size_t mAllocationPage IF_SAFE(= 0);
       // Precomputed counts indexed by MSB (avoids division by stride   
       // for that extra oompf)                                          
-      size_t mAllocationTable[sizeof(size_t) * 8 + 1];
-      
+      size_t mAllocationTable[sizeof(size_t) * 8 + 1] IF_SAFE(= {});
+
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          // The reflected pool tactic                                   
          PoolTactic mPoolTactic = PoolTactic::Default;
@@ -173,7 +173,8 @@ namespace Langulus::RTTI
       using FTypeRetriever = DMeta(*)();
       using FTraitRetriever = TMeta(*)(int);
       using FDynamicCast = void* (*)(void*);*/
-      explicit DefinitionData(const Token& cppname) : Definition {cppname} {}
+      DefinitionData(const Token& cppname, const Token& boundary)
+         : Definition {cppname, boundary} {}
 
    public:
       template<class>

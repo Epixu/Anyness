@@ -61,8 +61,8 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get the type boundary                                                  
-   inline auto MetaDataNaked::GetBoundary() const noexcept -> Token {
-      return mDefinition->mBoundary;
+   inline bool MetaDataNaked::CheckBoundary(const Token& boundary) const noexcept {
+      return mDefinition->mBoundaries.contains(boundary);
    }
 
    /// Check if type is CT::Dense                                             

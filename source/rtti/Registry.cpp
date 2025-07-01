@@ -228,8 +228,7 @@ namespace Langulus::RTTI
       return GetMetaList(mMetaAmbiguous, token, boundary);
    }
    
-   /// Disambiguate a token                                                   
-   /// Works in the following way:                                            
+   /// Disambiguate a token. Works in the following way:                      
    ///   1. Checks keyword for an exact match (not case-sensitive)            
    ///      If such is found, the meta is returned directly                   
    ///   2. If multiple keywords match partially:                             
@@ -262,8 +261,7 @@ namespace Langulus::RTTI
       MetaSet origins;
       for (auto& meta : symbols) {
          AssumeDevAndOptimize(meta, "Bad meta");
-         const auto meta_lc_token = meta->mNameOfLowercased;
-         if (meta_lc_token.find(lowercased) == ::std::string::npos)
+         if (not meta->mNameOfLowercased.contains(lowercased))
             continue;
          
          if (auto dmeta = dynamic_cast<DefinitionData const*>(meta)) {
@@ -372,7 +370,7 @@ namespace Langulus::RTTI
    ///   @param boundary - the boundary to register in                        
    ///   @param token - the token to register                                 
    ///   @param meta - the definition to add                                  
-   void Registry::RegisterAmbiguous(
+   /*void Registry::RegisterAmbiguous(
       const Token& boundary, const Lowercase& token, Inner::Definition const* meta
    ) noexcept {
       Lowercase ambiguous {Inner::ToLastToken(token)};
@@ -397,7 +395,7 @@ namespace Langulus::RTTI
          return;
       
       foundAmbiguous->second.erase(meta);
-   }
+   }*/
 
    /// Register a data definition                                             
    ///   @attention assumes type is not yet registered in the given boundary  
@@ -418,7 +416,7 @@ namespace Langulus::RTTI
          "Data name conflicts with constant: ", cppname);
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionData {cppname};
+      auto meta = new DefinitionData {cppname, boundary};
 
       // Index by C++ name                                              
       mMetaDataByName[meta->mCppNameOf] = meta;
@@ -453,7 +451,7 @@ namespace Langulus::RTTI
          "Constant name conflicts with data: ", cppname);
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionConst {cppname};
+      auto meta = new DefinitionConst {cppname, boundary};
 
       // Index by C++ name                                              
       mMetaConstantsByName[meta->mCppNameOf] = meta;
@@ -481,7 +479,7 @@ namespace Langulus::RTTI
          "Tag name conflicts with data: ", cppname);
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionTag {cppname};
+      auto meta = new DefinitionTag {cppname, boundary};
 
       // Index by C++ name                                              
       mMetaTagsByName[meta->mCppNameOf] = meta;
@@ -509,7 +507,7 @@ namespace Langulus::RTTI
          "Verb name conflicts with data: ", cppname);
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionVerb {cppname};
+      auto meta = new DefinitionVerb {cppname, boundary};
 
       // Index by C++ name                                              
       mUniqueVerbs[meta->mCppNameOf] = meta;
@@ -631,36 +629,53 @@ namespace Langulus::RTTI
          foundToken->second.insert(type);
    }
 
-   /// Runs through all definitions, and destroys all of those, that were     
-   /// defined within the given boundary token                                
+   /// Runs through all definitions and destroys all of those, that were      
+   /// defined only within the given boundary token                           
    ///   @param boundary - the boundary token to search for                   
    void Registry::UnloadBoundary(const Token& boundary) {
-      Logger::Verbose<VERBOSE>(Logger::PushRed, Logger::Underline, 
-         "Unloading library ", boundary, Logger::Pop);
+      AssumeDev(boundary != MainBoundary, HERE(),
+         "Can't unload main boundary");
+      auto scope = Logger::VerboseScoped<VERBOSE>(Logger::Red, Logger::Underline, 
+         "Unloading boundary ", boundary);
 
       // Unload constants                                               
       for (auto pair = mMetaConstantsByName.begin(); pair != mMetaConstantsByName.end();) {
-         auto found = pair->second.find(boundary);
-         if (found == pair->second.end()) {
+         auto definition = const_cast<DefinitionConst*>(pair->second);
+         if (not definition->mBoundaries.erase(boundary)) {
+            // Boundary is irrelevant for this definition               
             ++pair;
             continue;
          }
 
+         if (not definition->mBoundaries.empty()) {
+            // Definition is still used in other boundaries             
+            ++pair;
+            continue;
+         }
+
+         // If this is reached, then it is time to destroy the          
+         // definition - it is no longer in use                         
          Logger::Verbose<VERBOSE>(
-            "Constant ", Logger::PushYellow, found->second->mNameOf,
-            Logger::PopRed, " unregistered (", boundary, ")"
+            "Constant ", Logger::Yellow, definition->mNameOf,
+            Logger::Red, " unregistered"
          );
 
-         UnregisterAmbiguous(boundary, pair->first, found->second);
-         delete found->second;
-         pair->second.erase(found);
-         if (pair->second.empty())
-            pair = mMetaConstantsByName.erase(pair);
-         else
-            ++pair;
+         // Remove from indexing by ID                                  
+         if (mMetaConstantsByID[definition->mID] == definition)
+            mMetaConstantsByID[definition->mID] = nullptr;
+
+         // Remove from the ambiguity map                               
+         const auto ambiguous = mMetaAmbiguous.find(definition->mNameOfLowercased);
+         ambiguous->second.erase(definition);
+         if (ambiguous->second.empty())
+            mMetaAmbiguous.erase(ambiguous);
+
+         // Finally, delete the definition and remove it from registry  
+         delete definition;
+         pair = mMetaConstantsByName.erase(pair);
       }
 
-      // Unload file types                                              
+      // Unload file types (must be done before deleting meta data)     
       for (auto pair = mFileDatabase.begin(); pair != mFileDatabase.end();) {
          auto found = pair->second.find(boundary);
          if (found == pair->second.end()) {
@@ -702,7 +717,7 @@ namespace Langulus::RTTI
             ++pair;
       }
 
-      // Unload traits                                                  
+      // Unload tags                                                    
       for (auto pair = mMetaTagsByName.begin(); pair != mMetaTagsByName.end();) {
          auto found = pair->second.find(boundary);
          if (found == pair->second.end()) {

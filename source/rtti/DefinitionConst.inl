@@ -30,35 +30,40 @@ namespace Langulus::RTTI
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the const might 
-         // have been reflected previously in another shared library.   
-         // We can't keep a static pointer to the meta, because shared  
-         // libraries might get unloaded, resulting in different memory 
-         // spaces when reloaded. An individual definition is kept for  
-         // each shared library boundary, because definitions will      
-         // contain pointers to functions that reside in the library    
-         // memory itself, and it is a bad idea to mix those with the   
-         // main library itself.                                        
-         auto meta = Instance.GetMetaConstByCppName(cppname, Langulus::Boundary);
-         if (meta)
+         // have been reflected previously in another shared library    
+         DefinitionConst const* meta = Instance.GetMetaConstByCppName(cppname);
+         if (meta and meta->IsInRelevantBoundary())
             return meta;
 
-         auto& definition = Instance.RegisterConst(cppname, Langulus::Boundary);
+         DefinitionConst& definition = meta
+            ? const_cast<DefinitionConst&>(*meta)
+            : Instance.RegisterConst(cppname, Boundary);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
-         // for each translation unit, and rely on runtime checks to    
-         // make sure that definitions match between those.             
+         // for each translation unit, and rely on hashing and runtime  
+         // checks to make sure that definitions are the same           
          static constinit std::optional<DefinitionConst> s_definition;
          if (s_definition.has_value())
             return &s_definition.value();
 
-         auto& definition = s_definition.emplace(cppname);
+         DefinitionConst& definition = s_definition.emplace(cppname, "");
       #endif
 
 
       //                                                                
       // If this is reached, then constant is not defined yet           
-      // Save the original C++ name                                     
+      if constexpr (CT::VersionedValue<E>) {
+         // Reflected version                                           
+         definition.mVersionMajor = CTTI::VersionedValue<E>::Major;
+         definition.mVersionMinor = CTTI::VersionedValue<E>::Minor;
+      }
+
+      if constexpr (CT::InfoValue<E>) {
+         // Reflected info                                              
+         definition.mInfo = CTTI::InfoValue<E>::Text;
+      }
+      
       constexpr auto token = NameOf<E>();
       static_assert(token != "", "Invalid constant token is not allowed - "
          "you have reflected your constant with an empty CTTI::NamedValue");
@@ -68,34 +73,27 @@ namespace Langulus::RTTI
       definition.mNameOf[0] = ::std::toupper(definition.mNameOf[0]);
       definition.mNameOfLowercased = Inner::ToLowercase(token);
 
-      if constexpr (CT::InfoValue<E>) {
-         // Reflected info                                              
-         definition.mInfo = CTTI::InfoValue<E>::Text;
+      // Refer to a heap copy of the data                               
+      using T = decltype(E);
+      definition.mType = DefinitionData::Reflect<T>();
+      if (not definition.mData) {
+         definition.mData = malloc(sizeof(T));
+         new (definition.mData) T {E};
       }
 
-      if constexpr (CT::VersionedValue<E>) {
-         // Reflected version                                           
-         definition.mVersionMajor = CTTI::VersionedValue<E>::Major;
-         definition.mVersionMinor = CTTI::VersionedValue<E>::Minor;
-      }
-
-      // Refer to a local copy of the data                              
-      static const auto staticInstance = E;
-      definition.mType = DefinitionData::Reflect<decltype(E)>();
-      definition.mData = &staticInstance;
-
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      Logger::VerboseRaw(
-         "Constant ", Logger::Yellow, definition.mNameOf,
-         " (ID: ", definition.mID, ") ", Logger::Green,
-         " registered (LIB: ", definition.mLibraryName, ")"
-      );
-   #else
-      Logger::VerboseRaw(
-         "Constant ", Logger::Yellow, definition.mNameOf, Logger::Green,
-         " registered (LIB: ", definition.mLibraryName, ")"
-      );
-   #endif
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         Logger::VerboseRaw(
+            "Constant ", Logger::Yellow, definition.mNameOf,
+            " (ID: ", definition.mID, ") ", Logger::Green,
+            " registered from ", Boundary
+         );
+      #else
+         Logger::VerboseRaw(
+            "Constant ", Logger::Yellow, definition.mNameOf,
+            Logger::Green, " reflected"
+         );
+      #endif
+      
       return &definition;
    }
 

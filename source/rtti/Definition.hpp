@@ -10,6 +10,9 @@
 #include <Langulus/NameOf.hpp>
 #include <Langulus/CT/Info.hpp>
 #include <Langulus/CT/Versioned.hpp>
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include <unordered_set>
+#endif
 
 
 namespace Langulus::RTTI
@@ -28,7 +31,6 @@ namespace Langulus::RTTI
       
    namespace Inner
    {
-
       struct MetaDataNaked;
       struct MetaDataStructured_8_8;
       struct MetaDataStructured_16_16;
@@ -43,10 +45,8 @@ namespace Langulus::RTTI
       struct MetaVerbNaked;
       template<unsigned>
       struct MetaVerbStructured_X8;
-
-   } // namespace Langulus::RTTI::Inner
-
-} // namespace Langulus::RTTI
+   }
+}
 
 namespace Langulus::RTTI::Inner
 {
@@ -72,11 +72,8 @@ namespace Langulus::RTTI::Inner
       // Skip skippable at the front and the back of token              
       auto l = token.data();
       auto r = token.data() + token.size();
-      while (l < r and *l <= 32)
-         ++l;
-
-      while (r > l and *(r-1) <= 32)
-         --r;
+      while (l < r and     *l <= 32)   ++l;
+      while (r > l and *(r-1) <= 32)   --r;
 
       // Lowercase the isolated token                                   
       return ToLowercase(token.substr(l - token.data(), r - l));
@@ -130,50 +127,49 @@ namespace Langulus::RTTI::Inner
       const Hash mHash;
 
       // Original name of the type as it appears in C++                 
+      // We can't afford these to be pointers to avoid data behind them 
+      // getting unloaded on a shared object unload                     
       const ::std::string mCppNameOf;
       // Sanitized mToken with proper capitalization, used in scripting 
       ::std::string mNameOf;
       // Precomputed lowercase nameof                                   
       Lowercase mNameOfLowercased;
-
       // Each reflection may or may not have some info                  
       ::std::string mInfo = "<no info provided>";
 
       // Major version                                                  
       unsigned mVersionMajor = 1;
-
       // Minor version                                                  
       unsigned mVersionMinor = 0;
 
-      // Populated to be LANGULUS_BOUNDARY on reflection-time           
+      // Populated from LANGULUS_BOUNDARY on reflection-time            
       // Types can be reflected from the point of view of different     
       // shared libraries. Each new reflection will be applied on the   
       // top of the old one, but overwriting properties only if the     
       // changes come from the MainBoundary. Once mBoundary becomes     
       // the MainBoundary, the definition shall never be unregistered.  
-      IF_LANGULUS_MANAGED_REFLECTION(Token mBoundary);
+      IF_LANGULUS_MANAGED_REFLECTION(::std::unordered_set<Token> mBoundaries);
 
       /// Construct an abstract definition                                    
       ///   @param cppname - the name of the definition, as it appears in C++ 
-      explicit Definition(const Token& cppname)
+      ///   @param boundary - the library from which we're defining           
+      Definition(const Token& cppname, const Token& boundary)
          : mHash     {HashOf(cppname)}
-         , mCppNameOf{cppname} {}
+         , mCppNameOf{cppname} {
+         // Save the boundary at time of reflection                     
+         // Don't bother if it is the main boundary                     
+         IF_LANGULUS_MANAGED_REFLECTION(
+            if (boundary != Langulus::MainBoundary)
+               mBoundaries.insert(boundary);
+         );
+      }
 
       /// Reflect some common type properties, like info and version          
+      ///   @attention call this first, so that version is checked before any 
+      ///      other changes are made to the type                             
       ///   @tparam T - the type to reflect                                   
       template<class T>
       void ReflectCommon() {
-         // Save the boundary at time of reflection                     
-         IF_LANGULUS_MANAGED_REFLECTION(mBoundary = Langulus::Boundary);
-
-         if constexpr (CT::Info<T>) {
-            // Reflected info                                           
-            if constexpr (CTTI::Info<T>::Enabled)
-               mInfo = CTTI::Info<T>::Text;
-            else if constexpr (requires { T::CTTI_Info::Enabled; })
-               mInfo = T::CTTI_Info::Constant;
-         }
-
          if constexpr (CT::Versioned<T>) {
             // Reflected version                                        
             if constexpr (CTTI::Versioned<T>::Enabled) {
@@ -185,8 +181,28 @@ namespace Langulus::RTTI::Inner
                mVersionMinor = T::CTTI_Versioned::Minor;
             }
          }
+         
+         if constexpr (CT::Info<T>) {
+            // Reflected info                                           
+            if constexpr (CTTI::Info<T>::Enabled)
+               mInfo = CTTI::Info<T>::Text;
+            else if constexpr (requires { T::CTTI_Info::Enabled; })
+               mInfo = T::CTTI_Info::Constant;
+         }
       }
 
+      /// Check whether the definition is in the current boundary, or has     
+      /// been reflected from the main one                                    
+      ///   @attention must always be inline, so that boundary is relative    
+      LANGULUS(ALWAYS_INLINED)
+      constexpr bool IsInRelevantBoundary() const noexcept {
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            return mBoundaries.empty() or mBoundaries.contains(Langulus::Boundary);
+         #else
+            return true;
+         #endif
+      }
+      
    public:
       Definition() = delete;
       virtual ~Definition() = default;

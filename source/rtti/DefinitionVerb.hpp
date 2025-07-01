@@ -15,7 +15,7 @@ namespace Langulus::RTTI
    ///                                                                        
    /// A verb definition                                                      
    ///                                                                        
-   class DefinitionVerb : public Inner::Definition {
+   class DefinitionVerb final : public Inner::Definition {
    protected:
       friend class Registry;
       friend struct Inner::MetaVerbNaked;
@@ -50,7 +50,8 @@ namespace Langulus::RTTI
       using AbleList = ::std::unordered_set<DefinitionData const*>;
       AbleList mAble;
 
-      explicit DefinitionVerb(const Token& cppname) : Definition {cppname} {}
+      DefinitionVerb(const Token& cppname, const Token& boundary)
+         : Definition {cppname, boundary} {}
 
    public:
       template<CT::Decayed>

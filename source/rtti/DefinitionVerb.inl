@@ -74,7 +74,9 @@ namespace Langulus::RTTI
       #endif
 
       //                                                                
-      // If this is reached, then trait is not defined yet              
+      // If this is reached, then verb is not defined yet               
+      definition.template ReflectCommon<T>();
+      
       constexpr auto verbPos = NameOfVerb<T>();
       constexpr auto verbNeg = NameOfVerbReverse<T>();
       static_assert(not verbPos.empty(),
@@ -90,8 +92,6 @@ namespace Langulus::RTTI
          "Verb can't have the same positive and negative operators");
       definition.mOperator        = Inner::ToLowercase(opPos);
       definition.mOperatorReverse = Inner::ToLowercase(opNeg);
-
-      definition.template ReflectCommon<T>();
 
       if constexpr (CTTI::DefineVerb<T>::Enabled)
          definition.mPrecedence = CTTI::DefineVerb<T>::Precedence;
@@ -169,6 +169,7 @@ namespace Langulus::RTTI
          );
       }
    #endif
+      
       return &definition;
    }
 

@@ -76,10 +76,13 @@ namespace Langulus::RTTI
          // contain pointers to functions that reside in the library    
          // memory itself, and it is a bad idea to mix those with the   
          // main library itself.                                        
-         if (auto meta = Instance.GetMetaDataByCppName(cppname, Boundary))
+         DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
+         if (meta and meta->IsInRelevantBoundary())
             return meta;
 
-         auto& definition = Instance.RegisterData(cppname, Boundary);
+         DefinitionData& definition = meta
+            ? const_cast<DefinitionData&>(*meta)
+            : Instance.RegisterData(cppname, Boundary);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -89,13 +92,16 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         auto& definition = s_definition.emplace(cppname);
+         auto& definition = s_definition.emplace(cppname, "");
       #endif
-
+      
+      //                                                                
+      // If this is reached, then data is not defined yet               
+      definition.template ReflectCommon<T>();
+      
       constexpr auto token = NameOf<T>();
       static_assert(token != "", "Invalid data token is not allowed - "
          "you have equipped your type (or its base) with an empty CTTI_Named");
-      definition.template ReflectCommon<T>();
 
       // Data types canonically begin with a capital letter             
       definition.mNameOf = token;
@@ -314,9 +320,9 @@ namespace Langulus::RTTI
                }
                else if constexpr (CT::Fundamental<DTAll>) {
                   // Fundamental types are always strong-ordered        
-                  if      (*t1T == *t2T)  return Compared::Equal;
-                  else if (*t1T <  *t2T)  return Compared::Less;
-                  else                    return Compared::Greater;
+                  if (*t1T == *t2T)  return Compared::Equal;
+                  if (*t1T <  *t2T)  return Compared::Less;
+                  return Compared::Greater;
                }
                else if constexpr (CT::ComparableStrong<DTAll>) {
                   switch (*t1T <=> *t2T) {
@@ -373,16 +379,16 @@ namespace Langulus::RTTI
          // unregister them and free their dedicated pools when the     
          // shared library is unloaded                                  
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if (Langulus::Boundary != Langulus::MainBoundary)
+            if (Boundary != MainBoundary)
                definition.mPoolTactic = PoolTactic::Type;
          #endif
       #endif
-
+      
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          Logger::VerboseRaw<VERBOSE>(
             "Data ", Logger::Cyan, definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered (LIB: ", definition.mBoundary, ")"
+            " registered from ", Boundary
          );
       #else
          Logger::VerboseRaw<VERBOSE>(
@@ -390,7 +396,7 @@ namespace Langulus::RTTI
             Logger::Green, " reflected"
          );
       #endif
-
+      
       return &definition;
    }
 
