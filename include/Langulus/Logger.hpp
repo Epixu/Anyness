@@ -23,10 +23,10 @@ namespace Langulus::Logger
 
    /// Additional commands                                                    
    enum class CommandExt : uint8_t {
-      Pop,			// Pop the style, and apply previous style            
-      Push,			// Push the current style (don't stylize)             
-      Tab,			// Tab once on a new line after this command          
-      Untab 		// Untab once, again on a new line after this command 
+      Pop,	    // Pop the style, and apply previous style              
+      Push,		// Push the current style (don't stylize)               
+      Tab,		// Tab once on a new line after this command            
+      Untab 	// Untab once, again on a new line after this command   
    };
    using enum CommandExt;
    

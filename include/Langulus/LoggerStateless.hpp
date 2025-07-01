@@ -613,13 +613,13 @@ struct ::fmt::formatter<::Langulus::Logger::Color> {
       }
       else if ((c >= Color::Black    and c < Color::BlackBgr)
             or (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
-         // Create a new foreground color style                      
+         // Create a new foreground color style                         
          style = fg(static_cast<terminal_color>(c));
          const auto ansi = detail::make_foreground_color<char>(style.get_foreground());
          return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
       }
       else {
-         // Create a new background color style                      
+         // Create a new background color style                         
          style = bg(static_cast<terminal_color>(static_cast<uint8_t>(c) - 10));
          const auto ansi = detail::make_background_color<char>(style.get_background());
          return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
