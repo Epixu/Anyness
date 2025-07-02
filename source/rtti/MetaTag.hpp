@@ -32,11 +32,8 @@ namespace Langulus::RTTI
          constexpr MetaTagPacked_16& operator = (nullptr_t) noexcept;
          constexpr MetaTagPacked_16& operator = (DefinitionTag const*) noexcept;
 
-         auto GetName() const noexcept -> Token;
-
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
-         #endif
+         auto GetName()       const noexcept -> Token;
+         auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
       };
    #endif
       

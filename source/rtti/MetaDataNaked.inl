@@ -60,10 +60,24 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mHash;
    }
    
-   /// Get the type boundary                                                  
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   /// Get the active type boundaries                                         
    inline auto MetaDataNaked::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
       return mDefinition->mBoundaries;
    }
+#endif
+
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
+   /// Get the reflected pool tactic                                          
+   inline auto MetaDataNaked::GetPoolTactic() const noexcept -> PoolTactic {
+      return mDefinition->mPoolTactic;
+   }
+
+   /// Get the active pool chain                                              
+   inline auto MetaDataNaked::GetPoolchain() const noexcept -> Fractalloc::Pool* {
+      return mDefinition->mPoolChain;
+   }
+#endif
 
    /// Check if type is CT::Dense                                             
    inline bool MetaDataNaked::IsDense() const noexcept {

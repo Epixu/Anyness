@@ -54,20 +54,17 @@ namespace Langulus::RTTI
          constexpr MetaVerbStructured_X8& operator = (nullptr_t) noexcept;
          constexpr MetaVerbStructured_X8& operator = (DefinitionVerb const*) noexcept;
 
-         auto GetPositiveName() const noexcept -> Token;
-         auto GetNegativeName() const noexcept -> Token;
+         auto GetPositiveName()     const noexcept -> Token;
+         auto GetNegativeName()     const noexcept -> Token;
          auto GetPositiveOperator() const noexcept -> Token;
          auto GetNegativeOperator() const noexcept -> Token;
+         auto GetBoundaries()       const noexcept -> Definition::BoundarySet const&;
 
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
-         #endif
-
-         constexpr bool IsReversible() const noexcept;
-         constexpr bool IsConstant() const noexcept;
-         constexpr bool IsMutable() const noexcept;
+         constexpr bool IsReversible()  const noexcept;
+         constexpr bool IsConstant()    const noexcept;
+         constexpr bool IsMutable()     const noexcept;
          constexpr bool IsDefaultable() const noexcept;
-         constexpr bool IsStateless() const noexcept;
+         constexpr bool IsStateless()   const noexcept;
       };
    #endif
       static_assert(sizeof(MetaVerbStructured_X8<1>) == 2);

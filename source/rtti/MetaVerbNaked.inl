@@ -28,6 +28,14 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mOperatorReverse;
    }
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   /// Get the active boundaries of the verb                                  
+   inline auto MetaVerbNaked::GetBoundaries()
+   const noexcept -> Definition::BoundarySet const& {
+      return mDefinition->mBoundaries;
+   }
+#endif
+
    constexpr bool MetaVerbNaked::IsReversible() const noexcept {
       return not mDefinition->mNameOfReverse.empty();
    }

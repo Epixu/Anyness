@@ -17,4 +17,12 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mNameOf;
    }
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   /// Get the active boundaries of the tag                                   
+   inline auto MetaTagNaked::GetBoundaries()
+   const noexcept -> Definition::BoundarySet const& {
+      return mDefinition->mBoundaries;
+   }
+#endif
+
 } // namespace Langulus::RTTI::Inner

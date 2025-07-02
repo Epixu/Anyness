@@ -16,5 +16,13 @@ namespace Langulus::RTTI::Inner
    inline auto MetaConstNaked::GetName() const noexcept -> Token {
       return mDefinition->mNameOf;
    }
+   
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   /// Get the active boundaries of the constant                              
+   inline auto MetaConstNaked::GetBoundaries()
+   const noexcept -> Definition::BoundarySet const& {
+      return mDefinition->mBoundaries;
+   }
+#endif
 
 } // namespace Langulus::RTTI::Inner

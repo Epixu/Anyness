@@ -142,6 +142,7 @@ namespace Langulus::RTTI::Inner
       return Instance.GetMetaDataByID(*this)->mBoundaries;
    }
 
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
    /// Get the reflected pool tactic                                          
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetPoolTactic() const noexcept -> PoolTactic {
@@ -153,6 +154,7 @@ namespace Langulus::RTTI::Inner
    auto MetaDataStructured_XY<S1, S2>::GetPoolchain() const noexcept -> Fractalloc::Pool* {
       return Instance.GetMetaDataByID(*this)->mPoolChain;
    }
+#endif
 
    /// Check if type is CT::Dense                                             
    template<unsigned S1, unsigned S2>
