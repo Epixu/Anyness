@@ -125,13 +125,15 @@ namespace Langulus::RTTI
          // T has qualifiers, strip one level of those                  
          definition.mDecvqOnce = Reflect<DTOnce>();
          // Always propagate the dequalified ID                         
-         definition.mID = definition.mDecvqOnce->mID;
+         IF_LANGULUS_MANAGED_REFLECTION(definition.mID = definition.mDecvqOnce->mID);
          if constexpr (CT::Constant<T>)
             const_cast<DefinitionData*>(definition.mDecvqOnce)->mAddConst = &definition;
       }
       else {
          // T has no qualifiers                                         
          definition.mDecvqOnce = &definition;
+
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Propagate ID only if there's exactly one level of           
          // indirection, because that will be encoded in the structured 
          // meta data pointer. Otherwise we need a new ID to be reserved
@@ -139,6 +141,7 @@ namespace Langulus::RTTI
             definition.mID = definition.mDeptr->mID;
          else
             definition.mID = Instance.ReserveDataID(&definition);
+      #endif
       }
 
       using DTAll = DecvqAll<T>;
@@ -374,19 +377,17 @@ namespace Langulus::RTTI
                return Anyness::Any {atT->GetResolved()};
             };
       }
-
-      // Calculate the allocation page and table                        
-      // It is the same, regardless if T is const or not                
-      definition.mAllocationPage = CT::GetMinPool<T>();
-      constexpr auto minElements = CT::GetMinPool<T>() / sizeof(T);
-      for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
-         const size_t threshold = size_t {1} << bit;
-         const size_t elements = threshold / sizeof(T);
-         definition.mAllocationTable[bit] = ::std::max(minElements, elements);
-      }
       
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         // Calculate the allocation page and table using reflection    
          definition.mPoolTactic = CT::GetPoolTactic<T>();
+         definition.mAllocationPage = CT::GetMinPool<T>();
+         constexpr auto minElements = CT::GetMinPool<T>() / sizeof(T);
+         for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
+            const size_t threshold = size_t {1} << bit;
+            const size_t elements = threshold / sizeof(T);
+            definition.mAllocationTable[bit] = ::std::max(minElements, elements);
+         }
 
          // Make sure that types registered from an external shared     
          // library are always pooled by type, so that we're able to    
@@ -396,6 +397,17 @@ namespace Langulus::RTTI
             if (Boundary != MainBoundary)
                definition.mPoolTactic = PoolTactic::Type;
          #endif
+      #else
+         // Calculate the allocation page and table using configuration 
+         definition.mAllocationPage = sizeof(T) * 256 <= LANGULUS_MIN_POOL
+            ? LANGULUS_MIN_POOL
+            : sizeof(T) * 256;
+         constexpr auto minElements = definition.mAllocationPage / sizeof(T);
+         for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
+            const size_t threshold = size_t {1} << bit;
+            const size_t elements = threshold / sizeof(T);
+            definition.mAllocationTable[bit] = ::std::max(minElements, elements);
+         }
       #endif
       
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)

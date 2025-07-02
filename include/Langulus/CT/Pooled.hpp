@@ -2,6 +2,10 @@
 #include "../Typenav.hpp"
 #include "Signed.hpp"
 
+#if not LANGULUS_FEATURE(MANAGED_MEMORY)
+   #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
+#endif
+
 
 namespace Langulus
 {
@@ -42,7 +46,7 @@ namespace Langulus
    ///   @tparam MIN_ALLOC - what's the minimal allocation size in bytes      
    ///   @attention MIN_ALLOC will never be lower than Alignment or the size  
    ///      of the type after reflection. It is always a power-of-two         
-   template<unsigned MIN_ALLOC = Alignment>
+   template<unsigned MIN_ALLOC = LANGULUS_MIN_ALLOC>
    struct PooledBySize {
       static constexpr PoolTactic Tactic = PoolTactic::Size;
       static constexpr size_t MinAlloc = MIN_ALLOC;
@@ -57,7 +61,7 @@ namespace Langulus
    ///      of the type after reflection. It is always a power-of-two         
    ///   @attention MIN_POOL will never be lower than MIN_ALLOC * 256 after   
    ///      reflection. It is always a power-of-two                           
-   template<unsigned MIN_ALLOC = Alignment, unsigned MIN_POOL = 1024*1024>
+   template<unsigned MIN_ALLOC = LANGULUS_MIN_ALLOC, unsigned MIN_POOL = LANGULUS_MIN_POOL>
    struct PooledByType {
       static constexpr PoolTactic Tactic = PoolTactic::Type;
       static constexpr size_t MinAlloc = MIN_ALLOC;
@@ -111,8 +115,8 @@ namespace Langulus::CTTI
    template<class T>
    struct Pooled {
       static constexpr PoolTactic Tactic = PoolTactic::Default;
-      static constexpr size_t MinAlloc = Alignment;
-      static constexpr size_t MinPool  = 1024 * 1024;
+      static constexpr size_t MinAlloc = LANGULUS_MIN_ALLOC;
+      static constexpr size_t MinPool  = LANGULUS_MIN_POOL;
       static constexpr bool   Enabled  = false;
    };
 
@@ -120,8 +124,8 @@ namespace Langulus::CTTI
    template<CT::Fundamental T>
    struct Pooled<T> {
       static constexpr PoolTactic Tactic = PoolTactic::Size;
-      static constexpr size_t MinAlloc = Alignment;
-      static constexpr size_t MinPool  = 1024 * 1024;
+      static constexpr size_t MinAlloc = LANGULUS_MIN_ALLOC;
+      static constexpr size_t MinPool  = LANGULUS_MIN_POOL;
       static constexpr bool   Enabled  = true;
    };
 
@@ -161,7 +165,7 @@ namespace Langulus::CT
          constexpr size_t minallo = Roof2(GetMinAlloc<ST>());
          return minpool < minallo ? minallo : minpool;
       }
-      else return Roof2(GetMinAlloc<ST>() * 256);
+      else return Roof2(sizeof(ST) * 256 <= LANGULUS_MIN_POOL ? LANGULUS_MIN_POOL : sizeof(ST) * 256);
    }
    
    ///                                                                        

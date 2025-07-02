@@ -402,10 +402,24 @@
 #endif
 
 #ifndef LANGULUS_ALIGNMENT
+   /// The default memory alignment, in bytes                                 
    #define LANGULUS_ALIGNMENT 16
 #endif
 
+#ifndef LANGULUS_MIN_ALLOC
+   /// The smallest possible allocation, in bytes                             
+   ///   @attention should be greater or equal to the alignment               
+   #define LANGULUS_MIN_ALLOC LANGULUS_ALIGNMENT
+#endif
+
+#ifndef LANGULUS_MIN_POOL
+   /// The smallest possible memory pool size, in bytes                       
+   ///   @attention should be greater than the minimal allocation             
+   #define LANGULUS_MIN_POOL 1024*1024
+#endif
+
 #ifndef LANGULUS_HASHSIZE
+   /// The size of the hashes, in bits                                        
    #define LANGULUS_HASHSIZE 32
 #endif
 
@@ -414,6 +428,8 @@
 #endif
 
 #ifndef LANGULUS_FPU
+   /// The size of the default real number representation. Same type is used  
+   /// to determine the default type of number literals in Flow scripts       
    #define LANGULUS_FPU 32
 #endif
 
