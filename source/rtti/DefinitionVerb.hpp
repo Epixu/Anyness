@@ -69,13 +69,13 @@ namespace Langulus::RTTI
          // main boundary                                               
          ::std::unordered_map<Token, BoundaryDependent> mOtherBoundaries;
       #endif
-      
-      DefinitionVerb(const Token& cppname) noexcept
-         : Definition {cppname} {}
 
    public:
       template<CT::Decayed>
       static auto Reflect() -> DefinitionVerb const*;
+      
+      DefinitionVerb(const Token& cppname) noexcept
+         : Definition {cppname} {}
    };
 
 } // namespace Langulus::RTTI

@@ -93,8 +93,8 @@ namespace Langulus::RTTI::Inner
       constexpr MetaNaked() noexcept = default;
       constexpr MetaNaked(const MetaNaked&) noexcept = default;
       constexpr MetaNaked(MetaNaked&&) noexcept = default;
-      explicit constexpr MetaNaked(nullptr_t) noexcept {}
-      explicit constexpr MetaNaked(const T* d) noexcept
+      constexpr MetaNaked(nullptr_t) noexcept {}
+      constexpr MetaNaked(const T* d) noexcept
          : mDefinition {d} {}
 
       constexpr MetaNaked& operator = (const MetaNaked&) noexcept = default;

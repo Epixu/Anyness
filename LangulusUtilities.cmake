@@ -42,7 +42,7 @@ function(add_langulus_library NAME)
     set(multiValueArgs SOURCES LIBRARIES DEPENDENCIES EMSCRIPTEN_COMPILE_FLAGS EMSCRIPTEN_LINK_FLAGS)
     cmake_parse_arguments(PARSE_ARGV 0 arg "" "" "${multiValueArgs}")
 
-	if (EMSCRIPTEN AND LANGULUS_SHARED_LIBRARIES)
+	if (EMSCRIPTEN AND LANGULUS_OPTION_SHARED_LIBRARIES)
 		# When building for emscripten, we "fake" a shared library by	
 		# creating an executable with exports and no entry point		
 		# This "fake" shared library has to be linked in a specific way	

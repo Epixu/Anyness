@@ -26,16 +26,16 @@ namespace Langulus::RTTI
       // A pointer to an instance of the constant on the heap           
       void const* mData IF_SAFE(= nullptr);
       
+   public:
+      template<auto>
+      static auto Reflect() -> DefinitionConst const*;
+      
       DefinitionConst(const Token& cppname) noexcept
          : Definition {cppname} {}
 
       ~DefinitionConst() override {
          free(const_cast<void*>(mData));
       }
-      
-   public:
-      template<auto>
-      static auto Reflect() -> DefinitionConst const*;
    };
 
 } // namespace Langulus::RTTI

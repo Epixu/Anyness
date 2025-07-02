@@ -7,7 +7,7 @@ project(LangulusAnyness
 include(LangulusUtilities.cmake)
 
 # Reflected options																
-option(LANGULUS_SHARED_LIBRARIES 
+option(LANGULUS_OPTION_SHARED_LIBRARIES 
     "Will build shared libraries (DLL/SO/WASM) if enabled, \
     true by default" ON)
     
@@ -33,7 +33,7 @@ option(LANGULUS_DEBUGGING
 option(LANGULUS_FEATURE_NEWDELETE 
     "Overrides new/delete operators for anything statically linked to this library, \
     or provides LANGULUS_MONOPOLIZE_MEMORY() macro for you to use to override them, if dynamically linked. \
-    This feature can be enabled only if LANGULUS_FEATURE_MANAGED_MEMORY is enabled" OFF)
+    This feature can be enabled only if LANGULUS_OPTION_MANAGED_MEMORY is enabled" OFF)
 
 option(LANGULUS_FEATURE_UNICODE
     "Provides UTF8, UTF16, UTF32 tools and conversions inside Text containers (WIP)" OFF)
@@ -61,19 +61,19 @@ option(LANGULUS_LOGGER_DISABLE_INPUTS		"Disables input logging via Logger::Input
 option(LANGULUS_LOGGER_DISABLE_NETWORKS		"Disables network logging via Logger::Network()" OFF)
 option(LANGULUS_LOGGER_DISABLE_OS			"Disables OS logging via Logger::OS()" OFF)
 
-option(LANGULUS_FEATURE_MANAGED_MEMORY
+option(LANGULUS_OPTION_MANAGED_MEMORY
     "Memory will be pooled and recycled when freed, and you can safely push any kind of pointer, \
     as long as it was allocated by the memory manager, or by the overridden new/delete feature. Enabled by default" ON)
 
-option(LANGULUS_FEATURE_MANAGED_REFLECTION
+option(LANGULUS_OPTION_MANAGED_REFLECTION
     "Reflections will be kept in a centralized location, when reflected, which speeds up \
     type comparisons, and allows you to dynamically modify the reflection at runtime. \
-    This feature can be enabled only if LANGULUS_FEATURE_MANAGED_MEMORY is enabled. Enabled by default" ON)
+    This feature can be enabled only if LANGULUS_OPTION_MANAGED_MEMORY is enabled. Enabled by default" ON)
 
 option(LANGULUS_FEATURE_MEMORY_STATISTICS
     "Memory manager shall keep track of statistics, for the price of little overhead. Disabled by default" OFF)
 
-if (LANGULUS_SHARED_LIBRARIES)
+if (LANGULUS_OPTION_SHARED_LIBRARIES)
     set(LANGULUS_LIBRARY_TYPE SHARED CACHE INTERNAL "" FORCE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE INTERNAL "" FORCE)
     message("Building Langulus as shared library")
@@ -109,8 +109,8 @@ add_langulus_library(LangulusAnyness
 	SOURCES		$<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:source/logger/Logger.cpp>
 				$<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:source/logger/HTML.cpp>
 				$<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:source/logger/TXT.cpp>
-				$<$<BOOL:${LANGULUS_FEATURE_MANAGED_MEMORY}>:source/fractalloc/Allocator.cpp>
-				$<$<BOOL:${LANGULUS_FEATURE_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
+				$<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:source/fractalloc/Allocator.cpp>
+				$<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
 )
 
 target_compile_features(LangulusAnyness PUBLIC cxx_std_23)
@@ -155,10 +155,10 @@ reflect_option(LANGULUS_FEATURE_NEWDELETE          "New/Delete operator override
 reflect_option(LANGULUS_FEATURE_UNICODE            "Unicode text containers enabled")
 reflect_option(LANGULUS_FEATURE_COMPRESSION        "Compressable memory enabled")
 reflect_option(LANGULUS_FEATURE_ENCRYPTION		   "Encryptable memory enabled")
-reflect_option(LANGULUS_FEATURE_MANAGED_MEMORY     "Managed memory enabled")
-reflect_option(LANGULUS_FEATURE_MANAGED_REFLECTION "Managed reflection enabled")
+reflect_option(LANGULUS_OPTION_MANAGED_MEMORY      "Managed memory enabled")
+reflect_option(LANGULUS_OPTION_MANAGED_REFLECTION  "Managed reflection enabled")
 reflect_option(LANGULUS_FEATURE_MEMORY_STATISTICS  "Memory statistics enabled")
-reflect_option(LANGULUS_SHARED_LIBRARIES           "Building shared libraries enabled")
+reflect_option(LANGULUS_OPTION_SHARED_LIBRARIES    "Building shared libraries enabled")
 
 reflect_option(LANGULUS_LOGGER_DISABLE_FATALERRORS "Logger: fatal errors disabled")
 reflect_option(LANGULUS_LOGGER_DISABLE_ERRORS      "Logger: regular errors disabled")

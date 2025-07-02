@@ -21,11 +21,11 @@ namespace Langulus::RTTI::Inner
    constexpr MetaDataStructured_XY<S1, S2>::MetaDataStructured_XY(DefinitionData const* d) noexcept
       : Base {d ? d->mID : 0} {
       if (d) {
-         sparse = d->mDeptr != nullptr;
-         constant = d->mConst;
-         deep = d->mDeep;
-         pod = d->mPOD;
-         nullable = d->mNullable;
+         sparse     = d->mDeptr != nullptr;
+         constant   = d->mConst;
+         deep       = d->mDeep;
+         pod        = d->mPOD;
+         nullable   = d->mNullable;
          referenced = d->mCurrentBoundary.mReferencer != nullptr;
          resolvable = d->mCurrentBoundary.mResolver != nullptr;
          dispatcher = d->mCurrentBoundary.mDispatcherMut != nullptr
@@ -48,11 +48,11 @@ namespace Langulus::RTTI::Inner
       Base::operator = (d ? d->mID : 0);
 
       if (d) {
-         sparse = d->mConst;
-         constant = d->mConst;
-         deep = d->mDeep;
-         pod = d->mPOD;
-         nullable = d->mNullable;
+         sparse     = d->mConst;
+         constant   = d->mConst;
+         deep       = d->mDeep;
+         pod        = d->mPOD;
+         nullable   = d->mNullable;
          referenced = d->mCurrentBoundary.mReferencer != nullptr;
          resolvable = d->mCurrentBoundary.mResolver != nullptr;
          dispatcher = d->mCurrentBoundary.mDispatcherMut != nullptr

@@ -403,7 +403,7 @@ namespace Langulus::RTTI
          definition.mAllocationPage = sizeof(T) * 256 <= LANGULUS_MIN_POOL
             ? LANGULUS_MIN_POOL
             : sizeof(T) * 256;
-         constexpr auto minElements = definition.mAllocationPage / sizeof(T);
+         const auto minElements = definition.mAllocationPage / sizeof(T);
          for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
             const size_t threshold = size_t {1} << bit;
             const size_t elements = threshold / sizeof(T);

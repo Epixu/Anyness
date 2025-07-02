@@ -179,12 +179,12 @@ namespace Langulus::RTTI
          ::std::unordered_map<Token, BoundaryDependent> mOtherBoundaries;
       #endif
       
-      DefinitionData(const Token& cppname) noexcept
-         : Definition {cppname} {}
-
    public:
       template<class>
       static auto Reflect() -> DefinitionData const*;
+      
+      DefinitionData(const Token& cppname) noexcept
+         : Definition {cppname} {}
    };
 
 } // namespace Langulus::RTTI

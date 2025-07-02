@@ -156,7 +156,7 @@ namespace Langulus::RTTI::Inner
       /// Construct an abstract definition                                    
       ///   @param cppname - the name of the definition, as it appears in C++ 
       ///   @param boundary - the library from which we're defining           
-      explicit Definition(const Token& cppname)
+      Definition(const Token& cppname)
          : mHash      {HashOf(cppname)}
          , mCppNameOf {cppname} {}
 

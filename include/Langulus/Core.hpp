@@ -108,8 +108,7 @@
 /// speeds up meta definition comparisons.                                    
 /// Naming collisions will be detected upon type registration                 
 /// Gives a significant overhead on program launch, no dependencies           
-#ifdef LANGULUS_FEATURE_MANAGED_REFLECTION
-   #undef LANGULUS_FEATURE_MANAGED_REFLECTION
+#ifdef LANGULUS_OPTION_MANAGED_REFLECTION
    #define LANGULUS_FEATURE_MANAGED_REFLECTION()   1
    #define IF_LANGULUS_MANAGED_REFLECTION(a)       a
    #define IF_NOT_LANGULUS_MANAGED_REFLECTION(a)   LANGULUS(NOOP)
@@ -123,8 +122,7 @@
 /// memory will be reused whenever possible, and you can also tweak           
 /// runtime allocation strategies on per-type basis                           
 /// Significantly improves performance, no dependencies                       
-#ifdef LANGULUS_FEATURE_MANAGED_MEMORY
-   #undef LANGULUS_FEATURE_MANAGED_MEMORY
+#ifdef LANGULUS_OPTION_MANAGED_MEMORY
    #define LANGULUS_FEATURE_MANAGED_MEMORY()    1
    #define IF_LANGULUS_MANAGED_MEMORY(a)        a
    #define IF_NOT_LANGULUS_MANAGED_MEMORY(a)    LANGULUS(NOOP)
@@ -325,7 +323,7 @@
 #endif
 
 /// Shared object export/import attributes                                    
-#ifdef LANGULUS_SHARED_LIBRARIES
+#ifdef LANGULUS_OPTION_SHARED_LIBRARIES
    #if LANGULUS_COMPILER(GCC) or LANGULUS_COMPILER(CLANG) or LANGULUS_COMPILER(WASM)
       #if LANGULUS_OS(WINDOWS)
          #define LANGULUS_EXPORT() __attribute__ ((dllexport))
