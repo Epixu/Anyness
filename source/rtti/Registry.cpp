@@ -69,7 +69,7 @@ namespace Langulus::RTTI
       return where[id-1];
    }
 
-   /// Get an existing meta data definition by its CppNameOf                  
+   /// Get an existing data definition by its CppNameOf                       
    ///   @param token - the C++ name of the data definition                   
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByCppName(const Token& token)
@@ -77,7 +77,7 @@ namespace Langulus::RTTI
       return GetMetaByName<true>(mMetaDataByName, token);
    }
 
-   /// Get an existing meta data definition by its NameOf                     
+   /// Get an existing data definition by its NameOf                          
    ///   @param token - the reflected token of the data definition            
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByToken(const Token& token)
@@ -85,29 +85,62 @@ namespace Langulus::RTTI
       return GetMetaByName<false>(mMetaDataByName, token);
    }
 
-   /// Get an existing meta data definition by unpacking an ID                
-   ///   @param token - the reflected token of the data definition            
+   /// Get an existing data definition by unpacking an ID                     
+   ///   @param id - the packed data ID                                       
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaDataByID(const Inner::MetaDataStructured_8_8& id)
+   auto Registry::GetMetaDataByID(const Inner::MetaDataStructured_XY<3, 1>& id)
    const noexcept -> DefinitionData const* {
-      return GetMetaByID(mMetaDataByID, id.mHandle[0]);
+      DefinitionData const* found = GetMetaByID(mMetaDataByID, id.mHandle[0]);
+      if (not found)
+         return nullptr;
+
+      if (id.IsSparse()) {
+         AssumeDevAndOptimize(found->mAddPtr,
+            "An indirection ID for a type exists, "
+            "but no such type has been reflected yet: ", found->mNameOf
+         );
+         found = found->mAddPtr;
+      }
+
+      if (id.IsConstant()) {
+         AssumeDevAndOptimize(found->mAddConst,
+            "A constant ID for a type exists, "
+            "but no such type has been reflected yet: ", found->mNameOf
+         );
+         found = found->mAddConst;
+      }
+      
+      return found;
    }
 
-   auto Registry::GetMetaDataByID(const Inner::MetaDataStructured_16_16& id)
+   auto Registry::GetMetaDataByID(const Inner::MetaDataStructured_XY<2, 2>& id)
    const noexcept -> DefinitionData const* {
       size_t id_processed = 0;
       memcpy(&id_processed, id.mHandle, sizeof(id.mHandle));
-      return GetMetaByID(mMetaDataByID, id_processed);
+      DefinitionData const* found = GetMetaByID(mMetaDataByID, id_processed);
+      if (not found)
+         return nullptr;
+
+      if (id.IsSparse()) {
+         AssumeDevAndOptimize(found->mAddPtr,
+            "An indirection ID for a type exists, "
+            "but no such type has been reflected yet: ", found->mNameOf
+         );
+         found = found->mAddPtr;
+      }
+
+      if (id.IsConstant()) {
+         AssumeDevAndOptimize(found->mAddConst,
+            "A constant ID for a type exists, "
+            "but no such type has been reflected yet: ", found->mNameOf
+         );
+         found = found->mAddConst;
+      }
+
+      return found;
    }
 
-   auto Registry::GetMetaDataByID(const Inner::MetaDataStructured_24_8& id)
-   const noexcept -> DefinitionData const* {
-      size_t id_processed = 0;
-      memcpy(&id_processed, id.mHandle, sizeof(id.mHandle));
-      return GetMetaByID(mMetaDataByID, id_processed);
-   }
-
-   /// Get an existing meta constant definition by its CppNameOf              
+   /// Get an existing constant definition by its CppNameOf                   
    ///   @param token - the C++ name of the constant definition               
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByCppName(const Token& token)
@@ -115,7 +148,7 @@ namespace Langulus::RTTI
       return GetMetaByName<true>(mMetaConstantsByName, token);
    }
 
-   /// Get an existing meta constant definition by its NameOf                 
+   /// Get an existing constant definition by its NameOf                      
    ///   @param token - the reflected token of the constant definition        
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByToken(const Token& token)
@@ -123,7 +156,7 @@ namespace Langulus::RTTI
       return GetMetaByName<false>(mMetaConstantsByName, token);
    }
 
-   /// Get an existing meta tag definition by its CppNameOf                   
+   /// Get an existing tag definition by its CppNameOf                        
    ///   @param token - the C++ name of the tag definition                    
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByCppName(const Token& token)
@@ -131,7 +164,7 @@ namespace Langulus::RTTI
       return GetMetaByName<true>(mMetaTagsByName, token);
    }
 
-   /// Get an existing meta tag definition by its NameOf                      
+   /// Get an existing tag definition by its NameOfTag                        
    ///   @param token - the reflected token of the tag definition             
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByToken(const Token& token)
@@ -139,7 +172,7 @@ namespace Langulus::RTTI
       return GetMetaByName<false>(mMetaTagsByName, token);
    }
    
-   /// Get an existing meta verb definition by its CppNameOf                  
+   /// Get an existing verb definition by its CppNameOf                       
    ///   @param token - the C++ name of the verb definition                   
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByCppName(const Token& token)
@@ -147,7 +180,7 @@ namespace Langulus::RTTI
       return GetMetaByName<true>(mMetaVerbsByCppName, token);
    }
 
-   /// Get an existing meta verb definition by its NameOf                     
+   /// Get an existing verb definition by NameOfVerb/NameOfVerbReverse        
    ///   @param token - the reflected token of the verb definition            
    ///                  you can search by positive, as well as negative token 
    ///   @return the definition, or nullptr if not found                      
@@ -156,7 +189,7 @@ namespace Langulus::RTTI
       return GetMetaByName<false>(mMetaVerbsByTokens, token);
    }
 
-   /// Get an existing meta verb definition by its operator token             
+   /// Get an existing verb definition by OperatorOfVerb/OperatorOfVerbReverse
    ///   @param token - the reflected operator of the verb definition         
    ///                  you can search by positive, as well as negative       
    ///   @return the definition, or nullptr if not found                      
@@ -319,13 +352,10 @@ namespace Langulus::RTTI
    }
 
    /// Register a data definition                                             
-   ///   @attention assumes type is not yet registered in the given boundary  
+   ///   @attention assumes token is not yet registered                       
    ///   @param cppname - the C++ type name to register                       
-   ///   @param boundary - the boundary to register in                        
    ///   @return the newly defined meta data for that name                    
-   auto Registry::RegisterData(const Token& cppname, const Token& boundary) -> DefinitionData& {
-      AssumeDev(not boundary.empty(), HERE(),
-         "Bad boundary");
+   auto Registry::RegisterData(const Token& cppname) -> DefinitionData& {
       AssumeDev(not mMetaDataByName.contains(cppname), HERE(),
          "Data with this name is already registered: ", cppname);
       
@@ -337,7 +367,7 @@ namespace Langulus::RTTI
          "Data name conflicts with constant: ", cppname);
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionData {cppname, boundary};
+      auto meta = new DefinitionData {cppname};
 
       // Index by C++ name                                              
       mMetaDataByName[meta->mCppNameOf] = meta;
@@ -356,11 +386,10 @@ namespace Langulus::RTTI
    }
 
    /// Register a constant definition                                         
-   ///   @attention assumes token is not yet registered in the given boundary 
+   ///   @attention assumes token is not yet registered                       
    ///   @param cppname - the C++ type name to register                       
-   ///   @param boundary - the boundary to register in                        
    ///   @return the newly defined meta constant for that token               
-   auto Registry::RegisterConst(const Token& cppname, const Token& boundary) -> DefinitionConst& {
+   auto Registry::RegisterConst(const Token& cppname) -> DefinitionConst& {
       AssumeDev(not mMetaConstantsByName.contains(cppname), HERE(),
          "Constant with this name is already registered: ", cppname);
 
@@ -372,7 +401,7 @@ namespace Langulus::RTTI
          "Constant name conflicts with verb: ", cppname);
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionConst {cppname, boundary};
+      auto meta = new DefinitionConst {cppname};
 
       // Index by C++ name                                              
       mMetaConstantsByName[meta->mCppNameOf] = meta;
@@ -384,11 +413,10 @@ namespace Langulus::RTTI
    }
 
    /// Register a tag definition                                              
-   ///   @attention assumes token is not yet registered in the given boundary 
+   ///   @attention assumes token is not yet registered                       
    ///   @param cppname - the C++ type name to register                       
-   ///   @param boundary - the boundary to register in                        
    ///   @return the newly defined meta trait for that token                  
-   auto Registry::RegisterTag(const Token& cppname, const Token& boundary) -> DefinitionTag& {
+   auto Registry::RegisterTag(const Token& cppname) -> DefinitionTag& {
       AssumeDev(not mMetaTagsByName.contains(cppname), HERE(),
          "Tag with this name is already registered: ", cppname);
 
@@ -400,7 +428,7 @@ namespace Langulus::RTTI
          "Tag name conflicts with verb: ", cppname);
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionTag {cppname, boundary};
+      auto meta = new DefinitionTag {cppname};
 
       // Index by C++ name                                              
       mMetaTagsByName[meta->mCppNameOf] = meta;
@@ -414,9 +442,8 @@ namespace Langulus::RTTI
    /// Register a verb definition                                             
    ///   @attention assumes tokens are not yet registered                     
    ///   @param cppname - the C++ type name to register                       
-   ///   @param boundary - the boundary to register in                        
    ///   @return the newly defined meta verb for that token configuration     
-   auto Registry::RegisterVerb(const Token& cppname, const Token& boundary) -> DefinitionVerb& {
+   auto Registry::RegisterVerb(const Token& cppname) -> DefinitionVerb& {
       AssumeDev(not mMetaVerbsByCppName.contains(cppname), HERE(),
          "Verb with this name is already registered: ", cppname);
 
@@ -428,7 +455,7 @@ namespace Langulus::RTTI
          "Verb name conflicts with tag: ", cppname);
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionVerb {cppname, boundary};
+      auto meta = new DefinitionVerb {cppname};
 
       // Index by C++ name                                              
       mMetaVerbsByCppName[meta->mCppNameOf] = meta;
@@ -532,15 +559,10 @@ namespace Langulus::RTTI
    ///   @param token - the file extension token to reserve                   
    ///   @param type - the data to associate file with                        
    ///   @param boundary - the boundary to register in                        
-   void Registry::RegisterFileExtension(
-      const Token& token, DefinitionData* type, const Token& boundary
-   ) has_assumptions {
-      AssumeDev(not token.empty(), HERE(),
-         "Bad file extension");
-      AssumeDevAndOptimize(type,
-         "Bad meta data for file extension ", token);
-      AssumeDev(not boundary.empty(), HERE(),
-         "Bad boundary provided");
+   void Registry::RegisterFileExtension(const Token& token, DefinitionData* type)
+   has_assumptions {
+      AssumeDev(not token.empty(), HERE(), "Bad file extension");
+      AssumeDevAndOptimize(type, "Bad meta data for file extension: ", token);
 
       const auto lc = Inner::ToLowercase(token);
       const auto foundToken = mFileDatabase.find(lc);

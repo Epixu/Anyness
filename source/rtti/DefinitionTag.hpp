@@ -21,8 +21,8 @@ namespace Langulus::RTTI
       friend struct Inner::MetaTagNaked;
       friend struct Inner::MetaTagPacked_16;
 
-      DefinitionTag(const Token& cppname, const Token& boundary)
-         : Definition {cppname, boundary} {}
+      explicit DefinitionTag(const Token& cppname) noexcept
+         : Definition {cppname} {}
 
    public:
       template<CT::Decayed>

@@ -182,11 +182,6 @@ namespace Langulus
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Refer(I&& value) noexcept : mValue {value.mValue} {
-         static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }*/
-      
       /// Forward as referred                                                 
       ///   @tparam ALT_T - optional type to forward as                       
       ///   @return the desired new type with the same refer intent applied   
@@ -253,11 +248,6 @@ namespace Langulus
       explicit constexpr Copy(const T& value) noexcept : mValue {value} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
-      
-      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Copy(I&& value) noexcept : mValue {value.mValue} {
-         static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }*/
       
       /// Forward as copied                                                   
       ///   @tparam ALT_T - optional type to forward as                       
@@ -331,11 +321,6 @@ namespace Langulus
       explicit constexpr Move(T&& value) noexcept : mValue {FWD(value)} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
-      
-      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Move(I&& value) noexcept : mValue {FWD(value.mValue)} {
-         static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }*/
 
       /// Forward as moved                                                    
       ///   @tparam ALT_T - optional type to forward as                       
@@ -415,11 +400,6 @@ namespace Langulus
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Abandon(I&& value) noexcept : mValue {FWD(value.mValue)} {
-         static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }*/
-      
       /// Forward as abandoned                                                
       ///   @tparam ALT_T - optional type to forward as                       
       ///   @return the desired new type with the same move intent applied    
@@ -487,11 +467,6 @@ namespace Langulus
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
       
-      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Disown(I&& value) noexcept : mValue {value.mValue} {
-         static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }*/
-      
       /// Forward as disowned                                                 
       ///   @tparam ALT_T - optional type to forward as                       
       ///   @return the desired new type with the same disown intent applied  
@@ -558,11 +533,6 @@ namespace Langulus
       explicit constexpr Clone(const T& value) noexcept : mValue {value} {
          static_assert(CT::NoIntent<T>, "Can't nest intents");
       }
-      
-      /*template<CT::Intent I> LANGULUS(ALWAYS_INLINED)
-      explicit constexpr Clone(I&& value) noexcept : mValue {value.mValue} {
-         static_assert(CT::NoIntent<T>, "Can't nest intents");
-      }*/
 
       /// Forward as cloned, never collapse                                   
       template<class ALT_T = T> LANGULUS(ALWAYS_INLINED)

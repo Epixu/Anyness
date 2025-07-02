@@ -26,8 +26,8 @@ namespace Langulus::RTTI
       // A pointer to an instance of the constant on the heap           
       void const* mData IF_SAFE(= nullptr);
       
-      DefinitionConst(const Token& cppname, const Token& boundary)
-         : Definition {cppname, boundary} {}
+      explicit DefinitionConst(const Token& cppname) noexcept
+         : Definition {cppname} {}
 
       ~DefinitionConst() override {
          free(const_cast<void*>(mData));

@@ -43,9 +43,8 @@ namespace Langulus::RTTI
       friend class Registry;
       friend class Inner::Definition;
       friend struct Inner::MetaDataNaked;
-      friend struct Inner::MetaDataStructured_8_8;
-      friend struct Inner::MetaDataStructured_16_16;
-      friend struct Inner::MetaDataStructured_24_8;
+      template<unsigned, unsigned>
+      friend struct Inner::MetaDataStructured_XY;
 
       // The origin type, with all qualifiers and sparseness removed    
       // Will be nullptr for incomplete types                           
@@ -55,7 +54,7 @@ namespace Langulus::RTTI
       DefinitionData const* mDeptr = nullptr;
       // The type, when all qualifiers are removed down to the origin   
       DefinitionData const* mDecvqAll IF_SAFE(= nullptr);
-      // The type, when шдзпдяш qualifiers are removed                  
+      // The type, when topmost qualifiers are removed                  
       DefinitionData const* mDecvqOnce IF_SAFE(= nullptr);
 
       // The type, but with an additional level of indirection          
@@ -78,6 +77,8 @@ namespace Langulus::RTTI
       bool mDeep IF_SAFE(= false);
       // True if data is pod, set by CT::POD                            
       bool mPOD IF_SAFE(= false);
+      // True if data is nullable, set by CT::Nullable                  
+      bool mNullable IF_SAFE(= false);
       // Minimal pool allocation, in bytes                              
       size_t mAllocationPage IF_SAFE(= 0);
       // Precomputed counts indexed by MSB (avoids division by stride   
@@ -113,17 +114,17 @@ namespace Langulus::RTTI
       using FDispatch = void(*)(void* self, Flow::Verb& verb);
 
       struct BoundaryDependent {
-         // The default constructor, wrapped in a lambda expression if     
-         // available. Takes a pointer for a placement-new expression      
+         // The default constructor, wrapped in a lambda expression if  
+         // available. Takes a pointer for a placement-new expression   
          FUnary mDefaultConstructor {};
 
-         // Constructor by descriptor                                      
-         // Takes a pointer for a placement-new expression, and a Many     
+         // Constructor by descriptor                                   
+         // Takes a pointer for a placement-new expression, and a Many  
          FDescribeConstruct mDescribeConstructor {};
 
-         // The refer/copy/disown/clone/move/abandon constructors, wrapped 
-         // in lambdas. They take a pointer for a placement-new expression 
-         // and a source                                                   
+         // The refer/copy/disown/clone/move/abandon constructors,      
+         // wrapped in lambdas. They take a pointer for a placement-new 
+         // expression and a source                                     
          FBinary mReferConstructor {};
          FBinary mCopyConstructor {};
          FBinary mDisownConstructor {};
@@ -131,15 +132,15 @@ namespace Langulus::RTTI
          FBinary mMoveConstructor {};
          FBinary mAbandonConstructor {};
 
-         // The destructor, wrapped in a lambda expression                 
-         // Takes the pointer to the instance for destruction              
+         // The destructor, wrapped in a lambda expression              
+         // Takes the pointer to the instance for destruction           
          FUnary mDestructor {};
 
-         // The <=> operator, wrapped in a lambda expression if available  
+         // The <=> operator, wrapped in lambda expression if available 
          FCompare mComparer {};
 
-         // The refer/copy/disown/clone/move/abandon assignment, wrapped   
-         // in a lambdas                                                   
+         // The refer/copy/disown/clone/move/abandon assignment, wrapped
+         // in a lambdas                                                
          FBinary mReferAssigner {};
          FBinary mCopyAssigner {};
          FBinary mDisownAssigner {};
@@ -147,39 +148,39 @@ namespace Langulus::RTTI
          FBinary mMoveAssigner {};
          FBinary mAbandonAssigner {};
 
-         // The class type function, wrapped in a lambda expression        
-         // Returns a typed container with the most concrete class instance
+         // The class type function, wrapped in a lambda expression     
+         // Returns typed container with most concrete class instance   
          FResolve mResolver {};
 
-         // The hash getter, wrapped in a lambda expression                
-         // Takes the pointer to the instance for hashing, returns the hash
+         // The hash getter, wrapped in a lambda expression             
+         // Takes pointer to the instance for hashing, returns the hash 
          FHash mHasher {};
 
-         // The reference function wrapped in a lambda                     
-         // Takes the pointer to the instance for referencing              
-         // Returns the number of references after being referenced        
-         // (use 0 modifier to just get references)                        
+         // The reference function wrapped in a lambda                  
+         // Takes the pointer to the instance for referencing           
+         // Returns the number of references after being referenced     
+         // (use 0 modifier to just get references)                     
          FReference mReferencer {};
 
-         // A custom verb dispatcher, wrapped in a lambda expression       
-         // Takes pointer to the instance that will dispatch, and a verb   
-         // There is a mutable and immutable version of this               
+         // A custom verb dispatcher, wrapped in a lambda expression    
+         // Takes pointer to the instance that will dispatch, and a verb
+         // There is a mutable and immutable version of this            
          FDispatch mDispatcherMut {};
          FDispatch mDispatcher {};
       };
 
-      // The currently used boundary                                       
+      // The currently used boundary                                    
       BoundaryDependent mCurrentBoundary;
       
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         // All functions, reflected from all points of view               
-         // If this map is empty, then data has been reflected from the    
-         // main boundary                                                  
+         // All functions, reflected from all points of view            
+         // If this map is empty, then data has been reflected from the 
+         // main boundary                                               
          ::std::unordered_map<Token, BoundaryDependent> mOtherBoundaries;
       #endif
       
-      DefinitionData(const Token& cppname, const Token& boundary)
-         : Definition {cppname, boundary} {}
+      explicit DefinitionData(const Token& cppname) noexcept
+         : Definition {cppname} {}
 
    public:
       template<class>

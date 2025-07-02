@@ -12,7 +12,6 @@
 
 namespace Langulus::CTTI
 {
-   
    /// Can be used in two ways to satisfy CT::Void<T>:                        
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Void = Yes/No;` in T                       
@@ -28,15 +27,13 @@ namespace Langulus::CTTI
    struct Typelist {
       static constexpr bool Enabled = false;
    };
-
-} // namespace Langulus::CTTI
+}
 
 namespace Langulus::CT
 {
 
    namespace Inner
    {
-
       /// Concepts with ::std::decay_t<T>::CTTI_Void::Enabled bug out for     
       /// some reason. Probably because T may not be an user type, and        
       /// this isn't well handled as of yet by the compiler. I work around    
@@ -60,8 +57,7 @@ namespace Langulus::CT
          }
          else return false;
       }
-
-   } // namespace Langulus::CT::Inner
+   }
 
    /// Check if all T are marked void                                         
    template<class...T>
@@ -96,7 +92,6 @@ namespace Langulus
 
    namespace Inner
    {
-
       template<CT::Typelist GATHERED, CT::NotTypelist HEAD, CT::NotTypelist...TAIL>
       static consteval CT::Typelist auto GenerateTypes(auto&& lambda) {
          using R = decltype(lambda.template operator()<HEAD>());
@@ -106,8 +101,7 @@ namespace Langulus
          else
             return C {};
       }
-
-   } // namespace Langulus::Inner
+   }
 
 
    ///                                                                        

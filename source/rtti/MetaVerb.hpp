@@ -25,8 +25,7 @@ namespace Langulus::RTTI
       /// and worth experimenting with                                        
       ///                                                                     
       
-      /// Packing strategy useful for small projects, that do not exceed      
-      /// 255 possible verbs                                                  
+      /// Packing strategy that can't exceed 2^(8*ID_SIZE)-2 possible verbs   
       template<unsigned ID_SIZE>
       struct MetaVerbStructured_X8 : MetaPacked<DefinitionVerb, ID_SIZE> {
       private:
@@ -67,6 +66,9 @@ namespace Langulus::RTTI
          constexpr bool IsStateless() const noexcept;
       };
    #endif
+      static_assert(sizeof(MetaVerbStructured_X8<1>) == 2);
+      static_assert(sizeof(MetaVerbStructured_X8<2>) == 3);
+      static_assert(sizeof(MetaVerbStructured_X8<3>) == 4);
 
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 

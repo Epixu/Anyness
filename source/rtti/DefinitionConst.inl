@@ -24,7 +24,7 @@ namespace Langulus::RTTI
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam E - the constant to reflect                                  
-   template<auto E> LANGULUS(NOINLINE)
+   template<auto E>
    auto DefinitionConst::Reflect() -> DefinitionConst const* {
       constexpr auto cppname = CppNameOf<E>();
 
@@ -37,7 +37,7 @@ namespace Langulus::RTTI
 
          DefinitionConst& definition = meta
             ? const_cast<DefinitionConst&>(*meta)
-            : Instance.RegisterConst(cppname, Boundary);
+            : Instance.RegisterConst(cppname);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -58,6 +58,13 @@ namespace Langulus::RTTI
          definition.mVersionMajor = CTTI::VersionedValue<E>::Major;
          definition.mVersionMinor = CTTI::VersionedValue<E>::Minor;
       }
+
+      // Save the boundary at time of reflection, but don't even        
+      // bother if it is the main one                                   
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         if (Boundary != Langulus::MainBoundary)
+            definition.mBoundaries.insert(Boundary);
+      #endif
 
       if constexpr (CT::InfoValue<E>) {
          // Reflected info                                              

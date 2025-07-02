@@ -69,8 +69,8 @@ namespace Langulus::RTTI
          ::std::unordered_map<Token, BoundaryDependent> mOtherBoundaries;
       #endif
       
-      DefinitionVerb(const Token& cppname, const Token& boundary)
-         : Definition {cppname, boundary} {}
+      explicit DefinitionVerb(const Token& cppname) noexcept
+         : Definition {cppname} {}
 
    public:
       template<CT::Decayed>

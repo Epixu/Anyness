@@ -44,11 +44,10 @@ namespace Langulus::Inner
       using T::T;
    };
 
-} // namespace Langulus::Inner
+}
 
 namespace Langulus::Anyness
 {
-
    /// A type-erased dynamic tag, that depends on Anyness::Many               
    /// If incomplete, include <Langulus/Anyness/Tag.hpp>                      
    struct Tag;
@@ -56,15 +55,12 @@ namespace Langulus::Anyness
    /// A statically typed dynamic tag                                         
    template<CT::NotVoid>
    struct TTag;
-
-} // namespace Langulus::Anyness
+}
 
 namespace Langulus::CT
 {
-
    template<class...T>
    concept Tag = (T::CTTI_Tag and ...);
    template<class...T>
    concept NotTag = ((not Tag<T>) and ...);
-
-} // namespace Langulus::CT
+}

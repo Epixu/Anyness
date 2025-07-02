@@ -325,4 +325,5 @@ namespace fmt
          #endif
       }
    };
-} // namespace fmt
+
+}

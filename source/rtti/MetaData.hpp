@@ -29,48 +29,44 @@ namespace Langulus::RTTI
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
       ///                                                                     
-      
+      template<unsigned S>
+      struct Structured;
 
-      #pragma pack(push, 1)
-      /// This packing tactic is useful only for small projects with up to    
-      /// 256 types (including indirections)                                  
-      struct MetaDataStructured_8_8 : MetaPacked<DefinitionData, 1> {
-      private:
+      /// Encodes most frequently used properties                             
+   #pragma pack(push, 1)
+      template<> struct Structured<1> {
+      protected:
          union {
             struct {
                // The set of the main properties                        
-               bool sparse       : 1;
-               bool constant     : 1;
-               bool deep         : 1;
-               bool pod          : 1;
-               bool nullable     : 1;
-               bool referenced   : 1;
-               bool resolvable   : 1;
-               bool dispatcher   : 1;
+               bool sparse     : 1;
+               bool constant   : 1;
+               bool deep       : 1;
+               bool pod        : 1;
+               bool nullable   : 1;
+               bool referenced : 1;
+               bool resolvable : 1;
+               bool dispatcher : 1;
             };
             uint8_t all {};
          };
-
-      public:
       };
-      static_assert(sizeof(MetaDataStructured_8_8) == 2);
+      static_assert(sizeof(Structured<1>) == 1);
 
-      /// This is the most commonly used packing tactic, until proven not     
-      /// sufficient. It contains the most packed properties and should be    
-      /// the fastest, due to the smallest chance of an indirection           
-      struct MetaDataStructured_16_16 : MetaPacked<DefinitionData, 2> {
-      private:
+      /// Encodes most frequently used properties and the size up to 255 bytes
+      template<> struct Structured<2> {
+      protected:
          union {
             struct {
                // The set of the main properties                        
-               bool sparse       : 1;
-               bool constant     : 1;
-               bool deep         : 1;
-               bool pod          : 1;
-               bool nullable     : 1;
-               bool referenced   : 1;
-               bool resolvable   : 1;
-               bool dispatcher   : 1;
+               bool sparse     : 1;
+               bool constant   : 1;
+               bool deep       : 1;
+               bool pod        : 1;
+               bool nullable   : 1;
+               bool referenced : 1;
+               bool resolvable : 1;
+               bool dispatcher : 1;
 
                // Stores the size up to 255 bytes                       
                // A value of zero means size is bigger, and a lookup    
@@ -80,25 +76,49 @@ namespace Langulus::RTTI
             };
             uint16_t all {};
          };
+      };
+      static_assert(sizeof(Structured<2>) == 2);
+
+      /// This is the most commonly used packing tactic, until proven not     
+      /// sufficient. It contains the most packed properties and should be    
+      /// the fastest, due to the smallest chance of an indirection           
+      /// Packing strategy that can't exceed 2^(8*ID_SIZE)-2 possible types   
+      ///   @tparam ID_SIZE - the size reserved for unique ID                 
+      ///   @tparam PT_SIZE - the size reserved for properties                
+      template<unsigned ID_SIZE, unsigned PT_SIZE>
+      struct MetaDataStructured_XY
+         : MetaPacked<DefinitionData, ID_SIZE>
+         , Structured<PT_SIZE>
+      {
+      protected:
+         using Structured<PT_SIZE>::sparse;
+         using Structured<PT_SIZE>::constant;
+         using Structured<PT_SIZE>::deep;
+         using Structured<PT_SIZE>::pod;
+         using Structured<PT_SIZE>::nullable;
+         using Structured<PT_SIZE>::referenced;
+         using Structured<PT_SIZE>::resolvable;
+         using Structured<PT_SIZE>::dispatcher;
+         using Structured<PT_SIZE>::all;
 
       public:
          using Base = MetaPacked<DefinitionData, 2>;
 
-         constexpr MetaDataStructured_16_16() noexcept = default;
-         constexpr MetaDataStructured_16_16(MetaDataStructured_16_16 const&) noexcept = default;
-         constexpr MetaDataStructured_16_16(MetaDataStructured_16_16&&) noexcept = default;
-         constexpr MetaDataStructured_16_16(nullptr_t) noexcept;
-         constexpr MetaDataStructured_16_16(DefinitionData const*) noexcept;
+         constexpr MetaDataStructured_XY() noexcept = default;
+         constexpr MetaDataStructured_XY(MetaDataStructured_XY const&) noexcept = default;
+         constexpr MetaDataStructured_XY(MetaDataStructured_XY&&) noexcept = default;
+         constexpr MetaDataStructured_XY(nullptr_t) noexcept;
+         constexpr MetaDataStructured_XY(DefinitionData const*) noexcept;
 
-         constexpr MetaDataStructured_16_16& operator = (MetaDataStructured_16_16 const&) noexcept = default;
-         constexpr MetaDataStructured_16_16& operator = (MetaDataStructured_16_16&&) noexcept = default;
-         constexpr MetaDataStructured_16_16& operator = (nullptr_t) noexcept;
-         constexpr MetaDataStructured_16_16& operator = (DefinitionData const*) noexcept;
+         constexpr MetaDataStructured_XY& operator = (MetaDataStructured_XY const&) noexcept = default;
+         constexpr MetaDataStructured_XY& operator = (MetaDataStructured_XY&&) noexcept = default;
+         constexpr MetaDataStructured_XY& operator = (nullptr_t) noexcept;
+         constexpr MetaDataStructured_XY& operator = (DefinitionData const*) noexcept;
 
-         bool Is(const MetaDataStructured_16_16&) const noexcept;
-         constexpr bool IsExact(const MetaDataStructured_16_16&) const noexcept;
-         constexpr bool IsSimilar(const MetaDataStructured_16_16&) const noexcept;
-         constexpr bool operator == (const MetaDataStructured_16_16&) const noexcept;
+         bool Is(const MetaDataStructured_XY&) const noexcept;
+         constexpr bool IsExact(const MetaDataStructured_XY&) const noexcept;
+         constexpr bool IsSimilar(const MetaDataStructured_XY&) const noexcept;
+         constexpr bool operator == (const MetaDataStructured_XY&) const noexcept;
 
          constexpr auto GetSize()     const noexcept -> size_t;
          auto GetMinAllocation()      const noexcept -> size_t;
@@ -145,31 +165,13 @@ namespace Langulus::RTTI
             void SetPoolchain(Fractalloc::Pool*) const noexcept;
          #endif
       };
-      static_assert(sizeof(MetaDataStructured_16_16) == 4);
-
-      /// This packing tactic trades less properties for more type definitions
-      /// Most useful for very large projects                                 
-      struct MetaDataStructured_24_8 : MetaPacked<DefinitionData, 3> {
-      private:
-         union {
-            struct {
-               // The set of the main properties                        
-               bool sparse       : 1;
-               bool constant     : 1;
-               bool deep         : 1;
-               bool pod          : 1;
-               bool nullable     : 1;
-               bool referenced   : 1;
-               bool resolvable   : 1;
-               bool dispatcher   : 1;
-            };
-            uint8_t all {};
-         };
-
-      public:
-      };
-      static_assert(sizeof(MetaDataStructured_24_8) == 4);
-      #pragma pack(pop)
+      static_assert(sizeof(MetaDataStructured_XY<1, 1>) == 2);
+      static_assert(sizeof(MetaDataStructured_XY<2, 1>) == 3);
+      static_assert(sizeof(MetaDataStructured_XY<3, 1>) == 4);
+      static_assert(sizeof(MetaDataStructured_XY<1, 2>) == 3);
+      static_assert(sizeof(MetaDataStructured_XY<2, 2>) == 4);
+      static_assert(sizeof(MetaDataStructured_XY<3, 2>) == 5);
+   #pragma pack(pop)
    #endif
 
       ///                                                                     
@@ -235,7 +237,7 @@ namespace Langulus::RTTI
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaDataBase = MetaDataStructured_16_16;
+      using MetaDataBase = MetaDataStructured_XY<2, 2>;
    #else
       using MetaDataBase = MetaDataNaked;
    #endif

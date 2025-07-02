@@ -379,7 +379,6 @@ namespace Langulus
 
 namespace std
 {
-
    /// Extend std to be capable of hashing anything with a GetHash method     
    template<::Langulus::CT::HasGetHashMethod H>
    struct hash<H> {
@@ -388,5 +387,4 @@ namespace std
          return what.GetHash().mHash;
       }
    };
-
-} // namespace std
+}

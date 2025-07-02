@@ -18,15 +18,13 @@ namespace Langulus::RTTI
 {
 
    /// Reflect or return an already reflected tag                             
-   /// Definition is generated only on decayed types to avoid static variable 
-   /// duplication                                                            
    ///   @attention when making a shared library and reflecting your tags     
    ///      at library initialization, it is recommended you mark all other   
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the decayed trait to reflect                             
-   template<CT::Decayed T> LANGULUS(NOINLINE)
+   template<CT::Decayed T>
    auto DefinitionTag::Reflect() -> DefinitionTag const* {
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete tag - "
@@ -45,22 +43,15 @@ namespace Langulus::RTTI
       constexpr auto cppname = CppNameOf<T>();
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         // Try to get an already existing definition - the trait might 
-         // have been reflected previously in another shared library.   
-         // We can't keep a static pointer to the meta, because shared  
-         // libraries might get unloaded, resulting in different memory 
-         // spaces when reloaded. An individual definition is kept for  
-         // each shared library boundary, because definitions will      
-         // contain pointers to functions that reside in the library    
-         // memory itself, and it is a bad idea to mix those with the   
-         // main library itself.                                        
+         // Try to get an already existing definition - the tag might   
+         // have been reflected previously in another shared library    
          DefinitionTag const* meta = Instance.GetMetaTagByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
          DefinitionTag& definition = meta
             ? const_cast<DefinitionTag&>(*meta)
-            : Instance.RegisterTag(cppname, Boundary);
+            : Instance.RegisterTag(cppname);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -70,7 +61,7 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         auto& definition = s_definition.emplace(cppname, "");
+         DefinitionTag& definition = s_definition.emplace(cppname, "");
       #endif
 
 
@@ -86,18 +77,18 @@ namespace Langulus::RTTI
       definition.mNameOf = Inner::ToLowercase(token);
       definition.mNameOfLowercased = definition.mNameOf;
 
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      Logger::VerboseRaw(
-         "Tag ", Logger::Purple, definition.mNameOf,
-         " (ID: ", definition.mID, ") ", Logger::Green,
-         " registered from ", Boundary
-      );
-   #else
-      Logger::VerboseRaw(
-         "Tag ", Logger::Purple, definition.mNameOf,
-         Logger::Green, " reflected"
-      );
-   #endif
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         Logger::VerboseRaw(
+            "Tag ", Logger::Purple, definition.mNameOf,
+            " (ID: ", definition.mID, ") ", Logger::Green,
+            " registered from ", Boundary
+         );
+      #else
+         Logger::VerboseRaw(
+            "Tag ", Logger::Purple, definition.mNameOf,
+            Logger::Green, " reflected"
+         );
+      #endif
 
       return &definition;
    }

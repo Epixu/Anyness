@@ -13,24 +13,52 @@ namespace Langulus::RTTI::Inner
 {
 
    /// Empty data ID construction                                             
-   constexpr MetaDataStructured_16_16::MetaDataStructured_16_16(nullptr_t) noexcept
+   template<unsigned S1, unsigned S2>
+   constexpr MetaDataStructured_XY<S1, S2>::MetaDataStructured_XY(nullptr_t) noexcept
       : Base {0} {}
 
    /// ID from definition                                                     
-   constexpr MetaDataStructured_16_16::MetaDataStructured_16_16(DefinitionData const* d) noexcept
-      : Base {d ? d->mID : 0} {}
+   template<unsigned S1, unsigned S2>
+   constexpr MetaDataStructured_XY<S1, S2>::MetaDataStructured_XY(DefinitionData const* d) noexcept
+      : Base {d ? d->mID : 0} {
+      if (d) {
+         sparse = d->mDeptr != nullptr;
+         constant = d->mConst;
+         deep = d->mDeep;
+         pod = d->mPOD;
+         nullable = d->mNullable;
+         referenced = d->mCurrentBoundary.mReferencer != nullptr;
+         resolvable = d->mCurrentBoundary.mResolver != nullptr;
+         dispatcher = d->mCurrentBoundary.mDispatcherMut != nullptr
+                   or d->mCurrentBoundary.mDispatcher != nullptr;
+      }
+   }
 
    /// Reset data ID                                                          
-   constexpr auto MetaDataStructured_16_16::operator = (nullptr_t)
-   noexcept -> MetaDataStructured_16_16& {
+   template<unsigned S1, unsigned S2>
+   constexpr auto MetaDataStructured_XY<S1, S2>::operator = (nullptr_t)
+   noexcept -> MetaDataStructured_XY& {
       Base::operator = (0);
       return *this;
    }
 
    /// Reassign data ID                                                       
-   constexpr auto MetaDataStructured_16_16::operator = (DefinitionData const* d)
-   noexcept -> MetaDataStructured_16_16& {
+   template<unsigned S1, unsigned S2>
+   constexpr auto MetaDataStructured_XY<S1, S2>::operator = (DefinitionData const* d)
+   noexcept -> MetaDataStructured_XY& {
       Base::operator = (d ? d->mID : 0);
+
+      if (d) {
+         sparse = d->mConst;
+         constant = d->mConst;
+         deep = d->mDeep;
+         pod = d->mPOD;
+         nullable = d->mNullable;
+         referenced = d->mCurrentBoundary.mReferencer != nullptr;
+         resolvable = d->mCurrentBoundary.mResolver != nullptr;
+         dispatcher = d->mCurrentBoundary.mDispatcherMut != nullptr
+                   or d->mCurrentBoundary.mDispatcher != nullptr;
+      }
       return *this;
    }
 
@@ -38,7 +66,8 @@ namespace Langulus::RTTI::Inner
    /// Disregards all cv-qualifiers, pointers, array extents, etc.            
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
-   inline bool MetaDataStructured_16_16::Is(const MetaDataStructured_16_16& other) const noexcept {
+   template<unsigned S1, unsigned S2>
+   bool MetaDataStructured_XY<S1, S2>::Is(const MetaDataStructured_XY& other) const noexcept {
       return Instance.GetMetaDataByID(*this)->mOrigin
           == Instance.GetMetaDataByID(other)->mOrigin;
    }
@@ -46,11 +75,13 @@ namespace Langulus::RTTI::Inner
    /// Check if two meta definitions match exactly                            
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
-   constexpr bool MetaDataStructured_16_16::IsExact(const MetaDataStructured_16_16& other) const noexcept {
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsExact(const MetaDataStructured_XY& other) const noexcept {
       return all == other.all and Base::operator == (other);
    }
 
-   constexpr bool MetaDataStructured_16_16::operator==(const MetaDataStructured_16_16& other) const noexcept {
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::operator==(const MetaDataStructured_XY& other) const noexcept {
       return IsExact(other);
    }
    
@@ -59,194 +90,234 @@ namespace Langulus::RTTI::Inner
    /// on the current level of indirection, but on the entire way to origin   
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
-   constexpr bool MetaDataStructured_16_16::IsSimilar(const MetaDataStructured_16_16& other) const noexcept {
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsSimilar(const MetaDataStructured_XY& other) const noexcept {
       return Base::operator == (other);
    }
 
    /// Get the size of the type                                               
-   constexpr auto MetaDataStructured_16_16::GetSize() const noexcept -> size_t {
-      return size ? size : Instance.GetMetaDataByID(*this)->mSize;
+   template<unsigned S1, unsigned S2>
+   constexpr auto MetaDataStructured_XY<S1, S2>::GetSize() const noexcept -> size_t {
+      if constexpr (S2 > 1) {
+         return Structured<S2>::size
+            ? Structured<S2>::size
+            : Instance.GetMetaDataByID(*this)->mSize;
+      }
+      else return Instance.GetMetaDataByID(*this)->mSize;
    }
 
    /// Get the minimal allocation page                                        
-   inline auto MetaDataStructured_16_16::GetMinAllocation() const noexcept -> size_t {
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetMinAllocation() const noexcept -> size_t {
       return Instance.GetMetaDataByID(*this)->mAllocationPage;
    }
 
    /// Get the alignment of the type                                          
-   inline auto MetaDataStructured_16_16::GetAlignment() const noexcept -> size_t {
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetAlignment() const noexcept -> size_t {
       return Instance.GetMetaDataByID(*this)->mAlign;
    }
 
    /// Get the name of the type, the result of NameOf                         
-   inline auto MetaDataStructured_16_16::GetName() const noexcept -> Token {
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetName() const noexcept -> Token {
       return Instance.GetMetaDataByID(*this)->mNameOf;
    }
 
    /// Get the name of the type as it appearch in C++                         
-   inline auto MetaDataStructured_16_16::GetCppName() const noexcept -> Token {
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetCppName() const noexcept -> Token {
       return Instance.GetMetaDataByID(*this)->mCppNameOf;
    }
 
    /// Get the type hash                                                      
-   inline auto MetaDataStructured_16_16::GetHash() const noexcept -> Hash {
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetHash() const noexcept -> Hash {
       return Instance.GetMetaDataByID(*this)->mHash;
    }
    
    /// Get the type boundary                                                  
-   inline auto MetaDataStructured_16_16::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
       return Instance.GetMetaDataByID(*this)->mBoundaries;
    }
 
    /// Get the reflected pool tactic                                          
-   inline auto MetaDataStructured_16_16::GetPoolTactic() const noexcept -> PoolTactic {
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetPoolTactic() const noexcept -> PoolTactic {
       return Instance.GetMetaDataByID(*this)->mPoolTactic;
    }
 
    /// Get the poolchain                                                      
-   inline auto MetaDataStructured_16_16::GetPoolchain() const noexcept -> Fractalloc::Pool* {
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetPoolchain() const noexcept -> Fractalloc::Pool* {
       return Instance.GetMetaDataByID(*this)->mPoolChain;
    }
 
    /// Check if type is CT::Dense                                             
-   constexpr bool MetaDataStructured_16_16::IsDense() const noexcept {
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsDense() const noexcept {
       return not sparse;
    }
 
    /// Check if type is CT::Sparse                                            
-   constexpr bool MetaDataStructured_16_16::IsSparse() const noexcept {
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsSparse() const noexcept {
       return sparse;
    }
 
    /// Check if the type is CT::Constant                                      
-   constexpr bool MetaDataStructured_16_16::IsConstant() const noexcept {
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsConstant() const noexcept {
       return constant;
    }
 
    /// Check if the type is CT::Mutable                                       
-   constexpr bool MetaDataStructured_16_16::IsMutable() const noexcept {
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsMutable() const noexcept {
       return not constant;
    }
 
    /// Check if type is CT::Deep                                              
-   constexpr bool MetaDataStructured_16_16::IsDeep() const noexcept {
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsDeep() const noexcept {
       return deep;
    }
 
    /// Check if type is CT::POD                                               
-   constexpr bool MetaDataStructured_16_16::IsPOD() const noexcept {
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsPOD() const noexcept {
       return pod;
    }
 
    /// Get the reflected destructor                                           
-   inline auto MetaDataStructured_16_16::GetDestructor()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetDestructor()
    const noexcept -> DefinitionData::FUnary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mDestructor;
    }
 
    /// Get the reflected referencer                                           
-   inline auto MetaDataStructured_16_16::GetReferencer()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetReferencer()
    const noexcept -> DefinitionData::FReference {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mReferencer;
    }
 
    /// Get the reflected resolver                                             
-   inline auto MetaDataStructured_16_16::GetResolver()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetResolver()
    const noexcept -> DefinitionData::FResolve {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mResolver;
    }
 
    /// Get the reflected refer-constructor                                    
-   inline auto MetaDataStructured_16_16::GetReferConstructor()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetReferConstructor()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mReferConstructor;
    }
 
    /// Get the reflected refer-assigner                                       
-   inline auto MetaDataStructured_16_16::GetReferAssigner()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetReferAssigner()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mReferAssigner;
    }
 
    /// Get the reflected move-constructor                                     
-   inline auto MetaDataStructured_16_16::GetMoveConstructor()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetMoveConstructor()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mMoveConstructor;
    }
 
    /// Get the reflected move-assigner                                        
-   inline auto MetaDataStructured_16_16::GetMoveAssigner()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetMoveAssigner()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mMoveAssigner;
    }
 
    /// Get the reflected abandon-constructor                                  
-   inline auto MetaDataStructured_16_16::GetAbandonConstructor()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetAbandonConstructor()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mAbandonConstructor;
    }
 
    /// Get the reflected abandon-assigner                                     
-   inline auto MetaDataStructured_16_16::GetAbandonAssigner()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetAbandonAssigner()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mAbandonAssigner;
    }
 
    /// Get the reflected disown-constructor                                   
-   inline auto MetaDataStructured_16_16::GetDisownConstructor()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetDisownConstructor()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mDisownConstructor;
    }
 
    /// Get the reflected disown-assigner                                      
-   inline auto MetaDataStructured_16_16::GetDisownAssigner()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetDisownAssigner()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mDisownAssigner;
    }
 
    /// Get the reflected clone-constructor                                    
-   inline auto MetaDataStructured_16_16::GetCloneConstructor()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetCloneConstructor()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCloneConstructor;
    }
 
    /// Get the reflected clone-assigner                                       
-   inline auto MetaDataStructured_16_16::GetCloneAssigner()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetCloneAssigner()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCloneAssigner;
    }
 
    /// Get the reflected copy-constructor                                     
-   inline auto MetaDataStructured_16_16::GetCopyConstructor()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetCopyConstructor()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCopyConstructor;
    }
 
    /// Get the reflected copy-assigner                                        
-   inline auto MetaDataStructured_16_16::GetCopyAssigner()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetCopyAssigner()
    const noexcept -> DefinitionData::FBinary {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCopyAssigner;
    }
 
    /// Get the reflected comparer                                             
-   inline auto MetaDataStructured_16_16::GetComparer()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetComparer()
    const noexcept -> DefinitionData::FCompare {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mComparer;
    }
 
    /// Get the reflected hasher                                               
-   inline auto MetaDataStructured_16_16::GetHasher()
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetHasher()
    const noexcept -> DefinitionData::FHash {
       return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mHasher;
    }
 
    /// Check if type has an explicit GetHash() method                         
-   inline bool MetaDataStructured_16_16::HasGetHashMethod() const noexcept {
+   template<unsigned S1, unsigned S2>
+   bool MetaDataStructured_XY<S1, S2>::HasGetHashMethod() const noexcept {
       return Instance.GetMetaDataByID(*this)->mHasGetHashMethod;
    }
 
    /// Allows the memory manager to set a new pool chain                      
-   inline void MetaDataStructured_16_16::SetPoolchain(Fractalloc::Pool* pool) const noexcept {
+   template<unsigned S1, unsigned S2>
+   void MetaDataStructured_XY<S1, S2>::SetPoolchain(Fractalloc::Pool* pool) const noexcept {
       Instance.GetMetaDataByID(*this)->mPoolChain = pool;
    }
 

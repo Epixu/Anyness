@@ -13,7 +13,6 @@ namespace Langulus
 {
    namespace Inner
    {
-
       /// Non-templated retyping (relies on `typename T::template Retype`)    
       template<class T>
       struct RetypeInner {
@@ -45,8 +44,7 @@ namespace Langulus
             ORIGINAL<NEW_ARG>
          >;
       };
-
-   } // namespace Langulus::Inner
+   }
 
    /// This retype tool will take a (templated or not) T, and subsitute its   
    /// type with another. If `typename T::template Retype` exists, it will be 
@@ -54,5 +52,4 @@ namespace Langulus
    /// T remains unchanged                                                    
    template<class T, class...ARGUMENTS>
    using Retype = typename Inner::RetypeInner<T>::template Retype<ARGUMENTS...>;
-
-} // namespace Langulus
+}

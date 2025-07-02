@@ -496,7 +496,7 @@ namespace Langulus::Logger
 
    /// Gets a size stringified in a human readable way as KB, MB, GB, etc.    
    struct Size {
-		size_t bytes;
+      size_t bytes;
 
       ::std::string format() const {
          ::std::ostringstream oss;
@@ -508,23 +508,26 @@ namespace Langulus::Logger
             oss << (bytes * 1. / 1000LL) << " KB";
          else if (bytes < 1'000'000'000LL)
             oss << (bytes * 1. / 1000'000LL) << " MB";
-         else if (bytes < 1'000'000'000'000LL)
-            oss << (bytes * 1. / 1000'000'000LL) << " GB";
-         else if (bytes < 1'000'000'000'000'000LL)
-            oss << (bytes * 1. / 1000'000'000'000LL) << " TB";
-         else
-            oss << (bytes * 1. / 1000'000'000'000'000LL) << " PB";
-         
+         else if constexpr (sizeof(size_t) > 4) {
+            if (bytes < 1'000'000'000'000LL)
+               oss << (bytes * 1. / 1000'000'000LL) << " GB";
+            else if (bytes < 1'000'000'000'000'000LL)
+               oss << (bytes * 1. / 1000'000'000'000LL) << " TB";
+            else
+               oss << (bytes * 1. / 1000'000'000'000'000LL) << " PB";
+         }
+         else oss << (bytes * 1. / 1000'000'000LL) << " GB";
+
          return oss.str();
       }
-	};
+   };
 
-   // bytes only with integer
+   /// Bytes only with integer                                                
    constexpr Size operator""_B(unsigned long long int num) noexcept {
       return {static_cast<size_t>(num)};
    }
 
-   // floating-point numbers, like 5.5_kB
+   /// Floating-point numbers, like 5.5_KB                                    
    constexpr Size operator""_KiB(long double num) noexcept {
       return {static_cast<size_t>((1LL << 10) * num)};
    }
@@ -533,12 +536,6 @@ namespace Langulus::Logger
    }
    constexpr Size operator""_GiB(long double num) noexcept {
       return {static_cast<size_t>((1LL << 30) * num)};
-   }
-   constexpr Size operator""_TiB(long double num) noexcept {
-      return {static_cast<size_t>((1LL << 40) * num)};
-   }
-   constexpr Size operator""_PiB(long double num) noexcept {
-      return {static_cast<size_t>((1LL << 50) * num)};
    }
    constexpr Size operator""_KB(long double num) noexcept {
       return {static_cast<size_t>(1'000LL * num)};
@@ -549,44 +546,56 @@ namespace Langulus::Logger
    constexpr Size operator""_GB(long double num) noexcept {
       return {static_cast<size_t>(1'000'000'000LL * num)};
    }
+
+#if LANGULUS_BITNESS() > 32
+   constexpr Size operator""_TiB(long double num) noexcept {
+      return {static_cast<size_t>((1LL << 40) * num)};
+   }
+   constexpr Size operator""_PiB(long double num) noexcept {
+      return {static_cast<size_t>((1LL << 50) * num)};
+   }
    constexpr Size operator""_TB(long double num) noexcept {
       return {static_cast<size_t>(1'000'000'000'000LL * num)};
    }
    constexpr Size operator""_PB(long double num) noexcept {
       return {static_cast<size_t>(1'000'000'000'000'000LL * num)};
    }
+#endif
 
-   // repeated for integer literals so that e.g. 5_kB works
+   /// Integer literals so that e.g. 5_KB works                               
    constexpr Size operator""_KiB(unsigned long long num) noexcept {
-      return {(1LL << 10) * num};
+      return {static_cast<size_t>((1LL << 10) * num)};
    }
    constexpr Size operator""_MiB(unsigned long long num) noexcept {
-      return {(1LL << 20) * num};
+      return {static_cast<size_t>((1LL << 20) * num)};
    }
    constexpr Size operator""_GiB(unsigned long long num) noexcept {
-      return {(1LL << 30) * num};
-   }
-   constexpr Size operator""_TiB(unsigned long long num) noexcept {
-      return {(1LL << 40) * num};
-   }
-   constexpr Size operator""_PiB(unsigned long long num) noexcept {
-      return {(1LL << 50) * num};
+      return {static_cast<size_t>((1LL << 30) * num)};
    }
    constexpr Size operator""_KB(unsigned long long num) noexcept {
-      return {1'000LL * num};
+      return {static_cast<size_t>(1'000LL * num)};
    }
    constexpr Size operator""_MB(unsigned long long num) noexcept {
-      return {1'000'000LL * num};
+      return {static_cast<size_t>(1'000'000LL * num)};
    }
    constexpr Size operator""_GB(unsigned long long num) noexcept {
-      return {1'000'000'000LL * num};
+      return {static_cast<size_t>(1'000'000'000LL * num)};
+   }
+
+#if LANGULUS_BITNESS() > 32
+   constexpr Size operator""_TiB(unsigned long long num) noexcept {
+      return {static_cast<size_t>((1LL << 40) * num)};
+   }
+   constexpr Size operator""_PiB(unsigned long long num) noexcept {
+      return {static_cast<size_t>((1LL << 50) * num)};
    }
    constexpr Size operator""_TB(unsigned long long num) noexcept {
-      return {1'000'000'000'000LL * num};
+      return {static_cast<size_t>(1'000'000'000'000LL * num)};
    }
    constexpr Size operator""_PB(unsigned long long num) noexcept {
-      return {1'000'000'000'000'000LL * num};
+      return {static_cast<size_t>(1'000'000'000'000'000LL * num)};
    }
+#endif
 
 } // namespace Langulus::Logger
 

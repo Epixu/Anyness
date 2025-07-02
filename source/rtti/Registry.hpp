@@ -80,80 +80,81 @@ namespace Langulus::RTTI
       friend class DefinitionData;
       friend class DefinitionTag;
       friend class DefinitionConst;
+      friend struct Inner::MetaTagPacked_16;
+      friend struct Inner::MetaConstPacked_16;
+      template<unsigned, unsigned>
+      friend struct Inner::MetaDataStructured_XY;
 
-      void RegisterVerbOperator       (const Token&, const Token& library) has_assumptions;
-      void RegisterVerbOperatorReverse(const Token&, const Token& library) has_assumptions;
-      void RegisterVerbToken          (const Token&, const Token& library) has_assumptions;
-      void RegisterVerbTokenReverse   (const Token&, const Token& library) has_assumptions;
+      void RegisterVerbOperator       (Token const&) has_assumptions;
+      void RegisterVerbOperatorReverse(Token const&) has_assumptions;
+      void RegisterVerbToken          (Token const&) has_assumptions;
+      void RegisterVerbTokenReverse   (Token const&) has_assumptions;
 
       LANGULUS_API(RTTI)
-      auto RegisterData(const Token& cppname, const Token& library) -> DefinitionData&;
+      auto RegisterData(Token const&) -> DefinitionData&;
       LANGULUS_API(RTTI)
       auto ReserveDataID(DefinitionData const*) -> size_t;
 
       LANGULUS_API(RTTI)
-      auto RegisterConst(const Token& cppname, const Token& library) -> DefinitionConst&;
+      auto RegisterConst(Token const&) -> DefinitionConst&;
 
       LANGULUS_API(RTTI)
-      auto RegisterTag(const Token& cppname, const Token& library) -> DefinitionTag&;
+      auto RegisterTag(Token const&) -> DefinitionTag&;
 
       LANGULUS_API(RTTI)
-      auto RegisterVerb(const Token& cppname, const Token& library) -> DefinitionVerb&;
+      auto RegisterVerb(Token const&) -> DefinitionVerb&;
       
       LANGULUS_API(RTTI)
-      void RegisterFileExtension(const Token&, DefinitionData*, const Token& library) has_assumptions;
+      void RegisterFileExtension(Token const&, DefinitionData*) has_assumptions;
+
+      LANGULUS_API(RTTI)
+      auto GetMetaDataByCppName(Token const&) const noexcept -> DefinitionData const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaTagByCppName(Token const&) const noexcept -> DefinitionTag const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaVerbByCppName(Token const&) const noexcept -> DefinitionVerb const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaConstByCppName(Token const&) const noexcept -> DefinitionConst const*;
+
+      LANGULUS_API(RTTI)
+      auto GetMetaDataByID(Inner::MetaDataStructured_XY<2, 2> const&) const noexcept -> DefinitionData const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaDataByID(Inner::MetaDataStructured_XY<3, 1> const&) const noexcept -> DefinitionData const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaTagByID(Inner::MetaTagPacked_16 const&) const noexcept -> DefinitionTag const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaVerbByID(Inner::MetaVerbStructured_X8<1> const&) const noexcept -> DefinitionVerb const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaVerbByID(Inner::MetaVerbStructured_X8<3> const&) const noexcept -> DefinitionVerb const*;
+      LANGULUS_API(RTTI)
+      auto GetMetaConstByID(Inner::MetaConstPacked_16 const&) const noexcept -> DefinitionConst const*;
 
    public:
       ~Registry();
 
       LANGULUS_API(RTTI)
-      auto GetMetaDataByCppName(const Token&) const noexcept -> DefinitionData const*;
+      auto GetMetaDataByToken (Token const&) const noexcept -> DefinitionData const*;
       LANGULUS_API(RTTI)
-      auto GetMetaDataByToken(const Token&) const noexcept -> DefinitionData const*;
+      auto GetMetaTagByToken  (Token const&) const noexcept -> DefinitionTag const*;
       LANGULUS_API(RTTI)
-      auto GetMetaDataByID(const Inner::MetaDataStructured_8_8&) const noexcept -> DefinitionData const*;
+      auto GetMetaVerbByToken (Token const&) const noexcept -> DefinitionVerb const*;
       LANGULUS_API(RTTI)
-      auto GetMetaDataByID(const Inner::MetaDataStructured_16_16&) const noexcept -> DefinitionData const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaDataByID(const Inner::MetaDataStructured_24_8&) const noexcept -> DefinitionData const*;
+      auto GetMetaConstByToken(Token const&) const noexcept -> DefinitionConst const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaTagByCppName(const Token&) const noexcept -> DefinitionTag const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaTagByToken(const Token&) const noexcept -> DefinitionTag const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaTagByID(const Inner::MetaTagPacked_16&) const noexcept -> DefinitionTag const*;
+      auto GetOperator(Token const&) const noexcept -> DefinitionVerb const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaVerbByCppName(const Token&) const noexcept -> DefinitionVerb const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaVerbByToken(const Token&) const noexcept -> DefinitionVerb const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaVerbByID(const Inner::MetaVerbStructured_X8<1>&) const noexcept -> DefinitionVerb const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaVerbByID(const Inner::MetaVerbStructured_X8<3>&) const noexcept -> DefinitionVerb const*;
+      auto GetAmbiguousMeta(Token const&) const noexcept -> const MetaSet&;
 
       LANGULUS_API(RTTI)
-      auto GetMetaConstByCppName(const Token&) const noexcept -> DefinitionConst const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaConstByToken(const Token&) const noexcept -> DefinitionConst const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaConstByID(const Inner::MetaConstPacked_16&) const noexcept -> DefinitionConst const*;
+      auto DisambiguateMeta(Token const&) const -> Inner::Definition const*;
 
       LANGULUS_API(RTTI)
-      auto GetOperator(const Token&) const noexcept -> DefinitionVerb const*;
+      auto ResolveFileExtension(Token const&) const -> const MetaSet&;
 
       LANGULUS_API(RTTI)
-      auto GetAmbiguousMeta(const Token&) const noexcept -> const MetaSet&;
-
-      LANGULUS_API(RTTI)
-      auto DisambiguateMeta(const Token&) const -> Inner::Definition const*;
-
-      LANGULUS_API(RTTI)
-      auto ResolveFileExtension(const Token&) const -> const MetaSet&;
-
-      LANGULUS_API(RTTI)
-      void UnloadBoundary(const Token&);
+      void UnloadBoundary(Token const&);
    };
 
 
@@ -164,22 +165,22 @@ namespace Langulus::RTTI
 
       
    LANGULUS(ALWAYS_INLINED)
-   auto GetAmbiguousMeta(const Token& token) noexcept -> const MetaSet& {
+   auto GetAmbiguousMeta(Token const& token) noexcept -> const MetaSet& {
       return Instance.GetAmbiguousMeta(token);
    }
 
    LANGULUS(ALWAYS_INLINED)
-   auto DisambiguateMeta(const Token& token) -> Inner::Definition const* {
+   auto DisambiguateMeta(Token const& token) -> Inner::Definition const* {
       return Instance.DisambiguateMeta(token);
    }
 
    LANGULUS(ALWAYS_INLINED)
-   auto& ResolveFileExtension(const Token& token) {
+   auto& ResolveFileExtension(Token const& token) {
       return Instance.ResolveFileExtension(token);
    }
 
    LANGULUS(ALWAYS_INLINED)
-   void UnloadBoundary(const Token& boundary) {
+   void UnloadBoundary(Token const& boundary) {
       Instance.UnloadBoundary(boundary);
    }
 

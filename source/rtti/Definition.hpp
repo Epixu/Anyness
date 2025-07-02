@@ -10,6 +10,7 @@
 #include <Langulus/NameOf.hpp>
 #include <Langulus/CT/Info.hpp>
 #include <Langulus/CT/Versioned.hpp>
+
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <unordered_set>
 #endif
@@ -32,9 +33,8 @@ namespace Langulus::RTTI
    namespace Inner
    {
       struct MetaDataNaked;
-      struct MetaDataStructured_8_8;
-      struct MetaDataStructured_16_16;
-      struct MetaDataStructured_24_8;
+      template<unsigned, unsigned>
+      struct MetaDataStructured_XY;
 
       struct MetaTagNaked;
       struct MetaTagPacked_16;
@@ -156,22 +156,16 @@ namespace Langulus::RTTI::Inner
       /// Construct an abstract definition                                    
       ///   @param cppname - the name of the definition, as it appears in C++ 
       ///   @param boundary - the library from which we're defining           
-      Definition(const Token& cppname, const Token& boundary)
+      explicit Definition(const Token& cppname)
          : mHash      {HashOf(cppname)}
-         , mCppNameOf {cppname} {
-         // Save the boundary at time of reflection                     
-         // Don't bother if it is the main boundary                     
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if (boundary != Langulus::MainBoundary)
-               mBoundaries.insert(boundary);
-         #endif
-      }
+         , mCppNameOf {cppname} {}
 
       /// Reflect some common type properties, like info and version          
+      ///   @attention must always be inline, so that boundary is relative    
       ///   @attention call this first, so that version is checked before any 
       ///      other changes are made to the type                             
       ///   @tparam T - the type to reflect                                   
-      template<class T>
+      template<class T> LANGULUS(ALWAYS_INLINED)
       void ReflectCommon() {
          if constexpr (CT::Versioned<T>) {
             // Reflected version                                        
@@ -185,6 +179,13 @@ namespace Langulus::RTTI::Inner
             }
          }
          
+         // Save the boundary at time of reflection, but don't even     
+         // bother if it is the main one                                
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            if (Boundary != Langulus::MainBoundary)
+               mBoundaries.insert(Boundary);
+         #endif
+
          if constexpr (CT::Info<T>) {
             // Reflected info                                           
             if constexpr (CTTI::Info<T>::Enabled)

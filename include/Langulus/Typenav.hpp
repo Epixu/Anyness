@@ -122,7 +122,6 @@ namespace Langulus::CTTI
 ///                                                                           
 namespace Langulus::CT
 {
-   
    /// Check if all T are sheddable types (like intents), that serve only to  
    /// wrap data for tag dispatching and semantics. Sheddable types don't     
    /// carry any real data, and are often just a reference to the real data.  
@@ -138,8 +137,7 @@ namespace Langulus::CT
    template<class...T>
    concept NotSheddable = Inner::CheckSize<T...>()
        and ((not Sheddable<::std::remove_reference_t<T>>) and ...);
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus
 {
@@ -235,7 +233,6 @@ namespace Langulus
    
    namespace Inner
    {
-
       /// Nest-strip any qualifiers, extents and indirections                 
       ///   @return a pointer to the stripped T                               
       template<class T>
@@ -246,8 +243,7 @@ namespace Langulus
          else
             return NestedDecay<Stripped>();
       }
-
-   } // namespace Langulus::Inner
+   }
 
    /// Strip a typename to its identity, removing qualifiers/pointers/etc.    
    /// This strongly guarantees, that it strips EVERYTHING, including nested  
@@ -346,7 +342,6 @@ namespace Langulus
 
    namespace Inner
    {
-
       /// Removes all const/volatile qualifiers from all indirections         
       /// Preserves references                                                
       ///   @return a pointer to the stripped T                               
@@ -373,8 +368,7 @@ namespace Langulus
          else
             return 0;
       }
-
-   } // namespace Langulus::Inner
+   }
 
    /// Strip all qualifiers on all levels of indirection of a type            
    /// const volatile void * const * const becomes void**                     

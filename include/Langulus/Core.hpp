@@ -421,6 +421,15 @@
    #include <stdfloat>
 #endif
 
+/// Detect architecture                                                       
+#if INTPTR_MAX == INT64_MAX
+   #define LANGULUS_BITNESS() 64
+#elif INTPTR_MAX == INT32_MAX
+   #define LANGULUS_BITNESS() 32
+#else
+   #error Unknown architecture
+#endif
+
 #define LANGULUS_BOUNDARY(a) namespace Langulus { const char* Boundary = a; }
 
 
@@ -516,7 +525,6 @@ namespace Langulus
 
    namespace CT::Inner
    {
-
       /// Makes sure an error is reported if a CT concept is tested without   
       /// any arguments, so that failures aren't silent                       
       template<class...T>
@@ -524,7 +532,6 @@ namespace Langulus
          static_assert(sizeof...(T) > 0, "No arguments provided");
          return true;
       }
-
-   } // namespace Langulus::CT::Inner
+   }
 
 } // namespace Langulus

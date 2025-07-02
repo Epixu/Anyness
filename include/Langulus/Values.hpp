@@ -10,7 +10,6 @@
 
 namespace Langulus
 {
-
    ///                                                                        
    /// Can be used to handle value sequences at compile-time                  
    ///                                                                        
@@ -34,5 +33,4 @@ namespace Langulus
       template<unsigned I>
       static constexpr auto At = AtInner<I>().First;
    };
-
-} // namespace Langulus
+}

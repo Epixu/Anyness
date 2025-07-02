@@ -15,6 +15,8 @@
 #include <Langulus/CT/Deep.hpp>
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/CT/Resolvable.hpp>
+#include <Langulus/CT/Nullable.hpp>
+#include <Langulus/CT/POD.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
 #include <optional>
@@ -28,15 +30,13 @@ namespace Langulus::RTTI
 {
 
    /// Reflect or return an already reflected data                            
-   /// Definition is generated only on decayed types to avoid static variable 
-   /// duplication                                                            
    ///   @attention when making a shared library and reflecting your types    
    ///      at library initialization, it is recommended you mark all other   
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the decayed type to reflect                              
-   template<class T> LANGULUS(NOINLINE)
+   template<class T>
    auto DefinitionData::Reflect() -> DefinitionData const* {
       constexpr bool VERBOSE = false;
 
@@ -68,21 +68,14 @@ namespace Langulus::RTTI
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
-         // have been reflected previously in another shared library.   
-         // We can't keep a static pointer to the meta, because shared  
-         // libraries might get unloaded, resulting in different memory 
-         // spaces when reloaded. An individual definition is kept for  
-         // each shared library boundary, because definitions will      
-         // contain pointers to functions that reside in the library    
-         // memory itself, and it is a bad idea to mix those with the   
-         // main library itself.                                        
+         // have been reflected previously in another shared library    
          DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
-            : Instance.RegisterData(cppname, Boundary);
+            : Instance.RegisterData(cppname);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -92,11 +85,12 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         auto& definition = s_definition.emplace(cppname, "");
+         DefinitionData& definition = s_definition.emplace(cppname, "");
       #endif
       
       //                                                                
-      // If this is reached, then data is not defined yet               
+      // If this is reached, then data is not defined yet from the      
+      // viewpoint of the current boundary                              
       definition.template ReflectCommon<T>();
       
       constexpr auto token = NameOf<T>();
@@ -104,40 +98,60 @@ namespace Langulus::RTTI
          "you have equipped your type (or its base) with an empty CTTI_Named");
 
       // Data types canonically begin with a capital letter             
-      definition.mNameOf = token;
+      definition.mNameOf    = token;
       definition.mNameOf[0] = ::std::toupper(definition.mNameOf[0]);
       definition.mNameOfLowercased = Inner::ToLowercase(token);
 
-      definition.mSize  = sizeof(T);
-      definition.mAlign = alignof(T);
-      definition.mConst = CT::Constant<T>;
-      definition.mDeep  = CT::Deep<T>;
+      definition.mSize      = sizeof(T);
+      definition.mAlign     = alignof(T);
+      definition.mConst     = CT::Constant<T>;
+      definition.mDeep      = CT::Deep<T>;
+      definition.mPOD       = CT::POD<T>;
+      definition.mNullable  = CT::Nullable<T>;
 
-      if constexpr (CT::Sparse<T> and CT::Complete<Deptr<T>>) {
-         // Reflect the denser type and propagate its origin            
+      // Reflect the origin type                                        
+      if constexpr (CT::Decayed<T>)
+         definition.mOrigin = &definition;
+      else if constexpr (CT::Complete<Decay<T>>)
+         definition.mOrigin = Reflect<Decay<T>>();
+
+      // Reflect the denser type                                        
+      if constexpr (CT::Sparse<T> and CT::Complete<Deptr<T>>)
          definition.mDeptr = Reflect<Deptr<T>>();
-         const_cast<DefinitionData*>(definition.mDeptr)->mAddPtr = &definition;
-      }
 
-      // Reflect the dequalified type and generate/propagate IDs        
-      using DTAll = DecvqAll<T>;
-      if constexpr (not ::std::same_as<T, DTAll>) {
-         definition.mDecvqAll = Reflect<DTAll>();
-
+      // Reflect the dequalified types and generate/propagate IDs       
+      using DTOnce = Decvq<T>;
+      if constexpr (not ::std::same_as<T, DTOnce>) {
+         // T has qualifiers, strip one level of those                  
+         definition.mDecvqOnce = Reflect<DTOnce>();
          // Always propagate the dequalified ID                         
-         definition.mID = definition.mDecvqAll->mID;
+         definition.mID = definition.mDecvqOnce->mID;
+         if constexpr (CT::Constant<T>)
+            const_cast<DefinitionData*>(definition.mDecvqOnce)->mAddConst = &definition;
       }
       else {
-         definition.mDecvqAll = &definition;
-
-         // No qualifiers, but propagate ID only if there's exactly     
-         // one level of indirection, because that will be encoded in   
-         // the structured meta data pointer. Otherwise we need a new   
-         // ID to be reserved.                                          
+         // T has no qualifiers                                         
+         definition.mDecvqOnce = &definition;
+         // Propagate ID only if there's exactly one level of           
+         // indirection, because that will be encoded in the structured 
+         // meta data pointer. Otherwise we need a new ID to be reserved
          if (definition.mDeptr and not definition.mDeptr->mDeptr)
             definition.mID = definition.mDeptr->mID;
          else
             definition.mID = Instance.ReserveDataID(&definition);
+      }
+
+      using DTAll = DecvqAll<T>;
+      if constexpr (not ::std::same_as<T, DTAll>)
+         definition.mDecvqAll = Reflect<DTAll>();
+      else
+         definition.mDecvqAll = &definition;
+
+      if (definition.mDeptr) {
+         auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
+         deptr->mAddPtr = definition.mDecvqOnce;
+         if constexpr (CT::Constant<T>)
+            deptr->mAddConst = &definition;
       }
 
       //                                                                

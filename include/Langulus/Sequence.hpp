@@ -52,7 +52,7 @@ namespace Langulus
       }
    };
 
-} // namespace Langulus
+}
 
 /// Convenience macro that generates an unfoldable function body              
 /// Example use:                                                              

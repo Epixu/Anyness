@@ -11,7 +11,6 @@
 
 namespace Langulus::CT::Inner
 {
-
    /// Helper function to extract underlying type                             
    /// Supports underlying typelists as well                                  
    template<class T>
@@ -51,8 +50,7 @@ namespace Langulus::CT::Inner
             return Types<void> {};
       }
    };
-
-} // namespace Langulus::CT::Inner
+}
 
 namespace Langulus
 {
@@ -71,7 +69,6 @@ namespace Langulus
 
    namespace CT
    {
-
       /// Check if all T are typed by searching for CTTI::Typed<T>            
       /// specializations, or T::CTTI_Typed / T::value_type members           
       ///   @attention the inner type must not be 'void', in order for T to   
@@ -84,8 +81,7 @@ namespace Langulus
       /// Check if all T have no underlying types defined                     
       template<class...T>
       concept Untyped = CT::Inner::CheckSize<T...>() and ((not Typed<Deref<T>>) and ...);
-
-   } // namespace Langulus::CT
+   }
 
 
    /// Downcasts a typed wrapper to the contained element, if cast operator   

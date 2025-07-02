@@ -12,12 +12,15 @@
 #include <iterator>
 #include <string_view>
 
+#if LANGULUS(SAFE)
+   #include <exception>
+#endif
+
 
 namespace Langulus
 {
    namespace CT
    {
-      
       /// Check if all T are Literal types                                    
       template<class...T>
       concept FixedString = Inner::CheckSize<T...>() and (T::CTTI_StringLiteral and ...);
@@ -31,8 +34,7 @@ namespace Langulus
            or std::same_as<T, char16_t>
            or std::same_as<T, char32_t>
          ) and ...);
-
-   } // namespace Langulus::CT
+   }
 
    using Token = ::std::string_view;
 
@@ -128,7 +130,13 @@ namespace Langulus
       /// Access                                                              
       ///                                                                     
       template<class Self>
-      constexpr decltype(auto) operator [] (this Self&& self, size_type n) {
+      constexpr decltype(auto) operator [] (this Self&& self, size_type n) has_assumptions {
+         #if LANGULUS_SAFE()
+            if not consteval {
+               if (n >= N)
+                  throw ::std::range_error("Literal access out of range");
+            }
+         #endif
          return self._data[n];
       }
 
@@ -419,7 +427,7 @@ namespace Langulus
    constexpr bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {
       if constexpr (S::Count != N - 1)
          return false;
-      else for (size_t i = 0; i < N; ++i) {
+      else for (size_t i = 0; i < N - 1; ++i) {
          if (lhs[i] != rhs[i])
             return false;
       }
@@ -499,15 +507,13 @@ namespace Langulus
 
    namespace Inner
    {
-
       template<class T>
       constexpr auto from_char(T ch) {
          Literal<T, 1> fs;
          fs[0] = ch;
          return fs;
       }
-
-   } // namespace Langulus::Inner
+   }
 
    constexpr auto operator + (CT::FixedChar auto lhs, const CT::FixedString auto& rhs) {
       return Inner::from_char(lhs) + rhs;
@@ -528,7 +534,6 @@ namespace Langulus
 
 namespace std
 {
-
    ///                                                                        
    /// Hash support                                                           
    ///                                                                        
@@ -542,5 +547,4 @@ namespace std
          return hash<sv_t>()(static_cast<sv_t>(str));
       }
    };
-
-} // namespace std
+}
