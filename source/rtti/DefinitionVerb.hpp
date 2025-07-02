@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Definition.hpp"
+#include <unordered_set>
 
 
 namespace Langulus::RTTI
