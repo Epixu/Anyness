@@ -61,7 +61,7 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         DefinitionTag& definition = s_definition.emplace(cppname, "");
+         DefinitionTag& definition = s_definition.emplace(cppname);
       #endif
 
 

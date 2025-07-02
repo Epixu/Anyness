@@ -62,7 +62,7 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         DefinitionVerb& definition = s_definition.emplace(cppname, "");
+         DefinitionVerb& definition = s_definition.emplace(cppname);
       #endif
 
       //                                                                

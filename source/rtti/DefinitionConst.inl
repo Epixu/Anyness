@@ -47,7 +47,7 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         DefinitionConst& definition = s_definition.emplace(cppname, "");
+         DefinitionConst& definition = s_definition.emplace(cppname);
       #endif
 
 
