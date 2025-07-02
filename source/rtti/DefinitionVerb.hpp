@@ -70,7 +70,7 @@ namespace Langulus::RTTI
          ::std::unordered_map<Token, BoundaryDependent> mOtherBoundaries;
       #endif
       
-      explicit DefinitionVerb(const Token& cppname) noexcept
+      DefinitionVerb(const Token& cppname) noexcept
          : Definition {cppname} {}
 
    public:

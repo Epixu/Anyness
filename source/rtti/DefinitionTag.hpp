@@ -21,7 +21,7 @@ namespace Langulus::RTTI
       friend struct Inner::MetaTagNaked;
       friend struct Inner::MetaTagPacked_16;
 
-      explicit DefinitionTag(const Token& cppname) noexcept
+      DefinitionTag(const Token& cppname) noexcept
          : Definition {cppname} {}
 
    public:

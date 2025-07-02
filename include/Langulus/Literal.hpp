@@ -44,7 +44,7 @@ namespace Langulus
    /// You can use it as a template parameter                                 
    /// Should be introduced in C++26 as std::fixed_string, supposedly         
    ///                                                                        
-   template<class T, ::std::size_t N, class TRAITS = ::std::char_traits<T>>
+   template<class T, size_t N, class TRAITS = ::std::char_traits<T>>
    struct Literal {
       static constexpr bool CTTI_StringLiteral = true;
 
@@ -65,8 +65,8 @@ namespace Langulus
       using difference_type = ptrdiff_t;
       using view_type = ::std::basic_string_view<value_type, traits_type>;
 
-      static constexpr ::std::size_t npos = view_type::npos;
-      static constexpr ::std::size_t Count = N;
+      static constexpr size_t npos = view_type::npos;
+      static constexpr size_t Count = N;
       static constexpr bool Empty = (N == 0);
 
       constexpr Literal() noexcept = default;
@@ -172,7 +172,7 @@ namespace Langulus
       using Resized = Literal<value_type, M, traits_type>;
 
    protected:
-      template<class, ::std::size_t, class>
+      template<class, size_t, class>
       friend struct Literal;
 
       template<size_type pos, size_type count, size_type size>
@@ -423,7 +423,7 @@ namespace Langulus
    }
 
    /// Literal == Array                                                       
-   template<CT::FixedString S, ::std::size_t N>
+   template<CT::FixedString S, size_t N>
    constexpr bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {
       if constexpr (S::Count != N - 1)
          return false;
@@ -435,7 +435,7 @@ namespace Langulus
    }
 
    /// Array == Literal                                                       
-   template<CT::FixedString S, ::std::size_t N>
+   template<CT::FixedString S, size_t N>
    constexpr bool operator == (const typename S::value_type(&lhs)[N], const S& rhs) {
       return rhs == lhs;
    }
@@ -465,14 +465,14 @@ namespace Langulus
    }
    
    /// Literal <=> Array                                                      
-   template<CT::FixedString S, ::std::size_t N>
+   template<CT::FixedString S, size_t N>
    constexpr auto operator <=> (const S& lhs, const typename S::value_type(&rhs)[N]) {
       using sv_type = typename S::view_type;
       return static_cast<sv_type>(lhs) <=> sv_type {rhs};
    }
    
    /// Array <=> Literal                                                      
-   template<CT::FixedString S, ::std::size_t N>
+   template<CT::FixedString S, size_t N>
    constexpr auto operator <=> (const typename S::value_type(&lhs)[N], const S& rhs) {
       using sv_type = typename S::view_type;
       return sv_type {lhs} <=> static_cast<sv_type>(rhs);
