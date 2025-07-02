@@ -10,7 +10,7 @@ include(LangulusUtilities.cmake)
 option(LANGULUS_SHARED_LIBRARIES 
     "Will build shared libraries (DLL/SO/WASM) if enabled, \
     true by default" ON)
-	
+    
 option(LANGULUS_SAFE_MODE 
     "Overrides additional error checking and sanity checks, \
     incurs a serious runtime overhead, disabled by default" OFF)
@@ -84,28 +84,35 @@ endif()
 
 # Check if this project is built as standalone, or as a part of something else	
 if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
-	# It is very important these are set before any targets are introduced		
+    # It is very important these are set before any targets are introduced		
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-	if (LANGULUS_FEATURE_LOGGING)
-		# Configure and link {fmt} library                                      
-		fetch_external_module(
-			fmt
-			GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-			GIT_TAG        94ab51cb8c63c93220f0cdd1733bdeef95e77d60 # master	
-		)
-	endif()
+    if (LANGULUS_FEATURE_LOGGING)
+        # Configure and link {fmt} library                                      
+        fetch_external_module(
+            fmt
+            GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+            GIT_TAG        94ab51cb8c63c93220f0cdd1733bdeef95e77d60 # master	
+        )
+    endif()
 endif()
 
 # Build and install Anyness library												
-file(GLOB_RECURSE
+#[[file(GLOB_RECURSE
     LANGULUS_ANYNESS_SOURCES 
     LIST_DIRECTORIES FALSE CONFIGURE_DEPENDS
     source/*.cpp
+)]]
+
+add_langulus_library(LangulusAnyness
+	SOURCES		$<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:source/logger/Logger.cpp>
+				$<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:source/logger/HTML.cpp>
+				$<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:source/logger/TXT.cpp>
+				$<$<BOOL:${LANGULUS_FEATURE_MANAGED_MEMORY}>:source/fractalloc/Allocator.cpp>
+				$<$<BOOL:${LANGULUS_FEATURE_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
 )
 
-add_langulus_library(LangulusAnyness ${LANGULUS_ANYNESS_SOURCES})
 target_compile_features(LangulusAnyness PUBLIC cxx_std_23)
 target_include_directories(LangulusAnyness PUBLIC include)
 target_compile_definitions(LangulusAnyness PRIVATE LANGULUS_EXPORT_ALL)

@@ -27,7 +27,7 @@ namespace Langulus::RTTI
       
       /// Packing strategy that can't exceed 2^(8*ID_SIZE)-2 possible verbs   
       template<unsigned ID_SIZE>
-      struct MetaVerbStructured_X8 : MetaPacked<DefinitionVerb, ID_SIZE> {
+      struct MetaVerbStructured_X8 : MetaPacked<ID_SIZE> {
       private:
          union {
             struct {
@@ -41,17 +41,17 @@ namespace Langulus::RTTI
          };
 
       public:
-         using Base = MetaPacked<DefinitionVerb, ID_SIZE>;
+         using Base = MetaPacked<ID_SIZE>;
 
          constexpr MetaVerbStructured_X8() noexcept = default;
          constexpr MetaVerbStructured_X8(MetaVerbStructured_X8 const&) noexcept = default;
          constexpr MetaVerbStructured_X8(MetaVerbStructured_X8&&) noexcept = default;
-         constexpr MetaVerbStructured_X8(::std::nullptr_t) noexcept;
+         constexpr MetaVerbStructured_X8(nullptr_t) noexcept;
          constexpr MetaVerbStructured_X8(DefinitionVerb const*) noexcept;
 
          constexpr MetaVerbStructured_X8& operator = (MetaVerbStructured_X8 const&) noexcept = default;
          constexpr MetaVerbStructured_X8& operator = (MetaVerbStructured_X8&&) noexcept = default;
-         constexpr MetaVerbStructured_X8& operator = (::std::nullptr_t) noexcept;
+         constexpr MetaVerbStructured_X8& operator = (nullptr_t) noexcept;
          constexpr MetaVerbStructured_X8& operator = (DefinitionVerb const*) noexcept;
 
          auto GetPositiveName() const noexcept -> Token;

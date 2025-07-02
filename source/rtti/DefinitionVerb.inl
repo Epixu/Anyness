@@ -94,7 +94,7 @@ namespace Langulus::RTTI
       definition.mCurrentBoundary.mDefault    = VerbDefaultConstant<T>();
       definition.mCurrentBoundary.mStateless  = VerbStateless<T>();
 
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   /*#if LANGULUS_FEATURE(MANAGED_REFLECTION)
       if (definition.mOperator.size()) {
          Instance.RegisterVerbOperator(definition.mOperator);
          const auto op = IsolateOperator(definition.mOperator);
@@ -160,7 +160,7 @@ namespace Langulus::RTTI
             Logger::Green, " registered from ", Boundary
          );
       }
-   #endif
+   #endif*/
       
       return &definition;
    }

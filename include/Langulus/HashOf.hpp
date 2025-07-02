@@ -146,7 +146,7 @@ namespace Langulus
             k1 *= c2;
             h1 ^= k1;
          default:
-         };
+         }
 
          h1 ^= key.size();
 

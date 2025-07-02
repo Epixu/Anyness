@@ -115,8 +115,11 @@ namespace Langulus::RTTI
 
    auto Registry::GetMetaDataByID(const Inner::MetaDataStructured_XY<2, 2>& id)
    const noexcept -> DefinitionData const* {
-      size_t id_processed = 0;
-      memcpy(&id_processed, id.mHandle, sizeof(id.mHandle));
+      union {
+         size_t id_processed = 0;
+         ::std::array<uint8_t, 2> id_unprocessed;
+      };
+      id_unprocessed = id.mHandle;
       DefinitionData const* found = GetMetaByID(mMetaDataByID, id_processed);
       if (not found)
          return nullptr;

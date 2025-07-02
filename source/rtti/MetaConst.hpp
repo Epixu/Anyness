@@ -24,18 +24,18 @@ namespace Langulus::RTTI
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
       ///                                                                     
-      struct MetaConstPacked_16 : MetaPacked<DefinitionConst, 2> {
-         using Base = MetaPacked<DefinitionConst, 2>;
+      struct MetaConstPacked_16 : MetaPacked<2> {
+         using Base = MetaPacked<2>;
 
          constexpr MetaConstPacked_16() noexcept = default;
          constexpr MetaConstPacked_16(MetaConstPacked_16 const&) noexcept = default;
          constexpr MetaConstPacked_16(MetaConstPacked_16&&) noexcept = default;
-         constexpr MetaConstPacked_16(::std::nullptr_t) noexcept;
+         constexpr MetaConstPacked_16(nullptr_t) noexcept;
          constexpr MetaConstPacked_16(DefinitionConst const*) noexcept;
 
          constexpr MetaConstPacked_16& operator = (MetaConstPacked_16 const&) noexcept = default;
          constexpr MetaConstPacked_16& operator = (MetaConstPacked_16&&) noexcept = default;
-         constexpr MetaConstPacked_16& operator = (::std::nullptr_t) noexcept;
+         constexpr MetaConstPacked_16& operator = (nullptr_t) noexcept;
          constexpr MetaConstPacked_16& operator = (DefinitionConst const*) noexcept;
 
          auto GetName() const noexcept -> Token;

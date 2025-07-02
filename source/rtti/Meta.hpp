@@ -8,6 +8,10 @@
 #pragma once
 #include <Langulus/Core.hpp>
 
+#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include <array>
+#endif
+
 
 namespace Langulus::RTTI
 {
@@ -28,12 +32,12 @@ namespace Langulus::RTTI::Inner
    ///   @tparam BYTESIZE - the size of the handle in bytes                   
    ///                                                                        
    #pragma pack(push, 1)
-   template<class T, unsigned BYTESIZE>
+   template<unsigned BYTESIZE>
    struct MetaPacked {
    protected:
       friend class RTTI::Registry;
-      static constexpr uint8_t Zero[BYTESIZE] {0};
-      uint8_t mHandle[BYTESIZE] {0};
+      static constexpr ::std::array<uint8_t, BYTESIZE> Zero {0};
+      ::std::array<uint8_t, BYTESIZE> mHandle {0};
 
    public:
       constexpr MetaPacked() noexcept = default;
@@ -41,25 +45,28 @@ namespace Langulus::RTTI::Inner
       constexpr MetaPacked(MetaPacked&&) noexcept = default;
       constexpr MetaPacked(size_t id) noexcept {
          static_assert(sizeof(size_t) >= BYTESIZE);
-         memcpy(mHandle, &id, BYTESIZE);
+         memcpy(mHandle.data(), &id, BYTESIZE);
       }
 
       constexpr MetaPacked& operator = (const MetaPacked&) noexcept = default;
       constexpr MetaPacked& operator = (MetaPacked&&) noexcept = default;
       constexpr MetaPacked& operator = (size_t id) noexcept {
          static_assert(sizeof(size_t) >= BYTESIZE);
-         memcpy(mHandle, &id, BYTESIZE);
+         memcpy(mHandle.data(), &id, BYTESIZE);
          return *this;
       }
 
       constexpr explicit operator bool() const noexcept {
-         return 0 != memcmp(mHandle, Zero, BYTESIZE);
+         return mHandle != Zero;
       }
 
       constexpr bool operator == (const MetaPacked& rhs) const noexcept {
-         return 0 == memcmp(mHandle, rhs.mHandle, BYTESIZE);
+         return mHandle == rhs.mHandle;
       }
    };
+   static_assert(sizeof(MetaPacked<1>) == 1);
+   static_assert(sizeof(MetaPacked<2>) == 2);
+   static_assert(sizeof(MetaPacked<3>) == 3);
    #pragma pack(pop)
 #endif
 

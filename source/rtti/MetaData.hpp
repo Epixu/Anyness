@@ -86,10 +86,7 @@ namespace Langulus::RTTI
       ///   @tparam ID_SIZE - the size reserved for unique ID                 
       ///   @tparam PT_SIZE - the size reserved for properties                
       template<unsigned ID_SIZE, unsigned PT_SIZE>
-      struct MetaDataStructured_XY
-         : MetaPacked<DefinitionData, ID_SIZE>
-         , Structured<PT_SIZE>
-      {
+      struct MetaDataStructured_XY : MetaPacked<ID_SIZE>, Structured<PT_SIZE> {
       protected:
          using Structured<PT_SIZE>::sparse;
          using Structured<PT_SIZE>::constant;
@@ -102,7 +99,7 @@ namespace Langulus::RTTI
          using Structured<PT_SIZE>::all;
 
       public:
-         using Base = MetaPacked<DefinitionData, 2>;
+         using Base = MetaPacked<2>;
 
          constexpr MetaDataStructured_XY() noexcept = default;
          constexpr MetaDataStructured_XY(MetaDataStructured_XY const&) noexcept = default;
