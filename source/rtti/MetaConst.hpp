@@ -39,6 +39,10 @@ namespace Langulus::RTTI
          constexpr MetaConstPacked_16& operator = (DefinitionConst const*) noexcept;
 
          auto GetName() const noexcept -> Token;
+
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
+         #endif
       };
    #endif
 
@@ -50,6 +54,10 @@ namespace Langulus::RTTI
          using MetaNaked<DefinitionConst>::operator bool;
 
          auto GetName() const noexcept -> Token;
+
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
+         #endif
       };
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)

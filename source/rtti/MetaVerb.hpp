@@ -59,6 +59,10 @@ namespace Langulus::RTTI
          auto GetPositiveOperator() const noexcept -> Token;
          auto GetNegativeOperator() const noexcept -> Token;
 
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
+         #endif
+
          constexpr bool IsReversible() const noexcept;
          constexpr bool IsConstant() const noexcept;
          constexpr bool IsMutable() const noexcept;
@@ -83,6 +87,10 @@ namespace Langulus::RTTI
          auto GetNegativeName() const noexcept -> Token;
          auto GetPositiveOperator() const noexcept -> Token;
          auto GetNegativeOperator() const noexcept -> Token;
+
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
+         #endif
 
          constexpr bool IsReversible() const noexcept;
          constexpr bool IsConstant() const noexcept;

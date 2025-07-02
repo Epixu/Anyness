@@ -99,7 +99,7 @@ namespace Langulus::RTTI
          using Structured<PT_SIZE>::all;
 
       public:
-         using Base = MetaPacked<2>;
+         using Base = MetaPacked<ID_SIZE>;
 
          constexpr MetaDataStructured_XY() noexcept = default;
          constexpr MetaDataStructured_XY(MetaDataStructured_XY const&) noexcept = default;
@@ -123,7 +123,10 @@ namespace Langulus::RTTI
          auto GetName()               const noexcept -> Token;
          auto GetCppName()            const noexcept -> Token;
          auto GetHash()               const noexcept -> Hash;
-         auto GetBoundaries()         const noexcept -> Definition::BoundarySet const&;
+
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            auto GetBoundaries()      const noexcept -> Definition::BoundarySet const&;
+         #endif
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetPoolTactic()      const noexcept -> PoolTactic;
