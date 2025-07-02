@@ -145,7 +145,6 @@ namespace Langulus
             k1 = (k1 << 15) | (k1 >> (32 - 15));
             k1 *= c2;
             h1 ^= k1;
-         default:
          }
 
          h1 ^= key.size();

@@ -36,8 +36,15 @@ namespace Langulus::RTTI::Inner
    struct MetaPacked {
    protected:
       friend class RTTI::Registry;
-      static constexpr ::std::array<uint8_t, BYTESIZE> Zero {0};
-      ::std::array<uint8_t, BYTESIZE> mHandle {0};
+      using Block = ::std::array<uint8_t, BYTESIZE>;
+      static constexpr Block Zero {0};
+      Block mHandle {0};
+
+      union convert {
+         size_t id_unprocessed;
+         Block  id_processed;
+         convert(size_t t) : id_unprocessed {t} {}
+      };
 
    public:
       constexpr MetaPacked() noexcept = default;
@@ -45,14 +52,14 @@ namespace Langulus::RTTI::Inner
       constexpr MetaPacked(MetaPacked&&) noexcept = default;
       constexpr MetaPacked(size_t id) noexcept {
          static_assert(sizeof(size_t) >= BYTESIZE);
-         memcpy(mHandle.data(), &id, BYTESIZE);
+         mHandle = convert(id).id_processed;
       }
 
       constexpr MetaPacked& operator = (const MetaPacked&) noexcept = default;
       constexpr MetaPacked& operator = (MetaPacked&&) noexcept = default;
       constexpr MetaPacked& operator = (size_t id) noexcept {
          static_assert(sizeof(size_t) >= BYTESIZE);
-         memcpy(mHandle.data(), &id, BYTESIZE);
+         mHandle = convert(id).id_processed;
          return *this;
       }
 
