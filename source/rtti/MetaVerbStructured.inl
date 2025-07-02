@@ -6,28 +6,29 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "MetaVerb.hpp"
 
 
 namespace Langulus::RTTI::Inner
 {
    template<unsigned ID_SIZE>
-   constexpr MetaVerbStructured_X8<ID_SIZE>::MetaVerbStructured_X8(::std::nullptr_t) noexcept
+   constexpr MetaVerbStructured_X8<ID_SIZE>::MetaVerbStructured_X8(nullptr_t) noexcept
       : Base {0} {}
 
    template<unsigned ID_SIZE>
-   constexpr MetaVerbStructured_X8<ID_SIZE>::MetaVerbStructured_X8(DefinitionVerb const* definition) noexcept
-      : Base {definition ? definition->mID : 0} {}
+   constexpr MetaVerbStructured_X8<ID_SIZE>::MetaVerbStructured_X8(DefinitionVerb const* d) noexcept
+      : Base {d ? d->mID : 0} {}
 
    template<unsigned ID_SIZE>
-   constexpr MetaVerbStructured_X8<ID_SIZE>& MetaVerbStructured_X8<ID_SIZE>::operator = (::std::nullptr_t) noexcept {
+   constexpr auto MetaVerbStructured_X8<ID_SIZE>::operator = (nullptr_t)
+   noexcept -> MetaVerbStructured_X8& {
       Base::operator = (0);
       return *this;
    }
 
    template<unsigned ID_SIZE>
-   constexpr MetaVerbStructured_X8<ID_SIZE>& MetaVerbStructured_X8<ID_SIZE>::operator = (DefinitionVerb const* definition) noexcept {
-      Base::operator = (definition ? definition->mID : 0);
+   constexpr auto MetaVerbStructured_X8<ID_SIZE>::operator = (DefinitionVerb const* d)
+   noexcept -> MetaVerbStructured_X8& {
+      Base::operator = (d ? d->mID : 0);
       return *this;
    }
 
@@ -49,6 +50,11 @@ namespace Langulus::RTTI::Inner
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeOperator() const noexcept -> Token {
       return Instance.GetMetaVerbByID(*this)->mOperatorReverse;
+   }
+
+   template<unsigned ID_SIZE> auto MetaVerbStructured_X8<ID_SIZE>::GetBoundaries()
+   const noexcept -> Definition::BoundarySet const& {
+      return Instance.GetMetaVerbByID(*this)->mBoundaries;
    }
 
    template<unsigned ID_SIZE>

@@ -6,25 +6,26 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "MetaConst.hpp"
 
 
 namespace Langulus::RTTI::Inner
 {
 
-   constexpr MetaConstPacked_16::MetaConstPacked_16(::std::nullptr_t) noexcept
+   constexpr MetaConstPacked_16::MetaConstPacked_16(nullptr_t) noexcept
       : Base {0} {}
 
-   constexpr MetaConstPacked_16::MetaConstPacked_16(DefinitionConst const* definition) noexcept
-      : Base {definition ? definition->mID : 0} {}
+   constexpr MetaConstPacked_16::MetaConstPacked_16(DefinitionConst const* d) noexcept
+      : Base {d ? d->mID : 0} {}
 
-   constexpr MetaConstPacked_16& MetaConstPacked_16::operator = (::std::nullptr_t) noexcept {
+   constexpr auto MetaConstPacked_16::operator = (nullptr_t)
+   noexcept -> MetaConstPacked_16& {
       Base::operator = (0);
       return *this;
    }
 
-   constexpr MetaConstPacked_16& MetaConstPacked_16::operator = (DefinitionConst const* definition) noexcept {
-      Base::operator = (definition ? definition->mID : 0);
+   constexpr auto MetaConstPacked_16::operator = (DefinitionConst const* d)
+   noexcept -> MetaConstPacked_16& {
+      Base::operator = (d ? d->mID : 0);
       return *this;
    }
 

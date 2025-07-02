@@ -6,25 +6,26 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "MetaTag.hpp"
 
 
 namespace Langulus::RTTI::Inner
 {
 
-   constexpr MetaTagPacked_16::MetaTagPacked_16(::std::nullptr_t) noexcept
+   constexpr MetaTagPacked_16::MetaTagPacked_16(nullptr_t) noexcept
       : Base {0} {}
 
-   constexpr MetaTagPacked_16::MetaTagPacked_16(DefinitionTag const* definition) noexcept
-      : Base {definition ? definition->mID : 0} {}
+   constexpr MetaTagPacked_16::MetaTagPacked_16(DefinitionTag const* d) noexcept
+      : Base {d ? d->mID : 0} {}
 
-   constexpr MetaTagPacked_16& MetaTagPacked_16::operator = (::std::nullptr_t) noexcept {
+   constexpr auto MetaTagPacked_16::operator = (nullptr_t)
+   noexcept -> MetaTagPacked_16& {
       Base::operator = (0);
       return *this;
    }
 
-   constexpr MetaTagPacked_16& MetaTagPacked_16::operator = (DefinitionTag const* definition) noexcept {
-      Base::operator = (definition ? definition->mID : 0);
+   constexpr auto MetaTagPacked_16::operator = (DefinitionTag const* d)
+   noexcept -> MetaTagPacked_16& {
+      Base::operator = (d ? d->mID : 0);
       return *this;
    }
 

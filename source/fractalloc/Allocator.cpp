@@ -170,7 +170,7 @@ namespace Langulus::Fractalloc
 
       // If reached, pool chain can't contain the memory                
       // Allocate a new pool and add it at the front of hinted chain    
-      pool = AllocatePool(nullptr, Allocation::GetNewAllocationSize(size));
+      pool = AllocatePool({}, Allocation::GetNewAllocationSize(size));
       if (not pool)
          return nullptr;
 

@@ -46,8 +46,8 @@ namespace Langulus::RTTI
          constexpr MetaVerbStructured_X8() noexcept = default;
          constexpr MetaVerbStructured_X8(MetaVerbStructured_X8 const&) noexcept = default;
          constexpr MetaVerbStructured_X8(MetaVerbStructured_X8&&) noexcept = default;
-         constexpr MetaVerbStructured_X8(nullptr_t) noexcept;
-         constexpr MetaVerbStructured_X8(DefinitionVerb const*) noexcept;
+         explicit constexpr MetaVerbStructured_X8(nullptr_t) noexcept;
+         explicit constexpr MetaVerbStructured_X8(DefinitionVerb const*) noexcept;
 
          constexpr MetaVerbStructured_X8& operator = (MetaVerbStructured_X8 const&) noexcept = default;
          constexpr MetaVerbStructured_X8& operator = (MetaVerbStructured_X8&&) noexcept = default;

@@ -36,7 +36,7 @@ namespace Langulus
    ///   @return the meta definition of the provided constant                 
    template<auto E>
    RTTI::CMeta MetaOf() {
-      return {RTTI::DefinitionConst::Reflect<E>()};
+      return RTTI::CMeta {RTTI::DefinitionConst::Reflect<E>()};
    }
 
    /// Data definition retrieval                                              
@@ -46,7 +46,7 @@ namespace Langulus
    ///   @return the definition                                               
    template<class T>
    RTTI::DMeta MetaDataOf() {
-      return {RTTI::DefinitionData::Reflect<Deref<T>>()};
+      return RTTI::DMeta {RTTI::DefinitionData::Reflect<Deref<T>>()};
    }
 
    /// Tag definition retrieval                                               
@@ -56,7 +56,7 @@ namespace Langulus
    ///   @return the definition                                               
    template<class T>
    RTTI::TMeta MetaTagOf() {
-      return {RTTI::DefinitionTag::Reflect<Decay<T>>()};
+      return RTTI::TMeta {RTTI::DefinitionTag::Reflect<Decay<T>>()};
    }
 
    /// Verb definition retrieval                                              
@@ -66,7 +66,7 @@ namespace Langulus
    ///   @return the definition                                               
    template<class T>
    RTTI::VMeta MetaVerbOf() {
-      return {RTTI::DefinitionVerb::Reflect<Decay<T>>()};
+      return RTTI::VMeta {RTTI::DefinitionVerb::Reflect<Decay<T>>()};
    }
 
    /// Constant definition retrieval                                          
@@ -74,55 +74,55 @@ namespace Langulus
    ///   @return the definition                                               
    template<auto E>
    RTTI::CMeta MetaConstOf() {
-      return {RTTI::DefinitionConst::Reflect<E>()};
+      return RTTI::CMeta {RTTI::DefinitionConst::Reflect<E>()};
    }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    /// Convenience literals for getting meta definitions from token...        
    LANGULUS(INLINED)
    RTTI::DMeta operator ""_dmeta(const char* token, size_t size) noexcept {
-      return {RTTI::Instance.GetMetaDataByToken(Token {token, size})};
+      return RTTI::DMeta {RTTI::Instance.GetMetaDataByToken(Token {token, size})};
    }
 
    LANGULUS(INLINED)
    RTTI::TMeta operator ""_tmeta(const char* token, size_t size) noexcept {
-      return {RTTI::Instance.GetMetaTagByToken(Token {token, size})};
+      return RTTI::TMeta {RTTI::Instance.GetMetaTagByToken(Token {token, size})};
    }
 
    LANGULUS(INLINED)
    RTTI::CMeta operator ""_cmeta(const char* token, size_t size) noexcept {
-      return {RTTI::Instance.GetMetaConstByToken(Token {token, size})};
+      return RTTI::CMeta {RTTI::Instance.GetMetaConstByToken(Token {token, size})};
    }
 
    LANGULUS(INLINED)
    RTTI::VMeta operator ""_vmeta(const char* token, size_t size) noexcept {
-      return {RTTI::Instance.GetMetaVerbByToken(Token {token, size})};
+      return RTTI::VMeta {RTTI::Instance.GetMetaVerbByToken(Token {token, size})};
    }
    
    /// ... as well as getting them manually                                   
    LANGULUS(INLINED)
    RTTI::DMeta MetaDataOf(const Token& token) noexcept {
-      return {RTTI::Instance.GetMetaDataByToken(token)};
+      return RTTI::DMeta {RTTI::Instance.GetMetaDataByToken(token)};
    }
 
    LANGULUS(INLINED)
    RTTI::TMeta MetaTagOf(const Token& token) noexcept {
-      return {RTTI::Instance.GetMetaTagByToken(token)};
+      return RTTI::TMeta {RTTI::Instance.GetMetaTagByToken(token)};
    }
 
    LANGULUS(INLINED)
    RTTI::VMeta MetaVerbOf(const Token& token) noexcept {
-      return {RTTI::Instance.GetMetaVerbByToken(token)};
+      return RTTI::VMeta {RTTI::Instance.GetMetaVerbByToken(token)};
    }
 
    LANGULUS(INLINED)
    RTTI::CMeta MetaConstOf(const Token& token) noexcept {
-      return {RTTI::Instance.GetMetaConstByToken(token)};
+      return RTTI::CMeta {RTTI::Instance.GetMetaConstByToken(token)};
    }
 
    LANGULUS(INLINED)
    RTTI::VMeta MetaOperator(const Token& token) noexcept {
-      return {RTTI::Instance.GetOperator(token)};
+      return RTTI::VMeta {RTTI::Instance.GetOperator(token)};
    }
 #endif
 

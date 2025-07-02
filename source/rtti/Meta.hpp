@@ -50,7 +50,7 @@ namespace Langulus::RTTI::Inner
       constexpr MetaPacked() noexcept = default;
       constexpr MetaPacked(const MetaPacked&) noexcept = default;
       constexpr MetaPacked(MetaPacked&&) noexcept = default;
-      constexpr MetaPacked(size_t id) noexcept {
+      explicit constexpr MetaPacked(size_t id) noexcept {
          static_assert(sizeof(size_t) >= BYTESIZE);
          mHandle = convert(id).id_processed;
       }
@@ -71,10 +71,11 @@ namespace Langulus::RTTI::Inner
          return mHandle == rhs.mHandle;
       }
    };
+   #pragma pack(pop)
+   
    static_assert(sizeof(MetaPacked<1>) == 1);
    static_assert(sizeof(MetaPacked<2>) == 2);
    static_assert(sizeof(MetaPacked<3>) == 3);
-   #pragma pack(pop)
 #endif
 
 
@@ -92,18 +93,18 @@ namespace Langulus::RTTI::Inner
       constexpr MetaNaked() noexcept = default;
       constexpr MetaNaked(const MetaNaked&) noexcept = default;
       constexpr MetaNaked(MetaNaked&&) noexcept = default;
-      explicit constexpr MetaNaked(::std::nullptr_t) noexcept {}
-      explicit constexpr MetaNaked(const T* definition) noexcept
-         : mDefinition {definition} {}
+      explicit constexpr MetaNaked(nullptr_t) noexcept {}
+      explicit constexpr MetaNaked(const T* d) noexcept
+         : mDefinition {d} {}
 
       constexpr MetaNaked& operator = (const MetaNaked&) noexcept = default;
       constexpr MetaNaked& operator = (MetaNaked&&) noexcept = default;
-      constexpr MetaNaked& operator = (::std::nullptr_t) noexcept {
+      constexpr MetaNaked& operator = (nullptr_t) noexcept {
          mDefinition = nullptr;
          return *this;
       }
-      constexpr MetaNaked& operator = (const T* definition) noexcept {
-         mDefinition = definition;
+      constexpr MetaNaked& operator = (const T* d) noexcept {
+         mDefinition = d;
          return *this;
       }
 

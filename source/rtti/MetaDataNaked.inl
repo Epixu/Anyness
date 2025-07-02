@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "MetaData.hpp"
 
 
 namespace Langulus::RTTI::Inner
