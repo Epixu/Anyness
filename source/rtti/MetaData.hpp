@@ -106,11 +106,11 @@ namespace Langulus::RTTI
          auto GetName()               const noexcept -> Token;
          auto GetCppName()            const noexcept -> Token;
          auto GetHash()               const noexcept -> Hash;
-         bool CheckBoundary(const Token&) const noexcept;
+         auto GetBoundaries()         const noexcept -> Definition::BoundarySet const&;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            auto GetPoolTactic()         const noexcept -> PoolTactic;
-            auto GetPoolchain()          const noexcept -> Fractalloc::Pool*;
+            auto GetPoolTactic()      const noexcept -> PoolTactic;
+            auto GetPoolchain()       const noexcept -> Fractalloc::Pool*;
          #endif
 
          constexpr bool IsDense()     const noexcept;
@@ -120,21 +120,21 @@ namespace Langulus::RTTI
          constexpr bool IsDeep()      const noexcept;
          constexpr bool IsPOD()       const noexcept;
 
-         auto GetDestructor()         const noexcept -> DefinitionData::FDestroy;
+         auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
          auto GetResolver()           const noexcept -> DefinitionData::FResolve;
-         auto GetReferConstructor()   const noexcept -> DefinitionData::FCopyConstruct;
-         auto GetReferAssigner()      const noexcept -> DefinitionData::FCopyAssign;
-         auto GetMoveConstructor()    const noexcept -> DefinitionData::FMoveConstruct;
-         auto GetMoveAssigner()       const noexcept -> DefinitionData::FMoveAssign;
-         auto GetAbandonConstructor() const noexcept -> DefinitionData::FMoveConstruct;
-         auto GetAbandonAssigner()    const noexcept -> DefinitionData::FMoveAssign;
-         auto GetDisownConstructor()  const noexcept -> DefinitionData::FCopyConstruct;
-         auto GetDisownAssigner()     const noexcept -> DefinitionData::FCopyAssign;
-         auto GetCloneConstructor()   const noexcept -> DefinitionData::FCopyConstruct;
-         auto GetCloneAssigner()      const noexcept -> DefinitionData::FCopyAssign;
-         auto GetCopyConstructor()    const noexcept -> DefinitionData::FCopyConstruct;
-         auto GetCopyAssigner()       const noexcept -> DefinitionData::FCopyAssign;
+         auto GetReferConstructor()   const noexcept -> DefinitionData::FBinary;
+         auto GetReferAssigner()      const noexcept -> DefinitionData::FBinary;
+         auto GetMoveConstructor()    const noexcept -> DefinitionData::FBinary;
+         auto GetMoveAssigner()       const noexcept -> DefinitionData::FBinary;
+         auto GetAbandonConstructor() const noexcept -> DefinitionData::FBinary;
+         auto GetAbandonAssigner()    const noexcept -> DefinitionData::FBinary;
+         auto GetDisownConstructor()  const noexcept -> DefinitionData::FBinary;
+         auto GetDisownAssigner()     const noexcept -> DefinitionData::FBinary;
+         auto GetCloneConstructor()   const noexcept -> DefinitionData::FBinary;
+         auto GetCloneAssigner()      const noexcept -> DefinitionData::FBinary;
+         auto GetCopyConstructor()    const noexcept -> DefinitionData::FBinary;
+         auto GetCopyAssigner()       const noexcept -> DefinitionData::FBinary;
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          bool HasGetHashMethod()      const noexcept;
@@ -191,11 +191,14 @@ namespace Langulus::RTTI
          auto GetName()               const noexcept -> Token;
          auto GetCppName()            const noexcept -> Token;
          auto GetHash()               const noexcept -> Hash;
-         bool CheckBoundary(const Token&) const noexcept;
+         
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            auto GetBoundaries()      const noexcept -> Definition::BoundarySet const&;
+         #endif
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            auto GetPoolTactic()         const noexcept -> PoolTactic;
-            auto GetPoolchain()          const noexcept -> Fractalloc::Pool*;
+            auto GetPoolTactic()      const noexcept -> PoolTactic;
+            auto GetPoolchain()       const noexcept -> Fractalloc::Pool*;
          #endif
                                       
          bool IsDense()               const noexcept;
@@ -205,21 +208,21 @@ namespace Langulus::RTTI
          bool IsDeep()                const noexcept;
          bool IsPOD()                 const noexcept;
 
-         auto GetDestructor()         const noexcept -> DefinitionData::FDestroy;
+         auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
          auto GetResolver()           const noexcept -> DefinitionData::FResolve;
-         auto GetReferConstructor()   const noexcept -> DefinitionData::FCopyConstruct;
-         auto GetReferAssigner()      const noexcept -> DefinitionData::FCopyAssign;
-         auto GetMoveConstructor()    const noexcept -> DefinitionData::FMoveConstruct;
-         auto GetMoveAssigner()       const noexcept -> DefinitionData::FMoveAssign;
-         auto GetAbandonConstructor() const noexcept -> DefinitionData::FMoveConstruct;
-         auto GetAbandonAssigner()    const noexcept -> DefinitionData::FMoveAssign;
-         auto GetDisownConstructor()  const noexcept -> DefinitionData::FCopyConstruct;
-         auto GetDisownAssigner()     const noexcept -> DefinitionData::FCopyAssign;
-         auto GetCloneConstructor()   const noexcept -> DefinitionData::FCopyConstruct;
-         auto GetCloneAssigner()      const noexcept -> DefinitionData::FCopyAssign;
-         auto GetCopyConstructor()    const noexcept -> DefinitionData::FCopyConstruct;
-         auto GetCopyAssigner()       const noexcept -> DefinitionData::FCopyAssign;
+         auto GetReferConstructor()   const noexcept -> DefinitionData::FBinary;
+         auto GetReferAssigner()      const noexcept -> DefinitionData::FBinary;
+         auto GetMoveConstructor()    const noexcept -> DefinitionData::FBinary;
+         auto GetMoveAssigner()       const noexcept -> DefinitionData::FBinary;
+         auto GetAbandonConstructor() const noexcept -> DefinitionData::FBinary;
+         auto GetAbandonAssigner()    const noexcept -> DefinitionData::FBinary;
+         auto GetDisownConstructor()  const noexcept -> DefinitionData::FBinary;
+         auto GetDisownAssigner()     const noexcept -> DefinitionData::FBinary;
+         auto GetCloneConstructor()   const noexcept -> DefinitionData::FBinary;
+         auto GetCloneAssigner()      const noexcept -> DefinitionData::FBinary;
+         auto GetCopyConstructor()    const noexcept -> DefinitionData::FBinary;
+         auto GetCopyAssigner()       const noexcept -> DefinitionData::FBinary;
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          bool HasGetHashMethod()      const noexcept;

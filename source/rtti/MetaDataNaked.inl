@@ -61,8 +61,8 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get the type boundary                                                  
-   inline bool MetaDataNaked::CheckBoundary(const Token& boundary) const noexcept {
-      return mDefinition->mBoundaries.contains(boundary);
+   inline auto MetaDataNaked::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
+      return mDefinition->mBoundaries;
    }
 
    /// Check if type is CT::Dense                                             
@@ -97,104 +97,104 @@ namespace Langulus::RTTI::Inner
 
    /// Get the reflected destructor                                           
    inline auto MetaDataNaked::GetDestructor()
-   const noexcept -> DefinitionData::FDestroy {
-      return mDefinition->mDestructor;
+   const noexcept -> DefinitionData::FUnary {
+      return mDefinition->mCurrentBoundary.mDestructor;
    }
 
    /// Get the reflected referencer                                           
    inline auto MetaDataNaked::GetReferencer()
    const noexcept -> DefinitionData::FReference {
-      return mDefinition->mReferencer;
+      return mDefinition->mCurrentBoundary.mReferencer;
    }
 
    /// Get the reflected resolver                                             
    inline auto MetaDataNaked::GetResolver()
    const noexcept -> DefinitionData::FResolve {
-      return mDefinition->mResolver;
+      return mDefinition->mCurrentBoundary.mResolver;
    }
 
    /// Get the reflected refer-constructor                                    
    inline auto MetaDataNaked::GetReferConstructor()
-   const noexcept -> DefinitionData::FCopyConstruct {
-      return mDefinition->mReferConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mReferConstructor;
    }
 
    /// Get the reflected refer-assigner                                       
    inline auto MetaDataNaked::GetReferAssigner()
-   const noexcept -> DefinitionData::FCopyAssign {
-      return mDefinition->mReferAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mReferAssigner;
    }
 
    /// Get the reflected move-constructor                                     
    inline auto MetaDataNaked::GetMoveConstructor()
-   const noexcept -> DefinitionData::FMoveConstruct {
-      return mDefinition->mMoveConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mMoveConstructor;
    }
 
    /// Get the reflected move-assigner                                        
    inline auto MetaDataNaked::GetMoveAssigner()
-   const noexcept -> DefinitionData::FMoveAssign {
-      return mDefinition->mMoveAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mMoveAssigner;
    }
 
    /// Get the reflected abandon-constructor                                  
    inline auto MetaDataNaked::GetAbandonConstructor()
-   const noexcept -> DefinitionData::FMoveConstruct {
-      return mDefinition->mAbandonConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mAbandonConstructor;
    }
 
    /// Get the reflected abandon-assigner                                     
    inline auto MetaDataNaked::GetAbandonAssigner()
-   const noexcept -> DefinitionData::FMoveAssign {
-      return mDefinition->mAbandonAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mAbandonAssigner;
    }
 
    /// Get the reflected disown-constructor                                   
    inline auto MetaDataNaked::GetDisownConstructor()
-   const noexcept -> DefinitionData::FCopyConstruct {
-      return mDefinition->mDisownConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mDisownConstructor;
    }
 
    /// Get the reflected disown-assigner                                      
    inline auto MetaDataNaked::GetDisownAssigner()
-   const noexcept -> DefinitionData::FCopyAssign {
-      return mDefinition->mDisownAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mDisownAssigner;
    }
 
    /// Get the reflected clone-constructor                                    
    inline auto MetaDataNaked::GetCloneConstructor()
-   const noexcept -> DefinitionData::FCopyConstruct {
-      return mDefinition->mCloneConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mCloneConstructor;
    }
 
    /// Get the reflected clone-assigner                                       
    inline auto MetaDataNaked::GetCloneAssigner()
-   const noexcept -> DefinitionData::FCopyAssign {
-      return mDefinition->mCloneAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mCloneAssigner;
    }
 
    /// Get the reflected copy-constructor                                     
    inline auto MetaDataNaked::GetCopyConstructor()
-   const noexcept -> DefinitionData::FCopyConstruct {
-      return mDefinition->mCopyConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mCopyConstructor;
    }
 
    /// Get the reflected copy-assigner                                        
    inline auto MetaDataNaked::GetCopyAssigner()
-   const noexcept -> DefinitionData::FCopyAssign {
-      return mDefinition->mCopyAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition->mCurrentBoundary.mCopyAssigner;
    }
 
    /// Get the reflected comparer                                             
    inline auto MetaDataNaked::GetComparer()
    const noexcept -> DefinitionData::FCompare {
-      return mDefinition->mComparer;
+      return mDefinition->mCurrentBoundary.mComparer;
    }
 
    /// Get the reflected hasher                                               
    inline auto MetaDataNaked::GetHasher()
    const noexcept -> DefinitionData::FHash {
-      return mDefinition->mHasher;
+      return mDefinition->mCurrentBoundary.mHasher;
    }
 
    /// Check if type has an explicit GetHash() method                         

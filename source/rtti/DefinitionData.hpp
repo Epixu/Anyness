@@ -91,88 +91,93 @@ namespace Langulus::RTTI
          mutable Fractalloc::Pool* mPoolChain {};
       #endif
 
-      //                                                                
-      //   These methods are sought in each reflected type              
-      //                                                                
-      // The default constructor, wrapped in a lambda expression if     
-      // available. Takes a pointer for a placement-new expression      
-      using FDefaultConstruct = void(*)(void* self);
-      FDefaultConstruct mDefaultConstructor {};
-
-      // Constructor by descriptor                                      
-      // Takes a pointer for a placement-new expression, and a Many     
-      using FDescribeConstruct = void(*)(void* self, const Anyness::Many& describe);
-      FDescribeConstruct mDescribeConstructor {};
-
-      // The refer/copy/disown/clone constructor, wrapped in lambda     
-      // Takes a pointer for a placement-new expression, and a source   
-      using FCopyConstruct = void(*)(const void* from, void* to);
-      FCopyConstruct mReferConstructor {};
-      FCopyConstruct mCopyConstructor {};
-      FCopyConstruct mDisownConstructor {};
-      FCopyConstruct mCloneConstructor {};
-
-      // The move/abandon constructor, wrapped in a lambda expression   
-      // Takes a pointer for a placement-new expression, and a source   
-      using FMoveConstruct = void(*)(void* from, void* to);
-      FMoveConstruct mMoveConstructor {};
-      FMoveConstruct mAbandonConstructor {};
-
-      // The destructor, wrapped in a lambda expression                 
-      // Takes the pointer to the instance for destruction              
-      using FDestroy = void(*)(void* self);
-      FDestroy mDestructor {};
-
-      // The <=> operator, wrapped in a lambda expression if available  
-      using FCompare = Compared(*)(void* lhs, void* rhs);
-      FCompare mComparer {};
-
-      // The refer/copy/disown/clone assignment, wrapped in a lambda    
-      using FCopyAssign = void(*)(void* from, void* to);
-      FCopyAssign mReferAssigner {};
-      FCopyAssign mCopyAssigner {};
-      FCopyAssign mDisownAssigner {};
-      FCopyAssign mCloneAssigner {};
-
-      // The move/abandon-assignment operator, wrapped in a lambda      
-      // expression                                                     
-      using FMoveAssign = void(*)(void* from, void* to);
-      FMoveAssign mMoveAssigner {};
-      FMoveAssign mAbandonAssigner {};
-
-      // The class type function, wrapped in a lambda expression        
-      // Returns a typed container with the most concrete class instance
-      using FResolve = Anyness::Any(*)(void* self);
-      FResolve mResolver {};
-
-      // The hash getter, wrapped in a lambda expression                
-      // Takes the pointer to the instance for hashing, returns the hash
-      using FHash = Hash(*)(void* self);
-      FHash mHasher {};
       // Decides whether POD data is batch-hashable or not              
       // If there's a custom GetHash() method, POD data is not batchable
       bool mHasGetHashMethod = false;
-
-      // The reference function wrapped in a lambda                             
-      // Takes the pointer to the instance for referencing                      
-      // Returns the number of references after being referenced                
-      // (use 0 modifier to just get references)                                
+      
+      //                                                                
+      //    These methods are sought in each reflected type             
+      //                                                                
+      //    These function pointers will be different for different     
+      // libraries. We just collect them all. If a shared object is     
+      // unloaded, we simply pick a pointer from another. Once the data 
+      // is reflected from the MainBoundary, the maps are cleared and   
+      // only the main code is used, because it is most persistent.     
+      using FUnary = void(*)(void* self);
+      using FBinary = void(*)(void* from, void* to);
+      using FDescribeConstruct = void(*)(void* self, const Anyness::Many& describe);
+      using FCompare = Compared(*)(void* lhs, void* rhs);
+      using FResolve = Anyness::Any(*)(void* self);
+      using FHash = Hash(*)(void* self);
       using FReference = int(*)(void* self, int modifier);
-      FReference mReferencer {};
-
-      // A custom verb dispatcher, wrapped in a lambda expression               
-      // Takes the pointer to the instance that will dispatch, and a verb       
-      // There is a mutable and immutable version of this                       
       using FDispatch = void(*)(void* self, Flow::Verb& verb);
-      FDispatch mDispatcherMut {};
-      FDispatch mDispatcher {};
 
+      struct BoundaryDependent {
+         // The default constructor, wrapped in a lambda expression if     
+         // available. Takes a pointer for a placement-new expression      
+         FUnary mDefaultConstructor {};
 
-      /*using FVerbMutable = FDispatchMutable;
-      using FVerbConstant = FDispatchConstant;
-      using FTypeRetriever = DMeta(*)();
-      using FTraitRetriever = TMeta(*)(int);
-      using FDynamicCast = void* (*)(void*);*/
+         // Constructor by descriptor                                      
+         // Takes a pointer for a placement-new expression, and a Many     
+         FDescribeConstruct mDescribeConstructor {};
+
+         // The refer/copy/disown/clone/move/abandon constructors, wrapped 
+         // in lambdas. They take a pointer for a placement-new expression 
+         // and a source                                                   
+         FBinary mReferConstructor {};
+         FBinary mCopyConstructor {};
+         FBinary mDisownConstructor {};
+         FBinary mCloneConstructor {};
+         FBinary mMoveConstructor {};
+         FBinary mAbandonConstructor {};
+
+         // The destructor, wrapped in a lambda expression                 
+         // Takes the pointer to the instance for destruction              
+         FUnary mDestructor {};
+
+         // The <=> operator, wrapped in a lambda expression if available  
+         FCompare mComparer {};
+
+         // The refer/copy/disown/clone/move/abandon assignment, wrapped   
+         // in a lambdas                                                   
+         FBinary mReferAssigner {};
+         FBinary mCopyAssigner {};
+         FBinary mDisownAssigner {};
+         FBinary mCloneAssigner {};
+         FBinary mMoveAssigner {};
+         FBinary mAbandonAssigner {};
+
+         // The class type function, wrapped in a lambda expression        
+         // Returns a typed container with the most concrete class instance
+         FResolve mResolver {};
+
+         // The hash getter, wrapped in a lambda expression                
+         // Takes the pointer to the instance for hashing, returns the hash
+         FHash mHasher {};
+
+         // The reference function wrapped in a lambda                     
+         // Takes the pointer to the instance for referencing              
+         // Returns the number of references after being referenced        
+         // (use 0 modifier to just get references)                        
+         FReference mReferencer {};
+
+         // A custom verb dispatcher, wrapped in a lambda expression       
+         // Takes pointer to the instance that will dispatch, and a verb   
+         // There is a mutable and immutable version of this               
+         FDispatch mDispatcherMut {};
+         FDispatch mDispatcher {};
+      };
+
+      // The currently used boundary                                       
+      BoundaryDependent mCurrentBoundary;
+      
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         // All functions, reflected from all points of view               
+         // If this map is empty, then data has been reflected from the    
+         // main boundary                                                  
+         ::std::unordered_map<Token, BoundaryDependent> mOtherBoundaries;
+      #endif
+      
       DefinitionData(const Token& cppname, const Token& boundary)
          : Definition {cppname, boundary} {}
 

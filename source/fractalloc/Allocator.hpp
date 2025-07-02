@@ -173,6 +173,7 @@ namespace Langulus::Fractalloc
    ///                                                                        
    LANGULUS_API(FRACTALLOC) extern Allocator Instance;
 
+   
 } // namespace Langulus::Fractalloc
 
 #include "Allocation.inl"

@@ -94,8 +94,8 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get the type boundary                                                  
-   inline bool MetaDataStructured_16_16::CheckBoundary(const Token& boundary) const noexcept {
-      return Instance.GetMetaDataByID(*this)->mBoundaries.contains(boundary);
+   inline auto MetaDataStructured_16_16::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
+      return Instance.GetMetaDataByID(*this)->mBoundaries;
    }
 
    /// Get the reflected pool tactic                                          
@@ -140,104 +140,104 @@ namespace Langulus::RTTI::Inner
 
    /// Get the reflected destructor                                           
    inline auto MetaDataStructured_16_16::GetDestructor()
-   const noexcept -> DefinitionData::FDestroy {
-      return Instance.GetMetaDataByID(*this)->mDestructor;
+   const noexcept -> DefinitionData::FUnary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mDestructor;
    }
 
    /// Get the reflected referencer                                           
    inline auto MetaDataStructured_16_16::GetReferencer()
    const noexcept -> DefinitionData::FReference {
-      return Instance.GetMetaDataByID(*this)->mReferencer;
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mReferencer;
    }
 
    /// Get the reflected resolver                                             
    inline auto MetaDataStructured_16_16::GetResolver()
    const noexcept -> DefinitionData::FResolve {
-      return Instance.GetMetaDataByID(*this)->mResolver;
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mResolver;
    }
 
    /// Get the reflected refer-constructor                                    
    inline auto MetaDataStructured_16_16::GetReferConstructor()
-   const noexcept -> DefinitionData::FCopyConstruct {
-      return Instance.GetMetaDataByID(*this)->mReferConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mReferConstructor;
    }
 
    /// Get the reflected refer-assigner                                       
    inline auto MetaDataStructured_16_16::GetReferAssigner()
-   const noexcept -> DefinitionData::FCopyAssign {
-      return Instance.GetMetaDataByID(*this)->mReferAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mReferAssigner;
    }
 
    /// Get the reflected move-constructor                                     
    inline auto MetaDataStructured_16_16::GetMoveConstructor()
-   const noexcept -> DefinitionData::FMoveConstruct {
-      return Instance.GetMetaDataByID(*this)->mMoveConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mMoveConstructor;
    }
 
    /// Get the reflected move-assigner                                        
    inline auto MetaDataStructured_16_16::GetMoveAssigner()
-   const noexcept -> DefinitionData::FMoveAssign {
-      return Instance.GetMetaDataByID(*this)->mMoveAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mMoveAssigner;
    }
 
    /// Get the reflected abandon-constructor                                  
    inline auto MetaDataStructured_16_16::GetAbandonConstructor()
-   const noexcept -> DefinitionData::FMoveConstruct {
-      return Instance.GetMetaDataByID(*this)->mAbandonConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mAbandonConstructor;
    }
 
    /// Get the reflected abandon-assigner                                     
    inline auto MetaDataStructured_16_16::GetAbandonAssigner()
-   const noexcept -> DefinitionData::FMoveAssign {
-      return Instance.GetMetaDataByID(*this)->mAbandonAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mAbandonAssigner;
    }
 
    /// Get the reflected disown-constructor                                   
    inline auto MetaDataStructured_16_16::GetDisownConstructor()
-   const noexcept -> DefinitionData::FCopyConstruct {
-      return Instance.GetMetaDataByID(*this)->mDisownConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mDisownConstructor;
    }
 
    /// Get the reflected disown-assigner                                      
    inline auto MetaDataStructured_16_16::GetDisownAssigner()
-   const noexcept -> DefinitionData::FCopyAssign {
-      return Instance.GetMetaDataByID(*this)->mDisownAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mDisownAssigner;
    }
 
    /// Get the reflected clone-constructor                                    
    inline auto MetaDataStructured_16_16::GetCloneConstructor()
-   const noexcept -> DefinitionData::FCopyConstruct {
-      return Instance.GetMetaDataByID(*this)->mCloneConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCloneConstructor;
    }
 
    /// Get the reflected clone-assigner                                       
    inline auto MetaDataStructured_16_16::GetCloneAssigner()
-   const noexcept -> DefinitionData::FCopyAssign {
-      return Instance.GetMetaDataByID(*this)->mCloneAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCloneAssigner;
    }
 
    /// Get the reflected copy-constructor                                     
    inline auto MetaDataStructured_16_16::GetCopyConstructor()
-   const noexcept -> DefinitionData::FCopyConstruct {
-      return Instance.GetMetaDataByID(*this)->mCopyConstructor;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCopyConstructor;
    }
 
    /// Get the reflected copy-assigner                                        
    inline auto MetaDataStructured_16_16::GetCopyAssigner()
-   const noexcept -> DefinitionData::FCopyAssign {
-      return Instance.GetMetaDataByID(*this)->mCopyAssigner;
+   const noexcept -> DefinitionData::FBinary {
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCopyAssigner;
    }
 
    /// Get the reflected comparer                                             
    inline auto MetaDataStructured_16_16::GetComparer()
    const noexcept -> DefinitionData::FCompare {
-      return Instance.GetMetaDataByID(*this)->mComparer;
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mComparer;
    }
 
    /// Get the reflected hasher                                               
    inline auto MetaDataStructured_16_16::GetHasher()
    const noexcept -> DefinitionData::FHash {
-      return Instance.GetMetaDataByID(*this)->mHasher;
+      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mHasher;
    }
 
    /// Check if type has an explicit GetHash() method                         

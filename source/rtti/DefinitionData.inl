@@ -145,7 +145,7 @@ namespace Langulus::RTTI
       // @note these are allowed even if T is constant                  
       if constexpr (CT::Defaultable<DTAll>) {
          // Generate a default constructor                              
-         definition.mDefaultConstructor =
+         definition.mCurrentBoundary.mDefaultConstructor =
             [](void* at) noexcept(noexcept(DTAll {})) {
                auto atT = static_cast<DTAll*>(at);
                new (atT) DTAll {};
@@ -154,8 +154,8 @@ namespace Langulus::RTTI
 
       if constexpr (CT::CopyConstructible<DTAll>) {
          // Generate a copy-constructor                                 
-         definition.mCopyConstructor =
-            [](const void* from, void* to) {
+         definition.mCurrentBoundary.mCopyConstructor =
+            [](void* from, void* to) {
                auto fromT = static_cast<const DTAll*>(from);
                auto toT = static_cast<DTAll*>(to);
                IntentNew(toT, Copy(*fromT));
@@ -164,8 +164,8 @@ namespace Langulus::RTTI
             
       if constexpr (CT::ReferConstructible<DTAll>) {
          // Generate a refer-constructor                                
-         definition.mReferConstructor =
-            [](const void* from, void* to) {
+         definition.mCurrentBoundary.mReferConstructor =
+            [](void* from, void* to) {
                auto fromT = static_cast<const DTAll*>(from);
                auto toT = static_cast<DTAll*>(to);
                IntentNew(toT, Refer(*fromT));
@@ -174,8 +174,8 @@ namespace Langulus::RTTI
             
       if constexpr (CT::CloneConstructible<DTAll>) {
          // Generate a clone-constructor                                
-         definition.mCloneConstructor =
-            [](const void* from, void* to) {
+         definition.mCurrentBoundary.mCloneConstructor =
+            [](void* from, void* to) {
                auto fromT = static_cast<const DTAll*>(from);
                auto toT = static_cast<DTAll*>(to);
                IntentNew(toT, Clone(*fromT));
@@ -184,8 +184,8 @@ namespace Langulus::RTTI
 
       if constexpr (CT::DisownConstructible<DTAll>) {
          // Generate a disown-constructor                               
-         definition.mDisownConstructor =
-            [](const void* from, void* to) {
+         definition.mCurrentBoundary.mDisownConstructor =
+            [](void* from, void* to) {
                auto fromT = static_cast<const DTAll*>(from);
                auto toT = static_cast<DTAll*>(to);
                IntentNew(toT, Disown(*fromT));
@@ -194,7 +194,7 @@ namespace Langulus::RTTI
 
       if constexpr (CT::MoveConstructible<DTAll>) {
          // Generate a move-constructor                                 
-         definition.mMoveConstructor =
+         definition.mCurrentBoundary.mMoveConstructor =
             [](void* from, void* to) {
                auto fromT = static_cast<DTAll*>(from);
                auto toT = static_cast<DTAll*>(to);
@@ -204,7 +204,7 @@ namespace Langulus::RTTI
 
       if constexpr (CT::AbandonConstructible<DTAll>) {
          // Generate a abandon-constructor                              
-         definition.mAbandonConstructor =
+         definition.mCurrentBoundary.mAbandonConstructor =
             [](void* from, void* to) {
                auto fromT = static_cast<DTAll*>(from);
                auto toT = static_cast<DTAll*>(to);
@@ -214,7 +214,7 @@ namespace Langulus::RTTI
       
       if constexpr (CT::Destroyable<DTAll>) {
          // Generate a destructor                                       
-         definition.mDestructor =
+         definition.mCurrentBoundary.mDestructor =
             [](void* at) {
                auto atT = static_cast<DTAll*>(at);
                atT->~DTAll();
@@ -227,7 +227,7 @@ namespace Langulus::RTTI
       // @note allowed only if T is mutable                             
       if constexpr (CT::CopyAssignable<T>) {
          // Generate a copy-assigner                                    
-         definition.mCopyAssigner =
+         definition.mCurrentBoundary.mCopyAssigner =
             [](void* from, void* to) {
                auto fromT = static_cast<T*>(from);
                auto toT = static_cast<T*>(to);
@@ -237,7 +237,7 @@ namespace Langulus::RTTI
       
       if constexpr (CT::ReferAssignable<T>) {
          // Generate a refer-assigner                                   
-         definition.mReferAssigner =
+         definition.mCurrentBoundary.mReferAssigner =
             [](void* from, void* to) {
                auto fromT = static_cast<T*>(from);
                auto toT = static_cast<T*>(to);
@@ -247,7 +247,7 @@ namespace Langulus::RTTI
 
       if constexpr (CT::DisownAssignable<T>) {
          // Generate a disown-assigner                                  
-         definition.mDisownAssigner =
+         definition.mCurrentBoundary.mDisownAssigner =
             [](void* from, void* to) {
                auto fromT = static_cast<T*>(from);
                auto toT = static_cast<T*>(to);
@@ -257,7 +257,7 @@ namespace Langulus::RTTI
             
       if constexpr (CT::CloneAssignable<T>) {
          // Generate a clone-assigner                                   
-         definition.mCloneAssigner =
+         definition.mCurrentBoundary.mCloneAssigner =
             [](void* from, void* to) {
                auto fromT = static_cast<T*>(from);
                auto toT = static_cast<T*>(to);
@@ -267,7 +267,7 @@ namespace Langulus::RTTI
 
       if constexpr (CT::MoveAssignable<T>) {
          // Generate a move-assigner                                    
-         definition.mMoveAssigner =
+         definition.mCurrentBoundary.mMoveAssigner =
             [](void* from, void* to) {
                auto fromT = static_cast<T*>(from);
                auto toT = static_cast<T*>(to);
@@ -277,7 +277,7 @@ namespace Langulus::RTTI
 
       if constexpr (CT::AbandonAssignable<T>) {
          // Generate an abandon-assigner                                
-         definition.mAbandonAssigner =
+         definition.mCurrentBoundary.mAbandonAssigner =
             [](void* from, void* to) {
                auto fromT = static_cast<T*>(from);
                auto toT = static_cast<T*>(to);
@@ -291,7 +291,7 @@ namespace Langulus::RTTI
       if constexpr (CT::Hashable<T>) {
          // Generate a hashing function                                 
          definition.mHasGetHashMethod = CT::HasGetHashMethod<T>;
-         definition.mHasher = [](void* at) {
+         definition.mCurrentBoundary.mHasher = [](void* at) {
             auto self = static_cast<T*>(at);
             return HashOf<true>(*self);
          };
@@ -299,7 +299,7 @@ namespace Langulus::RTTI
 
       if constexpr (CT::Referenced<T>) {
          // Generate a referencing function                             
-         definition.mReferencer =
+         definition.mCurrentBoundary.mReferencer =
             [](void* at, int modifier) -> int {
                auto atT = static_cast<T*>(at);
                return atT->Reference(modifier);
@@ -308,7 +308,7 @@ namespace Langulus::RTTI
 
       if constexpr (CT::Comparable<T, T>) {
          // Generate a three-way comparison function                    
-         definition.mComparer =
+         definition.mCurrentBoundary.mComparer =
             [](void* t1, void* t2) -> Compared {
                auto t1T = static_cast<T*>(t1);
                auto t2T = static_cast<T*>(t2);
@@ -354,7 +354,7 @@ namespace Langulus::RTTI
 
       if constexpr (CT::Resolvable<T>) {
          // Generate a resolving function                               
-         definition.mResolver =
+         definition.mCurrentBoundary.mResolver =
             [](void* at) {
                auto atT = static_cast<T*>(at);
                return Anyness::Any {atT->GetResolved()};

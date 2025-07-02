@@ -12,19 +12,19 @@
 namespace Langulus::RTTI::Inner
 {
 
-   auto MetaVerbNaked::GetPositiveName() const noexcept -> Token {
+   inline auto MetaVerbNaked::GetPositiveName() const noexcept -> Token {
       return mDefinition->mNameOf;
    }
 
-   auto MetaVerbNaked::GetNegativeName() const noexcept -> Token {
+   inline auto MetaVerbNaked::GetNegativeName() const noexcept -> Token {
       return mDefinition->mNameOfReverse;
    }
 
-   auto MetaVerbNaked::GetPositiveOperator() const noexcept -> Token {
+   inline auto MetaVerbNaked::GetPositiveOperator() const noexcept -> Token {
       return mDefinition->mOperator;
    }
 
-   auto MetaVerbNaked::GetNegativeOperator() const noexcept -> Token {
+   inline auto MetaVerbNaked::GetNegativeOperator() const noexcept -> Token {
       return mDefinition->mOperatorReverse;
    }
 
@@ -33,20 +33,20 @@ namespace Langulus::RTTI::Inner
    }
 
    constexpr bool MetaVerbNaked::IsConstant() const noexcept {
-      return mDefinition->mDefaultInvocationMutable == nullptr;
+      return not mDefinition->mCurrentBoundary.mDefaultMut;
    }
 
    constexpr bool MetaVerbNaked::IsMutable() const noexcept {
-      return mDefinition->mDefaultInvocationMutable != nullptr;
+      return mDefinition->mCurrentBoundary.mDefaultMut;
    }
 
    constexpr bool MetaVerbNaked::IsDefaultable() const noexcept {
-      return mDefinition->mDefaultInvocationMutable  != nullptr
-          or mDefinition->mDefaultInvocationConstant != nullptr;
+      return mDefinition->mCurrentBoundary.mDefaultMut
+          or mDefinition->mCurrentBoundary.mDefault;
    }
 
    constexpr bool MetaVerbNaked::IsStateless() const noexcept {
-      return mDefinition->mStatelessInvocation != nullptr;
+      return mDefinition->mCurrentBoundary.mStateless;
    }
 
 } // namespace Langulus::RTTI::Inner

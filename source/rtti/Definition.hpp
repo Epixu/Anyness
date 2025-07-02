@@ -142,26 +142,29 @@ namespace Langulus::RTTI::Inner
       // Minor version                                                  
       unsigned mVersionMinor = 0;
 
-      // Populated from LANGULUS_BOUNDARY on reflection-time            
-      // Types can be reflected from the point of view of different     
-      // shared libraries. Each new reflection will be applied on the   
-      // top of the old one, but overwriting properties only if the     
-      // changes come from the MainBoundary. Once mBoundary becomes     
-      // the MainBoundary, the definition shall never be unregistered.  
-      IF_LANGULUS_MANAGED_REFLECTION(::std::unordered_set<Token> mBoundaries);
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         // Populated from LANGULUS_BOUNDARY on reflection-time         
+         // Types can be reflected from the point of view of different  
+         // shared libraries. Each new reflection will be applied on the
+         // top of the old one, but overwriting properties only if the  
+         // changes come from the MainBoundary. Once mBoundary becomes  
+         // the MainBoundary, the definition shall never be unregistered
+         public: using BoundarySet = ::std::unordered_set<Token>;
+         protected: BoundarySet mBoundaries;
+      #endif
 
       /// Construct an abstract definition                                    
       ///   @param cppname - the name of the definition, as it appears in C++ 
       ///   @param boundary - the library from which we're defining           
       Definition(const Token& cppname, const Token& boundary)
-         : mHash     {HashOf(cppname)}
-         , mCppNameOf{cppname} {
+         : mHash      {HashOf(cppname)}
+         , mCppNameOf {cppname} {
          // Save the boundary at time of reflection                     
          // Don't bother if it is the main boundary                     
-         IF_LANGULUS_MANAGED_REFLECTION(
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             if (boundary != Langulus::MainBoundary)
                mBoundaries.insert(boundary);
-         );
+         #endif
       }
 
       /// Reflect some common type properties, like info and version          
@@ -197,7 +200,7 @@ namespace Langulus::RTTI::Inner
       LANGULUS(ALWAYS_INLINED)
       constexpr bool IsInRelevantBoundary() const noexcept {
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            return mBoundaries.empty() or mBoundaries.contains(Langulus::Boundary);
+            return mBoundaries.empty() or mBoundaries.contains(Boundary);
          #else
             return true;
          #endif

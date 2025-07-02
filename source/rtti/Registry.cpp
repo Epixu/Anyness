@@ -37,7 +37,7 @@ namespace Langulus::RTTI
       for (auto& definition : ::std::ranges::views::values(mMetaTagsByName))
             delete definition;
 
-      for (auto& definition : ::std::ranges::views::values(mUniqueVerbs))
+      for (auto& definition : ::std::ranges::views::values(mMetaVerbsByCppName))
             delete definition;
    }
 
@@ -50,21 +50,12 @@ namespace Langulus::RTTI
    ///   @param boundary - the boundary to search in (optional)               
    ///   @return the found element, or nullptr if not found                   
    template<bool BY_CPPNAME>
-   auto Registry::GetMetaByName(
-      const auto& where, const Token& token, const Token& boundary
-   ) const noexcept -> decltype(where.begin()->second) {
+   auto Registry::GetMetaByName(const auto& where, const Token& token)
+   const noexcept -> decltype(where.begin()->second) {
       const ::std::string lc {BY_CPPNAME ? token : Inner::ToLowercase(token)};
       const auto foundToken = where.find(lc);
       if (foundToken == where.end())
          return nullptr;
-
-      if (not boundary.empty()) {
-         // Search for a specific boundary                              
-         if (not foundToken->second->mBoundary.contains(boundary))
-            return nullptr;
-         return foundToken->second;
-      }
-   
       return foundToken->second;
    }
    
@@ -78,59 +69,24 @@ namespace Langulus::RTTI
       return where[id-1];
    }
 
-   /// Get a list of all the interpretations for an ambiguous token           
-   /// These can be data types, verbs, traits, or constants                   
-   ///   @param where - the map to search for the token in                    
-   ///   @param token - the token to search for                               
-   ///   @param boundary - the boundary to search in (optional)               
-   ///   @return the list of associated meta definitions                      
-   auto Registry::GetMetaList(
-      const auto& where, const Token& token, const Token& boundary
-   ) const noexcept -> const MetaSet& {
-      static const MetaSet fallback {};
-      const auto lc = Inner::ToLowercase(Inner::ToLastToken(token));
-      const auto foundToken = where.find(lc);
-      if (foundToken == where.end())
-         return fallback;
-
-      if (not boundary.empty()) {
-         // Search in a specific boundary                               
-         const auto foundBoundary = foundToken->second.find(boundary);
-         if (foundBoundary == foundToken->second.end())
-            return fallback;
-         return foundBoundary->second;
-      }
-
-      // Always prefer the MAIN boundary, because it's persistent       
-      const auto foundBoundary = foundToken->second.find(MainBoundary);
-      if (foundBoundary != foundToken->second.end())
-         return foundBoundary->second;
-      if (not foundToken->second.empty())
-         return foundToken->second.begin()->second;
-      return fallback;
-   }
-
    /// Get an existing meta data definition by its CppNameOf                  
    ///   @param token - the C++ name of the data definition                   
-   ///   @param library - the boundary to search in (optional)                
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaDataByCppName(const Token& token, const Token& library)
+   auto Registry::GetMetaDataByCppName(const Token& token)
    const noexcept -> DefinitionData const* {
-      return GetMetaByName<true>(mMetaDataByName, token, library);
+      return GetMetaByName<true>(mMetaDataByName, token);
    }
 
-   /// Get an existing meta data definition by its NameOf and boundary        
+   /// Get an existing meta data definition by its NameOf                     
    ///   @param token - the reflected token of the data definition            
-   ///   @param library - the boundary to search in (optional)                
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaDataByToken(const Token& token, const Token& library)
+   auto Registry::GetMetaDataByToken(const Token& token)
    const noexcept -> DefinitionData const* {
-      return GetMetaByName<false>(mMetaDataByName, token, library);
+      return GetMetaByName<false>(mMetaDataByName, token);
    }
 
    /// Get an existing meta data definition by unpacking an ID                
    ///   @param token - the reflected token of the data definition            
-   ///   @param library - the boundary to search in (optional)                
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByID(const Inner::MetaDataStructured_8_8& id)
    const noexcept -> DefinitionData const* {
@@ -151,81 +107,76 @@ namespace Langulus::RTTI
       return GetMetaByID(mMetaDataByID, id_processed);
    }
 
-   /// Get an existing meta constant definition by its CppNameOf and boundary 
+   /// Get an existing meta constant definition by its CppNameOf              
    ///   @param token - the C++ name of the constant definition               
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaConstByCppName(const Token& token, const Token& boundary)
+   auto Registry::GetMetaConstByCppName(const Token& token)
    const noexcept -> DefinitionConst const* {
-      return GetMetaByName<true>(mMetaConstantsByName, token, boundary);
+      return GetMetaByName<true>(mMetaConstantsByName, token);
    }
 
-   /// Get an existing meta constant definition by its NameOf and boundary    
+   /// Get an existing meta constant definition by its NameOf                 
    ///   @param token - the reflected token of the constant definition        
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaConstByToken(const Token& token, const Token& boundary)
+   auto Registry::GetMetaConstByToken(const Token& token)
    const noexcept -> DefinitionConst const* {
-      return GetMetaByName<false>(mMetaConstantsByName, token, boundary);
+      return GetMetaByName<false>(mMetaConstantsByName, token);
    }
 
-   /// Get an existing meta tag definition by its CppNameOf and boundary      
+   /// Get an existing meta tag definition by its CppNameOf                   
    ///   @param token - the C++ name of the tag definition                    
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaTagByCppName(const Token& token, const Token& boundary)
+   auto Registry::GetMetaTagByCppName(const Token& token)
    const noexcept -> DefinitionTag const* {
-      return GetMetaByName<true>(mMetaTagsByName, token, boundary);
+      return GetMetaByName<true>(mMetaTagsByName, token);
    }
 
-   /// Get an existing meta tag definition by its NameOf and boundary         
+   /// Get an existing meta tag definition by its NameOf                      
    ///   @param token - the reflected token of the tag definition             
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaTagByToken(const Token& token, const Token& boundary)
+   auto Registry::GetMetaTagByToken(const Token& token)
    const noexcept -> DefinitionTag const* {
-      return GetMetaByName<false>(mMetaTagsByName, token, boundary);
+      return GetMetaByName<false>(mMetaTagsByName, token);
    }
    
-   /// Get an existing meta verb definition by its CppNameOf and boundary     
+   /// Get an existing meta verb definition by its CppNameOf                  
    ///   @param token - the C++ name of the verb definition                   
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaVerbByCppName(const Token& token, const Token& boundary)
+   auto Registry::GetMetaVerbByCppName(const Token& token)
    const noexcept -> DefinitionVerb const* {
-      return GetMetaByName<true>(mMetaVerbsByName, token, boundary);
+      return GetMetaByName<true>(mMetaVerbsByCppName, token);
    }
 
-   /// Get an existing meta verb definition by its NameOf and boundary        
+   /// Get an existing meta verb definition by its NameOf                     
    ///   @param token - the reflected token of the verb definition            
    ///                  you can search by positive, as well as negative token 
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaVerbByToken(const Token& token, const Token& boundary)
+   auto Registry::GetMetaVerbByToken(const Token& token)
    const noexcept -> DefinitionVerb const* {
-      return GetMetaByName<false>(mMetaVerbsByName, token, boundary);
+      return GetMetaByName<false>(mMetaVerbsByTokens, token);
    }
 
-   /// Get an existing meta verb definition by its operator token and boundary
+   /// Get an existing meta verb definition by its operator token             
    ///   @param token - the reflected operator of the verb definition         
    ///                  you can search by positive, as well as negative       
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetOperator(const Token& token, const Token& boundary)
+   auto Registry::GetOperator(const Token& token)
    const noexcept -> DefinitionVerb const* {
       const auto lc = Inner::IsolateOperator(token);
-      return GetMetaByName<false>(mOperators, lc, boundary);
+      return GetMetaByName<false>(mMetaVerbsByTokens, lc);
    }
 
    /// Get a list of all the interpretations for an ambiguous token           
-   /// These can be data types, verbs, tags, or constants                     
    ///   @param token - the token to search for                               
-   ///   @param boundary - the boundary to search in (optional)               
-   ///   @return the list of associated meta definitions                      
-   auto Registry::GetAmbiguousMeta(
-      const Token& token, const Token& boundary
-   ) const noexcept -> const MetaSet& {
-      return GetMetaList(mMetaAmbiguous, token, boundary);
+   ///   @return the set of associated meta definitions                       
+   auto Registry::GetAmbiguousMeta(const Token& token)
+   const noexcept -> const MetaSet& {
+      static const MetaSet fallback {};
+      const auto lc = Inner::ToLowercase(Inner::ToLastToken(token));
+      const auto foundToken = mMetaAmbiguous.find(lc);
+      if (foundToken == mMetaAmbiguous.end())
+         return fallback;
+      return foundToken->second;
    }
    
    /// Disambiguate a token. Works in the following way:                      
@@ -239,11 +190,10 @@ namespace Langulus::RTTI
    ///   3. If after all these disambiguation attempts there's still ambiguity
    ///      throw an exception - the ambiguity has to be manually fixed       
    ///   @param keyword - the token to search for                             
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return the disambiguated token; throws if not found/ambiguous       
-   auto Registry::DisambiguateMeta(const Token& keyword, const Token& boundary)
+   auto Registry::DisambiguateMeta(const Token& keyword)
    const -> Inner::Definition const* {
-      auto& symbols = GetAmbiguousMeta(keyword, boundary);
+      auto& symbols = GetAmbiguousMeta(keyword);
       Assert(not symbols.empty(), HERE(),
          "Keyword not found", ": `", keyword, '`');
       
@@ -358,44 +308,15 @@ namespace Langulus::RTTI
 
    /// Resolve a file extension                                               
    ///   @param token - the file extension to search for                      
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return all meta definitions associated with the file extension      
-   auto Registry::ResolveFileExtension(
-      const Token& token, const Token& boundary
-   ) const -> const MetaSet& {
-      return GetMetaList(mFileDatabase, token, boundary);
+   auto Registry::ResolveFileExtension(const Token& token) const -> const MetaSet& {
+      static const MetaSet fallback {};
+      const auto lc = Inner::ToLowercase(Inner::ToLastToken(token));
+      const auto foundToken = mFileDatabase.find(lc);
+      if (foundToken == mFileDatabase.end())
+         return fallback;
+      return foundToken->second;
    }
-   
-   /// Register most relevant token to the ambiguous token map                
-   ///   @param boundary - the boundary to register in                        
-   ///   @param token - the token to register                                 
-   ///   @param meta - the definition to add                                  
-   /*void Registry::RegisterAmbiguous(
-      const Token& boundary, const Lowercase& token, Inner::Definition const* meta
-   ) noexcept {
-      Lowercase ambiguous {Inner::ToLastToken(token)};
-      const auto foundAmbiguous = mMetaAmbiguous.find(ambiguous);
-      if (foundAmbiguous == mMetaAmbiguous.end())
-         mMetaAmbiguous.insert({MOV(ambiguous), {meta}});
-      else
-         foundAmbiguous->second.insert(meta);
-   }
-
-   /// Unregister most relevant token from the ambiguous token map            
-   ///   @attention only definitions in current boundary are affected                        !!
-   ///   @param boundary - the boundary to unregister from                    
-   ///   @param token - the token to unregister                               
-   ///   @param meta - the definition to remove                               
-   void Registry::UnregisterAmbiguous(
-      const Token& boundary, const Lowercase& token, Inner::Definition const* meta
-   ) noexcept {
-      Lowercase ambiguous {Inner::ToLastToken(token)};
-      const auto foundAmbiguous = mMetaAmbiguous.find(ambiguous);
-      if (foundAmbiguous == mMetaAmbiguous.end())
-         return;
-      
-      foundAmbiguous->second.erase(meta);
-   }*/
 
    /// Register a data definition                                             
    ///   @attention assumes type is not yet registered in the given boundary  
@@ -405,14 +326,14 @@ namespace Langulus::RTTI
    auto Registry::RegisterData(const Token& cppname, const Token& boundary) -> DefinitionData& {
       AssumeDev(not boundary.empty(), HERE(),
          "Bad boundary");
-      AssumeDev(not GetMetaByName<true>(mMetaDataByName, cppname, boundary), HERE(),
+      AssumeDev(not mMetaDataByName.contains(cppname), HERE(),
          "Data with this name is already registered: ", cppname);
       
-      Assert(not GetMetaByName<true>(mMetaTagsByName, cppname), HERE(),
+      Assert(not mMetaTagsByName.contains(cppname), HERE(),
          "Data name conflicts with tag: ", cppname);
-      Assert(not GetMetaByName<true>(mMetaVerbsByName, cppname), HERE(),
+      Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
          "Data name conflicts with verb: ", cppname);
-      Assert(not GetMetaByName<true>(mMetaConstantsByName, cppname), HERE(),
+      Assert(not mMetaConstantsByName.contains(cppname), HERE(),
          "Data name conflicts with constant: ", cppname);
 
       // If reached, then not found, so insert a new definition         
@@ -440,15 +361,15 @@ namespace Langulus::RTTI
    ///   @param boundary - the boundary to register in                        
    ///   @return the newly defined meta constant for that token               
    auto Registry::RegisterConst(const Token& cppname, const Token& boundary) -> DefinitionConst& {
-      AssumeDev(not GetMetaByName<true>(mMetaConstantsByName, cppname, boundary), HERE(),
+      AssumeDev(not mMetaConstantsByName.contains(cppname), HERE(),
          "Constant with this name is already registered: ", cppname);
 
-      Assert(not GetMetaByName<true>(mMetaTagsByName, cppname), HERE(),
-         "Constant name conflicts with tag: ", cppname);
-      Assert(not GetMetaByName<true>(mMetaVerbsByName, cppname), HERE(),
-         "Constant name conflicts with verb: ", cppname);
-      Assert(not GetMetaByName<true>(mMetaConstantsByName, cppname), HERE(),
+      Assert(not mMetaDataByName.contains(cppname), HERE(),
          "Constant name conflicts with data: ", cppname);
+      Assert(not mMetaTagsByName.contains(cppname), HERE(),
+         "Constant name conflicts with tag: ", cppname);
+      Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
+         "Constant name conflicts with verb: ", cppname);
 
       // If reached, then not found, so insert a new definition         
       auto meta = new DefinitionConst {cppname, boundary};
@@ -462,21 +383,21 @@ namespace Langulus::RTTI
       return *meta;
    }
 
-   /// Register a trait definition                                            
+   /// Register a tag definition                                              
    ///   @attention assumes token is not yet registered in the given boundary 
    ///   @param cppname - the C++ type name to register                       
    ///   @param boundary - the boundary to register in                        
    ///   @return the newly defined meta trait for that token                  
    auto Registry::RegisterTag(const Token& cppname, const Token& boundary) -> DefinitionTag& {
-      AssumeDev(not GetMetaByName<true>(mMetaTagsByName, cppname, boundary), HERE(),
+      AssumeDev(not mMetaTagsByName.contains(cppname), HERE(),
          "Tag with this name is already registered: ", cppname);
 
-      Assert(not GetMetaByName<true>(mMetaConstantsByName, cppname), HERE(),
-         "Tag name conflicts with constant: ", cppname);
-      Assert(not GetMetaByName<true>(mMetaVerbsByName, cppname), HERE(),
-         "Tag name conflicts with verb: ", cppname);
-      Assert(not GetMetaByName<true>(mMetaDataByName, cppname), HERE(),
+      Assert(not mMetaDataByName.contains(cppname), HERE(),
          "Tag name conflicts with data: ", cppname);
+      Assert(not mMetaConstantsByName.contains(cppname), HERE(),
+         "Tag name conflicts with constant: ", cppname);
+      Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
+         "Tag name conflicts with verb: ", cppname);
 
       // If reached, then not found, so insert a new definition         
       auto meta = new DefinitionTag {cppname, boundary};
@@ -496,21 +417,21 @@ namespace Langulus::RTTI
    ///   @param boundary - the boundary to register in                        
    ///   @return the newly defined meta verb for that token configuration     
    auto Registry::RegisterVerb(const Token& cppname, const Token& boundary) -> DefinitionVerb& {
-      AssumeDev(not GetMetaByName<true>(mUniqueVerbs, cppname, boundary), HERE(),
+      AssumeDev(not mMetaVerbsByCppName.contains(cppname), HERE(),
          "Verb with this name is already registered: ", cppname);
 
-      Assert(not GetMetaByName<true>(mMetaConstantsByName, cppname), HERE(),
-         "Verb name conflicts with constant: ", cppname);
-      Assert(not GetMetaByName<true>(mMetaTagsByName, cppname), HERE(),
-         "Verb name conflicts with tag: ", cppname);
-      Assert(not GetMetaByName<true>(mMetaDataByName, cppname), HERE(),
+      Assert(not mMetaDataByName.contains(cppname), HERE(),
          "Verb name conflicts with data: ", cppname);
+      Assert(not mMetaConstantsByName.contains(cppname), HERE(),
+         "Verb name conflicts with constant: ", cppname);
+      Assert(not mMetaTagsByName.contains(cppname), HERE(),
+         "Verb name conflicts with tag: ", cppname);
 
       // If reached, then not found, so insert a new definition         
       auto meta = new DefinitionVerb {cppname, boundary};
 
       // Index by C++ name                                              
-      mUniqueVerbs[meta->mCppNameOf] = meta;
+      mMetaVerbsByCppName[meta->mCppNameOf] = meta;
 
       // Index by ID                                                    
       mMetaVerbsByID.push_back(meta);
@@ -638,6 +559,7 @@ namespace Langulus::RTTI
       auto scope = Logger::VerboseScoped<VERBOSE>(Logger::Red, Logger::Underline, 
          "Unloading boundary ", boundary);
 
+      //                                                                
       // Unload constants                                               
       for (auto pair = mMetaConstantsByName.begin(); pair != mMetaConstantsByName.end();) {
          auto definition = const_cast<DefinitionConst*>(pair->second);
@@ -675,144 +597,169 @@ namespace Langulus::RTTI
          pair = mMetaConstantsByName.erase(pair);
       }
 
+      //                                                                
       // Unload file types (must be done before deleting meta data)     
       for (auto pair = mFileDatabase.begin(); pair != mFileDatabase.end();) {
-         auto found = pair->second.find(boundary);
-         if (found == pair->second.end()) {
-            ++pair;
-            continue;
+         for (auto def = pair->second.begin(); def != pair->second.end();) {
+            if ((*def)->mBoundaries.size() == 1
+            and (*def)->mBoundaries.contains(boundary))
+               def = pair->second.erase(def);
+            else
+               ++def;
          }
 
          Logger::Verbose<VERBOSE>(
-            "File ", Logger::PushCyan, pair->first,
-            Logger::PopRed, " unregistered (", boundary, ")"
+            "File ", Logger::Push, pair->first,
+            Logger::Red, " unregistered"
          );
-
-         pair->second.erase(found);
+         
          if (pair->second.empty())
             pair = mFileDatabase.erase(pair);
          else
             ++pair;
       }
 
+      //                                                                
       // Unload data types                                              
       for (auto pair = mMetaDataByName.begin(); pair != mMetaDataByName.end();) {
-         auto found = pair->second.find(boundary);
-         if (found == pair->second.end()) {
+         auto definition = const_cast<DefinitionData*>(pair->second);
+         if (not definition->mBoundaries.erase(boundary)) {
+            // Boundary is irrelevant for this definition               
+            ++pair;
+            continue;
+         }
+
+         if (not definition->mBoundaries.empty()) {
+            // Definition is still used in other boundaries, make sure  
+            // we pick new function pointers                            
+            definition->mOtherBoundaries.erase(boundary);
+            definition->mCurrentBoundary = definition->mOtherBoundaries.begin()->second;
             ++pair;
             continue;
          }
 
          Logger::Verbose<VERBOSE>(
-            "Data ", Logger::PushCyan, found->second->mNameOf,
-            Logger::PopRed, " unregistered (", boundary, ")"
+            "Data ", Logger::Cyan, definition->mNameOf,
+            Logger::Red, " unregistered"
          );
 
-         UnregisterAmbiguous(boundary, pair->first, found->second);
-         delete found->second;
-         pair->second.erase(found);
-         if (pair->second.empty())
-            pair = mMetaDataByName.erase(pair);
-         else
-            ++pair;
+         // Remove from indexing by ID                                  
+         if (mMetaDataByID[definition->mID] == definition)
+            mMetaDataByID[definition->mID] = nullptr;
+
+         // Remove from the ambiguity map                               
+         const auto ambiguous = mMetaAmbiguous.find(definition->mNameOfLowercased);
+         ambiguous->second.erase(definition);
+         if (ambiguous->second.empty())
+            mMetaAmbiguous.erase(ambiguous);
+
+         // Finally, delete the definition and remove it from registry  
+         delete definition;
+         pair = mMetaDataByName.erase(pair);
       }
 
+      //                                                                
       // Unload tags                                                    
       for (auto pair = mMetaTagsByName.begin(); pair != mMetaTagsByName.end();) {
-         auto found = pair->second.find(boundary);
-         if (found == pair->second.end()) {
+         auto definition = const_cast<DefinitionTag*>(pair->second);
+         if (not definition->mBoundaries.erase(boundary)) {
+            // Boundary is irrelevant for this definition               
+            ++pair;
+            continue;
+         }
+
+         if (not definition->mBoundaries.empty()) {
+            // Definition is still used in other boundaries             
             ++pair;
             continue;
          }
 
          Logger::Verbose<VERBOSE>(
-            "Trait ", Logger::PushPurple, found->second->mNameOf,
-            Logger::PopRed, " unregistered (", boundary, ")"
+            "Tag ", Logger::Purple, definition->mNameOf,
+            Logger::Red, " unregistered"
          );
 
-         UnregisterAmbiguous(boundary, pair->first, found->second);
-         delete found->second;
-         pair->second.erase(found);
-         if (pair->second.empty())
-            pair = mMetaTagsByName.erase(pair);
-         else
-            ++pair;
+         // Remove from indexing by ID                                  
+         if (mMetaTagsByID[definition->mID] == definition)
+            mMetaTagsByID[definition->mID] = nullptr;
+
+         // Remove from the ambiguity map                               
+         const auto ambiguous = mMetaAmbiguous.find(definition->mNameOfLowercased);
+         ambiguous->second.erase(definition);
+         if (ambiguous->second.empty())
+            mMetaAmbiguous.erase(ambiguous);
+
+         // Finally, delete the definition and remove it from registry  
+         delete definition;
+         pair = mMetaTagsByName.erase(pair);
       }
 
+      //                                                                
       // Unload verbs                                                   
-      for (auto pair = mUniqueVerbs.begin(); pair != mUniqueVerbs.end();) {
-         auto found = pair->second.find(boundary);
-         if (found == pair->second.end()) {
+      for (auto pair = mMetaVerbsByCppName.begin(); pair != mMetaVerbsByCppName.end();) {
+         auto definition = const_cast<DefinitionVerb*>(pair->second);
+         if (not definition->mBoundaries.erase(boundary)) {
+            // Boundary is irrelevant for this definition               
             ++pair;
             continue;
          }
 
-         DefinitionVerb const* definition = found->second;
-         auto& lc1 = definition->mNameOf;
-         AssumeDev(definition == GetMetaVerbByCppName(lc1, boundary), HERE(),
-            "Bad VMeta definition"
-         );
-
-         auto foundlc1 = mMetaVerbsByName.find(lc1);
-         if (foundlc1 != mMetaVerbsByName.end())
-            foundlc1->second.erase(boundary);
-
-         auto& lc2 = definition->mNameOfReverse;
-         if (not lc2.empty()) {
-            AssumeDev(definition == GetMetaVerbByCppName(lc2, boundary),
-               "Bad VMeta definition"
-            );
-            
-            auto foundlc2 = mMetaVerbsByName.find(lc2);
-            if (foundlc2 != mMetaVerbsByName.end())
-               foundlc2->second.erase(boundary);
-         }
-
-         if (not definition->mOperator.empty()) {
-            const auto op1 = Inner::IsolateOperator(definition->mOperator);
-            Logger::Verbose<VERBOSE>("Operator ", Logger::PushDarkGreen, op1,
-               Logger::PopRed, " unregistered (", boundary, ")");
-            
-            auto foundop1 = mOperators.find(op1);
-            if (foundop1 != mOperators.end())
-               foundop1->second.erase(boundary);
-         }
-
-         if (not definition->mOperatorReverse.empty()) {
-            const auto op2 = Inner::IsolateOperator(definition->mOperatorReverse);
-            Logger::Verbose<VERBOSE>("Operator ", Logger::PushDarkGreen, op2,
-               Logger::PopRed, " unregistered (", boundary, ")");
-            
-            auto foundop2 = mOperators.find(op2);
-            if (foundop2 != mOperators.end())
-               foundop2->second.erase(boundary);
+         if (not definition->mBoundaries.empty()) {
+            // Definition is still used in other boundaries             
+            ++pair;
+            continue;
          }
 
          if (not definition->mNameOfReverse.empty()) {
-            Logger::Verbose<VERBOSE>("Verb ", Logger::PushDarkGreen,
+            Logger::Verbose<VERBOSE>("Verb ", Logger::DarkGreen,
                definition->mNameOf, "/", definition->mNameOfReverse,
-               Logger::PopRed, " unregistered (", boundary, ")"
+               Logger::Red, " unregistered"
             );
          }
          else {
-            Logger::Verbose<VERBOSE>("Verb ", Logger::PushDarkGreen,
-               definition->mNameOf, Logger::PopRed,
-               " unregistered (", boundary, ")"
+            Logger::Verbose<VERBOSE>("Verb ", Logger::DarkGreen,
+               definition->mNameOf, Logger::Red,
+               " unregistered"
             );
          }
 
-         UnregisterAmbiguous(boundary, lc1, definition);
-         if (not lc2.empty())
-            UnregisterAmbiguous(boundary, lc2, definition);
-         
-         pair->second.erase(found);
-         
-         if (pair->second.empty())
-            pair = mUniqueVerbs.erase(pair);
-         else
-            ++pair;
+         // Remove from indexing by ID                                  
+         if (mMetaVerbsByID[definition->mID] == definition)
+            mMetaVerbsByID[definition->mID] = nullptr;
 
+         // Remove from the ambiguity map                               
+         const auto ambiguous = mMetaAmbiguous.find(definition->mNameOf);
+         ambiguous->second.erase(definition);
+         if (ambiguous->second.empty())
+            mMetaAmbiguous.erase(ambiguous);
+
+         if (not definition->mNameOfReverse.empty()) {
+            const auto ambiguous_rev = mMetaAmbiguous.find(definition->mNameOfReverse);
+            ambiguous_rev->second.erase(definition);
+            if (ambiguous_rev->second.empty())
+               mMetaAmbiguous.erase(ambiguous_rev);
+         }
+
+         // Remove from the token map                                   
+         mMetaVerbsByTokens.erase(definition->mNameOf);
+         if (not definition->mNameOfReverse.empty())
+            mMetaVerbsByTokens.erase(definition->mNameOfReverse);
+         
+         if (not definition->mOperator.empty()) {
+            Logger::Verbose<VERBOSE>("Operator ", Logger::DarkGreen, definition->mOperator,
+               Logger::Red, " unregistered");
+            mMetaVerbsByTokens.erase(definition->mOperator);
+         }
+         
+         if (not definition->mOperatorReverse.empty()) {
+            Logger::Verbose<VERBOSE>("Operator ", Logger::DarkGreen, definition->mOperatorReverse,
+               Logger::Red, " unregistered");
+            mMetaVerbsByTokens.erase(definition->mOperatorReverse);
+         }
+
+         // Finally, delete the definition and remove it from registry  
          delete definition;
+         pair = mMetaVerbsByCppName.erase(pair);
       }
    }
 

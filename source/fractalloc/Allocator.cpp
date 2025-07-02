@@ -409,12 +409,13 @@ namespace Langulus::Fractalloc
    size_t Allocator::CheckBoundary(const Token& boundary) noexcept {
       size_t count = 0;
       for (const auto& type : Instance.mInstantiatedTypes) {
-         if (type.CheckBoundary(boundary)) {
-            auto pool = type.GetPoolchain();
-            while (pool) {
-               ++count;
-               pool = pool->mNext;
-            }
+         if (not type.GetBoundaries().contains(boundary))
+            continue;
+         
+         auto pool = type.GetPoolchain();
+         while (pool) {
+            ++count;
+            pool = pool->mNext;
          }
       }
       return count;
@@ -859,11 +860,17 @@ namespace Langulus::Fractalloc
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             const auto scope = Logger::InfoScoped(Logger::Purple, 
                "TYPE POOL CHAIN FOR `", Logger::Red, type.GetCppName(), 
-               Logger::Purple, "` (BOUNDARY: ", Logger::Red,
-               type.GetBoundary(), Logger::Purple, "): "
+               Logger::Purple, "` (boundaries: "
             );
+         
+            if (type.GetBoundaries().empty())
+               Logger::Append(MainBoundary);
+            else for (auto& boundary : type.GetBoundaries())
+               Logger::Append(boundary, ' ');
+         
+            Logger::Append(Logger::Purple, "): ");
          #else
-            const auto scope = Logger::InfoTab(Logger::Purple, 
+            const auto scope = Logger::InfoScoped(Logger::Purple, 
                "TYPE POOL CHAIN FOR `", Logger::Red, type.GetCppName(), 
                Logger::Purple, '`'
             );
@@ -951,7 +958,10 @@ namespace Langulus::Fractalloc
                if (pool->mStep > with.mStep) {
                   Logger::Info(Logger::Purple, "Type ", type.GetCppName(), " pool: ");
                   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-                     Logger::Info(Logger::Purple, "(Boundary: ", type.GetBoundary(), ")");
+                     Logger::Info(Logger::Purple, "(boundaries: ");
+                     for (auto& boundary : type.GetBoundaries())
+                        Logger::Append(boundary, ' ');
+                     Logger::Append(')');
                   #endif
                   DumpPool(counter, pool);
                }
