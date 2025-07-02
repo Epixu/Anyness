@@ -455,6 +455,7 @@
 namespace Langulus
 {
    
+   using ::std::nullptr_t;
    using ::std::size_t;
 
    /// The Langulus::Boundary symbol is intentionally left undefined,         
