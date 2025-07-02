@@ -18,6 +18,7 @@ namespace Langulus::RTTI
       ///                                                                     
       /// Supports up to 65,535 tags                                          
       ///                                                                     
+      #pragma pack(push, 1)
       struct MetaTagPacked_16 : MetaPacked<2> {
          using Base = MetaPacked<2>;
 
@@ -35,6 +36,9 @@ namespace Langulus::RTTI
          auto GetName()       const noexcept -> Token;
          auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
       };
+      #pragma pack(pop)
+      
+      static_assert(sizeof(MetaTagPacked_16) == 2);
    #endif
       
       ///                                                                     

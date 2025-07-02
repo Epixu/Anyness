@@ -24,6 +24,7 @@ namespace Langulus::RTTI
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
       ///                                                                     
+      #pragma pack(push, 1)
       struct MetaConstPacked_16 : MetaPacked<2> {
          using Base = MetaPacked<2>;
 
@@ -41,6 +42,9 @@ namespace Langulus::RTTI
          auto GetName()       const noexcept -> Token;
          auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
       };
+      #pragma pack(pop)
+      
+      static_assert(sizeof(MetaConstPacked_16) == 2);
    #endif
 
       /// A naked pointer to a definition. Probably the fastest, but most     

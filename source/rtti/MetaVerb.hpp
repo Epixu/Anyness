@@ -26,6 +26,7 @@ namespace Langulus::RTTI
       ///                                                                     
       
       /// Packing strategy that can't exceed 2^(8*ID_SIZE)-2 possible verbs   
+      #pragma pack(push, 1)
       template<unsigned ID_SIZE>
       struct MetaVerbStructured_X8 : MetaPacked<ID_SIZE> {
       private:
@@ -66,10 +67,12 @@ namespace Langulus::RTTI
          constexpr bool IsDefaultable() const noexcept;
          constexpr bool IsStateless()   const noexcept;
       };
-   #endif
+      #pragma pack(pop)
+      
       static_assert(sizeof(MetaVerbStructured_X8<1>) == 2);
       static_assert(sizeof(MetaVerbStructured_X8<2>) == 3);
       static_assert(sizeof(MetaVerbStructured_X8<3>) == 4);
+   #endif
 
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 

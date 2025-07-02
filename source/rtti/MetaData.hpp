@@ -33,7 +33,7 @@ namespace Langulus::RTTI
       struct Structured;
 
       /// Encodes most frequently used properties                             
-   #pragma pack(push, 1)
+      #pragma pack(push, 1)
       template<> struct Structured<1> {
       protected:
          union {
@@ -51,9 +51,12 @@ namespace Langulus::RTTI
             uint8_t all {};
          };
       };
+      #pragma pack(pop)
+
       static_assert(sizeof(Structured<1>) == 1);
 
       /// Encodes most frequently used properties and the size up to 255 bytes
+      #pragma pack(push, 1)
       template<> struct Structured<2> {
       protected:
          union {
@@ -77,6 +80,8 @@ namespace Langulus::RTTI
             uint16_t all {};
          };
       };
+      #pragma pack(pop)
+      
       static_assert(sizeof(Structured<2>) == 2);
 
       /// This is the most commonly used packing tactic, until proven not     
@@ -85,6 +90,7 @@ namespace Langulus::RTTI
       /// Packing strategy that can't exceed 2^(8*ID_SIZE)-2 possible types   
       ///   @tparam ID_SIZE - the size reserved for unique ID                 
       ///   @tparam PT_SIZE - the size reserved for properties                
+      #pragma pack(push, 1)
       template<unsigned ID_SIZE, unsigned PT_SIZE>
       struct MetaDataStructured_XY : MetaPacked<ID_SIZE>, Structured<PT_SIZE> {
       protected:
@@ -162,13 +168,14 @@ namespace Langulus::RTTI
             void SetPoolchain(Fractalloc::Pool*) const noexcept;
          #endif
       };
+      #pragma pack(pop)
+      
       static_assert(sizeof(MetaDataStructured_XY<1, 1>) == 2);
       static_assert(sizeof(MetaDataStructured_XY<2, 1>) == 3);
       static_assert(sizeof(MetaDataStructured_XY<3, 1>) == 4);
       static_assert(sizeof(MetaDataStructured_XY<1, 2>) == 3);
       static_assert(sizeof(MetaDataStructured_XY<2, 2>) == 4);
       static_assert(sizeof(MetaDataStructured_XY<3, 2>) == 5);
-   #pragma pack(pop)
    #endif
 
       ///                                                                     
