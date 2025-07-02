@@ -12,7 +12,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
-      "cacheVariables": { "LANGULUS_TESTING": "ON" }
+      "cacheVariables": { "LANGULUS_OPTION_TESTING": "ON" }
     },
 
     {
@@ -136,10 +136,10 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "LANGULUS_SAFE_MODE": "ON",
-        "LANGULUS_DEBUGGING": "ON",
-        "LANGULUS_FEATURE_MEMORY_STATISTICS": "ON",
-        "LANGULUS_FEATURE_PROFILING": "ON"
+        "LANGULUS_OPTION_SAFE_MODE": "ON",
+        "LANGULUS_OPTION_DEBUGGING": "ON",
+        "LANGULUS_OPTION_MEMORY_STATISTICS": "ON",
+        "LANGULUS_OPTION_PROFILING": "ON"
       },
       "environment": {
         "BUILDTYPE_FLAGS": "",
@@ -153,7 +153,7 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "LANGULUS_SAFE_MODE": "ON",
+        "LANGULUS_OPTION_SAFE_MODE": "ON",
         "LANGULUS_LOGGER_DISABLE_VERBOSE": "ON",
         "LANGULUS_LOGGER_DISABLE_SPECIALS": "ON",
         "LANGULUS_LOGGER_DISABLE_FLOWS": "ON",

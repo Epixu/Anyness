@@ -25,4 +25,4 @@ add_langulus_test(LangulusAnynessTest
 	LIBRARIES	Catch2 LangulusAnyness
 )
 
-target_compile_definitions(LangulusAnynessTest PRIVATE LANGULUS_TESTING)
+target_compile_definitions(LangulusAnynessTest PRIVATE LANGULUS_OPTION_TESTING)

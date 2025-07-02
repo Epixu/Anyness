@@ -11,43 +11,43 @@ option(LANGULUS_OPTION_SHARED_LIBRARIES
     "Will build shared libraries (DLL/SO/WASM) if enabled, \
     true by default" ON)
     
-option(LANGULUS_SAFE_MODE 
+option(LANGULUS_OPTION_SAFE_MODE 
     "Overrides additional error checking and sanity checks, \
     incurs a serious runtime overhead, disabled by default" OFF)
 
-option(LANGULUS_PARANOIA 
+option(LANGULUS_OPTION_PARANOIA 
     "Make sure that any unused memory is nullified, \
     incurs a serious runtime overhead, disabled by default" OFF)
 
-option(LANGULUS_TESTING 
+option(LANGULUS_OPTION_TESTING 
     "Builds tests, disabled by default - Langulus tests are very exhaustive \
     and might increase your build time and RAM usage significantly" OFF)
     
-option(LANGULUS_BENCHMARK
+option(LANGULUS_OPTION_BENCHMARK
     "Enable benchmarking in tests, disabled by default. Will increase test time tenfold!" OFF)
 
-option(LANGULUS_DEBUGGING 
+option(LANGULUS_OPTION_DEBUGGING 
     "Explicitly define debug mode, in the case that default flags are \
     not detected by some odd reason, disabled by default" OFF)
 
-option(LANGULUS_FEATURE_NEWDELETE 
+option(LANGULUS_OPTION_NEWDELETE 
     "Overrides new/delete operators for anything statically linked to this library, \
     or provides LANGULUS_MONOPOLIZE_MEMORY() macro for you to use to override them, if dynamically linked. \
     This feature can be enabled only if LANGULUS_OPTION_MANAGED_MEMORY is enabled" OFF)
 
-option(LANGULUS_FEATURE_UNICODE
+option(LANGULUS_OPTION_UNICODE
     "Provides UTF8, UTF16, UTF32 tools and conversions inside Text containers (WIP)" OFF)
 
-option(LANGULUS_FEATURE_COMPRESSION
+option(LANGULUS_OPTION_COMPRESSION
     "Links to zstd library and provides memory compression for use with containers (WIP)" OFF)
 
-option(LANGULUS_FEATURE_ENCRYPTION
+option(LANGULUS_OPTION_ENCRYPTION
     "Allows for memory encryption for use with any container of your liking (WIP)" OFF)
 
-option(LANGULUS_FEATURE_PROFILING
+option(LANGULUS_OPTION_PROFILING
     "Performance measurements" OFF)
 
-option(LANGULUS_FEATURE_LOGGING             "Master logger switch" ON)
+option(LANGULUS_OPTION_LOGGING              "Master logger switch" ON)
 option(LANGULUS_LOGGER_DISABLE_FATALERRORS	"Disables fatal error logging via Logger::Fatal()" OFF)
 option(LANGULUS_LOGGER_DISABLE_ERRORS		"Disables error logging via Logger::Error()" OFF)
 option(LANGULUS_LOGGER_DISABLE_WARNINGS		"Disables warning logging via Logger::Warning()" OFF)
@@ -70,7 +70,7 @@ option(LANGULUS_OPTION_MANAGED_REFLECTION
     type comparisons, and allows you to dynamically modify the reflection at runtime. \
     This feature can be enabled only if LANGULUS_OPTION_MANAGED_MEMORY is enabled. Enabled by default" ON)
 
-option(LANGULUS_FEATURE_MEMORY_STATISTICS
+option(LANGULUS_OPTION_MEMORY_STATISTICS
     "Memory manager shall keep track of statistics, for the price of little overhead. Disabled by default" OFF)
 
 if (LANGULUS_OPTION_SHARED_LIBRARIES)
@@ -88,7 +88,7 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-    if (LANGULUS_FEATURE_LOGGING)
+    if (LANGULUS_OPTION_LOGGING)
         # Configure and link {fmt} library                                      
         fetch_external_module(
             fmt
@@ -106,9 +106,9 @@ endif()
 )]]
 
 add_langulus_library(LangulusAnyness
-	SOURCES		$<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:source/logger/Logger.cpp>
-				$<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:source/logger/HTML.cpp>
-				$<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:source/logger/TXT.cpp>
+	SOURCES		$<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/Logger.cpp>
+				$<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/HTML.cpp>
+				$<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/TXT.cpp>
 				$<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:source/fractalloc/Allocator.cpp>
 				$<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
 )
@@ -116,7 +116,7 @@ add_langulus_library(LangulusAnyness
 target_compile_features(LangulusAnyness PUBLIC cxx_std_23)
 target_include_directories(LangulusAnyness PUBLIC include)
 target_compile_definitions(LangulusAnyness PRIVATE LANGULUS_EXPORT_ALL)
-target_link_libraries(LangulusAnyness PUBLIC $<$<BOOL:${LANGULUS_FEATURE_LOGGING}>:fmt>)
+target_link_libraries(LangulusAnyness PUBLIC $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:fmt>)
 
 set(LANGULUS_ALIGNMENT 16 CACHE STRING "Default langulus alignment (in bytes)")
 message(STATUS "[FEATURE] Alignment was set to ${LANGULUS_ALIGNMENT} bytes")
@@ -131,7 +131,7 @@ message(STATUS "[FEATURE] Real number size was set to ${LANGULUS_FPU}bit")
 target_compile_definitions(LangulusAnyness PUBLIC LANGULUS_FPU=${LANGULUS_FPU})
 
 # Include tests																	
-if (LANGULUS_TESTING)
+if (LANGULUS_OPTION_TESTING)
     enable_testing()
     add_subdirectory(test)
 endif()
@@ -144,20 +144,20 @@ macro(reflect_option OPTION MESSAGE)
     endif()
 endmacro()
 
-reflect_option(LANGULUS_SAFE_MODE                  "Safe mode enabled")
-reflect_option(LANGULUS_PARANOIA                   "Paranoid mode enabled")
-reflect_option(LANGULUS_TESTING                    "Tests enabled")
-reflect_option(LANGULUS_BENCHMARK                  "Benchmarking enabled")
-reflect_option(LANGULUS_DEBUGGING                  "Debugging enabled")
-reflect_option(LANGULUS_FEATURE_LOGGING            "Logging enabled")
-reflect_option(LANGULUS_FEATURE_PROFILING          "Profiling enabled")
-reflect_option(LANGULUS_FEATURE_NEWDELETE          "New/Delete operator override enabled")
-reflect_option(LANGULUS_FEATURE_UNICODE            "Unicode text containers enabled")
-reflect_option(LANGULUS_FEATURE_COMPRESSION        "Compressable memory enabled")
-reflect_option(LANGULUS_FEATURE_ENCRYPTION		   "Encryptable memory enabled")
+reflect_option(LANGULUS_OPTION_SAFE_MODE           "Safe mode enabled")
+reflect_option(LANGULUS_OPTION_PARANOIA            "Paranoid mode enabled")
+reflect_option(LANGULUS_OPTION_TESTING             "Tests enabled")
+reflect_option(LANGULUS_OPTION_BENCHMARK           "Benchmarking enabled")
+reflect_option(LANGULUS_OPTION_DEBUGGING           "Debugging enabled")
+reflect_option(LANGULUS_OPTION_LOGGING             "Logging enabled")
+reflect_option(LANGULUS_OPTION_PROFILING           "Profiling enabled")
+reflect_option(LANGULUS_OPTION_NEWDELETE           "New/Delete operator override enabled")
+reflect_option(LANGULUS_OPTION_UNICODE             "Unicode text containers enabled")
+reflect_option(LANGULUS_OPTION_COMPRESSION         "Compressable memory enabled")
+reflect_option(LANGULUS_OPTION_ENCRYPTION		   "Encryptable memory enabled")
 reflect_option(LANGULUS_OPTION_MANAGED_MEMORY      "Managed memory enabled")
 reflect_option(LANGULUS_OPTION_MANAGED_REFLECTION  "Managed reflection enabled")
-reflect_option(LANGULUS_FEATURE_MEMORY_STATISTICS  "Memory statistics enabled")
+reflect_option(LANGULUS_OPTION_MEMORY_STATISTICS   "Memory statistics enabled")
 reflect_option(LANGULUS_OPTION_SHARED_LIBRARIES    "Building shared libraries enabled")
 
 reflect_option(LANGULUS_LOGGER_DISABLE_FATALERRORS "Logger: fatal errors disabled")
