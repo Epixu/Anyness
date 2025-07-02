@@ -20,13 +20,13 @@ namespace Langulus::RTTI
       ///                                                                     
       #pragma pack(push, 1)
       struct MetaTagPacked_16 : MetaPacked<2> {
-         using Base = MetaPacked<2>;
+         using Base = MetaPacked;
 
          constexpr MetaTagPacked_16() noexcept = default;
          constexpr MetaTagPacked_16(MetaTagPacked_16 const&) noexcept = default;
          constexpr MetaTagPacked_16(MetaTagPacked_16&&) noexcept = default;
-         explicit constexpr MetaTagPacked_16(nullptr_t) noexcept;
-         explicit constexpr MetaTagPacked_16(DefinitionTag const*) noexcept;
+         constexpr MetaTagPacked_16(nullptr_t) noexcept;
+         constexpr MetaTagPacked_16(DefinitionTag const*) noexcept;
 
          constexpr MetaTagPacked_16& operator = (MetaTagPacked_16 const&) noexcept = default;
          constexpr MetaTagPacked_16& operator = (MetaTagPacked_16&&) noexcept = default;
@@ -46,7 +46,7 @@ namespace Langulus::RTTI
       /// memory-inefficient on 64bit systems                                 
       ///                                                                     
       struct MetaTagNaked : MetaNaked<DefinitionTag> {
-         using Base = MetaNaked<DefinitionTag>;
+         using Base = MetaNaked;
 
          using Base::Base;
          using Base::operator =;

@@ -26,13 +26,13 @@ namespace Langulus::RTTI
       ///                                                                     
       #pragma pack(push, 1)
       struct MetaConstPacked_16 : MetaPacked<2> {
-         using Base = MetaPacked<2>;
+         using Base = MetaPacked;
 
          constexpr MetaConstPacked_16() noexcept = default;
          constexpr MetaConstPacked_16(MetaConstPacked_16 const&) noexcept = default;
          constexpr MetaConstPacked_16(MetaConstPacked_16&&) noexcept = default;
-         explicit constexpr MetaConstPacked_16(nullptr_t) noexcept;
-         explicit constexpr MetaConstPacked_16(DefinitionConst const*) noexcept;
+         constexpr MetaConstPacked_16(nullptr_t) noexcept;
+         constexpr MetaConstPacked_16(DefinitionConst const*) noexcept;
 
          constexpr MetaConstPacked_16& operator = (MetaConstPacked_16 const&) noexcept = default;
          constexpr MetaConstPacked_16& operator = (MetaConstPacked_16&&) noexcept = default;
@@ -50,9 +50,9 @@ namespace Langulus::RTTI
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
       struct MetaConstNaked : MetaNaked<DefinitionConst> {
-         using MetaNaked<DefinitionConst>::MetaNaked;
-         using MetaNaked<DefinitionConst>::operator =;
-         using MetaNaked<DefinitionConst>::operator bool;
+         using MetaNaked::MetaNaked;
+         using MetaNaked::operator =;
+         using MetaNaked::operator bool;
 
          auto GetName() const noexcept -> Token;
 

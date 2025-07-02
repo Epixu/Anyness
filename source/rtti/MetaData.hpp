@@ -110,8 +110,8 @@ namespace Langulus::RTTI
          constexpr MetaDataStructured_XY() noexcept = default;
          constexpr MetaDataStructured_XY(MetaDataStructured_XY const&) noexcept = default;
          constexpr MetaDataStructured_XY(MetaDataStructured_XY&&) noexcept = default;
-         explicit constexpr MetaDataStructured_XY(nullptr_t) noexcept;
-         explicit constexpr MetaDataStructured_XY(DefinitionData const*) noexcept;
+         constexpr MetaDataStructured_XY(nullptr_t) noexcept;
+         constexpr MetaDataStructured_XY(DefinitionData const*) noexcept;
 
          constexpr MetaDataStructured_XY& operator = (MetaDataStructured_XY const&) noexcept = default;
          constexpr MetaDataStructured_XY& operator = (MetaDataStructured_XY&&) noexcept = default;
@@ -183,7 +183,7 @@ namespace Langulus::RTTI
       /// but most memory-inefficient on 64bit systems                        
       ///                                                                     
       struct MetaDataNaked : MetaNaked<DefinitionData> {
-         using Base = MetaNaked<DefinitionData>;
+         using Base = MetaNaked;
          using Base::Base;
          using Base::operator =;
          using Base::operator bool;

@@ -50,7 +50,7 @@ namespace Langulus::RTTI::Inner
       constexpr MetaPacked() noexcept = default;
       constexpr MetaPacked(const MetaPacked&) noexcept = default;
       constexpr MetaPacked(MetaPacked&&) noexcept = default;
-      explicit constexpr MetaPacked(size_t id) noexcept {
+      constexpr MetaPacked(size_t id) noexcept {
          static_assert(sizeof(size_t) >= BYTESIZE);
          mHandle = convert(id).id_processed;
       }

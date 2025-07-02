@@ -11,7 +11,10 @@
 #include <Langulus/CT/Info.hpp>
 #include <Langulus/CT/Versioned.hpp>
 #include <Langulus/Logger.hpp>
-#include <optional>
+
+#if not LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include <optional>
+#endif
 
 
 namespace Langulus::RTTI

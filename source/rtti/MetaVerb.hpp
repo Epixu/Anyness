@@ -47,8 +47,8 @@ namespace Langulus::RTTI
          constexpr MetaVerbStructured_X8() noexcept = default;
          constexpr MetaVerbStructured_X8(MetaVerbStructured_X8 const&) noexcept = default;
          constexpr MetaVerbStructured_X8(MetaVerbStructured_X8&&) noexcept = default;
-         explicit constexpr MetaVerbStructured_X8(nullptr_t) noexcept;
-         explicit constexpr MetaVerbStructured_X8(DefinitionVerb const*) noexcept;
+         constexpr MetaVerbStructured_X8(nullptr_t) noexcept;
+         constexpr MetaVerbStructured_X8(DefinitionVerb const*) noexcept;
 
          constexpr MetaVerbStructured_X8& operator = (MetaVerbStructured_X8 const&) noexcept = default;
          constexpr MetaVerbStructured_X8& operator = (MetaVerbStructured_X8&&) noexcept = default;
@@ -77,7 +77,7 @@ namespace Langulus::RTTI
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
       struct MetaVerbNaked : MetaNaked<DefinitionVerb> {
-         using Base = MetaNaked<DefinitionVerb>;
+         using Base = MetaNaked;
 
          using Base::Base;
          using Base::operator =;

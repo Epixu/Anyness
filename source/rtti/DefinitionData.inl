@@ -19,9 +19,10 @@
 #include <Langulus/CT/POD.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
-#include <optional>
 
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
+#if not LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include <optional>
+#else
    #include "Registry.hpp"
 #endif
 

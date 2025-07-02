@@ -12,7 +12,10 @@
 #include <Langulus/CT/DefineTag.hpp>
 #include <Langulus/CT/DefineVerb.hpp>
 #include <Langulus/Logger.hpp>
-#include <optional>
+
+#if not LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #include <optional>
+#endif
 
 
 namespace Langulus::RTTI
@@ -41,7 +44,7 @@ namespace Langulus::RTTI
       static_assert(not ::std::is_function_v<T>,
          "Can't reflect this function signature as a verb");
 
-      constexpr auto cppname = CppNameOf<T>();
+      constexpr Token cppname = CppNameOf<T>();
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the verb might  
@@ -69,8 +72,8 @@ namespace Langulus::RTTI
       // If this is reached, then verb is not defined yet               
       definition.template ReflectCommon<T>();
       
-      constexpr auto verbPos = NameOfVerb<T>();
-      constexpr auto verbNeg = NameOfVerbReverse<T>();
+      constexpr Token verbPos = NameOfVerb<T>();
+      constexpr Token verbNeg = NameOfVerbReverse<T>();
       static_assert(not verbPos.empty(),
          "Invalid positive verb token is not allowed");
       static_assert(verbPos != verbNeg,
