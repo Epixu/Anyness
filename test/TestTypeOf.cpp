@@ -21,7 +21,7 @@ namespace
 {
    template<class T>
    struct SheddableType {
-      using CTTI_Sheddable = Yes;
+      using CTTI_Sheddable = Yes<>;
       using CTTI_Typed = T;
 
       T instance;

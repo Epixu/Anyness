@@ -42,7 +42,7 @@ namespace
    constexpr bool VERBOSE = false;
 
    struct NamedUsingMember {
-      using CTTI_Named = YesText<"NameOverrideUsingMember">;
+      using CTTI_Named = Yes<"NameOverrideUsingMember">;
    };
    struct NamedBySpecialization {};
 

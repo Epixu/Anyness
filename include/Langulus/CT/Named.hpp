@@ -13,7 +13,7 @@ namespace Langulus::CTTI
    /// when reflected (if MANAGED_REFLECTION is enabled)                      
    /// Can be used in two ways to satisfy CT::Named<T>:                       
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Named = YesText<"DataID">;` in T           
+   /// 2. Add a public `using CTTI_Named = Yes<"DataID">;` in T               
    template<class T>
    struct Named {
       static constexpr Literal Name = "<will use C++ name>";

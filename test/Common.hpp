@@ -533,12 +533,12 @@ namespace Verbs
    /// A testing verb, similar to the ones used in Langulus::Flow             
    ///                                                                        
    struct Create : public Flow::Verb {
-      using CTTI_PositiveVerb     = YesText<"Create">;
-      using CTTI_NegativeVerb     = YesText<"Destroy">;
-      using CTTI_PositiveOperator = YesText<" + ">;
-      using CTTI_NegativeOperator = YesText<" - ">;
-      using CTTI_Precedence       = YesValue<5>;
-      using CTTI_Info             = YesText<
+      using CTTI_PositiveVerb     = Yes<"Create">;
+      using CTTI_NegativeVerb     = Yes<"Destroy">;
+      using CTTI_PositiveOperator = Yes<" + ">;
+      using CTTI_NegativeOperator = Yes<" - ">;
+      using CTTI_Precedence       = Yes<5>;
+      using CTTI_Info             = Yes<
          "Used for allocating new elements. "
          "If the type you're creating has	a producer, "
          "you need to execute the verb in a matching producer, "
@@ -598,7 +598,7 @@ struct ImplicitlyReflectedData {
    enum Named { One, Two, Three };
 
    using CTTI_POD    = Yes;
-   using CTTI_Files  = YesText<"ASE">;
+   using CTTI_Files  = Yes<"ASE">;
    using CTTI_Typed  = Named;
    using CTTI_Values = Constants<One, Two, Three>;
 
@@ -630,9 +630,9 @@ public:
    explicit ImplicitlyReflectedDataWithTraits(Pi)
       : member {314} {}
 
-   using CTTI_Named     = YesText<"MyType">;
-   using CTTI_Info      = YesText<"Info about MyType">;
-   using CTTI_Files     = YesText<"txt, pdf">;
+   using CTTI_Named     = Yes<"MyType">;
+   using CTTI_Info      = Yes<"Info about MyType">;
+   using CTTI_Files     = Yes<"txt, pdf">;
    using CTTI_Versioned = Version<2, 1>;
    using CTTI_Deep      = Yes;
    using CTTI_POD       = Yes;
@@ -665,8 +665,8 @@ public:
    int  anotherMemberArray [12] {};
    int* sparseMember {};
 
-   using CTTI_Named     = YesText<"ComplexType">;
-   using CTTI_Info      = YesText<"Info about ComplexType">;
+   using CTTI_Named     = Yes<"ComplexType">;
+   using CTTI_Info      = Yes<"Info about ComplexType">;
    using CTTI_Versioned = Version<2, 1>;
    using CTTI_Pooled    = PooledBySize<250>;
 
@@ -694,7 +694,7 @@ public:
 struct AnotherTypeWithSimilarilyNamedValues {
    enum Named {One = 501, Two, Three};
    using CTTI_Values = Constants<One, Two, Three>;
-   using CTTI_Named  = YesText<"YetAnotherNamedType">;
+   using CTTI_Named  = Yes<"YetAnotherNamedType">;
 
    int v = One;
 
@@ -702,7 +702,7 @@ struct AnotherTypeWithSimilarilyNamedValues {
 };
 
 struct CheckingWhatGetsInherited : ImplicitlyReflectedDataWithTraits {
-   using CTTI_Named = YesText<"CheckingWhatGetsInherited">;
+   using CTTI_Named = Yes<"CheckingWhatGetsInherited">;
 
    using ImplicitlyReflectedDataWithTraits::ImplicitlyReflectedDataWithTraits;
 };

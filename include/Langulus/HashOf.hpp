@@ -34,8 +34,8 @@ namespace Langulus
    ///   @attention hashing a single hash always returns the hash itself      
    ///                                                                        
    struct Hash {
-      using CTTI_POD      = Yes;
-      using CTTI_Nullable = Yes;
+      using CTTI_POD      = Yes<>;
+      using CTTI_Nullable = Yes<>;
 
       #if LANGULUS_HASHSIZE == 32
          uint32_t mHash = 0;

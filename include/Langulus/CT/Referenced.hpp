@@ -36,7 +36,7 @@ namespace Langulus
       int mReferences = 1;
 
    public:
-      using CTTI_Referenced = Yes;
+      using CTTI_Referenced = Yes<>;
 
       LANGULUS(INLINED)
       ~Referenced() {

@@ -1,14 +1,7 @@
 #pragma once
+#include "../Core.hpp"
 #include <concepts>
 
-
-namespace Langulus
-{
-
-   /// Used as a return type in unsupported functions                         
-   struct Unsupported {};
-
-} // namespace Langulus
 
 namespace Langulus::CT
 {
@@ -22,4 +15,3 @@ namespace Langulus::CT
    concept Supported = ((not Unsupported<T>) and ...);
 
 } // namespace Langulus::CT
-

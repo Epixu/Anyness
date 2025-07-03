@@ -257,8 +257,8 @@ namespace Langulus::RTTI
    /// itself to avoid indirection                                            
    ///                                                                        
    struct MetaData : Inner::MetaDataBase {
-      using CTTI_POD      = Yes;
-      using CTTI_Nullable = Yes;
+      using CTTI_POD      = Yes<>;
+      using CTTI_Nullable = Yes<>;
 
       ignore_all_intents(MetaData);
 

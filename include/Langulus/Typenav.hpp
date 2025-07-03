@@ -35,7 +35,7 @@ namespace Langulus::CTTI
 
    /// Can be used in two ways to satisfy CT::Array<T>:                       
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Array = YesValue<count>;` in T             
+   /// 2. Add a public `using CTTI_Array = Yes<count>;` in T                  
    /// Optional: in many use cases, you should also make T CT::Typed          
    ///           and make sure that sizeof(T) == TypeOf<T> * ExtentOf<T>,     
    ///           if you want to reap the benefits of SIMD optimizations for T 

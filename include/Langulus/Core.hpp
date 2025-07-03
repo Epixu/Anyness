@@ -484,29 +484,6 @@ namespace Langulus
    /// The default alignment, depends on configuration and enabled SIMD       
    constexpr uintptr_t Alignment = LANGULUS_ALIGNMENT;
    
-   /// Equivalent to ::std::true_type, but without the silly nomenclature     
-   struct Yes {
-      static constexpr bool Enabled = true;
-   };
-
-   /// Equivalent to Yes, but also carries a constant of any type             
-   template<auto VALUE>
-   struct YesValue {
-      static constexpr auto Constant = VALUE;
-      static constexpr bool Enabled = true;
-   };
-
-   /// Equivalent to ::std::false_type, but without the silly nomenclature    
-   struct No {
-      static constexpr bool Enabled = false;
-   };
-   
-   /// Equivalent to ::std::false_type or ::std::true_type, depending on arg  
-   template<bool VALUE>
-   struct Maybe {
-      static constexpr bool Enabled = VALUE;
-   };
-   
    /// Same as ::std::declval, but adequately named                           
    template<class T>
    T&& Fake() { static_assert(false, "Calling Fake is ill-formed"); }
@@ -538,5 +515,8 @@ namespace Langulus
          return true;
       }
    }
+
+   /// Used as a return type in unsupported functions                         
+   struct Unsupported {};
 
 } // namespace Langulus

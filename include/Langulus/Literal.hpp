@@ -13,7 +13,7 @@
 #include <string_view>
 
 #if LANGULUS(SAFE)
-   #include <exception>
+   #include <stdexcept>
 #endif
 
 
@@ -81,41 +81,58 @@ namespace Langulus
    {
       /// Check if all T are Literal types                                    
       template<class...T>
-      concept FixedString = Inner::CheckSize<T...>() and (T::CTTI_StringLiteral and ...);
-
-      /// Supported character types used by Literal                           
+      concept Literal = Inner::CheckSize<T...>() and (T::CTTI_Literal and ...);
+      
+      /// Supported character types used by LiteralString                     
       template<class...T>
-      concept FixedChar = Inner::CheckSize<T...>() and ((
-              std::same_as<T, char>
-           or std::same_as<T, wchar_t>
-           or std::same_as<T, char8_t>
-           or std::same_as<T, char16_t>
-           or std::same_as<T, char32_t>
+      concept LiteralChar = Inner::CheckSize<T...>() and ((
+              ::std::same_as<::std::remove_cv_t<T>, char>
+           or ::std::same_as<::std::remove_cv_t<T>, wchar_t>
+           or ::std::same_as<::std::remove_cv_t<T>, char8_t>
+           or ::std::same_as<::std::remove_cv_t<T>, char16_t>
+           or ::std::same_as<::std::remove_cv_t<T>, char32_t>
          ) and ...);
+      
+      /// Check if all T are Literal strings                                  
+      template<class...T>
+      concept LiteralString = Literal<T...>
+          and ((T::ArraySize > 0 and LiteralChar<typename T::value_type>) and ...);
+      
+      /// Check if all T are Literal values                                   
+      template<class...T>
+      concept LiteralValue = Literal<T...> and ((T::ArraySize == 0
+          and not ::std::same_as<::std::remove_cv_t<typename T::value_type>, Unsupported>) and ...);
+      
+      /// Check if all T are Literal values, but undefined                    
+      template<class...T>
+      concept LiteralUndefined = Literal<T...>
+          and (::std::same_as<::std::remove_cv_t<typename T::value_type>, Unsupported> and ...);
+      
    }
 
    using Token = ::std::string_view;
 
 
    ///                                                                        
-   /// String literal                                                         
+   /// Acts as both a single value, or string literal                         
    /// You can use it as a template parameter                                 
-   /// Should be introduced in C++26 as std::fixed_string, supposedly         
+   /// The string implementation should be introduced in C++26 as             
+   /// std::fixed_string, supposedly...                                       
    ///                                                                        
-   /// Since literals are unique types, they can't be used in ?: statements,  
+   /// String literals are unique types, they can't be used in ?: statements, 
    /// so I've allowed string literals of the form `? "\0\0\0" : "alt"` to    
    /// be consistent - left literal has a Literal array size of 3, but size() 
    /// of 0                                                                   
    ///                                                                        
-   template<class T, size_t N, class TRAITS = ::std::char_traits<T>>
+   template<class T, size_t N>
    struct Literal {
-      static constexpr bool CTTI_StringLiteral = true;
+      static constexpr bool CTTI_Literal = true;
+      static constexpr bool Undefined = ::std::same_as<T, Unsupported>;
       static constexpr size_t ArraySize = N;
 
       using storage_type = ::std::array<T, N + 1>;
-      storage_type _data {0};
+      storage_type _data {};
 
-      using traits_type = TRAITS;
       using value_type = T;
       using pointer = value_type*;
       using const_pointer = const value_type*;
@@ -126,17 +143,21 @@ namespace Langulus
       using reverse_iterator = typename storage_type::reverse_iterator;
       using const_reverse_iterator = typename storage_type::const_reverse_iterator;
       using difference_type = ptrdiff_t;
-      using view_type = ::std::basic_string_view<value_type, traits_type>;
+      using view_type = ::std::basic_string_view<value_type>;
 
       static constexpr size_t npos = view_type::npos;
 
       constexpr Literal() noexcept = default;
 
-      constexpr Literal(const value_type(&array)[N + 1]) noexcept {
+      constexpr Literal(const value_type& c) noexcept {
+         _data[0] = c;
+      }
+
+      constexpr Literal(const value_type(&array)[N]) noexcept {
          ::std::copy(::std::begin(array), ::std::end(array), _data.begin());
       }
 
-      constexpr Literal& operator = (const value_type(&array)[N + 1]) noexcept {
+      constexpr Literal& operator = (const value_type(&array)[N]) noexcept {
          ::std::copy(::std::begin(array), ::std::end(array), _data.begin());
          return *this;
       }
@@ -180,33 +201,44 @@ namespace Langulus
       /// Encapsulation                                                       
       ///                                                                     
       constexpr size_t size() const noexcept {
-         // This is a slow implementation, but Literals are mostly used 
-         // at compile-time, so it shouldn't be an issue                
-         auto ptr = _data.data();
-         const auto ptrEnd = _data.data() + N;
-         while(ptr != ptrEnd and *ptr)
-            ++ptr;
-         return ptr - _data.data();
+         if constexpr (N > 0 and not Undefined) {
+            // This is a slow implementation, but Literals are mostly   
+            // used at compile-time, so it shouldn't be an issue        
+            auto ptr = _data.data();
+            const auto ptrEnd = _data.data() + N;
+            while(ptr != ptrEnd and *ptr)
+               ++ptr;
+            return ptr - _data.data();
+         }
+         else return 0;
       }
       
       constexpr bool empty() const noexcept {
-         return not N or not _data[0];
+         if constexpr (N > 0 and not Undefined)
+            return not N or not _data[0];
+         else
+            return true;
       }
       
       constexpr explicit operator bool () const noexcept {
-         return N and _data[0];
+         if constexpr (Undefined) return false;
+         else return _data[0];
       }
 
       ///                                                                     
       /// Access                                                              
-      ///                                                                     
-      constexpr decltype(auto) operator [] (this auto&& self, size_t n) has_assumptions {
-         #if LANGULUS_SAFE()
-            if not consteval {
-               if (n >= self.size()) throw ::std::range_error(HERE());
-            }
-         #endif
-         return self._data[n];
+      /// @attention 'n' is always 0 when N == 0                              
+      constexpr decltype(auto) operator [] (this auto&& self, [[maybe_unused]] size_t n)
+      has_assumptions {
+         if constexpr (N > 0) {
+            #if LANGULUS_SAFE()
+               if not consteval {
+                  if (n >= self.size()) throw ::std::range_error(HERE());
+               }
+            #endif
+            return self._data[n];
+         }
+         else return self._data[0];
       }
 
       constexpr decltype(auto) at(this auto&& self, size_t n) {
@@ -234,10 +266,10 @@ namespace Langulus
       ///                                                                     
       /// Get a resized Literal with the same properties                      
       template<size_t M>
-      using Resized = Literal<value_type, M, traits_type>;
+      using Resized = Literal<value_type, M>;
 
    protected:
-      template<class, size_t, class>
+      template<class, size_t>
       friend struct Literal;
 
       template<size_t pos, size_t count, size_t size>
@@ -250,9 +282,13 @@ namespace Langulus
       constexpr view_type sv() const { return *this; }
 
    public:
-
-      /// Implicit cast to a string view                                      
-      constexpr operator view_type() const noexcept {
+      /// Implicit cast to a first value, if N == 0                           
+      constexpr operator T() const noexcept requires (N == 0) {
+         return _data[0];
+      }
+      
+      /// Implicit cast to a string view, if N > 0                            
+      constexpr operator view_type() const noexcept requires (N > 0) {
          return {data(), size()};
       }
 
@@ -410,7 +446,7 @@ namespace Langulus
          return sv().substr(0, v.size()) == v;
       }
       constexpr bool starts_with(char c) const noexcept {
-         return not empty() and traits_type::eq(front(), c);
+         return not empty() and ::std::char_traits<T>::eq(front(), c);
       }
       constexpr bool starts_with(const value_type* s) const noexcept {
          return starts_with(view_type(s));
@@ -421,7 +457,7 @@ namespace Langulus
          return size() >= sv.size() && compare(size() - sv.size(), npos, sv) == 0;
       }
       constexpr bool ends_with(value_type c) const noexcept {
-         return !empty() && traits_type::eq(back(), c);
+         return !empty() && ::std::char_traits<T>::eq(back(), c);
       }
       constexpr bool ends_with(const value_type* s) const {
          return ends_with(view_type(s));
@@ -443,14 +479,17 @@ namespace Langulus
       }
    };
 
-   Literal() -> Literal<char, 0>;
+   Literal() -> Literal<Unsupported, 0>;
 
-   template<class TChar, size_t N>
-   Literal(const TChar(&)[N]) -> Literal<TChar, N - 1>;
+   template<class T>
+   Literal(const T&) -> Literal<T, 0>;
+   
+   template<class T, size_t N>
+   Literal(const T(&)[N]) -> Literal<T, N>;
 
 
-   /// Swap two literals                                                      
-   template<CT::FixedString S>
+   /// Swap two strings                                                       
+   template<CT::LiteralString S>
    void swap(S& lhs, S& rhs) noexcept(noexcept(lhs.swap(rhs))) {
       lhs.swap(rhs);
    }
@@ -458,50 +497,102 @@ namespace Langulus
 
    ///                                                                        
    /// Literal == Literal                                                     
-   constexpr bool operator == (
-      const CT::FixedString auto& lhs,
-      const CT::FixedString auto& rhs
-   ) {
-      if (lhs.size() != rhs.size())
-         return false;
+   template<CT::Literal LHS, CT::Literal RHS>
+   constexpr bool operator == (const LHS& lhs, const RHS& rhs) {
+      if constexpr (CT::LiteralString<LHS, RHS>) {
+         // Both are strings                                            
+         if (lhs.size() != rhs.size())
+            return false;
       
-      for (size_t i = 0; i < lhs.size(); ++i) {
-         if (lhs[i] != rhs[i])
+         for (size_t i = 0; i < lhs.size(); ++i) {
+            if (lhs[i] != rhs[i])
+               return false;
+         }
+         return true;
+      }
+      else if constexpr (CT::LiteralString<LHS>) {
+         // LHS is string, RHS is value/undefined                       
+         if constexpr (CT::LiteralUndefined<RHS>)
+            return lhs.empty();
+         else if constexpr (::std::equality_comparable_with<typename LHS::value_type, typename RHS::value_type>)
+            return (lhs.empty() and rhs.empty()) or (lhs.size() == 1 and lhs[0] == rhs[0]);
+         else
             return false;
       }
-      return true;
+      else if constexpr (CT::LiteralString<RHS>) {
+         // LHS is value/undefined, RHS is string                       
+         if constexpr (CT::LiteralUndefined<LHS>)
+            return rhs.empty();
+         else if constexpr (::std::equality_comparable_with<typename LHS::value_type, typename RHS::value_type>)
+            return (lhs.empty() and rhs.empty()) or (rhs.size() == 1 and lhs[0] == rhs[0]);
+         else
+            return false;
+      }
+      else if constexpr (::std::equality_comparable_with<typename LHS::value_type, typename RHS::value_type>) {
+         // Both are values/undefined and comparable                    
+         return lhs[0] == rhs[0];
+      }
+      else {
+         // Both are values/undefined and uncomparable, and can be the  
+         // same only if both are undefined                             
+         return CT::LiteralUndefined<LHS, RHS>;
+      }
    }
 
    /// Literal == View                                                        
-   template<CT::FixedString S>
+   template<CT::LiteralString S>
    constexpr bool operator == (const S& lhs, typename S::view_type rhs) {
       return static_cast<typename S::view_type>(lhs) == rhs;
    }
 
    /// View == Literal                                                        
-   template<CT::FixedString S>
+   template<CT::LiteralString S>
    constexpr bool operator == (typename S::view_type lhs, const S& rhs) {
       return lhs == static_cast<typename S::view_type>(rhs);
    }
 
    /// Literal == Array                                                       
-   template<CT::FixedString S, size_t N>
+   template<CT::LiteralString S, size_t N>
    constexpr bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {
       return lhs == static_cast<typename S::view_type>(rhs);
    }
 
    /// Array == Literal                                                       
-   template<CT::FixedString S, size_t N>
+   template<CT::LiteralString S, size_t N>
    constexpr bool operator == (const typename S::value_type(&lhs)[N], const S& rhs) {
       return static_cast<typename S::view_type>(lhs) == rhs;
+   }
+
+   /// LiteralValue == Array                                                  
+   template<CT::LiteralValue S, size_t N>
+   constexpr bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {
+      return lhs[0] == rhs[0];
+   }
+
+   /// Array == LiteralValue                                                  
+   template<CT::LiteralValue S, size_t N>
+   constexpr bool operator == (const typename S::value_type(&lhs)[N], const S& rhs) {
+      return lhs[0] == rhs[0];
+   }
+
+   /// LiteralUndefined == Array                                              
+   template<CT::LiteralUndefined S, CT::LiteralChar C, size_t N>
+   constexpr bool operator == (const S&, const C(&rhs)[N]) {
+      return rhs[0] == '\0';
+   }
+
+   /// Array == LiteralUndefined                                              
+   template<CT::LiteralUndefined S, CT::LiteralChar C, size_t N>
+   constexpr bool operator == (const C(&lhs)[N], const S&) {
+      return lhs[0] == '\0';
    }
 
 
    ///                                                                        
    /// Literal <=> Literal                                                    
    constexpr auto operator <=> (
-      const CT::FixedString auto& lhs,
-      const CT::FixedString auto& rhs
+      const CT::LiteralString auto& lhs,
+      const CT::LiteralString auto& rhs
    ) {
       using lhs_type = std::decay_t<decltype(lhs)>;
       using sv_type = typename lhs_type::view_type;
@@ -509,26 +600,26 @@ namespace Langulus
    }
 
    /// Literal <=> View                                                       
-   template<CT::FixedString S>
+   template<CT::LiteralString S>
    constexpr auto operator <=> (const S& lhs, const typename S::view_type& rhs) {
       return static_cast<typename S::view_type>(lhs) <=> rhs;
    }
    
    /// View <=> Literal                                                       
-   template<CT::FixedString S>
+   template<CT::LiteralString S>
    constexpr auto operator <=> (const typename S::view_type& lhs, const S& rhs) {
       return lhs <=> static_cast<typename S::view_type>(rhs);
    }
    
    /// Literal <=> Array                                                      
-   template<CT::FixedString S, size_t N>
+   template<CT::LiteralString S, size_t N>
    constexpr auto operator <=> (const S& lhs, const typename S::value_type(&rhs)[N]) {
       using sv_type = typename S::view_type;
       return static_cast<sv_type>(lhs) <=> sv_type {rhs};
    }
    
    /// Array <=> Literal                                                      
-   template<CT::FixedString S, size_t N>
+   template<CT::LiteralString S, size_t N>
    constexpr auto operator <=> (const typename S::value_type(&lhs)[N], const S& rhs) {
       using sv_type = typename S::view_type;
       return sv_type {lhs} <=> static_cast<sv_type>(rhs);
@@ -538,7 +629,7 @@ namespace Langulus
    ///                                                                        
    /// Concatenation                                                          
    ///                                                                        
-   template<CT::FixedString LHS, CT::FixedString RHS>
+   template<CT::LiteralString LHS, CT::LiteralString RHS>
    constexpr auto operator + (const LHS& lhs, const RHS& rhs) {
       typename LHS::template Resized<LHS::ArraySize + RHS::ArraySize> result;
       size_t i = 0;
@@ -549,14 +640,14 @@ namespace Langulus
       return result;
    }
 
-   template<CT::FixedChar C, size_t N>
-   constexpr auto operator + (const C(&lhs)[N], const CT::FixedString auto& rhs) {
+   template<CT::LiteralChar C, size_t N>
+   constexpr auto operator + (const C(&lhs)[N], const CT::LiteralString auto& rhs) {
       Literal lhs2 = lhs;
       return lhs2 + rhs;
    }
 
-   template<CT::FixedChar C, size_t N>
-   constexpr auto operator + (const CT::FixedString auto& lhs, const C(&rhs)[N]) {
+   template<CT::LiteralChar C, size_t N>
+   constexpr auto operator + (const CT::LiteralString auto& lhs, const C(&rhs)[N]) {
       Literal rhs2 = rhs;
       return lhs + rhs2;
    }
@@ -571,24 +662,36 @@ namespace Langulus
       }
    }
 
-   constexpr auto operator + (CT::FixedChar auto lhs, const CT::FixedString auto& rhs) {
+   constexpr auto operator + (CT::LiteralChar auto lhs, const CT::LiteralString auto& rhs) {
       return Inner::from_char(lhs) + rhs;
    }
 
-   constexpr auto operator + (const CT::FixedString auto& lhs, CT::FixedChar auto rhs) {
+   constexpr auto operator + (const CT::LiteralString auto& lhs, CT::LiteralChar auto rhs) {
       return lhs + Inner::from_char(rhs);
    }
 
-   /// Equivalent to Yes, but also carries a string literal                   
-   /*template<Literal TEXT>
-   struct YesText {
-      static constexpr Literal Constant = TEXT;
+   
+   /// Equivalent to ::std::true_type, but without the silly nomenclature     
+   /// Can carry a constant with itself                                       
+   template<Literal VALUE = 0>
+   struct Yes {
+      static constexpr auto Constant = VALUE;
       static constexpr bool Enabled = true;
-   };*/
+   };
+
+   /// Equivalent to ::std::false_type, but without the silly nomenclature    
+   /// Can carry a constant with itself                                       
+   template<Literal VALUE = 0>
+   struct No {
+      static constexpr auto Constant = VALUE;
+      static constexpr bool Enabled = false;
+   };
    
-   template<Literal TEXT>
-   using YesText = YesValue<TEXT>;
-   
+   /// Equivalent to ::std::false_type or ::std::true_type, depending on arg  
+   template<bool VALUE>
+   struct Maybe {
+      static constexpr bool Enabled = VALUE;
+   };
 }
 
 namespace std

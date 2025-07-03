@@ -15,10 +15,10 @@ using namespace Langulus;
 namespace
 {
    struct SuffixUsingMember {
-      using CTTI_Suffix = YesText<"yeah">;
+      using CTTI_Suffix = Yes<"yeah">;
    };
    struct NastySuffixUsingMember {
-      using CTTI_Suffix = YesText<"yeаh">; // contains cyrillic 'а'
+      using CTTI_Suffix = Yes<"yeаh">; // contains cyrillic 'а'
    };
    struct SuffixBySpecialization {};
    struct NoSuffix {};

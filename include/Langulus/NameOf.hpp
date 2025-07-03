@@ -476,10 +476,7 @@ namespace Langulus
    /// Considers CTTI::Named, or fallbacks to the C++ name                    
    /// If you want to avoid custom names, use CppNameOf directly instead      
    ///   @attention similarly named types in anonymous namespaces will result 
-   ///      in the same name. If this is not desired, give them unique        
-   ///      `using CTTI_Named = YesText<"name">` for each translation unit    
-   ///      they appear in manually. Alternatively, you can also specialize   
-   ///      CTTI::Named instead, if you have no control over the types        
+   ///      in the same name. If this is not desired - name your namespaces   
    ///   @tparam T - the type to get the name of                              
    ///   @return a compile-time string                                        
    template<class T>

@@ -23,7 +23,7 @@ using namespace Langulus;
 namespace
 {
    template<class T>
-   struct SheddableType { using CTTI_Sheddable = Yes; using CTTI_Typed = T; };
+   struct SheddableType { using CTTI_Sheddable = Yes<>; using CTTI_Typed = T; };
 
    struct NonHashable {
       int blah = 5;
@@ -42,7 +42,7 @@ namespace
    };
 
    struct HashableViaBeingPOD : NonHashable {
-      using CTTI_POD = Yes;
+      using CTTI_POD = Yes<>;
    };
 
    struct HashableViaBoth : HashableViaConstMethod, HashableViaBeingPOD {};
@@ -59,7 +59,7 @@ TEMPLATE_TEST_CASE("Testing hashable types", "[ct]",
    HashableViaBoth,
    HashableViaBoth&,
    NonHashable*,
-   int, float, bool, std::nullptr_t, void*,
+   int, float, bool, nullptr_t, void*,
    int&,
    int*
 ) {

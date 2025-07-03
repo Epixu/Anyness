@@ -76,8 +76,8 @@ namespace Langulus::RTTI
    /// in the ID itself to avoid indirection                                  
    ///                                                                        
    struct MetaTag : Inner::MetaTagBase {
-      using CTTI_POD      = Yes;
-      using CTTI_Nullable = Yes;
+      using CTTI_POD      = Yes<>;
+      using CTTI_Nullable = Yes<>;
 
       ignore_all_intents(MetaTag);
 

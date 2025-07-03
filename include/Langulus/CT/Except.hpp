@@ -34,7 +34,7 @@ namespace Langulus
    /// for debug builds, like message and location strings                    
    ///                                                                        
    struct Exception {
-      using CTTI_Exception = Yes;
+      using CTTI_Exception = Yes<>;
 
       static constexpr auto DefaultMessage  = "<no information provided>";
       static constexpr auto DefaultLocation = "<unknown location>";

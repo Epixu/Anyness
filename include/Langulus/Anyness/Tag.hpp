@@ -29,12 +29,12 @@ namespace Langulus::Anyness
 #define LANGULUS_DEFINE_TAG(NAME)               \
    namespace Langulus::Tags {                   \
       struct NAME : Anyness::Tag {              \
-         using CTTI_DefineTag = YesText<#NAME>; \
+         using CTTI_DefineTag = Yes<#NAME>;     \
          using Anyness::Tag::Tag;               \
       };                                        \
       template<CT::NotVoid T>                   \
       struct T##NAME : Anyness::TTag<T> {       \
-         using CTTI_DefineTag = YesText<#NAME>; \
+         using CTTI_DefineTag = Yes<#NAME>;     \
          using Anyness::TTag<T>::TTag;          \
       };                                        \
    }

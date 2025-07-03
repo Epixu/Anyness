@@ -7,7 +7,7 @@ namespace Langulus::CTTI
 
    /// Can be used in two ways to satisfy CT::DefineTag<T>:                   
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_DefineTrait = YesText<"TraitID">;` in T    
+   /// 2. Add a public `using CTTI_DefineTrait = Yes<"TraitID">;` in T        
    template<class T>
    struct DefineTag {
       static constexpr Literal Name = "<not a tag>";

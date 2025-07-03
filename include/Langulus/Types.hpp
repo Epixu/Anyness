@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Core.hpp"
+#include "Literal.hpp"
 #include <tuple>
 
 
@@ -109,8 +109,8 @@ namespace Langulus
    /// Satisfies CT::Void and is considered 'void'                            
    template<CT::Void T>
    struct Types<T> {
-      using CTTI_Typelist = Yes;
-      using CTTI_Void     = Yes;
+      using CTTI_Typelist = Yes<>;
+      using CTTI_Void     = Yes<>;
 
       static constexpr bool Empty = true;
       static constexpr size_t Count = 0;
@@ -137,7 +137,7 @@ namespace Langulus
    /// Type list that contains exactly one type, which isn't void             
    template<CT::NotTypelist T> requires CT::NotVoid<T>
    struct Types<T> {
-      using CTTI_Typelist = Yes;
+      using CTTI_Typelist = Yes<>;
 
       static constexpr bool Empty = false;
       static constexpr size_t Count = 1;
@@ -228,7 +228,7 @@ namespace Langulus
    /// Type list that contains multiple non-void types                        
    template<CT::NotTypelist T1, CT::NotTypelist T2, CT::NotTypelist...TN> requires CT::NotVoid<T1, T2, TN...>
    struct Types<T1, T2, TN...> {
-      using CTTI_Typelist = Yes;
+      using CTTI_Typelist = Yes<>;
 
       static constexpr bool Empty = false;
       static constexpr size_t Count = sizeof...(TN) + 2;
@@ -263,14 +263,14 @@ namespace Langulus
       /// Yes instead of No                                                   
       /// (utilizes a compile-time short-circuit)                             
       static constexpr bool ForEachConstOr(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::same_as<Yes>;  }
-                    or requires{ {lambda.template operator()<T1>()} -> ::std::same_as<No>; },
+         static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::same_as<Yes<>>;  }
+                    or requires{ {lambda.template operator()<T1>()} -> ::std::same_as<No<>>; },
             "Provided argument is not a lambda of the form []<class> -> Yes/No");
-         if constexpr (::std::same_as<Yes, decltype(lambda.template operator()<T1>())>) {
+         if constexpr (::std::same_as<Yes<>, decltype(lambda.template operator()<T1>())>) {
             lambda.template operator()<T1>();
             return true;
          }
-         else if constexpr (::std::same_as<Yes, decltype(lambda.template operator()<T2>())>) {
+         else if constexpr (::std::same_as<Yes<>, decltype(lambda.template operator()<T2>())>) {
             lambda.template operator()<T2>();
             return true;
          }

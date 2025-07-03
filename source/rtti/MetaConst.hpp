@@ -78,8 +78,8 @@ namespace Langulus::RTTI
    /// in the ID itself to avoid indirection                                  
    ///                                                                        
    struct MetaConst : Inner::MetaConstBase {
-      using CTTI_POD      = Yes;
-      using CTTI_Nullable = Yes;
+      using CTTI_POD      = Yes<>;
+      using CTTI_Nullable = Yes<>;
 
       ignore_all_intents(MetaConst);
 

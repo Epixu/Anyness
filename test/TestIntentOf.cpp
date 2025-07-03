@@ -139,7 +139,7 @@ namespace
 
    template<class T>
    struct SheddableType {
-      using CTTI_Sheddable = Yes;
+      using CTTI_Sheddable = Yes<>;
       using CTTI_Typed = T;
 
       T instance;
@@ -305,7 +305,7 @@ namespace
 
    /// Custom POD type                                                        
    struct ForcefullyPod {
-      using CTTI_POD = Yes;
+      using CTTI_POD = Yes<>;
       Complex mData;
    };
    static_assert(CT::POD<ForcefullyPod>);
@@ -345,7 +345,7 @@ TEMPLATE_TEST_CASE("Testing non-intent type", "[ct]",
    SheddableType<Refer<int>>,
    IncompleteType,
    TypedEnum,
-   void, int, int&&, int*, ::std::nullptr_t
+   void, int, int&&, int*, nullptr_t
 ) {
    static_assert(not CT::Intent<TestType>);
    static_assert(    CT::NoIntent<TestType>);
@@ -1306,7 +1306,7 @@ TEMPLATE_TEST_CASE("Testing move-constructible types", "[ct]",
    alignas(T) char storage2[sizeof(T)] {};
    auto test1 = reinterpret_cast<T*>(storage1);
    auto test2 = reinterpret_cast<T*>(storage2);
-   new (test1) T {::std::move(*test2)};
+   new (test1) T {MOV(*test2)};
 }
 
 TEMPLATE_TEST_CASE("Testing non-move-constructible types", "[ct]",
@@ -1378,7 +1378,7 @@ TEMPLATE_TEST_CASE("Testing move-assignable types", "[ct]",
    alignas(T) char storage2[sizeof(T)] {};
    auto test1 = reinterpret_cast<T*>(storage1);
    auto test2 = reinterpret_cast<T*>(storage2);
-   *test1 = ::std::move(*test2);
+   *test1 = MOV(*test2);
 }
 
 TEMPLATE_TEST_CASE("Testing non-move-assignable types", "[ct]",
