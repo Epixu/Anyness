@@ -19,6 +19,64 @@
 
 namespace Langulus
 {
+   /// A fully portable constexpr alphabetical character check                
+   /// Only english alphabet and underline symbol are allowed                 
+   constexpr bool IsAlphabetical(char c) noexcept {
+      switch (c) {
+      case 'A': case 'a': case 'B': case 'b': case 'C': case 'c':
+      case 'D': case 'd': case 'E': case 'e': case 'F': case 'f':
+      case 'G': case 'g': case 'H': case 'h': case 'I': case 'i':
+      case 'J': case 'j': case 'K': case 'k': case 'L': case 'l':
+      case 'M': case 'm': case 'N': case 'n': case 'O': case 'o':
+      case 'P': case 'p': case 'Q': case 'q': case 'R': case 'r':
+      case 'S': case 's': case 'T': case 't': case 'U': case 'u':
+      case 'V': case 'v': case 'W': case 'w': case 'X': case 'x':
+      case 'Y': case 'y': case 'Z': case 'z': case '_':
+         return true;
+      default:
+         return false;
+      }
+   }
+
+   /// A fully portable constexpr operator character check                    
+   /// Only operators that can occur in type names are allowed                
+   constexpr bool IsOperator(char c) noexcept {
+      switch (c) {
+      case '<': case '>': case '[': case ']': case '(': case ')':
+      case '*': case '&': case ':': case ';': case '"': case '\'':
+      case '.': case ',':
+         return true;
+      default:
+         return false;
+      }
+   }
+
+   /// A fully portable constexpr number character check                      
+   constexpr bool IsNumerical(char c) noexcept {
+      switch (c) {
+      case '0': case '1': case '2': case '3': case '4': case '5':
+      case '6': case '7': case '8': case '9':
+         return true;
+      default:
+         return false;
+      }
+   }
+   
+   /// A fully portable constexpr space character check                       
+   constexpr bool IsSpace(char c) noexcept {
+      return c == ' ';
+   }
+
+   /// Verify that a string literal is made of allowed ASCII symbols          
+   constexpr bool IsASCII(auto source) {
+      for (char c : source) {
+         if (IsAlphabetical(c) or IsOperator(c) or IsNumerical(c) or IsSpace(c))
+            continue;
+         return false;
+      }
+      return true;
+   }
+
    namespace CT
    {
       /// Check if all T are Literal types                                    
@@ -44,12 +102,18 @@ namespace Langulus
    /// You can use it as a template parameter                                 
    /// Should be introduced in C++26 as std::fixed_string, supposedly         
    ///                                                                        
+   /// Since literals are unique types, they can't be used in ?: statements,  
+   /// so I've allowed string literals of the form `? "\0\0\0" : "alt"` to    
+   /// be consistent - left literal has a Literal array size of 3, but size() 
+   /// of 0                                                                   
+   ///                                                                        
    template<class T, size_t N, class TRAITS = ::std::char_traits<T>>
    struct Literal {
       static constexpr bool CTTI_StringLiteral = true;
+      static constexpr size_t ArraySize = N;
 
-      using storage_type = std::array<T, N + 1>;
-      storage_type _data{};
+      using storage_type = ::std::array<T, N + 1>;
+      storage_type _data {0};
 
       using traits_type = TRAITS;
       using value_type = T;
@@ -61,58 +125,51 @@ namespace Langulus
       using const_iterator = typename storage_type::const_iterator;
       using reverse_iterator = typename storage_type::reverse_iterator;
       using const_reverse_iterator = typename storage_type::const_reverse_iterator;
-      using size_type = size_t;
       using difference_type = ptrdiff_t;
       using view_type = ::std::basic_string_view<value_type, traits_type>;
 
       static constexpr size_t npos = view_type::npos;
-      static constexpr size_t Count = N;
-      static constexpr bool Empty = (N == 0);
 
       constexpr Literal() noexcept = default;
 
       constexpr Literal(const value_type(&array)[N + 1]) noexcept {
-         std::copy(std::begin(array), std::end(array), _data.begin());
+         ::std::copy(::std::begin(array), ::std::end(array), _data.begin());
       }
 
       constexpr Literal& operator = (const value_type(&array)[N + 1]) noexcept {
-         std::copy(std::begin(array), std::end(array), _data.begin());
+         ::std::copy(::std::begin(array), ::std::end(array), _data.begin());
          return *this;
       }
 
       ///                                                                     
       /// Iteration                                                           
       ///                                                                     
-      template<class Self>
-      constexpr auto begin(this Self&& self) noexcept {
+      constexpr auto begin(this auto&& self) noexcept {
          return self._data.begin();
       }
 
-      template<class Self>
-      constexpr auto end(this Self&& self) noexcept {
-         return self._data.end() - 1;
+      constexpr auto end(this auto&& self) noexcept {
+         return self._data.begin() + self.size();
       }
 
       constexpr auto cbegin() const noexcept {
          return _data.cbegin();
       }
 
-      constexpr auto cend() const noexcept {
-         return _data.cend() - 1;
+      constexpr auto cend(this auto&& self) noexcept {
+         return self._data.cbegin() + self.size();
       }
 
-      template<class Self>
-      constexpr auto rbegin(this Self&& self) noexcept {
-         return self._data.rbegin() + 1;
+      constexpr auto rbegin(this auto&& self) noexcept {
+         return self._data.rbegin() + (N - self.size());
       }
 
-      template<class Self>
-      constexpr auto rend(this Self&& self) noexcept {
+      constexpr auto rend(this auto&& self) noexcept {
          return self._data.rend();
       }
 
-      constexpr auto crbegin() const noexcept {
-         return _data.crbegin() + 1;
+      constexpr auto crbegin(this auto&& self) noexcept {
+         return self._data.crbegin() + (N - self.size());
       }
 
       constexpr auto crend() const noexcept {
@@ -122,41 +179,49 @@ namespace Langulus
       ///                                                                     
       /// Encapsulation                                                       
       ///                                                                     
-      constexpr auto size() const noexcept { return Count; }
-      constexpr auto empty() const noexcept { return Empty; }
-      constexpr explicit operator bool () const noexcept { return Count > 0; }
+      constexpr size_t size() const noexcept {
+         // This is a slow implementation, but Literals are mostly used 
+         // at compile-time, so it shouldn't be an issue                
+         auto ptr = _data.data();
+         const auto ptrEnd = _data.data() + N;
+         while(ptr != ptrEnd and *ptr)
+            ++ptr;
+         return ptr - _data.data();
+      }
+      
+      constexpr bool empty() const noexcept {
+         return not N or not _data[0];
+      }
+      
+      constexpr explicit operator bool () const noexcept {
+         return N and _data[0];
+      }
 
       ///                                                                     
       /// Access                                                              
       ///                                                                     
-      template<class Self>
-      constexpr decltype(auto) operator [] (this Self&& self, size_type n) has_assumptions {
+      constexpr decltype(auto) operator [] (this auto&& self, size_t n) has_assumptions {
          #if LANGULUS_SAFE()
             if not consteval {
-               if (n >= N)
-                  throw ::std::range_error("Literal access out of range");
+               if (n >= self.size()) throw ::std::range_error(HERE());
             }
          #endif
          return self._data[n];
       }
 
-      template<class Self>
-      constexpr decltype(auto) at(this Self&& self, size_type n) {
+      constexpr decltype(auto) at(this auto&& self, size_t n) {
          return self._data.at(n);
       }
 
-      template<class Self>
-      constexpr decltype(auto) front(this Self&& self) noexcept requires (not Empty) {
+      constexpr decltype(auto) front(this auto&& self) noexcept {
          return self._data.front();
       }
 
-      template<class Self>
-      constexpr decltype(auto) back(this Self&& self) noexcept requires (not Empty) {
-         return self._data[Count - 1];
+      constexpr decltype(auto) back(this auto&& self) noexcept {
+         return self._data[self.size() - 1];
       }
 
-      template<class Self>
-      constexpr auto data(this Self&& self) noexcept {
+      constexpr auto data(this auto&& self) noexcept {
          return self._data.data();
       }
 
@@ -175,17 +240,12 @@ namespace Langulus
       template<class, size_t, class>
       friend struct Literal;
 
-      template<size_type pos, size_type count, size_type size>
-      consteval static size_type calculate_substr_size() {
+      template<size_t pos, size_t count, size_t size>
+      consteval static size_t clamp() {
          if constexpr (pos >= size)
             return 0;
-
-         constexpr size_type rcount = std::min(count, size - pos);
-         return rcount;
+         return count < size - pos ? count : size - pos;
       }
-
-      template <size_type pos, size_type count>
-      using substr_result_type = Resized<calculate_substr_size<pos, count, N>()>;
 
       constexpr view_type sv() const { return *this; }
 
@@ -193,134 +253,135 @@ namespace Langulus
 
       /// Implicit cast to a string view                                      
       constexpr operator view_type() const noexcept {
-         return {data(), N };
+         return {data(), size()};
       }
 
       /// Get a region of the string                                          
-      template<size_type pos = 0, size_type count = npos> requires (pos <= N)
+      template<size_t pos = 0, size_t count = npos> requires (pos <= N)
       constexpr auto substr() const noexcept {
-         substr_result_type<pos, count> result;
-         std::copy(begin() + pos, begin() + pos + result.size(), result.begin());
+         using Selection = Resized<clamp<pos, count, N>()>;
+         Selection result;
+         std::copy(begin() + pos, begin() + pos + Selection::ArraySize, result.begin());
          return result;
       }
 
       /// Find                                                                
       template <size_t M>
-      constexpr size_type find(const Resized<M>& str, size_type pos = 0) const noexcept {
+      constexpr size_t find(const Resized<M>& str, size_t pos = 0) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find(str.sv(), pos);
       }
-      constexpr size_type find(view_type sv, size_type pos = 0) const noexcept {
+      constexpr size_t find(view_type sv, size_t pos = 0) const noexcept {
          return sv().find(sv, pos);
       }
-      constexpr size_type find(const value_type* s, size_type pos, size_type n) const {
+      constexpr size_t find(const value_type* s, size_t pos, size_t n) const {
          return sv().find(s, pos, n);
       }
-      constexpr size_type find(const value_type* s, size_type pos = 0) const {
+      constexpr size_t find(const value_type* s, size_t pos = 0) const {
          return sv().find(s, pos);
       }
-      constexpr size_type find(value_type c, size_type pos = 0) const noexcept {
+      constexpr size_t find(value_type c, size_t pos = 0) const noexcept {
          return sv().find(c, pos);
       }
 
       /// Find in reverse                                                     
       template <size_t M>
-      constexpr size_type rfind(const Resized<M>& str, size_type pos = npos) const noexcept {
+      constexpr size_t rfind(const Resized<M>& str, size_t pos = npos) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().rfind(str.sv(), pos);
       }
-      constexpr size_type rfind(view_type sv, size_type pos = npos) const noexcept {
+      constexpr size_t rfind(view_type sv, size_t pos = npos) const noexcept {
          return sv().rfind(sv, pos);
       }
-      constexpr size_type rfind(const value_type* s, size_type pos, size_type n) const {
+      constexpr size_t rfind(const value_type* s, size_t pos, size_t n) const {
          return sv().rfind(s, pos, n);
       }
-      constexpr size_type rfind(const value_type* s, size_type pos = npos) const {
+      constexpr size_t rfind(const value_type* s, size_t pos = npos) const {
          return sv().rfind(s, pos);
       }
-      constexpr size_type rfind(value_type c, size_type pos = npos) const noexcept {
+      constexpr size_t rfind(value_type c, size_t pos = npos) const noexcept {
          return sv().rfind(c, pos);
       }
 
       /// Find the first of                                                   
       template <size_t M>
-      constexpr size_type find_first_of(const Resized<M>& str, size_type pos = 0) const noexcept {
+      constexpr size_t find_first_of(const Resized<M>& str, size_t pos = 0) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find_first_of(str.sv(), pos);
       }
-      constexpr size_type find_first_of(view_type sv, size_type pos = 0) const noexcept {
+      constexpr size_t find_first_of(view_type sv, size_t pos = 0) const noexcept {
          return sv().find_first_of(sv, pos);
       }
-      constexpr size_type find_first_of(const value_type* s, size_type pos, size_type n) const {
+      constexpr size_t find_first_of(const value_type* s, size_t pos, size_t n) const {
          return sv().find_first_of(s, pos, n);
       }
-      constexpr size_type find_first_of(const value_type* s, size_type pos = 0) const {
+      constexpr size_t find_first_of(const value_type* s, size_t pos = 0) const {
          return sv().find_first_of(s, pos);
       }
-      constexpr size_type find_first_of(value_type c, size_type pos = 0) const noexcept {
+      constexpr size_t find_first_of(value_type c, size_t pos = 0) const noexcept {
          return sv().find_first_of(c, pos);
       }
 
       /// Find the last of                                                    
       template <size_t M>
-      constexpr size_type find_last_of(const Resized<M>& str, size_type pos = npos) const noexcept {
+      constexpr size_t find_last_of(const Resized<M>& str, size_t pos = npos) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find_last_of(str.sv(), pos);
       }
-      constexpr size_type find_last_of(view_type sv, size_type pos = npos) const noexcept {
+      constexpr size_t find_last_of(view_type sv, size_t pos = npos) const noexcept {
          return sv().find_last_of(sv, pos);
       }
-      constexpr size_type find_last_of(const value_type* s, size_type pos, size_type n) const {
+      constexpr size_t find_last_of(const value_type* s, size_t pos, size_t n) const {
          return sv().find_last_of(s, pos, n);
       }
-      constexpr size_type find_last_of(const value_type* s, size_type pos = npos) const {
+      constexpr size_t find_last_of(const value_type* s, size_t pos = npos) const {
          return sv().find_last_of(s, pos);
       }
-      constexpr size_type find_last_of(value_type c, size_type pos = npos) const noexcept {
+      constexpr size_t find_last_of(value_type c, size_t pos = npos) const noexcept {
          return sv().find_last_of(c, pos);
       }
 
       /// Find the first NOT of                                               
       template <size_t M>
-      constexpr size_type find_first_not_of(const Resized<M>& str, size_type pos = 0) const noexcept {
+      constexpr size_t find_first_not_of(const Resized<M>& str, size_t pos = 0) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find_first_not_of(str.sv(), pos);
       }
-      constexpr size_type find_first_not_of(view_type sv, size_type pos = 0) const noexcept {
+      constexpr size_t find_first_not_of(view_type sv, size_t pos = 0) const noexcept {
          return sv().find_first_not_of(sv, pos);
       }
-      constexpr size_type find_first_not_of(const value_type* s, size_type pos, size_type n) const {
+      constexpr size_t find_first_not_of(const value_type* s, size_t pos, size_t n) const {
          return sv().find_first_not_of(s, pos, n);
       }
-      constexpr size_type find_first_not_of(const value_type* s, size_type pos = 0) const {
+      constexpr size_t find_first_not_of(const value_type* s, size_t pos = 0) const {
          return sv().find_first_not_of(s, pos);
       }
-      constexpr size_type find_first_not_of(value_type c, size_type pos = 0) const noexcept {
+      constexpr size_t find_first_not_of(value_type c, size_t pos = 0) const noexcept {
          return sv().find_first_not_of(c, pos);
       }
 
       /// Find the last NOT of                                                
       template <size_t M>
-      constexpr size_type find_last_not_of(const Resized<M>& str, size_type pos = npos) const noexcept {
+      constexpr size_t find_last_not_of(const Resized<M>& str, size_t pos = npos) const noexcept {
          if constexpr (M > N)
             return npos;
          return sv().find_last_not_of(str.sv(), pos);
       }
-      constexpr size_type find_last_not_of(view_type sv, size_type pos = npos) const noexcept {
+      constexpr size_t find_last_not_of(view_type sv, size_t pos = npos) const noexcept {
          return sv().find_last_not_of(sv, pos);
       }
-      constexpr size_type find_last_not_of(const value_type* s, size_type pos, size_type n) const {
+      constexpr size_t find_last_not_of(const value_type* s, size_t pos, size_t n) const {
          return sv().find_last_not_of(s, pos, n);
       }
-      constexpr size_type find_last_not_of(const value_type* s, size_type pos = npos) const {
+      constexpr size_t find_last_not_of(const value_type* s, size_t pos = npos) const {
          return sv().find_last_not_of(s, pos);
       }
-      constexpr size_type find_last_not_of(value_type c, size_type pos = npos) const noexcept {
+      constexpr size_t find_last_not_of(value_type c, size_t pos = npos) const noexcept {
          return sv().find_last_not_of(c, pos);
       }
 
@@ -328,19 +389,19 @@ namespace Langulus
       constexpr int compare(view_type v) const noexcept {
          return sv().compare(v);
       }
-      constexpr int compare(size_type pos1, size_type count1, view_type v) const {
+      constexpr int compare(size_t pos1, size_t count1, view_type v) const {
          return sv().compare(pos1, count1, v);
       }
-      constexpr int compare(size_type pos1, size_type count1, view_type v, size_type pos2, size_type count2) const {
+      constexpr int compare(size_t pos1, size_t count1, view_type v, size_t pos2, size_t count2) const {
          return sv().compare(pos1, count1, v, pos2, count2);
       }
       constexpr int compare(const value_type* s) const {
          return sv().compare(s);
       }
-      constexpr int compare(size_type pos1, size_type count1, const value_type* s) const {
+      constexpr int compare(size_t pos1, size_t count1, const value_type* s) const {
          return sv().compare(pos1, count1, s);
       }
-      constexpr int compare(size_type pos1, size_type count1, const value_type* s, size_type count2) const {
+      constexpr int compare(size_t pos1, size_t count1, const value_type* s, size_t count2) const {
          return sv().compare(pos1, count1, s, count2);
       }
 
@@ -349,7 +410,7 @@ namespace Langulus
          return sv().substr(0, v.size()) == v;
       }
       constexpr bool starts_with(char c) const noexcept {
-         return !empty() && traits_type::eq(front(), c);
+         return not empty() and traits_type::eq(front(), c);
       }
       constexpr bool starts_with(const value_type* s) const noexcept {
          return starts_with(view_type(s));
@@ -401,9 +462,10 @@ namespace Langulus
       const CT::FixedString auto& lhs,
       const CT::FixedString auto& rhs
    ) {
-      if constexpr (lhs.size() != rhs.size())
+      if (lhs.size() != rhs.size())
          return false;
-      else for (size_t i = 0; i < lhs.size(); ++i) {
+      
+      for (size_t i = 0; i < lhs.size(); ++i) {
          if (lhs[i] != rhs[i])
             return false;
       }
@@ -425,19 +487,13 @@ namespace Langulus
    /// Literal == Array                                                       
    template<CT::FixedString S, size_t N>
    constexpr bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {
-      if constexpr (S::Count != N - 1)
-         return false;
-      else for (size_t i = 0; i < N - 1; ++i) {
-         if (lhs[i] != rhs[i])
-            return false;
-      }
-      return true;
+      return lhs == static_cast<typename S::view_type>(rhs);
    }
 
    /// Array == Literal                                                       
    template<CT::FixedString S, size_t N>
    constexpr bool operator == (const typename S::value_type(&lhs)[N], const S& rhs) {
-      return rhs == lhs;
+      return static_cast<typename S::view_type>(lhs) == rhs;
    }
 
 
@@ -484,12 +540,12 @@ namespace Langulus
    ///                                                                        
    template<CT::FixedString LHS, CT::FixedString RHS>
    constexpr auto operator + (const LHS& lhs, const RHS& rhs) {
-      typename LHS::template Resized<LHS::Count + RHS::Count> result;
+      typename LHS::template Resized<LHS::ArraySize + RHS::ArraySize> result;
       size_t i = 0;
-      for (; i < LHS::Count; ++i)
+      for (; i < lhs.size(); ++i)
          result[i] = lhs[i];
-      for (; i < LHS::Count + RHS::Count; ++i)
-         result[i] = rhs[i - LHS::Count];
+      for (; i < lhs.size() + rhs.size(); ++i)
+         result[i] = rhs[i - lhs.size()];
       return result;
    }
 
@@ -524,13 +580,16 @@ namespace Langulus
    }
 
    /// Equivalent to Yes, but also carries a string literal                   
-   template<Literal TEXT>
+   /*template<Literal TEXT>
    struct YesText {
       static constexpr Literal Constant = TEXT;
       static constexpr bool Enabled = true;
-   };
-
-} // namespace Langulus
+   };*/
+   
+   template<Literal TEXT>
+   using YesText = YesValue<TEXT>;
+   
+}
 
 namespace std
 {

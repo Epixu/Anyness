@@ -6,132 +6,89 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "Main.hpp"
-#include <Langulus/CT/Suffix.hpp>
+#include <Langulus/SuffixOf.hpp>
 #include <Langulus/Logger.hpp>
-#include <string>
 
 using namespace Langulus;
 
+
 namespace
 {
-
-   struct TypeWithSuffix { using CTTI_Suffix = YesText<"yeah">; };
-   struct TypeWithoutSuffix {};
-
+   struct SuffixUsingMember {
+      using CTTI_Suffix = YesText<"yeah">;
+   };
+   struct NastySuffixUsingMember {
+      using CTTI_Suffix = YesText<"yeаh">; // contains cyrillic 'а'
+   };
+   struct SuffixBySpecialization {};
+   struct NoSuffix {};
+   struct IncompleteType;
 }
 
-SCENARIO("SuffixOf", "[ct]") {
-   WHEN("Generating a suffix for uint8_t") {
-      auto token = SuffixOf<uint8_t>();
-      REQUIRE(token == "u8");
-      STATIC_REQUIRE(SuffixOf<uint8_t>() == "u8");
+namespace Langulus::CTTI
+{
+   template<>
+   struct Suffix<SuffixBySpecialization> {
+      static constexpr Literal Name = "yeah";
+      static constexpr bool Enabled = true;
+   };
+   template<>
+   struct Suffix<SuffixBySpecialization*> {
+      static constexpr Literal Name = "yeahPtr";
+      static constexpr bool Enabled = true;
+   };
+   template<>
+   struct Suffix<SuffixBySpecialization const*> {
+      static constexpr Literal Name = "yeahCptr";
+      static constexpr bool Enabled = true;
+   };
+   template<>
+   struct Suffix<NoSuffix> {
+      [[maybe_unused]] static constexpr Literal Name = "<shouldn't see this>";
+      [[maybe_unused]] static constexpr bool Enabled = false;
+   };
+}
+
+#define DEFINE_SUFFIXOF_TYPE_TEST(WHAT, RESULT) \
+   WHEN("Taken the suffix of type " #WHAT) { \
+      STATIC_REQUIRE(SuffixOf<WHAT>() == RESULT); \
    }
 
-   WHEN("Generating a suffix for uint16_t") {
-      auto token = SuffixOf<uint16_t>();
-      REQUIRE(token == "u16");
-      STATIC_REQUIRE(SuffixOf<uint16_t>() == "u16");
-   }
 
-   WHEN("Generating a suffix for uint32_t") {
-      auto token = SuffixOf<uint32_t>();
-      if constexpr (CT::Same<uint32_t, unsigned int>) {
-         REQUIRE(token == "u");
-         STATIC_REQUIRE(SuffixOf<uint32_t>() == "u");
-      }
-      else {
-         REQUIRE(token == "u32");
-         STATIC_REQUIRE(SuffixOf<uint32_t>() == "u32");
-      }
-   }
+SCENARIO("SuffixOf", "[suffixof]") {
+   DEFINE_SUFFIXOF_TYPE_TEST(void, "")
+   DEFINE_SUFFIXOF_TYPE_TEST(nullptr_t, "")
+   DEFINE_SUFFIXOF_TYPE_TEST(int32_t(&)[5], "") 
+   DEFINE_SUFFIXOF_TYPE_TEST(int32_t[5], "")    
+   DEFINE_SUFFIXOF_TYPE_TEST(SuffixUsingMember, "yeah")         
+   DEFINE_SUFFIXOF_TYPE_TEST(SuffixUsingMember&, "yeah")         
+   DEFINE_SUFFIXOF_TYPE_TEST(SuffixUsingMember const, "yeah")
+   DEFINE_SUFFIXOF_TYPE_TEST(SuffixUsingMember const*, "")
+   DEFINE_SUFFIXOF_TYPE_TEST(SuffixBySpecialization, "yeah")         
+   DEFINE_SUFFIXOF_TYPE_TEST(SuffixBySpecialization&, "yeah")         
+   DEFINE_SUFFIXOF_TYPE_TEST(SuffixBySpecialization const, "yeah")
+   DEFINE_SUFFIXOF_TYPE_TEST(SuffixBySpecialization*, "yeahPtr")
+   DEFINE_SUFFIXOF_TYPE_TEST(SuffixBySpecialization const*, "yeahCptr")
+   DEFINE_SUFFIXOF_TYPE_TEST(NoSuffix, "")
+
+   DEFINE_SUFFIXOF_TYPE_TEST(bool,  "b")
    
-   WHEN("Generating a suffix for uint64_t") {
-      auto token = SuffixOf<uint64_t>();
-      if constexpr (CT::Same<uint64_t, unsigned int>) {
-         REQUIRE(token == "u");
-         STATIC_REQUIRE(SuffixOf<uint64_t>() == "u");
-      }
-      else {
-         REQUIRE(token == "u64");
-         STATIC_REQUIRE(SuffixOf<uint64_t>() == "u64");
-      }
-   }
-
-   WHEN("Generating a suffix for int8_t") {
-      auto token = SuffixOf<int8_t>();
-      REQUIRE(token == "i8");
-      STATIC_REQUIRE(SuffixOf<int8_t>() == "i8");
-   }
-
-   WHEN("Generating a suffix for int16_t") {
-      auto token = SuffixOf<int16_t>();
-      REQUIRE(token == "i16");
-      STATIC_REQUIRE(SuffixOf<int16_t>() == "i16");
-   }
-
-   WHEN("Generating a suffix for int32_t") {
-      auto token = SuffixOf<int32_t>();
-      if constexpr (CT::Same<int32_t, signed int>) {
-         REQUIRE(token == "i");
-         STATIC_REQUIRE(SuffixOf<int32_t>() == "i");
-      }
-      else {
-         REQUIRE(token == "i32");
-         STATIC_REQUIRE(SuffixOf<int32_t>() == "i32");
-      }
-   }
+   DEFINE_SUFFIXOF_TYPE_TEST(uint8_t,  "u8")
+   DEFINE_SUFFIXOF_TYPE_TEST(uint16_t, "u16")
+   DEFINE_SUFFIXOF_TYPE_TEST(uint32_t, (::std::same_as<uint32_t, unsigned int> ? "u" : "u32"))
+   DEFINE_SUFFIXOF_TYPE_TEST(uint64_t, (::std::same_as<uint64_t, unsigned int> ? "u" : "u64"))
    
-   WHEN("Generating a suffix for int64_t") {
-      auto token = SuffixOf<int64_t>();
-      if constexpr (CT::Same<int64_t, signed int>) {
-         REQUIRE(token == "i");
-         STATIC_REQUIRE(SuffixOf<int64_t>() == "i");
-      }
-      else {
-         REQUIRE(token == "i64");
-         STATIC_REQUIRE(SuffixOf<int64_t>() == "i64");
-      }
+   DEFINE_SUFFIXOF_TYPE_TEST( int8_t,  "i8")
+   DEFINE_SUFFIXOF_TYPE_TEST( int16_t, "i16")
+   DEFINE_SUFFIXOF_TYPE_TEST( int32_t, (::std::same_as<int32_t, int> ? "i" : "i32"))
+   DEFINE_SUFFIXOF_TYPE_TEST( int64_t, (::std::same_as<int64_t, int> ? "i" : "i64"))
+   
+   DEFINE_SUFFIXOF_TYPE_TEST( float,   (::std::same_as<float,  Real> ? "" : "f"))
+   DEFINE_SUFFIXOF_TYPE_TEST( double,  (::std::same_as<double, Real> ? "" : "d"))
+   
+   WHEN("Taken the suffix of type NastySuffixUsingMember (with cyrillic 'a')") {
+      //STATIC_REQUIRE(SuffixOf<NastySuffixUsingMember>()); // shouldn't compile at all
    }
 
-   WHEN("Generating a suffix for float") {
-      auto token = SuffixOf<float>();
-      if constexpr (CT::Same<float, Real>) {
-         REQUIRE(token == "");
-         STATIC_REQUIRE(SuffixOf<float>() == "");
-      }
-      else {
-         REQUIRE(token == "f");
-         STATIC_REQUIRE(SuffixOf<float>() == "f");
-      }
-   }
-
-   WHEN("Generating a suffix for double") {
-      auto token = SuffixOf<double>();
-      if constexpr (CT::Same<double, Real>) {
-         REQUIRE(token == "");
-         STATIC_REQUIRE(SuffixOf<double>() == "");
-      }
-      else {
-         REQUIRE(token == "d");
-         STATIC_REQUIRE(SuffixOf<double>() == "d");
-      }
-   }
-
-   WHEN("Generating a suffix for bool") {
-      auto token = SuffixOf<bool>();
-      REQUIRE(token == "b");
-      STATIC_REQUIRE(SuffixOf<bool>() == "b");
-   }
-
-   WHEN("Generating a suffix for a type with CTTI_Suffix") {
-      auto token = SuffixOf<TypeWithSuffix>();
-      REQUIRE(token == "yeah");
-      STATIC_REQUIRE(SuffixOf<TypeWithSuffix>() == "yeah");
-   }
-
-   WHEN("Generating a suffix for a type without CTTI_Suffix") {
-      auto token = SuffixOf<TypeWithoutSuffix>();
-      REQUIRE(token == "");
-      STATIC_REQUIRE(SuffixOf<TypeWithoutSuffix>() == "");
-   }
+   //DEFINE_SUFFIXOF_TYPE_TEST(IncompleteType, "") // shouldn't compile at all
 }

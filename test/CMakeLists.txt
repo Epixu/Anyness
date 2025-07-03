@@ -12,15 +12,15 @@ fetch_external_module(
 
 add_langulus_test(LangulusAnynessTest
 	SOURCES		Main.cpp 
-	      		TestTypenav.cpp
-	      		TestAssume.cpp
-	      		TestNameOf.cpp
-	      		TestHashOf.cpp
-	      		TestTypeOf.cpp
-	      		TestIntentOf.cpp
-	      		TestLambda.cpp
+				TestAssume.cpp
+				TestHashOf.cpp
+				TestIntentOf.cpp
+				TestLambda.cpp
 				TestLiteral.cpp
-	      		#TestSuffixOf.cpp
+				TestNameOf.cpp
+				TestSuffixOf.cpp
+	      		TestTypenav.cpp
+	      		TestTypeOf.cpp
 				#${LANGULUS_ANYNESS_TEST_SOURCES}
 	LIBRARIES	Catch2 LangulusAnyness
 )

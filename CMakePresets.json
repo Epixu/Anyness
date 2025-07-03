@@ -390,7 +390,12 @@
       "name": "windows-clang-cl-x86-debug-safe-AVX-managed",
       "displayName": "clang-cl x86 Debug Safe AVX",
       "description": "Target Windows with the 32bit Clang-Cl compiler (debug, safe, AVX)",
-      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "AVX" ]
+      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "AVX" ],
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "ClangCL x86"
+        }
+      }
     },
     {
       "name": "windows-clang-cl-x86-debug-safe-AVX2-managed",

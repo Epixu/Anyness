@@ -27,7 +27,6 @@
 ///                                                                           
 namespace Langulus::CTTI
 {
-
    /// Affects CT::Sheddable<T>:                                              
    template<class T>
    struct Sheddable {
@@ -95,8 +94,7 @@ namespace Langulus::CTTI
    struct Typed {
       using Type = void;
    };
-
-} // namespace Langulus::CTTI
+}
 
 
 /// Checks for reflection traits inside types themselves                      
@@ -122,6 +120,16 @@ namespace Langulus::CTTI
 ///                                                                           
 namespace Langulus::CT
 {
+   /// Check if all T are complete (defined), by exploiting sizeof            
+   /// Usefulness of this is limited to the first instantiation, and          
+   /// that is how it is used upon reflection by RTTI. Any other use is       
+   /// undefined and might produce wrong results on some compilers.           
+   /// Thankfully, most modern compilers do detect, if a definition           
+   /// changes between completeness checks, so it is unlikely to cause any    
+   /// real harm: https://stackoverflow.com/questions/21119281                
+   template<class...T>
+   concept Complete = ((sizeof(T) == sizeof(T)) and ...);
+
    /// Check if all T are sheddable types (like intents), that serve only to  
    /// wrap data for tag dispatching and semantics. Sheddable types don't     
    /// carry any real data, and are often just a reference to the real data.  
@@ -143,7 +151,6 @@ namespace Langulus
 {
    namespace Inner
    {
-
       /// Extracts the inner type if T is marked as sheddable                 
       /// Otherwise results in the same type                                  
       template<CT::NotTypelist T>
@@ -187,8 +194,7 @@ namespace Langulus
          else
             return 1;
       };
-
-   } // namespace Langulus::Inner
+   }
 
    /// Sheds any sheddable types                                              
    template<class T>
@@ -253,7 +259,6 @@ namespace Langulus
    
    namespace CT
    {
-
       /// Check if all T are bounded arrays                                   
       template<class...T>
       concept Array = Inner::CheckSize<T...>()
@@ -337,8 +342,7 @@ namespace Langulus
             and not ::std::is_reference_v<T>
             and not ::std::is_array_v<T>
           ) and ...);
-
-   } // namespace Langulus::CT
+   }
 
    namespace Inner
    {
@@ -383,8 +387,7 @@ namespace Langulus
    ///   @attention sparse sheddables will contribute to the count            
    template<class T>
    static constexpr size_t IndirectsOf = Inner::CountIndirections<Deref<Shed<T>>>();
-
-} // namespace Langulus
+}
 
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   

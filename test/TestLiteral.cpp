@@ -15,6 +15,10 @@ using namespace Langulus;
 
 namespace
 {
+   constexpr Literal emptyString1 {};
+   constexpr Literal emptyString2 = "";
+   constexpr Literal emptyString3 = "\0";
+   constexpr Literal emptyString4 = "\0\0\0";
    constexpr Literal fixedString = "Test String";
    constexpr const char carrayString[] = "Test String";
    constexpr const char* cptrString = "Test String";
@@ -66,31 +70,55 @@ TEMPLATE_TEST_CASE("Testing Literal", "[ct]",
       REQUIRE(not defaultConstructed);
       REQUIRE(defaultConstructed.size() == 0);
       REQUIRE(defaultConstructed.empty() == true);
+      REQUIRE(defaultConstructed == emptyString1);
+      REQUIRE(defaultConstructed == emptyString2);
+      REQUIRE(defaultConstructed == emptyString3);
+      REQUIRE(defaultConstructed == emptyString4);
 
       constexpr Literal defaultConstructedCxpr;
       STATIC_REQUIRE(not defaultConstructedCxpr);
       STATIC_REQUIRE(defaultConstructedCxpr.size() == 0);
       STATIC_REQUIRE(defaultConstructedCxpr.empty() == true);
+      STATIC_REQUIRE(defaultConstructedCxpr == emptyString1);
+      STATIC_REQUIRE(defaultConstructedCxpr == emptyString2);
+      STATIC_REQUIRE(defaultConstructedCxpr == emptyString3);
+      STATIC_REQUIRE(defaultConstructedCxpr == emptyString4);
 
       Literal arrayConstructed = "array constructed";
       REQUIRE(arrayConstructed);
       REQUIRE(arrayConstructed.size() == 17);
       REQUIRE(arrayConstructed.empty() == false);
+      REQUIRE(arrayConstructed != emptyString1);
+      REQUIRE(arrayConstructed != emptyString2);
+      REQUIRE(arrayConstructed != emptyString3);
+      REQUIRE(arrayConstructed != emptyString4);
 
       constexpr Literal arrayConstructedCxpr = "array constructed";
       STATIC_REQUIRE(arrayConstructedCxpr);
       STATIC_REQUIRE(arrayConstructedCxpr.size() == 17);
       STATIC_REQUIRE(arrayConstructedCxpr.empty() == false);
+      STATIC_REQUIRE(arrayConstructedCxpr != emptyString1);
+      STATIC_REQUIRE(arrayConstructedCxpr != emptyString2);
+      STATIC_REQUIRE(arrayConstructedCxpr != emptyString3);
+      STATIC_REQUIRE(arrayConstructedCxpr != emptyString4);
 
       Literal emptyArrayConstructed = "";
       REQUIRE(not emptyArrayConstructed);
       REQUIRE(emptyArrayConstructed.size() == 0);
       REQUIRE(emptyArrayConstructed.empty() == true);
+      REQUIRE(emptyArrayConstructed == emptyString1);
+      REQUIRE(emptyArrayConstructed == emptyString2);
+      REQUIRE(emptyArrayConstructed == emptyString3);
+      REQUIRE(emptyArrayConstructed == emptyString4);
 
       constexpr Literal emptyArrayConstructedCxpr = "";
       STATIC_REQUIRE(not emptyArrayConstructedCxpr);
       STATIC_REQUIRE(emptyArrayConstructedCxpr.size() == 0);
       STATIC_REQUIRE(emptyArrayConstructedCxpr.empty() == true);
+      STATIC_REQUIRE(emptyArrayConstructedCxpr == emptyString1);
+      STATIC_REQUIRE(emptyArrayConstructedCxpr == emptyString2);
+      STATIC_REQUIRE(emptyArrayConstructedCxpr == emptyString3);
+      STATIC_REQUIRE(emptyArrayConstructedCxpr == emptyString4);
    }
 
    WHEN("Assigned") {

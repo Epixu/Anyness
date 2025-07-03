@@ -182,10 +182,7 @@ namespace
       ::std::string a19 = ReplaceAtRuntime(a18, IsolateTypenameAtRuntime<int64_t,  false>(), "int64" );
 
       for (char c : a19) {
-         if (RTTI::Inner::IsAlphabetical(c)
-            or RTTI::Inner::IsOperator(c)
-            or RTTI::Inner::IsNumerical(c)
-            or RTTI::Inner::IsSpace(c))
+         if (IsAlphabetical(c) or IsOperator(c) or IsNumerical(c) or IsSpace(c))
             continue;
 
          Logger::ErrorRaw<VERBOSE>("Disallowed symbol: `", c, "` in `", a19, "`");
@@ -346,7 +343,7 @@ namespace Langulus::CTTI
 
 SCENARIO("NameOf", "[nameof]") {
    DEFINE_NAMEOF_TYPE_TEST(void, "void")
-   DEFINE_NAMEOF_TYPE_TEST(std::nullptr_t, "null")
+   DEFINE_NAMEOF_TYPE_TEST(nullptr_t, "null")
    DEFINE_NAMEOF_TYPE_TEST(int32_t(&)[5], "int32[5]&")
    DEFINE_NAMEOF_TYPE_TEST(int32_t[5], "int32[5]")
    DEFINE_NAMEOF_TYPE_TEST(uint16_t, "uint16")

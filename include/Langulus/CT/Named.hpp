@@ -1,5 +1,6 @@
 #pragma once
 #include "../Typenav.hpp"
+#include "../Literal.hpp"
 
 
 namespace Langulus::CTTI
