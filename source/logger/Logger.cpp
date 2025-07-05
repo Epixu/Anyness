@@ -7,30 +7,20 @@
 ///                                                                           
 #include <Langulus/Logger.hpp>
 
+#if LANGULUS_OS(WINDOWS)
+   #define WIN32_LEAN_AND_MEAN
+   #ifndef NOMINMAX
+      #define NOMINMAX
+   #endif
+   #include <windows.h>
+#endif
+
 using Clock = ::std::chrono::system_clock;
 
 namespace Langulus::Logger
 {
-
    State GlobalState {};
-
-   void AttachDuplicator(Interface* d) noexcept {
-      GlobalState.AttachDuplicator(d);
-   }
-
-   void DettachDuplicator(Interface* d) noexcept {
-      GlobalState.DettachDuplicator(d);
-   }
-
-   void AttachRedirector(Interface* r) noexcept {
-      GlobalState.AttachRedirector(r);
-   }
-
-   void DettachRedirector(Interface* r) noexcept {
-      GlobalState.DettachRedirector(r);
-   }
-
-} // namespace Langulus::Logger
+}
 
 using namespace Langulus;
 using namespace Langulus::Logger;
@@ -43,7 +33,19 @@ Scope::~Scope() noexcept {
 }
 
 /// Logger construction                                                       
-State::State() {}
+State::State() {
+   #if LANGULUS_OS(WINDOWS)
+      auto stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+      DWORD out_mode = 0;
+      GetConsoleMode(stdout_handle, &out_mode);
+      out_mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+      //out_mode |= DISABLE_NEWLINE_AUTO_RETURN;
+      SetConsoleMode(stdout_handle, out_mode);
+   #endif
+
+   for (int i = 0; i < static_cast<int>(Intent::Counter); ++i)
+      mIntentStyle[i] = DefaultIntentStyle[i];
+}
 
 /// Logger destruction                                                        
 State::~State() {}
@@ -134,9 +136,9 @@ void State::NewLine() const noexcept {
    }
 
    // Clear formatting, add new line, simple time stamp, and tabs       
-   fmt::print("\n");
    Detail::FmtPrintStyle(DefaultStyle);
-   fmt::print("{}{}", GetSimpleTime(), mIntentStyle[int(mCurrentIntent)].prefix);
+   fmt::print("\n");
+   fmt::print("{}{}", GetSimpleTime(), mIntentStyle[GetCurrentIntent()].prefix);
 
    if (mTabulator) {
       auto tabs = mTabulator;
@@ -146,10 +148,8 @@ void State::NewLine() const noexcept {
       }
    }
 
-   if (mStyleStack.empty()) {
-      const_cast<decltype(mStyleStack)&>(mStyleStack)
-         .push(GetCurrentStyle());
-   }
+   if (mStyleStack.empty())
+      mStyleStack.push(GetCurrentStyle());
 
    Detail::FmtPrintStyle(mStyleStack.top());
 
@@ -172,10 +172,8 @@ void State::Clear() const noexcept {
    // Clear the window                                                  
    fmt::print("{}", "\x1b[2J");
 
-   if (mStyleStack.empty()) {
-      const_cast<decltype(mStyleStack)&>(mStyleStack)
-         .push(GetCurrentStyle());
-   }
+   if (mStyleStack.empty())
+      mStyleStack.push(GetCurrentStyle());
 
    Detail::FmtPrintStyle(mStyleStack.top());
 
@@ -198,11 +196,6 @@ void State::Clear() const noexcept {
       SetEmphasis(Emphasis::Reverse);
       Write(mStyleStack.top());
       break;
-   case Command::Reset:
-      if (mCurrentIntent == Intent::Ignore)
-         mCurrentIntent = DefaultIntent;
-      Write(DefaultStyle);
-      break;
    case Command::Time:
       Write(GetSimpleTime());
       break;
@@ -221,12 +214,12 @@ void State::Clear() const noexcept {
 /// Execute a logger command (extended)                                       
 ///   @param c - the command to execute                                       
 void State::Write(CommandExt c) const noexcept {
-   if (mCurrentIntent == Intent::Ignore)
-      return;
-
    switch (c) {
    case CommandExt::Pop:
       // Pop the style stack and write the previous style               
+      if (mCurrentIntent == Intent::Ignore)
+         return;
+
       if (not mStyleStack.empty())
          mStyleStack.pop();
 
@@ -237,16 +230,41 @@ void State::Write(CommandExt c) const noexcept {
       break;
    case CommandExt::Push:
       // Duplicate the current style                                    
+      if (mCurrentIntent == Intent::Ignore)
+         return;
+
       mStyleStack.push(mStyleStack.top());
       break;
    case CommandExt::Tab:
       // Increate indentation                                           
+      if (mCurrentIntent == Intent::Ignore)
+         return;
+
       ++mTabulator;
       break;
    case CommandExt::Untab:
       // Decrease indentation                                           
+      if (mCurrentIntent == Intent::Ignore)
+         return;
+
       if (mTabulator > 0)
          --mTabulator;
+      break;
+   case CommandExt::Reset:
+      // Reset logger state                                             
+      mTabulator = 0;
+      mCurrentIntent = mDefaultIntent;
+      while (not mStyleStack.empty())
+         mStyleStack.pop();
+      break;
+   case CommandExt::Stylize:
+      if (mCurrentIntent == Intent::Ignore)
+         return;
+
+      if (mStyleStack.empty())
+         mStyleStack.push(GetCurrentStyle());
+
+      Write(mStyleStack.top());
       break;
    }
 }
@@ -298,7 +316,7 @@ void State::Write(ColorExt c_with_flags) const noexcept {
          style |= fmt::fg(oldStyle.get_foreground());
    }
    else if ((c >= Color::Black    and c < Color::BlackBgr) 
-   or       (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
+        or  (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
       // Create a new foreground color style                            
       style = fmt::fg(static_cast<fmt::terminal_color>(c));
       if (oldStyle.has_background())
@@ -363,9 +381,9 @@ void State::Write(Intent i) const noexcept {
 
    if (i != Intent::Ignore) {
       if (mStyleStack.empty())
-         mStyleStack.emplace(GlobalState.mIntentStyle[int(i)].style);
+         mStyleStack.emplace(GlobalState.mIntentStyle[static_cast<int>(i)].style);
       else
-         mStyleStack.top() = GlobalState.mIntentStyle[int(i)].style;
+         mStyleStack.top() = GlobalState.mIntentStyle[static_cast<int>(i)].style;
 
       // Dispatch the new style                                         
       Write(mStyleStack.top());
@@ -385,11 +403,15 @@ auto State::NewScope() const noexcept -> Scope {
 Style State::GetCurrentStyle() const noexcept {
    if (mStyleStack.empty()) {
       if (GlobalState.mCurrentIntent != Intent::Ignore)
-         return GlobalState.mIntentStyle[int(GlobalState.mCurrentIntent)].style;
-      else
-         return {};
+         return GlobalState.mIntentStyle[GlobalState.GetCurrentIntent()].style;
+      return {};
    }
-   else return mStyleStack.top();
+   return mStyleStack.top();
+}
+
+/// Get the current intent                                                    
+int State::GetCurrentIntent() const noexcept {
+   return static_cast<int>(GlobalState.mCurrentIntent);
 }
 
 /// Attach another logger, if no redirectors are attached, any logging        

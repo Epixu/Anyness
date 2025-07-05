@@ -20,13 +20,14 @@
 
 namespace Langulus::Logger
 {
-
    /// Additional commands                                                    
    enum class CommandExt : uint8_t {
       Pop,	   // Pop the style, and apply previous style               
       Push,		// Push the current style (don't stylize)                
       Tab,		// Tab once on a new line after this command             
-      Untab 	// Untab once, again on a new line after this command    
+      Untab,	// Untab once, again on a new line after this command    
+      Reset,   // Reset the state (color stack, tabulation, intent)     
+      Stylize  // Apply the last style                                  
    };
    using enum CommandExt;
    
@@ -181,7 +182,7 @@ namespace Langulus::Logger
    struct Scope : Tabs {
       using Tabs::Tabs;
       constexpr Scope(Scope&& other) noexcept
-         : Tabs {::std::forward<Tabs>(other)} {}
+         : Tabs {FWD(other)} {}
       LANGULUS_API(LOGGER) ~Scope() noexcept;
    };
 
@@ -219,6 +220,8 @@ namespace Langulus::Logger
       mutable ::std::stack<Style> mStyleStack;
       // Number of tabulations                                          
       mutable size_t mTabulator = 0;
+      // Current intent                                                 
+      mutable Intent mCurrentIntent = DefaultIntent;
 
       // Redirectors                                                    
       ::std::list<Interface*> mRedirectors;
@@ -226,9 +229,6 @@ namespace Langulus::Logger
       ::std::list<Interface*> mDuplicators;
 
    public:
-      // Current intent                                                 
-      Intent mCurrentIntent = DefaultIntent;
-
       // Intent style customization point                               
       IntentProperties mIntentStyle[static_cast<int>(Intent::Counter)];
 
@@ -263,7 +263,8 @@ namespace Langulus::Logger
       LANGULUS_API(LOGGER) void Write(Intent) const noexcept;
       LANGULUS_API(LOGGER) auto NewScope() const noexcept -> Scope;
 
-      LANGULUS_API(LOGGER) Style GetCurrentStyle() const noexcept;
+      LANGULUS_API(LOGGER) auto GetCurrentStyle() const noexcept -> Style;
+      LANGULUS_API(LOGGER) int  GetCurrentIntent() const noexcept;
 
       ///                                                                     
       /// Attachments                                                         
@@ -281,6 +282,22 @@ namespace Langulus::Logger
    ///                                                                        
    LANGULUS_API(LOGGER) extern State GlobalState;
 
+   
+   inline void AttachDuplicator(Interface* d) noexcept {
+      GlobalState.AttachDuplicator(d);
+   }
+
+   inline void DettachDuplicator(Interface* d) noexcept {
+      GlobalState.DettachDuplicator(d);
+   }
+
+   inline void AttachRedirector(Interface* r) noexcept {
+      GlobalState.AttachRedirector(r);
+   }
+
+   inline void DettachRedirector(Interface* r) noexcept {
+      GlobalState.DettachRedirector(r);
+   }
    
    /// A general new-line write function that continues the last intent/style 
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
@@ -320,14 +337,16 @@ namespace Langulus::Logger
       #if LANGULUS_FEATURE(LOGGING)
          if constexpr (TOGGLE and sizeof...(arguments) > 0) {
             if not consteval {
-               const auto currentStyle = GlobalState.GetCurrentStyle();
+               //const auto currentStyle = GlobalState.GetCurrentStyle();
                GlobalState.NewLine();
-               GlobalState.Write(GlobalState.mDefaultStyle);
+               //GlobalState.Write(GlobalState.mDefaultStyle);
                GlobalState.Write(" ");
-               GlobalState.Write(currentStyle);
+               GlobalState.Write(Push);
+               //GlobalState.Write(currentStyle);
                GlobalState.Write(Underline);
                (GlobalState.Write(FWD(arguments)), ...);
-               GlobalState.Write(GlobalState.mDefaultStyle);
+               //GlobalState.Write(GlobalState.mDefaultStyle);
+               GlobalState.Write(Pop);
                return GlobalState.NewScope();
             }
             else {
@@ -903,5 +922,4 @@ namespace Langulus::Logger
          else return UnusedScope {};
       #endif
    }
-
-} // namespace Langulus::Logger
+}

@@ -28,11 +28,7 @@ namespace
    constexpr Literal fixedValueChar = 'a';
 
    template<Literal SENT_AS_TEMPLATE_ARGUMENT>
-   consteval auto FixedStringAsTemplateArgument() {
-      return SENT_AS_TEMPLATE_ARGUMENT;
-   }
-   template<Literal SENT_AS_TEMPLATE_ARGUMENT>
-   consteval auto FixedValueAsTemplateArgument() {
+   consteval auto LiteralAsTemplateArgument() {
       return SENT_AS_TEMPLATE_ARGUMENT;
    }
 }
@@ -135,7 +131,10 @@ SCENARIO("Testing CT::LiteralChar", "[ct]") {
 TEMPLATE_TEST_CASE("Testing literal strings", "[ct]",
    char, wchar_t, char8_t, char16_t, char32_t
 ) {
-   STATIC_REQUIRE(FixedStringAsTemplateArgument<"Template String">());
+   STATIC_REQUIRE(    LiteralAsTemplateArgument<"string">());
+   STATIC_REQUIRE(    LiteralAsTemplateArgument<5.5f>());
+   STATIC_REQUIRE(not LiteralAsTemplateArgument<"">());
+   STATIC_REQUIRE(not LiteralAsTemplateArgument<0>());
 
    WHEN("Constructed") {
       Literal defaultConstructed;
@@ -211,7 +210,7 @@ TEMPLATE_TEST_CASE("Testing literal strings", "[ct]",
    }
 
    WHEN("Accessed") {
-      volatile size_t idx = fixedString.size() + 1;
+      IF_SAFE(volatile size_t idx = fixedString.size() + 1);
       IF_SAFE(REQUIRE_THROWS(fixedString[idx]));
       STATIC_REQUIRE(fixedString[0] == carrayString[0]);
       //STATIC_REQUIRE(fixedString[fixedString.size() + 1]); // shouldn't compile

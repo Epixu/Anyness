@@ -42,7 +42,7 @@ void ToTXT::Write(Style) const noexcept {
 void ToTXT::NewLine() const noexcept {
    Write("\n");
    Write(GetSimpleTime());
-   Write(GlobalState.mIntentStyle[int(GlobalState.mCurrentIntent)].prefix);
+   Write(GlobalState.mIntentStyle[GlobalState.GetCurrentIntent()].prefix);
 
    auto tabs = GlobalState.GetTabs();
    if (tabs) {

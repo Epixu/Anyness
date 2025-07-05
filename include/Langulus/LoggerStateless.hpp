@@ -9,7 +9,6 @@
 #include "Core.hpp"
 
 #if LANGULUS_FEATURE(LOGGING)
-
 #include <fmt/format.h>
 #include <fmt/color.h>
 #include <fmt/chrono.h>
@@ -18,7 +17,6 @@
 
 namespace Langulus::CT
 {
-
    /// Anything formattable by fmt is also loggable                           
    /// You can extend this concept by specializing fmt::formatter yourself    
    template<class...T>
@@ -28,14 +26,15 @@ namespace Langulus::CT
    template<class...T>
    concept NotLoggable = Inner::CheckSize<T...>()
        and ((not Loggable<T>) and ...);
-
-} // namespace Langulus::CT
-
+}
 #endif 
 
+
+///                                                                           
+/// Logger library namespace                                                  
+///                                                                           
 namespace Langulus::Logger
 {
-
    /// Color codes, consistent with ANSI/VT100 escapes                        
    /// Also consistent with fmt::terminal_color                               
    enum class Color : unsigned {
@@ -102,10 +101,8 @@ namespace Langulus::Logger
       Clear,		// Clear the console                                  
       NewLine,		// Write a new line, with a timestamp and tabulation  
       Invert,		// Inverts background and foreground colors           
-      Reset,		// Reset the style                                    
-      Stylize,    // Apply the last style                               
       Time,			// Write a short timestamp                            
-      ExactTime,	// Write an exhaustive timestamp                      
+      ExactTime 	// Write an exhaustive timestamp                      
    };
    
    /// Types of predefined messages, each with its unique style and search    
@@ -133,9 +130,8 @@ namespace Langulus::Logger
    using enum Color;
    using enum Emphasis;
    using enum Command;
-
+   
 #if LANGULUS_FEATURE(LOGGING)
-
    /// Text style, with background color, foreground color, and emphasis      
    using Style = fmt::text_style;
 
@@ -169,24 +165,38 @@ namespace Langulus::Logger
 
    namespace Detail
    {
-
       /// Write styling escape sequence to stdout                             
       LANGULUS(INLINED)
       void FmtPrintStyle(const Style& style) noexcept {
+         bool has_style = false;
          if (style.has_emphasis()) {
             const auto e = fmt::detail::make_emphasis<char>(style.get_emphasis());
-            fmt::print("{}", e.begin());
+            fmt::print("\x1b[0m{}", e.begin());
+            has_style = true;
          }
 
          if (style.has_foreground()) {
             const auto f = fmt::detail::make_foreground_color<char>(style.get_foreground());
-            fmt::print("{}", f.begin());
+            if (has_style)
+               fmt::print("{}", f.begin());
+            else {
+               fmt::print("\x1b[0m{}", f.begin());
+               has_style = true;
+            } 
          }
 
          if (style.has_background()) {
             const auto b = fmt::detail::make_background_color<char>(style.get_background());
-            fmt::print("{}", b.begin());
+            if (has_style)
+               fmt::print("{}", b.begin());
+            else {
+               fmt::print("\x1b[0m{}", b.begin());
+               has_style = true;
+            } 
          }
+
+         if (not has_style)
+            fmt::print("{}", "\x1b[0m");
       }
 
       /// Write a short timestamp in the current system time zone             
@@ -208,9 +218,7 @@ namespace Langulus::Logger
          catch (...) { fmt::print("<stringification error>"); }
          fflush(stdout);
       }
-
-   } // namespace Langulus::Logger::Detail
-
+   }
 #endif
    
    /// Generate hexadecimal string from a given value                         
@@ -231,7 +239,7 @@ namespace Langulus::Logger
       #if LANGULUS_FEATURE(LOGGING)
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n            ");
+               Detail::FmtWrite("\n          | ");
                (Detail::FmtWrite(FWD(arguments)), ...);
             }
          }
@@ -262,8 +270,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::FatalError)];
                Detail::FmtWrite(style.prefix);
@@ -282,8 +290,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Error)];
                Detail::FmtWrite(style.prefix);
@@ -302,8 +310,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Warning)];
                Detail::FmtWrite(style.prefix);
@@ -322,8 +330,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Verbose)];
                Detail::FmtWrite(style.prefix);
@@ -342,8 +350,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Info)];
                Detail::FmtWrite(style.prefix);
@@ -362,8 +370,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Message)];
                Detail::FmtWrite(style.prefix);
@@ -382,8 +390,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Special)];
                Detail::FmtWrite(style.prefix);
@@ -402,8 +410,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Flow)];
                Detail::FmtWrite(style.prefix);
@@ -422,8 +430,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Input)];
                Detail::FmtWrite(style.prefix);
@@ -442,8 +450,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Network)];
                Detail::FmtWrite(style.prefix);
@@ -462,8 +470,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::OS)];
                Detail::FmtWrite(style.prefix);
@@ -482,8 +490,8 @@ namespace Langulus::Logger
       #else
          if constexpr (TOGGLE) {
             if not consteval {
-               Detail::FmtWrite("\n");
                Detail::FmtPrintStyle(DefaultStyle);
+               Detail::FmtWrite("\n");
                Detail::FmtPrintTime();
                auto& style = DefaultIntentStyle[static_cast<int>(Intent::Prompt)];
                Detail::FmtWrite(style.prefix);
@@ -596,14 +604,11 @@ namespace Langulus::Logger
       return {static_cast<size_t>(1'000'000'000'000'000LL * num)};
    }
 #endif
-
-} // namespace Langulus::Logger
+}
 
 #if LANGULUS_FEATURE(LOGGING)
-
 namespace fmt
 {
-
    ///                                                                        
    /// Extend FMT to be capable of logging Logger::Color                      
    ///                                                                        
@@ -620,22 +625,21 @@ namespace fmt
          auto format(Color const& c, CONTEXT& ctx) const {
          text_style style = {};
 
-         if (c == Color::NoForeground or c == Color::NoBackground) {
+         if (c == Color::NoForeground or c == Color::NoBackground)
             return ctx.out();
-         }
-         else if ((c >= Color::Black and c < Color::BlackBgr)
-            or (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
+
+         if ((c >= Color::Black and c < Color::BlackBgr)
+         or (c >= Color::DarkGray and c < Color::DarkGrayBgr)) {
             // Create a new foreground color style                      
             style = fg(static_cast<terminal_color>(c));
             const auto ansi = detail::make_foreground_color<char>(style.get_foreground());
             return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
          }
-         else {
-            // Create a new background color style                      
-            style = bg(static_cast<terminal_color>(static_cast<uint8_t>(c) - 10));
-            const auto ansi = detail::make_background_color<char>(style.get_background());
-            return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
-         }
+
+         // Create a new background color style                         
+         style = bg(static_cast<terminal_color>(static_cast<uint8_t>(c) - 10));
+         const auto ansi = detail::make_background_color<char>(style.get_background());
+         return format_to(ctx.out(), "{}", static_cast<const char*>(ansi));
       }
    };
 
@@ -670,7 +674,5 @@ namespace fmt
          return format_to(ctx.out(), "{}", ::std::string_view(a.data(), a.size()));
       }
    };
-
-} // namespace fmt
-
+}
 #endif
