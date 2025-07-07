@@ -18,6 +18,7 @@ add_langulus_test(LangulusAnynessTest
 				TestLambda.cpp
 				TestLiteral.cpp
 				TestLogger.cpp
+				TestMetaOf.cpp
 				TestNameOf.cpp
 				TestSuffixOf.cpp
 	      		TestTypenav.cpp
