@@ -11,17 +11,4 @@
 namespace Langulus::RTTI::Inner
 {
 
-   /// Get the name of the tag, the result of NameOf                          
-   inline auto MetaTagNaked::GetName() const noexcept -> Token {
-      return mDefinition->mNameOf;
-   }
-
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-   /// Get the active boundaries of the tag                                   
-   inline auto MetaTagNaked::GetBoundaries()
-   const noexcept -> Definition::BoundarySet const& {
-      return mDefinition->mBoundaries;
-   }
-#endif
-
 } // namespace Langulus::RTTI::Inner

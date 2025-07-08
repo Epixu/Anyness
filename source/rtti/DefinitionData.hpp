@@ -79,6 +79,8 @@ namespace Langulus::RTTI
       bool mPOD IF_SAFE(= false);
       // True if data is nullable, set by CT::Nullable                  
       bool mNullable IF_SAFE(= false);
+      // True if data is abstract, set by CT::Abstract                  
+      bool mAbstract IF_SAFE(= false);
       // Minimal pool allocation, in bytes                              
       size_t mAllocationPage IF_SAFE(= 0);
       // Precomputed counts indexed by MSB (avoids division by stride   
@@ -95,7 +97,7 @@ namespace Langulus::RTTI
       // Decides whether POD data is batch-hashable or not              
       // If there's a custom GetHash() method, POD data is not batchable
       bool mHasGetHashMethod = false;
-      
+
       //                                                                
       //    These methods are sought in each reflected type             
       //                                                                
@@ -112,8 +114,47 @@ namespace Langulus::RTTI
       using FHash = Hash(*)(void* self);
       using FReference = int(*)(void* self, int modifier);
       using FDispatch = void(*)(void* self, Flow::Verb& verb);
+      using FAccessMember = void* (*)(void* owner);
+      using FTagRetriever = DefinitionTag const* (*)(int index);
+      using FTypeRetriever = DefinitionData const* (*)();
+      
+      /// Type-erased member variable reflection                              
+      struct Member {
+         using CTTI_ReflectAs = void;
 
+         // Type of data                                                
+         FTypeRetriever type IF_SAFE(= nullptr);
+         // Get pointer to the member                                   
+         FAccessMember member IF_SAFE(= nullptr);
+         // Number of elements in mData (in case of an array)           
+         size_t extent = 1;
+         // Trait tags                                                  
+         FTagRetriever tag = nullptr;
+
+         Member(const auto&);
+
+      private:
+         template<CT::DefineTag...T>
+         static auto TagSelector(int, Types<T...>&&) -> DefinitionTag const*;
+      };
+      
+      /// Ability reflection                                                  
+      struct Ability {
+         using CTTI_ReflectAs = void;
+
+         // For functions that can mutate the context                   
+         FDispatch callMut = nullptr;
+         // For functions that can't mutate the context                 
+         FDispatch call    = nullptr;
+
+         template<class T, CT::DefineVerb V>
+         static Ability From() noexcept;
+      };
+
+      ///                                                                     
       struct BoundaryDependent {
+         using CTTI_ReflectAs = void;
+
          // The default constructor, wrapped in a lambda expression if  
          // available. Takes a pointer for a placement-new expression   
          FUnary mDefaultConstructor {};
@@ -167,6 +208,26 @@ namespace Langulus::RTTI
          // There is a mutable and immutable version of this            
          FDispatch mDispatcherMut {};
          FDispatch mDispatcher {};
+
+         // Default concretization                                      
+         // Used as redirection when requesting the creation of abstract
+         FTypeRetriever mConcrete = nullptr;
+         // Types with producers can be instantiated only by the        
+         // invocation of Verbs::Create in the context of the producer  
+         FTypeRetriever mProducer = nullptr;
+
+         // List of reflected members of the origin type                
+         ::std::vector<Member> mMembers;
+         // List of reflected abilities of the origin type              
+         ::std::unordered_map<DefinitionVerb const*, Ability> mAbilities;
+
+         // List of reflected bases of the origin type                  
+         BaseList mBases {};
+         // List of reflected converters to/from the origin type        
+         ConverterMap mConvertersTo {};
+         ConverterMap mConvertersFrom {};
+         // List of named values of the origin type                     
+         NamedValueList mNamedValues {};
       };
 
       // The currently used boundary                                    
@@ -178,8 +239,10 @@ namespace Langulus::RTTI
          // main boundary                                               
          ::std::unordered_map<Token, BoundaryDependent> mOtherBoundaries;
       #endif
-      
+
    public:
+      using CTTI_ReflectAs = void;
+
       template<class>
       static auto Reflect() -> DefinitionData const*;
       

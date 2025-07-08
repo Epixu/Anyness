@@ -27,6 +27,7 @@ namespace
       REQUIRE(meta.IsNullable() == CT::Nullable<T>);
       IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == CT::GetPoolTactic<T>()));
       REQUIRE(meta.GetConcrete() == nullptr);
+      REQUIRE(meta.GetProducer() == nullptr);
       REQUIRE(meta.GetAllocationPage() == ::std::max(Alignment, Roof2(sizeof(T))));
       REQUIRE(meta.IsAbstract() == CT::Abstract<T>);
       REQUIRE(meta.GetSize() == sizeof(T));
@@ -49,7 +50,7 @@ namespace
       else
          REQUIRE(meta.GetOrigin() == nullptr);
       
-      REQUIRE(meta.GetDecvq() == MetaDataOf<IncompleteType*>());
+      REQUIRE(meta.GetDecvqAll() == MetaDataOf<IncompleteType*>());
 
       REQUIRE(meta.GetBases().size() == 0);
       REQUIRE(meta.GetAbilities().size() == 0);
@@ -87,7 +88,7 @@ SCENARIO("An incomplete type reflected (as long as its a pointer)", "[metadata]"
       REQUIRE(meta.GetDeptr() == nullptr);
       REQUIRE(meta.GetOrigin() == nullptr);
       REQUIRE(meta.IsConstant() == false);
-      REQUIRE(meta.GetDecvq() == MetaDataOf<IncompleteType*>());
+      REQUIRE(meta.GetDecvqAll() == MetaDataOf<IncompleteType*>());
 
       REQUIRE(meta.GetBases().size() == 0);
       REQUIRE(meta.GetAbilities().size() == 0);

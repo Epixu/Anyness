@@ -59,6 +59,8 @@ namespace Langulus::RTTI
          auto GetNegativeName()     const noexcept -> Token;
          auto GetPositiveOperator() const noexcept -> Token;
          auto GetNegativeOperator() const noexcept -> Token;
+         auto GetVersionMajor()     const noexcept -> unsigned;
+         auto GetVersionMinor()     const noexcept -> unsigned;
          auto GetBoundaries()       const noexcept -> Definition::BoundarySet const&;
 
          constexpr bool IsReversible()  const noexcept;
@@ -88,10 +90,6 @@ namespace Langulus::RTTI
          auto GetPositiveOperator() const noexcept -> Token;
          auto GetNegativeOperator() const noexcept -> Token;
 
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
-         #endif
-
          constexpr bool IsReversible() const noexcept;
          constexpr bool IsConstant() const noexcept;
          constexpr bool IsMutable() const noexcept;
@@ -99,32 +97,13 @@ namespace Langulus::RTTI
          constexpr bool IsStateless() const noexcept;
       };
 
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaVerbBase = MetaVerbStructured_X8<1>;
-   #else
-      using MetaVerbBase = MetaVerbNaked;
-   #endif
-
    } // namespace Langulus::RTTI::Inner
 
-
-   ///                                                                        
-   ///   Verb type ID                                                         
-   ///                                                                        
-   /// Can be a naked pointer to a definition, or a structured ID that is     
-   /// either packed to a smaller size, or carry a lot of meta information    
-   /// in the ID itself to avoid indirection - all this is configurable.      
-   ///                                                                        
-   struct MetaVerb : Inner::MetaVerbBase {
-      using CTTI_POD      = Yes<>;
-      using CTTI_Nullable = Yes<>;
-
-      ignore_all_intents(MetaVerb);
-
-      using Inner::MetaVerbBase::MetaVerbBase;
-      using Inner::MetaVerbBase::operator =;
-      using Inner::MetaVerbBase::operator bool;
-   };
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using MetaVerb = Inner::MetaVerbStructured_X8<1>;
+   #else
+      using MetaVerb = Inner::MetaVerbNaked;
+   #endif
 
    using VMeta = MetaVerb;
 

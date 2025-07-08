@@ -39,8 +39,10 @@ namespace Langulus::RTTI
          constexpr MetaConstPacked_16& operator = (nullptr_t) noexcept;
          constexpr MetaConstPacked_16& operator = (DefinitionConst const*) noexcept;
 
-         auto GetName()       const noexcept -> Token;
-         auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
+         auto GetName()          const noexcept -> Token;
+         auto GetVersionMajor()  const noexcept -> unsigned;
+         auto GetVersionMinor()  const noexcept -> unsigned;
+         auto GetBoundaries()    const noexcept -> Definition::BoundarySet const&;
       };
       #pragma pack(pop)
       
@@ -53,40 +55,15 @@ namespace Langulus::RTTI
          using MetaNaked::MetaNaked;
          using MetaNaked::operator =;
          using MetaNaked::operator bool;
-
-         auto GetName() const noexcept -> Token;
-
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
-         #endif
       };
-
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaConstBase = MetaConstPacked_16;
-   #else
-      using MetaConstBase = MetaConstNaked;
-   #endif
 
    } // namespace Langulus::RTTI::Inner
 
-
-   ///                                                                        
-   ///   Constant ID                                                          
-   ///                                                                        
-   /// Can be a naked pointer to a definition, or a structured ID that is     
-   /// either packed to a smaller size, or carry a lot of meta information    
-   /// in the ID itself to avoid indirection                                  
-   ///                                                                        
-   struct MetaConst : Inner::MetaConstBase {
-      using CTTI_POD      = Yes<>;
-      using CTTI_Nullable = Yes<>;
-
-      ignore_all_intents(MetaConst);
-
-      using Inner::MetaConstBase::MetaConstBase;
-      using Inner::MetaConstBase::operator =;
-      using Inner::MetaConstBase::operator bool;
-   };
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using MetaConst = Inner::MetaConstPacked_16;
+   #else
+      using MetaConst = Inner::MetaConstNaked;
+   #endif
 
    using CMeta = MetaConst;
 

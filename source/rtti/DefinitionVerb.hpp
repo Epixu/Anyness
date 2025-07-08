@@ -71,6 +71,8 @@ namespace Langulus::RTTI
       #endif
 
    public:
+      using CTTI_ReflectAs = void;
+
       template<CT::Decayed>
       static auto Reflect() -> DefinitionVerb const*;
       

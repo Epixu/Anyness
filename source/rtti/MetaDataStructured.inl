@@ -134,7 +134,17 @@ namespace Langulus::RTTI::Inner
    auto MetaDataStructured_XY<S1, S2>::GetHash() const noexcept -> Hash {
       return Instance.GetMetaDataByID(*this)->mHash;
    }
-   
+
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetVersionMajor()  const noexcept -> unsigned {
+      return Instance.GetMetaDataByID(*this)->mVersionMajor;
+   }
+
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetVersionMinor()  const noexcept -> unsigned {
+      return Instance.GetMetaDataByID(*this)->mVersionMinor;
+   }
+
    /// Get the type boundary                                                  
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
@@ -189,6 +199,12 @@ namespace Langulus::RTTI::Inner
    template<unsigned S1, unsigned S2>
    constexpr bool MetaDataStructured_XY<S1, S2>::IsPOD() const noexcept {
       return pod;
+   }
+
+   /// Check if type is CT::POD                                               
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsNullable() const noexcept {
+      return nullable;
    }
 
    /// Get the reflected destructor                                           

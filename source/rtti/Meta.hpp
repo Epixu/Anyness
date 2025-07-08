@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include <Langulus/Core.hpp>
+#include "Definition.hpp"
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <array>
@@ -34,6 +34,10 @@ namespace Langulus::RTTI::Inner
    #pragma pack(push, 1)
    template<unsigned BYTESIZE>
    struct MetaPacked {
+      using CTTI_Abstract  = Yes<>;
+      using CTTI_POD       = Yes<>;
+      using CTTI_Nullable  = Yes<>;
+
    protected:
       friend class RTTI::Registry;
       using Block = ::std::array<uint8_t, BYTESIZE>;
@@ -86,6 +90,9 @@ namespace Langulus::RTTI::Inner
    ///                                                                        
    template<class T>
    struct MetaNaked {
+      using CTTI_POD      = Yes<>;
+      using CTTI_Nullable = Yes<>;
+
    protected:
       const T* mDefinition = nullptr;
 
@@ -118,6 +125,35 @@ namespace Langulus::RTTI::Inner
 
       constexpr bool operator == (const MetaNaked& rhs) const noexcept {
          return mDefinition == rhs.mDefinition;
+      }
+      
+      /// Get the name of the type, the result of NameOf                      
+      auto GetName() const noexcept -> Token {
+         return mDefinition->mNameOf;
+      }
+   
+      /// Get the name of the type as it appearch in C++                      
+      auto GetCppName() const noexcept -> Token {
+         return mDefinition->mCppNameOf;
+      }
+
+      /// Get the type hash                                                   
+      auto GetHash() const noexcept -> Hash {
+         return mDefinition->mHash;
+      }
+   
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      /// Get the active type boundaries                                      
+      auto GetBoundaries() const noexcept -> Definition::BoundarySet const& {
+         return mDefinition->mBoundaries;
+      }
+   #endif
+
+      unsigned GetVersionMajor() const noexcept {
+         return mDefinition->mVersionMajor;
+      }
+      unsigned GetVersionMinor() const noexcept {
+         return mDefinition->mVersionMinor;
       }
    };
 

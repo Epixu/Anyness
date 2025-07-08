@@ -52,7 +52,6 @@ namespace Langulus::RTTI
          };
       };
       #pragma pack(pop)
-
       static_assert(sizeof(Structured<1>) == 1);
 
       /// Encodes most frequently used properties and the size up to 255 bytes
@@ -81,7 +80,6 @@ namespace Langulus::RTTI
          };
       };
       #pragma pack(pop)
-      
       static_assert(sizeof(Structured<2>) == 2);
 
       /// This is the most commonly used packing tactic, until proven not     
@@ -130,6 +128,9 @@ namespace Langulus::RTTI
          auto GetCppName()            const noexcept -> Token;
          auto GetHash()               const noexcept -> Hash;
          auto GetBoundaries()         const noexcept -> Definition::BoundarySet const&;
+         auto GetVersionMajor()       const noexcept -> unsigned;
+         auto GetVersionMinor()       const noexcept -> unsigned;
+         auto GetAllocationPage()     const noexcept -> size_t;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetPoolTactic()      const noexcept -> PoolTactic;
@@ -142,6 +143,8 @@ namespace Langulus::RTTI
          constexpr bool IsMutable()   const noexcept;
          constexpr bool IsDeep()      const noexcept;
          constexpr bool IsPOD()       const noexcept;
+         constexpr bool IsNullable()  const noexcept;
+         constexpr bool IsAbstract()  const noexcept;
 
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
@@ -161,6 +164,12 @@ namespace Langulus::RTTI
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          bool HasGetHashMethod()      const noexcept;
+
+         auto GetDeptr()    const -> MetaDataStructured_XY;
+         auto GetOrigin()   const -> MetaDataStructured_XY;
+         auto GetDecvqAll() const -> MetaDataStructured_XY;
+         auto GetConcrete() const -> MetaDataStructured_XY;
+         auto GetProducer() const -> MetaDataStructured_XY;
 
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -194,13 +203,7 @@ namespace Langulus::RTTI
          auto GetMinAllocation()      const noexcept -> size_t;
          auto GetSize()               const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
-         auto GetName()               const noexcept -> Token;
-         auto GetCppName()            const noexcept -> Token;
-         auto GetHash()               const noexcept -> Hash;
-         
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            auto GetBoundaries()      const noexcept -> Definition::BoundarySet const&;
-         #endif
+         auto GetAllocationPage()     const noexcept -> size_t;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetPoolTactic()      const noexcept -> PoolTactic;
@@ -213,6 +216,8 @@ namespace Langulus::RTTI
          bool IsMutable()             const noexcept;
          bool IsDeep()                const noexcept;
          bool IsPOD()                 const noexcept;
+         bool IsNullable()            const noexcept;
+         bool IsAbstract()            const noexcept;
 
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
@@ -232,7 +237,13 @@ namespace Langulus::RTTI
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          bool HasGetHashMethod()      const noexcept;
-         
+
+         auto GetDeptr()    const -> MetaDataNaked;
+         auto GetOrigin()   const -> MetaDataNaked;
+         auto GetDecvqAll() const -> MetaDataNaked;
+         auto GetConcrete() const -> MetaDataNaked;
+         auto GetProducer() const -> MetaDataNaked;
+
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             friend struct Fractalloc::Allocator;
@@ -240,32 +251,13 @@ namespace Langulus::RTTI
          #endif
       };
 
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaDataBase = MetaDataStructured_XY<2, 2>;
-   #else
-      using MetaDataBase = MetaDataNaked;
-   #endif
-
    } // namespace Langulus::RTTI::Inner
    
-
-   ///                                                                        
-   ///   Data type ID                                                         
-   ///                                                                        
-   /// Can be a naked pointer to a definition, or a structured ID that is     
-   /// packed to a smaller size, carrying a lot of meta information in the ID 
-   /// itself to avoid indirection                                            
-   ///                                                                        
-   struct MetaData : Inner::MetaDataBase {
-      using CTTI_POD      = Yes<>;
-      using CTTI_Nullable = Yes<>;
-
-      ignore_all_intents(MetaData);
-
-      using Inner::MetaDataBase::MetaDataBase;
-      using Inner::MetaDataBase::operator =;
-      using Inner::MetaDataBase::operator bool;
-   };
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using MetaData = Inner::MetaDataStructured_XY<2, 2>;
+   #else
+      using MetaData = Inner::MetaDataNaked;
+   #endif
 
    using DMeta = MetaData;
 

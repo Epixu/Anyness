@@ -18,10 +18,10 @@
 
 namespace Langulus::RTTI
 {
-   struct MetaData;
+   /*struct MetaData;
    struct MetaTag;
    struct MetaVerb;
-   struct MetaConst;
+   struct MetaConst;*/
 
    class DefinitionConst;
    class DefinitionData;
@@ -208,6 +208,8 @@ namespace Langulus::RTTI::Inner
       }
       
    public:
+      using CTTI_ReflectAs = void;
+
       Definition() = delete;
       virtual ~Definition() = default;
    };

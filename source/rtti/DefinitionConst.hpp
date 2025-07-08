@@ -27,6 +27,8 @@ namespace Langulus::RTTI
       void const* mData IF_SAFE(= nullptr);
       
    public:
+      using CTTI_ReflectAs = void;
+
       template<auto>
       static auto Reflect() -> DefinitionConst const*;
       

@@ -22,6 +22,8 @@ namespace Langulus::RTTI
       friend struct Inner::MetaTagPacked_16;
 
    public:
+      using CTTI_ReflectAs = void;
+
       template<CT::Decayed>
       static auto Reflect() -> DefinitionTag const*;
 

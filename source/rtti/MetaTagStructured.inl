@@ -34,4 +34,12 @@ namespace Langulus::RTTI::Inner
       return Instance.GetMetaTagByID(*this)->mNameOf;
    }
 
+   inline auto MetaTagPacked_16::GetVersionMajor()  const noexcept -> unsigned {
+      return Instance.GetMetaTagByID(*this)->mVersionMajor;
+   }
+
+   inline auto MetaTagPacked_16::GetVersionMinor()  const noexcept -> unsigned {
+      return Instance.GetMetaTagByID(*this)->mVersionMinor;
+   }
+
 } // namespace Langulus::RTTI::Inner

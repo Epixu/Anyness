@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "DefinitionData.hpp"
+#include <Langulus/CT/Abstract.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/CT/DefineTag.hpp>
 #include <Langulus/CT/DefineVerb.hpp>
@@ -17,6 +18,8 @@
 #include <Langulus/CT/Resolvable.hpp>
 #include <Langulus/CT/Nullable.hpp>
 #include <Langulus/CT/POD.hpp>
+#include <Langulus/CT/Concrete.hpp>
+#include <Langulus/CT/Producer.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
 
@@ -109,6 +112,7 @@ namespace Langulus::RTTI
       definition.mDeep      = CT::Deep<T>;
       definition.mPOD       = CT::POD<T>;
       definition.mNullable  = CT::Nullable<T>;
+      definition.mAbstract  = CT::Abstract<T>;
 
       // Reflect the origin type                                        
       if constexpr (CT::Decayed<T>)
@@ -156,6 +160,20 @@ namespace Langulus::RTTI
          deptr->mAddPtr = definition.mDecvqOnce;
          if constexpr (CT::Constant<T>)
             deptr->mAddConst = &definition;
+      }
+
+      // Reflect the concrete type                                      
+      if constexpr (CT::Concretizable<T>) {
+         static_assert(not CT::Abstract<ConcreteOf<T>>,
+            "Concrete type can't be abstract");
+         definition.mConcrete = Reflect<ConcreteOf<T>>;
+      }
+
+      // Reflect the producer type                                      
+      if constexpr (CT::Producible<T>) {
+         static_assert(not CT::Abstract<ProducerOf<T>>,
+            "Producer type can't be abstract");
+         definition.mProducer = Reflect<ProducerOf<T>>;
       }
 
       //                                                                

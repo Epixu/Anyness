@@ -52,6 +52,16 @@ namespace Langulus::RTTI::Inner
       return Instance.GetMetaVerbByID(*this)->mOperatorReverse;
    }
 
+   template<unsigned ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor()  const noexcept -> unsigned {
+      return Instance.GetMetaVerbByID(*this)->mVersionMajor;
+   }
+
+   template<unsigned ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMinor()  const noexcept -> unsigned {
+      return Instance.GetMetaVerbByID(*this)->mVersionMinor;
+   }
+
    template<unsigned ID_SIZE> auto MetaVerbStructured_X8<ID_SIZE>::GetBoundaries()
    const noexcept -> Definition::BoundarySet const& {
       return Instance.GetMetaVerbByID(*this)->mBoundaries;

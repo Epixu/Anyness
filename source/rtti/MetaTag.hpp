@@ -33,8 +33,10 @@ namespace Langulus::RTTI
          constexpr MetaTagPacked_16& operator = (nullptr_t) noexcept;
          constexpr MetaTagPacked_16& operator = (DefinitionTag const*) noexcept;
 
-         auto GetName()       const noexcept -> Token;
-         auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
+         auto GetName()          const noexcept -> Token;
+         auto GetVersionMajor()  const noexcept -> unsigned;
+         auto GetVersionMinor()  const noexcept -> unsigned;
+         auto GetBoundaries()    const noexcept -> Definition::BoundarySet const&;
       };
       #pragma pack(pop)
       
@@ -51,40 +53,15 @@ namespace Langulus::RTTI
          using Base::Base;
          using Base::operator =;
          using Base::operator bool;
-
-         auto GetName() const noexcept -> Token;
-
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            auto GetBoundaries() const noexcept -> Definition::BoundarySet const&;
-         #endif
       };
-
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaTagBase = MetaTagPacked_16;
-   #else
-      using MetaTagBase = MetaTagNaked;
-   #endif
 
    } // namespace Langulus::RTTI::Inner
 
-
-   ///                                                                        
-   ///   Tag ID                                                               
-   ///                                                                        
-   /// Can be a naked pointer to a definition, or a structured ID that is     
-   /// either packed to a smaller size, or carry a lot of meta information    
-   /// in the ID itself to avoid indirection                                  
-   ///                                                                        
-   struct MetaTag : Inner::MetaTagBase {
-      using CTTI_POD      = Yes<>;
-      using CTTI_Nullable = Yes<>;
-
-      ignore_all_intents(MetaTag);
-
-      using Inner::MetaTagBase::MetaTagBase;
-      using Inner::MetaTagBase::operator =;
-      using Inner::MetaTagBase::operator bool;
-   };
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using MetaTag = Inner::MetaTagPacked_16;
+   #else
+      using MetaTag = Inner::MetaTagNaked;
+   #endif
 
    using TMeta = MetaTag;
 

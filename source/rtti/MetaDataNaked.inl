@@ -44,28 +44,6 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mAlign;
    }
 
-   /// Get the name of the type, the result of NameOf                         
-   inline auto MetaDataNaked::GetName() const noexcept -> Token {
-      return mDefinition->mNameOf;
-   }
-   
-   /// Get the name of the type as it appearch in C++                         
-   inline auto MetaDataNaked::GetCppName() const noexcept -> Token {
-      return mDefinition->mCppNameOf;
-   }
-
-   /// Get the type hash                                                      
-   inline auto MetaDataNaked::GetHash() const noexcept -> Hash {
-      return mDefinition->mHash;
-   }
-   
-#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-   /// Get the active type boundaries                                         
-   inline auto MetaDataNaked::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
-      return mDefinition->mBoundaries;
-   }
-#endif
-
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    /// Get the reflected pool tactic                                          
    inline auto MetaDataNaked::GetPoolTactic() const noexcept -> PoolTactic {
@@ -106,6 +84,11 @@ namespace Langulus::RTTI::Inner
    /// Check if type is CT::POD                                               
    inline bool MetaDataNaked::IsPOD() const noexcept {
       return mDefinition->mPOD;
+   }
+
+   /// Check if type is CT::Nullable                                          
+   inline bool MetaDataNaked::IsNullable() const noexcept {
+      return mDefinition->mNullable;
    }
 
    /// Get the reflected destructor                                           
