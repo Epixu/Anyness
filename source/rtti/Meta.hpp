@@ -132,6 +132,11 @@ namespace Langulus::RTTI::Inner
          return mDefinition->mNameOf;
       }
    
+      /// Get the info of the type, the result of InfoOf                      
+      auto GetInfo() const noexcept -> Token {
+         return mDefinition->mInfoOf;
+      }
+   
       /// Get the name of the type as it appearch in C++                      
       auto GetCppName() const noexcept -> Token {
          return mDefinition->mCppNameOf;

@@ -4,23 +4,20 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::DefineTag<T>:                   
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_DefineTrait = Yes<"TraitID">;` in T        
+   /// 2. Add a public `using CTTI_DefineTag = Yes<"TagID">;` in T            
    template<class T>
    struct DefineTag {
       static constexpr Literal Name = "<not a tag>";
       static constexpr bool Enabled = false;
    };
-
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(DefineTag);
 
 namespace Langulus::RTTI
 {
-
    /// Get the name of a tag definition at compile-time                       
    ///   @tparam T - the tag to get the name of                               
    ///   @return the name                                                     
@@ -33,5 +30,4 @@ namespace Langulus::RTTI
       else
          return Literal {""};
    }
-
-} // namespace Langulus::RTTI
+}

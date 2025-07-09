@@ -11,14 +11,6 @@
 
 using namespace Langulus;
 
-//TODO this test has been coping with a plague of compiler bugs, read   
-// comments carefully for methods to workaround issues with intents,    
-// and their interplay with built-in implicit copy and move semantics   
-// I'm hopeful, that in future compiler versions these things will be   
-// sorted out, and these tests will be free to do the real thing        
-// The way to work around them all, was to disable implicit coversion   
-// from intent types to built-in move/copy semantics                    
-
 namespace
 {
    struct EmptyType {};
@@ -103,10 +95,10 @@ namespace
    ///   @attention this hits a lot of compiler bugs on different compilers:  
    ///   - it causes ambiguity on Clang 19.1 for refer intents, because       
    ///     the compiler can't decide whether to implicit-cast to && or        
-   ///     const&. I've added explicit intent assigners to compensate for that
+   ///     const&
    ///   - it causes ambiguity on GCC 14.2 for move/abandon intents, because  
    ///     the compiler can't decide how to implicit-cast to && or            
-   ///     const&. I've added explicit intent assigners to compensate for that
+   ///     const&
    ///   @note implicit coversion of intents has been disabled to cope        
    struct PartiallyIntentConstructibleButImplicitly {
       template<template<class> class S, class T>

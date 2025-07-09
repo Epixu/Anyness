@@ -6,7 +6,6 @@ namespace Langulus
 {
    namespace Inner
    {
-
       template<auto T>
       struct Emballage {};
 
@@ -33,12 +32,10 @@ namespace Langulus
       };
 
       /// This CTAD auto-completes the additional template arguments          
-      /// No harm done :)                                                     
       template<auto HANDLE, class OWNER, class TYPE>
-      MemberReflector(Emballage<HANDLE>, TYPE OWNER::*) -> MemberReflector<HANDLE, OWNER, TYPE>;
-
-   } // namespace Langulus::Inner
-
+      MemberReflector(Emballage<HANDLE>, TYPE OWNER::*)
+         -> MemberReflector<HANDLE, OWNER, TYPE>;
+   }
 
    /// Can be used to reflect named members inside your T like so:            
    /// public: using CTTI_Members = Members<&T::mOne, &T::mTwo>;              
@@ -48,5 +45,4 @@ namespace Langulus
          decltype(Inner::MemberReflector(Fake<Inner::Emballage<M>>(), M))...
       >;
    };
-
-} // namespace Langulus
+}

@@ -1,5 +1,5 @@
 ///                                                                           
-/// Langulus::Core                                                            
+/// Langulus::RTTI                                                            
 /// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
 /// Part of the Langulus framework, see https://langulus.com                  
 ///                                                                           
@@ -7,398 +7,364 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/MetaOf.hpp>
+#include <Langulus/InfoOf.hpp>
+#include <Langulus/Values.hpp>
+#include <Langulus/CT/Members.hpp>
 
 using namespace Langulus;
+
+namespace Langulus::Tags
+{
+   struct Name {
+      using CTTI_DefineTag = Yes<"Name">;
+      Token name;
+   };
+
+   template<class T>
+   struct TName {
+      using CTTI_DefineTag = Yes<"Name">;
+      T name;
+   };
+}
+
+namespace Langulus::Flow
+{
+   struct Verb {};
+}
+
+namespace Langulus::Verbs
+{
+   template<class T>
+   struct CreateIn {};
+   
+   struct Create {
+      using CTTI_DefineVerb = VerbToken<"create", "destroy", 5.f>;
+      using CTTI_DefineVerbOperator = VerbToken<" + ", " - ">;
+      using CTTI_Info = Yes<
+         "Used for allocating new elements. "
+         "If the type you're creating has	a producer, "
+         "you need to execute the verb in a matching producer, "
+         "or that producer will be created automatically for you, if possible"
+      >;
+      
+      template<class T>
+      static constexpr bool IsAble
+         = requires (T&& t, Flow::Verb& v) { t.Create(v); }
+        or requires (Flow::Verb& v) { CreateIn<T>::Run(v); };
+   };
+}
 
 namespace
 {
    class IncompleteType;
-
-   template<class T>
-   void TestDefinition() {
-      auto meta = MetaDataOf<T>();
-      REQUIRE(meta);
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta.GetName() == NameOf<T>());
-      REQUIRE(meta.GetVersionMajor() == VersionOf<T>().Major);
-      REQUIRE(meta.GetVersionMinor() == VersionOf<T>().Minor);
-      REQUIRE(meta.IsDeep() == CT::Deep<T>);
-      REQUIRE(meta.IsPOD() == CT::POD<T>);
-      REQUIRE(meta.IsNullable() == CT::Nullable<T>);
-      IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == CT::GetPoolTactic<T>()));
-      REQUIRE(meta.GetConcrete() == nullptr);
-      REQUIRE(meta.GetProducer() == nullptr);
-      REQUIRE(meta.GetAllocationPage() == ::std::max(Alignment, Roof2(sizeof(T))));
-      REQUIRE(meta.IsAbstract() == CT::Abstract<T>);
-      REQUIRE(meta.GetSize() == sizeof(T));
-      REQUIRE(meta.GetAlignment() == alignof(T));
-
-      if constexpr (CT::Complete<Deptr<T>>)
-         REQUIRE(meta.GetDeptr() == MetaDataOf<Deptr<T>>());
-      else
-         REQUIRE(meta.GetDeptr() == nullptr);
-      
-      if constexpr (CT::Complete<Decay<T>>)
-         REQUIRE(meta.GetOrigin() == MetaDataOf<Decay<T>>());
-      else
-         REQUIRE(meta.GetOrigin() == nullptr);
-            
-      REQUIRE(meta.IsConstant() == false);
-
-      if constexpr (CT::Complete<Decay<T>>)
-         REQUIRE(meta.GetOrigin() == MetaDataOf<Decay<T>>());
-      else
-         REQUIRE(meta.GetOrigin() == nullptr);
-      
-      REQUIRE(meta.GetDecvqAll() == MetaDataOf<IncompleteType*>());
-
-      REQUIRE(meta.GetBases().size() == 0);
-      REQUIRE(meta.GetAbilities().size() == 0);
-      REQUIRE(meta.GetMembers().size() == 0);
-      REQUIRE(meta.GetNamedValues().size() == 0);
-      REQUIRE(meta.GetMorphismsTo().size() == 0);
-      REQUIRE(meta.GetMorphismsFrom().size() == 0);
-   }
-}
-
-TEMPLATE_TEST_CASE("Testing reflection", "[rtti]",
-   IncompleteType*
-) {
    
+   enum class Pi {
+      Number = 314
+   };
+   
+   struct ImplicitlyReflectedData {
+      enum Named { One, Two, Three };
+
+      using CTTI_POD    = Yes<>;
+      using CTTI_Files  = Yes<"ASE">;
+      using CTTI_Typed  = Named;
+      using CTTI_Values = Values<One, Two, Three>;
+
+      Named v = One;
+
+      inline bool operator == (const ImplicitlyReflectedData&) const noexcept = default;
+   };
+
+   class alignas(128) ImplicitlyReflectedDataWithTraits : public ImplicitlyReflectedData {
+      public:
+      int member {664};
+      Tags::TName<bool> anotherMember {};
+      int anotherMemberArray [12] {};
+      int* sparseMember {};
+
+      inline operator int() const noexcept {
+         return member;
+      }
+
+      void Create(Flow::Verb&) const {
+         //++member;
+      }
+
+      void Create(Flow::Verb&) {
+         ++member;
+      }
+
+      ImplicitlyReflectedDataWithTraits() = default;
+      explicit ImplicitlyReflectedDataWithTraits(Pi)
+         : member {314} {}
+
+      using CTTI_Named     = Yes<"MyType">;
+      using CTTI_Info      = Yes<"Info about MyType">;
+      using CTTI_Files     = Yes<"txt, pdf">;
+      using CTTI_Versioned = Version<2, 1>;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_POD       = Yes<>;
+      using CTTI_Nullable  = Yes<>;
+      using CTTI_Pooled    = PooledBySize<250>;
+      using CTTI_Concrete  = ImplicitlyReflectedData;
+      using CTTI_ReflectAs = void;
+      using CTTI_Abstract  = Yes<>;
+      using CTTI_Bases     = ImplicitlyReflectedData;
+      using CTTI_Verbs     = Verbs::Create;
+      using CTTI_MapsOnto  = int;
+      using CTTI_MapsFrom  = Pi;
+      using CTTI_Values    = No<>;
+
+      using Self = ImplicitlyReflectedDataWithTraits;
+      using CTTI_Members   = Members<
+         &Self::member,
+         &Self::anotherMember,
+         &Self::anotherMemberArray,
+         &Self::sparseMember
+      >;
+   };
+   
+   struct ConvertibleData : ImplicitlyReflectedData {
+      int member {664};
+
+      inline operator int() const noexcept {
+         return member;
+      }
+
+      ConvertibleData() = default;
+      explicit ConvertibleData(Pi)
+         : member {314} {}
+
+      using CTTI_Bases     = ImplicitlyReflectedData;
+      using CTTI_MapsOnto  = int;
+      using CTTI_MapsFrom  = Pi;
+      using CTTI_Values    = No<>;
+   };
+   
+   struct CheckingWhatGetsInherited : ImplicitlyReflectedDataWithTraits {
+      using CTTI_Named = Yes<"CheckingWhatGetsInherited">;
+
+      using ImplicitlyReflectedDataWithTraits::ImplicitlyReflectedDataWithTraits;
+   };
+   
+   void FunctionForTesting(void*) {
+      Logger::Verbose("Executed FunctionForTesting");
+   }
 }
 
-SCENARIO("An incomplete type reflected (as long as its a pointer)", "[metadata]") {
-   WHEN("IncompleteType* reflected") {
-      auto meta = MetaDataOf<IncompleteType*>();
+TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
+   void, // shouldn't compile
+   nullptr_t, // shouldn't compile
+   IncompleteType, // shouldn't compile
+   IncompleteType*,
+   IncompleteType**,
+   const IncompleteType**,
+   const IncompleteType* const*&,
+   const IncompleteType* const* const&,
+   const IncompleteType* const* const&&
+) {
+   using T = TestType;
+   RTTI::DMeta meta = MetaDataOf<T>();
+   REQUIRE(meta);
+   REQUIRE(meta != nullptr);
+   REQUIRE(meta.GetHash() != Hash {});
+   REQUIRE(meta.GetCppName() == CppNameOf<T>());
+   REQUIRE(meta.GetName() == NameOf<T>());
+   REQUIRE(meta.GetInfo() == InfoOf<T>());
+   REQUIRE(meta.GetFiles() == FilesOf<T>());
+   REQUIRE(meta.GetSuffix() == SuffixOf<T>());
+   REQUIRE(meta.GetVersionMajor() == VersionOf<T>().Major);
+   REQUIRE(meta.GetVersionMinor() == VersionOf<T>().Minor);
 
-      REQUIRE(meta);
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta.GetName() == "IncompleteType*");
-      REQUIRE(meta.GetVersionMajor() == 1);
-      REQUIRE(meta.GetVersionMinor() == 0);
-      REQUIRE(meta.IsDeep() == false);
-      REQUIRE(meta.IsPOD() == false);
-      REQUIRE(meta.IsNullable() == false);
-      IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Default));
-      REQUIRE(meta.GetConcrete() == nullptr);
-      REQUIRE(meta.GetAllocationPage() == ::std::max(Alignment, Roof2(sizeof(IncompleteType*))));
-      REQUIRE(meta.IsAbstract() == false);
-      REQUIRE(meta.GetSize() == sizeof(void*));
-      REQUIRE(meta.GetAlignment() == alignof(void*));
-      REQUIRE(meta.GetDeptr() == nullptr);
+   IF_LANGULUS_MANAGED_REFLECTION(REQUIRE(meta.GetID() != 0));
+   IF_LANGULUS_MANAGED_REFLECTION(REQUIRE(meta.GetBoundaries().empty()));
+
+   if constexpr (CT::Complete<Decay<T>>)
+      REQUIRE(meta.GetOrigin() == MetaDataOf<Decay<T>>());
+   else
       REQUIRE(meta.GetOrigin() == nullptr);
-      REQUIRE(meta.IsConstant() == false);
-      REQUIRE(meta.GetDecvqAll() == MetaDataOf<IncompleteType*>());
+   
+   if constexpr (CT::Complete<Deptr<T>>)
+      REQUIRE(meta.GetDeptr() == MetaDataOf<Deptr<T>>());
+   else
+      REQUIRE(meta.GetDeptr() == nullptr);
+   
+   REQUIRE(meta.GetDecvqAll() == MetaDataOf<DecvqAll<T>>());
+   REQUIRE(meta.GetDecvq() == MetaDataOf<Decvq<T>>());
+   REQUIRE(meta.AddPtr() == nullptr);
+   REQUIRE(meta.AddConst() == nullptr);
+   
+   REQUIRE(meta.GetSize() == sizeof(T));
+   REQUIRE(meta.GetAlignment() == alignof(T));
+   REQUIRE(meta.IsConstant() == false);      
+   REQUIRE(meta.IsDeep() == CT::Deep<T>);
+   REQUIRE(meta.IsPOD() == CT::POD<T>);
+   REQUIRE(meta.IsNullable() == CT::Nullable<T>);
+   REQUIRE(meta.IsAbstract() == CT::Abstract<T>);
+   REQUIRE(meta.GetAllocationPage() == ::std::max(Alignment, Roof2(sizeof(T))));
 
-      REQUIRE(meta.GetBases().size() == 0);
-      REQUIRE(meta.GetAbilities().size() == 0);
-      REQUIRE(meta.GetMembers().size() == 0);
-      REQUIRE(meta.GetNamedValues().size() == 0);
-      REQUIRE(meta.GetMorphismsTo().size() == 0);
-      REQUIRE(meta.GetMorphismsFrom().size() == 0);
-   }
+   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == CT::GetPoolTactic<T>()));
+   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolchain() == nullptr));
+   REQUIRE(meta.HasGetHashMethod() == false);
 
-   WHEN("IncompleteType** reflected") {
-      auto meta = MetaDataOf<IncompleteType**>();
+   REQUIRE(meta.GetDefaultConstructor() != nullptr);
+   REQUIRE(meta.GetDescribeConstructor() == nullptr);
+   REQUIRE(meta.GetReferConstructor() != nullptr);
+   REQUIRE(meta.GetCopyConstructor() != nullptr);
+   REQUIRE(meta.GetDisownConstructor() != nullptr);
+   REQUIRE(meta.GetCloneConstructor() != nullptr);
+   REQUIRE(meta.GetMoveConstructor() != nullptr);
+   REQUIRE(meta.GetAbandonConstructor() != nullptr);
+   
+   REQUIRE(meta.GetDestructor() != nullptr);
+   REQUIRE(meta.GetComparer() != nullptr);
 
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "IncompleteType**");
-      REQUIRE(meta->mVersionMajor == 1);
-      REQUIRE(meta->mVersionMinor == 0);
-      REQUIRE(meta->mIsDeep == false);
-      REQUIRE(meta->mIsPOD == false);
-      REQUIRE(meta->mIsNullifiable == false);
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         REQUIRE(meta->mPoolTactic == PoolTactic::Default);
-      #endif
-      REQUIRE(meta->mConcreteRetriever == nullptr);
-      REQUIRE(meta->mAllocationPage == ::std::max(Alignment, Roof2(sizeof(IncompleteType*))));
-      REQUIRE(meta->mIsAbstract == false);
-      REQUIRE(meta->mSize == sizeof(void*));
-      REQUIRE(meta->mAlignment == alignof(void*));
-      REQUIRE(meta->mDeptr == MetaDataOf<IncompleteType*>());
-      REQUIRE(meta->mOrigin == nullptr);
-      REQUIRE(meta->mIsConstant == false);
-      REQUIRE(meta->mDeptr->mIsConstant == false);
-      REQUIRE(meta->mDeptr->mDeptr == nullptr);
-      REQUIRE(meta->mDecvq == MetaDataOf<IncompleteType**>());
+   REQUIRE(meta.GetReferAssigner() != nullptr);
+   REQUIRE(meta.GetCopyAssigner() != nullptr);
+   REQUIRE(meta.GetDisownAssigner() != nullptr);
+   REQUIRE(meta.GetCloneAssigner() != nullptr);
+   REQUIRE(meta.GetMoveAssigner() != nullptr);
+   REQUIRE(meta.GetAbandonAssigner() != nullptr);
 
-      REQUIRE(meta->mBases.size() == 0);
-      REQUIRE(meta->mAbilities.size() == 0);
-      REQUIRE(meta->mMembers.size() == 0);
-      REQUIRE(meta->mNamedValues.size() == 0);
-      REQUIRE(meta->mConvertersTo.size() == 0);
-      REQUIRE(meta->mConvertersFrom.size() == 0);
-   }
+   REQUIRE(meta.GetResolver() == nullptr);
+   REQUIRE(meta.GetHasher() == nullptr);
+   REQUIRE(meta.GetReferencer() == nullptr);
+   REQUIRE(meta.GetDispatcher() == nullptr);
+   REQUIRE(meta.GetDispatcherMut() == nullptr);
+   REQUIRE(meta.GetConcrete() == nullptr);
+   REQUIRE(meta.GetProducer() == nullptr);
 
-   WHEN("const IncompleteType** reflected") {
-      auto meta = MetaDataOf<const IncompleteType**>();
-
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "const IncompleteType**");
-      REQUIRE(meta->mVersionMajor == 1);
-      REQUIRE(meta->mVersionMinor == 0);
-      REQUIRE(meta->mIsDeep == false);
-      REQUIRE(meta->mIsPOD == false);
-      REQUIRE(meta->mIsNullifiable == false);
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         REQUIRE(meta->mPoolTactic == PoolTactic::Default);
-      #endif
-      REQUIRE(meta->mConcreteRetriever == nullptr);
-      REQUIRE(meta->mAllocationPage == ::std::max(Alignment, Roof2(sizeof(IncompleteType*))));
-      REQUIRE(meta->mIsAbstract == false);
-      REQUIRE(meta->mSize == sizeof(void*));
-      REQUIRE(meta->mAlignment == alignof(void*));
-      REQUIRE(meta->mDeptr == MetaDataOf<const IncompleteType*>());
-      REQUIRE(meta->mOrigin == nullptr);
-      REQUIRE(meta->mIsConstant == false);
-      REQUIRE(meta->mDeptr->mIsConstant == false);
-      REQUIRE(meta->mDeptr->mDeptr == nullptr);
-      REQUIRE(meta->mDecvq == MetaDataOf<IncompleteType**>());
-
-      REQUIRE(meta->mBases.size() == 0);
-      REQUIRE(meta->mAbilities.size() == 0);
-      REQUIRE(meta->mMembers.size() == 0);
-      REQUIRE(meta->mNamedValues.size() == 0);
-      REQUIRE(meta->mConvertersTo.size() == 0);
-      REQUIRE(meta->mConvertersFrom.size() == 0);
-   }
-
-   WHEN("const IncompleteType* const*& reflected") {
-      auto meta = MetaDataOf<const IncompleteType* const*&>();
-
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "const IncompleteType* const*");
-      REQUIRE(meta->mVersionMajor == 1);
-      REQUIRE(meta->mVersionMinor == 0);
-      REQUIRE(meta->mIsDeep == false);
-      REQUIRE(meta->mIsPOD == false);
-      REQUIRE(meta->mIsNullifiable == false);
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         REQUIRE(meta->mPoolTactic == PoolTactic::Default);
-      #endif
-      REQUIRE(meta->mConcreteRetriever == nullptr);
-      REQUIRE(meta->mAllocationPage == ::std::max(Alignment, Roof2(sizeof(IncompleteType*))));
-      REQUIRE(meta->mIsAbstract == false);
-      REQUIRE(meta->mSize == sizeof(void*));
-      REQUIRE(meta->mAlignment == alignof(void*));
-      REQUIRE(meta->mDeptr == MetaDataOf<const IncompleteType* const>());
-      REQUIRE(meta->mOrigin == nullptr);
-      REQUIRE(meta->mIsConstant == false);
-      REQUIRE(meta->mDeptr->mIsConstant == true);
-      REQUIRE(meta->mDeptr->mDeptr == nullptr);
-      REQUIRE(meta->mDecvq == MetaDataOf<IncompleteType**>());
-      REQUIRE(meta->mDeptr->mDecvq == MetaDataOf<IncompleteType*>());
-
-      REQUIRE(meta->mBases.size() == 0);
-      REQUIRE(meta->mAbilities.size() == 0);
-      REQUIRE(meta->mMembers.size() == 0);
-      REQUIRE(meta->mNamedValues.size() == 0);
-      REQUIRE(meta->mConvertersTo.size() == 0);
-      REQUIRE(meta->mConvertersFrom.size() == 0);
-   }
-
-   WHEN("const IncompleteType* const* const& reflected") {
-      auto meta = MetaDataOf<const IncompleteType* const* const&>();
-
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "const IncompleteType* const* const");
-      REQUIRE(meta->mVersionMajor == 1);
-      REQUIRE(meta->mVersionMinor == 0);
-      REQUIRE(meta->mIsDeep == false);
-      REQUIRE(meta->mIsPOD == false);
-      REQUIRE(meta->mIsNullifiable == false);
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         REQUIRE(meta->mPoolTactic == PoolTactic::Default);
-      #endif
-      REQUIRE(meta->mConcreteRetriever == nullptr);
-      REQUIRE(meta->mAllocationPage == ::std::max(Alignment, Roof2(sizeof(IncompleteType*))));
-      REQUIRE(meta->mIsAbstract == false);
-      REQUIRE(meta->mSize == sizeof(void*));
-      REQUIRE(meta->mAlignment == alignof(void*));
-      REQUIRE(meta->mDeptr == MetaDataOf<const IncompleteType* const>());
-      REQUIRE(meta->mOrigin == nullptr);
-      REQUIRE(meta->mIsConstant == true);
-      REQUIRE(meta->mDeptr->mIsConstant == true);
-      REQUIRE(meta->mDecvq == MetaDataOf<IncompleteType**>());
-      REQUIRE(meta->mDeptr->mDecvq == MetaDataOf<IncompleteType*>());
-
-      REQUIRE(meta->mBases.size() == 0);
-      REQUIRE(meta->mAbilities.size() == 0);
-      REQUIRE(meta->mMembers.size() == 0);
-      REQUIRE(meta->mNamedValues.size() == 0);
-      REQUIRE(meta->mConvertersTo.size() == 0);
-      REQUIRE(meta->mConvertersFrom.size() == 0);
-   }
-
-   WHEN("const IncompleteType* const* const&& reflected") {
-      auto meta = MetaDataOf<const IncompleteType* const* const&&>();
-
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "const IncompleteType* const* const");
-      REQUIRE(meta->mVersionMajor == 1);
-      REQUIRE(meta->mVersionMinor == 0);
-      REQUIRE(meta->mIsDeep == false);
-      REQUIRE(meta->mIsPOD == false);
-      REQUIRE(meta->mIsNullifiable == false);
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         REQUIRE(meta->mPoolTactic == PoolTactic::Default);
-      #endif
-      REQUIRE(meta->mConcreteRetriever == nullptr);
-      REQUIRE(meta->mAllocationPage == ::std::max(Alignment, Roof2(sizeof(IncompleteType*))));
-      REQUIRE(meta->mIsAbstract == false);
-      REQUIRE(meta->mSize == sizeof(void*));
-      REQUIRE(meta->mAlignment == alignof(void*));
-      REQUIRE(meta->mDeptr == MetaDataOf<const IncompleteType* const>());
-      REQUIRE(meta->mOrigin == nullptr);
-      REQUIRE(meta->mIsConstant == true);
-      REQUIRE(meta->mDeptr->mIsConstant == true);
-      REQUIRE(meta->mDecvq == MetaDataOf<IncompleteType**>());
-      REQUIRE(meta->mDeptr->mDecvq == MetaDataOf<IncompleteType*>());
-
-      REQUIRE(meta->mBases.size() == 0);
-      REQUIRE(meta->mAbilities.size() == 0);
-      REQUIRE(meta->mMembers.size() == 0);
-      REQUIRE(meta->mNamedValues.size() == 0);
-      REQUIRE(meta->mConvertersTo.size() == 0);
-      REQUIRE(meta->mConvertersFrom.size() == 0);
-   }
+   REQUIRE(meta.GetMembers().size() == 0);
+   REQUIRE(meta.GetAbilities().size() == 0);
+   REQUIRE(meta.GetBases().size() == 0);
+   REQUIRE(meta.GetMorphismsTo().size() == 0);
+   REQUIRE(meta.GetMorphismsFrom().size() == 0);
+   REQUIRE(meta.GetNamedValues().size() == 0);
 }
 
-SCENARIO("A complex type reflected with CTTI traits", "[metadata]") {
+SCENARIO("A type reflected with all traits", "[rtti]") {
    WHEN("ImplicitlyReflectedDataWithTraits reflected") {
       ImplicitlyReflectedDataWithTraits instance;
       auto ptrtobase = static_cast<ImplicitlyReflectedData*>(&instance);
-      const auto baseoffset = reinterpret_cast<char*>(ptrtobase) - reinterpret_cast<char*>(&instance);
+      const size_t baseoffset = reinterpret_cast<char*>(ptrtobase) - reinterpret_cast<char*>(&instance);
       auto meta = MetaDataOf<ImplicitlyReflectedDataWithTraits>();
 
       REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "MyType");
-      REQUIRE(meta->mInfo == "Info about MyType");
-      REQUIRE(meta->mFileExtensions == "txt, pdf");
-      REQUIRE(meta->mVersionMajor == 2);
-      REQUIRE(meta->mVersionMinor == 1);
-      REQUIRE(meta->mIsDeep == true);
-      REQUIRE(meta->mIsPOD == false); // not POD due to being abstract
-      REQUIRE(meta->mIsNullifiable == false); // not nullifiable due to being abstract
-      IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta->mPoolTactic == PoolTactic::Size));
-      REQUIRE(meta->mConcreteRetriever()->Is<ImplicitlyReflectedData>());
-      REQUIRE(meta->mAllocationPage == Roof2(250 * sizeof(ImplicitlyReflectedDataWithTraits)));
-      REQUIRE(meta->mIsAbstract == true);
-      REQUIRE(meta->mSize == sizeof(ImplicitlyReflectedDataWithTraits));
-      REQUIRE(meta->mAlignment == alignof(ImplicitlyReflectedDataWithTraits));
-      REQUIRE(meta->mOrigin == meta);
-      REQUIRE(meta->mIsConstant == false);
-      REQUIRE(meta->mDeptr == nullptr);
-      REQUIRE(meta->mDecvq == MetaDataOf<ImplicitlyReflectedDataWithTraits>());
+      REQUIRE(meta.GetName() == "MyType");
+      REQUIRE(meta.GetInfo() == "Info about MyType");
+      REQUIRE(meta.GetFiles() == "txt, pdf");
+      REQUIRE(meta.GetVersionMajor() == 2);
+      REQUIRE(meta.GetVersionMinor() == 1);
+      REQUIRE(meta.IsDeep() == true);
+      REQUIRE(meta.IsPOD() == false);       // not POD due to being abstract
+      REQUIRE(meta.IsNullable() == false);  // not nullifiable due to being abstract
+      IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
+      REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
+      REQUIRE(meta.GetAllocationPage() == Roof2(250 * sizeof(ImplicitlyReflectedDataWithTraits)));
+      REQUIRE(meta.IsAbstract() == true);
+      REQUIRE(meta.GetSize() == sizeof(ImplicitlyReflectedDataWithTraits));
+      REQUIRE(meta.GetAlignment() == alignof(ImplicitlyReflectedDataWithTraits));
+      REQUIRE(meta.GetOrigin() == meta);
+      REQUIRE(meta.IsConstant() == false);
+      REQUIRE(meta.GetDeptr() == nullptr);
+      REQUIRE(meta.GetDecvqAll() == MetaDataOf<ImplicitlyReflectedDataWithTraits>());
 
-      REQUIRE(meta->mBases.size() == 1);
-      REQUIRE(meta->mBases[0].mType->Is<ConvertibleData>());
-      REQUIRE(meta->mBases[0].mImposed == false);
-      REQUIRE(meta->mBases[0].mBinaryCompatible == false);
-      REQUIRE(meta->mBases[0].mCount == 1);
+      REQUIRE(meta.GetBases().size() == 1);
+      REQUIRE(RTTI::DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ConvertibleData>()));
+      REQUIRE(meta.GetBases()[0].imposed == false);
+      REQUIRE(meta.GetBases()[0].binaryCompatible == false);
+      REQUIRE(meta.GetBases()[0].count == 1);
       REQUIRE(baseoffset >= 0);
-      REQUIRE(meta->mBases[0].mOffset == static_cast<Offset>(baseoffset));
+      REQUIRE(meta.GetBases()[0].offset == baseoffset);
 
-      REQUIRE(meta->mAbilities.size() == 1);
-      REQUIRE(meta->mAbilities.begin()->first->Is<Verbs::Create>());
-      REQUIRE(meta->mAbilities.begin()->second.mVerb->Is<Verbs::Create>());
-      REQUIRE(meta->mAbilities.begin()->second.mOverloadsConstant.size() == 1);
-      REQUIRE(meta->mAbilities.begin()->second.mOverloadsConstant.contains(Ability::Signature {}));
-      REQUIRE(meta->mAbilities.begin()->second.mOverloadsMutable.size() == 1);
-      REQUIRE(meta->mAbilities.begin()->second.mOverloadsMutable.contains(Ability::Signature {}));
+      REQUIRE(meta.GetAbilities().size() == 1);
+      auto ability = meta.GetAbilities().begin();
+      REQUIRE(RTTI::VMeta(ability->first) == MetaVerbOf<Verbs::Create>());
+      REQUIRE(ability->second.call != nullptr);
+      REQUIRE(ability->second.callMut != nullptr);
 
-      REQUIRE(meta->mMembers.size() == 3);
-      /*REQUIRE(meta->mMembers[0].mCount == 1);
-      REQUIRE(meta->mMembers[0].mValueRetriever(&instance) == &instance.member);
-      REQUIRE(meta->mMembers[0].GetTrait(0) == nullptr);
-      REQUIRE(meta->mMembers[0].GetType()->Is<int>());*/
+      REQUIRE(meta.GetMembers().size() == 3);
+      REQUIRE(meta.GetMembers()[0].extent == 1);
+      REQUIRE(meta.GetMembers()[0].member(&instance) == &instance.anotherMember);
+      REQUIRE(RTTI::TMeta(meta.GetMembers()[0].getTag(0)) == MetaTagOf<Tags::Name>());
+      REQUIRE(meta.GetMembers()[0].getTag(1) == nullptr);
+      REQUIRE(RTTI::DMeta(meta.GetMembers()[0].type()).Is(MetaDataOf<bool>()));
 
-      REQUIRE(meta->mMembers[0].mCount == 1);
-      REQUIRE(meta->mMembers[0].mValueRetriever(&instance) == &instance.anotherMember);
-      REQUIRE(meta->mMembers[0].GetTrait(0)->Is<Traits::Tag>());
-      REQUIRE(meta->mMembers[0].GetTrait(1) == nullptr);
-      REQUIRE(meta->mMembers[0].GetType()->Is<bool>());
+      REQUIRE(meta.GetMembers()[1].extent == 12);
+      REQUIRE(meta.GetMembers()[1].member(&instance) == instance.anotherMemberArray);
+      REQUIRE(meta.GetMembers()[1].getTag(0) == nullptr);
+      REQUIRE(RTTI::DMeta(meta.GetMembers()[1].type()).Is(MetaDataOf<int>()));
 
-      REQUIRE(meta->mMembers[1].mCount == 12);
-      REQUIRE(meta->mMembers[1].mValueRetriever(&instance) == instance.anotherMemberArray);
-      REQUIRE(meta->mMembers[1].GetTrait(0) == nullptr);
-      REQUIRE(meta->mMembers[1].GetType()->Is<int>());
+      REQUIRE(meta.GetMembers()[2].extent == 1);
+      REQUIRE(meta.GetMembers()[2].member(&instance) == &instance.sparseMember);
+      REQUIRE(meta.GetMembers()[2].getTag(0) == nullptr);
+      REQUIRE(RTTI::DMeta(meta.GetMembers()[2].type()).Is(MetaDataOf<int>()));
 
-      REQUIRE(meta->mMembers[2].mCount == 1);
-      REQUIRE(meta->mMembers[2].mValueRetriever(&instance) == &instance.sparseMember);
-      REQUIRE(meta->mMembers[2].GetTrait(0) == nullptr);
-      REQUIRE(meta->mMembers[2].GetType()->Is<int>());
+      REQUIRE(meta.GetNamedValues().size() == 0);
 
-      REQUIRE(meta->mNamedValues.size() == 0);
+      const auto intmeta = RTTI::DefinitionData::Reflect<int>();
+      REQUIRE(meta.GetMorphismsTo().size() == 1);
+      REQUIRE(meta.GetMorphismsTo().at(intmeta).call != nullptr);
+      REQUIRE(meta.GetMorphism(RTTI::DMeta(intmeta)) == meta.GetMorphismsTo().at(intmeta).call);
 
-      const auto intmeta = MetaDataOf<int>();
-      REQUIRE(meta->mConvertersTo.size() == 1);
-      REQUIRE(meta->mConvertersTo.at(intmeta).mType->Is<int>());
-      REQUIRE(meta->mConvertersTo.at(intmeta).mFunction);
-      REQUIRE(meta->GetConverter(intmeta) == meta->mConvertersTo.at(intmeta).mFunction);
+      const auto pimeta = RTTI::DefinitionData::Reflect<Pi>();
+      REQUIRE(meta.GetMorphismsFrom().size() == 1);
+      REQUIRE(meta.GetMorphismsFrom().at(pimeta).call != nullptr);
+      REQUIRE(meta.GetMorphism(RTTI::DMeta(pimeta)) == nullptr);
 
-      const auto pimeta = MetaDataOf<Pi>();
-      REQUIRE(meta->mConvertersFrom.size() == 1);
-      REQUIRE(meta->mConvertersFrom.at(pimeta).mType->Is<Pi>());
-      REQUIRE(meta->mConvertersFrom.at(pimeta).mFunction);
-      REQUIRE(meta->GetConverter(pimeta) == nullptr);
-
-      REQUIRE(pimeta->GetConverter(meta) == meta->mConvertersFrom.at(pimeta).mFunction);
+      REQUIRE(RTTI::DMeta(pimeta).GetMorphism(meta) == meta.GetMorphismsFrom().at(pimeta).call);
 
       int converted = 1;
-      meta->GetConverter(intmeta)(&instance, &converted);
+      meta.GetMorphism(RTTI::DMeta(intmeta))(&instance, &converted);
       REQUIRE(converted == 664);
 
       Pi source;
       ImplicitlyReflectedDataWithTraits convertedFromPi1;
-      pimeta->GetConverter(meta)(&source, &convertedFromPi1);
+      RTTI::DMeta(pimeta).GetMorphism(meta)(&source, &convertedFromPi1);
       REQUIRE(convertedFromPi1.member == 314);
    }
 
    WHEN("CheckingWhatGetsInherited reflected") {
       CheckingWhatGetsInherited instance;
       ImplicitlyReflectedData* ptrtobase = &static_cast<ImplicitlyReflectedData&>(instance);
-      const auto baseoffset = reinterpret_cast<char*>(ptrtobase) - reinterpret_cast<char*>(&instance);
+      const size_t baseoffset = reinterpret_cast<char*>(ptrtobase) - reinterpret_cast<char*>(&instance);
       auto meta = MetaDataOf<CheckingWhatGetsInherited>();
 
       REQUIRE(meta != nullptr);
-      REQUIRE(meta->mInfo == "Info about MyType");
-      REQUIRE(meta->mFileExtensions == "txt, pdf");
-      REQUIRE(meta->mVersionMajor == 2);
-      REQUIRE(meta->mVersionMinor == 1);
-      REQUIRE(meta->mIsDeep == true);
-      REQUIRE(meta->mIsPOD == false);           // not POD due to being abstract
-      REQUIRE(meta->mIsNullifiable == false);   // not nullifiable due to being abstract
-      IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta->mPoolTactic == PoolTactic::Size));
-      REQUIRE(meta->mConcreteRetriever()->Is<ImplicitlyReflectedData>());
-      REQUIRE(meta->mAllocationPage == Roof2(250 * sizeof(ImplicitlyReflectedDataWithTraits)));
-      REQUIRE(meta->mIsAbstract == true);
-      REQUIRE(meta->mSize == sizeof(ImplicitlyReflectedDataWithTraits));
-      REQUIRE(meta->mAlignment == alignof(ImplicitlyReflectedDataWithTraits));
-      REQUIRE(meta->mOrigin == meta);
-      REQUIRE(meta->mIsConstant == false);
-      REQUIRE(meta->mDeptr == nullptr);
-      REQUIRE(meta->mDecvq == MetaDataOf<CheckingWhatGetsInherited>());
+      REQUIRE(meta.GetInfo() == "Info about MyType");
+      REQUIRE(meta.GetFiles() == "txt, pdf");
+      REQUIRE(meta.GetVersionMajor() == 2);
+      REQUIRE(meta.GetVersionMinor() == 1);
+      REQUIRE(meta.IsDeep() == true);
+      REQUIRE(meta.IsPOD() == false);           // not POD due to being abstract
+      REQUIRE(meta.IsNullable() == false);   // not nullifiable due to being abstract
+      IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
+      REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
+      REQUIRE(meta.GetAllocationPage() == Roof2(250 * sizeof(ImplicitlyReflectedDataWithTraits)));
+      REQUIRE(meta.IsAbstract() == true);
+      REQUIRE(meta.GetSize() == sizeof(ImplicitlyReflectedDataWithTraits));
+      REQUIRE(meta.GetAlignment() == alignof(ImplicitlyReflectedDataWithTraits));
+      REQUIRE(meta.GetOrigin() == meta);
+      REQUIRE(meta.IsConstant() == false);
+      REQUIRE(meta.GetDeptr() == nullptr);
+      REQUIRE(meta.GetDecvqAll() == MetaDataOf<CheckingWhatGetsInherited>());
 
-      REQUIRE(meta->mBases.size() == 1);
-      REQUIRE(meta->mBases[0].mType->Is<ConvertibleData>());
-      REQUIRE(meta->mBases[0].mImposed == false);
-      REQUIRE(meta->mBases[0].mBinaryCompatible == false);
-      REQUIRE(meta->mBases[0].mCount == 1);
+      REQUIRE(meta.GetBases().size() == 1);
+      REQUIRE(RTTI::DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ConvertibleData>()));
+      REQUIRE(meta.GetBases()[0].imposed == false);
+      REQUIRE(meta.GetBases()[0].binaryCompatible == false);
+      REQUIRE(meta.GetBases()[0].count == 1);
       REQUIRE(baseoffset >= 0);
-      REQUIRE(meta->mBases[0].mOffset == static_cast<Offset>(baseoffset));
+      REQUIRE(meta.GetBases()[0].offset == baseoffset);
 
-      REQUIRE(meta->mAbilities.size() == 1);
-      REQUIRE(meta->mAbilities.begin()->first->Is<Verbs::Create>());
-      REQUIRE(meta->mAbilities.begin()->second.mVerb->Is<Verbs::Create>());
-      REQUIRE(meta->mAbilities.begin()->second.mOverloadsConstant.size() == 1);
-      REQUIRE(meta->mAbilities.begin()->second.mOverloadsConstant.contains(Ability::Signature {}));
-      REQUIRE(meta->mAbilities.begin()->second.mOverloadsMutable.size() == 1);
-      REQUIRE(meta->mAbilities.begin()->second.mOverloadsMutable.contains(Ability::Signature {}));
+      REQUIRE(meta.GetAbilities().size() == 1);
+      auto ability = meta.GetAbilities().begin();
+      REQUIRE(RTTI::VMeta(ability->first) == MetaVerbOf<Verbs::Create>());
+      REQUIRE(ability->second.call != nullptr);
+      REQUIRE(ability->second.callMut != nullptr);
 
-      REQUIRE(meta->mMembers.size() == 0);
-      REQUIRE(meta->mNamedValues.size() == 0);
+      REQUIRE(meta.GetMembers().size() == 0);
+      REQUIRE(meta.GetNamedValues().size() == 0);
 
       const auto intmeta = MetaDataOf<int>();
       REQUIRE(meta->mConvertersTo.size() == 1);
@@ -425,7 +391,7 @@ SCENARIO("A complex type reflected with CTTI traits", "[metadata]") {
    }
 }
 
-SCENARIO("A simple type reflected with CTTI traits", "[metadata]") {
+SCENARIO("A simple type reflected with CTTI traits", "[rtti]") {
    WHEN("ImplicitlyReflectedData reflected") {
       auto meta = MetaDataOf<ImplicitlyReflectedData>();
 
@@ -506,7 +472,7 @@ SCENARIO("A simple type reflected with CTTI traits", "[metadata]") {
    }
 }
 
-SCENARIO("A reflected verb with CTTI traits", "[metaverb]") {
+SCENARIO("A reflected verb with CTTI traits", "[rtti]") {
    GIVEN("Create verb with positive/negative tokens, with stateless and contextual default functions") {
       WHEN("Reflected") {
          Anyness::Many someBlock;
@@ -532,11 +498,7 @@ SCENARIO("A reflected verb with CTTI traits", "[metaverb]") {
    }
 }
 
-void FunctionForTesting(void*) {
-   Logger::Verbose("Executed FunctionForTesting");
-}
-
-SCENARIO("A reflected function signature", "[function]") {
+SCENARIO("A reflected function signature", "[rtti]") {
    GIVEN("A reflected function pointer") {
       using Signature = void(*)(void*);
 
@@ -548,7 +510,7 @@ SCENARIO("A reflected function signature", "[function]") {
       auto meta = MetaDataOf<Signature>();
 
       REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "Function<void(void*)>*");
+      REQUIRE(meta->mToken == "<void(void*)>*");
       REQUIRE(meta->mIsSparse);
       REQUIRE(meta->mVersionMajor == 1);
       REQUIRE(meta->mVersionMinor == 0);

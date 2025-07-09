@@ -22,6 +22,8 @@
 #include <Langulus/CT/Producer.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
+#include "Langulus/SuffixOf.hpp"
+#include "Langulus/FilesOf.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <optional>
@@ -113,6 +115,8 @@ namespace Langulus::RTTI
       definition.mPOD       = CT::POD<T>;
       definition.mNullable  = CT::Nullable<T>;
       definition.mAbstract  = CT::Abstract<T>;
+      definition.mSuffixOf  = SuffixOf<T>();
+      definition.mFilesOf   = FilesOf<T>();
 
       // Reflect the origin type                                        
       if constexpr (CT::Decayed<T>)
@@ -166,14 +170,14 @@ namespace Langulus::RTTI
       if constexpr (CT::Concretizable<T>) {
          static_assert(not CT::Abstract<ConcreteOf<T>>,
             "Concrete type can't be abstract");
-         definition.mConcrete = Reflect<ConcreteOf<T>>;
+         definition.mCurrentBoundary.mConcrete = Reflect<ConcreteOf<T>>;
       }
 
       // Reflect the producer type                                      
       if constexpr (CT::Producible<T>) {
          static_assert(not CT::Abstract<ProducerOf<T>>,
             "Producer type can't be abstract");
-         definition.mProducer = Reflect<ProducerOf<T>>;
+         definition.mCurrentBoundary.mProducer = Reflect<ProducerOf<T>>;
       }
 
       //                                                                

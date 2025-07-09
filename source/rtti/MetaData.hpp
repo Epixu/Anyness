@@ -125,8 +125,12 @@ namespace Langulus::RTTI
          auto GetMinAllocation()      const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
          auto GetName()               const noexcept -> Token;
+         auto GetInfo()               const noexcept -> Token;
          auto GetCppName()            const noexcept -> Token;
          auto GetHash()               const noexcept -> Hash;
+         auto GetID()                 const noexcept -> size_t;
+         auto GetFiles()              const noexcept -> Token;
+         auto GetSuffix()             const noexcept -> Token;
          auto GetBoundaries()         const noexcept -> Definition::BoundarySet const&;
          auto GetVersionMajor()       const noexcept -> unsigned;
          auto GetVersionMinor()       const noexcept -> unsigned;
@@ -149,6 +153,8 @@ namespace Langulus::RTTI
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
          auto GetResolver()           const noexcept -> DefinitionData::FResolve;
+         auto GetDefaultConstructor() const noexcept -> DefinitionData::FUnary;
+         auto GetDescribeConstructor()const noexcept -> DefinitionData::FDescribe;
          auto GetReferConstructor()   const noexcept -> DefinitionData::FBinary;
          auto GetReferAssigner()      const noexcept -> DefinitionData::FBinary;
          auto GetMoveConstructor()    const noexcept -> DefinitionData::FBinary;
@@ -165,11 +171,26 @@ namespace Langulus::RTTI
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          bool HasGetHashMethod()      const noexcept;
 
-         auto GetDeptr()    const -> MetaDataStructured_XY;
-         auto GetOrigin()   const -> MetaDataStructured_XY;
-         auto GetDecvqAll() const -> MetaDataStructured_XY;
-         auto GetConcrete() const -> MetaDataStructured_XY;
-         auto GetProducer() const -> MetaDataStructured_XY;
+         auto GetDispatcherMut()      const noexcept -> DefinitionData::FDispatch;
+         auto GetDispatcher()         const noexcept -> DefinitionData::FDispatch;
+         
+         auto GetDeptr()              const -> MetaDataStructured_XY;
+         auto GetOrigin()             const -> MetaDataStructured_XY;
+         auto GetDecvqAll()           const -> MetaDataStructured_XY;
+         auto GetDecvq()              const -> MetaDataStructured_XY;
+         auto AddPtr()                const -> MetaDataStructured_XY;
+         auto AddConst()              const -> MetaDataStructured_XY;
+         auto GetConcrete()           const -> MetaDataStructured_XY;
+         auto GetProducer()           const -> MetaDataStructured_XY;
+              
+         auto GetBases()              const noexcept -> DefinitionData::BaseList const&;
+         auto GetAbilities()          const noexcept -> DefinitionData::AbilityList const&;
+         auto GetMembers()            const noexcept -> DefinitionData::MemberList const&;
+         auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
+         auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
+         auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
+         
+         auto GetMorphism(const MetaDataStructured_XY&) const noexcept -> DefinitionData::FBinary;
 
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -204,6 +225,8 @@ namespace Langulus::RTTI
          auto GetSize()               const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
          auto GetAllocationPage()     const noexcept -> size_t;
+         auto GetFiles()              const noexcept -> Token;
+         auto GetSuffix()             const noexcept -> Token;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetPoolTactic()      const noexcept -> PoolTactic;
@@ -238,11 +261,21 @@ namespace Langulus::RTTI
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          bool HasGetHashMethod()      const noexcept;
 
-         auto GetDeptr()    const -> MetaDataNaked;
-         auto GetOrigin()   const -> MetaDataNaked;
-         auto GetDecvqAll() const -> MetaDataNaked;
-         auto GetConcrete() const -> MetaDataNaked;
-         auto GetProducer() const -> MetaDataNaked;
+         auto GetDeptr()              const -> MetaDataNaked;
+         auto GetOrigin()             const -> MetaDataNaked;
+         auto GetDecvqAll()           const -> MetaDataNaked;
+         auto GetDecvq()              const -> MetaDataNaked;
+         auto AddPtr()                const -> MetaDataNaked;
+         auto AddConst()              const -> MetaDataNaked;
+         auto GetConcrete()           const -> MetaDataNaked;
+         auto GetProducer()           const -> MetaDataNaked;
+              
+         auto GetBases()              const noexcept -> DefinitionData::BaseList const&;
+         auto GetAbilities()          const noexcept -> DefinitionData::AbilityList const&;
+         auto GetMembers()            const noexcept -> DefinitionData::MemberList const&;
+         auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
+         auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
+         auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
 
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)

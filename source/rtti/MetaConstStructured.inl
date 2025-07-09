@@ -29,9 +29,14 @@ namespace Langulus::RTTI::Inner
       return *this;
    }
 
-   /// Get the name of the tag, the result of NameOf                          
+   /// Get the name of the constant, the result of NameOf                     
    inline auto MetaConstPacked_16::GetName() const noexcept -> Token {
       return Instance.GetMetaConstByID(*this)->mNameOf;
+   }
+
+   /// Get the info of the constant, the result of NameOf                     
+   inline auto MetaConstPacked_16::GetInfo() const noexcept -> Token {
+      return Instance.GetMetaConstByID(*this)->mInfoOf;
    }
 
    inline auto MetaConstPacked_16::GetVersionMajor()  const noexcept -> unsigned {

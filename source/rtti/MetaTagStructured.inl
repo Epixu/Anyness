@@ -34,6 +34,11 @@ namespace Langulus::RTTI::Inner
       return Instance.GetMetaTagByID(*this)->mNameOf;
    }
 
+   /// Get the info of the tag, the result of InfoOf                          
+   inline auto MetaTagPacked_16::GetInfo() const noexcept -> Token {
+      return Instance.GetMetaTagByID(*this)->mInfoOf;
+   }
+
    inline auto MetaTagPacked_16::GetVersionMajor()  const noexcept -> unsigned {
       return Instance.GetMetaTagByID(*this)->mVersionMajor;
    }

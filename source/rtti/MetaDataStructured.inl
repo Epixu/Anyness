@@ -122,6 +122,12 @@ namespace Langulus::RTTI::Inner
    auto MetaDataStructured_XY<S1, S2>::GetName() const noexcept -> Token {
       return Instance.GetMetaDataByID(*this)->mNameOf;
    }
+   
+   /// Get the info of the type, the result of InfoOf                         
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetInfo() const noexcept -> Token {
+      return Instance.GetMetaDataByID(*this)->mInfoOf;
+   }
 
    /// Get the name of the type as it appearch in C++                         
    template<unsigned S1, unsigned S2>

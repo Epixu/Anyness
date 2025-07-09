@@ -11,6 +11,8 @@
 #include <Langulus/CT/Info.hpp>
 #include <Langulus/CT/Versioned.hpp>
 
+#include "Langulus/InfoOf.hpp"
+
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <unordered_set>
 #endif
@@ -18,11 +20,6 @@
 
 namespace Langulus::RTTI
 {
-   /*struct MetaData;
-   struct MetaTag;
-   struct MetaVerb;
-   struct MetaConst;*/
-
    class DefinitionConst;
    class DefinitionData;
    class DefinitionTag;
@@ -117,12 +114,6 @@ namespace Langulus::RTTI::Inner
    protected:
       friend class RTTI::Registry;
 
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         // A sequential identifier provided by the registry            
-         // Used for packing type ids                                   
-         size_t mID = 0;
-      #endif
-
       // Each reflected type has an unique hash based on C++ name       
       const Hash mHash;
 
@@ -135,14 +126,18 @@ namespace Langulus::RTTI::Inner
       // Precomputed lowercase nameof                                   
       Lowercase mNameOfLowercased;
       // Each reflection may or may not have some info                  
-      ::std::string mInfo = "<no info provided>";
+      ::std::string mInfoOf = "<no info provided>";
 
       // Major version                                                  
-      unsigned mVersionMajor = 1;
+      unsigned mVersionMajor IF_SAFE(= 1);
       // Minor version                                                  
-      unsigned mVersionMinor = 0;
+      unsigned mVersionMinor IF_SAFE(= 0);
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         // A sequential identifier provided by the registry            
+         // Used for packing type ids                                   
+         size_t mID = 0;
+
          // Populated from LANGULUS_BOUNDARY on reflection-time         
          // Types can be reflected from the point of view of different  
          // shared libraries. Each new reflection will be applied on the
@@ -154,7 +149,7 @@ namespace Langulus::RTTI::Inner
       #endif
 
       /// Construct an abstract definition                                    
-      ///   @param cppname - the name of the definition, as it appears in C++ 
+      ///   @param cppname - the C++ name of the definition                   
       ///   @param boundary - the library from which we're defining           
       Definition(const Token& cppname)
          : mHash      {HashOf(cppname)}
@@ -167,32 +162,19 @@ namespace Langulus::RTTI::Inner
       ///   @tparam T - the type to reflect                                   
       template<class T> LANGULUS(ALWAYS_INLINED)
       void ReflectCommon() {
-         if constexpr (CT::Versioned<T>) {
-            // Reflected version                                        
-            if constexpr (CTTI::Versioned<T>::Enabled) {
-               mVersionMajor = CTTI::Versioned<T>::Major;
-               mVersionMinor = CTTI::Versioned<T>::Minor;
-            }
-            else if constexpr (requires { T::CTTI_Versioned::Enabled; }) {
-               mVersionMajor = T::CTTI_Versioned::Major;
-               mVersionMinor = T::CTTI_Versioned::Minor;
-            }
-         }
+         // Reflected version                                           
+         mVersionMajor = VersionOf<T>().Major;
+         mVersionMinor = VersionOf<T>().Minor;
          
          // Save the boundary at time of reflection, but don't even     
          // bother if it is the main one                                
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if (Boundary != Langulus::MainBoundary)
+            if (Boundary != MainBoundary)
                mBoundaries.insert(Boundary);
          #endif
 
-         if constexpr (CT::Info<T>) {
-            // Reflected info                                           
-            if constexpr (CTTI::Info<T>::Enabled)
-               mInfo = CTTI::Info<T>::Text;
-            else if constexpr (requires { T::CTTI_Info::Enabled; })
-               mInfo = T::CTTI_Info::Constant;
-         }
+         // Reflected info                                              
+         mInfoOf = InfoOf<T>();
       }
 
       /// Check whether the definition is in the current boundary, or has     

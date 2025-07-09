@@ -33,13 +33,18 @@ namespace Langulus::RTTI::Inner
    }
 
    template<unsigned ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetInfo() const noexcept -> Token {
+      return Instance.GetMetaVerbByID(*this)->mInfoOf;
+   }
+   
+   template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveName() const noexcept -> Token {
-      return Instance.GetMetaVerbByID(*this)->mToken;
+      return Instance.GetMetaVerbByID(*this)->mNameOf;
    }
 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeName() const noexcept -> Token {
-      return Instance.GetMetaVerbByID(*this)->mTokenReverse;
+      return Instance.GetMetaVerbByID(*this)->mNameOfReverse;
    }
 
    template<unsigned ID_SIZE>

@@ -56,11 +56,9 @@ namespace Langulus::RTTI
 
       //                                                                
       // If this is reached, then constant is not defined yet           
-      if constexpr (CT::VersionedValue<E>) {
-         // Reflected version                                           
-         definition.mVersionMajor = CTTI::VersionedValue<E>::Major;
-         definition.mVersionMinor = CTTI::VersionedValue<E>::Minor;
-      }
+      // Reflected version                                              
+      definition.mVersionMajor = VersionOf<E>().Major;
+      definition.mVersionMinor = VersionOf<E>().Minor;
 
       // Save the boundary at time of reflection, but don't even        
       // bother if it is the main one                                   
@@ -69,10 +67,8 @@ namespace Langulus::RTTI
             definition.mBoundaries.insert(Boundary);
       #endif
 
-      if constexpr (CT::InfoValue<E>) {
-         // Reflected info                                              
-         definition.mInfo = CTTI::InfoValue<E>::Text;
-      }
+      // Reflected info                                                 
+      definition.mInfoOf = InfoOf<E>();
       
       constexpr auto token = NameOf<E>();
       static_assert(token != "", "Invalid constant token is not allowed - "

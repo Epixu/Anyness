@@ -55,6 +55,7 @@ namespace Langulus::RTTI
          constexpr MetaVerbStructured_X8& operator = (nullptr_t) noexcept;
          constexpr MetaVerbStructured_X8& operator = (DefinitionVerb const*) noexcept;
 
+         auto GetInfo()             const noexcept -> Token;
          auto GetPositiveName()     const noexcept -> Token;
          auto GetNegativeName()     const noexcept -> Token;
          auto GetPositiveOperator() const noexcept -> Token;

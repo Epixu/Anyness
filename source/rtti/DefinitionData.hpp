@@ -8,6 +8,8 @@
 #pragma once
 #include "Definition.hpp"
 #include <Langulus/CT/Comparable.hpp>
+#include <Langulus/CT/DefineTag.hpp>
+#include <Langulus/CT/DefineVerb.hpp>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #include <Langulus/CT/Pooled.hpp>
@@ -86,7 +88,11 @@ namespace Langulus::RTTI
       // Precomputed counts indexed by MSB (avoids division by stride   
       // for that extra oompf)                                          
       size_t mAllocationTable[sizeof(size_t) * 8 + 1] IF_SAFE(= {});
-
+      // Reflected suffix                                               
+      ::std::string mSuffixOf;
+      // Reflected file extensions, separated with commas               
+      ::std::string mFilesOf;
+      
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          // The reflected pool tactic                                   
          PoolTactic mPoolTactic = PoolTactic::Default;
@@ -108,7 +114,7 @@ namespace Langulus::RTTI
       // only the main code is used, because it is most persistent.     
       using FUnary = void(*)(void* self);
       using FBinary = void(*)(void* from, void* to);
-      using FDescribeConstruct = void(*)(void* self, const Anyness::Many& describe);
+      using FDescribe = void(*)(void* self, const Anyness::Many& describe);
       using FCompare = Compared(*)(void* lhs, void* rhs);
       using FResolve = Anyness::Any(*)(void* self);
       using FHash = Hash(*)(void* self);
@@ -128,8 +134,8 @@ namespace Langulus::RTTI
          FAccessMember member IF_SAFE(= nullptr);
          // Number of elements in mData (in case of an array)           
          size_t extent = 1;
-         // Trait tags                                                  
-         FTagRetriever tag = nullptr;
+         // Tags                                                        
+         FTagRetriever getTag = nullptr;
 
          Member(const auto&);
 
@@ -151,84 +157,134 @@ namespace Langulus::RTTI
          static Ability From() noexcept;
       };
 
+      /// Used to reflect a base for a t                                      
+      struct Base {
+         using CTTI_ReflectAs = void;
+
+         // Type of the base                                            
+         DefinitionData const* type IF_SAFE(= nullptr);
+         // Number of bases that fit in the type                        
+         size_t count = 1;
+         // Offset of the base, relative to the derived type            
+         // @attention valid only if not 'virtualBase'                  
+         size_t offset = 0;
+         // Used to map one type onto another                           
+         // Usually true when base completely fills the derived type    
+         bool binaryCompatible = false;
+         // Whether or not this base is considered 'imposed'            
+         // Basically, imposed bases are not serialized and don't       
+         // act in distance computation or dispatching                  
+         // An imposed base can be added only manually                  
+         bool imposed = false;
+         // Only possible way to get pointer to a virtual base is       
+         // through a lambda. Nullptr if base is not virtual            
+         FAccessMember virtualBase = nullptr;
+         
+         template<CT::Dense T, CT::Dense BASE>
+         static Base From() has_assumptions;
+      };
+      
+      /// Used to reflect data coversions                                     
+      struct Morphism {
+         using CTTI_ReflectAs = void;
+
+         // The data ID we're converting to                             
+         //DefinitionData const* type IF_SAFE(= nullptr);
+         // Address of function to call                                 
+         FBinary call IF_SAFE(= nullptr);
+
+         template<CT::Decayed FROM, CT::Decayed TO>
+         static Morphism From(DefinitionData const*) noexcept;
+      };
+
+      using MemberList = ::std::vector<Member>;
+      using AbilityList = ::std::unordered_map<DefinitionVerb const*, Ability>;
+      using BaseList = ::std::vector<Base>;
+      using MorphismList = ::std::unordered_map<DefinitionData const*, Morphism>;
+      using ValuesList = ::std::vector<DefinitionConst const*>;
+      
       ///                                                                     
       struct BoundaryDependent {
          using CTTI_ReflectAs = void;
 
          // The default constructor, wrapped in a lambda expression if  
          // available. Takes a pointer for a placement-new expression   
-         FUnary mDefaultConstructor {};
+         FUnary mDefaultConstructor = nullptr;
 
          // Constructor by descriptor                                   
          // Takes a pointer for a placement-new expression, and a Many  
-         FDescribeConstruct mDescribeConstructor {};
+         FDescribe mDescribeConstructor = nullptr;
 
          // The refer/copy/disown/clone/move/abandon constructors,      
          // wrapped in lambdas. They take a pointer for a placement-new 
          // expression and a source                                     
-         FBinary mReferConstructor {};
-         FBinary mCopyConstructor {};
-         FBinary mDisownConstructor {};
-         FBinary mCloneConstructor {};
-         FBinary mMoveConstructor {};
-         FBinary mAbandonConstructor {};
+         FBinary mReferConstructor = nullptr;
+         FBinary mCopyConstructor = nullptr;
+         FBinary mDisownConstructor = nullptr;
+         FBinary mCloneConstructor = nullptr;
+         FBinary mMoveConstructor = nullptr;
+         FBinary mAbandonConstructor = nullptr;
 
          // The destructor, wrapped in a lambda expression              
          // Takes the pointer to the instance for destruction           
-         FUnary mDestructor {};
+         FUnary mDestructor = nullptr;
 
          // The <=> operator, wrapped in lambda expression if available 
-         FCompare mComparer {};
+         FCompare mComparer = nullptr;
 
          // The refer/copy/disown/clone/move/abandon assignment, wrapped
          // in a lambdas                                                
-         FBinary mReferAssigner {};
-         FBinary mCopyAssigner {};
-         FBinary mDisownAssigner {};
-         FBinary mCloneAssigner {};
-         FBinary mMoveAssigner {};
-         FBinary mAbandonAssigner {};
+         FBinary mReferAssigner = nullptr;
+         FBinary mCopyAssigner = nullptr;
+         FBinary mDisownAssigner = nullptr;
+         FBinary mCloneAssigner = nullptr;
+         FBinary mMoveAssigner = nullptr;
+         FBinary mAbandonAssigner = nullptr;
 
          // The class type function, wrapped in a lambda expression     
          // Returns typed container with most concrete class instance   
-         FResolve mResolver {};
+         FResolve mResolver = nullptr;
 
          // The hash getter, wrapped in a lambda expression             
          // Takes pointer to the instance for hashing, returns the hash 
-         FHash mHasher {};
+         FHash mHasher = nullptr;
 
          // The reference function wrapped in a lambda                  
          // Takes the pointer to the instance for referencing           
          // Returns the number of references after being referenced     
          // (use 0 modifier to just get references)                     
-         FReference mReferencer {};
+         FReference mReferencer = nullptr;
 
          // A custom verb dispatcher, wrapped in a lambda expression    
          // Takes pointer to the instance that will dispatch, and a verb
          // There is a mutable and immutable version of this            
-         FDispatch mDispatcherMut {};
-         FDispatch mDispatcher {};
+         FDispatch mDispatcherMut = nullptr;
+         FDispatch mDispatcher = nullptr;
 
          // Default concretization                                      
          // Used as redirection when requesting the creation of abstract
          FTypeRetriever mConcrete = nullptr;
+         
          // Types with producers can be instantiated only by the        
          // invocation of Verbs::Create in the context of the producer  
          FTypeRetriever mProducer = nullptr;
 
          // List of reflected members of the origin type                
-         ::std::vector<Member> mMembers;
+         MemberList mMembers;
+         
          // List of reflected abilities of the origin type              
-         ::std::unordered_map<DefinitionVerb const*, Ability> mAbilities;
+         AbilityList mAbilities;
 
          // List of reflected bases of the origin type                  
-         BaseList mBases {};
+         BaseList mBases;
+         
          // List of reflected converters to/from the origin type        
-         ConverterMap mConvertersTo {};
-         ConverterMap mConvertersFrom {};
-         // List of named values of the origin type                     
-         NamedValueList mNamedValues {};
+         MorphismList mMorphismsTo;
+         MorphismList mMorphismsFrom;
       };
+      
+      // List of named values                                           
+      ValuesList mNamedValues;
 
       // The currently used boundary                                    
       BoundaryDependent mCurrentBoundary;

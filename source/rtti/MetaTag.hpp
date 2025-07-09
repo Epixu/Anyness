@@ -34,6 +34,7 @@ namespace Langulus::RTTI
          constexpr MetaTagPacked_16& operator = (DefinitionTag const*) noexcept;
 
          auto GetName()          const noexcept -> Token;
+         auto GetInfo()          const noexcept -> Token;
          auto GetVersionMajor()  const noexcept -> unsigned;
          auto GetVersionMinor()  const noexcept -> unsigned;
          auto GetBoundaries()    const noexcept -> Definition::BoundarySet const&;
