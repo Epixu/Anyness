@@ -464,13 +464,13 @@ SCENARIO("Reflecting a verb", "[rtti]") {
    REQUIRE(vmeta.GetPrecedence() == 5);
 
    Flow::Verb verb;
+   REQUIRE(vmeta.GetContextless()(verb));
+
    const DMeta dmeta = MetaDataOf<DMeta>();
    REQUIRE(dmeta.GetAbilities().at(vdef)(const_cast<DMeta*>(&dmeta), verb));
-   REQUIRE(vmeta.GetContextless()(verb));
 
    const DMeta dmeta_const = MetaDataOf<const DMeta>();
    REQUIRE(dmeta_const.GetAbilities().at(vdef)(const_cast<DMeta*>(&dmeta_const), verb));
-   REQUIRE(vmeta.GetContextless()(verb));
 }
 
 
