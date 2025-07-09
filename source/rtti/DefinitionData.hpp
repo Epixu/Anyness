@@ -58,21 +58,15 @@ namespace Langulus::RTTI
       DefinitionData const* mDecvqAll IF_SAFE(= nullptr);
       // The type, when topmost qualifiers are removed                  
       DefinitionData const* mDecvqOnce IF_SAFE(= nullptr);
-
       // The type, but with an additional level of indirection          
       // @attention this is not null only after the pointer type has    
       //    been reflected elsewhere at runtime                         
       DefinitionData const* mAddPtr = nullptr;
-
       // The type, but constant                                         
       // @attention this is not null only after the constant type has   
       //    been reflected elsewhere at runtime                         
       DefinitionData const* mAddConst = nullptr;
 
-      // Data instance size in bytes, set by sizeof()                   
-      size_t mSize IF_SAFE(= 0);
-      // Data instance alignment in bytes, set by alignof()             
-      size_t mAlign IF_SAFE(= Alignment);
       // True if data is constant, set by CT::Constant                  
       bool mConst IF_SAFE(= false);
       // True if data is deep, set by CT::Deep                          
@@ -83,6 +77,14 @@ namespace Langulus::RTTI
       bool mNullable IF_SAFE(= false);
       // True if data is abstract, set by CT::Abstract                  
       bool mAbstract IF_SAFE(= false);
+      // Decides whether POD data is batch-hashable or not              
+      // If there's a custom GetHash() method, POD data is not batchable
+      bool mHasGetHashMethod = false;
+
+      // Data instance size in bytes, set by sizeof()                   
+      size_t mSize IF_SAFE(= 0);
+      // Data instance alignment in bytes, set by alignof()             
+      size_t mAlign IF_SAFE(= Alignment);
       // Minimal pool allocation, in bytes                              
       size_t mAllocationPage IF_SAFE(= 0);
       // Precomputed counts indexed by MSB (avoids division by stride   
@@ -97,12 +99,8 @@ namespace Langulus::RTTI
          // The reflected pool tactic                                   
          PoolTactic mPoolTactic = PoolTactic::Default;
          // The start of the pool chain for the type                    
-         mutable Fractalloc::Pool* mPoolChain {};
+         mutable Fractalloc::Pool* mPoolChain = nullptr;
       #endif
-
-      // Decides whether POD data is batch-hashable or not              
-      // If there's a custom GetHash() method, POD data is not batchable
-      bool mHasGetHashMethod = false;
 
       //                                                                
       //    These methods are sought in each reflected type             
@@ -144,19 +142,6 @@ namespace Langulus::RTTI
          static auto TagSelector(int, Types<T...>&&) -> DefinitionTag const*;
       };
       
-      /// Ability reflection                                                  
-      struct Ability {
-         using CTTI_ReflectAs = void;
-
-         // For functions that can mutate the context                   
-         FDispatch callMut = nullptr;
-         // For functions that can't mutate the context                 
-         FDispatch call    = nullptr;
-
-         template<class T, CT::DefineVerb V>
-         static Ability From() noexcept;
-      };
-
       /// Used to reflect a base for a t                                      
       struct Base {
          using CTTI_ReflectAs = void;
@@ -184,24 +169,11 @@ namespace Langulus::RTTI
          static Base From() has_assumptions;
       };
       
-      /// Used to reflect data coversions                                     
-      struct Morphism {
-         using CTTI_ReflectAs = void;
-
-         // The data ID we're converting to                             
-         //DefinitionData const* type IF_SAFE(= nullptr);
-         // Address of function to call                                 
-         FBinary call IF_SAFE(= nullptr);
-
-         template<CT::Decayed FROM, CT::Decayed TO>
-         static Morphism From(DefinitionData const*) noexcept;
-      };
-
-      using MemberList = ::std::vector<Member>;
-      using AbilityList = ::std::unordered_map<DefinitionVerb const*, Ability>;
-      using BaseList = ::std::vector<Base>;
-      using MorphismList = ::std::unordered_map<DefinitionData const*, Morphism>;
-      using ValuesList = ::std::vector<DefinitionConst const*>;
+      using MemberList   = ::std::vector<Member>;
+      using AbilityList  = ::std::unordered_map<DefinitionVerb const*, FDispatch>;
+      using BaseList     = ::std::vector<Base>;
+      using MorphismList = ::std::unordered_map<DefinitionData const*, FBinary>;
+      using ValuesList   = ::std::vector<DefinitionConst const*>;
       
       ///                                                                     
       struct BoundaryDependent {

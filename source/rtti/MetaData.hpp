@@ -190,7 +190,8 @@ namespace Langulus::RTTI
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
          
-         auto GetMorphism(const MetaDataStructured_XY&) const noexcept -> DefinitionData::FBinary;
+         /*auto GetMember(const MetaDataStructured_XY&) const noexcept -> DefinitionData::FBinary;
+         auto GetMorphism(const MetaDataStructured_XY&) const noexcept -> DefinitionData::FBinary;*/
 
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)

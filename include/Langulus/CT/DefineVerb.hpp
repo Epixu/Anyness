@@ -4,17 +4,16 @@
 
 namespace Langulus
 {
-
    /// Useful for setting CTTI_DefineVerb                                     
-   template<Literal POSITIVE, Literal NEGATIVE = "", float PRECEDENCE = 0.f>
+   template<Literal POSITIVE, Literal NEGATIVE = "", auto PRECEDENCE = 0>
    struct VerbToken {
       static constexpr unsigned Positive = POSITIVE;
       static constexpr unsigned Negative = NEGATIVE;
-      static constexpr float Precedence = PRECEDENCE;
+      static constexpr float Precedence = static_cast<float>(PRECEDENCE);
       static constexpr bool Enabled = true;
    };
 
-   namespace Anyness
+   /*namespace Anyness
    {
       struct Many;
    }
@@ -22,13 +21,11 @@ namespace Langulus
    namespace Flow
    {
       struct Verb;
-   }
-
-} // namespace Langulus
+   }*/
+}
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in three ways to satisfy CT::DefineVerb<T>:                
    /// 1. Specialize for T/concept having Enabled as true and the needed      
    ///    tokens. Negative is optional and makes the verb reversible          
@@ -57,15 +54,13 @@ namespace Langulus::CTTI
       static constexpr Literal Negative = "<not a verb>";
       static constexpr bool Enabled = false;
    };
-
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(DefineVerb);
 LANGULUS_CTTI_CONCEPT(DefineVerbOperator);
 
 namespace Langulus::RTTI
 {
-
    /// Get the name of CTTI_DefineVerb::Positive at compile-time              
    ///   @tparam T - the verb to get the name of                              
    ///   @return the name                                                     
@@ -113,37 +108,4 @@ namespace Langulus::RTTI
       else
          return Literal {""};
    }
-   
-   /// The default verb execution functor                                     
-   using FVerbDefaultMutable  = bool (*)(      Anyness::Many&, Flow::Verb&);
-   using FVerbDefaultConstant = bool (*)(const Anyness::Many&, Flow::Verb&);
-   using FVerbStateless       = bool (*)(Flow::Verb&);
-
-   /// Checks if a verb is default-executable in a mutable context            
-   template<CT::DefineVerb T>
-   consteval FVerbDefaultMutable VerbDefaultMutable() {
-      if constexpr (requires { FVerbDefaultMutable {&T::ExecuteDefault}; })
-         return &T::ExecuteDefault;
-      else
-         return nullptr;
-   }
-
-   /// Checks if a verb is default-executable in an immutable context         
-   template<CT::DefineVerb T>
-   consteval FVerbDefaultConstant VerbDefaultConstant() {
-      if constexpr (requires { FVerbDefaultConstant {&T::ExecuteDefault}; })
-         return &T::ExecuteDefault;
-      else
-         return nullptr;
-   }
-
-   /// Checks if a verb is stateless-executable                               
-   template<CT::DefineVerb T>
-   consteval FVerbStateless VerbStateless() {
-      if constexpr (requires { FVerbStateless {&T::ExecuteStateless}; })
-         return &T::ExecuteStateless;
-      else
-         return nullptr;
-   }
-
-} // namespace Langulus::RTTI
+}

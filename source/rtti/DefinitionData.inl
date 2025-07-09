@@ -115,8 +115,14 @@ namespace Langulus::RTTI
       definition.mPOD       = CT::POD<T>;
       definition.mNullable  = CT::Nullable<T>;
       definition.mAbstract  = CT::Abstract<T>;
-      definition.mSuffixOf  = SuffixOf<T>();
-      definition.mFilesOf   = FilesOf<T>();
+
+      constexpr auto suffix = SuffixOf<T>();
+      if constexpr (suffix != "")
+         definition.mSuffixOf = suffix;
+
+      constexpr auto files = FilesOf<T>();
+      if constexpr (files != "")
+         definition.mFilesOf = files;
 
       // Reflect the origin type                                        
       if constexpr (CT::Decayed<T>)
@@ -168,6 +174,8 @@ namespace Langulus::RTTI
 
       // Reflect the concrete type                                      
       if constexpr (CT::Concretizable<T>) {
+         static_assert(CT::Abstract<T>,
+            "Only abstract types can have concretizations");
          static_assert(not CT::Abstract<ConcreteOf<T>>,
             "Concrete type can't be abstract");
          definition.mCurrentBoundary.mConcrete = Reflect<ConcreteOf<T>>;

@@ -12,6 +12,10 @@
 #include <Langulus/CT/Members.hpp>
 
 using namespace Langulus;
+using RTTI::DMeta;
+using RTTI::TMeta;
+using RTTI::CMeta;
+using RTTI::VMeta;
 
 namespace Langulus::Tags
 {
@@ -34,10 +38,9 @@ namespace Langulus::Flow
 
 namespace Langulus::Verbs
 {
-   template<class T>
-   struct CreateIn {};
-   
+   /// Defines a verb                                                         
    struct Create {
+      using CTTI_Versioned = Version<6, 10>;
       using CTTI_DefineVerb = VerbToken<"create", "destroy", 5.f>;
       using CTTI_DefineVerbOperator = VerbToken<" + ", " - ">;
       using CTTI_Info = Yes<
@@ -46,11 +49,40 @@ namespace Langulus::Verbs
          "you need to execute the verb in a matching producer, "
          "or that producer will be created automatically for you, if possible"
       >;
-      
+
+      /// Allows the verb to be executed without context                      
+      static bool ExecuteContextless(Flow::Verb&) {
+         Logger::Special("Verbs::Create executed without context");
+         return true;
+      }
+
+      /// Helps you specialize verbs for types/concepts                       
+      /// You can also do that, by adding a `void Create(Flow::Verb&)` in T   
       template<class T>
-      static constexpr bool IsAble
-         = requires (T&& t, Flow::Verb& v) { t.Create(v); }
-        or requires (Flow::Verb& v) { CreateIn<T>::Run(v); };
+      struct In {};
+
+      /// Checks whether T is capable of doing this verb                      
+      template<class T>
+      static constexpr bool IsAble =
+              requires (T& t, Flow::Verb& v) { t.Create(v); }
+           or requires (T& t, Flow::Verb& v) { Create::In<T>::Execute(t, v); };
+   };
+
+   /// Specializing for any other type                                        
+   template<>
+   struct Create::In<DMeta> {
+      static bool Execute(DMeta& context, Flow::Verb&) {
+         Logger::Special("Verbs::Create executed in: ", context.GetName());
+         return true;
+      }
+   };
+
+   template<>
+   struct Create::In<const DMeta> {
+      static bool Execute(const DMeta& context, Flow::Verb&) {
+         Logger::Special("Verbs::Create executed in: ", context.GetName());
+         return true;
+      }
    };
 }
 
@@ -164,7 +196,7 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    const IncompleteType* const* const&&
 ) {
    using T = TestType;
-   RTTI::DMeta meta = MetaDataOf<T>();
+   const DMeta meta = MetaDataOf<T>();
    REQUIRE(meta);
    REQUIRE(meta != nullptr);
    REQUIRE(meta.GetHash() != Hash {});
@@ -243,298 +275,248 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
 }
 
 SCENARIO("A type reflected with all traits", "[rtti]") {
-   WHEN("ImplicitlyReflectedDataWithTraits reflected") {
-      ImplicitlyReflectedDataWithTraits instance;
-      auto ptrtobase = static_cast<ImplicitlyReflectedData*>(&instance);
-      const size_t baseoffset = reinterpret_cast<char*>(ptrtobase) - reinterpret_cast<char*>(&instance);
-      auto meta = MetaDataOf<ImplicitlyReflectedDataWithTraits>();
+   ImplicitlyReflectedDataWithTraits instance;
+   auto ptrtobase = static_cast<ImplicitlyReflectedData*>(&instance);
+   const size_t baseoffset = reinterpret_cast<char*>(ptrtobase) - reinterpret_cast<char*>(&instance);
+   const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits>();
 
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta.GetName() == "MyType");
-      REQUIRE(meta.GetInfo() == "Info about MyType");
-      REQUIRE(meta.GetFiles() == "txt, pdf");
-      REQUIRE(meta.GetVersionMajor() == 2);
-      REQUIRE(meta.GetVersionMinor() == 1);
-      REQUIRE(meta.IsDeep() == true);
-      REQUIRE(meta.IsPOD() == false);       // not POD due to being abstract
-      REQUIRE(meta.IsNullable() == false);  // not nullifiable due to being abstract
-      IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
-      REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
-      REQUIRE(meta.GetAllocationPage() == Roof2(250 * sizeof(ImplicitlyReflectedDataWithTraits)));
-      REQUIRE(meta.IsAbstract() == true);
-      REQUIRE(meta.GetSize() == sizeof(ImplicitlyReflectedDataWithTraits));
-      REQUIRE(meta.GetAlignment() == alignof(ImplicitlyReflectedDataWithTraits));
-      REQUIRE(meta.GetOrigin() == meta);
-      REQUIRE(meta.IsConstant() == false);
-      REQUIRE(meta.GetDeptr() == nullptr);
-      REQUIRE(meta.GetDecvqAll() == MetaDataOf<ImplicitlyReflectedDataWithTraits>());
+   REQUIRE(meta != nullptr);
+   REQUIRE(meta.GetName() == "MyType");
+   REQUIRE(meta.GetInfo() == "Info about MyType");
+   REQUIRE(meta.GetFiles() == "txt, pdf");
+   REQUIRE(meta.GetVersionMajor() == 2);
+   REQUIRE(meta.GetVersionMinor() == 1);
+   REQUIRE(meta.IsDeep() == true);
+   REQUIRE(meta.IsPOD() == false);       // not POD due to being abstract
+   REQUIRE(meta.IsNullable() == false);  // not nullifiable due to being abstract
+   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
+   REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
+   REQUIRE(meta.GetAllocationPage() == Roof2(250 * sizeof(ImplicitlyReflectedDataWithTraits)));
+   REQUIRE(meta.IsAbstract() == true);
+   REQUIRE(meta.GetSize() == sizeof(ImplicitlyReflectedDataWithTraits));
+   REQUIRE(meta.GetAlignment() == alignof(ImplicitlyReflectedDataWithTraits));
+   REQUIRE(meta.GetOrigin() == meta);
+   REQUIRE(meta.IsConstant() == false);
+   REQUIRE(meta.GetDeptr() == nullptr);
+   REQUIRE(meta.GetDecvqAll() == MetaDataOf<ImplicitlyReflectedDataWithTraits>());
 
-      REQUIRE(meta.GetBases().size() == 1);
-      REQUIRE(RTTI::DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ConvertibleData>()));
-      REQUIRE(meta.GetBases()[0].imposed == false);
-      REQUIRE(meta.GetBases()[0].binaryCompatible == false);
-      REQUIRE(meta.GetBases()[0].count == 1);
-      REQUIRE(baseoffset >= 0);
-      REQUIRE(meta.GetBases()[0].offset == baseoffset);
+   REQUIRE(meta.GetBases().size() == 1);
+   REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ConvertibleData>()));
+   REQUIRE(meta.GetBases()[0].imposed == false);
+   REQUIRE(meta.GetBases()[0].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[0].count == 1);
+   REQUIRE(baseoffset >= 0);
+   REQUIRE(meta.GetBases()[0].offset == baseoffset);
 
-      REQUIRE(meta.GetAbilities().size() == 1);
-      auto ability = meta.GetAbilities().begin();
-      REQUIRE(RTTI::VMeta(ability->first) == MetaVerbOf<Verbs::Create>());
-      REQUIRE(ability->second.call != nullptr);
-      REQUIRE(ability->second.callMut != nullptr);
+   REQUIRE(meta.GetAbilities().size() == 1);
+   auto ability = meta.GetAbilities().begin();
+   REQUIRE(VMeta(ability->first) == MetaVerbOf<Verbs::Create>());
+   REQUIRE(ability->second != nullptr);
 
-      REQUIRE(meta.GetMembers().size() == 3);
-      REQUIRE(meta.GetMembers()[0].extent == 1);
-      REQUIRE(meta.GetMembers()[0].member(&instance) == &instance.anotherMember);
-      REQUIRE(RTTI::TMeta(meta.GetMembers()[0].getTag(0)) == MetaTagOf<Tags::Name>());
-      REQUIRE(meta.GetMembers()[0].getTag(1) == nullptr);
-      REQUIRE(RTTI::DMeta(meta.GetMembers()[0].type()).Is(MetaDataOf<bool>()));
+   REQUIRE(meta.GetMembers().size() == 3);
+   REQUIRE(meta.GetMembers()[0].extent == 1);
+   REQUIRE(meta.GetMembers()[0].member(&instance) == &instance.anotherMember);
+   REQUIRE(TMeta(meta.GetMembers()[0].getTag(0)) == MetaTagOf<Tags::Name>());
+   REQUIRE(meta.GetMembers()[0].getTag(1) == nullptr);
+   REQUIRE(DMeta(meta.GetMembers()[0].type()).Is(MetaDataOf<bool>()));
 
-      REQUIRE(meta.GetMembers()[1].extent == 12);
-      REQUIRE(meta.GetMembers()[1].member(&instance) == instance.anotherMemberArray);
-      REQUIRE(meta.GetMembers()[1].getTag(0) == nullptr);
-      REQUIRE(RTTI::DMeta(meta.GetMembers()[1].type()).Is(MetaDataOf<int>()));
+   REQUIRE(meta.GetMembers()[1].extent == 12);
+   REQUIRE(meta.GetMembers()[1].member(&instance) == instance.anotherMemberArray);
+   REQUIRE(meta.GetMembers()[1].getTag(0) == nullptr);
+   REQUIRE(DMeta(meta.GetMembers()[1].type()).Is(MetaDataOf<int>()));
 
-      REQUIRE(meta.GetMembers()[2].extent == 1);
-      REQUIRE(meta.GetMembers()[2].member(&instance) == &instance.sparseMember);
-      REQUIRE(meta.GetMembers()[2].getTag(0) == nullptr);
-      REQUIRE(RTTI::DMeta(meta.GetMembers()[2].type()).Is(MetaDataOf<int>()));
+   REQUIRE(meta.GetMembers()[2].extent == 1);
+   REQUIRE(meta.GetMembers()[2].member(&instance) == &instance.sparseMember);
+   REQUIRE(meta.GetMembers()[2].getTag(0) == nullptr);
+   REQUIRE(DMeta(meta.GetMembers()[2].type()).Is(MetaDataOf<int>()));
 
-      REQUIRE(meta.GetNamedValues().size() == 0);
+   REQUIRE(meta.GetNamedValues().size() == 0);
 
-      const auto intmeta = RTTI::DefinitionData::Reflect<int>();
-      REQUIRE(meta.GetMorphismsTo().size() == 1);
-      REQUIRE(meta.GetMorphismsTo().at(intmeta).call != nullptr);
-      REQUIRE(meta.GetMorphism(RTTI::DMeta(intmeta)) == meta.GetMorphismsTo().at(intmeta).call);
+   const auto intmeta = RTTI::DefinitionData::Reflect<int>();
+   REQUIRE(meta.GetMorphismsTo().size() == 1);
+   REQUIRE(meta.GetMorphismsTo().at(intmeta) != nullptr);
 
-      const auto pimeta = RTTI::DefinitionData::Reflect<Pi>();
-      REQUIRE(meta.GetMorphismsFrom().size() == 1);
-      REQUIRE(meta.GetMorphismsFrom().at(pimeta).call != nullptr);
-      REQUIRE(meta.GetMorphism(RTTI::DMeta(pimeta)) == nullptr);
+   const auto pimeta = RTTI::DefinitionData::Reflect<Pi>();
+   REQUIRE(meta.GetMorphismsFrom().size() == 1);
+   REQUIRE(meta.GetMorphismsFrom().at(pimeta) != nullptr);
 
-      REQUIRE(RTTI::DMeta(pimeta).GetMorphism(meta) == meta.GetMorphismsFrom().at(pimeta).call);
+   const auto impmeta = RTTI::DefinitionData::Reflect<ImplicitlyReflectedDataWithTraits>();
+   REQUIRE(DMeta(pimeta).GetMorphismsTo().at(impmeta) == meta.GetMorphismsFrom().at(pimeta));
 
-      int converted = 1;
-      meta.GetMorphism(RTTI::DMeta(intmeta))(&instance, &converted);
-      REQUIRE(converted == 664);
+   int converted = 1;
+   meta.GetMorphismsTo().at(intmeta)(&instance, &converted);
+   REQUIRE(converted == 664);
 
-      Pi source;
-      ImplicitlyReflectedDataWithTraits convertedFromPi1;
-      RTTI::DMeta(pimeta).GetMorphism(meta)(&source, &convertedFromPi1);
-      REQUIRE(convertedFromPi1.member == 314);
-   }
-
-   WHEN("CheckingWhatGetsInherited reflected") {
-      CheckingWhatGetsInherited instance;
-      ImplicitlyReflectedData* ptrtobase = &static_cast<ImplicitlyReflectedData&>(instance);
-      const size_t baseoffset = reinterpret_cast<char*>(ptrtobase) - reinterpret_cast<char*>(&instance);
-      auto meta = MetaDataOf<CheckingWhatGetsInherited>();
-
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta.GetInfo() == "Info about MyType");
-      REQUIRE(meta.GetFiles() == "txt, pdf");
-      REQUIRE(meta.GetVersionMajor() == 2);
-      REQUIRE(meta.GetVersionMinor() == 1);
-      REQUIRE(meta.IsDeep() == true);
-      REQUIRE(meta.IsPOD() == false);           // not POD due to being abstract
-      REQUIRE(meta.IsNullable() == false);   // not nullifiable due to being abstract
-      IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
-      REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
-      REQUIRE(meta.GetAllocationPage() == Roof2(250 * sizeof(ImplicitlyReflectedDataWithTraits)));
-      REQUIRE(meta.IsAbstract() == true);
-      REQUIRE(meta.GetSize() == sizeof(ImplicitlyReflectedDataWithTraits));
-      REQUIRE(meta.GetAlignment() == alignof(ImplicitlyReflectedDataWithTraits));
-      REQUIRE(meta.GetOrigin() == meta);
-      REQUIRE(meta.IsConstant() == false);
-      REQUIRE(meta.GetDeptr() == nullptr);
-      REQUIRE(meta.GetDecvqAll() == MetaDataOf<CheckingWhatGetsInherited>());
-
-      REQUIRE(meta.GetBases().size() == 1);
-      REQUIRE(RTTI::DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ConvertibleData>()));
-      REQUIRE(meta.GetBases()[0].imposed == false);
-      REQUIRE(meta.GetBases()[0].binaryCompatible == false);
-      REQUIRE(meta.GetBases()[0].count == 1);
-      REQUIRE(baseoffset >= 0);
-      REQUIRE(meta.GetBases()[0].offset == baseoffset);
-
-      REQUIRE(meta.GetAbilities().size() == 1);
-      auto ability = meta.GetAbilities().begin();
-      REQUIRE(RTTI::VMeta(ability->first) == MetaVerbOf<Verbs::Create>());
-      REQUIRE(ability->second.call != nullptr);
-      REQUIRE(ability->second.callMut != nullptr);
-
-      REQUIRE(meta.GetMembers().size() == 0);
-      REQUIRE(meta.GetNamedValues().size() == 0);
-
-      const auto intmeta = MetaDataOf<int>();
-      REQUIRE(meta->mConvertersTo.size() == 1);
-      REQUIRE(meta->mConvertersTo.at(intmeta).mType->Is<int>());
-      REQUIRE(meta->mConvertersTo.at(intmeta).mFunction);
-      REQUIRE(meta->GetConverter(intmeta) == meta->mConvertersTo.at(intmeta).mFunction);
-
-      const auto pimeta = MetaDataOf<Pi>();
-      REQUIRE(meta->mConvertersFrom.size() == 1);
-      REQUIRE(meta->mConvertersFrom.at(pimeta).mType->Is<Pi>());
-      REQUIRE(meta->mConvertersFrom.at(pimeta).mFunction);
-      REQUIRE(meta->GetConverter(pimeta) == nullptr);
-
-      REQUIRE(pimeta->GetConverter(meta) == meta->mConvertersFrom.at(pimeta).mFunction);
-
-      int converted = 1;
-      meta->GetConverter(intmeta)(&instance, &converted);
-      REQUIRE(converted == 664);
-
-      Pi source;
-      CheckingWhatGetsInherited convertedFromPi1;
-      pimeta->GetConverter(meta)(&source, &convertedFromPi1);
-      REQUIRE(convertedFromPi1.member == 314);
-   }
+   Pi source;
+   ImplicitlyReflectedDataWithTraits convertedFromPi1;
+   meta.GetMorphismsFrom().at(pimeta)(&source, &convertedFromPi1);
+   REQUIRE(convertedFromPi1.member == 314);
 }
 
-SCENARIO("A simple type reflected with CTTI traits", "[rtti]") {
-   WHEN("ImplicitlyReflectedData reflected") {
-      auto meta = MetaDataOf<ImplicitlyReflectedData>();
 
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "ImplicitlyReflectedData");
-      REQUIRE(meta->mCppName == "ImplicitlyReflectedData");
-      REQUIRE(meta->mInfo == "<no info provided>");
-      REQUIRE(meta->mFileExtensions == "ASE");
-      REQUIRE(meta->mVersionMajor == 1);
-      REQUIRE(meta->mVersionMinor == 0);
-      REQUIRE(meta->mIsDeep == false);
-      REQUIRE(meta->mIsPOD == true);
-      REQUIRE(meta->mIsNullifiable == false);
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         REQUIRE(meta->mPoolTactic == PoolTactic::Default);
-      #endif
-      REQUIRE(meta->mConcreteRetriever == nullptr);
-      REQUIRE(meta->mAllocationPage >= Alignment);
-      REQUIRE(meta->mIsAbstract == false);
-      REQUIRE(meta->mSize == sizeof(ImplicitlyReflectedData));
-      REQUIRE(meta->mAlignment == alignof(ImplicitlyReflectedData));
+///                                                                           
+/// Reflecting abstracts                                                      
+///                                                                           
+namespace
+{
+   /// Built-in abstract type via a pure virtual function                     
+   struct PureAbstract {
+      PureAbstract() = delete;
+      virtual ~PureAbstract() {}
+      PureAbstract(void*) {}
+      virtual auto PureVirtualMethod() -> size_t = 0;
+   };
 
-      REQUIRE(meta->mNamedValues.size() == 3);
-      REQUIRE(meta->mConvertersTo.size() == 0);
-      REQUIRE(meta->mConvertersFrom.size() == 0);
-   }
+   /// Proper type, reflected as abstract                                     
+   struct ForcedAbstractExternally {};
+   struct ForcedAbstractInternally {
+      using CTTI_Abstract = Yes<>;
+   };
 
-   WHEN("ForcedAbstract reflected") {
-      auto meta = MetaDataOf<ForcedAbstract>();
+   /// Types that can inherit abstractness                                    
+   struct InheritedAbstract1 : ForcedAbstractInternally { };
+   struct InheritedAbstract2 : PureAbstract { };
 
-      static_assert(not CT::HasIntentAssign<Langulus::Moved, PureVirtual>);
-      static_assert(::std::assignable_from<PureVirtual&, PureVirtual&&>);
-
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "ForcedAbstract");
-      REQUIRE(meta->mCppName == "ForcedAbstract");
-      REQUIRE(meta->mInfo == "<no info provided>");
-      REQUIRE(meta->mFileExtensions == "");
-      REQUIRE(meta->mVersionMajor == 1);
-      REQUIRE(meta->mVersionMinor == 0);
-      REQUIRE(meta->mIsDeep == false);
-      REQUIRE(meta->mIsPOD == false);
-      REQUIRE(meta->mIsNullifiable == false);
-      REQUIRE(meta->mConcreteRetriever == nullptr);
-      REQUIRE(meta->mAllocationPage >= Alignment);
-      REQUIRE(meta->mIsAbstract == true);
-      REQUIRE(meta->mSize == sizeof(ForcedAbstract));
-      REQUIRE(meta->mAlignment == alignof(ForcedAbstract));
-      REQUIRE(meta->mNamedValues.empty());
-      REQUIRE(meta->mConvertersTo.empty());
-      REQUIRE(meta->mConvertersFrom.empty());
-   }
-
-   WHEN("PureVirtual reflected") {
-      auto meta = MetaDataOf<PureVirtual>();
-
-      static_assert(not CT::HasIntentAssign<Langulus::Moved, PureVirtual>);
-      static_assert(::std::assignable_from<PureVirtual&, PureVirtual&&>);
-
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "PureVirtual");
-      REQUIRE(meta->mCppName == "PureVirtual");
-      REQUIRE(meta->mInfo == "<no info provided>");
-      REQUIRE(meta->mFileExtensions == "");
-      REQUIRE(meta->mVersionMajor == 1);
-      REQUIRE(meta->mVersionMinor == 0);
-      REQUIRE(meta->mIsDeep == false);
-      REQUIRE(meta->mIsPOD == false);
-      REQUIRE(meta->mIsNullifiable == false);
-      REQUIRE(meta->mConcreteRetriever == nullptr);
-      REQUIRE(meta->mAllocationPage >= Alignment);
-      REQUIRE(meta->mIsAbstract == true);
-      REQUIRE(meta->mSize == sizeof(PureVirtual));
-      REQUIRE(meta->mAlignment == alignof(PureVirtual));
-      REQUIRE(meta->mNamedValues.empty());
-      REQUIRE(meta->mConvertersTo.empty());
-      REQUIRE(meta->mConvertersFrom.empty());
-   }
+   /// Types that can inherit abstractness privately                          
+   struct ImpureVirtual {
+      virtual ~ImpureVirtual() {}
+   };
+   struct InheritedAbstract1ButPrivate : private ForcedAbstractInternally {};
+   struct InheritedAbstract2ButPrivate : private PureAbstract {};
+   struct InheritedAbstractExternally  : ForcedAbstractExternally {};
 }
 
-SCENARIO("A reflected verb with CTTI traits", "[rtti]") {
-   GIVEN("Create verb with positive/negative tokens, with stateless and contextual default functions") {
-      WHEN("Reflected") {
-         Anyness::Many someBlock;
-         Flow::Verb someVerb;
-         auto meta = MetaVerbOf<Verbs::Create>();
-
-         REQUIRE(meta != nullptr);
-         REQUIRE(meta->mToken == "Create");
-         REQUIRE(meta->mTokenReverse == "Destroy");
-         REQUIRE(meta->mInfo.starts_with("Used for allocating new elements. "));
-         REQUIRE(meta->mVersionMajor == 1);
-         REQUIRE(meta->mVersionMinor == 0);
-         REQUIRE(meta->mOperator == " + ");
-         REQUIRE(meta->mPrecedence == 5);
-         REQUIRE(meta->mOperatorReverse == " - ");
-         REQUIRE(meta->mDefaultInvocationMutable);
-         REQUIRE(meta->mDefaultInvocationMutable(someBlock, someVerb) == false);
-         REQUIRE(meta->mDefaultInvocationConstant);
-         REQUIRE(meta->mDefaultInvocationConstant(someBlock, someVerb) == true);
-         REQUIRE(meta->mStatelessInvocation);
-         REQUIRE(meta->mStatelessInvocation(someVerb) == false);
-      }
-   }
+TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]",
+   PureAbstract,
+   ForcedAbstractExternally,
+   ForcedAbstractInternally,
+   InheritedAbstract1,
+   InheritedAbstract2
+) {
+   using T = TestType;
+   const DMeta meta = MetaDataOf<T>();
+   REQUIRE(meta != nullptr);
+   REQUIRE(meta.IsDeep() == false);
+   REQUIRE(meta.IsPOD() == false);        // Abstract types can't be POD      
+   REQUIRE(meta.IsNullable()  == false);  // Abstract types can't be nullable 
+   REQUIRE(meta.GetConcrete() == nullptr);
+   REQUIRE(meta.IsAbstract() == true);
+   REQUIRE(meta.GetSize() == sizeof(T));
+   REQUIRE(meta.GetAlignment() == alignof(T));
 }
 
-SCENARIO("A reflected function signature", "[rtti]") {
-   GIVEN("A reflected function pointer") {
-      using Signature = void(*)(void*);
+TEMPLATE_TEST_CASE("Reflecting non-abstract types", "[rtti]",
+   void, int, nullptr_t,
+   ImpureVirtual,
+   InheritedAbstract1ButPrivate,
+   InheritedAbstract2ButPrivate,
+   InheritedAbstractExternally
+) {
+   using T = TestType;
+   const DMeta meta = MetaDataOf<T>();
+   REQUIRE(meta != nullptr);
+   REQUIRE(meta.IsAbstract() == false);
+   REQUIRE(meta.IsPOD() == CT::POD<T>);
+   REQUIRE(meta.IsNullable() == CT::Nullable<T>);
+   REQUIRE(meta.GetConcrete() == nullptr);
+}
 
-      static_assert(    ::std::is_function_v<Deptr<Signature>>);
-      static_assert(    CT::Sparse<Signature>);
-      static_assert(not CT::Decayed<Signature>);
-      static_assert(    CT::Complete<Signature>);
 
-      auto meta = MetaDataOf<Signature>();
+///                                                                           
+/// Reflecting virtual bases                                                  
+///                                                                           
+namespace
+{
+   /// Type that has a virtual base                                           
+   struct VirtuallyDerived : virtual ImpureVirtual {
 
-      REQUIRE(meta != nullptr);
-      REQUIRE(meta->mToken == "<void(void*)>*");
-      REQUIRE(meta->mIsSparse);
-      REQUIRE(meta->mVersionMajor == 1);
-      REQUIRE(meta->mVersionMinor == 0);
-   }
+   };
 
-   /*GIVEN("A reflected function reference (shouldn't compile)") {
-      auto FuncRef = FunctionForTesting;
-      using Signature = decltype(*FuncRef);
+   /// Type that has a private non-virtual base                               
+   struct PrivatelyDerived : private ImpureVirtual {
 
-      WHEN("Reflected") {
-         static_assert(    ::std::is_function_v<Deref<Signature>>);
-         static_assert(    CT::Dense<Signature>);
-         static_assert(not CT::Decayed<Signature>);
-         static_assert(not CT::Complete<Signature>);
+   };
+}
 
-         auto meta = MetaData::Of<Signature>();
-         REQUIRE(meta != nullptr);
+TEMPLATE_TEST_CASE("Reflecting virtual bases", "[rtti]",
+   VirtuallyDerived
+) {
+   using T = TestType;
+   const DMeta meta = MetaDataOf<T>();
+   //TODO
+}
 
-         THEN("Requirements should be met") {
-            REQUIRE(meta->mToken == "void(*)(void*)");
-            REQUIRE(meta->mIsSparse);
-            REQUIRE(meta->mVersionMajor == 1);
-            REQUIRE(meta->mVersionMinor == 0);
-         }
-      }
-   }*/
+
+///                                                                           
+/// Reflecting verbs                                                          
+///                                                                           
+SCENARIO("Reflecting a verb", "[rtti]") {
+   const auto vdef = RTTI::DefinitionVerb::Reflect<Verbs::Create>();
+   const VMeta vmeta = MetaVerbOf<Verbs::Create>();
+   REQUIRE(vmeta != nullptr);
+   REQUIRE(vmeta.GetPositiveName() == "Create");
+   REQUIRE(vmeta.GetNegativeName() == "Destroy");
+   REQUIRE(vmeta.GetInfo().starts_with("Used for allocating new elements."));
+   REQUIRE(vmeta.GetVersionMajor() == 6);
+   REQUIRE(vmeta.GetVersionMinor() == 10);
+   REQUIRE(vmeta.GetPositiveOperator() == " + ");
+   REQUIRE(vmeta.GetNegativeOperator() == " - ");
+   REQUIRE(vmeta.GetPrecedence() == 5);
+
+   Flow::Verb verb;
+   const DMeta dmeta = MetaDataOf<DMeta>();
+   REQUIRE(dmeta.GetAbilities().at(vdef)(const_cast<DMeta*>(&dmeta), verb));
+   REQUIRE(vmeta.GetContextless()(verb));
+
+   const DMeta dmeta_const = MetaDataOf<const DMeta>();
+   REQUIRE(dmeta_const.GetAbilities().at(vdef)(const_cast<DMeta*>(&dmeta_const), verb));
+   REQUIRE(vmeta.GetContextless()(verb));
+}
+
+
+///                                                                           
+/// Reflecting tags                                                           
+///                                                                           
+SCENARIO("Reflecting a tag", "[rtti]") {
+   const TMeta meta = MetaTagOf<Tags::Name>();
+
+   REQUIRE(meta != nullptr);
+   REQUIRE(meta->mToken == "Create");
+   REQUIRE(meta->mTokenReverse == "Destroy");
+   REQUIRE(meta->mInfo.starts_with("Used for allocating new elements. "));
+   REQUIRE(meta->mVersionMajor == 1);
+   REQUIRE(meta->mVersionMinor == 0);
+   REQUIRE(meta->mOperator == " + ");
+   REQUIRE(meta->mPrecedence == 5);
+   REQUIRE(meta->mOperatorReverse == " - ");
+   REQUIRE(meta->mDefaultInvocationMutable);
+   REQUIRE(meta->mDefaultInvocationMutable(someBlock, someVerb) == false);
+   REQUIRE(meta->mDefaultInvocationConstant);
+   REQUIRE(meta->mDefaultInvocationConstant(someBlock, someVerb) == true);
+   REQUIRE(meta->mStatelessInvocation);
+   REQUIRE(meta->mStatelessInvocation(someVerb) == false);
+}
+
+
+///                                                                           
+/// Reflecting functions                                                      
+///                                                                           
+TEMPLATE_TEST_CASE("A reflected function signature", "[rtti]",
+   decltype(FunctionForTesting),
+   void(*)(void*)
+) {
+   using Signature = TestType;
+
+   static_assert(    ::std::is_function_v<Deptr<Signature>>);
+   static_assert(    CT::Sparse<Signature>);
+   static_assert(not CT::Decayed<Signature>);
+   static_assert(    CT::Complete<Signature>);
+
+   const DMeta meta = MetaDataOf<Signature>();
+
+   REQUIRE(meta != nullptr);
+   REQUIRE(meta->mToken == "<void(void*)>*");
+   REQUIRE(meta->mIsSparse);
+   REQUIRE(meta->mVersionMajor == 1);
+   REQUIRE(meta->mVersionMinor == 0);
 }

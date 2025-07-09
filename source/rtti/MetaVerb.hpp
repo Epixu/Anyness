@@ -34,9 +34,7 @@ namespace Langulus::RTTI
             struct {
                // The set of the main properties                        
                bool reversible   : 1;
-               bool constant     : 1;
-               bool defaultable  : 1;
-               bool stateless    : 1;
+               bool contextless  : 1;
             };
             uint8_t all {};
          };
@@ -55,20 +53,22 @@ namespace Langulus::RTTI
          constexpr MetaVerbStructured_X8& operator = (nullptr_t) noexcept;
          constexpr MetaVerbStructured_X8& operator = (DefinitionVerb const*) noexcept;
 
+         constexpr bool operator == (const MetaVerbStructured_X8&) const noexcept;
+
          auto GetInfo()             const noexcept -> Token;
-         auto GetPositiveName()     const noexcept -> Token;
-         auto GetNegativeName()     const noexcept -> Token;
-         auto GetPositiveOperator() const noexcept -> Token;
-         auto GetNegativeOperator() const noexcept -> Token;
          auto GetVersionMajor()     const noexcept -> unsigned;
          auto GetVersionMinor()     const noexcept -> unsigned;
          auto GetBoundaries()       const noexcept -> Definition::BoundarySet const&;
 
+         auto GetPositiveName()     const noexcept -> Token;
+         auto GetNegativeName()     const noexcept -> Token;
+         auto GetPositiveOperator() const noexcept -> Token;
+         auto GetNegativeOperator() const noexcept -> Token;
+         auto GetPrecedence()       const noexcept -> float;
+         auto GetContextless()      const noexcept -> DefinitionVerb::FContextless;
+
          constexpr bool IsReversible()  const noexcept;
-         constexpr bool IsConstant()    const noexcept;
-         constexpr bool IsMutable()     const noexcept;
-         constexpr bool IsDefaultable() const noexcept;
-         constexpr bool IsStateless()   const noexcept;
+         constexpr bool IsContextless() const noexcept;
       };
       #pragma pack(pop)
       
@@ -86,16 +86,15 @@ namespace Langulus::RTTI
          using Base::operator =;
          using Base::operator bool;
 
-         auto GetPositiveName() const noexcept -> Token;
-         auto GetNegativeName() const noexcept -> Token;
+         auto GetPositiveName()     const noexcept -> Token;
+         auto GetNegativeName()     const noexcept -> Token;
          auto GetPositiveOperator() const noexcept -> Token;
          auto GetNegativeOperator() const noexcept -> Token;
+         auto GetPrecedence()       const noexcept -> float;
+         auto GetContextless()      const noexcept -> DefinitionVerb::FContextless;
 
-         constexpr bool IsReversible() const noexcept;
-         constexpr bool IsConstant() const noexcept;
-         constexpr bool IsMutable() const noexcept;
-         constexpr bool IsDefaultable() const noexcept;
-         constexpr bool IsStateless() const noexcept;
+         constexpr bool IsReversible()  const noexcept;
+         constexpr bool IsContextless() const noexcept;
       };
 
    } // namespace Langulus::RTTI::Inner

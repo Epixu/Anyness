@@ -33,10 +33,31 @@ namespace Langulus::RTTI::Inner
    }
 
    template<unsigned ID_SIZE>
+   constexpr bool MetaVerbStructured_X8<ID_SIZE>::operator == (const MetaVerbStructured_X8& rhs) const noexcept {
+      return Base::operator == (rhs);
+   }
+
+   template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetInfo() const noexcept -> Token {
       return Instance.GetMetaVerbByID(*this)->mInfoOf;
    }
    
+   template<unsigned ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor()  const noexcept -> unsigned {
+      return Instance.GetMetaVerbByID(*this)->mVersionMajor;
+   }
+
+   template<unsigned ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMinor()  const noexcept -> unsigned {
+      return Instance.GetMetaVerbByID(*this)->mVersionMinor;
+   }
+   
+   template<unsigned ID_SIZE> auto MetaVerbStructured_X8<ID_SIZE>::GetBoundaries()
+   const noexcept -> Definition::BoundarySet const& {
+      return Instance.GetMetaVerbByID(*this)->mBoundaries;
+   }
+
+
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveName() const noexcept -> Token {
       return Instance.GetMetaVerbByID(*this)->mNameOf;
@@ -58,19 +79,10 @@ namespace Langulus::RTTI::Inner
    }
 
    template<unsigned ID_SIZE>
-   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor()  const noexcept -> unsigned {
-      return Instance.GetMetaVerbByID(*this)->mVersionMajor;
+   auto MetaVerbStructured_X8<ID_SIZE>::GetPrecedence() const noexcept -> float {
+      return Instance.GetMetaVerbByID(*this)->mPrecedence;
    }
 
-   template<unsigned ID_SIZE>
-   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMinor()  const noexcept -> unsigned {
-      return Instance.GetMetaVerbByID(*this)->mVersionMinor;
-   }
-
-   template<unsigned ID_SIZE> auto MetaVerbStructured_X8<ID_SIZE>::GetBoundaries()
-   const noexcept -> Definition::BoundarySet const& {
-      return Instance.GetMetaVerbByID(*this)->mBoundaries;
-   }
 
    template<unsigned ID_SIZE>
    constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsReversible() const noexcept {
@@ -78,23 +90,7 @@ namespace Langulus::RTTI::Inner
    }
 
    template<unsigned ID_SIZE>
-   constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsConstant() const noexcept {
-      return constant;
+   constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsContextless() const noexcept {
+      return contextless;
    }
-
-   template<unsigned ID_SIZE>
-   constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsMutable() const noexcept {
-      return not constant;
-   }
-
-   template<unsigned ID_SIZE>
-   constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsDefaultable() const noexcept {
-      return defaultable;
-   }
-
-   template<unsigned ID_SIZE>
-   constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsStateless() const noexcept {
-      return stateless;
-   }
-
-} // namespace Langulus::RTTI::Inner
+}

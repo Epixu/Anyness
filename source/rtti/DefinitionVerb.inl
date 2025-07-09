@@ -93,9 +93,8 @@ namespace Langulus::RTTI
       else
          definition.mPrecedence = T::CTTI_DefineVerb::Precedence;
 
-      definition.mCurrentBoundary.mDefaultMut = VerbDefaultMutable<T>();
-      definition.mCurrentBoundary.mDefault    = VerbDefaultConstant<T>();
-      definition.mCurrentBoundary.mStateless  = VerbStateless<T>();
+      if constexpr (requires { FContextless {&T::ExecuteContextless}; })
+         definition.mCurrentBoundary.mContextless = &T::ExecuteStateless;
 
    /*#if LANGULUS_FEATURE(MANAGED_REFLECTION)
       if (definition.mOperator.size()) {

@@ -33,7 +33,7 @@ namespace Langulus::RTTI
       ::std::string mOperatorReverse;
 
       // Verb's reflected precedence                                    
-      Real mPrecedence {};
+      Real mPrecedence IF_SAFE(= 0);
 
       // A set of data types that are capable of doing the verb         
       using AbleList = ::std::unordered_set<DefinitionData const*>;
@@ -48,16 +48,11 @@ namespace Langulus::RTTI
       // unloaded, we simply pick a pointer from another. Once the verb 
       // is reflected from the MainBoundary, the maps are cleared and   
       // only the main code is used, because it is most persistent.     
-      using FDefault   = bool (*)(Anyness::Many&, Flow::Verb&);
-      using FStateless = bool (*)(Flow::Verb&);
+      using FContextless = bool (*)(Flow::Verb&);
 
       struct BoundaryDependent {
-         // Reflected default verb for mutable context, if available    
-         FDefault mDefaultMut {};
-         // Reflected default verb for immutable context, if available  
-         FDefault mDefault {};
          // Reflected stateless verb, if available                      
-         FStateless mStateless {};
+         FContextless mContextless  = nullptr;
       };
 
       // The currently used boundary                                    

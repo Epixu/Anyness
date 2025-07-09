@@ -31,21 +31,8 @@ namespace Langulus::RTTI::Inner
       return not mDefinition->mNameOfReverse.empty();
    }
 
-   constexpr bool MetaVerbNaked::IsConstant() const noexcept {
-      return not mDefinition->mCurrentBoundary.mDefaultMut;
-   }
-
-   constexpr bool MetaVerbNaked::IsMutable() const noexcept {
-      return mDefinition->mCurrentBoundary.mDefaultMut;
-   }
-
-   constexpr bool MetaVerbNaked::IsDefaultable() const noexcept {
-      return mDefinition->mCurrentBoundary.mDefaultMut
-          or mDefinition->mCurrentBoundary.mDefault;
-   }
-
-   constexpr bool MetaVerbNaked::IsStateless() const noexcept {
-      return mDefinition->mCurrentBoundary.mStateless;
+   constexpr bool MetaVerbNaked::IsContextless() const noexcept {
+      return mDefinition->mCurrentBoundary.mContextless;
    }
 
 } // namespace Langulus::RTTI::Inner
