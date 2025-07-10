@@ -150,6 +150,7 @@ namespace Langulus::RTTI
          constexpr bool IsPOD()       const noexcept;
          constexpr bool IsNullable()  const noexcept;
          constexpr bool IsAbstract()  const noexcept;
+         constexpr bool HasGetHashMethod() const noexcept;
 
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
@@ -170,9 +171,6 @@ namespace Langulus::RTTI
          auto GetCopyAssigner()       const noexcept -> DefinitionData::FBinary;
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
-         bool HasGetHashMethod()      const noexcept;
-
-         auto GetDispatcherMut()      const noexcept -> DefinitionData::FDispatch;
          auto GetDispatcher()         const noexcept -> DefinitionData::FDispatch;
          
          auto GetDeptr()              const -> MetaDataStructured_XY;
@@ -190,9 +188,6 @@ namespace Langulus::RTTI
          auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
-         
-         /*auto GetMember(const MetaDataStructured_XY&) const noexcept -> DefinitionData::FBinary;
-         auto GetMorphism(const MetaDataStructured_XY&) const noexcept -> DefinitionData::FBinary;*/
 
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)

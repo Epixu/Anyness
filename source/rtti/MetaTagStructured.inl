@@ -33,22 +33,29 @@ namespace Langulus::RTTI::Inner
       return Base::operator == (rhs);
    }
    
+   /// Get the tag definition                                                 
+   inline auto MetaTagPacked_16::GetDefinition() const noexcept -> DefinitionTag const* {
+      return Instance.GetMetaTagByID(GetID());
+   }
+ 
    /// Get the name of the tag, the result of NameOf                          
    inline auto MetaTagPacked_16::GetName() const noexcept -> Token {
-      return Instance.GetMetaTagByID(*this)->mNameOf;
+      return GetDefinition()->mNameOf;
    }
 
    /// Get the info of the tag, the result of InfoOf                          
    inline auto MetaTagPacked_16::GetInfo() const noexcept -> Token {
-      return Instance.GetMetaTagByID(*this)->mInfoOf;
+      return GetDefinition()->mInfoOf;
    }
 
+   /// Get the major version                                                  
    inline auto MetaTagPacked_16::GetVersionMajor()  const noexcept -> unsigned {
-      return Instance.GetMetaTagByID(*this)->mVersionMajor;
+      return GetDefinition()->mVersionMajor;
    }
 
+   /// Get the minor version                                                  
    inline auto MetaTagPacked_16::GetVersionMinor()  const noexcept -> unsigned {
-      return Instance.GetMetaTagByID(*this)->mVersionMinor;
+      return GetDefinition()->mVersionMinor;
    }
 
 } // namespace Langulus::RTTI::Inner

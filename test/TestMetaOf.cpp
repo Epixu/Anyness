@@ -269,7 +269,6 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.GetHasher() == nullptr);
    REQUIRE(meta.GetReferencer() == nullptr);
    REQUIRE(meta.GetDispatcher() == nullptr);
-   REQUIRE(meta.GetDispatcherMut() == nullptr);
    REQUIRE(meta.GetConcrete() == nullptr);
    REQUIRE(meta.GetProducer() == nullptr);
 

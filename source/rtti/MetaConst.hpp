@@ -44,6 +44,9 @@ namespace Langulus::RTTI
          auto GetVersionMajor()  const noexcept -> unsigned;
          auto GetVersionMinor()  const noexcept -> unsigned;
          auto GetBoundaries()    const noexcept -> Definition::BoundarySet const&;
+
+      protected:
+         auto GetDefinition()    const noexcept -> DefinitionConst const*;
       };
       #pragma pack(pop)
       

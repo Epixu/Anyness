@@ -164,6 +164,27 @@ namespace Langulus::RTTI
       return found;
    }
 
+   /// Get an existing tag definition by unpacking an ID                      
+   ///   @param id - the ID                                                   
+   ///   @return the definition, or nullptr if not found                      
+   auto Registry::GetMetaTagByID(size_t id) const noexcept -> DefinitionTag const* {
+      return GetMetaByID(mMetaTagsByID, id);
+   }
+
+   /// Get an existing verb definition by unpacking an ID                     
+   ///   @param id - the ID                                                   
+   ///   @return the definition, or nullptr if not found                      
+   auto Registry::GetMetaVerbByID(size_t id) const noexcept -> DefinitionVerb const* {
+      return GetMetaByID(mMetaVerbsByID, id);
+   }
+
+   /// Get an existing constant definition by unpacking an ID                 
+   ///   @param id - the ID                                                   
+   ///   @return the definition, or nullptr if not found                      
+   auto Registry::GetMetaConstByID(size_t id) const noexcept -> DefinitionConst const* {
+      return GetMetaByID(mMetaConstantsByID, id);
+   }
+
    /// Get an existing verb definition by OperatorOfVerb/OperatorOfVerbReverse
    ///   @param token - the reflected operator of the verb definition         
    ///                  you can search by positive, as well as negative       

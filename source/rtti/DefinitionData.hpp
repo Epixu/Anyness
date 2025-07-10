@@ -230,7 +230,6 @@ namespace Langulus::RTTI
          // A custom verb dispatcher, wrapped in a lambda expression    
          // Takes pointer to the instance that will dispatch, and a verb
          // There is a mutable and immutable version of this            
-         FDispatch mDispatcherMut = nullptr;
          FDispatch mDispatcher = nullptr;
 
          // Default concretization                                      

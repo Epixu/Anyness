@@ -28,8 +28,7 @@ namespace Langulus::RTTI::Inner
          nullable   = d->mNullable;
          referenced = d->mCurrentBoundary.mReferencer != nullptr;
          resolvable = d->mCurrentBoundary.mResolver != nullptr;
-         dispatcher = d->mCurrentBoundary.mDispatcherMut != nullptr
-                   or d->mCurrentBoundary.mDispatcher != nullptr;
+         dispatcher = d->mCurrentBoundary.mDispatcher != nullptr;
       }
    }
 
@@ -55,8 +54,7 @@ namespace Langulus::RTTI::Inner
          nullable   = d->mNullable;
          referenced = d->mCurrentBoundary.mReferencer != nullptr;
          resolvable = d->mCurrentBoundary.mResolver != nullptr;
-         dispatcher = d->mCurrentBoundary.mDispatcherMut != nullptr
-                   or d->mCurrentBoundary.mDispatcher != nullptr;
+         dispatcher = d->mCurrentBoundary.mDispatcher != nullptr;
       }
       return *this;
    }
@@ -65,7 +63,7 @@ namespace Langulus::RTTI::Inner
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetDefinition() const noexcept
    -> DefinitionData const* {
-      return Instance.GetMetaDataByID(GetID(), sparse, constant);
+      return Instance.GetMetaDataByID(Base::GetID(), sparse, constant);
    }
 
    /// Check if type origins match                                            
@@ -175,19 +173,31 @@ namespace Langulus::RTTI::Inner
       return GetDefinition()->mVersionMinor;
    }
 
-#if LANGULUS_FEATURE(MANAGED_MEMORY)
-   /// Get the reflected pool tactic                                          
-   template<unsigned S1, unsigned S2>
-   auto MetaDataStructured_XY<S1, S2>::GetPoolTactic() const noexcept -> PoolTactic {
-      return GetDefinition()->mPoolTactic;
+   /// Get the reflected allocation page                                      
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetAllocationPage() const noexcept -> size_t {
+      return GetDefinition()->mAllocationPage;      
    }
 
-   /// Get the poolchain                                                      
-   template<unsigned S1, unsigned S2>
-   auto MetaDataStructured_XY<S1, S2>::GetPoolchain() const noexcept -> Fractalloc::Pool* {
-      return GetDefinition()->mPoolChain;
-   }
-#endif
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      /// Get the reflected pool tactic                                       
+      template<unsigned S1, unsigned S2>
+      auto MetaDataStructured_XY<S1, S2>::GetPoolTactic() const noexcept -> PoolTactic {
+         return GetDefinition()->mPoolTactic;
+      }
+
+      /// Get the poolchain                                                   
+      template<unsigned S1, unsigned S2>
+      auto MetaDataStructured_XY<S1, S2>::GetPoolchain() const noexcept -> Fractalloc::Pool* {
+         return GetDefinition()->mPoolChain;
+      }
+      
+      /// Allows the memory manager to set a new pool chain                   
+      template<unsigned S1, unsigned S2>
+      void MetaDataStructured_XY<S1, S2>::SetPoolchain(Fractalloc::Pool* pool) const noexcept {
+         GetDefinition()->mPoolChain = pool;
+      }
+   #endif
 
    /// Check if type is CT::Dense                                             
    template<unsigned S1, unsigned S2>
@@ -237,6 +247,12 @@ namespace Langulus::RTTI::Inner
       return GetDefinition()->mAbstract;
    }
 
+   /// Check if type has an explicit GetHash() method                         
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::HasGetHashMethod() const noexcept {
+      return GetDefinition()->mHasGetHashMethod;
+   }
+   
    /// Get the reflected destructor                                           
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetDestructor()
@@ -257,6 +273,18 @@ namespace Langulus::RTTI::Inner
    const noexcept -> DefinitionData::FResolve {
       return GetDefinition()->mCurrentBoundary.mResolver;
    }
+
+   /// Get the reflected default constructor                                  
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetDefaultConstructor() const noexcept -> DefinitionData::FUnary {
+      return GetDefinition()->mCurrentBoundary.mDefaultConstructor;
+   }
+   
+   /// Get the reflected describe-constructo                                  
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetDescribeConstructor() const noexcept -> DefinitionData::FDescribe {
+      return GetDefinition()->mCurrentBoundary.mDescribeConstructor;
+   }   
 
    /// Get the reflected refer-constructor                                    
    template<unsigned S1, unsigned S2>
@@ -356,16 +384,95 @@ namespace Langulus::RTTI::Inner
       return GetDefinition()->mCurrentBoundary.mHasher;
    }
 
-   /// Check if type has an explicit GetHash() method                         
-   template<unsigned S1, unsigned S2>
-   bool MetaDataStructured_XY<S1, S2>::HasGetHashMethod() const noexcept {
-      return GetDefinition()->mHasGetHashMethod;
+   /// Get the reflected dispatcher                                           
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetDispatcher()
+   const noexcept -> DefinitionData::FDispatch {
+      return GetDefinition()->mCurrentBoundary.mDispatcher;  
    }
 
-   /// Allows the memory manager to set a new pool chain                      
-   template<unsigned S1, unsigned S2>
-   void MetaDataStructured_XY<S1, S2>::SetPoolchain(Fractalloc::Pool* pool) const noexcept {
-      GetDefinition()->mPoolChain = pool;
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetDeptr()
+   const -> MetaDataStructured_XY {
+      return GetDefinition()->mDeptr;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetOrigin()
+   const -> MetaDataStructured_XY {
+      return GetDefinition()->mOrigin;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetDecvqAll()
+   const -> MetaDataStructured_XY {
+      return GetDefinition()->mDecvqAll;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetDecvq()
+   const -> MetaDataStructured_XY {
+      return GetDefinition()->mDecvqOnce;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::AddPtr()
+   const -> MetaDataStructured_XY {
+      return GetDefinition()->mAddPtr;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::AddConst()
+   const -> MetaDataStructured_XY {
+      return GetDefinition()->mAddConst;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetConcrete()
+   const -> MetaDataStructured_XY {
+      return GetDefinition()->mCurrentBoundary.mConcrete();
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetProducer()
+   const -> MetaDataStructured_XY {
+      return GetDefinition()->mCurrentBoundary.mProducer();
    }
 
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetBases()
+   const noexcept -> DefinitionData::BaseList const& {
+      return GetDefinition()->mCurrentBoundary.mBases;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetAbilities()
+   const noexcept -> DefinitionData::AbilityList const& {
+      return GetDefinition()->mCurrentBoundary.mAbilities;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetMembers()
+   const noexcept -> DefinitionData::MemberList const& {
+      return GetDefinition()->mCurrentBoundary.mMembers;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetNamedValues()
+   const noexcept -> DefinitionData::ValuesList const& {
+      return GetDefinition()->mNamedValues;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetMorphismsTo()
+   const noexcept -> DefinitionData::MorphismList const& {
+      return GetDefinition()->mCurrentBoundary.mMorphismsTo;
+   }
+   
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetMorphismsFrom()
+   const noexcept -> DefinitionData::MorphismList const& {
+      return GetDefinition()->mCurrentBoundary.mMorphismsFrom;
+   }
+   
 } // namespace Langulus::RTTI::Inner

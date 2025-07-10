@@ -46,9 +46,12 @@ namespace Langulus::RTTI::Inner
 
       union convert {
          size_t id_unprocessed;
-         Block  id_processed;
+         Block id_processed;
+
          explicit convert(const size_t& t) : id_unprocessed {t} {}
-         explicit convert(const Block&  t) : id_processed {t} {}
+         explicit convert(const Block&  t) : id_unprocessed {0} {
+            id_processed = t;
+         }
       };
 
    public:

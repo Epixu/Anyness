@@ -37,53 +37,64 @@ namespace Langulus::RTTI::Inner
       return Base::operator == (rhs);
    }
 
+   /// Get the tag definition                                                 
+   template<unsigned ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetDefinition() const noexcept -> DefinitionVerb const* {
+      return Instance.GetMetaVerbByID(Base::GetID());
+   }
+   
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetInfo() const noexcept -> Token {
-      return Instance.GetMetaVerbByID(*this)->mInfoOf;
+      return GetDefinition()->mInfoOf;
    }
    
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor()  const noexcept -> unsigned {
-      return Instance.GetMetaVerbByID(*this)->mVersionMajor;
+      return GetDefinition()->mVersionMajor;
    }
 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMinor()  const noexcept -> unsigned {
-      return Instance.GetMetaVerbByID(*this)->mVersionMinor;
+      return GetDefinition()->mVersionMinor;
    }
    
    template<unsigned ID_SIZE> auto MetaVerbStructured_X8<ID_SIZE>::GetBoundaries()
    const noexcept -> Definition::BoundarySet const& {
-      return Instance.GetMetaVerbByID(*this)->mBoundaries;
+      return GetDefinition()->mBoundaries;
    }
 
 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveName() const noexcept -> Token {
-      return Instance.GetMetaVerbByID(*this)->mNameOf;
+      return GetDefinition()->mNameOf;
    }
 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeName() const noexcept -> Token {
-      return Instance.GetMetaVerbByID(*this)->mNameOfReverse;
+      return GetDefinition()->mNameOfReverse;
    }
 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveOperator() const noexcept -> Token {
-      return Instance.GetMetaVerbByID(*this)->mOperator;
+      return GetDefinition()->mOperator;
    }
 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeOperator() const noexcept -> Token {
-      return Instance.GetMetaVerbByID(*this)->mOperatorReverse;
+      return GetDefinition()->mOperatorReverse;
    }
 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPrecedence() const noexcept -> float {
-      return Instance.GetMetaVerbByID(*this)->mPrecedence;
+      return GetDefinition()->mPrecedence;
    }
 
+   template<unsigned ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetContextless() const noexcept -> DefinitionVerb::FContextless {
+      return contextless ? GetDefinition()->mCurrentBoundary.mContextless : nullptr;
+   }
 
+   
    template<unsigned ID_SIZE>
    constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsReversible() const noexcept {
       return reversible;
