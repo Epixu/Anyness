@@ -32,6 +32,8 @@ namespace Langulus::RTTI
          constexpr MetaTagPacked_16& operator = (MetaTagPacked_16&&) noexcept = default;
          constexpr MetaTagPacked_16& operator = (nullptr_t) noexcept;
          constexpr MetaTagPacked_16& operator = (DefinitionTag const*) noexcept;
+         
+         constexpr bool operator == (const MetaTagPacked_16&) const noexcept;
 
          auto GetName()          const noexcept -> Token;
          auto GetInfo()          const noexcept -> Token;

@@ -782,11 +782,14 @@ namespace Langulus
          // Clone                                                       
          // @attention - assumes that all levels of indirection have    
          //    been allocated and pointers point to valid memory        
+         // @attention - cloning operates only on decayed types, and    
+         //    if they're incomplete, then cloning is impossible        
          using DT = Decay<T>;
-         static_assert(CT::Complete<DT>,
-            "Can't clone-construct an incomplete type");
-
-         if constexpr (CT::NotVoid<DT>) {
+         if constexpr (not CT::Complete<DT>) {
+            static_assert(FAKE, "Can't clone-construct an incomplete type");
+            return Unsupported {};            
+         }
+         else if constexpr (CT::NotVoid<DT>) {
             if constexpr (CT::HasCloneConstructor<DT>)
                return new (placement) DT {Clone(DenseCast(*value))};
             else if constexpr (CT::POD<DT> and CT::HasReferConstructor<DT>)
@@ -889,11 +892,15 @@ namespace Langulus
          // Clone                                                       
          // @attention - assumes that all levels of indirection have    
          //    been allocated and pointers point to valid memory        
+         // @attention - cloning operates only on decayed types, and    
+         //    if they're incomplete, then cloning is impossible        
          using DT = Decay<T>;
-         static_assert(CT::Complete<DT>,
-            "Can't clone-assign an incomplete type");
 
-         if constexpr (CT::NotVoid<DT>) {
+         if constexpr (not CT::Complete<DT>) {
+            static_assert(FAKE, "Can't clone-assign incomplete type");
+            return Unsupported {};            
+         }   
+         else if constexpr (CT::NotVoid<DT>) {
             if constexpr (CT::Mutable<Deptr<T>>) {
                if constexpr (CT::HasCloneAssign<DT>)
                   return (DenseCast(lhs) = Clone(DenseCast(*rhs)));

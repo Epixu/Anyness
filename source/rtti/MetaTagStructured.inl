@@ -29,6 +29,10 @@ namespace Langulus::RTTI::Inner
       return *this;
    }
 
+   constexpr bool MetaTagPacked_16::operator == (const MetaTagPacked_16& rhs) const noexcept {
+      return Base::operator == (rhs);
+   }
+   
    /// Get the name of the tag, the result of NameOf                          
    inline auto MetaTagPacked_16::GetName() const noexcept -> Token {
       return Instance.GetMetaTagByID(*this)->mNameOf;

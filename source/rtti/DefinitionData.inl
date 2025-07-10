@@ -358,8 +358,8 @@ namespace Langulus::RTTI
          // Generate a three-way comparison function                    
          definition.mCurrentBoundary.mComparer =
             [](void* t1, void* t2) -> Compared {
-               auto t1T = static_cast<T*>(t1);
-               auto t2T = static_cast<T*>(t2);
+               auto t1T = static_cast<const T*>(t1);
+               auto t2T = static_cast<const T*>(t2);
 
                if constexpr (CT::Sparse<DTAll>) {
                   // Pointers are either the same or not - not ordered  

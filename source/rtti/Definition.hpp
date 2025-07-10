@@ -174,7 +174,8 @@ namespace Langulus::RTTI::Inner
          #endif
 
          // Reflected info                                              
-         mInfoOf = InfoOf<T>();
+         if constexpr (CT::Info<T>)
+            mInfoOf = InfoOf<T>();
       }
 
       /// Check whether the definition is in the current boundary, or has     

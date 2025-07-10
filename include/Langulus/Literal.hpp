@@ -551,6 +551,12 @@ namespace Langulus
       return lhs == static_cast<typename S::view_type>(rhs);
    }
 
+   /// View == Undefined                                                      
+   template<CT::LiteralUndefined S>
+   constexpr bool operator == (const ::std::string_view& lhs, const S&) {
+      return lhs.empty();
+   }
+
    /// Literal == Array                                                       
    template<CT::LiteralString S, size_t N>
    constexpr bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {

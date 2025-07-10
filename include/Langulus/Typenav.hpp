@@ -48,7 +48,7 @@ namespace Langulus::CTTI
    /// Affects CT::Sparse<T>:                                                 
    template<class T>
    struct Sparse {
-      static constexpr bool Enabled = ::std::is_pointer_v<T> or ::std::is_null_pointer_v<T>;
+      static constexpr bool Enabled = ::std::is_pointer_v<T>/* or ::std::is_null_pointer_v<T>*/;
    };
 
    /// Affects CT::Constant<T>:                                               

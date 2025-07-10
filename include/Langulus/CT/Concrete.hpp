@@ -30,9 +30,11 @@ namespace Langulus::CT::Inner
          "Strip references first");
       static_assert(not CT::Convoluted<T>,
          "Strip constness/volatility first");
-      static_assert(CT::Abstract<T>,
-         "T has to be abstract in order to be concretizable");
 
+      if constexpr (not CT::Abstract<T>) {
+         // T has to be abstract in order to be concretizable           
+         return Types<void> {};
+      }
       if constexpr (NotVoid<typename CTTI::Concrete<T>::Type>) {
          // Checked externally, T doesn't have to be complete           
          return Types<typename CTTI::Concrete<T>::Type> {};
@@ -57,12 +59,12 @@ namespace Langulus
       ///   @attention the concrete type must not be 'void', in order for T   
       ///      to be considered 'concretizable'                               
       template<class...T>
-      concept Concretizable = CT::Inner::CheckSize<T...>()
+      concept Concretizable = Inner::CheckSize<T...>()
           and (NotVoid<ConcreteOf<Decvq<Deref<T>>>> and ...);
 
       /// Check if all T have no concretizations                              
       template<class...T>
-      concept Unconcretizable = CT::Inner::CheckSize<T...>()
+      concept Unconcretizable = Inner::CheckSize<T...>()
           and ((not Concretizable<Decvq<Deref<T>>>) and ...);
    }
 }

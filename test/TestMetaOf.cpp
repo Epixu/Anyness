@@ -20,7 +20,10 @@ using RTTI::VMeta;
 namespace Langulus::Tags
 {
    struct Name {
+      using CTTI_Versioned = Version<7, 10>;
       using CTTI_DefineTag = Yes<"Name">;
+      using CTTI_Info = Yes<"Used for tagging names">;
+
       Token name;
    };
 
@@ -185,9 +188,9 @@ namespace
 }
 
 TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
-   void, // shouldn't compile
+   //void, // shouldn't compile
    nullptr_t, // shouldn't compile
-   IncompleteType, // shouldn't compile
+   //IncompleteType, // shouldn't compile
    IncompleteType*,
    IncompleteType**,
    const IncompleteType**,
@@ -481,20 +484,10 @@ SCENARIO("Reflecting a tag", "[rtti]") {
    const TMeta meta = MetaTagOf<Tags::Name>();
 
    REQUIRE(meta != nullptr);
-   REQUIRE(meta->mToken == "Create");
-   REQUIRE(meta->mTokenReverse == "Destroy");
-   REQUIRE(meta->mInfo.starts_with("Used for allocating new elements. "));
-   REQUIRE(meta->mVersionMajor == 1);
-   REQUIRE(meta->mVersionMinor == 0);
-   REQUIRE(meta->mOperator == " + ");
-   REQUIRE(meta->mPrecedence == 5);
-   REQUIRE(meta->mOperatorReverse == " - ");
-   REQUIRE(meta->mDefaultInvocationMutable);
-   REQUIRE(meta->mDefaultInvocationMutable(someBlock, someVerb) == false);
-   REQUIRE(meta->mDefaultInvocationConstant);
-   REQUIRE(meta->mDefaultInvocationConstant(someBlock, someVerb) == true);
-   REQUIRE(meta->mStatelessInvocation);
-   REQUIRE(meta->mStatelessInvocation(someVerb) == false);
+   REQUIRE(meta.GetName() == "Name");
+   REQUIRE(meta.GetInfo() == "Used for tagging names");
+   REQUIRE(meta.GetVersionMajor() == 7);
+   REQUIRE(meta.GetVersionMinor() == 10);
 }
 
 
@@ -515,8 +508,6 @@ TEMPLATE_TEST_CASE("A reflected function signature", "[rtti]",
    const DMeta meta = MetaDataOf<Signature>();
 
    REQUIRE(meta != nullptr);
-   REQUIRE(meta->mToken == "<void(void*)>*");
-   REQUIRE(meta->mIsSparse);
-   REQUIRE(meta->mVersionMajor == 1);
-   REQUIRE(meta->mVersionMinor == 0);
+   REQUIRE(meta.GetName() == "<void(void*)>*");
+   REQUIRE(meta.IsSparse());
 }

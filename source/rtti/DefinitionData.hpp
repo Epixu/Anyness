@@ -117,7 +117,7 @@ namespace Langulus::RTTI
       using FResolve = Anyness::Any(*)(void* self);
       using FHash = Hash(*)(void* self);
       using FReference = int(*)(void* self, int modifier);
-      using FDispatch = void(*)(void* self, Flow::Verb& verb);
+      using FDispatch = bool(*)(void* self, Flow::Verb& verb);
       using FAccessMember = void* (*)(void* owner);
       using FTagRetriever = DefinitionTag const* (*)(int index);
       using FTypeRetriever = DefinitionData const* (*)();

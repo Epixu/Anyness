@@ -133,7 +133,6 @@ TEMPLATE_TEST_CASE("Testing sparse types", "[ct]",
    SheddableType<PointerType>,
    PointerType,
    CustomPointerType,
-   nullptr_t,
    IncompleteType*,
    void**
 ) {
@@ -144,7 +143,7 @@ TEMPLATE_TEST_CASE("Testing sparse types", "[ct]",
 TEMPLATE_TEST_CASE("Testing dense types", "[ct]",
    SheddableType<CustomNonPointerType>,
    CustomNonPointerType,
-   int, int&, void,
+   int, int&, void, nullptr_t,
    IncompleteType
 ) {
    static_assert(not CT::Sparse<TestType>);
