@@ -31,7 +31,7 @@ namespace Langulus::RTTI::Inner
 
    /// Get the name of the constant, the result of NameOf                     
    inline auto MetaConstPacked_16::GetName() const noexcept -> Token {
-      return Instance.GetMetaConstByID(*this)->mNameOf;
+      return Instance.GetMetaConstByID(GetID())->mNameOf;
    }
 
    /// Get the info of the constant, the result of NameOf                     

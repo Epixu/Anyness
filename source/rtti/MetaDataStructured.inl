@@ -61,14 +61,20 @@ namespace Langulus::RTTI::Inner
       return *this;
    }
 
+   /// Get definition                                                         
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetDefinition() const noexcept
+   -> DefinitionData const* {
+      return Instance.GetMetaDataByID(GetID(), sparse, constant);
+   }
+
    /// Check if type origins match                                            
    /// Disregards all cv-qualifiers, pointers, array extents, etc.            
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
    template<unsigned S1, unsigned S2>
    bool MetaDataStructured_XY<S1, S2>::Is(const MetaDataStructured_XY& other) const noexcept {
-      return Instance.GetMetaDataByID(*this)->mOrigin
-          == Instance.GetMetaDataByID(other)->mOrigin;
+      return GetDefinition()->mOrigin == other.GetDefinition()->mOrigin;
    }
 
    /// Check if two meta definitions match exactly                            
@@ -97,77 +103,89 @@ namespace Langulus::RTTI::Inner
    /// Get the size of the type                                               
    template<unsigned S1, unsigned S2>
    constexpr auto MetaDataStructured_XY<S1, S2>::GetSize() const noexcept -> size_t {
-      if constexpr (S2 > 1) {
-         return Structured<S2>::size
-            ? Structured<S2>::size
-            : Instance.GetMetaDataByID(*this)->mSize;
-      }
-      else return Instance.GetMetaDataByID(*this)->mSize;
+      if constexpr (S2 > 1)
+         return Structured<S2>::size ? Structured<S2>::size : GetDefinition()->mSize;
+      else
+         return GetDefinition()->mSize;
    }
 
    /// Get the minimal allocation page                                        
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetMinAllocation() const noexcept -> size_t {
-      return Instance.GetMetaDataByID(*this)->mAllocationPage;
+      return GetDefinition()->mAllocationPage;
    }
 
    /// Get the alignment of the type                                          
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetAlignment() const noexcept -> size_t {
-      return Instance.GetMetaDataByID(*this)->mAlign;
+      return GetDefinition()->mAlign;
    }
 
    /// Get the name of the type, the result of NameOf                         
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetName() const noexcept -> Token {
-      return Instance.GetMetaDataByID(*this)->mNameOf;
+      return GetDefinition()->mNameOf;
    }
    
    /// Get the info of the type, the result of InfoOf                         
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetInfo() const noexcept -> Token {
-      return Instance.GetMetaDataByID(*this)->mInfoOf;
+      return GetDefinition()->mInfoOf;
    }
 
    /// Get the name of the type as it appearch in C++                         
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetCppName() const noexcept -> Token {
-      return Instance.GetMetaDataByID(*this)->mCppNameOf;
+      return GetDefinition()->mCppNameOf;
    }
 
    /// Get the type hash                                                      
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetHash() const noexcept -> Hash {
-      return Instance.GetMetaDataByID(*this)->mHash;
+      return GetDefinition()->mHash;
    }
 
+   /// Get the associated file extensions, separated with commas              
    template<unsigned S1, unsigned S2>
-   auto MetaDataStructured_XY<S1, S2>::GetVersionMajor()  const noexcept -> unsigned {
-      return Instance.GetMetaDataByID(*this)->mVersionMajor;
+   auto MetaDataStructured_XY<S1, S2>::GetFiles() const noexcept -> Token {
+      return GetDefinition()->mFilesOf;
    }
 
+   /// Get the associated suffix                                              
    template<unsigned S1, unsigned S2>
-   auto MetaDataStructured_XY<S1, S2>::GetVersionMinor()  const noexcept -> unsigned {
-      return Instance.GetMetaDataByID(*this)->mVersionMinor;
+   auto MetaDataStructured_XY<S1, S2>::GetSuffix() const noexcept -> Token {
+      return GetDefinition()->mSuffixOf;
    }
 
-   /// Get the type boundary                                                  
+   /// Get the type boundaries                                                
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
-      return Instance.GetMetaDataByID(*this)->mBoundaries;
+      return GetDefinition()->mBoundaries;
+   }
+
+   /// Get the major version                                                  
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetVersionMajor()  const noexcept -> unsigned {
+      return GetDefinition()->mVersionMajor;
+   }
+
+   /// Get the minor version                                                  
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetVersionMinor()  const noexcept -> unsigned {
+      return GetDefinition()->mVersionMinor;
    }
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    /// Get the reflected pool tactic                                          
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetPoolTactic() const noexcept -> PoolTactic {
-      return Instance.GetMetaDataByID(*this)->mPoolTactic;
+      return GetDefinition()->mPoolTactic;
    }
 
    /// Get the poolchain                                                      
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetPoolchain() const noexcept -> Fractalloc::Pool* {
-      return Instance.GetMetaDataByID(*this)->mPoolChain;
+      return GetDefinition()->mPoolChain;
    }
 #endif
 
@@ -207,141 +225,147 @@ namespace Langulus::RTTI::Inner
       return pod;
    }
 
-   /// Check if type is CT::POD                                               
+   /// Check if type is CT::Nullable                                          
    template<unsigned S1, unsigned S2>
    constexpr bool MetaDataStructured_XY<S1, S2>::IsNullable() const noexcept {
       return nullable;
+   }
+
+   /// Check if type is CT::Abstract                                          
+   template<unsigned S1, unsigned S2>
+   constexpr bool MetaDataStructured_XY<S1, S2>::IsAbstract() const noexcept {
+      return GetDefinition()->mAbstract;
    }
 
    /// Get the reflected destructor                                           
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetDestructor()
    const noexcept -> DefinitionData::FUnary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mDestructor;
+      return GetDefinition()->mCurrentBoundary.mDestructor;
    }
 
    /// Get the reflected referencer                                           
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetReferencer()
    const noexcept -> DefinitionData::FReference {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mReferencer;
+      return GetDefinition()->mCurrentBoundary.mReferencer;
    }
 
    /// Get the reflected resolver                                             
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetResolver()
    const noexcept -> DefinitionData::FResolve {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mResolver;
+      return GetDefinition()->mCurrentBoundary.mResolver;
    }
 
    /// Get the reflected refer-constructor                                    
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetReferConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mReferConstructor;
+      return GetDefinition()->mCurrentBoundary.mReferConstructor;
    }
 
    /// Get the reflected refer-assigner                                       
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetReferAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mReferAssigner;
+      return GetDefinition()->mCurrentBoundary.mReferAssigner;
    }
 
    /// Get the reflected move-constructor                                     
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetMoveConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mMoveConstructor;
+      return GetDefinition()->mCurrentBoundary.mMoveConstructor;
    }
 
    /// Get the reflected move-assigner                                        
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetMoveAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mMoveAssigner;
+      return GetDefinition()->mCurrentBoundary.mMoveAssigner;
    }
 
    /// Get the reflected abandon-constructor                                  
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetAbandonConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mAbandonConstructor;
+      return GetDefinition()->mCurrentBoundary.mAbandonConstructor;
    }
 
    /// Get the reflected abandon-assigner                                     
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetAbandonAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mAbandonAssigner;
+      return GetDefinition()->mCurrentBoundary.mAbandonAssigner;
    }
 
    /// Get the reflected disown-constructor                                   
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetDisownConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mDisownConstructor;
+      return GetDefinition()->mCurrentBoundary.mDisownConstructor;
    }
 
    /// Get the reflected disown-assigner                                      
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetDisownAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mDisownAssigner;
+      return GetDefinition()->mCurrentBoundary.mDisownAssigner;
    }
 
    /// Get the reflected clone-constructor                                    
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetCloneConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCloneConstructor;
+      return GetDefinition()->mCurrentBoundary.mCloneConstructor;
    }
 
    /// Get the reflected clone-assigner                                       
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetCloneAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCloneAssigner;
+      return GetDefinition()->mCurrentBoundary.mCloneAssigner;
    }
 
    /// Get the reflected copy-constructor                                     
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetCopyConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCopyConstructor;
+      return GetDefinition()->mCurrentBoundary.mCopyConstructor;
    }
 
    /// Get the reflected copy-assigner                                        
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetCopyAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mCopyAssigner;
+      return GetDefinition()->mCurrentBoundary.mCopyAssigner;
    }
 
    /// Get the reflected comparer                                             
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetComparer()
    const noexcept -> DefinitionData::FCompare {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mComparer;
+      return GetDefinition()->mCurrentBoundary.mComparer;
    }
 
    /// Get the reflected hasher                                               
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetHasher()
    const noexcept -> DefinitionData::FHash {
-      return Instance.GetMetaDataByID(*this)->mCurrentBoundary.mHasher;
+      return GetDefinition()->mCurrentBoundary.mHasher;
    }
 
    /// Check if type has an explicit GetHash() method                         
    template<unsigned S1, unsigned S2>
    bool MetaDataStructured_XY<S1, S2>::HasGetHashMethod() const noexcept {
-      return Instance.GetMetaDataByID(*this)->mHasGetHashMethod;
+      return GetDefinition()->mHasGetHashMethod;
    }
 
    /// Allows the memory manager to set a new pool chain                      
    template<unsigned S1, unsigned S2>
    void MetaDataStructured_XY<S1, S2>::SetPoolchain(Fractalloc::Pool* pool) const noexcept {
-      Instance.GetMetaDataByID(*this)->mPoolChain = pool;
+      GetDefinition()->mPoolChain = pool;
    }
 
 } // namespace Langulus::RTTI::Inner

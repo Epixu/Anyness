@@ -102,6 +102,8 @@ namespace Langulus::RTTI
          using Structured<PT_SIZE>::dispatcher;
          using Structured<PT_SIZE>::all;
 
+         auto GetDefinition() const noexcept -> DefinitionData const*;
+
       public:
          using Base = MetaPacked<ID_SIZE>;
 
@@ -128,7 +130,6 @@ namespace Langulus::RTTI
          auto GetInfo()               const noexcept -> Token;
          auto GetCppName()            const noexcept -> Token;
          auto GetHash()               const noexcept -> Hash;
-         auto GetID()                 const noexcept -> size_t;
          auto GetFiles()              const noexcept -> Token;
          auto GetSuffix()             const noexcept -> Token;
          auto GetBoundaries()         const noexcept -> Definition::BoundarySet const&;

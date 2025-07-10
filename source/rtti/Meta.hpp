@@ -47,7 +47,8 @@ namespace Langulus::RTTI::Inner
       union convert {
          size_t id_unprocessed;
          Block  id_processed;
-         convert(size_t t) : id_unprocessed {t} {}
+         explicit convert(const size_t& t) : id_unprocessed {t} {}
+         explicit convert(const Block&  t) : id_processed {t} {}
       };
 
    public:
@@ -73,6 +74,13 @@ namespace Langulus::RTTI::Inner
 
       constexpr bool operator == (const MetaPacked& rhs) const noexcept {
          return mHandle == rhs.mHandle;
+      }
+
+      constexpr size_t GetID() const noexcept {
+         if constexpr (BYTESIZE == 1)
+            return static_cast<size_t>(mHandle[0]);
+         else
+            return convert(mHandle).id_unprocessed;
       }
    };
    #pragma pack(pop)

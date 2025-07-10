@@ -7,8 +7,8 @@ namespace Langulus
    /// Useful for setting CTTI_DefineVerb                                     
    template<Literal POSITIVE, Literal NEGATIVE = "", auto PRECEDENCE = 0>
    struct VerbToken {
-      static constexpr unsigned Positive = POSITIVE;
-      static constexpr unsigned Negative = NEGATIVE;
+      static constexpr Literal Positive = POSITIVE;
+      static constexpr Literal Negative = NEGATIVE;
       static constexpr float Precedence = static_cast<float>(PRECEDENCE);
       static constexpr bool Enabled = true;
    };

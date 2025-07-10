@@ -97,6 +97,10 @@ namespace
       Number = 314
    };
    
+   struct NotReflectable {
+      using CTTI_ReflectAs = void;
+   };
+
    struct ImplicitlyReflectedData {
       enum Named { One, Two, Three };
 
@@ -142,7 +146,6 @@ namespace
       using CTTI_Nullable  = Yes<>;
       using CTTI_Pooled    = PooledBySize<250>;
       using CTTI_Concrete  = ImplicitlyReflectedData;
-      using CTTI_ReflectAs = void;
       using CTTI_Abstract  = Yes<>;
       using CTTI_Bases     = ImplicitlyReflectedData;
       using CTTI_Verbs     = Verbs::Create;
@@ -191,6 +194,7 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    //void, // shouldn't compile
    nullptr_t, // shouldn't compile
    //IncompleteType, // shouldn't compile
+   //NotReflectable, // shouldn't compile
    IncompleteType*,
    IncompleteType**,
    const IncompleteType**,
@@ -409,7 +413,7 @@ TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]",
 }
 
 TEMPLATE_TEST_CASE("Reflecting non-abstract types", "[rtti]",
-   void, int, nullptr_t,
+   int, nullptr_t,
    ImpureVirtual,
    InheritedAbstract1ButPrivate,
    InheritedAbstract2ButPrivate,
@@ -495,7 +499,7 @@ SCENARIO("Reflecting a tag", "[rtti]") {
 /// Reflecting functions                                                      
 ///                                                                           
 TEMPLATE_TEST_CASE("A reflected function signature", "[rtti]",
-   decltype(FunctionForTesting),
+   //decltype(FunctionForTesting), // shouldn't compile
    void(*)(void*)
 ) {
    using Signature = TestType;

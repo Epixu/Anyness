@@ -44,7 +44,7 @@ namespace Langulus::RTTI
       static_assert(not ::std::is_function_v<T>,
          "Can't reflect this function signature as a verb");
 
-      constexpr Token cppname = CppNameOf<T>();
+      constexpr auto cppname = CppNameOf<T>();
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the verb might  
@@ -72,8 +72,8 @@ namespace Langulus::RTTI
       // If this is reached, then verb is not defined yet               
       definition.template ReflectCommon<T>();
       
-      constexpr Token verbPos = NameOfVerb<T>();
-      constexpr Token verbNeg = NameOfVerbReverse<T>();
+      constexpr auto verbPos = NameOfVerb<T>();
+      constexpr auto verbNeg = NameOfVerbReverse<T>();
       static_assert(not verbPos.empty(),
          "Invalid positive verb token is not allowed");
       static_assert(verbPos != verbNeg,
@@ -94,7 +94,7 @@ namespace Langulus::RTTI
          definition.mPrecedence = T::CTTI_DefineVerb::Precedence;
 
       if constexpr (requires { FContextless {&T::ExecuteContextless}; })
-         definition.mCurrentBoundary.mContextless = &T::ExecuteStateless;
+         definition.mCurrentBoundary.mContextless = &T::ExecuteContextless;
 
    /*#if LANGULUS_FEATURE(MANAGED_REFLECTION)
       if (definition.mOperator.size()) {

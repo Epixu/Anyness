@@ -84,6 +84,8 @@ namespace Langulus::RTTI
       friend struct Inner::MetaConstPacked_16;
       template<unsigned, unsigned>
       friend struct Inner::MetaDataStructured_XY;
+      template<unsigned>
+      friend struct Inner::MetaVerbStructured_X8;
 
       void RegisterVerbOperator       (Token const&) has_assumptions;
       void RegisterVerbOperatorReverse(Token const&) has_assumptions;
@@ -117,17 +119,13 @@ namespace Langulus::RTTI
       auto GetMetaConstByCppName(Token const&) const noexcept -> DefinitionConst const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaDataByID(Inner::MetaDataStructured_XY<2, 2> const&) const noexcept -> DefinitionData const*;
+      auto GetMetaDataByID(size_t, bool sparse, bool constant) const noexcept -> DefinitionData const*;
       LANGULUS_API(RTTI)
-      auto GetMetaDataByID(Inner::MetaDataStructured_XY<3, 1> const&) const noexcept -> DefinitionData const*;
+      auto GetMetaTagByID(size_t) const noexcept -> DefinitionTag const*;
       LANGULUS_API(RTTI)
-      auto GetMetaTagByID(Inner::MetaTagPacked_16 const&) const noexcept -> DefinitionTag const*;
+      auto GetMetaVerbByID(size_t) const noexcept -> DefinitionVerb const*;
       LANGULUS_API(RTTI)
-      auto GetMetaVerbByID(Inner::MetaVerbStructured_X8<1> const&) const noexcept -> DefinitionVerb const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaVerbByID(Inner::MetaVerbStructured_X8<3> const&) const noexcept -> DefinitionVerb const*;
-      LANGULUS_API(RTTI)
-      auto GetMetaConstByID(Inner::MetaConstPacked_16 const&) const noexcept -> DefinitionConst const*;
+      auto GetMetaConstByID(size_t) const noexcept -> DefinitionConst const*;
 
    public:
       ~Registry();

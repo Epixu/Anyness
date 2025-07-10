@@ -734,14 +734,16 @@ namespace Langulus
    constexpr auto IntentNew(void* placement, S<T>&& value) {
       static_assert(CT::Complete<T>,
          "T has to be complete in order to be constructed");
-      static_assert(not CT::Abstract<T>,
-         "T has to be concrete in order to be constructed");
       static_assert(not CT::Reference<T>,
          "T can't be a reference in order to be constructed");
 
       AssumeDev(placement, HERE(), "Invalid placement pointer");
 
-      if constexpr (CT::Referred<S<T>>) {
+      if constexpr (CT::Abstract<T>) {
+         static_assert(FAKE, "Can't construct abstract type");
+         return Unsupported {};
+      }
+      else if constexpr (CT::Referred<S<T>>) {
          // Refer                                                       
          if constexpr (CT::HasReferConstructor<T>)
             return new (placement) T {FWD(value)};

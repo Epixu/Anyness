@@ -366,12 +366,12 @@ namespace Langulus::RTTI
                   // for security reasons                               
                   return *t1T == *t2T ? Compared::Equal : Compared::Unordered;
                }
-               else if constexpr (CT::Fundamental<DTAll>) {
+               /*else if constexpr (CT::Fundamental<DTAll>) {
                   // Fundamental types are always strong-ordered        
                   if (*t1T == *t2T)  return Compared::Equal;
                   if (*t1T <  *t2T)  return Compared::Less;
                   return Compared::Greater;
-               }
+               }*/
                else if constexpr (CT::ComparableStrong<DTAll>) {
                   switch (*t1T <=> *t2T) {
                   case ::std::strong_ordering::less:        return Compared::Less;
@@ -395,8 +395,11 @@ namespace Langulus::RTTI
                   case ::std::partial_ordering::greater:     return Compared::Greater;
                   }
                }
-               else static_assert(false, "Unsupported comparison");
-               return Compared::Unordered;
+               else {
+                  if (*t1T == *t2T)  return Compared::Equal;
+                  if (*t1T <  *t2T)  return Compared::Less;
+                  return Compared::Greater;
+               }
             };
       }
 

@@ -85,64 +85,6 @@ namespace Langulus::RTTI
       return GetMetaByName<false>(mMetaDataByName, token);
    }
 
-   /// Get an existing data definition by unpacking an ID                     
-   ///   @param id - the packed data ID                                       
-   ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaDataByID(const Inner::MetaDataStructured_XY<3, 1>& id)
-   const noexcept -> DefinitionData const* {
-      DefinitionData const* found = GetMetaByID(mMetaDataByID, id.mHandle[0]);
-      if (not found)
-         return nullptr;
-
-      if (id.IsSparse()) {
-         AssumeDevAndOptimize(found->mAddPtr,
-            "An indirection ID for a type exists, "
-            "but no such type has been reflected yet: ", found->mNameOf
-         );
-         found = found->mAddPtr;
-      }
-
-      if (id.IsConstant()) {
-         AssumeDevAndOptimize(found->mAddConst,
-            "A constant ID for a type exists, "
-            "but no such type has been reflected yet: ", found->mNameOf
-         );
-         found = found->mAddConst;
-      }
-      
-      return found;
-   }
-
-   auto Registry::GetMetaDataByID(const Inner::MetaDataStructured_XY<2, 2>& id)
-   const noexcept -> DefinitionData const* {
-      union {
-         size_t id_processed = 0;
-         ::std::array<uint8_t, 2> id_unprocessed;
-      };
-      id_unprocessed = id.mHandle;
-      DefinitionData const* found = GetMetaByID(mMetaDataByID, id_processed);
-      if (not found)
-         return nullptr;
-
-      if (id.IsSparse()) {
-         AssumeDevAndOptimize(found->mAddPtr,
-            "An indirection ID for a type exists, "
-            "but no such type has been reflected yet: ", found->mNameOf
-         );
-         found = found->mAddPtr;
-      }
-
-      if (id.IsConstant()) {
-         AssumeDevAndOptimize(found->mAddConst,
-            "A constant ID for a type exists, "
-            "but no such type has been reflected yet: ", found->mNameOf
-         );
-         found = found->mAddConst;
-      }
-
-      return found;
-   }
-
    /// Get an existing constant definition by its CppNameOf                   
    ///   @param token - the C++ name of the constant definition               
    ///   @return the definition, or nullptr if not found                      
@@ -190,6 +132,36 @@ namespace Langulus::RTTI
    auto Registry::GetMetaVerbByToken(const Token& token)
    const noexcept -> DefinitionVerb const* {
       return GetMetaByName<false>(mMetaVerbsByTokens, token);
+   }
+   
+   /// Get an existing data definition by unpacking an ID                     
+   ///   @param id - the ID                                                   
+   ///   @param sparse - is the data type sparse?                             
+   ///   @param constant - is the data type constant?                         
+   ///   @return the definition, or nullptr if not found                      
+   auto Registry::GetMetaDataByID(size_t id, bool sparse, bool constant)
+   const noexcept -> DefinitionData const* {
+      DefinitionData const* found = GetMetaByID(mMetaDataByID, id);
+      if (not found)
+         return nullptr;
+
+      if (sparse) {
+         AssumeDevAndOptimize(found->mAddPtr,
+            "An indirection ID for a type exists, "
+            "but no such type has been reflected yet: ", found->mNameOf
+         );
+         found = found->mAddPtr;
+      }
+
+      if (constant) {
+         AssumeDevAndOptimize(found->mAddConst,
+            "A constant ID for a type exists, "
+            "but no such type has been reflected yet: ", found->mNameOf
+         );
+         found = found->mAddConst;
+      }
+      
+      return found;
    }
 
    /// Get an existing verb definition by OperatorOfVerb/OperatorOfVerbReverse
