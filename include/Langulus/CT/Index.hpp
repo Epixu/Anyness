@@ -23,7 +23,8 @@ namespace Langulus::Index
    {
       template<bool VALID>
       struct Common {
-         using CTTI_Index = Yes;
+         using CTTI_Index = Yes<>;
+
          constexpr explicit operator bool() const noexcept {
             return VALID;
          }
@@ -92,7 +93,7 @@ namespace Langulus::Index
    /// comparing against npos like a chump                                    
    template<class T>
    struct At {
-      using CTTI_Index = Yes;
+      using CTTI_Index = Yes<>;
 
       T index;
 

@@ -15,7 +15,7 @@ namespace Langulus::Anyness
    /// equal to other iterators if they have reached their end marker         
    ///                                                                        
    struct IteratorEnd final {
-      using CTTI_Iterator = Yes;
+      using CTTI_Iterator  = Yes<>;
       using CTTI_ReflectAs = void;
    };
 
@@ -60,7 +60,7 @@ namespace Langulus::Anyness
 
       /// A single combined iterator                                          
       struct Iterator {
-         using CTTI_Iterator = Yes;
+         using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
 
       protected:
@@ -123,7 +123,7 @@ namespace Langulus::Anyness
 
       /// The iterator                                                        
       struct Iterator {
-         using CTTI_Iterator = Yes;
+         using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
 
       protected:
@@ -181,7 +181,7 @@ namespace Langulus::Anyness
 
       /// The iterator                                                        
       struct Iterator {
-         using CTTI_Iterator = Yes;
+         using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
 
       protected:
@@ -242,7 +242,7 @@ namespace Langulus::Anyness
 
       /// The iterator                                                        
       struct Iterator {
-         using CTTI_Iterator = Yes;
+         using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
 
       protected:
@@ -297,7 +297,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0>
    struct IterationRange {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
    private:
       template<CT::Container C>

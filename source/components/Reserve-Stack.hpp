@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
       T mReserved = 0;
 
    public:
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       using ReserveType = T;
 
       /// Get the number of reserved (maybe uninitialized) elements           

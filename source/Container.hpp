@@ -124,7 +124,7 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::Component...COMPONENTS>
    struct Container : COMPONENTS... {
-      using CTTI_Container = Yes;
+      using CTTI_Container = Yes<>;
       using ComponentList = Types<COMPONENTS...>;
       using InitList = Sequence<sizeof...(COMPONENTS)>;
       

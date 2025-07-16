@@ -133,6 +133,7 @@ namespace Langulus::RTTI
       // Reflect the dequalified types and generate/propagate IDs       
       using DTOnce = Decvq<T>;
       using DTAll  = DecvqAll<T>;
+
       if constexpr (not ::std::same_as<T, DTAll>) {
          // T has qualifiers                                            
          definition.mDecvqOnce = Reflect<DTOnce>();
@@ -150,9 +151,11 @@ namespace Langulus::RTTI
       }
 
       if constexpr (CT::Sparse<T>) {
-         if constexpr (CT::Complete<Deptr<T>>) {
+         using DenserT = Deptr<T>;
+
+         if constexpr (CT::Complete<DenserT>) {
             // Reflect the denser type                                  
-            definition.mDeptr = Reflect<Deptr<T>>();
+            definition.mDeptr = Reflect<DenserT>();
             auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
             deptr->mAddPtr = definition.mDecvqOnce;
 
@@ -160,19 +163,29 @@ namespace Langulus::RTTI
                // Propagate ID only if there's exactly one level of     
                // indirection, because that will be encoded in the      
                // packed meta data pointer - otherwise we need a new ID 
-               if constexpr (CT::Dense<Deptr<T>>)
+               if constexpr (CT::Dense<DenserT>)
                   definition.mID = deptr->mID;
-               else
-                  definition.mID = Instance.ReserveDataID(&definition);
             #endif
          }
          else {
-            // An incomplete sparse type always has a dedicated ID      
+            // An incomplete sparse type always has mDeptr of 1         
             definition.mDeptr = reinterpret_cast<DefinitionData*>(intptr_t {1});
-            auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
-            decvq->mID = Instance.ReserveDataID(&definition);
-            definition.mID = decvq->mID;
          }
+
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            if constexpr (CT::Sparse<DenserT> or not CT::Complete<DenserT>) {
+               // Multiple indirections always result in a unique ID    
+               // Incomplete types are always considered an indirection 
+               auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
+               decvq->mID = Instance.ReserveDataID(decvq);
+               decvq->mPtrIncludedInID = true;
+
+               if constexpr (CT::Convoluted<T>) {
+                  definition.mID = decvq->mID;
+                  definition.mPtrIncludedInID = true;
+               }
+            }
+         #endif
       }
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       else if constexpr (CT::Convoluted<T>) {

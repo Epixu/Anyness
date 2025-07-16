@@ -9,7 +9,7 @@ namespace Langulus::Anyness::Component
    /// Adds operators for concatenation (+ and +=)                            
    ///                                                                        
    struct ConcatenateOperators {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
       /// Push back                                                           
       template<CT::Container C>

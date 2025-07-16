@@ -137,7 +137,7 @@ namespace Langulus::Anyness
    template<CT::NotVoid K, CT::NotVoid V>
    struct TMap : Inner::TMapBase<K, V> {
       using CTTI_ReflectAs = Map;
-      using CTTI_Map       = Yes;
+      using CTTI_Map       = Yes<>;
       using Base           = Inner::TMapBase<K, V>;
 
       using KeyDenseMut  = K&;
@@ -207,7 +207,7 @@ namespace Langulus::Anyness
    template<CT::NotVoid K, CT::NotVoid V>
    struct TMapUnsorted : Inner::TMapUnsortedBase<K, V> {
       using CTTI_ReflectAs = Map;
-      using CTTI_Map       = Yes;
+      using CTTI_Map       = Yes<>;
       using Base           = Inner::TMapUnsortedBase<K, V>;
 
       using KeyDenseMut  = K&;
@@ -281,7 +281,7 @@ namespace Langulus::Anyness
    template<CT::NotVoid K, CT::NotVoid V>
    struct TMapSorted : Inner::TMapSortedBase<K, V> {
       using CTTI_ReflectAs = Map;
-      using CTTI_Map       = Yes;
+      using CTTI_Map       = Yes<>;
       using Base           = Inner::TMapSortedBase<K, V>;
 
       using KeyDenseMut  = K&;

@@ -20,7 +20,7 @@ namespace Langulus::Anyness::Component
       AllocationPtr mAllocation = nullptr;
 
    public:
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       static constexpr bool Owned = AUTO;
 
       /// Get the allocation                                                  

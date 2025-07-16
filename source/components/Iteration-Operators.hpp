@@ -13,7 +13,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0>
    struct IterationOperators {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
       /// Prefix increment operator                                           
       ///   @attention this doesn't check any boundaries, use carefully       

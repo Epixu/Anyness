@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0, class H = Hash>
    struct HashEmergent {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
       /// Get the hash, recompute every time                                  
       template<CT::Container C>

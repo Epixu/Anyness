@@ -54,6 +54,8 @@ namespace Langulus::RTTI
       // The type, when a single level of indirection is removed        
       // Will be null if data is dense                                  
       DefinitionData const* mDeptr = nullptr;
+      bool mPtrIncludedInID = false;
+
       // The type, when all qualifiers are removed down to the origin   
       DefinitionData const* mDecvqAll IF_SAFE(= nullptr);
       // The type, when topmost qualifiers are removed                  

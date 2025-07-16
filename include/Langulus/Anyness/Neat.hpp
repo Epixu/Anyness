@@ -54,7 +54,7 @@ namespace Langulus::Anyness
       TMapUnsorted<DMeta, TailList> mAnythingElse;
 
    public:
-      using CTTI_Container = Yes;
+      using CTTI_Container = Yes<>;
 
       ///                                                                     
       ///   Construction                                                      

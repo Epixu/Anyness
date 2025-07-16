@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID   - which heap/stack is typed?                            
    template<class T, class TYPE = void, unsigned ID = 0>
    struct TypedStack {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
 
       static constexpr bool TypeErased = CT::Void<TYPE>;

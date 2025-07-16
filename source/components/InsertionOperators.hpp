@@ -12,7 +12,7 @@ namespace Langulus::Anyness::Component
    ///      and text containers. Use void to insert without serialization     
    template<unsigned ID = 0, class AS = void>
    struct InsertionOperators {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
       /// Push back                                                           
       template<CT::Container C, class A>

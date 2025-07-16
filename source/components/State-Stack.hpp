@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam STATES... - the possible states                              
    template<CT::State...STATES>
    struct StateStack : STATES... {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       using StateList = Types<STATES...>;
       using StateType = Tif<sizeof...(STATES) <= 8, uint8_t, uint16_t>;
       static constexpr StateType StateCount = sizeof...(STATES);

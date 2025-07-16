@@ -56,7 +56,7 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
-      using CTTI_Set = Yes;
+      using CTTI_Set = Yes<>;
 
       constexpr Set() noexcept = default;
       constexpr Set(const Set&) noexcept = default;
@@ -93,7 +93,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Set;
-      using CTTI_Set = Yes;
+      using CTTI_Set       = Yes<>;
 
       constexpr SetUnsorted() noexcept = default;
       constexpr SetUnsorted(const SetUnsorted&) noexcept = default;
@@ -130,7 +130,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Set;
-      using CTTI_Set = Yes;
+      using CTTI_Set       = Yes<>;
 
       constexpr SetSorted() noexcept = default;
       constexpr SetSorted(const SetSorted&) noexcept = default;

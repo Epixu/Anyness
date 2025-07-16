@@ -10,7 +10,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam AS - type to serialize as before inserting. Useful for byte  
    ///      and text containers. Use void to insert without serialization     
    struct Concatenate {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
    private:
       template<CT::Container C>

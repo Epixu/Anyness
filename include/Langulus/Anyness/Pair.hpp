@@ -21,8 +21,8 @@ namespace Langulus::Anyness
       Any mVal;
 
    public:
-      using CTTI_Pair = Yes;
-      using CTTI_Container = Yes;
+      using CTTI_Pair      = Yes<>;
+      using CTTI_Container = Yes<>;
 
       using Key = Any;
       using Val = Any;

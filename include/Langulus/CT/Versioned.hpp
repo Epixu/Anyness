@@ -50,10 +50,10 @@ namespace Langulus
    template<class T>
    consteval auto VersionOf() {
       using ST = Shed<T>;
-      if constexpr (requires { CTTI::Versioned<ST>::Enabled; })
+      if constexpr (CTTI::Versioned<ST>::Enabled)
          return CTTI::Versioned<ST> {};
       else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Versioned))
-         return typename Decay<ST>::CTTI_Pooled {};
+         return typename Decay<ST>::CTTI_Versioned {};
       else
          return CTTI::Versioned<void> {};
    }
@@ -61,7 +61,7 @@ namespace Langulus
    ///                                                                        
    template<auto E>
    consteval auto VersionOf() {
-      if constexpr (requires { CTTI::VersionedValue<E>::Enabled; })
+      if constexpr (CTTI::VersionedValue<E>::Enabled)
          return CTTI::VersionedValue<E> {};
       else
          return CTTI::VersionedValue<0> {};

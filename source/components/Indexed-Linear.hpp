@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Component
    ///      to allow for all the usual integer types                          
    template<class T = void>
    struct IndexedLinear {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       static constexpr bool Indexed = true;
 
    private:

@@ -16,9 +16,9 @@ namespace Langulus::Anyness::Component
    /// Charge, carrying the four dimensions *ominous music*                   
    ///                                                                        
    struct Charge {
-      using CTTI_POD       = Yes;
-      using CTTI_Nullable  = No;
-      using CTTI_Component = Yes;
+      using CTTI_POD       = Yes<>;
+      using CTTI_Nullable  = No<>;
+      using CTTI_Component = Yes<>;
 
       static constexpr Real DefaultMass = 1;
       static constexpr Real DefaultRate = 0;

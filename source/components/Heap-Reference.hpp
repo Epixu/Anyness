@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0>
    struct HeapReference {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       static constexpr bool HeapAllocated = true;
       static constexpr bool HeapCanBeNull = false;
 

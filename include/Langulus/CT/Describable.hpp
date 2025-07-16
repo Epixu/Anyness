@@ -27,10 +27,10 @@ namespace Langulus
       const Many& mValue;
 
    public:
-      using CTTI_Typed = Many;
-      using CTTI_ReflectAs = void;
-      using CTTI_Abstract = Yes;
-      using CTTI_Unallocatable = Yes;
+      using CTTI_Typed         = Many;
+      using CTTI_ReflectAs     = void;
+      using CTTI_Abstract      = Yes<>;
+      using CTTI_Unallocatable = Yes<>;
 
       Describe() = delete;
       constexpr Describe(const Describe&) noexcept = default;

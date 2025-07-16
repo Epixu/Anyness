@@ -71,7 +71,7 @@ namespace Langulus::Anyness
    ///                                                                        
    struct Text : Inner::TextBase {
       using Base = Inner::TextBase;
-      using CTTI_Text = Yes;
+      using CTTI_Text = Yes<>;
 
       constexpr Text() noexcept = default;
 

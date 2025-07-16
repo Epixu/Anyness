@@ -69,7 +69,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID - heap we're removing from                                
    template<unsigned ID = 0>
    struct Assignment {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
       constexpr Assignment() noexcept = default;
       ignore_all_intents(Assignment);

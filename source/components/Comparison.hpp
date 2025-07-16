@@ -34,7 +34,7 @@ namespace Langulus::Anyness::Component
    /// Implements comparison for containers                                   
    ///                                                                        
    struct Comparison {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
       constexpr Comparison() noexcept = default;
       ignore_all_intents(Comparison);

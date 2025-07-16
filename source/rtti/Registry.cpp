@@ -145,7 +145,7 @@ namespace Langulus::RTTI
       if (not found)
          return nullptr;
 
-      if (sparse and found->mDeptr != reinterpret_cast<DefinitionData*>(intptr_t {1})) {
+      if (sparse and not found->mPtrIncludedInID) {
          AssumeDevAndOptimize(found->mAddPtr,
             "An indirection ID for a type exists, "
             "but no such type has been reflected yet: ", found->mNameOf

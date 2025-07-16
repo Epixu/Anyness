@@ -66,7 +66,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID - heap/stack we're iterating                              
    template<unsigned ID = 0>
    struct IterationForEach {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
    private:
       template<CT::Container C>

@@ -29,7 +29,7 @@ namespace Langulus::Anyness
       Com::Assignment<>,
       Com::Comparison
    > {
-      using CTTI_Handle = Yes;
+      using CTTI_Handle = Yes<>;
       using CTTI_ReflectAs = void;
 
       HandleMut() = delete;
@@ -46,7 +46,7 @@ namespace Langulus::Anyness
       Com::Assignment<>,
       Com::Comparison
    > {
-      using CTTI_Handle = Yes;
+      using CTTI_Handle = Yes<>;
       using CTTI_ReflectAs = void;
 
       HandleDisownedMut() = delete;
@@ -68,7 +68,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta>,
       Com::Comparison
    > {
-      using CTTI_Handle = Yes;
+      using CTTI_Handle = Yes<>;
       using CTTI_ReflectAs = void;
 
       Handle() = delete;
@@ -84,7 +84,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta>,
       Com::Comparison
    > {
-      using CTTI_Handle = Yes;
+      using CTTI_Handle = Yes<>;
       using CTTI_ReflectAs = void;
 
       HandleDisowned() = delete;

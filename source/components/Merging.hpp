@@ -16,7 +16,7 @@ namespace Langulus::Anyness::Component
       using Deep = typename C::DeepType;
 
    public:
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
       /// Merging at specific index                                           
       template<bool FORCE = true, class A1, class...AN, CT::IndexedLinearly C>

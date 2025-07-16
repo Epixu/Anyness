@@ -15,7 +15,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<CT::NotVoid T, unsigned ID = 0>
    struct Stack {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
    protected:
       T mStack;

@@ -39,7 +39,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Set;
-      using CTTI_Set = Yes;
+      using CTTI_Set       = Yes<>;
 
       constexpr TSet() noexcept = default;
       constexpr TSet(const TSet&) noexcept = default;
@@ -77,7 +77,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Set;
-      using CTTI_Set = Yes;
+      using CTTI_Set       = Yes<>;
 
       constexpr TSetUnsorted() noexcept = default;
       constexpr TSetUnsorted(const TSetUnsorted&) noexcept = default;
@@ -115,7 +115,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Set;
-      using CTTI_Set = Yes;
+      using CTTI_Set       = Yes<>;
 
       constexpr TSetSorted() noexcept = default;
       constexpr TSetSorted(const TSetSorted&) noexcept = default;

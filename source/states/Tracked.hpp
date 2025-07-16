@@ -14,7 +14,7 @@ namespace Langulus::Anyness::DefineState
    ///   @tparam V - decides whether state is dynamic or static               
    template<State::StateValue V>
    struct Tracked {
-      using CTTI_State = Yes;
+      using CTTI_State = Yes<>;
       static constexpr bool Static  = V != State::Variable;
       static constexpr bool Dynamic = V == State::Variable;
       static constexpr bool Enable  = V == State::Enabled;

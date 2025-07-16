@@ -60,8 +60,8 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::Reference T>
    struct THandle<T> : Inner::THandleBase<T> {
-      using CTTI_Handle = Yes;
-      using CTTI_Typed = Deref<T>;
+      using CTTI_Handle    = Yes<>;
+      using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Base = Inner::THandleBase<T>;
 
@@ -91,8 +91,8 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::Reference T>
    struct THandleDisowned<T> : Inner::THandleDisownedBase<T> {
-      using CTTI_Handle = Yes;
-      using CTTI_Typed = Deref<T>;
+      using CTTI_Handle    = Yes<>;
+      using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Base = Inner::THandleDisownedBase<T>;
 
@@ -122,7 +122,7 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotReference T> requires CT::Dense<T>
    struct THandle<T> : TOwn<T> {
-      using CTTI_Handle = Yes;
+      using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
    };
    
@@ -134,7 +134,7 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotReference T> requires CT::Sparse<T>
    struct THandle<T> : TRef<T> {
-      using CTTI_Handle = Yes;
+      using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
    };
 

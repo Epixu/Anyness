@@ -9,7 +9,7 @@ namespace Langulus::Anyness::Component
 
    template<CT::State...STATES>
    struct StateHeap {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       static constexpr ::std::size_t Count = sizeof...(STATES);
       using State = ::std::bitset<Count>;
 

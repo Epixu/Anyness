@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam T - the count type                                           
    template<unsigned ID = 0, class T = ::std::size_t>
    struct CountHeap {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       using CountType = T;
       using IndexType = Index::At<T>;
 

@@ -73,7 +73,7 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
-      using CTTI_Map = Yes;
+      using CTTI_Map = Yes<>;
 
       using KeyMut = HandleMut;
       using Key    = Handle;
@@ -148,7 +148,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Map;
-      using CTTI_Map       = Yes;
+      using CTTI_Map       = Yes<>;
 
       using KeyMut = HandleMut;
       using Key    = Handle;
@@ -223,7 +223,7 @@ namespace Langulus::Anyness
       >
    > {
       using CTTI_ReflectAs = Map;
-      using CTTI_Map       = Yes;
+      using CTTI_Map       = Yes<>;
 
       using KeyMut = HandleMut;
       using Key    = Handle;

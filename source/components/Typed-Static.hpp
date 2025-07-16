@@ -22,7 +22,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID   - which heap/stack is typed?                            
    template<class T, CT::NotVoid TYPE, unsigned ID = 0>
    struct TypedStatic {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
       using CTTI_Sparse    = Maybe<CT::Sparse<TYPE>>;
 

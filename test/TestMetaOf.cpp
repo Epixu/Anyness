@@ -115,7 +115,7 @@ namespace
    };
 
    class alignas(128) ImplicitlyReflectedDataWithTraits : public ImplicitlyReflectedData {
-      public:
+   public:
       int member {664};
       Tags::TName<bool> anotherMember {};
       int anotherMemberArray [12] {};
@@ -235,7 +235,7 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    
    REQUIRE(meta.GetSize() == sizeof(Deref<T>));
    REQUIRE(meta.GetAlignment() == alignof(Deref<T>));
-   REQUIRE(meta.IsConstant() == false);      
+   REQUIRE(meta.IsConstant() == CT::Constant<T>);      
    REQUIRE(meta.IsDeep() == CT::Deep<Deref<T>>);
    REQUIRE(meta.IsPOD() == CT::POD<Deref<T>>);
    REQUIRE(meta.IsNullable() == CT::Nullable<Deref<T>>);
@@ -258,12 +258,22 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.GetDestructor() == nullptr);
    REQUIRE(meta.GetComparer() != nullptr);
 
-   REQUIRE(meta.GetReferAssigner() != nullptr);
-   REQUIRE(meta.GetCopyAssigner() != nullptr);
-   REQUIRE(meta.GetDisownAssigner() != nullptr);
-   REQUIRE(meta.GetCloneAssigner() == nullptr);
-   REQUIRE(meta.GetMoveAssigner() != nullptr);
-   REQUIRE(meta.GetAbandonAssigner() != nullptr);
+   if constexpr (CT::Constant<T>) {
+      REQUIRE(meta.GetReferAssigner()   == nullptr);
+      REQUIRE(meta.GetCopyAssigner()    == nullptr);
+      REQUIRE(meta.GetDisownAssigner()  == nullptr);
+      REQUIRE(meta.GetCloneAssigner()   == nullptr);
+      REQUIRE(meta.GetMoveAssigner()    == nullptr);
+      REQUIRE(meta.GetAbandonAssigner() == nullptr);
+   }
+   else {
+      REQUIRE(meta.GetReferAssigner()   != nullptr);
+      REQUIRE(meta.GetCopyAssigner()    != nullptr);
+      REQUIRE(meta.GetDisownAssigner()  != nullptr);
+      REQUIRE(meta.GetCloneAssigner()   == nullptr);
+      REQUIRE(meta.GetMoveAssigner()    != nullptr);
+      REQUIRE(meta.GetAbandonAssigner() != nullptr);
+   }
 
    REQUIRE(meta.GetResolver() == nullptr);
    REQUIRE(meta.GetHasher() != nullptr);

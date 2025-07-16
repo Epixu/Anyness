@@ -35,7 +35,7 @@ namespace Langulus::CT::Inner
          // T has to be abstract in order to be concretizable           
          return Types<void> {};
       }
-      if constexpr (NotVoid<typename CTTI::Concrete<T>::Type>) {
+      else if constexpr (NotVoid<typename CTTI::Concrete<T>::Type>) {
          // Checked externally, T doesn't have to be complete           
          return Types<typename CTTI::Concrete<T>::Type> {};
       }

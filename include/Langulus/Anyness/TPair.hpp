@@ -61,7 +61,7 @@ namespace Langulus::Anyness
 
    public:
       using CTTI_Typed = Types<K, V>;
-      using CTTI_Pair  = Yes;
+      using CTTI_Pair  = Yes<>;
 
       using Key = K;
       using Val = V;

@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Component
    struct CountStatic {
       static_assert(COUNT > 0, "Can't have a container of zero or negative count");
 
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       using CountType = decltype(COUNT);
       using IndexType = Index::At<CountType>;
 

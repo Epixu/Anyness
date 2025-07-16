@@ -13,7 +13,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0, class T = ::std::size_t>
    struct ReserveHeap {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       using ReserveType = T;
 
       /// Get the number of reserved (maybe uninitialized) elements           

@@ -74,7 +74,7 @@ namespace Langulus::Anyness::Component
    ///      and text containers. Use void to insert without serialization     
    template<unsigned ID = 0, class AS = void>
    struct Insertion {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
       template<CT::Container C>
       static consteval bool Validate() {

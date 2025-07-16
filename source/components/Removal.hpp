@@ -11,7 +11,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID - heap we're removing from                                
    template<unsigned ID = 0>
    struct Removal {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
    private:
       template<CT::Container C>

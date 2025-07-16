@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
       T mCount;
 
    public:
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       using CountType = T;
       using IndexType = Index::At<T>;
 

@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0>
    struct Emplacement {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
 
       constexpr Emplacement() noexcept = default;
       ignore_all_intents(Emplacement);

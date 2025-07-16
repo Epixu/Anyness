@@ -136,7 +136,7 @@ namespace Langulus::RTTI::Inner
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // A sequential identifier provided by the registry            
          // Used for packing type ids                                   
-         size_t mID = 0;
+         size_t mID IF_SAFE(= 0);
 
          // Populated from LANGULUS_BOUNDARY on reflection-time         
          // Types can be reflected from the point of view of different  
@@ -163,8 +163,9 @@ namespace Langulus::RTTI::Inner
       template<class T> LANGULUS(ALWAYS_INLINED)
       void ReflectCommon() {
          // Reflected version                                           
-         mVersionMajor = VersionOf<T>().Major;
-         mVersionMinor = VersionOf<T>().Minor;
+         using V = decltype(VersionOf<T>());
+         mVersionMajor = V::Major;
+         mVersionMinor = V::Minor;
          
          // Save the boundary at time of reflection, but don't even     
          // bother if it is the main one                                

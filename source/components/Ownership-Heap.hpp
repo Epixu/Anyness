@@ -16,7 +16,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0, bool AUTO = true>
    struct OwnershipHeap {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       static constexpr bool Owned = AUTO;
 
       /// Get the allocation                                                  

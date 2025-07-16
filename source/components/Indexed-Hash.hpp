@@ -13,8 +13,8 @@ namespace Langulus::Anyness::Component
    ///   @tparam HASH - type of the hash                                      
    template<unsigned ID = 0, class HASH = Hash>
    struct IndexedHash {
-      using CTTI_Component = Yes;
-      using CTTI_Contiguous = No;
+      using CTTI_Component  = Yes<>;
+      using CTTI_Contiguous = No<>;
       using TableType = uint8_t;
 
    protected:

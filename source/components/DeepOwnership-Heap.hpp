@@ -16,7 +16,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0>
    struct DeepOwnershipHeap {
-      using CTTI_Component = Yes;
+      using CTTI_Component = Yes<>;
       static constexpr bool DeeplyOwned = true;
 
    protected:
