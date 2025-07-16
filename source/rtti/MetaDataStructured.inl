@@ -394,7 +394,10 @@ namespace Langulus::RTTI::Inner
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetDeptr()
    const -> MetaDataStructured_XY {
-      return GetDefinition()->mDeptr;
+      auto d = GetDefinition();
+      return d->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t {1})
+         ? nullptr
+         : d->mDeptr;
    }
    
    template<unsigned ID_SIZE, unsigned PT_SIZE>
@@ -430,13 +433,19 @@ namespace Langulus::RTTI::Inner
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetConcrete()
    const -> MetaDataStructured_XY {
-      return GetDefinition()->mCurrentBoundary.mConcrete();
+      auto d = GetDefinition();
+      return d->mCurrentBoundary.mConcrete
+         ? d->mCurrentBoundary.mConcrete()
+         : nullptr;
    }
    
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetProducer()
    const -> MetaDataStructured_XY {
-      return GetDefinition()->mCurrentBoundary.mProducer();
+      auto d = GetDefinition();
+      return d->mCurrentBoundary.mProducer
+         ? d->mCurrentBoundary.mProducer()
+         : nullptr;
    }
 
    template<unsigned ID_SIZE, unsigned PT_SIZE>

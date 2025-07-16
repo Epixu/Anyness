@@ -10,13 +10,13 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Info = Yes<"some info">;` in T             
    template<class T>
    struct Info {
-      static constexpr Literal Text = "<no info provided>";
+      static constexpr Literal Text = {};
       static constexpr bool Enabled = false;
    };
 
    template<auto E>
    struct InfoValue {
-      static constexpr Literal Text = "<no info provided>";
+      static constexpr Literal Text = {};
       static constexpr bool Enabled = false;
    };
 

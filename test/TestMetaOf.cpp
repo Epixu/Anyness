@@ -192,7 +192,7 @@ namespace
 
 TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    //void, // shouldn't compile
-   nullptr_t, // shouldn't compile
+   //nullptr_t, // shouldn't compile
    //IncompleteType, // shouldn't compile
    //NotReflectable, // shouldn't compile
    IncompleteType*,
@@ -207,13 +207,13 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta);
    REQUIRE(meta != nullptr);
    REQUIRE(meta.GetHash() != Hash {});
-   REQUIRE(meta.GetCppName() == CppNameOf<T>());
-   REQUIRE(meta.GetName() == NameOf<T>());
-   REQUIRE(meta.GetInfo() == InfoOf<T>());
-   REQUIRE(meta.GetFiles() == FilesOf<T>());
-   REQUIRE(meta.GetSuffix() == SuffixOf<T>());
-   REQUIRE(meta.GetVersionMajor() == VersionOf<T>().Major);
-   REQUIRE(meta.GetVersionMinor() == VersionOf<T>().Minor);
+   REQUIRE(meta.GetCppName() == CppNameOf<Deref<T>>());
+   REQUIRE(meta.GetName() == NameOf<Deref<T>>());
+   REQUIRE(meta.GetInfo() == InfoOf<Deref<T>>());
+   REQUIRE(meta.GetFiles() == FilesOf<Deref<T>>());
+   REQUIRE(meta.GetSuffix() == SuffixOf<Deref<T>>());
+   REQUIRE(meta.GetVersionMajor() == VersionOf<Deref<T>>().Major);
+   REQUIRE(meta.GetVersionMinor() == VersionOf<Deref<T>>().Minor);
 
    IF_LANGULUS_MANAGED_REFLECTION(REQUIRE(meta.GetID() != 0));
    IF_LANGULUS_MANAGED_REFLECTION(REQUIRE(meta.GetBoundaries().empty()));
@@ -223,26 +223,26 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    else
       REQUIRE(meta.GetOrigin() == nullptr);
    
-   if constexpr (CT::Complete<Deptr<T>>)
-      REQUIRE(meta.GetDeptr() == MetaDataOf<Deptr<T>>());
+   if constexpr (CT::Complete<Deptr<Deref<T>>>)
+      REQUIRE(meta.GetDeptr() == MetaDataOf<Deptr<Deref<T>>>());
    else
       REQUIRE(meta.GetDeptr() == nullptr);
    
-   REQUIRE(meta.GetDecvqAll() == MetaDataOf<DecvqAll<T>>());
-   REQUIRE(meta.GetDecvq() == MetaDataOf<Decvq<T>>());
+   REQUIRE(meta.GetDecvqAll() == MetaDataOf<DecvqAll<Deref<T>>>());
+   REQUIRE(meta.GetDecvq() == MetaDataOf<Decvq<Deref<T>>>());
    REQUIRE(meta.AddPtr() == nullptr);
    REQUIRE(meta.AddConst() == nullptr);
    
-   REQUIRE(meta.GetSize() == sizeof(T));
-   REQUIRE(meta.GetAlignment() == alignof(T));
+   REQUIRE(meta.GetSize() == sizeof(Deref<T>));
+   REQUIRE(meta.GetAlignment() == alignof(Deref<T>));
    REQUIRE(meta.IsConstant() == false);      
-   REQUIRE(meta.IsDeep() == CT::Deep<T>);
-   REQUIRE(meta.IsPOD() == CT::POD<T>);
-   REQUIRE(meta.IsNullable() == CT::Nullable<T>);
-   REQUIRE(meta.IsAbstract() == CT::Abstract<T>);
-   REQUIRE(meta.GetAllocationPage() == ::std::max(Alignment, Roof2(sizeof(T))));
+   REQUIRE(meta.IsDeep() == CT::Deep<Deref<T>>);
+   REQUIRE(meta.IsPOD() == CT::POD<Deref<T>>);
+   REQUIRE(meta.IsNullable() == CT::Nullable<Deref<T>>);
+   REQUIRE(meta.IsAbstract() == CT::Abstract<Deref<T>>);
+   REQUIRE(meta.GetAllocationPage() == (Roof2(sizeof(T) * 256 <= LANGULUS_MIN_POOL ? LANGULUS_MIN_POOL : sizeof(T) * 256)));
 
-   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == CT::GetPoolTactic<T>()));
+   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == CT::GetPoolTactic<Deref<T>>()));
    IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolchain() == nullptr));
    REQUIRE(meta.HasGetHashMethod() == false);
 
@@ -251,22 +251,22 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.GetReferConstructor() != nullptr);
    REQUIRE(meta.GetCopyConstructor() != nullptr);
    REQUIRE(meta.GetDisownConstructor() != nullptr);
-   REQUIRE(meta.GetCloneConstructor() != nullptr);
+   REQUIRE(meta.GetCloneConstructor() == nullptr);
    REQUIRE(meta.GetMoveConstructor() != nullptr);
    REQUIRE(meta.GetAbandonConstructor() != nullptr);
    
-   REQUIRE(meta.GetDestructor() != nullptr);
+   REQUIRE(meta.GetDestructor() == nullptr);
    REQUIRE(meta.GetComparer() != nullptr);
 
    REQUIRE(meta.GetReferAssigner() != nullptr);
    REQUIRE(meta.GetCopyAssigner() != nullptr);
    REQUIRE(meta.GetDisownAssigner() != nullptr);
-   REQUIRE(meta.GetCloneAssigner() != nullptr);
+   REQUIRE(meta.GetCloneAssigner() == nullptr);
    REQUIRE(meta.GetMoveAssigner() != nullptr);
    REQUIRE(meta.GetAbandonAssigner() != nullptr);
 
    REQUIRE(meta.GetResolver() == nullptr);
-   REQUIRE(meta.GetHasher() == nullptr);
+   REQUIRE(meta.GetHasher() != nullptr);
    REQUIRE(meta.GetReferencer() == nullptr);
    REQUIRE(meta.GetDispatcher() == nullptr);
    REQUIRE(meta.GetConcrete() == nullptr);
@@ -412,7 +412,8 @@ TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]",
 }
 
 TEMPLATE_TEST_CASE("Reflecting non-abstract types", "[rtti]",
-   int, nullptr_t,
+   //nullptr_t, // shouldn't compile
+   int,
    ImpureVirtual,
    InheritedAbstract1ButPrivate,
    InheritedAbstract2ButPrivate,

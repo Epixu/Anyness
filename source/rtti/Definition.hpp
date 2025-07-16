@@ -126,7 +126,7 @@ namespace Langulus::RTTI::Inner
       // Precomputed lowercase nameof                                   
       Lowercase mNameOfLowercased;
       // Each reflection may or may not have some info                  
-      ::std::string mInfoOf = "<no info provided>";
+      ::std::string mInfoOf;
 
       // Major version                                                  
       unsigned mVersionMajor IF_SAFE(= 1);

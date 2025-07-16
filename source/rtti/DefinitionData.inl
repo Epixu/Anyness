@@ -104,7 +104,7 @@ namespace Langulus::RTTI
          "you have equipped your type (or its base) with an empty CTTI_Named");
 
       // Data types canonically begin with a capital letter             
-      definition.mNameOf    = token;
+      definition.mNameOf = token;
       definition.mNameOf[0] = ::std::toupper(definition.mNameOf[0]);
       definition.mNameOfLowercased = Inner::ToLowercase(token);
 
@@ -130,47 +130,60 @@ namespace Langulus::RTTI
       else if constexpr (CT::Complete<Decay<T>>)
          definition.mOrigin = Reflect<Decay<T>>();
 
-      // Reflect the denser type                                        
-      if constexpr (CT::Sparse<T> and CT::Complete<Deptr<T>>)
-         definition.mDeptr = Reflect<Deptr<T>>();
-
       // Reflect the dequalified types and generate/propagate IDs       
       using DTOnce = Decvq<T>;
-      if constexpr (not ::std::same_as<T, DTOnce>) {
-         // T has qualifiers, strip one level of those                  
+      using DTAll  = DecvqAll<T>;
+      if constexpr (not ::std::same_as<T, DTAll>) {
+         // T has qualifiers                                            
          definition.mDecvqOnce = Reflect<DTOnce>();
-         // Always propagate the dequalified ID                         
-         IF_LANGULUS_MANAGED_REFLECTION(definition.mID = definition.mDecvqOnce->mID);
-         if constexpr (CT::Constant<T>)
-            const_cast<DefinitionData*>(definition.mDecvqOnce)->mAddConst = &definition;
+         definition.mDecvqAll  = Reflect<DTAll>();
+         
+         if constexpr (CT::Constant<T>) {
+            auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
+            decvq->mAddConst = &definition;
+         }
       }
       else {
          // T has no qualifiers                                         
          definition.mDecvqOnce = &definition;
+         definition.mDecvqAll  = &definition;
+      }
 
+      if constexpr (CT::Sparse<T>) {
+         if constexpr (CT::Complete<Deptr<T>>) {
+            // Reflect the denser type                                  
+            definition.mDeptr = Reflect<Deptr<T>>();
+            auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
+            deptr->mAddPtr = definition.mDecvqOnce;
+
+            #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+               // Propagate ID only if there's exactly one level of     
+               // indirection, because that will be encoded in the      
+               // packed meta data pointer - otherwise we need a new ID 
+               if constexpr (CT::Dense<Deptr<T>>)
+                  definition.mID = deptr->mID;
+               else
+                  definition.mID = Instance.ReserveDataID(&definition);
+            #endif
+         }
+         else {
+            // An incomplete sparse type always has a dedicated ID      
+            definition.mDeptr = reinterpret_cast<DefinitionData*>(intptr_t {1});
+            auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
+            decvq->mID = Instance.ReserveDataID(&definition);
+            definition.mID = decvq->mID;
+         }
+      }
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         // Propagate ID only if there's exactly one level of           
-         // indirection, because that will be encoded in the structured 
-         // meta data pointer. Otherwise we need a new ID to be reserved
-         if (definition.mDeptr and not definition.mDeptr->mDeptr)
-            definition.mID = definition.mDeptr->mID;
-         else
-            definition.mID = Instance.ReserveDataID(&definition);
+      else if constexpr (CT::Convoluted<T>) {
+         // Const/volatile dense encountered, propagate ID              
+         definition.mID = definition.mDecvqOnce->mID;
+      }
+      else {
+         // Origin type encountered, time to reserve a new ID           
+         definition.mID = Instance.ReserveDataID(&definition);
+      }
       #endif
-      }
-
-      using DTAll = DecvqAll<T>;
-      if constexpr (not ::std::same_as<T, DTAll>)
-         definition.mDecvqAll = Reflect<DTAll>();
-      else
-         definition.mDecvqAll = &definition;
-
-      if (definition.mDeptr) {
-         auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
-         deptr->mAddPtr = definition.mDecvqOnce;
-         if constexpr (CT::Constant<T>)
-            deptr->mAddConst = &definition;
-      }
 
       // Reflect the concrete type                                      
       if constexpr (CT::Concretizable<T>) {

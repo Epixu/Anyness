@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::ReflectAs<T>:                   
    /// 1. Specialize for T/concept with Enabled set to true and desired Type  
    /// 2. Add a public `using CTTI_ReflectAs = <DesiredType>;` in T           
@@ -21,14 +20,20 @@ namespace Langulus::CTTI
       using Type = T;
       static constexpr bool Enabled = false;
    };
-   
-} // namespace Langulus::CTTI
+
+   /// nullptr_t is not reflectable                                           
+   template<>
+   struct ReflectAs<nullptr_t> {
+      using Type = void;
+      static constexpr bool Enabled = true;
+   };
+
+}
 
 namespace Langulus::CT
 {
    namespace Inner
    {
-
       /// Convenience function that checks if ReflectAs is not void, which    
       /// would mean that the type is not reflectable at all                  
       template<CT::NotReference T>
@@ -65,9 +70,7 @@ namespace Langulus::CT
          }
          else return static_cast<T*>(nullptr);
       }
-
-   } // namespace Langulus::CT::Inner
-
+   }
 
    /// Check if all of the types are reflectable                              
    template<class...T>
@@ -80,5 +83,4 @@ namespace Langulus::CT
    /// by reducing unnessesary template instantiations of redundant types     
    template<class T>
    using ReflectedAs = Deptr<decltype(Inner::IsReflectable<Deref<T>>())>;
-
-} // namespace Langulus::CT
+}
