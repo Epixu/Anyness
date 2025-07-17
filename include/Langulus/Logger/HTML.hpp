@@ -39,6 +39,8 @@ namespace Langulus::Logger
       LANGULUS_API(LOGGER) void Write(Style) const noexcept;
       LANGULUS_API(LOGGER) void NewLine() const noexcept;
       LANGULUS_API(LOGGER) void Clear() const noexcept;
+      LANGULUS_API(LOGGER) auto GetFilename() const noexcept -> ::std::string_view;
+
    };
 
 } // namespace Langulus::Logger

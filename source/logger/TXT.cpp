@@ -60,6 +60,11 @@ void ToTXT::Clear() const noexcept {
    WriteHeader();
 }
 
+/// Returns the output filename                                               
+auto ToTXT::GetFilename() const noexcept -> ::std::string_view {
+   return mFilename;
+}
+
 /// Write file header - just a timestamp                                      
 void ToTXT::WriteHeader() const {
    Write("Log started - ");

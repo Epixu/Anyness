@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Allocatable<T>:                 
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Allocatable = Yes/No;` in T                
@@ -19,7 +18,6 @@ namespace Langulus::CTTI
    struct Allocatable {
       static constexpr bool Enabled = true;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Allocatable);

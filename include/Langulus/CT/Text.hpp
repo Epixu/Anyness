@@ -13,7 +13,6 @@
 
 namespace Langulus::CT
 {
-
    /// Check if all T are literals or bounded character arrays                
    template<class...T>
    concept TextLiteral = ((
@@ -32,12 +31,10 @@ namespace Langulus::CT
    concept TextRange = ((::std::ranges::contiguous_range<T>
        and CT::Character<TypeOf<T>>
       ) and ...);
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Text<T>:                        
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Text = Yes;` in T                          
@@ -47,7 +44,6 @@ namespace Langulus::CTTI
                                    or CT::TextPointer<T>
                                    or CT::TextRange<T>;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Text);

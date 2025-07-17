@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Abstract<T>:                    
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Abstract = Yes<>;` in T                    
@@ -19,7 +18,6 @@ namespace Langulus::CTTI
    struct Abstract {
       static constexpr bool Enabled = ::std::is_abstract_v<T>;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Abstract);

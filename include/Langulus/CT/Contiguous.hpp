@@ -12,7 +12,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Contiguous<T>:                  
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Contiguous = Yes/No;` in T                 
@@ -20,7 +19,6 @@ namespace Langulus::CTTI
    struct Contiguous {
       static constexpr bool Enabled = ::std::ranges::contiguous_range<T>;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Contiguous);

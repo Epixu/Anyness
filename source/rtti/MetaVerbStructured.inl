@@ -16,7 +16,12 @@ namespace Langulus::RTTI::Inner
 
    template<unsigned ID_SIZE>
    constexpr MetaVerbStructured_X8<ID_SIZE>::MetaVerbStructured_X8(DefinitionVerb const* d) noexcept
-      : Base {d ? d->mID : 0} {}
+      : Base {d ? d->mID : 0} {
+      if (d) {
+         reversible = (d->mNameOfReverse != "");
+         contextless = d->mCurrentBoundary.mContextless != nullptr;
+      }
+   }
 
    template<unsigned ID_SIZE>
    constexpr auto MetaVerbStructured_X8<ID_SIZE>::operator = (nullptr_t)
@@ -29,6 +34,11 @@ namespace Langulus::RTTI::Inner
    constexpr auto MetaVerbStructured_X8<ID_SIZE>::operator = (DefinitionVerb const* d)
    noexcept -> MetaVerbStructured_X8& {
       Base::operator = (d ? d->mID : 0);
+
+      if (d) {
+         reversible = (d->mNameOfReverse != "");
+         contextless = d->mCurrentBoundary.mContextless != nullptr;
+      }
       return *this;
    }
 

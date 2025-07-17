@@ -35,7 +35,6 @@ namespace Langulus::Anyness
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Resolvable<T>:                  
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Resolvable = Yes/No;` in T                 
@@ -48,7 +47,6 @@ namespace Langulus::CTTI
          { a.GetResolved() } -> ::std::same_as<Anyness::Any>;
       };
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Resolvable);

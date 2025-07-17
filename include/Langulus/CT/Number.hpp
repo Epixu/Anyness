@@ -12,7 +12,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Number<T>:                      
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Number = Yes/No;` in T                     
@@ -20,7 +19,6 @@ namespace Langulus::CTTI
    struct Number {
       static constexpr bool Enabled = CT::Integer<T> or CT::Real<T>;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Number);

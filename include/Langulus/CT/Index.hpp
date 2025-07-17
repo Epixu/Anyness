@@ -4,7 +4,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Index<T>:                       
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Index = Yes;` in T                         
@@ -12,8 +11,7 @@ namespace Langulus::CTTI
    struct Index {
       static constexpr bool Enabled = CT::Integer<T>;
    };
-
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Index);
 
@@ -43,8 +41,7 @@ namespace Langulus::Index
       struct Random   : Common<true>  {};
       struct First    : Common<true>  {};
       struct Last     : Common<true>  {};
-
-   } // namespace Langulus::Anyness::Index::Inner
+   }
 
    /// Equivalent to the container's initialized count                        
    constexpr auto All = Inner::All {};
@@ -101,6 +98,6 @@ namespace Langulus::Index
          return index != ::std::numeric_limits<T>::max();
       }
    };
-   template<class T> At(T&&) -> At<T>;
 
-} // namespace Langulus::Index
+   template<class T> At(T&&) -> At<T>;
+}

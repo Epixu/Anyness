@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Character<T>:                   
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Character = Yes;` in T                     
@@ -24,7 +23,6 @@ namespace Langulus::CTTI
          or ::std::same_as<Decvq<Deref<T>>, char16_t>
          or ::std::same_as<Decvq<Deref<T>>, char32_t>;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Character);

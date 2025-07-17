@@ -5,7 +5,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Used to define a custom file extensions for serialization.             
    /// Can be used in two ways to satisfy CT::Files<T>:                       
    /// 1. Specialize for T/concept                                            
@@ -15,7 +14,6 @@ namespace Langulus::CTTI
       static constexpr Literal Name = "<missing file extensions>";
       static constexpr bool Enabled = false;
    };
-
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Files);

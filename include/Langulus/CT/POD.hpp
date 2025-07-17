@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Affects CT::POD<T>                                                     
    ///   @note: is_trivially_destructible_v is required to strenghten the     
    ///      is_trivial_v check on GCC/Clang due to compiler bugs; MSVC is fine
@@ -25,7 +24,6 @@ namespace Langulus::CTTI
          )
       );
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(POD);

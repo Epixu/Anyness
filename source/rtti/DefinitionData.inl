@@ -20,6 +20,8 @@
 #include <Langulus/CT/POD.hpp>
 #include <Langulus/CT/Concrete.hpp>
 #include <Langulus/CT/Producer.hpp>
+#include <Langulus/CT/Convertible.hpp>
+#include <Langulus/CT/DefineConst.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
 #include "Langulus/SuffixOf.hpp"
@@ -30,6 +32,9 @@
 #else
    #include "Registry.hpp"
 #endif
+
+#include "DefinitionVerb.hpp"
+#include "DefinitionConst.hpp"
 
 
 namespace Langulus::RTTI
@@ -392,12 +397,6 @@ namespace Langulus::RTTI
                   // for security reasons                               
                   return *t1T == *t2T ? Compared::Equal : Compared::Unordered;
                }
-               /*else if constexpr (CT::Fundamental<DTAll>) {
-                  // Fundamental types are always strong-ordered        
-                  if (*t1T == *t2T)  return Compared::Equal;
-                  if (*t1T <  *t2T)  return Compared::Less;
-                  return Compared::Greater;
-               }*/
                else if constexpr (CT::ComparableStrong<DTAll>) {
                   switch (*t1T <=> *t2T) {
                   case ::std::strong_ordering::less:        return Compared::Less;
@@ -470,14 +469,122 @@ namespace Langulus::RTTI
          }
       #endif
       
+      using BASES = BasesOf<T>;
+      if constexpr (not BASES::Empty) {
+         // Set reflected bases                                         
+         BASES::ForEach([&definition]<class B>{
+            definition.mCurrentBoundary.mBases.push_back(
+               Base::From<T, B>()
+            );
+         });
+      }
+
+      using VERBS = VerbsOf<T>;
+      if constexpr (not VERBS::Empty) {
+         // Set reflected abilities                                     
+         VERBS::ForEach([&definition]<class V>{
+            static_assert(CT::DefineVerb<V>,
+               "Verb list must contain only verbs");
+            static_assert(CT::Decayed<V>,
+               "Verbs must be fully decayed when listed");
+            static_assert(V::template IsAble<T>,
+               "T doesn't have the required verb method/specialization");
+
+            definition.mCurrentBoundary.mVerbs.emplace(
+               DefinitionVerb::Reflect<V>(),
+               [](void* self, Flow::Verb& verb) -> bool {
+                  auto in = static_cast<T*>(self);
+                  return V::template In<T>::Execute(*in, verb);
+               }
+            );
+         });
+      }
+
+      using MAPTO = MorphismsTo<T>;
+      if constexpr (not MAPTO::Empty) {
+         // Set reflected morphisms                                     
+         // @attention morphisms assume that source is initialized, but 
+         //    destination is only allocated and not yet constructed    
+         MAPTO::ForEach([&definition]<class TO>{
+            definition.mCurrentBoundary.mMorphismsTo.emplace(
+               DefinitionData::Reflect<TO>(),
+               [](void* from, void* to) {
+                  auto fromT = static_cast<T*>(from);
+                  auto toT   = static_cast<TO*>(to);
+
+                  if constexpr (requires { TO (*fromT); })
+                     new (toT) TO (*fromT);
+                  else if constexpr (requires { TO (static_cast<TO>(*fromT)); })
+                     new (toT) TO (static_cast<TO>(*fromT));
+                  else {
+                     static_assert(false,
+                        "T can't be converted to TO - add "
+                        "explicit/implicit constructors and/or cast operators"
+                     );
+                  }
+               }
+            );
+         });
+      }
+
+      using MAPFROM = MorphismsFrom<T>;
+      if constexpr (not MAPFROM::Empty) {
+         // Set reflected morphisms                                     
+         // @attention morphisms assume that source is initialized, but 
+         //    destination is only allocated and not yet constructed    
+         MAPFROM::ForEach([&definition]<class FROM>{
+            definition.mCurrentBoundary.mMorphismsFrom.emplace(
+               DefinitionData::Reflect<FROM>(),
+               [](void* from, void* to) {
+                  auto fromT = static_cast<FROM*>(from);
+                  auto toT   = static_cast<T*>(to);
+
+                  if constexpr (requires { T (*fromT); })
+                     new (toT) T (*fromT);
+                  else if constexpr (requires { T (static_cast<T>(*fromT)); })
+                     new (toT) T (static_cast<T>(*fromT));
+                  else {
+                     static_assert(false,
+                        "FROM can't be converted to T - add "
+                        "explicit/implicit constructors and/or cast operators"
+                     );
+                  }
+               }
+            );
+         });
+      }
+
+      using CONSTANTS = NamedValuesOf<T>;
+      if constexpr (not CONSTANTS::Empty) {
+         // Reflected named values if this type is origin type          
+         CONSTANTS::ForEach([&definition]<auto V>{
+            definition.mNamedValues.push_back(
+               DefinitionConst::Reflect<V>()
+            );
+         });
+      }
+
+      // Set reflected members                                          
+      if constexpr (requires { typename T::CTTI_Members; }) {
+         using List = typename T::CTTI_Members;
+
+         List::ForEach([&definition]<class M>{
+            // Make sure that members don't come from inheritance       
+            if constexpr (CT::Exact<T, typename M::Owner>) {
+               Logger::Verbose<VERBOSE>("Adding member: ", NameOf<M>());
+               definition.mMembers.emplace_back(M {});
+            }
+         });
+      }
+
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         Logger::VerboseRaw<VERBOSE>(
+         Logger::Verbose<VERBOSE>(
             "Data ", Logger::Cyan, definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             " registered from ", Boundary
          );
       #else
-         Logger::VerboseRaw<VERBOSE>(
+         Logger::Verbose<VERBOSE>(
             Logger::Green, "Data ", Logger::Cyan, definition.mNameOf,
             Logger::Green, " reflected"
          );

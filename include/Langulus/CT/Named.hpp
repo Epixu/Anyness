@@ -5,7 +5,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Used to define an alternative token for the data definition, as        
    /// opposed to the C++ one                                                 
    /// Types defined with the same token will use the same definition, unless 
@@ -31,14 +30,12 @@ namespace Langulus::CTTI
    /// to use <Langulus/Values.hpp> instead, as it is two levels above this.  
    /// the Named pattern instructs how NameOf works, which is in turn used by 
    /// NamedValues to instruct how such constants are reflected.              
-
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Named);
 
 namespace Langulus::CT
 {
-
    /// Check if a constant has a name associate with it                       
    template<auto E>
    concept NamedValue = CTTI::NamedValue<E>::Enabled;
@@ -46,5 +43,4 @@ namespace Langulus::CT
    /// Check if a constant doesn't have a name associate with it              
    template<auto E>
    concept NotNamedValue = not NamedValue<E>;
-
-} // namespace Langulus::CT
+}

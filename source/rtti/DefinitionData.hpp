@@ -115,16 +115,16 @@ namespace Langulus::RTTI
       // unloaded, we simply pick a pointer from another. Once the data 
       // is reflected from the MainBoundary, the maps are cleared and   
       // only the main code is used, because it is most persistent.     
-      using FUnary = void(*)(void* self);
-      using FBinary = void(*)(void* from, void* to);
-      using FDescribe = void(*)(void* self, const Anyness::Many& describe);
-      using FCompare = Compared(*)(void* lhs, void* rhs);
-      using FResolve = Anyness::Any(*)(void* self);
-      using FHash = Hash(*)(void* self);
-      using FReference = int(*)(void* self, int modifier);
-      using FDispatch = bool(*)(void* self, Flow::Verb& verb);
-      using FAccessMember = void* (*)(void* owner);
-      using FTagRetriever = DefinitionTag const* (*)(int index);
+      using FUnary         = void (*)(void* self);
+      using FBinary        = void (*)(void* from, void* to);
+      using FDescribe      = void (*)(void* self, const Anyness::Many& describe);
+      using FCompare       = Compared (*)(void* lhs, void* rhs);
+      using FResolve       = Anyness::Any (*)(void* self);
+      using FHash          = Hash (*)(void* self);
+      using FReference     = int (*)(void* self, int modifier);
+      using FDispatch      = bool (*)(void* self, Flow::Verb& verb);
+      using FAccessMember  = void* (*)(void* owner);
+      using FTagRetriever  = DefinitionTag const* (*)(int index);
       using FTypeRetriever = DefinitionData const* (*)();
       
       /// Type-erased member variable reflection                              
@@ -175,7 +175,7 @@ namespace Langulus::RTTI
       };
       
       using MemberList   = ::std::vector<Member>;
-      using AbilityList  = ::std::unordered_map<DefinitionVerb const*, FDispatch>;
+      using VerbList     = ::std::unordered_map<DefinitionVerb const*, FDispatch>;
       using BaseList     = ::std::vector<Base>;
       using MorphismList = ::std::unordered_map<DefinitionData const*, FBinary>;
       using ValuesList   = ::std::vector<DefinitionConst const*>;
@@ -245,16 +245,16 @@ namespace Langulus::RTTI
          // invocation of Verbs::Create in the context of the producer  
          FTypeRetriever mProducer = nullptr;
 
-         // List of reflected members of the origin type                
+         // List of reflected members                                   
          MemberList mMembers;
          
-         // List of reflected abilities of the origin type              
-         AbilityList mAbilities;
+         // List of reflected abilities                                 
+         VerbList mVerbs;
 
-         // List of reflected bases of the origin type                  
+         // List of reflected bases                                     
          BaseList mBases;
          
-         // List of reflected converters to/from the origin type        
+         // List of reflected converters                                
          MorphismList mMorphismsTo;
          MorphismList mMorphismsFrom;
       };

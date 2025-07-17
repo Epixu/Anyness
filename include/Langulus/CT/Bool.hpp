@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Bool<T>:                        
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Bool = Yes;` in T                          
@@ -19,7 +18,6 @@ namespace Langulus::CTTI
    struct Bool {
       static constexpr bool Enabled = ::std::same_as<T, bool>;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Bool);

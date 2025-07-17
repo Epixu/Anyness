@@ -26,6 +26,7 @@ namespace Langulus::Logger
       void Write(Style) const noexcept {}
       void NewLine() const noexcept {}
       void Clear() const noexcept {}
+      auto GetFilename() const noexcept -> ::std::string_view;
    };
 
 } // namespace Langulus::Logger

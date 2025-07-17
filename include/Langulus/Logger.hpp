@@ -203,6 +203,7 @@ namespace Langulus::Logger
       virtual void Write(Style) const noexcept = 0;
       virtual void NewLine() const noexcept = 0;
       virtual void Clear() const noexcept = 0;
+      virtual auto GetFilename() const noexcept -> ::std::string_view = 0;
 
       LANGULUS_API(LOGGER) static ::std::string GetAdvancedTime() noexcept;
       LANGULUS_API(LOGGER) static ::std::string GetSimpleTime()   noexcept;
@@ -249,6 +250,7 @@ namespace Langulus::Logger
       LANGULUS_API(LOGGER) void Write(Style) const noexcept;
       LANGULUS_API(LOGGER) void NewLine() const noexcept;
       LANGULUS_API(LOGGER) void Clear() const noexcept;
+      LANGULUS_API(LOGGER) auto GetFilename() const noexcept -> ::std::string_view;
 
       /// Additional services                                                 
       void Write(const CT::Loggable auto& anything) const noexcept {
@@ -282,22 +284,6 @@ namespace Langulus::Logger
    ///                                                                        
    LANGULUS_API(LOGGER) extern State GlobalState;
 
-   
-   inline void AttachDuplicator(Interface* d) noexcept {
-      GlobalState.AttachDuplicator(d);
-   }
-
-   inline void DettachDuplicator(Interface* d) noexcept {
-      GlobalState.DettachDuplicator(d);
-   }
-
-   inline void AttachRedirector(Interface* r) noexcept {
-      GlobalState.AttachRedirector(r);
-   }
-
-   inline void DettachRedirector(Interface* r) noexcept {
-      GlobalState.DettachRedirector(r);
-   }
    
    /// A general new-line write function that continues the last intent/style 
    template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
@@ -921,5 +907,25 @@ namespace Langulus::Logger
          }
          else return UnusedScope {};
       #endif
+   }
+   
+   inline void AttachDuplicator(Interface* d) noexcept {
+      GlobalState.AttachDuplicator(d);
+      Logger::Info("Logging duplicator attached: ", d->GetFilename());
+   }
+
+   inline void DettachDuplicator(Interface* d) noexcept {
+      GlobalState.DettachDuplicator(d);
+      Logger::Info("Logging duplicator dettached: ", d->GetFilename());
+   }
+
+   inline void AttachRedirector(Interface* r) noexcept {
+      GlobalState.AttachRedirector(r);
+      Logger::Info("Logging redirector attached: ", r->GetFilename());
+   }
+
+   inline void DettachRedirector(Interface* r) noexcept {
+      GlobalState.DettachRedirector(r);
+      Logger::Info("Logging redirector dettached: ", r->GetFilename());
    }
 }

@@ -12,7 +12,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Referenced<T>:                  
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Referenced = Yes;` in T                    
@@ -20,14 +19,12 @@ namespace Langulus::CTTI
    struct Referenced {
       static constexpr bool Enabled = false;
    };
-
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Referenced);
 
 namespace Langulus
 {
-
    ///                                                                        
    /// Base types off this one, to make them CT::Referenced and provide the   
    /// required interface for it                                              
@@ -69,5 +66,4 @@ namespace Langulus
          return mReferences;
       }
    };
-
-} // namespace Langulus
+}

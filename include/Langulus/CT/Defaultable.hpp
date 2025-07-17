@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Defaultable<T>:                 
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Defaultable = Yes;` in T                   
@@ -19,7 +18,6 @@ namespace Langulus::CTTI
    struct Defaultable {
       static constexpr bool Enabled = not CT::Abstract<T> and requires { T {}; };
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Defaultable);

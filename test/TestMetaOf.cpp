@@ -60,14 +60,19 @@ namespace Langulus::Verbs
 
       /// Helps you specialize verbs for types/concepts                       
       /// You can also do that, by adding a `void Create(Flow::Verb&)` in T   
-      template<class T>
-      struct In {};
+      template<class T> struct In {
+         static bool Execute(T& context, Flow::Verb& v)
+         requires (requires { context.Create(v); }) {
+            Logger::Special("Verbs::Create executed using method in: ", NameOf<T>());
+            return context.Create(v);
+         }
+      };
 
       /// Checks whether T is capable of doing this verb                      
       template<class T>
-      static constexpr bool IsAble =
-              requires (T& t, Flow::Verb& v) { t.Create(v); }
-           or requires (T& t, Flow::Verb& v) { Create::In<T>::Execute(t, v); };
+      static constexpr bool IsAble = requires (T& t, Flow::Verb& v) {
+         Create::In<T>::Execute(t, v);
+      };
    };
 
    /// Specializing for any other type                                        
@@ -147,7 +152,7 @@ namespace
       using CTTI_Abstract  = Yes<>;
       using CTTI_Bases     = ImplicitlyReflectedData;
       using CTTI_Verbs     = Verbs::Create;
-      using CTTI_MapsOnto  = int;
+      using CTTI_MapsTo    = int;
       using CTTI_MapsFrom  = Pi;
       using CTTI_Values    = No<>;
 
@@ -172,7 +177,7 @@ namespace
          : member {314} {}
 
       using CTTI_Bases     = ImplicitlyReflectedData;
-      using CTTI_MapsOnto  = int;
+      using CTTI_MapsTo    = int;
       using CTTI_MapsFrom  = Pi;
       using CTTI_Values    = No<>;
    };
@@ -505,7 +510,7 @@ SCENARIO("Reflecting a tag", "[rtti]") {
    const TMeta meta = MetaTagOf<Tags::Name>();
 
    REQUIRE(meta != nullptr);
-   REQUIRE(meta.GetName() == "Name");
+   REQUIRE(meta.GetName() == "name");
    REQUIRE(meta.GetInfo() == "Used for tagging names");
    REQUIRE(meta.GetVersionMajor() == 7);
    REQUIRE(meta.GetVersionMinor() == 10);

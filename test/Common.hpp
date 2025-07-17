@@ -597,10 +597,10 @@ namespace Verbs
 struct ImplicitlyReflectedData {
    enum Named { One, Two, Three };
 
-   using CTTI_POD    = Yes;
+   using CTTI_POD    = Yes<>;
    using CTTI_Files  = Yes<"ASE">;
    using CTTI_Typed  = Named;
-   using CTTI_Values = Constants<One, Two, Three>;
+   using CTTI_Values = Values<One, Two, Three>;
 
    Named v = One;
 
@@ -693,7 +693,7 @@ public:
 
 struct AnotherTypeWithSimilarilyNamedValues {
    enum Named {One = 501, Two, Three};
-   using CTTI_Values = Constants<One, Two, Three>;
+   using CTTI_Values = Values<One, Two, Three>;
    using CTTI_Named  = Yes<"YetAnotherNamedType">;
 
    int v = One;

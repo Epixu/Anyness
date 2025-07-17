@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Exception<T>:                   
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Exception = Yes/No;` in T                  
@@ -19,14 +18,12 @@ namespace Langulus::CTTI
    struct Exception {
       static constexpr bool Enabled = false;
    };
-
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(Exception);
 
 namespace Langulus
 {
-
    ///                                                                        
    ///   General exception                                                    
    ///                                                                        
@@ -52,6 +49,6 @@ namespace Langulus
          constexpr Exception(const char*, const char*) noexcept {}
       #endif
    };
-   static_assert(CT::Exception<Exception>);
 
-} // namespace Langulus
+   static_assert(CT::Exception<Exception>);
+}

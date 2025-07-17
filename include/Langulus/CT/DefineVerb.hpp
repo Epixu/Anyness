@@ -12,16 +12,6 @@ namespace Langulus
       static constexpr float Precedence = static_cast<float>(PRECEDENCE);
       static constexpr bool Enabled = true;
    };
-
-   /*namespace Anyness
-   {
-      struct Many;
-   }
-
-   namespace Flow
-   {
-      struct Verb;
-   }*/
 }
 
 namespace Langulus::CTTI
@@ -52,6 +42,15 @@ namespace Langulus::CTTI
    struct DefineVerbOperator {
       static constexpr Literal Positive = "<not a verb>";
       static constexpr Literal Negative = "<not a verb>";
+      static constexpr bool Enabled = false;
+   };
+
+   /// Can be used in two ways to satisfy CT::Verbs<T>:                       
+   /// 1. Specialize for T/concept                                            
+   /// 2. Add a public `using CTTI_Verbs = <single type or Types<...>>;` in T 
+   template<class T>
+   struct Verbs {
+      using Type = void;
       static constexpr bool Enabled = false;
    };
 }
@@ -108,4 +107,44 @@ namespace Langulus::RTTI
       else
          return Literal {""};
    }
+}
+
+namespace Langulus::CT
+{
+   namespace Inner
+   {
+      /// Helper function to extract reflected verbs                          
+      template<class T>
+      consteval CT::Typelist auto GetVerbs() {
+         static_assert(not ::std::is_reference_v<T>,
+            "Strip references first");
+         static_assert(not CT::Convoluted<T>,
+            "Strip constness/volatility first");
+
+         if constexpr (CTTI::Verbs<T>::Enabled) {
+            // Checked externally, T doesn't have to be complete        
+            using LIST = typename CTTI::Verbs<T>::Type;
+            if constexpr (CT::Typelist<LIST>)
+               return LIST {};
+            else
+               return Types<LIST> {};
+         }
+         else if constexpr (requires { typename T::CTTI_Verbs; }) {
+            // Checked internally, T has to be a complete type          
+            using LIST = typename T::CTTI_Verbs;
+            if constexpr (CT::Typelist<LIST>)
+               return LIST {};
+            else
+               return Types<LIST> {};
+         }
+         else return Types<void> {};
+      };
+   }
+}
+
+namespace Langulus
+{
+   /// Get the reflected verbs, CT::Void if none                              
+   template<class T>
+   using VerbsOf = decltype(CT::Inner::GetVerbs<Decvq<Deref<T>>>());
 }

@@ -110,6 +110,11 @@ void ToHTML::Clear() const noexcept {
    WriteHeader();
 }
 
+/// Returns the output filename                                               
+auto ToHTML::GetFilename() const noexcept -> ::std::string_view {
+   return mFilename;
+}
+
 /// Write file header - general HTML styling options, etc.                    
 void ToHTML::WriteHeader() const {
    mFile << "<!DOCTYPE html><html>\n";

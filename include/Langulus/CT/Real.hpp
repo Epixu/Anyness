@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Real<T>:                        
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Real = Yes;` in T                          
@@ -19,7 +18,6 @@ namespace Langulus::CTTI
    struct Real {
       static constexpr bool Enabled = ::std::floating_point<T>;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Real);

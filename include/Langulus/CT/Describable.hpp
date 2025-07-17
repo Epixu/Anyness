@@ -46,12 +46,10 @@ namespace Langulus
       LANGULUS(ALWAYS_INLINED)
       const auto* operator -> () const noexcept { return &mValue; }
    };
-
-} // namespace Langulus
+}
 
 namespace Langulus::CT
 {
-
    /// Check if the T is descriptor-constructible                             
    /// It has to have the T (Describe&&) constructor in order to be so        
    template<class...T>
@@ -69,5 +67,4 @@ namespace Langulus::CT
        and requires (T&...lhs, const Anyness::Many& rhs) {
          ((lhs = Describe {rhs}), ...);
        };
-
-} // namespace Langulus::CT
+}

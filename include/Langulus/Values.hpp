@@ -14,13 +14,25 @@ namespace Langulus
    ///                                                                        
    /// Can be used to handle value sequences at compile-time                  
    ///                                                                        
+   template<auto...EN>
+   struct Values;
+
+   /// Empty values list                                                      
+   template<>
+   struct Values<> {
+      static constexpr bool Empty = true;
+      static constexpr size_t Count = 0;
+   };
+
+   /// Filled values list                                                     
    template<auto E1, auto...EN>
-   struct Values {
+   struct Values<E1, EN...> {
       using FirstType = decltype(E1);
       static constexpr auto First = E1;
       static constexpr bool Empty = false;
       static constexpr size_t Count = sizeof...(EN) + 1;
 
+   protected:
       template<unsigned I>
       static consteval auto AtInner() {
          if constexpr (I == 0)
@@ -31,7 +43,8 @@ namespace Langulus
             static_assert(false, "Index is out of value list bounds");
       }
 
+   public:
       template<unsigned I>
-      static constexpr auto At = AtInner<I>().First;
+      static constexpr auto At = AtInner<I>();
    };
 }

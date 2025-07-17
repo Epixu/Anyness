@@ -27,7 +27,6 @@ namespace Langulus::CTTI
       using Type = void;
       static constexpr bool Enabled = true;
    };
-
 }
 
 namespace Langulus::CT
@@ -74,7 +73,8 @@ namespace Langulus::CT
 
    /// Check if all of the types are reflectable                              
    template<class...T>
-   concept Reflectable = (CT::NotVoid<Deptr<decltype(Inner::IsReflectable<Deref<T>>())>> and ...);
+   concept Reflectable = Inner::CheckSize<T...>()
+       and (CT::NotVoid<Deptr<decltype(Inner::IsReflectable<Deref<T>>())>> and ...);
 
    /// Get the type a given type is reflected as. This is very useful as a    
    /// a build-time optimization, because many type-erased containers are     

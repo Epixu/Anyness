@@ -14,7 +14,7 @@ namespace Langulus::CTTI
 {
    /// Can be used in two ways to satisfy CT::Void<T>:                        
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Void = Yes/No;` in T                       
+   /// 2. Add a public `using CTTI_Void = Yes<>/No<>;` in T                   
    template<class T>
    struct Void {
       static constexpr bool Enabled = ::std::is_void_v<T>;
@@ -22,7 +22,7 @@ namespace Langulus::CTTI
    
    /// Can be used in two ways to satisfy CT::Typelist<T>:                    
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Typelist = Yes/No;` in T                   
+   /// 2. Add a public `using CTTI_Typelist = Yes<>/No<>;` in T               
    template<class T>
    struct Typelist {
       static constexpr bool Enabled = false;
@@ -35,7 +35,7 @@ namespace Langulus::CT
    namespace Inner
    {
       /// Concepts with ::std::decay_t<T>::CTTI_Void::Enabled bug out for     
-      /// some reason. Probably because T may not be an user type, and        
+      /// some reason. Probably because T may not be a user type, and         
       /// this isn't well handled as of yet by the compiler. I work around    
       /// this by using if constexpr to constrain the compiler further        
       template<class T>
@@ -226,7 +226,8 @@ namespace Langulus
 
    ///                                                                        
    /// Type list that contains multiple non-void types                        
-   template<CT::NotTypelist T1, CT::NotTypelist T2, CT::NotTypelist...TN> requires CT::NotVoid<T1, T2, TN...>
+   template<CT::NotTypelist T1, CT::NotTypelist T2, CT::NotTypelist...TN>
+   requires CT::NotVoid<T1, T2, TN...>
    struct Types<T1, T2, TN...> {
       using CTTI_Typelist = Yes<>;
 
@@ -265,7 +266,7 @@ namespace Langulus
       static constexpr bool ForEachConstOr(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::same_as<Yes<>>;  }
                     or requires{ {lambda.template operator()<T1>()} -> ::std::same_as<No<>>; },
-            "Provided argument is not a lambda of the form []<class> -> Yes/No");
+            "Provided argument is not a lambda of the form []<class> -> Yes<>/No<>");
          if constexpr (::std::same_as<Yes<>, decltype(lambda.template operator()<T1>())>) {
             lambda.template operator()<T1>();
             return true;

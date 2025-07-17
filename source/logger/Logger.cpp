@@ -182,6 +182,11 @@ void State::Clear() const noexcept {
       attachment->Clear();
 }
 
+/// Returns the output filename, in this case, it's just the terminal         
+auto State::GetFilename() const noexcept -> ::std::string_view {
+   return "<console output>";
+}
+
 /// Execute a logger command                                                  
 ///   @param c - the command to execute                                       
 /*void State::Write(Command c) const noexcept {

@@ -11,7 +11,6 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Integer<T>:                     
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Integer = Yes;` in T                       
@@ -19,7 +18,6 @@ namespace Langulus::CTTI
    struct Integer {
       static constexpr bool Enabled = ::std::integral<T> and not CT::Bool<T>;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 LANGULUS_CTTI_CONCEPT(Integer);

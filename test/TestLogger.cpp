@@ -251,4 +251,7 @@ SCENARIO("Logging to console (stateful)", "[logger]") {
       Logger::Pop, ", and any subsequent pop shouldn't change anything");
       Logger::Line("^ just checking the above statement\n\n");
    }
+
+   Logger::DettachDuplicator(&html_test);
+   Logger::DettachDuplicator(&txt_test);
 }

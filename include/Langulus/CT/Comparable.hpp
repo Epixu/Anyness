@@ -5,7 +5,6 @@
 
 namespace Langulus::CT
 {
-   
    /// Three-way comparison check for any LHS and RHS                         
    template<class LHS, class...RHS>
    concept Comparable = requires (const LHS& lhs, const RHS&...rhs) {
@@ -35,12 +34,10 @@ namespace Langulus::CT
    concept ComparablePartial = requires (const LHS& lhs, const RHS&...rhs) {
       { ((lhs <=> rhs), ...) } -> ::std::same_as<::std::partial_ordering>;
    };
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus
 {
-
    /// Unified comparison results                                             
    enum class Compared {
       Unordered = -128, // Can't be compared                            
@@ -50,5 +47,4 @@ namespace Langulus
       Greater = 1,      // LHS >  RHS (strong/weak/partial ordering)    
       Equivalent = 2    // LHS == RHS (weak/partial ordering)           
    };
-
-} // namespace Langulus
+}
