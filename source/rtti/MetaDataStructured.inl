@@ -110,7 +110,7 @@ namespace Langulus::RTTI::Inner
    /// Get the minimal allocation page                                        
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetMinAllocation() const noexcept -> size_t {
-      return GetDefinition()->mAllocationPage;
+      return GetDefinition()->mMinimalPoolSize;
    }
 
    /// Get the alignment of the type                                          
@@ -173,13 +173,13 @@ namespace Langulus::RTTI::Inner
       return GetDefinition()->mVersionMinor;
    }
 
-   /// Get the reflected allocation page                                      
-   template<unsigned ID_SIZE, unsigned PT_SIZE>
-   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetAllocationPage() const noexcept -> size_t {
-      return GetDefinition()->mAllocationPage;      
-   }
-
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      /// Get the reflected allocation page                                   
+      template<unsigned ID_SIZE, unsigned PT_SIZE>
+      auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetMinPoolsize() const noexcept -> size_t {
+         return GetDefinition()->mMinimalPoolSize;      
+      }
+   
       /// Get the reflected pool tactic                                       
       template<unsigned S1, unsigned S2>
       auto MetaDataStructured_XY<S1, S2>::GetPoolTactic() const noexcept -> PoolTactic {

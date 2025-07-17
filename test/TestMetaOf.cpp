@@ -7,7 +7,6 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/MetaOf.hpp>
-#include <Langulus/InfoOf.hpp>
 #include <Langulus/Values.hpp>
 #include <Langulus/CT/Members.hpp>
 
@@ -142,7 +141,6 @@ namespace
       using CTTI_Files     = Yes<"txt, pdf">;
       using CTTI_Versioned = Version<2, 1>;
       using CTTI_Deep      = Yes<>;
-      using CTTI_POD       = Yes<>;
       using CTTI_Nullable  = Yes<>;
       using CTTI_Pooled    = PooledBySize<250>;
       using CTTI_Concrete  = ImplicitlyReflectedData;
@@ -240,7 +238,7 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.IsPOD() == CT::POD<Deref<T>>);
    REQUIRE(meta.IsNullable() == CT::Nullable<Deref<T>>);
    REQUIRE(meta.IsAbstract() == CT::Abstract<Deref<T>>);
-   REQUIRE(meta.GetAllocationPage() == (Roof2(sizeof(T) * 256 <= LANGULUS_MIN_POOL ? LANGULUS_MIN_POOL : sizeof(T) * 256)));
+   REQUIRE(meta.GetMinPoolsize() == (Roof2(sizeof(T) * 256 <= LANGULUS_MIN_POOL ? LANGULUS_MIN_POOL : sizeof(T) * 256)));
 
    IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == CT::GetPoolTactic<Deref<T>>()));
    IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolchain() == nullptr));
@@ -303,11 +301,11 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
    REQUIRE(meta.GetVersionMajor() == 2);
    REQUIRE(meta.GetVersionMinor() == 1);
    REQUIRE(meta.IsDeep() == true);
-   REQUIRE(meta.IsPOD() == false);       // not POD due to being abstract
-   REQUIRE(meta.IsNullable() == false);  // not nullifiable due to being abstract
+   REQUIRE(meta.IsPOD() == false);       // not POD due to being abstract     
+   REQUIRE(meta.IsNullable() == false);  // not nullable due to being abstract
    IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
    REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
-   REQUIRE(meta.GetAllocationPage() == Roof2(250 * sizeof(ImplicitlyReflectedDataWithTraits)));
+   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetMinPoolsize() == MinimalPoolSize));
    REQUIRE(meta.IsAbstract() == true);
    REQUIRE(meta.GetSize() == sizeof(ImplicitlyReflectedDataWithTraits));
    REQUIRE(meta.GetAlignment() == alignof(ImplicitlyReflectedDataWithTraits));
@@ -402,12 +400,22 @@ namespace
    struct InheritedAbstractExternally  : ForcedAbstractExternally {};
 }
 
+namespace Langulus::CTTI
+{
+   template<>
+   struct Abstract<ForcedAbstractExternally> {
+      static constexpr bool Enabled = true;
+   };
+}
+
+
 TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]",
    PureAbstract,
    ForcedAbstractExternally,
    ForcedAbstractInternally,
    InheritedAbstract1,
-   InheritedAbstract2
+   InheritedAbstract2,
+   InheritedAbstract2ButPrivate
 ) {
    using T = TestType;
    const DMeta meta = MetaDataOf<T>();
@@ -426,7 +434,6 @@ TEMPLATE_TEST_CASE("Reflecting non-abstract types", "[rtti]",
    int,
    ImpureVirtual,
    InheritedAbstract1ButPrivate,
-   InheritedAbstract2ButPrivate,
    InheritedAbstractExternally
 ) {
    using T = TestType;
@@ -471,8 +478,8 @@ SCENARIO("Reflecting a verb", "[rtti]") {
    const auto vdef = RTTI::DefinitionVerb::Reflect<Verbs::Create>();
    const VMeta vmeta = MetaVerbOf<Verbs::Create>();
    REQUIRE(vmeta != nullptr);
-   REQUIRE(vmeta.GetPositiveName() == "Create");
-   REQUIRE(vmeta.GetNegativeName() == "Destroy");
+   REQUIRE(vmeta.GetPositiveName() == "create");
+   REQUIRE(vmeta.GetNegativeName() == "destroy");
    REQUIRE(vmeta.GetInfo().starts_with("Used for allocating new elements."));
    REQUIRE(vmeta.GetVersionMajor() == 6);
    REQUIRE(vmeta.GetVersionMinor() == 10);

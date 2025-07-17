@@ -11,8 +11,6 @@
 #include <Langulus/CT/Info.hpp>
 #include <Langulus/CT/Versioned.hpp>
 
-#include "Langulus/InfoOf.hpp"
-
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <unordered_set>
 #endif

@@ -31,7 +31,7 @@ namespace Langulus::RTTI::Inner
 
    /// Get the minimal allocation page                                        
    inline auto MetaDataNaked::GetMinAllocation() const noexcept -> size_t {
-      return mDefinition->mAllocationPage;
+      return mDefinition->mMinimalPoolSize;
    }
 
    /// Get the size of the type                                               

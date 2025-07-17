@@ -112,8 +112,8 @@ namespace Langulus::RTTI
       definition.mAlign     = alignof(T);
       definition.mConst     = CT::Constant<T>;
       definition.mDeep      = CT::Deep<T>;
-      definition.mPOD       = CT::POD<T>;
-      definition.mNullable  = CT::Nullable<T>;
+      definition.mPOD       = CT::POD<T> and not CT::Abstract<T>;
+      definition.mNullable  = CT::Nullable<T> and not CT::Abstract<T>;
       definition.mAbstract  = CT::Abstract<T>;
 
       constexpr auto suffix = SuffixOf<T>();
@@ -441,7 +441,7 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          // Calculate the allocation page and table using reflection    
          definition.mPoolTactic = CT::GetPoolTactic<T>();
-         definition.mAllocationPage = CT::GetMinPool<T>();
+         definition.mMinimalPoolSize = CT::GetMinPool<T>();
          constexpr auto minElements = CT::GetMinPool<T>() / sizeof(T);
          for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
             const size_t threshold = size_t {1} << bit;
@@ -459,10 +459,10 @@ namespace Langulus::RTTI
          #endif
       #else
          // Calculate the allocation page and table using configuration 
-         definition.mAllocationPage = sizeof(T) * 256 <= LANGULUS_MIN_POOL
+         definition.mMinimalPoolSize = sizeof(T) * 256 <= LANGULUS_MIN_POOL
             ? LANGULUS_MIN_POOL
             : sizeof(T) * 256;
-         const auto minElements = definition.mAllocationPage / sizeof(T);
+         const auto minElements = definition.mMinimalPoolSize / sizeof(T);
          for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
             const size_t threshold = size_t {1} << bit;
             const size_t elements = threshold / sizeof(T);

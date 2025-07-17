@@ -135,9 +135,9 @@ namespace Langulus::RTTI
          auto GetBoundaries()         const noexcept -> Definition::BoundarySet const&;
          auto GetVersionMajor()       const noexcept -> unsigned;
          auto GetVersionMinor()       const noexcept -> unsigned;
-         auto GetAllocationPage()     const noexcept -> size_t;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            auto GetMinPoolsize()     const noexcept -> size_t;
             auto GetPoolTactic()      const noexcept -> PoolTactic;
             auto GetPoolchain()       const noexcept -> Fractalloc::Pool*;
          #endif
@@ -221,11 +221,11 @@ namespace Langulus::RTTI
          auto GetMinAllocation()      const noexcept -> size_t;
          auto GetSize()               const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
-         auto GetAllocationPage()     const noexcept -> size_t;
          auto GetFiles()              const noexcept -> Token;
          auto GetSuffix()             const noexcept -> Token;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            auto GetMinPoolsize()     const noexcept -> size_t;
             auto GetPoolTactic()      const noexcept -> PoolTactic;
             auto GetPoolchain()       const noexcept -> Fractalloc::Pool*;
          #endif

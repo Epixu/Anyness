@@ -483,6 +483,15 @@ namespace Langulus
 
    /// The default alignment, depends on configuration and enabled SIMD       
    constexpr uintptr_t Alignment = LANGULUS_ALIGNMENT;
+   static_assert(Alignment >= Byteness);
+
+   /// The default allocation size, depends on configuration and enabled SIMD 
+   constexpr size_t MinimalAllocation = LANGULUS_MIN_ALLOC;
+   static_assert(MinimalAllocation >= Alignment);
+   
+   /// The smallest possible pool size, depends on configuration              
+   constexpr size_t MinimalPoolSize = LANGULUS_MIN_POOL;
+   static_assert(MinimalPoolSize > MinimalAllocation);
    
    /// Same as ::std::declval, but adequately named                           
    template<class T>

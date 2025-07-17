@@ -49,11 +49,14 @@ namespace Langulus::RTTI
       friend struct Inner::MetaDataStructured_XY;
 
       // The origin type, with all qualifiers and sparseness removed    
-      // Will be nullptr for incomplete types                           
+      // Will be null for incomplete types                              
       DefinitionData const* mOrigin = nullptr;
       // The type, when a single level of indirection is removed        
-      // Will be null if data is dense                                  
+      // Will be null if data is dense. Will be exactly 1 if sparse,    
+      // but pointing to an incomplete type                             
       DefinitionData const* mDeptr = nullptr;
+      // This is required in some corner cases involving multiple       
+      // layers of indirection, or incomplete types                     
       bool mPtrIncludedInID = false;
 
       // The type, when all qualifiers are removed down to the origin   
@@ -86,9 +89,7 @@ namespace Langulus::RTTI
       // Data instance size in bytes, set by sizeof()                   
       size_t mSize IF_SAFE(= 0);
       // Data instance alignment in bytes, set by alignof()             
-      size_t mAlign IF_SAFE(= Alignment);
-      // Minimal pool allocation, in bytes                              
-      size_t mAllocationPage IF_SAFE(= 0);
+      size_t mAlign IF_SAFE(= 0);
       // Precomputed counts indexed by MSB (avoids division by stride   
       // for that extra oompf)                                          
       size_t mAllocationTable[sizeof(size_t) * 8 + 1] IF_SAFE(= {});
@@ -98,6 +99,8 @@ namespace Langulus::RTTI
       ::std::string mFilesOf;
       
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         // Minimal pool allocation, in bytes                           
+         size_t mMinimalPoolSize IF_SAFE(= 0);
          // The reflected pool tactic                                   
          PoolTactic mPoolTactic = PoolTactic::Default;
          // The start of the pool chain for the type                    
@@ -206,8 +209,8 @@ namespace Langulus::RTTI
          // The <=> operator, wrapped in lambda expression if available 
          FCompare mComparer = nullptr;
 
-         // The refer/copy/disown/clone/move/abandon assignment, wrapped
-         // in a lambdas                                                
+         // The refer/copy/disown/clone/move/abandon assignments, all   
+         // wrapped in lambdas                                          
          FBinary mReferAssigner = nullptr;
          FBinary mCopyAssigner = nullptr;
          FBinary mDisownAssigner = nullptr;
