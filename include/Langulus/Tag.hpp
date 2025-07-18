@@ -7,11 +7,11 @@
 ///                                                                           
 #pragma once
 #include "Typenav.hpp"
+#include "CT/DefineTag.hpp"
 
 
-namespace Langulus::Inner
+namespace Langulus
 {
-
    ///                                                                        
    ///   Tags are types that give additional context to data without          
    /// changing its behavior                                                  
@@ -26,41 +26,23 @@ namespace Langulus::Inner
    /// used in descriptor-construction, when seeking data, and more.          
    ///   @tparam T - the data behind the tag                                  
    ///                                                                        
-   template<CT::NotVoid T>
+   template<class T, class...TAGS>
    struct Tag;
 
    /// Since we can't inherit from fundamental types or references/pointers,  
    /// we have to wrap them inside the tag                                    
-   template<CT::NotVoid T> requires (CT::NotDecayed<T> or CT::Fundamental<T>)
-   struct Tag<T> {
-      static constexpr bool CTTI_Tag = true;
+   template<CT::NotVoid T, CT::DefineTag...TAGS>
+   requires (CT::NotDecayed<T> or CT::Fundamental<T>)
+   struct Tag<T, TAGS...> {
+      using CTTI_Tags = Types<TAGS...>;
       T value;
    };
    
    /// We can inherit from all the rest                                       
-   template<CT::NotVoid T> requires (CT::Decayed<T> and CT::NotFundamental<T>)
-   struct Tag<T> : T {
-      static constexpr bool CTTI_Tag = true;
+   template<CT::NotVoid T, CT::DefineTag...TAGS>
+   requires (CT::Decayed<T> and CT::NotFundamental<T>)
+   struct Tag<T, TAGS...> : T {
+      using CTTI_Tags = Types<TAGS...>;
       using T::T;
    };
-
-}
-
-namespace Langulus::Anyness
-{
-   /// A type-erased dynamic tag, that depends on Anyness::Many               
-   /// If incomplete, include <Langulus/Anyness/Tag.hpp>                      
-   struct Tag;
-
-   /// A statically typed dynamic tag                                         
-   template<CT::NotVoid>
-   struct TTag;
-}
-
-namespace Langulus::CT
-{
-   template<class...T>
-   concept Tag = (T::CTTI_Tag and ...);
-   template<class...T>
-   concept NotTag = ((not Tag<T>) and ...);
 }

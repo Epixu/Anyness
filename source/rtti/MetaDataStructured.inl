@@ -455,9 +455,9 @@ namespace Langulus::RTTI::Inner
    }
    
    template<unsigned ID_SIZE, unsigned PT_SIZE>
-   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetAbilities()
-   const noexcept -> DefinitionData::AbilityList const& {
-      return GetDefinition()->mCurrentBoundary.mAbilities;
+   auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetVerbs()
+   const noexcept -> DefinitionData::VerbList const& {
+      return GetDefinition()->mCurrentBoundary.mVerbs;
    }
    
    template<unsigned ID_SIZE, unsigned PT_SIZE>

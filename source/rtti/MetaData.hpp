@@ -183,7 +183,7 @@ namespace Langulus::RTTI
          auto GetProducer()           const -> MetaDataStructured_XY;
               
          auto GetBases()              const noexcept -> DefinitionData::BaseList const&;
-         auto GetAbilities()          const noexcept -> DefinitionData::AbilityList const&;
+         auto GetVerbs()              const noexcept -> DefinitionData::VerbList const&;
          auto GetMembers()            const noexcept -> DefinitionData::MemberList const&;
          auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
@@ -268,7 +268,7 @@ namespace Langulus::RTTI
          auto GetProducer()           const -> MetaDataNaked;
               
          auto GetBases()              const noexcept -> DefinitionData::BaseList const&;
-         auto GetAbilities()          const noexcept -> DefinitionData::AbilityList const&;
+         auto GetVerbs()              const noexcept -> DefinitionData::VerbList const&;
          auto GetMembers()            const noexcept -> DefinitionData::MemberList const&;
          auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;

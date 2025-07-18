@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    struct Charge {
       using CTTI_POD       = Yes<>;
-      using CTTI_Nullable  = No<>;
+      using CTTI_Nullable  = No;
       using CTTI_Component = Yes<>;
 
       static constexpr Real DefaultMass = 1;

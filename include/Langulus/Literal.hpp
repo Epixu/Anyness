@@ -685,18 +685,18 @@ namespace Langulus
       static constexpr bool Enabled = true;
    };
 
-   /// Equivalent to ::std::false_type, but without the silly nomenclature    
-   /// Can carry a constant with itself                                       
-   template<Literal VALUE = 0>
-   struct No {
-      static constexpr auto Constant = VALUE;
-      static constexpr bool Enabled = false;
-   };
-   
    /// Equivalent to ::std::false_type or ::std::true_type, depending on arg  
-   template<bool VALUE>
+   /// Can carry a constant with itself                                       
+   template<bool CONDITION, Literal VALUE = 0>
    struct Maybe {
-      static constexpr bool Enabled = VALUE;
+      static constexpr auto Constant = VALUE;
+      static constexpr bool Enabled = CONDITION;
+   };
+
+   /// Equivalent to ::std::false_type, but without the silly nomenclature    
+   struct No {
+      using CTTI_Void = Yes<>;
+      static constexpr bool Enabled = false;
    };
 }
 

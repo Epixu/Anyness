@@ -8,6 +8,7 @@
 #include "Main.hpp"
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/Values.hpp>
+#include <Langulus/Tag.hpp>
 #include <Langulus/CT/Members.hpp>
 
 using namespace Langulus;
@@ -22,14 +23,6 @@ namespace Langulus::Tags
       using CTTI_Versioned = Version<7, 10>;
       using CTTI_DefineTag = Yes<"Name">;
       using CTTI_Info = Yes<"Used for tagging names">;
-
-      Token name;
-   };
-
-   template<class T>
-   struct TName {
-      using CTTI_DefineTag = Yes<"Name">;
-      T name;
    };
 }
 
@@ -64,7 +57,8 @@ namespace Langulus::Verbs
          static bool Execute(T& context, Flow::Verb& v)
          requires (requires { context.Create(v); }) {
             Logger::Special("Verbs::Create executed using method in: ", NameOf<T>());
-            return context.Create(v);
+            context.Create(v);
+            return true;
          }
       };
 
@@ -121,7 +115,7 @@ namespace
    class alignas(128) ImplicitlyReflectedDataWithTraits : public ImplicitlyReflectedData {
    public:
       int member {664};
-      Tags::TName<bool> anotherMember {};
+      Tag<bool, Tags::Name> anotherMember {};
       int anotherMemberArray [12] {};
       int* sparseMember {};
 
@@ -154,7 +148,7 @@ namespace
       using CTTI_Verbs     = Verbs::Create;
       using CTTI_MapsTo    = int;
       using CTTI_MapsFrom  = Pi;
-      using CTTI_Values    = No<>;
+      using CTTI_Values    = No;
 
       using Self = ImplicitlyReflectedDataWithTraits;
       using CTTI_Members   = Members<
@@ -179,7 +173,7 @@ namespace
       using CTTI_Bases     = ImplicitlyReflectedData;
       using CTTI_MapsTo    = int;
       using CTTI_MapsFrom  = Pi;
-      using CTTI_Values    = No<>;
+      using CTTI_Values    = No;
    };
    
    struct CheckingWhatGetsInherited : ImplicitlyReflectedDataWithTraits {
@@ -286,7 +280,7 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.GetProducer() == nullptr);
 
    REQUIRE(meta.GetMembers().size() == 0);
-   REQUIRE(meta.GetAbilities().size() == 0);
+   REQUIRE(meta.GetVerbs().size() == 0);
    REQUIRE(meta.GetBases().size() == 0);
    REQUIRE(meta.GetMorphismsTo().size() == 0);
    REQUIRE(meta.GetMorphismsFrom().size() == 0);
@@ -327,8 +321,8 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
    REQUIRE(baseoffset >= 0);
    REQUIRE(meta.GetBases()[0].offset == baseoffset);
 
-   REQUIRE(meta.GetAbilities().size() == 1);
-   auto ability = meta.GetAbilities().begin();
+   REQUIRE(meta.GetVerbs().size() == 1);
+   auto ability = meta.GetVerbs().begin();
    REQUIRE(VMeta(ability->first) == MetaVerbOf<Verbs::Create>());
    REQUIRE(ability->second != nullptr);
 
@@ -496,10 +490,10 @@ SCENARIO("Reflecting a verb", "[rtti]") {
    REQUIRE(vmeta.GetContextless()(verb));
 
    const DMeta dmeta = MetaDataOf<DMeta>();
-   REQUIRE(dmeta.GetAbilities().at(vdef)(const_cast<DMeta*>(&dmeta), verb));
+   REQUIRE(dmeta.GetVerbs().at(vdef)(const_cast<DMeta*>(&dmeta), verb));
 
    const DMeta dmeta_const = MetaDataOf<const DMeta>();
-   REQUIRE(dmeta_const.GetAbilities().at(vdef)(const_cast<DMeta*>(&dmeta_const), verb));
+   REQUIRE(dmeta_const.GetVerbs().at(vdef)(const_cast<DMeta*>(&dmeta_const), verb));
 }
 
 

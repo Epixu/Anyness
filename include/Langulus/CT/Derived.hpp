@@ -20,7 +20,7 @@ namespace Langulus::CT
    {
       /// Helper function to extract reflected base types                     
       template<class T>
-      consteval CT::Typelist auto GetBaseTypes() {
+      consteval auto GetBaseTypes() {
          static_assert(not ::std::is_reference_v<T>,
             "Strip references first");
          static_assert(not CT::Convoluted<T>,
@@ -42,7 +42,6 @@ namespace Langulus::CT
             else
                return Types<LIST> {};
          }
-         else return Types<void> {};
       };
 
       /// Check if T has BASE                                                 
@@ -91,7 +90,7 @@ namespace Langulus::CT
 
 namespace Langulus
 {
-   /// Get the reflected base types, CT::Void if none                         
+   /// Get the reflected base types, void if none                             
    template<class T>
    using BasesOf = decltype(CT::Inner::GetBaseTypes<Decvq<Deref<T>>>());
 }

@@ -11,6 +11,7 @@
 #include <Langulus/CT/Info.hpp>
 #include <Langulus/CT/Versioned.hpp>
 #include <Langulus/Logger.hpp>
+#include <Langulus/Assume.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <optional>
@@ -68,7 +69,9 @@ namespace Langulus::RTTI
       #endif
 
       // Reflected info                                                 
-      definition.mInfoOf = InfoOf<E>();
+      constexpr auto info = InfoOf<E>();
+      if constexpr (info != "")
+         definition.mInfoOf = info;
       
       constexpr auto token = NameOf<E>();
       static_assert(token != "", "Invalid constant token is not allowed - "
@@ -83,8 +86,12 @@ namespace Langulus::RTTI
       using T = decltype(E);
       definition.mType = DefinitionData::Reflect<T>();
       if (not definition.mData) {
-         definition.mData = malloc(sizeof(T));
-         new (definition.mData) T {E};
+         definition.mData = new T {E};
+         Assert(definition.mData, HERE(), "Insufficient memory on reflection");
+         definition.mDestroyConstant = [](const void* p) {
+            auto pt = static_cast<const T*>(p);
+            delete pt;
+         };
       }
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)

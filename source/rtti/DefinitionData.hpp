@@ -124,7 +124,7 @@ namespace Langulus::RTTI
       using FReference     = int (*)(void* self, int modifier);
       using FDispatch      = bool (*)(void* self, Flow::Verb& verb);
       using FAccessMember  = void* (*)(void* owner);
-      using FTagRetriever  = DefinitionTag const* (*)(int index);
+      using FTagRetriever  = DefinitionTag const* (*)(unsigned index);
       using FTypeRetriever = DefinitionData const* (*)();
       
       /// Type-erased member variable reflection                              
@@ -136,15 +136,12 @@ namespace Langulus::RTTI
          // Get pointer to the member                                   
          FAccessMember member IF_SAFE(= nullptr);
          // Number of elements in mData (in case of an array)           
-         size_t extent = 1;
+         size_t extent IF_SAFE(= 1);
          // Tags                                                        
-         FTagRetriever getTag = nullptr;
+         FTagRetriever getTag IF_SAFE(= nullptr);
 
-         Member(const auto&);
-
-      private:
-         template<CT::DefineTag...T>
-         static auto TagSelector(int, Types<T...>&&) -> DefinitionTag const*;
+         template<class HANDLE>
+         static auto From() -> Member;
       };
       
       /// Used to reflect a base for a t                                      
@@ -171,7 +168,7 @@ namespace Langulus::RTTI
          FAccessMember virtualBase = nullptr;
          
          template<CT::Dense T, CT::Dense BASE>
-         static Base From() has_assumptions;
+         static auto From() has_assumptions -> Base;
       };
       
       using MemberList   = ::std::vector<Member>;

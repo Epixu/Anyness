@@ -265,7 +265,7 @@ namespace Langulus
       /// (utilizes a compile-time short-circuit)                             
       static constexpr bool ForEachConstOr(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::same_as<Yes<>>;  }
-                    or requires{ {lambda.template operator()<T1>()} -> ::std::same_as<No<>>; },
+                    or requires{ {lambda.template operator()<T1>()} -> ::std::same_as<No>; },
             "Provided argument is not a lambda of the form []<class> -> Yes<>/No<>");
          if constexpr (::std::same_as<Yes<>, decltype(lambda.template operator()<T1>())>) {
             lambda.template operator()<T1>();

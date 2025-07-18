@@ -66,7 +66,7 @@ namespace Langulus
 
       ///                                                                     
       template<class R, class F, class...AN>
-      No<> IsNoexcept(R(F::*)(AN...) const) {
+      No IsNoexcept(R(F::*)(AN...) const) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
          return {};
       }
@@ -78,7 +78,7 @@ namespace Langulus
       }
 
       template<class R, class F, class...AN>
-      No<> IsNoexcept(R(F::*)(AN...)) {
+      No IsNoexcept(R(F::*)(AN...)) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
          return {};
       }
@@ -90,7 +90,7 @@ namespace Langulus
       }
 
       template<class R, class...AN>
-      No<> IsNoexcept(R(*)(AN...)) {
+      No IsNoexcept(R(*)(AN...)) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
          return {};
       }

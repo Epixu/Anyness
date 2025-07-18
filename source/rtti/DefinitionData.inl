@@ -22,6 +22,7 @@
 #include <Langulus/CT/Producer.hpp>
 #include <Langulus/CT/Convertible.hpp>
 #include <Langulus/CT/DefineConst.hpp>
+#include <Langulus/CT/Members.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
 #include "Langulus/SuffixOf.hpp"
@@ -35,6 +36,7 @@
 
 #include "DefinitionVerb.hpp"
 #include "DefinitionConst.hpp"
+#include "DefinitionTag.hpp"
 
 
 namespace Langulus::RTTI
@@ -470,7 +472,7 @@ namespace Langulus::RTTI
       #endif
       
       using BASES = BasesOf<T>;
-      if constexpr (not BASES::Empty) {
+      if constexpr (not CT::Void<BASES>) {
          // Set reflected bases                                         
          BASES::ForEach([&definition]<class B>{
             definition.mCurrentBoundary.mBases.push_back(
@@ -480,7 +482,7 @@ namespace Langulus::RTTI
       }
 
       using VERBS = VerbsOf<T>;
-      if constexpr (not VERBS::Empty) {
+      if constexpr (not CT::Void<VERBS>) {
          // Set reflected abilities                                     
          VERBS::ForEach([&definition]<class V>{
             static_assert(CT::DefineVerb<V>,
@@ -501,7 +503,7 @@ namespace Langulus::RTTI
       }
 
       using MAPTO = MorphismsTo<T>;
-      if constexpr (not MAPTO::Empty) {
+      if constexpr (not CT::Void<MAPTO>) {
          // Set reflected morphisms                                     
          // @attention morphisms assume that source is initialized, but 
          //    destination is only allocated and not yet constructed    
@@ -528,7 +530,7 @@ namespace Langulus::RTTI
       }
 
       using MAPFROM = MorphismsFrom<T>;
-      if constexpr (not MAPFROM::Empty) {
+      if constexpr (not CT::Void<MAPFROM>) {
          // Set reflected morphisms                                     
          // @attention morphisms assume that source is initialized, but 
          //    destination is only allocated and not yet constructed    
@@ -555,25 +557,22 @@ namespace Langulus::RTTI
       }
 
       using CONSTANTS = NamedValuesOf<T>;
-      if constexpr (not CONSTANTS::Empty) {
-         // Reflected named values if this type is origin type          
-         CONSTANTS::ForEach([&definition]<auto V>{
+      if constexpr (not CT::Void<CONSTANTS>) {
+         // Reflecting named values                                     
+         CONSTANTS::ForEach([&definition]<auto C>{
             definition.mNamedValues.push_back(
-               DefinitionConst::Reflect<V>()
+               DefinitionConst::Reflect<C>()
             );
          });
       }
 
-      // Set reflected members                                          
-      if constexpr (requires { typename T::CTTI_Members; }) {
-         using List = typename T::CTTI_Members;
-
-         List::ForEach([&definition]<class M>{
-            // Make sure that members don't come from inheritance       
-            if constexpr (CT::Exact<T, typename M::Owner>) {
-               Logger::Verbose<VERBOSE>("Adding member: ", NameOf<M>());
-               definition.mMembers.emplace_back(M {});
-            }
+      using MEMBERS = MembersOf<T>;
+      if constexpr (not CT::Void<MEMBERS>) {
+         // Reflecting members                                          
+         MEMBERS::ForEach([&definition]<class M>{
+            definition.mCurrentBoundary.mMembers.push_back(
+               DefinitionData::Member::From<M>()
+            );
          });
       }
 
@@ -591,6 +590,108 @@ namespace Langulus::RTTI
       #endif
       
       return &definition;
+   }
+   
+   /// Generate a member definition                                           
+   ///   @return the generated member descriptor                              
+   template<class HANDLE>
+   auto DefinitionData::Member::From() -> Member {
+      using THIS = typename HANDLE::Owner;
+      using DATA = typename HANDLE::Type;
+
+      Member m;
+      m.extent = ExtentOf<DATA>;
+      m.member = [](void* owner) -> void* {
+         auto context = reinterpret_cast<THIS*>(owner);
+         return &(context->*HANDLE::Handle);
+      };
+
+      using TAGS = TagsOf<DATA>;
+      if constexpr (not CT::Void<TAGS>) {
+         // Reflect the trait tag                                       
+         m.type = Reflect<DATA>;
+         m.getTag = [](unsigned index) -> DefinitionTag const* {
+            DefinitionTag const* found = nullptr;
+            TAGS::ForEach([&index, &found]<class T>{
+               static_assert(CT::DefineTag<T>, "T is not a tag definition");
+               if (index == 0)
+                  found = DefinitionTag::Reflect<T>();
+               --index;
+            });
+            return found;
+         };
+      }
+      else {
+         m.type = Reflect<Deext<DATA>>;
+         m.getTag = nullptr;
+      }
+      return m;
+   }
+   
+   /// Create a base descriptor for the derived type T                        
+   ///   @return the generated base descriptor                                
+   template<CT::Dense T, CT::Dense BASE>
+   auto DefinitionData::Base::From() has_assumptions -> Base {
+      static_assert(not CT::Void<BASE>,
+         "Can't have void as base");
+      static_assert(not CT::Same<T, BASE>,
+         "Can't have base of the same type as the derived");
+      static_assert(NameOf<T>() != NameOf<BASE>(),
+         "T and BASE have the same LANGULUS(NAME) token, possibly due to "
+         "inheritance. Specify a different LANGULUS(NAME) for each!");
+
+      Base result;
+      result.type = Reflect<BASE>();
+
+      if constexpr (CT::DerivedFrom<T, BASE>) {
+         // This will fail if base is private                           
+         // This is detectable by is_convertible_v                      
+         if constexpr (::std::is_convertible_v<T*, BASE*>) {
+            if constexpr (CT::VirtuallyDerivedFrom<T, BASE>) {
+               // Can't use pointer arithmetics when base is virtual    
+               result.virtualBase = [](void* from) -> void* {
+                  return dynamic_cast<BASE*>(reinterpret_cast<T*>(from));
+               };
+            }
+            else {
+               // The devil's work, right here                          
+               // @attention works only with conventional inheritance   
+               alignas(T) static const uint8_t storage[sizeof(T)] {};
+               // First reinterpret the storage as T                    
+               const auto derived = reinterpret_cast<const T*>(storage);
+               // Then cast it down to base                             
+               const auto base = static_cast<const BASE*>(derived);
+               // Then reinterpret back to byte array and get difference
+               const auto offset =
+                  reinterpret_cast<const uint8_t*>(base) -
+                  reinterpret_cast<const uint8_t*>(derived);
+
+               Assert(offset >= 0, HERE(),
+                  "BASE is laid (memorywise) before T");
+               result.offset = static_cast<size_t>(offset);
+            }
+         }
+         else static_assert(false, "Can't reflect private base");
+      }
+      else {
+         // If not inherited in C++, then always imposed                
+         // Imposed bases are excluded from serialization               
+         result.imposed = true;
+
+         if constexpr (not CT::Abstract<BASE> and sizeof(BASE) < sizeof(T)) {
+            // The imposed type has a chance of being binary            
+            // compatible when having a specific count                  
+            result.binaryCompatible = 0 == sizeof(T) % sizeof(BASE);
+            result.count = sizeof(T) / sizeof(BASE);
+         }
+      }
+
+      // If sizes match and there's no byte offset, then the base       
+      // and the derived type are binary compatible                     
+      if constexpr (sizeof(BASE) == sizeof(T)
+      and not CT::VirtuallyDerivedFrom<T, BASE>)
+         result.binaryCompatible = (0 == result.offset);
+      return result;
    }
 
 } // namespace Langulus::RTTI

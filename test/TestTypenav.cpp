@@ -20,7 +20,7 @@ namespace
    template<class T>
    struct SheddableType { using CTTI_Sheddable = Yes<>; using CTTI_Typed = T; };
    struct SheddableTypeDerived : SheddableType<int&> {};
-   struct NonSheddableTypeDerived : SheddableType<int&> { using CTTI_Sheddable = No<>; };
+   struct NonSheddableTypeDerived : SheddableType<int&> { using CTTI_Sheddable = No; };
    struct IncompleteType;
 }
 
@@ -165,7 +165,7 @@ static_assert(not CT::Dense<SheddableType<CustomNonPointerType>, CustomNonPointe
 namespace
 {
    struct CustomConstType { using CTTI_Constant = Yes<>; };
-   struct CustomMutableType : CustomConstType { using CTTI_Constant = No<>; };
+   struct CustomMutableType : CustomConstType { using CTTI_Constant = No; };
 }
 
 TEMPLATE_TEST_CASE("Testing constant types", "[ct]",
@@ -211,7 +211,7 @@ static_assert(not CT::Mutable<SheddableType<PointerType>, SheddableType<PointerT
 namespace
 {
    struct CustomVolatileType { using CTTI_Volatile = Yes<>; };
-   struct CustomNonVolatileType : CustomVolatileType { using CTTI_Volatile = No<>; };
+   struct CustomNonVolatileType : CustomVolatileType { using CTTI_Volatile = No; };
 }
 
 TEMPLATE_TEST_CASE("Testing volatile types", "[ct]",
@@ -291,7 +291,7 @@ namespace
 {
    struct NullType { using CTTI_Null = Yes<>; };
    struct NullTypeDerived : NullType {};
-   struct NonNullTypeDerived : NullType { using CTTI_Null = No<>; };
+   struct NonNullTypeDerived : NullType { using CTTI_Null = No; };
 }
 
 TEMPLATE_TEST_CASE("Testing null types", "[ct]",
@@ -336,7 +336,7 @@ namespace
 {
    struct EnumType { using CTTI_Enum = Yes<>; };
    struct EnumTypeDerived : EnumType {};
-   struct NonEnumTypeDerived : EnumType { using CTTI_Enum = No<>; };
+   struct NonEnumTypeDerived : EnumType { using CTTI_Enum = No; };
    enum ActualEnum { one, two };
    enum class ActualEnumClass { one, two };
 }
@@ -397,7 +397,7 @@ namespace
    };
    struct AggregateTypeDerived : AggregateType {};
    struct NonAggregateTypeDerived : AggregateType {
-      using CTTI_Aggregate = No<>;
+      using CTTI_Aggregate = No;
 
       NonAggregateTypeDerived()
          : AggregateType() {
@@ -450,7 +450,7 @@ namespace
 {
    struct FundamentalType { using CTTI_Fundamental = Yes<>; };
    struct FundamentalTypeDerived : FundamentalType {};
-   struct NonFundamentalTypeDerived : FundamentalType { using CTTI_Fundamental = No<>; };
+   struct NonFundamentalTypeDerived : FundamentalType { using CTTI_Fundamental = No; };
 }
 
 TEMPLATE_TEST_CASE("Testing fundamental types", "[ct]",

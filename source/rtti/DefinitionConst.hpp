@@ -25,7 +25,8 @@ namespace Langulus::RTTI
       DefinitionData const* mType IF_SAFE(= nullptr);
       // A pointer to an instance of the constant on the heap           
       void const* mData IF_SAFE(= nullptr);
-      
+      void (*mDestroyConstant)(const void*) IF_SAFE(= nullptr);
+
    public:
       using CTTI_ReflectAs = void;
 
@@ -35,8 +36,8 @@ namespace Langulus::RTTI
       DefinitionConst(const Token& cppname) noexcept
          : Definition {cppname} {}
 
-      ~DefinitionConst() override {
-         free(const_cast<void*>(mData));
+      ~DefinitionConst() {
+         if (mData) mDestroyConstant(mData);
       }
    };
 

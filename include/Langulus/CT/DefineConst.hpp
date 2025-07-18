@@ -4,11 +4,11 @@
 
 namespace Langulus::CTTI
 {
-   /// Can be used in two ways to satisfy CT::Constants<T>:                   
+   /// Can be used in two ways to reflect named values:                       
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Values = Values<constants...>;` in T       
    template<class T>
-   struct Constants {
+   struct DefineConstant {
       using Type = void;
       static constexpr bool Enabled = false;
    };
@@ -24,21 +24,20 @@ namespace Langulus::CT::Inner
       static_assert(not CT::Convoluted<T>,
          "Strip qualifiers first");
 
-      if constexpr (CTTI::Constants<T>::Enabled) {
+      if constexpr (CTTI::DefineConstant<T>::Enabled) {
          // Checked externally, T doesn't have to be complete           
-         return typename CTTI::Constants<T>::Type {};
+         return typename CTTI::DefineConstant<T>::Type {};
       }
       else if constexpr (requires { typename T::CTTI_Values; }) {
          // Checked internally, T has to be a complete type             
          return typename T::CTTI_Values {};
       }
-      else return Values<> {};
    };
 }
 
 namespace Langulus
 {
-   /// Get the reflected named values, CT::Void if none                       
+   /// Get the reflected named values, void if none                           
    template<class T>
    using NamedValuesOf = decltype(CT::Inner::GetNamedValues<Decvq<Deref<T>>>());
 }

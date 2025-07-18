@@ -14,19 +14,9 @@ namespace Langulus
    ///                                                                        
    /// Can be used to handle value sequences at compile-time                  
    ///                                                                        
-   template<auto...EN>
-   struct Values;
-
-   /// Empty values list                                                      
-   template<>
-   struct Values<> {
-      static constexpr bool Empty = true;
-      static constexpr size_t Count = 0;
-   };
-
    /// Filled values list                                                     
    template<auto E1, auto...EN>
-   struct Values<E1, EN...> {
+   struct Values {
       using FirstType = decltype(E1);
       static constexpr auto First = E1;
       static constexpr bool Empty = false;
@@ -46,5 +36,26 @@ namespace Langulus
    public:
       template<unsigned I>
       static constexpr auto At = AtInner<I>();
+
+      static constexpr void ForEach(auto&& lambda) {
+         static_assert(requires{ lambda.template operator()<E1>(); },
+            "Provided argument is not a lambda of the form []<auto>");
+          lambda.template operator()<E1>();
+         (lambda.template operator()<EN>(), ...);
+      }
+
+      static constexpr bool ForEachAnd(auto&& lambda) {
+         static_assert(requires{ {lambda.template operator()<E1>()} -> ::std::convertible_to<bool>; },
+            "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
+         return lambda.template operator()<E1>()
+            and (... and lambda.template operator()<EN>());
+      }
+
+      static constexpr bool ForEachOr(auto&& lambda) {
+         static_assert(requires{ {lambda.template operator()<E1>()} -> ::std::convertible_to<bool>; },
+            "Provided argument is not a lambda of the form []<auto> -> convertible to bool");
+         return lambda.template operator()<E1>()
+             or (... or lambda.template operator()<EN>());
+      }
    };
 }
