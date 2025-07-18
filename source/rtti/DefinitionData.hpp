@@ -124,7 +124,7 @@ namespace Langulus::RTTI
       using FReference     = int (*)(void* self, int modifier);
       using FDispatch      = bool (*)(void* self, Flow::Verb& verb);
       using FAccessMember  = void* (*)(void* owner);
-      using FTagRetriever  = DefinitionTag const* (*)(unsigned index);
+      //using FTagRetriever  = DefinitionTag const* (*)(unsigned index);
       using FTypeRetriever = DefinitionData const* (*)();
       
       /// Type-erased member variable reflection                              
@@ -138,7 +138,9 @@ namespace Langulus::RTTI
          // Number of elements in mData (in case of an array)           
          size_t extent IF_SAFE(= 1);
          // Tags                                                        
-         FTagRetriever getTag IF_SAFE(= nullptr);
+         ::std::unordered_set<DefinitionTag const*> tags;
+         // Name of the member                                          
+         ::std::string name;
 
          template<class HANDLE>
          static auto From() -> Member;

@@ -12,15 +12,6 @@ namespace Langulus::CTTI
       using Type = void;
       static constexpr bool Enabled = false;
    };
-
-   /// Can be used in two ways to satisfy CT::MapsFrom<T>:                    
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_MapsFrom = <type or Types<...>>;` in T     
-   template<class T>
-   struct MapsFrom {
-      using Type = void;
-      static constexpr bool Enabled = false;
-   };
 }
 
 namespace Langulus::CT
@@ -29,7 +20,7 @@ namespace Langulus::CT
    {
       /// Helper function to extract reflected morphisms                      
       template<class T>
-      consteval CT::Typelist auto GetMorphismsTo() {
+      consteval CT::Typelist auto GetMorphisms() {
          static_assert(not ::std::is_reference_v<T>,
             "Strip references first");
 
@@ -51,31 +42,6 @@ namespace Langulus::CT
          }
          else return Types<void> {};
       };
-
-      /// Helper function to extract reflected morphisms                      
-      template<class T>
-      consteval CT::Typelist auto GetMorphismsFrom() {
-         static_assert(not ::std::is_reference_v<T>,
-            "Strip references first");
-
-         if constexpr (CTTI::MapsFrom<T>::Enabled) {
-            // Checked externally, T doesn't have to be complete        
-            using LIST = typename CTTI::MapsFrom<T>::Type;
-            if constexpr (CT::Typelist<LIST>)
-               return LIST {};
-            else
-               return Types<LIST> {};
-         }
-         else if constexpr (requires { typename T::CTTI_MapsFrom; }) {
-            // Checked internally, T has to be a complete type          
-            using LIST = typename T::CTTI_MapsFrom;
-            if constexpr (CT::Typelist<LIST>)
-               return LIST {};
-            else
-               return Types<LIST> {};
-         }
-         else return Types<void> {};
-      };
    }
 
    /// Convertible concept                                                    
@@ -88,9 +54,5 @@ namespace Langulus
 {
    /// Get the reflected morphisms, CT::Void if none                          
    template<class T>
-   using MorphismsTo = decltype(CT::Inner::GetMorphismsTo<Decvq<Deref<T>>>());
-
-   /// Get the reflected morphisms, CT::Void if none                          
-   template<class T>
-   using MorphismsFrom = decltype(CT::Inner::GetMorphismsFrom<Decvq<Deref<T>>>());
+   using MorphismsOf = decltype(CT::Inner::GetMorphisms<Decvq<Deref<T>>>());
 }

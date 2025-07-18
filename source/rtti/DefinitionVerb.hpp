@@ -19,6 +19,7 @@ namespace Langulus::RTTI
    class DefinitionVerb final : public Inner::Definition {
    protected:
       friend class Registry;
+      friend class DefinitionData;
       friend struct Inner::MetaVerbNaked;
       template<unsigned>
       friend struct Inner::MetaVerbStructured_X8;

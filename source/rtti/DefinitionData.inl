@@ -104,7 +104,7 @@ namespace Langulus::RTTI
       //                                                                
       // If this is reached, then data is not defined yet from the      
       // viewpoint of the current boundary                              
-      definition.template ReflectCommon<T>();
+      definition.ReflectCommon<T>();
       
       constexpr auto token = NameOf<T>();
       static_assert(token != "", "Invalid data token is not allowed - "
@@ -135,7 +135,7 @@ namespace Langulus::RTTI
       if constexpr (CT::Decayed<T>)
          definition.mOrigin = &definition;
       else if constexpr (CT::Complete<Decay<T>>)
-         definition.mOrigin = Reflect<Decay<T>>();
+         definition.mOrigin = Reflect<CT::ReflectedAs<Decay<T>>>();
 
       // Reflect the dequalified types and generate/propagate IDs       
       using DTOnce = Decvq<T>;
@@ -162,7 +162,7 @@ namespace Langulus::RTTI
 
          if constexpr (CT::Complete<DenserT>) {
             // Reflect the denser type                                  
-            definition.mDeptr = Reflect<DenserT>();
+            definition.mDeptr = Reflect<CT::ReflectedAs<DenserT>>();
             auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
             deptr->mAddPtr = definition.mDecvqOnce;
 
@@ -209,16 +209,16 @@ namespace Langulus::RTTI
       if constexpr (CT::Concretizable<T>) {
          static_assert(CT::Abstract<T>,
             "Only abstract types can have concretizations");
-         static_assert(not CT::Abstract<ConcreteOf<T>>,
+         using C = CT::ReflectedAs<ConcreteOf<T>>;
+         static_assert(not CT::Abstract<C>,
             "Concrete type can't be abstract");
-         definition.mCurrentBoundary.mConcrete = Reflect<ConcreteOf<T>>;
+         definition.mCurrentBoundary.mConcrete = Reflect<C>;
       }
 
       // Reflect the producer type                                      
       if constexpr (CT::Producible<T>) {
-         static_assert(not CT::Abstract<ProducerOf<T>>,
-            "Producer type can't be abstract");
-         definition.mCurrentBoundary.mProducer = Reflect<ProducerOf<T>>;
+         using P = CT::ReflectedAs<ProducerOf<T>>;
+         definition.mCurrentBoundary.mProducer = Reflect<P>;
       }
 
       //                                                                
@@ -492,66 +492,47 @@ namespace Langulus::RTTI
             static_assert(V::template IsAble<T>,
                "T doesn't have the required verb method/specialization");
 
+            auto verb_definition = const_cast<DefinitionVerb*>(
+               DefinitionVerb::Reflect<V>());
             definition.mCurrentBoundary.mVerbs.emplace(
-               DefinitionVerb::Reflect<V>(),
+               verb_definition,
                [](void* self, Flow::Verb& verb) -> bool {
                   auto in = static_cast<T*>(self);
                   return V::template In<T>::Execute(*in, verb);
                }
             );
+            verb_definition->mAble.insert(&definition);
          });
       }
 
-      using MAPTO = MorphismsTo<T>;
+      using MAPTO = MorphismsOf<T>;
       if constexpr (not CT::Void<MAPTO>) {
          // Set reflected morphisms                                     
          // @attention morphisms assume that source is initialized, but 
          //    destination is only allocated and not yet constructed    
-         MAPTO::ForEach([&definition]<class TO>{
+         MAPTO::ForEach([&definition]<class TO_RAW>{
+            using TO = CT::ReflectedAs<TO_RAW>;
+            auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
+            auto converter_function = [](void* from, void* to) {
+               auto fromT = static_cast<T*>(from);
+               auto toT   = static_cast<TO*>(to);
+
+               if constexpr (requires { TO (*fromT); })
+                  new (toT) TO (*fromT);
+               else if constexpr (requires { TO (static_cast<TO>(*fromT)); })
+                  new (toT) TO (static_cast<TO>(*fromT));
+               else {
+                  static_assert(false,
+                     "T can't be converted to TO - add "
+                     "explicit/implicit constructors and/or cast operators"
+                  );
+               }
+            };
             definition.mCurrentBoundary.mMorphismsTo.emplace(
-               DefinitionData::Reflect<TO>(),
-               [](void* from, void* to) {
-                  auto fromT = static_cast<T*>(from);
-                  auto toT   = static_cast<TO*>(to);
-
-                  if constexpr (requires { TO (*fromT); })
-                     new (toT) TO (*fromT);
-                  else if constexpr (requires { TO (static_cast<TO>(*fromT)); })
-                     new (toT) TO (static_cast<TO>(*fromT));
-                  else {
-                     static_assert(false,
-                        "T can't be converted to TO - add "
-                        "explicit/implicit constructors and/or cast operators"
-                     );
-                  }
-               }
+               destination_type, converter_function
             );
-         });
-      }
-
-      using MAPFROM = MorphismsFrom<T>;
-      if constexpr (not CT::Void<MAPFROM>) {
-         // Set reflected morphisms                                     
-         // @attention morphisms assume that source is initialized, but 
-         //    destination is only allocated and not yet constructed    
-         MAPFROM::ForEach([&definition]<class FROM>{
-            definition.mCurrentBoundary.mMorphismsFrom.emplace(
-               DefinitionData::Reflect<FROM>(),
-               [](void* from, void* to) {
-                  auto fromT = static_cast<FROM*>(from);
-                  auto toT   = static_cast<T*>(to);
-
-                  if constexpr (requires { T (*fromT); })
-                     new (toT) T (*fromT);
-                  else if constexpr (requires { T (static_cast<T>(*fromT)); })
-                     new (toT) T (static_cast<T>(*fromT));
-                  else {
-                     static_assert(false,
-                        "FROM can't be converted to T - add "
-                        "explicit/implicit constructors and/or cast operators"
-                     );
-                  }
-               }
+            destination_type->mCurrentBoundary.mMorphismsFrom.emplace( //TODO modifying destination type from the questionably-same boundary may cause problems?
+               &definition, converter_function
             );
          });
       }
@@ -571,7 +552,7 @@ namespace Langulus::RTTI
          // Reflecting members                                          
          MEMBERS::ForEach([&definition]<class M>{
             definition.mCurrentBoundary.mMembers.push_back(
-               DefinitionData::Member::From<M>()
+               Member::From<M>()
             );
          });
       }
@@ -580,7 +561,7 @@ namespace Langulus::RTTI
          Logger::Verbose<VERBOSE>(
             "Data ", Logger::Cyan, definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", Boundary
+            "registered from ", Boundary
          );
       #else
          Logger::Verbose<VERBOSE>(
@@ -605,40 +586,35 @@ namespace Langulus::RTTI
          auto context = reinterpret_cast<THIS*>(owner);
          return &(context->*HANDLE::Handle);
       };
+      m.name = HANDLE::Name;
+      m.name = m.name.substr(m.name.find_last_of(':') + 1);
 
+      using AS = CT::ReflectedAs<Deext<DATA>>;
       using TAGS = TagsOf<DATA>;
       if constexpr (not CT::Void<TAGS>) {
          // Reflect the trait tag                                       
-         m.type = Reflect<DATA>;
-         m.getTag = [](unsigned index) -> DefinitionTag const* {
-            DefinitionTag const* found = nullptr;
-            TAGS::ForEach([&index, &found]<class T>{
-               static_assert(CT::DefineTag<T>, "T is not a tag definition");
-               if (index == 0)
-                  found = DefinitionTag::Reflect<T>();
-               --index;
-            });
-            return found;
-         };
+         m.type = Reflect<AS>;
+         TAGS::ForEach([&m]<class T>{
+            static_assert(CT::DefineTag<T>, "T is not a tag definition");
+            m.tags.insert(DefinitionTag::Reflect<T>());
+         });
       }
-      else {
-         m.type = Reflect<Deext<DATA>>;
-         m.getTag = nullptr;
-      }
+      else m.type = Reflect<AS>;
       return m;
    }
    
    /// Create a base descriptor for the derived type T                        
    ///   @return the generated base descriptor                                
-   template<CT::Dense T, CT::Dense BASE>
+   template<CT::Dense T, CT::Dense B>
    auto DefinitionData::Base::From() has_assumptions -> Base {
+      using BASE = CT::ReflectedAs<B>;
       static_assert(not CT::Void<BASE>,
          "Can't have void as base");
       static_assert(not CT::Same<T, BASE>,
          "Can't have base of the same type as the derived");
       static_assert(NameOf<T>() != NameOf<BASE>(),
-         "T and BASE have the same LANGULUS(NAME) token, possibly due to "
-         "inheritance. Specify a different LANGULUS(NAME) for each!");
+         "T and BASE have the same NameOf, possibly due to inheritance. "
+         "Specify a different CTTI::Named<T> or T::CTTI_Named for each!");
 
       Base result;
       result.type = Reflect<BASE>();

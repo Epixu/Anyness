@@ -95,9 +95,8 @@ namespace
       Number = 314
    };
    
-   struct NotReflectable {
-      using CTTI_ReflectAs = void;
-   };
+   struct NotReflectable    { using CTTI_ReflectAs = void; };
+   struct NotReflectableAlt { using CTTI_ReflectAs = No;   };
 
    struct ImplicitlyReflectedData {
       enum Named { One, Two, Three };
@@ -147,7 +146,7 @@ namespace
       using CTTI_Bases     = ImplicitlyReflectedData;
       using CTTI_Verbs     = Verbs::Create;
       using CTTI_MapsTo    = int;
-      using CTTI_MapsFrom  = Pi;
+      //using CTTI_MapsFrom  = Pi;
       using CTTI_Values    = No;
 
       using Self = ImplicitlyReflectedDataWithTraits;
@@ -172,7 +171,7 @@ namespace
 
       using CTTI_Bases     = ImplicitlyReflectedData;
       using CTTI_MapsTo    = int;
-      using CTTI_MapsFrom  = Pi;
+      //using CTTI_MapsFrom  = Pi;
       using CTTI_Values    = No;
    };
    
@@ -186,6 +185,16 @@ namespace
       Logger::Verbose("Executed FunctionForTesting");
    }
 }
+
+namespace Langulus::CTTI
+{
+   template<>
+   struct MapsTo<Pi> {
+      using Type = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>; //TODO doesn't seem custimizable enough, maybe specialize MapsFromTo<SRC,DST> instead?
+      static constexpr bool Enabled = true;
+   };
+}
+
 
 TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    //void, // shouldn't compile
@@ -314,7 +323,7 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
    REQUIRE(meta.GetDecvqAll() == MetaDataOf<ImplicitlyReflectedDataWithTraits>());
 
    REQUIRE(meta.GetBases().size() == 1);
-   REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ConvertibleData>()));
+   REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ImplicitlyReflectedData>()));
    REQUIRE(meta.GetBases()[0].imposed == false);
    REQUIRE(meta.GetBases()[0].binaryCompatible == false);
    REQUIRE(meta.GetBases()[0].count == 1);
@@ -326,22 +335,32 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
    REQUIRE(VMeta(ability->first) == MetaVerbOf<Verbs::Create>());
    REQUIRE(ability->second != nullptr);
 
-   REQUIRE(meta.GetMembers().size() == 3);
+   REQUIRE(meta.GetMembers().size() == 4);
+   
    REQUIRE(meta.GetMembers()[0].extent == 1);
-   REQUIRE(meta.GetMembers()[0].member(&instance) == &instance.anotherMember);
-   REQUIRE(TMeta(meta.GetMembers()[0].getTag(0)) == MetaTagOf<Tags::Name>());
-   REQUIRE(meta.GetMembers()[0].getTag(1) == nullptr);
-   REQUIRE(DMeta(meta.GetMembers()[0].type()).Is(MetaDataOf<bool>()));
+   REQUIRE(meta.GetMembers()[0].member(&instance) == &instance.member);
+   REQUIRE(meta.GetMembers()[0].tags.empty());
+   REQUIRE(meta.GetMembers()[0].name == "member");
+   REQUIRE(DMeta(meta.GetMembers()[0].type()).Is(MetaDataOf<int>()));
 
-   REQUIRE(meta.GetMembers()[1].extent == 12);
-   REQUIRE(meta.GetMembers()[1].member(&instance) == instance.anotherMemberArray);
-   REQUIRE(meta.GetMembers()[1].getTag(0) == nullptr);
-   REQUIRE(DMeta(meta.GetMembers()[1].type()).Is(MetaDataOf<int>()));
+   REQUIRE(meta.GetMembers()[1].extent == 1);
+   REQUIRE(meta.GetMembers()[1].member(&instance) == &instance.anotherMember);
+   REQUIRE(meta.GetMembers()[1].tags.size() == 1);
+   REQUIRE(meta.GetMembers()[1].tags.contains(RTTI::DefinitionTag::Reflect<Tags::Name>()));
+   REQUIRE(meta.GetMembers()[1].name == "anotherMember");
+   REQUIRE(DMeta(meta.GetMembers()[1].type()).Is(MetaDataOf<bool>()));
 
-   REQUIRE(meta.GetMembers()[2].extent == 1);
-   REQUIRE(meta.GetMembers()[2].member(&instance) == &instance.sparseMember);
-   REQUIRE(meta.GetMembers()[2].getTag(0) == nullptr);
+   REQUIRE(meta.GetMembers()[2].extent == 12);
+   REQUIRE(meta.GetMembers()[2].member(&instance) == instance.anotherMemberArray);
+   REQUIRE(meta.GetMembers()[2].tags.empty());
+   REQUIRE(meta.GetMembers()[2].name == "anotherMemberArray");
    REQUIRE(DMeta(meta.GetMembers()[2].type()).Is(MetaDataOf<int>()));
+
+   REQUIRE(meta.GetMembers()[3].extent == 1);
+   REQUIRE(meta.GetMembers()[3].member(&instance) == &instance.sparseMember);
+   REQUIRE(meta.GetMembers()[3].tags.empty());
+   REQUIRE(meta.GetMembers()[3].name == "sparseMember");
+   REQUIRE(DMeta(meta.GetMembers()[3].type()).Is(MetaDataOf<int>()));
 
    REQUIRE(meta.GetNamedValues().size() == 0);
 
@@ -403,6 +422,12 @@ namespace Langulus::CTTI
 {
    template<>
    struct Abstract<ForcedAbstractExternally> {
+      static constexpr bool Enabled = true;
+   };
+   
+   template<>
+   struct Verbs<DMeta> {
+      using Type = Langulus::Verbs::Create;
       static constexpr bool Enabled = true;
    };
 }

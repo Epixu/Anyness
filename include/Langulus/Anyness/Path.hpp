@@ -17,7 +17,7 @@ namespace Langulus::Anyness
    ///                                                                        
    struct Path : Text {
       using CTTI_Bases    = Text;
-      using CTTI_MapsFrom = Text;
+      //using CTTI_MapsFrom = Text;
 
       static constexpr char Separator = '/';
 

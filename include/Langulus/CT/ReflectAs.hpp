@@ -14,7 +14,7 @@ namespace Langulus::CTTI
    /// Can be used in two ways to satisfy CT::ReflectAs<T>:                   
    /// 1. Specialize for T/concept with Enabled set to true and desired Type  
    /// 2. Add a public `using CTTI_ReflectAs = <DesiredType>;` in T           
-   /// Use void type to disable reflection for the type                       
+   /// Use void/No type to disable reflection for the type                    
    template<class T>
    struct ReflectAs {
       using Type = T;

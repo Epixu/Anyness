@@ -34,6 +34,7 @@ namespace Langulus
    template<CT::NotVoid T, CT::DefineTag...TAGS>
    requires (CT::NotDecayed<T> or CT::Fundamental<T>)
    struct Tag<T, TAGS...> {
+      using CTTI_ReflectAs = T;
       using CTTI_Tags = Types<TAGS...>;
       T value;
    };
@@ -42,6 +43,7 @@ namespace Langulus
    template<CT::NotVoid T, CT::DefineTag...TAGS>
    requires (CT::Decayed<T> and CT::NotFundamental<T>)
    struct Tag<T, TAGS...> : T {
+      using CTTI_ReflectAs = T;
       using CTTI_Tags = Types<TAGS...>;
       using T::T;
    };

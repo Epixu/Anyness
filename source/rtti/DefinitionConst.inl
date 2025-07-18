@@ -98,7 +98,7 @@ namespace Langulus::RTTI
          Logger::VerboseRaw(
             "Constant ", Logger::Yellow, definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", Boundary
+            "registered from ", Boundary
          );
       #else
          Logger::VerboseRaw(
