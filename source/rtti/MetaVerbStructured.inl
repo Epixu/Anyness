@@ -74,42 +74,49 @@ namespace Langulus::RTTI::Inner
    }
 
 
+   /// Get the positive verb token                                            
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveName() const noexcept -> Token {
       return GetDefinition()->mNameOf;
    }
 
+   /// Get the negative verb token, a.k.a. the antonym                        
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeName() const noexcept -> Token {
       return GetDefinition()->mNameOfReverse;
    }
 
+   /// Get the positive reflected operator token                              
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveOperator() const noexcept -> Token {
       return GetDefinition()->mOperator;
    }
 
+   /// Get the negative reflected operator token                              
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeOperator() const noexcept -> Token {
       return GetDefinition()->mOperatorReverse;
    }
 
+   /// Get the default reflected precedence for the verb                      
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPrecedence() const noexcept -> float {
       return GetDefinition()->mPrecedence;
    }
 
+   /// Get the contextless execution routine if such was defined              
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetContextless() const noexcept -> DefinitionVerb::FContextless {
       return contextless ? GetDefinition()->mCurrentBoundary.mContextless : nullptr;
    }
 
-   
+   /// Check if the verb has a negative token defined                         
    template<unsigned ID_SIZE>
    constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsReversible() const noexcept {
       return reversible;
    }
 
+   /// Check if the verb provides a contextless execution routine             
    template<unsigned ID_SIZE>
    constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsContextless() const noexcept {
       return contextless;
