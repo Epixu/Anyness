@@ -38,7 +38,17 @@ namespace Langulus::RTTI::Inner
    inline auto MetaDataNaked::GetAlignment() const noexcept -> size_t {
       return mDefinition->mAlign;
    }
-   
+
+   /// Get the reflected file extensions, separated with commas               
+   inline auto MetaDataNaked::GetFiles() const noexcept -> Token {
+      return mDefinition->mFilesOf;
+   }
+
+   /// Get the reflected suffix                                               
+   inline auto MetaDataNaked::GetSuffix() const noexcept -> Token {
+      return mDefinition->mSuffixOf;
+   }
+
    /// Get the minimal allocation of the type in bytes                        
    inline auto MetaDataNaked::GetMinAllocation() const noexcept -> size_t {
       return mDefinition->mMinimalAllocation;
@@ -94,6 +104,11 @@ namespace Langulus::RTTI::Inner
    /// Check if type is CT::Nullable                                          
    inline bool MetaDataNaked::IsNullable() const noexcept {
       return mDefinition->mNullable;
+   }
+
+   /// Check if type is CT::Abstract                                          
+   inline bool MetaDataNaked::IsAbstract() const noexcept {
+      return mDefinition->mAbstract;
    }
 
    /// Check if type has an explicit GetHash() method                         
@@ -221,4 +236,92 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mCurrentBoundary.mDispatcher;
    }
 
+   /// Remove a layer of indirection                                          
+   ///   @attention will return invalid meta if type is incomplete            
+   inline auto MetaDataNaked::GetDeptr() const -> MetaDataNaked {
+      return mDefinition->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t {1})
+         ? nullptr
+         : mDefinition->mDeptr;
+   }
+
+   /// Get the origin type, if complete                                       
+   /// The origin type has all indirections and qualifiers removed            
+   inline auto MetaDataNaked::GetOrigin() const -> MetaDataNaked {
+      return mDefinition->mOrigin;
+   }
+
+   /// Strip all qualifiers from all levels of indirection                    
+   inline auto MetaDataNaked::GetDecvqAll() const -> MetaDataNaked {
+      return mDefinition->mDecvqAll;
+   }
+
+   /// Strip topmost qualifiers                                               
+   inline auto MetaDataNaked::GetDecvq() const -> MetaDataNaked {
+      return mDefinition->mDecvqOnce;
+   }
+
+   /// Add a level of indirection to the type                                 
+   ///   @attention this is possible only if that level of indirection has    
+   ///      already been reflected at runtime prior to calling this function  
+   inline auto MetaDataNaked::AddPtr() const -> MetaDataNaked {
+      return mDefinition->mAddPtr;
+   }
+
+   /// Add a constant qualifier to the type                                   
+   ///   @attention this is possible only if the qualified type has           
+   ///      already been reflected at runtime prior to calling this function  
+   inline auto MetaDataNaked::AddConst() const -> MetaDataNaked {
+      return mDefinition->mAddConst;
+   }
+
+   /// Get the default concretization for an abstract type                    
+   inline auto MetaDataNaked::GetConcrete() const -> MetaDataNaked {
+      return mDefinition->mCurrentBoundary.mConcrete
+         ? mDefinition->mCurrentBoundary.mConcrete()
+         : nullptr;
+   }
+
+   /// Get the runtime producer of the type, if any                           
+   inline auto MetaDataNaked::GetProducer() const -> MetaDataNaked {
+      return mDefinition->mCurrentBoundary.mProducer
+         ? mDefinition->mCurrentBoundary.mProducer()
+         : nullptr;
+   }
+
+   /// Get the reflected bases                                                
+   inline auto MetaDataNaked::GetBases()
+   const noexcept -> DefinitionData::BaseList const& {
+      return mDefinition->mCurrentBoundary.mBases;
+   }
+
+   /// Get the reflected verbs                                                
+   inline auto MetaDataNaked::GetVerbs()
+   const noexcept -> DefinitionData::VerbList const& {
+      return mDefinition->mCurrentBoundary.mVerbs;
+   }
+
+   /// Get the reflected members                                              
+   inline auto MetaDataNaked::GetMembers()
+   const noexcept -> DefinitionData::MemberList const& {
+      return mDefinition->mCurrentBoundary.mMembers;
+   }
+
+   /// Get the reflected named values                                         
+   inline auto MetaDataNaked::GetNamedValues()
+   const noexcept -> DefinitionData::ValuesList const& {
+      return mDefinition->mNamedValues;
+   }
+
+   /// Get morphisms to other types                                           
+   inline auto MetaDataNaked::GetMorphismsTo()
+   const noexcept -> DefinitionData::MorphismList const& {
+      return mDefinition->mCurrentBoundary.mMorphismsTo;
+   }
+   
+   /// Get morphisms from other types                                         
+   inline auto MetaDataNaked::GetMorphismsFrom()
+   const noexcept -> DefinitionData::MorphismList const& {
+      return mDefinition->mCurrentBoundary.mMorphismsFrom;
+   }
+   
 } // namespace Langulus::RTTI::Inner

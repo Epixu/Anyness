@@ -391,6 +391,8 @@ namespace Langulus::RTTI::Inner
       return GetDefinition()->mCurrentBoundary.mDispatcher;  
    }
 
+   /// Remove a layer of indirection                                          
+   ///   @attention will return invalid meta if type is incomplete            
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetDeptr()
    const -> MetaDataStructured_XY {
@@ -400,36 +402,47 @@ namespace Langulus::RTTI::Inner
          : d->mDeptr;
    }
    
+   /// Get the origin type, if complete                                       
+   /// The origin type has all indirections and qualifiers removed            
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetOrigin()
    const -> MetaDataStructured_XY {
       return GetDefinition()->mOrigin;
    }
    
+   /// Strip all qualifiers from all levels of indirection                    
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetDecvqAll()
    const -> MetaDataStructured_XY {
       return GetDefinition()->mDecvqAll;
    }
    
+   /// Strip topmost qualifiers                                               
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetDecvq()
    const -> MetaDataStructured_XY {
       return GetDefinition()->mDecvqOnce;
    }
    
+   /// Add a level of indirection to the type                                 
+   ///   @attention this is possible only if that level of indirection has    
+   ///      already been reflected at runtime prior to calling this function  
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::AddPtr()
    const -> MetaDataStructured_XY {
       return GetDefinition()->mAddPtr;
    }
    
+   /// Add a constant qualifier to the type                                   
+   ///   @attention this is possible only if the qualified type has           
+   ///      already been reflected at runtime prior to calling this function  
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::AddConst()
    const -> MetaDataStructured_XY {
       return GetDefinition()->mAddConst;
    }
    
+   /// Get the default concretization for an abstract type                    
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetConcrete()
    const -> MetaDataStructured_XY {
@@ -439,6 +452,7 @@ namespace Langulus::RTTI::Inner
          : nullptr;
    }
    
+   /// Get the runtime producer of the type, if any                           
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetProducer()
    const -> MetaDataStructured_XY {
@@ -448,36 +462,42 @@ namespace Langulus::RTTI::Inner
          : nullptr;
    }
 
+   /// Get the reflected bases                                                
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetBases()
    const noexcept -> DefinitionData::BaseList const& {
       return GetDefinition()->mCurrentBoundary.mBases;
    }
    
+   /// Get the reflected verbs                                                
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetVerbs()
    const noexcept -> DefinitionData::VerbList const& {
       return GetDefinition()->mCurrentBoundary.mVerbs;
    }
    
+   /// Get the reflected members                                              
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetMembers()
    const noexcept -> DefinitionData::MemberList const& {
       return GetDefinition()->mCurrentBoundary.mMembers;
    }
    
+   /// Get the reflected named values                                         
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetNamedValues()
    const noexcept -> DefinitionData::ValuesList const& {
       return GetDefinition()->mNamedValues;
    }
    
+   /// Get morphisms to other types                                           
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetMorphismsTo()
    const noexcept -> DefinitionData::MorphismList const& {
       return GetDefinition()->mCurrentBoundary.mMorphismsTo;
    }
    
+   /// Get morphisms from other types                                         
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    auto MetaDataStructured_XY<ID_SIZE, PT_SIZE>::GetMorphismsFrom()
    const noexcept -> DefinitionData::MorphismList const& {
