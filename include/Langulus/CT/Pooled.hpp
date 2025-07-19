@@ -61,7 +61,7 @@ namespace Langulus
    /// Useful for setting CTTI_Pooled                                         
    /// Instructs Fractalloc to pool to dedicated type-indexed pools           
    ///   @tparam MIN_POOL - what's the minimal pool size in bytes             
-   template<unsigned MIN_POOL = MinimalPoolSize>
+   template<unsigned MIN_POOL>
    struct PooledByType {
       static constexpr auto   Tactic   = PoolTactic::Type;
       static constexpr size_t MinPool  = MIN_POOL;
