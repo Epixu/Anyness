@@ -111,7 +111,9 @@ namespace Langulus::RTTI::Inner
    class Definition {
    protected:
       friend class RTTI::Registry;
-
+      template<class T>
+      friend struct MetaNaked;
+      
       // Each reflected type has an unique hash based on C++ name       
       const Hash mHash;
 

@@ -28,7 +28,6 @@ namespace Langulus::RTTI::Inner
    /// in a program either way. If somehow you do, then you're probably doing 
    /// something wrong. The handle has to be transformed into a pointer, so   
    /// this requires an additional level of indirection                       
-   ///   @tparam T - the type of the meta (data/tag/verb/const)               
    ///   @tparam BYTESIZE - the size of the handle in bytes                   
    ///                                                                        
    #pragma pack(push, 1)
