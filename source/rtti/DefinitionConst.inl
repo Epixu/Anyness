@@ -96,13 +96,13 @@ namespace Langulus::RTTI
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          Logger::VerboseRaw(
-            "Constant ", Logger::Yellow, definition.mNameOf,
+            Logger::Yellow, "Constant ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             "registered from ", Boundary
          );
       #else
          Logger::VerboseRaw(
-            "Constant ", Logger::Yellow, definition.mNameOf,
+            Logger::Yellow, "Constant ", definition.mNameOf,
             Logger::Green, " reflected"
          );
       #endif

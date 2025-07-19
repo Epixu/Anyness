@@ -22,7 +22,7 @@ namespace Langulus::Tags
    struct Name {
       using CTTI_Versioned = Version<7, 10>;
       using CTTI_DefineTag = Yes<"Name">;
-      using CTTI_Info = Yes<"Used for tagging names">;
+      using CTTI_Info      = Yes<"Used for tagging names">;
    };
 }
 
@@ -146,7 +146,6 @@ namespace
       using CTTI_Bases     = ImplicitlyReflectedData;
       using CTTI_Verbs     = Verbs::Create;
       using CTTI_MapsTo    = int;
-      //using CTTI_MapsFrom  = Pi;
       using CTTI_Values    = No;
 
       using Self = ImplicitlyReflectedDataWithTraits;
@@ -171,7 +170,6 @@ namespace
 
       using CTTI_Bases     = ImplicitlyReflectedData;
       using CTTI_MapsTo    = int;
-      //using CTTI_MapsFrom  = Pi;
       using CTTI_Values    = No;
    };
    

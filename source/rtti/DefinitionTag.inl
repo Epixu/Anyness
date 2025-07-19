@@ -82,13 +82,13 @@ namespace Langulus::RTTI
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          Logger::VerboseRaw(
-            "Tag ", Logger::Purple, definition.mNameOf,
+            Logger::Purple, "Tag ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             "registered from ", Boundary
          );
       #else
          Logger::VerboseRaw(
-            "Tag ", Logger::Purple, definition.mNameOf,
+            Logger::Purple, "Tag ", definition.mNameOf,
             Logger::Green, " reflected"
          );
       #endif

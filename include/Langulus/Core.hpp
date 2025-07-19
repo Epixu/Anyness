@@ -458,7 +458,7 @@ namespace Langulus
    extern const char* Boundary;
 
    /// The main boundary indentifier token                                    
-   constexpr const char* MainBoundary = "MAIN";
+   static const char* MainBoundary = "MAIN";
 
    /// The default floating point type, depends on configuration              
    #if LANGULUS_FPU == 16

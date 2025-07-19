@@ -555,13 +555,13 @@ namespace Langulus::RTTI
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          Logger::Verbose<VERBOSE>(
-            "Data ", Logger::Cyan, definition.mNameOf,
+            Logger::Cyan, "Data ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             "registered from ", Boundary
          );
       #else
          Logger::Verbose<VERBOSE>(
-            Logger::Green, "Data ", Logger::Cyan, definition.mNameOf,
+            Logger::Cyan, "Data ", definition.mNameOf,
             Logger::Green, " reflected"
          );
       #endif
