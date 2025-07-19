@@ -242,6 +242,8 @@ namespace Langulus::RTTI
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
          auto GetResolver()           const noexcept -> DefinitionData::FResolve;
+         auto GetDefaultConstructor() const noexcept -> DefinitionData::FUnary;
+         auto GetDescribeConstructor()const noexcept -> DefinitionData::FDescribe;
          auto GetReferConstructor()   const noexcept -> DefinitionData::FBinary;
          auto GetReferAssigner()      const noexcept -> DefinitionData::FBinary;
          auto GetMoveConstructor()    const noexcept -> DefinitionData::FBinary;

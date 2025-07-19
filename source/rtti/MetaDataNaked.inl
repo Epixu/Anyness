@@ -114,6 +114,18 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mCurrentBoundary.mResolver;
    }
 
+   /// Get the reflected default-constructor                                  
+   inline auto MetaDataNaked::GetDefaultConstructor()
+   const noexcept -> DefinitionData::FUnary {
+      return mDefinition->mCurrentBoundary.mDefaultConstructor;
+   }
+   
+   /// Get the reflected describe-constructor                                 
+   inline auto MetaDataNaked::GetDescribeConstructor()
+   const noexcept -> DefinitionData::FDescribe {
+      return mDefinition->mCurrentBoundary.mDescribeConstructor;
+   }
+   
    /// Get the reflected refer-constructor                                    
    inline auto MetaDataNaked::GetReferConstructor()
    const noexcept -> DefinitionData::FBinary {

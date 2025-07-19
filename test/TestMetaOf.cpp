@@ -219,8 +219,10 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.GetVersionMajor() == VersionOf<Deref<T>>().Major);
    REQUIRE(meta.GetVersionMinor() == VersionOf<Deref<T>>().Minor);
 
-   IF_LANGULUS_MANAGED_REFLECTION(REQUIRE(meta.GetID() != 0));
-   IF_LANGULUS_MANAGED_REFLECTION(REQUIRE(meta.GetBoundaries().empty()));
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      REQUIRE(meta.GetID() != 0);
+      REQUIRE(meta.GetBoundaries().empty());
+   #endif
 
    if constexpr (CT::Complete<Decay<T>>)
       REQUIRE(meta.GetOrigin() == MetaDataOf<Decay<T>>());
@@ -244,12 +246,14 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.IsPOD() == CT::POD<Deref<T>>);
    REQUIRE(meta.IsNullable() == CT::Nullable<Deref<T>>);
    REQUIRE(meta.IsAbstract() == CT::Abstract<Deref<T>>);
-   REQUIRE(meta.GetMinPoolsize() == (Roof2(sizeof(T) * 256 <= LANGULUS_MIN_POOL ? LANGULUS_MIN_POOL : sizeof(T) * 256)));
-
-   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == CT::GetPoolTactic<Deref<T>>()));
-   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolchain() == nullptr));
    REQUIRE(meta.HasGetHashMethod() == false);
 
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      REQUIRE(meta.GetMinPoolsize() == CT::GetMinPool<Deref<T>>());
+      REQUIRE(meta.GetPoolTactic() == CT::GetPoolTactic<Deref<T>>());
+      REQUIRE(meta.GetPoolchain() == nullptr);
+   #endif
+   
    REQUIRE(meta.GetDefaultConstructor() != nullptr);
    REQUIRE(meta.GetDescribeConstructor() == nullptr);
    REQUIRE(meta.GetReferConstructor() != nullptr);
@@ -309,10 +313,10 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
    REQUIRE(meta.IsDeep() == true);
    REQUIRE(meta.IsPOD() == false);       // not POD due to being abstract     
    REQUIRE(meta.IsNullable() == false);  // not nullable due to being abstract
-   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
-   REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
-   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetMinPoolsize() == MinimalPoolSize));
    REQUIRE(meta.IsAbstract() == true);
+   REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
+   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
+   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetMinPoolsize() == MinimalPoolSize));
    REQUIRE(meta.GetSize() == sizeof(ImplicitlyReflectedDataWithTraits));
    REQUIRE(meta.GetAlignment() == alignof(ImplicitlyReflectedDataWithTraits));
    REQUIRE(meta.GetOrigin() == meta);
