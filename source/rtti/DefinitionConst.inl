@@ -64,8 +64,11 @@ namespace Langulus::RTTI
       // Save the boundary at time of reflection, but don't even        
       // bother if it is the main one                                   
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         if (Boundary != Langulus::MainBoundary)
+         if (Boundary) {
+            Assert(Token{Boundary} != "MAIN", HERE(),
+               "Boundary named `MAIN` is reserved - pick another name");
             definition.mBoundaries.insert(Boundary);
+         }
       #endif
 
       // Reflected info                                                 
@@ -98,7 +101,7 @@ namespace Langulus::RTTI
          Logger::VerboseRaw(
             Logger::Yellow, "Constant ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            "registered from ", Boundary
+            "registered from ", (Boundary?Boundary:"MAIN")
          );
       #else
          Logger::VerboseRaw(

@@ -84,7 +84,7 @@ namespace Langulus::RTTI
          Logger::VerboseRaw(
             Logger::Purple, "Tag ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            "registered from ", Boundary
+            "registered from ", (Boundary?Boundary:"MAIN")
          );
       #else
          Logger::VerboseRaw(

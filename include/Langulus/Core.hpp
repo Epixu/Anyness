@@ -452,13 +452,10 @@ namespace Langulus
    /// is read upon data reflection, so that RTTI can track from which        
    /// library a type was reflected, and thus unregister it when shared       
    /// object is unloaded. The boundary also affects pooling tactics,         
-   /// because if boundary is not equal exactly to RTTI::MainBoundary,        
-   /// pooling will be PoolTactic::Type by default, and allocations           
-   /// happening from external libraries can be easily tracked.               
+   /// because if boundary is not equal nullptr, pooling will be              
+   /// PoolTactic::Type by default, and allocations happening from external   
+   /// libraries can be easily tracked.                                       
    extern const char* Boundary;
-
-   /// The main boundary indentifier token                                    
-   static const char* const MainBoundary = "MAIN";
 
    /// The default floating point type, depends on configuration              
    #if LANGULUS_FPU == 16

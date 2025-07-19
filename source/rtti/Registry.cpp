@@ -572,8 +572,7 @@ namespace Langulus::RTTI
    /// defined only within the given boundary token                           
    ///   @param boundary - the boundary token to search for                   
    void Registry::UnloadBoundary(const Token& boundary) {
-      AssumeDev(boundary != MainBoundary, HERE(),
-         "Can't unload main boundary");
+      AssumeDev(not boundary.empty(), HERE(), "Can't unload main boundary");
       auto scope = Logger::VerboseScoped<VERBOSE>(Logger::Red, Logger::Underline, 
          "Unloading boundary ", boundary);
 

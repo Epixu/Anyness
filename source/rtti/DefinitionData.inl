@@ -453,7 +453,7 @@ namespace Langulus::RTTI
          // unregister them and free their dedicated pools when the     
          // shared library is unloaded                                  
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if (Boundary != MainBoundary)
+            if (Boundary)
                definition.mPoolTactic = PoolTactic::Type;
          #endif
       #endif
@@ -557,7 +557,7 @@ namespace Langulus::RTTI
          Logger::Verbose<VERBOSE>(
             Logger::Cyan, "Data ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            "registered from ", Boundary
+            "registered from ", (Boundary?Boundary:"MAIN")
          );
       #else
          Logger::Verbose<VERBOSE>(

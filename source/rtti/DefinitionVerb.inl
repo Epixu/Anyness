@@ -103,7 +103,7 @@ namespace Langulus::RTTI
          Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", Boundary
+            " registered from ", (Boundary?Boundary:"MAIN")
          );
       }
 
@@ -113,7 +113,7 @@ namespace Langulus::RTTI
          Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", Boundary
+            " registered from ", (Boundary?Boundary:"MAIN")
          );
       }
 
@@ -122,7 +122,7 @@ namespace Langulus::RTTI
          Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", Boundary
+            " registered from ", (Boundary?Boundary:"MAIN")
          );
       }
       else {
@@ -130,7 +130,7 @@ namespace Langulus::RTTI
          Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mNameOf, "/", definition.mNameOfReverse,
             " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", Boundary
+            " registered from ", (Boundary?Boundary:"MAIN")
          );
       }
    #else
@@ -138,7 +138,7 @@ namespace Langulus::RTTI
          const auto op1 = IsolateOperator(definition.mOperator);
          Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op1, Logger::Green,
-            " registered from ", Boundary
+            " registered from ", (Boundary?Boundary:"MAIN")
          );
       }
 
@@ -146,20 +146,20 @@ namespace Langulus::RTTI
          const auto op2 = IsolateOperator(definition.mOperatorReverse);
          Logger::VerboseRaw(
             "Operator ", Logger::DarkGreen, op2, Logger::Green,
-            " registered from ", Boundary
+            " registered from ", (Boundary?Boundary:"MAIN")
          );
       }
 
       if (definition.mNameOfReverse.empty()) {
          Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mNameOf, Logger::Green,
-            " registered from ", Boundary
+            " registered from ", (Boundary?Boundary:"MAIN")
          );
       }
       else {
          Logger::VerboseRaw(
             "Verb ", Logger::DarkGreen, definition.mNameOf, "/", definition.mNameOfReverse,
-            Logger::Green, " registered from ", Boundary
+            Logger::Green, " registered from ", (Boundary?Boundary:"MAIN")
          );
       }
    #endif*/

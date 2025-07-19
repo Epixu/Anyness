@@ -170,8 +170,11 @@ namespace Langulus::RTTI::Inner
          // Save the boundary at time of reflection, but don't even     
          // bother if it is the main one                                
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if (Boundary != MainBoundary)
+            if (Boundary) {
+               Assert(Token{Boundary} != "MAIN", HERE(),
+                  "Boundary named `MAIN` is reserved - pick another name");
                mBoundaries.insert(Boundary);
+            }
          #endif
 
          // Reflected info                                              

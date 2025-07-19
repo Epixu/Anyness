@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include <Langulus/Core.hpp>
-LANGULUS_BOUNDARY(Langulus::MainBoundary)
+LANGULUS_BOUNDARY(nullptr)
 
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>

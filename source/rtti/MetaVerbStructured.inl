@@ -7,6 +7,9 @@
 ///                                                                           
 #pragma once
 
+#if not LANGULUS_FEATURE(MANAGED_REFLECTION)
+   #error "This file shouldn't be included if MANAGED_REFLECTION feature is disabled"
+#endif
 
 namespace Langulus::RTTI::Inner
 {

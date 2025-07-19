@@ -864,7 +864,7 @@ namespace Langulus::Fractalloc
             );
          
             if (type.GetBoundaries().empty())
-               Logger::Append(MainBoundary);
+               Logger::Append("MAIN");
             else for (auto& boundary : type.GetBoundaries())
                Logger::Append(boundary, ' ');
          
