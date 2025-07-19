@@ -238,6 +238,7 @@ namespace Langulus::RTTI
          bool IsPOD()                 const noexcept;
          bool IsNullable()            const noexcept;
          bool IsAbstract()            const noexcept;
+         bool HasGetHashMethod()      const noexcept;
 
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
@@ -258,7 +259,7 @@ namespace Langulus::RTTI
          auto GetCopyAssigner()       const noexcept -> DefinitionData::FBinary;
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
-         bool HasGetHashMethod()      const noexcept;
+         auto GetDispatcher()         const noexcept -> DefinitionData::FDispatch;
 
          auto GetDeptr()              const -> MetaDataNaked;
          auto GetOrigin()             const -> MetaDataNaked;

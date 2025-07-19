@@ -96,6 +96,11 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mNullable;
    }
 
+   /// Check if type has an explicit GetHash() method                         
+   inline bool MetaDataNaked::HasGetHashMethod() const noexcept {
+      return mDefinition->mHasGetHashMethod;
+   }
+   
    /// Get the reflected destructor                                           
    inline auto MetaDataNaked::GetDestructor()
    const noexcept -> DefinitionData::FUnary {
@@ -210,9 +215,10 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mCurrentBoundary.mHasher;
    }
 
-   /// Check if type has an explicit GetHash() method                         
-   inline bool MetaDataNaked::HasGetHashMethod() const noexcept {
-      return mDefinition->mHasGetHashMethod;
+   /// Get the reflected dispatcher                                           
+   inline auto MetaDataNaked::GetDispatcher()
+   const noexcept -> DefinitionData::FDispatch {
+      return mDefinition->mCurrentBoundary.mDispatcher;
    }
 
 } // namespace Langulus::RTTI::Inner
