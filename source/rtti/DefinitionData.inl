@@ -23,6 +23,7 @@
 #include <Langulus/CT/Convertible.hpp>
 #include <Langulus/CT/DefineConst.hpp>
 #include <Langulus/CT/Members.hpp>
+#include <Langulus/CT/MinAlloc.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
 #include "Langulus/SuffixOf.hpp"
@@ -438,17 +439,14 @@ namespace Langulus::RTTI
                return Anyness::Any {atT->GetResolved()};
             };
       }
-      
+
+      // Reflect the minimal allocation in bytes                        
+      definition.mMinimalAllocation = CT::GetMinAlloc<T>();
+
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         // Calculate the allocation page and table using reflection    
+         // Reflect pooling properties                                  
          definition.mPoolTactic = CT::GetPoolTactic<T>();
          definition.mMinimalPoolSize = CT::GetMinPool<T>();
-         constexpr auto minElements = CT::GetMinPool<T>() / sizeof(T);
-         for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
-            const size_t threshold = size_t {1} << bit;
-            const size_t elements = threshold / sizeof(T);
-            definition.mAllocationTable[bit] = ::std::max(minElements, elements);
-         }
 
          // Make sure that types registered from an external shared     
          // library are always pooled by type, so that we're able to    
@@ -458,19 +456,17 @@ namespace Langulus::RTTI
             if (Boundary != MainBoundary)
                definition.mPoolTactic = PoolTactic::Type;
          #endif
-      #else
-         // Calculate the allocation page and table using configuration 
-         definition.mMinimalPoolSize = sizeof(T) * 256 <= LANGULUS_MIN_POOL
-            ? LANGULUS_MIN_POOL
-            : sizeof(T) * 256;
-         const auto minElements = definition.mMinimalPoolSize / sizeof(T);
-         for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
-            const size_t threshold = size_t {1} << bit;
-            const size_t elements = threshold / sizeof(T);
-            definition.mAllocationTable[bit] = ::std::max(minElements, elements);
-         }
       #endif
       
+      // Calculate the allocation table                                 
+      constexpr auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
+      for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
+         const size_t threshold = size_t {1} << bit;
+         const size_t elements = threshold / sizeof(T);
+         definition.mAllocationTable[bit] = minElements > elements
+            ? minElements : elements;
+      }
+
       using BASES = BasesOf<T>;
       if constexpr (not CT::Void<BASES>) {
          // Set reflected bases                                         

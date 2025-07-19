@@ -22,7 +22,7 @@
 //#include <Langulus/Anyness/Tag.hpp>
 #include "Main.hpp"
 #include <Langulus/TypeOf.hpp>
-#include <Langulus/CT/Except.hpp>
+#include <../include/Langulus/Except.hpp>
 #include <Langulus/CT/Referenced.hpp>
 #include <fmt/format.h>
 

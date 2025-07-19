@@ -72,7 +72,8 @@ namespace Langulus::Fractalloc
 
       // Touching is mandatory for pools - without touching the         
       // memory, it might remain just a promise by the OS, making       
-      // initial pool allocations very, very, VERY slow                 
+      // initial pool allocations very, very, VERY slow at the most     
+      // inappropriate of times                                         
       Touch();
    }
 

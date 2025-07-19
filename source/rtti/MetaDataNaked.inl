@@ -29,11 +29,6 @@ namespace Langulus::RTTI::Inner
       return other and mDefinition->mDecvqAll == other.mDefinition->mDecvqAll;
    }
 
-   /// Get the minimal allocation page                                        
-   inline auto MetaDataNaked::GetMinAllocation() const noexcept -> size_t {
-      return mDefinition->mMinimalPoolSize;
-   }
-
    /// Get the size of the type                                               
    inline auto MetaDataNaked::GetSize() const noexcept -> size_t {
       return mDefinition->mSize;
@@ -43,8 +38,18 @@ namespace Langulus::RTTI::Inner
    inline auto MetaDataNaked::GetAlignment() const noexcept -> size_t {
       return mDefinition->mAlign;
    }
+   
+   /// Get the minimal allocation of the type in bytes                        
+   inline auto MetaDataNaked::GetMinAllocation() const noexcept -> size_t {
+      return mDefinition->mMinimalAllocation;
+   }
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
+   /// Get the minimal allocation page                                        
+   inline auto MetaDataNaked::GetMinPoolsize() const noexcept -> size_t {
+      return mDefinition->mMinimalPoolSize;
+   }
+   
    /// Get the reflected pool tactic                                          
    inline auto MetaDataNaked::GetPoolTactic() const noexcept -> PoolTactic {
       return mDefinition->mPoolTactic;

@@ -107,12 +107,6 @@ namespace Langulus::RTTI::Inner
          return GetDefinition()->mSize;
    }
 
-   /// Get the minimal allocation page                                        
-   template<unsigned S1, unsigned S2>
-   auto MetaDataStructured_XY<S1, S2>::GetMinAllocation() const noexcept -> size_t {
-      return GetDefinition()->mMinimalPoolSize;
-   }
-
    /// Get the alignment of the type                                          
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetAlignment() const noexcept -> size_t {
@@ -171,6 +165,12 @@ namespace Langulus::RTTI::Inner
    template<unsigned S1, unsigned S2>
    auto MetaDataStructured_XY<S1, S2>::GetVersionMinor()  const noexcept -> unsigned {
       return GetDefinition()->mVersionMinor;
+   }
+   
+   /// Get the minimal allocation size in bytes                               
+   template<unsigned S1, unsigned S2>
+   auto MetaDataStructured_XY<S1, S2>::GetMinAllocation() const noexcept -> size_t {
+      return GetDefinition()->mMinimalAllocation;      
    }
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)

@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../Typenav.hpp"
+#include "Typenav.hpp"
 
 
 namespace Langulus::CTTI

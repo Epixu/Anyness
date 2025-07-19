@@ -10,6 +10,7 @@
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/DefineTag.hpp>
 #include <Langulus/CT/DefineVerb.hpp>
+#include <unordered_set>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #include <Langulus/CT/Pooled.hpp>
@@ -90,6 +91,8 @@ namespace Langulus::RTTI
       size_t mSize IF_SAFE(= 0);
       // Data instance alignment in bytes, set by alignof()             
       size_t mAlign IF_SAFE(= 0);
+      // Minimal element allocation, in bytes                           
+      size_t mMinimalAllocation IF_SAFE(= 0);
       // Precomputed counts indexed by MSB (avoids division by stride   
       // for that extra oompf)                                          
       size_t mAllocationTable[sizeof(size_t) * 8 + 1] IF_SAFE(= {});
@@ -124,7 +127,6 @@ namespace Langulus::RTTI
       using FReference     = int (*)(void* self, int modifier);
       using FDispatch      = bool (*)(void* self, Flow::Verb& verb);
       using FAccessMember  = void* (*)(void* owner);
-      //using FTagRetriever  = DefinitionTag const* (*)(unsigned index);
       using FTypeRetriever = DefinitionData const* (*)();
       
       /// Type-erased member variable reflection                              

@@ -124,7 +124,6 @@ namespace Langulus::RTTI
          constexpr bool operator == (const MetaDataStructured_XY&) const noexcept;
 
          constexpr auto GetSize()     const noexcept -> size_t;
-         auto GetMinAllocation()      const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
          auto GetName()               const noexcept -> Token;
          auto GetInfo()               const noexcept -> Token;
@@ -135,6 +134,7 @@ namespace Langulus::RTTI
          auto GetBoundaries()         const noexcept -> Definition::BoundarySet const&;
          auto GetVersionMajor()       const noexcept -> unsigned;
          auto GetVersionMinor()       const noexcept -> unsigned;
+         auto GetMinAllocation()      const noexcept -> size_t;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetMinPoolsize()     const noexcept -> size_t;
@@ -218,11 +218,11 @@ namespace Langulus::RTTI
          bool Is(const MetaDataNaked&) const noexcept;
          bool IsSimilar(const MetaDataNaked&) const noexcept;
 
-         auto GetMinAllocation()      const noexcept -> size_t;
          auto GetSize()               const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;
          auto GetFiles()              const noexcept -> Token;
          auto GetSuffix()             const noexcept -> Token;
+         auto GetMinAllocation()      const noexcept -> size_t;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetMinPoolsize()     const noexcept -> size_t;

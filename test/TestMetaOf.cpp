@@ -140,7 +140,7 @@ namespace
       using CTTI_Versioned = Version<2, 1>;
       using CTTI_Deep      = Yes<>;
       using CTTI_Nullable  = Yes<>;
-      using CTTI_Pooled    = PooledBySize<250>;
+      using CTTI_Pooled    = PooledBySize;
       using CTTI_Concrete  = ImplicitlyReflectedData;
       using CTTI_Abstract  = Yes<>;
       using CTTI_Bases     = ImplicitlyReflectedData;

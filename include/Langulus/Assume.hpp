@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "CT/Except.hpp"
+#include "Except.hpp"
 #include "Logger.hpp"
 #include "NameOf.hpp"
 

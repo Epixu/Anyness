@@ -1,6 +1,13 @@
+///                                                                           
+/// Langulus::Core                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
 #pragma once
 #include "../Typenav.hpp"
-#include "Signed.hpp"
+#include "../Utils/Roof.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
@@ -42,64 +49,24 @@ namespace Langulus
 
    /// Useful for setting CTTI_Pooled                                         
    /// Instructs Fractalloc to pool in the common size-indexed pools          
-   ///   @tparam MIN_ALLOC - what's the minimal allocation size in bytes      
    ///   @attention MinPool doesn't really have any effect on the type, as    
    ///      it will be pooled by size, in a common pool that is sized to the  
    ///      MinimalPoolSize                                                   
-   template<unsigned MIN_ALLOC = LANGULUS_MIN_ALLOC>
    struct PooledBySize {
       static constexpr auto   Tactic   = PoolTactic::Size;
-      static constexpr size_t MinAlloc = MinimalAllocation;
       static constexpr size_t MinPool  = MinimalPoolSize;
       static constexpr bool   Enabled  = true;
    };
 
    /// Useful for setting CTTI_Pooled                                         
    /// Instructs Fractalloc to pool to dedicated type-indexed pools           
-   ///   @tparam MIN_ALLOC - what's the minimal allocation size in bytes      
    ///   @tparam MIN_POOL - what's the minimal pool size in bytes             
-   template<unsigned MIN_ALLOC = LANGULUS_MIN_ALLOC, unsigned MIN_POOL = LANGULUS_MIN_POOL>
+   template<unsigned MIN_POOL = MinimalPoolSize>
    struct PooledByType {
       static constexpr auto   Tactic   = PoolTactic::Type;
-      static constexpr size_t MinAlloc = MinimalAllocation;
-      static constexpr size_t MinPool  = MinimalPoolSize;
+      static constexpr size_t MinPool  = MIN_POOL;
       static constexpr bool   Enabled  = true;
    };
-
-   /// Round to the upper power-of-two                                        
-   ///   @tparam SAFE - set to true if you want it to throw on overflow       
-   ///   @param x - the unsigned integer to round up                          
-   ///   @return the closest upper power-of-two to x                          
-   template<bool SAFE = false, CT::Unsigned T> LANGULUS(ALWAYS_INLINED)
-   constexpr T Roof2(const T x) noexcept(not SAFE) {
-      if constexpr (SAFE) {
-         constexpr T lastPowerOfTwo = (T {1}) << (T {sizeof(T) * 8 - 1});
-         if (x > lastPowerOfTwo)
-            throw Exception("Roof2 overflowed", HERE());
-      }
-
-      if consteval {
-         T n = x;
-         --n;
-         n |= n >> 1;
-         n |= n >> 2;
-         n |= n >> 4;
-         if constexpr (sizeof(T) > 1)
-            n |= n >> 8;
-         if constexpr (sizeof(T) > 2)
-            n |= n >> 16;
-         if constexpr (sizeof(T) > 4)
-            n |= n >> 32;
-         static_assert(sizeof(T) <= 8, "Not implemented");
-
-         ++n;
-         return n;
-      }
-      else {
-         return x <= 1 ? x : static_cast<T>((T {1}) << 
-            static_cast<T>(sizeof(T) * 8 - ::std::countl_zero(static_cast<T>(x - 1))));
-      }
-   }
 }
 
 namespace Langulus::CTTI
@@ -110,44 +77,22 @@ namespace Langulus::CTTI
    template<class T>
    struct Pooled {
       static constexpr PoolTactic Tactic = PoolTactic::Default;
-      static constexpr size_t MinAlloc = MinimalAllocation;
       static constexpr size_t MinPool  = MinimalPoolSize;
       static constexpr bool   Enabled  = false;
    };
 
-   /// Specialize for all fundamental types                                   
+   /// All fundamental types are pooled by size by default                    
    template<CT::Fundamental T>
    struct Pooled<T> {
       static constexpr PoolTactic Tactic = PoolTactic::Size;
-      static constexpr size_t MinAlloc = MinimalAllocation;
       static constexpr size_t MinPool  = MinimalPoolSize;
       static constexpr bool   Enabled  = true;
    };
 }
 
-LANGULUS_CTTI_CONCEPT(Pooled);
-
 namespace Langulus::CT
 {
-   ///                                                                        
-   template<class T>
-   consteval size_t GetMinAlloc() {
-      static_assert(Roof2(MinimalAllocation),
-         "MinimalAllocation must be a power-of-two");
-      
-      using ST = Shed<T>;
-      if constexpr (CTTI::Pooled<ST>::Enabled) {
-         constexpr size_t minalloc = CTTI::Pooled<ST>::MinAlloc;
-         return minalloc < MinimalAllocation ? MinimalAllocation : minalloc;
-      }
-      else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled)) {
-         constexpr size_t minalloc = Decay<ST>::CTTI_Pooled::MinAlloc;
-         return minalloc < MinimalAllocation ? MinimalAllocation : minalloc;
-      }
-      else return sizeof(T) < MinimalAllocation ? MinimalAllocation : sizeof(T);
-   }
-   
-   ///                                                                        
+   /// Get the minimal pool size in bytes at compile time for T               
    template<class T>
    consteval size_t GetMinPool() {
       static_assert(Roof2(MinimalPoolSize),
@@ -156,21 +101,22 @@ namespace Langulus::CT
       using ST = Shed<T>;
       if constexpr (CTTI::Pooled<ST>::Enabled) {
          constexpr size_t minpool = Roof2(CTTI::Pooled<ST>::MinPool);
-         constexpr size_t minallo = Roof2(GetMinAlloc<ST>());
-         return minpool < minallo ? minallo : minpool;
+         static_assert(Roof2(minpool),
+            "Reflected MinPool must be a power-of-two");
+         return minpool < MinimalPoolSize ? MinimalPoolSize : minpool;
       }
       else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled)) {
          constexpr size_t minpool = Roof2(Decay<ST>::CTTI_Pooled::MinPool);
-         constexpr size_t minallo = Roof2(GetMinAlloc<ST>());
-         return minpool < minallo ? minallo : minpool;
+         static_assert(Roof2(minpool),
+            "Reflected MinPool must be a power-of-two");
+         return minpool < MinimalPoolSize ? MinimalPoolSize : minpool;
       }
       else return Roof2(sizeof(ST) * 256 <= MinimalPoolSize
-         ? MinimalPoolSize
-         : sizeof(ST) * 256
+         ? MinimalPoolSize : sizeof(ST) * 256
       );
    }
    
-   ///                                                                        
+   /// Get the reflected pool tactic for T at compile time                    
    template<class T>
    consteval PoolTactic GetPoolTactic() {
       using ST = Shed<T>;
