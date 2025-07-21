@@ -12,9 +12,6 @@
 #include "DefinitionVerb.hpp"
 #include <ranges>
 
-#include "MetaData.hpp"
-#include "MetaTag.hpp"
-
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #error "This file shouldn't be compiled if MANAGED_REFLECTION is disabled"
 #endif
@@ -47,7 +44,6 @@ namespace Langulus::RTTI
    ///      no normalization is required. Used mostly internally.             
    ///   @param where - where to search in                                    
    ///   @param token - the token to search for                               
-   ///   @param boundary - the boundary to search in (optional)               
    ///   @return the found element, or nullptr if not found                   
    template<bool BY_CPPNAME>
    auto Registry::GetMetaByName(const auto& where, const Token& token)
@@ -554,7 +550,6 @@ namespace Langulus::RTTI
    /// Register file extension                                                
    ///   @param token - the file extension token to reserve                   
    ///   @param type - the data to associate file with                        
-   ///   @param boundary - the boundary to register in                        
    void Registry::RegisterFileExtension(const Token& token, DefinitionData* type)
    has_assumptions {
       AssumeDev(not token.empty(), HERE(), "Bad file extension");

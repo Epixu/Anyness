@@ -9,7 +9,6 @@
 #include "Definition.hpp"
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/DefineTag.hpp>
-#include <Langulus/CT/DefineVerb.hpp>
 #include <unordered_set>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)

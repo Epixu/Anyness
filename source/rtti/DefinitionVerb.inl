@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "DefinitionVerb.hpp"
-#include "MetaVerb.hpp"
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/CT/DefineTag.hpp>
 #include <Langulus/CT/DefineVerb.hpp>
@@ -70,7 +69,7 @@ namespace Langulus::RTTI
 
       //                                                                
       // If this is reached, then verb is not defined yet               
-      definition.template ReflectCommon<T>();
+      definition.ReflectCommon<T>();
       
       constexpr auto verbPos = NameOfVerb<T>();
       constexpr auto verbNeg = NameOfVerbReverse<T>();

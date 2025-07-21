@@ -76,5 +76,3 @@ namespace Langulus::RTTI
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include "MetaTagStructured.inl"
 #endif
-
-#include "MetaTagNaked.inl"

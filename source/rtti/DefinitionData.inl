@@ -402,25 +402,34 @@ namespace Langulus::RTTI
                }
                else if constexpr (CT::ComparableStrong<DTAll>) {
                   switch (*t1T <=> *t2T) {
-                  case ::std::strong_ordering::less:        return Compared::Less;
-                  case ::std::strong_ordering::equal:
-                  case ::std::strong_ordering::equivalent:  return Compared::Equal;
-                  case ::std::strong_ordering::greater:     return Compared::Greater;
+                  case ::std::strong_ordering::less:
+                     return Compared::Less;
+                  case ::std::strong_ordering::greater:
+                     return Compared::Greater;
+                  default:
+                     return Compared::Equal;
                   }
                }
                else if constexpr (CT::ComparableWeak<DTAll>) {
                   switch (*t1T <=> *t2T) {
-                  case ::std::weak_ordering::less:          return Compared::Less;
-                  case ::std::weak_ordering::equivalent:    return Compared::Equivalent;
-                  case ::std::weak_ordering::greater:       return Compared::Greater;
+                  case ::std::weak_ordering::less:
+                     return Compared::Less;
+                  case ::std::weak_ordering::greater:
+                     return Compared::Greater;
+                  default:
+                     return Compared::Equivalent;
                   }
                }
                else if constexpr (CT::ComparablePartial<DTAll>) {
                   switch (*t1T <=> *t2T) {
-                  case ::std::partial_ordering::unordered:   return Compared::Unordered;
-                  case ::std::partial_ordering::less:        return Compared::Less;
-                  case ::std::partial_ordering::equivalent:  return Compared::Equivalent;
-                  case ::std::partial_ordering::greater:     return Compared::Greater;
+                  case ::std::partial_ordering::unordered:
+                     return Compared::Unordered;
+                  case ::std::partial_ordering::less:
+                     return Compared::Less;
+                  case ::std::partial_ordering::greater:
+                     return Compared::Greater;
+                  default:
+                     return Compared::Equivalent;
                   }
                }
                else {
@@ -579,7 +588,7 @@ namespace Langulus::RTTI
       Member m;
       m.extent = ExtentOf<DATA>;
       m.member = [](void* owner) -> void* {
-         auto context = reinterpret_cast<THIS*>(owner);
+         auto context = static_cast<THIS*>(owner);
          return &(context->*HANDLE::Handle);
       };
       m.name = HANDLE::Name;
@@ -619,13 +628,13 @@ namespace Langulus::RTTI
       if constexpr (CT::DerivedFrom<T, BASE>) {
          if constexpr (CT::VirtuallyDerivedFrom<T, BASE>) {
             // Needs to use slower dynamic_cast when base is virtual    
-            result.getBase = [](void* from) -> void* {
+            result.getBase = [](void* from) noexcept -> void* {
                return dynamic_cast<BASE*>(static_cast<T*>(from));
             };
          }
          else {
-            result.getBase = [](void* from) -> void* {
-               return static_cast<T*>(from);
+            result.getBase = [](void* from) noexcept -> void* {
+               return static_cast<BASE*>(static_cast<T*>(from));
             };
             
             // If sizes match and there's no byte offset, then the      

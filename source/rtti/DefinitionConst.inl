@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "DefinitionConst.hpp"
-#include "MetaConst.hpp"
 #include <Langulus/CT/Info.hpp>
 #include <Langulus/CT/Versioned.hpp>
 #include <Langulus/Logger.hpp>

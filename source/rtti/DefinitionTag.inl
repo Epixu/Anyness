@@ -70,7 +70,7 @@ namespace Langulus::RTTI
 
       //                                                                
       // If this is reached, then tag is not defined yet                
-      definition.template ReflectCommon<T>();
+      definition.ReflectCommon<T>();
 
       constexpr auto token = NameOfTag<T>();
       static_assert(token != "", "Invalid tag token is not allowed - "
