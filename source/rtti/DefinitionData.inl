@@ -42,6 +42,20 @@
 
 namespace Langulus::RTTI
 {
+   namespace Inner
+   {
+      /// These functions are used to reduce the number of generated lambdas  
+      /// at reflection time                                                  
+      inline void SparseDefaultConstructor(void* at) noexcept {
+         auto atT = static_cast<void**>(at);
+         *atT = nullptr;
+      };
+      inline void SparseCopyConstructor(void* from, void* to) noexcept {
+         auto fromT = static_cast<void**>(from);
+         auto toT = static_cast<void**>(to);
+         *fromT = *toT;
+      };
+   }
 
    /// Reflect or return an already reflected data                            
    ///   @attention when making a shared library and reflecting your types    
@@ -225,81 +239,131 @@ namespace Langulus::RTTI
       // @note these are allowed even if T is constant                  
       if constexpr (::std::same_as<T, DTAll>) {
          if constexpr (CT::Defaultable<DTAll>) {
-            // Generate a default constructor                           
-            definition.mCurrentBoundary.mDefaultConstructor =
-               [](void* at) noexcept(noexcept(DTAll {})) {
-                  auto atT = static_cast<DTAll*>(at);
-                  new (atT) DTAll {};
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mDefaultConstructor
+                  = Inner::SparseDefaultConstructor;
+            }
+            else {
+               // Generate a default constructor                        
+               definition.mCurrentBoundary.mDefaultConstructor =
+                  [](void* at) noexcept(noexcept(DTAll {})) {
+                     auto atT = static_cast<DTAll*>(at);
+                     new (atT) DTAll {};
+                  };
+            }
          }
 
          if constexpr (CT::CopyConstructible<DTAll>) {
-            // Generate a copy-constructor                              
-            definition.mCurrentBoundary.mCopyConstructor =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<const DTAll*>(from);
-                  auto toT = static_cast<DTAll*>(to);
-                  IntentNew(toT, Copy(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mCopyConstructor
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate a copy-constructor                           
+               definition.mCurrentBoundary.mCopyConstructor =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<const DTAll*>(from);
+                     auto toT = static_cast<DTAll*>(to);
+                     IntentNew(toT, Copy(*fromT));
+                  };
+            }
          }
             
          if constexpr (CT::ReferConstructible<DTAll>) {
-            // Generate a refer-constructor                             
-            definition.mCurrentBoundary.mReferConstructor =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<const DTAll*>(from);
-                  auto toT = static_cast<DTAll*>(to);
-                  IntentNew(toT, Refer(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mReferConstructor
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate a refer-constructor                          
+               definition.mCurrentBoundary.mReferConstructor =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<const DTAll*>(from);
+                     auto toT = static_cast<DTAll*>(to);
+                     IntentNew(toT, Refer(*fromT));
+                  };
+            }
          }
             
          if constexpr (CT::CloneConstructible<DTAll>) {
-            // Generate a clone-constructor                             
-            definition.mCurrentBoundary.mCloneConstructor =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<const DTAll*>(from);
-                  auto toT = static_cast<DTAll*>(to);
-                  IntentNew(toT, Clone(*fromT));
-            };
+            if constexpr (CT::Sparse<T> and CT::Complete<Decay<T>>) {
+               // Always use the origin cloning routine                 
+               definition.mCurrentBoundary.mCloneConstructor
+                  = definition.mOrigin->mCurrentBoundary.mCloneConstructor;
+            }
+            else {
+               // Generate a clone-constructor                          
+               definition.mCurrentBoundary.mCloneConstructor =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<const DTAll*>(from);
+                     auto toT = static_cast<DTAll*>(to);
+                     IntentNew(toT, Clone(*fromT));
+                  };
+            }
          }
 
          if constexpr (CT::DisownConstructible<DTAll>) {
-            // Generate a disown-constructor                            
-            definition.mCurrentBoundary.mDisownConstructor =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<const DTAll*>(from);
-                  auto toT = static_cast<DTAll*>(to);
-                  IntentNew(toT, Disown(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mDisownConstructor
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate a disown-constructor                         
+               definition.mCurrentBoundary.mDisownConstructor =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<const DTAll*>(from);
+                     auto toT = static_cast<DTAll*>(to);
+                     IntentNew(toT, Disown(*fromT));
+                  };
+            }
          }
 
          if constexpr (CT::MoveConstructible<DTAll>) {
-            // Generate a move-constructor                              
-            definition.mCurrentBoundary.mMoveConstructor =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<DTAll*>(from);
-                  auto toT = static_cast<DTAll*>(to);
-                  IntentNew(toT, Move(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mMoveConstructor
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate a move-constructor                           
+               definition.mCurrentBoundary.mMoveConstructor =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<DTAll*>(from);
+                     auto toT = static_cast<DTAll*>(to);
+                     IntentNew(toT, Move(*fromT));
+                  };
+            }
          }
 
          if constexpr (CT::AbandonConstructible<DTAll>) {
-            // Generate a abandon-constructor                           
-            definition.mCurrentBoundary.mAbandonConstructor =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<DTAll*>(from);
-                  auto toT = static_cast<DTAll*>(to);
-                  IntentNew(toT, Abandon(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mAbandonConstructor
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate a abandon-constructor                        
+               definition.mCurrentBoundary.mAbandonConstructor =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<DTAll*>(from);
+                     auto toT = static_cast<DTAll*>(to);
+                     IntentNew(toT, Abandon(*fromT));
+                  };
+            }
          }
       
          if constexpr (CT::Destroyable<DTAll>) {
-            // Generate a destructor                                    
-            definition.mCurrentBoundary.mDestructor =
-               [](void* at) {
-                  auto atT = static_cast<DTAll*>(at);
-                  atT->~DTAll();
-            };
+            if constexpr (CT::Sparse<T> and CT::Complete<Decay<T>>) {
+               // Always use the origin destructor                      
+               definition.mCurrentBoundary.mDestructor
+                  = definition.mOrigin->mCurrentBoundary.mDestructor;
+            }
+            else {
+               // Generate a destructor                                 
+               definition.mCurrentBoundary.mDestructor =
+                  [](void* at) {
+                     auto atT = static_cast<DTAll*>(at);
+                     atT->~DTAll();
+                  };
+            }
          }
       }
       else {
@@ -328,63 +392,100 @@ namespace Langulus::RTTI
       // @note allowed only if T is mutable                             
       if constexpr (CT::Mutable<T>) {
          if constexpr (CT::CopyAssignable<T>) {
-            // Generate a copy-assigner                                 
-            definition.mCurrentBoundary.mCopyAssigner =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<T*>(from);
-                  auto toT = static_cast<T*>(to);
-                  IntentAssign(*toT, Copy(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mCopyAssigner
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate a copy-assigner                              
+               definition.mCurrentBoundary.mCopyAssigner =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<T*>(from);
+                     auto toT = static_cast<T*>(to);
+                     IntentAssign(*toT, Copy(*fromT));
+                  };
+            }
          }
       
          if constexpr (CT::ReferAssignable<T>) {
-            // Generate a refer-assigner                                
-            definition.mCurrentBoundary.mReferAssigner =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<T*>(from);
-                  auto toT = static_cast<T*>(to);
-                  IntentAssign(*toT, Refer(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mReferAssigner
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate a refer-assigner                             
+               definition.mCurrentBoundary.mReferAssigner =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<T*>(from);
+                     auto toT = static_cast<T*>(to);
+                     IntentAssign(*toT, Refer(*fromT));
+                  };
+            }
          }
 
          if constexpr (CT::DisownAssignable<T>) {
-            // Generate a disown-assigner                               
-            definition.mCurrentBoundary.mDisownAssigner =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<T*>(from);
-                  auto toT = static_cast<T*>(to);
-                  IntentAssign(*toT, Disown(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mDisownAssigner
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate a disown-assigner                            
+               definition.mCurrentBoundary.mDisownAssigner =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<T*>(from);
+                     auto toT = static_cast<T*>(to);
+                     IntentAssign(*toT, Disown(*fromT));
+                  };
+            }
          }
             
          if constexpr (CT::CloneAssignable<T>) {
-            // Generate a clone-assigner                                
-            definition.mCurrentBoundary.mCloneAssigner =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<T*>(from);
-                  auto toT = static_cast<T*>(to);
-                  IntentAssign(*toT, Clone(*fromT));
-            };
+            if constexpr (CT::Sparse<T> and CT::Complete<Decay<T>>) {
+               // Always use the origin cloning routine                 
+               definition.mCurrentBoundary.mCloneAssigner
+                  = definition.mOrigin->mCurrentBoundary.mCloneAssigner;
+            }
+            else {
+               // Generate a clone-assigner                             
+               definition.mCurrentBoundary.mCloneAssigner =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<T*>(from);
+                     auto toT = static_cast<T*>(to);
+                     IntentAssign(*toT, Clone(*fromT));
+                  };
+            }
          }
 
          if constexpr (CT::MoveAssignable<T>) {
-            // Generate a move-assigner                                 
-            definition.mCurrentBoundary.mMoveAssigner =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<T*>(from);
-                  auto toT = static_cast<T*>(to);
-                  IntentAssign(*toT, Move(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mMoveAssigner
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate a move-assigner                              
+               definition.mCurrentBoundary.mMoveAssigner =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<T*>(from);
+                     auto toT = static_cast<T*>(to);
+                     IntentAssign(*toT, Move(*fromT));
+                  };
+            }
          }
 
          if constexpr (CT::AbandonAssignable<T>) {
-            // Generate an abandon-assigner                             
-            definition.mCurrentBoundary.mAbandonAssigner =
-               [](void* from, void* to) {
-                  auto fromT = static_cast<T*>(from);
-                  auto toT = static_cast<T*>(to);
-                  IntentAssign(*toT, Abandon(*fromT));
-            };
+            if constexpr (::std::is_pointer_v<T>) {
+               definition.mCurrentBoundary.mAbandonAssigner
+                  = Inner::SparseCopyConstructor;
+            }
+            else {
+               // Generate an abandon-assigner                          
+               definition.mCurrentBoundary.mAbandonAssigner =
+                  [](void* from, void* to) {
+                     auto fromT = static_cast<T*>(from);
+                     auto toT = static_cast<T*>(to);
+                     IntentAssign(*toT, Abandon(*fromT));
+                  };
+            }
          }
       }
 

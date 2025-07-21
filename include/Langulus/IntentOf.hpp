@@ -726,7 +726,7 @@ namespace Langulus
    ///      assumes that the 'placement' pointer always points to an          
    ///      instance of type Decay<T>                                         
    ///   @param placement - where to place the new instance                   
-   ///   @param value - the constructor argument, with or without intent      
+   ///   @param value - the constructor argument and intent                   
    ///   @return the instance on the heap                                     
    template<bool FAKE = false, template<class> class S, CT::NoIntent T>
    requires CT::Intent<S<T>> LANGULUS(INLINED)
