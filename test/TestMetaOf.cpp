@@ -255,16 +255,16 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    #endif
    
    REQUIRE(meta.GetDefaultConstructor() != nullptr);
-   REQUIRE(meta.GetDescribeConstructor() == nullptr);
-   REQUIRE(meta.GetReferConstructor() != nullptr);
-   REQUIRE(meta.GetCopyConstructor() != nullptr);
-   REQUIRE(meta.GetDisownConstructor() != nullptr);
-   REQUIRE(meta.GetCloneConstructor() == nullptr);
-   REQUIRE(meta.GetMoveConstructor() != nullptr);
+   REQUIRE(meta.GetDescribeConstructor()== nullptr);
+   REQUIRE(meta.GetReferConstructor()   != nullptr);
+   REQUIRE(meta.GetCopyConstructor()    != nullptr);
+   REQUIRE(meta.GetDisownConstructor()  != nullptr);
+   REQUIRE(meta.GetCloneConstructor()   == nullptr);
+   REQUIRE(meta.GetMoveConstructor()    != nullptr);
    REQUIRE(meta.GetAbandonConstructor() != nullptr);
    
    REQUIRE(meta.GetDestructor() == nullptr);
-   REQUIRE(meta.GetComparer() != nullptr);
+   REQUIRE(meta.GetComparer()   != nullptr);
 
    if constexpr (CT::Constant<T>) {
       REQUIRE(meta.GetReferAssigner()   == nullptr);
@@ -283,12 +283,12 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
       REQUIRE(meta.GetAbandonAssigner() != nullptr);
    }
 
-   REQUIRE(meta.GetResolver() == nullptr);
-   REQUIRE(meta.GetHasher() != nullptr);
+   REQUIRE(meta.GetResolver()   == nullptr);
+   REQUIRE(meta.GetHasher()     != nullptr);
    REQUIRE(meta.GetReferencer() == nullptr);
    REQUIRE(meta.GetDispatcher() == nullptr);
-   REQUIRE(meta.GetConcrete() == nullptr);
-   REQUIRE(meta.GetProducer() == nullptr);
+   REQUIRE(meta.GetConcrete()   == nullptr);
+   REQUIRE(meta.GetProducer()   == nullptr);
 
    REQUIRE(meta.GetMembers().size() == 0);
    REQUIRE(meta.GetVerbs().size() == 0);
@@ -301,7 +301,6 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
 SCENARIO("A type reflected with all traits", "[rtti]") {
    ImplicitlyReflectedDataWithTraits instance;
    auto ptrtobase = static_cast<ImplicitlyReflectedData*>(&instance);
-   const size_t baseoffset = reinterpret_cast<char*>(ptrtobase) - reinterpret_cast<char*>(&instance);
    const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits>();
 
    REQUIRE(meta != nullptr);
@@ -326,11 +325,8 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
 
    REQUIRE(meta.GetBases().size() == 1);
    REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ImplicitlyReflectedData>()));
-   REQUIRE(meta.GetBases()[0].imposed == false);
    REQUIRE(meta.GetBases()[0].binaryCompatible == false);
-   REQUIRE(meta.GetBases()[0].count == 1);
-   REQUIRE(baseoffset >= 0);
-   REQUIRE(meta.GetBases()[0].offset == baseoffset);
+   REQUIRE(meta.GetBases()[0].getBase(&instance) == ptrtobase);
 
    REQUIRE(meta.GetVerbs().size() == 1);
    auto ability = meta.GetVerbs().begin();
@@ -479,12 +475,12 @@ namespace
 {
    /// Type that has a virtual base                                           
    struct VirtuallyDerived : virtual ImpureVirtual {
-
+      using CTTI_Bases = Types<ImpureVirtual, int>;
    };
 
    /// Type that has a private non-virtual base                               
    struct PrivatelyDerived : private ImpureVirtual {
-
+      using CTTI_Bases = Types<ImpureVirtual, int, float>;
    };
 }
 
@@ -493,7 +489,39 @@ TEMPLATE_TEST_CASE("Reflecting virtual bases", "[rtti]",
 ) {
    using T = TestType;
    const DMeta meta = MetaDataOf<T>();
-   //TODO
+   T instance {};
+   auto instance_base = dynamic_cast<ImpureVirtual*>(&instance);
+
+   REQUIRE(meta.GetBases().size() == 2);
+   
+   REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ImpureVirtual>()));
+   REQUIRE(meta.GetBases()[0].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[0].getBase(&instance) == instance_base);
+   
+   REQUIRE(DMeta(meta.GetBases()[1].type).Is(MetaDataOf<int>()));
+   REQUIRE(meta.GetBases()[1].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[1].getBase == nullptr);
+}
+
+TEMPLATE_TEST_CASE("Reflecting non-virtual bases", "[rtti]",
+   PrivatelyDerived
+) {
+   using T = TestType;
+   const DMeta meta = MetaDataOf<T>();
+
+   REQUIRE(meta.GetBases().size() == 3);
+   
+   REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ImpureVirtual>()));
+   REQUIRE(meta.GetBases()[0].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[0].getBase == nullptr);
+   
+   REQUIRE(DMeta(meta.GetBases()[1].type).Is(MetaDataOf<int>()));
+   REQUIRE(meta.GetBases()[1].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[1].getBase == nullptr);
+   
+   REQUIRE(DMeta(meta.GetBases()[2].type).Is(MetaDataOf<float>()));
+   REQUIRE(meta.GetBases()[2].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[2].getBase == nullptr);
 }
 
 

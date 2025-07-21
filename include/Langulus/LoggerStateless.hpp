@@ -517,6 +517,7 @@ namespace Langulus::Logger
          else if (bytes < 1'000'000'000LL)
             oss << (bytes * 1. / 1000'000LL) << " MB";
          else if constexpr (sizeof(size_t) > 4) {
+            // ReSharper disable once CppDFAUnreachableCode             
             if (bytes < 1'000'000'000'000LL)
                oss << (bytes * 1. / 1000'000'000LL) << " GB";
             else if (bytes < 1'000'000'000'000'000LL)

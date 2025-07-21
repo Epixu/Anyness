@@ -18,7 +18,6 @@
 namespace Langulus
 {
    /// Round to the upper power-of-two                                        
-   ///   @tparam SAFE - set to true if you want it to throw on overflow       
    ///   @param x - the unsigned integer to round up                          
    ///   @return the closest upper power-of-two to x                          
    template<class T> LANGULUS(ALWAYS_INLINED)

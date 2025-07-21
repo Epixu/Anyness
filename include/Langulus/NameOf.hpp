@@ -126,6 +126,7 @@ namespace Langulus::RTTI
       /// Analyze compiler stringification and find the right offset in order 
       /// the shed the unnecessary emballage                                  
       ///   @return the number of characters to discard on the right          
+      // ReSharper disable once CppDFAUnreachableFunctionCall           
       consteval size_t CalculateTypeRightOffset() {
          constexpr auto calibration_name = 
             WrappedTypeName<Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK>();
@@ -156,6 +157,7 @@ namespace Langulus::RTTI
       /// Analyze compiler stringification and find the right offset in order 
       /// the shed the unnecessary emballage                                  
       ///   @return the number of characters to discard on the right          
+      // ReSharper disable once CppDFAUnreachableFunctionCall           
       consteval size_t CalculateEnumRightOffset() {
          constexpr auto calibration_name = 
             WrappedEnumName<Oddly_Specific_EnumASDOLSAJDPAFHOAF>();
@@ -399,6 +401,7 @@ namespace Langulus::RTTI
       /// enclosed in a <template>, and skip forward to that                  
       ///   @param token - the token to scan                                  
       ///   @return the last token                                            
+      // ReSharper disable once CppDFAUnreachableFunctionCall           
       constexpr size_t FindLastToken(const Token& token) noexcept {
          size_t depth = 0;
          for (size_t i = token.size() - 1; i < token.size(); --i) {

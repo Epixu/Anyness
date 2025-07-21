@@ -343,9 +343,9 @@ void State::Write(ColorExt c_with_flags) const noexcept {
 
 /// Push a number of tabs                                                     
 ///   @attention the effect will be observable on the next new line           
-///   @param t - the tabs to push                                             
-void State::Write(Tabs tabs) const noexcept {
-   if (mCurrentIntent == Intent::Ignore or not tabs.mTabs)
+///   @param tabs - the tabs to push                                          
+void State::Write(const Tabs& tabs) const noexcept {
+   if (not tabs.mTabs)
       return;
 
    if (tabs.mTabs < 0) {

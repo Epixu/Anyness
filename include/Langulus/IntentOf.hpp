@@ -11,7 +11,6 @@
 #include "CT/Derived.hpp"
 #include "CT/POD.hpp"
 #include "CT/Support.hpp"
-#include <new>
 
 
 namespace Langulus::CTTI

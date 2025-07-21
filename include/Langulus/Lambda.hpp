@@ -24,42 +24,50 @@ namespace Langulus
       ///                                                                     
       template<class R, class F, class...AN>
       Tif<(sizeof...(AN) > 0), Types<AN...>, Types<void>>
+      // ReSharper disable once CppFunctionDoesntReturnValue            
       GetFunctionArguments(R(F::*)(AN...) const) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
       template<class R, class F, class...AN>
       Tif<(sizeof...(AN) > 0), Types<AN...>, Types<void>>
+      // ReSharper disable once CppFunctionDoesntReturnValue            
       GetFunctionArguments(R(F::*)(AN...)) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
 
       template<class R, class...AN>
       Tif<(sizeof...(AN) > 0), Types<AN...>, Types<void>>
+      // ReSharper disable once CppFunctionDoesntReturnValue            
       GetFunctionArguments(R(*)(AN...)) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
 
       template<class F>
+      // ReSharper disable once CppFunctionDoesntReturnValue            
       decltype(GetFunctionArguments(&F::operator())) GetFunctionArguments(F) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
 
       ///                                                                     
       template<class R, class F, class...AN>
+      // ReSharper disable once CppFunctionDoesntReturnValue            
       R GetFunctionReturn(R(F::*)(AN...) const) {
          static_assert(false, "Calling GetFunctionReturn is ill-formed");
       }
       template<class R, class F, class...AN>
+      // ReSharper disable once CppFunctionDoesntReturnValue            
       R GetFunctionReturn(R(F::*)(AN...)) {
          static_assert(false, "Calling GetFunctionReturn is ill-formed");
       }
 
       template<class R, class...AN>
+      // ReSharper disable once CppFunctionDoesntReturnValue            
       R GetFunctionReturn(R(*)(AN...)) {
          static_assert(false, "Calling GetFunctionReturn is ill-formed");
       }
 
       template<class F>
+      // ReSharper disable once CppFunctionDoesntReturnValue            
       decltype(GetFunctionReturn(&F::operator())) GetFunctionReturn(F) {
          static_assert(false, "Calling GetFunctionReturn is ill-formed");
       }

@@ -32,6 +32,7 @@ namespace Langulus::Logger
 
    public:
       LANGULUS_API(LOGGER)  ToTXT(::std::string_view const& filename);
+      // ReSharper disable once CppEnforceOverridingDestructorStyle     
       LANGULUS_API(LOGGER) ~ToTXT();
 
       LANGULUS_API(LOGGER) void Write(::std::string_view const&) const noexcept;

@@ -154,25 +154,16 @@ namespace Langulus::RTTI
 
          // Type of the base                                            
          DefinitionData const* type IF_SAFE(= nullptr);
-         // Number of bases that fit in the type                        
-         size_t count = 1;
-         // Offset of the base, relative to the derived type            
-         // @attention valid only if not 'virtualBase'                  
-         size_t offset = 0;
-         // Used to map one type onto another                           
          // Usually true when base completely fills the derived type    
          bool binaryCompatible = false;
-         // Whether or not this base is considered 'imposed'            
-         // Basically, imposed bases are not serialized and don't       
-         // act in distance computation or dispatching                  
-         // An imposed base can be added only manually                  
-         bool imposed = false;
-         // Only possible way to get pointer to a virtual base is       
-         // through a lambda. Nullptr if base is not virtual            
-         FAccessMember virtualBase = nullptr;
-         
-         template<CT::Dense T, CT::Dense BASE>
-         static auto From() has_assumptions -> Base;
+         // Get a pointer to the base inside an instance                
+         // If nullptr, then base is imposed. Imposed bases are not     
+         // serialized and don't participate in type-distance           
+         // computation or dispatching                                  
+         FAccessMember getBase = nullptr;
+
+         template<CT::Dense T, CT::Dense BASE> static auto
+         From() has_assumptions -> Base;
       };
       
       using MemberList   = ::std::vector<Member>;

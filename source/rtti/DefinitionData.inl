@@ -24,10 +24,10 @@
 #include <Langulus/CT/DefineConst.hpp>
 #include <Langulus/CT/Members.hpp>
 #include <Langulus/CT/MinAlloc.hpp>
+#include <Langulus/CT/Files.hpp>
+#include <Langulus/CT/Suffix.hpp>
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Logger.hpp>
-#include "Langulus/SuffixOf.hpp"
-#include "Langulus/FilesOf.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <optional>
@@ -600,6 +600,7 @@ namespace Langulus::RTTI
    }
    
    /// Create a base descriptor for the derived type T                        
+   ///   @attention private bases will end up as imposed                      
    ///   @return the generated base descriptor                                
    template<CT::Dense T, CT::Dense B>
    auto DefinitionData::Base::From() has_assumptions -> Base {
@@ -616,53 +617,23 @@ namespace Langulus::RTTI
       result.type = Reflect<BASE>();
 
       if constexpr (CT::DerivedFrom<T, BASE>) {
-         // This will fail if base is private                           
-         // This is detectable by is_convertible_v                      
-         if constexpr (::std::is_convertible_v<T*, BASE*>) {
-            if constexpr (CT::VirtuallyDerivedFrom<T, BASE>) {
-               // Can't use pointer arithmetics when base is virtual    
-               result.virtualBase = [](void* from) -> void* {
-                  return dynamic_cast<BASE*>(reinterpret_cast<T*>(from));
-               };
-            }
-            else {
-               // The devil's work, right here                          
-               // @attention works only with conventional inheritance   
-               alignas(T) static const uint8_t storage[sizeof(T)] {};
-               // First reinterpret the storage as T                    
-               const auto derived = reinterpret_cast<const T*>(storage);
-               // Then cast it down to base                             
-               const auto base = static_cast<const BASE*>(derived);
-               // Then reinterpret back to byte array and get difference
-               const auto offset =
-                  reinterpret_cast<const uint8_t*>(base) -
-                  reinterpret_cast<const uint8_t*>(derived);
-
-               Assert(offset >= 0, HERE(),
-                  "BASE is laid (memorywise) before T");
-               result.offset = static_cast<size_t>(offset);
-            }
+         if constexpr (CT::VirtuallyDerivedFrom<T, BASE>) {
+            // Needs to use slower dynamic_cast when base is virtual    
+            result.getBase = [](void* from) -> void* {
+               return dynamic_cast<BASE*>(static_cast<T*>(from));
+            };
          }
-         else static_assert(false, "Can't reflect private base");
-      }
-      else {
-         // If not inherited in C++, then always imposed                
-         // Imposed bases are excluded from serialization               
-         result.imposed = true;
-
-         if constexpr (not CT::Abstract<BASE> and sizeof(BASE) < sizeof(T)) {
-            // The imposed type has a chance of being binary            
-            // compatible when having a specific count                  
-            result.binaryCompatible = 0 == sizeof(T) % sizeof(BASE);
-            result.count = sizeof(T) / sizeof(BASE);
+         else {
+            result.getBase = [](void* from) -> void* {
+               return static_cast<T*>(from);
+            };
+            
+            // If sizes match and there's no byte offset, then the      
+            // base and the derived type are binary compatible          
+            result.binaryCompatible = (sizeof(BASE) == sizeof(T));
          }
       }
 
-      // If sizes match and there's no byte offset, then the base       
-      // and the derived type are binary compatible                     
-      if constexpr (sizeof(BASE) == sizeof(T)
-      and not CT::VirtuallyDerivedFrom<T, BASE>)
-         result.binaryCompatible = (0 == result.offset);
       return result;
    }
 

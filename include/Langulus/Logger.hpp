@@ -241,6 +241,7 @@ namespace Langulus::Logger
       size_t GetTabs() const noexcept { return mTabulator; }
 
       LANGULUS_API(LOGGER)  State();
+      // ReSharper disable once CppEnforceOverridingDestructorStyle     
       LANGULUS_API(LOGGER) ~State();
 
       ///                                                                     
@@ -260,7 +261,7 @@ namespace Langulus::Logger
 
       LANGULUS_API(LOGGER) void Write(CommandExt) const noexcept;
       LANGULUS_API(LOGGER) void Write(ColorExt) const noexcept;
-      LANGULUS_API(LOGGER) void Write(Tabs) const noexcept;
+      LANGULUS_API(LOGGER) void Write(const Tabs&) const noexcept;
       LANGULUS_API(LOGGER) void Write(Emphasis) const noexcept;
       LANGULUS_API(LOGGER) void Write(Intent) const noexcept;
       LANGULUS_API(LOGGER) auto NewScope() const noexcept -> Scope;

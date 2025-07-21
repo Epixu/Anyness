@@ -492,6 +492,7 @@ namespace Langulus
    
    /// Same as ::std::declval, but adequately named                           
    template<class T>
+   // ReSharper disable once CppFunctionDoesntReturnValue               
    T&& Fake() { static_assert(false, "Calling Fake is ill-formed"); }
    
    /// I don't like how long ::std::conditional_t is to write                 

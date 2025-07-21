@@ -134,6 +134,7 @@ namespace Langulus
 
          uint32_t k1 = 0;
 
+         // ReSharper disable once CppDefaultCaseNotHandledInSwitchStatement
          switch (key.size() & 3) {
          case 3:
             k1 ^= key.tail(2) << 16;

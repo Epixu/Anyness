@@ -121,8 +121,10 @@ namespace Langulus
       static constexpr bool ForEachOr (auto&&) noexcept { return false; }
 
       template<CT::NotTypelist...N>
+      // ReSharper disable once CppFunctionIsNotImplemented             
       static consteval auto Concat(Types<N...>&&) -> Types<N...>;
-      template<CT::NotTypelist   N>
+      // ReSharper disable once CppFunctionIsNotImplemented             
+      template<CT::NotTypelist N>
       static consteval auto Concat(N&&) -> Types<N>;
 
       template<class N>
@@ -212,8 +214,10 @@ namespace Langulus
       }
 
       template<CT::NotTypelist...N>
+      // ReSharper disable once CppFunctionIsNotImplemented             
       static consteval auto Concat(Types<N...>&&) -> Types<T, N...>;
-      template<CT::NotTypelist   N>
+      template<CT::NotTypelist N>
+      // ReSharper disable once CppFunctionIsNotImplemented             
       static consteval auto Concat(N&&) -> Types<T, N>;
 
       template<class N>
@@ -366,8 +370,10 @@ namespace Langulus
       }
 
       template<CT::NotTypelist...N>
+      // ReSharper disable once CppFunctionIsNotImplemented             
       static consteval auto Concat(Types<N...>&&) -> Types<T1, T2, TN..., N...>;
-      template<CT::NotTypelist   N>
+      template<CT::NotTypelist N>
+      // ReSharper disable once CppFunctionIsNotImplemented             
       static consteval auto Concat(N&&) -> Types<T1, T2, TN..., N>;
 
       template<class N>
