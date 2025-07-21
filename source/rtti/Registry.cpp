@@ -21,7 +21,6 @@
 
 namespace Langulus::RTTI
 {
-
    Registry Instance {};
 
    /// Database destruction                                                   

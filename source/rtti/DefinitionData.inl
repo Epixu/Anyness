@@ -46,16 +46,29 @@ namespace Langulus::RTTI
    {
       /// These functions are used to reduce the number of generated lambdas  
       /// at reflection time                                                  
+      LANGULUS(NOINLINE)
       inline void SparseDefaultConstructor(void* at) noexcept {
          auto atT = static_cast<void**>(at);
          *atT = nullptr;
       };
+      LANGULUS(NOINLINE)
       inline void SparseCopyConstructor(void* from, void* to) noexcept {
          auto fromT = static_cast<void**>(from);
          auto toT = static_cast<void**>(to);
          *fromT = *toT;
       };
-   }
+      LANGULUS(NOINLINE)
+      inline auto SparseCompare(void* lhs, void* rhs) noexcept -> Compared {
+         auto lhsT = static_cast<void**>(lhs);
+         auto rhsT = static_cast<void**>(rhs);
+         return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;
+      };
+      LANGULUS(NOINLINE)
+      inline auto SparseHash(void* lhs) noexcept -> Hash {
+         auto lhsT = static_cast<void**>(lhs);
+         return HashOf<true>(*lhsT);
+      };
+}
 
    /// Reflect or return an already reflected data                            
    ///   @attention when making a shared library and reflecting your types    
@@ -493,12 +506,18 @@ namespace Langulus::RTTI
       //                                                                
       // Other utilities                                                
       if constexpr (CT::Hashable<T>) {
-         // Generate a hashing function                                 
-         definition.mHasGetHashMethod = CT::HasGetHashMethod<T>;
-         definition.mCurrentBoundary.mHasher = [](void* at) {
-            auto self = static_cast<T*>(at);
-            return HashOf<true>(*self);
-         };
+         if constexpr (::std::is_pointer_v<T>) {
+            definition.mCurrentBoundary.mHasher
+               = Inner::SparseHash;
+         }
+         else {
+            // Generate a hashing function                              
+            definition.mHasGetHashMethod = CT::HasGetHashMethod<T>;
+            definition.mCurrentBoundary.mHasher = [](void* at) {
+               auto self = static_cast<T*>(at);
+               return HashOf<true>(*self);
+            };
+         }
       }
 
       if constexpr (CT::Referenced<T>) {
@@ -511,55 +530,58 @@ namespace Langulus::RTTI
       }
 
       if constexpr (CT::Comparable<T, T>) {
-         // Generate a three-way comparison function                    
-         definition.mCurrentBoundary.mComparer =
-            [](void* t1, void* t2) -> Compared {
-               auto t1T = static_cast<const T*>(t1);
-               auto t2T = static_cast<const T*>(t2);
-
-               if constexpr (CT::Sparse<DTAll>) {
-                  // Pointers are either the same or not - not ordered  
-                  // for security reasons                               
-                  return *t1T == *t2T ? Compared::Equal : Compared::Unordered;
-               }
-               else if constexpr (CT::ComparableStrong<DTAll>) {
-                  switch (*t1T <=> *t2T) {
-                  case ::std::strong_ordering::less:
-                     return Compared::Less;
-                  case ::std::strong_ordering::greater:
-                     return Compared::Greater;
-                  default:
-                     return Compared::Equal;
+         if constexpr (::std::is_pointer_v<T>) {
+            // Pointers are either the same or not - not                
+            // ordered for security reasons                             
+            definition.mCurrentBoundary.mComparer
+               = Inner::SparseCompare;
+         }
+         else {
+            // Generate a three-way comparison function                 
+            definition.mCurrentBoundary.mComparer =
+               [](void* t1, void* t2) -> Compared {
+                  auto t1T = static_cast<const T*>(t1);
+                  auto t2T = static_cast<const T*>(t2);
+                  
+                  if constexpr (CT::ComparableStrong<DTAll>) {
+                     switch (*t1T <=> *t2T) {
+                     case ::std::strong_ordering::less:
+                        return Compared::Less;
+                     case ::std::strong_ordering::greater:
+                        return Compared::Greater;
+                     default:
+                        return Compared::Equal;
+                     }
                   }
-               }
-               else if constexpr (CT::ComparableWeak<DTAll>) {
-                  switch (*t1T <=> *t2T) {
-                  case ::std::weak_ordering::less:
-                     return Compared::Less;
-                  case ::std::weak_ordering::greater:
-                     return Compared::Greater;
-                  default:
-                     return Compared::Equivalent;
+                  else if constexpr (CT::ComparableWeak<DTAll>) {
+                     switch (*t1T <=> *t2T) {
+                     case ::std::weak_ordering::less:
+                        return Compared::Less;
+                     case ::std::weak_ordering::greater:
+                        return Compared::Greater;
+                     default:
+                        return Compared::Equivalent;
+                     }
                   }
-               }
-               else if constexpr (CT::ComparablePartial<DTAll>) {
-                  switch (*t1T <=> *t2T) {
-                  case ::std::partial_ordering::unordered:
-                     return Compared::Unordered;
-                  case ::std::partial_ordering::less:
-                     return Compared::Less;
-                  case ::std::partial_ordering::greater:
-                     return Compared::Greater;
-                  default:
-                     return Compared::Equivalent;
+                  else if constexpr (CT::ComparablePartial<DTAll>) {
+                     switch (*t1T <=> *t2T) {
+                     case ::std::partial_ordering::unordered:
+                        return Compared::Unordered;
+                     case ::std::partial_ordering::less:
+                        return Compared::Less;
+                     case ::std::partial_ordering::greater:
+                        return Compared::Greater;
+                     default:
+                        return Compared::Equivalent;
+                     }
                   }
-               }
-               else {
-                  if (*t1T == *t2T)  return Compared::Equal;
-                  if (*t1T <  *t2T)  return Compared::Less;
-                  return Compared::Greater;
-               }
-            };
+                  else {
+                     if (*t1T == *t2T)  return Compared::Equal;
+                     if (*t1T <  *t2T)  return Compared::Less;
+                     return Compared::Greater;
+                  }
+               };
+         }
       }
 
       if constexpr (CT::Resolvable<T>) {

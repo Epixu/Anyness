@@ -26,7 +26,6 @@
 
 namespace Langulus::RTTI
 {
-
    using MetaSet = ::std::unordered_set<Inner::Definition const*>;
 
    struct MetaException : Exception {
