@@ -12,7 +12,6 @@
 
 namespace Langulus::CTTI
 {
-
    ///                                                                        
    /// The following are some manual overrides that make stuff consistent     
    /// across different compilers                                             
@@ -70,17 +69,14 @@ namespace Langulus::CTTI
       static constexpr Literal Name = "uint64";
       static constexpr bool Enabled = true;
    };
-
-} // namespace Langulus::CTTI
+}
 
 namespace Langulus::RTTI
 {
-
    using Lowercase = ::std::string;
 
    namespace Inner
    {
-
       /// Types used for pattern matching while isolating typenames           
       /// These need to be in exactly this namespace to avoid corner cases    
       class Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK {};
@@ -183,10 +179,10 @@ namespace Langulus::RTTI
       consteval auto IsolateTypename() {
          if constexpr (NAMED and CTTI::Named<T>::Enabled)
             return CTTI::Named<T>::Name;
-         // Move `const` next to pointers/references at the end of type 
-         // Discards `volatile` - it shouldn't matter outside compiler  
-         // Helps with better sorting reflected types                   
          else if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
+            // Move `const` next to pointers/references at the end of type 
+            // Discards `volatile` - it shouldn't matter outside compiler  
+            // Helps with better sorting of reflected types                
             auto deptr = IsolateTypename<Decvq<T>, NORMALIZE, NAMED>();
             if constexpr (not ::std::is_const_v<T>)
                return deptr;
@@ -199,6 +195,42 @@ namespace Langulus::RTTI
                return deptr + "&";
             else
                return deptr + " const&";
+         }
+         else if constexpr (::std::is_bounded_array_v<T>) {
+            auto deext = IsolateTypename<Deext<T>, NORMALIZE, NAMED>();
+            constexpr auto ext = ::std::extent_v<T>;
+            static_assert(ext < 1000000, "Extent is too big");
+            if constexpr (ext > 99999) {
+               return deext + "[" + static_cast<char>('0' + ext/100000)
+                                  + static_cast<char>('0' + ext/10000)
+                                  + static_cast<char>('0' + ext/1000)
+                                  + static_cast<char>('0' + ext/100)
+                                  + static_cast<char>('0' + ext/10)
+                                  + static_cast<char>('0' + ext) + "]";
+            }
+            else if constexpr (ext > 9999) {
+               return deext + "[" + static_cast<char>('0' + ext/10000)
+                                  + static_cast<char>('0' + ext/1000)
+                                  + static_cast<char>('0' + ext/100)
+                                  + static_cast<char>('0' + ext/10)
+                                  + static_cast<char>('0' + ext) + "]";
+            }
+            else if constexpr (ext > 999) {
+               return deext + "[" + static_cast<char>('0' + ext/1000)
+                                  + static_cast<char>('0' + ext/100)
+                                  + static_cast<char>('0' + ext/10)
+                                  + static_cast<char>('0' + ext) + "]";               
+            }
+            else if constexpr (ext > 99) {
+               return deext + "[" + static_cast<char>('0' + ext/100)
+                                  + static_cast<char>('0' + ext/10)
+                                  + static_cast<char>('0' + ext) + "]";               
+            }
+            else if constexpr (ext > 9) {
+               return deext + "[" + static_cast<char>('0' + ext/10)
+                                  + static_cast<char>('0' + ext) + "]";
+            }
+            else return deext + "[" + static_cast<char>('0' + ext) + "]";
          }
          else if constexpr (::std::is_pointer_v<T>) {
             auto deptr = IsolateTypename<Decvq<Deptr<T>>, NORMALIZE, NAMED>();
@@ -426,14 +458,11 @@ namespace Langulus::RTTI
          }
          return 0;
       }
-
-   } // namespace Langulus::RTTI::Inner
-
-} // namespace Langulus::RTTI
+   }
+}
 
 namespace Langulus
 {
-   
    /// Get the name of a type, templated or not, with consistently named      
    /// template arguments, even if nested, at compile-time                    
    ///   @tparam T - the type to get the name of                              
@@ -450,7 +479,6 @@ namespace Langulus
    consteval auto CppNameOf() {
       return RTTI::Inner::IsolateConstant<E, true, false>();
    }
-   
 
    /// Same as CppNameOf, but removes all namespaces at compile-time          
    ///   @tparam T - the type to get the name of                              
@@ -474,7 +502,6 @@ namespace Langulus
       return fullName.substr(lastName);
    }
 
-
    /// Get the name of a type at compile-time                                 
    /// Considers CTTI::Named, or fallbacks to the C++ name                    
    /// If you want to avoid custom names, use CppNameOf directly instead      
@@ -497,5 +524,4 @@ namespace Langulus
    consteval auto NameOf() {
       return RTTI::Inner::IsolateConstant<E>();
    }
-
-} // namespace Langulus
+}

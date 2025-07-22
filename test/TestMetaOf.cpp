@@ -193,7 +193,9 @@ namespace Langulus::CTTI
    };
 }
 
-
+///                                                                           
+/// Reflecting incomplete types                                               
+///                                                                           
 TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    //void, // shouldn't compile
    //nullptr_t, // shouldn't compile
@@ -298,6 +300,212 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.GetNamedValues().size() == 0);
 }
 
+///                                                                           
+/// Reflecting names                                                          
+///                                                                           
+SCENARIO("Testing reflection of names", "[rtti]") {
+   {
+      const DMeta meta = MetaDataOf<int>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "int32");
+      REQUIRE(meta.GetName() == "Int32");
+   }
+   {
+      const DMeta meta = MetaDataOf<const int>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "int32 const");
+      REQUIRE(meta.GetName() == "Int32 const");
+   }
+   {
+      const DMeta meta = MetaDataOf<const int*>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "int32 const*");
+      REQUIRE(meta.GetName() == "Int32 const*");
+   }
+   {
+      const DMeta meta = MetaDataOf<int const>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "int32 const");
+      REQUIRE(meta.GetName() == "Int32 const");
+   }
+   {
+      const DMeta meta = MetaDataOf<int const*>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "int32 const*");
+      REQUIRE(meta.GetName() == "Int32 const*");
+   }
+   {
+      const DMeta meta = MetaDataOf<IncompleteType*>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "IncompleteType*");
+      REQUIRE(meta.GetName() == "IncompleteType*");
+   }
+   {
+      const DMeta meta = MetaDataOf<const IncompleteType**>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "IncompleteType const**");
+      REQUIRE(meta.GetName() == "IncompleteType const**");
+   }
+   {
+      const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits");
+      REQUIRE(meta.GetName() == "MyType");
+   }
+   {
+      const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits*>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits*");
+      REQUIRE(meta.GetName() == "MyType*");
+   }
+   {
+      const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits const*>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits const*");
+      REQUIRE(meta.GetName() == "MyType const*");
+   }
+}
+
+///                                                                           
+/// Reflecting abstracts                                                      
+///                                                                           
+namespace
+{
+   /// Built-in abstract type via a pure virtual function                     
+   struct PureAbstract {
+      PureAbstract() = delete;
+      virtual ~PureAbstract() {}
+      PureAbstract(void*) {}
+      virtual auto PureVirtualMethod() -> size_t = 0;
+   };
+
+   /// Proper type, reflected as abstract                                     
+   struct ForcedAbstractExternally {};
+   struct ForcedAbstractInternally {
+      using CTTI_Abstract = Yes<>;
+   };
+
+   /// Types that can inherit abstractness                                    
+   struct InheritedAbstract1 : ForcedAbstractInternally { };
+   struct InheritedAbstract2 : PureAbstract { };
+
+   /// Types that can inherit abstractness privately                          
+   struct ImpureVirtual {
+      virtual ~ImpureVirtual() {}
+   };
+   struct InheritedAbstract1ButPrivate : private ForcedAbstractInternally {};
+   struct InheritedAbstract2ButPrivate : private PureAbstract {};
+   struct InheritedAbstractExternally  : ForcedAbstractExternally {};
+}
+
+namespace Langulus::CTTI
+{
+   template<>
+   struct Abstract<ForcedAbstractExternally> {
+      static constexpr bool Enabled = true;
+   };
+   
+   template<>
+   struct Verbs<DMeta> {
+      using Type = Langulus::Verbs::Create;
+      static constexpr bool Enabled = true;
+   };
+}
+
+TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]",
+   PureAbstract,
+   ForcedAbstractExternally,
+   ForcedAbstractInternally,
+   InheritedAbstract1,
+   InheritedAbstract2,
+   InheritedAbstract2ButPrivate
+) {
+   using T = TestType;
+   const DMeta meta = MetaDataOf<T>();
+   REQUIRE(meta != nullptr);
+   REQUIRE(meta.IsDeep() == false);
+   REQUIRE(meta.IsPOD() == false);        // Abstract types can't be POD      
+   REQUIRE(meta.IsNullable()  == false);  // Abstract types can't be nullable 
+   REQUIRE(meta.GetConcrete() == nullptr);
+   REQUIRE(meta.IsAbstract() == true);
+   REQUIRE(meta.GetSize() == sizeof(T));
+   REQUIRE(meta.GetAlignment() == alignof(T));
+}
+
+TEMPLATE_TEST_CASE("Reflecting non-abstract types", "[rtti]",
+   int,
+   ImpureVirtual,
+   InheritedAbstract1ButPrivate,
+   InheritedAbstractExternally
+) {
+   using T = TestType;
+   const DMeta meta = MetaDataOf<T>();
+   REQUIRE(meta != nullptr);
+   REQUIRE(meta.IsAbstract() == false);
+   REQUIRE(meta.IsPOD() == CT::POD<T>);
+   REQUIRE(meta.IsNullable() == CT::Nullable<T>);
+   REQUIRE(meta.GetConcrete() == nullptr);
+}
+
+///                                                                           
+/// Reflecting virtual bases                                                  
+///                                                                           
+namespace
+{
+   /// Type that has a virtual base                                           
+   struct VirtuallyDerived : virtual ImpureVirtual {
+      using CTTI_Bases = Types<ImpureVirtual, int>;
+   };
+
+   /// Type that has a private non-virtual base                               
+   struct PrivatelyDerived : private ImpureVirtual {
+      using CTTI_Bases = Types<ImpureVirtual, int, float>;
+   };
+}
+
+TEMPLATE_TEST_CASE("Reflecting virtual bases", "[rtti]",
+   VirtuallyDerived
+) {
+   using T = TestType;
+   const DMeta meta = MetaDataOf<T>();
+   T instance {};
+   auto instance_base = dynamic_cast<ImpureVirtual*>(&instance);
+
+   REQUIRE(meta.GetBases().size() == 2);
+   
+   REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ImpureVirtual>()));
+   REQUIRE(meta.GetBases()[0].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[0].getBase(&instance) == instance_base);
+   
+   REQUIRE(DMeta(meta.GetBases()[1].type).Is(MetaDataOf<int>()));
+   REQUIRE(meta.GetBases()[1].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[1].getBase == nullptr);
+}
+
+TEMPLATE_TEST_CASE("Reflecting non-virtual bases", "[rtti]",
+   PrivatelyDerived
+) {
+   using T = TestType;
+   const DMeta meta = MetaDataOf<T>();
+
+   REQUIRE(meta.GetBases().size() == 3);
+   
+   REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ImpureVirtual>()));
+   REQUIRE(meta.GetBases()[0].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[0].getBase == nullptr);
+   
+   REQUIRE(DMeta(meta.GetBases()[1].type).Is(MetaDataOf<int>()));
+   REQUIRE(meta.GetBases()[1].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[1].getBase == nullptr);
+   
+   REQUIRE(DMeta(meta.GetBases()[2].type).Is(MetaDataOf<float>()));
+   REQUIRE(meta.GetBases()[2].binaryCompatible == false);
+   REQUIRE(meta.GetBases()[2].getBase == nullptr);
+}
+
+///                                                                           
+/// Reflecting a complex type                                                 
+///                                                                           
 SCENARIO("A type reflected with all traits", "[rtti]") {
    ImplicitlyReflectedDataWithTraits instance;
    auto ptrtobase = static_cast<ImplicitlyReflectedData*>(&instance);
@@ -383,148 +591,6 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
    REQUIRE(convertedFromPi1.member == 314);
 }
 
-
-///                                                                           
-/// Reflecting abstracts                                                      
-///                                                                           
-namespace
-{
-   /// Built-in abstract type via a pure virtual function                     
-   struct PureAbstract {
-      PureAbstract() = delete;
-      virtual ~PureAbstract() {}
-      PureAbstract(void*) {}
-      virtual auto PureVirtualMethod() -> size_t = 0;
-   };
-
-   /// Proper type, reflected as abstract                                     
-   struct ForcedAbstractExternally {};
-   struct ForcedAbstractInternally {
-      using CTTI_Abstract = Yes<>;
-   };
-
-   /// Types that can inherit abstractness                                    
-   struct InheritedAbstract1 : ForcedAbstractInternally { };
-   struct InheritedAbstract2 : PureAbstract { };
-
-   /// Types that can inherit abstractness privately                          
-   struct ImpureVirtual {
-      virtual ~ImpureVirtual() {}
-   };
-   struct InheritedAbstract1ButPrivate : private ForcedAbstractInternally {};
-   struct InheritedAbstract2ButPrivate : private PureAbstract {};
-   struct InheritedAbstractExternally  : ForcedAbstractExternally {};
-}
-
-namespace Langulus::CTTI
-{
-   template<>
-   struct Abstract<ForcedAbstractExternally> {
-      static constexpr bool Enabled = true;
-   };
-   
-   template<>
-   struct Verbs<DMeta> {
-      using Type = Langulus::Verbs::Create;
-      static constexpr bool Enabled = true;
-   };
-}
-
-
-TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]",
-   PureAbstract,
-   ForcedAbstractExternally,
-   ForcedAbstractInternally,
-   InheritedAbstract1,
-   InheritedAbstract2,
-   InheritedAbstract2ButPrivate
-) {
-   using T = TestType;
-   const DMeta meta = MetaDataOf<T>();
-   REQUIRE(meta != nullptr);
-   REQUIRE(meta.IsDeep() == false);
-   REQUIRE(meta.IsPOD() == false);        // Abstract types can't be POD      
-   REQUIRE(meta.IsNullable()  == false);  // Abstract types can't be nullable 
-   REQUIRE(meta.GetConcrete() == nullptr);
-   REQUIRE(meta.IsAbstract() == true);
-   REQUIRE(meta.GetSize() == sizeof(T));
-   REQUIRE(meta.GetAlignment() == alignof(T));
-}
-
-TEMPLATE_TEST_CASE("Reflecting non-abstract types", "[rtti]",
-   //nullptr_t, // shouldn't compile
-   int,
-   ImpureVirtual,
-   InheritedAbstract1ButPrivate,
-   InheritedAbstractExternally
-) {
-   using T = TestType;
-   const DMeta meta = MetaDataOf<T>();
-   REQUIRE(meta != nullptr);
-   REQUIRE(meta.IsAbstract() == false);
-   REQUIRE(meta.IsPOD() == CT::POD<T>);
-   REQUIRE(meta.IsNullable() == CT::Nullable<T>);
-   REQUIRE(meta.GetConcrete() == nullptr);
-}
-
-
-///                                                                           
-/// Reflecting virtual bases                                                  
-///                                                                           
-namespace
-{
-   /// Type that has a virtual base                                           
-   struct VirtuallyDerived : virtual ImpureVirtual {
-      using CTTI_Bases = Types<ImpureVirtual, int>;
-   };
-
-   /// Type that has a private non-virtual base                               
-   struct PrivatelyDerived : private ImpureVirtual {
-      using CTTI_Bases = Types<ImpureVirtual, int, float>;
-   };
-}
-
-TEMPLATE_TEST_CASE("Reflecting virtual bases", "[rtti]",
-   VirtuallyDerived
-) {
-   using T = TestType;
-   const DMeta meta = MetaDataOf<T>();
-   T instance {};
-   auto instance_base = dynamic_cast<ImpureVirtual*>(&instance);
-
-   REQUIRE(meta.GetBases().size() == 2);
-   
-   REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ImpureVirtual>()));
-   REQUIRE(meta.GetBases()[0].binaryCompatible == false);
-   REQUIRE(meta.GetBases()[0].getBase(&instance) == instance_base);
-   
-   REQUIRE(DMeta(meta.GetBases()[1].type).Is(MetaDataOf<int>()));
-   REQUIRE(meta.GetBases()[1].binaryCompatible == false);
-   REQUIRE(meta.GetBases()[1].getBase == nullptr);
-}
-
-TEMPLATE_TEST_CASE("Reflecting non-virtual bases", "[rtti]",
-   PrivatelyDerived
-) {
-   using T = TestType;
-   const DMeta meta = MetaDataOf<T>();
-
-   REQUIRE(meta.GetBases().size() == 3);
-   
-   REQUIRE(DMeta(meta.GetBases()[0].type).Is(MetaDataOf<ImpureVirtual>()));
-   REQUIRE(meta.GetBases()[0].binaryCompatible == false);
-   REQUIRE(meta.GetBases()[0].getBase == nullptr);
-   
-   REQUIRE(DMeta(meta.GetBases()[1].type).Is(MetaDataOf<int>()));
-   REQUIRE(meta.GetBases()[1].binaryCompatible == false);
-   REQUIRE(meta.GetBases()[1].getBase == nullptr);
-   
-   REQUIRE(DMeta(meta.GetBases()[2].type).Is(MetaDataOf<float>()));
-   REQUIRE(meta.GetBases()[2].binaryCompatible == false);
-   REQUIRE(meta.GetBases()[2].getBase == nullptr);
-}
-
-
 ///                                                                           
 /// Reflecting verbs                                                          
 ///                                                                           
@@ -551,7 +617,6 @@ SCENARIO("Reflecting a verb", "[rtti]") {
    REQUIRE(dmeta_const.GetVerbs().at(vdef)(const_cast<DMeta*>(&dmeta_const), verb));
 }
 
-
 ///                                                                           
 /// Reflecting tags                                                           
 ///                                                                           
@@ -564,7 +629,6 @@ SCENARIO("Reflecting a tag", "[rtti]") {
    REQUIRE(meta.GetVersionMajor() == 7);
    REQUIRE(meta.GetVersionMinor() == 10);
 }
-
 
 ///                                                                           
 /// Reflecting functions                                                      

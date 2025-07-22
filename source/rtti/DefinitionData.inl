@@ -620,14 +620,20 @@ namespace Langulus::RTTI
             ? minElements : elements;
       }
 
-      using BASES = BasesOf<T>;
-      if constexpr (not CT::Void<BASES>) {
-         // Set reflected bases                                         
-         BASES::ForEach([&definition]<class B>{
-            definition.mCurrentBoundary.mBases.push_back(
-               Base::From<T, B>()
-            );
-         });
+      if constexpr (::std::same_as<T, DTAll>) {
+         using BASES = BasesOf<T>;
+         if constexpr (not CT::Void<BASES>) {
+            // Set reflected bases                                      
+            BASES::ForEach([&definition]<class B>{
+               definition.mCurrentBoundary.mBases.push_back(
+                  Base::From<T, B>()
+               );
+            });
+         }
+      }
+      else {
+         definition.mCurrentBoundary.mBases
+            = definition.mDecvqAll->mCurrentBoundary.mBases;
       }
 
       using VERBS = VerbsOf<T>;
@@ -654,58 +660,73 @@ namespace Langulus::RTTI
          });
       }
 
-      using MAPTO = MorphismsOf<T>;
-      if constexpr (not CT::Void<MAPTO>) {
-         // Set reflected morphisms                                     
-         // @attention morphisms assume that source is initialized, but 
-         //    destination is only allocated and not yet constructed    
-         MAPTO::ForEach([&definition]<class TO_RAW>{
-            using TO = CT::ReflectedAs<TO_RAW>;
-            auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
-            auto converter_function = [](void* from, void* to) {
-               auto fromT = static_cast<T*>(from);
-               auto toT   = static_cast<TO*>(to);
+      if constexpr (::std::same_as<T, DTAll>) {
+         using MAPTO = MorphismsOf<T>;
+         if constexpr (not CT::Void<MAPTO>) {
+            // Set reflected morphisms                                  
+            // @attention morphisms assume that source is initialized,  
+            // but destination is only allocated and not yet constructed
+            MAPTO::ForEach([&definition]<class TO_RAW>{
+               using TO = CT::ReflectedAs<TO_RAW>;
+               auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
+               auto converter_function = [](void* from, void* to) {
+                  auto fromT = static_cast<T*>(from);
+                  auto toT   = static_cast<TO*>(to);
 
-               if constexpr (requires { TO (*fromT); })
-                  new (toT) TO (*fromT);
-               else if constexpr (requires { TO (static_cast<TO>(*fromT)); })
-                  new (toT) TO (static_cast<TO>(*fromT));
-               else {
-                  static_assert(false,
-                     "T can't be converted to TO - add "
-                     "explicit/implicit constructors and/or cast operators"
-                  );
-               }
-            };
-            definition.mCurrentBoundary.mMorphismsTo.emplace(
-               destination_type, converter_function
-            );
-            destination_type->mCurrentBoundary.mMorphismsFrom.emplace( //TODO modifying destination type from the questionably-same boundary may cause problems?
-               &definition, converter_function
-            );
-         });
+                  if constexpr (requires { TO (*fromT); })
+                     new (toT) TO (*fromT);
+                  else if constexpr (requires { TO (static_cast<TO>(*fromT)); })
+                     new (toT) TO (static_cast<TO>(*fromT));
+                  else {
+                     static_assert(false,
+                        "T can't be converted to TO - add "
+                        "explicit/implicit constructors and/or cast operators"
+                     );
+                  }
+               };
+               definition.mCurrentBoundary.mMorphismsTo.emplace(
+                  destination_type, converter_function
+               );
+               destination_type->mCurrentBoundary.mMorphismsFrom.emplace( //TODO modifying destination type from the questionably-same boundary may cause problems?
+                  &definition, converter_function
+               );
+            });
+         }
+      }
+      else {
+         definition.mCurrentBoundary.mMorphismsTo
+            = definition.mDecvqAll->mCurrentBoundary.mMorphismsTo;
       }
 
-      using CONSTANTS = NamedValuesOf<T>;
-      if constexpr (not CT::Void<CONSTANTS>) {
-         // Reflecting named values                                     
-         CONSTANTS::ForEach([&definition]<auto C>{
-            definition.mNamedValues.push_back(
-               DefinitionConst::Reflect<C>()
-            );
-         });
+      if constexpr (::std::same_as<T, DTAll>) {
+         using CONSTANTS = NamedValuesOf<T>;
+         if constexpr (not CT::Void<CONSTANTS>) {
+            // Reflecting named values                                  
+            CONSTANTS::ForEach([&definition]<auto C>{
+               definition.mNamedValues.push_back(
+                  DefinitionConst::Reflect<C>()
+               );
+            });
+         }
       }
+      else definition.mNamedValues = definition.mDecvqAll->mNamedValues;
 
-      using MEMBERS = MembersOf<T>;
-      if constexpr (not CT::Void<MEMBERS>) {
-         // Reflecting members                                          
-         MEMBERS::ForEach([&definition]<class M>{
-            definition.mCurrentBoundary.mMembers.push_back(
-               Member::From<M>()
-            );
-         });
+      if constexpr (::std::same_as<T, DTAll>) {
+         using MEMBERS = MembersOf<T>;
+         if constexpr (not CT::Void<MEMBERS>) {
+            // Reflecting members                                       
+            MEMBERS::ForEach([&definition]<class M>{
+               definition.mCurrentBoundary.mMembers.push_back(
+                  Member::From<M>()
+               );
+            });
+         }
       }
-
+      else {
+         definition.mCurrentBoundary.mMembers
+            = definition.mDecvqAll->mCurrentBoundary.mMembers;
+      }
+      
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          Logger::Verbose<VERBOSE>(
             Logger::Cyan, "Data ", definition.mNameOf,
@@ -727,6 +748,8 @@ namespace Langulus::RTTI
    template<class HANDLE>
    auto DefinitionData::Member::From() -> Member {
       using THIS = typename HANDLE::Owner;
+      static_assert(CT::NotConvoluted<THIS>,
+         "Can't have qualifiers here");
       using DATA = typename HANDLE::Type;
 
       Member m;
@@ -760,6 +783,8 @@ namespace Langulus::RTTI
       using BASE = CT::ReflectedAs<B>;
       static_assert(not CT::Void<BASE>,
          "Can't have void as base");
+      static_assert(CT::NotConvoluted<T, BASE>,
+         "Can't have qualifiers here");
       static_assert(not CT::Same<T, BASE>,
          "Can't have base of the same type as the derived");
       static_assert(NameOf<T>() != NameOf<BASE>(),
