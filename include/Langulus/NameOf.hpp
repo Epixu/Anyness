@@ -297,6 +297,7 @@ namespace Langulus::RTTI
       ///   @param lhs - start of the region                                  
       ///   @param rhs - end of the region                                    
       ///   @return true if a transition occurs at both points                
+      // ReSharper disable once CppDFAUnreachableFunctionCall           
       constexpr bool IsTransition(auto source, size_t lhs, size_t rhs) {
          return (
                // Test left side for transition                         
@@ -310,22 +311,69 @@ namespace Langulus::RTTI
                or     IsAlphabetical(source[rhs-1]) != IsAlphabetical(source[rhs])
             );
       }
+
+      constexpr Literal uint8_t_token  = IsolateTypename<uint8_t,  false, false>();
+      constexpr Literal uint16_t_token = IsolateTypename<uint16_t, false, false>();
+      constexpr Literal uint32_t_token = IsolateTypename<uint32_t, false, false>();
+      constexpr Literal uint64_t_token = IsolateTypename<uint64_t, false, false>();
+      constexpr Literal int8_t_token   = IsolateTypename<int8_t,   false, false>();
+      constexpr Literal int16_t_token  = IsolateTypename<int16_t,  false, false>();
+      constexpr Literal int32_t_token  = IsolateTypename<int32_t,  false, false>();
+      constexpr Literal int64_t_token  = IsolateTypename<int64_t,  false, false>();
       
-      /// Count the number of found tokens, if separated by non-alphabetical  
-      /// symbols                                                             
-      ///   @tparam LHS - what are we checking?                               
-      ///   @tparam RHS - what are we searching for?                          
-      template<Literal LHS, Literal RHS>
-      consteval size_t CountOccurences() {
-         if constexpr (RHS.size() > LHS.size() or RHS.size() == 0)
-            return 0;
-         else {
+      /// Replace these patterns when normalizing names                       
+      /// @attention when having similar tokens to replace, order             
+      ///    them correctly, with longer ones replaced first                  
+      /// @attention replacement will not commence, if IsTransition           
+      ///    isn't satisifed                                                  
+      constexpr struct ReplacePattern {
+         Token what;
+         Token with;
+      } ReplacePatterns[] = {
+         #if LANGULUS_COMPILER(MSVC)
+            {"`anonymous-namespace'::", ""},
+         #elif LANGULUS_COMPILER(CLANG)
+            {"(anonymous namespace)::", ""},
+         #else
+            {"<unnamed>::",   ""},
+            {"{anonymous}::", ""},
+         #endif
+         {" *",            "*"},
+         {" &",            "&"},
+         {" >",            ">"},
+         {" (",            "("},
+         {" )",            ")"},
+         {" [",            "["},
+         {" ]",            "]"},
+         {"class ",        "" },
+         {"struct ",       "" },
+         {"enum ",         "" },
+         {"(__cdecl *)",   "" },
+         
+         // These types are stringified differently on some compilers   
+         // `unsigned short` is longer than just `short`, and needs to  
+         // be handled first                                            
+         {uint8_t_token,  "uint8"  },
+         {uint16_t_token, "uint16" },
+         {uint32_t_token, "uint32" },
+         {uint64_t_token, "uint64" },
+         {int8_t_token,   "int8"   },
+         {int16_t_token,  "int16"  },
+         {int32_t_token,  "int32"  },
+         {int64_t_token,  "int64"  }
+      };
+      
+      /// Decide buffer size by checking all replacement patterns             
+      ///   @param in - search where?                                         
+      constexpr size_t DecideBufferSize(const Token& in) {
+         size_t result = 0;
+         for (const auto& pattern : ReplacePatterns) {
             size_t occurences = 0;
             size_t cookie = 0;
-            while (cookie + RHS.size() <= LHS.size()) {
+            while (cookie + pattern.what.size() <= in.size()) {
                size_t scan = 0;
-               while (scan < RHS.size()) {
-                  if (LHS[cookie + scan] == RHS[scan]) {
+               while (scan < pattern.what.size()) {
+                  if (in[cookie + scan] == pattern.what[scan]) {
                      ++scan;
                      continue;
                   }
@@ -333,52 +381,22 @@ namespace Langulus::RTTI
                   break;
                }
 
-               if (scan == RHS.size() and Inner::IsTransition(LHS, cookie, cookie + RHS.size())) {
-                  cookie += RHS.size();
+               if (scan == pattern.what.size()
+               and Inner::IsTransition(in, cookie, cookie + pattern.what.size())) {
+                  cookie += pattern.what.size();
                   ++occurences;
                }
                else ++cookie;
             }
-            return occurences;
+            
+            const auto candidate = in.size()
+               - occurences * pattern.what.size()
+               + occurences * pattern.with.size();
+            
+            if (candidate > result)
+               result = candidate;
          }
-      }
-
-      /// Replace all occurences of a substring at compile-time               
-      ///   @tparam SOURCE - what are we checking?                            
-      ///   @tparam WHAT - what are we replacing?                             
-      ///   @tparam WITH - what are we replacing with?                        
-      ///   @return new literal                                               
-      template<Literal SOURCE, Literal WHAT, Literal WITH>
-      consteval auto Replace() {
-         constexpr auto found = CountOccurences<SOURCE, WHAT>();
-         if constexpr (not found)
-            return SOURCE;
-         else {
-            Literal<char, SOURCE.size() - found*WHAT.size() + found*WITH.size()> result;
-            size_t fill = 0;
-            size_t prev = 0;
-            size_t curr = 0;
-            while ((curr = SOURCE.find(WHAT, prev)) != SOURCE.npos) {
-               while (curr > prev) {
-                  // Copy anything we've skipped                        
-                  result[fill++] = SOURCE[prev++];
-               }
-
-               if (IsTransition(SOURCE, curr, curr + WHAT.size())) {
-                  // Replace                                            
-                  for (auto& c : WITH)
-                     result[fill++] = c;
-                  prev += WHAT.size();
-               }
-            }
-
-            while (prev < SOURCE.size()) {
-               // Copy any remaining trailing data                      
-               result[fill++] = SOURCE[prev++];
-            }
-
-            return result;
-         }
+         return result + 1;
       }
       
       /// Normalize a type/enum/function name                                 
@@ -386,46 +404,38 @@ namespace Langulus::RTTI
       ///   @return new literal                                               
       template<Literal SRC>
       consteval auto Normalize() {
-         // Replace these patterns when normalizing names               
-         // @attention when having similar tokens to replace, order     
-         //    them correctly, with longer ones replaced first          
-         // @attention replacement will not commence, if IsTransition   
-         //    isn't satisifed                                          
-      #if LANGULUS_COMPILER(MSVC)
-         constexpr auto a00 = Replace<SRC, Literal {"`anonymous-namespace'::"}, Literal {""}>();
-      #elif LANGULUS_COMPILER(CLANG)
-         constexpr auto a00 = Replace<SRC, Literal {"(anonymous namespace)::"}, Literal {""}>();
-      #else
-         constexpr auto b00 = Replace<SRC, Literal {"<unnamed>::"},   Literal {"" }>();
-         constexpr auto a00 = Replace<b00, Literal {"{anonymous}::"}, Literal {"" }>();
-      #endif
-         constexpr auto a01 = Replace<a00, Literal {" *"},            Literal {"*"}>();
-         constexpr auto a02 = Replace<a01, Literal {" &"},            Literal {"&"}>();
-         constexpr auto a03 = Replace<a02, Literal {" >"},            Literal {">"}>();
-         constexpr auto a04 = Replace<a03, Literal {" ("},            Literal {"("}>();
-         constexpr auto a05 = Replace<a04, Literal {" )"},            Literal {")"}>();
-         constexpr auto a06 = Replace<a05, Literal {" ["},            Literal {"["}>();
-         constexpr auto a07 = Replace<a06, Literal {" ]"},            Literal {"]"}>();
-         constexpr auto a08 = Replace<a07, Literal {"class "},        Literal {"" }>();
-         constexpr auto a09 = Replace<a08, Literal {"struct "},       Literal {"" }>();
-         constexpr auto a10 = Replace<a09, Literal {"enum "},         Literal {"" }>();
-         constexpr auto a11 = Replace<a10, Literal {"(__cdecl *)"},   Literal {"" }>();
+         static_assert(IsASCII(SRC), "Literal isn't ASCII");
+         Literal<char, DecideBufferSize(SRC)> result {SRC};
+         
+         for (const auto& pattern : ReplacePatterns) {
+            size_t fill = 0;
+            size_t prev = 0;
+            size_t curr = 0;
+            Literal<char, DecideBufferSize(SRC)> buffer {result};
+            while ((curr = result.find(pattern.what, prev)) != result.npos) {
+               while (curr > prev) {
+                  // Copy anything we've skipped                        
+                  buffer[fill++] = result[prev++];
+               }
 
-         // These types are stringified differently on some compilers   
-         // `unsigned short` is longer than just `short`, and needs to  
-         // be handled first                                            
-         constexpr auto a12 = Replace<a11, IsolateTypename<uint8_t,  false, false>(), Literal {"uint8" }>();
-         constexpr auto a13 = Replace<a12, IsolateTypename<uint16_t, false, false>(), Literal {"uint16"}>();
-         constexpr auto a14 = Replace<a13, IsolateTypename<uint32_t, false, false>(), Literal {"uint32"}>();
-         constexpr auto a15 = Replace<a14, IsolateTypename<uint64_t, false, false>(), Literal {"uint64"}>();
+               if (IsTransition(result, curr, curr + pattern.what.size())) {
+                  // Replace                                            
+                  for (auto& c : pattern.with)
+                     buffer[fill++] = c;
+                  prev += pattern.what.size();
+               }
+            }
 
-         constexpr auto a16 = Replace<a15, IsolateTypename<int8_t,   false, false>(), Literal {"int8"  }>();
-         constexpr auto a17 = Replace<a16, IsolateTypename<int16_t,  false, false>(), Literal {"int16" }>();
-         constexpr auto a18 = Replace<a17, IsolateTypename<int32_t,  false, false>(), Literal {"int32" }>();
-         constexpr auto a19 = Replace<a18, IsolateTypename<int64_t,  false, false>(), Literal {"int64" }>();
+            while (prev < result.size()) {
+               // Copy any remaining trailing data                      
+               buffer[fill++] = result[prev++];
+            }
+            
+            buffer[fill] = 0;
+            result = buffer;
+         }
 
-         static_assert(IsASCII(a19), "Normalized typename isn't ASCII");
-         return a19;
+         return result;
       }
       
       /// Get the last, most relevant part of a token that may or may not     

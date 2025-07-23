@@ -6,6 +6,8 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
+#include <array>
+
 #include "Core.hpp"
 #include <array>
 #include <functional>
@@ -151,6 +153,13 @@ namespace Langulus
 
       constexpr Literal(const value_type& c) noexcept {
          _data[0] = c;
+      }
+
+      template<size_t M> requires (M <= N)
+      constexpr Literal(const Literal<char, M>& other) noexcept {
+         for (size_t i = 0; i < M; i++)
+            _data[i] = other._data[i];
+         _data[M] = 0;
       }
 
       constexpr Literal(const value_type(&array)[N]) noexcept {
@@ -308,8 +317,8 @@ namespace Langulus
             return npos;
          return sv().find(str.sv(), pos);
       }
-      constexpr size_t find(view_type sv, size_t pos = 0) const noexcept {
-         return sv().find(sv, pos);
+      constexpr size_t find(const view_type& view, size_t pos = 0) const noexcept {
+         return sv().find(view, pos);
       }
       constexpr size_t find(const value_type* s, size_t pos, size_t n) const {
          return sv().find(s, pos, n);
@@ -328,8 +337,8 @@ namespace Langulus
             return npos;
          return sv().rfind(str.sv(), pos);
       }
-      constexpr size_t rfind(view_type sv, size_t pos = npos) const noexcept {
-         return sv().rfind(sv, pos);
+      constexpr size_t rfind(const view_type& view, size_t pos = npos) const noexcept {
+         return sv().rfind(view, pos);
       }
       constexpr size_t rfind(const value_type* s, size_t pos, size_t n) const {
          return sv().rfind(s, pos, n);
@@ -348,8 +357,8 @@ namespace Langulus
             return npos;
          return sv().find_first_of(str.sv(), pos);
       }
-      constexpr size_t find_first_of(view_type sv, size_t pos = 0) const noexcept {
-         return sv().find_first_of(sv, pos);
+      constexpr size_t find_first_of(const view_type& view, size_t pos = 0) const noexcept {
+         return sv().find_first_of(view, pos);
       }
       constexpr size_t find_first_of(const value_type* s, size_t pos, size_t n) const {
          return sv().find_first_of(s, pos, n);
@@ -368,8 +377,8 @@ namespace Langulus
             return npos;
          return sv().find_last_of(str.sv(), pos);
       }
-      constexpr size_t find_last_of(view_type sv, size_t pos = npos) const noexcept {
-         return sv().find_last_of(sv, pos);
+      constexpr size_t find_last_of(const view_type& view, size_t pos = npos) const noexcept {
+         return sv().find_last_of(view, pos);
       }
       constexpr size_t find_last_of(const value_type* s, size_t pos, size_t n) const {
          return sv().find_last_of(s, pos, n);
@@ -388,8 +397,8 @@ namespace Langulus
             return npos;
          return sv().find_first_not_of(str.sv(), pos);
       }
-      constexpr size_t find_first_not_of(view_type sv, size_t pos = 0) const noexcept {
-         return sv().find_first_not_of(sv, pos);
+      constexpr size_t find_first_not_of(const view_type& view, size_t pos = 0) const noexcept {
+         return sv().find_first_not_of(view, pos);
       }
       constexpr size_t find_first_not_of(const value_type* s, size_t pos, size_t n) const {
          return sv().find_first_not_of(s, pos, n);
@@ -408,8 +417,8 @@ namespace Langulus
             return npos;
          return sv().find_last_not_of(str.sv(), pos);
       }
-      constexpr size_t find_last_not_of(view_type sv, size_t pos = npos) const noexcept {
-         return sv().find_last_not_of(sv, pos);
+      constexpr size_t find_last_not_of(const view_type& view, size_t pos = npos) const noexcept {
+         return sv().find_last_not_of(view, pos);
       }
       constexpr size_t find_last_not_of(const value_type* s, size_t pos, size_t n) const {
          return sv().find_last_not_of(s, pos, n);
