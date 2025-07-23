@@ -173,9 +173,16 @@ namespace
       using CTTI_Values    = No;
    };
    
+   struct ConflictingName { using CTTI_Named = Yes<"MyType">;   };
+   struct InvalidName1    { using CTTI_Named = Yes<"1MyType">;  };
+   struct InvalidName2    { using CTTI_Named = Yes<"MyType{}">; };
+   struct InvalidName3    { using CTTI_Named = Yes<"My.Type">;  };
+   struct InvalidName4    { using CTTI_Named = Yes<"MyType[]">; };
+   struct InvalidName5    { using CTTI_Named = Yes<"MyType,">;  };
+   struct InvalidName6    { using CTTI_Named = Yes<"My Type">;  };
+   
    struct CheckingWhatGetsInherited : ImplicitlyReflectedDataWithTraits {
       using CTTI_Named = Yes<"CheckingWhatGetsInherited">;
-
       using ImplicitlyReflectedDataWithTraits::ImplicitlyReflectedDataWithTraits;
    };
    
@@ -364,6 +371,22 @@ SCENARIO("Testing reflection of names", "[rtti]") {
       REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits const*");
       REQUIRE(meta.GetName() == "MyType const*");
    }
+   {
+      const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits* const*>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits* const*");
+      REQUIRE(meta.GetName() == "MyType* const*");
+   }
+
+   REQUIRE_THROWS(MetaDataOf<ConflictingName>());
+   REQUIRE_THROWS(MetaDataOf<ConflictingName*>());
+   REQUIRE_THROWS(MetaDataOf<ConflictingName const*>());
+   REQUIRE_THROWS(MetaDataOf<InvalidName1>());
+   REQUIRE_THROWS(MetaDataOf<InvalidName2>());
+   REQUIRE_THROWS(MetaDataOf<InvalidName3>());
+   REQUIRE_THROWS(MetaDataOf<InvalidName4>());
+   REQUIRE_THROWS(MetaDataOf<InvalidName5>());
+   REQUIRE_THROWS(MetaDataOf<InvalidName6>());
 }
 
 ///                                                                           

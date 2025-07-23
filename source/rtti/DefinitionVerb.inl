@@ -44,6 +44,16 @@ namespace Langulus::RTTI
          "Can't reflect this function signature as a verb");
 
       constexpr auto cppname = CppNameOf<T>();
+      constexpr auto verbPos = NameOfVerb<T>();
+      constexpr auto verbNeg = NameOfVerbReverse<T>();
+      constexpr auto opPos   = OperatorOfVerb<T>();
+      constexpr auto opNeg   = OperatorOfVerbReverse<T>();
+      static_assert(not verbPos.empty(),
+         "Invalid positive verb token is not allowed");
+      static_assert(verbPos != verbNeg,
+         "Verb can't have the same positive and negative tokens");
+      static_assert(opPos != opNeg or opPos.empty(),
+         "Verb can't have the same positive and negative operators");
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the verb might  
@@ -54,7 +64,7 @@ namespace Langulus::RTTI
 
          DefinitionVerb& definition = meta
             ? const_cast<DefinitionVerb&>(*meta)
-            : Instance.RegisterVerb(cppname);
+            : Instance.RegisterVerb(cppname, verbPos, verbNeg, opPos, opNeg);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -65,27 +75,15 @@ namespace Langulus::RTTI
             return &s_definition.value();
 
          DefinitionVerb& definition = s_definition.emplace(cppname);
+         definition.mNameOf = Inner::ToLowercase(verbPos);
+         definition.mNameOfReverse = Inner::ToLowercase(verbNeg);
+         definition.mOperator = Inner::ToLowercase(opPos);
+         definition.mOperatorReverse = Inner::ToLowercase(opNeg);
       #endif
 
       //                                                                
       // If this is reached, then verb is not defined yet               
       definition.ReflectCommon<T>();
-      
-      constexpr auto verbPos = NameOfVerb<T>();
-      constexpr auto verbNeg = NameOfVerbReverse<T>();
-      static_assert(not verbPos.empty(),
-         "Invalid positive verb token is not allowed");
-      static_assert(verbPos != verbNeg,
-         "Verb can't have the same positive and negative tokens");
-      definition.mNameOf        = Inner::ToLowercase(verbPos);
-      definition.mNameOfReverse = Inner::ToLowercase(verbNeg);
-
-      constexpr auto opPos = OperatorOfVerb<T>();
-      constexpr auto opNeg = OperatorOfVerbReverse<T>();
-      static_assert(opPos != opNeg or opPos.empty(),
-         "Verb can't have the same positive and negative operators");
-      definition.mOperator        = Inner::ToLowercase(opPos);
-      definition.mOperatorReverse = Inner::ToLowercase(opNeg);
 
       if constexpr (CTTI::DefineVerb<T>::Enabled)
          definition.mPrecedence = CTTI::DefineVerb<T>::Precedence;

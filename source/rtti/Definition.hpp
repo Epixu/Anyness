@@ -114,17 +114,16 @@ namespace Langulus::RTTI::Inner
       template<class T>
       friend struct MetaNaked;
       
-      // Each reflected type has an unique hash based on C++ name       
+      // Each reflected type has a unique hash based on C++ name        
       const Hash mHash;
 
+      // @attention we can't afford strings to be pointers to static    
+      //    data to avoid data behind them getting unloaded on a shared 
+      //    object unload                                               
       // Original name of the type as it appears in C++                 
-      // We can't afford these to be pointers to avoid data behind them 
-      // getting unloaded on a shared object unload                     
       const ::std::string mCppNameOf;
-      // Sanitized mToken with proper capitalization, used in scripting 
+      // Sanitized mToken with proper capitalization, used in scripts   
       ::std::string mNameOf;
-      // Precomputed lowercase nameof                                   
-      Lowercase mNameOfLowercased;
       // Each reflection may or may not have some info                  
       ::std::string mInfoOf;
 
@@ -134,6 +133,9 @@ namespace Langulus::RTTI::Inner
       unsigned mVersionMinor IF_SAFE(= 0);
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         // Precomputed lowercase nameof                                
+         Lowercase mNameOfLowercased;
+
          // A sequential identifier provided by the registry            
          // Used for packing type ids                                   
          size_t mID IF_SAFE(= 0);
@@ -192,7 +194,7 @@ namespace Langulus::RTTI::Inner
             return true;
          #endif
       }
-      
+
    public:
       using CTTI_ReflectAs = void;
 

@@ -44,6 +44,9 @@ namespace Langulus::RTTI
          "Can't reflect this function signature as a tag");
 
       constexpr auto cppname = CppNameOf<T>();
+      constexpr auto token = NameOfTag<T>();
+      static_assert(token != "", "Invalid tag token is not allowed - "
+         "you have equipped your type (or its base) with an empty CTTI_DefineTag");
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the tag might   
@@ -54,7 +57,7 @@ namespace Langulus::RTTI
 
          DefinitionTag& definition = meta
             ? const_cast<DefinitionTag&>(*meta)
-            : Instance.RegisterTag(cppname);
+            : Instance.RegisterTag(cppname, token);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -65,20 +68,13 @@ namespace Langulus::RTTI
             return &s_definition.value();
 
          DefinitionTag& definition = s_definition.emplace(cppname);
+         definition.mNameOf = Inner::ToLowercase(token);
       #endif
 
 
       //                                                                
       // If this is reached, then tag is not defined yet                
       definition.ReflectCommon<T>();
-
-      constexpr auto token = NameOfTag<T>();
-      static_assert(token != "", "Invalid tag token is not allowed - "
-         "you have equipped your type (or its base) with an empty CTTI_DefineTag");
-
-      // Tags are canonically always lowercased                         
-      definition.mNameOf = Inner::ToLowercase(token);
-      definition.mNameOfLowercased = definition.mNameOf;
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          Logger::VerboseRaw(

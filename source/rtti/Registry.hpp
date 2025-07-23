@@ -26,8 +26,6 @@
 
 namespace Langulus::RTTI
 {
-   using MetaSet = ::std::unordered_set<Inner::Definition const*>;
-
    struct MetaException : Exception {
       using Exception::Exception;
    };
@@ -39,14 +37,17 @@ namespace Langulus::RTTI
    /// Available only if managed reflection feature is enabled                
    ///                                                                        
    class Registry {
+   public:
       // Definitions indexed by lowercase reflected name                
       template<class T>
       using MetaMap = ::std::unordered_map<Token, T>;
-      
+      using MetaSet = ::std::unordered_set<Inner::Definition const*>;
+
       // Definitions indexed by ID                                      
       template<class T>
       using Indexed = ::std::vector<T>;
 
+   private:
       // Database for meta data definitions                             
       MetaMap<DefinitionData const*>  mMetaDataByName;
       Indexed<DefinitionData const*>  mMetaDataByID;
@@ -65,6 +66,7 @@ namespace Langulus::RTTI
       Indexed<DefinitionVerb const*>  mMetaVerbsByID;
 
       // Database for ambiguous tokens                                  
+      // All definitions indexed by their last lowercased token         
       MetaMap<MetaSet> mMetaAmbiguous;
       // Meta data definitions, indexed by file extensions              
       MetaMap<MetaSet> mFileDatabase;
@@ -72,7 +74,8 @@ namespace Langulus::RTTI
       template<bool BY_CPPNAME>
       auto GetMetaByName(const auto& where, const Token& name) const noexcept
          -> decltype(where.begin()->second);
-      auto GetMetaByID  (const auto& where, size_t id) const noexcept;
+
+      auto GetMetaByID(const auto& where, size_t id) const noexcept;
 
    protected:
       friend class DefinitionVerb;
@@ -86,24 +89,25 @@ namespace Langulus::RTTI
       template<unsigned>
       friend struct Inner::MetaVerbStructured_X8;
 
-      void RegisterVerbOperator       (Token const&) has_assumptions;
-      void RegisterVerbOperatorReverse(Token const&) has_assumptions;
-      void RegisterVerbToken          (Token const&) has_assumptions;
-      void RegisterVerbTokenReverse   (Token const&) has_assumptions;
-
       LANGULUS_API(RTTI)
-      auto RegisterData(Token const&) -> DefinitionData&;
+      auto RegisterData(Token const& cppname, Token const& token) -> DefinitionData&;
       LANGULUS_API(RTTI)
       auto ReserveDataID(DefinitionData const*) -> size_t;
 
       LANGULUS_API(RTTI)
-      auto RegisterConst(Token const&) -> DefinitionConst&;
+      auto RegisterConst(Token const& cppname, Token const& token) -> DefinitionConst&;
 
       LANGULUS_API(RTTI)
-      auto RegisterTag(Token const&) -> DefinitionTag&;
+      auto RegisterTag(Token const& cppname, Token const& token) -> DefinitionTag&;
 
       LANGULUS_API(RTTI)
-      auto RegisterVerb(Token const&) -> DefinitionVerb&;
+      auto RegisterVerb(
+         Token const& cppname,
+         Token const& token,
+         Token const& tokenRev,
+         Token const& op,
+         Token const& opRev
+      ) -> DefinitionVerb&;
       
       LANGULUS_API(RTTI)
       void RegisterFileExtension(Token const&, DefinitionData*) has_assumptions;
@@ -162,7 +166,7 @@ namespace Langulus::RTTI
 
       
    LANGULUS(ALWAYS_INLINED)
-   auto GetAmbiguousMeta(Token const& token) noexcept -> const MetaSet& {
+   auto GetAmbiguousMeta(Token const& token) noexcept -> const Registry::MetaSet& {
       return Instance.GetAmbiguousMeta(token);
    }
 

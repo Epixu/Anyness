@@ -30,6 +30,9 @@ namespace Langulus::RTTI
    template<auto E>
    auto DefinitionConst::Reflect() -> DefinitionConst const* {
       constexpr auto cppname = CppNameOf<E>();
+      constexpr auto token = NameOf<E>();
+      static_assert(token != "", "Invalid constant token is not allowed - "
+         "you have reflected your constant with an empty CTTI::NamedValue");
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the const might 
@@ -40,7 +43,7 @@ namespace Langulus::RTTI
 
          DefinitionConst& definition = meta
             ? const_cast<DefinitionConst&>(*meta)
-            : Instance.RegisterConst(cppname);
+            : Instance.RegisterConst(cppname, token);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -51,6 +54,8 @@ namespace Langulus::RTTI
             return &s_definition.value();
 
          DefinitionConst& definition = s_definition.emplace(cppname);
+         definition.mNameOf = token;
+         definition.mNameOf[0] = ::std::toupper(token[0]);
       #endif
 
 
@@ -75,15 +80,6 @@ namespace Langulus::RTTI
       if constexpr (info != "")
          definition.mInfoOf = info;
       
-      constexpr auto token = NameOf<E>();
-      static_assert(token != "", "Invalid constant token is not allowed - "
-         "you have reflected your constant with an empty CTTI::NamedValue");
-
-      // Constants canonically begin with a capital letter              
-      definition.mNameOf = token;
-      definition.mNameOf[0] = ::std::toupper(definition.mNameOf[0]);
-      definition.mNameOfLowercased = Inner::ToLowercase(token);
-
       // Refer to a heap copy of the data                               
       using T = decltype(E);
       definition.mType = DefinitionData::Reflect<T>();

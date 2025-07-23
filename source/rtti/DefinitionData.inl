@@ -76,7 +76,7 @@ namespace Langulus::RTTI
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
-   ///   @tparam T - the decayed type to reflect                              
+   ///   @tparam T - the type to reflect                                      
    template<class T>
    auto DefinitionData::Reflect() -> DefinitionData const* {
       constexpr bool VERBOSE = false;
@@ -106,6 +106,9 @@ namespace Langulus::RTTI
          "make sure you're using a pointer to it instead");
 
       constexpr auto cppname = CppNameOf<T>();
+      constexpr auto token = NameOf<T>();
+      static_assert(token != "", "Invalid data token is not allowed - "
+         "you have equipped your type (or its base) with an empty CTTI_Named");
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
@@ -116,7 +119,7 @@ namespace Langulus::RTTI
 
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
-            : Instance.RegisterData(cppname);
+            : Instance.RegisterData(cppname, token);
       #else
          // There's no centralized registry when MANAGED_REFLECTION is  
          // disabled, so all we can do is keep a definition on the stack
@@ -127,22 +130,14 @@ namespace Langulus::RTTI
             return &s_definition.value();
 
          DefinitionData& definition = s_definition.emplace(cppname);
+         definition.mNameOf = token;
+         definition.mNameOf[0] = ::std::toupper(token[0]);
       #endif
       
       //                                                                
       // If this is reached, then data is not defined yet from the      
       // viewpoint of the current boundary                              
       definition.ReflectCommon<T>();
-      
-      constexpr auto token = NameOf<T>();
-      static_assert(token != "", "Invalid data token is not allowed - "
-         "you have equipped your type (or its base) with an empty CTTI_Named");
-
-      // Data types canonically begin with a capital letter             
-      definition.mNameOf = token;
-      definition.mNameOf[0] = ::std::toupper(definition.mNameOf[0]);
-      definition.mNameOfLowercased = Inner::ToLowercase(token);
-
       definition.mSize      = sizeof(T);
       definition.mAlign     = alignof(T);
       definition.mConst     = CT::Constant<T>;
@@ -196,9 +191,10 @@ namespace Langulus::RTTI
 
             #if LANGULUS_FEATURE(MANAGED_REFLECTION)
                // Propagate ID only if there's exactly one level of     
-               // indirection, because that will be encoded in the      
-               // packed meta data pointer - otherwise we need a new ID 
-               if constexpr (CT::Dense<DenserT>)
+               // unqualifided indirection, because that will be encoded
+               // in the packed meta data pointer perfectly - otherwise 
+               // we need a new ID                                      
+               if constexpr (CT::Dense<DenserT> and not CT::Constant<DenserT>)
                   definition.mID = deptr->mID;
             #endif
          }
@@ -208,14 +204,20 @@ namespace Langulus::RTTI
          }
 
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if constexpr (CT::Sparse<DenserT> or not CT::Complete<DenserT>) {
+            if constexpr (CT::Sparse<DenserT>
+            or not CT::Complete<DenserT> or CT::Constant<DenserT>) {
                // Multiple indirections always result in a unique ID    
                // Incomplete types are always considered an indirection 
+               // A constant denser type (at any level of indirection)  
+               // also requires a unique ID                             
                auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
                decvq->mID = Instance.ReserveDataID(decvq);
                decvq->mPtrIncludedInID = true;
+               IF_SAFE(AssumeDev(not definition.mDedicatedID, HERE(),
+                  "ID has already been reserved"));
+               IF_SAFE(definition.mDedicatedID = true);
 
-               if constexpr (CT::Convoluted<T>) {
+               if constexpr (CT::Constant<T>) {
                   definition.mID = decvq->mID;
                   definition.mPtrIncludedInID = true;
                }
@@ -230,6 +232,9 @@ namespace Langulus::RTTI
       else {
          // Origin type encountered, time to reserve a new ID           
          definition.mID = Instance.ReserveDataID(&definition);
+         IF_SAFE(AssumeDev(not definition.mDedicatedID, HERE(),
+            "ID has already been reserved"));
+         IF_SAFE(definition.mDedicatedID = true);
       }
       #endif
 

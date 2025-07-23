@@ -58,6 +58,7 @@ namespace Langulus::RTTI
       // This is required in some corner cases involving multiple       
       // layers of indirection, or incomplete types                     
       bool mPtrIncludedInID = false;
+      IF_SAFE(bool mDedicatedID = false);
 
       // The type, when all qualifiers are removed down to the origin   
       DefinitionData const* mDecvqAll IF_SAFE(= nullptr);

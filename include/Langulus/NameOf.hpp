@@ -177,12 +177,14 @@ namespace Langulus::RTTI
       ///   @return a compile-time string                                     
       template<class T, bool NORMALIZE = true, bool NAMED = true>
       consteval auto IsolateTypename() {
-         if constexpr (NAMED and CTTI::Named<T>::Enabled)
+         if constexpr (NAMED and CTTI::Named<T>::Enabled) {
+            // Custom name by CTTI::Named specialization                
             return CTTI::Named<T>::Name;
+         }
          else if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
-            // Move `const` next to pointers/references at the end of type 
-            // Discards `volatile` - it shouldn't matter outside compiler  
-            // Helps with better sorting of reflected types                
+            // Move `const` next to pointers/references at the end of   
+            // type. Discards `volatile` - it shouldn't matter outside  
+            // compiler. Helps with better sorting of reflected types   
             auto deptr = IsolateTypename<Decvq<T>, NORMALIZE, NAMED>();
             if constexpr (not ::std::is_const_v<T>)
                return deptr;
@@ -190,6 +192,7 @@ namespace Langulus::RTTI
                return deptr + " const";
          }
          else if constexpr (::std::is_reference_v<T>) {
+            // Append & or const& to the back                           
             auto deptr = IsolateTypename<Decvq<Deref<T>>, NORMALIZE, NAMED>();
             if constexpr (not ::std::is_const_v<Deref<T>>)
                return deptr + "&";
@@ -197,6 +200,7 @@ namespace Langulus::RTTI
                return deptr + " const&";
          }
          else if constexpr (::std::is_bounded_array_v<T>) {
+            // Append extent                                            
             auto deext = IsolateTypename<Deext<T>, NORMALIZE, NAMED>();
             constexpr auto ext = ::std::extent_v<T>;
             static_assert(ext < 1000000, "Extent is too big");
@@ -233,15 +237,19 @@ namespace Langulus::RTTI
             else return deext + "[" + static_cast<char>('0' + ext) + "]";
          }
          else if constexpr (::std::is_pointer_v<T>) {
+            // Append * or const* to the back                           
             auto deptr = IsolateTypename<Decvq<Deptr<T>>, NORMALIZE, NAMED>();
             if constexpr (not ::std::is_const_v<Deptr<T>>)
                return deptr + "*";
             else
                return deptr + " const*";
          }
-         else if constexpr (NAMED and requires { T::CTTI_Named::Constant; })
+         else if constexpr (NAMED and requires { T::CTTI_Named::Constant; }) {
+            // Custom name taken from T::CTTI_Named member              
             return T::CTTI_Named::Constant;
+         }
          else {
+            // Extract the C++ name, normalize it if required           
             constexpr auto name = WrappedTypeName<T>();
             constexpr size_t size = name.size();
             constexpr size_t left = CalibratedTypeLeftOffset;
@@ -273,9 +281,12 @@ namespace Langulus::RTTI
       ///   @return a compile-time string                                     
       template<auto T, bool NORMALIZE = true, bool NAMED = true>
       consteval auto IsolateConstant() {
-         if constexpr (NAMED and CT::NamedValue<T>)
+         if constexpr (NAMED and CT::NamedValue<T>) {
+            // Custom name by specializing CTTI::NamedValue             
             return CTTI::NamedValue<T>::Name;
+         }
          else {
+            // Extract the C++ name and normalize it if required        
             constexpr auto name = WrappedEnumName<T>();
             constexpr auto size = name.size();
             constexpr auto left = CalibratedEnumLeftOffset;
@@ -298,7 +309,7 @@ namespace Langulus::RTTI
       ///   @param rhs - end of the region                                    
       ///   @return true if a transition occurs at both points                
       // ReSharper disable once CppDFAUnreachableFunctionCall           
-      constexpr bool IsTransition(auto source, size_t lhs, size_t rhs) {
+      constexpr bool IsTransition(const Token& source, size_t lhs, size_t rhs) {
          return (
                // Test left side for transition                         
                lhs == 0

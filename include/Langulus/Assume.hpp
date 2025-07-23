@@ -14,6 +14,32 @@
 namespace Langulus
 {
    
+   /// Will throw an exception                                                
+   ///   @param m1 - optional main error message                              
+   ///   @param location - optional location of the error                     
+   ///   @param mn - additional information to log                            
+   template<class E = Exception, class...MORE> LANGULUS(INLINED)
+   constexpr void Error(
+      const char* location = nullptr,
+      const char* m1 = "<unknown assertion failure>",
+      MORE&&...mn
+   ) {
+      if not consteval {
+         // Log location first, because message might cause             
+         // additional errors                                           
+         DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
+
+         // Log error message                                           
+         Logger::ErrorRaw("Assertion failure: ", m1, FWD(mn)...);
+
+         // Throw                                                       
+         if constexpr (CT::Exception<E>)
+            throw E {m1, location};
+         else
+            throw E {m1};
+      }
+   }
+   
    /// Assertion that works both at runtime and at compile-time               
    /// Will throw an exception if condition isn't met at runtime              
    ///   @param condition - the condition that must hold true                 

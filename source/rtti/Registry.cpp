@@ -345,23 +345,47 @@ namespace Langulus::RTTI
    /// Register a data definition                                             
    ///   @attention assumes token is not yet registered                       
    ///   @param cppname - the C++ type name to register                       
+   ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta data for that name                    
-   auto Registry::RegisterData(const Token& cppname) -> DefinitionData& {
+   auto Registry::RegisterData(const Token& cppname, const Token& token) -> DefinitionData& {
       AssumeDev(not mMetaDataByName.contains(cppname), HERE(),
          "Data with this name is already registered: ", cppname);
       
       Assert(not mMetaTagsByName.contains(cppname), HERE(),
-         "Data name conflicts with tag: ", cppname);
+         "Data type already registered as tag: ", cppname);
       Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
-         "Data name conflicts with verb: ", cppname);
+         "Data type already registered as verb: ", cppname);
       Assert(not mMetaConstantsByName.contains(cppname), HERE(),
-         "Data name conflicts with constant: ", cppname);
+         "Data type already registered as constant: ", cppname);
+
+      // Make sure scripting token doesn't conflict with other metas    
+      auto lowercased_token = Inner::ToLowercase(token);
+      if (mMetaDataByName.contains(lowercased_token)) {
+         Error(HERE(), "Data token conflict between ", cppname, " and ",
+            mMetaDataByName.at(lowercased_token)->mCppNameOf);
+      }
+      if (mMetaConstantsByName.contains(lowercased_token)) {
+         Error(HERE(), "Token conflict between data ", cppname, " and constant ",
+            mMetaConstantsByName.at(lowercased_token)->mCppNameOf);
+      }
 
       // If reached, then not found, so insert a new definition         
       auto meta = new DefinitionData {cppname};
 
       // Index by C++ name                                              
       mMetaDataByName[meta->mCppNameOf] = meta;
+
+      // Index by lowercased token                                      
+      meta->mNameOf = token;
+      meta->mNameOf[0] = ::std::toupper(token[0]);
+      meta->mNameOfLowercased = ::std::move(lowercased_token);
+      // @important notice how key is made from heap-allocated          
+      // member variable. This guarantees, that if a boundary is        
+      // unloaded, the name data remains untouched on the heap          
+      mMetaDataByName[meta->mNameOfLowercased] = meta;
+
+      // Index by last lowercase token                                  
+      mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfLowercased)].insert(meta);
       return *meta;
    }
 
@@ -379,17 +403,29 @@ namespace Langulus::RTTI
    /// Register a constant definition                                         
    ///   @attention assumes token is not yet registered                       
    ///   @param cppname - the C++ type name to register                       
+   ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta constant for that token               
-   auto Registry::RegisterConst(const Token& cppname) -> DefinitionConst& {
+   auto Registry::RegisterConst(const Token& cppname, const Token& token) -> DefinitionConst& {
       AssumeDev(not mMetaConstantsByName.contains(cppname), HERE(),
          "Constant with this name is already registered: ", cppname);
 
       Assert(not mMetaDataByName.contains(cppname), HERE(),
-         "Constant name conflicts with data: ", cppname);
+         "Constant already registered as data: ", cppname);
       Assert(not mMetaTagsByName.contains(cppname), HERE(),
-         "Constant name conflicts with tag: ", cppname);
+         "Constant already registered as tag: ", cppname);
       Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
-         "Constant name conflicts with verb: ", cppname);
+         "Constant already registered as verb: ", cppname);
+
+      // Make sure scripting token doesn't conflict with other metas    
+      auto lowercased_token = Inner::ToLowercase(token);
+      if (mMetaDataByName.contains(lowercased_token)) {
+         Error(HERE(), "Token conflict between constant ", cppname, " and data ",
+            mMetaDataByName.at(lowercased_token)->mCppNameOf);
+      }
+      if (mMetaConstantsByName.contains(lowercased_token)) {
+         Error(HERE(), "Constant token conflict between ", cppname, " and ",
+            mMetaConstantsByName.at(lowercased_token)->mCppNameOf);
+      }
 
       // If reached, then not found, so insert a new definition         
       auto meta = new DefinitionConst {cppname};
@@ -400,23 +436,43 @@ namespace Langulus::RTTI
       // Index by ID                                                    
       mMetaConstantsByID.push_back(meta);
       meta->mID = mMetaConstantsByID.size();
+
+      // Index by lowercased token                                      
+      meta->mNameOf = token;
+      meta->mNameOf[0] = ::std::toupper(token[0]);
+      meta->mNameOfLowercased = ::std::move(lowercased_token);
+      // @important notice how key is made from heap-allocated          
+      // member variable. This guarantees, that if a boundary is        
+      // unloaded, the name data remains untouched on the heap          
+      mMetaConstantsByName[meta->mNameOfLowercased] = meta;
+
+      // Index by last lowercase token                                  
+      mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfLowercased)].insert(meta);
       return *meta;
    }
 
    /// Register a tag definition                                              
    ///   @attention assumes token is not yet registered                       
    ///   @param cppname - the C++ type name to register                       
+   ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta trait for that token                  
-   auto Registry::RegisterTag(const Token& cppname) -> DefinitionTag& {
+   auto Registry::RegisterTag(const Token& cppname, const Token& token) -> DefinitionTag& {
       AssumeDev(not mMetaTagsByName.contains(cppname), HERE(),
          "Tag with this name is already registered: ", cppname);
 
       Assert(not mMetaDataByName.contains(cppname), HERE(),
-         "Tag name conflicts with data: ", cppname);
+         "Tag already registered as data: ", cppname);
       Assert(not mMetaConstantsByName.contains(cppname), HERE(),
-         "Tag name conflicts with constant: ", cppname);
+         "Tag already registered as constant: ", cppname);
       Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
-         "Tag name conflicts with verb: ", cppname);
+         "Tag already registered as verb: ", cppname);
+
+      // Make sure scripting token doesn't conflict with other metas    
+      auto lowercased_token = Inner::ToLowercase(token);
+      if (mMetaTagsByName.contains(lowercased_token)) {
+         Error(HERE(), "Tag token conflict between ", cppname, " and ",
+            mMetaTagsByName.at(lowercased_token)->mCppNameOf);
+      }
 
       // If reached, then not found, so insert a new definition         
       auto meta = new DefinitionTag {cppname};
@@ -427,23 +483,69 @@ namespace Langulus::RTTI
       // Index by ID                                                    
       mMetaTagsByID.push_back(meta);
       meta->mID = mMetaTagsByID.size();
+
+      // Index by lowercased token                                      
+      meta->mNameOf = ::std::move(lowercased_token);
+      meta->mNameOfLowercased = meta->mNameOf;
+      // @important notice how key is made from heap-allocated          
+      // member variable. This guarantees, that if a boundary is        
+      // unloaded, the name data remains untouched on the heap          
+      mMetaTagsByName[meta->mNameOfLowercased] = meta;
+
+      // Index by last lowercase token                                  
+      mMetaAmbiguous[Inner::ToLastToken(meta->mNameOf)].insert(meta);
       return *meta;
    }
 
    /// Register a verb definition                                             
    ///   @attention assumes tokens are not yet registered                     
    ///   @param cppname - the C++ type name to register                       
+   ///   @param token - positive verb token                                   
+   ///   @param tokenRev - negative verb token (optional)                     
+   ///   @param op - positive verb operator (optional)                        
+   ///   @param opRev - negative verb operator (optional)                     
    ///   @return the newly defined meta verb for that token configuration     
-   auto Registry::RegisterVerb(const Token& cppname) -> DefinitionVerb& {
+   auto Registry::RegisterVerb(
+      Token const& cppname,
+      Token const& token,
+      Token const& tokenRev,
+      Token const& op,
+      Token const& opRev
+   ) -> DefinitionVerb& {
       AssumeDev(not mMetaVerbsByCppName.contains(cppname), HERE(),
          "Verb with this name is already registered: ", cppname);
 
       Assert(not mMetaDataByName.contains(cppname), HERE(),
-         "Verb name conflicts with data: ", cppname);
+         "Verb already registered as data: ", cppname);
       Assert(not mMetaConstantsByName.contains(cppname), HERE(),
-         "Verb name conflicts with constant: ", cppname);
+         "Verb already registered as constant: ", cppname);
       Assert(not mMetaTagsByName.contains(cppname), HERE(),
-         "Verb name conflicts with tag: ", cppname);
+         "Verb already registered as tag: ", cppname);
+
+      // Make sure scripting token doesn't conflict with other metas    
+      auto lowercased_token = Inner::ToLowercase(token);
+      if (mMetaVerbsByTokens.contains(lowercased_token)) {
+         Error(HERE(), "Verb positive token conflict between ", cppname, " and ",
+            mMetaVerbsByTokens.at(lowercased_token)->mCppNameOf);
+      }
+
+      auto lowercased_token_rev = Inner::ToLowercase(tokenRev);
+      if (not tokenRev.empty() and mMetaVerbsByTokens.contains(lowercased_token_rev)) {
+         Error(HERE(), "Verb negative token conflict between ", cppname, " and ",
+            mMetaVerbsByTokens.at(lowercased_token_rev)->mCppNameOf);
+      }
+
+      auto lowercased_op = Inner::ToLowercase(op);
+      if (not op.empty() and mMetaVerbsByTokens.contains(lowercased_op)) {
+         Error(HERE(), "Verb positive operator conflict between ", cppname, " and ",
+            mMetaVerbsByTokens.at(lowercased_op)->mCppNameOf);
+      }
+
+      auto lowercased_op_rev = Inner::ToLowercase(opRev);
+      if (not opRev.empty() and mMetaVerbsByTokens.contains(lowercased_op_rev)) {
+         Error(HERE(), "Verb negative operator conflict between ", cppname, " and ",
+            mMetaVerbsByTokens.at(lowercased_op_rev)->mCppNameOf);
+      }
 
       // If reached, then not found, so insert a new definition         
       auto meta = new DefinitionVerb {cppname};
@@ -454,96 +556,39 @@ namespace Langulus::RTTI
       // Index by ID                                                    
       mMetaVerbsByID.push_back(meta);
       meta->mID = mMetaVerbsByID.size();
+
+      // Index by lowercased tokens                                     
+      meta->mNameOf = ::std::move(lowercased_token);
+      meta->mNameOfReverse = ::std::move(lowercased_token_rev);
+      meta->mOperator = ::std::move(lowercased_op);
+      meta->mOperatorReverse = ::std::move(lowercased_op_rev);
+      // Amalgamate all tokens in this one                              
+      // Verb disambiguation is a bit more complex                      
+      meta->mNameOfLowercased = meta->mNameOf
+                        + " " + meta->mNameOfReverse
+                        + " " + meta->mOperator
+                        + " " + meta->mOperatorReverse;
+
+      // @important notice how key is made from heap-allocated          
+      // member variable. This guarantees, that if a boundary is        
+      // unloaded, the name data remains untouched on the heap          
+      mMetaVerbsByTokens[meta->mNameOf] = meta;
+      if (not meta->mNameOfReverse.empty())
+         mMetaVerbsByTokens[meta->mNameOfReverse] = meta;
+      if (not meta->mOperator.empty())
+         mMetaVerbsByTokens[meta->mOperator] = meta;
+      if (not meta->mOperatorReverse.empty())
+         mMetaVerbsByTokens[meta->mOperatorReverse] = meta;
+
+      // Index by last lowercase token                                  
+      mMetaAmbiguous[Inner::ToLastToken(meta->mNameOf)].insert(meta);
+      if (not meta->mNameOfReverse.empty())
+         mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfReverse)].insert(meta);
+      if (not meta->mOperator.empty())
+         mMetaAmbiguous[Inner::ToLastToken(meta->mOperator)].insert(meta);
+      if (not meta->mOperatorReverse.empty())
+         mMetaAmbiguous[Inner::ToLastToken(meta->mOperatorReverse)].insert(meta);
       return *meta;
-      
-      /*AssumeDev(not boundary.empty(), HERE(),
-         "Bad boundary provided");
-      const auto cppnamelc = Inner::ToLowercase(cppname);
-
-      IF_SAFE(const auto uniqueFound = mUniqueVerbs.find(cppnamelc));
-      AssumeDev(uniqueFound == mUniqueVerbs.end()
-         or not uniqueFound->second.contains(boundary), HERE(),
-         "Verb already registered for that boundary");
-
-      auto lc1 = Inner::ToLowercase(token);
-      AssumeDev(not GetMetaVerb(lc1, boundary), HERE(),
-         "Verb already registered with token: ",token);
-
-      Lowercase lc2;
-      if (not tokenReverse.empty()) {
-         lc2 = Inner::ToLowercase(tokenReverse);
-         AssumeDev(not GetMetaVerb(lc2, boundary), HERE(),
-            "Verb already registered with token: ", tokenReverse);
-      }
-
-      Assert(not GetMetaConst(token), HERE(),
-         "Verb positive token conflicts with constant: ", token);
-      Assert(not GetMetaTag(token), HERE(),
-         "Verb positive token conflicts with trait: ", token);
-      Assert(not GetMetaData(token), HERE(),
-         "Verb positive token conflicts with data: ", token);
-
-      Assert(not GetMetaConst(tokenReverse), HERE(),
-         "Verb negative token conflicts with constant: ", tokenReverse);
-      Assert(not GetMetaTag(tokenReverse), HERE(),
-         "Verb negative token conflicts with trait: ", tokenReverse);
-      Assert(not GetMetaData(tokenReverse), HERE(),
-         "Verb negative token conflicts with data: ", tokenReverse);
-
-      Lowercase op1;
-      if (not op.empty()) {
-         op1 = Inner::IsolateOperator(op);
-         AssumeDev(not GetOperator(op1, boundary), HERE(),
-            "Positive operator already registered");
-
-         Assert(not GetMetaConst(op1), HERE(),
-            "Verb positive operator conflicts with constant: ", op1);
-         Assert(not GetMetaTag(op1), HERE(),
-            "Verb positive operator conflicts with trait: ", op1);
-         Assert(not GetMetaData(op1), HERE(),
-            "Verb positive operator conflicts with data: ", op1);
-      }
-
-      Lowercase op2;
-      if (not opReverse.empty()) {
-         op2 = Inner::IsolateOperator(opReverse);
-         AssumeDev(not GetOperator(op2, boundary), HERE(),
-            "Negative operator already registered");
-
-         Assert(not GetMetaConst(op2), HERE(),
-            "Verb positive operator conflicts with constant: ", op2);
-         Assert(not GetMetaTag(op2), HERE(),
-            "Verb positive operator conflicts with trait: ", op2);
-         Assert(not GetMetaData(op2), HERE(),
-            "Verb positive operator conflicts with data: ", op2);
-      }
-
-      const auto meta = Register<false>(
-         new DefinitionVerb {token, tokenReverse, op, opReverse},
-         mUniqueVerbs, cppnamelc, boundary
-      );
-
-      if (tokenReverse.empty())
-         Logger::Verbose<VERBOSE>("Verb ", token, " registered");
-      else
-         Logger::Verbose<VERBOSE>("Verb ", token, '/', tokenReverse, " registered");
-
-      Register(meta, mMetaVerbsByName, lc1, boundary);
-
-      if (not lc2.empty())
-         Register(meta, mMetaVerbsByName, lc2, boundary);
-
-      if (not op1.empty()) {
-         Register<false>(meta, mOperators, op1, boundary);
-         Logger::Verbose<VERBOSE>("Operator ", op1, " registered");
-      }
-
-      if (not op2.empty()) {
-         Register<false>(meta, mOperators, op2, boundary);
-         Logger::Verbose<VERBOSE>("Operator ", op2, " registered");
-      }
-
-      return meta;*/
    }
 
    /// Register file extension                                                
