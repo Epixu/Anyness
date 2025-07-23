@@ -23,6 +23,7 @@ namespace Langulus
 {
    /// A fully portable constexpr alphabetical character check                
    /// Only english alphabet and underline symbol are allowed                 
+   // ReSharper disable once CppDFAUnreachableFunctionCall
    constexpr bool IsAlphabetical(char c) noexcept {
       switch (c) {
       case 'A': case 'a': case 'B': case 'b': case 'C': case 'c':
@@ -42,11 +43,12 @@ namespace Langulus
 
    /// A fully portable constexpr operator character check                    
    /// Only operators that can occur in type names are allowed                
+   // ReSharper disable once CppDFAUnreachableFunctionCall
    constexpr bool IsOperator(char c) noexcept {
       switch (c) {
       case '<': case '>': case '[': case ']': case '(': case ')':
       case '*': case '&': case ':': case ';': case '"': case '\'':
-      case '.': case ',':
+      case '.': case ',': case '{': case '}':
          return true;
       default:
          return false;
@@ -54,6 +56,7 @@ namespace Langulus
    }
 
    /// A fully portable constexpr number character check                      
+   // ReSharper disable once CppDFAUnreachableFunctionCall
    constexpr bool IsNumerical(char c) noexcept {
       switch (c) {
       case '0': case '1': case '2': case '3': case '4': case '5':
@@ -65,12 +68,13 @@ namespace Langulus
    }
    
    /// A fully portable constexpr space character check                       
+   // ReSharper disable once CppDFAUnreachableFunctionCall
    constexpr bool IsSpace(char c) noexcept {
       return c == ' ';
    }
 
    /// Verify that a string literal is made of allowed ASCII symbols          
-   constexpr bool IsASCII(auto source) {
+   constexpr bool IsASCII(const ::std::string_view& source) {
       for (char c : source) {
          if (IsAlphabetical(c) or IsOperator(c) or IsNumerical(c) or IsSpace(c))
             continue;
