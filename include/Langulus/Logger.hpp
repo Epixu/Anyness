@@ -287,14 +287,12 @@ namespace Langulus::Logger
 
    
    /// A general new-line write function that continues the last intent/style 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Line(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
-         if constexpr (TOGGLE) {
-            if not consteval {
-               GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
-            }
+         if not consteval {
+            GlobalState.NewLine();
+            (GlobalState.Write(FWD(arguments)), ...);
          }
       #else
          LANGULUS(NOOP);
@@ -302,13 +300,11 @@ namespace Langulus::Logger
    }
 
    /// A general same-line write function that continues the last style/intent
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Append(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
-         if constexpr (TOGGLE) {
-            if not consteval {
-               (GlobalState.Write(FWD(arguments)), ...);
-            }
+         if not consteval {
+            (GlobalState.Write(FWD(arguments)), ...);
          }
       #else
          LANGULUS(NOOP);
@@ -319,10 +315,10 @@ namespace Langulus::Logger
    /// and return the scoped tabs, that will be	untabbed automatically at the 
    /// scope's end. Section color is context dependent on the current intent  
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto Section(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
-         if constexpr (TOGGLE and sizeof...(arguments) > 0) {
+         if constexpr (sizeof...(arguments) > 0) {
             if not consteval {
                //const auto currentStyle = GlobalState.GetCurrentStyle();
                GlobalState.NewLine();
@@ -347,566 +343,506 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line fatal error                                           
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Fatal([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::FatalError);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::FatalError);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line fatal error and tab all next lines                    
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto FatalScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::FatalError);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::FatalError);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
 
    /// Write a new-line error                                                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Error([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Error);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Error);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line error and tab all next lines                          
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto ErrorScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Error);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
-               return Scope {0};
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Error);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return Scope {0};
+         }
       #endif
    }
 
    /// Write a new-line warning                                               
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Warning([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Warning);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Warning);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line warning and tab all next lines                        
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto WarningScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Warning);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::Warning);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
 
    /// Write a new-line with verbose information                              
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Verbose([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Verbose);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Verbose);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line verbose and tab all next lines                        
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto VerboseScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Verbose);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::Verbose);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
 
    /// Write a new-line with information                                      
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Info([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_INFOS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Info);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_INFOS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Info);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line info and tab all next lines                           
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto InfoScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_INFOS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Info);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
-               return Scope {0};
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_INFOS
+               GlobalState.Write(Intent::Ignore);
+               return UnusedScope {};
+            #else
+               GlobalState.Write(Intent::Info);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return Scope {0};
+         }
       #endif
    }
 
    /// Write a new-line with a personal message                               
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Message([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Message);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Message);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line message and tab all next lines                        
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto MessageScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Message);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::Message);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
 
    /// Write a new-line with special text                                     
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Special([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Special);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Special);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line special and tab all next lines                        
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto SpecialScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Special);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::Special);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
 
    /// Write a new-line with flow information                                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Flow([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Flow);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Flow);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line flow and tab all next lines                           
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto FlowScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Flow);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::Flow);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
 
    /// Write a new-line on user input                                         
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Input([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Input);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Input);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line input and tab all next lines                          
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto InputScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Input);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::Input);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
 
    /// Write a new-line with network message                                  
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Network([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Network);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Network);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line network and tab all next lines                        
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto NetworkScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Network);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::Network);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
 
    /// Write a new-line with a message from OS                                
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void OS([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_OS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::OS);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_OS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::OS);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
 
    /// Write a new-line OS and tab all next lines                             
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto OSScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_OS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::OS);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_OS
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::OS);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
 
    /// Write a new-line with an input prompt                                  
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void Prompt([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
-                  GlobalState.Write(Intent::Ignore);
-               #else
-                  GlobalState.Write(Intent::Prompt);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-               #endif
-            }
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
+               GlobalState.Write(Intent::Ignore);
+            #else
+               GlobalState.Write(Intent::Prompt);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+            #endif
          }
       #endif
    }
    
    /// Write a new-line prompt and tab all next lines                         
    ///   @return a scoped tab, that will untab when destroyed                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr auto PromptScoped([[maybe_unused]] T&&...arguments) noexcept {
       #if not LANGULUS_FEATURE(LOGGING)
          return UnusedScope {};
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
-                  GlobalState.Write(Intent::Ignore);
-                  return UnusedScope {};
-               #else
-                  GlobalState.Write(Intent::Prompt);
-                  GlobalState.NewLine();
-                  (GlobalState.Write(FWD(arguments)), ...);
-                  return GlobalState.NewScope();
-               #endif
-            }
-            else {
+         if not consteval {
+            #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
+               GlobalState.Write(Intent::Ignore);
                return UnusedScope {};
-            }
+            #else
+               GlobalState.Write(Intent::Prompt);
+               GlobalState.NewLine();
+               (GlobalState.Write(FWD(arguments)), ...);
+               return GlobalState.NewScope();
+            #endif
          }
-         else return UnusedScope {};
+         else {
+            return UnusedScope {};
+         }
       #endif
    }
    

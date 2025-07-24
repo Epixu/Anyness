@@ -234,14 +234,12 @@ namespace Langulus::Logger
    }
    
    /// A general new-line write function that continues the last style        
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void LineRaw(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtWrite("\n          | ");
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtWrite("\n          | ");
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #else
          LANGULUS(NOOP);
@@ -249,13 +247,11 @@ namespace Langulus::Logger
    }
 
    /// A general same-line write function that continues the last style       
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void AppendRaw(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
-         if constexpr (TOGGLE) {
-            if not consteval {
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #else
          LANGULUS(NOOP);
@@ -263,241 +259,217 @@ namespace Langulus::Logger
    }
 
    /// Write a new-line fatal error                                           
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void FatalRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_FATALERRORS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::FatalError)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::FatalError)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line error                                                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void ErrorRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_ERRORS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Error)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Error)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line warning                                               
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void WarningRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_WARNINGS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Warning)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Warning)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line with verbose information                              
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void VerboseRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_VERBOSE) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Verbose)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Verbose)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line with information                                      
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void InfoRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_INFOS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Info)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Info)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line with a personal message                               
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void MessageRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_MESSAGES) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Message)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Message)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line with special text                                     
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void SpecialRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_SPECIALS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Special)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Special)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line with flow information                                 
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void FlowRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_FLOWS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Flow)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Flow)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line on user input                                         
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void InputRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_INPUTS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Input)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Input)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line with network message                                  
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void NetworkRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_NETWORKS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Network)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Network)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line with a message from OS                                
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void OSRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_OS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::OS)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::OS)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }
 
    /// Write a new-line with an input prompt                                  
-   template<bool TOGGLE = true, class...T> LANGULUS(INLINED)
+   template<class...T> LANGULUS(INLINED)
    constexpr void PromptRaw([[maybe_unused]] T&&...arguments) noexcept {
       #if defined(LANGULUS_LOGGER_DISABLE_PROMPTS) or not LANGULUS_FEATURE(LOGGING)
          LANGULUS(NOOP);
       #else
-         if constexpr (TOGGLE) {
-            if not consteval {
-               Detail::FmtPrintStyle(DefaultStyle);
-               Detail::FmtWrite("\n");
-               Detail::FmtPrintTime();
-               auto& style = DefaultIntentStyle[static_cast<int>(Intent::Prompt)];
-               Detail::FmtWrite(style.prefix);
-               Detail::FmtPrintStyle(style.style);
-               (Detail::FmtWrite(FWD(arguments)), ...);
-            }
+         if not consteval {
+            Detail::FmtPrintStyle(DefaultStyle);
+            Detail::FmtWrite("\n");
+            Detail::FmtPrintTime();
+            auto& style = DefaultIntentStyle[static_cast<int>(Intent::Prompt)];
+            Detail::FmtWrite(style.prefix);
+            Detail::FmtPrintStyle(style.style);
+            (Detail::FmtWrite(FWD(arguments)), ...);
          }
       #endif
    }

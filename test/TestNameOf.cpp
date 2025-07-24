@@ -38,8 +38,6 @@ namespace Langulus::Flow
 
 namespace
 {
-   constexpr bool VERBOSE = false;
-
    struct NamedUsingMember {
       using CTTI_Named = Yes<"NameOverrideUsingMember">;
    };
@@ -184,7 +182,7 @@ namespace
          if (IsAlphabetical(c) or IsOperator(c) or IsNumerical(c) or IsSpace(c))
             continue;
 
-         Logger::ErrorRaw<VERBOSE>("Disallowed symbol: `", c, "` in `", a19, "`");
+         Logger::Error("Disallowed symbol: `", c, "` in `", a19, "`");
          throw "";
       }
 
@@ -272,9 +270,9 @@ namespace
                return isolated;
          }
          else {
-            Logger::InfoRaw<VERBOSE>("IsolateTypenameAtRuntime: ", name, " -> ", isolated);
+            Logger::Info("IsolateTypenameAtRuntime: ", name, " -> ", isolated);
             ::std::string normalized = NormalizeTypenameAtRuntime(isolated);
-            Logger::InfoRaw<VERBOSE>("NormalizeTypenameAtRuntime: ", isolated, " -> ", normalized);
+            Logger::Info("NormalizeTypenameAtRuntime: ", isolated, " -> ", normalized);
             if constexpr (::std::is_function_v<T>)
                return "<" + normalized + ">";
             else
@@ -295,11 +293,11 @@ namespace
          REQUIRE(size > left + right);
          ::std::string isolated = name.substr(left, size - right - left);
 
-         Logger::InfoRaw<VERBOSE>("IsolateConstantAtRuntime: ", name, " -> ", isolated);
+         Logger::Info("IsolateConstantAtRuntime: ", name, " -> ", isolated);
 
          if constexpr (NORMALIZE) {
             ::std::string normalized = NormalizeTypenameAtRuntime(isolated);
-            Logger::InfoRaw<VERBOSE>("Normalized constant: ", isolated, " -> ", normalized);
+            Logger::Info("Normalized constant: ", isolated, " -> ", normalized);
             return normalized;
          }
          else return isolated;

@@ -8,9 +8,17 @@
 #include "Allocator.hpp"
 #include "Pool.inl"
 #include "Allocation.inl"
-#include <Langulus/Logger.hpp>
 
-#define VERBOSE 0
+#if 0
+   #include <Langulus/Logger.hpp>
+   #define VERBOSE 1
+   #define LOG_VERBOSE(...) Logger::Verbose(__VA_ARGS__)
+   #define LOG_VERBOSE_SCOPED(...) const auto scope = Logger::VerboseScoped(__VA_ARGS__)
+#else
+   #define VERBOSE 0
+   #define LOG_VERBOSE(...)
+   #define LOG_VERBOSE_SCOPED(...)
+#endif
 
 
 namespace Langulus::Fractalloc
@@ -174,7 +182,7 @@ namespace Langulus::Fractalloc
       if (not pool)
          return nullptr;
 
-      Logger::Verbose<VERBOSE>(
+      LOG_VERBOSE(
          "Fractalloc: ", Logger::Cyan, "New pool ", Logger::Hex(pool),
          " of size ", Logger::Size {pool->GetAllocatedByBackend()}
       );
@@ -253,7 +261,7 @@ namespace Langulus::Fractalloc
             );
          #endif
 
-         Logger::Verbose<VERBOSE>(
+         LOG_VERBOSE(
             "Fractalloc: ", Logger::Yellow, "Allocation ", Logger::Hex(previous),
             " was reallocated from ", Logger::Size {as}, " to ", Logger::Size {size}
          );
@@ -278,7 +286,7 @@ namespace Langulus::Fractalloc
       AssumeDevAndOptimize(entry->mReferences == 1,
          "Deallocating an allocation used from multiple places");
 
-      Logger::Verbose<VERBOSE>(
+      LOG_VERBOSE(
          "Fractalloc: ", Logger::Red, "Allocation ", Logger::Hex(entry),
          " of size ", Logger::Size {entry->GetBackendSize()}, " was deallocated"
       );
@@ -324,7 +332,7 @@ namespace Langulus::Fractalloc
 
          IF_LANGULUS_MEMORY_STATISTICS(mStatistics.DelPool(chainStart));
          auto next = chainStart->mNext;
-         Logger::Verbose<VERBOSE>(
+         LOG_VERBOSE(
             "Fractalloc: ", Logger::DarkCyan, "Pool ", Logger::Hex(chainStart),
             " of size ", Logger::Size {chainStart->GetAllocatedByBackend()},
             " was deallocated"
@@ -349,7 +357,7 @@ namespace Langulus::Fractalloc
 
          IF_LANGULUS_MEMORY_STATISTICS(mStatistics.DelPool(pool));
          const auto next = pool->mNext;
-         Logger::Verbose<VERBOSE>(
+         LOG_VERBOSE(
             "Fractalloc: ", Logger::DarkCyan, "Pool ", Logger::Hex(pool),
             " of size ", Logger::Size {pool->GetAllocatedByBackend()},
             " was deallocated"
@@ -739,7 +747,7 @@ namespace Langulus::Fractalloc
    ///   @param id - pool id                                                  
    ///   @param pool - the pool to dump                                       
    void Allocator::DumpPool(size_t id, const Pool* pool) noexcept {
-      const auto scope = Logger::InfoScoped<VERBOSE>(
+      const auto scope = Logger::InfoScoped(
          Logger::PushCyan, Logger::Underline, "Pool #", id, " at ",
          Logger::Hex(pool), Logger::Pop
       );
@@ -1079,7 +1087,7 @@ namespace Langulus::Fractalloc
    bool Allocator::IntegrityCheck() {
       // Integrity check the default chain                              
       if (Instance.mMainPoolChain) {
-         Logger::Verbose<VERBOSE>("Integrity check: mMainPoolChain...");
+         LOG_VERBOSE("Integrity check: mMainPoolChain...");
          if (not Instance.IntegrityCheckChain(Instance.mMainPoolChain))
             return false;
       }
@@ -1088,7 +1096,7 @@ namespace Langulus::Fractalloc
       [[maybe_unused]] int size = 1;
       for (auto& sizeChain : Instance.mSizePoolChain) {
          if (sizeChain) {
-            Logger::Verbose<VERBOSE>("Integrity check: mSizePoolChain #", size++, "...");
+            LOG_VERBOSE("Integrity check: mSizePoolChain #", size++, "...");
             if (not Instance.IntegrityCheckChain(sizeChain))
                return false;
          }
@@ -1097,7 +1105,7 @@ namespace Langulus::Fractalloc
       // Integrity check all type chains                                
       for (auto& typeChain : Instance.mInstantiatedTypes) {
          if (auto relevantPool = typeChain.GetPoolchain()) {
-            Logger::Verbose<VERBOSE>("Integrity check for type ", typeChain.GetName(), "...");
+            LOG_VERBOSE("Integrity check for type ", typeChain.GetName(), "...");
             if (not Instance.IntegrityCheckChain(relevantPool))
                return false;
          }
