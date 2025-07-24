@@ -22,7 +22,6 @@ namespace Langulus::RTTI
    class DefinitionData;
    class DefinitionTag;
    class DefinitionVerb;
-
    class Registry;
       
    namespace Inner

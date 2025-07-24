@@ -16,6 +16,13 @@
    #include <optional>
 #endif
 
+#if 0
+   #include <Langulus/Logger.hpp>
+   #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE(...)
+#endif
+
 
 namespace Langulus::RTTI
 {
@@ -163,3 +170,5 @@ namespace Langulus::RTTI
       return &definition;
    }
 }
+
+#undef VERBOSE

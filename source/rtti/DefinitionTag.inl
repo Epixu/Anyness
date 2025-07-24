@@ -10,10 +10,16 @@
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/CT/DefineTag.hpp>
 #include <Langulus/CT/DefineVerb.hpp>
-#include <Langulus/Logger.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <optional>
+#endif
+
+#if 0
+   #include <Langulus/Logger.hpp>
+   #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE(...)
 #endif
 
 
@@ -76,13 +82,13 @@ namespace Langulus::RTTI
       definition.ReflectCommon<T>();
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         Logger::VerboseRaw(
+         VERBOSE(
             Logger::Purple, "Tag ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             "registered from ", (Boundary?Boundary:"MAIN")
          );
       #else
-         Logger::VerboseRaw(
+         VERBOSE(
             Logger::Purple, "Tag ", definition.mNameOf,
             Logger::Green, " reflected"
          );
@@ -91,3 +97,5 @@ namespace Langulus::RTTI
       return &definition;
    }
 }
+
+#undef VERBOSE

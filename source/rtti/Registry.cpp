@@ -16,7 +16,14 @@
    #error "This file shouldn't be compiled if MANAGED_REFLECTION is disabled"
 #endif
 
-#define VERBOSE 0
+#if 0
+   #include <Langulus/Logger.hpp>
+   #define VERBOSE_SCOPED(...) const auto scope = Logger::VerboseScoped(__VA_ARGS__);
+   #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE_SCOPED(...)
+   #define VERBOSE(...)
+#endif
 
 
 namespace Langulus::RTTI
@@ -619,13 +626,13 @@ namespace Langulus::RTTI
    ///   @param boundary - the boundary token to search for                   
    void Registry::UnloadBoundary(const Token& boundary) {
       AssumeDev(not boundary.empty(), HERE(), "Can't unload main boundary");
-      auto scope = Logger::VerboseScoped<VERBOSE>(Logger::Red, Logger::Underline, 
+      VERBOSE_SCOPED(Logger::Red, Logger::Underline, 
          "Unloading boundary ", boundary);
 
       //                                                                
       // Unload constants                                               
       for (auto pair = mMetaConstantsByCppName.begin(); pair != mMetaConstantsByCppName.end();) {
-         auto definition = const_cast<DefinitionConst*>(pair->second.get());
+         auto definition = pair->second.get();
          if (not definition->mBoundaries.erase(boundary)) {
             // Boundary is irrelevant for this definition               
             ++pair;
@@ -640,7 +647,7 @@ namespace Langulus::RTTI
 
          // If this is reached, then it is time to destroy the          
          // definition - it is no longer in use                         
-         Logger::Verbose<VERBOSE>(
+         VERBOSE(
             "Constant ", Logger::Yellow, definition->mNameOf,
             Logger::Red, " unregistered"
          );
@@ -670,7 +677,7 @@ namespace Langulus::RTTI
                ++def;
          }
 
-         Logger::Verbose<VERBOSE>(
+         VERBOSE(
             "File ", Logger::Push, pair->first, Logger::Red, " unregistered"
          );
          
@@ -683,7 +690,7 @@ namespace Langulus::RTTI
       //                                                                
       // Unload data types                                              
       for (auto pair = mMetaDataByCppName.begin(); pair != mMetaDataByCppName.end();) {
-         auto definition = const_cast<DefinitionData*>(pair->second.get());
+         auto definition = pair->second.get();
          if (not definition->mBoundaries.erase(boundary)) {
             // Boundary is irrelevant for this definition               
             ++pair;
@@ -699,7 +706,7 @@ namespace Langulus::RTTI
             continue;
          }
 
-         Logger::Verbose<VERBOSE>(
+         VERBOSE(
             "Data ", Logger::Cyan, definition->mNameOf,
             Logger::Red, " unregistered"
          );
@@ -735,7 +742,7 @@ namespace Langulus::RTTI
             continue;
          }
 
-         Logger::Verbose<VERBOSE>(
+         VERBOSE(
             "Tag ", Logger::Purple, definition->mNameOf,
             Logger::Red, " unregistered"
          );
@@ -772,13 +779,13 @@ namespace Langulus::RTTI
          }
 
          if (not definition->mNameOfReverse.empty()) {
-            Logger::Verbose<VERBOSE>("Verb ", Logger::DarkGreen,
+            VERBOSE("Verb ", Logger::DarkGreen,
                definition->mNameOf, "/", definition->mNameOfReverse,
                Logger::Red, " unregistered"
             );
          }
          else {
-            Logger::Verbose<VERBOSE>("Verb ", Logger::DarkGreen,
+            VERBOSE("Verb ", Logger::DarkGreen,
                definition->mNameOf, Logger::Red, " unregistered"
             );
          }
@@ -806,7 +813,7 @@ namespace Langulus::RTTI
             mMetaVerbsByToken.erase(definition->mNameOfReverse);
          
          if (not definition->mOperator.empty()) {
-            Logger::Verbose<VERBOSE>(
+            VERBOSE(
                "Operator ", Logger::DarkGreen, definition->mOperator,
                Logger::Red, " unregistered"
             );
@@ -814,7 +821,7 @@ namespace Langulus::RTTI
          }
          
          if (not definition->mOperatorReverse.empty()) {
-            Logger::Verbose<VERBOSE>(
+            VERBOSE(
                "Operator ", Logger::DarkGreen, definition->mOperatorReverse,
                Logger::Red, " unregistered"
             );
@@ -904,3 +911,6 @@ namespace Langulus::RTTI
    }*/
 
 } // namespace Langulus::RTTI
+
+#undef VERBOSE
+#undef VERBOSE_SCOPED

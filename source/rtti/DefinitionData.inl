@@ -27,7 +27,6 @@
 #include <Langulus/CT/Files.hpp>
 #include <Langulus/CT/Suffix.hpp>
 #include <Langulus/IntentOf.hpp>
-#include <Langulus/Logger.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <optional>
@@ -38,6 +37,13 @@
 #include "DefinitionVerb.hpp"
 #include "DefinitionConst.hpp"
 #include "DefinitionTag.hpp"
+
+#if 0
+   #include <Langulus/Logger.hpp>
+   #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE(...)
+#endif
 
 
 namespace Langulus::RTTI
@@ -79,8 +85,6 @@ namespace Langulus::RTTI
    ///   @tparam T - the type to reflect                                      
    template<class T>
    auto DefinitionData::Reflect() -> DefinitionData const* {
-      constexpr bool VERBOSE = false;
-
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete type - "
          "make sure you have included the corresponding headers "
@@ -733,13 +737,13 @@ namespace Langulus::RTTI
       }
       
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         Logger::Verbose<VERBOSE>(
+         VERBOSE(
             Logger::Cyan, "Data ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             "registered from ", (Boundary?Boundary:"MAIN")
          );
       #else
-         Logger::Verbose<VERBOSE>(
+         VERBOSE(
             Logger::Cyan, "Data ", definition.mNameOf,
             Logger::Green, " reflected"
          );
@@ -753,8 +757,7 @@ namespace Langulus::RTTI
    template<class HANDLE>
    auto DefinitionData::Member::From() -> Member {
       using THIS = typename HANDLE::Owner;
-      static_assert(CT::NotConvoluted<THIS>,
-         "Can't have qualifiers here");
+      static_assert(CT::NotConvoluted<THIS>, "Can't have qualifiers here");
       using DATA = typename HANDLE::Type;
 
       Member m;
@@ -821,3 +824,5 @@ namespace Langulus::RTTI
    }
 
 } // namespace Langulus::RTTI
+
+#undef VERBOSE
