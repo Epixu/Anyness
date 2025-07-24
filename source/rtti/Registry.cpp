@@ -358,7 +358,7 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta data for that name                    
    auto Registry::RegisterData(const Token& cppname, const Token& token) -> DefinitionData& {
-      AssumeDev(not mMetaDataByCppName.contains(cppname), HERE(),
+      AssumeDev(not mMetaDataByCppName.contains(cppname),
          "Data with this name is already registered: ", cppname);
       
       Assert(not mMetaTagsByCppName.contains(cppname), HERE(),
@@ -417,7 +417,7 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta constant for that token               
    auto Registry::RegisterConst(const Token& cppname, const Token& token) -> DefinitionConst& {
-      AssumeDev(not mMetaConstantsByCppName.contains(cppname), HERE(),
+      AssumeDev(not mMetaConstantsByCppName.contains(cppname),
          "Constant with this name is already registered: ", cppname);
 
       Assert(not mMetaDataByCppName.contains(cppname), HERE(),
@@ -469,7 +469,7 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta trait for that token                  
    auto Registry::RegisterTag(const Token& cppname, const Token& token) -> DefinitionTag& {
-      AssumeDev(not mMetaTagsByCppName.contains(cppname), HERE(),
+      AssumeDev(not mMetaTagsByCppName.contains(cppname),
          "Tag with this name is already registered: ", cppname);
 
       Assert(not mMetaDataByCppName.contains(cppname), HERE(),
@@ -525,7 +525,7 @@ namespace Langulus::RTTI
       Token const& op,
       Token const& opRev
    ) -> DefinitionVerb& {
-      AssumeDev(not mMetaVerbsByCppName.contains(cppname), HERE(),
+      AssumeDev(not mMetaVerbsByCppName.contains(cppname),
          "Verb with this name is already registered: ", cppname);
 
       Assert(not mMetaDataByCppName.contains(cppname), HERE(),
@@ -610,7 +610,7 @@ namespace Langulus::RTTI
    ///   @param type - the data to associate file with                        
    void Registry::RegisterFileExtension(const Token& token, DefinitionData* type)
    has_assumptions {
-      AssumeDev(not token.empty(), HERE(), "Bad file extension");
+      AssumeDev(not token.empty(), "Bad file extension");
       AssumeDevAndOptimize(type, "Bad meta data for file extension: ", token);
 
       const auto lc = Inner::ToLowercase(token);
@@ -625,7 +625,7 @@ namespace Langulus::RTTI
    /// defined only within the given boundary token                           
    ///   @param boundary - the boundary token to search for                   
    void Registry::UnloadBoundary(const Token& boundary) {
-      AssumeDev(not boundary.empty(), HERE(), "Can't unload main boundary");
+      AssumeDev(not boundary.empty(), "Can't unload main boundary");
       VERBOSE_SCOPED(Logger::Red, Logger::Underline, 
          "Unloading boundary ", boundary);
 

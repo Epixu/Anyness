@@ -179,7 +179,7 @@ namespace Langulus
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
    template<class E = Exception, class...MORE> LANGULUS(INLINED)
-   constexpr void AssumeDev(
+   constexpr void AssumeDevInner(
       bool condition,
       const char* location = nullptr,
       const char* m1 = "<unknown dev assumption failure>",
@@ -210,10 +210,13 @@ namespace Langulus
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
    #if LANGULUS(SAFE) > 1
+      #define AssumeDev(CONDITION, ...) \
+         AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
       #define AssumeDevAndOptimize(CONDITION, ...) \
-         AssumeDev(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
+         AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
          [[assume(CONDITION)]]
    #else
+      #define AssumeDev(CONDITION, ...)
       #define AssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
    #endif
 

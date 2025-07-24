@@ -25,7 +25,7 @@ namespace Langulus
       #if LANGULUS(SAFE)
          static_assert(CT::Unsigned<T>, "T should be unsigned");
          constexpr T lastPowerOfTwo = (T {1}) << (T {sizeof(T) * 8 - 1});
-         AssumeDev(x <= lastPowerOfTwo, HERE(), "Roof2 overflowed");
+         AssumeDev(x <= lastPowerOfTwo, "Roof2 overflowed");
       #endif
 
       // Pick a well optimized intrinsic function if not constexpr      

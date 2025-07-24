@@ -37,7 +37,7 @@ namespace Langulus
 
       LANGULUS(INLINED)
       ~Referenced() {
-         AssumeDev(mReferences <= 1, HERE(),
+         AssumeDev(mReferences <= 1,
             "Leftover references (", mReferences,") on instance destruction. "
             "When inheriting from Referenced, you're supposed to "
             "implement either an appropriate destructor (or surrounding logic) "
@@ -58,10 +58,8 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       int Reference(int x) has_assumptions {
-         AssumeDev(mReferences or x == 0, HERE(),
-            "Dead instance resurrection/overkill");
-         AssumeDev(x >= 0 or mReferences >= -x, HERE(),
-            "Live instance overkill");
+         AssumeDev(mReferences or x == 0, "Dead instance resurrection/overkill");
+         AssumeDev(x >= 0 or mReferences >= -x, "Live instance overkill");
          mReferences += x;
          return mReferences;
       }

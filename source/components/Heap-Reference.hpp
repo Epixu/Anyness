@@ -117,7 +117,7 @@ namespace Langulus::Anyness::Component
          }
          else if constexpr (CT::Untyped<C>) {
             // Casting to a desired runtime type                        
-            AssumeDev(self.IsTyped(), HERE(), "Block is not typed");
+            AssumeDev(self.IsTyped(), "Block is not typed");
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TT>)

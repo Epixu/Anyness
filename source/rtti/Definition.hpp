@@ -49,7 +49,7 @@ namespace Langulus::RTTI::Inner
    ///   @param token - the token to lowercase                                
    ///   @return the lowercase string                                         
    constexpr Lowercase ToLowercase(const Token& token) noexcept {
-      AssumeDev(IsASCII(token), HERE(), "Token must be ASCII");
+      AssumeDev(IsASCII(token), "Token must be ASCII");
       Lowercase lc {token};
       for (char& c : lc)
          c = Langulus::ToLowercase(c);

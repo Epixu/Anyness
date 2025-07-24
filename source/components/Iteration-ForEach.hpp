@@ -222,8 +222,8 @@ namespace Langulus::Anyness::Component
       ///   @return the last 'f' result                                       
       template<bool REVERSE, CT::Container C, class F>
       LoopControl ForEachInner(this C&& self, F&& f, Count<C>& index) noexcept(IsNoexcept<F>) {
-         AssumeDev(self.GetCount(), HERE(), "Can't iterate empty container");
-         AssumeDev(self.IsTyped(),  HERE(), "Can't iterate untyped container");
+         AssumeDev(self.GetCount(), "Can't iterate empty container");
+         AssumeDev(self.IsTyped(), "Can't iterate untyped container");
 
          using A  = ArgumentOf<F>;
          using R  = ReturnOf<F>;
@@ -283,7 +283,7 @@ namespace Langulus::Anyness::Component
                else {
                   // Iterate dense container where A is binary-         
                   // compatible to the type, but may not be it exactly  
-                  AssumeDev(self.GetStride() % sizeof(DA) == 0, HERE(), "Unaligned iterator");
+                  AssumeDev(self.GetStride() % sizeof(DA) == 0, "Unaligned iterator");
                   loop = self.template IterateInner<REVERSE>(
                      self.GetCount() * (self.GetStride() / sizeof(DA)),
                      [&index, &f](DA& element) noexcept(IsNoexcept<F>) -> R {
@@ -556,16 +556,16 @@ namespace Langulus::Anyness::Component
          static_assert(CT::Complete<Decay<A>> or CT::Sparse<A>,
             "Can't iterate with incomplete type, use pointer instead");
 
-         AssumeDev(self.IsTyped(), HERE(),
+         AssumeDev(self.IsTyped(), 
             "Block is not typed");
-         AssumeDev(not self.IsEmpty(), HERE(),
+         AssumeDev(not self.IsEmpty(), 
             "Block is empty (of type `", self.GetType(), "`)");
-         AssumeDev(self.IsSparse() == CT::Sparse<A>, HERE(),
+         AssumeDev(self.IsSparse() == CT::Sparse<A>,
             "Sparseness mismatch (`", self.GetType(),
             "` compared against `", MetaDataOf<A>(), "`)");
 
          if constexpr (CT::Dense<A>) {
-            AssumeDev(self.template CastsTo<A, true>(), HERE(),
+            AssumeDev(self.template CastsTo<A, true>(),
                "Incompatible iterator type", " `", MetaDataOf<A>(), 
                "` (iterating block of type `", self.GetType(), "`)");
          }

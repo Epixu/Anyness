@@ -207,7 +207,7 @@ namespace Langulus::Anyness
       ///   @tparam TYPE - the type of the data to get                        
       template<unsigned ID, CT::NotVoid TYPE>
       constexpr auto& GetInner() has_assumptions {
-         AssumeDev(not IsEmpty(), HERE(), "Container is empty");
+         AssumeDev(not IsEmpty(), "Container is empty");
 
          if constexpr (HasComponent<Com::HeapMovable<ID>>)
             return Com::HeapMovable<ID>::template Get<TYPE>();
@@ -229,7 +229,7 @@ namespace Langulus::Anyness
 
       template<unsigned ID, CT::NotVoid TYPE>
       constexpr auto const& GetInner() const has_assumptions {
-         AssumeDev(not IsEmpty(), HERE(), "Container is empty");
+         AssumeDev(not IsEmpty(), "Container is empty");
 
          if constexpr (HasComponent<Com::HeapMovable<ID>>)
             return Com::HeapMovable<ID>::template Get<TYPE>();

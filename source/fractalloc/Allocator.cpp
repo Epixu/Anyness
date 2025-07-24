@@ -160,7 +160,7 @@ namespace Langulus::Fractalloc
             stats.mEntries += 1;
             stats.mBytesAllocatedByFrontend += memory->GetFrontendSize();
             AssumeDev(
-               stats.mBytesAllocatedByFrontend <= stats.mBytesAllocatedByBackend, HERE(),
+               stats.mBytesAllocatedByFrontend <= stats.mBytesAllocatedByBackend,
                "Impossible amount of frontend allocation"
             );
          #endif
@@ -249,7 +249,7 @@ namespace Langulus::Fractalloc
             stats.mBytesAllocatedByFrontend += previous->GetFrontendSize();
             AssumeDev(
                stats.mBytesAllocatedByFrontend <= stats.mBytesAllocatedByBackend,
-               HERE(), "Impossible amount of frontend allocation"
+               "Impossible amount of frontend allocation"
             );
          #endif
 
@@ -271,7 +271,7 @@ namespace Langulus::Fractalloc
    void Allocator::Deallocate(Allocation* entry) has_assumptions {
       AssumeDevAndOptimize(entry,
          "Deallocating nullptr");
-      AssumeDev(entry->GetBackendSize(), HERE(),
+      AssumeDev(entry->GetBackendSize(),
          "Deallocating an empty allocation");
       AssumeDevAndOptimize(entry->mReferences,
          "Deallocating an unused allocation");
@@ -1011,7 +1011,7 @@ namespace Langulus::Fractalloc
    ///   @param pool - the pool to account for                                
    void Allocator::Statistics::DelPool(const Pool* pool) IF_UNSAFE(noexcept) {
       AssumeDev(
-         mBytesAllocatedByBackend >= pool->GetTotalSize(), HERE(),
+         mBytesAllocatedByBackend >= pool->GetTotalSize(),
          "Impossible amount of backend allocation"
       );
       mBytesAllocatedByBackend -= pool->GetTotalSize();

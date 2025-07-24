@@ -37,9 +37,9 @@ namespace Langulus::Anyness::Component
          using DC = Deref<C>;
          if constexpr (DC::TypeErased) {
             if (self.IsSparse()) {
-               AssumeDev(self.GetHeap(), HERE(),
+               AssumeDev(self.GetHeap(),
                   "No memory available");
-               AssumeDev(self.GetAllocation(), HERE(),
+               AssumeDev(self.GetAllocation(),
                   "Entries do not exist for sparse containers which are out of jurisdiction");
                return reinterpret_cast<AllocationPtr*>(self.GetHeapEnd());
             }
@@ -47,9 +47,9 @@ namespace Langulus::Anyness::Component
          }
          else {
             if constexpr (DC::Sparse) {
-               AssumeDev(self.GetHeap(), HERE(),
+               AssumeDev(self.GetHeap(),
                   "No memory available");
-               AssumeDev(self.GetAllocation(), HERE(),
+               AssumeDev(self.GetAllocation(),
                   "Entries do not exist for sparse containers which are out of jurisdiction");
                return reinterpret_cast<AllocationPtr*>(self.GetHeapEnd());
             }
@@ -61,7 +61,7 @@ namespace Langulus::Anyness::Component
       /// allocation changes to update any heap-allocated data pointers       
       template<CT::Container C>
       void OnAllocationChange(this C& self, const View<C>& oldv) {
-         AssumeDev(self.GetAllocation() != oldv.GetAllocation(), HERE(),
+         AssumeDev(self.GetAllocation() != oldv.GetAllocation(),
             "Allocation didn't change");
 
          if constexpr (C::Sparse) {
@@ -85,7 +85,7 @@ namespace Langulus::Anyness::Component
          // long as it's a keeper intent                                
          if constexpr (C::TypeErased) {
             AssumeDev(self.IsSparse() and (CT::Void<DT> or self.template IsSimilar<ST>()),
-               HERE(), "Type mismatch");
+               "Type mismatch");
 
             if constexpr (S::Keep and CT::Allocatable<DT>) {
                auto found = Allocator::Find(self.mType, *self.mSparseHeap);
@@ -127,7 +127,7 @@ namespace Langulus::Anyness::Component
 
          if constexpr (C::TypeErased) {
             AssumeDev(self.IsSparse() and (CT::Void<DT> or self.template IsSimilar<ST>()),
-               HERE(), "Type mismatch");
+               "Type mismatch");
 
             if constexpr (S::Keep or S::Move) {
                if constexpr (CT::NotNull<AL>) {

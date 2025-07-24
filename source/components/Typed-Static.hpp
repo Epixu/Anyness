@@ -186,13 +186,13 @@ namespace Langulus::Anyness::Component
 
       /// Dereference the first pointer inside the container, if sparse       
       constexpr TYPE& operator * (this auto&& self) has_assumptions {
-         AssumeDev(not self.IsEmpty(), HERE(), "Container is empty");
+         AssumeDev(not self.IsEmpty(), "Container is empty");
          return self.template GetInner<ID, TYPE>();
       }
 
       /// Get the first pointer inside the container, if sparse               
       constexpr TYPE& operator -> (this auto&& self) has_assumptions {
-         AssumeDev(not self.IsEmpty(), HERE(), "Container is empty");
+         AssumeDev(not self.IsEmpty(), "Container is empty");
          return self.template GetInner<ID, TYPE>();
       }
    };

@@ -736,7 +736,7 @@ namespace Langulus
       static_assert(not CT::Reference<T>,
          "T can't be a reference in order to be constructed");
 
-      AssumeDev(placement, HERE(), "Invalid placement pointer");
+      AssumeDev(placement, "Invalid placement pointer");
 
       if constexpr (CT::Abstract<T>) {
          static_assert(FAKE, "Can't construct abstract type");

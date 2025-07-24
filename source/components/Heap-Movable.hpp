@@ -57,7 +57,7 @@ namespace Langulus::Anyness::Component
          Allocation::Request result;
 
          if constexpr (C::TypeErased) {
-            AssumeDev(self.mType, HERE(),
+            AssumeDev(self.mType,
                "Requesting allocation size for an untyped container");
 
             // Check for reflected minimal allocation at runtime        
@@ -112,7 +112,7 @@ namespace Langulus::Anyness::Component
       ///   @param elements - number of elements to allocate                  
       template<bool CREATE = false, bool SETSIZE = false, CT::Container C>
       void AllocateMore(this C& self, const Count<C> elements) {
-         AssumeDev(elements > self.GetCount(), HERE(), "Bad element count");
+         AssumeDev(elements > self.GetCount(), "Bad element count");
 
          if constexpr (CT::Typed<C>) {
             // Allocate/reallocate                                      
@@ -134,7 +134,7 @@ namespace Langulus::Anyness::Component
                   return;
                }
 
-               AssumeDev(self.GetUses() == 1, HERE(),
+               AssumeDev(self.GetUses() == 1,
                   "Can't reuse memory of a heap used from multiple places, "
                   "BranchOut should've been called prior to AllocateMore"
                );
@@ -218,7 +218,7 @@ namespace Langulus::Anyness::Component
       ///   @param elements - number of elements to allocate                  
       template<CT::Container C>
       void AllocateLess(this C& self, const Count<C> elements) {
-         AssumeDev(elements < self.GetReserved(), HERE(), "Bad element count");
+         AssumeDev(elements < self.GetReserved(), "Bad element count");
 
          if (self.GetCount() > elements) {
             // Destroy back entries on smaller allocation               
@@ -236,7 +236,7 @@ namespace Langulus::Anyness::Component
             if (request.mElementCount == mReserved)
                return;
          
-            AssumeDev(mEntry->GetUses() == 1, HERE(),
+            AssumeDev(mEntry->GetUses() == 1,
                "Can't reuse memory of a block used from multiple places, "
                "BranchOut should've been called prior to AllocateMore"
             );
@@ -256,7 +256,7 @@ namespace Langulus::Anyness::Component
                );
             }
             else {
-               AssumeDev(mType, HERE(), "Invalid type");
+               AssumeDev(mType, "Invalid type");
 
                if (mType->mIsSparse) {
                   // Move entry data to its new place                   
@@ -285,8 +285,8 @@ namespace Langulus::Anyness::Component
          using S  = IntentOf<decltype(rhs_with_intent)>;
          using ST = TypeOf<S>;
          using STT = TypeOf<ST>;
-         AssumeDev(self.IsTyped(), HERE(), "Invalid type");
-         AssumeDev(self.mHeap,     HERE(), "Invalid heap");
+         AssumeDev(self.IsTyped(), "Invalid type");
+         AssumeDev(self.mHeap, "Invalid heap");
          auto& rhs = DeintCast(rhs_with_intent);
 
          if constexpr (C::TypeErased) {
@@ -444,7 +444,7 @@ namespace Langulus::Anyness::Component
                "Sparseness mismatch");
 
             if constexpr (CT::Untyped<DC>)
-               AssumeDev(self.IsSparse() == CT::Sparse<TT>, HERE(), "Sparseness mismatch");
+               AssumeDev(self.IsSparse() == CT::Sparse<TT>, "Sparseness mismatch");
 
             if constexpr (CT::DeeplyOwned<DC>) {
                // C is deeply owned, so each sparse element is coupled  

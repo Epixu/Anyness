@@ -217,7 +217,7 @@ namespace Langulus::RTTI
                auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
                decvq->mID = Instance.ReserveDataID(decvq);
                decvq->mPtrIncludedInID = true;
-               IF_SAFE(AssumeDev(not definition.mDedicatedID, HERE(),
+               IF_SAFE(AssumeDev(not definition.mDedicatedID,
                   "ID has already been reserved"));
                IF_SAFE(definition.mDedicatedID = true);
 
@@ -236,7 +236,7 @@ namespace Langulus::RTTI
       else {
          // Origin type encountered, time to reserve a new ID           
          definition.mID = Instance.ReserveDataID(&definition);
-         IF_SAFE(AssumeDev(not definition.mDedicatedID, HERE(),
+         IF_SAFE(AssumeDev(not definition.mDedicatedID,
             "ID has already been reserved"));
          IF_SAFE(definition.mDedicatedID = true);
       }

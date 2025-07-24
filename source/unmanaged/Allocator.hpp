@@ -63,19 +63,19 @@ namespace Langulus::Unmanaged
 
       LANGULUS(INLINED)
       static auto Allocate(DMeta, Size size) has_assumptions -> Allocation* {
-         AssumeDev(size, HERE(), "Zero allocation is not allowed");
+         AssumeDev(size, "Zero allocation is not allowed");
          return AlignedAllocate(size);
       }
 
       LANGULUS(INLINED)
       static auto Reallocate(Size size, Allocation* previous) has_assumptions -> Allocation* {
-         AssumeDev(previous, HERE(),
+         AssumeDev(previous,
             "Reallocating nullptr");
-         AssumeDev(size != previous->GetFrontendSize(), HERE(),
+         AssumeDev(size != previous->GetFrontendSize(),
             "Reallocation suboptimal - size is same as previous");
-         AssumeDev(size, HERE(),
+         AssumeDev(size,
             "Zero reallocation is not allowed - deallocate instead");
-         AssumeDev(previous->mReferences, HERE(),
+         AssumeDev(previous->mReferences,
             "Deallocating an unused allocation");
 
          (void) previous;
@@ -84,13 +84,13 @@ namespace Langulus::Unmanaged
 
       LANGULUS(INLINED)
       static void Deallocate(Allocation* entry) has_assumptions {
-         AssumeDev(entry, HERE(),
+         AssumeDev(entry,
             "Deallocating nullptr");
-         AssumeDev(entry->GetFrontendSize(), HERE(),
+         AssumeDev(entry->GetFrontendSize(),
             "Deallocating an empty allocation");
-         AssumeDev(entry->mReferences, HERE(),
+         AssumeDev(entry->mReferences,
             "Deallocating an unused allocation");
-         AssumeDev(entry->mReferences == 1, HERE(),
+         AssumeDev(entry->mReferences == 1,
             "Deallocating an allocation used from multiple places");
 
          ::std::free(entry->mMallocHandle);

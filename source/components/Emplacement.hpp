@@ -52,8 +52,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, CT::Intent I>
       void EmplaceWithIntent(this C& self, I&& rhs_with_intent) {
          using IT = TypeOf<I>;
-         AssumeDev(self.IsTyped(), HERE(), "Invalid type");
-         AssumeDev(self.GetRaw(),  HERE(), "Invalid heap");
+         AssumeDev(self.IsTyped(), "Invalid type");
+         AssumeDev(self.GetRaw(), "Invalid heap");
          decltype(auto) rhs = *rhs_with_intent;
 
          if constexpr (CT::Untyped<C>) {
@@ -75,7 +75,7 @@ namespace Langulus::Anyness::Component
                   }
                   else {
                      // RHS is (maybe) valid pointer                    
-                     AssumeDev(CT::Void<DT> or self.template IsSimilar<IT>(), HERE(),
+                     AssumeDev(CT::Void<DT> or self.template IsSimilar<IT>(),
                         "Type mismatch");
 
                      *self.mSparseHeap = rhs;
