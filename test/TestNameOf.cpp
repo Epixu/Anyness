@@ -7,8 +7,14 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/NameOf.hpp>
-#include <Langulus/Logger.hpp>
+
 #include <string>
+#if 0
+   #include <Langulus/Logger.hpp>
+   #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
+#else
+   #define VERBOSE(...)
+#endif
 
 using namespace Langulus;
 
@@ -182,7 +188,7 @@ namespace
          if (IsAlphabetical(c) or IsOperator(c) or IsNumerical(c) or IsSpace(c))
             continue;
 
-         Logger::Error("Disallowed symbol: `", c, "` in `", a19, "`");
+         VERBOSE(Logger::Red, "Disallowed symbol: `", c, "` in `", a19, "`");
          throw "";
       }
 
@@ -270,9 +276,9 @@ namespace
                return isolated;
          }
          else {
-            Logger::Info("IsolateTypenameAtRuntime: ", name, " -> ", isolated);
+            VERBOSE("IsolateTypenameAtRuntime: ", name, " -> ", isolated);
             ::std::string normalized = NormalizeTypenameAtRuntime(isolated);
-            Logger::Info("NormalizeTypenameAtRuntime: ", isolated, " -> ", normalized);
+            VERBOSE("NormalizeTypenameAtRuntime: ", isolated, " -> ", normalized);
             if constexpr (::std::is_function_v<T>)
                return "<" + normalized + ">";
             else
@@ -293,11 +299,11 @@ namespace
          REQUIRE(size > left + right);
          ::std::string isolated = name.substr(left, size - right - left);
 
-         Logger::Info("IsolateConstantAtRuntime: ", name, " -> ", isolated);
+         VERBOSE("IsolateConstantAtRuntime: ", name, " -> ", isolated);
 
          if constexpr (NORMALIZE) {
             ::std::string normalized = NormalizeTypenameAtRuntime(isolated);
-            Logger::Info("Normalized constant: ", isolated, " -> ", normalized);
+            VERBOSE("Normalized constant: ", isolated, " -> ", normalized);
             return normalized;
          }
          else return isolated;
