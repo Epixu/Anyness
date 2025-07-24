@@ -36,7 +36,6 @@ namespace Langulus::Flow
 
 namespace Langulus::RTTI
 {
-
    ///                                                                        
    /// A data definition                                                      
    ///                                                                        
@@ -273,7 +272,6 @@ namespace Langulus::RTTI
       DefinitionData(const Token& cppname) noexcept
          : Definition {cppname} {}
    };
-
-} // namespace Langulus::RTTI
+}
 
 #include "DefinitionData.inl"

@@ -45,25 +45,23 @@ namespace Langulus::RTTI
 
 namespace Langulus::RTTI::Inner
 {
-
-   /// Convert a token to a lowercase string                                  
+   /// Convert a token to a lowercase string in the most portable way possible
+   ///   @attention assumes token is ASCII                                    
    ///   @param token - the token to lowercase                                
    ///   @return the lowercase string                                         
-   LANGULUS(INLINED)
-   Lowercase ToLowercase(const Token& token) noexcept {
-      Lowercase lc;
-      lc.reserve(token.size());
-      ::std::ranges::transform(token.begin(), token.end(), std::back_inserter(lc),
-         [](char c) { return static_cast<char>(::std::tolower(c)); }
-      );
+   constexpr Lowercase ToLowercase(const Token& token) noexcept {
+      AssumeDev(IsASCII(token), HERE(), "Token must be ASCII");
+      Lowercase lc {token};
+      for (char& c : lc)
+         c = Langulus::ToLowercase(c);
       return lc;
    }
 
    /// Isolate and lowercase an operator token                                
+   ///   @attention assumes token is ASCII                                    
    ///   @param token - the operator                                          
    ///   @return the lowercased and isolated operator token                   
-   LANGULUS(INLINED)
-   Lowercase IsolateOperator(const Token& token) noexcept {
+   constexpr Lowercase IsolateOperator(const Token& token) noexcept {
       // Skip skippable at the front and the back of token              
       auto l = token.data();
       auto r = token.data() + token.size();
@@ -101,7 +99,6 @@ namespace Langulus::RTTI::Inner
             break;
          }
       }
-
       return token;
    }
 
@@ -201,5 +198,4 @@ namespace Langulus::RTTI::Inner
       Definition() = delete;
       virtual ~Definition() = default;
    };
-   
-} // namespace Langulus::RTTI::Inner
+}

@@ -11,9 +11,9 @@
    #error "This file shouldn't be included if MANAGED_REFLECTION feature is disabled"
 #endif
 
+
 namespace Langulus::RTTI::Inner
 {
-
    constexpr MetaConstPacked_16::MetaConstPacked_16(nullptr_t) noexcept
       : Base {0} {}
 
@@ -56,5 +56,4 @@ namespace Langulus::RTTI::Inner
    inline auto MetaConstPacked_16::GetVersionMinor()  const noexcept -> unsigned {
       return GetDefinition()->mVersionMinor;
    }
-
-} // namespace Langulus::RTTI::Inner
+}

@@ -200,12 +200,13 @@ namespace Langulus::CTTI
    };
 }
 
+
 ///                                                                           
 /// Reflecting incomplete types                                               
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
-   //void, // shouldn't compile
-   //nullptr_t, // shouldn't compile
+   //void,           // shouldn't compile
+   //nullptr_t,      // shouldn't compile
    //IncompleteType, // shouldn't compile
    //NotReflectable, // shouldn't compile
    IncompleteType*,
@@ -381,12 +382,12 @@ SCENARIO("Testing reflection of names", "[rtti]") {
    REQUIRE_THROWS(MetaDataOf<ConflictingName>());
    REQUIRE_THROWS(MetaDataOf<ConflictingName*>());
    REQUIRE_THROWS(MetaDataOf<ConflictingName const*>());
-   REQUIRE_THROWS(MetaDataOf<InvalidName1>());
-   REQUIRE_THROWS(MetaDataOf<InvalidName2>());
-   REQUIRE_THROWS(MetaDataOf<InvalidName3>());
-   REQUIRE_THROWS(MetaDataOf<InvalidName4>());
-   REQUIRE_THROWS(MetaDataOf<InvalidName5>());
-   REQUIRE_THROWS(MetaDataOf<InvalidName6>());
+   //REQUIRE_THROWS(MetaDataOf<InvalidName1>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName2>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName3>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName4>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName5>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName6>()); // shouldn't compile
 }
 
 ///                                                                           
@@ -399,7 +400,7 @@ namespace
       PureAbstract() = delete;
       virtual ~PureAbstract() {}
       PureAbstract(void*) {}
-      virtual auto PureVirtualMethod() -> size_t = 0;
+      [[maybe_unused]] virtual auto PureVirtualMethod() -> size_t = 0;
    };
 
    /// Proper type, reflected as abstract                                     

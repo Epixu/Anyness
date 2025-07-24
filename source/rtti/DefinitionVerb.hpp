@@ -12,7 +12,6 @@
 
 namespace Langulus::RTTI
 {  
-
    ///                                                                        
    /// A verb definition                                                      
    ///                                                                        
@@ -75,7 +74,6 @@ namespace Langulus::RTTI
       DefinitionVerb(const Token& cppname) noexcept
          : Definition {cppname} {}
    };
-
-} // namespace Langulus::RTTI
+}
 
 #include "DefinitionVerb.inl"

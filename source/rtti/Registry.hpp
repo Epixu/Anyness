@@ -48,21 +48,25 @@ namespace Langulus::RTTI
       using Indexed = ::std::vector<T>;
 
    private:
+      // @attention order of these containers matters!                  
       // Database for meta data definitions                             
-      MetaMap<DefinitionData const*>  mMetaDataByName;
+      MetaMap<::std::unique_ptr<DefinitionData>> mMetaDataByCppName;
+      MetaMap<DefinitionData const*>  mMetaDataByToken;
       Indexed<DefinitionData const*>  mMetaDataByID;
 
       // Database for named values                                      
-      MetaMap<DefinitionConst const*> mMetaConstantsByName;
+      MetaMap<::std::unique_ptr<DefinitionConst>> mMetaConstantsByCppName;
+      MetaMap<DefinitionConst const*> mMetaConstantsByToken;
       Indexed<DefinitionConst const*> mMetaConstantsByID;
 
       // Database for meta trait definitions                            
-      MetaMap<DefinitionTag const*>   mMetaTagsByName;
+      MetaMap<::std::unique_ptr<DefinitionTag>> mMetaTagsByCppName;
+      MetaMap<DefinitionTag const*>   mMetaTagsByToken;
       Indexed<DefinitionTag const*>   mMetaTagsByID;
 
       // Database for meta verb definitions                             
-      MetaMap<DefinitionVerb const*>  mMetaVerbsByCppName;
-      MetaMap<DefinitionVerb const*>  mMetaVerbsByTokens;
+      MetaMap<::std::unique_ptr<DefinitionVerb>> mMetaVerbsByCppName;
+      MetaMap<DefinitionVerb const*>  mMetaVerbsByToken;
       Indexed<DefinitionVerb const*>  mMetaVerbsByID;
 
       // Database for ambiguous tokens                                  
@@ -71,10 +75,6 @@ namespace Langulus::RTTI
       // Meta data definitions, indexed by file extensions              
       MetaMap<MetaSet> mFileDatabase;
       
-      template<bool BY_CPPNAME>
-      auto GetMetaByName(const auto& where, const Token& name) const noexcept
-         -> decltype(where.begin()->second);
-
       auto GetMetaByID(const auto& where, size_t id) const noexcept;
 
    protected:

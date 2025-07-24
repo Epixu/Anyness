@@ -10,7 +10,6 @@
 
 namespace Langulus::RTTI::Inner
 {
-
    /// Get the positive verb token                                            
    inline auto MetaVerbNaked::GetPositiveName() const noexcept -> Token {
       return mDefinition->mNameOf;
@@ -50,5 +49,4 @@ namespace Langulus::RTTI::Inner
    constexpr bool MetaVerbNaked::IsContextless() const noexcept {
       return mDefinition->mCurrentBoundary.mContextless;
    }
-
-} // namespace Langulus::RTTI::Inner
+}

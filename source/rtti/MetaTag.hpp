@@ -70,8 +70,7 @@ namespace Langulus::RTTI
    #endif
 
    using TMeta = MetaTag;
-
-} // namespace Langulus::RTTI
+}
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include "MetaTagStructured.inl"

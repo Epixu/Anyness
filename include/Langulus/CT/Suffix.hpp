@@ -8,6 +8,7 @@
 #pragma once
 #include "../Typenav.hpp"
 #include "../Literal.hpp"
+#include "../Utils/ASCII.hpp"
 
 
 namespace Langulus::CTTI

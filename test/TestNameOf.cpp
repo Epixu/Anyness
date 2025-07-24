@@ -38,7 +38,6 @@ namespace Langulus::Flow
 
 namespace
 {
-
    constexpr bool VERBOSE = false;
 
    struct NamedUsingMember {
@@ -115,7 +114,7 @@ namespace
             break;
          }
 
-         if (scan == RHS.size() and RTTI::Inner::IsTransition(LHS, cookie, cookie + RHS.size())) {
+         if (scan == RHS.size() and IsTransition(LHS, cookie, cookie + RHS.size())) {
             cookie += RHS.size();
             ++occurences;
          }
@@ -136,7 +135,7 @@ namespace
          while (curr > prev)
             result += SOURCE[prev++];
 
-         if (RTTI::Inner::IsTransition(SOURCE, curr, curr + WHAT.size())) {
+         if (IsTransition(SOURCE, curr, curr + WHAT.size())) {
             for (auto& c : WITH)
                result += c;
             prev += WHAT.size();

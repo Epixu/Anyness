@@ -98,8 +98,7 @@ namespace Langulus::RTTI
          constexpr bool IsReversible()  const noexcept;
          constexpr bool IsContextless() const noexcept;
       };
-
-   } // namespace Langulus::RTTI::Inner
+   }
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       using MetaVerb = Inner::MetaVerbStructured_X8<1>;
@@ -108,8 +107,7 @@ namespace Langulus::RTTI
    #endif
 
    using VMeta = MetaVerb;
-
-} // namespace Langulus::RTTI
+}
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include "MetaVerbStructured.inl"

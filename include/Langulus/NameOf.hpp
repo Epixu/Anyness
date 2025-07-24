@@ -8,6 +8,7 @@
 #pragma once
 #include "Literal.hpp"
 #include "CT/Named.hpp"
+#include "Utils/ASCII.hpp"
 
 
 namespace Langulus::CTTI
@@ -179,6 +180,11 @@ namespace Langulus::RTTI
       consteval auto IsolateTypename() {
          if constexpr (NAMED and CTTI::Named<T>::Enabled) {
             // Custom name by CTTI::Named specialization                
+            static_assert(IsKeyword(CTTI::Named<T>::Name),
+               "Not a valid CTTI::Named - "
+               "must be ASCII, starting with an alphabetical symbol, "
+               "and must not contain any spaces or operators"
+            );
             return CTTI::Named<T>::Name;
          }
          else if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
@@ -246,6 +252,11 @@ namespace Langulus::RTTI
          }
          else if constexpr (NAMED and requires { T::CTTI_Named::Constant; }) {
             // Custom name taken from T::CTTI_Named member              
+            static_assert(IsKeyword(T::CTTI_Named::Constant),
+               "Not a valid CTTI_Named - "
+               "must be ASCII, starting with an alphabetical symbol, "
+               "and must not contain any spaces or operators"
+            );
             return T::CTTI_Named::Constant;
          }
          else {
@@ -283,6 +294,11 @@ namespace Langulus::RTTI
       consteval auto IsolateConstant() {
          if constexpr (NAMED and CT::NamedValue<T>) {
             // Custom name by specializing CTTI::NamedValue             
+            static_assert(IsKeyword(CTTI::NamedValue<T>::Name),
+               "Not a valid CTTI::NamedValue - "
+               "must be ASCII, starting with an alphabetical symbol, "
+               "and must not contain any spaces or operators"
+            );
             return CTTI::NamedValue<T>::Name;
          }
          else {
@@ -299,28 +315,6 @@ namespace Langulus::RTTI
             else
                return isolated;
          }
-      }
-
-      /// Check if a token transition happens at the beginning and the end of 
-      /// a region inside a source. A token transition means, that the token  
-      /// is surrounded by non-alphabetical symbols                           
-      ///   @param source - data source                                       
-      ///   @param lhs - start of the region                                  
-      ///   @param rhs - end of the region                                    
-      ///   @return true if a transition occurs at both points                
-      // ReSharper disable once CppDFAUnreachableFunctionCall           
-      constexpr bool IsTransition(const Token& source, size_t lhs, size_t rhs) {
-         return (
-               // Test left side for transition                         
-               lhs == 0
-               or not IsAlphabetical(source[lhs])
-               or     IsAlphabetical(source[lhs]) != IsAlphabetical(source[lhs-1])
-            ) and (
-               // Test right side for transition                        
-               rhs >= source.size()
-               or not IsAlphabetical(source[rhs-1])
-               or     IsAlphabetical(source[rhs-1]) != IsAlphabetical(source[rhs])
-            );
       }
 
       constexpr Literal uint8_t_token  = IsolateTypename<uint8_t,  false, false>();
@@ -349,17 +343,17 @@ namespace Langulus::RTTI
             {"<unnamed>::",   ""},
             {"{anonymous}::", ""},
          #endif
-         {" *",            "*"},
-         {" &",            "&"},
-         {" >",            ">"},
-         {" (",            "("},
-         {" )",            ")"},
-         {" [",            "["},
-         {" ]",            "]"},
-         {"class ",        "" },
-         {"struct ",       "" },
-         {"enum ",         "" },
-         {"(__cdecl *)",   "" },
+         {" *",           "*"},
+         {" &",           "&"},
+         {" >",           ">"},
+         {" (",           "("},
+         {" )",           ")"},
+         {" [",           "["},
+         {" ]",           "]"},
+         {"class ",       "" },
+         {"struct ",      "" },
+         {"enum ",        "" },
+         {"(__cdecl *)",  "" },
          
          // These types are stringified differently on some compilers   
          // `unsigned short` is longer than just `short`, and needs to  
@@ -388,12 +382,11 @@ namespace Langulus::RTTI
                      ++scan;
                      continue;
                   }
-
                   break;
                }
 
                if (scan == pattern.what.size()
-               and Inner::IsTransition(in, cookie, cookie + pattern.what.size())) {
+               and IsTransition(in, cookie, cookie + pattern.what.size())) {
                   cookie += pattern.what.size();
                   ++occurences;
                }
@@ -422,7 +415,7 @@ namespace Langulus::RTTI
             size_t fill = 0;
             size_t prev = 0;
             size_t curr = 0;
-            Literal<char, DecideBufferSize(SRC)> buffer {result};
+            decltype(result) buffer {result};
             while ((curr = result.find(pattern.what, prev)) != result.npos) {
                while (curr > prev) {
                   // Copy anything we've skipped                        
@@ -445,7 +438,6 @@ namespace Langulus::RTTI
             buffer[fill] = 0;
             result = buffer;
          }
-
          return result;
       }
       

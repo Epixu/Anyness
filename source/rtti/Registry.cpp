@@ -24,35 +24,7 @@ namespace Langulus::RTTI
    Registry Instance {};
 
    /// Database destruction                                                   
-   Registry::~Registry() {
-      // If an exception happens here on a delete, then a meta likely   
-      // wasn't unregistered upon mod unload. Thank me later.           
-      for (auto& definition : ::std::ranges::views::values(mMetaDataByName))
-            delete definition;
-
-      for (auto& definition : ::std::ranges::views::values(mMetaTagsByName))
-            delete definition;
-
-      for (auto& definition : ::std::ranges::views::values(mMetaVerbsByCppName))
-            delete definition;
-   }
-
-   /// Common way to extract something from the registry by NameOf or by      
-   /// CppNameOf. The latter is faster, as no token normalization is applied  
-   ///   @tparam BY_CPPNAME - true if token is provided from CppNameOf, and   
-   ///      no normalization is required. Used mostly internally.             
-   ///   @param where - where to search in                                    
-   ///   @param token - the token to search for                               
-   ///   @return the found element, or nullptr if not found                   
-   template<bool BY_CPPNAME>
-   auto Registry::GetMetaByName(const auto& where, const Token& token)
-   const noexcept -> decltype(where.begin()->second) {
-      const ::std::string lc {BY_CPPNAME ? token : Inner::ToLowercase(token)};
-      const auto foundToken = where.find(lc);
-      if (foundToken == where.end())
-         return nullptr;
-      return foundToken->second;
-   }
+   Registry::~Registry() { }
    
    /// Common way to extract something from the registry by ID                
    ///   @param where - where to search in                                    
@@ -69,7 +41,10 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByCppName(const Token& token)
    const noexcept -> DefinitionData const* {
-      return GetMetaByName<true>(mMetaDataByName, token);
+      const auto foundToken = mMetaDataByCppName.find(token);
+      if (foundToken == mMetaDataByCppName.end())
+         return nullptr;
+      return foundToken->second.get();
    }
 
    /// Get an existing data definition by its NameOf                          
@@ -77,7 +52,11 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByToken(const Token& token)
    const noexcept -> DefinitionData const* {
-      return GetMetaByName<false>(mMetaDataByName, token);
+      const ::std::string lc {Inner::ToLowercase(token)};
+      const auto foundToken = mMetaDataByToken.find(lc);
+      if (foundToken == mMetaDataByToken.end())
+         return nullptr;
+      return foundToken->second;
    }
 
    /// Get an existing constant definition by its CppNameOf                   
@@ -85,7 +64,10 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByCppName(const Token& token)
    const noexcept -> DefinitionConst const* {
-      return GetMetaByName<true>(mMetaConstantsByName, token);
+      const auto foundToken = mMetaConstantsByCppName.find(token);
+      if (foundToken == mMetaConstantsByCppName.end())
+         return nullptr;
+      return foundToken->second.get();
    }
 
    /// Get an existing constant definition by its NameOf                      
@@ -93,7 +75,11 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByToken(const Token& token)
    const noexcept -> DefinitionConst const* {
-      return GetMetaByName<false>(mMetaConstantsByName, token);
+      const ::std::string lc {Inner::ToLowercase(token)};
+      const auto foundToken = mMetaConstantsByToken.find(lc);
+      if (foundToken == mMetaConstantsByToken.end())
+         return nullptr;
+      return foundToken->second;
    }
 
    /// Get an existing tag definition by its CppNameOf                        
@@ -101,7 +87,10 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByCppName(const Token& token)
    const noexcept -> DefinitionTag const* {
-      return GetMetaByName<true>(mMetaTagsByName, token);
+      const auto foundToken = mMetaTagsByCppName.find(token);
+      if (foundToken == mMetaTagsByCppName.end())
+         return nullptr;
+      return foundToken->second.get();
    }
 
    /// Get an existing tag definition by its NameOfTag                        
@@ -109,7 +98,11 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByToken(const Token& token)
    const noexcept -> DefinitionTag const* {
-      return GetMetaByName<false>(mMetaTagsByName, token);
+      const ::std::string lc {Inner::ToLowercase(token)};
+      const auto foundToken = mMetaTagsByToken.find(lc);
+      if (foundToken == mMetaTagsByToken.end())
+         return nullptr;
+      return foundToken->second;
    }
    
    /// Get an existing verb definition by its CppNameOf                       
@@ -117,7 +110,10 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByCppName(const Token& token)
    const noexcept -> DefinitionVerb const* {
-      return GetMetaByName<true>(mMetaVerbsByCppName, token);
+      const auto foundToken = mMetaVerbsByCppName.find(token);
+      if (foundToken == mMetaVerbsByCppName.end())
+         return nullptr;
+      return foundToken->second.get();
    }
 
    /// Get an existing verb definition by NameOfVerb/NameOfVerbReverse        
@@ -126,7 +122,11 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByToken(const Token& token)
    const noexcept -> DefinitionVerb const* {
-      return GetMetaByName<false>(mMetaVerbsByTokens, token);
+      const ::std::string lc {Inner::ToLowercase(token)};
+      const auto foundToken = mMetaVerbsByToken.find(lc);
+      if (foundToken == mMetaVerbsByToken.end())
+         return nullptr;
+      return foundToken->second;
    }
    
    /// Get an existing data definition by unpacking an ID                     
@@ -187,7 +187,10 @@ namespace Langulus::RTTI
    auto Registry::GetOperator(const Token& token)
    const noexcept -> DefinitionVerb const* {
       const auto lc = Inner::IsolateOperator(token);
-      return GetMetaByName<false>(mMetaVerbsByTokens, lc);
+      const auto foundToken = mMetaVerbsByToken.find(lc);
+      if (foundToken == mMetaVerbsByToken.end())
+         return nullptr;
+      return foundToken->second;
    }
 
    /// Get a list of all the interpretations for an ambiguous token           
@@ -348,41 +351,42 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta data for that name                    
    auto Registry::RegisterData(const Token& cppname, const Token& token) -> DefinitionData& {
-      AssumeDev(not mMetaDataByName.contains(cppname), HERE(),
+      AssumeDev(not mMetaDataByCppName.contains(cppname), HERE(),
          "Data with this name is already registered: ", cppname);
       
-      Assert(not mMetaTagsByName.contains(cppname), HERE(),
+      Assert(not mMetaTagsByCppName.contains(cppname), HERE(),
          "Data type already registered as tag: ", cppname);
       Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
          "Data type already registered as verb: ", cppname);
-      Assert(not mMetaConstantsByName.contains(cppname), HERE(),
+      Assert(not mMetaConstantsByCppName.contains(cppname), HERE(),
          "Data type already registered as constant: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
       auto lowercased_token = Inner::ToLowercase(token);
-      if (mMetaDataByName.contains(lowercased_token)) {
+      if (mMetaDataByToken.contains(lowercased_token)) {
          Error(HERE(), "Data token conflict between ", cppname, " and ",
-            mMetaDataByName.at(lowercased_token)->mCppNameOf);
+            mMetaDataByToken.at(lowercased_token)->mCppNameOf);
       }
-      if (mMetaConstantsByName.contains(lowercased_token)) {
+      if (mMetaConstantsByToken.contains(lowercased_token)) {
          Error(HERE(), "Token conflict between data ", cppname, " and constant ",
-            mMetaConstantsByName.at(lowercased_token)->mCppNameOf);
+            mMetaConstantsByToken.at(lowercased_token)->mCppNameOf);
       }
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionData {cppname};
+      auto new_meta = ::std::make_unique<DefinitionData>(cppname);
+      auto meta = new_meta.get();
 
       // Index by C++ name                                              
-      mMetaDataByName[meta->mCppNameOf] = meta;
-
+      mMetaDataByCppName[meta->mCppNameOf] = MOV(new_meta);
+      
       // Index by lowercased token                                      
       meta->mNameOf = token;
-      meta->mNameOf[0] = ::std::toupper(token[0]);
-      meta->mNameOfLowercased = ::std::move(lowercased_token);
+      meta->mNameOf[0] = ToUppercase(token[0]);
+      meta->mNameOfLowercased = MOV(lowercased_token);
       // @important notice how key is made from heap-allocated          
       // member variable. This guarantees, that if a boundary is        
       // unloaded, the name data remains untouched on the heap          
-      mMetaDataByName[meta->mNameOfLowercased] = meta;
+      mMetaDataByToken[meta->mNameOfLowercased] = meta;
 
       // Index by last lowercase token                                  
       mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfLowercased)].insert(meta);
@@ -406,32 +410,33 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta constant for that token               
    auto Registry::RegisterConst(const Token& cppname, const Token& token) -> DefinitionConst& {
-      AssumeDev(not mMetaConstantsByName.contains(cppname), HERE(),
+      AssumeDev(not mMetaConstantsByCppName.contains(cppname), HERE(),
          "Constant with this name is already registered: ", cppname);
 
-      Assert(not mMetaDataByName.contains(cppname), HERE(),
+      Assert(not mMetaDataByCppName.contains(cppname), HERE(),
          "Constant already registered as data: ", cppname);
-      Assert(not mMetaTagsByName.contains(cppname), HERE(),
+      Assert(not mMetaTagsByCppName.contains(cppname), HERE(),
          "Constant already registered as tag: ", cppname);
       Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
          "Constant already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
       auto lowercased_token = Inner::ToLowercase(token);
-      if (mMetaDataByName.contains(lowercased_token)) {
+      if (mMetaDataByToken.contains(lowercased_token)) {
          Error(HERE(), "Token conflict between constant ", cppname, " and data ",
-            mMetaDataByName.at(lowercased_token)->mCppNameOf);
+            mMetaDataByToken.at(lowercased_token)->mCppNameOf);
       }
-      if (mMetaConstantsByName.contains(lowercased_token)) {
+      if (mMetaConstantsByToken.contains(lowercased_token)) {
          Error(HERE(), "Constant token conflict between ", cppname, " and ",
-            mMetaConstantsByName.at(lowercased_token)->mCppNameOf);
+            mMetaConstantsByToken.at(lowercased_token)->mCppNameOf);
       }
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionConst {cppname};
+      auto new_meta = ::std::make_unique<DefinitionConst>(cppname);
+      auto meta = new_meta.get();
 
       // Index by C++ name                                              
-      mMetaConstantsByName[meta->mCppNameOf] = meta;
+      mMetaConstantsByCppName[meta->mCppNameOf] = MOV(new_meta);
 
       // Index by ID                                                    
       mMetaConstantsByID.push_back(meta);
@@ -439,12 +444,12 @@ namespace Langulus::RTTI
 
       // Index by lowercased token                                      
       meta->mNameOf = token;
-      meta->mNameOf[0] = ::std::toupper(token[0]);
-      meta->mNameOfLowercased = ::std::move(lowercased_token);
+      meta->mNameOf[0] = ToUppercase(token[0]);
+      meta->mNameOfLowercased = MOV(lowercased_token);
       // @important notice how key is made from heap-allocated          
       // member variable. This guarantees, that if a boundary is        
       // unloaded, the name data remains untouched on the heap          
-      mMetaConstantsByName[meta->mNameOfLowercased] = meta;
+      mMetaConstantsByToken[meta->mNameOfLowercased] = meta;
 
       // Index by last lowercase token                                  
       mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfLowercased)].insert(meta);
@@ -457,40 +462,41 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta trait for that token                  
    auto Registry::RegisterTag(const Token& cppname, const Token& token) -> DefinitionTag& {
-      AssumeDev(not mMetaTagsByName.contains(cppname), HERE(),
+      AssumeDev(not mMetaTagsByCppName.contains(cppname), HERE(),
          "Tag with this name is already registered: ", cppname);
 
-      Assert(not mMetaDataByName.contains(cppname), HERE(),
+      Assert(not mMetaDataByCppName.contains(cppname), HERE(),
          "Tag already registered as data: ", cppname);
-      Assert(not mMetaConstantsByName.contains(cppname), HERE(),
+      Assert(not mMetaConstantsByCppName.contains(cppname), HERE(),
          "Tag already registered as constant: ", cppname);
       Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
          "Tag already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
       auto lowercased_token = Inner::ToLowercase(token);
-      if (mMetaTagsByName.contains(lowercased_token)) {
+      if (mMetaTagsByToken.contains(lowercased_token)) {
          Error(HERE(), "Tag token conflict between ", cppname, " and ",
-            mMetaTagsByName.at(lowercased_token)->mCppNameOf);
+            mMetaTagsByToken.at(lowercased_token)->mCppNameOf);
       }
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionTag {cppname};
+      auto new_meta = ::std::make_unique<DefinitionTag>(cppname);
+      auto meta = new_meta.get();
 
       // Index by C++ name                                              
-      mMetaTagsByName[meta->mCppNameOf] = meta;
+      mMetaTagsByCppName[meta->mCppNameOf] = MOV(new_meta);
 
       // Index by ID                                                    
       mMetaTagsByID.push_back(meta);
       meta->mID = mMetaTagsByID.size();
 
       // Index by lowercased token                                      
-      meta->mNameOf = ::std::move(lowercased_token);
+      meta->mNameOf = MOV(lowercased_token);
       meta->mNameOfLowercased = meta->mNameOf;
       // @important notice how key is made from heap-allocated          
       // member variable. This guarantees, that if a boundary is        
       // unloaded, the name data remains untouched on the heap          
-      mMetaTagsByName[meta->mNameOfLowercased] = meta;
+      mMetaTagsByToken[meta->mNameOfLowercased] = meta;
 
       // Index by last lowercase token                                  
       mMetaAmbiguous[Inner::ToLastToken(meta->mNameOf)].insert(meta);
@@ -515,53 +521,54 @@ namespace Langulus::RTTI
       AssumeDev(not mMetaVerbsByCppName.contains(cppname), HERE(),
          "Verb with this name is already registered: ", cppname);
 
-      Assert(not mMetaDataByName.contains(cppname), HERE(),
+      Assert(not mMetaDataByCppName.contains(cppname), HERE(),
          "Verb already registered as data: ", cppname);
-      Assert(not mMetaConstantsByName.contains(cppname), HERE(),
+      Assert(not mMetaConstantsByCppName.contains(cppname), HERE(),
          "Verb already registered as constant: ", cppname);
-      Assert(not mMetaTagsByName.contains(cppname), HERE(),
+      Assert(not mMetaTagsByCppName.contains(cppname), HERE(),
          "Verb already registered as tag: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
       auto lowercased_token = Inner::ToLowercase(token);
-      if (mMetaVerbsByTokens.contains(lowercased_token)) {
+      if (mMetaVerbsByToken.contains(lowercased_token)) {
          Error(HERE(), "Verb positive token conflict between ", cppname, " and ",
-            mMetaVerbsByTokens.at(lowercased_token)->mCppNameOf);
+            mMetaVerbsByToken.at(lowercased_token)->mCppNameOf);
       }
 
       auto lowercased_token_rev = Inner::ToLowercase(tokenRev);
-      if (not tokenRev.empty() and mMetaVerbsByTokens.contains(lowercased_token_rev)) {
+      if (not tokenRev.empty() and mMetaVerbsByToken.contains(lowercased_token_rev)) {
          Error(HERE(), "Verb negative token conflict between ", cppname, " and ",
-            mMetaVerbsByTokens.at(lowercased_token_rev)->mCppNameOf);
+            mMetaVerbsByToken.at(lowercased_token_rev)->mCppNameOf);
       }
 
       auto lowercased_op = Inner::ToLowercase(op);
-      if (not op.empty() and mMetaVerbsByTokens.contains(lowercased_op)) {
+      if (not op.empty() and mMetaVerbsByToken.contains(lowercased_op)) {
          Error(HERE(), "Verb positive operator conflict between ", cppname, " and ",
-            mMetaVerbsByTokens.at(lowercased_op)->mCppNameOf);
+            mMetaVerbsByToken.at(lowercased_op)->mCppNameOf);
       }
 
       auto lowercased_op_rev = Inner::ToLowercase(opRev);
-      if (not opRev.empty() and mMetaVerbsByTokens.contains(lowercased_op_rev)) {
+      if (not opRev.empty() and mMetaVerbsByToken.contains(lowercased_op_rev)) {
          Error(HERE(), "Verb negative operator conflict between ", cppname, " and ",
-            mMetaVerbsByTokens.at(lowercased_op_rev)->mCppNameOf);
+            mMetaVerbsByToken.at(lowercased_op_rev)->mCppNameOf);
       }
 
       // If reached, then not found, so insert a new definition         
-      auto meta = new DefinitionVerb {cppname};
+      auto new_meta = ::std::make_unique<DefinitionVerb>(cppname);
+      auto meta = new_meta.get();
 
       // Index by C++ name                                              
-      mMetaVerbsByCppName[meta->mCppNameOf] = meta;
+      mMetaVerbsByCppName[meta->mCppNameOf] = MOV(new_meta);
 
       // Index by ID                                                    
       mMetaVerbsByID.push_back(meta);
       meta->mID = mMetaVerbsByID.size();
 
       // Index by lowercased tokens                                     
-      meta->mNameOf = ::std::move(lowercased_token);
-      meta->mNameOfReverse = ::std::move(lowercased_token_rev);
-      meta->mOperator = ::std::move(lowercased_op);
-      meta->mOperatorReverse = ::std::move(lowercased_op_rev);
+      meta->mNameOf = MOV(lowercased_token);
+      meta->mNameOfReverse = MOV(lowercased_token_rev);
+      meta->mOperator = MOV(lowercased_op);
+      meta->mOperatorReverse = MOV(lowercased_op_rev);
       // Amalgamate all tokens in this one                              
       // Verb disambiguation is a bit more complex                      
       meta->mNameOfLowercased = meta->mNameOf
@@ -572,13 +579,13 @@ namespace Langulus::RTTI
       // @important notice how key is made from heap-allocated          
       // member variable. This guarantees, that if a boundary is        
       // unloaded, the name data remains untouched on the heap          
-      mMetaVerbsByTokens[meta->mNameOf] = meta;
+      mMetaVerbsByToken[meta->mNameOf] = meta;
       if (not meta->mNameOfReverse.empty())
-         mMetaVerbsByTokens[meta->mNameOfReverse] = meta;
+         mMetaVerbsByToken[meta->mNameOfReverse] = meta;
       if (not meta->mOperator.empty())
-         mMetaVerbsByTokens[meta->mOperator] = meta;
+         mMetaVerbsByToken[meta->mOperator] = meta;
       if (not meta->mOperatorReverse.empty())
-         mMetaVerbsByTokens[meta->mOperatorReverse] = meta;
+         mMetaVerbsByToken[meta->mOperatorReverse] = meta;
 
       // Index by last lowercase token                                  
       mMetaAmbiguous[Inner::ToLastToken(meta->mNameOf)].insert(meta);
@@ -617,8 +624,8 @@ namespace Langulus::RTTI
 
       //                                                                
       // Unload constants                                               
-      for (auto pair = mMetaConstantsByName.begin(); pair != mMetaConstantsByName.end();) {
-         auto definition = const_cast<DefinitionConst*>(pair->second);
+      for (auto pair = mMetaConstantsByCppName.begin(); pair != mMetaConstantsByCppName.end();) {
+         auto definition = const_cast<DefinitionConst*>(pair->second.get());
          if (not definition->mBoundaries.erase(boundary)) {
             // Boundary is irrelevant for this definition               
             ++pair;
@@ -648,25 +655,23 @@ namespace Langulus::RTTI
          if (ambiguous->second.empty())
             mMetaAmbiguous.erase(ambiguous);
 
-         // Finally, delete the definition and remove it from registry  
-         delete definition;
-         pair = mMetaConstantsByName.erase(pair);
+         // Finally, remove it from registry (delete unique_ptr)        
+         mMetaConstantsByToken.erase(definition->mNameOfLowercased);
+         pair = mMetaConstantsByCppName.erase(pair);
       }
 
       //                                                                
       // Unload file types (must be done before deleting meta data)     
       for (auto pair = mFileDatabase.begin(); pair != mFileDatabase.end();) {
          for (auto def = pair->second.begin(); def != pair->second.end();) {
-            if ((*def)->mBoundaries.size() == 1
-            and (*def)->mBoundaries.contains(boundary))
+            if ((*def)->mBoundaries.size() == 1 and (*def)->mBoundaries.contains(boundary))
                def = pair->second.erase(def);
             else
                ++def;
          }
 
          Logger::Verbose<VERBOSE>(
-            "File ", Logger::Push, pair->first,
-            Logger::Red, " unregistered"
+            "File ", Logger::Push, pair->first, Logger::Red, " unregistered"
          );
          
          if (pair->second.empty())
@@ -677,8 +682,8 @@ namespace Langulus::RTTI
 
       //                                                                
       // Unload data types                                              
-      for (auto pair = mMetaDataByName.begin(); pair != mMetaDataByName.end();) {
-         auto definition = const_cast<DefinitionData*>(pair->second);
+      for (auto pair = mMetaDataByCppName.begin(); pair != mMetaDataByCppName.end();) {
+         auto definition = const_cast<DefinitionData*>(pair->second.get());
          if (not definition->mBoundaries.erase(boundary)) {
             // Boundary is irrelevant for this definition               
             ++pair;
@@ -709,15 +714,15 @@ namespace Langulus::RTTI
          if (ambiguous->second.empty())
             mMetaAmbiguous.erase(ambiguous);
 
-         // Finally, delete the definition and remove it from registry  
-         delete definition;
-         pair = mMetaDataByName.erase(pair);
+         // Finally, remove it from registry (destroys unique_ptr)      
+         mMetaDataByToken.erase(definition->mNameOfLowercased);
+         pair = mMetaDataByCppName.erase(pair);
       }
 
       //                                                                
       // Unload tags                                                    
-      for (auto pair = mMetaTagsByName.begin(); pair != mMetaTagsByName.end();) {
-         auto definition = const_cast<DefinitionTag*>(pair->second);
+      for (auto pair = mMetaTagsByCppName.begin(); pair != mMetaTagsByCppName.end();) {
+         auto definition = const_cast<DefinitionTag*>(pair->second.get());
          if (not definition->mBoundaries.erase(boundary)) {
             // Boundary is irrelevant for this definition               
             ++pair;
@@ -745,15 +750,15 @@ namespace Langulus::RTTI
          if (ambiguous->second.empty())
             mMetaAmbiguous.erase(ambiguous);
 
-         // Finally, delete the definition and remove it from registry  
-         delete definition;
-         pair = mMetaTagsByName.erase(pair);
+         // Finally, remove it from registry (destroys unique_ptr)      
+         mMetaTagsByToken.erase(definition->mNameOfLowercased);
+         pair = mMetaTagsByCppName.erase(pair);
       }
 
       //                                                                
       // Unload verbs                                                   
       for (auto pair = mMetaVerbsByCppName.begin(); pair != mMetaVerbsByCppName.end();) {
-         auto definition = const_cast<DefinitionVerb*>(pair->second);
+         auto definition = const_cast<DefinitionVerb*>(pair->second.get());
          if (not definition->mBoundaries.erase(boundary)) {
             // Boundary is irrelevant for this definition               
             ++pair;
@@ -774,8 +779,7 @@ namespace Langulus::RTTI
          }
          else {
             Logger::Verbose<VERBOSE>("Verb ", Logger::DarkGreen,
-               definition->mNameOf, Logger::Red,
-               " unregistered"
+               definition->mNameOf, Logger::Red, " unregistered"
             );
          }
 
@@ -797,24 +801,27 @@ namespace Langulus::RTTI
          }
 
          // Remove from the token map                                   
-         mMetaVerbsByTokens.erase(definition->mNameOf);
+         mMetaVerbsByToken.erase(definition->mNameOf);
          if (not definition->mNameOfReverse.empty())
-            mMetaVerbsByTokens.erase(definition->mNameOfReverse);
+            mMetaVerbsByToken.erase(definition->mNameOfReverse);
          
          if (not definition->mOperator.empty()) {
-            Logger::Verbose<VERBOSE>("Operator ", Logger::DarkGreen, definition->mOperator,
-               Logger::Red, " unregistered");
-            mMetaVerbsByTokens.erase(definition->mOperator);
+            Logger::Verbose<VERBOSE>(
+               "Operator ", Logger::DarkGreen, definition->mOperator,
+               Logger::Red, " unregistered"
+            );
+            mMetaVerbsByToken.erase(definition->mOperator);
          }
          
          if (not definition->mOperatorReverse.empty()) {
-            Logger::Verbose<VERBOSE>("Operator ", Logger::DarkGreen, definition->mOperatorReverse,
-               Logger::Red, " unregistered");
-            mMetaVerbsByTokens.erase(definition->mOperatorReverse);
+            Logger::Verbose<VERBOSE>(
+               "Operator ", Logger::DarkGreen, definition->mOperatorReverse,
+               Logger::Red, " unregistered"
+            );
+            mMetaVerbsByToken.erase(definition->mOperatorReverse);
          }
 
-         // Finally, delete the definition and remove it from registry  
-         delete definition;
+         // Finally, remove it from registry (destroys unique_ptr)      
          pair = mMetaVerbsByCppName.erase(pair);
       }
    }

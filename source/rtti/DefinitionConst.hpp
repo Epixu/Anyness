@@ -11,7 +11,6 @@
 
 namespace Langulus::RTTI
 {
-
    ///                                                                        
    /// A constant value definition                                            
    ///                                                                        
@@ -41,7 +40,6 @@ namespace Langulus::RTTI
          if (mData) mDestroyConstant(mData);
       }
    };
-
-} // namespace Langulus::RTTI
+}
 
 #include "DefinitionConst.inl"

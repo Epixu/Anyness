@@ -19,7 +19,6 @@
 
 namespace Langulus::RTTI
 {
-
    /// Reflect or return an already reflected verb                            
    ///   @attention when making a shared library and reflecting your verbs    
    ///      at library initialization, it is recommended you mark all other   
@@ -163,5 +162,4 @@ namespace Langulus::RTTI
       
       return &definition;
    }
-
-} // namespace Langulus::RTTI
+}

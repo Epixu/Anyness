@@ -19,7 +19,6 @@
 
 namespace Langulus::RTTI
 {
-
    /// Reflect or return an already reflected tag                             
    ///   @attention when making a shared library and reflecting your tags     
    ///      at library initialization, it is recommended you mark all other   
@@ -91,5 +90,4 @@ namespace Langulus::RTTI
 
       return &definition;
    }
-
-} // namespace Langulus::RTTI
+}

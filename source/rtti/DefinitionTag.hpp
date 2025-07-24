@@ -11,7 +11,6 @@
 
 namespace Langulus::RTTI
 {
-
    ///                                                                        
    /// Tag definition                                                         
    ///                                                                        
@@ -30,7 +29,6 @@ namespace Langulus::RTTI
       DefinitionTag(const Token& cppname) noexcept
          : Definition {cppname} {}
    };
-
-} // namespace Langulus::RTTI
+}
 
 #include "DefinitionTag.inl"
