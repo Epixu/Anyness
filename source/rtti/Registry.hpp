@@ -40,8 +40,10 @@ namespace Langulus::RTTI
    public:
       // Definitions indexed by lowercase reflected name                
       template<class T>
-      using MetaMap = ::std::unordered_map<Token, T>;
-      using MetaSet = ::std::unordered_set<Inner::Definition const*>;
+      using MetaMap  = ::std::unordered_map<::std::string, T>;
+      template<class T>
+      using AliasMap = ::std::unordered_map<Token, T>;
+      using MetaSet  = ::std::unordered_set<Inner::Definition const*>;
 
       // Definitions indexed by ID                                      
       template<class T>
@@ -51,29 +53,29 @@ namespace Langulus::RTTI
       // @attention order of these containers matters!                  
       // Database for meta data definitions                             
       MetaMap<::std::unique_ptr<DefinitionData>> mMetaDataByCppName;
-      MetaMap<DefinitionData const*>  mMetaDataByToken;
-      Indexed<DefinitionData const*>  mMetaDataByID;
+      AliasMap<DefinitionData const*>  mMetaDataByToken;
+      Indexed<DefinitionData const*>   mMetaDataByID;
 
       // Database for named values                                      
       MetaMap<::std::unique_ptr<DefinitionConst>> mMetaConstantsByCppName;
-      MetaMap<DefinitionConst const*> mMetaConstantsByToken;
-      Indexed<DefinitionConst const*> mMetaConstantsByID;
+      AliasMap<DefinitionConst const*> mMetaConstantsByToken;
+      Indexed<DefinitionConst const*>  mMetaConstantsByID;
 
       // Database for meta trait definitions                            
       MetaMap<::std::unique_ptr<DefinitionTag>> mMetaTagsByCppName;
-      MetaMap<DefinitionTag const*>   mMetaTagsByToken;
-      Indexed<DefinitionTag const*>   mMetaTagsByID;
+      AliasMap<DefinitionTag const*>   mMetaTagsByToken;
+      Indexed<DefinitionTag const*>    mMetaTagsByID;
 
       // Database for meta verb definitions                             
       MetaMap<::std::unique_ptr<DefinitionVerb>> mMetaVerbsByCppName;
-      MetaMap<DefinitionVerb const*>  mMetaVerbsByToken;
-      Indexed<DefinitionVerb const*>  mMetaVerbsByID;
+      AliasMap<DefinitionVerb const*>  mMetaVerbsByToken;
+      Indexed<DefinitionVerb const*>   mMetaVerbsByID;
 
       // Database for ambiguous tokens                                  
       // All definitions indexed by their last lowercased token         
-      MetaMap<MetaSet> mMetaAmbiguous;
+      AliasMap<MetaSet> mMetaAmbiguous;
       // Meta data definitions, indexed by file extensions              
-      MetaMap<MetaSet> mFileDatabase;
+      AliasMap<MetaSet> mFileDatabase;
       
       auto GetMetaByID(const auto& where, size_t id) const noexcept;
 

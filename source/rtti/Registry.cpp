@@ -48,7 +48,7 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByCppName(const Token& token)
    const noexcept -> DefinitionData const* {
-      const auto foundToken = mMetaDataByCppName.find(token);
+      const auto foundToken = mMetaDataByCppName.find(::std::string {token});
       if (foundToken == mMetaDataByCppName.end())
          return nullptr;
       return foundToken->second.get();
@@ -71,7 +71,7 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByCppName(const Token& token)
    const noexcept -> DefinitionConst const* {
-      const auto foundToken = mMetaConstantsByCppName.find(token);
+      const auto foundToken = mMetaConstantsByCppName.find(::std::string {token});
       if (foundToken == mMetaConstantsByCppName.end())
          return nullptr;
       return foundToken->second.get();
@@ -94,7 +94,7 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByCppName(const Token& token)
    const noexcept -> DefinitionTag const* {
-      const auto foundToken = mMetaTagsByCppName.find(token);
+      const auto foundToken = mMetaTagsByCppName.find(::std::string {token});
       if (foundToken == mMetaTagsByCppName.end())
          return nullptr;
       return foundToken->second.get();
@@ -117,7 +117,7 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByCppName(const Token& token)
    const noexcept -> DefinitionVerb const* {
-      const auto foundToken = mMetaVerbsByCppName.find(token);
+      const auto foundToken = mMetaVerbsByCppName.find(::std::string {token});
       if (foundToken == mMetaVerbsByCppName.end())
          return nullptr;
       return foundToken->second.get();
@@ -357,14 +357,15 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta data for that name                    
    auto Registry::RegisterData(const Token& cppname, const Token& token) -> DefinitionData& {
-      LglsAssumeDev(not mMetaDataByCppName.contains(cppname),
+      const ::std::string cppname_s {cppname};
+      LglsAssumeDev(not mMetaDataByCppName.contains(cppname_s),
          "Data with this name is already registered: ", cppname);
       
-      LglsAssert(not mMetaTagsByCppName.contains(cppname),
+      LglsAssert(not mMetaTagsByCppName.contains(cppname_s),
          "Data type already registered as tag: ", cppname);
-      LglsAssert(not mMetaVerbsByCppName.contains(cppname),
+      LglsAssert(not mMetaVerbsByCppName.contains(cppname_s),
          "Data type already registered as verb: ", cppname);
-      LglsAssert(not mMetaConstantsByCppName.contains(cppname),
+      LglsAssert(not mMetaConstantsByCppName.contains(cppname_s),
          "Data type already registered as constant: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
@@ -416,14 +417,15 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta constant for that token               
    auto Registry::RegisterConst(const Token& cppname, const Token& token) -> DefinitionConst& {
-      LglsAssumeDev(not mMetaConstantsByCppName.contains(cppname),
+      const ::std::string cppname_s {cppname};
+      LglsAssumeDev(not mMetaConstantsByCppName.contains(cppname_s),
          "Constant with this name is already registered: ", cppname);
 
-      LglsAssert(not mMetaDataByCppName.contains(cppname),
+      LglsAssert(not mMetaDataByCppName.contains(cppname_s),
          "Constant already registered as data: ", cppname);
-      LglsAssert(not mMetaTagsByCppName.contains(cppname),
+      LglsAssert(not mMetaTagsByCppName.contains(cppname_s),
          "Constant already registered as tag: ", cppname);
-      LglsAssert(not mMetaVerbsByCppName.contains(cppname),
+      LglsAssert(not mMetaVerbsByCppName.contains(cppname_s),
          "Constant already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
@@ -468,14 +470,15 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta trait for that token                  
    auto Registry::RegisterTag(const Token& cppname, const Token& token) -> DefinitionTag& {
-      LglsAssumeDev(not mMetaTagsByCppName.contains(cppname),
+      const ::std::string cppname_s {cppname};
+      LglsAssumeDev(not mMetaTagsByCppName.contains(cppname_s),
          "Tag with this name is already registered: ", cppname);
 
-      LglsAssert(not mMetaDataByCppName.contains(cppname),
+      LglsAssert(not mMetaDataByCppName.contains(cppname_s),
          "Tag already registered as data: ", cppname);
-      LglsAssert(not mMetaConstantsByCppName.contains(cppname),
+      LglsAssert(not mMetaConstantsByCppName.contains(cppname_s),
          "Tag already registered as constant: ", cppname);
-      LglsAssert(not mMetaVerbsByCppName.contains(cppname),
+      LglsAssert(not mMetaVerbsByCppName.contains(cppname_s),
          "Tag already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
@@ -524,14 +527,15 @@ namespace Langulus::RTTI
       Token const& op,
       Token const& opRev
    ) -> DefinitionVerb& {
-      LglsAssumeDev(not mMetaVerbsByCppName.contains(cppname),
+      const ::std::string cppname_s {cppname};
+      LglsAssumeDev(not mMetaVerbsByCppName.contains(cppname_s),
          "Verb with this name is already registered: ", cppname);
 
-      LglsAssert(not mMetaDataByCppName.contains(cppname),
+      LglsAssert(not mMetaDataByCppName.contains(cppname_s),
          "Verb already registered as data: ", cppname);
-      LglsAssert(not mMetaConstantsByCppName.contains(cppname),
+      LglsAssert(not mMetaConstantsByCppName.contains(cppname_s),
          "Verb already registered as constant: ", cppname);
-      LglsAssert(not mMetaTagsByCppName.contains(cppname),
+      LglsAssert(not mMetaTagsByCppName.contains(cppname_s),
          "Verb already registered as tag: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
