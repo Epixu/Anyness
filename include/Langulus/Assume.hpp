@@ -205,12 +205,11 @@ namespace Langulus
       /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
       /// test the assumption when safety is enabled, and instruct the        
       /// compiler to generate more performant code                           
-      #define LglsAssumeUserAndOptimize(CONDITION, ...) \
-         AssumeUserInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
-         [[assume(CONDITION)]]
+      #define LglsAssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]; \
+         AssumeUserInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
    #else
-      #define LglsAssumeUser(CONDITION, ...)
-      #define LglsAssumeUserWarn(CONDITION, ...)
+      #define LglsAssumeUser(CONDITION, ...) LANGULUS(NOOP)
+      #define LglsAssumeUserWarn(CONDITION, ...) LANGULUS(NOOP)
       #define LglsAssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
    #endif
 
@@ -295,12 +294,11 @@ namespace Langulus
       /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
       /// test the assumption when safety is enabled, and instruct the        
       /// compiler to generate more performant code                           
-      #define LglsAssumeDevAndOptimize(CONDITION, ...) \
-         AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
-         [[assume(CONDITION)]]
+      #define LglsAssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]; \
+         AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
    #else
-      #define LglsAssumeDev(CONDITION, ...)
-      #define LglsAssumeDevWarn(CONDITION, ...)
+      #define LglsAssumeDev(CONDITION, ...) LANGULUS(NOOP)
+      #define LglsAssumeDevWarn(CONDITION, ...) LANGULUS(NOOP)
       #define LglsAssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
    #endif
 
@@ -351,9 +349,8 @@ namespace Langulus
    #define LglsAssume(LEVEL, CONDITION, ...) \
       AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
    #define LglsAssumeAndOptimize(LEVEL, CONDITION, ...) \
-      AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
-      [[assume(CONDITION)]];
-
+      AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__) \
+      [[assume(CONDITION)]] 
    
    /// Custom assumption at runtime                                           
    /// Tested only if LANGULUS(SAFE) >= LEVEL                                 
