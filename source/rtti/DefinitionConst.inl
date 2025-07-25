@@ -74,7 +74,7 @@ namespace Langulus::RTTI
       // bother if it is the main one                                   
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          if (Boundary) {
-            Assert(Token{Boundary} != "MAIN", HERE(),
+            LglsAssert(Token{Boundary} != "MAIN",
                "Boundary named `MAIN` is reserved - pick another name");
             definition.mBoundaries.insert(Boundary);
          }
@@ -90,7 +90,7 @@ namespace Langulus::RTTI
       definition.mType = DefinitionData::Reflect<T>();
       if (not definition.mData) {
          definition.mData = new T {E};
-         Assert(definition.mData, HERE(), "Insufficient memory on reflection");
+         LglsAssert(definition.mData, "Insufficient memory on reflection");
          definition.mDestroyConstant = [](const void* p) {
             auto pt = static_cast<const T*>(p);
             delete pt;

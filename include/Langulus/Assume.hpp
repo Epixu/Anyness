@@ -17,8 +17,8 @@ namespace Langulus
    ///   @param m1 - optional main error message                              
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(NOINLINE)
-   constexpr void Error(
+   template<class E = Exception, class...MORE>
+   constexpr void ErrorInner(
       const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
@@ -38,6 +38,8 @@ namespace Langulus
             throw E {m1};
       }
    }
+
+   #define LglsError(...) ErrorInner(HERE(), __VA_ARGS__)
    
    /// Assertion that works both at runtime and at compile-time               
    /// Will throw an exception if condition isn't met at runtime              
@@ -45,8 +47,8 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(NOINLINE)
-   constexpr void Assert(
+   template<class E = Exception, class...MORE>
+   constexpr void AssertInner(
       bool condition,
       const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
@@ -70,14 +72,16 @@ namespace Langulus
       }
    }
    
+   #define LglsAssert(CONDITION, ...) AssertInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+
    /// Assertion that works at runtime                                        
    /// Doesn't throw or ruin compilation                                      
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class...MORE> LANGULUS(NOINLINE)
-   constexpr void AssertWarn(
+   template<class...MORE>
+   constexpr void AssertWarnInner(
       bool condition,
       const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
@@ -95,6 +99,8 @@ namespace Langulus
       }
    }
    
+   #define LglsAssertWarn(CONDITION, ...) AssertWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+
    #if LANGULUS(SAFE) > 0
    /// User assumption that works both at runtime and at compile-time         
    /// Tested only if LANGULUS(SAFE) >= 1                                     
@@ -103,7 +109,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(NOINLINE)
+   template<class E = Exception, class...MORE>
    constexpr void AssumeUserInner(
       bool condition,
       const char* location = nullptr,
@@ -135,7 +141,7 @@ namespace Langulus
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class...MORE> LANGULUS(NOINLINE)
+   template<class...MORE>
    constexpr void AssumeUserWarnInner(
       bool condition,
       const char* location = nullptr,
@@ -159,17 +165,17 @@ namespace Langulus
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
    #if LANGULUS(SAFE) > 0
-      #define AssumeUser(CONDITION, ...) \
-         AssumeUserInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
-      #define AssumeUserWarn(CONDITION, ...) \
-         AssumeUserWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
-      #define AssumeUserAndOptimize(CONDITION, ...) \
+      #define LglsAssumeUser(CONDITION, ...) \
+         AssumeUserInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+      #define LglsAssumeUserWarn(CONDITION, ...) \
+         AssumeUserWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+      #define LglsAssumeUserAndOptimize(CONDITION, ...) \
          AssumeUserInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
          [[assume(CONDITION)]]
    #else
-      #define AssumeUser(CONDITION, ...)
-      #define AssumeUserWarn(CONDITION, ...)
-      #define AssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
+      #define LglsAssumeUser(CONDITION, ...)
+      #define LglsAssumeUserWarn(CONDITION, ...)
+      #define LglsAssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
    #endif
 
    #if LANGULUS(SAFE) > 1
@@ -180,7 +186,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(NOINLINE)
+   template<class E = Exception, class...MORE>
    constexpr void AssumeDevInner(
       bool condition,
       const char* location = nullptr,
@@ -212,7 +218,7 @@ namespace Langulus
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class...MORE> LANGULUS(NOINLINE)
+   template<class...MORE>
    constexpr void AssumeDevWarnInner(
       bool condition,
       const char* location = nullptr,
@@ -236,17 +242,17 @@ namespace Langulus
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
    #if LANGULUS(SAFE) > 1
-      #define AssumeDev(CONDITION, ...) \
-         AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
-      #define AssumeDevWarn(CONDITION, ...) \
-         AssumeDevWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
-      #define AssumeDevAndOptimize(CONDITION, ...) \
+      #define LglsAssumeDev(CONDITION, ...) \
+         AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+      #define LglsAssumeDevWarn(CONDITION, ...) \
+         AssumeDevWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+      #define LglsAssumeDevAndOptimize(CONDITION, ...) \
          AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
          [[assume(CONDITION)]]
    #else
-      #define AssumeDev(CONDITION, ...)
-      #define AssumeDevWarn(CONDITION, ...)
-      #define AssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
+      #define LglsAssumeDev(CONDITION, ...)
+      #define LglsAssumeDevWarn(CONDITION, ...)
+      #define LglsAssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
    #endif
 
    /// Custom assumption that works both at runtime and at compile-time       
@@ -256,8 +262,8 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<unsigned LEVEL, class E = Exception, class...MORE> LANGULUS(NOINLINE)
-   constexpr void Assume(
+   template<unsigned LEVEL, class E = Exception, class...MORE>
+   constexpr void AssumeInner(
       bool condition,
       const char* location = nullptr,
       const char* m1 = "<unknown assumption failure>",
@@ -286,8 +292,10 @@ namespace Langulus
    /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
-   #define AssumeAndOptimize(LEVEL, CONDITION, ...) \
-      Assume<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
+   #define LglsAssume(LEVEL, CONDITION, ...) \
+      AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+   #define LglsAssumeAndOptimize(LEVEL, CONDITION, ...) \
+      AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
       [[assume(CONDITION)]];
 
    
@@ -298,8 +306,8 @@ namespace Langulus
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<unsigned LEVEL, class...MORE> LANGULUS(NOINLINE)
-   constexpr void AssumeWarn(
+   template<unsigned LEVEL, class...MORE>
+   constexpr void AssumeWarnInner(
       bool condition,
       const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
@@ -318,10 +326,13 @@ namespace Langulus
          }
       }
    }
+
+   #define LglsAssumeWarn(LEVEL, CONDITION, ...) \
+      AssumeWarnInner<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
 }
 
 /// Convenience macro for specifying temporary lazyness                       
-#define TODO() ::Langulus::Assert(false, HERE(), "Unfinished code")
+#define TODO() ::Langulus::AssertInner(false, HERE(), "Unfinished code")
 
 
 namespace fmt

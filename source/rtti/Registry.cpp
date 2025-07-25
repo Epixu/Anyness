@@ -148,7 +148,7 @@ namespace Langulus::RTTI
          return nullptr;
 
       if (sparse and not found->mPtrIncludedInID) {
-         AssumeDevAndOptimize(found->mAddPtr,
+         LglsAssumeDevAndOptimize(found->mAddPtr,
             "An indirection ID for a type exists, "
             "but no such type has been reflected yet: ", found->mNameOf
          );
@@ -156,7 +156,7 @@ namespace Langulus::RTTI
       }
 
       if (constant) {
-         AssumeDevAndOptimize(found->mAddConst,
+         LglsAssumeDevAndOptimize(found->mAddConst,
             "A constant ID for a type exists, "
             "but no such type has been reflected yet: ", found->mNameOf
          );
@@ -228,8 +228,7 @@ namespace Langulus::RTTI
    auto Registry::DisambiguateMeta(const Token& keyword)
    const -> Inner::Definition const* {
       auto& symbols = GetAmbiguousMeta(keyword);
-      Assert(not symbols.empty(), HERE(),
-         "Keyword not found", ": `", keyword, '`');
+      LglsAssert(not symbols.empty(), "Keyword not found", ": `", keyword, '`');
       
       if (symbols.size() == 1) {
          // No ambiguity, just return the single result (1)             
@@ -244,7 +243,7 @@ namespace Langulus::RTTI
       const auto lowercased = Inner::ToLowercase(keyword);
       MetaSet origins;
       for (auto& meta : symbols) {
-         AssumeDevAndOptimize(meta, "Bad meta");
+         LglsAssumeDevAndOptimize(meta, "Bad meta");
          if (not meta->mNameOfLowercased.contains(lowercased))
             continue;
          
@@ -257,7 +256,7 @@ namespace Langulus::RTTI
          else origins.insert(meta);
       }
 
-      Assert(not origins.empty(), HERE(),
+      LglsAssert(not origins.empty(),
          "No relevant origins for keyword", ": `", keyword, '`');
 
       DefinitionData const* meta_data             IF_SAFE(= nullptr);
@@ -358,24 +357,24 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta data for that name                    
    auto Registry::RegisterData(const Token& cppname, const Token& token) -> DefinitionData& {
-      AssumeDev(not mMetaDataByCppName.contains(cppname),
+      LglsAssumeDev(not mMetaDataByCppName.contains(cppname),
          "Data with this name is already registered: ", cppname);
       
-      Assert(not mMetaTagsByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaTagsByCppName.contains(cppname),
          "Data type already registered as tag: ", cppname);
-      Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaVerbsByCppName.contains(cppname),
          "Data type already registered as verb: ", cppname);
-      Assert(not mMetaConstantsByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaConstantsByCppName.contains(cppname),
          "Data type already registered as constant: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaDataByToken.contains(lowercased_token)) {
-         Error(HERE(), "Data token conflict between ", cppname, " and ",
+         LglsError("Data token conflict between ", cppname, " and ",
             mMetaDataByToken.at(lowercased_token)->mCppNameOf);
       }
       if (mMetaConstantsByToken.contains(lowercased_token)) {
-         Error(HERE(), "Token conflict between data ", cppname, " and constant ",
+         LglsError("Token conflict between data ", cppname, " and constant ",
             mMetaConstantsByToken.at(lowercased_token)->mCppNameOf);
       }
 
@@ -417,24 +416,24 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta constant for that token               
    auto Registry::RegisterConst(const Token& cppname, const Token& token) -> DefinitionConst& {
-      AssumeDev(not mMetaConstantsByCppName.contains(cppname),
+      LglsAssumeDev(not mMetaConstantsByCppName.contains(cppname),
          "Constant with this name is already registered: ", cppname);
 
-      Assert(not mMetaDataByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaDataByCppName.contains(cppname),
          "Constant already registered as data: ", cppname);
-      Assert(not mMetaTagsByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaTagsByCppName.contains(cppname),
          "Constant already registered as tag: ", cppname);
-      Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaVerbsByCppName.contains(cppname),
          "Constant already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaDataByToken.contains(lowercased_token)) {
-         Error(HERE(), "Token conflict between constant ", cppname, " and data ",
+         LglsError("Token conflict between constant ", cppname, " and data ",
             mMetaDataByToken.at(lowercased_token)->mCppNameOf);
       }
       if (mMetaConstantsByToken.contains(lowercased_token)) {
-         Error(HERE(), "Constant token conflict between ", cppname, " and ",
+         LglsError("Constant token conflict between ", cppname, " and ",
             mMetaConstantsByToken.at(lowercased_token)->mCppNameOf);
       }
 
@@ -469,20 +468,20 @@ namespace Langulus::RTTI
    ///   @param token - the custom token used in scripting                    
    ///   @return the newly defined meta trait for that token                  
    auto Registry::RegisterTag(const Token& cppname, const Token& token) -> DefinitionTag& {
-      AssumeDev(not mMetaTagsByCppName.contains(cppname),
+      LglsAssumeDev(not mMetaTagsByCppName.contains(cppname),
          "Tag with this name is already registered: ", cppname);
 
-      Assert(not mMetaDataByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaDataByCppName.contains(cppname),
          "Tag already registered as data: ", cppname);
-      Assert(not mMetaConstantsByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaConstantsByCppName.contains(cppname),
          "Tag already registered as constant: ", cppname);
-      Assert(not mMetaVerbsByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaVerbsByCppName.contains(cppname),
          "Tag already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaTagsByToken.contains(lowercased_token)) {
-         Error(HERE(), "Tag token conflict between ", cppname, " and ",
+         LglsError("Tag token conflict between ", cppname, " and ",
             mMetaTagsByToken.at(lowercased_token)->mCppNameOf);
       }
 
@@ -525,38 +524,38 @@ namespace Langulus::RTTI
       Token const& op,
       Token const& opRev
    ) -> DefinitionVerb& {
-      AssumeDev(not mMetaVerbsByCppName.contains(cppname),
+      LglsAssumeDev(not mMetaVerbsByCppName.contains(cppname),
          "Verb with this name is already registered: ", cppname);
 
-      Assert(not mMetaDataByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaDataByCppName.contains(cppname),
          "Verb already registered as data: ", cppname);
-      Assert(not mMetaConstantsByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaConstantsByCppName.contains(cppname),
          "Verb already registered as constant: ", cppname);
-      Assert(not mMetaTagsByCppName.contains(cppname), HERE(),
+      LglsAssert(not mMetaTagsByCppName.contains(cppname),
          "Verb already registered as tag: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaVerbsByToken.contains(lowercased_token)) {
-         Error(HERE(), "Verb positive token conflict between ", cppname, " and ",
+         LglsError("Verb positive token conflict between ", cppname, " and ",
             mMetaVerbsByToken.at(lowercased_token)->mCppNameOf);
       }
 
       auto lowercased_token_rev = Inner::ToLowercase(tokenRev);
       if (not tokenRev.empty() and mMetaVerbsByToken.contains(lowercased_token_rev)) {
-         Error(HERE(), "Verb negative token conflict between ", cppname, " and ",
+         LglsError("Verb negative token conflict between ", cppname, " and ",
             mMetaVerbsByToken.at(lowercased_token_rev)->mCppNameOf);
       }
 
       auto lowercased_op = Inner::ToLowercase(op);
       if (not op.empty() and mMetaVerbsByToken.contains(lowercased_op)) {
-         Error(HERE(), "Verb positive operator conflict between ", cppname, " and ",
+         LglsError("Verb positive operator conflict between ", cppname, " and ",
             mMetaVerbsByToken.at(lowercased_op)->mCppNameOf);
       }
 
       auto lowercased_op_rev = Inner::ToLowercase(opRev);
       if (not opRev.empty() and mMetaVerbsByToken.contains(lowercased_op_rev)) {
-         Error(HERE(), "Verb negative operator conflict between ", cppname, " and ",
+         LglsError("Verb negative operator conflict between ", cppname, " and ",
             mMetaVerbsByToken.at(lowercased_op_rev)->mCppNameOf);
       }
 
@@ -610,8 +609,8 @@ namespace Langulus::RTTI
    ///   @param type - the data to associate file with                        
    void Registry::RegisterFileExtension(const Token& token, DefinitionData* type)
    has_assumptions {
-      AssumeDev(not token.empty(), "Bad file extension");
-      AssumeDevAndOptimize(type, "Bad meta data for file extension: ", token);
+      LglsAssumeDev(not token.empty(), "Bad file extension");
+      LglsAssumeDevAndOptimize(type, "Bad meta data for file extension: ", token);
 
       const auto lc = Inner::ToLowercase(token);
       const auto foundToken = mFileDatabase.find(lc);
@@ -625,7 +624,7 @@ namespace Langulus::RTTI
    /// defined only within the given boundary token                           
    ///   @param boundary - the boundary token to search for                   
    void Registry::UnloadBoundary(const Token& boundary) {
-      AssumeDev(not boundary.empty(), "Can't unload main boundary");
+      LglsAssumeDev(not boundary.empty(), "Can't unload main boundary");
       VERBOSE_SCOPED(Logger::Red, Logger::Underline, 
          "Unloading boundary ", boundary);
 

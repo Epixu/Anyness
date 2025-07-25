@@ -49,7 +49,7 @@ namespace Langulus::RTTI::Inner
    ///   @param token - the token to lowercase                                
    ///   @return the lowercase string                                         
    constexpr Lowercase ToLowercase(const Token& token) noexcept {
-      AssumeDev(IsASCII(token), "Token must be ASCII");
+      LglsAssumeDev(IsASCII(token), "Token must be ASCII");
       Lowercase lc {token};
       for (char& c : lc)
          c = Langulus::ToLowercase(c);
@@ -168,7 +168,7 @@ namespace Langulus::RTTI::Inner
          // bother if it is the main one                                
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             if (Boundary) {
-               Assert(Token{Boundary} != "MAIN", HERE(),
+               LglsAssert(Token{Boundary} != "MAIN",
                   "Boundary named `MAIN` is reserved - pick another name");
                mBoundaries.insert(Boundary);
             }

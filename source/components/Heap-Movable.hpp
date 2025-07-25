@@ -100,7 +100,7 @@ namespace Langulus::Anyness::Component
                request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1));
          }
 
-         Assert(al, HERE(), "Out of memory");
+         Assert(al, "Out of memory");
          self.SetAllocation(al);
          self.SetReserved(request.mElementCount);
       }
@@ -145,7 +145,7 @@ namespace Langulus::Anyness::Component
                   request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1),
                   self.GetAllocation()
                );
-               Assert(reallocated, HERE(), "Out of memory");
+               Assert(reallocated, "Out of memory");
                self.SetAllocation(reallocated);
                self.SetReserved(request.mElementCount);
 
@@ -190,9 +190,9 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            Assert(self.mType, HERE(),
+            Assert(self.mType,
                "Can't instantiate unknown type");
-            Assert(self.mType.IsSparse() or not self.mType.IsAbstract(), HERE(),
+            Assert(self.mType.IsSparse() or not self.mType.IsAbstract(),
                "Unable to instantiate ", elements, " elements of abstract type ", self.mType);
 
             if (self.GetReserved() >= elements) {

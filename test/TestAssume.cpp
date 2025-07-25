@@ -14,44 +14,44 @@ using namespace Langulus;
 SCENARIO("Testing whether assumptions throw properly, in both constant-evaluated and not contexts", "[assume]") {
    constexpr auto test = [] {
       if consteval {
-         Assert(false, HERE(), "Message");
-         AssertWarn(false, HERE(), "Message");
-         AssumeUserInner(false, HERE(), "Message");
-         AssumeUserWarnInner(false, HERE(), "Message");
-         AssumeDevInner(false, HERE(), "Message");
-         AssumeDevWarnInner(false, HERE(), "Message");
-         Assume<0>(false, HERE(), "Message");
-         AssumeWarn<0>(false, HERE(), "Message");
+         LglsAssert(false, "Message");
+         LglsAssertWarn(false, "Message");
+         LglsAssumeUser(false, "Message");
+         LglsAssumeUserWarn(false, "Message");
+         LglsAssumeDev(false, "Message");
+         LglsAssumeDevWarn(false, "Message");
+         LglsAssume(0, false, "Message");
+         LglsAssumeWarn(0, false, "Message");
       }
       else {
-         REQUIRE_THROWS(Assert(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(Assert(true, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssertWarn(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssertWarn(true, HERE(), "Message"));
+         REQUIRE_THROWS(LglsAssert(false, "Message"));
+         REQUIRE_NOTHROW(LglsAssert(true, "Message"));
+         REQUIRE_NOTHROW(LglsAssertWarn(false, "Message"));
+         REQUIRE_NOTHROW(LglsAssertWarn(true, "Message"));
 
          if constexpr (LANGULUS(SAFE) > 0)
-            REQUIRE_THROWS(AssumeUserInner(false, HERE(), "Message"));
+            REQUIRE_THROWS(LglsAssumeUser(false, "Message"));
          else
-            REQUIRE_NOTHROW(AssumeUserInner(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssumeUserInner(true, HERE(), "Message"));
+            REQUIRE_NOTHROW(LglsAssumeUser(false, "Message"));
+         REQUIRE_NOTHROW(LglsAssumeUser(true, "Message"));
 
-         REQUIRE_NOTHROW(AssumeUserWarnInner(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssumeUserWarnInner(true, HERE(), "Message"));
+         REQUIRE_NOTHROW(LglsAssumeUserWarn(false, "Message"));
+         REQUIRE_NOTHROW(LglsAssumeUserWarn(true, "Message"));
 
          if constexpr (LANGULUS(SAFE) > 1)
-            REQUIRE_THROWS(AssumeDevInner(false, HERE(), "Message"));
+            REQUIRE_THROWS(LglsAssumeDev(false, "Message"));
          else
-            REQUIRE_NOTHROW(AssumeDevInner(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssumeDevInner(true, HERE(), "Message"));
+            REQUIRE_NOTHROW(LglsAssumeDev(false, "Message"));
+         REQUIRE_NOTHROW(LglsAssumeDev(true, "Message"));
 
-         REQUIRE_NOTHROW(AssumeDevWarnInner(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssumeDevWarnInner(true, HERE(), "Message"));
+         REQUIRE_NOTHROW(LglsAssumeDevWarn(false, "Message"));
+         REQUIRE_NOTHROW(LglsAssumeDevWarn(true, "Message"));
 
-         REQUIRE_THROWS(Assume<0>(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(Assume<0>(true, HERE(), "Message"));
+         REQUIRE_THROWS(LglsAssume(0, false, "Message"));
+         REQUIRE_NOTHROW(LglsAssume(0, true, "Message"));
 
-         REQUIRE_NOTHROW(AssumeWarn<0>(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssumeWarn<0>(true, HERE(), "Message"));
+         REQUIRE_NOTHROW(LglsAssumeWarn(0, false, "Message"));
+         REQUIRE_NOTHROW(LglsAssumeWarn(0, true, "Message"));
       }
 
       return true;

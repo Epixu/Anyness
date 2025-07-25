@@ -87,7 +87,7 @@ namespace Langulus
             : p(a.data()), sz(N) {}
 
          constexpr char operator[](std::size_t n) const has_assumptions {
-            AssumeDevAndOptimize(n < sz, "Out of range");
+            LglsAssumeDevAndOptimize(n < sz, "Out of range");
             return p[n];
          }
 
