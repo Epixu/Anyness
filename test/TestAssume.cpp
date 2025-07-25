@@ -16,10 +16,10 @@ SCENARIO("Testing whether assumptions throw properly, in both constant-evaluated
       if consteval {
          Assert(false, HERE(), "Message");
          AssertWarn(false, HERE(), "Message");
-         AssumeUser(false, HERE(), "Message");
-         AssumeUserWarn(false, HERE(), "Message");
+         AssumeUserInner(false, HERE(), "Message");
+         AssumeUserWarnInner(false, HERE(), "Message");
          AssumeDevInner(false, HERE(), "Message");
-         AssumeDevWarn(false, HERE(), "Message");
+         AssumeDevWarnInner(false, HERE(), "Message");
          Assume<0>(false, HERE(), "Message");
          AssumeWarn<0>(false, HERE(), "Message");
       }
@@ -30,13 +30,13 @@ SCENARIO("Testing whether assumptions throw properly, in both constant-evaluated
          REQUIRE_NOTHROW(AssertWarn(true, HERE(), "Message"));
 
          if constexpr (LANGULUS(SAFE) > 0)
-            REQUIRE_THROWS(AssumeUser(false, HERE(), "Message"));
+            REQUIRE_THROWS(AssumeUserInner(false, HERE(), "Message"));
          else
-            REQUIRE_NOTHROW(AssumeUser(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssumeUser(true, HERE(), "Message"));
+            REQUIRE_NOTHROW(AssumeUserInner(false, HERE(), "Message"));
+         REQUIRE_NOTHROW(AssumeUserInner(true, HERE(), "Message"));
 
-         REQUIRE_NOTHROW(AssumeUserWarn(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssumeUserWarn(true, HERE(), "Message"));
+         REQUIRE_NOTHROW(AssumeUserWarnInner(false, HERE(), "Message"));
+         REQUIRE_NOTHROW(AssumeUserWarnInner(true, HERE(), "Message"));
 
          if constexpr (LANGULUS(SAFE) > 1)
             REQUIRE_THROWS(AssumeDevInner(false, HERE(), "Message"));
@@ -44,8 +44,8 @@ SCENARIO("Testing whether assumptions throw properly, in both constant-evaluated
             REQUIRE_NOTHROW(AssumeDevInner(false, HERE(), "Message"));
          REQUIRE_NOTHROW(AssumeDevInner(true, HERE(), "Message"));
 
-         REQUIRE_NOTHROW(AssumeDevWarn(false, HERE(), "Message"));
-         REQUIRE_NOTHROW(AssumeDevWarn(true, HERE(), "Message"));
+         REQUIRE_NOTHROW(AssumeDevWarnInner(false, HERE(), "Message"));
+         REQUIRE_NOTHROW(AssumeDevWarnInner(true, HERE(), "Message"));
 
          REQUIRE_THROWS(Assume<0>(false, HERE(), "Message"));
          REQUIRE_NOTHROW(Assume<0>(true, HERE(), "Message"));

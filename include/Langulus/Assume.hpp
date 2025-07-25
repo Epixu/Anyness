@@ -13,12 +13,11 @@
 
 namespace Langulus
 {
-   
    /// Will throw an exception                                                
    ///   @param m1 - optional main error message                              
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(INLINED)
+   template<class E = Exception, class...MORE> LANGULUS(NOINLINE)
    constexpr void Error(
       const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
@@ -46,7 +45,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(INLINED)
+   template<class E = Exception, class...MORE> LANGULUS(NOINLINE)
    constexpr void Assert(
       bool condition,
       const char* location = nullptr,
@@ -77,7 +76,7 @@ namespace Langulus
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class...MORE> LANGULUS(INLINED)
+   template<class...MORE> LANGULUS(NOINLINE)
    constexpr void AssertWarn(
       bool condition,
       const char* location = nullptr,
@@ -96,6 +95,7 @@ namespace Langulus
       }
    }
    
+   #if LANGULUS(SAFE) > 0
    /// User assumption that works both at runtime and at compile-time         
    /// Tested only if LANGULUS(SAFE) >= 1                                     
    /// Will throw an exception if condition isn't met at runtime              
@@ -103,45 +103,31 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(INLINED)
-   constexpr void AssumeUser(
+   template<class E = Exception, class...MORE> LANGULUS(NOINLINE)
+   constexpr void AssumeUserInner(
       bool condition,
       const char* location = nullptr,
       const char* m1 = "<unknown user assumption failure>",
       MORE&&...mn
    ) {
-      if constexpr (LANGULUS(SAFE) > 0) {
-         if not consteval {
-            if (not condition) {
-               // Log location first, because message might cause       
-               // additional errors                                     
-               DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
+      if not consteval {
+         if (not condition) {
+            // Log location first, because message might cause          
+            // additional errors                                        
+            DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
-               // Log error message                                     
-               Logger::ErrorRaw("User assumption failure: ", m1, FWD(mn)...);
+            // Log error message                                        
+            Logger::ErrorRaw("User assumption failure: ", m1, FWD(mn)...);
 
-               // Throw                                                 
-               if constexpr (CT::Exception<E>)
-                  throw E {m1, location};
-               else
-                  throw E {m1};
-            }
+            // Throw                                                    
+            if constexpr (CT::Exception<E>)
+               throw E {m1, location};
+            else
+               throw E {m1};
          }
       }
-      else LANGULUS(NOOP);
    }
-
-   /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
-   /// test the assumption when safety is enabled, and instruct the compiler  
-   /// to generate more performant code                                       
-   #if LANGULUS(SAFE) > 0
-      #define AssumeUserAndOptimize(CONDITION, ...) \
-         AssumeUser(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
-         [[assume(CONDITION)]]
-   #else
-      #define AssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
-   #endif
-
+   
    /// User assumption at runtime                                             
    /// Tested only if LANGULUS(SAFE) >= 1                                     
    /// Doesn't throw or ruin compilation                                      
@@ -149,28 +135,44 @@ namespace Langulus
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class...MORE> LANGULUS(INLINED)
-   constexpr void AssumeUserWarn(
+   template<class...MORE> LANGULUS(NOINLINE)
+   constexpr void AssumeUserWarnInner(
       bool condition,
       const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
-      if constexpr (LANGULUS(SAFE) > 0) {
-         if not consteval {
-            if (not condition) {
-               // Log location first, because message might cause       
-               // additional errors                                     
-               DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
+      if not consteval {
+         if (not condition) {
+            // Log location first, because message might cause          
+            // additional errors                                        
+            DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
-               // Log error message                                     
-               Logger::WarningRaw("User assumption failure: ", m1, FWD(mn)...);
-            }
+            // Log error message                                        
+            Logger::WarningRaw("User assumption failure: ", m1, FWD(mn)...);
          }
       }
-      else LANGULUS(NOOP);
    }
+   #endif
 
+   /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
+   /// test the assumption when safety is enabled, and instruct the compiler  
+   /// to generate more performant code                                       
+   #if LANGULUS(SAFE) > 0
+      #define AssumeUser(CONDITION, ...) \
+         AssumeUserInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
+      #define AssumeUserWarn(CONDITION, ...) \
+         AssumeUserWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
+      #define AssumeUserAndOptimize(CONDITION, ...) \
+         AssumeUserInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
+         [[assume(CONDITION)]]
+   #else
+      #define AssumeUser(CONDITION, ...)
+      #define AssumeUserWarn(CONDITION, ...)
+      #define AssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
+   #endif
+
+   #if LANGULUS(SAFE) > 1
    /// Developer assumption that works both at runtime and at compile-time    
    /// Tested only if LANGULUS(SAFE) >= 2                                     
    /// Will throw an exception if condition isn't met at runtime              
@@ -178,48 +180,31 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class E = Exception, class...MORE> LANGULUS(INLINED)
+   template<class E = Exception, class...MORE> LANGULUS(NOINLINE)
    constexpr void AssumeDevInner(
       bool condition,
       const char* location = nullptr,
       const char* m1 = "<unknown dev assumption failure>",
       MORE&&...mn
    ) {
-      if constexpr (LANGULUS(SAFE) > 1) {
-         if not consteval {
-            if (not condition) {
-               // Log location first, because message might cause       
-               // additional errors                                     
-               DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
+      if not consteval {
+         if (not condition) {
+            // Log location first, because message might cause          
+            // additional errors                                        
+            DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
 
-               // Log error message                                     
-               Logger::ErrorRaw("Dev assumption failure: ", m1, FWD(mn)...);
+            // Log error message                                        
+            Logger::ErrorRaw("Dev assumption failure: ", m1, FWD(mn)...);
 
-               // Throw                                                 
-               if constexpr (CT::Exception<E>)
-                  throw E {m1, location};
-               else
-                  throw E {m1};
-            }
+            // Throw                                                    
+            if constexpr (CT::Exception<E>)
+               throw E {m1, location};
+            else
+               throw E {m1};
          }
       }
-      else LANGULUS(NOOP);
    }
-
-   /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
-   /// test the assumption when safety is enabled, and instruct the compiler  
-   /// to generate more performant code                                       
-   #if LANGULUS(SAFE) > 1
-      #define AssumeDev(CONDITION, ...) \
-         AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
-      #define AssumeDevAndOptimize(CONDITION, ...) \
-         AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
-         [[assume(CONDITION)]]
-   #else
-      #define AssumeDev(CONDITION, ...)
-      #define AssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
-   #endif
-
+   
    /// Developer assumption at runtime                                        
    /// Tested only if LANGULUS(SAFE) >= 2                                     
    /// Doesn't throw or ruin compilation                                      
@@ -227,27 +212,42 @@ namespace Langulus
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<class...MORE> LANGULUS(INLINED)
-   constexpr void AssumeDevWarn(
+   template<class...MORE> LANGULUS(NOINLINE)
+   constexpr void AssumeDevWarnInner(
       bool condition,
       const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
-      if constexpr (LANGULUS(SAFE) > 1) {
-         if not consteval {
-            if (not condition) {
-               // Log location first, because message might cause       
-               // additional errors                                     
-               DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
+      if not consteval {
+         if (not condition) {
+            // Log location first, because message might cause          
+            // additional errors                                        
+            DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
 
-               // Log error message                                     
-               Logger::WarningRaw("Dev assumption failure: ", m1, FWD(mn)...);
-            }
+            // Log error message                                        
+            Logger::WarningRaw("Dev assumption failure: ", m1, FWD(mn)...);
          }
       }
-      else LANGULUS(NOOP);
    }
+   #endif
+
+   /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
+   /// test the assumption when safety is enabled, and instruct the compiler  
+   /// to generate more performant code                                       
+   #if LANGULUS(SAFE) > 1
+      #define AssumeDev(CONDITION, ...) \
+         AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
+      #define AssumeDevWarn(CONDITION, ...) \
+         AssumeDevWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__);
+      #define AssumeDevAndOptimize(CONDITION, ...) \
+         AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
+         [[assume(CONDITION)]]
+   #else
+      #define AssumeDev(CONDITION, ...)
+      #define AssumeDevWarn(CONDITION, ...)
+      #define AssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
+   #endif
 
    /// Custom assumption that works both at runtime and at compile-time       
    /// Tested only if LANGULUS(SAFE) >= LEVEL                                 
@@ -256,7 +256,7 @@ namespace Langulus
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<unsigned LEVEL, class E = Exception, class...MORE> LANGULUS(INLINED)
+   template<unsigned LEVEL, class E = Exception, class...MORE> LANGULUS(NOINLINE)
    constexpr void Assume(
       bool condition,
       const char* location = nullptr,
@@ -281,7 +281,6 @@ namespace Langulus
             }
          }
       }
-      else LANGULUS(NOOP);
    }
 
    /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
@@ -299,7 +298,7 @@ namespace Langulus
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
-   template<unsigned LEVEL, class...MORE> LANGULUS(INLINED)
+   template<unsigned LEVEL, class...MORE> LANGULUS(NOINLINE)
    constexpr void AssumeWarn(
       bool condition,
       const char* location = nullptr,
@@ -318,10 +317,8 @@ namespace Langulus
             }
          }
       }
-      else LANGULUS(NOOP);
    }
-
-} // namespace Langulus
+}
 
 /// Convenience macro for specifying temporary lazyness                       
 #define TODO() ::Langulus::Assert(false, HERE(), "Unfinished code")
@@ -342,8 +339,8 @@ namespace fmt
          return ctx.begin();
       }
 
-      template<class CONTEXT> LANGULUS(INLINED)
-         auto format(T const& e, CONTEXT& ctx) const {
+      template<class CONTEXT>
+      auto format(T const& e, CONTEXT& ctx) const {
          constexpr auto name = ::Langulus::NameOf<T>();
          #if LANGULUS(DEBUG)
             return format_to(ctx.out(), "{}({} at {})",

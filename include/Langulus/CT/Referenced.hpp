@@ -45,7 +45,7 @@ namespace Langulus
             "this destructor gets called. This is necessary to make sure "
             "that no leaks happen."
          );
-         AssumeDevWarn(mReferences != 1, HERE(),
+         AssumeDevWarn(mReferences != 1,
             "Referenced object destroyed before last "
             "reference was removed - was it on the stack?"
          );
@@ -58,8 +58,11 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       int Reference(int x) has_assumptions {
-         AssumeDev(mReferences or x == 0, "Dead instance resurrection/overkill");
-         AssumeDev(x >= 0 or mReferences >= -x, "Live instance overkill");
+         AssumeDev(mReferences or x == 0,
+            "Dead instance resurrection/overkill");
+         AssumeDev(x >= 0 or mReferences >= -x,
+            "Live instance overkill");
+         
          mReferences += x;
          return mReferences;
       }

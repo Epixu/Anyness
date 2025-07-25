@@ -7,13 +7,10 @@
 ///                                                                           
 #pragma once
 #include "TypeOf.hpp"
+#include "Assume.hpp"
 #include "CT/Derived.hpp"
 #include "CT/POD.hpp"
 #include "CT/Support.hpp"
-
-#if LANGULUS(SAFE) > 1
-   #include "Assume.hpp"
-#endif
 
 
 namespace Langulus::CTTI
