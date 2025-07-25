@@ -379,9 +379,15 @@ SCENARIO("Testing reflection of names", "[rtti]") {
       REQUIRE(meta.GetName() == "MyType* const*");
    }
 
-   REQUIRE_THROWS(MetaDataOf<ConflictingName>());
-   REQUIRE_THROWS(MetaDataOf<ConflictingName*>());
-   REQUIRE_THROWS(MetaDataOf<ConflictingName const*>());
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      REQUIRE_THROWS(MetaDataOf<ConflictingName>());
+      REQUIRE_THROWS(MetaDataOf<ConflictingName*>());
+      REQUIRE_THROWS(MetaDataOf<ConflictingName const*>());
+   #else
+      REQUIRE_NOTHROW(MetaDataOf<ConflictingName>());
+      REQUIRE_NOTHROW(MetaDataOf<ConflictingName*>());
+      REQUIRE_NOTHROW(MetaDataOf<ConflictingName const*>());
+   #endif
    //REQUIRE_THROWS(MetaDataOf<InvalidName1>()); // shouldn't compile
    //REQUIRE_THROWS(MetaDataOf<InvalidName2>()); // shouldn't compile
    //REQUIRE_THROWS(MetaDataOf<InvalidName3>()); // shouldn't compile
