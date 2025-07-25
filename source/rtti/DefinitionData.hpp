@@ -266,9 +266,11 @@ namespace Langulus::RTTI
    public:
       using CTTI_ReflectAs = void;
 
-      template<CT::Dense>
+      template<class T> requires (not ::std::is_pointer_v<T> and not ::std::is_const_v<T>)
       static auto Reflect() -> DefinitionData const*;
-      template<CT::Sparse>
+      template<class T> requires (not ::std::is_pointer_v<T> and ::std::is_const_v<T>)
+      static auto Reflect() -> DefinitionData const*;
+      template<class T> requires (::std::is_pointer_v<T>)
       static auto Reflect() -> DefinitionData const*;
       
       DefinitionData(const Token& cppname) noexcept

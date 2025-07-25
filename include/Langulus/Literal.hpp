@@ -241,11 +241,18 @@ namespace Langulus
       }
 
       /// Get a region of the string                                          
-      template<size_t pos = 0, size_t count = npos> requires (pos <= N)
-      constexpr auto substr() const noexcept {
-         using Selection = Resized<clamp<pos, count, N>()>;
-         Selection result;
-         std::copy(begin() + pos, begin() + pos + Selection::ArraySize, result.begin());
+      constexpr Literal substr(size_t pos = 0, size_t count = npos) const noexcept {
+         Literal result;
+         const size_t s = size();
+         if (pos >= s)
+            return result;
+         
+         if (count > s - pos)
+            count = s - pos;         
+         
+         for (int i = 0; i < count; ++i)
+            result._data[i] = _data[pos + i];
+         result._data[count] = 0;
          return result;
       }
 

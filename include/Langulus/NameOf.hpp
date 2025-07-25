@@ -267,7 +267,7 @@ namespace Langulus::RTTI
             constexpr size_t right = CalibratedTypeRightOffset;
             static_assert(size > left + right, "Invalid type name");
 
-            constexpr auto isolated = name.template substr<left, size - right - left>();
+            constexpr auto isolated = name.substr(left, size - right - left);
             if constexpr (not NORMALIZE) {
                if constexpr (::std::is_function_v<T>)
                   return "<" + isolated + ">";
@@ -275,7 +275,7 @@ namespace Langulus::RTTI
                   return isolated;
             }
             else {
-               constexpr auto normalized = Normalize<isolated>();
+               const auto normalized = Normalize<isolated>();
                if constexpr (::std::is_function_v<T>)
                   return "<" + normalized + ">";
                else
@@ -309,7 +309,7 @@ namespace Langulus::RTTI
             constexpr auto right = CalibratedEnumRightOffset;
             static_assert(size > left + right, "Invalid enum name");
 
-            constexpr auto isolated = name.template substr<left, size - right - left>();
+            constexpr auto isolated = name.substr(left, size - right - left);
             if constexpr (NORMALIZE)
                return Normalize<isolated>();
             else
@@ -369,16 +369,17 @@ namespace Langulus::RTTI
       };
       
       /// Decide buffer size by checking all replacement patterns             
-      ///   @param in - search where?                                         
-      constexpr size_t DecideBufferSize(const Token& in) {
+      ///   @tparam SRC - search where?                                       
+      template<Literal SRC>
+      constexpr size_t DecideBufferSize() {
          size_t result = 0;
          for (const auto& pattern : ReplacePatterns) {
             size_t occurences = 0;
             size_t cookie = 0;
-            while (cookie + pattern.what.size() <= in.size()) {
+            while (cookie + pattern.what.size() <= SRC.size()) {
                size_t scan = 0;
                while (scan < pattern.what.size()) {
-                  if (in[cookie + scan] == pattern.what[scan]) {
+                  if (SRC[cookie + scan] == pattern.what[scan]) {
                      ++scan;
                      continue;
                   }
@@ -386,21 +387,21 @@ namespace Langulus::RTTI
                }
 
                if (scan == pattern.what.size()
-               and IsTransition(in, cookie, cookie + pattern.what.size())) {
+               and IsTransition(SRC, cookie, cookie + pattern.what.size())) {
                   cookie += pattern.what.size();
                   ++occurences;
                }
                else ++cookie;
             }
             
-            const auto candidate = in.size()
+            const auto candidate = SRC.size()
                - occurences * pattern.what.size()
                + occurences * pattern.with.size();
             
             if (candidate > result)
                result = candidate;
          }
-         return result + 1;
+         return (result < SRC.ArraySize ? SRC.ArraySize : result) + 1;
       }
       
       /// Normalize a type/enum/function name                                 
@@ -409,7 +410,7 @@ namespace Langulus::RTTI
       template<Literal SRC>
       consteval auto Normalize() {
          static_assert(IsASCII(SRC), "Literal isn't ASCII");
-         Literal<char, DecideBufferSize(SRC)> result {SRC};
+         Literal<char, DecideBufferSize<SRC>()> result {SRC};
          
          for (const auto& pattern : ReplacePatterns) {
             size_t fill = 0;
@@ -424,7 +425,7 @@ namespace Langulus::RTTI
 
                if (IsTransition(result, curr, curr + pattern.what.size())) {
                   // Replace                                            
-                  for (auto& c : pattern.with)
+                  for (char c : pattern.with)
                      buffer[fill++] = c;
                   prev += pattern.what.size();
                }
