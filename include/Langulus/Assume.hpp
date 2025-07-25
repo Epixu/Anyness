@@ -26,10 +26,15 @@ namespace Langulus
       if not consteval {
          // Log location first, because message might cause             
          // additional errors                                           
-         DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
+         DEBUGGERY(if (location) {
+            Logger::Error("At ");
+            Logger::Append(location);
+         })
 
          // Log error message                                           
-         Logger::ErrorRaw("Assertion failure: ", m1, FWD(mn)...);
+         Logger::Error("Assertion failure: ");
+         Logger::Append(m1);
+         (Logger::Append(FWD(mn)), ...);
 
          // Throw                                                       
          if constexpr (CT::Exception<E>)
@@ -58,10 +63,15 @@ namespace Langulus
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
-            DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
+            DEBUGGERY(if (location) {
+               Logger::Error("At ");
+               Logger::Append(location);
+            })
 
             // Log error message                                        
-            Logger::ErrorRaw("Assertion failure: ", m1, FWD(mn)...);
+            Logger::Error("Assertion failure: ");
+            Logger::Append(m1);
+            (Logger::Append(FWD(mn)), ...);
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -92,10 +102,15 @@ namespace Langulus
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
-            DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
+            DEBUGGERY(if (location) {
+               Logger::Warning("At ");
+               Logger::Append(location);
+            })
 
             // Log error message                                        
-            Logger::WarningRaw("Assertion failure: ", m1, FWD(mn)...);
+            Logger::Warning("Assertion failure: ");
+            Logger::Append(m1);
+            (Logger::Append(FWD(mn)), ...);
          }
       }
    }
@@ -122,10 +137,15 @@ namespace Langulus
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
-            DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
+            DEBUGGERY(if (location) {
+               Logger::Error("At ");
+               Logger::Append(location);
+            })
 
             // Log error message                                        
-            Logger::ErrorRaw("User assumption failure: ", m1, FWD(mn)...);
+            Logger::Error("User assumption failure: ");
+            Logger::Append(m1);
+            (Logger::Append(FWD(mn)), ...);
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -154,23 +174,27 @@ namespace Langulus
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
-            DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
+            DEBUGGERY(if (location) {
+               Logger::Warning("At ");
+               Logger::Append(location);
+            })
 
             // Log error message                                        
-            Logger::WarningRaw("User assumption failure: ", m1, FWD(mn)...);
+            Logger::Warning("User assumption failure: ");
+            Logger::Append(m1);
+            (Logger::Append(FWD(mn)), ...);
          }
       }
    }
-   #endif
 
-   /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
-   /// test the assumption when safety is enabled, and instruct the compiler  
-   /// to generate more performant code                                       
-   #if LANGULUS(SAFE) > 0
       #define LglsAssumeUser(CONDITION, ...) \
          AssumeUserInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
       #define LglsAssumeUserWarn(CONDITION, ...) \
          AssumeUserWarnInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
+   
+      /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
+      /// test the assumption when safety is enabled, and instruct the        
+      /// compiler to generate more performant code                           
       #define LglsAssumeUserAndOptimize(CONDITION, ...) \
          AssumeUserInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
          [[assume(CONDITION)]]
@@ -199,10 +223,15 @@ namespace Langulus
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
-            DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
+            DEBUGGERY(if (location) {
+               Logger::Error("At ");
+               Logger::Append(location);
+            })
 
             // Log error message                                        
-            Logger::ErrorRaw("Dev assumption failure: ", m1, FWD(mn)...);
+            Logger::Error("Dev assumption failure: ");
+            Logger::Append(m1);
+            (Logger::Append(FWD(mn)), ...);
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -231,23 +260,27 @@ namespace Langulus
          if (not condition) {
             // Log location first, because message might cause          
             // additional errors                                        
-            DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
+            DEBUGGERY(if (location) {
+               Logger::Warning("At ");
+               Logger::Append(location);
+            })
 
             // Log error message                                        
-            Logger::WarningRaw("Dev assumption failure: ", m1, FWD(mn)...);
+            Logger::Warning("Dev assumption failure: ");
+            Logger::Append(m1);
+            (Logger::Append(FWD(mn)), ...);
          }
       }
    }
-   #endif
 
-   /// Leverages C++23's [[assume(condition)]] attribute, in order to both    
-   /// test the assumption when safety is enabled, and instruct the compiler  
-   /// to generate more performant code                                       
-   #if LANGULUS(SAFE) > 1
       #define LglsAssumeDev(CONDITION, ...) \
          AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
       #define LglsAssumeDevWarn(CONDITION, ...) \
          AssumeDevWarnInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
+   
+      /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
+      /// test the assumption when safety is enabled, and instruct the        
+      /// compiler to generate more performant code                           
       #define LglsAssumeDevAndOptimize(CONDITION, ...) \
          AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
          [[assume(CONDITION)]]
@@ -276,10 +309,15 @@ namespace Langulus
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
-               DEBUGGERY(if (location) Logger::ErrorRaw("At ", location));
+               DEBUGGERY(if (location) {
+                  Logger::Error("At ");
+                  Logger::Append(location);
+               })
 
                // Log error message                                     
-               Logger::ErrorRaw("Assumption level ", LEVEL, " failure: ", m1, FWD(mn)...);
+               Logger::Error("Assumption level ", LEVEL, " failure: ");
+               Logger::Append(m1);
+               (Logger::Append(FWD(mn)), ...);
 
                // Throw                                                 
                if constexpr (CT::Exception<E>)
@@ -320,10 +358,15 @@ namespace Langulus
             if (not condition) {
                // Log location first, because message might cause       
                // additional errors                                     
-               DEBUGGERY(if (location) Logger::WarningRaw("At ", location));
+               DEBUGGERY(if (location) {
+                  Logger::Warning("At ");
+                  Logger::Append(location);
+               })
 
                // Log error message                                     
-               Logger::WarningRaw("Assumption level ", LEVEL, " failure: ", m1, FWD(mn)...);
+               Logger::Warning("Assumption level ", LEVEL, " failure: ");
+               Logger::Append(m1);
+               (Logger::Append(FWD(mn)), ...);
             }
          }
       }

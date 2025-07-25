@@ -29,23 +29,21 @@ SCENARIO("Testing whether assumptions throw properly, in both constant-evaluated
          REQUIRE_NOTHROW(LglsAssertWarn(false, "Message"));
          REQUIRE_NOTHROW(LglsAssertWarn(true, "Message"));
 
-         if constexpr (LANGULUS(SAFE) > 0) {
+         if constexpr (LANGULUS(SAFE) > 0)
             REQUIRE_THROWS(LglsAssumeUser(false, "Message"));
-         }
-         else {
+         else
             REQUIRE_NOTHROW(LglsAssumeUser(false, "Message"));
-         }
+         
          REQUIRE_NOTHROW(LglsAssumeUser(true, "Message"));
 
          REQUIRE_NOTHROW(LglsAssumeUserWarn(false, "Message"));
          REQUIRE_NOTHROW(LglsAssumeUserWarn(true, "Message"));
 
-         if constexpr (LANGULUS(SAFE) > 1) {
+         if constexpr (LANGULUS(SAFE) > 1)
             REQUIRE_THROWS(LglsAssumeDev(false, "Message"));
-         }
-         else {
+         else
             REQUIRE_NOTHROW(LglsAssumeDev(false, "Message"));
-         }
+         
          REQUIRE_NOTHROW(LglsAssumeDev(true, "Message"));
 
          REQUIRE_NOTHROW(LglsAssumeDevWarn(false, "Message"));
