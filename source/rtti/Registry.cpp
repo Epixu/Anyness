@@ -31,27 +31,7 @@ namespace Langulus::RTTI
    Registry Instance {};
 
    /// Database destruction                                                   
-   Registry::~Registry() {
-      mFileDatabase.clear();
-      mMetaAmbiguous.clear();
-      mMetaVerbsByID.clear();
-      mMetaVerbsByToken.clear();
-      mMetaTagsByID.clear();
-      mMetaTagsByToken.clear();
-      mMetaConstantsByID.clear();
-      mMetaConstantsByToken.clear();
-      mMetaDataByID.clear();
-      mMetaDataByToken.clear();
-
-      for (auto& meta : ::std::ranges::views::values(mMetaVerbsByCppName)) {
-         meta->mOtherBoundaries.clear();
-         meta->mAble.clear();
-      }
-      
-      for (auto& meta : ::std::ranges::views::values(mMetaDataByCppName)) {
-         meta->mOtherBoundaries.clear();
-      }
-   }
+   Registry::~Registry() {}
    
    /// Common way to extract something from the registry by ID                
    ///   @param where - where to search in                                    

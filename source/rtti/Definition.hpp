@@ -76,14 +76,14 @@ namespace Langulus::RTTI::Inner
    /// a template <>, and skip forward to that                                
    ///   @param token - the token to scan                                     
    ///   @return the last token                                               
-   constexpr Token ToLastToken(const Token& token) noexcept {
+   constexpr ::std::string ToLastToken(const Token& token) noexcept {
       size_t depth = 0;
       for (size_t i = token.size() - 1; i < token.size(); --i) {
          switch (token[i]) {
          case ':':
             // If no depth, then we found it                            
             if (not depth)
-               return token.substr(i + 1, token.size() - i - 1);
+               return ::std::string{token.substr(i + 1, token.size() - i - 1)};
             break;
          case '>':
             // Open template scope                                      
@@ -98,7 +98,7 @@ namespace Langulus::RTTI::Inner
             break;
          }
       }
-      return token;
+      return ::std::string{token};
    }
 
    ///                                                                        

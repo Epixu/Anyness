@@ -42,7 +42,7 @@ namespace Langulus::RTTI
       template<class T>
       using MetaMap  = ::std::unordered_map<::std::string, T>;
       template<class T>
-      using AliasMap = ::std::unordered_map<Token, T>;
+      using AliasMap = ::std::unordered_map<::std::string, T>;
       using MetaSet  = ::std::unordered_set<Inner::Definition const*>;
 
       // Definitions indexed by ID                                      
