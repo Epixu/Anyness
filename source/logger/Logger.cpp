@@ -140,18 +140,15 @@ void State::NewLine() const noexcept {
    fmt::print("\n");
    fmt::print("{}{}", GetSimpleTime(), mIntentStyle[GetCurrentIntent()].prefix);
 
-   if (mTabulator) {
-      auto tabs = mTabulator;
-      while (tabs) {
-         fmt::print("{}", mTabString);
-         --tabs;
-      }
-   }
-
    if (mStyleStack.empty())
       mStyleStack.push(GetCurrentStyle());
-
    Detail::FmtPrintStyle(mStyleStack.top());
+
+   auto tabs = mTabulator;
+   while (tabs) {
+      fmt::print("{}", mTabString);
+      --tabs;
+   }
 
    // Dispatch to duplicators                                           
    for (auto attachment : mDuplicators)

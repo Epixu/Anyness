@@ -236,7 +236,7 @@ namespace Langulus::Logger
       // Tabulator color and formatting customization                   
       Intent mDefaultIntent = DefaultIntent;
       Style  mDefaultStyle = DefaultStyle;
-      ::std::string_view mTabString = "|  ";
+      ::std::string_view mTabString = "▐  ";
 
       size_t GetTabs() const noexcept { return mTabulator; }
 

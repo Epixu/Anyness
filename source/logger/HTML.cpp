@@ -91,16 +91,13 @@ void ToHTML::NewLine() const noexcept {
    mFile << "</span></p><p>\n";
    mFile << GlobalState.GetSimpleTime();
    Write(GlobalState.mIntentStyle[GlobalState.GetCurrentIntent()].prefix);
+   Write(GlobalState.GetCurrentStyle());
 
    auto tabs = GlobalState.GetTabs();
-   if (tabs) {
-      while (tabs) {
-         Write(GlobalState.mTabString);
-         --tabs;
-      }
+   while (tabs) {
+      Write(GlobalState.mTabString);
+      --tabs;
    }
-
-   Write(GlobalState.GetCurrentStyle());
 }
 
 /// Clear the log file                                                        
