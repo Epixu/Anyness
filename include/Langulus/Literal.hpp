@@ -49,7 +49,6 @@ namespace Langulus
       template<class...T>
       concept LiteralUndefined = Literal<T...>
           and (::std::same_as<::std::remove_cv_t<typename T::value_type>, Unsupported> and ...);
-      
    }
 
    using Token = ::std::string_view;

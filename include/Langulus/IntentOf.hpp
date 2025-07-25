@@ -7,26 +7,26 @@
 ///                                                                           
 #pragma once
 #include "TypeOf.hpp"
-#include "Assume.hpp"
 #include "CT/Derived.hpp"
 #include "CT/POD.hpp"
 #include "CT/Support.hpp"
 
+#if LANGULUS(SAFE) > 1
+   #include "Assume.hpp"
+#endif
+
 
 namespace Langulus::CTTI
 {
-
    /// Affects CT::Intent                                                     
    template<class T>
    struct Intent {
       static constexpr bool Enabled = false;
    };
-   
-} // namespace Langulus::CTTI
+}
 
 namespace Langulus::CT
 {
-
    /// Check if all T are sheddable intents                                   
    template<class...T>
    concept Intent = Inner::CheckSize<T...>() and (
@@ -95,8 +95,7 @@ namespace Langulus::CT
    template<class...T>
    concept Cloned = Inner::CheckSize<T...>()
        and ((DeepIntent<Deref<T>> and Decay<T>::Is(true, false)) and ...);
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus
 {
@@ -125,7 +124,6 @@ namespace Langulus
 
    namespace Inner
    {
-
       /// Helper base that defines intent properties                          
       ///   @tparam DEPTH - the depth of the intent, use -1 for infinite      
       ///   @tparam KEEP - does the intent practice ownership                 
@@ -150,8 +148,7 @@ namespace Langulus
             return KEEP == keep and MOVE == move;
          }
       };
-
-   } // namespace Langulus::Inner
+   }
 
 
    ///                                                                        

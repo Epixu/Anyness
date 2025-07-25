@@ -74,7 +74,7 @@ namespace Langulus::RTTI
          auto lhsT = static_cast<void**>(lhs);
          return HashOf<true>(*lhsT);
       };
-}
+   }
 
    /// Reflect or return an already reflected data                            
    ///   @attention when making a shared library and reflecting your types    
@@ -83,7 +83,7 @@ namespace Langulus::RTTI
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the type to reflect                                      
-   template<class T>
+   template<CT::Dense T>
    auto DefinitionData::Reflect() -> DefinitionData const* {
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete type - "
@@ -184,52 +184,8 @@ namespace Langulus::RTTI
          definition.mDecvqAll  = &definition;
       }
 
-      if constexpr (CT::Sparse<T>) {
-         using DenserT = Deptr<T>;
-
-         if constexpr (CT::Complete<DenserT>) {
-            // Reflect the denser type                                  
-            definition.mDeptr = Reflect<CT::ReflectedAs<DenserT>>();
-            auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
-            deptr->mAddPtr = definition.mDecvqOnce;
-
-            #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-               // Propagate ID only if there's exactly one level of     
-               // unqualifided indirection, because that will be encoded
-               // in the packed meta data pointer perfectly - otherwise 
-               // we need a new ID                                      
-               if constexpr (CT::Dense<DenserT> and not CT::Constant<DenserT>)
-                  definition.mID = deptr->mID;
-            #endif
-         }
-         else {
-            // An incomplete sparse type always has mDeptr of 1         
-            definition.mDeptr = reinterpret_cast<DefinitionData*>(intptr_t {1});
-         }
-
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            if constexpr (CT::Sparse<DenserT>
-            or not CT::Complete<DenserT> or CT::Constant<DenserT>) {
-               // Multiple indirections always result in a unique ID    
-               // Incomplete types are always considered an indirection 
-               // A constant denser type (at any level of indirection)  
-               // also requires a unique ID                             
-               auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
-               decvq->mID = Instance.ReserveDataID(decvq);
-               decvq->mPtrIncludedInID = true;
-               IF_SAFE(AssumeDev(not definition.mDedicatedID,
-                  "ID has already been reserved"));
-               IF_SAFE(definition.mDedicatedID = true);
-
-               if constexpr (CT::Constant<T>) {
-                  definition.mID = decvq->mID;
-                  definition.mPtrIncludedInID = true;
-               }
-            }
-         #endif
-      }
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      else if constexpr (CT::Convoluted<T>) {
+      if constexpr (CT::Convoluted<T>) {
          // Const/volatile dense encountered, propagate ID              
          definition.mID = definition.mDecvqOnce->mID;
       }
@@ -261,131 +217,81 @@ namespace Langulus::RTTI
       // @note these are allowed even if T is constant                  
       if constexpr (::std::same_as<T, DTAll>) {
          if constexpr (CT::Defaultable<DTAll>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mDefaultConstructor
-                  = Inner::SparseDefaultConstructor;
-            }
-            else {
-               // Generate a default constructor                        
-               definition.mCurrentBoundary.mDefaultConstructor =
-                  [](void* at) noexcept(noexcept(DTAll {})) {
-                     auto atT = static_cast<DTAll*>(at);
-                     new (atT) DTAll {};
-                  };
-            }
+            // Generate a default constructor                        
+            definition.mCurrentBoundary.mDefaultConstructor =
+               [](void* at) noexcept(noexcept(DTAll {})) {
+                  auto atT = static_cast<DTAll*>(at);
+                  new (atT) DTAll {};
+               };
          }
 
          if constexpr (CT::CopyConstructible<DTAll>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mCopyConstructor
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
-               // Generate a copy-constructor                           
-               definition.mCurrentBoundary.mCopyConstructor =
-                  [](void* from, void* to) {
-                     auto fromT = static_cast<const DTAll*>(from);
-                     auto toT = static_cast<DTAll*>(to);
-                     IntentNew(toT, Copy(*fromT));
-                  };
-            }
+            // Generate a copy-constructor                           
+            definition.mCurrentBoundary.mCopyConstructor =
+               [](void* from, void* to) {
+                  auto fromT = static_cast<const DTAll*>(from);
+                  auto toT = static_cast<DTAll*>(to);
+                  IntentNew(toT, Copy(*fromT));
+               };
          }
             
          if constexpr (CT::ReferConstructible<DTAll>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mReferConstructor
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
-               // Generate a refer-constructor                          
-               definition.mCurrentBoundary.mReferConstructor =
-                  [](void* from, void* to) {
-                     auto fromT = static_cast<const DTAll*>(from);
-                     auto toT = static_cast<DTAll*>(to);
-                     IntentNew(toT, Refer(*fromT));
-                  };
-            }
+            // Generate a refer-constructor                          
+            definition.mCurrentBoundary.mReferConstructor =
+               [](void* from, void* to) {
+                  auto fromT = static_cast<const DTAll*>(from);
+                  auto toT = static_cast<DTAll*>(to);
+                  IntentNew(toT, Refer(*fromT));
+               };
          }
             
          if constexpr (CT::CloneConstructible<DTAll>) {
-            if constexpr (CT::Sparse<T> and CT::Complete<Decay<T>>) {
-               // Always use the origin cloning routine                 
-               definition.mCurrentBoundary.mCloneConstructor
-                  = definition.mOrigin->mCurrentBoundary.mCloneConstructor;
-            }
-            else {
-               // Generate a clone-constructor                          
-               definition.mCurrentBoundary.mCloneConstructor =
-                  [](void* from, void* to) {
-                     auto fromT = static_cast<const DTAll*>(from);
-                     auto toT = static_cast<DTAll*>(to);
-                     IntentNew(toT, Clone(*fromT));
-                  };
-            }
+            // Generate a clone-constructor                          
+            definition.mCurrentBoundary.mCloneConstructor =
+               [](void* from, void* to) {
+                  auto fromT = static_cast<const DTAll*>(from);
+                  auto toT = static_cast<DTAll*>(to);
+                  IntentNew(toT, Clone(*fromT));
+               };
          }
 
          if constexpr (CT::DisownConstructible<DTAll>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mDisownConstructor
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
-               // Generate a disown-constructor                         
-               definition.mCurrentBoundary.mDisownConstructor =
-                  [](void* from, void* to) {
-                     auto fromT = static_cast<const DTAll*>(from);
-                     auto toT = static_cast<DTAll*>(to);
-                     IntentNew(toT, Disown(*fromT));
-                  };
-            }
+            // Generate a disown-constructor                         
+            definition.mCurrentBoundary.mDisownConstructor =
+               [](void* from, void* to) {
+                  auto fromT = static_cast<const DTAll*>(from);
+                  auto toT = static_cast<DTAll*>(to);
+                  IntentNew(toT, Disown(*fromT));
+               };
          }
 
          if constexpr (CT::MoveConstructible<DTAll>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mMoveConstructor
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
-               // Generate a move-constructor                           
-               definition.mCurrentBoundary.mMoveConstructor =
-                  [](void* from, void* to) {
-                     auto fromT = static_cast<DTAll*>(from);
-                     auto toT = static_cast<DTAll*>(to);
-                     IntentNew(toT, Move(*fromT));
-                  };
-            }
+            // Generate a move-constructor                           
+            definition.mCurrentBoundary.mMoveConstructor =
+               [](void* from, void* to) {
+                  auto fromT = static_cast<DTAll*>(from);
+                  auto toT = static_cast<DTAll*>(to);
+                  IntentNew(toT, Move(*fromT));
+               };
          }
 
          if constexpr (CT::AbandonConstructible<DTAll>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mAbandonConstructor
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
-               // Generate a abandon-constructor                        
-               definition.mCurrentBoundary.mAbandonConstructor =
-                  [](void* from, void* to) {
-                     auto fromT = static_cast<DTAll*>(from);
-                     auto toT = static_cast<DTAll*>(to);
-                     IntentNew(toT, Abandon(*fromT));
-                  };
-            }
+            // Generate a abandon-constructor                        
+            definition.mCurrentBoundary.mAbandonConstructor =
+               [](void* from, void* to) {
+                  auto fromT = static_cast<DTAll*>(from);
+                  auto toT = static_cast<DTAll*>(to);
+                  IntentNew(toT, Abandon(*fromT));
+               };
          }
       
          if constexpr (CT::Destroyable<DTAll>) {
-            if constexpr (CT::Sparse<T> and CT::Complete<Decay<T>>) {
-               // Always use the origin destructor                      
-               definition.mCurrentBoundary.mDestructor
-                  = definition.mOrigin->mCurrentBoundary.mDestructor;
-            }
-            else {
-               // Generate a destructor                                 
-               definition.mCurrentBoundary.mDestructor =
-                  [](void* at) {
-                     auto atT = static_cast<DTAll*>(at);
-                     atT->~DTAll();
-                  };
-            }
+            // Generate a destructor                                 
+            definition.mCurrentBoundary.mDestructor =
+               [](void* at) {
+                  auto atT = static_cast<DTAll*>(at);
+                  atT->~DTAll();
+               };
          }
       }
       else {
@@ -414,11 +320,7 @@ namespace Langulus::RTTI
       // @note allowed only if T is mutable                             
       if constexpr (CT::Mutable<T>) {
          if constexpr (CT::CopyAssignable<T>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mCopyAssigner
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
+            
                // Generate a copy-assigner                              
                definition.mCurrentBoundary.mCopyAssigner =
                   [](void* from, void* to) {
@@ -426,15 +328,10 @@ namespace Langulus::RTTI
                      auto toT = static_cast<T*>(to);
                      IntentAssign(*toT, Copy(*fromT));
                   };
-            }
          }
       
          if constexpr (CT::ReferAssignable<T>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mReferAssigner
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
+            
                // Generate a refer-assigner                             
                definition.mCurrentBoundary.mReferAssigner =
                   [](void* from, void* to) {
@@ -442,15 +339,10 @@ namespace Langulus::RTTI
                      auto toT = static_cast<T*>(to);
                      IntentAssign(*toT, Refer(*fromT));
                   };
-            }
          }
 
          if constexpr (CT::DisownAssignable<T>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mDisownAssigner
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
+            
                // Generate a disown-assigner                            
                definition.mCurrentBoundary.mDisownAssigner =
                   [](void* from, void* to) {
@@ -458,16 +350,10 @@ namespace Langulus::RTTI
                      auto toT = static_cast<T*>(to);
                      IntentAssign(*toT, Disown(*fromT));
                   };
-            }
          }
             
          if constexpr (CT::CloneAssignable<T>) {
-            if constexpr (CT::Sparse<T> and CT::Complete<Decay<T>>) {
-               // Always use the origin cloning routine                 
-               definition.mCurrentBoundary.mCloneAssigner
-                  = definition.mOrigin->mCurrentBoundary.mCloneAssigner;
-            }
-            else {
+            
                // Generate a clone-assigner                             
                definition.mCurrentBoundary.mCloneAssigner =
                   [](void* from, void* to) {
@@ -475,15 +361,10 @@ namespace Langulus::RTTI
                      auto toT = static_cast<T*>(to);
                      IntentAssign(*toT, Clone(*fromT));
                   };
-            }
          }
 
          if constexpr (CT::MoveAssignable<T>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mMoveAssigner
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
+            
                // Generate a move-assigner                              
                definition.mCurrentBoundary.mMoveAssigner =
                   [](void* from, void* to) {
@@ -491,15 +372,10 @@ namespace Langulus::RTTI
                      auto toT = static_cast<T*>(to);
                      IntentAssign(*toT, Move(*fromT));
                   };
-            }
          }
 
          if constexpr (CT::AbandonAssignable<T>) {
-            if constexpr (::std::is_pointer_v<T>) {
-               definition.mCurrentBoundary.mAbandonAssigner
-                  = Inner::SparseCopyConstructor;
-            }
-            else {
+            
                // Generate an abandon-assigner                          
                definition.mCurrentBoundary.mAbandonAssigner =
                   [](void* from, void* to) {
@@ -507,7 +383,6 @@ namespace Langulus::RTTI
                      auto toT = static_cast<T*>(to);
                      IntentAssign(*toT, Abandon(*fromT));
                   };
-            }
          }
       }
 
@@ -515,18 +390,13 @@ namespace Langulus::RTTI
       //                                                                
       // Other utilities                                                
       if constexpr (CT::Hashable<T>) {
-         if constexpr (::std::is_pointer_v<T>) {
-            definition.mCurrentBoundary.mHasher
-               = Inner::SparseHash;
-         }
-         else {
+         
             // Generate a hashing function                              
             definition.mHasGetHashMethod = CT::HasGetHashMethod<T>;
             definition.mCurrentBoundary.mHasher = [](void* at) {
                auto self = static_cast<T*>(at);
                return HashOf<true>(*self);
             };
-         }
       }
 
       if constexpr (CT::Referenced<T>) {
@@ -539,13 +409,7 @@ namespace Langulus::RTTI
       }
 
       if constexpr (CT::Comparable<T, T>) {
-         if constexpr (::std::is_pointer_v<T>) {
-            // Pointers are either the same or not - not                
-            // ordered for security reasons                             
-            definition.mCurrentBoundary.mComparer
-               = Inner::SparseCompare;
-         }
-         else {
+         
             // Generate a three-way comparison function                 
             definition.mCurrentBoundary.mComparer =
                [](void* t1, void* t2) -> Compared {
@@ -590,7 +454,6 @@ namespace Langulus::RTTI
                      return Compared::Greater;
                   }
                };
-         }
       }
 
       if constexpr (CT::Resolvable<T>) {
@@ -735,6 +598,350 @@ namespace Langulus::RTTI
          definition.mCurrentBoundary.mMembers
             = definition.mDecvqAll->mCurrentBoundary.mMembers;
       }
+      
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         VERBOSE(
+            Logger::Cyan, "Data ", definition.mNameOf,
+            " (ID: ", definition.mID, ") ", Logger::Green,
+            "registered from ", (Boundary?Boundary:"MAIN")
+         );
+      #else
+         VERBOSE(
+            Logger::Cyan, "Data ", definition.mNameOf,
+            Logger::Green, " reflected"
+         );
+      #endif
+      
+      return &definition;
+   }
+   
+   /// Reflect or return an already reflected data                            
+   ///   @attention when making a shared library and reflecting your types    
+   ///      at library initialization, it is recommended you mark all other   
+   ///      relevant instantiations of this function as extern template, to   
+   ///      save on a lot of compiler resources:                              
+   ///      https://stackoverflow.com/questions/8130602                       
+   ///   @tparam T - the type to reflect                                      
+   template<CT::Sparse T>
+   auto DefinitionData::Reflect() -> DefinitionData const* {
+      static_assert(not CT::Array<T>,
+         "Reflecting a bounded array is forbidden to avoid bloat");
+      static_assert(not CT::Volatile<T>,
+         "Can't reflect volatile type, use Devq before reflection");
+      static_assert(not CT::Reference<T>,
+         "Can't reflect reference type, use Deref before reflection");
+      static_assert(CT::Reflectable<T>,
+         "Can't reflect data that was explicitly marked unreflectable");
+      static_assert(CT::Exact<CT::ReflectedAs<T>, T>,
+         "Data is marked to be reflected as something else, "
+         "make sure this is respected before reaching this function");
+      static_assert(not ::std::is_function_v<T>,
+         "Can't reflect this function signature - "
+         "make sure you're using a pointer to it instead");
+
+      constexpr auto cppname = CppNameOf<T>();
+      constexpr auto token = NameOf<T>();
+      static_assert(token != "", "Invalid data token is not allowed - "
+         "you have equipped your type (or its base) with an empty CTTI_Named");
+
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         // Try to get an already existing definition - the data might  
+         // have been reflected previously in another shared library    
+         DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
+         if (meta and meta->IsInRelevantBoundary())
+            return meta;
+
+         DefinitionData& definition = meta
+            ? const_cast<DefinitionData&>(*meta)
+            : Instance.RegisterData(cppname, token);
+      #else
+         // There's no centralized registry when MANAGED_REFLECTION is  
+         // disabled, so all we can do is keep a definition on the stack
+         // for each translation unit, and rely on runtime checks to    
+         // make sure that definitions match between those.             
+         static constinit std::optional<DefinitionData> s_definition;
+         if (s_definition.has_value())
+            return &s_definition.value();
+
+         DefinitionData& definition = s_definition.emplace(cppname);
+         definition.mNameOf = token;
+         definition.mNameOf[0] = ::std::toupper(token[0]);
+      #endif
+      
+      //                                                                
+      // If this is reached, then data is not defined yet from the      
+      // viewpoint of the current boundary                              
+      definition.ReflectCommon<T>();
+      definition.mSize      = sizeof(T);
+      definition.mAlign     = alignof(T);
+      definition.mConst     = CT::Constant<T>;
+      definition.mDeep      = CT::Deep<T>;
+      definition.mPOD       = true;
+      definition.mNullable  = true;
+      definition.mAbstract  = false;
+
+      // Reflect the origin type                                        
+      if constexpr (CT::Decayed<T>)
+         definition.mOrigin = &definition;
+      else if constexpr (CT::Complete<Decay<T>>)
+         definition.mOrigin = Reflect<CT::ReflectedAs<Decay<T>>>();
+
+      // Reflect the dequalified types and generate/propagate IDs       
+      using DTOnce = Decvq<T>;
+      using DTAll  = DecvqAll<T>;
+
+      if constexpr (not ::std::same_as<T, DTAll>) {
+         // T has qualifiers                                            
+         definition.mDecvqOnce = Reflect<DTOnce>();
+         definition.mDecvqAll  = Reflect<DTAll>();
+         
+         if constexpr (CT::Constant<T>) {
+            auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
+            decvq->mAddConst = &definition;
+         }
+      }
+      else {
+         // T has no qualifiers                                         
+         definition.mDecvqOnce = &definition;
+         definition.mDecvqAll  = &definition;
+      }
+
+         using DenserT = Deptr<T>;
+
+         if constexpr (CT::Complete<DenserT>) {
+            // Reflect the denser type                                  
+            definition.mDeptr = Reflect<CT::ReflectedAs<DenserT>>();
+            auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
+            deptr->mAddPtr = definition.mDecvqOnce;
+
+            #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+               // Propagate ID only if there's exactly one level of     
+               // unqualifided indirection, because that will be encoded
+               // in the packed meta data pointer perfectly - otherwise 
+               // we need a new ID                                      
+               if constexpr (CT::Dense<DenserT> and not CT::Constant<DenserT>)
+                  definition.mID = deptr->mID;
+            #endif
+         }
+         else {
+            // An incomplete sparse type always has mDeptr of 1         
+            definition.mDeptr = reinterpret_cast<DefinitionData*>(intptr_t {1});
+         }
+
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            if constexpr (CT::Sparse<DenserT>
+            or not CT::Complete<DenserT> or CT::Constant<DenserT>) {
+               // Multiple indirections always result in a unique ID    
+               // Incomplete types are always considered an indirection 
+               // A constant denser type (at any level of indirection)  
+               // also requires a unique ID                             
+               auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
+               decvq->mID = Instance.ReserveDataID(decvq);
+               decvq->mPtrIncludedInID = true;
+               IF_SAFE(AssumeDev(not definition.mDedicatedID,
+                  "ID has already been reserved"));
+               IF_SAFE(definition.mDedicatedID = true);
+
+               if constexpr (CT::Constant<T>) {
+                  definition.mID = decvq->mID;
+                  definition.mPtrIncludedInID = true;
+               }
+            }
+         #endif
+
+      //                                                                
+      // Constructor reflections                                        
+      // @note these are allowed even if T is constant                  
+      if constexpr (::std::same_as<T, DTAll>) {
+         //if constexpr (CT::Defaultable<DTAll>) {
+            
+               definition.mCurrentBoundary.mDefaultConstructor
+                  = Inner::SparseDefaultConstructor;
+            
+         //}
+
+         //if constexpr (CT::CopyConstructible<DTAll>) {
+            
+               definition.mCurrentBoundary.mCopyConstructor
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+            
+         //if constexpr (CT::ReferConstructible<DTAll>) {
+            
+               definition.mCurrentBoundary.mReferConstructor
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+            
+         if constexpr (CT::CloneConstructible<DTAll>) {
+            if constexpr (CT::Complete<Decay<T>>) {
+               // Always use the origin cloning routine                 
+               definition.mCurrentBoundary.mCloneConstructor
+                  = definition.mOrigin->mCurrentBoundary.mCloneConstructor;
+            }
+            
+         }
+
+         //if constexpr (CT::DisownConstructible<DTAll>) {
+            
+               definition.mCurrentBoundary.mDisownConstructor
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+
+         //if constexpr (CT::MoveConstructible<DTAll>) {
+            
+               definition.mCurrentBoundary.mMoveConstructor
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+
+         //if constexpr (CT::AbandonConstructible<DTAll>) {
+            
+               definition.mCurrentBoundary.mAbandonConstructor
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+      
+         //if constexpr (CT::Destroyable<DTAll>) {
+            if constexpr (CT::Complete<Decay<T>>) {
+               // Always use the origin destructor                      
+               definition.mCurrentBoundary.mDestructor
+                  = definition.mOrigin->mCurrentBoundary.mDestructor;
+            }
+            
+         //}
+      }
+      else {
+         // Reuse the same lambdas as the dequalified reflection        
+         // (template bloat reduction)                                  
+         definition.mCurrentBoundary.mDefaultConstructor
+            = definition.mDecvqAll->mCurrentBoundary.mDefaultConstructor;
+         definition.mCurrentBoundary.mCopyConstructor
+            = definition.mDecvqAll->mCurrentBoundary.mCopyConstructor;
+         definition.mCurrentBoundary.mReferConstructor
+            = definition.mDecvqAll->mCurrentBoundary.mReferConstructor;
+         definition.mCurrentBoundary.mCloneConstructor
+            = definition.mDecvqAll->mCurrentBoundary.mCloneConstructor;
+         definition.mCurrentBoundary.mDisownConstructor
+            = definition.mDecvqAll->mCurrentBoundary.mDisownConstructor;
+         definition.mCurrentBoundary.mMoveConstructor
+            = definition.mDecvqAll->mCurrentBoundary.mMoveConstructor;
+         definition.mCurrentBoundary.mAbandonConstructor
+            = definition.mDecvqAll->mCurrentBoundary.mAbandonConstructor;
+         definition.mCurrentBoundary.mDestructor
+            = definition.mDecvqAll->mCurrentBoundary.mDestructor;
+      }
+
+      //                                                                
+      // Assignment reflections                                         
+      // @note allowed only if T is mutable                             
+      if constexpr (CT::Mutable<T>) {
+         //if constexpr (CT::CopyAssignable<T>) {
+            
+               definition.mCurrentBoundary.mCopyAssigner
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+      
+         //if constexpr (CT::ReferAssignable<T>) {
+            
+               definition.mCurrentBoundary.mReferAssigner
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+
+         //if constexpr (CT::DisownAssignable<T>) {
+            
+               definition.mCurrentBoundary.mDisownAssigner
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+            
+         if constexpr (CT::CloneAssignable<T>) {
+            if constexpr (CT::Complete<Decay<T>>) {
+               // Always use the origin cloning routine                 
+               definition.mCurrentBoundary.mCloneAssigner
+                  = definition.mOrigin->mCurrentBoundary.mCloneAssigner;
+            }
+            
+         }
+
+         //if constexpr (CT::MoveAssignable<T>) {
+            
+               definition.mCurrentBoundary.mMoveAssigner
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+
+         //if constexpr (CT::AbandonAssignable<T>) {
+            
+               definition.mCurrentBoundary.mAbandonAssigner
+                  = Inner::SparseCopyConstructor;
+            
+         //}
+      }
+
+
+      //                                                                
+      // Other utilities                                                
+      //if constexpr (CT::Hashable<T>) {
+         
+            definition.mCurrentBoundary.mHasher
+               = Inner::SparseHash;
+         
+      //}
+
+      //if constexpr (CT::Comparable<T, T>) {
+         
+            // Pointers are either the same or not - not                
+            // ordered for security reasons                             
+            definition.mCurrentBoundary.mComparer
+               = Inner::SparseCompare;
+         
+      //}
+
+      // Reflect the minimal allocation in bytes                        
+      definition.mMinimalAllocation = CT::GetMinAlloc<T>();
+
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         // Reflect pooling properties                                  
+         definition.mPoolTactic = CT::GetPoolTactic<T>();
+         definition.mMinimalPoolSize = CT::GetMinPool<T>();
+
+         // Make sure that types registered from an external shared     
+         // library are always pooled by type, so that we're able to    
+         // unregister them and free their dedicated pools when the     
+         // shared library is unloaded                                  
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            if (Boundary)
+               definition.mPoolTactic = PoolTactic::Type;
+         #endif
+      #endif
+      
+      // Calculate the allocation table                                 
+      constexpr auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
+      for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
+         const size_t threshold = size_t {1} << bit;
+         const size_t elements = threshold / sizeof(T);
+         definition.mAllocationTable[bit] = minElements > elements
+            ? minElements : elements;
+      }
+
+         definition.mCurrentBoundary.mBases
+            = definition.mDecvqAll->mCurrentBoundary.mBases;
+
+         if (definition.mDeptr > reinterpret_cast<DefinitionData*>(intptr_t {1})) {
+            definition.mCurrentBoundary.mVerbs
+               = definition.mDeptr->mCurrentBoundary.mVerbs;
+         }
+
+         definition.mCurrentBoundary.mMorphismsTo
+            = definition.mDecvqAll->mCurrentBoundary.mMorphismsTo;
+
+         definition.mCurrentBoundary.mMembers
+            = definition.mDecvqAll->mCurrentBoundary.mMembers;
       
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          VERBOSE(

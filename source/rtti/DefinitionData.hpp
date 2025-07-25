@@ -266,7 +266,9 @@ namespace Langulus::RTTI
    public:
       using CTTI_ReflectAs = void;
 
-      template<class>
+      template<CT::Dense>
+      static auto Reflect() -> DefinitionData const*;
+      template<CT::Sparse>
       static auto Reflect() -> DefinitionData const*;
       
       DefinitionData(const Token& cppname) noexcept

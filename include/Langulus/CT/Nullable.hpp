@@ -16,7 +16,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Nullable = Yes/No;` in T                   
    template<class T>
    struct Nullable {
-      static constexpr bool Enabled = false;
+      static constexpr bool Enabled = ::std::is_pointer_v<T>;
    };
 }
 
