@@ -46,6 +46,8 @@ jobs:
             suffix: ''
           - managed: ON
             suffix: '-managed'
+          - build: Debug
+            debug_flags: "-DLANGULUS_OPTION_SAFE_MODE=ON"
 
     name: "${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}"
     runs-on: ${{matrix.os}}
@@ -78,6 +80,7 @@ jobs:
           -DLANGULUS_OPTION_MANAGED_MEMORY=${{matrix.managed}}
           -DLANGULUS_OPTION_MANAGED_REFLECTION=${{matrix.managed}}
           -DLANGULUS_OPTION_TESTING=ON
+          ${{matrix.debug_flags}}
 
       - if: matrix.os == 'windows-latest'
         name: Configure (Windows)
@@ -88,6 +91,7 @@ jobs:
           -DLANGULUS_OPTION_MANAGED_MEMORY=${{matrix.managed}}
           -DLANGULUS_OPTION_MANAGED_REFLECTION=${{matrix.managed}}
           -DLANGULUS_OPTION_TESTING=ON
+          ${{matrix.debug_flags}}
 
       - name: Build
         run: cmake --build build -j4 --config ${{matrix.build}}
