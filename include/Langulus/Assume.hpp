@@ -39,7 +39,7 @@ namespace Langulus
       }
    }
 
-   #define LglsError(...) ErrorInner(HERE(), __VA_ARGS__)
+   #define LglsError(...) (ErrorInner(HERE(), __VA_ARGS__))
    
    /// Assertion that works both at runtime and at compile-time               
    /// Will throw an exception if condition isn't met at runtime              
@@ -72,7 +72,8 @@ namespace Langulus
       }
    }
    
-   #define LglsAssert(CONDITION, ...) AssertInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+   #define LglsAssert(CONDITION, ...) \
+      (AssertInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__))
 
    /// Assertion that works at runtime                                        
    /// Doesn't throw or ruin compilation                                      
@@ -99,7 +100,8 @@ namespace Langulus
       }
    }
    
-   #define LglsAssertWarn(CONDITION, ...) AssertWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+   #define LglsAssertWarn(CONDITION, ...) \
+      (AssertWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__))
 
    #if LANGULUS(SAFE) > 0
    /// User assumption that works both at runtime and at compile-time         
@@ -166,9 +168,9 @@ namespace Langulus
    /// to generate more performant code                                       
    #if LANGULUS(SAFE) > 0
       #define LglsAssumeUser(CONDITION, ...) \
-         AssumeUserInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+         (AssumeUserInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__))
       #define LglsAssumeUserWarn(CONDITION, ...) \
-         AssumeUserWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+         (AssumeUserWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__))
       #define LglsAssumeUserAndOptimize(CONDITION, ...) \
          AssumeUserInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
          [[assume(CONDITION)]]
@@ -243,9 +245,9 @@ namespace Langulus
    /// to generate more performant code                                       
    #if LANGULUS(SAFE) > 1
       #define LglsAssumeDev(CONDITION, ...) \
-         AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+         (AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__))
       #define LglsAssumeDevWarn(CONDITION, ...) \
-         AssumeDevWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+         (AssumeDevWarnInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__))
       #define LglsAssumeDevAndOptimize(CONDITION, ...) \
          AssumeDevInner(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
          [[assume(CONDITION)]]
@@ -293,7 +295,7 @@ namespace Langulus
    /// test the assumption when safety is enabled, and instruct the compiler  
    /// to generate more performant code                                       
    #define LglsAssume(LEVEL, CONDITION, ...) \
-      AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+      (AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__))
    #define LglsAssumeAndOptimize(LEVEL, CONDITION, ...) \
       AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__); \
       [[assume(CONDITION)]];
@@ -328,11 +330,11 @@ namespace Langulus
    }
 
    #define LglsAssumeWarn(LEVEL, CONDITION, ...) \
-      AssumeWarnInner<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__)
+      (AssumeWarnInner<LEVEL>(static_cast<bool>(CONDITION), HERE(), __VA_ARGS__))
 }
 
 /// Convenience macro for specifying temporary lazyness                       
-#define TODO() ::Langulus::AssertInner(false, HERE(), "Unfinished code")
+#define TODO() (::Langulus::AssertInner(false, HERE(), "Unfinished code"))
 
 
 namespace fmt
