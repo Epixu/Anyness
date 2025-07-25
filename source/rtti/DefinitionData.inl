@@ -618,7 +618,10 @@ namespace Langulus::RTTI
       definition.mFilesOf   = definition.mOrigin->mFilesOf;
       definition.mDecvqOnce = definition.mOrigin;
       definition.mDecvqAll  = definition.mOrigin;
-      definition.mID        = definition.mDecvqOnce->mID;
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         definition.mID     = definition.mDecvqOnce->mID;
+      #endif
+      
       auto decvq = const_cast<DefinitionData*>(definition.mDecvqOnce);
       decvq->mAddConst = &definition;
       
