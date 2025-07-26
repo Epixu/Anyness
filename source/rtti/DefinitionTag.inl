@@ -69,7 +69,7 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         const auto cppname {CppNameOf<T>();
+         const auto cppname {CppNameOf<T>()};
          DefinitionTag& definition = s_definition.emplace(cppname);
             
          const auto token {NameOfTag<T>()};
