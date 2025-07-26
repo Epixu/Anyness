@@ -345,37 +345,61 @@ SCENARIO("Testing reflection of names", "[rtti]") {
    {
       const DMeta meta = MetaDataOf<IncompleteType*>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "(anonymous namespace)::IncompleteType*");
+      #if LANGULUS_COMPILER(GCC)
+         REQUIRE(meta.GetCppName() == "{anonymous}::IncompleteType*");
+      #else
+         REQUIRE(meta.GetCppName() == "(anonymous namespace)::IncompleteType*");
+      #endif
       REQUIRE(meta.GetName() == "IncompleteType*");
    }
    {
       const DMeta meta = MetaDataOf<const IncompleteType**>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "(anonymous namespace)::IncompleteType const**");
+      #if LANGULUS_COMPILER(GCC)
+         REQUIRE(meta.GetCppName() == "{anonymous}::IncompleteType const**");
+      #else
+         REQUIRE(meta.GetCppName() == "(anonymous namespace)::IncompleteType const**");
+      #endif
       REQUIRE(meta.GetName() == "IncompleteType const**");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits");
+      #if LANGULUS_COMPILER(GCC)
+         REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits");
+      #else
+         REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits");
+      #endif
       REQUIRE(meta.GetName() == "MyType");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits*>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits*");
+      #if LANGULUS_COMPILER(GCC)
+         REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits*");
+      #else
+         REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits*");
+      #endif
       REQUIRE(meta.GetName() == "MyType*");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits const*>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits const*");
+      #if LANGULUS_COMPILER(GCC)
+         REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits const*");
+      #else
+         REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits const*");
+      #endif
       REQUIRE(meta.GetName() == "MyType const*");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits* const*>();
       REQUIRE(meta);
+      #if LANGULUS_COMPILER(GCC)
+      REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits* const*");
+      #else
       REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits* const*");
+      #endif
       REQUIRE(meta.GetName() == "MyType* const*");
    }
 
