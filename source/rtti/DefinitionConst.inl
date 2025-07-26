@@ -34,18 +34,15 @@ namespace Langulus::RTTI
    ///   @tparam E - the constant to reflect                                  
    template<auto E>
    auto DefinitionConst::Reflect() -> DefinitionConst const* {
-      constexpr auto cppname = CppNameOf<E>();
-      constexpr auto token = NameOf<E>();
-      static_assert(token != "", "Invalid constant token is not allowed - "
-         "you have reflected your constant with an empty CTTI::NamedValue");
-
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the const might 
          // have been reflected previously in another shared library    
+         const auto cppname {CppNameOf<E>()};
          DefinitionConst const* meta = Instance.GetMetaConstByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
+         const auto token {NameOf<E, false>()};
          DefinitionConst& definition = meta
             ? const_cast<DefinitionConst&>(*meta)
             : Instance.RegisterConst(cppname, token);
@@ -58,9 +55,12 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
+         const auto cppname {CppNameOf<E>()};
          DefinitionConst& definition = s_definition.emplace(cppname);
+
+         const auto token {NameOf<E, false>()};
          definition.mNameOf = token;
-         definition.mNameOf[0] = ::std::toupper(token[0]);
+         definition.mNameOf[0] = ToUppercase(token[0]);
       #endif
 
 
@@ -81,9 +81,8 @@ namespace Langulus::RTTI
       #endif
 
       // Reflected info                                                 
-      constexpr auto info = InfoOf<E>();
-      if constexpr (info != "")
-         definition.mInfoOf = info;
+      if constexpr (CT::InfoValue<E>)
+         definition.mInfoOf = InfoOf<E>();
       
       // Refer to a heap copy of the data                               
       using T = decltype(E);

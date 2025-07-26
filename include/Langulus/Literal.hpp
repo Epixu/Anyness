@@ -8,8 +8,8 @@
 #pragma once
 #include "Core.hpp"
 #include <array>
-#include <functional>
-#include <iterator>
+//#include <functional>
+//#include <iterator>
 #include <string_view>
 
 #if LANGULUS(SAFE)
@@ -102,11 +102,18 @@ namespace Langulus
       }
 
       constexpr Literal(const value_type(&array)[N]) noexcept {
-         ::std::copy(::std::begin(array), ::std::end(array), _data.begin());
+         for (size_t i = 0; i < N; i++)
+            _data[i] = array[i];
+         //_data[M] = 0;
+
+         //::std::copy(::std::begin(array), ::std::end(array), _data.begin());
       }
 
       constexpr Literal& operator = (const value_type(&array)[N]) noexcept {
-         ::std::copy(::std::begin(array), ::std::end(array), _data.begin());
+         for (size_t i = 0; i < N; i++)
+            _data[i] = array[i];
+
+         //::std::copy(::std::begin(array), ::std::end(array), _data.begin());
          return *this;
       }
 
@@ -181,7 +188,8 @@ namespace Langulus
          if constexpr (N > 0) {
             #if LANGULUS_SAFE()
                if not consteval {
-                  if (n >= self.size()) throw ::std::range_error(HERE());
+                  if (n >= self.size())
+                     throw ::std::range_error(HERE());
                }
             #endif
             return self._data[n];
@@ -432,6 +440,17 @@ namespace Langulus
       void swap(Literal& other) noexcept(std::is_nothrow_swappable_v<storage_type>) {
          _data.swap(other._data);
       }
+
+      /// Append a string literal                                             
+      ///   @attention will never allocate a bigger literal                   
+      constexpr Literal& operator += (const CT::LiteralString auto& rhs) noexcept {
+         auto d = data() + size();
+         auto s = rhs.data();
+         const auto sEnd = rhs.data() + rhs.size() + 1;
+         while (d != data() + ArraySize and s != sEnd)
+            *(d++) = *(s++); 
+         return *this;
+      }
    };
 
    Literal() -> Literal<Unsupported, 0>;
@@ -592,12 +611,8 @@ namespace Langulus
    ///                                                                        
    template<CT::LiteralString LHS, CT::LiteralString RHS>
    constexpr auto operator + (const LHS& lhs, const RHS& rhs) {
-      typename LHS::template Resized<LHS::ArraySize + RHS::ArraySize> result;
-      size_t i = 0;
-      for (; i < lhs.size(); ++i)
-         result[i] = lhs[i];
-      for (; i < lhs.size() + rhs.size(); ++i)
-         result[i] = rhs[i - lhs.size()];
+      typename LHS::template Resized<LHS::ArraySize + RHS::ArraySize> result {lhs};
+      result += rhs;
       return result;
    }
 

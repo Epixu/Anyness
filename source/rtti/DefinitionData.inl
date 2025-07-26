@@ -113,18 +113,15 @@ namespace Langulus::RTTI
          "Can't reflect this function signature - "
          "make sure you're using a pointer to it instead");
 
-      constexpr auto cppname = CppNameOf<T>();
-      constexpr auto token = NameOf<T>();
-      static_assert(token != "", "Invalid data token is not allowed - "
-         "you have equipped your type (or its base) with an empty CTTI_Named");
-
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
          // have been reflected previously in another shared library    
+         const auto cppname {CppNameOf<T>()};
          DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
+         const auto token {NameOf<T, false>()};
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
             : Instance.RegisterData(cppname, token);
@@ -137,9 +134,14 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
+         const auto cppname {CppNameOf<T>()};
          DefinitionData& definition = s_definition.emplace(cppname);
+
+         const auto token {NameOf<T, false>()};
+         LglsAssert(not token.empty(), "Invalid data token is not allowed - "
+            "you have equipped your type (or its base) with an empty CTTI_Named");
          definition.mNameOf = token;
-         definition.mNameOf[0] = ::std::toupper(token[0]);
+         definition.mNameOf[0] = ToUppercase(token[0]);
       #endif
       
       //                                                                
@@ -157,13 +159,11 @@ namespace Langulus::RTTI
       definition.mDecvqOnce = &definition;
       definition.mDecvqAll  = &definition;
 
-      constexpr auto suffix = SuffixOf<T>();
-      if constexpr (suffix != "")
-         definition.mSuffixOf = suffix;
+      if constexpr (CT::Suffix<T>)
+         definition.mSuffixOf = SuffixOf<T>();
 
-      constexpr auto files = FilesOf<T>();
-      if constexpr (files != "")
-         definition.mFilesOf = files;
+      if constexpr (CT::Files<T>)
+         definition.mFilesOf = FilesOf<T>();
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Origin type encountered, time to reserve a new ID           
@@ -330,7 +330,6 @@ namespace Langulus::RTTI
             };
       }
 
-
       //                                                                
       // Other utilities                                                
       if constexpr (CT::Hashable<T>) {
@@ -426,7 +425,7 @@ namespace Langulus::RTTI
       #endif
       
       // Calculate the allocation table                                 
-      constexpr auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
+      auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
       for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
          const size_t threshold = size_t {1} << bit;
          const size_t elements = threshold / sizeof(T);
@@ -569,20 +568,15 @@ namespace Langulus::RTTI
          "Can't reflect this function signature - "
          "make sure you're using a pointer to it instead");
 
-      // NameOf costs a lot of build time, minimize its use by reusing  
-      // already generated tokens                                       
-      ::std::string cppname {CppNameOf<Decvq<T>>()};
-      ::std::string token {NameOf<Decvq<T>>()};
-      cppname += " const";
-      token += " const";
-
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
          // have been reflected previously in another shared library    
+         const auto cppname {CppNameOf<Decvq<T>>() + " const"};
          DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
-
+      
+         const auto token {NameOf<Decvq<T>, false>() + " const"};
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
             : Instance.RegisterData(cppname, token);
@@ -595,9 +589,12 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
+         const auto cppname {CppNameOf<Decvq<T>>() + " const"};
          DefinitionData& definition = s_definition.emplace(cppname);
+      
+         const auto token {NameOf<Decvq<T>>() + " const"};
          definition.mNameOf = token;
-         definition.mNameOf[0] = ::std::toupper(token[0]);
+         definition.mNameOf[0] = ToUppercase(token[0]);
       #endif
       
       //                                                                
@@ -760,31 +757,21 @@ namespace Langulus::RTTI
          "Can't reflect this function signature - "
          "make sure you're using a pointer to it instead");
 
-      // NameOf costs a lot of build time, minimize its use by reusing  
-      // already generated tokens                                       
-      ::std::string cppname {CppNameOf<Decvq<Deptr<T>>>()};
-      ::std::string token {NameOf<Decvq<Deptr<T>>>()};
-      if constexpr (CT::Constant<Deptr<T>>) {
-         cppname += " const";
-         token += " const";
-      }
-      
-      if constexpr (CT::Constant<T>) {
-         cppname += "* const";
-         token += "* const";
-      }
-      else {
-         cppname += "*";
-         token += "*";
-      }
-      
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
          // have been reflected previously in another shared library    
+         ::std::string cppname {CppNameOf<Decvq<Deptr<T>>>()};
+         if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
+         if constexpr (CT::Constant<T>) cppname += "* const";
+         else cppname += "*";
          DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
+         ::std::string token {NameOf<Decvq<Deptr<T>>, false>()};
+         if constexpr (CT::Constant<Deptr<T>>) token += " const";
+         if constexpr (CT::Constant<T>) token += "* const";
+         else token += "*";
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
             : Instance.RegisterData(cppname, token);
@@ -797,9 +784,18 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
+         ::std::string cppname {CppNameOf<Decvq<Deptr<T>>>()};
+         if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
+         if constexpr (CT::Constant<T>) cppname += "* const";
+         else cppname += "*";
          DefinitionData& definition = s_definition.emplace(cppname);
+
+         ::std::string token {NameOf<Decvq<Deptr<T>>>()};
+         if constexpr (CT::Constant<Deptr<T>>) token += " const";
+         if constexpr (CT::Constant<T>) token += "* const";
+         else token += "*";
          definition.mNameOf = token;
-         definition.mNameOf[0] = ::std::toupper(token[0]);
+         definition.mNameOf[0] = ToUppercase(token[0]);
       #endif
       
       //                                                                
@@ -952,7 +948,7 @@ namespace Langulus::RTTI
       #endif
       
       // Calculate the allocation table                                 
-      constexpr auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
+      auto minElements = CT::GetMinAlloc<T>() / sizeof(T);
       for (size_t bit = 0; bit < sizeof(size_t) * 8u; ++bit) {
          const size_t threshold = size_t {1} << bit;
          const size_t elements = threshold / sizeof(T);
@@ -1033,7 +1029,7 @@ namespace Langulus::RTTI
          "Can't have qualifiers here");
       static_assert(not CT::Same<T, BASE>,
          "Can't have base of the same type as the derived");
-      static_assert(NameOf<T>() != NameOf<BASE>(),
+      static_assert(NameOf<T, false>() != NameOf<BASE, false>(),
          "T and BASE have the same NameOf, possibly due to inheritance. "
          "Specify a different CTTI::Named<T> or T::CTTI_Named for each!");
 

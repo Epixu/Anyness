@@ -315,67 +315,67 @@ SCENARIO("Testing reflection of names", "[rtti]") {
    {
       const DMeta meta = MetaDataOf<int>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "int32");
+      REQUIRE(meta.GetCppName() == "int");
       REQUIRE(meta.GetName() == "Int32");
    }
    {
       const DMeta meta = MetaDataOf<const int>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "int32 const");
+      REQUIRE(meta.GetCppName() == "int const");
       REQUIRE(meta.GetName() == "Int32 const");
    }
    {
       const DMeta meta = MetaDataOf<const int*>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "int32 const*");
+      REQUIRE(meta.GetCppName() == "int const*");
       REQUIRE(meta.GetName() == "Int32 const*");
    }
    {
       const DMeta meta = MetaDataOf<int const>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "int32 const");
+      REQUIRE(meta.GetCppName() == "int const");
       REQUIRE(meta.GetName() == "Int32 const");
    }
    {
       const DMeta meta = MetaDataOf<int const*>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "int32 const*");
+      REQUIRE(meta.GetCppName() == "int const*");
       REQUIRE(meta.GetName() == "Int32 const*");
    }
    {
       const DMeta meta = MetaDataOf<IncompleteType*>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "IncompleteType*");
+      REQUIRE(meta.GetCppName() == "(anonymous namespace)::IncompleteType*");
       REQUIRE(meta.GetName() == "IncompleteType*");
    }
    {
       const DMeta meta = MetaDataOf<const IncompleteType**>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "IncompleteType const**");
+      REQUIRE(meta.GetCppName() == "(anonymous namespace)::IncompleteType const**");
       REQUIRE(meta.GetName() == "IncompleteType const**");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits");
+      REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits");
       REQUIRE(meta.GetName() == "MyType");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits*>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits*");
+      REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits*");
       REQUIRE(meta.GetName() == "MyType*");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits const*>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits const*");
+      REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits const*");
       REQUIRE(meta.GetName() == "MyType const*");
    }
    {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits* const*>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "ImplicitlyReflectedDataWithTraits* const*");
+      REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits* const*");
       REQUIRE(meta.GetName() == "MyType* const*");
    }
 
@@ -388,6 +388,7 @@ SCENARIO("Testing reflection of names", "[rtti]") {
       REQUIRE_NOTHROW(MetaDataOf<ConflictingName*>());
       REQUIRE_NOTHROW(MetaDataOf<ConflictingName const*>());
    #endif
+   
    //REQUIRE_THROWS(MetaDataOf<InvalidName1>()); // shouldn't compile
    //REQUIRE_THROWS(MetaDataOf<InvalidName2>()); // shouldn't compile
    //REQUIRE_THROWS(MetaDataOf<InvalidName3>()); // shouldn't compile

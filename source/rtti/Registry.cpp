@@ -354,9 +354,9 @@ namespace Langulus::RTTI
    /// Register a data definition                                             
    ///   @attention assumes token is not yet registered                       
    ///   @param cppname - the C++ type name to register                       
-   ///   @param token - the custom token used in scripting                    
+   ///   @param token_messy - the custom token used in scripting              
    ///   @return the newly defined meta data for that name                    
-   auto Registry::RegisterData(const Token& cppname, const Token& token) -> DefinitionData& {
+   auto Registry::RegisterData(const Token& cppname, const Token& token_messy) -> DefinitionData& {
       const ::std::string cppname_s {cppname};
       LglsAssumeDev(not mMetaDataByCppName.contains(cppname_s),
          "Data with this name is already registered: ", cppname);
@@ -369,6 +369,13 @@ namespace Langulus::RTTI
          "Data type already registered as constant: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
+      const auto token = Inner::NormalizeAtRuntime(token_messy);
+      LglsAssert(not token.empty(),
+         "Invalid data token is not allowed - "
+         "you have equipped your type (or its base) with an empty CTTI_Named. "
+         "The type in question is: ", cppname
+      );
+      
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaDataByToken.contains(lowercased_token)) {
          LglsError("Data token conflict between ", cppname, " and ",
@@ -414,9 +421,9 @@ namespace Langulus::RTTI
    /// Register a constant definition                                         
    ///   @attention assumes token is not yet registered                       
    ///   @param cppname - the C++ type name to register                       
-   ///   @param token - the custom token used in scripting                    
+   ///   @param token_messy - the custom token used in scripting              
    ///   @return the newly defined meta constant for that token               
-   auto Registry::RegisterConst(const Token& cppname, const Token& token) -> DefinitionConst& {
+   auto Registry::RegisterConst(const Token& cppname, const Token& token_messy) -> DefinitionConst& {
       const ::std::string cppname_s {cppname};
       LglsAssumeDev(not mMetaConstantsByCppName.contains(cppname_s),
          "Constant with this name is already registered: ", cppname);
@@ -429,6 +436,13 @@ namespace Langulus::RTTI
          "Constant already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
+      const auto token = Inner::NormalizeAtRuntime(token_messy);
+      LglsAssert(not token.empty(),
+         "Invalid constant token is not allowed - "
+         "you have equipped your constant with an empty CTTI::NamedValue. "
+         "The constant in question is: ", cppname
+      );
+
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaDataByToken.contains(lowercased_token)) {
          LglsError("Token conflict between constant ", cppname, " and data ",
@@ -467,9 +481,9 @@ namespace Langulus::RTTI
    /// Register a tag definition                                              
    ///   @attention assumes token is not yet registered                       
    ///   @param cppname - the C++ type name to register                       
-   ///   @param token - the custom token used in scripting                    
+   ///   @param token_messy - the custom token used in scripting              
    ///   @return the newly defined meta trait for that token                  
-   auto Registry::RegisterTag(const Token& cppname, const Token& token) -> DefinitionTag& {
+   auto Registry::RegisterTag(const Token& cppname, const Token& token_messy) -> DefinitionTag& {
       const ::std::string cppname_s {cppname};
       LglsAssumeDev(not mMetaTagsByCppName.contains(cppname_s),
          "Tag with this name is already registered: ", cppname);
@@ -482,6 +496,13 @@ namespace Langulus::RTTI
          "Tag already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
+      const auto token = Inner::NormalizeAtRuntime(token_messy);
+      LglsAssert(not token.empty(),
+         "Invalid tag token is not allowed - "
+         "you have equipped your type (or its base) with an empty CTTI_DefineTag. "
+         "The type in question is: ", cppname
+      );
+
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaTagsByToken.contains(lowercased_token)) {
          LglsError("Tag token conflict between ", cppname, " and ",
@@ -515,15 +536,15 @@ namespace Langulus::RTTI
    /// Register a verb definition                                             
    ///   @attention assumes tokens are not yet registered                     
    ///   @param cppname - the C++ type name to register                       
-   ///   @param token - positive verb token                                   
-   ///   @param tokenRev - negative verb token (optional)                     
+   ///   @param token_messy - positive verb token                             
+   ///   @param tokenRev_messy - negative verb token (optional)               
    ///   @param op - positive verb operator (optional)                        
    ///   @param opRev - negative verb operator (optional)                     
    ///   @return the newly defined meta verb for that token configuration     
    auto Registry::RegisterVerb(
       Token const& cppname,
-      Token const& token,
-      Token const& tokenRev,
+      Token const& token_messy,
+      Token const& tokenRev_messy,
       Token const& op,
       Token const& opRev
    ) -> DefinitionVerb& {
@@ -539,6 +560,23 @@ namespace Langulus::RTTI
          "Verb already registered as tag: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
+      const auto token = Inner::NormalizeAtRuntime(token_messy);
+      LglsAssert(not token.empty(),
+         "Invalid tag token is not allowed - "
+         "you have equipped your verb (or its base) with an empty CTTI_DefineVerb. "
+         "The verb in question is: ", cppname);
+      
+      const auto tokenRev = Inner::NormalizeAtRuntime(tokenRev_messy);
+      LglsAssert(token != tokenRev,
+         "Verb can't have the same positive and negative tokens for: ", cppname);
+      
+      LglsAssert(op != opRev or op.empty(),
+         "Verb can't have the same positive and negative operators for: ", cppname);
+      LglsAssert(IsASCII(op),
+         "Verb positive operator isn't ASCII for: ", cppname);
+      LglsAssert(IsASCII(opRev),
+         "Verb reverse operator isn't ASCII for: ", cppname);
+
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaVerbsByToken.contains(lowercased_token)) {
          LglsError("Verb positive token conflict between ", cppname, " and ",

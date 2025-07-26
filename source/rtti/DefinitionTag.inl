@@ -48,18 +48,15 @@ namespace Langulus::RTTI
       static_assert(not ::std::is_function_v<T>,
          "Can't reflect this function signature as a tag");
 
-      constexpr auto cppname = CppNameOf<T>();
-      constexpr auto token = NameOfTag<T>();
-      static_assert(token != "", "Invalid tag token is not allowed - "
-         "you have equipped your type (or its base) with an empty CTTI_DefineTag");
-
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the tag might   
          // have been reflected previously in another shared library    
+         const auto cppname {CppNameOf<T>()};
          DefinitionTag const* meta = Instance.GetMetaTagByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
+         const auto token {NameOfTag<T>()};
          DefinitionTag& definition = meta
             ? const_cast<DefinitionTag&>(*meta)
             : Instance.RegisterTag(cppname, token);
@@ -72,7 +69,10 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
+         const auto cppname {CppNameOf<T>();
          DefinitionTag& definition = s_definition.emplace(cppname);
+            
+         const auto token {NameOfTag<T>()};
          definition.mNameOf = Inner::ToLowercase(token);
       #endif
 

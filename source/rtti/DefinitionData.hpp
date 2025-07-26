@@ -10,6 +10,7 @@
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/DefineTag.hpp>
 #include <unordered_set>
+#include <unordered_map>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #include <Langulus/CT/Pooled.hpp>

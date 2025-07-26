@@ -168,7 +168,7 @@ namespace Langulus::RTTI
       constexpr size_t CalibratedEnumRightOffset = CalculateEnumRightOffset();
 
       template<Literal>
-      consteval auto Normalize();
+      constexpr auto Normalize();
 
       /// Skip all decorations in front and the back of a WrappedTypeName     
       ///   @tparam T - the typename to isolate                               
@@ -370,8 +370,7 @@ namespace Langulus::RTTI
       
       /// Decide buffer size by checking all replacement patterns             
       ///   @tparam SRC - search where?                                       
-      template<Literal SRC>
-      constexpr size_t DecideBufferSize() {
+      constexpr size_t DecideBufferSize(const CT::Literal auto& SRC) {
          size_t result = 0;
          for (const auto& pattern : ReplacePatterns) {
             size_t occurences = 0;
@@ -401,36 +400,104 @@ namespace Langulus::RTTI
             if (candidate > result)
                result = candidate;
          }
-         return (result < SRC.ArraySize ? SRC.ArraySize : result) + 1;
+         return (result < SRC.ArraySize ? SRC.ArraySize : result);
+      }
+      
+      /// Normalize a type/enum/function name at runtime                      
+      ///   @tparam SRC - the token to normalize                              
+      ///   @return new literal                                               
+      inline ::std::string NormalizeAtRuntime(const Token& SRC) {
+         if (not IsASCII(SRC))
+            throw ::std::runtime_error{"Token isn't ASCII"};
+         ::std::string result {SRC};
+   
+         for (const auto& pattern : ReplacePatterns) {
+            size_t fill = 0;
+            size_t prev = 0;
+            size_t curr = result.find(pattern.what, 0);
+            size_t already_replaced = not pattern.with.empty()
+               ? result.find(pattern.with, 0)
+               : result.npos;
+            if (curr == result.npos
+            or (already_replaced != result.npos and curr == already_replaced))
+               continue;
+            
+            ::std::string buffer;
+            buffer.resize(result.size());
+            do {
+               while (curr > prev) {
+                  // Copy anything we've skipped                        
+                  buffer[fill++] = result[prev++];
+               }
+
+               //if (IsTransition(result, curr, curr + pattern.what.size())) {
+                  // Replace                                            
+                  buffer.resize(curr + pattern.with.size());
+                  for (char c : pattern.with)
+                     buffer[fill++] = c;
+                  prev += pattern.what.size();
+               //}
+
+               curr = result.find(pattern.what, prev);
+               already_replaced = not pattern.with.empty()
+                  ? result.find(pattern.with, prev)
+                  : result.npos;
+            }
+            while (curr != result.npos
+            and   (already_replaced == result.npos or curr != already_replaced));
+            
+            while (prev < result.size()) {
+               // Copy any remaining trailing data                      
+               buffer.resize(fill + (result.size() - prev));
+               buffer[fill++] = result[prev++];
+            }
+            
+            result = MOV(buffer);
+         }
+         return result;
       }
       
       /// Normalize a type/enum/function name                                 
       ///   @tparam SRC - the literal to normalize                            
       ///   @return new literal                                               
       template<Literal SRC>
-      consteval auto Normalize() {
+      constexpr auto Normalize() {
          static_assert(IsASCII(SRC), "Literal isn't ASCII");
-         Literal<char, DecideBufferSize<SRC>()> result {SRC};
+         Literal<char, DecideBufferSize(SRC)> result {SRC};
          
          for (const auto& pattern : ReplacePatterns) {
             size_t fill = 0;
             size_t prev = 0;
-            size_t curr = 0;
-            decltype(result) buffer {result};
-            while ((curr = result.find(pattern.what, prev)) != result.npos) {
+            size_t curr = result.find(pattern.what, 0);
+            size_t already_replaced = not pattern.with.empty()
+               ? result.find(pattern.with, 0)
+               : result.npos;
+            if (curr == result.npos
+            or (already_replaced != result.npos and curr == already_replaced))
+               continue;
+            
+            decltype(result) buffer;
+            do {
                while (curr > prev) {
                   // Copy anything we've skipped                        
                   buffer[fill++] = result[prev++];
                }
 
-               if (IsTransition(result, curr, curr + pattern.what.size())) {
+               //if (IsTransition(result, curr, curr + pattern.what.size())) {
                   // Replace                                            
                   for (char c : pattern.with)
                      buffer[fill++] = c;
                   prev += pattern.what.size();
-               }
-            }
+               //}
 
+               curr = result.find(pattern.what, prev);
+               already_replaced = not pattern.with.empty()
+                  ? result.find(pattern.with, prev)
+                  : result.npos;
+            }
+            while (curr != result.npos
+            and   (already_replaced == result.npos or curr != already_replaced));
+            
             while (prev < result.size()) {
                // Copy any remaining trailing data                      
                buffer[fill++] = result[prev++];
@@ -480,38 +547,50 @@ namespace Langulus
    /// Get the name of a type, templated or not, with consistently named      
    /// template arguments, even if nested, at compile-time                    
    ///   @tparam T - the type to get the name of                              
+   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///      across compilers. This costs a lot of build time and is rarely    
+   ///      used for C++ names                                                
    ///   @return a compile-time string                                        
-   template<class T>
-   consteval auto CppNameOf() {
-      return RTTI::Inner::IsolateTypename<T, true, false>();
+   template<class T, bool NORMALIZE = false>
+   constexpr auto CppNameOf() {
+      return RTTI::Inner::IsolateTypename<T, NORMALIZE, false>();
    }
    
    /// Get the name of an enum value at compile-time                          
    ///   @tparam E - the constant to get the name of                          
+   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///      across compilers. This costs a lot of build time and is rarely    
+   ///      used for C++ names                                                
    ///   @return a compile-time string                                        
-   template<auto E>
-   consteval auto CppNameOf() {
-      return RTTI::Inner::IsolateConstant<E, true, false>();
+   template<auto E, bool NORMALIZE = false>
+   constexpr auto CppNameOf() {
+      return RTTI::Inner::IsolateConstant<E, NORMALIZE, false>();
    }
 
    /// Same as CppNameOf, but removes all namespaces at compile-time          
    ///   @tparam T - the type to get the name of                              
+   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///      across compilers. This costs a lot of build time and is rarely    
+   ///      used for C++ names                                                
    ///   @return a compile-time string                                        
-   template<class T>
-   consteval auto LastCppNameOf() {
+   template<class T, bool NORMALIZE = false>
+   constexpr auto LastCppNameOf() {
       // Find the last ':' symbol, that is not inside <...> scope       
-      auto fullName = RTTI::Inner::IsolateTypename<T, true, false>();
+      auto fullName = RTTI::Inner::IsolateTypename<T, NORMALIZE, false>();
       auto lastName = RTTI::Inner::FindLastToken(fullName);
       return fullName.substr(lastName);
    }
 
    /// Same as CppNameOf, but removes all namespaces at compile-time          
    ///   @tparam E - the enum to get the name of                              
+   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///      across compilers. This costs a lot of build time and is rarely    
+   ///      used for C++ names                                                
    ///   @return a compile-time string                                        
-   template<auto E>
-   consteval auto LastCppNameOf() {
+   template<auto E, bool NORMALIZE = false>
+   constexpr auto LastCppNameOf() {
       // Find the last ':' symbol, that is not inside <...> scope       
-      auto fullName = RTTI::Inner::IsolateConstant<E, true, false>();
+      auto fullName = RTTI::Inner::IsolateConstant<E, NORMALIZE, false>();
       auto lastName = RTTI::Inner::FindLastToken(fullName);
       return fullName.substr(lastName);
    }
@@ -520,22 +599,35 @@ namespace Langulus
    /// Considers CTTI::Named, or fallbacks to the C++ name                    
    /// If you want to avoid custom names, use CppNameOf directly instead      
    ///   @attention similarly named types in anonymous namespaces will result 
-   ///      in the same name. If this is not desired - name your namespaces   
+   ///      in the same name. If this is not desired disable NORMALIZE, or    
+   ///      specialize CTTI::Named for each translation unit the type         
+   ///      appears in                                                        
    ///   @tparam T - the type to get the name of                              
+   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///      across compilers. This costs a lot of build time, so you might    
+   ///      want to do it at runtime instead if build time becomes an issue   
+   ///      See Langulus::RTTI::Inner::NormalizeAtRuntime                     
    ///   @return a compile-time string                                        
-   template<class T>
-   consteval auto NameOf() {
-      return RTTI::Inner::IsolateTypename<T>();
+   ///   @return a compile-time string                                        
+   template<class T, bool NORMALIZE = true>
+   constexpr auto NameOf() {
+      return RTTI::Inner::IsolateTypename<T, NORMALIZE>();
    }
    
    /// Get the name of an enum value at compile-time                          
+   /// Considers CTTI::NamedValue, or fallbacks to the C++ name               
    ///   @attention similarly named values in anonymous namespaces will result
-   ///      in the same name. If this is not desired, specialize              
-   ///      CTTI::NamedValue for each translation unit they appear in         
+   ///      in the same name. If this is not desired disable NORMALIZE, or    
+   ///      specialize CTTI::NamedValue for each translation unit the value   
+   ///      appears in                                                        
    ///   @tparam E - the value to get the name of                             
+   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///      across compilers. This costs a lot of build time, so you might    
+   ///      want to do it at runtime instead if build time becomes an issue   
+   ///      See Langulus::RTTI::Inner::NormalizeAtRuntime                     
    ///   @return a compile-time string                                        
-   template<auto E>
-   consteval auto NameOf() {
-      return RTTI::Inner::IsolateConstant<E>();
+   template<auto E, bool NORMALIZE = true>
+   constexpr auto NameOf() {
+      return RTTI::Inner::IsolateConstant<E, NORMALIZE>();
    }
 }

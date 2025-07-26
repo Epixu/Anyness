@@ -49,25 +49,18 @@ namespace Langulus::RTTI
       static_assert(not ::std::is_function_v<T>,
          "Can't reflect this function signature as a verb");
 
-      constexpr auto cppname = CppNameOf<T>();
-      constexpr auto verbPos = NameOfVerb<T>();
-      constexpr auto verbNeg = NameOfVerbReverse<T>();
-      constexpr auto opPos   = OperatorOfVerb<T>();
-      constexpr auto opNeg   = OperatorOfVerbReverse<T>();
-      static_assert(not verbPos.empty(),
-         "Invalid positive verb token is not allowed");
-      static_assert(verbPos != verbNeg,
-         "Verb can't have the same positive and negative tokens");
-      static_assert(opPos != opNeg or opPos.empty(),
-         "Verb can't have the same positive and negative operators");
-
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the verb might  
          // have been reflected previously in another shared library    
+         const auto cppname {CppNameOf<T>()};
          DefinitionVerb const* meta = Instance.GetMetaVerbByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
-
+         
+         const auto verbPos {NameOfVerb<T>()};
+         const auto verbNeg {NameOfVerbReverse<T>()};
+         const auto opPos   {OperatorOfVerb<T>()};
+         const auto opNeg   {OperatorOfVerbReverse<T>()};
          DefinitionVerb& definition = meta
             ? const_cast<DefinitionVerb&>(*meta)
             : Instance.RegisterVerb(cppname, verbPos, verbNeg, opPos, opNeg);
@@ -80,7 +73,13 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
+         const auto cppname {CppNameOf<T>()};
          DefinitionVerb& definition = s_definition.emplace(cppname);
+
+         const auto verbPos {NameOfVerb<T>()};
+         const auto verbNeg {NameOfVerbReverse<T>()};
+         const auto opPos   {OperatorOfVerb<T>()};
+         const auto opNeg   {OperatorOfVerbReverse<T>()};
          definition.mNameOf = Inner::ToLowercase(verbPos);
          definition.mNameOfReverse = Inner::ToLowercase(verbNeg);
          definition.mOperator = Inner::ToLowercase(opPos);
