@@ -9,7 +9,7 @@ include(LangulusUtilities.cmake)
 # Reflected options																
 option(LANGULUS_OPTION_SHARED_LIBRARIES 
     "Will build shared libraries (DLL/SO/WASM) if enabled, \
-    true by default" ON)
+    true by default" OFF)
     
 option(LANGULUS_OPTION_SAFE_MODE 
     "Overrides additional error checking and sanity checks, \

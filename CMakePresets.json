@@ -59,8 +59,8 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc-14",
         "CMAKE_CXX_COMPILER": "g++-14",
-        "CMAKE_C_FLAGS": "-Wall -Wextra -fvisibility=hidden -fvisibility-inlines-hidden -Wno-trigraphs $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}",
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra -fvisibility=hidden -fvisibility-inlines-hidden -Wno-trigraphs $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS}"
+        "CMAKE_C_FLAGS": "-Wall -Wextra -fvisibility=hidden -fvisibility-inlines-hidden -Wno-trigraphs $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\"",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -fvisibility=hidden -fvisibility-inlines-hidden -Wno-trigraphs $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\""
       }
     },
     {
@@ -100,6 +100,16 @@
       }
     },
 
+    {
+      "name": "coverage",
+      "description": "Enables coverage",
+      "inherits": "base",
+      "hidden": true,
+      "cacheVariables": {
+        "LANGULUS_COVERAGE": "ON"
+      }
+    },
+    
     {
       "name": "x64",
       "description": "Target x64 architecture",
@@ -347,6 +357,13 @@
       "displayName": "clang-cl x64 Debug Safe AVX2",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, AVX2)",
       "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX2" ]
+    },
+    
+    {
+      "name": "windows-clang-cl-x64-debug-safe-AVX-managed-coverage",
+      "displayName": "clang-cl x64 Debug Safe AVX",
+      "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, AVX)",
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "coverage" ]
     },
 
     {

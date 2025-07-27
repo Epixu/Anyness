@@ -5,7 +5,7 @@ function(fetch_external_module NAME GIT_REPOSITORY REPO GIT_TAG TAG)
     if(NOT DEFINED LANGULUS_EXTERNAL_DIRECTORY)
         set(LANGULUS_EXTERNAL_DIRECTORY "${CMAKE_SOURCE_DIR}/external" CACHE PATH
             "Place where external dependencies will be downloaded")
-        message(WARNING "LANGULUS_EXTERNAL_DIRECTORY not defined, \
+        message(STATUS "LANGULUS_EXTERNAL_DIRECTORY not defined, \
 		using default: ${LANGULUS_EXTERNAL_DIRECTORY}")
     endif()
 
@@ -78,8 +78,14 @@ function(add_langulus_library NAME)
 	else()
 		add_library(${NAME} ${LANGULUS_LIBRARY_TYPE} ${arg_SOURCES})
 		target_link_libraries(${NAME} PRIVATE ${arg_LIBRARIES})
-	endif()
-
+    endif()
+    
+    if (LANGULUS_COVERAGE)
+        target_compile_options(${NAME} PUBLIC /Od --coverage)
+        target_link_options(${NAME} PUBLIC --coverage)
+        target_link_libraries(${NAME} PUBLIC clang_rt.profile-x86_64.lib) #workaround for bad cmake clang-cl support
+    endif()
+    
 	foreach(ITEM ${arg_DEPENDENCIES})
 		add_dependencies(${NAME} ${ITEM})
 	endforeach()
@@ -132,6 +138,13 @@ endfunction()
 # Create a test executable if tests are enabled									
 function(add_langulus_test NAME)
 	add_langulus_app(${NAME} ${ARGN})
+    
+    if (LANGULUS_COVERAGE)
+        #target_compile_options(${NAME} PRIVATE /Od --coverage)
+        #target_link_options(${NAME} PRIVATE --coverage)
+        #target_link_libraries(${NAME} PRIVATE clang_rt.profile-x86_64.lib) #workaround for bad cmake clang-cl support
+    endif()
+    
 	add_test(
 		NAME				${NAME}
 		COMMAND				${NAME}
