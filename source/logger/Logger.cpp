@@ -346,7 +346,7 @@ void State::Write(const Tabs& tabs) const noexcept {
       return;
 
    if (tabs.mTabs < 0) {
-      if (tabs.mTabs > mTabulator)
+      if (static_cast<size_t>(tabs.mTabs) > mTabulator)
          mTabulator = 0;
       else
          mTabulator -= tabs.mTabs;

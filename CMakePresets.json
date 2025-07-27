@@ -64,7 +64,7 @@
       }
     },
     {
-      "name": "clang++19",
+      "name": "clang++-19",
       "description": "Target Clang 19 compiler",
       "inherits": "base",
       "hidden": true,
@@ -106,7 +106,107 @@
       "inherits": "base",
       "hidden": true,
       "cacheVariables": {
-        "LANGULUS_COVERAGE": "ON"
+        "LANGULUS_COVERAGE_COMPILER_FLAGS": "--coverage",
+        "LANGULUS_COVERAGE_LINKER_FLAGS": "",
+        "LANGULUS_COVERAGE_COMPILER_FLAGS_MSVC": "/Od --coverage",
+        "LANGULUS_COVERAGE_LINKER_FLAGS_MSVC": "--coverage clang_rt.profile-x86_64.lib"
+      }
+    },
+    
+    {
+      "name": "sanitize",
+      "description": "Enables sanitizer, see presets below for some useful configurations, as sanitizers are mutually exclusive",
+      "inherits": "base",
+      "hidden": true,
+      "cacheVariables": {
+        "LANGULUS_SANITIZE_COMPILER_FLAGS": "-fsanitize=memory",
+        "LANGULUS_SANITIZE_LINKER_FLAGS": "",
+        "LANGULUS_SANITIZE_COMPILER_FLAGS_MSVC": "",
+        "LANGULUS_SANITIZE_LINKER_FLAGS_MSVC": ""
+      }
+    },
+    {
+      "name": "sanitize-undefined",
+      "description": "Not used, but here as an example how to enable -fsanitize=undefined",
+      "inherits": "base",
+      "hidden": true,
+      "cacheVariables": {
+        "LANGULUS_SANITIZE_COMPILER_FLAGS": "-fsanitize=undefined -fno-sanitize=vptr",
+        "LANGULUS_SANITIZE_LINKER_FLAGS": "",
+        "LANGULUS_SANITIZE_COMPILER_FLAGS_MSVC": "TODO",
+        "LANGULUS_SANITIZE_LINKER_FLAGS_MSVC": "TODO"
+      }
+    },
+    {
+      "name": "sanitize-memory",
+      "description": "Not used, but here as an example how to enable -fsanitize=memory",
+      "inherits": "base",
+      "hidden": true,
+      "cacheVariables": {
+        "LANGULUS_SANITIZE_COMPILER_FLAGS": "-fsanitize=memory",
+        "LANGULUS_SANITIZE_LINKER_FLAGS": "",
+        "LANGULUS_SANITIZE_COMPILER_FLAGS_MSVC": "TODO",
+        "LANGULUS_SANITIZE_LINKER_FLAGS_MSVC": "TODO"
+      }
+    },
+    {
+      "name": "sanitize-leak",
+      "description": "Not used, but here as an example how to enable -fsanitize=leak",
+      "inherits": "base",
+      "hidden": true,
+      "cacheVariables": {
+        "LANGULUS_SANITIZE_COMPILER_FLAGS": "-fsanitize=leak",
+        "LANGULUS_SANITIZE_LINKER_FLAGS": "",
+        "LANGULUS_SANITIZE_COMPILER_FLAGS_MSVC": "TODO",
+        "LANGULUS_SANITIZE_LINKER_FLAGS_MSVC": "TODO"
+      }
+    },
+    {
+      "name": "sanitize-address",
+      "description": "Not used, but here as an example how to enable -fsanitize=address",
+      "inherits": "base",
+      "hidden": true,
+      "cacheVariables": {
+        "LANGULUS_SANITIZE_COMPILER_FLAGS": "-fsanitize=address",
+        "LANGULUS_SANITIZE_LINKER_FLAGS": "",
+        "LANGULUS_SANITIZE_COMPILER_FLAGS_MSVC": "/fsanitize=address /Zi -D_DISABLE_VECTOR_ANNOTATION -D_DISABLE_STRING_ANNOTATION",
+        "LANGULUS_SANITIZE_LINKER_FLAGS_MSVC": "clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
+      }
+    },
+    
+    {
+      "name": "vendor-clang-cl-x86",
+      "description": "Enables vendor specific toolchains for clang-cl x86",
+      "inherits": "base",
+      "hidden": true,
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "ClangCL x86"
+        }
+      }
+    },
+    
+    {
+      "name": "vendor-clang-cl-x64",
+      "description": "Enables vendor specific toolchains for clang-cl x64",
+      "inherits": "base",
+      "hidden": true,
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "ClangCL x64"
+        }
+      }
+    },
+    
+    {
+      "name": "vendor-clang-x64",
+      "description": "Enables vendor specific toolchains for clang x64",
+      "inherits": "base",
+      "hidden": true,
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "WSL Clang x64"
+        }
       }
     },
     
@@ -338,137 +438,176 @@
       "name": "windows-clang-cl-x64-debug-safe-noSIMD-managed",
       "displayName": "clang-cl x64 Debug Safe NoSIMD",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, no SIMD)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "NoSIMD" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "NoSIMD", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-SSE2-managed",
       "displayName": "clang-cl x64 Debug Safe SSE2",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, SSE2)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "SSE2" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "SSE2", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX-managed",
       "displayName": "clang-cl x64 Debug Safe AVX",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, AVX)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX2-managed",
       "displayName": "clang-cl x64 Debug Safe AVX2",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, AVX2)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX2" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX2", "vendor-clang-cl-x64" ]
     },
     
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX-managed-coverage",
-      "displayName": "clang-cl x64 Debug Safe AVX",
+      "displayName": "clang-cl x64 Debug Safe AVX with coverage generation",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, AVX)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "coverage" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "coverage", "vendor-clang-cl-x64" ]
+    },
+    {
+      "name": "windows-clang-cl-x64-release-safe-AVX-managed-sanitize",
+      "displayName": "clang-cl x64 Release Safe AVX with sanitizers",
+      "description": "Target Windows with the 64bit Clang-Cl compiler (release, safe, AVX)",
+      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX", "sanitize", "vendor-clang-cl-x64" ]
+    },
+
+    {
+      "name": "ubuntu-clang-x64-debug-safe-noSIMD-managed",
+      "displayName": "clang x64 Debug Safe NoSIMD",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, no SIMD)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "NoSIMD", "vendor-clang-x64" ]
+    },
+    {
+      "name": "ubuntu-clang-x64-debug-safe-SSE2-managed",
+      "displayName": "clang x64 Debug Safe SSE2",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, SSE2)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "SSE2", "vendor-clang-x64" ]
+    },
+    {
+      "name": "ubuntu-clang-x64-debug-safe-AVX-managed",
+      "displayName": "clang x64 Debug Safe AVX",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX", "vendor-clang-x64" ]
+    },
+    {
+      "name": "ubuntu-clang-x64-debug-safe-AVX2-managed",
+      "displayName": "clang x64 Debug Safe AVX2",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX2)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX2", "vendor-clang-x64" ]
+    },
+    
+    {
+      "name": "ubuntu-clang-x64-debug-safe-AVX-managed-coverage",
+      "displayName": "clang x64 Debug Safe AVX with coverage generation",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX", "coverage", "vendor-clang-x64" ]
+    },
+    {
+      "name": "ubuntu-clang-x64-release-safe-AVX-managed-sanitize",
+      "displayName": "clang x64 Release Safe AVX with sanitizers",
+      "description": "Target Ubuntu with the 64bit Clang compiler (release, safe, AVX)",
+      "inherits": [ "linux", "clang++-19", "x64", "release", "AVX", "sanitize", "vendor-clang-x64" ]
     },
 
     {
       "name": "windows-clang-cl-x64-debug-safe-noSIMD-unmanaged",
       "displayName": "clang-cl x64 Debug Safe NoSIMD Unmanaged",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, no SIMD, unmanaged)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "NoSIMD", "unmanaged" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "NoSIMD", "unmanaged", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-SSE2-unmanaged",
       "displayName": "clang-cl x64 Debug Safe SSE2 Unmanaged",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, SSE2, unmanaged)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "SSE2", "unmanaged" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "SSE2", "unmanaged", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX-unmanaged",
       "displayName": "clang-cl x64 Debug Safe AVX Unmanaged",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, AVX, unmanaged)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "unmanaged" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "unmanaged", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX2-unmanaged",
       "displayName": "clang-cl x64 Debug Safe AVX2 Unmanaged",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, AVX2, unmanaged)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX2", "unmanaged" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX2", "unmanaged", "vendor-clang-cl-x64" ]
     },
 
     {
       "name": "windows-clang-cl-x86-debug-safe-noSIMD-managed",
       "displayName": "clang-cl x86 Debug Safe NoSIMD",
       "description": "Target Windows with the 32bit Clang-Cl compiler (debug, safe, no SIMD)",
-      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "NoSIMD" ]
+      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "NoSIMD", "vendor-clang-cl-x86" ]
     },
     {
       "name": "windows-clang-cl-x86-debug-safe-SSE2-managed",
       "displayName": "clang-cl x86 Debug Safe SSE2",
       "description": "Target Windows with the 32bit Clang-Cl compiler (debug, safe, SSE2)",
-      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "SSE2" ]
+      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "SSE2", "vendor-clang-cl-x86" ]
     },
     {
       "name": "windows-clang-cl-x86-debug-safe-AVX-managed",
       "displayName": "clang-cl x86 Debug Safe AVX",
       "description": "Target Windows with the 32bit Clang-Cl compiler (debug, safe, AVX)",
-      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "AVX" ],
-      "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "ClangCL x86"
-        }
-      }
+      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "AVX", "vendor-clang-cl-x86" ]
     },
     {
       "name": "windows-clang-cl-x86-debug-safe-AVX2-managed",
       "displayName": "clang-cl x86 Debug Safe AVX2",
       "description": "Target Windows with the 32bit Clang-Cl compiler (debug, safe, AVX2)",
-      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "AVX2" ]
+      "inherits": [ "windows", "clang-cl-19", "x86", "debug", "AVX2", "vendor-clang-cl-x86" ]
     },
 
     {
       "name": "windows-clang-cl-x64-release-safe-noSIMD-managed",
       "displayName": "clang-cl x64 Release Safe NoSIMD",
       "description": "Target Windows with the 64bit Clang-Cl compiler (release, safe, no SIMD)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "NoSIMD" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "release", "NoSIMD", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-release-safe-SSE2-managed",
       "displayName": "clang-cl x64 Release Safe SSE2",
       "description": "Target Windows with the 64bit Clang-Cl compiler (release, safe, SSE2)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "SSE2" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "release", "SSE2", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-release-safe-AVX-managed",
       "displayName": "clang-cl x64 Release Safe AVX",
       "description": "Target Windows with the 64bit Clang-Cl compiler (release, safe, AVX)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-release-safe-AVX2-managed",
       "displayName": "clang-cl x64 Release Safe AVX2",
       "description": "Target Windows with the 64bit Clang-Cl compiler (release, safe, AVX2)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX2" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX2", "vendor-clang-cl-x64" ]
     },
 
     {
       "name": "windows-clang-cl-x86-release-safe-noSIMD-managed",
       "displayName": "clang-cl x86 Release Safe NoSIMD",
       "description": "Target Windows with the 32bit Clang-Cl compiler (release, safe, no SIMD)",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "NoSIMD" ]
+      "inherits": [ "windows", "clang-cl-19", "x86", "release", "NoSIMD", "vendor-clang-cl-x86" ]
     },
     {
       "name": "windows-clang-cl-x86-release-safe-SSE2-managed",
       "displayName": "clang-cl x86 Release Safe SSE2",
       "description": "Target Windows with the 32bit Clang-Cl compiler (release, safe, SSE2)",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "SSE2" ]
+      "inherits": [ "windows", "clang-cl-19", "x86", "release", "SSE2", "vendor-clang-cl-x86" ]
     },
     {
       "name": "windows-clang-cl-x86-release-safe-AVX-managed",
       "displayName": "clang-cl x86 Release Safe AVX",
       "description": "Target Windows with the 32bit Clang-Cl compiler (release, safe, AVX)",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "AVX" ]
+      "inherits": [ "windows", "clang-cl-19", "x86", "release", "AVX", "vendor-clang-cl-x86" ]
     },
     {
       "name": "windows-clang-cl-x86-release-safe-AVX2-managed",
       "displayName": "clang-cl x86 Release Safe AVX2",
       "description": "Target Windows with the 32bit Clang-Cl compiler (release, safe, AVX2)",
-      "inherits": [ "windows", "clang-cl-19", "x86", "release", "AVX2" ]
+      "inherits": [ "windows", "clang-cl-19", "x86", "release", "AVX2", "vendor-clang-cl-x86" ]
     }
   ]
 }

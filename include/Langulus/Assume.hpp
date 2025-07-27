@@ -19,7 +19,7 @@ namespace Langulus
    ///   @param mn - additional information to log                            
    template<class E = Exception, class...MORE>
    constexpr void ErrorInner(
-      const char* location = nullptr,
+      [[maybe_unused]] const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) {
@@ -57,7 +57,7 @@ namespace Langulus
    template<class E = Exception, class...MORE>
    constexpr void AssertInner(
       bool condition,
-      const char* location = nullptr,
+      [[maybe_unused]] const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) {
@@ -98,7 +98,7 @@ namespace Langulus
    template<class...MORE>
    constexpr void AssertWarnInner(
       bool condition,
-      const char* location = nullptr,
+      [[maybe_unused]] const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
@@ -135,7 +135,7 @@ namespace Langulus
    template<class E = Exception, class...MORE>
    constexpr void AssumeUserInner(
       bool condition,
-      const char* location = nullptr,
+      [[maybe_unused]] const char* location = nullptr,
       const char* m1 = "<unknown user assumption failure>",
       MORE&&...mn
    ) {
@@ -174,7 +174,7 @@ namespace Langulus
    template<class...MORE>
    constexpr void AssumeUserWarnInner(
       bool condition,
-      const char* location = nullptr,
+      [[maybe_unused]] const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
@@ -224,7 +224,7 @@ namespace Langulus
    template<class E = Exception, class...MORE>
    constexpr void AssumeDevInner(
       bool condition,
-      const char* location = nullptr,
+      [[maybe_unused]] const char* location = nullptr,
       const char* m1 = "<unknown dev assumption failure>",
       MORE&&...mn
    ) {
@@ -263,7 +263,7 @@ namespace Langulus
    template<class...MORE>
    constexpr void AssumeDevWarnInner(
       bool condition,
-      const char* location = nullptr,
+      [[maybe_unused]] const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
@@ -312,7 +312,7 @@ namespace Langulus
    template<unsigned LEVEL, class E = Exception, class...MORE>
    constexpr void AssumeInner(
       bool condition,
-      const char* location = nullptr,
+      [[maybe_unused]] const char* location = nullptr,
       const char* m1 = "<unknown assumption failure>",
       MORE&&...mn
    ) {
@@ -362,7 +362,7 @@ namespace Langulus
    template<unsigned LEVEL, class...MORE>
    constexpr void AssumeWarnInner(
       bool condition,
-      const char* location = nullptr,
+      [[maybe_unused]] const char* location = nullptr,
       const char* m1 = "<unknown assertion failure>",
       MORE&&...mn
    ) noexcept {
@@ -411,7 +411,7 @@ namespace fmt
       }
 
       template<class CONTEXT>
-      auto format(T const& e, CONTEXT& ctx) const {
+      auto format([[maybe_unused]] T const& e, CONTEXT& ctx) const {
          constexpr auto name = ::Langulus::NameOf<T>();
          #if LANGULUS(DEBUG)
             return format_to(ctx.out(), "{}({} at {})",

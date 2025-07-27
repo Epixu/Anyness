@@ -80,12 +80,6 @@ function(add_langulus_library NAME)
 		target_link_libraries(${NAME} PRIVATE ${arg_LIBRARIES})
     endif()
     
-    if (LANGULUS_COVERAGE)
-        target_compile_options(${NAME} PUBLIC /Od --coverage)
-        target_link_options(${NAME} PUBLIC --coverage)
-        target_link_libraries(${NAME} PUBLIC clang_rt.profile-x86_64.lib) #workaround for bad cmake clang-cl support
-    endif()
-    
 	foreach(ITEM ${arg_DEPENDENCIES})
 		add_dependencies(${NAME} ${ITEM})
 	endforeach()
@@ -138,13 +132,6 @@ endfunction()
 # Create a test executable if tests are enabled									
 function(add_langulus_test NAME)
 	add_langulus_app(${NAME} ${ARGN})
-    
-    if (LANGULUS_COVERAGE)
-        #target_compile_options(${NAME} PRIVATE /Od --coverage)
-        #target_link_options(${NAME} PRIVATE --coverage)
-        #target_link_libraries(${NAME} PRIVATE clang_rt.profile-x86_64.lib) #workaround for bad cmake clang-cl support
-    endif()
-    
 	add_test(
 		NAME				${NAME}
 		COMMAND				${NAME}

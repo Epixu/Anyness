@@ -199,7 +199,7 @@ TEMPLATE_TEST_CASE("Testing literal strings", "[ct]",
    }
 
    WHEN("Iterated") {
-      for (int i = 0; i < fixedString.size(); ++i) {
+      for (size_t i = 0; i < fixedString.size(); ++i) {
          REQUIRE(fixedString[i] == carrayString[i]);
       }
 

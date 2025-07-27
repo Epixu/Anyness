@@ -82,7 +82,7 @@ namespace
    /// Because they're explicit, there are no implicit intent-assigners       
    struct PartiallyIntentConstructible {
       template<template<class> class S, class T>
-      explicit PartiallyIntentConstructible(S<T>&& a) requires CT::Intent<S<T>> {}
+      explicit PartiallyIntentConstructible(S<T>&&) requires CT::Intent<S<T>> {}
    };
    static_assert(not CT::POD<PartiallyIntentConstructible>);
    static_assert(::std::is_copy_constructible_v<PartiallyIntentConstructible>);
@@ -102,7 +102,7 @@ namespace
    ///   @note implicit coversion of intents has been disabled to cope        
    struct PartiallyIntentConstructibleButImplicitly {
       template<template<class> class S, class T>
-      PartiallyIntentConstructibleButImplicitly(S<T>&& a) requires CT::Intent<S<T>> {}
+      PartiallyIntentConstructibleButImplicitly(S<T>&&) requires CT::Intent<S<T>> {}
    };
    static_assert(not CT::POD<PartiallyIntentConstructibleButImplicitly>);
    static_assert(::std::is_copy_constructible_v<PartiallyIntentConstructibleButImplicitly>);

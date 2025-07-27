@@ -258,7 +258,7 @@ namespace Langulus
          if (count > s - pos)
             count = s - pos;         
          
-         for (int i = 0; i < count; ++i)
+         for (size_t i = 0; i < count; ++i)
             result._data[i] = _data[pos + i];
          result._data[count] = 0;
          return result;

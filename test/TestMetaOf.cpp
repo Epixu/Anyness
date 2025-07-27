@@ -186,9 +186,9 @@ namespace
       using ImplicitlyReflectedDataWithTraits::ImplicitlyReflectedDataWithTraits;
    };
    
-   void FunctionForTesting(void*) {
+   /*void FunctionForTesting(void*) {
       Logger::Verbose("Executed FunctionForTesting");
-   }
+   }*/
 }
 
 namespace Langulus::CTTI
