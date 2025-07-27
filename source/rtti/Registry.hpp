@@ -133,6 +133,7 @@ namespace Langulus::RTTI
       auto GetMetaConstByID(size_t) const noexcept -> DefinitionConst const*;
 
    public:
+      LANGULUS_API(RTTI)
       ~Registry();
 
       LANGULUS_API(RTTI)

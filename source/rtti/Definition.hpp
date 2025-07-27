@@ -15,6 +15,7 @@
    #include <unordered_set>
 #endif
 
+#define LANGULUS_META_VERBOSITY_MASTER_SWITCH() 0
 
 namespace Langulus::RTTI
 {

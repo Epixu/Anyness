@@ -16,7 +16,7 @@
    #include <optional>
 #endif
 
-#if 1
+#if 0 or LANGULUS_META_VERBOSITY_MASTER_SWITCH()
    #include <Langulus/Logger.hpp>
    #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
 #else
