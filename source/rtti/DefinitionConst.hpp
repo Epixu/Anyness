@@ -23,8 +23,8 @@ namespace Langulus::RTTI
       // The type of the constant                                       
       DefinitionData const* mType IF_SAFE(= nullptr);
       // A pointer to an instance of the constant on the heap           
-      void const* mData IF_SAFE(= nullptr);
-      void (*mDestroyConstant)(const void*) IF_SAFE(= nullptr);
+      void const* mData = nullptr;
+      void (*mDestroyConstant)(const void*) = nullptr;
 
    public:
       using CTTI_ReflectAs = void;
