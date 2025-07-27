@@ -38,7 +38,7 @@
 #include "DefinitionConst.hpp"
 #include "DefinitionTag.hpp"
 
-#if 0
+#if 1
    #include <Langulus/Logger.hpp>
    #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
 #else
@@ -986,6 +986,11 @@ namespace Langulus::RTTI
       return &definition;
    }
    
+   inline DefinitionData::~DefinitionData() {
+      VERBOSE(Logger::Red, "Destroying data definition: ", Logger::Cyan, mNameOf);
+   }
+   
+
    /// Generate a member definition                                           
    ///   @return the generated member descriptor                              
    template<class HANDLE>

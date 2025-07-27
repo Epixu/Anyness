@@ -15,7 +15,7 @@
    #include <optional>
 #endif
 
-#if 0
+#if 1
    #include <Langulus/Logger.hpp>
    #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
 #else
@@ -95,6 +95,10 @@ namespace Langulus::RTTI
       #endif
 
       return &definition;
+   }
+
+   inline DefinitionTag::~DefinitionTag() {
+      VERBOSE(Logger::Red, "Destroying tag definition: ", Logger::Purple, mNameOf);
    }
 }
 

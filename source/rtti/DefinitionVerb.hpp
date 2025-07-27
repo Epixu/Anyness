@@ -73,6 +73,7 @@ namespace Langulus::RTTI
       
       DefinitionVerb(const Token& cppname) noexcept
          : Definition {cppname} {}
+      ~DefinitionVerb();
    };
 }
 

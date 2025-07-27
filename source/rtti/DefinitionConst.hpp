@@ -36,9 +36,7 @@ namespace Langulus::RTTI
          : Definition {cppname} {}
 
       // ReSharper disable once CppEnforceOverridingDestructorStyle     
-      ~DefinitionConst() {
-         if (mData) mDestroyConstant(mData);
-      }
+      ~DefinitionConst();
    };
 }
 

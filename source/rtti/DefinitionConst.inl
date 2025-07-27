@@ -15,7 +15,7 @@
    #include <optional>
 #endif
 
-#if 0
+#if 1
    #include <Langulus/Logger.hpp>
    #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
 #else
@@ -110,6 +110,11 @@ namespace Langulus::RTTI
       #endif
       
       return &definition;
+   }
+
+   inline DefinitionConst::~DefinitionConst() {
+      VERBOSE(Logger::Red, "Destroying constant definition: ", Logger::Yellow, mNameOf);
+      if (mData) mDestroyConstant(mData);
    }
 }
 
