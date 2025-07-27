@@ -674,7 +674,7 @@ namespace Langulus::RTTI
       // Unload constants                                               
       for (auto pair = mMetaConstantsByCppName.begin(); pair != mMetaConstantsByCppName.end();) {
          auto definition = pair->second.get();
-         if (not definition->mBoundaries.erase(boundary)) {
+         if (not definition->mBoundaries.erase(::std::string{boundary})) {
             // Boundary is irrelevant for this definition               
             ++pair;
             continue;
@@ -712,7 +712,7 @@ namespace Langulus::RTTI
       // Unload file types (must be done before deleting meta data)     
       for (auto pair = mFileDatabase.begin(); pair != mFileDatabase.end();) {
          for (auto def = pair->second.begin(); def != pair->second.end();) {
-            if ((*def)->mBoundaries.size() == 1 and (*def)->mBoundaries.contains(boundary))
+            if ((*def)->mBoundaries.size() == 1 and (*def)->mBoundaries.contains(::std::string{boundary}))
                def = pair->second.erase(def);
             else
                ++def;
@@ -732,7 +732,7 @@ namespace Langulus::RTTI
       // Unload data types                                              
       for (auto pair = mMetaDataByCppName.begin(); pair != mMetaDataByCppName.end();) {
          auto definition = pair->second.get();
-         if (not definition->mBoundaries.erase(boundary)) {
+         if (not definition->mBoundaries.erase(::std::string{boundary})) {
             // Boundary is irrelevant for this definition               
             ++pair;
             continue;
@@ -741,7 +741,7 @@ namespace Langulus::RTTI
          if (not definition->mBoundaries.empty()) {
             // Definition is still used in other boundaries, make sure  
             // we pick new function pointers                            
-            definition->mOtherBoundaries.erase(boundary);
+            definition->mOtherBoundaries.erase(::std::string{boundary});
             definition->mCurrentBoundary = definition->mOtherBoundaries.begin()->second;
             ++pair;
             continue;
@@ -770,8 +770,8 @@ namespace Langulus::RTTI
       //                                                                
       // Unload tags                                                    
       for (auto pair = mMetaTagsByCppName.begin(); pair != mMetaTagsByCppName.end();) {
-         auto definition = const_cast<DefinitionTag*>(pair->second.get());
-         if (not definition->mBoundaries.erase(boundary)) {
+         auto definition = pair->second.get();
+         if (not definition->mBoundaries.erase(::std::string{boundary})) {
             // Boundary is irrelevant for this definition               
             ++pair;
             continue;
@@ -806,8 +806,8 @@ namespace Langulus::RTTI
       //                                                                
       // Unload verbs                                                   
       for (auto pair = mMetaVerbsByCppName.begin(); pair != mMetaVerbsByCppName.end();) {
-         auto definition = const_cast<DefinitionVerb*>(pair->second.get());
-         if (not definition->mBoundaries.erase(boundary)) {
+         auto definition = pair->second.get();
+         if (not definition->mBoundaries.erase(::std::string{boundary})) {
             // Boundary is irrelevant for this definition               
             ++pair;
             continue;

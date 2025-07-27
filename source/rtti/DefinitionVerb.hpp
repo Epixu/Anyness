@@ -62,7 +62,7 @@ namespace Langulus::RTTI
          // All functions, reflected from all points of view            
          // If this map is empty, then data has been reflected from the 
          // main boundary                                               
-         ::std::unordered_map<Token, BoundaryDependent> mOtherBoundaries;
+         ::std::unordered_map<::std::string, BoundaryDependent> mOtherBoundaries;
       #endif
 
    public:

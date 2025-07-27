@@ -142,7 +142,7 @@ namespace Langulus::RTTI::Inner
          // top of the old one, but overwriting properties only if the  
          // changes come from the MainBoundary. Once mBoundary becomes  
          // the MainBoundary, the definition shall never be unregistered
-         public: using BoundarySet = ::std::unordered_set<Token>;
+         public: using BoundarySet = ::std::unordered_set<::std::string>;
          protected: BoundarySet mBoundaries;
       #endif
 

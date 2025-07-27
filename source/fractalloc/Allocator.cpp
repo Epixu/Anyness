@@ -417,7 +417,7 @@ namespace Langulus::Fractalloc
    size_t Allocator::CheckBoundary(const Token& boundary) noexcept {
       size_t count = 0;
       for (const auto& type : Instance.mInstantiatedTypes) {
-         if (not type.GetBoundaries().contains(boundary))
+         if (not type.GetBoundaries().contains(::std::string{boundary}))
             continue;
          
          auto pool = type.GetPoolchain();
