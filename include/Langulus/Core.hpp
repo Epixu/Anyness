@@ -210,7 +210,7 @@
    #define LANGULUS_COMPILER_GCC() 0
 #endif
 
-#if defined(__clang__)
+#if defined(__clang__) and not LANGULUS_COMPILER_GCC()
    // We're on a clang compiler!                                        
    #define LANGULUS_COMPILER_CLANG() 1
 #else
