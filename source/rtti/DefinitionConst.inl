@@ -37,12 +37,12 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the const might 
          // have been reflected previously in another shared library    
-         const auto cppname {CppNameOf<E>()};
+         const auto cppname = CppNameOf<E>();
          DefinitionConst const* meta = Instance.GetMetaConstByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
-         const auto token {NameOf<E, false>()};
+         const auto token = NameOf<E, false>();
          DefinitionConst& definition = meta
             ? const_cast<DefinitionConst&>(*meta)
             : Instance.RegisterConst(cppname, token);
@@ -55,12 +55,17 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         const auto cppname {CppNameOf<E>()};
+         const auto cppname = CppNameOf<E>();
          DefinitionConst& definition = s_definition.emplace(cppname);
 
-         const auto token {NameOf<E, false>()};
-         definition.mNameOf = token;
-         definition.mNameOf[0] = ToUppercase(token[0]);
+         const auto token = Inner::NormalizeAtRuntime(NameOf<E, false>());
+         LglsAssert(not token.empty(),
+            "Invalid constant token is not allowed - "
+            "you have equipped your constant with an empty CTTI::NamedValue. "
+            "The constant in question is: ", cppname
+         );
+         definition.mNameOf = MOV(token);
+         definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
       #endif
 
 

@@ -51,12 +51,12 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the tag might   
          // have been reflected previously in another shared library    
-         const auto cppname {CppNameOf<T>()};
+         const auto cppname = CppNameOf<T>();
          DefinitionTag const* meta = Instance.GetMetaTagByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
-         const auto token {NameOfTag<T>()};
+         const auto token = NameOfTag<T>();
          DefinitionTag& definition = meta
             ? const_cast<DefinitionTag&>(*meta)
             : Instance.RegisterTag(cppname, token);
@@ -69,11 +69,16 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         const auto cppname {CppNameOf<T>()};
+         const auto cppname = CppNameOf<T>();
          DefinitionTag& definition = s_definition.emplace(cppname);
-            
-         const auto token {NameOfTag<T>()};
-         definition.mNameOf = Inner::ToLowercase(token);
+
+         const auto token = Inner::ToLowercase(NameOfTag<T>());
+         LglsAssert(not token.empty(),
+            "Invalid tag token is not allowed - "
+            "you have equipped your type (or its base) with an empty CTTI_DefineTag. "
+            "The type in question is: ", cppname
+         );
+         definition.mNameOf = MOV(token);
       #endif
 
 

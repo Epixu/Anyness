@@ -116,12 +116,12 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
          // have been reflected previously in another shared library    
-         const auto cppname {CppNameOf<T>()};
+         const auto cppname = CppNameOf<T>();
          DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
 
-         const auto token {NameOf<T, false>()};
+         const auto token = NameOf<T, false>();
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
             : Instance.RegisterData(cppname, token);
@@ -134,14 +134,17 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         const auto cppname {CppNameOf<T>()};
+         const auto cppname = CppNameOf<T>();
          DefinitionData& definition = s_definition.emplace(cppname);
 
-         const auto token {NameOf<T, false>()};
-         LglsAssert(not token.empty(), "Invalid data token is not allowed - "
-            "you have equipped your type (or its base) with an empty CTTI_Named");
-         definition.mNameOf = token;
-         definition.mNameOf[0] = ToUppercase(token[0]);
+         const auto token = Inner::NormalizeAtRuntime(NameOf<T, false>());
+         LglsAssert(not token.empty(),
+            "Invalid data token is not allowed - "
+            "you have equipped your type (or its base) with an empty CTTI_Named. "
+            "The type in question is: ", cppname
+         );
+         definition.mNameOf = MOV(token);
+         definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
       #endif
       
       //                                                                

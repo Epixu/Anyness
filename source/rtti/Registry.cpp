@@ -563,7 +563,7 @@ namespace Langulus::RTTI
 
       const auto token = Inner::ToLowercase(token_messy);
       LglsAssert(not token.empty(),
-         "Invalid tag token is not allowed - "
+         "Invalid verb token is not allowed - "
          "you have equipped your verb (or its base) with an empty CTTI_DefineVerb. "
          "The verb in question is: ", cppname);
       

@@ -497,7 +497,7 @@ SCENARIO("Testing reflection of names", "[rtti]") {
       const CMeta meta = MetaConstOf<Pi::Number>();
       REQUIRE(meta);
       #if LANGULUS_COMPILER(GCC)
-         REQUIRE(meta.GetCppName() == "{anonymous}::Pi::Number");
+         REQUIRE(meta.GetCppName() == "<unnamed>::Pi::Number");
       #else
          REQUIRE(meta.GetCppName() == "(anonymous namespace)::Pi::Number");
       #endif

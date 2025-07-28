@@ -51,15 +51,15 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the verb might  
          // have been reflected previously in another shared library    
-         const auto cppname {CppNameOf<T>()};
+         const auto cppname = CppNameOf<T>();
          DefinitionVerb const* meta = Instance.GetMetaVerbByCppName(cppname);
          if (meta and meta->IsInRelevantBoundary())
             return meta;
          
-         const auto verbPos {NameOfVerb<T>()};
-         const auto verbNeg {NameOfVerbReverse<T>()};
-         const auto opPos   {OperatorOfVerb<T>()};
-         const auto opNeg   {OperatorOfVerbReverse<T>()};
+         const auto verbPos = NameOfVerb<T>();
+         const auto verbNeg = NameOfVerbReverse<T>();
+         const auto opPos   = OperatorOfVerb<T>();
+         const auto opNeg   = OperatorOfVerbReverse<T>();
          DefinitionVerb& definition = meta
             ? const_cast<DefinitionVerb&>(*meta)
             : Instance.RegisterVerb(cppname, verbPos, verbNeg, opPos, opNeg);
@@ -72,17 +72,34 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         const auto cppname {CppNameOf<T>()};
+         const auto cppname = CppNameOf<T>();
          DefinitionVerb& definition = s_definition.emplace(cppname);
 
-         const auto verbPos {NameOfVerb<T>()};
-         const auto verbNeg {NameOfVerbReverse<T>()};
-         const auto opPos   {OperatorOfVerb<T>()};
-         const auto opNeg   {OperatorOfVerbReverse<T>()};
-         definition.mNameOf = Inner::ToLowercase(verbPos);
-         definition.mNameOfReverse = Inner::ToLowercase(verbNeg);
-         definition.mOperator = Inner::ToLowercase(opPos);
-         definition.mOperatorReverse = Inner::ToLowercase(opNeg);
+         const auto verbPos = Inner::ToLowercase(NameOfVerb<T>());
+         LglsAssert(not verbPos.empty(),
+            "Invalid verb token is not allowed - "
+            "you have equipped your verb (or its base) with an empty CTTI_DefineVerb. "
+            "The verb in question is: ", cppname);
+
+         const auto verbNeg = Inner::ToLowercase(NameOfVerbReverse<T>());
+         LglsAssert(verbPos != verbNeg,
+            "Verb can't have the same positive and negative tokens for: ", cppname);
+
+         const auto opPos = Inner::ToLowercase(OperatorOfVerb<T>());
+         const auto opNeg = Inner::ToLowercase(OperatorOfVerbReverse<T>());
+         LglsAssert(opPos != opNeg or opPos.empty(),
+            "Verb can't have the same positive and negative operators for: ", cppname);
+         LglsAssert(IsASCII(opPos),
+            "Verb positive operator isn't ASCII for: ", cppname);
+         LglsAssert(IsASCII(opNeg),
+            "Verb reverse operator isn't ASCII for: ", cppname);
+
+         definition.mNameOf = MOV(verbPos);
+         definition.mNameOfReverse = MOV(verbNeg);
+         definition.mOperator = MOV(opPos);
+         definition.mOperatorReverse = MOV(opNeg);
+         definition.mOperatorStripped = Inner::StripSpaces(definition.mOperator);
+         definition.mOperatorReverseStripped = Inner::StripSpaces(definition.mOperatorReverse);
       #endif
 
       //                                                                
