@@ -21,7 +21,6 @@
 
 namespace Langulus
 {
-   
    ///                                                                        
    /// Type that holds a hash                                                 
    /// Size is configurable using LANGULUS_HASHSIZE                           
@@ -58,7 +57,6 @@ namespace Langulus
 
    namespace Inner
    {
-
       ///                                                                     
       /// MurmurHash3 was written by Austin Appleby, and is placed in the     
       /// public domain                                                       
@@ -158,8 +156,7 @@ namespace Langulus
 
          return h1;
       }
-
-   } // namespace Langulus::Inner
+   }
 
 
    /// Hash a sequence of bytes                                               
@@ -177,7 +174,6 @@ namespace Langulus
 
    namespace CT
    {
-
       /// Check if the origin T can be hashed using HashOf                    
       template<class...T>
       concept Hashable = Inner::CheckSize<T...>() and requires (Shed<T>...a) {
@@ -199,8 +195,7 @@ namespace Langulus
       template<class...T>
       concept HasStdHasher = Inner::CheckSize<T...>()
           and requires (::std::hash<Shed<T>>...h, Shed<T>...a) { (h(a), ...); };
-
-   } // namespace Langulus::CT
+   }
 
 
    /// Hash any hashable data, including fundamental/POD/range types          
@@ -373,8 +368,7 @@ namespace Langulus
          return Unsupported {};
       }
    }
-
-} // namespace Langulus
+}
 
 
 namespace std

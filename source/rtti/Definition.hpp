@@ -49,7 +49,8 @@ namespace Langulus::RTTI::Inner
    ///   @attention assumes token is ASCII                                    
    ///   @param token - the token to lowercase                                
    ///   @return the lowercase string                                         
-   constexpr Lowercase ToLowercase(const Token& token) noexcept {
+   // ReSharper disable once CppDFAUnreachableFunctionCall              
+   constexpr Lowercase ToLowercase(const Token& token) has_assumptions {
       LglsAssumeDev(IsASCII(token), "Token must be ASCII");
       Lowercase lc {token};
       for (char& c : lc)
@@ -57,18 +58,17 @@ namespace Langulus::RTTI::Inner
       return lc;
    }
 
-   /// Isolate and lowercase an operator token                                
+   /// Operators are often defined with proper spaces around them for prettier
+   /// logging. This makes sure they are stripped before searching in registry
    ///   @attention assumes token is ASCII                                    
    ///   @param token - the operator                                          
    ///   @return the lowercased and isolated operator token                   
-   constexpr Lowercase IsolateOperator(const Token& token) noexcept {
-      // Skip skippable at the front and the back of token              
+   constexpr Lowercase StripSpaces(const Token& token) has_assumptions {
+      LglsAssumeDev(IsASCII(token), "Token must be ASCII");
       auto l = token.data();
       auto r = token.data() + token.size();
       while (l < r and     *l <= 32)   ++l;
       while (r > l and *(r-1) <= 32)   --r;
-
-      // Lowercase the isolated token                                   
       return ToLowercase(token.substr(l - token.data(), r - l));
    }
       
@@ -77,14 +77,14 @@ namespace Langulus::RTTI::Inner
    /// a template <>, and skip forward to that                                
    ///   @param token - the token to scan                                     
    ///   @return the last token                                               
-   constexpr ::std::string ToLastToken(const Token& token) noexcept {
+   constexpr Token ToLastToken(const Token& token) noexcept {
       size_t depth = 0;
       for (size_t i = token.size() - 1; i < token.size(); --i) {
          switch (token[i]) {
          case ':':
             // If no depth, then we found it                            
             if (not depth)
-               return ::std::string{token.substr(i + 1, token.size() - i - 1)};
+               return token.substr(i + 1, token.size() - i - 1);
             break;
          case '>':
             // Open template scope                                      
@@ -99,7 +99,7 @@ namespace Langulus::RTTI::Inner
             break;
          }
       }
-      return ::std::string{token};
+      return token;
    }
 
    ///                                                                        

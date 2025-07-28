@@ -8,8 +8,6 @@
 #pragma once
 #include "Core.hpp"
 #include <array>
-//#include <functional>
-//#include <iterator>
 #include <string_view>
 
 #if LANGULUS(SAFE)
@@ -104,16 +102,11 @@ namespace Langulus
       constexpr Literal(const value_type(&array)[N]) noexcept {
          for (size_t i = 0; i < N; i++)
             _data[i] = array[i];
-         //_data[M] = 0;
-
-         //::std::copy(::std::begin(array), ::std::end(array), _data.begin());
       }
 
       constexpr Literal& operator = (const value_type(&array)[N]) noexcept {
          for (size_t i = 0; i < N; i++)
             _data[i] = array[i];
-
-         //::std::copy(::std::begin(array), ::std::end(array), _data.begin());
          return *this;
       }
 

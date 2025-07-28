@@ -13,7 +13,6 @@
 
 namespace Langulus
 {
-
    template<auto...IDX>
    using ExpandedSequence = ::std::integer_sequence<typename Values<IDX...>::FirstType, IDX...>;
 
@@ -51,7 +50,6 @@ namespace Langulus
          }(Expand);
       }
    };
-
 }
 
 /// Convenience macro that generates an unfoldable function body              

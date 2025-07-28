@@ -13,7 +13,6 @@ namespace Langulus
 {
    namespace Inner
    {
-
       ///                                                                     
       /// These function declarations are used to decompose lambdas           
       /// You can use it to extract the argument types of functions, by using 
@@ -114,8 +113,7 @@ namespace Langulus
          static_assert(false, "Calling IsNoexcept is ill-formed");
          return {};
       }
-
-   } // namespace Langulus::Inner
+   }
 
    /// Get the type of the first argument of a function                       
    ///   @attention will give void if no arguments                            
@@ -137,5 +135,4 @@ namespace Langulus
    /// Check if a function is noexcept                                        
    template<class F>
    static constexpr bool IsNoexcept = decltype(Inner::IsNoexcept(Fake<F>()))::Enabled;
-
-} // namespace Langulus
+}

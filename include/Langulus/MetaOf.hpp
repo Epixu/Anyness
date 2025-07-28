@@ -14,7 +14,6 @@
 
 namespace Langulus
 {
-
    /// Get the meta definition of a type, deducing whether it's a data, verb, 
    /// or tag. Note: anything can be data, so meta-data is given only if      
    /// not evaluated to be a tag or verb, which might not be desired. Use one 
@@ -119,11 +118,5 @@ namespace Langulus
    RTTI::CMeta MetaConstOf(const Token& token) noexcept {
       return RTTI::Instance.GetMetaConstByToken(token);
    }
-
-   LANGULUS(INLINED)
-   RTTI::VMeta MetaOperator(const Token& token) noexcept {
-      return RTTI::Instance.GetOperator(token);
-   }
 #endif
-
-} // namespace Langulus
+}

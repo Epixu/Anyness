@@ -497,6 +497,7 @@ namespace Langulus::Logger
             else
                oss << (bytes * 1. / 1000'000'000'000'000LL) << " PB";
          }
+         // ReSharper disable once CppDFAUnreachableCode                
          else oss << (bytes * 1. / 1000'000'000LL) << " GB";
 
          return oss.str();

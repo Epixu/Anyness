@@ -48,19 +48,20 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByCppName(const Token& token)
    const noexcept -> DefinitionData const* {
-      const auto foundToken = mMetaDataByCppName.find(::std::string {token});
+      const auto foundToken = mMetaDataByCppName.find(token);
       if (foundToken == mMetaDataByCppName.end())
          return nullptr;
       return foundToken->second.get();
    }
 
    /// Get an existing data definition by its NameOf                          
+   ///   @attention assumes token doesn't contain spaces                      
    ///   @param token - the reflected token of the data definition            
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByToken(const Token& token)
-   const noexcept -> DefinitionData const* {
-      const ::std::string lc {Inner::ToLowercase(token)};
-      const auto foundToken = mMetaDataByToken.find(lc);
+   const has_assumptions -> DefinitionData const* {
+      LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
+      const auto foundToken = mMetaDataByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaDataByToken.end())
          return nullptr;
       return foundToken->second;
@@ -71,19 +72,20 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByCppName(const Token& token)
    const noexcept -> DefinitionConst const* {
-      const auto foundToken = mMetaConstantsByCppName.find(::std::string {token});
+      const auto foundToken = mMetaConstantsByCppName.find(token);
       if (foundToken == mMetaConstantsByCppName.end())
          return nullptr;
       return foundToken->second.get();
    }
 
    /// Get an existing constant definition by its NameOf                      
+   ///   @attention assumes token doesn't contain spaces                      
    ///   @param token - the reflected token of the constant definition        
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByToken(const Token& token)
-   const noexcept -> DefinitionConst const* {
-      const ::std::string lc {Inner::ToLowercase(token)};
-      const auto foundToken = mMetaConstantsByToken.find(lc);
+   const has_assumptions -> DefinitionConst const* {
+      LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
+      const auto foundToken = mMetaConstantsByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaConstantsByToken.end())
          return nullptr;
       return foundToken->second;
@@ -94,19 +96,20 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByCppName(const Token& token)
    const noexcept -> DefinitionTag const* {
-      const auto foundToken = mMetaTagsByCppName.find(::std::string {token});
+      const auto foundToken = mMetaTagsByCppName.find(token);
       if (foundToken == mMetaTagsByCppName.end())
          return nullptr;
       return foundToken->second.get();
    }
 
    /// Get an existing tag definition by its NameOfTag                        
+   ///   @attention assumes token doesn't contain spaces                      
    ///   @param token - the reflected token of the tag definition             
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByToken(const Token& token)
-   const noexcept -> DefinitionTag const* {
-      const ::std::string lc {Inner::ToLowercase(token)};
-      const auto foundToken = mMetaTagsByToken.find(lc);
+   const has_assumptions -> DefinitionTag const* {
+      LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
+      const auto foundToken = mMetaTagsByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaTagsByToken.end())
          return nullptr;
       return foundToken->second;
@@ -117,20 +120,22 @@ namespace Langulus::RTTI
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByCppName(const Token& token)
    const noexcept -> DefinitionVerb const* {
-      const auto foundToken = mMetaVerbsByCppName.find(::std::string {token});
+      const auto foundToken = mMetaVerbsByCppName.find(token);
       if (foundToken == mMetaVerbsByCppName.end())
          return nullptr;
       return foundToken->second.get();
    }
 
    /// Get an existing verb definition by NameOfVerb/NameOfVerbReverse        
+   /// or OperatorOfVerb/OperatorOfVerbReverse                                
+   ///   @attention assumes token doesn't contain spaces                      
    ///   @param token - the reflected token of the verb definition            
    ///                  you can search by positive, as well as negative token 
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByToken(const Token& token)
-   const noexcept -> DefinitionVerb const* {
-      const ::std::string lc {Inner::ToLowercase(token)};
-      const auto foundToken = mMetaVerbsByToken.find(lc);
+   const has_assumptions -> DefinitionVerb const* {
+      LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
+      const auto foundToken = mMetaVerbsByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaVerbsByToken.end())
          return nullptr;
       return foundToken->second;
@@ -187,27 +192,15 @@ namespace Langulus::RTTI
       return GetMetaByID(mMetaConstantsByID, id);
    }
 
-   /// Get an existing verb definition by OperatorOfVerb/OperatorOfVerbReverse
-   ///   @param token - the reflected operator of the verb definition         
-   ///                  you can search by positive, as well as negative       
-   ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetOperator(const Token& token)
-   const noexcept -> DefinitionVerb const* {
-      const auto lc = Inner::IsolateOperator(token);
-      const auto foundToken = mMetaVerbsByToken.find(lc);
-      if (foundToken == mMetaVerbsByToken.end())
-         return nullptr;
-      return foundToken->second;
-   }
-
    /// Get a list of all the interpretations for an ambiguous token           
+   ///   @attention assumes token doesn't contain spaces                      
    ///   @param token - the token to search for                               
    ///   @return the set of associated meta definitions                       
    auto Registry::GetAmbiguousMeta(const Token& token)
-   const noexcept -> const MetaSet& {
+   const has_assumptions -> const MetaSet& {
+      LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       static const MetaSet fallback {};
-      const auto lc = Inner::ToLowercase(Inner::ToLastToken(token));
-      const auto foundToken = mMetaAmbiguous.find(lc);
+      const auto foundToken = mMetaAmbiguous.find(Inner::ToLowercase(token));
       if (foundToken == mMetaAmbiguous.end())
          return fallback;
       return foundToken->second;
@@ -290,7 +283,7 @@ namespace Langulus::RTTI
       // If there are data/traits available, discard verbs/consts (2.a) 
       if (meta_data_encountered and meta_tag_encountered) {
          // Both data and traits encountered, check first letter (2.b)  
-         if (::std::islower(keyword[0])) {
+         if (IsLowercase(keyword[0])) {
             if (meta_tag_encountered == 1)
                return meta_tag;
          }
@@ -340,12 +333,14 @@ namespace Langulus::RTTI
    }
 
    /// Resolve a file extension                                               
+   ///   @attention assumes token doesn't contain spaces                      
    ///   @param token - the file extension to search for                      
    ///   @return all meta definitions associated with the file extension      
-   auto Registry::ResolveFileExtension(const Token& token) const -> const MetaSet& {
+   auto Registry::ResolveFileExtension(const Token& token)
+   const has_assumptions -> const MetaSet& {
+      LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       static const MetaSet fallback {};
-      const auto lc = Inner::ToLowercase(Inner::ToLastToken(token));
-      const auto foundToken = mFileDatabase.find(lc);
+      const auto foundToken = mFileDatabase.find(Inner::ToLowercase(token));
       if (foundToken == mFileDatabase.end())
          return fallback;
       return foundToken->second;
@@ -589,16 +584,16 @@ namespace Langulus::RTTI
             mMetaVerbsByToken.at(lowercased_token_rev)->mCppNameOf);
       }
 
-      auto lowercased_op = Inner::ToLowercase(op);
-      if (not op.empty() and mMetaVerbsByToken.contains(lowercased_op)) {
+      auto stripped_op = Inner::StripSpaces(op);
+      if (not op.empty() and mMetaVerbsByToken.contains(stripped_op)) {
          LglsError("Verb positive operator conflict between ", cppname, " and ",
-            mMetaVerbsByToken.at(lowercased_op)->mCppNameOf);
+            mMetaVerbsByToken.at(stripped_op)->mCppNameOf);
       }
 
-      auto lowercased_op_rev = Inner::ToLowercase(opRev);
-      if (not opRev.empty() and mMetaVerbsByToken.contains(lowercased_op_rev)) {
+      auto stripped_op_rev = Inner::StripSpaces(opRev);
+      if (not opRev.empty() and mMetaVerbsByToken.contains(stripped_op_rev)) {
          LglsError("Verb negative operator conflict between ", cppname, " and ",
-            mMetaVerbsByToken.at(lowercased_op_rev)->mCppNameOf);
+            mMetaVerbsByToken.at(stripped_op_rev)->mCppNameOf);
       }
 
       // If reached, then not found, so insert a new definition         
@@ -615,8 +610,8 @@ namespace Langulus::RTTI
       // Index by lowercased tokens                                     
       meta->mNameOf = MOV(lowercased_token);
       meta->mNameOfReverse = MOV(lowercased_token_rev);
-      meta->mOperator = MOV(lowercased_op);
-      meta->mOperatorReverse = MOV(lowercased_op_rev);
+      meta->mOperator = Inner::ToLowercase(op);
+      meta->mOperatorReverse = Inner::ToLowercase(opRev);
       // Amalgamate all tokens in this one                              
       // Verb disambiguation is a bit more complex                      
       meta->mNameOfLowercased = meta->mNameOf
@@ -631,18 +626,18 @@ namespace Langulus::RTTI
       if (not meta->mNameOfReverse.empty())
          mMetaVerbsByToken[meta->mNameOfReverse] = meta;
       if (not meta->mOperator.empty())
-         mMetaVerbsByToken[meta->mOperator] = meta;
+         mMetaVerbsByToken[stripped_op] = meta;
       if (not meta->mOperatorReverse.empty())
-         mMetaVerbsByToken[meta->mOperatorReverse] = meta;
+         mMetaVerbsByToken[stripped_op_rev] = meta;
 
       // Index by last lowercase token                                  
       mMetaAmbiguous[Inner::ToLastToken(meta->mNameOf)].insert(meta);
       if (not meta->mNameOfReverse.empty())
          mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfReverse)].insert(meta);
       if (not meta->mOperator.empty())
-         mMetaAmbiguous[Inner::ToLastToken(meta->mOperator)].insert(meta);
+         mMetaAmbiguous[stripped_op].insert(meta);
       if (not meta->mOperatorReverse.empty())
-         mMetaAmbiguous[Inner::ToLastToken(meta->mOperatorReverse)].insert(meta);
+         mMetaAmbiguous[stripped_op_rev].insert(meta);
       return *meta;
    }
 

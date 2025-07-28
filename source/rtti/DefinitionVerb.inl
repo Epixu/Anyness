@@ -10,7 +10,6 @@
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/CT/DefineTag.hpp>
 #include <Langulus/CT/DefineVerb.hpp>
-#include <Langulus/Logger.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include <optional>
@@ -98,73 +97,67 @@ namespace Langulus::RTTI
       if constexpr (requires { FContextless {&T::ExecuteContextless}; })
          definition.mCurrentBoundary.mContextless = &T::ExecuteContextless;
 
-   /*#if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      if (definition.mOperator.size()) {
-         Instance.RegisterVerbOperator(definition.mOperator);
-         const auto op = IsolateOperator(definition.mOperator);
-         Logger::VerboseRaw(
-            "Operator ", Logger::DarkGreen, op,
-            " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", (Boundary?Boundary:"MAIN")
-         );
-      }
+      #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+         if (definition.mOperator.size()) {
+            VERBOSE(
+               Logger::DarkGreen, "Operator ",
+               Inner::IsolateOperator(definition.mOperator),
+               " (ID: ", definition.mID, ") ", Logger::Green,
+               "registered from ", (Boundary?Boundary:"MAIN")
+            );
+         }
 
-      if (not definition.mOperatorReverse.empty()) {
-         Instance.RegisterVerbOperatorReverse(definition.mOperatorReverse);
-         const auto op = IsolateOperator(definition.mOperatorReverse);
-         Logger::VerboseRaw(
-            "Operator ", Logger::DarkGreen, op,
-            " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", (Boundary?Boundary:"MAIN")
-         );
-      }
+         if (not definition.mOperatorReverse.empty()) {
+            VERBOSE(
+               Logger::DarkGreen, "Operator ", 
+               Inner::IsolateOperator(definition.mOperatorReverse),
+               " (ID: ", definition.mID, ") ", Logger::Green,
+               "registered from ", (Boundary?Boundary:"MAIN")
+            );
+         }
 
-      Instance.RegisterVerbToken(definition.mNameOf);
-      if (definition.mNameOfReverse.empty()) {
-         Logger::VerboseRaw(
-            "Verb ", Logger::DarkGreen, definition.mNameOf,
-            " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", (Boundary?Boundary:"MAIN")
-         );
-      }
-      else {
-         Instance.RegisterVerbTokenReverse(definition.mNameOfReverse);
-         Logger::VerboseRaw(
-            "Verb ", Logger::DarkGreen, definition.mNameOf, "/", definition.mNameOfReverse,
-            " (ID: ", definition.mID, ") ", Logger::Green,
-            " registered from ", (Boundary?Boundary:"MAIN")
-         );
-      }
-   #else
-      if (definition.mOperator.size()) {
-         const auto op1 = IsolateOperator(definition.mOperator);
-         Logger::VerboseRaw(
-            "Operator ", Logger::DarkGreen, op1, Logger::Green,
-            " registered from ", (Boundary?Boundary:"MAIN")
-         );
-      }
+         if (definition.mNameOfReverse.empty()) {
+            VERBOSE(
+               Logger::DarkGreen, "Verb ", definition.mNameOf,
+               " (ID: ", definition.mID, ") ", Logger::Green,
+               "registered from ", (Boundary?Boundary:"MAIN")
+            );
+         }
+         else {
+            VERBOSE(
+               Logger::DarkGreen, "Verb ", definition.mNameOf, "/", definition.mNameOfReverse,
+               " (ID: ", definition.mID, ") ", Logger::Green,
+               " registered from ", (Boundary?Boundary:"MAIN")
+            );
+         }
+      #else
+         if (definition.mOperator.size()) {
+            VERBOSE(
+               Logger::DarkGreen, "Operator ", Inner::IsolateOperator(definition.mOperator),
+               Logger::Green, " registered from ", (Boundary?Boundary:"MAIN")
+            );
+         }
 
-      if (not definition.mOperatorReverse.empty()) {
-         const auto op2 = IsolateOperator(definition.mOperatorReverse);
-         Logger::VerboseRaw(
-            "Operator ", Logger::DarkGreen, op2, Logger::Green,
-            " registered from ", (Boundary?Boundary:"MAIN")
-         );
-      }
+         if (not definition.mOperatorReverse.empty()) {
+            VERBOSE(
+               Logger::DarkGreen, "Operator ", Inner::IsolateOperator(definition.mOperatorReverse),
+               Logger::Green, " registered from ", (Boundary?Boundary:"MAIN")
+            );
+         }
 
-      if (definition.mNameOfReverse.empty()) {
-         Logger::VerboseRaw(
-            "Verb ", Logger::DarkGreen, definition.mNameOf, Logger::Green,
-            " registered from ", (Boundary?Boundary:"MAIN")
-         );
-      }
-      else {
-         Logger::VerboseRaw(
-            "Verb ", Logger::DarkGreen, definition.mNameOf, "/", definition.mNameOfReverse,
-            Logger::Green, " registered from ", (Boundary?Boundary:"MAIN")
-         );
-      }
-   #endif*/
+         if (definition.mNameOfReverse.empty()) {
+            VERBOSE(
+               Logger::DarkGreen, "Verb ", definition.mNameOf, Logger::Green,
+               " registered from ", (Boundary?Boundary:"MAIN")
+            );
+         }
+         else {
+            VERBOSE(
+               Logger::DarkGreen, "Verb ", definition.mNameOf, "/", definition.mNameOfReverse,
+               Logger::Green, " registered from ", (Boundary?Boundary:"MAIN")
+            );
+         }
+      #endif
       
       return &definition;
    }

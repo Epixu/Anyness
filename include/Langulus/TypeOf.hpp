@@ -54,7 +54,6 @@ namespace Langulus::CT::Inner
 
 namespace Langulus
 {
-
    /// Get the type that wraps std::underlying_type_t<T> for enums,           
    /// as well as any bounded array, or anything with CTTI::Typed::Type or    
    /// T::CTTI_Typed/T::value_type that isn't 'void'. Will result int a type  
@@ -152,5 +151,4 @@ namespace Langulus
       else
          return ShedCast(FWD(a));
    }
-
-} // namespace Langulus
+}

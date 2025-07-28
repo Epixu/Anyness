@@ -31,6 +31,18 @@ namespace Langulus
       }
    }
 
+   /// A fully portable constexpr lowercase character check                   
+   // ReSharper disable once CppDFAUnreachableFunctionCall
+   constexpr bool IsLowercase(char c) noexcept {
+      return c != '_' and IsAlphabetical(c) and c >= 'a';
+   }
+
+   /// A fully portable constexpr lowercase character check                   
+   // ReSharper disable once CppDFAUnreachableFunctionCall
+   constexpr bool IsUppercase(char c) noexcept {
+      return c != '_' and IsAlphabetical(c) and c <= 'Z';
+   }
+
    /// A fully portable constexpr operator character check                    
    // ReSharper disable once CppDFAUnreachableFunctionCall
    constexpr bool IsOperator(char c) noexcept {

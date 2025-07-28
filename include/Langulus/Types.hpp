@@ -31,7 +31,6 @@ namespace Langulus::CTTI
 
 namespace Langulus::CT
 {
-
    namespace Inner
    {
       /// Concepts with ::std::decay_t<T>::CTTI_Void::Enabled bug out for     
@@ -75,8 +74,7 @@ namespace Langulus::CT
 
    template<class...T>
    concept NotTypelist = ((not Typelist<::std::remove_reference_t<T>>) and ...);
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus
 {
@@ -195,6 +193,7 @@ namespace Langulus
       ///          the lambda may or may not return Types, which will be      
       ///          concatenated along if so                                   
       ///   @return a type list, containing the generated types               
+      // ReSharper disable once CppEntityUsedOnlyInUnevaluatedContext   
       static consteval CT::Typelist auto GenerateTypes(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
@@ -397,5 +396,4 @@ namespace Langulus
    /// Retrieve the second type from a type list                              
    template<class...T>
    using SecondOf = typename Types<T...>::Second;
-
-} // namespace Langulus
+}

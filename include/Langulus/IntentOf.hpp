@@ -96,7 +96,6 @@ namespace Langulus::CT
 
 namespace Langulus
 {
-   
    /// Shed only the intent from a type, if any                               
    template<class T>
    using Deint = Tif<CT::Intent<Deref<T>>, TypeOf<T>, T>;
@@ -559,7 +558,6 @@ namespace Langulus
 
    namespace CT
    {
-
       ///                                                                     
       ///   Intent type traits                                                
       ///                                                                     
@@ -670,8 +668,7 @@ namespace Langulus
       template<class...T>
       concept HasMoveAssign = Inner::CheckSize<T...>()
           and (HasIntentAssign<::Langulus::Move, T> and ...);
-
-   } // namespace Langulus::CT
+   }
 
    
    /// Deduce the proper intent, based on whether T already has a             
@@ -688,8 +685,7 @@ namespace Langulus
             Refer<Deref<T>>
          >
       >;
-
-} // namespace Langulus
+}
 
 
 /// A handy constructor & assignment pattern that adds all possible intents   
@@ -709,7 +705,6 @@ namespace Langulus
 
 namespace Langulus
 {
-   
    /// Create an instance of T at the provided memory using placement new     
    /// which considers the intent and checks if T's constructors support it   
    /// All intent-related construction concepts are defined in terms of this  
@@ -949,7 +944,6 @@ namespace Langulus
 
    namespace CT
    {
-   
       /// Check if T is constructible with each of the provided arguments     
       ///   @attention that this differs from std::constructible_from, by     
       ///      attempting each argument separately                            
@@ -1145,7 +1139,5 @@ namespace Langulus
       template<class...T>
       concept MoveAssignable = Inner::CheckSize<T...>()
           and (IntentAssignable<Langulus::Move, T> and ...);
-
-   } // namespace Langulus::CT
-
-} // namespace Langulus
+   }
+}
