@@ -114,18 +114,6 @@
     },
     
     {
-      "name": "sanitize",
-      "description": "Enables sanitizer, see presets below for some useful configurations, as sanitizers are mutually exclusive",
-      "inherits": "base",
-      "hidden": true,
-      "cacheVariables": {
-        "LANGULUS_SANITIZE_COMPILER_FLAGS": "-fsanitize=memory",
-        "LANGULUS_SANITIZE_LINKER_FLAGS": "",
-        "LANGULUS_SANITIZE_COMPILER_FLAGS_MSVC": "",
-        "LANGULUS_SANITIZE_LINKER_FLAGS_MSVC": ""
-      }
-    },
-    {
       "name": "sanitize-undefined",
       "description": "Not used, but here as an example how to enable -fsanitize=undefined",
       "inherits": "base",
@@ -461,15 +449,15 @@
     
     {
       "name": "windows-clang-cl-x64-debug-safe-AVX-managed-coverage",
-      "displayName": "clang-cl x64 Debug Safe AVX with coverage generation",
+      "displayName": "clang-cl x64 Debug Safe AVX Coverage",
       "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, AVX)",
       "inherits": [ "windows", "clang-cl-19", "x64", "debug", "AVX", "coverage", "vendor-clang-cl-x64" ]
     },
     {
       "name": "windows-clang-cl-x64-release-safe-AVX-managed-sanitize",
-      "displayName": "clang-cl x64 Release Safe AVX with sanitizers",
+      "displayName": "clang-cl x64 Release Safe AVX SanitizeAddress",
       "description": "Target Windows with the 64bit Clang-Cl compiler (release, safe, AVX)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX", "sanitize", "vendor-clang-cl-x64" ]
+      "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX", "sanitize-address", "vendor-clang-cl-x64" ]
     },
 
     {
@@ -499,15 +487,15 @@
     
     {
       "name": "ubuntu-clang-x64-debug-safe-AVX-managed-coverage",
-      "displayName": "clang x64 Debug Safe AVX with coverage generation",
+      "displayName": "clang x64 Debug Safe AVX Coverage",
       "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX)",
       "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX", "coverage", "vendor-clang-x64" ]
     },
     {
       "name": "ubuntu-clang-x64-release-safe-AVX-managed-sanitize",
-      "displayName": "clang x64 Release Safe AVX with sanitizers",
+      "displayName": "clang x64 Release Safe AVX SanitizeAddress",
       "description": "Target Ubuntu with the 64bit Clang compiler (release, safe, AVX)",
-      "inherits": [ "linux", "clang++-19", "x64", "release", "AVX", "sanitize", "vendor-clang-x64" ]
+      "inherits": [ "linux", "clang++-19", "x64", "release", "AVX", "sanitize-address", "vendor-clang-x64" ]
     },
 
     {

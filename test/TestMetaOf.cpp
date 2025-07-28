@@ -24,6 +24,18 @@ namespace Langulus::Tags
       using CTTI_DefineTag = Yes<"Name">;
       using CTTI_Info      = Yes<"Used for tagging names">;
    };
+   struct ConflictingName1 {
+      using CTTI_DefineTag = Yes<"Name">;
+   };
+   struct ConflictingName2 {
+      using CTTI_DefineTag = Yes<"int">;
+   };
+   struct ConflictingName3 {
+      using CTTI_DefineTag = Yes<"create">;
+   };
+   struct ConflictingName4 {
+      using CTTI_DefineTag = Yes<"Pi::Number">;
+   };
 }
 
 namespace Langulus::Flow
@@ -36,8 +48,8 @@ namespace Langulus::Verbs
    /// Defines a verb                                                         
    struct Create {
       using CTTI_Versioned = Version<6, 10>;
-      using CTTI_DefineVerb = VerbToken<"create", "destroy", 5.f>;
-      using CTTI_DefineVerbOperator = VerbToken<" + ", " - ">;
+      using CTTI_DefineVerb = DefineVerb<"create", "destroy", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" + ", " - ">;
       using CTTI_Info = Yes<
          "Used for allocating new elements. "
          "If the type you're creating has	a producer, "
@@ -85,6 +97,58 @@ namespace Langulus::Verbs
          return true;
       }
    };
+
+   struct ConflictingByPosToken1 {
+      using CTTI_DefineVerb = DefineVerb<"create", "destroy_alt", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" ++ ", " -- ">;
+   };
+   struct ConflictingByPosToken2 {
+      using CTTI_DefineVerb = DefineVerb<"int", "destroy_alt", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" ++ ", " -- ">;
+   };
+   struct ConflictingByPosToken3 {
+      using CTTI_DefineVerb = DefineVerb<"name", "destroy_alt", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" ++ ", " -- ">;
+   };
+
+   struct ConflictingByNegToken1 {
+      using CTTI_DefineVerb = DefineVerb<"create_alt", "destroy", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" ++ ", " -- ">;
+   };
+   struct ConflictingByNegToken2 {
+      using CTTI_DefineVerb = DefineVerb<"create_alt2", "int", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" +++ ", " --- ">;
+   };
+   struct ConflictingByNegToken3 {
+      using CTTI_DefineVerb = DefineVerb<"create_alt", "name", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" ++ ", " -- ">;
+   };
+
+   struct ConflictingByPosOp1 {
+      using CTTI_DefineVerb = DefineVerb<"create_alt", "destroy_alt", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" + ", " -- ">;
+   };
+   struct ConflictingByPosOp2 {
+      using CTTI_DefineVerb = DefineVerb<"create_alt3", "destroy_alt3", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" int ", " ---- ">;
+   };
+   struct ConflictingByPosOp3 {
+      using CTTI_DefineVerb = DefineVerb<"create_alt", "destroy_alt", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" name ", " -- ">;
+   };
+
+   struct ConflictingByNegOp1 {
+      using CTTI_DefineVerb = DefineVerb<"create_alt", "destroy_alt", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" ++ ", " - ">;
+   };
+   struct ConflictingByNegOp2 {
+      using CTTI_DefineVerb = DefineVerb<"create_alt4", "destroy_alt4", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" ++++ ", " int ">;
+   };
+   struct ConflictingByNegOp3 {
+      using CTTI_DefineVerb = DefineVerb<"create_alt", "destroy_alt", 5.f>;
+      using CTTI_DefineVerbOperator = DefineVerb<" ++ ", " name ">;
+   };
 }
 
 namespace
@@ -92,7 +156,8 @@ namespace
    class IncompleteType;
    
    enum class Pi {
-      Number = 314
+      Number = 314,
+      ConflictingNumber = 666
    };
    
    struct NotReflectable    { using CTTI_ReflectAs = void; };
@@ -195,7 +260,12 @@ namespace Langulus::CTTI
 {
    template<>
    struct MapsTo<Pi> {
-      using Type = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>; //TODO doesn't seem custimizable enough, maybe specialize MapsFromTo<SRC,DST> instead?
+      using Type = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
+      static constexpr bool Enabled = true;
+   };
+   template<>
+   struct NamedValue<Pi::ConflictingNumber> {
+      static constexpr Literal Name = "Pi::Number";
       static constexpr bool Enabled = true;
    };
 }
@@ -396,21 +466,76 @@ SCENARIO("Testing reflection of names", "[rtti]") {
       const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits* const*>();
       REQUIRE(meta);
       #if LANGULUS_COMPILER(GCC)
-      REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits* const*");
+         REQUIRE(meta.GetCppName() == "{anonymous}::ImplicitlyReflectedDataWithTraits* const*");
       #else
-      REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits* const*");
+         REQUIRE(meta.GetCppName() == "(anonymous namespace)::ImplicitlyReflectedDataWithTraits* const*");
       #endif
       REQUIRE(meta.GetName() == "MyType* const*");
+   }
+   {
+      const VMeta meta = MetaVerbOf<Verbs::Create>();
+      REQUIRE(meta);
+      REQUIRE(meta == MetaVerbOf<Verbs::Create*>());
+      REQUIRE(meta == MetaVerbOf<Verbs::Create const>());
+      REQUIRE(meta == MetaVerbOf<Verbs::Create const&>());
+      REQUIRE(meta.GetCppName() == "Langulus::Verbs::Create");
+      REQUIRE(meta.GetPositiveName() == "create");
+      REQUIRE(meta.GetNegativeName() == "destroy");
+      REQUIRE(meta.GetPositiveOperator() == " + ");
+      REQUIRE(meta.GetNegativeOperator() == " - ");
+   }
+   {
+      const TMeta meta = MetaTagOf<Tags::Name>();
+      REQUIRE(meta);
+      REQUIRE(meta == MetaTagOf<Tags::Name*>());
+      REQUIRE(meta == MetaTagOf<Tags::Name const>());
+      REQUIRE(meta == MetaTagOf<Tags::Name const&>());
+      REQUIRE(meta.GetCppName() == "Langulus::Tags::Name");
+      REQUIRE(meta.GetName() == "name");
+   }
+   {
+      const CMeta meta = MetaConstOf<Pi::Number>();
+      REQUIRE(meta);
+      #if LANGULUS_COMPILER(GCC)
+         REQUIRE(meta.GetCppName() == "{anonymous}::Pi::Number");
+      #else
+         REQUIRE(meta.GetCppName() == "(anonymous namespace)::Pi::Number");
+      #endif
+      REQUIRE(meta.GetName() == "Pi::Number");
    }
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       REQUIRE_THROWS(MetaDataOf<ConflictingName>());
       REQUIRE_THROWS(MetaDataOf<ConflictingName*>());
       REQUIRE_THROWS(MetaDataOf<ConflictingName const*>());
-   #else
-      REQUIRE_NOTHROW(MetaDataOf<ConflictingName>());
-      REQUIRE_NOTHROW(MetaDataOf<ConflictingName*>());
-      REQUIRE_NOTHROW(MetaDataOf<ConflictingName const*>());
+
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByNegOp1>());
+      REQUIRE_NOTHROW(MetaVerbOf<Verbs::ConflictingByNegOp2>()); // allowed because tokens differ in capitalization, and int hasn't been associated with a verb yet
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByNegOp3>());
+
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByPosOp1>());
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByPosOp2>());
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByPosOp3>());
+
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByNegToken1>());
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByNegToken2>());
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByNegToken3>());
+
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByPosToken1>());
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByPosToken2>());
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByPosToken3>());
+
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByPosToken1*>());
+      REQUIRE_THROWS(MetaVerbOf<Verbs::ConflictingByPosToken1* const>());
+
+      REQUIRE_THROWS(MetaTagOf<Tags::ConflictingName1>());
+      REQUIRE_THROWS(MetaTagOf<Tags::ConflictingName2>());
+      REQUIRE_THROWS(MetaTagOf<Tags::ConflictingName3>());
+      REQUIRE_NOTHROW(MetaTagOf<Tags::ConflictingName4>()); // allowed because tokens differ in capitalization, and Pi::Number hasn't been associated with a tag yet
+      REQUIRE_THROWS(MetaTagOf<Tags::ConflictingName3*>());
+      REQUIRE_THROWS(MetaTagOf<Tags::ConflictingName3* const>());
+
+      REQUIRE_THROWS(MetaConstOf<Pi::ConflictingNumber>());
    #endif
    
    //REQUIRE_THROWS(MetaDataOf<InvalidName1>()); // shouldn't compile

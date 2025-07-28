@@ -11,6 +11,7 @@
    #error "This file shouldn't be included if MANAGED_REFLECTION feature is disabled"
 #endif
 
+
 namespace Langulus::RTTI::Inner
 {
    template<unsigned ID_SIZE>
@@ -50,27 +51,37 @@ namespace Langulus::RTTI::Inner
       return Base::operator == (rhs);
    }
 
-   /// Get the tag definition                                                 
+   /// Get the verb definition                                                
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetDefinition() const noexcept -> DefinitionVerb const* {
       return Instance.GetMetaVerbByID(Base::GetID());
    }
    
+   /// Get the C++ name of the verb                                           
+   template<unsigned ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetCppName() const noexcept -> Token {
+      return GetDefinition()->mCppNameOf;
+   }
+   
+   /// Get any reflected information about the verb                           
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetInfo() const noexcept -> Token {
       return GetDefinition()->mInfoOf;
    }
    
+   /// Get major verb version                                                 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor()  const noexcept -> unsigned {
       return GetDefinition()->mVersionMajor;
    }
 
+   /// Get minor verb version                                                 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMinor()  const noexcept -> unsigned {
       return GetDefinition()->mVersionMinor;
    }
    
+   /// Get the reflected boundaries                                           
    template<unsigned ID_SIZE> auto MetaVerbStructured_X8<ID_SIZE>::GetBoundaries()
    const noexcept -> Definition::BoundarySet const& {
       return GetDefinition()->mBoundaries;

@@ -57,6 +57,7 @@ namespace Langulus::RTTI
 
          constexpr bool operator == (const MetaVerbStructured_X8&) const noexcept;
 
+         auto GetCppName()          const noexcept -> Token;
          auto GetInfo()             const noexcept -> Token;
          auto GetVersionMajor()     const noexcept -> unsigned;
          auto GetVersionMinor()     const noexcept -> unsigned;

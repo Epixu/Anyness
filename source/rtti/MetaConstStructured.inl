@@ -37,6 +37,11 @@ namespace Langulus::RTTI::Inner
       return Instance.GetMetaConstByID(GetID());
    }
 
+   /// Get the C++ name of the constant, the result of CppNameOf              
+   inline auto MetaConstPacked_16::GetCppName() const noexcept -> Token {
+      return GetDefinition()->mCppNameOf;
+   }
+
    /// Get the name of the constant, the result of NameOf                     
    inline auto MetaConstPacked_16::GetName() const noexcept -> Token {
       return GetDefinition()->mNameOf;

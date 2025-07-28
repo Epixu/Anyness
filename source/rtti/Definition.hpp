@@ -62,14 +62,13 @@ namespace Langulus::RTTI::Inner
    /// logging. This makes sure they are stripped before searching in registry
    ///   @attention assumes token is ASCII                                    
    ///   @param token - the operator                                          
-   ///   @return the lowercased and isolated operator token                   
-   constexpr Lowercase StripSpaces(const Token& token) has_assumptions {
-      LglsAssumeDev(IsASCII(token), "Token must be ASCII");
+   ///   @return the isolated operator token                                  
+   constexpr Token StripSpaces(const Token& token) has_assumptions {
       auto l = token.data();
       auto r = token.data() + token.size();
       while (l < r and     *l <= 32)   ++l;
       while (r > l and *(r-1) <= 32)   --r;
-      return ToLowercase(token.substr(l - token.data(), r - l));
+      return token.substr(l - token.data(), r - l);
    }
       
    /// Get the last, most relevant part of a token that may or may not have   

@@ -41,6 +41,11 @@ namespace Langulus::RTTI::Inner
       return Instance.GetMetaTagByID(GetID());
    }
  
+   /// Get the C++ name of the tag, the result of CppNameOf                   
+   inline auto MetaTagPacked_16::GetCppName() const noexcept -> Token {
+      return GetDefinition()->mCppNameOf;
+   }
+
    /// Get the name of the tag, the result of NameOf                          
    inline auto MetaTagPacked_16::GetName() const noexcept -> Token {
       return GetDefinition()->mNameOf;

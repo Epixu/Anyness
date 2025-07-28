@@ -39,6 +39,7 @@ namespace Langulus::RTTI
          constexpr MetaConstPacked_16& operator = (nullptr_t) noexcept;
          constexpr MetaConstPacked_16& operator = (DefinitionConst const*) noexcept;
 
+         auto GetCppName()       const noexcept -> Token;
          auto GetName()          const noexcept -> Token;
          auto GetInfo()          const noexcept -> Token;
          auto GetVersionMajor()  const noexcept -> unsigned;

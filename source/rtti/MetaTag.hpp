@@ -35,6 +35,7 @@ namespace Langulus::RTTI
          
          constexpr bool operator == (const MetaTagPacked_16&) const noexcept;
 
+         auto GetCppName()       const noexcept -> Token;
          auto GetName()          const noexcept -> Token;
          auto GetInfo()          const noexcept -> Token;
          auto GetVersionMajor()  const noexcept -> unsigned;

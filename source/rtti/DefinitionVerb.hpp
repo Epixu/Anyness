@@ -32,6 +32,10 @@ namespace Langulus::RTTI
       ::std::string mOperator;
       ::std::string mOperatorReverse;
 
+      // Operators with stripped spaces around them                     
+      Token mOperatorStripped;
+      Token mOperatorReverseStripped;
+
       // Verb's reflected precedence                                    
       Real mPrecedence IF_SAFE(= 0);
 

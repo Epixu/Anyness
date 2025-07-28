@@ -600,7 +600,7 @@ static_assert(not IsConstexpr([] { nonconst_function(1,2);}));
 ///                                                                           
 /// Deref                                                                     
 ///                                                                           
-static_assert(::std::same_as<Deref<SheddableType<int&>>, SheddableType<int&>>); //TODO decide whether to shed
+static_assert(::std::same_as<Deref<SheddableType<int&>>, SheddableType<int&>>);
 static_assert(::std::same_as<Deref<SheddableType<int>&>, SheddableType<int>>);
 
 static_assert(::std::same_as<Deref<int>,   int>);
@@ -615,7 +615,7 @@ static_assert(::std::same_as<Deref<int(&)[15]>, int[15]>);
 ///                                                                           
 /// Deptr                                                                     
 ///                                                                           
-static_assert(::std::same_as<Deptr<SheddableType<int*>>, SheddableType<int*>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Deptr<SheddableType<int*>>, SheddableType<int*>>);
 static_assert(::std::same_as<Deptr<SheddableType<int>*>, SheddableType<int>>);
 
 static_assert(::std::same_as<Deptr<int>,   int>);
@@ -646,7 +646,7 @@ static_assert(::std::same_as<Deptr<int const* const*&&>, int const* const>);
 ///                                                                           
 /// Decvq                                                                     
 ///                                                                           
-static_assert(::std::same_as<Decvq<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Decvq<SheddableType<int* const>>, SheddableType<int* const>>);
 static_assert(::std::same_as<Decvq<SheddableType<int>* const volatile>, SheddableType<int>*>);
 
 static_assert(::std::same_as<Decvq<int>,   int>);
@@ -688,7 +688,7 @@ static_assert(::std::same_as<Decvq<int const* const* const volatile>, int const*
 ///                                                                           
 /// Decq                                                                      
 ///                                                                           
-static_assert(::std::same_as<Decq<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Decq<SheddableType<int* const>>, SheddableType<int* const>>);
 static_assert(::std::same_as<Decq<SheddableType<int>* const>, SheddableType<int>*>);
 
 static_assert(::std::same_as<Decq<int>,   int>);
@@ -730,7 +730,7 @@ static_assert(::std::same_as<Decq<int const* const* const volatile>, int const* 
 ///                                                                           
 /// Devq                                                                      
 ///                                                                           
-static_assert(::std::same_as<Decq<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Decq<SheddableType<int* const>>, SheddableType<int* const>>);
 static_assert(::std::same_as<Decq<SheddableType<int>* const volatile>, SheddableType<int>* volatile>);
 
 static_assert(::std::same_as<Devq<int>, int>);
@@ -772,7 +772,7 @@ static_assert(::std::same_as<Devq<int const* const* const volatile>, int const* 
 ///                                                                           
 /// Deext                                                                     
 ///                                                                           
-static_assert(::std::same_as<Deext<SheddableType<int(&)[15]>>, SheddableType<int(&)[15]>>);  //TODO decide whether to shed, because CT::Array sheds and it seems more intuitive
+static_assert(::std::same_as<Deext<SheddableType<int(&)[15]>>, SheddableType<int(&)[15]>>);
 static_assert(::std::same_as<Deext<SheddableType<int>(&)[15]>, SheddableType<int>>);
 
 static_assert(::std::same_as<Deext<int>, int>);
@@ -800,7 +800,7 @@ static_assert(::std::same_as<Deext<int const* const volatile>, int const* const 
 ///                                                                           
 /// Decay                                                                     
 ///                                                                           
-static_assert(::std::same_as<Decay<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<Decay<SheddableType<int* const>>, SheddableType<int* const>>);
 static_assert(::std::same_as<Decay<SheddableType<int>* const volatile>, SheddableType<int>>);
 
 static_assert(::std::same_as<Decay<int>, int>);
@@ -841,7 +841,7 @@ static_assert(::std::same_as<Decay<int const* const* const volatile>, int>);
 ///                                                                           
 /// DecvqAll                                                                  
 ///                                                                           
-static_assert(::std::same_as<DecvqAll<SheddableType<int* const>>, SheddableType<int* const>>);  //TODO decide whether to shed
+static_assert(::std::same_as<DecvqAll<SheddableType<int* const>>, SheddableType<int* const>>);
 static_assert(::std::same_as<DecvqAll<SheddableType<int>* const volatile>, SheddableType<int>*>);
 
 static_assert(::std::same_as<DecvqAll<int>,   int>);

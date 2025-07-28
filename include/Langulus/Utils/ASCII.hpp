@@ -11,6 +11,8 @@
 
 namespace Langulus
 {
+   using Token = ::std::string_view;
+
    /// A fully portable constexpr alphabetical character check                
    /// Only english alphabet and underline symbol are allowed                 
    // ReSharper disable once CppDFAUnreachableFunctionCall
@@ -77,7 +79,7 @@ namespace Langulus
    }
 
    /// Verify that a string literal is made of allowed ASCII symbols          
-   constexpr bool IsASCII(const ::std::string_view& source) noexcept {
+   constexpr bool IsASCII(const Token& source) noexcept {
       for (char c : source) {
          if (IsAlphabetical(c) or IsOperator(c) or IsNumerical(c) or IsSpace(c))
             continue;
@@ -159,7 +161,7 @@ namespace Langulus
    ///   @param rhs - end of the region                                       
    ///   @return true if a transition occurs at both points                   
    // ReSharper disable once CppDFAUnreachableFunctionCall              
-   constexpr bool IsTransition(const ::std::string_view& source, size_t lhs, size_t rhs) noexcept {
+   constexpr bool IsTransition(const Token& source, size_t lhs, size_t rhs) noexcept {
       return (
             // Test left side for transition                            
             lhs == 0
@@ -176,18 +178,35 @@ namespace Langulus
    /// Check if a token satisfies all requirements for being a keyword:       
    /// 1. Must be a continuous string of ASCII characters, no spaces          
    /// 2. Must start with an alphabetical symbol                              
-   /// 3. Must not contain any operators                                      
+   /// 3. Must not contain any operators, except <>:,                         
    ///   @param token - the token to check                                    
    ///   @return true if token is a valid keyword                             
-   constexpr bool IsKeyword(const ::std::string_view& token) noexcept {
-      if (token.empty())
+   constexpr bool IsKeyword(const Token& token) noexcept {
+      if (token.empty() or not IsAlphabetical(token[0]))
          return false;
-      if (not IsAlphabetical(token[0]))
-         return false;
+
+      int template_depth = 0;
+      int namespace_separator = 0;
       for (char c : token) {
-         if (not IsAlphabetical(c) and not IsNumerical(c))
-            return false;
+         if (not IsAlphabetical(c) and not IsNumerical(c)) {
+            switch (c) {
+            case '<':
+               ++template_depth;
+               break;
+            case '>':
+               --template_depth;
+               break;
+            case ':':
+               ++namespace_separator;
+               if (namespace_separator > 2)
+                  return false;
+               break;
+            default:
+               return false;
+            }
+         }
+         else namespace_separator = 0;
       }
-      return true;
+      return template_depth == 0;
    }
 }

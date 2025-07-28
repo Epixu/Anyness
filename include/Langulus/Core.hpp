@@ -205,6 +205,9 @@
 /// Detect compiler                                                           
 #if defined(__GNUC__) and not defined(__clang__)
    // We're on a GNUC Compiler!                                         
+   #if __GNUC___ < 14 or (__GNUC__ == 14 and __GNUC_MINOR__ < 2))
+      #error "Langulus can only be built with GCC 14.2 or above"
+   #endif
    #define LANGULUS_COMPILER_GCC() 1
 #else
    #define LANGULUS_COMPILER_GCC() 0
@@ -212,6 +215,9 @@
 
 #if defined(__clang__) and not LANGULUS_COMPILER_GCC()
    // We're on a clang compiler!                                        
+   #if __clang_major__ < 19
+      #error "Langulus can only be built with Clang 19 or above"
+   #endif
    #define LANGULUS_COMPILER_CLANG() 1
 #else
    #define LANGULUS_COMPILER_CLANG() 0
@@ -219,6 +225,9 @@
 
 #if defined(_MSC_VER) and not defined(__clang__)
    // We're on a microsoft visual c++ compiler. (no enthusiasm)         
+   #if _MSC_VER < 1944
+      #error "Langulus can only be built with MSVC 19.44 or above"
+   #endif
    #define LANGULUS_COMPILER_MSVC() 1
 #else
    #define LANGULUS_COMPILER_MSVC() 0

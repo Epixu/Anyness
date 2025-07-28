@@ -364,6 +364,7 @@ namespace Langulus::RTTI
          "Data type already registered as constant: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
+      // that use a capital first letter, such as constants             
       const auto token = Inner::NormalizeAtRuntime(token_messy);
       LglsAssert(not token.empty(),
          "Invalid data token is not allowed - "
@@ -431,7 +432,8 @@ namespace Langulus::RTTI
          "Constant already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
-      const auto token = Inner::NormalizeAtRuntime(token_messy);
+      // that use a capital first letter, such as data definitions      
+      auto token = Inner::NormalizeAtRuntime(token_messy);
       LglsAssert(not token.empty(),
          "Invalid constant token is not allowed - "
          "you have equipped your constant with an empty CTTI::NamedValue. "
@@ -460,8 +462,8 @@ namespace Langulus::RTTI
       meta->mID = mMetaConstantsByID.size();
 
       // Index by lowercased token                                      
-      meta->mNameOf = token;
-      meta->mNameOf[0] = ToUppercase(token[0]);
+      meta->mNameOf = MOV(token);
+      meta->mNameOf[0] = ToUppercase(meta->mNameOf[0]);
       meta->mNameOfLowercased = MOV(lowercased_token);
       // @important notice how key is made from heap-allocated          
       // member variable. This guarantees, that if a boundary is        
@@ -491,7 +493,8 @@ namespace Langulus::RTTI
          "Tag already registered as verb: ", cppname);
 
       // Make sure scripting token doesn't conflict with other metas    
-      const auto token = Inner::NormalizeAtRuntime(token_messy);
+      // that use a lowercase first letter, such as verbs               
+      const auto token = Inner::ToLowercase(token_messy);
       LglsAssert(not token.empty(),
          "Invalid tag token is not allowed - "
          "you have equipped your type (or its base) with an empty CTTI_DefineTag. "
@@ -502,6 +505,10 @@ namespace Langulus::RTTI
       if (mMetaTagsByToken.contains(lowercased_token)) {
          LglsError("Tag token conflict between ", cppname, " and ",
             mMetaTagsByToken.at(lowercased_token)->mCppNameOf);
+      }
+      if (mMetaVerbsByToken.contains(lowercased_token)) {
+         LglsError("Token conflict between tag ", cppname, " and verb ",
+            mMetaVerbsByToken.at(lowercased_token)->mCppNameOf);
       }
 
       // If reached, then not found, so insert a new definition         
@@ -554,14 +561,13 @@ namespace Langulus::RTTI
       LglsAssert(not mMetaTagsByCppName.contains(cppname_s),
          "Verb already registered as tag: ", cppname);
 
-      // Make sure scripting token doesn't conflict with other metas    
-      const auto token = Inner::NormalizeAtRuntime(token_messy);
+      const auto token = Inner::ToLowercase(token_messy);
       LglsAssert(not token.empty(),
          "Invalid tag token is not allowed - "
          "you have equipped your verb (or its base) with an empty CTTI_DefineVerb. "
          "The verb in question is: ", cppname);
       
-      const auto tokenRev = Inner::NormalizeAtRuntime(tokenRev_messy);
+      const auto tokenRev = Inner::ToLowercase(tokenRev_messy);
       LglsAssert(token != tokenRev,
          "Verb can't have the same positive and negative tokens for: ", cppname);
       
@@ -572,10 +578,16 @@ namespace Langulus::RTTI
       LglsAssert(IsASCII(opRev),
          "Verb reverse operator isn't ASCII for: ", cppname);
 
+      // Make sure scripting token doesn't conflict with other metas    
+      // that use a lowercase first letter, such as tags                
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaVerbsByToken.contains(lowercased_token)) {
          LglsError("Verb positive token conflict between ", cppname, " and ",
             mMetaVerbsByToken.at(lowercased_token)->mCppNameOf);
+      }
+      if (mMetaTagsByToken.contains(lowercased_token)) {
+         LglsError("Token conflict between verb positive token in ", cppname, " and tag ",
+            mMetaTagsByToken.at(lowercased_token)->mCppNameOf);
       }
 
       auto lowercased_token_rev = Inner::ToLowercase(tokenRev);
@@ -583,17 +595,31 @@ namespace Langulus::RTTI
          LglsError("Verb negative token conflict between ", cppname, " and ",
             mMetaVerbsByToken.at(lowercased_token_rev)->mCppNameOf);
       }
+      if (not tokenRev.empty() and mMetaTagsByToken.contains(lowercased_token_rev)) {
+         LglsError("Token conflict between verb negative token in ", cppname, " and tag ",
+            mMetaTagsByToken.at(lowercased_token_rev)->mCppNameOf);
+      }
 
-      auto stripped_op = Inner::StripSpaces(op);
-      if (not op.empty() and mMetaVerbsByToken.contains(stripped_op)) {
+      auto lowercased_op = Inner::ToLowercase(op);
+      auto stripped_op = Inner::StripSpaces(lowercased_op);
+      if (not stripped_op.empty() and mMetaVerbsByToken.contains(stripped_op)) {
          LglsError("Verb positive operator conflict between ", cppname, " and ",
             mMetaVerbsByToken.at(stripped_op)->mCppNameOf);
       }
+      if (not stripped_op.empty() and mMetaTagsByToken.contains(stripped_op)) {
+         LglsError("Token conflict between verb positive operator in ", cppname, " and tag ",
+            mMetaTagsByToken.at(stripped_op)->mCppNameOf);
+      }
 
-      auto stripped_op_rev = Inner::StripSpaces(opRev);
-      if (not opRev.empty() and mMetaVerbsByToken.contains(stripped_op_rev)) {
+      auto lowercased_op_rev = Inner::ToLowercase(opRev);
+      auto stripped_op_rev = Inner::StripSpaces(lowercased_op_rev);
+      if (not stripped_op_rev.empty() and mMetaVerbsByToken.contains(stripped_op_rev)) {
          LglsError("Verb negative operator conflict between ", cppname, " and ",
             mMetaVerbsByToken.at(stripped_op_rev)->mCppNameOf);
+      }
+      if (not stripped_op_rev.empty() and mMetaTagsByToken.contains(stripped_op_rev)) {
+         LglsError("Token conflict between verb negative operator in ", cppname, " and tag ",
+            mMetaTagsByToken.at(stripped_op_rev)->mCppNameOf);
       }
 
       // If reached, then not found, so insert a new definition         
@@ -610,14 +636,16 @@ namespace Langulus::RTTI
       // Index by lowercased tokens                                     
       meta->mNameOf = MOV(lowercased_token);
       meta->mNameOfReverse = MOV(lowercased_token_rev);
-      meta->mOperator = Inner::ToLowercase(op);
-      meta->mOperatorReverse = Inner::ToLowercase(opRev);
+      meta->mOperator = MOV(lowercased_op);
+      meta->mOperatorReverse = MOV(lowercased_op_rev);
+      meta->mOperatorStripped = Inner::StripSpaces(meta->mOperator);
+      meta->mOperatorReverseStripped = Inner::StripSpaces(meta->mOperatorReverse);
       // Amalgamate all tokens in this one                              
       // Verb disambiguation is a bit more complex                      
       meta->mNameOfLowercased = meta->mNameOf
                         + " " + meta->mNameOfReverse
-                        + " " + meta->mOperator
-                        + " " + meta->mOperatorReverse;
+                        + " " + ::std::string(meta->mOperatorStripped)
+                        + " " + ::std::string(meta->mOperatorReverseStripped);
 
       // @important notice how key is made from heap-allocated          
       // member variable. This guarantees, that if a boundary is        
@@ -625,19 +653,19 @@ namespace Langulus::RTTI
       mMetaVerbsByToken[meta->mNameOf] = meta;
       if (not meta->mNameOfReverse.empty())
          mMetaVerbsByToken[meta->mNameOfReverse] = meta;
-      if (not meta->mOperator.empty())
-         mMetaVerbsByToken[stripped_op] = meta;
-      if (not meta->mOperatorReverse.empty())
-         mMetaVerbsByToken[stripped_op_rev] = meta;
+      if (not meta->mOperatorStripped.empty())
+         mMetaVerbsByToken[meta->mOperatorStripped] = meta;
+      if (not meta->mOperatorReverseStripped.empty())
+         mMetaVerbsByToken[meta->mOperatorReverseStripped] = meta;
 
       // Index by last lowercase token                                  
       mMetaAmbiguous[Inner::ToLastToken(meta->mNameOf)].insert(meta);
       if (not meta->mNameOfReverse.empty())
          mMetaAmbiguous[Inner::ToLastToken(meta->mNameOfReverse)].insert(meta);
-      if (not meta->mOperator.empty())
-         mMetaAmbiguous[stripped_op].insert(meta);
-      if (not meta->mOperatorReverse.empty())
-         mMetaAmbiguous[stripped_op_rev].insert(meta);
+      if (not meta->mOperatorStripped.empty())
+         mMetaAmbiguous[meta->mOperatorStripped].insert(meta);
+      if (not meta->mOperatorReverseStripped.empty())
+         mMetaAmbiguous[meta->mOperatorReverseStripped].insert(meta);
       return *meta;
    }
 
