@@ -57,12 +57,14 @@ namespace Langulus::RTTI
          auto atT = static_cast<void**>(at);
          *atT = nullptr;
       };
+
       LANGULUS(NOINLINE)
       inline void SparseCopyConstructor(void* from, void* to) noexcept {
          auto fromT = static_cast<void**>(from);
          auto toT = static_cast<void**>(to);
          *fromT = *toT;
       };
+
       LANGULUS(NOINLINE)
       inline auto SparseCompare(void* lhs, void* rhs) noexcept -> Compared {
          // Pointers are either the same or not - not                   
@@ -71,6 +73,7 @@ namespace Langulus::RTTI
          auto rhsT = static_cast<void**>(rhs);
          return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;
       };
+
       LANGULUS(NOINLINE)
       inline auto SparseHash(void* lhs) noexcept -> Hash {
          auto lhsT = static_cast<void**>(lhs);
@@ -137,13 +140,12 @@ namespace Langulus::RTTI
          const auto cppname = CppNameOf<T>();
          DefinitionData& definition = s_definition.emplace(cppname);
 
-         const auto token = Inner::NormalizeAtRuntime(NameOf<T, false>());
-         LglsAssert(not token.empty(),
+         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<T, false>());
+         LglsAssert(not definition.mNameOf.empty(),
             "Invalid data token is not allowed - "
             "you have equipped your type (or its base) with an empty CTTI_Named. "
             "The type in question is: ", cppname
          );
-         definition.mNameOf = MOV(token);
          definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
       #endif
       
@@ -595,9 +597,9 @@ namespace Langulus::RTTI
          const auto cppname {CppNameOf<Decvq<T>>() + " const"};
          DefinitionData& definition = s_definition.emplace(cppname);
       
-         const auto token {NameOf<Decvq<T>>() + " const"};
-         definition.mNameOf = token;
-         definition.mNameOf[0] = ToUppercase(token[0]);
+         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<T>, false>());
+         definition.mNameOf += " const";
+         definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
       #endif
       
       //                                                                
@@ -793,12 +795,14 @@ namespace Langulus::RTTI
          else cppname += "*";
          DefinitionData& definition = s_definition.emplace(cppname);
 
-         ::std::string token {NameOf<Decvq<Deptr<T>>>()};
-         if constexpr (CT::Constant<Deptr<T>>) token += " const";
-         if constexpr (CT::Constant<T>) token += "* const";
-         else token += "*";
-         definition.mNameOf = token;
-         definition.mNameOf[0] = ToUppercase(token[0]);
+         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<Deptr<T>>, false>());
+         if constexpr (CT::Constant<Deptr<T>>)
+            definition.mNameOf += " const";
+         if constexpr (CT::Constant<T>)
+            definition.mNameOf += "* const";
+         else
+            definition.mNameOf += "*";
+         definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
       #endif
       
       //                                                                

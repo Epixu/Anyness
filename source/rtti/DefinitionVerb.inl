@@ -75,29 +75,25 @@ namespace Langulus::RTTI
          const auto cppname = CppNameOf<T>();
          DefinitionVerb& definition = s_definition.emplace(cppname);
 
-         const auto verbPos = Inner::ToLowercase(NameOfVerb<T>());
-         LglsAssert(not verbPos.empty(),
+         definition.mNameOf = Inner::ToLowercase(NameOfVerb<T>());
+         LglsAssert(not definition.mNameOf.empty(),
             "Invalid verb token is not allowed - "
             "you have equipped your verb (or its base) with an empty CTTI_DefineVerb. "
             "The verb in question is: ", cppname);
 
-         const auto verbNeg = Inner::ToLowercase(NameOfVerbReverse<T>());
-         LglsAssert(verbPos != verbNeg,
+         definition.mNameOfReverse = Inner::ToLowercase(NameOfVerbReverse<T>());
+         LglsAssert(definition.mNameOf != definition.mNameOfReverse,
             "Verb can't have the same positive and negative tokens for: ", cppname);
 
-         const auto opPos = Inner::ToLowercase(OperatorOfVerb<T>());
-         const auto opNeg = Inner::ToLowercase(OperatorOfVerbReverse<T>());
-         LglsAssert(opPos != opNeg or opPos.empty(),
+         definition.mOperator = Inner::ToLowercase(OperatorOfVerb<T>());
+         definition.mOperatorReverse = Inner::ToLowercase(OperatorOfVerbReverse<T>());
+         LglsAssert(definition.mOperator != definition.mOperatorReverse or definition.mOperator.empty(),
             "Verb can't have the same positive and negative operators for: ", cppname);
-         LglsAssert(IsASCII(opPos),
+         LglsAssert(IsASCII(definition.mOperator),
             "Verb positive operator isn't ASCII for: ", cppname);
-         LglsAssert(IsASCII(opNeg),
+         LglsAssert(IsASCII(definition.mOperatorReverse),
             "Verb reverse operator isn't ASCII for: ", cppname);
 
-         definition.mNameOf = MOV(verbPos);
-         definition.mNameOfReverse = MOV(verbNeg);
-         definition.mOperator = MOV(opPos);
-         definition.mOperatorReverse = MOV(opNeg);
          definition.mOperatorStripped = Inner::StripSpaces(definition.mOperator);
          definition.mOperatorReverseStripped = Inner::StripSpaces(definition.mOperatorReverse);
       #endif

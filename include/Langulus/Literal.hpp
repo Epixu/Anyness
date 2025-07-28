@@ -99,8 +99,9 @@ namespace Langulus
          _data[M] = 0;
       }
 
-      constexpr Literal(const value_type(&array)[N]) noexcept {
-         for (size_t i = 0; i < N; i++)
+      template<size_t M> requires (M <= N + 1)
+      constexpr Literal(const value_type(&array)[M]) noexcept {
+         for (size_t i = 0; i < M; i++)
             _data[i] = array[i];
       }
 
@@ -444,6 +445,16 @@ namespace Langulus
             *(d++) = *(s++); 
          return *this;
       }
+
+      template<CT::LiteralChar C, size_t M>
+      constexpr Literal& operator += (const C(&rhs)[M]) noexcept {
+         auto d = data() + size();
+         auto s = rhs;
+         const auto sEnd = rhs + M;
+         while (d != data() + ArraySize and s != sEnd)
+            *(d++) = *(s++); 
+         return *this;
+      }
    };
 
    Literal() -> Literal<Unsupported, 0>;
@@ -515,7 +526,7 @@ namespace Langulus
    /// View == Literal                                                        
    template<CT::LiteralString S>
    constexpr bool operator == (typename S::view_type lhs, const S& rhs) {
-      return lhs == static_cast<typename S::view_type>(rhs);
+      return static_cast<typename S::view_type>(rhs) == lhs;
    }
 
    /// View == Undefined                                                      
@@ -527,7 +538,7 @@ namespace Langulus
    /// Literal == Array                                                       
    template<CT::LiteralString S, size_t N>
    constexpr bool operator == (const S& lhs, const typename S::value_type(&rhs)[N]) {
-      return lhs == static_cast<typename S::view_type>(rhs);
+      return static_cast<typename S::view_type>(rhs) == lhs;
    }
 
    /// Array == Literal                                                       
@@ -609,34 +620,32 @@ namespace Langulus
       return result;
    }
 
-   template<CT::LiteralChar C, size_t N>
-   constexpr auto operator + (const C(&lhs)[N], const CT::LiteralString auto& rhs) {
-      Literal lhs2 = lhs;
-      return lhs2 + rhs;
+   template<CT::LiteralChar C, size_t N, CT::LiteralString RHS>
+   constexpr auto operator + (const C(&lhs)[N], const RHS& rhs) {
+      typename RHS::template Resized<N + RHS::ArraySize> result {lhs};
+      result += rhs;
+      return result;
    }
 
-   template<CT::LiteralChar C, size_t N>
-   constexpr auto operator + (const CT::LiteralString auto& lhs, const C(&rhs)[N]) {
-      Literal rhs2 = rhs;
-      return lhs + rhs2;
+   template<CT::LiteralChar C, size_t N, CT::LiteralString LHS>
+   constexpr auto operator + (const LHS& lhs, const C(&rhs)[N]) {
+      typename LHS::template Resized<LHS::ArraySize + N> result {lhs};
+      result += rhs;
+      return result;
    }
 
-   namespace Inner
-   {
-      template<class T>
-      constexpr auto from_char(T ch) {
-         Literal<T, 1> fs;
-         fs[0] = ch;
-         return fs;
-      }
+   template<CT::LiteralChar C, CT::LiteralString RHS>
+   constexpr auto operator + (C lhs, const RHS& rhs) {
+      typename RHS::template Resized<1 + RHS::ArraySize> result {lhs};
+      result += rhs;
+      return result;
    }
 
-   constexpr auto operator + (CT::LiteralChar auto lhs, const CT::LiteralString auto& rhs) {
-      return Inner::from_char(lhs) + rhs;
-   }
-
-   constexpr auto operator + (const CT::LiteralString auto& lhs, CT::LiteralChar auto rhs) {
-      return lhs + Inner::from_char(rhs);
+   template<CT::LiteralChar C, CT::LiteralString LHS>
+   constexpr auto operator + (const LHS& lhs, C rhs) {
+      typename LHS::template Resized<1 + LHS::ArraySize> result {lhs};
+      result += rhs;
+      return result;
    }
 
    

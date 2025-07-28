@@ -72,13 +72,12 @@ namespace Langulus::RTTI
          const auto cppname = CppNameOf<T>();
          DefinitionTag& definition = s_definition.emplace(cppname);
 
-         const auto token = Inner::ToLowercase(NameOfTag<T>());
-         LglsAssert(not token.empty(),
+         definition.mNameOf = Inner::ToLowercase(NameOfTag<T>());
+         LglsAssert(not definition.mNameOf.empty(),
             "Invalid tag token is not allowed - "
             "you have equipped your type (or its base) with an empty CTTI_DefineTag. "
             "The type in question is: ", cppname
          );
-         definition.mNameOf = MOV(token);
       #endif
 
 
