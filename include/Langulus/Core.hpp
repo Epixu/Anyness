@@ -205,7 +205,7 @@
 /// Detect compiler                                                           
 #if defined(__GNUC__) and not defined(__clang__)
    // We're on a GNUC Compiler!                                         
-   #if __GNUC___ < 14 or (__GNUC__ == 14 and __GNUC_MINOR__ < 2))
+   #if __GNUC___ < 14 or (__GNUC__ == 14 and __GNUC_MINOR__ < 2)
       #error "Langulus can only be built with GCC 14.2 or above"
    #endif
    #define LANGULUS_COMPILER_GCC() 1
