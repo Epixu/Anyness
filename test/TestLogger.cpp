@@ -128,7 +128,7 @@ SCENARIO("Logging to console (stateful)", "[logger]") {
       Logger::Line(Logger::Purple, "Purple, ", Logger::Red, "Red, ", Logger::White, "White, ", Logger::Yellow, "Yellow, ");
    }
    {
-      auto scope = Logger::Section("Now testing background colors (yellow color should carry over): ");
+      auto scope = Logger::Section("Now testing background colors: ");
       Logger::Line(Logger::BlackBgr, "Black, ", Logger::BlueBgr, "Blue, ", Logger::CyanBgr, "Cyan, ", Logger::DarkBlueBgr, "Dark blue, ");
       Logger::Line(Logger::DarkCyanBgr, "Dark cyan, ", Logger::DarkGrayBgr, "Dark gray, ", Logger::DarkGreenBgr, "Dark green, ", Logger::DarkPurpleBgr, "Dark purple, ");
       Logger::Line(Logger::DarkRedBgr, "Dark red, ", Logger::DarkYellowBgr, "Dark yellow, ", Logger::GrayBgr, "Gray, ", Logger::GreenBgr, "Green, ");
