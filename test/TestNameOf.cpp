@@ -8,7 +8,6 @@
 #include "Main.hpp"
 #include <Langulus/NameOf.hpp>
 
-#include <string>
 #if 0
    #include <Langulus/Logger.hpp>
    #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)

@@ -1,9 +1,3 @@
-#[[file(GLOB_RECURSE
-	LANGULUS_ANYNESS_TEST_SOURCES 
-	LIST_DIRECTORIES FALSE CONFIGURE_DEPENDS
-	*.cpp
-)]]
-
 fetch_external_module(
     Catch2
     GIT_REPOSITORY  https://github.com/catchorg/Catch2.git
@@ -20,10 +14,11 @@ add_langulus_test(LangulusAnynessTest
 				TestLogger.cpp
 				TestMetaOf.cpp
 				TestNameOf.cpp
-				TestSuffixOf.cpp
+				TestRetype.cpp
+				TestSequence.cpp
 	      		TestTypenav.cpp
 	      		TestTypeOf.cpp
-				#${LANGULUS_ANYNESS_TEST_SOURCES}
+                CT/TestSuffix.cpp
 	LIBRARIES	Catch2 LangulusAnyness
 )
 

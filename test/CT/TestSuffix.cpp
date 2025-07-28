@@ -5,7 +5,7 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-#include "Main.hpp"
+#include "../Main.hpp"
 #include <Langulus/CT/Suffix.hpp>
 #include <Langulus/Logger.hpp>
 

@@ -6,36 +6,29 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Core.hpp"
 #include "Values.hpp"
+#include "CT/Noexcept.hpp"
 #include <utility>
 
 
 namespace Langulus
 {
    template<auto...IDX>
-   using ExpandedSequence = ::std::integer_sequence<typename Values<IDX...>::FirstType, IDX...>;
-
+   using ExpandedSequence =
+      ::std::integer_sequence<typename Values<IDX...>::FirstType, IDX...>;
 
    ///                                                                        
    ///   Compile-time integer sequences                                       
    ///                                                                        
    template<auto END>
    struct Sequence {
-   protected:
-      template<class LAMBDA>
-      static consteval bool Noexcept() {
-         return noexcept(Fake<LAMBDA&&>().template operator() <0> ());
-      }
-
-   public:
       using Type = decltype(END);
       static constexpr auto Size   = END;
       static constexpr bool Empty  = END == 0;
       static constexpr auto Expand = ::std::make_integer_sequence<Type, END> {};
 
       /// Iterate through each index in the sequence using generator pattern  
-      ///   @param generator - a templated lambda function                    
+      ///   @param lambda - a templated lambda function                       
       /// Example use:                                                        
       ///   Sequence<Ret::Columns>::ForEach([&]<Offset COL>() noexcept {      
       ///      auto& lc = lhs.template GetColumn<COL>();                      
@@ -43,10 +36,9 @@ namespace Langulus
       ///         *(r++) = (lc * rhs.template GetRow<ROW>()).HSum();          
       ///      });                                                            
       ///   });                                                               
-      template<class LAMBDA>
-      static constexpr void ForEach(LAMBDA&& generator) noexcept(Noexcept<LAMBDA>()) {
-         [&]<Type...IDX>(ExpandedSequence<IDX...>) noexcept(Noexcept<LAMBDA>()) {
-            (generator.template operator() <IDX> (), ...);
+      static constexpr void ForEach(auto&& lambda) noexcept_if(lambda) {
+         [&]<Type...IDX>(ExpandedSequence<IDX...>) noexcept_if(lambda) {
+            (lambda.template operator() <IDX> (), ...);
          }(Expand);
       }
    };
@@ -54,10 +46,10 @@ namespace Langulus
 
 /// Convenience macro that generates an unfoldable function body              
 /// Example use:                                                              
-///   return LANGULUS_SEQUENCE(StateCount, {                                  
+///   return LglsSequence(StateCount, {                                       
 ///      return ((StateType {1} << I) | ...);                                 
 ///   });                                                                     
-#define LANGULUS_SEQUENCE(END, BODY)                                     \
+#define LglsSequence(END, BODY)                                          \
    [&]<decltype(END)...I>(::std::integer_sequence<decltype(END), I...>)  \
       BODY                                                               \
    (::std::make_integer_sequence<decltype(END), END> {});

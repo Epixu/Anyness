@@ -23,6 +23,9 @@ namespace Langulus::CT::Inner
       static constexpr bool Value = true;
       static constexpr size_t ArgumentCount = sizeof...(ARGS);
       using Arguments = Types<ARGS...>;
+
+      template<class...NEW_ARGS>
+      using Retype = T<NEW_ARGS...>;
    };
 }
 

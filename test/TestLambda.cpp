@@ -7,6 +7,7 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/Lambda.hpp>
+#include <Langulus/CT/Noexcept.hpp>
 #include <concepts>
 
 using namespace Langulus;
@@ -32,6 +33,13 @@ namespace
       double ConstTwoArgs(int, float) const { return 5; }
       double ConstTwoArgsRef(int&, float&) const noexcept { return 5; }
    };
+
+   int testNoexceptTrue() noexcept { return 1; }
+   int testNoexceptFalse() { return 1; }
+   int testNoexceptMaybe1() noexcept_if(testNoexceptTrue) { return 1; }
+   int testNoexceptMaybe2() noexcept_if(testNoexceptFalse) { return 1; }
+   static_assert(    IsNoexcept<decltype(testNoexceptMaybe1)>);
+   static_assert(not IsNoexcept<decltype(testNoexceptMaybe2)>);
 }
 
 
