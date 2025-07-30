@@ -32,5 +32,9 @@
 #define ALL_TYPES             UNSIGNED_TYPES, SIGNED_TYPES, CHARACTER_TYPES, BOOL_TYPES
 
 CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception& e) {
-   return e.mMessage;
+   #if LANGULUS(DEBUG)
+      return e.mMessage;
+   #else
+      return ::Langulus::Exception::DefaultMessage;
+   #endif
 }
