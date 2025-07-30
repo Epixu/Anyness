@@ -59,7 +59,8 @@ TEMPLATE_TEST_CASE("Tags", "[tag]",
 
    // Will cause a runtime meta conflict with another test              
    // if that test has been executed prior to this one (!!!)            
-   REQUIRE_THROWS(MetaTagOf<Tags::Name<>>());
+   // Sad thing is, that this can't be guaranteed, so I've disabled it  
+   //REQUIRE_THROWS(MetaTagOf<Tags::Name<>>());
 
    {
       // Testing the tag aspect of the tag                              
