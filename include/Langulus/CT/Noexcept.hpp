@@ -6,7 +6,8 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../Core.hpp"
+#include "../Lambda.hpp"
+#include "../Typenav.hpp"
 
 
 namespace Langulus
@@ -50,16 +51,23 @@ namespace Langulus
       }
 
       template<class F>
-      auto IsNoexcept(F) -> decltype(IsNoexcept(&F::operator())) {
+      auto IsNoexcept(F&&) -> decltype(IsNoexcept(decltype(&F::operator()) {})) {
+         static_assert(false, "Calling IsNoexcept is ill-formed");
+         return {};
+      }
+      
+      template<class F>
+      auto IsNoexcept(F&&) -> decltype(IsNoexcept(decltype(&F::template operator()<int>) {})) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
          return {};
       }
    }
 
-   /// Check if any kind of function F is noexcept                            
-   template<class F>
-   static constexpr bool IsNoexcept =
-      ::std::same_as<decltype(Inner::IsNoexcept(Fake<F>())), ::std::true_type>;
+   /// True if all functions F... are noexcept                                
+   template<class...F>
+   static constexpr bool IsNoexcept = CT::Inner::CheckSize<F...>() and (
+         ::std::same_as<decltype(Inner::IsNoexcept(Fake<Decay<F>&&>())), ::std::true_type>
+      and ...);
 }
 
 /// Convenience macro for propagating noexceptness                            

@@ -117,6 +117,7 @@ namespace Langulus
       static constexpr void ForEach   (auto&&) noexcept { }
       static constexpr bool ForEachAnd(auto&&) noexcept { return false; }
       static constexpr bool ForEachOr (auto&&) noexcept { return false; }
+      static constexpr void Expand    (auto&&) noexcept { }
 
       template<CT::NotTypelist...N>
       // ReSharper disable once CppFunctionIsNotImplemented             
@@ -177,6 +178,10 @@ namespace Langulus
          static_assert(requires{ {lambda.template operator()<T,0>()} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
          return lambda.template operator()<T,0>();
+      }
+      
+      static constexpr auto Expand(auto&& lambda) {
+         return ForEach(FWD(lambda));
       }
 
       template<unsigned I>
@@ -329,6 +334,12 @@ namespace Langulus
                 or Types<TN...>::template ForEachIndexedOr<IDX + 2>(lambda);
          else return false;
       }
+      
+      static constexpr auto Expand(auto&& lambda) {
+         static_assert(requires{ lambda.template operator()<T1, T2, TN...>(); },
+            "Provided argument is not a lambda of the form []<class...>");
+         return lambda.template operator()<T1, T2, TN...>();
+      }
 
       template<unsigned I>
       static consteval auto AtInner() {
@@ -387,7 +398,7 @@ namespace Langulus
       });
    };
 
-   #define LangulusTypegen(TYPES, LAMBDA) decltype(TYPES::GenerateTypes(LAMBDA));
+   #define LglsTypegen(TYPES, LAMBDA) decltype(TYPES::GenerateTypes(LAMBDA));
 
    /// Retrieve the first type from a type list                               
    template<class...T>

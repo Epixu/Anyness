@@ -21,10 +21,13 @@ namespace Langulus
    ///   For example, a variable 'count' can appear in many objects and       
    /// containers, but it always does essentially the same thing - it keeps   
    /// track of a number of things. You can encode that semantic meaning by   
-   /// tagging all these variables with Tags::Count<int> mSomeVariable;       
-   /// across your code. This can be leveraged when reflecting members, later 
+   /// tagging all these variables in two ways:                               
+   ///   1) Tags::Count<int> mSomeVariable;                                   
+   ///   2) Tag<int, Tags::Count, Tags::Other> mSomeVariable;                 
+   /// This can be leveraged when reflecting members, later                   
    /// used in descriptor-construction, when seeking data, and more.          
    ///   @tparam T - the data behind the tag                                  
+   ///   @tparam TAGS - the tags                                              
    ///                                                                        
    template<class T, class...TAGS>
    struct Tag;
@@ -34,6 +37,7 @@ namespace Langulus
    template<CT::NotVoid T, CT::DefineTag...TAGS>
    requires (CT::NotDecayed<T> or CT::Fundamental<T>)
    struct Tag<T, TAGS...> {
+      static_assert(sizeof...(TAGS) > 0, "No tags specified");
       using CTTI_ReflectAs = T;
       using CTTI_Tags = Types<TAGS...>;
       T value;
@@ -43,6 +47,7 @@ namespace Langulus
    template<CT::NotVoid T, CT::DefineTag...TAGS>
    requires (CT::Decayed<T> and CT::NotFundamental<T>)
    struct Tag<T, TAGS...> : T {
+      static_assert(sizeof...(TAGS) > 0, "No tags specified");
       using CTTI_ReflectAs = T;
       using CTTI_Tags = Types<TAGS...>;
       using T::T;

@@ -17,7 +17,7 @@ namespace
    auto testLambdaNoArgs = []()     -> double { return 5; };
    auto testLambdaOne    = [](int)  -> double { return 5; };
    auto testLambdaOneRef = [](int&) -> double { return 5; };
-   auto testLambdaTwo    = [](int,  float)  -> double { return 5; };
+   auto testLambdaTwo    = [](int,  float) -> double { return 5; };
    auto testLambdaTwoRef = [](int&, float&) noexcept -> double { return 5; };
 
    struct TestingMethods {
@@ -38,8 +38,15 @@ namespace
    int testNoexceptFalse() { return 1; }
    int testNoexceptMaybe1() noexcept_if(testNoexceptTrue) { return 1; }
    int testNoexceptMaybe2() noexcept_if(testNoexceptFalse) { return 1; }
+   int testNoexceptMaybe3() noexcept_if(testLambdaTwo) { return 1; }
+   int testNoexceptMaybe4() noexcept_if(testLambdaTwoRef) { return 1; }
+   
    static_assert(    IsNoexcept<decltype(testNoexceptMaybe1)>);
    static_assert(not IsNoexcept<decltype(testNoexceptMaybe2)>);
+   static_assert(not IsNoexcept<decltype(testNoexceptMaybe3)>);
+   static_assert(    IsNoexcept<decltype(testNoexceptMaybe4)>);
+   static_assert(not IsNoexcept<decltype(testLambdaTwo)>);
+   static_assert(    IsNoexcept<decltype(testLambdaTwoRef)>);
 }
 
 

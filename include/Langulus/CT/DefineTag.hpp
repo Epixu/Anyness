@@ -16,7 +16,7 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_DefineTag = Yes<"TagID">;` in T            
    template<class T>
    struct DefineTag {
-      static constexpr Literal Name = "<not a tag>";
+      static constexpr Literal Name = "";
       static constexpr bool Enabled = false;
    };
 

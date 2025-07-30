@@ -80,7 +80,9 @@ namespace Langulus::CT
    /// a build-time optimization, because many type-erased containers are     
    /// binary-compatible with their templated equivalents, and the use of     
    /// CTTI_ReflectAs can drastically lower build time for meta generation,   
-   /// by reducing unnessesary template instantiations of redundant types     
+   /// by reducing unnessesary template reflections of redundant types        
+   ///   @attention this is designed only for affecting the reflection of     
+   ///      data types, not tag, verb and constant definitions                
    template<class T>
    using ReflectedAs = Deptr<decltype(Inner::IsReflectable<Deref<T>>())>;
 }

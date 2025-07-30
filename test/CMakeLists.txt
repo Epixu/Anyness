@@ -16,6 +16,7 @@ add_langulus_test(LangulusAnynessTest
 				TestNameOf.cpp
 				TestRetype.cpp
 				TestSequence.cpp
+				TestTag.cpp
 	      		TestTypenav.cpp
 	      		TestTypeOf.cpp
                 CT/TestSuffix.cpp

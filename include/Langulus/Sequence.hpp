@@ -52,4 +52,4 @@ namespace Langulus
 #define LglsSequence(END, BODY)                                          \
    [&]<decltype(END)...I>(::std::integer_sequence<decltype(END), I...>)  \
       BODY                                                               \
-   (::std::make_integer_sequence<decltype(END), END> {});
+   (::std::make_integer_sequence<decltype(END), END> {})
