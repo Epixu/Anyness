@@ -374,11 +374,11 @@ namespace Langulus::RTTI
       
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaDataByToken.contains(lowercased_token)) {
-         LglsError("Data token conflict between ", cppname, " and ",
+         LglsError("Data token conflict", " between ", cppname, " and ",
             mMetaDataByToken.at(lowercased_token)->mCppNameOf);
       }
       if (mMetaConstantsByToken.contains(lowercased_token)) {
-         LglsError("Token conflict between data ", cppname, " and constant ",
+         LglsError("Token conflict", " between data ", cppname, " and constant ",
             mMetaConstantsByToken.at(lowercased_token)->mCppNameOf);
       }
 
@@ -442,11 +442,11 @@ namespace Langulus::RTTI
 
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaDataByToken.contains(lowercased_token)) {
-         LglsError("Token conflict between constant ", cppname, " and data ",
+         LglsError("Token conflict", " between constant ", cppname, " and data ",
             mMetaDataByToken.at(lowercased_token)->mCppNameOf);
       }
       if (mMetaConstantsByToken.contains(lowercased_token)) {
-         LglsError("Constant token conflict between ", cppname, " and ",
+         LglsError("Constant token conflict", " between ", cppname, " and ",
             mMetaConstantsByToken.at(lowercased_token)->mCppNameOf);
       }
 
@@ -503,11 +503,11 @@ namespace Langulus::RTTI
 
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaTagsByToken.contains(lowercased_token)) {
-         LglsError("Tag token conflict between ", cppname, " and ",
+         LglsError("Tag token conflict", " between ", cppname, " and ",
             mMetaTagsByToken.at(lowercased_token)->mCppNameOf);
       }
       if (mMetaVerbsByToken.contains(lowercased_token)) {
-         LglsError("Token conflict between tag ", cppname, " and verb ",
+         LglsError("Token conflict", " between tag ", cppname, " and verb ",
             mMetaVerbsByToken.at(lowercased_token)->mCppNameOf);
       }
 
@@ -582,43 +582,43 @@ namespace Langulus::RTTI
       // that use a lowercase first letter, such as tags                
       auto lowercased_token = Inner::ToLowercase(token);
       if (mMetaVerbsByToken.contains(lowercased_token)) {
-         LglsError("Verb positive token conflict between ", cppname, " and ",
+         LglsError("Verb positive token conflict", " between ", cppname, " and ",
             mMetaVerbsByToken.at(lowercased_token)->mCppNameOf);
       }
       if (mMetaTagsByToken.contains(lowercased_token)) {
-         LglsError("Token conflict between verb positive token in ", cppname, " and tag ",
+         LglsError("Token conflict", " between verb positive token in ", cppname, " and tag ",
             mMetaTagsByToken.at(lowercased_token)->mCppNameOf);
       }
 
       auto lowercased_token_rev = Inner::ToLowercase(tokenRev);
       if (not tokenRev.empty() and mMetaVerbsByToken.contains(lowercased_token_rev)) {
-         LglsError("Verb negative token conflict between ", cppname, " and ",
+         LglsError("Verb negative token conflict", " between ", cppname, " and ",
             mMetaVerbsByToken.at(lowercased_token_rev)->mCppNameOf);
       }
       if (not tokenRev.empty() and mMetaTagsByToken.contains(lowercased_token_rev)) {
-         LglsError("Token conflict between verb negative token in ", cppname, " and tag ",
+         LglsError("Token conflict", " between verb negative token in ", cppname, " and tag ",
             mMetaTagsByToken.at(lowercased_token_rev)->mCppNameOf);
       }
 
       auto lowercased_op = Inner::ToLowercase(op);
       auto stripped_op = Inner::StripSpaces(lowercased_op);
       if (not stripped_op.empty() and mMetaVerbsByToken.contains(stripped_op)) {
-         LglsError("Verb positive operator conflict between ", cppname, " and ",
+         LglsError("Verb positive operator conflict", " between ", cppname, " and ",
             mMetaVerbsByToken.at(stripped_op)->mCppNameOf);
       }
       if (not stripped_op.empty() and mMetaTagsByToken.contains(stripped_op)) {
-         LglsError("Token conflict between verb positive operator in ", cppname, " and tag ",
+         LglsError("Token conflict", " between verb positive operator in ", cppname, " and tag ",
             mMetaTagsByToken.at(stripped_op)->mCppNameOf);
       }
 
       auto lowercased_op_rev = Inner::ToLowercase(opRev);
       auto stripped_op_rev = Inner::StripSpaces(lowercased_op_rev);
       if (not stripped_op_rev.empty() and mMetaVerbsByToken.contains(stripped_op_rev)) {
-         LglsError("Verb negative operator conflict between ", cppname, " and ",
+         LglsError("Verb negative operator conflict", " between ", cppname, " and ",
             mMetaVerbsByToken.at(stripped_op_rev)->mCppNameOf);
       }
       if (not stripped_op_rev.empty() and mMetaTagsByToken.contains(stripped_op_rev)) {
-         LglsError("Token conflict between verb negative operator in ", cppname, " and tag ",
+         LglsError("Token conflict", " between verb negative operator in ", cppname, " and tag ",
             mMetaTagsByToken.at(stripped_op_rev)->mCppNameOf);
       }
 

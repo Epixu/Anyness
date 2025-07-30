@@ -10,6 +10,7 @@
 #include "../source/rtti/MetaTag.hpp"
 #include "../source/rtti/MetaConst.hpp"
 #include "../source/rtti/MetaVerb.hpp"
+#include <Langulus/CT/ReflectAs.hpp>
 
 
 namespace Langulus
@@ -45,7 +46,7 @@ namespace Langulus
    ///   @return the definition                                               
    template<class T>
    RTTI::DMeta MetaDataOf() {
-      return RTTI::DefinitionData::Reflect<Deref<T>>();
+      return RTTI::DefinitionData::Reflect<CT::ReflectedAs<T>>();
    }
 
    /// Tag definition retrieval                                               

@@ -32,8 +32,8 @@ namespace Langulus::CTTI
    ///   `using CTTI_DefineVerb = VerbToken<"verb">;` in T                    
    template<class T>
    struct DefineVerb {
-      static constexpr Literal Positive = "<not a verb>";
-      static constexpr Literal Negative = "<not a verb>";
+      static constexpr Literal Positive = "";
+      static constexpr Literal Negative = "";
       static constexpr float Precedence = 0;
       static constexpr bool Enabled = false;
    };
@@ -47,8 +47,8 @@ namespace Langulus::CTTI
    ///                                 or VerbToken<"negative">;` in T        
    template<class T>
    struct DefineVerbOperator {
-      static constexpr Literal Positive = "<not a verb>";
-      static constexpr Literal Negative = "<not a verb>";
+      static constexpr Literal Positive = "";
+      static constexpr Literal Negative = "";
       static constexpr bool Enabled = false;
    };
 

@@ -17,8 +17,15 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Void = Yes<>/No<>;` in T                   
    template<class T>
    struct Void {
-      static constexpr bool Enabled = ::std::is_void_v<T>;
+      static constexpr bool Enabled = false;
    };
+
+   /// Make sure no one interferes with true void types                       
+   template<class T> requires (::std::is_void_v<T>)
+   struct Void<T> {
+      static constexpr bool Enabled = true;
+   };
+
    
    /// Can be used in two ways to satisfy CT::Typelist<T>:                    
    /// 1. Specialize for T/concept                                            
@@ -37,9 +44,11 @@ namespace Langulus::CT
       /// some reason. Probably because T may not be a user type, and         
       /// this isn't well handled as of yet by the compiler. I work around    
       /// this by using if constexpr to constrain the compiler further        
+      
       template<class T>
       consteval bool IsVoidInner() {
-         using DT = ::std::remove_reference_t<T>;
+         using DT = ::std::remove_cv_t<::std::remove_reference_t<T>>;
+
          if constexpr (CTTI::Void<DT>::Enabled) {
             // Essentially relies on ::std::is_void_v<T>, but with      
             // the possibility for an override, so that we can have     
@@ -56,24 +65,42 @@ namespace Langulus::CT
          }
          else return false;
       }
+
+      template<class T>
+      consteval bool IsTypelistInner() {
+         using DT = ::std::remove_cv_t<::std::remove_reference_t<T>>;
+
+         if constexpr (CTTI::Typelist<DT>::Enabled)
+            return true;
+         else if constexpr (::std::is_class_v<DT>) {
+            // Access member only if T is an user type, to save the     
+            // compiler from bugging out                                
+            if constexpr (requires { ::std::decay_t<DT>::CTTI_Typelist::Enabled; })
+               return not ::std::is_pointer_v<DT>
+                      and ::std::decay_t<DT>::CTTI_Typelist::Enabled;
+            else return false;
+         }
+         else return false;
+      }
    }
 
    /// Check if all T are marked void                                         
    template<class...T>
-   concept Void = (Inner::IsVoidInner<T>() and ...);
+   concept Void = Inner::CheckSize<T...>()
+       and (Inner::IsVoidInner<T>() and ...);
 
    template<class...T>
-   concept NotVoid = ((not Inner::IsVoidInner<T>()) and ...);
+   concept NotVoid = Inner::CheckSize<T...>()
+       and ((not Inner::IsVoidInner<T>()) and ...);
 
    /// Check if all T are typelists                                           
    template<class...T>
-   concept Typelist = ((CTTI::Typelist<::std::remove_reference_t<T>>::Enabled
-        or (not ::std::is_pointer_v<::std::remove_reference_t<T>>
-            and ::std::decay_t<T>::CTTI_Typelist::Enabled
-        )) and ...);
+   concept Typelist = Inner::CheckSize<T...>()
+       and (Inner::IsTypelistInner<T>() and ...);
 
    template<class...T>
-   concept NotTypelist = ((not Typelist<::std::remove_reference_t<T>>) and ...);
+   concept NotTypelist = Inner::CheckSize<T...>()
+       and ((not Inner::IsTypelistInner<T>()) and ...);
 }
 
 namespace Langulus
@@ -103,10 +130,10 @@ namespace Langulus
 
 
    ///                                                                        
-   /// Type list, that contains only one void item - a canonical empty list   
+   /// An empty typelist                                                      
    /// Satisfies CT::Void and is considered 'void'                            
-   template<CT::Void T>
-   struct Types<T> {
+   template<>
+   struct Types<> {
       using CTTI_Typelist = Yes<>;
       using CTTI_Void     = Yes<>;
 
@@ -132,6 +159,15 @@ namespace Langulus
       template<CT::NotTypelist N>
       static constexpr bool Contains = false;
    };
+
+   ///                                                                        
+   /// An empty typelist with single void element is allowed, as many         
+   /// reflection traits use 'void' to signify lack of something              
+   /// It is isomorphic to Types<>                                            
+   template<>
+   struct Types<void> : Types<> {};
+
+   using NoTypes = Types<>;
 
 
    ///                                                                        

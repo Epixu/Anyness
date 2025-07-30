@@ -11,31 +11,34 @@
 using namespace Langulus;
 
 
-SCENARIO("Sequences", "[sequence]") {
-   using s = Sequence<50>;
+TEMPLATE_TEST_CASE("Sequences", "[sequence]",
+   int, unsigned long long
+) {
+   using T = TestType;
+   using s = Sequence<T{50}>;
    int counter_noexcept = 0;
-   s::ForEach([&]<int IDX> noexcept {      
+   s::ForEach([&]<auto IDX> noexcept {      
       REQUIRE(IDX == counter_noexcept);
       ++counter_noexcept;
    });
    REQUIRE(counter_noexcept == 50);
 
-   int counter = 0;
-   s::ForEach([&]<int IDX> {      
+   T counter = 0;
+   s::ForEach([&]<auto IDX> {      
       REQUIRE(IDX == counter);
       ++counter;
    });
    REQUIRE(counter == 50);
 
-   int counter2 = 0;
+   T counter2 = 0;
    LglsSequence(20, {
       ((counter2 += I), ...);
    });
-   REQUIRE(counter2 == 200);
+   REQUIRE(counter2 == 190);
    
-   int counter2_noexcept = 0;
+   T counter2_noexcept = 0;
    LglsSequence(20, noexcept {
       ((counter2_noexcept += I), ...);
    });
-   REQUIRE(counter2_noexcept == 200);
+   REQUIRE(counter2_noexcept == 190);
 }

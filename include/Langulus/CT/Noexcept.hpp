@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "../Lambda.hpp"
-#include "../Typenav.hpp"
 
 
 namespace Langulus
@@ -49,15 +48,25 @@ namespace Langulus
          static_assert(false, "Calling IsNoexcept is ill-formed");
          return {};
       }
+      
 
+      ///                                                                     
+      /// The following overrides peek inside lambdas/functors and test their 
+      /// operator() instead. You might have to specialize these for your     
+      /// template signatures, as they can't be generalized here yet          
+      /// Make sure you notify me if you figure out a general solution        
+      ///                                                                     
+      
+      /// Used for non-templated lambdas                                      
       template<class F>
       auto IsNoexcept(F&&) -> decltype(IsNoexcept(decltype(&F::operator()) {})) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
          return {};
       }
       
+      /// This particular override is used in Sequence.hpp                    
       template<class F>
-      auto IsNoexcept(F&&) -> decltype(IsNoexcept(decltype(&F::template operator()<int>) {})) {
+      auto IsNoexcept(F&&) -> decltype(IsNoexcept(decltype(&F::template operator()<0>) {})) {
          static_assert(false, "Calling IsNoexcept is ill-formed");
          return {};
       }
@@ -66,7 +75,7 @@ namespace Langulus
    /// True if all functions F... are noexcept                                
    template<class...F>
    static constexpr bool IsNoexcept = CT::Inner::CheckSize<F...>() and (
-         ::std::same_as<decltype(Inner::IsNoexcept(Fake<Decay<F>&&>())), ::std::true_type>
+         ::std::same_as<decltype(Inner::IsNoexcept(Fake<F&&>())), ::std::true_type>
       and ...);
 }
 

@@ -22,22 +22,19 @@ namespace Langulus
       
       ///                                                                     
       template<class R, class F, class...AN>
-      Tif<(sizeof...(AN) > 0), Types<AN...>, Types<void>>
       // ReSharper disable once CppFunctionDoesntReturnValue            
-      GetFunctionArguments(R(F::*)(AN...) const) {
+      Types<AN...> GetFunctionArguments(R(F::*)(AN...) const) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
       template<class R, class F, class...AN>
-      Tif<(sizeof...(AN) > 0), Types<AN...>, Types<void>>
       // ReSharper disable once CppFunctionDoesntReturnValue            
-      GetFunctionArguments(R(F::*)(AN...)) {
+      Types<AN...> GetFunctionArguments(R(F::*)(AN...)) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
 
       template<class R, class...AN>
-      Tif<(sizeof...(AN) > 0), Types<AN...>, Types<void>>
       // ReSharper disable once CppFunctionDoesntReturnValue            
-      GetFunctionArguments(R(*)(AN...)) {
+      Types<AN...> GetFunctionArguments(R(*)(AN...)) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
 

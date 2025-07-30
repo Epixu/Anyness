@@ -34,19 +34,12 @@ namespace
       double ConstTwoArgsRef(int&, float&) const noexcept { return 5; }
    };
 
-   int testNoexceptTrue() noexcept { return 1; }
-   int testNoexceptFalse() { return 1; }
-   int testNoexceptMaybe1() noexcept_if(testNoexceptTrue) { return 1; }
-   int testNoexceptMaybe2() noexcept_if(testNoexceptFalse) { return 1; }
-   int testNoexceptMaybe3() noexcept_if(testLambdaTwo) { return 1; }
-   int testNoexceptMaybe4() noexcept_if(testLambdaTwoRef) { return 1; }
-   
-   static_assert(    IsNoexcept<decltype(testNoexceptMaybe1)>);
-   static_assert(not IsNoexcept<decltype(testNoexceptMaybe2)>);
-   static_assert(not IsNoexcept<decltype(testNoexceptMaybe3)>);
-   static_assert(    IsNoexcept<decltype(testNoexceptMaybe4)>);
-   static_assert(not IsNoexcept<decltype(testLambdaTwo)>);
-   static_assert(    IsNoexcept<decltype(testLambdaTwoRef)>);
+   [[maybe_unused]] int testNoexceptTrue() noexcept { return 1; }
+   [[maybe_unused]] int testNoexceptFalse() { return 1; }
+   [[maybe_unused]] int testNoexceptMaybe1() noexcept_if(testNoexceptTrue)  { return 1; }
+   [[maybe_unused]] int testNoexceptMaybe2() noexcept_if(testNoexceptFalse) { return 1; }
+   [[maybe_unused]] int testNoexceptMaybe3() noexcept_if(testLambdaTwo)     { return 1; }
+   [[maybe_unused]] int testNoexceptMaybe4() noexcept_if(testLambdaTwoRef)  { return 1; }
 }
 
 
@@ -86,19 +79,19 @@ SCENARIO("Testing ArgumentOf", "[ct]") {
 /// ArgumentsOf                                                               
 ///                                                                           
 SCENARIO("Testing ArgumentsOf", "[ct]") {
-   static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaNoArgs)>, Types<void>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaNoArgs)>, NoTypes>);
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaOne)>,    Types<int>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaOneRef)>, Types<int&>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaTwo)>,    Types<int, float>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaTwoRef)>, Types<int&, float&>>);
 
-   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::NoArgs)>,     Types<void>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::NoArgs)>,     NoTypes>);
    static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::OneArg)>,     Types<int>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::OneArgRef)>,  Types<int&>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::TwoArgs)>,    Types<int, float>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::TwoArgsRef)>, Types<int&, float&>>);
 
-   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstNoArgs)>,     Types<void>>);
+   static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstNoArgs)>,     NoTypes>);
    static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstOneArg)>,     Types<int>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstOneArgRef)>,  Types<int&>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(&TestingMethods::ConstTwoArgs)>,    Types<int, float>>);
@@ -151,4 +144,11 @@ SCENARIO("Testing IsNoexcept", "[ct]") {
    static_assert(not IsNoexcept<decltype(&TestingMethods::ConstOneArgRef)>);
    static_assert(not IsNoexcept<decltype(&TestingMethods::ConstTwoArgs)>);
    static_assert(    IsNoexcept<decltype(&TestingMethods::ConstTwoArgsRef)>);
+
+   static_assert(    IsNoexcept<decltype(testNoexceptMaybe1)>);
+   static_assert(not IsNoexcept<decltype(testNoexceptMaybe2)>);
+   static_assert(not IsNoexcept<decltype(testNoexceptMaybe3)>);
+   static_assert(    IsNoexcept<decltype(testNoexceptMaybe4)>);
+   static_assert(not IsNoexcept<decltype(testLambdaTwo)>);
+   static_assert(    IsNoexcept<decltype(testLambdaTwoRef)>);
 }

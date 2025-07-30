@@ -47,7 +47,7 @@ namespace Langulus::CT::Inner
          else if constexpr (Enum<T>)
             return Types<::std::underlying_type_t<T>> {};
          else
-            return Types<void> {};
+            return NoTypes {};
       }
    };
 }

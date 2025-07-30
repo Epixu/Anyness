@@ -41,10 +41,8 @@ namespace Langulus::RTTI
    consteval auto NameOfTag() {
       if constexpr (CTTI::DefineTag<T>::Enabled)
          return CTTI::DefineTag<T>::Name;
-      else if constexpr (requires { T::CTTI_DefineTag::Enabled; })
-         return T::CTTI_DefineTag::Constant;
       else
-         return Literal {""};
+         return T::CTTI_DefineTag::Constant;
    }
 }
 

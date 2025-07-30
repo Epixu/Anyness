@@ -13,6 +13,7 @@
 #endif
 
 #include <Langulus/Core.hpp>
+#include <Langulus/Except.hpp>
 
 
 #if LANGULUS(BENCHMARK)
@@ -29,3 +30,7 @@
 #define INTEGER_TYPES         UNSIGNED_TYPES, SIGNED_INTEGER_TYPES
 #define SIGNED_TYPES          SIGNED_INTEGER_TYPES, REAL_TYPES
 #define ALL_TYPES             UNSIGNED_TYPES, SIGNED_TYPES, CHARACTER_TYPES, BOOL_TYPES
+
+CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception& e) {
+   return e.mMessage;
+}
