@@ -39,7 +39,7 @@ namespace Langulus::CT::Inner
          // Checked internally, T has to be a complete type             
          return Types<typename T::CTTI_Producer> {};
       }
-      else return Types<void> {};
+      else return NoTypes {};
    };
 }
 

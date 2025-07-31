@@ -400,7 +400,7 @@ namespace Langulus
       static consteval CT::Typelist auto GenerateTypes(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
-         return Inner::GenerateTypes<Types<void>, T1, T2, TN...>(lambda);
+         return Inner::GenerateTypes<NoTypes, T1, T2, TN...>(lambda);
       }
 
       using Tuple = ::std::tuple<T1, T2, TN...>;

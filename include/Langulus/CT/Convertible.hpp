@@ -47,7 +47,7 @@ namespace Langulus::CT
             else
                return Types<LIST> {};
          }
-         else return Types<void> {};
+         else return NoTypes {};
       };
    }
 

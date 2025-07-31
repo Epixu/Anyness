@@ -16,9 +16,11 @@ using namespace Langulus;
 ///                                                                           
 namespace
 {
+   // ReSharper disable once CppTypeAliasNeverUsed
    struct VoidType { using CTTI_Void = Yes<>; };
    struct VoidTypeDerived : VoidType {};
    struct VoidTypeExternal;
+   // ReSharper disable once CppTypeAliasNeverUsed
    struct NonVoidTypeDerived : VoidType { using CTTI_Void = No; };
    struct IncompleteType;
 }
@@ -83,9 +85,11 @@ static_assert(not CT::NotVoid<VoidType*, NonVoidTypeDerived, VoidType>);
 ///                                                                           
 namespace
 {
+   // ReSharper disable once CppTypeAliasNeverUsed
    struct CustomTypelist { using CTTI_Typelist = Yes<>; };
    struct CustomTypelistDerived : CustomTypelist {};
    struct CustomTypelistExternal;
+   // ReSharper disable once CppTypeAliasNeverUsed
    struct CustomNonTypelistDerived : CustomTypelist { using CTTI_Typelist = No; };
 }
 
