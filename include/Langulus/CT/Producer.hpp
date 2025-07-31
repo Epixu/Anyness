@@ -55,12 +55,12 @@ namespace Langulus
       ///   @attention the producer type must not be 'void', in order for T   
       ///      to be considered 'producible'                                  
       template<class...T>
-      concept Producible = CT::Inner::CheckSize<T...>()
+      concept Producible = Validate<T...>
           and (NotVoid<ProducerOf<Decvq<Deref<T>>>> and ...);
 
       /// Check if all T have no producers                                    
       template<class...T>
-      concept Unproducible = CT::Inner::CheckSize<T...>()
+      concept Unproducible = Validate<T...>
           and ((not Producible<Decvq<Deref<T>>>) and ...);
    }
 }

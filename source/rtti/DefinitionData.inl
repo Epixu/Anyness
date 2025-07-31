@@ -865,8 +865,9 @@ namespace Langulus::RTTI
       }
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         if constexpr (CT::Sparse<DenserT>
-         or not CT::Complete<DenserT> or CT::Constant<DenserT>) {
+         if constexpr (not CT::Complete<DenserT>
+         or ::std::is_const_v<DenserT>
+         or ::std::is_pointer_v<DenserT>) {
             // Multiple indirections always result in a unique ID       
             // Incomplete types are always considered an indirection    
             // A constant denser type (at any level of indirection)     

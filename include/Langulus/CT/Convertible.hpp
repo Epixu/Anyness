@@ -53,7 +53,7 @@ namespace Langulus::CT
 
    /// Convertible concept                                                    
    template<class FROM, class...TO>
-   concept Convertible = Inner::CheckSize<TO...>()
+   concept Convertible = Validate<TO...>
        and (::std::convertible_to<FROM, TO> and ...);
 }
 

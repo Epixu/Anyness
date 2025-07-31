@@ -73,7 +73,7 @@ namespace Langulus::CT
 
    /// Check if all of the types are reflectable                              
    template<class...T>
-   concept Reflectable = Inner::CheckSize<T...>()
+   concept Reflectable = Validate<T...>
        and (CT::NotVoid<Deptr<decltype(Inner::IsReflectable<Deref<T>>())>> and ...);
 
    /// Get the type a given type is reflected as. This is very useful as a    

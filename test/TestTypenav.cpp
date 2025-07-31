@@ -18,9 +18,11 @@ using namespace Langulus;
 namespace
 {
    template<class T>
-   struct SheddableType { using CTTI_Sheddable = Yes<>; using CTTI_Typed = T; };
-   struct SheddableTypeDerived : SheddableType<int&> {};
-   struct NonSheddableTypeDerived : SheddableType<int&> { using CTTI_Sheddable = No; };
+   struct SheddableType { using CTTI_Sheddable = T; };
+   struct SheddableTypeDerived     : SheddableType<int&> {};
+   struct NonSheddableTypeDerived1 : SheddableType<int&> { using CTTI_Sheddable = No; };
+   struct NonSheddableTypeDerived2 : SheddableType<int&> { using CTTI_Sheddable = void; };
+   struct NonSheddableTypeDerived3 : SheddableType<int&> { using CTTI_Sheddable = Yes<>; };
    struct IncompleteType;
 }
 
@@ -36,9 +38,13 @@ TEMPLATE_TEST_CASE("Testing sheddable types", "[ct]",
 
 TEMPLATE_TEST_CASE("Testing non-sheddable types", "[ct]",
    SheddableType<int&>*,
-   NonSheddableTypeDerived,
-   NonSheddableTypeDerived&,
-   IncompleteType,
+   NonSheddableTypeDerived1,
+   NonSheddableTypeDerived1&,
+   NonSheddableTypeDerived2,
+   NonSheddableTypeDerived2&,
+   //NonSheddableTypeDerived3,   // shouldn't compile
+   //NonSheddableTypeDerived3&,  // shouldn't compile
+   IncompleteType,               // incomplete types are always assumed unsheddable
    int,
    int&
 ) {
@@ -49,11 +55,11 @@ TEMPLATE_TEST_CASE("Testing non-sheddable types", "[ct]",
 
 //static_assert(CT::Sheddable<>); // shouldn't compile at all
 static_assert(    CT::Sheddable<SheddableType<int&>, SheddableTypeDerived, SheddableTypeDerived&>);
-static_assert(not CT::Sheddable<SheddableType<int&>, SheddableTypeDerived, NonSheddableTypeDerived>);
+static_assert(not CT::Sheddable<SheddableType<int&>, SheddableTypeDerived, NonSheddableTypeDerived1>);
 
 //static_assert(CT::NotSheddable<>); // shouldn't compile at all
-static_assert(    CT::NotSheddable<SheddableType<int&>*, NonSheddableTypeDerived, int&>);
-static_assert(not CT::NotSheddable<SheddableType<int&>*, NonSheddableTypeDerived, SheddableTypeDerived>);
+static_assert(    CT::NotSheddable<SheddableType<int&>*, NonSheddableTypeDerived1, int&>);
+static_assert(not CT::NotSheddable<SheddableType<int&>*, NonSheddableTypeDerived1, SheddableTypeDerived>);
 
 
 ///                                                                           
@@ -68,6 +74,7 @@ namespace
    using PointerType = int*;
    using PointerType2 = int**;
    struct CustomArrayType { using CTTI_Array = Yes<56>; };
+   struct CustomNonArrayTypeDerived : CustomArrayType { using CTTI_Array = No; };
    struct CustomNonArrayType {};
 }
 
@@ -88,7 +95,8 @@ TEMPLATE_TEST_CASE("Testing non-array types", "[ct]",
    PointerType2,
    ArrayType*,
    CustomNonArrayType,
-   IncompleteType,
+   CustomNonArrayTypeDerived,
+   //IncompleteType,    // shouldn't compile
    int,
    int&
 ) {
@@ -116,7 +124,8 @@ SCENARIO("Getting the extent of bounded array types", "[ct]") {
    static_assert(ExtentOf<PointerType2> == 1);
    static_assert(ExtentOf<CustomArrayType> == 56);
    static_assert(ExtentOf<CustomNonArrayType> == 1);
-   static_assert(ExtentOf<IncompleteType> == 1);
+   static_assert(ExtentOf<CustomNonArrayTypeDerived> == 1);
+   //static_assert(ExtentOf<IncompleteType> == 1); // shouldn't compile
 }
 
 
@@ -141,10 +150,10 @@ TEMPLATE_TEST_CASE("Testing sparse types", "[ct]",
 }
 
 TEMPLATE_TEST_CASE("Testing dense types", "[ct]",
+   //IncompleteType,    // shouldn't compile, we must check whether it's a custom pointer type
    SheddableType<CustomNonPointerType>,
    CustomNonPointerType,
-   int, int&, void, nullptr_t,
-   IncompleteType
+   int, int&, void, nullptr_t
 ) {
    static_assert(not CT::Sparse<TestType>);
    static_assert(    CT::Dense<TestType>);
@@ -162,19 +171,10 @@ static_assert(not CT::Dense<SheddableType<CustomNonPointerType>, CustomNonPointe
 ///                                                                           
 /// CT::Constant / CT::Mutable                                                
 ///                                                                           
-namespace
-{
-   struct CustomConstType { using CTTI_Constant = Yes<>; };
-   struct CustomMutableType : CustomConstType { using CTTI_Constant = No; };
-}
-
 TEMPLATE_TEST_CASE("Testing constant types", "[ct]",
    SheddableType<const PointerType>,
    SheddableType<const PointerType&>,
    PointerType* const,
-   CustomMutableType const,
-   CustomConstType,
-   CustomConstType&,
    IncompleteType const
 ) {
    static_assert(    CT::Constant<TestType>);
@@ -182,42 +182,33 @@ TEMPLATE_TEST_CASE("Testing constant types", "[ct]",
 }
 
 TEMPLATE_TEST_CASE("Testing mutable types", "[ct]",
+   IncompleteType,
    SheddableType<PointerType>,
    SheddableType<PointerType&>,
    SheddableType<PointerType const*>,
    PointerType const* const*,
-   CustomMutableType,
-   CustomConstType*,
    nullptr_t,
-   void, int,
-   IncompleteType
+   void, int
 ) {
    static_assert(not CT::Constant<TestType>);
    static_assert(    CT::Mutable<TestType>);
 }
 
 //static_assert(CT::Constant<>); // shouldn't compile at all
-static_assert(    CT::Constant<SheddableType<const PointerType>, CustomConstType, CustomConstType>);
-static_assert(not CT::Constant<SheddableType<const PointerType>, CustomConstType, int>);
+static_assert(    CT::Constant<SheddableType<const PointerType>, PointerType* const, IncompleteType const>);
+static_assert(not CT::Constant<SheddableType<const PointerType>, PointerType* const, int>);
 
 //static_assert(CT::Mutable<>); // shouldn't compile at all
 static_assert(    CT::Mutable<SheddableType<PointerType>, SheddableType<PointerType&>, int>);
-static_assert(not CT::Mutable<SheddableType<PointerType>, SheddableType<PointerType&>, CustomConstType>);
+static_assert(not CT::Mutable<SheddableType<PointerType>, SheddableType<PointerType&>, IncompleteType const>);
 
 
 ///                                                                           
 /// CT::Volatile                                                              
 ///                                                                           
-namespace
-{
-   struct CustomVolatileType { using CTTI_Volatile = Yes<>; };
-   struct CustomNonVolatileType : CustomVolatileType { using CTTI_Volatile = No; };
-}
-
 TEMPLATE_TEST_CASE("Testing volatile types", "[ct]",
-   SheddableType<CustomVolatileType>,
-   SheddableType<CustomVolatileType&>,
-   CustomVolatileType,
+   SheddableType<volatile int>,
+   SheddableType<volatile int&>,
    volatile int&,
    volatile int,
    volatile IncompleteType
@@ -226,8 +217,7 @@ TEMPLATE_TEST_CASE("Testing volatile types", "[ct]",
 }
 
 TEMPLATE_TEST_CASE("Testing non-volatile types", "[ct]",
-   SheddableType<CustomVolatileType*>,
-   CustomNonVolatileType,
+   SheddableType<volatile int*>,
    int,
    IncompleteType
 ) {
@@ -235,8 +225,8 @@ TEMPLATE_TEST_CASE("Testing non-volatile types", "[ct]",
 }
 
 //static_assert(CT::Volatile<>); // shouldn't compile at all
-static_assert(    CT::Volatile<SheddableType<CustomVolatileType>, SheddableType<CustomVolatileType&>, volatile int>);
-static_assert(not CT::Volatile<SheddableType<CustomVolatileType>, SheddableType<CustomVolatileType&>, int>);
+static_assert(    CT::Volatile<SheddableType<volatile int>, SheddableType<volatile int&>, volatile int>);
+static_assert(not CT::Volatile<SheddableType<volatile int>, SheddableType<volatile int&>, int>);
 
 
 ///                                                                           
@@ -249,10 +239,6 @@ TEMPLATE_TEST_CASE("Testing convoluted types", "[ct]",
    SheddableType<volatile PointerType&>,
    PointerType* const,
    PointerType* volatile,
-   CustomMutableType const,
-   CustomVolatileType,
-   CustomConstType,
-   CustomConstType&,
    IncompleteType const,
    volatile IncompleteType
 ) {
@@ -265,8 +251,6 @@ TEMPLATE_TEST_CASE("Testing non-convoluted types", "[ct]",
    SheddableType<PointerType&>,
    SheddableType<PointerType const*>,
    volatile PointerType const* const*,
-   CustomMutableType,
-   CustomConstType*,
    nullptr_t,
    void, int,
    IncompleteType
@@ -276,12 +260,12 @@ TEMPLATE_TEST_CASE("Testing non-convoluted types", "[ct]",
 }
 
 //static_assert(CT::Convoluted<>); // shouldn't compile at all
-static_assert(    CT::Convoluted<SheddableType<const PointerType>, CustomConstType, CustomConstType>);
-static_assert(not CT::Convoluted<SheddableType<const PointerType>, CustomConstType, int>);
+static_assert(    CT::Convoluted<SheddableType<const PointerType>, const int, const int>);
+static_assert(not CT::Convoluted<SheddableType<const PointerType>, const int, int>);
 
 //static_assert(CT::NotConvoluted<>); // shouldn't compile at all
 static_assert(    CT::NotConvoluted<SheddableType<PointerType>, SheddableType<PointerType&>, int>);
-static_assert(not CT::NotConvoluted<SheddableType<PointerType>, SheddableType<PointerType&>, CustomConstType>);
+static_assert(not CT::NotConvoluted<SheddableType<PointerType>, SheddableType<PointerType&>, const int>);
 
 
 ///                                                                           
@@ -312,7 +296,7 @@ TEMPLATE_TEST_CASE("Testing non-null types", "[ct]",
    NonNullTypeDerived,
    NonNullTypeDerived&,
    SheddableType<NonNullTypeDerived&>,
-   IncompleteType,
+   // IncompleteType, // shouldn't compile
    int,
    int&
 ) {
@@ -364,7 +348,7 @@ TEMPLATE_TEST_CASE("Testing non-enum types", "[ct]",
    NonEnumTypeDerived,
    NonEnumTypeDerived&,
    SheddableType<NonEnumTypeDerived&>,
-   IncompleteType,
+   //IncompleteType,    // shouldn't compile
    int,
    int&
 ) {
@@ -426,7 +410,7 @@ TEMPLATE_TEST_CASE("Testing non-aggregate types", "[ct]",
    NonAggregateTypeDerived,
    NonAggregateTypeDerived&,
    SheddableType<NonAggregateTypeDerived&>,
-   //IncompleteType, // should error out, we can't know whether an incomplete type is an aggregate
+   //IncompleteType,    // shouldn't compile out
    int,
    int&
 ) {
@@ -467,12 +451,12 @@ TEMPLATE_TEST_CASE("Testing fundamental types", "[ct]",
 }
 
 TEMPLATE_TEST_CASE("Testing non-fundamental types", "[ct]",
+   //IncompleteType,    // shouldn't compile
    SheddableType<FundamentalType*>,
    FundamentalType*,
    NonFundamentalTypeDerived,
    NonFundamentalTypeDerived&,
-   SheddableType<NonFundamentalTypeDerived&>,
-   IncompleteType
+   SheddableType<NonFundamentalTypeDerived&>
 ) {
    static_assert(not CT::Fundamental<TestType>);
    static_assert(    CT::NotFundamental<TestType>);
@@ -491,22 +475,22 @@ static_assert(not CT::NotFundamental<SheddableType<FundamentalType*>, NonFundame
 /// CT::Reference                                                             
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing reference types", "[ct]",
+   IncompleteType&,
    SheddableType<int&>,
    int*&,
    int&,
    int&&,
-   int(&)[15],
-   IncompleteType&
+   int(&)[15]
 ) {
    static_assert(    CT::Reference<TestType>);
    static_assert(not CT::NotReference<TestType>);
 }
 
 TEMPLATE_TEST_CASE("Testing non-reference types", "[ct]",
+   IncompleteType,
    SheddableType<int>&,
    int*,
-   int[15],
-   IncompleteType
+   int[15]
 ) {
    static_assert(not CT::Reference<TestType>);
    static_assert(    CT::NotReference<TestType>);

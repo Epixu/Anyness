@@ -20,12 +20,10 @@ namespace Langulus::CT
    /// Anything formattable by fmt is also loggable                           
    /// You can extend this concept by specializing fmt::formatter yourself    
    template<class...T>
-   concept Loggable = Inner::CheckSize<T...>()
-       and (::fmt::is_formattable<T>::value and ...);
+   concept Loggable = Validate<T...> and (::fmt::is_formattable<T>::value and ...);
 
    template<class...T>
-   concept NotLoggable = Inner::CheckSize<T...>()
-       and ((not Loggable<T>) and ...);
+   concept NotLoggable = Validate<T...> and ((not Loggable<T>) and ...);
 }
 #endif 
 

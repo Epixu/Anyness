@@ -27,18 +27,12 @@
 ///                                                                           
 namespace Langulus::CTTI
 {
-   /// Affects CT::Sheddable<T>:                                              
-   template<class T>
-   struct Sheddable {
-      static constexpr bool Enabled = false;
-   };
-
    /// Can be used in two ways to satisfy CT::Array<T>:                       
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Array = Yes<count>;` in T                  
    /// Optional: in many use cases, you should also make T CT::Typed          
-   ///           and make sure that sizeof(T) == TypeOf<T> * ExtentOf<T>,     
-   ///           if you want to reap the benefits of SIMD optimizations for T 
+   ///   and make sure that sizeof(T) == TypeOf<T> * ExtentOf<T>,             
+   ///   if you want to reap the benefits of SIMD optimizations for T         
    template<class T>
    struct Array {
       static constexpr bool Enabled = ::std::is_bounded_array_v<T>;
@@ -48,19 +42,7 @@ namespace Langulus::CTTI
    /// Affects CT::Sparse<T>:                                                 
    template<class T>
    struct Sparse {
-      static constexpr bool Enabled = ::std::is_pointer_v<T>/* or ::std::is_null_pointer_v<T>*/;
-   };
-
-   /// Affects CT::Constant<T>:                                               
-   template<class T>
-   struct Constant {
-      static constexpr bool Enabled = ::std::is_const_v<T>;
-   };
-   
-   /// Affects CT::Volatile<T>:                                               
-   template<class T>
-   struct Volatile {
-      static constexpr bool Enabled = ::std::is_volatile_v<T>;
+      static constexpr bool Enabled = ::std::is_pointer_v<T>;
    };
    
    /// Affects CT::Null<T>:                                                   
@@ -102,9 +84,9 @@ namespace Langulus::CTTI
 /// Short-circuiting inside concepts doesn't properly work in Clang, but no   
 /// one seems to care: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54310     
 /// This is why I've wrapped it in a lambda with 'if constexpr'               
-///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_DELVE_IN(TYPE,NAME) ([]{ \
-      if constexpr (::std::is_class_v<::std::decay_t<TYPE>> \
+      if constexpr (::Langulus::CT::Validate<TYPE> \
+      and ::std::is_class_v<::std::decay_t<TYPE>> \
       and requires { typename ::std::decay_t<TYPE>::CTTI_##NAME; }) \
          return ::std::decay_t<TYPE>::CTTI_##NAME::Enabled; \
       else \
@@ -112,97 +94,96 @@ namespace Langulus::CTTI
    }())
 
 
-///                                                                           
-///   A namespace for defining concepts                                       
-///                                                                           
-/// Most of the concepts here are affected by structure specializations in    
-/// the Langulus::CTTI namespace.                                             
-///                                                                           
-namespace Langulus::CT
-{
-   /// Check if all T are complete (defined), by exploiting sizeof            
-   /// Usefulness of this is limited to the first instantiation, and          
-   /// that is how it is used upon reflection by RTTI. Any other use is       
-   /// undefined and might produce wrong results on some compilers.           
-   /// Thankfully, most modern compilers do detect, if a definition           
-   /// changes between completeness checks, so it is unlikely to cause any    
-   /// real harm: https://stackoverflow.com/questions/21119281                
-   template<class...T>
-   concept Complete = ((sizeof(T) == sizeof(T)) and ...);
-
-   /// Check if all T are sheddable types (like intents), that serve only to  
-   /// wrap data for tag dispatching and semantics. Sheddable types don't     
-   /// carry any real data, and are often just a reference to the real data.  
-   /// Should be aggressively optimized out of the final binary. Marking them 
-   /// as sheddable means that they don't interfere with other CT checks -    
-   /// these checks will act as if the sheddable type doesn't exist at all    
-   /// The concept relies on CTTI::Typed for getting into the inner type      
-   template<class...T>
-   concept Sheddable = Inner::CheckSize<T...>() and (
-         (CTTI::Sheddable<::std::remove_reference_t<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, Sheddable)
-      ) and ...);
-
-   template<class...T>
-   concept NotSheddable = Inner::CheckSize<T...>()
-       and ((not Sheddable<::std::remove_reference_t<T>>) and ...);
-}
-
 namespace Langulus
 {
-   namespace Inner
+   namespace CT
    {
-      /// Extracts the inner type if T is marked as sheddable                 
-      /// Otherwise results in the same type                                  
-      template<CT::NotTypelist T>
-      consteval CT::Typelist auto GetSheddedType() {
-         using DT = ::std::remove_cv_t<::std::remove_reference_t<T>>;
+      namespace Inner
+      {
+         /// Extracts the inner type if T is marked as sheddable              
+         /// Otherwise results in an empty type list                          
+         template<class T>
+         consteval auto GetSheddedType() {
+            using DT = ::std::remove_cvref_t<T>;
 
-         if constexpr (CT::Sheddable<DT>) {
-            using OuterT = typename CTTI::Typed<DT>::Type;
-            if constexpr (CT::NotVoid<OuterT>) {
-               // Checked externally, T doesn't have to be complete     
-               static_assert(not CT::Typelist<OuterT>,
-                  "T has multiple inner types, don't know which one to use after shedding");
-               return Types<OuterT> {};
+            if constexpr (Complete<DT> and ::std::is_class_v<DT>) {
+               if constexpr (requires { typename DT::CTTI_Sheddable; }) {
+                  using InnerT = typename DT::CTTI_Sheddable;
+                  if constexpr (::std::same_as<InnerT, No>
+                  or ::std::same_as<InnerT, void>)
+                     return NoTypes {};
+                  else {
+                     static_assert(not ::std::same_as<InnerT, Yes<>>,
+                        "Instead of Yes<> pick a type to shed to "
+                        "for CTTI_Sheddable"
+                     );
+                     return Types<InnerT> {};
+                  }
+               }
+               else return NoTypes {};
             }
-            else {
-               // Checked internally, T has to be a complete type       
-               using InnerT = typename DT::CTTI_Typed;
-               static_assert(not CT::Void<InnerT>,
-                  "T is CT::Sheddable, but isn't CT::Typed");
-               static_assert(not CT::Typelist<InnerT>,
-                  "T has multiple inner types, don't know which one to use after shedding");
-               return Types<InnerT> {};
-            }
-         }
-         else return Types<T> {};
-      };
+            else return NoTypes {};
+         };
 
-      /// Extracts the bounded array size                                     
-      /// Otherwise results in 1                                              
-      template<class T>
-      consteval size_t GetBoundedArrayExtent() {
-         static_assert(not ::std::is_reference_v<T>,
-            "Shed all references prior to this call");
-         static_assert(not CT::Sheddable<T>,
-            "Shed all sheddables prior to this call");
+         /// Extracts the inner type if T is marked as sheddable              
+         /// If T is not sheddable, just returns T as the type                
+         template<class T>
+         consteval auto ShedInner() {
+            using ST = decltype(GetSheddedType<T>());
+            if constexpr (ST::Empty)
+               return Types<T> {};
+            else
+               return ST {};
+         };
+      }
+      
+      /// Check if all T are sheddable types (like intents), that serve only  
+      /// to wrap data for tag dispatching and semantics. Sheddable types     
+      /// don't carry any real data, and are often just a reference to the    
+      /// real data.                                                          
+      /// They should be aggressively optimized out from the final binary.    
+      /// Marking types as sheddable means that they don't interfere with most
+      /// other CT concepts - these will act as if the sheddable type doesn't 
+      /// exist at all                                                        
+      ///   @attention sheddable types can only be defined through a member   
+      ///      called CTTI_Sheddable, and are always assumed complete,        
+      ///      otherwise this check will return false                         
+      template<class...T>
+      concept Sheddable = PartialValidate<T...>
+          and ((not decltype(Inner::GetSheddedType<T>())::Empty) and ...);
 
-         if constexpr (CTTI::Array<T>::Enabled)
-            return CTTI::Array<T>::Count;
-         else if constexpr (LANGULUS_CTTI_DELVE_IN(T, Array))
-            return ::std::decay_t<T>::CTTI_Array::Constant;
-         else
-            return 1;
-      };
+      template<class...T>
+      concept NotSheddable = PartialValidate<T...>
+          and ((    decltype(Inner::GetSheddedType<T>())::Empty) and ...);
+
+      namespace Inner
+      {
+         /// Extracts the bounded array size                                  
+         /// Otherwise results in 1                                           
+         template<class T>
+         consteval size_t GetBoundedArrayExtent() {
+            static_assert(not ::std::is_reference_v<T>,
+               "Shed all references prior to this call");
+            static_assert(not CT::Sheddable<T>,
+               "Shed all sheddables prior to this call");
+
+            if constexpr (CTTI::Array<T>::Enabled)
+               return CTTI::Array<T>::Count;
+            else if constexpr (LANGULUS_CTTI_DELVE_IN(T, Array))
+               return ::std::decay_t<T>::CTTI_Array::Constant;
+            else
+               return 1;
+         };
+      }
    }
 
    /// Sheds any sheddable types                                              
    template<class T>
-   using Shed = typename decltype(Inner::GetSheddedType<T>())::First;
+   using Shed = typename decltype(CT::Inner::ShedInner<T>())::First;
 
    /// Get the extent of a bounded array type, or 1 if T is not an array      
    template<class T>
-   constexpr size_t ExtentOf = Inner::GetBoundedArrayExtent<::std::remove_reference_t<Shed<T>>>();
+   constexpr size_t ExtentOf = CT::Inner::GetBoundedArrayExtent<::std::remove_reference_t<Shed<T>>>();
 
    /// Get the extent of an array argument, or 1 if T is not an array         
    template<class T>
@@ -261,59 +242,60 @@ namespace Langulus
    {
       /// Check if all T are bounded arrays                                   
       template<class...T>
-      concept Array = Inner::CheckSize<T...>()
-          and ((CTTI::Array<Deref<Shed<T>>>::Enabled
+      concept Array = PartialValidate<T...>
+          and ((CTTI::Array<Decvq<Deref<Shed<T>>>>::Enabled
            or LANGULUS_CTTI_DELVE_IN(Shed<T>, Array)) and ...);
 
       /// Check if all T are volatile-qualified                               
       template<class...T>
-      concept Volatile = Inner::CheckSize<T...>()
-          and ((CTTI::Volatile<Deref<Shed<T>>>::Enabled
-           or LANGULUS_CTTI_DELVE_IN(Shed<T>, Volatile)) and ...);
+      concept Volatile = PartialValidate<T...>
+          and (::std::is_volatile_v<Deref<Shed<T>>> and ...);
 
       /// Check if all T are sparse                                           
       ///   @attention this also includes non-pointer types that are tagged   
       ///      as custom packed pointers                                      
       template<class...T>
-      concept Sparse = Inner::CheckSize<T...>()
-          and ((CTTI::Sparse<Deref<Shed<T>>>::Enabled
+      concept Sparse = PartialValidate<T...>
+          and ((CTTI::Sparse<Decvq<Deref<Shed<T>>>>::Enabled
            or LANGULUS_CTTI_DELVE_IN(Shed<T>, Sparse)) and ...);
 
       /// Check if all T are dense                                            
       template<class...T>
-      concept Dense = Inner::CheckSize<T...>()
-          and ((not Sparse<Deref<Shed<T>>>) and ...);
+      concept Dense = PartialValidate<T...> and ((not Sparse<T>) and ...);
 
       /// Check if all T are constant-qualified                               
       template<class...T>
-      concept Constant = Inner::CheckSize<T...>()
-          and ((CTTI::Constant<Deref<Shed<T>>>::Enabled
-           or LANGULUS_CTTI_DELVE_IN(Shed<T>, Constant)) and ...);
+      concept Constant = PartialValidate<T...>
+          and (::std::is_const_v<Deref<Shed<T>>> and ...);
 
       /// Check if all T are not constant-qualified                           
       template<class...T>
-      concept Mutable = Inner::CheckSize<T...>()
-          and ((not Constant<Deref<Shed<T>>>) and ...);
+      concept Mutable = PartialValidate<T...>
+         and ((not ::std::is_const_v<Deref<Shed<T>>>) and ...);
 
       /// Check if all T are either const- and/or volatile-qualified          
       template<class...T>
-      concept Convoluted = Inner::CheckSize<T...>()
-          and ((Constant<Deref<Shed<T>>> or Volatile<Deref<Shed<T>>>) and ...);
+      concept Convoluted = PartialValidate<T...>
+          and ((::std::is_const_v<Deref<Shed<T>>>
+             or ::std::is_volatile_v<Deref<Shed<T>>>
+          ) and ...);
 
       /// Check if none of T are const- and/or volatile-qualified             
       template<class...T>
-      concept NotConvoluted = Inner::CheckSize<T...>()
-          and ((not Convoluted<Deref<Shed<T>>>) and ...);
+      concept NotConvoluted = PartialValidate<T...>
+          and (( not ::std::is_const_v<Deref<Shed<T>>>
+             and not ::std::is_volatile_v<Deref<Shed<T>>>
+          ) and ...);
 
       /// Check if all T are reference types                                  
       template<class...T>
-      concept Reference = Inner::CheckSize<T...>()
+      concept Reference = PartialValidate<T...>
           and (::std::is_reference_v<Shed<T>> and ...);
 
       /// Check if all T are not reference types                              
       template<class...T>
-      concept NotReference = Inner::CheckSize<T...>()
-          and ((not Reference<Shed<T>>) and ...);
+      concept NotReference = PartialValidate<T...>
+          and ((not ::std::is_reference_v<Shed<T>>) and ...);
 
       /// Check if types have no reference/pointer/extent/qualifiers          
       ///   @attention this doesn't shed or remove references before check    
@@ -321,7 +303,7 @@ namespace Langulus
       ///      when using custom packed pointer types for example. Decaying   
       ///      removes only indirections that are part of the C++ syntax      
       template<class...T>
-      concept Decayed = Inner::CheckSize<T...>() and ((
+      concept Decayed = PartialValidate<T...> and ((
               not ::std::is_bounded_array_v<T>
           and not ::std::is_pointer_v<T>
           and not ::std::is_reference_v<T>
@@ -331,13 +313,13 @@ namespace Langulus
    
       /// Check if types have reference/pointer/extent/const/volatile         
       template<class...T>
-      concept NotDecayed = Inner::CheckSize<T...>() and ((not Decayed<T>) and ...);
+      concept NotDecayed = PartialValidate<T...> and ((not Decayed<T>) and ...);
 
       /// True if T is not a pointer, has no extent with [], and isn't a      
       /// reference                                                           
       ///   @attention still allowed to be cv-qualified                       
       template<class...T>
-      concept Slab = Inner::CheckSize<T...>()
+      concept Slab = PartialValidate<T...>
           and ((not ::std::is_pointer_v<T>
             and not ::std::is_reference_v<T>
             and not ::std::is_array_v<T>
@@ -392,27 +374,61 @@ namespace Langulus
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
-/// Used to reduce boilerplate. Will only shed references                     
+/// Used to reduce boilerplate                                                
+///   @attention types need to be complete only if we end up 'delving in'     
+///   @attention will only shed references                                    
 ///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = Inner::CheckSize<T...>() and ((CTTI::NAME<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, NAME)) and ...); \
+      concept NAME = PartialValidate<T...> and ((CTTI::NAME<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, NAME)) and ...); \
       template<class...T> \
-      concept Not##NAME = Inner::CheckSize<T...>() and ((not NAME<Deref<T>>) and ...); \
+      concept Not##NAME = PartialValidate<T...> and ((not NAME<Deref<T>>) and ...); \
+   }
+
+/// Automatically populates the Langulus::CT namespace with the appropriate   
+/// concepts, based on the provided Langulus::CTTI::<structure name>          
+/// Used to reduce boilerplate                                                
+///   @attention types need to be complete only if we end up 'delving in'     
+///   @attention will shed only references and cv qualifiers                  
+///   @attention use this macro in the global namespace                       
+#define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE_DECVQ(NAME) \
+   namespace Langulus::CT { \
+      template<class...T> \
+      concept NAME = PartialValidate<T...> and ((CTTI::NAME<Decvq<Deref<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, NAME)) and ...); \
+      template<class...T> \
+      concept Not##NAME = PartialValidate<T...> and ((not NAME<Decvq<Deref<T>>>) and ...); \
    }
 
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
-/// It takes sheddable types into consideration. Used to reduce boilerplate   
+/// Used to reduce boilerplate                                                
+///   @attention types need to be complete only if we end up 'delving in'     
+///   @attention will shed all sheddables, as well as references after that   
 ///   @attention use this macro in the global namespace                       
 #define LANGULUS_CTTI_CONCEPT(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = Inner::CheckSize<T...>() and ((CTTI::NAME<Deref<Shed<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, NAME)) and ...); \
+      concept NAME = PartialValidate<T...> and ((CTTI::NAME<Deref<Shed<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, NAME)) and ...); \
       template<class...T> \
-      concept Not##NAME = Inner::CheckSize<T...>() and ((not NAME<T>) and ...); \
+      concept Not##NAME = PartialValidate<T...> and ((not NAME<T>) and ...); \
+   }
+
+
+/// Automatically populates the Langulus::CT namespace with the appropriate   
+/// concepts, based on the provided Langulus::CTTI::<structure name>          
+/// Used to reduce boilerplate                                                
+///   @attention types need to be complete only if we end up 'delving in'     
+///   @attention will shed all sheddables, as well as references and cv       
+///      qualifiers after that                                                
+///   @attention use this macro in the global namespace                       
+#define LANGULUS_CTTI_CONCEPT_DECVQ(NAME) \
+   namespace Langulus::CT { \
+      template<class...T> \
+      concept NAME = PartialValidate<T...> and ((CTTI::NAME<Decvq<Deref<Shed<T>>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, NAME)) and ...); \
+      template<class...T> \
+      concept Not##NAME = PartialValidate<T...> and ((not NAME<T>) and ...); \
    }
 
 LANGULUS_CTTI_CONCEPT(Null);

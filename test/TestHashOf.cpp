@@ -23,7 +23,7 @@ using namespace Langulus;
 namespace
 {
    template<class T>
-   struct SheddableType { using CTTI_Sheddable = Yes<>; using CTTI_Typed = T; };
+   struct SheddableType { using CTTI_Sheddable = T; using CTTI_Typed = T; };
 
    struct NonHashable {
       int blah = 5;

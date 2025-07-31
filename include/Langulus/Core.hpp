@@ -521,15 +521,54 @@ namespace Langulus
    consteval bool IsConstexpr(Lambda) { return true;  }
    consteval bool IsConstexpr(...)    { return false; }
 
-   namespace CT::Inner
+   ///                                                                        
+   ///   A namespace for defining concepts                                    
+   ///                                                                        
+   /// Most of the concepts here are affected by structure specializations in 
+   /// the Langulus::CTTI namespace                                           
+   ///                                                                        
+   namespace CT
    {
-      /// Makes sure an error is reported if a CT concept is tested without   
-      /// any arguments, so that failures aren't silent                       
+      /// Check if all T are complete (defined), by exploiting sizeof         
+      /// Usefulness of this is limited to the first instantiation, and       
+      /// that is how it is used upon reflection. Thankfully, most modern     
+      /// compilers do detect, if a definition changes between completeness   
+      /// checks, so it is unlikely to cause any real harm:                   
+      /// https://stackoverflow.com/questions/21119281                        
       template<class...T>
-      consteval bool CheckSize() {
-         static_assert(sizeof...(T) > 0, "No arguments provided");
-         return true;
+      concept Complete = (sizeof...(T) > 0) and ((sizeof(T) == sizeof(T)) and ...);
+
+      namespace Inner
+      {
+         template<class...T>
+         consteval bool ValidateInner() {
+            static_assert(sizeof...(T) > 0,
+               "No arguments provided");
+            static_assert(((Complete<T> or ::std::is_void_v<T>) and ...),
+               "Incomplete type in CT check");
+            return true;
+         }
+
+         template<class...T>
+         consteval bool PartialValidateInner() {
+            static_assert(sizeof...(T) > 0,
+               "No arguments provided");
+            return true;
+         }
       }
+
+      /// Makes sure an error is reported if a CT concept is tested without   
+      /// any arguments, or if any argument is an incomplete type, so that    
+      /// failures aren't silent                                              
+      ///   @attention 'void' is not considered incomplete in this context    
+      template<class...T>
+      concept Validate = Inner::ValidateInner<T...>();
+
+      /// Makes sure an error is reported if a CT concept is tested without   
+      /// any arguments, so failures aren't silent. This variation allows for 
+      /// incomplete types                                                    
+      template<class...T>
+      concept PartialValidate = Inner::PartialValidateInner<T...>();
    }
 
    /// Used as a return type in unsupported functions                         

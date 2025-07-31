@@ -69,19 +69,19 @@ namespace Langulus::CT
    /// primitive types...                                                     
    ///   @attention involves only C++ bases, not reflected ones               
    template<class T, class...BASE>
-   concept DerivedFrom = Inner::CheckSize<BASE...>()
+   concept DerivedFrom = Validate<BASE...>
        and (Inner::DerivedFrom<T, BASE>() and ...);
    
    /// Check if T1 is somehow related to all of the provided types            
    ///   @attention involves only C++ bases, not reflected ones               
    template<class T1, class...TN>
-   concept Related = Inner::CheckSize<TN...>() 
+   concept Related = Validate<TN...>
        and ((DerivedFrom<T1, TN> or DerivedFrom<TN, T1>) and ...);
 
    /// Check if a type is virtually derived from all the provided BASE(s)     
    ///   @attention involves only C++ bases, not reflected ones               
    template<class T, class...BASE>
-   concept VirtuallyDerivedFrom = Inner::CheckSize<BASE...>()
+   concept VirtuallyDerivedFrom = Validate<BASE...>
        and ((::std::is_base_of_v<Decay<BASE>, Decay<T>>
          and not requires (Decay<BASE>* from) { static_cast<Decay<T>*>(from); }
        ) and ...);
@@ -90,7 +90,7 @@ namespace Langulus::CT
    /// To be binary compatible, types must be of the same size, and be        
    /// similar or related                                                     
    template<class T1, class...TN>
-   concept BinaryCompatible = Inner::CheckSize<TN...>() and ((
+   concept BinaryCompatible = Validate<TN...> and ((
          Similar<T1, TN> or (Related<T1, TN> and sizeof(T1) == sizeof(TN))
       ) and ...);
 }

@@ -74,7 +74,7 @@ namespace Langulus
 
    /// True if all functions F... are noexcept                                
    template<class...F>
-   static constexpr bool IsNoexcept = CT::Inner::CheckSize<F...>() and (
+   static constexpr bool IsNoexcept = CT::PartialValidate<F...> and (
          ::std::same_as<decltype(Inner::IsNoexcept(Fake<F&&>())), ::std::true_type>
       and ...);
 }

@@ -131,7 +131,7 @@ namespace
 
    template<class T>
    struct SheddableType {
-      using CTTI_Sheddable = Yes<>;
+      using CTTI_Sheddable = T;
       using CTTI_Typed = T;
 
       T instance;
@@ -335,7 +335,7 @@ TEMPLATE_TEST_CASE("Testing non-intent type", "[ct]",
    Refer<int>*,
    SheddableType<int>,
    SheddableType<Refer<int>>,
-   IncompleteType,
+   //IncompleteType, // shouldn't compile
    TypedEnum,
    void, int, int&&, int*, nullptr_t
 ) {

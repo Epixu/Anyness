@@ -20,4 +20,4 @@ namespace Langulus::CTTI
    };
 }
 
-LANGULUS_CTTI_CONCEPT(Abstract);
+LANGULUS_CTTI_CONCEPT_DECVQ(Abstract);

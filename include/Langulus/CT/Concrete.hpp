@@ -59,12 +59,12 @@ namespace Langulus
       ///   @attention the concrete type must not be 'void', in order for T   
       ///      to be considered 'concretizable'                               
       template<class...T>
-      concept Concretizable = Inner::CheckSize<T...>()
+      concept Concretizable = Validate<T...>
           and (NotVoid<ConcreteOf<Decvq<Deref<T>>>> and ...);
 
       /// Check if all T have no concretizations                              
       template<class...T>
-      concept Unconcretizable = Inner::CheckSize<T...>()
+      concept Unconcretizable = Validate<T...>
           and ((not Concretizable<Decvq<Deref<T>>>) and ...);
    }
 }

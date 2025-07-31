@@ -21,11 +21,11 @@ namespace Langulus
    {
       /// Check if all T are Literal types                                    
       template<class...T>
-      concept Literal = Inner::CheckSize<T...>() and (T::CTTI_Literal and ...);
+      concept Literal = Validate<T...> and (T::CTTI_Literal and ...);
       
       /// Supported character types used by LiteralString                     
       template<class...T>
-      concept LiteralChar = Inner::CheckSize<T...>() and ((
+      concept LiteralChar = Validate<T...> and ((
               ::std::same_as<::std::remove_cv_t<T>, char>
            or ::std::same_as<::std::remove_cv_t<T>, wchar_t>
            or ::std::same_as<::std::remove_cv_t<T>, char8_t>

@@ -176,24 +176,24 @@ namespace Langulus
    {
       /// Check if the origin T can be hashed using HashOf                    
       template<class...T>
-      concept Hashable = Inner::CheckSize<T...>() and requires (Shed<T>...a) {
+      concept Hashable = Validate<T...> and requires (Shed<T>...a) {
          { (HashOf<true>(a), ...) } -> Supported;
       };
 
       template<class...T>
-      concept NotHashable = Inner::CheckSize<T...>() and ((not Hashable<Shed<T>>) and ...);
+      concept NotHashable = Validate<T...> and ((not Hashable<Shed<T>>) and ...);
 
       /// Check if T has a GetHash() method                                   
       /// It is always preferred when hashing data                            
       template<class...T>
-      concept HasGetHashMethod = Inner::CheckSize<T...>() and requires (Shed<T>...a) {
+      concept HasGetHashMethod = Validate<T...> and requires (Shed<T>...a) {
          { (a.GetHash(), ...) } -> Similar<Hash>;
       };
       
       /// Check if T has a GetHash() method                                   
       /// It is always preferred when hashing data                            
       template<class...T>
-      concept HasStdHasher = Inner::CheckSize<T...>()
+      concept HasStdHasher = Validate<T...>
           and requires (::std::hash<Shed<T>>...h, Shed<T>...a) { (h(a), ...); };
    }
 

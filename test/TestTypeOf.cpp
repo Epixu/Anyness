@@ -21,7 +21,7 @@ namespace
 {
    template<class T>
    struct SheddableType {
-      using CTTI_Sheddable = Yes<>;
+      using CTTI_Sheddable = T;
       using CTTI_Typed = T;
 
       T instance;
@@ -78,7 +78,7 @@ TEMPLATE_TEST_CASE("Testing typed type", "[ct]",
 
 TEMPLATE_TEST_CASE("Testing untyped type", "[ct]",
    CustomUntypedType,
-   IncompleteType,
+   //IncompleteType, // shouldn't compile
    void, int
 ) {
    static_assert(not CT::Typed<TestType>);
@@ -90,8 +90,8 @@ static_assert(    CT::Typed<std::vector<bool>, CustomTypedType, TypedEnum>);
 static_assert(not CT::Typed<std::vector<bool>, CustomTypedType, int>);
 
 //static_assert(CT::Untyped<>); // shouldn't compile at all
-static_assert(    CT::Untyped<CustomUntypedType, IncompleteType, int>);
-static_assert(not CT::Untyped<CustomUntypedType, IncompleteType, TypedEnum>);
+static_assert(    CT::Untyped<CustomUntypedType, void, int>);
+static_assert(not CT::Untyped<CustomUntypedType, void, TypedEnum>);
 
 
 ///                                                                           
@@ -112,7 +112,7 @@ TEST_CASE("Testing TypeOf", "[ct]") {
    static_assert(::std::same_as<TypeOf<std::vector<bool>>, bool>);
    static_assert(::std::same_as<TypeOf<std::string_view>, char>);
    static_assert(::std::same_as<TypeOf<std::array<double, 5>>, double>);
-   static_assert(::std::same_as<TypeOf<IncompleteType>, void>);
+   //static_assert(::std::same_as<TypeOf<IncompleteType>, void>); // shouldn't compile
 }
 
 

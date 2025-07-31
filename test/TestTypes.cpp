@@ -19,7 +19,7 @@ namespace
    // ReSharper disable once CppTypeAliasNeverUsed
    struct VoidType { using CTTI_Void = Yes<>; };
    struct VoidTypeDerived : VoidType {};
-   struct VoidTypeExternal;
+   struct VoidTypeExternal {};
    // ReSharper disable once CppTypeAliasNeverUsed
    struct NonVoidTypeDerived : VoidType { using CTTI_Void = No; };
    struct IncompleteType;
@@ -44,8 +44,6 @@ TEMPLATE_TEST_CASE("Testing void types", "[ct]",
    VoidTypeExternal,
    VoidTypeExternal const,
    VoidTypeExternal&,
-   Types<void>,
-   //(Types<void, void>), // shouldn't compile
    Types<>
 ) {
    static_assert(    CT::Void<TestType>);
@@ -58,14 +56,16 @@ TEMPLATE_TEST_CASE("Testing non-void types", "[ct]",
    NonVoidTypeDerived,
    NonVoidTypeDerived const,
    NonVoidTypeDerived*,
-   IncompleteType,
-   IncompleteType const,
+   //IncompleteType,         // shouldn't compile
+   //IncompleteType const,   // shouldn't compile
    IncompleteType*,
    int,
    int const,
    int const&,
    int&,
-   Types<void*>
+   Types<void>,
+   Types<void*>,
+   (Types<void, void>)
 ) {
    static_assert(not CT::Void<TestType>);
    static_assert(    CT::NotVoid<TestType>);
@@ -88,7 +88,7 @@ namespace
    // ReSharper disable once CppTypeAliasNeverUsed
    struct CustomTypelist { using CTTI_Typelist = Yes<>; };
    struct CustomTypelistDerived : CustomTypelist {};
-   struct CustomTypelistExternal;
+   struct CustomTypelistExternal {};
    // ReSharper disable once CppTypeAliasNeverUsed
    struct CustomNonTypelistDerived : CustomTypelist { using CTTI_Typelist = No; };
 }
@@ -104,7 +104,7 @@ namespace Langulus::CTTI
 TEMPLATE_TEST_CASE("Testing typelists", "[ct]",
    Types<>,
    Types<void>,
-   //(Types<void, void>), // shouldn't compile
+   (Types<void, void>),
    Types<int>,
    (Types<int, float>),
    CustomTypelist,
@@ -128,8 +128,8 @@ TEMPLATE_TEST_CASE("Testing non-typelists", "[ct]",
    CustomNonTypelistDerived,
    CustomNonTypelistDerived const,
    CustomNonTypelistDerived*,
-   IncompleteType,
-   IncompleteType const,
+   //IncompleteType,         // shouldn't compile
+   //IncompleteType const,   // shouldn't compile
    IncompleteType*,
    int,
    int const,

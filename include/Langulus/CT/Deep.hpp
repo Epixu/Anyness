@@ -25,5 +25,5 @@ LANGULUS_CTTI_CONCEPT(Deep);
 namespace Langulus::CT
 {
    template<class...T>
-   concept Flat = Inner::CheckSize<T...>() and (NotDeep<T> and ...);
+   concept Flat = (NotDeep<T> and ...);
 }
