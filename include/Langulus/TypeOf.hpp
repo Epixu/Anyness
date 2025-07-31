@@ -9,27 +9,42 @@
 #include "Typenav.hpp"
 
 
+namespace Langulus::CTTI
+{
+   /// Can be used in two ways to satisfy CT::Typed<T>:                       
+   /// 1. Specialize for T/concept having non-void Type                       
+   /// 2. Add a public `using CTTI_Typed = <non void type/typelist>;` in T    
+   template<class T>
+   struct Typed {
+      using Type = void;
+   };
+}
+
 namespace Langulus::CT::Inner
 {
    /// Helper function to extract underlying type                             
    /// Supports underlying typelists as well                                  
    template<class T>
-   consteval CT::Typelist auto GetUnderlyingType() {
+   consteval auto GetUnderlyingType() {
       static_assert(not ::std::is_reference_v<T>, "Strip references first");
 
-      if constexpr (Array<T>)
+      if constexpr (::std::is_bounded_array_v<T>)
          return Types<Deext<T>> {};
-      else {
-         if constexpr (NotVoid<typename CTTI::Typed<T>::Type>) {
-            // Checked externally, T doesn't have to be complete        
-            using TLIST = typename CTTI::Typed<T>::Type;
-            if constexpr (CT::Typelist<TLIST>)
-               return TLIST {};
-            else
-               return Types<TLIST> {};
-         }
-         else if constexpr (requires { typename T::CTTI_Typed; }) {
-            // Checked internally, T has to be a complete type          
+      else if constexpr (NotVoid<typename CTTI::Typed<T>::Type>) {
+         // Checked externally, T doesn't have to be complete        
+         using TLIST = typename CTTI::Typed<T>::Type;
+         if constexpr (CT::Typelist<TLIST>)
+            return TLIST {};
+         else
+            return Types<TLIST> {};
+      }
+      else if constexpr (::std::is_enum_v<T>)
+         return Types<::std::underlying_type_t<T>> {};
+      else if constexpr (::std::is_class_v<T>) {
+         static_assert(Complete<T>,
+            "Can't get inner type of an incomplete outer type");
+         if constexpr (requires { typename T::CTTI_Typed; }) {
+            // Checked internally, T has to be a complete type       
             using TLIST = typename T::CTTI_Typed;
             if constexpr (CT::Typelist<TLIST>)
                return TLIST {};
@@ -37,18 +52,16 @@ namespace Langulus::CT::Inner
                return Types<TLIST> {};
          }
          else if constexpr (requires { typename T::value_type; }) {
-            // Checked internally, T has to be a complete type          
+            // Checked internally, T has to be a complete type       
             using TLIST = typename T::value_type;
             if constexpr (CT::Typelist<TLIST>)
                return TLIST {};
             else
                return Types<TLIST> {};
          }
-         else if constexpr (Enum<T>)
-            return Types<::std::underlying_type_t<T>> {};
-         else
-            return NoTypes {};
+         else return NoTypes {};
       }
+      else return NoTypes {};
    };
 }
 

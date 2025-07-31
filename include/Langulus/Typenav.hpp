@@ -68,14 +68,6 @@ namespace Langulus::CTTI
    struct Fundamental {
       static constexpr bool Enabled = ::std::is_fundamental_v<T>;
    };
-   
-   /// Can be used in two ways to satisfy CT::Typed<T>:                       
-   /// 1. Specialize for T/concept having non-void Type                       
-   /// 2. Add a public `using CTTI_Typed = <non void type/typelist>;` in T    
-   template<class T>
-   struct Typed {
-      using Type = void;
-   };
 }
 
 

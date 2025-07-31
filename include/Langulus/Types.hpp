@@ -52,7 +52,9 @@ namespace Langulus::CT
 
          if constexpr (CTTI::Void<DT>::Enabled)
             return true;
-         else if constexpr (Validate<DT> and ::std::is_class_v<DT>) {
+         else if constexpr (::std::is_class_v<DT>) {
+            static_assert(Complete<DT>,
+               "Can't check if an incomplete type is void");
             // Access member only if T is an user type, to save the     
             // compiler from bugging out                                
             if constexpr (requires { DT::CTTI_Void::Enabled; })
@@ -69,7 +71,9 @@ namespace Langulus::CT
 
          if constexpr (CTTI::Typelist<DT>::Enabled)
             return true;
-         else if constexpr (Validate<DT> and ::std::is_class_v<DT>) {
+         else if constexpr (::std::is_class_v<DT>) {
+            static_assert(Complete<DT>,
+               "Can't check if an incomplete type is a type list");
             // Access member only if T is an user type, to save the     
             // compiler from bugging out                                
             if constexpr (requires { DT::CTTI_Typelist::Enabled; })
