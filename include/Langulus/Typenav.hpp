@@ -102,7 +102,7 @@ namespace Langulus
                if constexpr (requires { typename DT::CTTI_Sheddable; }) {
                   using InnerT = typename DT::CTTI_Sheddable;
                   if constexpr (::std::same_as<InnerT, No>
-                  or ::std::same_as<InnerT, void>)
+                  or ::std::is_void_v<InnerT>)
                      return NoTypes {};
                   else {
                      static_assert(not ::std::same_as<InnerT, Yes<>>,

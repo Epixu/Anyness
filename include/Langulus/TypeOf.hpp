@@ -23,43 +23,36 @@ namespace Langulus::CTTI
 namespace Langulus::CT::Inner
 {
    /// Helper function to extract underlying type                             
-   /// Supports underlying typelists as well                                  
    template<class T>
    consteval auto GetUnderlyingType() {
       static_assert(not ::std::is_reference_v<T>, "Strip references first");
 
       if constexpr (::std::is_bounded_array_v<T>)
          return Types<Deext<T>> {};
-      else if constexpr (NotVoid<typename CTTI::Typed<T>::Type>) {
-         // Checked externally, T doesn't have to be complete        
-         using TLIST = typename CTTI::Typed<T>::Type;
-         if constexpr (CT::Typelist<TLIST>)
-            return TLIST {};
-         else
-            return Types<TLIST> {};
+      else if constexpr (not ::std::is_void_v<typename CTTI::Typed<T>::Type>) {
+         // Checked externally, T doesn't have to be complete           
+         return Types<typename CTTI::Typed<T>::Type> {};
       }
       else if constexpr (::std::is_enum_v<T>)
          return Types<::std::underlying_type_t<T>> {};
       else if constexpr (::std::is_class_v<T>) {
+         // Checked internally, T has to be a complete type             
          static_assert(Complete<T>,
             "Can't get inner type of an incomplete outer type");
          if constexpr (requires { typename T::CTTI_Typed; }) {
-            // Checked internally, T has to be a complete type       
-            using TLIST = typename T::CTTI_Typed;
-            if constexpr (CT::Typelist<TLIST>)
-               return TLIST {};
-            else
-               return Types<TLIST> {};
+            using InnerT = typename T::CTTI_Typed;
+            if constexpr (::std::is_void_v<InnerT> or ::std::same_as<InnerT, No>)
+               return NoTypes {};
+            else {
+               static_assert(not ::std::same_as<InnerT, Yes<>>,
+                  "Instead of Yes<> pick a type CTTI_Typed");
+               return Types<InnerT> {};
+            }
          }
-         else if constexpr (requires { typename T::value_type; }) {
-            // Checked internally, T has to be a complete type       
-            using TLIST = typename T::value_type;
-            if constexpr (CT::Typelist<TLIST>)
-               return TLIST {};
-            else
-               return Types<TLIST> {};
-         }
-         else return NoTypes {};
+         else if constexpr (requires { typename T::value_type; })
+            return Types<typename T::value_type> {};
+         else
+            return NoTypes {};
       }
       else return NoTypes {};
    };
@@ -69,15 +62,15 @@ namespace Langulus
 {
    /// Get the type that wraps std::underlying_type_t<T> for enums,           
    /// as well as any bounded array, or anything with CTTI::Typed::Type or    
-   /// T::CTTI_Typed/T::value_type that isn't 'void'. Will result int a type  
+   /// T::CTTI_Typed/T::value_type that isn't 'void'. Will result in a type   
    /// list if inner type contains more than one type                         
    ///   - if T is an array -> return the type (remove extents and refs)      
    ///   - if T has CTTI::Typed is specialized -> return CTTI::Typed::Type    
-   ///   - if T has CTTI_Typed/value_type -> return the inner type(s)         
    ///   - if T is an enum -> return the underlying type                      
+   ///   - if T has CTTI_Typed/value_type -> return the inner type(s)         
    ///   - otherwise just return a void type                                  
-   template<class T, CT::Typelist INNER = decltype(CT::Inner::GetUnderlyingType<Deref<T>>())>
-   using TypeOf = Tif<INNER::Count <= 1, typename INNER::First, INNER>;
+   template<class T>
+   using TypeOf = typename decltype(CT::Inner::GetUnderlyingType<Deref<T>>())::First;
 
    namespace CT
    {
@@ -88,11 +81,11 @@ namespace Langulus
       ///   @attention if the inner type is a typelist, that typelist will be 
       ///      accounted for, and Ts are multiply-typed (like TPair)          
       template<class...T>
-      concept Typed = Validate<T...> and (NotVoid<TypeOf<Deref<T>>> and ...);
+      concept Typed = PartialValidate<T...> and (NotVoid<TypeOf<Deref<T>>> and ...);
 
       /// Check if all T have no underlying types defined                     
       template<class...T>
-      concept Untyped = Validate<T...> and ((not Typed<Deref<T>>) and ...);
+      concept Untyped = PartialValidate<T...> and (Void<TypeOf<Deref<T>>> and ...);
    }
 
 
