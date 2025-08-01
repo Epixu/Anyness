@@ -15,10 +15,7 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Values = Values<constants...>;` in T       
    template<class T>
-   struct DefineConstant {
-      using Type = void;
-      static constexpr bool Enabled = false;
-   };
+   struct DefineConstant;
 }
 
 namespace Langulus::CT::Inner
@@ -31,7 +28,7 @@ namespace Langulus::CT::Inner
       static_assert(not CT::Convoluted<T>,
          "Strip qualifiers first");
 
-      if constexpr (CTTI::DefineConstant<T>::Enabled) {
+      if constexpr (Complete<CTTI::DefineConstant<T>>) {
          // Checked externally, T doesn't have to be complete           
          return typename CTTI::DefineConstant<T>::Type {};
       }
@@ -39,6 +36,7 @@ namespace Langulus::CT::Inner
          // Checked internally, T has to be a complete type             
          return typename T::CTTI_Values {};
       }
+      else return NoTypes {};
    };
 }
 

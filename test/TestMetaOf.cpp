@@ -261,12 +261,10 @@ namespace Langulus::CTTI
    template<>
    struct MapsTo<Pi> {
       using Type = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
-      static constexpr bool Enabled = true;
    };
    template<>
    struct NamedValue<Pi::ConflictingNumber> {
       static constexpr Literal Name = "Pi::Number";
-      static constexpr bool Enabled = true;
    };
 }
 
@@ -581,14 +579,11 @@ namespace
 namespace Langulus::CTTI
 {
    template<>
-   struct Abstract<ForcedAbstractExternally> {
-      static constexpr bool Enabled = true;
-   };
+   struct Abstract<ForcedAbstractExternally> {};
    
    template<>
    struct Verbs<DMeta> {
       using Type = Langulus::Verbs::Create;
-      static constexpr bool Enabled = true;
    };
 }
 

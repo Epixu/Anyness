@@ -26,29 +26,21 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept having Enabled as true and a version       
    /// 2. Add a public `using CTTI_Versioned = Version<major, minor>;` in T   
    template<class T>
-   struct Versioned {
-      static constexpr unsigned Major = 1;
-      static constexpr unsigned Minor = 0;
-      static constexpr bool Enabled = false;
-   };
+   struct Versioned;
 
    template<auto E>
-   struct VersionedValue {
-      static constexpr unsigned Major = 1;
-      static constexpr unsigned Minor = 0;
-      static constexpr bool Enabled = false;
-   };
+   struct VersionedValue;
 }
 
-LANGULUS_CTTI_CONCEPT(Versioned);
+LANGULUS_CTTI_CONCEPT_DECVQ(Versioned);
 
 namespace Langulus::CT
 {
    template<auto E>
-   concept VersionedValue = CTTI::VersionedValue<E>::Enabled;
+   concept VersionedValue = Complete<CTTI::VersionedValue<E>>;
 
    template<auto E>
-   concept NotVersionedValue = not VersionedValue<E>;
+   concept NotVersionedValue = not Complete<CTTI::VersionedValue<E>>;
 }
 
 namespace Langulus
@@ -57,20 +49,20 @@ namespace Langulus
    template<class T>
    consteval auto VersionOf() {
       using ST = Shed<T>;
-      if constexpr (CTTI::Versioned<ST>::Enabled)
+      if constexpr (CT::Complete<CTTI::Versioned<ST>>)
          return CTTI::Versioned<ST> {};
       else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Versioned))
          return typename Decay<ST>::CTTI_Versioned {};
       else
-         return CTTI::Versioned<void> {};
+         return Version<1, 0> {};
    }
 
    ///                                                                        
    template<auto E>
    consteval auto VersionOf() {
-      if constexpr (CTTI::VersionedValue<E>::Enabled)
+      if constexpr (CT::Complete<CTTI::VersionedValue<E>>)
          return CTTI::VersionedValue<E> {};
       else
-         return CTTI::VersionedValue<0> {};
+         return Version<1, 0> {};
    }
 }

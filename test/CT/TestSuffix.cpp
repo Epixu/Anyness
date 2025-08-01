@@ -30,22 +30,14 @@ namespace Langulus::CTTI
    template<>
    struct Suffix<SuffixBySpecialization> {
       static constexpr Literal Name = "yeah";
-      static constexpr bool Enabled = true;
    };
    template<>
    struct Suffix<SuffixBySpecialization*> {
       static constexpr Literal Name = "yeahPtr";
-      static constexpr bool Enabled = true;
    };
    template<>
    struct Suffix<SuffixBySpecialization const*> {
       static constexpr Literal Name = "yeahCptr";
-      static constexpr bool Enabled = true;
-   };
-   template<>
-   struct Suffix<NoSuffix> {
-      [[maybe_unused]] static constexpr Literal Name = "<shouldn't see this>";
-      [[maybe_unused]] static constexpr bool Enabled = false;
    };
 }
 

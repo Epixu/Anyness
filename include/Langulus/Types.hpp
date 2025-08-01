@@ -14,26 +14,19 @@ namespace Langulus::CTTI
 {
    /// Can be used in two ways to satisfy CT::Void<T>:                        
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Void = Yes<>/No<>;` in T                   
+   /// 2. Add a public `using CTTI_Void = Yes<>;` in T                        
    template<class T>
-   struct Void {
-      static constexpr bool Enabled = false;
-   };
+   struct Void;
 
-   /// Make sure no one interferes with true void types                       
+   /// Make sure no one interferes with true void type                        
    template<>
-   struct Void<void> {
-      static constexpr bool Enabled = true;
-   };
-
+   struct Void<void> {};
    
    /// Can be used in two ways to satisfy CT::Typelist<T>:                    
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Typelist = Yes<>/No<>;` in T               
    template<class T>
-   struct Typelist {
-      static constexpr bool Enabled = false;
-   };
+   struct Typelist;
 }
 
 namespace Langulus::CT
@@ -49,8 +42,7 @@ namespace Langulus::CT
       template<class T>
       consteval bool IsVoidInner() {
          using DT = ::std::remove_cvref_t<T>;
-
-         if constexpr (CTTI::Void<DT>::Enabled)
+         if constexpr (Complete<CTTI::Void<DT>>)
             return true;
          else if constexpr (::std::is_class_v<DT>) {
             static_assert(Complete<DT>,
@@ -68,8 +60,7 @@ namespace Langulus::CT
       template<class T>
       consteval bool IsTypelistInner() {
          using DT = ::std::remove_cvref_t<T>;
-
-         if constexpr (CTTI::Typelist<DT>::Enabled)
+         if constexpr (Complete<CTTI::Typelist<DT>>)
             return true;
          else if constexpr (::std::is_class_v<DT>) {
             static_assert(Complete<DT>,

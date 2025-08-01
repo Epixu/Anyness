@@ -12,10 +12,12 @@
 namespace Langulus::CTTI
 {
    /// Can be used in two ways to satisfy CT::Abstract<T>:                    
+   /// Types with pure virtual functions are CT::Abstract by default          
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Abstract = Yes<>;` in T                    
    template<class T>
    struct Abstract {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = ::std::is_abstract_v<T>;
    };
 }

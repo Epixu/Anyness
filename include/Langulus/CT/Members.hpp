@@ -13,12 +13,9 @@ namespace Langulus::CTTI
 {
    /// Can be used to reflect members in two ways:                            
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Members = Members<constants...>;` in T     
+   /// 2. Add a public `using CTTI_Members = Members<...>;` in T              
    template<class T>
-   struct DefineMembers {
-      using Type = void;
-      static constexpr bool Enabled = false;
-   };
+   struct DefineMembers;
 }
 
 namespace Langulus::CT::Inner
@@ -37,7 +34,7 @@ namespace Langulus::CT::Inner
    template<auto HANDLE, class OWNER, class TYPE>
    struct MemberReflector {
       using Member = decltype(HANDLE);
-      static_assert(std::is_member_pointer_v<Member>,
+      static_assert(::std::is_member_pointer_v<Member>,
          "Member must be a member pointer");
       using Owner = OWNER;
       using Type  = TYPE;
@@ -61,7 +58,7 @@ namespace Langulus::CT::Inner
       static_assert(not CT::Convoluted<T>,
          "Strip qualifiers first");
 
-      if constexpr (CTTI::DefineMembers<T>::Enabled) {
+      if constexpr (Complete<CTTI::DefineMembers<T>>) {
          // Checked externally, T doesn't have to be complete           
          return typename CTTI::DefineMembers<T>::Type {};
       }
@@ -69,6 +66,7 @@ namespace Langulus::CT::Inner
          // Checked internally, T has to be a complete type             
          return typename T::CTTI_Members {};
       }
+      else return NoTypes {};
    };
 }
 
@@ -79,10 +77,10 @@ namespace Langulus
    /// Or by specializing CTTI::DefineMembers<T>                              
    template<auto...M>
    struct Members : Types<
-         decltype(CT::Inner::MemberReflector(Fake<CT::Inner::Emballage<M>>(), M))...
+      decltype(CT::Inner::MemberReflector(Fake<CT::Inner::Emballage<M>>(), M))...
    > {};
 
-   /// Get the reflected named members, void if none                          
+   /// Get the reflected named members                                        
    template<class T>
    using MembersOf = decltype(CT::Inner::GetMembers<Decvq<Deref<T>>>());
 }

@@ -12,10 +12,13 @@
 namespace Langulus::CTTI
 {
    /// Can be used in two ways to satisfy CT::Character<T>:                   
+   /// The types char, wchar_t, char8_t, char16_t and char32_t are considered 
+   /// CT::Character by default                                               
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Character = Yes;` in T                     
+   /// 2. Add a public `using CTTI_Character = Yes<>;` in T                   
    template<class T>
    struct Character {
+      static constexpr bool Default = true;
       static constexpr bool Enabled =
             ::std::same_as<Decvq<Deref<T>>, char>
          or ::std::same_as<Decvq<Deref<T>>, wchar_t>
@@ -25,4 +28,4 @@ namespace Langulus::CTTI
    };
 }
 
-LANGULUS_CTTI_CONCEPT(Character);
+LANGULUS_CTTI_CONCEPT_DECVQ(Character);

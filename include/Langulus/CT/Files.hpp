@@ -12,18 +12,15 @@
 
 namespace Langulus::CTTI
 {
-   /// Used to define a custom file extensions for serialization.             
+   /// Used to define a custom file extensions for types                      
    /// Can be used in two ways to satisfy CT::Files<T>:                       
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Files = Yes<"txt,rtf,etc">;` in T          
    template<class T>
-   struct Files {
-      static constexpr Literal Name = "<missing file extensions>";
-      static constexpr bool Enabled = false;
-   };
+   struct Files;;
 }
 
-LANGULUS_CTTI_CONCEPT(Files);
+LANGULUS_CTTI_CONCEPT_DECVQ(Files);
 
 namespace Langulus
 {
@@ -36,18 +33,15 @@ namespace Langulus
       static_assert(CT::Void<T> or CT::Complete<T>,
          "Can't get file extensions of an incomplete type");
       
-      if constexpr (CTTI::Files<DT>::Enabled) {
+      if constexpr (CT::Complete<CTTI::Files<DT>>) {
          constexpr auto s = CTTI::Files<DT>::Name;
          static_assert(IsASCII(s), "File extensions must be ASCII");
          return s;
       }
-      else if constexpr (::std::is_class_v<DT>) {
-         if constexpr (requires { DT::CTTI_Files::Constant; }) {
-            constexpr auto s = DT::CTTI_Files::Constant;
-            static_assert(IsASCII(s), "File extensions must be ASCII");
-            return DT::CTTI_Files::Constant;
-         }
-         else return Literal {};
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(DT, Files)) {
+         constexpr auto s = DT::CTTI_Files::Constant;
+         static_assert(IsASCII(s), "File extensions must be ASCII");
+         return s;
       }
       else return Literal {};
    }

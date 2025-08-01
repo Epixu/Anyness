@@ -18,57 +18,48 @@ namespace Langulus::CTTI
    /// across different compilers                                             
    ///                                                                        
    template<>
-   struct Named<::std::nullptr_t> {
+   struct Named<nullptr_t> {
       static constexpr Literal Name = "null";
-      static constexpr bool Enabled = true;
    };
 
    template<>
    struct Named<int8_t> {
       static constexpr Literal Name = "int8";
-      static constexpr bool Enabled = true;
    };
 
    template<>
    struct Named<int16_t> {
       static constexpr Literal Name = "int16";
-      static constexpr bool Enabled = true;
    };
 
    template<>
    struct Named<int32_t> {
       static constexpr Literal Name = "int32";
-      static constexpr bool Enabled = true;
    };
 
    template<>
    struct Named<int64_t> {
       static constexpr Literal Name = "int64";
-      static constexpr bool Enabled = true;
    };
 
    template<>
    struct Named<uint8_t> {
       static constexpr Literal Name = "uint8";
-      static constexpr bool Enabled = true;
    };
 
    template<>
    struct Named<uint16_t> {
       static constexpr Literal Name = "uint16";
-      static constexpr bool Enabled = true;
    };
 
    template<>
    struct Named<uint32_t> {
       static constexpr Literal Name = "uint32";
-      static constexpr bool Enabled = true;
    };
 
    template<>
    struct Named<uint64_t> {
       static constexpr Literal Name = "uint64";
-      static constexpr bool Enabled = true;
    };
 }
 
@@ -178,7 +169,7 @@ namespace Langulus::RTTI
       ///   @return a compile-time string                                     
       template<class T, bool NORMALIZE = true, bool NAMED = true>
       consteval auto IsolateTypename() {
-         if constexpr (NAMED and CTTI::Named<T>::Enabled) {
+         if constexpr (NAMED and CT::Complete<CTTI::Named<T>>) {
             // Custom name by CTTI::Named specialization                
             static_assert(IsKeyword(CTTI::Named<T>::Name),
                "Not a valid CTTI::Named - "
@@ -250,14 +241,17 @@ namespace Langulus::RTTI
             else
                return deptr + " const*";
          }
-         else if constexpr (NAMED and requires { T::CTTI_Named::Constant; }) {
-            // Custom name taken from T::CTTI_Named member              
-            static_assert(IsKeyword(T::CTTI_Named::Constant),
-               "Not a valid CTTI_Named - "
-               "must be ASCII, starting with an alphabetical symbol, "
-               "and must not contain any spaces or operators"
-            );
-            return T::CTTI_Named::Constant;
+         else if constexpr (NAMED and requires { T::CTTI_Named::Enabled; }) {
+            if constexpr (T::CTTI_Named::Enabled) {
+               // Custom name taken from T::CTTI_Named member           
+               static_assert(IsKeyword(T::CTTI_Named::Constant),
+                  "Not a valid CTTI_Named - "
+                  "must be ASCII, starting with an alphabetical symbol, "
+                  "and must not contain any spaces or operators"
+               );
+               return T::CTTI_Named::Constant;
+            }
+            else return IsolateTypename<T, NORMALIZE, false>();
          }
          else {
             // Extract the C++ name, normalize it if required           

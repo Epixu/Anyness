@@ -16,6 +16,7 @@ namespace Langulus::CTTI
    ///      is_trivial_v check on GCC/Clang due to compiler bugs; MSVC is fine
    template<class T>
    struct POD {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = not CT::Abstract<T> and (
          CT::Sparse<T> or CT::Fundamental<T> or (
                 ::std::is_trivial_v<T>
@@ -26,4 +27,4 @@ namespace Langulus::CTTI
    };
 }
 
-LANGULUS_CTTI_CONCEPT(POD);
+LANGULUS_CTTI_CONCEPT_DECVQ(POD);

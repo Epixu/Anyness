@@ -15,27 +15,21 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept having Enabled as true and an info string  
    /// 2. Add a public `using CTTI_Info = Yes<"some info">;` in T             
    template<class T>
-   struct Info {
-      static constexpr Literal Text = {};
-      static constexpr bool Enabled = false;
-   };
+   struct Info;
 
    template<auto E>
-   struct InfoValue {
-      static constexpr Literal Text = {};
-      static constexpr bool Enabled = false;
-   };
+   struct InfoValue;
 }
 
-LANGULUS_CTTI_CONCEPT(Info);
+LANGULUS_CTTI_CONCEPT_DECVQ(Info);
 
 namespace Langulus::CT
 {
    template<auto E>
-   concept InfoValue = CTTI::InfoValue<E>::Enabled;
+   concept InfoValue = Complete<CTTI::InfoValue<E>>;
 
    template<auto E>
-   concept NotInfoValue = not InfoValue<E>;
+   concept NotInfoValue = not Complete<CTTI::InfoValue<E>>;
 }
 
 namespace Langulus
@@ -47,15 +41,12 @@ namespace Langulus
    consteval auto InfoOf() {
       using DT = Decvq<Deref<T>>;
       
-      if constexpr (CTTI::Info<DT>::Enabled)
+      if constexpr (CT::Complete<CTTI::Info<DT>>)
          return CTTI::Info<DT>::Text;
-      else if constexpr (::std::is_class_v<DT>) {
-         if constexpr (requires { DT::CTTI_Info::Constant; })
-            return DT::CTTI_Info::Constant;
-         else
-            return Literal {};
-      }
-      else return Literal {};
+      else if constexpr (LANGULUS_CTTI_DELVE_IN(DT, Info))
+         return DT::CTTI_Info::Constant;
+      else
+         return Literal {};
    }
    
    /// Get the info for a constant at compile-time                            
@@ -63,7 +54,7 @@ namespace Langulus
    ///   @return a compile-time string                                        
    template<auto E>
    consteval auto InfoOf() {
-      if constexpr (CTTI::InfoValue<E>::Enabled)
+      if constexpr (CT::Complete<CTTI::InfoValue<E>>)
          return CTTI::InfoValue<E>::Text;
       else
          return Literal {};

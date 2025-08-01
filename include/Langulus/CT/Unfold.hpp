@@ -15,25 +15,23 @@
 
 namespace Langulus::CTTI
 {
-
    /// Can be used in two ways to satisfy CT::Unfoldable<T>:                  
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Unfoldable = Yes;` in T                    
+   /// 2. Add a public `using CTTI_Unfoldable = Yes<>;` in T                  
    template<class T>
    struct Unfoldable {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = CT::Intent<T> or CT::Array<T>
-         or (::std::ranges::range<T> and CT::Typed<T>);
+                       or (::std::ranges::range<T> and CT::Typed<T>);
    };
-   
-} // namespace Langulus::CTTI
+}
 
-LANGULUS_CTTI_CONCEPT(Unfoldable);
+LANGULUS_CTTI_CONCEPT_DECVQ(Unfoldable);
 
 namespace Langulus::CT
 {
    namespace Inner
    {
-
       ///   @return a pointer of the first nested non-unfoldable type         
       template<class T, class UNLESS = void>
       consteval Typelist auto UnfoldInner() {
@@ -52,15 +50,14 @@ namespace Langulus::CT
             return UnfoldInner<Deext<T>>();
          }
          else if constexpr (Typed<T>) {
-            // This includes ::std::ranges::range as well as anything   
+            // This includes ::std::ranges::range, as well as anything  
             // that is statically typed in Anyness, unless reflected    
             // as not Unfoldable                                        
             return UnfoldInner<TypeOf<T>>();
          }
          else Types<T> {};
       }
-
-   } // namespace Langulus::CT::Inner
+   }
       
    /// Unfolds T, if it is a bounded array or std::range, and returns the     
    /// contained type. Nested for ranges containing other ranges, or arrays   

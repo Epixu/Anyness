@@ -16,10 +16,7 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_MinAlloc = Yes<value>;` in T               
    template<class T>
-   struct MinAlloc {
-      static constexpr size_t Value   = MinimalAllocation;
-      static constexpr bool   Enabled = false;
-   };
+   struct MinAlloc;
 }
 
 namespace Langulus::CT
@@ -31,7 +28,7 @@ namespace Langulus::CT
          "MinimalAllocation must be a power-of-two");
       
       using ST = Shed<T>;
-      if constexpr (CTTI::MinAlloc<ST>::Enabled) {
+      if constexpr (Complete<CTTI::MinAlloc<ST>>) {
          constexpr size_t minalloc = CTTI::MinAlloc<ST>::Value;
          static_assert(Roof2(minalloc),
             "Reflected MinAlloc must be a power-of-two");

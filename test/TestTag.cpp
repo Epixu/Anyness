@@ -48,7 +48,6 @@ namespace Langulus::CTTI
    template<>
    struct Named<::std::string> {
       static constexpr Literal Name = "string";
-      static constexpr bool Enabled = true;
    };
 }
 

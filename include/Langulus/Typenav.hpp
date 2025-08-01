@@ -35,56 +35,85 @@ namespace Langulus::CTTI
    ///   if you want to reap the benefits of SIMD optimizations for T         
    template<class T>
    struct Array {
-      static constexpr bool Enabled = ::std::is_bounded_array_v<T>;
-      static constexpr size_t Count = Enabled ? ::std::extent_v<T> : 1;
+      static constexpr bool Default = true;
+      static constexpr size_t Count = ::std::is_bounded_array_v<T> ? ::std::extent_v<T> : 1;
    };
    
    /// Affects CT::Sparse<T>:                                                 
    template<class T>
    struct Sparse {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = ::std::is_pointer_v<T>;
    };
    
    /// Affects CT::Null<T>:                                                   
    template<class T>
    struct Null {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = ::std::is_null_pointer_v<T>;
    };
    
    /// Affects CT::Enum<T>:                                                   
    template<class T>
    struct Enum {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = ::std::is_enum_v<T>;
    };
    
    /// Affects CT::Aggregate<T>:                                              
    template<class T>
    struct Aggregate {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = ::std::is_aggregate_v<T>;
    };
    
    /// Affects CT::Fundamental<T>:                                            
    template<class T>
    struct Fundamental {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = ::std::is_fundamental_v<T>;
    };
 }
 
+/// @note short-circuiting inside concepts doesn't properly work in Clang,    
+///    but no one seems to care:                                              
+///    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54310                     
+///    This is why I've wrapped it in a lambda with 'if constexpr'            
 
 /// Checks for reflection traits inside types themselves                      
-/// Requires the type to be complete in order to do that                      
-/// Short-circuiting inside concepts doesn't properly work in Clang, but no   
-/// one seems to care: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54310     
-/// This is why I've wrapped it in a lambda with 'if constexpr'               
-#define LANGULUS_CTTI_DELVE_IN(TYPE,NAME) ([]{ \
-      if constexpr (::Langulus::CT::Validate<TYPE> \
-      and ::std::is_class_v<::std::decay_t<TYPE>> \
-      and requires { typename ::std::decay_t<TYPE>::CTTI_##NAME; }) \
-         return ::std::decay_t<TYPE>::CTTI_##NAME::Enabled; \
-      else \
-         return false; \
+/// Requires the TYPE to be complete in order to do that                      
+#define LANGULUS_CTTI_DELVE_IN(TYPE,NAME) ([] -> bool { \
+      if constexpr (::std::is_class_v<TYPE>) { \
+         static_assert(::Langulus::CT::Complete<TYPE>, \
+            "Can't access `CTTI_" #NAME "` inside incomplete type " #TYPE); \
+         if constexpr (requires { TYPE::CTTI_##NAME::Enabled; }) \
+            return TYPE::CTTI_##NAME::Enabled; \
+         else return false; \
+      } else return false; \
    }())
 
+/// Checks for reflection traits outside types by CTTI struct specializations 
+/// If CTTI struct is incomplete, it has no effect                            
+/// If CTTI struct has a Default member, LANGULUS_CTTI_DELVE_IN is checked    
+///   before utilizing the Enabled member                                     
+/// If CTTI struct has no Default member, it is assumed specialized, and no   
+///   LANGULUS_CTTI_DELVE_IN is required, the Enabled member is used          
+#define LANGULUS_CTTI_CHECK(TYPE,NAME) ([] -> bool { \
+      using ctti = ::Langulus::CTTI::NAME<TYPE>; \
+      if constexpr (::Langulus::CT::Complete<ctti>) { \
+         if constexpr(requires { ctti::Default; }) { \
+            if constexpr (::std::is_class_v<TYPE>) { \
+               static_assert(::Langulus::CT::Complete<TYPE>, \
+                  "Can't access `CTTI_" #NAME "` inside incomplete type " #TYPE); \
+               if constexpr(requires { TYPE::CTTI_##NAME::Enabled; }) \
+                  return TYPE::CTTI_##NAME::Enabled; \
+               else return ctti::Enabled; \
+            } else return ctti::Enabled; \
+         } else if constexpr (requires { ctti::Enabled; }) { \
+            return ctti::Enabled; \
+         } else return true; \
+      } else return LANGULUS_CTTI_DELVE_IN(TYPE, NAME); \
+   }())
 
 namespace Langulus
 {
@@ -107,8 +136,7 @@ namespace Langulus
                   else {
                      static_assert(not ::std::same_as<InnerT, Yes<>>,
                         "Instead of Yes<> pick a type to shed to "
-                        "for CTTI_Sheddable"
-                     );
+                        "for CTTI_Sheddable");
                      return Types<InnerT> {};
                   }
                }
@@ -131,8 +159,8 @@ namespace Langulus
       
       /// Check if all T are sheddable types (like intents), that serve only  
       /// to wrap data for tag dispatching and semantics. Sheddable types     
-      /// don't carry any real data, and are often just a reference to the    
-      /// real data.                                                          
+      /// don't carry any real data, and often just contain a reference       
+      /// to the eal data.                                                    
       /// They should be aggressively optimized out from the final binary.    
       /// Marking types as sheddable means that they don't interfere with most
       /// other CT concepts - these will act as if the sheddable type doesn't 
@@ -152,6 +180,8 @@ namespace Langulus
       {
          /// Extracts the bounded array size                                  
          /// Otherwise results in 1                                           
+         ///   @attention assumes `CTTI::Array<T>::Default` exists for the    
+         ///      unspecialized template CTTI::Array                          
          template<class T>
          consteval size_t GetBoundedArrayExtent() {
             static_assert(not ::std::is_reference_v<T>,
@@ -159,12 +189,21 @@ namespace Langulus
             static_assert(not CT::Sheddable<T>,
                "Shed all sheddables prior to this call");
 
-            if constexpr (CTTI::Array<T>::Enabled)
-               return CTTI::Array<T>::Count;
-            else if constexpr (LANGULUS_CTTI_DELVE_IN(T, Array))
-               return ::std::decay_t<T>::CTTI_Array::Constant;
-            else
-               return 1;
+            if constexpr (requires { CTTI::Array<T>::Default; }) {
+               if constexpr (::std::is_class_v<T>) {
+                  static_assert(Complete<T>,
+                     "Can't access `CTTI_Array` inside incomplete type");
+                  if constexpr(requires { T::CTTI_Array::Enabled; }) {
+                     if constexpr (T::CTTI_Array::Enabled)
+                        return T::CTTI_Array::Constant;
+                     else
+                        return 1;
+                  }
+                  else return CTTI::Array<T>::Count;
+               }
+               else return CTTI::Array<T>::Count;
+            }
+            else return CTTI::Array<T>::Count;
          };
       }
    }
@@ -235,8 +274,9 @@ namespace Langulus
       /// Check if all T are bounded arrays                                   
       template<class...T>
       concept Array = PartialValidate<T...>
-          and ((CTTI::Array<Decvq<Deref<Shed<T>>>>::Enabled
-           or LANGULUS_CTTI_DELVE_IN(Shed<T>, Array)) and ...);
+          and ((::std::is_bounded_array_v<Decvq<Deref<Shed<T>>>>
+             or ExtentOf<Decvq<Deref<Shed<T>>>> > 1
+          ) and ...);
 
       /// Check if all T are volatile-qualified                               
       template<class...T>
@@ -248,8 +288,7 @@ namespace Langulus
       ///      as custom packed pointers                                      
       template<class...T>
       concept Sparse = PartialValidate<T...>
-          and ((CTTI::Sparse<Decvq<Deref<Shed<T>>>>::Enabled
-           or LANGULUS_CTTI_DELVE_IN(Shed<T>, Sparse)) and ...);
+          and (LANGULUS_CTTI_CHECK(Decvq<Deref<Shed<T>>>, Sparse) and ...);
 
       /// Check if all T are dense                                            
       template<class...T>
@@ -373,9 +412,11 @@ namespace Langulus
 #define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = PartialValidate<T...> and ((CTTI::NAME<Deref<T>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, NAME)) and ...); \
+      concept NAME = PartialValidate<T...> \
+          and (LANGULUS_CTTI_CHECK(Deref<T>, NAME) and ...); \
       template<class...T> \
-      concept Not##NAME = PartialValidate<T...> and ((not NAME<Deref<T>>) and ...); \
+      concept Not##NAME = PartialValidate<T...> \
+          and ((not LANGULUS_CTTI_CHECK(Deref<T>, NAME)) and ...); \
    }
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
@@ -387,11 +428,12 @@ namespace Langulus
 #define LANGULUS_CTTI_CONCEPT_UNSHEDDABLE_DECVQ(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = PartialValidate<T...> and ((CTTI::NAME<Decvq<Deref<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(T, NAME)) and ...); \
+      concept NAME = PartialValidate<T...> \
+          and (LANGULUS_CTTI_CHECK(Decvq<Deref<T>>, NAME) and ...); \
       template<class...T> \
-      concept Not##NAME = PartialValidate<T...> and ((not NAME<Decvq<Deref<T>>>) and ...); \
+      concept Not##NAME = PartialValidate<T...> \
+          and ((not LANGULUS_CTTI_CHECK(Decvq<Deref<T>>, NAME)) and ...); \
    }
-
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
@@ -402,11 +444,12 @@ namespace Langulus
 #define LANGULUS_CTTI_CONCEPT(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = PartialValidate<T...> and ((CTTI::NAME<Deref<Shed<T>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, NAME)) and ...); \
+      concept NAME = PartialValidate<T...> \
+          and (LANGULUS_CTTI_CHECK(Deref<Shed<T>>, NAME) and ...); \
       template<class...T> \
-      concept Not##NAME = PartialValidate<T...> and ((not NAME<T>) and ...); \
+      concept Not##NAME = PartialValidate<T...> \
+          and ((not LANGULUS_CTTI_CHECK(Deref<Shed<T>>, NAME)) and ...); \
    }
-
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
@@ -418,9 +461,11 @@ namespace Langulus
 #define LANGULUS_CTTI_CONCEPT_DECVQ(NAME) \
    namespace Langulus::CT { \
       template<class...T> \
-      concept NAME = PartialValidate<T...> and ((CTTI::NAME<Decvq<Deref<Shed<T>>>>::Enabled or LANGULUS_CTTI_DELVE_IN(Shed<T>, NAME)) and ...); \
+      concept NAME = PartialValidate<T...> \
+          and (LANGULUS_CTTI_CHECK(Decvq<Deref<Shed<T>>>, NAME) and ...); \
       template<class...T> \
-      concept Not##NAME = PartialValidate<T...> and ((not NAME<T>) and ...); \
+      concept Not##NAME = PartialValidate<T...> \
+          and ((not LANGULUS_CTTI_CHECK(Decvq<Deref<Shed<T>>>, NAME)) and ...); \
    }
 
 LANGULUS_CTTI_CONCEPT(Null);

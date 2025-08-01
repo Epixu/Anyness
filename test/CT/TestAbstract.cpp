@@ -28,11 +28,14 @@ namespace
    /// Proper type, reflected as abstract                                     
    struct ForcedAbstractExternally {};
    struct ForcedAbstractInternally {
+      // ReSharper disable once CppTypeAliasNeverUsed
       using CTTI_Abstract = Yes<>;
    };
 
    /// Types that can inherit abstractness                                    
    struct InheritedAbstract1 : ForcedAbstractInternally {};
+   // ReSharper disable once CppTypeAliasNeverUsed
+   struct InheritedAbstract1Disabled : ForcedAbstractInternally { using CTTI_Abstract = No; };
    struct InheritedAbstract2 : PureAbstract {};
 
    /// Types that can inherit abstractness privately                          
@@ -47,9 +50,7 @@ namespace
 namespace Langulus::CTTI
 {
    template<>
-   struct Abstract<ForcedAbstractExternally> {
-      static constexpr bool Enabled = true;
-   };
+   struct Abstract<ForcedAbstractExternally> {};
 }
 
 
@@ -102,7 +103,8 @@ TEMPLATE_TEST_CASE("Testing CT::NotAbstract types", "[ct]",
    int const,
    int const&,
    int&,
-   Types<void*>
+   Types<void*>,
+   InheritedAbstract1Disabled
 ) {
    static_assert(not CT::Abstract<TestType>);
    static_assert(    CT::NotAbstract<TestType>);

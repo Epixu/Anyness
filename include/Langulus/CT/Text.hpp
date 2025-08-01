@@ -15,21 +15,22 @@ namespace Langulus::CT
 {
    /// Check if all T are literals or bounded character arrays                
    template<class...T>
-   concept TextLiteral = ((
+   concept TextLiteral = PartialValidate<T...> and ((
          LiteralString<T> or (Array<T> and Character<TypeOf<T>>)
       ) and ...);
 
    /// Check if all T are string pointers, hopefully null-terminated          
    /// This accounts for all character pointers that <do not have extents>    
    template<class...T>
-   concept TextPointer = ((Sparse<T> and Character<Deptr<Deref<T>>>) and ...);
+   concept TextPointer = PartialValidate<T...>
+       and ((Sparse<T> and Character<Deptr<Deref<T>>>) and ...);
    
    /// Concept for any possible standard library representation of a string   
    /// This includes not only std::string, but also any contiguous range      
    /// that's filled with dense characters                                    
    template<class...T>
-   concept TextRange = ((::std::ranges::contiguous_range<T>
-       and CT::Character<TypeOf<T>>
+   concept TextRange = PartialValidate<T...> and ((
+         ::std::ranges::contiguous_range<T> and CT::Character<TypeOf<T>>
       ) and ...);
 }
 
@@ -37,13 +38,14 @@ namespace Langulus::CTTI
 {
    /// Can be used in two ways to satisfy CT::Text<T>:                        
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Text = Yes;` in T                          
+   /// 2. Add a public `using CTTI_Text = Yes<>;` in T                        
    template<class T>
    struct Text {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = CT::TextLiteral<T>
                                    or CT::TextPointer<T>
                                    or CT::TextRange<T>;
    };
 }
 
-LANGULUS_CTTI_CONCEPT(Text);
+LANGULUS_CTTI_CONCEPT_DECVQ(Text);

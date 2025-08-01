@@ -196,7 +196,7 @@ namespace
 
    template<class T, bool NORMALIZE, bool NAMED>
    ::std::string IsolateTypenameAtRuntime() {
-      if constexpr (NAMED and CTTI::Named<T>::Enabled)
+      if constexpr (NAMED and CT::Complete<CTTI::Named<T>>)
          return static_cast<::std::string>(CTTI::Named<T>::Name);
       // Move `const` next to pointers/references at the end of type 
       // Discards `volatile` - it shouldn't matter outside compiler  
@@ -258,10 +258,20 @@ namespace
          else
             return deptr + " const*";
       }
-      else if constexpr (NAMED and requires { T::CTTI_Named::Constant; })
-         return static_cast<::std::string>(T::CTTI_Named::Constant);
+      else if constexpr (NAMED and requires { T::CTTI_Named::Enabled; }) {
+         if constexpr (T::CTTI_Named::Enabled) {
+            // Custom name taken from T::CTTI_Named member           
+            static_assert(IsKeyword(T::CTTI_Named::Constant),
+               "Not a valid CTTI_Named - "
+               "must be ASCII, starting with an alphabetical symbol, "
+               "and must not contain any spaces or operators"
+            );
+            return static_cast<::std::string>(T::CTTI_Named::Constant);
+         }
+         else return IsolateTypenameAtRuntime<T, NORMALIZE, false>();
+      }
       else {
-         ::std::string name = static_cast<::std::string>(RTTI::Inner::WrappedTypeName<T>());
+         auto name = static_cast<::std::string>(RTTI::Inner::WrappedTypeName<T>());
          size_t size = name.size();
          size_t left = RTTI::Inner::CalculateTypeLeftOffset();
          size_t right = RTTI::Inner::CalculateTypeRightOffset();
@@ -316,43 +326,27 @@ namespace Langulus::CTTI
    template<>
    struct Named<NamedBySpecialization> {
       static constexpr Literal Name = "NameOverridedBySpecializing_CTTI_Named";
-      static constexpr bool Enabled = true;
    };
    template<>
    struct Named<NamedBySpecialization*> {
       static constexpr Literal Name = "NameOverridedBySpecializing_CTTI_Named_Ptr";
-      static constexpr bool Enabled = true;
    };
    template<>
    struct Named<NamedBySpecialization const*> {
       static constexpr Literal Name = "NameOverridedBySpecializing_CTTI_Named_ConstPtr";
-      static constexpr bool Enabled = true;
-   };
-   template<>
-   struct Named<NamedUsingMember> {
-      //static constexpr Literal Name = "<should be disabled>";
-      static constexpr bool Enabled = false;
    };
 
    template<>
    struct NamedValue<PiButNamed::Number> {
       static constexpr Literal Name = "PiButNamedByCTTI";
-      static constexpr bool Enabled = true;
    };
    template<>
    struct NamedValue<NumberButNamed> {
       static constexpr Literal Name = "NumberButNamedByCTTI";
-      static constexpr bool Enabled = true;
    };
    template<>
    struct NamedValue<AnonymousNumberButNamed> {
       static constexpr Literal Name = "AnonymousNumberButNamedByCTTI";
-      static constexpr bool Enabled = true;
-   };
-   template<>
-   struct NamedValue<AnonymousNumberButNotNamed> {
-      //static constexpr Literal Name = "<not actually named>";
-      static constexpr bool Enabled = false;
    };
 
 } // namespace Langulus::CTTI

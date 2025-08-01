@@ -12,20 +12,16 @@
 namespace Langulus::CTTI
 {
    /// Can be used in two ways to satisfy CT::ReflectAs<T>:                   
-   /// 1. Specialize for T/concept with Enabled set to true and desired Type  
+   /// 1. Specialize for T/concept, with the desired Type                     
    /// 2. Add a public `using CTTI_ReflectAs = <DesiredType>;` in T           
    /// Use void/No type to disable reflection for the type                    
    template<class T>
-   struct ReflectAs {
-      using Type = T;
-      static constexpr bool Enabled = false;
-   };
+   struct ReflectAs;
 
    /// nullptr_t is not reflectable                                           
    template<>
    struct ReflectAs<nullptr_t> {
       using Type = void;
-      static constexpr bool Enabled = true;
    };
 }
 
@@ -40,13 +36,11 @@ namespace Langulus::CT
          using DT = Decay<T>;
 
          if constexpr (Void<T>) {
-            // Void is never reflectable                                
+            // Void types are never reflectable                         
             return static_cast<void*>(nullptr);
          }
-         else if constexpr (CTTI::ReflectAs<T>::Enabled) {
-            // T is checked for safety, so it has to be complete        
+         else if constexpr (Complete<CTTI::ReflectAs<T>>) {
             using AS = typename CTTI::ReflectAs<T>::Type;
-
             if constexpr (Void<AS>)
                return static_cast<void*>(nullptr);
             else {
@@ -56,9 +50,7 @@ namespace Langulus::CT
             }
          }
          else if constexpr (Dense<T> and requires { typename DT::CTTI_ReflectAs; }) {
-            // T is checked for safety, so it has to be complete        
             using AS = typename DT::CTTI_ReflectAs;
-
             if constexpr (Void<AS>)
                return static_cast<void*>(nullptr);
             else {

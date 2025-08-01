@@ -19,22 +19,25 @@ namespace Langulus::CTTI
       /// float- and double-initializables as well                            
       template<class T, CT::Fundamental F>
       consteval bool SignedInner() {
-         return ::std::constructible_from<T, F> and requires {
-            T {F {-1}} < T {F {0}};
-         };
+         if constexpr (::std::constructible_from<T, F>
+         and requires { T {F {-1}} < T {F {0}}; })
+            return T {F {-1}} < T {F {0}};
+         else
+            return false;
       }
    }
 
    /// Affects CT::Signed<T>                                                  
    template<class T>
    struct Signed {
+      static constexpr bool Default = true;
       static constexpr bool Enabled = Inner::SignedInner<T, int>()
                                    or Inner::SignedInner<T, float>()
                                    or Inner::SignedInner<T, double>();
    };
 }
 
-LANGULUS_CTTI_CONCEPT(Signed);
+LANGULUS_CTTI_CONCEPT_DECVQ(Signed);
 
 namespace Langulus::CT
 {

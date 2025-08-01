@@ -15,10 +15,7 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Bases = <single type or Types<...>>;` in T 
    template<class T>
-   struct Bases {
-      using Type = void;
-      static constexpr bool Enabled = false;
-   };
+   struct Bases;
 }
 
 namespace Langulus::CT
@@ -33,7 +30,7 @@ namespace Langulus::CT
          static_assert(not CT::Convoluted<T>,
             "Strip constness/volatility first");
 
-         if constexpr (CTTI::Bases<T>::Enabled) {
+         if constexpr (Complete<CTTI::Bases<T>>) {
             // Checked externally, T doesn't have to be complete        
             using LIST = typename CTTI::Bases<T>::Type;
             if constexpr (CT::Typelist<LIST>)
@@ -49,6 +46,7 @@ namespace Langulus::CT
             else
                return Types<LIST> {};
          }
+         else return NoTypes {};
       };
 
       /// Check if T has BASE                                                 
@@ -69,19 +67,19 @@ namespace Langulus::CT
    /// primitive types...                                                     
    ///   @attention involves only C++ bases, not reflected ones               
    template<class T, class...BASE>
-   concept DerivedFrom = Validate<BASE...>
+   concept DerivedFrom = PartialValidate<BASE...>
        and (Inner::DerivedFrom<T, BASE>() and ...);
    
    /// Check if T1 is somehow related to all of the provided types            
    ///   @attention involves only C++ bases, not reflected ones               
    template<class T1, class...TN>
-   concept Related = Validate<TN...>
+   concept Related = PartialValidate<TN...>
        and ((DerivedFrom<T1, TN> or DerivedFrom<TN, T1>) and ...);
 
    /// Check if a type is virtually derived from all the provided BASE(s)     
    ///   @attention involves only C++ bases, not reflected ones               
    template<class T, class...BASE>
-   concept VirtuallyDerivedFrom = Validate<BASE...>
+   concept VirtuallyDerivedFrom = PartialValidate<BASE...>
        and ((::std::is_base_of_v<Decay<BASE>, Decay<T>>
          and not requires (Decay<BASE>* from) { static_cast<Decay<T>*>(from); }
        ) and ...);
@@ -90,7 +88,7 @@ namespace Langulus::CT
    /// To be binary compatible, types must be of the same size, and be        
    /// similar or related                                                     
    template<class T1, class...TN>
-   concept BinaryCompatible = Validate<TN...> and ((
+   concept BinaryCompatible = PartialValidate<TN...> and ((
          Similar<T1, TN> or (Related<T1, TN> and sizeof(T1) == sizeof(TN))
       ) and ...);
 }

@@ -15,9 +15,7 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept having non-void Type                       
    /// 2. Add a public `using CTTI_Typed = <non void type/typelist>;` in T    
    template<class T>
-   struct Typed {
-      using Type = void;
-   };
+   struct Typed;
 }
 
 namespace Langulus::CT::Inner
@@ -29,7 +27,7 @@ namespace Langulus::CT::Inner
 
       if constexpr (::std::is_bounded_array_v<T>)
          return Types<Deext<T>> {};
-      else if constexpr (not ::std::is_void_v<typename CTTI::Typed<T>::Type>) {
+      else if constexpr (Complete<CTTI::Typed<T>>) {
          // Checked externally, T doesn't have to be complete           
          return Types<typename CTTI::Typed<T>::Type> {};
       }
@@ -45,7 +43,7 @@ namespace Langulus::CT::Inner
                return NoTypes {};
             else {
                static_assert(not ::std::same_as<InnerT, Yes<>>,
-                  "Instead of Yes<> pick a type CTTI_Typed");
+                  "Instead of Yes<> pick a type for CTTI_Typed");
                return Types<InnerT> {};
             }
          }

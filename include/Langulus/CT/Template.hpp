@@ -31,9 +31,10 @@ namespace Langulus::CT::Inner
 
 namespace Langulus::CT
 {
-   /// Tests whether T is a templated type                                    
-   template<class T>
-   concept Template = Inner::IsTemplate<T>::Value;
+   /// Tests whether all T are templated types                                
+   template<class...T>
+   concept Template = PartialValidate<T...>
+       and (Inner::IsTemplate<T>::Value and ...);
 
    /// Get the type list with all template arguments                          
    template<class T>

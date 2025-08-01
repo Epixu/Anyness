@@ -17,9 +17,7 @@ namespace Langulus::CTTI
 {
    /// Affects CT::Intent                                                     
    template<class T>
-   struct Intent {
-      static constexpr bool Enabled = false;
-   };
+   struct Intent;
 }
 
 LANGULUS_CTTI_CONCEPT_UNSHEDDABLE_DECVQ(Intent);

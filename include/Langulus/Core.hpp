@@ -542,8 +542,7 @@ namespace Langulus
       {
          template<class...T>
          consteval bool ValidateInner() {
-            static_assert(sizeof...(T) > 0,
-               "No arguments provided");
+            static_assert(sizeof...(T) > 0, "No arguments provided");
             static_assert(((Complete<T> or ::std::is_void_v<T>) and ...),
                "Incomplete type in CT check");
             return true;
@@ -551,8 +550,7 @@ namespace Langulus
 
          template<class...T>
          consteval bool PartialValidateInner() {
-            static_assert(sizeof...(T) > 0,
-               "No arguments provided");
+            static_assert(sizeof...(T) > 0, "No arguments provided");
             return true;
          }
       }

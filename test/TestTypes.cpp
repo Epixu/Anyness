@@ -28,9 +28,7 @@ namespace
 namespace Langulus::CTTI
 {
    template<>
-   struct Void<VoidTypeExternal> {
-      static constexpr bool Enabled = true;
-   };
+   struct Void<VoidTypeExternal> {};
 }
 
 TEMPLATE_TEST_CASE("Testing void types", "[ct]",
@@ -96,9 +94,7 @@ namespace
 namespace Langulus::CTTI
 {
    template<>
-   struct Typelist<CustomTypelistExternal> {
-      static constexpr bool Enabled = true;
-   };
+   struct Typelist<CustomTypelistExternal> {};
 }
 
 TEMPLATE_TEST_CASE("Testing typelists", "[ct]",

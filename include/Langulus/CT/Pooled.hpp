@@ -75,18 +75,13 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Pooled = PooledBySize/PooledByType;` in T  
    template<class T>
-   struct Pooled {
-      static constexpr PoolTactic Tactic = PoolTactic::Default;
-      static constexpr size_t MinPool  = MinimalPoolSize;
-      static constexpr bool   Enabled  = false;
-   };
+   struct Pooled;
 
    /// All fundamental types are pooled by size by default                    
    template<CT::Fundamental T>
    struct Pooled<T> {
       static constexpr PoolTactic Tactic = PoolTactic::Size;
       static constexpr size_t MinPool  = MinimalPoolSize;
-      static constexpr bool   Enabled  = true;
    };
 }
 
@@ -99,7 +94,7 @@ namespace Langulus::CT
          "MinimalPoolSize must be a power-of-two");
 
       using ST = Shed<T>;
-      if constexpr (CTTI::Pooled<ST>::Enabled) {
+      if constexpr (Complete<CTTI::Pooled<ST>>) {
          constexpr size_t minpool = Roof2(CTTI::Pooled<ST>::MinPool);
          static_assert(Roof2(minpool),
             "Reflected MinPool must be a power-of-two");
@@ -120,7 +115,7 @@ namespace Langulus::CT
    template<class T>
    consteval PoolTactic GetPoolTactic() {
       using ST = Shed<T>;
-      if constexpr (CTTI::Pooled<ST>::Enabled)
+      if constexpr (Complete<CTTI::Pooled<ST>>)
          return CTTI::Pooled<ST>::Tactic;
       else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled))
          return Decay<ST>::CTTI_Pooled::Tactic;

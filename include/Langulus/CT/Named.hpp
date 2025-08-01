@@ -21,16 +21,10 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Named = Yes<"DataID">;` in T               
    template<class T>
-   struct Named {
-      static constexpr Literal Name = "<will use C++ name>";
-      static constexpr bool Enabled = false;
-   };
+   struct Named;
 
    template<auto E>
-   struct NamedValue {
-      static constexpr Literal Name = "<will use C++ name>";
-      static constexpr bool Enabled = false;
-   };
+   struct NamedValue;
 
    ///   @important                                                           
    /// When reflecting enums inside your classes/structs, it is recommended   
@@ -39,15 +33,15 @@ namespace Langulus::CTTI
    /// NamedValues to instruct how such constants are reflected.              
 }
 
-LANGULUS_CTTI_CONCEPT(Named);
+LANGULUS_CTTI_CONCEPT_DECVQ(Named);
 
 namespace Langulus::CT
 {
    /// Check if a constant has a name associate with it                       
    template<auto E>
-   concept NamedValue = CTTI::NamedValue<E>::Enabled;
+   concept NamedValue = Complete<CTTI::NamedValue<E>>;
 
    /// Check if a constant doesn't have a name associate with it              
    template<auto E>
-   concept NotNamedValue = not NamedValue<E>;
+   concept NotNamedValue = not Complete<CTTI::NamedValue<E>>;
 }

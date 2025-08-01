@@ -15,19 +15,13 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_DefineTag = Yes<"TagID">;` in T            
    template<class T>
-   struct DefineTag {
-      static constexpr Literal Name = "";
-      static constexpr bool Enabled = false;
-   };
+   struct DefineTag;
 
    /// Can be used in two ways to reflect tags:                               
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Tags = <tag or Types<tags...>>;` in T      
    template<class T>
-   struct Tags {
-      using Type = void;
-      static constexpr bool Enabled = false;
-   };
+   struct Tags;
 }
 
 LANGULUS_CTTI_CONCEPT(DefineTag);
@@ -36,10 +30,10 @@ namespace Langulus::RTTI
 {
    /// Get the name of a tag definition at compile-time                       
    ///   @tparam T - the tag to get the name of                               
-   ///   @return the name                                                     
+   ///   @return a compile-time string                                        
    template<CT::DefineTag T>
    consteval auto NameOfTag() {
-      if constexpr (CTTI::DefineTag<T>::Enabled)
+      if constexpr (CT::Complete<CTTI::DefineTag<T>>)
          return CTTI::DefineTag<T>::Name;
       else
          return T::CTTI_DefineTag::Constant;
@@ -56,7 +50,7 @@ namespace Langulus::CT::Inner
       static_assert(not CT::Convoluted<T>,
          "Strip qualifiers first");
 
-      if constexpr (CTTI::Tags<T>::Enabled) {
+      if constexpr (CT::Complete<CTTI::Tags<T>>) {
          // Checked externally, T doesn't have to be complete           
          return typename CTTI::Tags<T>::Type {};
       }
@@ -64,6 +58,7 @@ namespace Langulus::CT::Inner
          // Checked internally, T has to be a complete type             
          return typename T::CTTI_Tags {};
       }
+      else return NoTypes {};
    };
 }
 

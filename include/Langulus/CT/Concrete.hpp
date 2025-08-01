@@ -15,17 +15,14 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Concrete = <concrete type>;` in T          
    template<class T>
-   struct Concrete {
-      using Type = void;
-      static constexpr bool Enabled = false;
-   };
+   struct Concrete;
 }
 
 namespace Langulus::CT::Inner
 {
    /// Helper function to extract concrete type                               
    template<class T>
-   consteval CT::Typelist auto GetConcreteType() {
+   consteval auto GetConcreteType() {
       static_assert(not ::std::is_reference_v<T>,
          "Strip references first");
       static_assert(not CT::Convoluted<T>,
@@ -35,7 +32,7 @@ namespace Langulus::CT::Inner
          // T has to be abstract in order to be concretizable           
          return NoTypes {};
       }
-      else if constexpr (CTTI::Concrete<T>::Enabled) {
+      else if constexpr (Complete<CTTI::Concrete<T>>) {
          // Checked externally, T doesn't have to be complete           
          return Types<typename CTTI::Concrete<T>::Type> {};
       }
@@ -59,12 +56,12 @@ namespace Langulus
       ///   @attention the concrete type must not be 'void', in order for T   
       ///      to be considered 'concretizable'                               
       template<class...T>
-      concept Concretizable = Validate<T...>
+      concept Concretizable = PartialValidate<T...>
           and (NotVoid<ConcreteOf<Decvq<Deref<T>>>> and ...);
 
       /// Check if all T have no concretizations                              
       template<class...T>
-      concept Unconcretizable = Validate<T...>
+      concept Unconcretizable = PartialValidate<T...>
           and ((not Concretizable<Decvq<Deref<T>>>) and ...);
    }
 }

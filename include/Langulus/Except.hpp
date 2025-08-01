@@ -13,11 +13,9 @@ namespace Langulus::CTTI
 {
    /// Can be used in two ways to satisfy CT::Exception<T>:                   
    /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Exception = Yes/No;` in T                  
+   /// 2. Add a public `using CTTI_Exception = Yes<>;` in T                   
    template<class T>
-   struct Exception {
-      static constexpr bool Enabled = false;
-   };
+   struct Exception;
 }
 
 LANGULUS_CTTI_CONCEPT_UNSHEDDABLE(Exception);

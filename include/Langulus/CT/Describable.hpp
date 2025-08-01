@@ -30,27 +30,23 @@ namespace Langulus
       using CTTI_Typed         = Many;
       using CTTI_ReflectAs     = void;
       using CTTI_Abstract      = Yes<>;
-      using CTTI_Unallocatable = Yes<>;
+      using CTTI_Allocatable   = No;
 
       Describe() = delete;
       constexpr Describe(const Describe&) noexcept = default;
       explicit constexpr Describe(Describe&&) noexcept = default;
 
-      LANGULUS(ALWAYS_INLINED)
       explicit constexpr Describe(const Many& value) noexcept
          : mValue {value} {}
 
-      LANGULUS(ALWAYS_INLINED)
       const auto& operator *  () const noexcept { return  mValue; }
-
-      LANGULUS(ALWAYS_INLINED)
       const auto* operator -> () const noexcept { return &mValue; }
    };
 }
 
 namespace Langulus::CT
 {
-   /// Check if the T is descriptor-constructible                             
+   /// Check if all T are descriptor-constructible                            
    /// It has to have the T (Describe&&) constructor in order to be so        
    template<class...T>
    concept DescribeConstructible = not Abstract<T...>
@@ -59,7 +55,7 @@ namespace Langulus::CT
          (T (Describe {a}), ...);
        };
    
-   /// Check if the T is descriptor-assignable                                
+   /// Check if all T are descriptor-assignable                               
    /// It has to have the T::operator = (Describe&&) constructor              
    template<class...T>
    concept DescribeAssignable = not Abstract<T...>

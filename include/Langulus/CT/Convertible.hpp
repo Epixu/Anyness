@@ -15,10 +15,7 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_MapsTo = <type or Types<...>>;` in T       
    template<class T>
-   struct MapsTo {
-      using Type = void;
-      static constexpr bool Enabled = false;
-   };
+   struct MapsTo;;
 }
 
 namespace Langulus::CT
@@ -27,11 +24,11 @@ namespace Langulus::CT
    {
       /// Helper function to extract reflected morphisms                      
       template<class T>
-      consteval CT::Typelist auto GetMorphisms() {
+      consteval auto GetMorphisms() {
          static_assert(not ::std::is_reference_v<T>,
             "Strip references first");
 
-         if constexpr (CTTI::MapsTo<T>::Enabled) {
+         if constexpr (CT::Complete<CTTI::MapsTo<T>>) {
             // Checked externally, T doesn't have to be complete        
             using LIST = typename CTTI::MapsTo<T>::Type;
             if constexpr (CT::Typelist<LIST>)
@@ -53,7 +50,7 @@ namespace Langulus::CT
 
    /// Convertible concept                                                    
    template<class FROM, class...TO>
-   concept Convertible = Validate<TO...>
+   concept Convertible = PartialValidate<TO...>
        and (::std::convertible_to<FROM, TO> and ...);
 }
 

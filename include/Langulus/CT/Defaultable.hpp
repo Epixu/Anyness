@@ -9,15 +9,21 @@
 #include "Abstract.hpp"
 
 
-namespace Langulus::CTTI
+namespace Langulus::CT
 {
-   /// Can be used in two ways to satisfy CT::Defaultable<T>:                 
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Defaultable = Yes;` in T                   
-   template<class T>
-   struct Defaultable {
-      static constexpr bool Enabled = not CT::Abstract<T> and requires { T {}; };
-   };
+   /// Checks whether all T are default-constructible                         
+   /// You can make them default-constructible if you add a default           
+   /// constructor. You can disable default-construction automatically, if    
+   /// you make your type CT::Abstract                                        
+   template<class...T>
+   concept Defaultable = PartialValidate<T...> and ((
+       not CT::Abstract<Decvq<Deref<Shed<T>>>>
+       and requires { Decvq<Deref<Shed<T>>> {}; }
+      ) and ...);
+   
+   template<class...T>
+   concept NotDefaultable = PartialValidate<T...> and ((
+       CT::Abstract<Decvq<Deref<Shed<T>>>>
+       or not requires { Decvq<Deref<Shed<T>>> {}; }
+      ) and ...);
 }
-
-LANGULUS_CTTI_CONCEPT(Defaultable);

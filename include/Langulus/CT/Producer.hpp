@@ -15,23 +15,20 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Producer = <Factory Type>;` in T           
    template<class T>
-   struct Producer {
-      using Type = void;
-      static constexpr bool Enabled = false;
-   };
+   struct Producer;
 }
 
 namespace Langulus::CT::Inner
 {
    /// Helper function to extract producer type                               
    template<class T>
-   consteval CT::Typelist auto GetProducerType() {
+   consteval auto GetProducerType() {
       static_assert(not ::std::is_reference_v<T>,
          "Strip references first");
       static_assert(not CT::Convoluted<T>,
          "Strip constness/volatility first");
 
-      if constexpr (NotVoid<typename CTTI::Producer<T>::Type>) {
+      if constexpr (Complete<CTTI::Producer<T>>) {
          // Checked externally, T doesn't have to be complete           
          return Types<typename CTTI::Producer<T>::Type> {};
       }
@@ -55,12 +52,12 @@ namespace Langulus
       ///   @attention the producer type must not be 'void', in order for T   
       ///      to be considered 'producible'                                  
       template<class...T>
-      concept Producible = Validate<T...>
+      concept Producible = PartialValidate<T...>
           and (NotVoid<ProducerOf<Decvq<Deref<T>>>> and ...);
 
       /// Check if all T have no producers                                    
       template<class...T>
-      concept Unproducible = Validate<T...>
+      concept Unproducible = PartialValidate<T...>
           and ((not Producible<Decvq<Deref<T>>>) and ...);
    }
 }

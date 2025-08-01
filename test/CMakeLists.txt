@@ -21,6 +21,7 @@ add_langulus_test(LangulusAnynessTest
 	      		TestTypeOf.cpp
 	      		TestTypes.cpp
                 CT/TestAbstract.cpp
+                CT/TestAllocatable.cpp
                 CT/TestSuffix.cpp
 	LIBRARIES	Catch2 LangulusAnyness
 )

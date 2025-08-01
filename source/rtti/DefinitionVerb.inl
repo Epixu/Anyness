@@ -102,7 +102,7 @@ namespace Langulus::RTTI
       // If this is reached, then verb is not defined yet               
       definition.ReflectCommon<T>();
 
-      if constexpr (CTTI::DefineVerb<T>::Enabled)
+      if constexpr (CT::Complete<CTTI::DefineVerb<T>>)
          definition.mPrecedence = CTTI::DefineVerb<T>::Precedence;
       else
          definition.mPrecedence = T::CTTI_DefineVerb::Precedence;
