@@ -21,6 +21,53 @@ namespace Langulus::Anyness::Component
    struct IterationOperators {
       using CTTI_Component = Yes<>;
 
+      /// Offset first element to the right by the desired amount             
+      ///   @attention this doesn't check any boundaries, use carefully       
+      ///   @param offset - the number of elements to offset                  
+      ///   @return a shallow modified copy of this container                 
+      template<CT::Container C>
+      constexpr C operator + (this C const& self, size_t offset) noexcept {
+         // Increment the heap pointer                                  
+         C copy = self;
+         if constexpr (C::template HasComponent<HeapReference<ID>>) {
+            auto& heap = copy.HeapReference<ID>::mHeap;
+            heap = static_cast<uint8_t*>(heap) + copy.GetStride() * offset;
+         }
+         else if constexpr (C::template HasComponent<HeapMovable<ID>>) {
+            auto& heap = copy.HeapMovable<ID>::mHeap;
+            heap = static_cast<uint8_t*>(heap) + copy.GetStride() * offset;
+         }
+         else static_assert(false, "Container doesn't have a compatible heap component");
+
+         // Increment deep ownership entries, but only if on the stack  
+         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
+            copy.DeepOwnershipStack<ID>::mEntries += offset;
+         return copy;
+      }
+
+      /// Offset first element to the right by the desired amount             
+      ///   @attention this doesn't check any boundaries, use carefully       
+      ///   @param offset - the number of elements to offset                  
+      ///   @return reference to this, after being modified                   
+      template<CT::Container C>
+      constexpr C& operator += (this C& self, size_t offset) noexcept {
+         // Increment the heap pointer                                  
+         if constexpr (C::template HasComponent<HeapReference<ID>>) {
+            auto& heap = self.HeapReference<ID>::mHeap;
+            heap = static_cast<uint8_t*>(heap) + self.GetStride() * offset;
+         }
+         else if constexpr (C::template HasComponent<HeapMovable<ID>>) {
+            auto& heap = self.HeapMovable<ID>::mHeap;
+            heap = static_cast<uint8_t*>(heap) + self.GetStride() * offset;
+         }
+         else static_assert(false, "Container doesn't have a compatible heap component");
+
+         // Increment deep ownership entries, but only if on the stack  
+         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
+            self.DeepOwnershipStack<ID>::mEntries += offset;
+         return self;
+      }
+
       /// Prefix increment operator                                           
       ///   @attention this doesn't check any boundaries, use carefully       
       ///   @return reference to this, after being modified                   
@@ -40,7 +87,6 @@ namespace Langulus::Anyness::Component
          // Increment deep ownership entries, but only if on the stack  
          if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
             ++self.DeepOwnershipStack<ID>::mEntries;
-
          return self;
       }
 
@@ -52,6 +98,53 @@ namespace Langulus::Anyness::Component
          C backup = self;
          ++self;
          return backup;
+      }
+      
+      /// Offset first element to the left by the desired amount              
+      ///   @attention this doesn't check any boundaries, use carefully       
+      ///   @param offset - the number of elements to offset                  
+      ///   @return a shallow modified copy of this container                 
+      template<CT::Container C>
+      constexpr C operator - (this C const& self, size_t offset) noexcept {
+         // Increment the heap pointer                                  
+         C copy = self;
+         if constexpr (C::template HasComponent<HeapReference<ID>>) {
+            auto& heap = copy.HeapReference<ID>::mHeap;
+            heap = static_cast<uint8_t*>(heap) - copy.GetStride() * offset;
+         }
+         else if constexpr (C::template HasComponent<HeapMovable<ID>>) {
+            auto& heap = copy.HeapMovable<ID>::mHeap;
+            heap = static_cast<uint8_t*>(heap) - copy.GetStride() * offset;
+         }
+         else static_assert(false, "Container doesn't have a compatible heap component");
+
+         // Increment deep ownership entries, but only if on the stack  
+         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
+            copy.DeepOwnershipStack<ID>::mEntries -= offset;
+         return copy;
+      }
+
+      /// Offset first element to the left by the desired amount              
+      ///   @attention this doesn't check any boundaries, use carefully       
+      ///   @param offset - the number of elements to offset                  
+      ///   @return reference to this, after being modified                   
+      template<CT::Container C>
+      constexpr C& operator -= (this C& self, size_t offset) noexcept {
+         // Increment the heap pointer                                  
+         if constexpr (C::template HasComponent<HeapReference<ID>>) {
+            auto& heap = self.HeapReference<ID>::mHeap;
+            heap = static_cast<uint8_t*>(heap) - self.GetStride() * offset;
+         }
+         else if constexpr (C::template HasComponent<HeapMovable<ID>>) {
+            auto& heap = self.HeapMovable<ID>::mHeap;
+            heap = static_cast<uint8_t*>(heap) - self.GetStride() * offset;
+         }
+         else static_assert(false, "Container doesn't have a compatible heap component");
+
+         // Increment deep ownership entries, but only if on the stack  
+         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
+            self.DeepOwnershipStack<ID>::mEntries -= offset;
+         return self;
       }
 
       /// Prefix decrement operator                                           
@@ -73,7 +166,6 @@ namespace Langulus::Anyness::Component
          // Decrement deep ownership entries, but only if on the stack  
          if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
             --self.DeepOwnershipStack<ID>::mEntries;
-
          return self;
       }
 

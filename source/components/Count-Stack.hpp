@@ -24,7 +24,11 @@ namespace Langulus::Anyness::Component
    protected:
       T mCount;
 
-      void SetCount(T);
+      /// Set a new count                                                     
+      ///   @attention this is very unsafe                                    
+      void SetCount(T count) noexcept {
+         mCount = count;
+      }
       
    public:
       using CTTI_Component = Yes<>;
