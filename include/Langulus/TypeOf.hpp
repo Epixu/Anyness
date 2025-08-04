@@ -86,7 +86,6 @@ namespace Langulus
       concept Untyped = PartialValidate<T...> and (Void<TypeOf<Deref<T>>> and ...);
    }
 
-
    /// Downcasts a typed wrapper to the contained element, if cast operator   
    /// to TypeOf<T> is available                                              
    ///  - if T isn't typed, just return itself                                

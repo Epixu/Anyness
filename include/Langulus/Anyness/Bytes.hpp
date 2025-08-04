@@ -33,7 +33,6 @@
 
 namespace Langulus::Anyness
 {
-
    struct Bytes;
    struct BytesView;
 
@@ -102,7 +101,6 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       constexpr Bytes(A1&&, AN&&...) requires CT::RangeInsertable<Bytes, A1, AN...>;
    };
-
-} // namespace Langulus::Anyness
+}
 
 #include "BytesView.hpp"

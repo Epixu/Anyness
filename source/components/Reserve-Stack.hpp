@@ -1,10 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// A dynamic reserve, stored as a member variable                         
    /// Will increase container's stack size                                   
@@ -31,5 +37,4 @@ namespace Langulus::Anyness::Component
       /// Set number of reserved elements                                     
       constexpr void SetReserved(ReserveType r) noexcept { mReserved = r;    }
    };
-
-} // namespace Langulus::Anyness::Component
+}

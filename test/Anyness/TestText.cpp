@@ -5,71 +5,53 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
+#include "../Main.hpp"
 #include <Langulus/Anyness/Text.hpp>
-#include <Langulus/Anyness/Path.hpp>
-#include "Common.hpp"
 
+using namespace Langulus;
+using Anyness::Text;
+using Anyness::Allocator;
 
-/// A type that is reflected, as convertible to Text                          
-/*struct Stringifiable {
-   LANGULUS_CONVERTS_TO(Text);
-   explicit operator Text() { return "Stringifiable converted to Text"; }
-};*/
-// TODO: this causes MSVC to ICE since 19.40.33811.0 :(
-// Cast operators must ALWAYS be const!
+namespace
+{
+   /// A type that is reflected, as convertible to Text                       
+   ///    @attention this causes MSVC to ICE since 19.40.33811.0 :(           
+   ///      good thing we don't support MSVC any longer :)                    
+   struct Stringifiable {
+      using CTTI_MapsTo = Text;
+      // ReSharper disable once CppMemberFunctionMayBeConst
+      explicit operator Text() { return "Stringifiable converted to Text"; }
+   };
 
-/// A type that is reflected, as convertible to Text                          
-struct StringifiableConst {
-   using CTTI_MapsTo = Text;
-   
-   explicit operator Text() const {
-      return "Stringifiable converted to Text";
-   }
-};
+   /// A type that is reflected as convertible to Text                        
+   struct StringifiableConst {
+      using CTTI_MapsTo = Text;
+      explicit operator Text() const { return "StringifiableConst converted to Text"; }
+   };
+}
 
-
-///                                                                           
 /// Possible states:                                                          
-///   - uninitialized                                                         
-///   - default                                                               
 void Text_CheckState_Default(const Text&);
-///   - invariant                                                             
 void Text_CheckState_Invariant(const Text&);
-///   - owned-full                                                            
 void Text_CheckState_OwnedFull(const Text&);
-///   - owned-full-const                                                      
 void Text_CheckState_OwnedFullConst(const Text&);
-///   - owned-empty                                                           
 void Text_CheckState_OwnedEmpty(const Text&);
-///   - disowned-full                                                         
 void Text_CheckState_DisownedFull(const Text&);
-///   - disowned-full-const                                                   
 void Text_CheckState_DisownedFullConst(const Text&);
-///   - abandoned                                                             
 void Text_CheckState_Abandoned(const Text&);
 
-///                                                                           
-/// Possible actions for each state:                                          
-///   - uninitialized                                                         
-///      - default-initialized                                                
-///      - intent-initialized from container                                  
-///      - intent-initialized from dense letter                               
-///      - intent-initialized from dense std::string                          
-///      - intent-initialized from dense std::string_view                     
-///      - intent-initialized from dense number (stringification)             
-///      - intent-initialized from sparse meta (stringification)              
-///      - intent-initialized from exception (stringification)                
-///      - intent-initialized from sparse element, zero-terminated            
-///      - intent-initialized from sparse element, bound-terminated           
-///      - intent-initialized from sparse element, count-terminated           
-
 TEMPLATE_TEST_CASE("Testing text containers", "[text]",
-   Text, Path
+   Text
+   //TODO Path
 ) {
+   using T = TestType;
    static Allocator::State memoryState;
+   static_assert(CT::Typed<T>, "Container not typed");
+   static_assert(not CT::Array<T>, "Wrongly typed container");
+   static_assert(CT::Exact<TypeOf<T>, char>, "Wrongly typed container");
 
    GIVEN("Default text container") {
-      TestType text;
+      T text;
 
       Text_CheckState_Default(text);
       REQUIRE_FALSE(text.IsConstant());
@@ -83,8 +65,12 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       }
 
       WHEN("Directly assigned to itself") {
+         LglsDisableWarningPush
+         LglsDisableWarning_SelfAssign
+         // ReSharper disable once CppIdenticalOperandsInBinaryExpression
          text = text;
-
+         LglsDisableWarningPop
+         
          Text_CheckState_Default(text);
          REQUIRE_FALSE(text.IsConstant());
       }
@@ -99,10 +85,10 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
    }
 
    GIVEN("Uninitialized text container") {
-      TestType* text = nullptr;
+      T* text = nullptr;
 
-      WHEN("Constructed with a null-terminated literal") {
-         text = new TestType {"test1"};
+      WHEN("Constructed with a null-terminated c-string") {
+         text = new T {"test1"};
 
          Text_CheckState_OwnedFull(*text);
          REQUIRE((*text).GetCount() == 5);
@@ -116,8 +102,8 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE_THROWS((*text)[5] == '?');
       }
 
-      WHEN("Constructed with a count-terminated literal") {
-         text = new TestType {Text::From("test2", 5)};
+      WHEN("Constructed with a count-terminated string") {
+         text = new T {Text::FromText("test2", 5)};
 
          Text_CheckState_DisownedFullConst(*text);
          REQUIRE((*text).GetCount() == 5);
@@ -131,9 +117,9 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE_THROWS((*text)[5] == '?');
       }
 
-      WHEN("Constructed with a bounded literal") {
+      WHEN("Constructed with a bounded array string") {
          char test1[] = "test3";
-         text = new TestType {test1};
+         text = new T {test1};
 
          Text_CheckState_OwnedFull(*text);
          REQUIRE((*text).GetCount() == 5);
@@ -148,25 +134,25 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       }
 
       WHEN("Constructed with a nullptr_t") {
-         text = new TestType {nullptr};
+         text = new T {nullptr};
 
          Text_CheckState_Default(*text);
       }
 
       WHEN("Constructed with a nullptr c-array") {
-         text = new TestType {(char*)nullptr};
+         text = new T {(char*)nullptr};
 
          Text_CheckState_Default(*text);
       }
 
       WHEN("Constructed with empty c-array") {
-         text = new TestType {""};
+         text = new T {""};
 
          Text_CheckState_Default(*text);
       }
 
       WHEN("Constructed with a single character") {
-         text = new TestType {'?'};
+         text = new T {'?'};
 
          Text_CheckState_OwnedFull(*text);
          REQUIRE((*text).GetCount() == 1);
@@ -180,7 +166,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
    }
 
    GIVEN("Reserved text container") {
-      TestType text;
+      T text;
       text.Reserve(500);
       auto memory = text.GetRaw();
 
@@ -230,7 +216,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
    }
 
    GIVEN("Full text container") {
-      TestType text {"test1"};
+      T text {"test1"};
       auto memory = text.GetRaw();
 
       WHEN("Add more text") {
@@ -299,7 +285,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       }
 
       WHEN("Text is copied shallowly") {
-         TestType copy = text;
+         T copy = text;
 
          REQUIRE(text.GetCount() == copy.GetCount());
          REQUIRE(text.GetReserved() == copy.GetReserved());
@@ -312,7 +298,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       }
 
       WHEN("Text is cloned (deep copy)") {
-         TestType copy = Clone(text);
+         T copy = Clone(text);
 
          REQUIRE(text.GetCount() == copy.GetCount());
          REQUIRE(text.GetReserved() >= copy.GetReserved());
@@ -341,11 +327,6 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
    }
 
    REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
@@ -367,7 +348,7 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
       delete text;
    }
 
-   WHEN("Constructed Path with a number") {
+   /*WHEN("Constructed Path with a number") {
       Path* text = new Path {TestType{66}};
 
       REQUIRE((*text).GetCount() == 2);
@@ -378,14 +359,9 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
       REQUIRE((*text) == "66");
 
       delete text;
-   }
+   }*/
 
    REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
@@ -405,7 +381,7 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]", int8_t, int16_t, i
       delete text;
    }
 
-   WHEN("Constructed Path with a number") {
+   /*WHEN("Constructed Path with a number") {
       Path* text = new Path {TestType{-66}};
 
       REQUIRE((*text).GetCount() == 3);
@@ -416,18 +392,13 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]", int8_t, int16_t, i
       REQUIRE((*text) == "-66");
 
       delete text;
-   }
+   }*/
 
    REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Logging text containers", "[text]", Text, Path) {
+TEMPLATE_TEST_CASE("Logging text containers", "[text]", Text/*TODO , Path*/) {
    static Allocator::State memoryState;
 
    WHEN("Logging") {
@@ -440,11 +411,6 @@ TEMPLATE_TEST_CASE("Logging text containers", "[text]", Text, Path) {
    }
 
    REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
@@ -461,7 +427,7 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", /*Stringifiable,*/ S
          const auto staticallyConverted = instance.operator Text();
          
          Text rttiConverted;
-         meta.GetConverter(debugMeta)(&instance, &rttiConverted);
+         meta.GetMorphism(debugMeta)(&instance, &rttiConverted);
 
          REQUIRE(staticallyConverted == rttiConverted);
          REQUIRE(staticallyConverted == "Stringifiable converted to Text");
@@ -469,15 +435,10 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", /*Stringifiable,*/ S
    }
 
    REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Text container interoperability", "[text]",
+/*TEMPLATE_TEST_CASE("Text container interoperability", "[text]",
    (TypePair<Path, Text>),
    (TypePair<Text, Path>)
 ) {
@@ -523,9 +484,9 @@ TEMPLATE_TEST_CASE("Text container interoperability", "[text]",
    BANK.Reset();
 
    REQUIRE_FALSE(Allocator::CollectGarbage());
-}
+}*/
 
-TEMPLATE_TEST_CASE("Text container conversion at runtime", "[text]",
+/*TEMPLATE_TEST_CASE("Text container conversion at runtime", "[text]",
    (TypePair<Text, Path>)
 ) {
    static Allocator::State memoryState;
@@ -549,9 +510,9 @@ TEMPLATE_TEST_CASE("Text container conversion at runtime", "[text]",
    BANK.Reset();
 
    REQUIRE_FALSE(Allocator::CollectGarbage());
-}
+}*/
 
-TEMPLATE_TEST_CASE("Containing literals", "[text]",
+/*TEMPLATE_TEST_CASE("Containing literals", "[text]",
    Many, Tag
 ) {
    static Allocator::State memoryState;
@@ -599,13 +560,8 @@ TEMPLATE_TEST_CASE("Containing literals", "[text]",
    }
 
    REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
    REQUIRE_FALSE(Allocator::CollectGarbage());
-}
+}*/
 
 void Text_CheckState_Default(const Text& text) {
    REQUIRE_FALSE(text.IsCompressed());

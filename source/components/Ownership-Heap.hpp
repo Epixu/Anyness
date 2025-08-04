@@ -1,10 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
-#include "../fractalloc/Allocation.hpp"
+#include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Use the memory manager to extract the allocation from heap pointer     
    /// Manage its ownership                                                   
@@ -36,5 +42,4 @@ namespace Langulus::Anyness::Component
       void Keep() const noexcept;
       void Free() const noexcept;
    };
-
-} // namespace Langulus::Anyness::Component
+}

@@ -1,10 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
-   
    ///                                                                        
    /// Adds prefix and suffix operators for increment and decrement           
    /// These operators are fundamentally unsafe, so the API is protected,     
@@ -81,5 +87,4 @@ namespace Langulus::Anyness::Component
          return backup;
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

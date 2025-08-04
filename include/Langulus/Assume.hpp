@@ -397,7 +397,7 @@ namespace Langulus
 
 namespace fmt
 {
-   /// Sidenote: global qualifier specializations don't work on GCC :(        
+   /// @note global qualifier specializations don't work on GCC :(            
    /// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66892                     
 
    ///                                                                        

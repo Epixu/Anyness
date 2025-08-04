@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include "../states/Default.hpp"
@@ -13,7 +20,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Adds a variable state to a container                                   
    /// Increases the container's bytesize to the smallest possible integer    
@@ -81,7 +87,7 @@ namespace Langulus::Anyness::Component
       /// Get the value of a speicific state                                  
       template<CT::State S>
       static consteval StateType GetStateBit() {
-         return LANGULUS_SEQUENCE(StateCount, {
+         return LglsSequence(StateCount, {
             return ((::std::same_as<S, STATES> * (StateType {1} << I)) | ...);
          });
       }
@@ -134,5 +140,4 @@ namespace Langulus::Anyness::Component
          return not self.IsValid();
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

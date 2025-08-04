@@ -11,7 +11,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// File path                                                              
    ///                                                                        
@@ -33,12 +32,9 @@ namespace Langulus::Anyness
       auto operator /  (const Text&) const -> Path;
       auto operator /= (const Text&) -> Path&;
    };
-
-} // namespace Langulus::Anyness
+}
 
 namespace Langulus
 {
-
    Anyness::Path operator ""_path(const char*, ::std::size_t);
-
-} // namespace Langulus
+}

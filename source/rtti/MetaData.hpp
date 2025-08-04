@@ -188,6 +188,7 @@ namespace Langulus::RTTI
          auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
+         auto GetMorphism(MetaDataStructured_XY) const noexcept -> DefinitionData::FBinary;
 
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -283,8 +284,7 @@ namespace Langulus::RTTI
             void SetPoolchain(Fractalloc::Pool*) const noexcept;
          #endif
       };
-
-   } // namespace Langulus::RTTI::Inner
+   }
    
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       using MetaData = Inner::MetaDataStructured_XY<2, 2>;
@@ -293,11 +293,44 @@ namespace Langulus::RTTI
    #endif
 
    using DMeta = MetaData;
-
-} // namespace Langulus::RTTI
+}
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include "MetaDataStructured.inl"
 #endif
 
 #include "MetaDataNaked.inl"
+
+#if LANGULUS_FEATURE(LOGGING)
+namespace fmt
+{
+   ///                                                                        
+   /// Extend FMT to be capable of logging data types                         
+   ///                                                                        
+   template<unsigned ID_SIZE, unsigned PT_SIZE>
+   struct formatter<::Langulus::RTTI::Inner::MetaDataStructured_XY<ID_SIZE, PT_SIZE>> {
+      using M = ::Langulus::RTTI::Inner::MetaDataStructured_XY<ID_SIZE, PT_SIZE>;
+
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {return ctx.begin();}
+
+      template<class CONTEXT>
+      auto format(M const& c, CONTEXT& ctx) const {
+         return format_to(ctx.out(), "{}", c.GetName());
+      }
+   };
+   
+   template<>
+   struct formatter<::Langulus::RTTI::Inner::MetaDataNaked> {
+      using M = ::Langulus::RTTI::Inner::MetaDataNaked;
+
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {return ctx.begin();}
+
+      template<class CONTEXT>
+      auto format(M const& c, CONTEXT& ctx) const {
+         return format_to(ctx.out(), "{}", c.GetName());
+      }
+   };
+}
+#endif

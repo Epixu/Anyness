@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/HashOf.hpp>
@@ -5,7 +12,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Provides random element access by hashing a value of the provide ID    
    /// Uses Robin Hood algorithm to manage collisions                         
@@ -33,5 +39,4 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       auto operator[] (this C&&, Key<C>) has_assumptions -> Val<C>;
    };
-
-} // namespace Langulus::Anyness::Component
+}

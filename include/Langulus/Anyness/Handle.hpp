@@ -15,7 +15,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// A type-erased mutable handle with ownership                            
    /// It refers to a picked element inside a type-erased container           
@@ -60,7 +59,7 @@ namespace Langulus::Anyness
    ///      destruction - only on reassignment. Since this handle is not      
    ///      mutable, this isn't possible either, however the handle still     
    ///      carries ownership information, so that it can be used on demand   
-   ///      instead of sought from the memory manager every time.             
+   ///      instead of sought from the memory manager every time              
    ///                                                                        
    struct Handle : Container<
       Com::HeapReference<>,
@@ -89,6 +88,4 @@ namespace Langulus::Anyness
 
       HandleDisowned() = delete;
    };
-   
-} // namespace Langulus::Anyness
-
+}

@@ -1,13 +1,18 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../rtti/Intent.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
 
 
 namespace Langulus::CT
 {
-   
    /// Check if container's elements are unfold-assignable                    
    ///   @attention type-erased elements are always assignable, and will fail 
    ///      at runtime if not reflected as such                               
@@ -18,7 +23,6 @@ namespace Langulus::CT
 
    namespace Inner
    {
-
       /// Test whether a TMany is assignable with the given argument          
       ///   @tparam T - the contained type in TMany<T>                        
       ///   @tparam A - the argument to test                                  
@@ -51,19 +55,16 @@ namespace Langulus::CT
          }
          else return UnfoldAssignable<T, A>;
       };
-
-   } // namespace Langulus::CT::Inner
+   }
 
    /// Concept for recognizing argument, with which a statically typed        
    /// container can be assigned                                              
    template<class C, class A>
    concept DeepAssignable = Inner::DeepAssignable<C, A>();
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Implements assignment for containers                                   
    ///   @tparam ID - heap we're removing from                                
@@ -88,5 +89,4 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class A>
       void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
    };
-
-} // namespace Langulus::Anyness::Component
+}

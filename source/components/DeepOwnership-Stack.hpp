@@ -1,5 +1,13 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "../Allocator.hpp"
 #include <Langulus/Assume.hpp>
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
@@ -7,7 +15,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Manages deep ownership by holding a pointer to the entries locally     
    ///   @tparam ID - which heap are we keeping track of?                     
@@ -32,5 +39,4 @@ namespace Langulus::Anyness::Component
       constexpr DeepOwnershipStack(AllocationPtr* entries) noexcept
          : mEntries {entries} {}
    };
-
-} // namespace Langulus::Anyness::Component
+}

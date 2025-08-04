@@ -30,7 +30,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// Type-erased set of unspecified state                                   
    ///                                                                        
@@ -139,5 +138,4 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       SetSorted(A1&&, AN&&...) requires CT::RangeInsertable<SetSorted, A1, AN...>;
    };
-
-} // namespace Langulus::Anyness
+}

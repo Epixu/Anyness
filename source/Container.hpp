@@ -1,94 +1,65 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
-#include <Langulus/CTTI.hpp>
-#include <Langulus/Intent.hpp>
+#include <Langulus/IntentOf.hpp>
 #include <Langulus/Sequence.hpp>
 #include <Langulus/CT/Defaultable.hpp>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
-
+#define LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH() 1
 
 namespace Langulus::CTTI
 {
-      
-   /// Can be used in two ways to satisfy CT::State<T>:                       
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_State = Yes/No;` in T                      
+   /// Affects CT::State<T>                                                   
    template<class T>
-   struct State {
-      static constexpr bool Enabled = false;
-   };
+   struct State;
    
-   /// Can be used in two ways to satisfy CT::Component<T>:                   
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Component = Yes/No;` in T                  
+   /// Affects CT::Component<T>                                               
    template<class T>
-   struct Component {
-      static constexpr bool Enabled = false;
-   };
+   struct Component;
    
-   /// Can be used in two ways to satisfy CT::Container<T>:                   
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Container = Yes/No;` in T                  
+   /// Affects CT::Container<T>                                               
    template<class T>
-   struct Container {
-      static constexpr bool Enabled = false;
-   };
+   struct Container;
    
-   /// Can be used in two ways to satisfy CT::Map<T>:                         
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Map = Yes/No;` in T                        
+   /// Affects CT::Map<T>                                                     
    template<class T>
-   struct Map {
-      static constexpr bool Enabled = false;
-   };
+   struct Map;
    
-   /// Can be used in two ways to satisfy CT::Set<T>:                         
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Set = Yes/No;` in T                        
+   /// Affects CT::Set<T>                                                     
    template<class T>
-   struct Set {
-      static constexpr bool Enabled = false;
-   };
+   struct Set;
    
-   /// Can be used in two ways to satisfy CT::Pair<T>:                        
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Pair = Yes/No;` in T                       
+   /// Affects CT::Pair<T>                                                    
    template<class T>
-   struct Pair {
-      static constexpr bool Enabled = false;
-   };
+   struct Pair;
 
-   /// Can be used in two ways to satisfy CT::Handle<T>:                      
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Handle = Yes/No;` in T                     
+   /// Affects CT::Handle<T>                                                  
    template<class T>
-   struct Handle {
-      static constexpr bool Enabled = false;
-   };
+   struct Handle;
 
-   /// Can be used in two ways to satisfy CT::Iterator<T>:                    
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Iterator = Yes/No;` in T                   
+   /// Affects CT::Iterator<T>                                                
    template<class T>
-   struct Iterator {
-      static constexpr bool Enabled = false;
-   };
+   struct Iterator;
+}
 
-} // namespace Langulus::CTTI
-
-LANGULUS_CTTI_CONCEPT(State);
-LANGULUS_CTTI_CONCEPT(Component);
-LANGULUS_CTTI_CONCEPT(Container);
-LANGULUS_CTTI_CONCEPT(Map);
-LANGULUS_CTTI_CONCEPT(Set);
-LANGULUS_CTTI_CONCEPT(Pair);
-LANGULUS_CTTI_CONCEPT(Handle);
-LANGULUS_CTTI_CONCEPT(Iterator);
+LANGULUS_CTTI_CONCEPT_DECVQ(State);
+LANGULUS_CTTI_CONCEPT_DECVQ(Component);
+LANGULUS_CTTI_CONCEPT_DECVQ(Container);
+LANGULUS_CTTI_CONCEPT_DECVQ(Map);
+LANGULUS_CTTI_CONCEPT_DECVQ(Set);
+LANGULUS_CTTI_CONCEPT_DECVQ(Pair);
+LANGULUS_CTTI_CONCEPT_DECVQ(Handle);
+LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
 namespace Langulus::Anyness
 {
-
    struct HandleMut;
    struct HandleDisownedMut;
    struct Handle;
@@ -99,7 +70,6 @@ namespace Langulus::Anyness
 
    namespace Component
    {
-
       template<unsigned>
       struct HeapMovable;
       template<unsigned>
@@ -108,8 +78,9 @@ namespace Langulus::Anyness
       struct HeapReference;
       template<CT::NotVoid, unsigned>
       struct Stack;
-
-   } // namespace Langulus::Anyness::Components
+      template<unsigned>
+      struct IterationOperators;
+   }
 
    namespace Com = Component;
 
@@ -131,6 +102,10 @@ namespace Langulus::Anyness
       template<CT::Component...MORE_COMPONENTS>
       using AddComponents = Container<COMPONENTS..., MORE_COMPONENTS...>;
 
+   protected:
+      template<unsigned>
+      friend struct Com::IterationOperators;
+      
       /// Maps one unfold expression onto another of different length, and    
       /// returns a default-initialized 'FALLBACK' instance if index goes out 
       /// of range. Some components aren't default-initializable, and this    
@@ -180,6 +155,14 @@ namespace Langulus::Anyness
       constexpr Container(ExpandedSequence<IDX...>, AN&&...aN)
          : COMPONENTS {PickArgument<COMPONENTS, IDX>(FWD(aN)...)}... {}
 
+      /// Initialize from any other compatible container                      
+      constexpr void InitFrom(CT::Container auto&& from) {
+         ComponentList::ForEach([&]<class C> {
+            if constexpr (requires { C::InitFrom(FWD(from)); })
+               C::InitFrom(FWD(from));
+         });
+      }
+      
       constexpr Container& operator = (Container const&) noexcept = default;
       constexpr Container& operator = (Container&&) noexcept = default;
 
@@ -207,7 +190,7 @@ namespace Langulus::Anyness
       ///   @tparam TYPE - the type of the data to get                        
       template<unsigned ID, CT::NotVoid TYPE>
       constexpr auto& GetInner() has_assumptions {
-         AssumeDev(not IsEmpty(), "Container is empty");
+         LglsAssumeDev(not this->IsEmpty(), "Container is empty");
 
          if constexpr (HasComponent<Com::HeapMovable<ID>>)
             return Com::HeapMovable<ID>::template Get<TYPE>();
@@ -229,7 +212,7 @@ namespace Langulus::Anyness
 
       template<unsigned ID, CT::NotVoid TYPE>
       constexpr auto const& GetInner() const has_assumptions {
-         AssumeDev(not IsEmpty(), "Container is empty");
+         LglsAssumeDev(not this->IsEmpty(), "Container is empty");
 
          if constexpr (HasComponent<Com::HeapMovable<ID>>)
             return Com::HeapMovable<ID>::template Get<TYPE>();
@@ -250,53 +233,42 @@ namespace Langulus::Anyness
       }
    };
 
-} // namespace Langulus::Anyness
+   namespace State
+   {
+      enum StateValue {
+         Variable = 0,
+         Enabled = 1,
+         Disabled = 2
+      };
+   }
 
-namespace Langulus::Anyness::State
-{
-
-   enum StateValue {
-      Variable = 0,
-      Enabled = 1,
-      Disabled = 2
-   };
-
-} // namespace Langulus::Anyness::State
-
-namespace Langulus::Anyness::DefineState
-{
-
-   struct Default;
-
-   template<State::StateValue = State::Variable> struct Compressed;
-   template<State::StateValue = State::Variable> struct Encrypted;
-   template<State::StateValue = State::Variable> struct Future;
-   template<State::StateValue = State::Variable> struct Or;
-   template<State::StateValue = State::Variable> struct Past;
-   template<State::StateValue = State::Variable> struct Sorted;
-   template<State::StateValue = State::Variable> struct Tracked;
-   template<State::StateValue = State::Variable> struct Typed;
-
-} // namespace Langulus::Anyness::DefineState
+   namespace DefineState
+   {
+      struct Default;
+      template<State::StateValue = State::Variable> struct Compressed;
+      template<State::StateValue = State::Variable> struct Encrypted;
+      template<State::StateValue = State::Variable> struct Future;
+      template<State::StateValue = State::Variable> struct Or;
+      template<State::StateValue = State::Variable> struct Past;
+      template<State::StateValue = State::Variable> struct Sorted;
+      template<State::StateValue = State::Variable> struct Tracked;
+      template<State::StateValue = State::Variable> struct Typed;
+   }
+}
 
 namespace Langulus::CT
 {
-   
    /// Check if listed types are containers with any kind of DeepOwnership    
    /// component                                                              
-   template<class T1, class...TN>
-   concept DeeplyOwned = Container<T1, TN...>
-       and Deref<T1>::DeeplyOwned and (Deref<TN>::DeeplyOwned and ...);
+   template<class...T>
+   concept DeeplyOwned = Container<T...> and (Deref<T>::DeeplyOwned and ...);
 
    /// Check if listed types are containers with any kind of linear indexing  
    /// component                                                              
-   template<class T1, class...TN>
-   concept IndexedLinearly = Container<T1, TN...>
-       and Deref<T1>::Indexed and (Deref<TN>::Indexed and ...);
+   template<class...T>
+   concept IndexedLinearly = Container<T...> and (Deref<T>::Indexed and ...);
    
    /// Check if listed types are containers with any kind of heap memory      
-   template<class T1, class...TN>
-   concept HeapAllocated = Container<T1, TN...>
-       and Deref<T1>::HeapAllocated and (Deref<TN>::HeapAllocated and ...);
-
-} // namespace Langulus::CT
+   template<class...T>
+   concept HeapAllocated = Container<T...> and (Deref<T>::HeapAllocated and ...);
+}

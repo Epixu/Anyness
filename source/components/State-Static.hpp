@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include "../states/Default.hpp"
@@ -7,7 +14,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    template<CT::State...STATES>
    struct StateStatic {
       using CTTI_Component = Yes<>;
@@ -22,5 +28,4 @@ namespace Langulus::Anyness::Component
          return combiner.template operator()<STATES...>(::std::make_index_sequence<Count>{});
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

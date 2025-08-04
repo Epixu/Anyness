@@ -863,6 +863,31 @@ static_assert(::std::same_as<DecvqAll<int const* const* const&&>, int**&&>);
 static_assert(::std::same_as<DecvqAll<int const* const* const>,   int**>);
 static_assert(::std::same_as<DecvqAll<int const* const* const volatile>, int**>);
 
+TEMPLATE_TEST_CASE("Testing DecvqAllCast", "[typenav]",
+   SheddableType<int>&,
+   SheddableType<int> const&,
+   int*,
+   int const*,
+   int const* const,
+   int**,
+   int const* const*,
+   int const* const* const,
+   int*&,
+   int const* const&,
+   //int const* const&&,
+   int[15],
+   const int[15],
+   int(&)[15],
+   const int(&)[15],
+   IncompleteType*,
+   IncompleteType const*,
+   IncompleteType const* const
+) {
+   if constexpr (::std::is_bounded_array_v<TestType>)
+      static_assert(::std::same_as<decltype(DecvqAllCast(Fake<TestType>())), Deext<DecvqAll<TestType>>*>);
+   else
+      static_assert(::std::same_as<decltype(DecvqAllCast(Fake<TestType>())), DecvqAll<TestType>>);
+}
 
 ///                                                                           
 /// IndirectsOf                                                               

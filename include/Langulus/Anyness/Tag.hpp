@@ -6,7 +6,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// A type-erased dynamic tag, that depends on Anyness::Many               
    ///                                                                        
@@ -21,8 +20,7 @@ namespace Langulus::Anyness
    struct TTag : ::Langulus::Inner::Tag<T> {
       using ::Langulus::Inner::Tag<T>::Tag;
    };
-
-} // namespace Langulus::Anyness
+}
 
 
 /// Define a tag, both in a type-erased and templated form                    

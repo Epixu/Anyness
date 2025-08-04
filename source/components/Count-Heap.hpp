@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Index.hpp>
@@ -6,7 +13,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Defines count as a part of the heap                                    
    /// Count shows how many elements inside a container are initialized       
@@ -44,5 +50,4 @@ namespace Langulus::Anyness::Component
          return self.GetCount() != 0;
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

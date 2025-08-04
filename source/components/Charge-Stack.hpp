@@ -11,7 +11,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Charge, carrying the four dimensions *ominous music*                   
    ///                                                                        
@@ -88,5 +87,4 @@ namespace Langulus::Anyness::Component
          mPriority = DefaultPriority;
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

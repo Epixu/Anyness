@@ -21,7 +21,6 @@ namespace Langulus::Anyness
 {
    namespace Inner
    {
-
       template<CT::Reference T>
       using THandleBase = Container<
          Com::HeapReference<>,
@@ -44,9 +43,7 @@ namespace Langulus::Anyness
          Com::Comparison,
          Com::IterationOperators<>
       >;
-
-   } // namespace Langulus::Anyness::Inner
-
+   }
 
    template<class T> struct THandle;
    template<class T> struct THandleDisowned;
@@ -137,6 +134,4 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
    };
-
-} // namespace Langulus::Anyness
-
+}

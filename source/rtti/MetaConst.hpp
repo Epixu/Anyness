@@ -61,8 +61,7 @@ namespace Langulus::RTTI
          using MetaNaked::operator =;
          using MetaNaked::operator bool;
       };
-
-   } // namespace Langulus::RTTI::Inner
+   }
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       using MetaConst = Inner::MetaConstPacked_16;
@@ -75,4 +74,38 @@ namespace Langulus::RTTI
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include "MetaConstStructured.inl"
+#endif
+
+#if LANGULUS_FEATURE(LOGGING)
+namespace fmt
+{
+   ///                                                                        
+   /// Extend FMT to be capable of logging constant types                     
+   ///                                                                        
+   template<>
+   struct formatter<::Langulus::RTTI::Inner::MetaConstPacked_16> {
+      using M = ::Langulus::RTTI::Inner::MetaConstPacked_16;
+
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {return ctx.begin();}
+
+      template<class CONTEXT>
+      auto format(M const& c, CONTEXT& ctx) const {
+         return format_to(ctx.out(), "{}", c.GetName());
+      }
+   };
+   
+   template<>
+   struct formatter<::Langulus::RTTI::Inner::MetaConstNaked> {
+      using M = ::Langulus::RTTI::Inner::MetaConstNaked;
+
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {return ctx.begin();}
+
+      template<class CONTEXT>
+      auto format(M const& c, CONTEXT& ctx) const {
+         return format_to(ctx.out(), "{}", c.GetName());
+      }
+   };
+}
 #endif

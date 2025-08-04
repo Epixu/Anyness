@@ -1,10 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
-
    //template<unsigned>
    //struct IterationOperators;
 
@@ -45,8 +51,8 @@ namespace Langulus::Anyness::Component
       };
 
    public:
-      /// A heap reference can not be default-initialized to a nullptr        
-      /// It must always reference a valid heap allocation                    
+      /// A heap reference can not be default-initialized to avoid errors     
+      /// You have to specify a nullptr manually                              
       HeapReference() = delete;
 
       constexpr HeapReference(HeapReference const& other) noexcept
@@ -112,12 +118,11 @@ namespace Langulus::Anyness::Component
             // Type-erased reference, no casting                        
             if (self.IsSparse())
                return static_cast<void**&>(self.mHeap);
-            else
-               return static_cast<void* &>(self.mHeap);
+            return static_cast<void* &>(self.mHeap);
          }
          else if constexpr (CT::Untyped<C>) {
             // Casting to a desired runtime type                        
-            AssumeDev(self.IsTyped(), "Block is not typed");
+            LglsAssumeDev(self.IsTyped(), "Block is not typed");
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TT>)
@@ -125,12 +130,11 @@ namespace Langulus::Anyness::Component
                else
                   return  *static_cast<TT* >(self.mHeap);
             }
-            else {
-               if constexpr (CT::Dense<TT>)
-                  return *static_cast<TT*>( self.mHeap);
-               else
-                  return *reinterpret_cast<TT*>(const_cast<ST*>(&self.mHeap));
-            }
+         
+            if constexpr (CT::Dense<TT>)
+               return *static_cast<TT*>( self.mHeap);
+            else
+               return *reinterpret_cast<TT*>(const_cast<ST*>(&self.mHeap));
          }
          else {
             // Casting to a desired static type                         
@@ -148,6 +152,59 @@ namespace Langulus::Anyness::Component
             }
          }
       }
-   };
 
-} // namespace Langulus::Anyness::Component
+      /// Return a handle to the first element                                
+      ///   @attention assumes T is of proper sparseness if not void          
+      ///   @tparam T - the type of data we're accessing                      
+      ///      use void to use the type of the container, if statically typed 
+      template<class T = void, CT::Container C>
+      auto GetHandle(this C&& self) has_assumptions {
+         static_assert(not CT::Handle<T>, "T can't be a handle");
+         static_assert(not CT::Reference<T>, "Strip references");
+         using DC = Deref<C>;
+         using TT = Tif<CT::Void<T>, TypeOf<DC>, T>;
+
+         if constexpr (CT::Void<TT>) {
+            // Type-erased handle                                       
+            if constexpr (CT::DeeplyOwned<DC>) {
+               // C is deeply owned, so each sparse element is coupled  
+               // with an entry that points to its allocation. Dense    
+               // elements simply refer to the container's allocation   
+               return Handle {self.mHeap, self.GetEntries(), self.GetType()};
+            }
+            else {
+               // C isn't deeply owned, so handles are just pointers    
+               // They still need to be handles, so that they have the  
+               // necessary insertion/emplacement interfaces            
+               return HandleDisowned {self.mHeap, self.GetType()};
+            }
+         }
+         else {
+            // Typed handle required                                    
+            static_assert(CT::NotVoid<TT>, "Logic error");
+            static_assert(CT::Untyped<DC> or CT::Sparse<TypeOf<C>> == CT::Sparse<TT>,
+               "Sparseness mismatch");
+            if constexpr (CT::Untyped<DC>)
+               LglsAssumeDev(self.IsSparse() == CT::Sparse<TT>, "Sparseness mismatch");
+
+            if constexpr (CT::DeeplyOwned<DC>) {
+               // C is deeply owned, so each sparse element is coupled  
+               // with an entry that points to its allocation. Dense    
+               // elements simply refer to the container's allocation   
+               return THandle<TT&> {&self.template Get<TT>(), self.GetEntries()};
+            }
+            else {
+               // C isn't deeply owned, so handles are just pointers    
+               // They still need to be handles, so that they have the  
+               // necessary insertion/emplacement interfaces            
+               return THandleDisowned<TT&> {&self.template Get<TT>()};
+            }
+         }
+      }
+
+      /*template<CT::IndexedLinearly C>
+      auto GetHandleAt(this C&& self, CT::Index auto at) has_assumptions {
+         return self.GetHandle() + at;
+      }*/
+   };
+}

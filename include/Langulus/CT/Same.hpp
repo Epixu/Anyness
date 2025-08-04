@@ -34,30 +34,36 @@ namespace Langulus::CT
    /// True if decayed T1 matches all decayed TN types                        
    ///   @attention ignores type density, references, and cv-qualifications   
    template<class T1, class...TN>
-   concept Same = (::std::same_as<Decay<T1>, Decay<TN>> and ...);
+   concept Same = PartialValidate<TN...>
+       and (::std::same_as<Decay<T1>, Decay<TN>> and ...);
 
    /// True if unqualified T1 matches all unqualified TN types                
    ///   @attention ignores cv-qualifications and references only             
    template<class T1, class...TN>
-   concept Similar = (Inner::NestedSimilar<Deref<T1>, Deref<TN>>() and ...);
+   concept Similar = PartialValidate<TN...>
+       and (Inner::NestedSimilar<Deref<T1>, Deref<TN>>() and ...);
 
    /// True if T1 matches exactly all the provided TN, including              
    /// density and cv-qualifiers. References are ignored                      
    template<class T1, class...TN>
-   concept Exact = (::std::same_as<Deref<T1>, Deref<TN>> and ...);
+   concept Exact = PartialValidate<TN...>
+       and (::std::same_as<Deref<T1>, Deref<TN>> and ...);
 
    /// True if decayed T1 matches at least one of the decayed TN              
    ///   @attention ignores type density, references, and cv-qualifications   
    template<class T1, class...TN>
-   concept SameAsOneOf = (::std::same_as<Decay<T1>, Decay<TN>> or ...);
+   concept SameAsOneOf = PartialValidate<TN...>
+       and (::std::same_as<Decay<T1>, Decay<TN>> or ...);
 
    /// True if unqualified T1 matches at least one of the unqualified TN      
    ///   @attention ignores cv-qualifications and references only             
    template<class T1, class...TN>
-   concept SimilarAsOneOf = (Inner::NestedSimilar<Deref<T1>, Deref<TN>>() or ...);
+   concept SimilarAsOneOf = PartialValidate<TN...>
+       and (Inner::NestedSimilar<Deref<T1>, Deref<TN>>() or ...);
 
    /// True if T1 matches exactly at least one of the TN, including           
    /// density and cv-qualifications. References are ignored                  
    template<class T1, class...TN>
-   concept ExactAsOneOf = (::std::same_as<Deref<T1>, Deref<TN>> or ...);
+   concept ExactAsOneOf = PartialValidate<TN...>
+       and (::std::same_as<Deref<T1>, Deref<TN>> or ...);
 }

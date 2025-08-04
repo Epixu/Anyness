@@ -76,3 +76,37 @@ namespace Langulus::RTTI
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    #include "MetaTagStructured.inl"
 #endif
+
+#if LANGULUS_FEATURE(LOGGING)
+namespace fmt
+{
+   ///                                                                        
+   /// Extend FMT to be capable of logging tag types                          
+   ///                                                                        
+   template<>
+   struct formatter<::Langulus::RTTI::Inner::MetaTagPacked_16> {
+      using M = ::Langulus::RTTI::Inner::MetaTagPacked_16;
+
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {return ctx.begin();}
+
+      template<class CONTEXT>
+      auto format(M const& c, CONTEXT& ctx) const {
+         return format_to(ctx.out(), "{}", c.GetName());
+      }
+   };
+   
+   template<>
+   struct formatter<::Langulus::RTTI::Inner::MetaTagNaked> {
+      using M = ::Langulus::RTTI::Inner::MetaTagNaked;
+
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {return ctx.begin();}
+
+      template<class CONTEXT>
+      auto format(M const& c, CONTEXT& ctx) const {
+         return format_to(ctx.out(), "{}", c.GetName());
+      }
+   };
+}
+#endif

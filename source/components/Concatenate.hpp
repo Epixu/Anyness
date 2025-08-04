@@ -1,10 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
-   
    ///                                                                        
    /// Implements insertion for containers                                    
    ///   @tparam AS - type to serialize as before inserting. Useful for byte  
@@ -29,5 +35,4 @@ namespace Langulus::Anyness::Component
       auto Concat(this C&, CT::Container auto&&)
          -> Count<C>;
    };
-
-} // namespace Langulus::Anyness::Component
+}

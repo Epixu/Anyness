@@ -115,3 +115,37 @@ namespace Langulus::RTTI
 #endif
 
 #include "MetaVerbNaked.inl"
+
+#if LANGULUS_FEATURE(LOGGING)
+namespace fmt
+{
+   ///                                                                        
+   /// Extend FMT to be capable of logging verb types                         
+   ///                                                                        
+   template<unsigned ID_SIZE>
+   struct formatter<::Langulus::RTTI::Inner::MetaVerbStructured_X8<ID_SIZE>> {
+      using M = ::Langulus::RTTI::Inner::MetaVerbStructured_X8<ID_SIZE>;
+
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {return ctx.begin();}
+
+      template<class CONTEXT>
+      auto format(M const& c, CONTEXT& ctx) const {
+         return format_to(ctx.out(), "{}", c.GetPositiveName());
+      }
+   };
+   
+   template<>
+   struct formatter<::Langulus::RTTI::Inner::MetaVerbNaked> {
+      using M = ::Langulus::RTTI::Inner::MetaVerbNaked;
+
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {return ctx.begin();}
+
+      template<class CONTEXT>
+      auto format(M const& c, CONTEXT& ctx) const {
+         return format_to(ctx.out(), "{}", c.GetPositiveName());
+      }
+   };
+}
+#endif

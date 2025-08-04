@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Deep.hpp>
@@ -10,7 +17,6 @@
 
 namespace Langulus
 {
-
    /// Loop controls from inside ForEach lambdas when iterating containers    
    struct LoopControl {
       enum Command : int {
@@ -37,7 +43,6 @@ namespace Langulus
 
    namespace Loop
    {
-
       /// Break the entire iteration as a whole                               
       constexpr LoopControl Break      = LoopControl::Break;
       /// Continue to next element or function                                
@@ -48,19 +53,16 @@ namespace Langulus
       constexpr LoopControl Discard    = LoopControl::Discard;
       /// End this iterating function and jump immediately to the next        
       constexpr LoopControl NextLoop   = LoopControl::NextLoop;
-
-   } // namespace Langulus::Loop
+   }
 
    namespace Anyness
    {
       class Neat;
    }
-
-} // namespace Langulus
+}
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Implements ForEach iteration interface for containers                  
    ///   @tparam ID - heap/stack we're iterating                              
@@ -651,5 +653,4 @@ namespace Langulus::Anyness::Component
          return Loop::Continue;
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

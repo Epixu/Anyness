@@ -40,7 +40,6 @@
 
 namespace Langulus::Anyness
 {
-
    struct Many;
    struct ManyView;
 
@@ -131,7 +130,6 @@ namespace Langulus::Anyness
    };
    
    using Messy = Many;
-   
-} // namespace Langulus::Anyness
+}
 
 #include "Neat.hpp"

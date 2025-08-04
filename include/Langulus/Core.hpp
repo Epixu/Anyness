@@ -383,6 +383,11 @@
       /// Force always inlining - significantly increases build time!         
       #define LANGULUS_INLINED() __forceinline
    #endif
+
+   #define LglsDisableWarningPush  __pragma(warning( push ))
+   #define LglsDisableWarningPop   __pragma(warning( pop )) 
+   #define LglsDisableWarning(W)   __pragma(warning( disable : W ))
+   #define LglsDisableWarning_SelfAssign
 #else
    /// Force no inlining                                                      
    #define LANGULUS_NOINLINE() __attribute__((noinline))
@@ -396,6 +401,12 @@
       /// Force always inlining - significantly increases build time!         
       #define LANGULUS_INLINED() __attribute__((always_inline)) inline
    #endif
+
+   #define LglsDoPragma(X)         _Pragma(#X)
+   #define LglsDisableWarningPush  LglsDoPragma(GCC diagnostic push)
+   #define LglsDisableWarningPop   LglsDoPragma(GCC diagnostic pop)
+   #define LglsDisableWarning(W)   LglsDoPragma(GCC diagnostic ignored #W)
+   #define LglsDisableWarning_SelfAssign LglsDisableWarning(-Wself-assign-overloaded)
 #endif
 
 #ifndef LANGULUS_ALIGNMENT

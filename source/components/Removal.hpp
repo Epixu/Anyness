@@ -1,11 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include <Langulus/Intent.hpp>
 
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Implements removal for containers                                      
    ///   @tparam ID - heap we're removing from                                
@@ -44,5 +49,4 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       void Reset(this C&);
    };
-
-} // namespace Langulus::Anyness::Component
+}

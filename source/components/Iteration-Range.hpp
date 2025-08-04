@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include "../Iterator.hpp"
@@ -7,7 +14,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    ///   A weightless 'end' iterator helper type                              
    ///                                                                        
@@ -19,6 +25,7 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
    };
 
+   
    ///                                                                        
    ///   Reverse iteration adapter                                            
    ///                                                                        
@@ -46,7 +53,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// Use like this: for(auto i : IterateTogether(pack1, pack2)), where      
    /// 'packN' can be any range, including a std one. You can retrieve the    
-   /// current element by using i[N], or i.one() i.two() for the first two.   
+   /// current element by using i[N], or i.one() i.two() for the first two    
    ///                                                                        
    template<::std::ranges::range...C>
    struct IterateTogether {
@@ -263,11 +270,17 @@ namespace Langulus::Anyness
             , mRange {range} {}
 
          constexpr bool operator == (const Iterator& rhs) const noexcept {
-            return mIt.GetRaw() == rhs.mIt.GetRaw();
+            if constexpr (UsingHandles)
+               return mIt.GetRaw() == rhs.mIt.GetRaw();
+            else
+               return mIt == rhs.mIt;
          }
 
          constexpr bool operator == (const IteratorEnd&) const noexcept {
-            return mIt.GetRaw() == mRange.GetRawEnd();
+            if constexpr (UsingHandles)
+               return mIt.GetRaw() == mRange.GetRawEnd();
+            else
+               return mIt == mRange;
          }
 
          H& operator *  () const noexcept { return  mIt; }
@@ -284,13 +297,10 @@ namespace Langulus::Anyness
 
    template<CT::Container C>
    IterateDefault(C&) -> IterateDefault<C>;
-
-} // namespace Langulus::Anyness
-
+}
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Implements ranged iteration interface for containers                   
    ///   @tparam ID - heap/stack we're iterating                              
@@ -319,7 +329,6 @@ namespace Langulus::Anyness::Component
             return {self.GetRaw(), self};
       }
 
-
       /// Return the last item                                                
       template<CT::Container C>
       constexpr auto last(this C&& self) noexcept -> Iterator<C> {
@@ -340,5 +349,4 @@ namespace Langulus::Anyness::Component
       constexpr auto end()  const noexcept -> IteratorEnd { return {}; }
       constexpr auto rend() const noexcept -> IteratorEnd { return {}; }
    };
-
-} // namespace Langulus::Anyness::Component
+}

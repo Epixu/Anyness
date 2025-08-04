@@ -1,10 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "Insertion.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
-   
    ///                                                                        
    /// Adds operators for front (>>) and back (<<) insertion                  
    ///   @tparam ID - heap we're inserting to                                 
@@ -22,5 +28,4 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class A>
       C& operator >> (this C&, A&&) requires CT::RangeInsertable<C, A>;
    };
-
-} // namespace Langulus::Anyness::Component
+}

@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/CT/Deep.hpp>
@@ -5,15 +12,12 @@
 
 namespace Langulus::Anyness
 {
-
    using DMeta = RTTI::DMeta;
    using TMeta = RTTI::TMeta;
-
-} // namespace Langulus::Anyness
+}
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Defines the contained type at compile-time                             
    /// Doesn't allow for type-erasure and doesn't take up space               
@@ -186,15 +190,14 @@ namespace Langulus::Anyness::Component
 
       /// Dereference the first pointer inside the container, if sparse       
       constexpr TYPE& operator * (this auto&& self) has_assumptions {
-         AssumeDev(not self.IsEmpty(), "Container is empty");
+         LglsAssumeDev(not self.IsEmpty(), "Container is empty");
          return self.template GetInner<ID, TYPE>();
       }
 
       /// Get the first pointer inside the container, if sparse               
       constexpr TYPE& operator -> (this auto&& self) has_assumptions {
-         AssumeDev(not self.IsEmpty(), "Container is empty");
+         LglsAssumeDev(not self.IsEmpty(), "Container is empty");
          return self.template GetInner<ID, TYPE>();
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

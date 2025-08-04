@@ -1,15 +1,29 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../logger/LoggerStateful.hpp"
 #include <Langulus/CT/Character.hpp>
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Text.hpp>
 
+#if 0 or LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH()
+   #include <Langulus/Logger.hpp>
+   #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
+   #define VERBOSE_SCOPED(...) const auto scope____ = Logger::VerboseScoped(__VA_ARGS__)
+#else
+   #define VERBOSE(...)
+   #define VERBOSE_SCOPED(...)
+#endif
+
 
 namespace Langulus::CT
 {
-   
    /// Check if container's elements are comparable                           
    ///   @attention type-erased elements are always insertable, but will fail 
    ///      at runtime if not reflected as such                               
@@ -17,19 +31,15 @@ namespace Langulus::CT
    concept RangeComparable = Container<C> and (
       Untyped<C> or UnfoldComparable<TypeOf<C>, T1, TN...>
    );
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus::Anyness
 {
-
    struct Text;
-
-} // namespace Langulus::Anyness
+}
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Implements comparison for containers                                   
    ///                                                                        
@@ -76,8 +86,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container LHS, CT::Container RHS>
       constexpr bool Compare(this const LHS& lhs, const RHS& rhs) {
          // Toggle logging at compile-time in this function scope       
-         constexpr bool VERBOSE = false;
-         auto tab = Logger::VerboseScoped<VERBOSE>("Comparing ",
+         VERBOSE_SCOPED("Comparing ",
             Logger::White, lhs.GetCount(), "x of ", lhs.GetName(),
             Logger::Reset, " with ",
             Logger::White, rhs.GetCount(), "x of ", rhs.GetName()
@@ -92,7 +101,7 @@ namespace Langulus::Anyness::Component
 
             if constexpr (not CT::Similar<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
                // Types are different                                   
-               Logger::Verbose<VERBOSE>(Logger::Red, "Types differ (typed): ",
+               VERBOSE(Logger::Red, "Types differ (typed): ",
                   NameOf<LT>(), " != ", NameOf<RT>());
                return false;
             }
@@ -106,7 +115,7 @@ namespace Langulus::Anyness::Component
                else if (lhs.GetCount() != rhs.GetCount()) {
                   // Early failure if count differs, no point in        
                   // comparing anything at all                          
-                  Logger::Verbose<VERBOSE>(Logger::Red, "Different count (typed): ",
+                  VERBOSE(Logger::Red, "Different count (typed): ",
                      lhs.GetCount(), " != ", rhs.GetCount());
                   return false;
                }
@@ -114,7 +123,7 @@ namespace Langulus::Anyness::Component
                if (not lhs.CompareHashes(rhs)) {
                   // Early failure if valid hashes differ - no point    
                   // in comparing anything at all                       
-                  Logger::Verbose<VERBOSE>(Logger::Red, "Different hashes (typed)");
+                  VERBOSE(Logger::Red, "Different hashes (typed)");
                   return false;
                }
 
@@ -122,9 +131,9 @@ namespace Langulus::Anyness::Component
                   // Batch compare POD data, including pointers         
                   const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
                   if (not same) {
-                     Logger::Verbose<VERBOSE>(Logger::Red,
+                     VERBOSE(Logger::Red,
                         "Different POD memory after memcmp (typed)");
-                     Logger::Verbose<VERBOSE>(Logger::Red,
+                     VERBOSE(Logger::Red,
                         "Most likely padding bytes filled with junk - pack your struct: ", NameOf<LT>());
                   }
                   return same;
@@ -140,13 +149,13 @@ namespace Langulus::Anyness::Component
                   }
 
                   if (t1 != t1end) {
-                     Logger::Verbose<VERBOSE>(Logger::Red,
+                     VERBOSE(Logger::Red,
                         "Element #", t1 - lhs.GetRaw(), " differs (typed)");
                   }
                   return t1 == t1end;
                }
                else {
-                  Logger::Verbose<VERBOSE>(Logger::Red,
+                  VERBOSE(Logger::Red,
                      "Type not comparable (typed): ", NameOf<LT>());
                   return false;
                }
@@ -160,7 +169,7 @@ namespace Langulus::Anyness::Component
             const DMeta RT = rhs.GetType();
 
             if (not LT.IsSimilar(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
-               Logger::Verbose<VERBOSE>(Logger::Red, "Types differ (type-erased): ",
+               VERBOSE(Logger::Red, "Types differ (type-erased): ",
                   LT, " != ", RT);
                return false;
             }
@@ -171,8 +180,9 @@ namespace Langulus::Anyness::Component
                // matter of whether they have the same count            
                return lhs.GetCount() == rhs.GetCount();
             }
-            else if (lhs.GetCount() != rhs.GetCount()) {
-               Logger::Verbose<VERBOSE>(Logger::Red, "Different count (type-erased): ",
+            
+            if (lhs.GetCount() != rhs.GetCount()) {
+               VERBOSE(Logger::Red, "Different count (type-erased): ",
                   lhs.GetCount(), " != ", rhs.GetCount());
                return false;
             }
@@ -180,7 +190,7 @@ namespace Langulus::Anyness::Component
             if (not lhs.CompareHashes(rhs)) {
                // Early failure if valid hashes differ - no point       
                // in comparing anything at all                          
-               Logger::Verbose<VERBOSE>(Logger::Red, "Different hashes (type-erased)");
+               VERBOSE(Logger::Red, "Different hashes (type-erased)");
                return false;
             }
 
@@ -188,14 +198,15 @@ namespace Langulus::Anyness::Component
                // Batch-compare memory if POD or sparse                 
                const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
                if (not same) {
-                  Logger::Verbose<VERBOSE>(Logger::Red,
+                  VERBOSE(Logger::Red,
                      "Different POD memory after memcmp (type-erased)");
-                  Logger::Verbose<VERBOSE>(Logger::Red,
+                  VERBOSE(Logger::Red,
                      "Most likely padding bytes filled with junk - pack your struct: ", LT);
                }
                return same;
             }
-            else if (LT.HasComparer()) {
+
+            if (LT.GetComparer()) {
                // Call compare operator for each element pair           
                auto t1 = lhs.template GetRawAs<uint8_t>();
                auto t2 = rhs.template GetRawAs<uint8_t>();
@@ -203,8 +214,8 @@ namespace Langulus::Anyness::Component
                const auto t1end = t1 + lhs.GetBytesize();
                const auto size = LT.GetSize();
                while (t1 < t1end) {
-                  if (0 != LT.RunComparer(t1, t2)) {
-                     Logger::Verbose<VERBOSE>(Logger::Red,
+                  if (0 != LT.GetComparer()(t1, t2)) {
+                     VERBOSE(Logger::Red,
                         "Element #", (t1 - t1_start) / size, " differs (type-erased)");
                      return false;
                   }
@@ -214,12 +225,9 @@ namespace Langulus::Anyness::Component
                }
                return true;
             }
-            else {
-               Logger::Verbose<VERBOSE>(Logger::Red,
-                  "Type not comparable (type-erased): ", LT);
-               return false;
-            }
-            return true;
+
+            VERBOSE(Logger::Red, "Type not comparable (type-erased): ", LT);
+            return false;
          }
       }
 
@@ -421,5 +429,7 @@ namespace Langulus::Anyness::Component
          else return false;
       }
    };
+}
 
-} // namespace Langulus::Anyness::Component
+#undef VERBOSE
+#undef VERBOSE_SCOPED

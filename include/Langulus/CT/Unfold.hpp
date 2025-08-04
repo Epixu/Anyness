@@ -7,10 +7,10 @@
 ///                                                                           
 #pragma once
 #include "Same.hpp"
+//#include "../Typenav.hpp"
+#include "../TypeOf.hpp"
+//#include "../IntentOf.hpp"
 #include "Comparable.hpp"
-#include "../Typenav.hpp"
-#include "../Types.hpp"
-#include "../IntentOf.hpp"
 
 
 namespace Langulus::CTTI
@@ -21,20 +21,20 @@ namespace Langulus::CTTI
    template<class T>
    struct Unfoldable {
       static constexpr bool Default = true;
-      static constexpr bool Enabled = CT::Intent<T> or CT::Array<T>
-                       or (::std::ranges::range<T> and CT::Typed<T>);
+      static constexpr bool Enabled = CT::Sheddable<T>
+         or ::std::is_bounded_array_v<Deref<T>>
+         or (::std::ranges::range<T> and CT::Typed<T>);
    };
 }
 
-LANGULUS_CTTI_CONCEPT_DECVQ(Unfoldable);
+LANGULUS_CTTI_CONCEPT_UNSHEDDABLE_DECVQ(Unfoldable);
 
 namespace Langulus::CT
 {
    namespace Inner
    {
-      ///   @return a pointer of the first nested non-unfoldable type         
       template<class T, class UNLESS = void>
-      consteval Typelist auto UnfoldInner() {
+      consteval auto UnfoldInner() {
          if constexpr (Similar<T, UNLESS> or not Unfoldable<T>) {
             // Immediately break the nesting if UNLESS condition is met 
             // Alternatively, break nesting if T is reflected as not    

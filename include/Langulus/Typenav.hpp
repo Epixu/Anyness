@@ -274,8 +274,8 @@ namespace Langulus
       /// Check if all T are bounded arrays                                   
       template<class...T>
       concept Array = PartialValidate<T...>
-          and ((::std::is_bounded_array_v<Decvq<Deref<Shed<T>>>>
-             or ExtentOf<Decvq<Deref<Shed<T>>>> > 1
+          and ((::std::is_bounded_array_v<Deref<Shed<T>>>
+             or (ExtentOf<Deref<Shed<T>>>) > 1
           ) and ...);
 
       /// Check if all T are volatile-qualified                               
@@ -394,6 +394,20 @@ namespace Langulus
    template<class T>
    using DecvqAll = typename decltype(Inner::NestedDecvq<T>())::First;
 
+   /// Strips all cv-qualifiers from the provided argument                    
+   ///   @attention this will return pointers for bounded array arguments     
+   template<class T> requires (not ::std::is_bounded_array_v<T>)
+   LANGULUS(ALWAYS_INLINED)
+   constexpr auto DecvqAllCast(T&& what) noexcept -> DecvqAll<T> {
+      return const_cast<DecvqAll<T>>(what);
+   }
+   
+   template<class T> requires ::std::is_bounded_array_v<T>
+   LANGULUS(ALWAYS_INLINED)
+   constexpr auto DecvqAllCast(T&& what) noexcept -> DecvqAll<Deext<T>>* {
+      return const_cast<DecvqAll<Deext<T>>*>(what);
+   }
+   
    /// Count the number of indirections                                       
    ///   @attention this considers only C+++ syntax pointers, not custom      
    ///      pointer types                                                     

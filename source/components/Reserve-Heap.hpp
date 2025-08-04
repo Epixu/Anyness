@@ -1,10 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// A dynamic reserve derived from the heap directly                       
    /// As such, it will not increase container's stack size                   
@@ -44,5 +50,4 @@ namespace Langulus::Anyness::Component
       /// the allocation says                                                 
       constexpr void SetReserved(ReserveType) const noexcept { LANGULUS(NOOP); }
    };
-
-} // namespace Langulus::Anyness::Component
+}

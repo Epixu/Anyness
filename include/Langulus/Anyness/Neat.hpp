@@ -15,7 +15,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    ///   Neat - a normalized data container                                   
    ///                                                                        
@@ -169,5 +168,4 @@ namespace Langulus::Anyness
       template<CT::DefineTag, bool EMPTY_TOO = false>
       Count RemoveTag();
    };
-
-} // namespace Langulus::Anyness
+}

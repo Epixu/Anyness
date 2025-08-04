@@ -1,22 +1,21 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "Heap-Reference.hpp"
 #include "../Allocator.hpp"
-#include "../rtti/Intent.hpp"
+#include <Langulus/MetaOf.hpp>
 #include <Langulus/CT/Index.hpp>
-#include <Langulus/CT/Pooled.hpp>
 #include <Langulus/CT/Resolvable.hpp>
 #include "Iteration-Range.hpp"
-
-/*#include "../Container.hpp"
-#include <Langulus/TypeOf.hpp>
-#include <Langulus/CT/Allocatable.hpp>
-#include <Langulus/CT/Referenced.hpp>
-#include <algorithm>*/
 
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Interfaces a heap allocation                                           
    /// Adds a pointer member to the raw byte memory                           
@@ -41,10 +40,8 @@ namespace Langulus::Anyness::Component
       using Pick = Tif<CT::Mutable<C>, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
-
-      /*using Byte = ::std::uint8_t;*/
       template<CT::Container C>
-      using View = typename C::ViewType;
+      using View = typename Deref<C>::ViewType;
             
 
       /// Get a size based on reflected allocation page and count             
@@ -57,7 +54,7 @@ namespace Langulus::Anyness::Component
          Allocation::Request result;
 
          if constexpr (C::TypeErased) {
-            AssumeDev(self.mType,
+            LglsAssumeDev(self.mType,
                "Requesting allocation size for an untyped container");
 
             // Check for reflected minimal allocation at runtime        
@@ -100,7 +97,7 @@ namespace Langulus::Anyness::Component
                request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1));
          }
 
-         Assert(al, "Out of memory");
+         LglsAssert(al, "Out of memory");
          self.SetAllocation(al);
          self.SetReserved(request.mElementCount);
       }
@@ -112,7 +109,7 @@ namespace Langulus::Anyness::Component
       ///   @param elements - number of elements to allocate                  
       template<bool CREATE = false, bool SETSIZE = false, CT::Container C>
       void AllocateMore(this C& self, const Count<C> elements) {
-         AssumeDev(elements > self.GetCount(), "Bad element count");
+         LglsAssumeDev(elements > self.GetCount(), "Bad element count");
 
          if constexpr (CT::Typed<C>) {
             // Allocate/reallocate                                      
@@ -134,7 +131,7 @@ namespace Langulus::Anyness::Component
                   return;
                }
 
-               AssumeDev(self.GetUses() == 1,
+               LglsAssumeDev(self.GetUses() == 1,
                   "Can't reuse memory of a heap used from multiple places, "
                   "BranchOut should've been called prior to AllocateMore"
                );
@@ -145,7 +142,7 @@ namespace Langulus::Anyness::Component
                   request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1),
                   self.GetAllocation()
                );
-               Assert(reallocated, "Out of memory");
+               LglsAssert(reallocated, "Out of memory");
                self.SetAllocation(reallocated);
                self.SetReserved(request.mElementCount);
 
@@ -166,7 +163,7 @@ namespace Langulus::Anyness::Component
                   // Memory didn't move, but reserved count changed     
                   if constexpr (C::Sparse) {
                      // Move entry data to its new place                
-                     MoveMemory(GetEntries(), previous.GetEntries(), self.GetCount());
+                     MoveMemory(self.GetEntries(), previous.GetEntries(), self.GetCount());
                   }
                }
 
@@ -190,9 +187,9 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            Assert(self.mType,
+            LglsAssert(self.mType,
                "Can't instantiate unknown type");
-            Assert(self.mType.IsSparse() or not self.mType.IsAbstract(),
+            LglsAssert(self.mType.IsSparse() or not self.mType.IsAbstract(),
                "Unable to instantiate ", elements, " elements of abstract type ", self.mType);
 
             if (self.GetReserved() >= elements) {
@@ -218,7 +215,7 @@ namespace Langulus::Anyness::Component
       ///   @param elements - number of elements to allocate                  
       template<CT::Container C>
       void AllocateLess(this C& self, const Count<C> elements) {
-         AssumeDev(elements < self.GetReserved(), "Bad element count");
+         LglsAssumeDev(elements < self.GetReserved(), "Bad element count");
 
          if (self.GetCount() > elements) {
             // Destroy back entries on smaller allocation               
@@ -232,47 +229,47 @@ namespace Langulus::Anyness::Component
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             // Shrink the memory block                                  
             // Guaranteed that entry doesn't move                       
-            const auto request = RequestSize(elements);
-            if (request.mElementCount == mReserved)
+            const auto request = self.RequestSize(elements);
+            if (request.mElementCount == self.GetReserved())
                return;
          
-            AssumeDev(mEntry->GetUses() == 1,
+            LglsAssumeDev(self.GetAllocation()->GetUses() == 1,
                "Can't reuse memory of a block used from multiple places, "
                "BranchOut should've been called prior to AllocateMore"
             );
 
-            if constexpr (not TypeErased) {
-               if constexpr (Sparse) {
+            if constexpr (not C::TypeErased) {
+               if constexpr (C::Sparse) {
                   // Move entry data to its new place                   
                   MoveMemory(
-                     GetEntries() - mReserved + request.mElementCount,
-                     GetEntries(), mCount
+                     self.GetEntries() - self.mReserved + request.mElementCount,
+                     self.GetEntries(), self.mCount
                   );
                }
 
-               mEntry = Allocator::Reallocate(
-                  request.mByteSize * (Sparse ? 2 : 1),
+               self.SetAllocation(Allocator::Reallocate(
+                  request.mByteSize * (C::Sparse ? 2 : 1),
                   self.GetAllocation()
-               );
+               ));
             }
             else {
-               AssumeDev(mType, "Invalid type");
+               LglsAssumeDev(self.mType, "Invalid type");
 
-               if (mType->mIsSparse) {
+               if (self.mType->mIsSparse) {
                   // Move entry data to its new place                   
                   MoveMemory(
-                     GetEntries() - mReserved + request.mElementCount,
-                     GetEntries(), mCount
+                     self.GetEntries() - self.mReserved + request.mElementCount,
+                     self.GetEntries(), self.mCount
                   );
                }
 
-               mEntry = Allocator::Reallocate(
-                  request.mByteSize * (mType->mIsSparse ? 2 : 1),
+               self.SetAllocation(Allocator::Reallocate(
+                  request.mByteSize * (self.mType->mIsSparse ? 2 : 1),
                   self.GetAllocation()
-               );
+               ));
             }
 
-            mReserved = request.mElementCount;
+            self.SetReserved(request.mElementCount);
          #endif
       }
       
@@ -285,8 +282,8 @@ namespace Langulus::Anyness::Component
          using S  = IntentOf<decltype(rhs_with_intent)>;
          using ST = TypeOf<S>;
          using STT = TypeOf<ST>;
-         AssumeDev(self.IsTyped(), "Invalid type");
-         AssumeDev(self.mHeap, "Invalid heap");
+         LglsAssumeDev(self.IsTyped(), "Invalid type");
+         LglsAssumeDev(self.mHeap, "Invalid heap");
          auto& rhs = DeintCast(rhs_with_intent);
 
          if constexpr (C::TypeErased) {
@@ -294,7 +291,7 @@ namespace Langulus::Anyness::Component
             // This container is type-erased                            
             //                                                          
             if (self.mType.IsSparse()) {
-               AssumeDev(rhs.IsSparse(), "Sparseness mismatch");
+               LglsAssumeDev(rhs.IsSparse(), "Sparseness mismatch");
 
                if constexpr (S::Shallow) {
                   // Do a refer/copy/disown/abandon/move sparse LHS     
@@ -322,7 +319,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Do a refer/copy/disown/abandon/move/clone dense LHS   
-               AssumeDev(CT::Dense<STT>, "Sparseness mismatch");
+               LglsAssumeDev(CT::Dense<STT>, "Sparseness mismatch");
 
                if constexpr (CT::Moved<S>)
                   self.mType.MoveAssign   (self.mHeap, rhs.mHeap);
@@ -411,61 +408,6 @@ namespace Langulus::Anyness::Component
       constexpr HeapMovable() noexcept
          : HeapReference<ID> {nullptr} {}
 
-      /// Return a handle to the first element                                
-      ///   @attention assumes T is of proper sparseness if not void          
-      ///   @tparam T - the type of data we're accessing                      
-      ///      use void to use the type of the container, if statically typed 
-      template<class T = void, CT::Container C>
-      auto GetHandle(this C&& self) has_assumptions {
-         static_assert(not CT::Handle<T>, "T can't be a handle");
-         static_assert(not CT::Reference<T>, "Strip references");
-         using DC = Deref<C>;
-         using TT = Tif<CT::Void<T>, TypeOf<DC>, T>;
-
-         if constexpr (CT::Void<TT>) {
-            // Type-erased handle                                       
-            if constexpr (CT::DeeplyOwned<DC>) {
-               // C is deeply owned, so each sparse element is coupled  
-               // with an entry that points to its allocation. Dense    
-               // elements simply refer to the container's allocation   
-               return Handle {self.mHeap, self.GetEntries(), self.GetType()};
-            }
-            else {
-               // C isn't deeply owned, so handles are just pointers    
-               // They still need to be handles, so that they have the  
-               // necessary insertion/emplacement interfaces            
-               return HandleDisowned {self.mHeap, self.GetType()};
-            }
-         }
-         else {
-            // Typed handle required                                    
-            static_assert(CT::NotVoid<TT>, "Logic error");
-            static_assert(CT::Untyped<DC> or CT::Sparse<TypeOf<C>> == CT::Sparse<TT>,
-               "Sparseness mismatch");
-
-            if constexpr (CT::Untyped<DC>)
-               AssumeDev(self.IsSparse() == CT::Sparse<TT>, "Sparseness mismatch");
-
-            if constexpr (CT::DeeplyOwned<DC>) {
-               // C is deeply owned, so each sparse element is coupled  
-               // with an entry that points to its allocation. Dense    
-               // elements simply refer to the container's allocation   
-               return THandle<TT&> {&self.template Get<TT>(), self.GetEntries()};
-            }
-            else {
-               // C isn't deeply owned, so handles are just pointers    
-               // They still need to be handles, so that they have the  
-               // necessary insertion/emplacement interfaces            
-               return THandleDisowned<TT&> {&self.template Get<TT>()};
-            }
-         }
-      }
-
-      template<CT::IndexedLinearly C>
-      auto GetHandleAt(this C&& self, CT::Index auto at) has_assumptions {
-         return self.GetHandle() + at;
-      }
-
       template<CT::NotVoid AS, CT::Container C>
       auto As(this C&& self) -> Pick<C>;
 
@@ -492,5 +434,4 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       auto GetDense(this C&&, Count<C> = CountMax<C>) -> Deep<C>;
    };
-
-} // namespace Langulus::Anyness::Component
+}

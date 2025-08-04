@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Same.hpp>
@@ -7,15 +14,12 @@
 
 namespace Langulus::Anyness
 {
-
    using DMeta = RTTI::DMeta;
    using TMeta = RTTI::TMeta;
-
-} // namespace Langulus::Anyness
+}
 
 namespace Langulus::Anyness::Component
 {
-
    template<unsigned>
    struct IterationForEach;
 
@@ -251,6 +255,8 @@ namespace Langulus::Anyness::Component
       template<CT::NotVoid>
       void SetType()  requires TypeErased;
       void SetType(T) requires TypeErased;
-   };
 
-} // namespace Langulus::Anyness::Component
+      void MakeConstant() noexcept;
+      void MakeMutable() noexcept;
+   };
+}

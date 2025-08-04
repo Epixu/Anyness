@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../rtti/MetaData.hpp"
 #include <Langulus/HashOf.hpp>
@@ -6,10 +13,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
-   using DMeta = RTTI::DMeta;
-
-
    ///                                                                        
    /// Doesn't cache hash - recalculates it every time                        
    /// The hash is calculated using the data inside the given heap ID         
@@ -48,8 +51,10 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::POD<T> and not CT::HasGetHashMethod<T>) {
                // Hash all PODs at once, this includes any pointers     
                // That is unless T::GetHash() method exists             
-               return HashBytes<DefaultHashSeed, (alignof(T) < Byteness)> (
-                  self.GetRaw(), static_cast<int>(self.GetBytesize()));
+               return HashBytes(
+                  {reinterpret_cast<const uint8_t*>(self.GetRaw()), self.GetBytesize()},
+                  DefaultHashSeed
+               );
             }
             else {
                // Hash each element, and then combine hashes            
@@ -57,9 +62,11 @@ namespace Langulus::Anyness::Component
                h.reserve(self.GetCount());
                for (T& element : self)
                   h.emplace_back(HashOf(element));
-
-               return HashBytes<DefaultHashSeed, (alignof(H) < Byteness)>(
-                  h.data(), static_cast<int>(h.size() * sizeof(H)));
+               
+               return HashBytes(
+                  {reinterpret_cast<const uint8_t*>(h.data()), h.size() * sizeof(H)},
+                  DefaultHashSeed
+               );
             }
          }
          else {
@@ -71,7 +78,7 @@ namespace Langulus::Anyness::Component
             const DMeta T = self.GetType();
             if (self.GetCount() == 1) {
                // Exactly one element means exactly one hash            
-               return T.RunHasher(self.GetRaw());
+               return T.GetHasher()(self.GetRaw());
             }
 
             // Hashing multiple elements                                
@@ -79,27 +86,23 @@ namespace Langulus::Anyness::Component
             if (T.IsPOD() and not T.HasGetHashMethod()) {
                // Hash all PODs at once, this includes any pointers     
                // That is unless T::GetHash() method exists             
-               if (T.GetAlignment() < Byteness) {
-                  return HashBytes<DefaultHashSeed, true>(
-                     self.GetRaw(), static_cast<int>(self.GetBytesize()));
-               }
-               else {
-                  return HashBytes<DefaultHashSeed, false>(
-                     self.GetRaw(), static_cast<int>(self.GetBytesize()));
-               }
+               return HashBytes(
+                  {reinterpret_cast<const uint8_t*>(self.GetRaw()), self.GetBytesize()},
+                  DefaultHashSeed
+               );
             }
-            else {
-               // Hash each element, and then combine hashes            
-               ::std::vector<H> h;
-               h.reserve(self.GetCount());
-               for (auto element : self)
-                  h.emplace_back(T.RunHasher(element.GetRaw()));
-
-               return HashBytes<DefaultHashSeed, (alignof(H) < Byteness)>(
-                  h.data(), static_cast<int>(h.size() * sizeof(H)));
-            }
+            
+            // Hash each element, and then combine hashes               
+            ::std::vector<H> h;
+            h.reserve(self.GetCount());
+            for (auto element : self)
+               h.emplace_back(T.GetHasher()(element.GetRaw()));
+            
+            return HashBytes(
+               {reinterpret_cast<const uint8_t*>(h.data()), h.size() * sizeof(H)},
+               DefaultHashSeed
+            );
          }
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

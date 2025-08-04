@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Index.hpp>
@@ -5,19 +12,20 @@
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Defines count as a member                                              
    /// Count shows how many elements inside a container are initialized       
    /// Stack-based counting increases the container size, but doesn't require 
-   /// indirections, making count lookup faster and more cache-friendly.      
+   /// indirections, making count lookup faster and more cache-friendly       
    ///   @tparam ID - the heap/stack ID to keep count of                      
    ///   @tparam T - the count type                                           
-   template<unsigned ID = 0, class T = ::std::size_t>
+   template<unsigned ID = 0, class T = size_t>
    struct CountStack {
-   private:
+   protected:
       T mCount;
 
+      void SetCount(T);
+      
    public:
       using CTTI_Component = Yes<>;
       using CountType = T;
@@ -35,5 +43,4 @@ namespace Langulus::Anyness::Component
       T GetCountDeep() const noexcept;
       T GetCountItemsDeep() const noexcept;
    };
-
-} // namespace Langulus::Anyness::Component
+}

@@ -1,6 +1,12 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../rtti/Intent.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
@@ -8,18 +14,16 @@
 
 namespace Langulus::CT
 {
-   
    /// Check if container's elements are unfold-constructible                 
    ///   @attention type-erased elements are always insertable, and will fail 
    ///      at runtime if not reflected as such                               
-   template<class C, class T1, class...TN>
+   template<class C, class...A>
    concept RangeInsertable = Container<C> and (
-      Untyped<C> or UnfoldConstructible<TypeOf<C>, T1, TN...>
+      Untyped<C> or UnfoldConstructible<TypeOf<C>, A...>
    );
 
    namespace Inner
    {
-
       /// Test whether a container is constructible with the given arguments  
       ///   @tparam C - the contained type                                    
       ///   @tparam ...A - the arguments to test                              
@@ -54,19 +58,16 @@ namespace Langulus::CT
          }
          else return UnfoldConstructible<T, A...>;
       };
-
-   } // namespace Langulus::CT::Inner
+   }
 
    /// Concept for recognizing arguments, with which a statically typed       
    /// container can be constructed                                           
    template<class C, class...A>
    concept DeepConstructible = Inner::DeepConstructible<C, A...>();
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus::Anyness::Component
 {
-   
    ///                                                                        
    /// Implements insertion for containers                                    
    ///   @tparam ID - heap we're inserting to                                 
@@ -120,5 +121,4 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class...A>
       auto Extend(this C&, Count<C> = 1, A&&...) -> PickRangeMut<C>;
    };
-
-} // namespace Langulus::Anyness::Component
+}

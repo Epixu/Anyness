@@ -114,19 +114,12 @@ if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
     endif()
 endif()
 
-# Build and install Anyness library												
-#[[file(GLOB_RECURSE
-    LANGULUS_ANYNESS_SOURCES 
-    LIST_DIRECTORIES FALSE CONFIGURE_DEPENDS
-    source/*.cpp
-)]]
-
 add_langulus_library(LangulusAnyness
-	SOURCES		$<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/Logger.cpp>
-				$<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/HTML.cpp>
-				$<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/TXT.cpp>
-				$<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:source/fractalloc/Allocator.cpp>
-				$<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
+	SOURCES  $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/Logger.cpp>
+		     $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/HTML.cpp>
+		     $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/TXT.cpp>
+		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:source/fractalloc/Allocator.cpp>
+		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
 )
 
 target_compile_features(LangulusAnyness PUBLIC cxx_std_23)

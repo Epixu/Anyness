@@ -33,7 +33,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// Type-erased map of unspecified state                                   
    ///                                                                        
@@ -256,5 +255,4 @@ namespace Langulus::Anyness
       auto RemovePair (const CT::Pair auto&) -> CountType;
       void RemoveIt   (IteratorMut&);
    };
-
-} // namespace Langulus::Anyness
+}

@@ -25,7 +25,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// A universal type-erased container of size 1                            
    /// This is the most universal and feature-complete container, that        
@@ -50,6 +49,5 @@ namespace Langulus::Anyness
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
-   > {};
-      
-} // namespace Langulus::Anyness
+   > {};  
+}

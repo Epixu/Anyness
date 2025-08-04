@@ -505,7 +505,7 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            return Scope {0};
          }
       #endif
    }

@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include "../rtti/Intent.hpp"
@@ -8,7 +15,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Reserves a part of the heap to keep track of sparse element's          
    /// allocations                                                            
@@ -167,5 +173,4 @@ namespace Langulus::Anyness::Component
          }
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

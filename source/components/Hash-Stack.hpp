@@ -1,10 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "Hash-Emergent.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Stores a precomputed hash on the stack                                 
    /// The hash is calculated using the data from the given heap/stack ID     
@@ -32,5 +38,4 @@ namespace Langulus::Anyness::Component
          return cached;
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

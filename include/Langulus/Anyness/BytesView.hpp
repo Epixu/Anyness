@@ -27,7 +27,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// A continuous byte container view (without ownership) of variable size, 
    /// that is binary compatible with the container above                     
@@ -58,5 +57,4 @@ namespace Langulus::Anyness
 
       constexpr BytesView(const CT::Container auto&) noexcept;
    };
-
-} // namespace Langulus::Anyness
+}

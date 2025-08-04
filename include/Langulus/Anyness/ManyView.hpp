@@ -33,9 +33,7 @@
 
 namespace Langulus::Anyness
 {
-
    struct Many;
-
 
    ///                                                                        
    /// A universal type-erased continuous container view of variable size     
@@ -67,5 +65,4 @@ namespace Langulus::Anyness
    > {
       using CTTI_ReflectAs = Many;
    };
-   
-} // namespace Langulus::Anyness
+}

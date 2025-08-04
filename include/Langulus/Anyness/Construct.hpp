@@ -41,7 +41,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    ///   Construct                                                            
    ///                                                                        
@@ -115,5 +114,4 @@ namespace Langulus::Anyness
       void Reset();
       void ResetCharge() noexcept;
    };
-
-} // namespace Langulus::Anyness
+}

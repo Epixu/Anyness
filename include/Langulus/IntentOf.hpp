@@ -95,13 +95,13 @@ namespace Langulus
 
    /// This just makes sure that mutable references are forwarded properly    
    /// by attaching a deprecation warning to it                               
-   template<CT::Mutable T>
+   /*template<CT::Mutable T>
    [[deprecated("Did you forget to forward the argument?")]]
    LANGULUS(ALWAYS_INLINED)   
    constexpr decltype(auto) DeintCast(T& what) {
       if constexpr (CT::Intent<T>) return *what;
       else return (what);
-   }
+   }*/
 
    /// Decay an intent to the contained data                                  
    ///   @param what - the instance to decay                                  
@@ -129,7 +129,8 @@ namespace Langulus
          static consteval bool IsKept()       { return KEEP;  }
          static consteval bool IsMoved()      { return MOVE;  }
          static consteval bool ResetsOnMove() { return KEEP and MOVE; }
-         static consteval bool IsShallow()    { return DEPTH < 2;     }
+         static consteval bool KeepsOnCopy()  { return KEEP and not MOVE; }
+         static consteval bool IsShallow()    { return DEPTH < 2; }
          static consteval bool Is(int depth, bool keep, bool move) {
             return DEPTH == depth and KEEP == keep and MOVE == move;
          }
@@ -144,7 +145,7 @@ namespace Langulus
    /// Referred value intermediate type, use in constructors and assignments  
    /// to refer to data explicitly                                            
    ///   @tparam T - the type to refer                                        
-   template<class T>
+   template<class T> requires (not ::std::is_reference_v<T>)
    struct Refer final : Inner::CommonIntent<0, true, false> {
    private:
       const T& mValue;
@@ -204,6 +205,12 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
+      
+      LANGULUS(ALWAYS_INLINED)
+      explicit constexpr operator bool () const noexcept
+      requires requires { static_cast<bool>(mValue); } {
+         return static_cast<bool>(mValue);
+      }
    };
 
    template<CT::NoIntent T>
@@ -217,7 +224,7 @@ namespace Langulus
    /// Copied value intermediate type, use in constructors and assignments    
    /// to shallow-copy container explicitly                                   
    ///   @tparam T - the type to copy                                         
-   template<class T>
+   template<class T> requires (not ::std::is_reference_v<T>)
    struct Copy final : Inner::CommonIntent<1, true, false> {
    private:
       const T& mValue;
@@ -272,6 +279,12 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
+      
+      LANGULUS(ALWAYS_INLINED)
+      explicit constexpr operator bool () const noexcept
+      requires requires { static_cast<bool>(mValue); } {
+         return static_cast<bool>(mValue);
+      }
    };
 
    template<CT::NoIntent T>
@@ -285,7 +298,7 @@ namespace Langulus
    /// Moved value intermediate type, use in constructors and assignments     
    /// to move data explicitly                                                
    ///   @tparam T - the type to move                                         
-   template<class T>
+   template<class T> requires (not ::std::is_reference_v<T>)
    struct Move final : Inner::CommonIntent<0, true, true> {
    protected:
       static_assert(CT::Mutable<T>, "Constant T isn't movable");
@@ -346,6 +359,12 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       constexpr T* operator -> () const noexcept { return SparseCast(mValue); }
+      
+      LANGULUS(ALWAYS_INLINED)
+      explicit constexpr operator bool () const noexcept
+      requires requires { static_cast<bool>(mValue); } {
+         return static_cast<bool>(mValue);
+      }
    };
 
    template<CT::NoIntent T>
@@ -364,7 +383,7 @@ namespace Langulus
    /// mEntry reset, instead of the entire container, leaving it in a state   
    /// that is unfit for reuse, but also saving a lot of instructions.        
    ///   @tparam T - the type to abandon                                      
-   template<class T>
+   template<class T> requires (not ::std::is_reference_v<T>)
    struct Abandon final : Inner::CommonIntent<0, false, true> {
    protected:
       static_assert(CT::Mutable<T>, "Constant T isn't abandonable");
@@ -425,6 +444,12 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       constexpr T* operator -> () const noexcept { return SparseCast(mValue); }
+      
+      LANGULUS(ALWAYS_INLINED)
+      explicit constexpr operator bool () const noexcept
+      requires requires { static_cast<bool>(mValue); } {
+         return static_cast<bool>(mValue);
+      }
    };
    
    template<CT::NoIntent T>
@@ -438,7 +463,7 @@ namespace Langulus
    /// Disowned value intermediate type, use in constructors and assignments  
    /// to copy container without gaining ownership                            
    ///   @tparam T - the type to disown                                       
-   template<class T>
+   template<class T> requires (not ::std::is_reference_v<T>)
    struct Disown final : Inner::CommonIntent<0, false, false> {
    protected:
       const T& mValue;
@@ -493,6 +518,12 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
+      
+      LANGULUS(ALWAYS_INLINED)
+      explicit constexpr operator bool () const noexcept
+      requires requires { static_cast<bool>(mValue); } {
+         return static_cast<bool>(mValue);
+      }
    };
    
    template<CT::NoIntent T>
@@ -506,7 +537,7 @@ namespace Langulus
    /// Cloned value intermediate type, used in constructors and assignments   
    /// to clone container, doing a deep copy instead of default shallow one   
    ///   @tparam T - the type to clone                                        
-   template<class T>
+   template<class T> requires (not ::std::is_reference_v<T>)
    struct Clone final : Inner::CommonIntent<static_cast<unsigned>(-1), true, false> {
    protected:
       const T& mValue;
@@ -546,6 +577,12 @@ namespace Langulus
 
       LANGULUS(ALWAYS_INLINED)
       constexpr const T* operator -> () const noexcept { return SparseCast(mValue); }
+      
+      LANGULUS(ALWAYS_INLINED)
+      explicit constexpr operator bool () const noexcept
+      requires requires { static_cast<bool>(mValue); } {
+         return static_cast<bool>(mValue);
+      }
    };
    
    template<CT::NoIntent T>
@@ -719,11 +756,8 @@ namespace Langulus
    template<bool FAKE = false, template<class> class S, CT::NoIntent T>
    requires CT::Intent<S<T>> LANGULUS(INLINED)
    constexpr auto IntentNew(void* placement, S<T>&& value) {
-      static_assert(CT::Complete<T>,
-         "T has to be complete in order to be constructed");
-      static_assert(not CT::Reference<T>,
-         "T can't be a reference in order to be constructed");
-
+      static_assert(CT::Complete<T>, "T has to be complete");
+      static_assert(not CT::Reference<T>, "T can't be a reference");
       LglsAssumeDev(placement, "Invalid placement pointer");
 
       if constexpr (CT::Abstract<T>) {

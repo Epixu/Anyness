@@ -11,7 +11,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    ///   Type-erased key-value pair                                           
    ///                                                                        
@@ -53,5 +52,4 @@ namespace Langulus::Anyness
       void Clear();
       void Reset();
    };
-
-} // namespace Langulus::Anyness
+}

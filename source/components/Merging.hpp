@@ -1,10 +1,16 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "Insertion.hpp"
 
 
 namespace Langulus::Anyness::Component
 {
-   
    ///                                                                        
    /// Implements merging for containers                                      
    ///                                                                        
@@ -36,5 +42,4 @@ namespace Langulus::Anyness::Component
       auto MergeRange(this C&, CT::Container auto&&)
          -> Count<C>;
    };
-
-} // namespace Langulus::Anyness::Component
+}

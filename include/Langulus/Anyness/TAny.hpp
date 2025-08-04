@@ -11,7 +11,6 @@
 
 namespace Langulus::Anyness
 {
-
    /// A statically typed container of size 1 that is binary compatible with  
    /// the type-erased alternative above                                      
    template<CT::NotVoid T>
@@ -51,5 +50,4 @@ namespace Langulus::Anyness
    > {
       using CTTI_ReflectAs = AnyView;
    };
-
-} // namespace Langulus::Anyness
+}

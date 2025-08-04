@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Index.hpp>
@@ -5,7 +12,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    ///   A compile-time count                                                 
    ///                                                                        
@@ -54,5 +60,4 @@ namespace Langulus::Anyness::Component
          return self.GetCount() != CountType {};
       }
    };
-
-} // namespace Langulus::Anyness::Component
+}

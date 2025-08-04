@@ -23,7 +23,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// A universal type-erased container view (without ownership) of size 1,  
    /// that is binary compatible with Any                                     
@@ -43,5 +42,4 @@ namespace Langulus::Anyness
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {};
-   
-} // namespace Langulus::Anyness
+}

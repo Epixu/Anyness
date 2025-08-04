@@ -1,14 +1,20 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 
 #if not LANGULUS(DEBUG)
-#error "This state shouldn't be included in release builds"
+   #error "This state shouldn't be included in release builds"
 #endif
 
 
 namespace Langulus::Anyness::DefineState
 {
-
    ///                                                                        
    /// If enabled, data is tracked while changing - useful for debugging      
    ///   @tparam V - decides whether state is dynamic or static               
@@ -40,12 +46,9 @@ namespace Langulus::Anyness::DefineState
          return self;
       }
    };
-
-} // namespace Langulus::Anyness::DefineState
+}
 
 namespace Langulus::Anyness::State
 {
-
    constexpr DefineState::Tracked<> Tracked = {};
-
-} // namespace Langulus::Anyness::State
+}

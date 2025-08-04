@@ -276,6 +276,7 @@ namespace Langulus::RTTI
       
       DefinitionData(const Token& cppname) noexcept
          : Definition {cppname} {}
+      
       // ReSharper disable once CppEnforceOverridingDestructorStyle     
       ~DefinitionData();
    };

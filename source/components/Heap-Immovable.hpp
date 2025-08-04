@@ -1,3 +1,10 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/TypeOf.hpp>
@@ -5,7 +12,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    ///                                                                        
    /// Interfaces a heap allocation                                           
    /// Adds a pointer member to the raw byte memory                           
@@ -38,5 +44,4 @@ namespace Langulus::Anyness::Component
       auto GetFrame(int idx)  const noexcept { return mHeap[idx]; }
    #endif
    };
-
-} // namespace Langulus::Anyness::Component
+}
