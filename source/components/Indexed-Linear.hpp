@@ -23,7 +23,12 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       static constexpr bool Indexed = true;
 
-   private:
+   protected:
+      template<unsigned, class>
+      friend struct Insertion;
+      template<unsigned>
+      friend struct HeapMovable;
+
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
@@ -49,7 +54,7 @@ namespace Langulus::Anyness::Component
       /// Special indices will be contextualized                              
       /// Unsigned/signed indices are directly forwarded without any overhead 
       ///   @param index - the index to simplify                              
-      ///   @return the simplified index, as a simple offset                  
+      ///   @return a simple element offset into contiguous memory            
       template<CT::Container C, CT::Index INDEX>
       constexpr auto SimplifyIndex(this C const& self, INDEX index)
       has_assumptions -> Count<C> {
@@ -107,6 +112,16 @@ namespace Langulus::Anyness::Component
          else static_assert(false, "Unsupported index type");
       }
       
+      /// Select a contiguous region from the memory block - unsafe and may   
+      /// return memory that has not been initialized yet                     
+      ///   @attention assumes container is typed and allocated               
+      ///   @param start - starting element index (included)                  
+      ///   @param count - number of sequential elements                      
+      ///   @return the selected contiguous range                             
+      template<CT::Container C>
+      auto SelectInner(this C&&, Count<C> start, Count<C> count)
+      has_assumptions -> PickRange<C>;
+
    public:
       /// Subscript operator for accessing element at a specific index        
       ///   @param idx - the index                                            

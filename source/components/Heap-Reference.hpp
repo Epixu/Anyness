@@ -201,10 +201,5 @@ namespace Langulus::Anyness::Component
             }
          }
       }
-
-      /*template<CT::IndexedLinearly C>
-      auto GetHandleAt(this C&& self, CT::Index auto at) has_assumptions {
-         return self.GetHandle() + at;
-      }*/
    };
 }

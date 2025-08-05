@@ -118,7 +118,22 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       void Null(this C&, Count<C>);
 
+      /// Extend the container's memory and return the newly allocated range  
+      ///   @attention if extending memory without ownership, the container   
+      ///      will copy the data and diverge into a new allocation           
+      ///   @param count - the number of elements to extend by                
+      ///   @param arguments - the arguments to use for each constructor call 
+      ///      no arguments will result in default construction               
+      ///   @return the newly allocated mutable range                         
       template<CT::Container C, class...A>
-      auto Extend(this C&, Count<C> = 1, A&&...) -> PickRangeMut<C>;
+      auto Extend(this C& self, Count<C> count = 1, A&&...arguments)
+      -> PickRangeMut<C> {
+         const auto previousCount = self.GetCount();
+         if constexpr (sizeof...(A) == 0)
+            self.template AllocateMore<true>(self.GetCount() + count);
+         else
+            TODO();
+         return self.SelectInner(previousCount, count);
+      }
    };
 }

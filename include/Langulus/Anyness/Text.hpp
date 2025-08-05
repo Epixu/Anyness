@@ -144,7 +144,7 @@ namespace Langulus::Anyness
          *Base::GetRaw() = DeintCast(ch);
          Base::SetCount(1);
       }
-      
+
       //template<class A1, class...AN>
       //Text(A1&&, AN&&...) requires CT::RangeInsertable<Text, A1, AN...>;
 

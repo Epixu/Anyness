@@ -30,7 +30,9 @@ namespace Langulus::Anyness::Component
       template<unsigned, class>
       friend struct ReserveHeap;
       template<unsigned>
-      struct IterationOperators;
+      friend struct IterationOperators;
+      template<unsigned, class AS>
+      friend struct Insertion;
 
       template<CT::Container C>
       using Count = typename C::CountType;
@@ -122,7 +124,7 @@ namespace Langulus::Anyness::Component
                      // But is not yet initialized, so initialize it    
                      if (self.GetCount() < elements) {
                         const auto count = elements - self.GetCount();
-                        self.CropInner(self.GetCount(), count).CreateDefault();
+                        self.SelectInner(self.GetCount(), count).CreateDefault();
                      }
                   }
 

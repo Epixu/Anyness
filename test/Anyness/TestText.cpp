@@ -331,12 +331,12 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
 }
 
 TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
-   /*uint8_t,*/ uint16_t, uint32_t, uint64_t
+   uint8_t, uint16_t, uint32_t, uint64_t
 ) {
    static Allocator::State memoryState;
 
    WHEN("Constructed Text with a number") {
-      Text* text = new Text {TestType{66}};
+      Text* text = new Text {Text::FromNumber(TestType{66})};
 
       REQUIRE((*text).GetCount() == 2);
       REQUIRE((*text).GetReserved() >= 2);
@@ -365,11 +365,13 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Signed number stringification", "[text]", int8_t, int16_t, int32_t, int64_t) {
+TEMPLATE_TEST_CASE("Signed number stringification", "[text]",
+   int8_t, int16_t, int32_t, int64_t
+) {
    static Allocator::State memoryState;
 
    WHEN("Constructed Text with a number") {
-      Text* text = new Text {TestType{-66}};
+      Text* text = new Text {Text::FromNumber(TestType{-66})};
 
       REQUIRE((*text).GetCount() == 3);
       REQUIRE((*text).GetReserved() >= 3);
@@ -377,6 +379,41 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]", int8_t, int16_t, i
       REQUIRE((*text).GetRaw());
       REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "-66");
+
+      delete text;
+   }
+
+   /*WHEN("Constructed Path with a number") {
+      Path* text = new Path {TestType{-66}};
+
+      REQUIRE((*text).GetCount() == 3);
+      REQUIRE((*text).GetReserved() >= 3);
+      REQUIRE((*text).Is<char>());
+      REQUIRE((*text).GetRaw());
+      REQUIRE((*text).GetAllocation());
+      REQUIRE((*text) == "-66");
+
+      delete text;
+   }*/
+
+   REQUIRE(memoryState.Assert());
+   REQUIRE_FALSE(Allocator::CollectGarbage());
+}
+
+TEMPLATE_TEST_CASE("Real number stringification", "[text]",
+   float, double
+) {
+   static Allocator::State memoryState;
+
+   WHEN("Constructed Text with a number") {
+      Text* text = new Text {Text::FromNumber(TestType{-66.666}, 2)};
+
+      REQUIRE((*text).GetCount() == 3);
+      REQUIRE((*text).GetReserved() >= 3);
+      REQUIRE((*text).Is<char>());
+      REQUIRE((*text).GetRaw());
+      REQUIRE((*text).GetAllocation());
+      REQUIRE((*text) == "~-66.67");
 
       delete text;
    }
