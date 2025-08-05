@@ -137,8 +137,16 @@ namespace Langulus::Anyness
          else static_assert(false, "Unsupported text constructor");
       }
 
-      template<class A1, class...AN>
-      Text(A1&&, AN&&...) requires CT::RangeInsertable<Text, A1, AN...>;
+      /// Construction from all kinds of characters                           
+      template<CT::Character T>
+      constexpr Text(T&& ch) {
+         Base::AllocateFresh(Base::RequestSize(1));
+         *Base::GetRaw() = DeintCast(ch);
+         Base::SetCount(1);
+      }
+      
+      //template<class A1, class...AN>
+      //Text(A1&&, AN&&...) requires CT::RangeInsertable<Text, A1, AN...>;
 
       /// Construction from all kinds of text, trim length to desired count   
       ///   @param text - text to wrap, assumed valid                         

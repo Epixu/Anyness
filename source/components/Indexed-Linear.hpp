@@ -51,7 +51,7 @@ namespace Langulus::Anyness::Component
       ///   @param index - the index to simplify                              
       ///   @return the simplified index, as a simple offset                  
       template<CT::Container C, CT::Index INDEX>
-      auto SimplifyIndex(this C const& self, INDEX index)
+      constexpr auto SimplifyIndex(this C const& self, INDEX index)
       has_assumptions -> Count<C> {
          if constexpr      (::std::same_as<INDEX, Index::Inner::All>)
             static_assert(false, "Index::All can't be used here");
@@ -86,15 +86,14 @@ namespace Langulus::Anyness::Component
             // If index is negative, wrap it around (if in range)       
             if (index.index < 0)
                return c + index.index >= 0 ? c + index.index : CountMax<C>;
-            else
-               return index.index >= c ? CountMax<C> : index.index;
+            return index.index >= c ? CountMax<C> : index.index;
 
          }
          else if constexpr (CT::Integer<INDEX>) {
             // Unsafe, works only on assumptions                        
             // Using an integer index explicitly makes a statement,     
             // that you know what you're doing                          
-            LglsAssumeUser(index < self.GetCount(),
+            LglsAssumeUser(static_cast<Count<C>>(index) < self.GetCount(),
                "Integer index out of range");
 
             if constexpr (CT::Signed<INDEX>) {
