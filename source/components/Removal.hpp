@@ -43,8 +43,39 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       void Optimize(this C&);
 
+      /// Destroy all elements but don't deallocate memory                    
       template<CT::Container C>
-      void Clear(this C&);
+      void Clear(this C& self) {
+         auto allocation = self.GetAllocation();
+         if (not allocation) {
+            // Data is either static or unallocated                     
+            // Don't call destructors, just clear it up                 
+            self.SetHeap(nullptr);
+            self.SetCount(0);
+            self.SetReserved(0);
+            self.ResetType();
+            return;
+         }
+
+         if (allocation->GetUses() == 1) {
+            // Entry is used only in this block, so it's safe to        
+            // destroy all elements. We will reuse the entry and type   
+            if (not self.IsEmpty()) {
+               self.FreeInner();
+               self.SetCount(0);
+            }
+         }
+         else {
+            // If reached, then data is referenced from multiple places 
+            // Don't call destructors, just clear it up and dereference 
+            allocation->Free();
+            self.SetHeap(nullptr);
+            self.SetAllocation(nullptr);
+            self.SetCount(0);
+            self.SetReserved(0);
+            self.ResetType();
+         }
+      }
 
       template<CT::Container C>
       void Reset(this C&);

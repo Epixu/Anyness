@@ -30,7 +30,9 @@ namespace Langulus::Anyness::Component
    protected:
       template<unsigned>
       friend struct IterationOperators;
-
+      template<unsigned>
+      friend struct Removal;
+      
       /*using Byte = ::std::uint8_t;
       template<CT::Container C>
       using View = typename C::ViewType;
@@ -49,6 +51,10 @@ namespace Langulus::Anyness::Component
          void*  mHeap = nullptr;
          void** mSparseHeap;
       };
+
+      /// Set a new heap pointer                                              
+      ///   @attention this is very unsafe                                    
+      void SetHeap(void* a) noexcept { mHeap = a; }
 
    public:
       /// A heap reference can not be default-initialized to avoid errors     

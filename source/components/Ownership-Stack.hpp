@@ -64,8 +64,55 @@ namespace Langulus::Anyness::Component
       template<unsigned>
       friend struct DeepOwnershipHeap;
 
+      /// Set a new allocation                                                
+      ///   @attention this is very unsafe                                    
       void SetAllocation(AllocationPtr a) noexcept { mAllocation = a; }
-      void Keep() const noexcept;
-      void Free() const noexcept;
+      
+      /// Reference memory block once                                         
+      ///   @param DEEP - reference inner pointers/referenced instances, too? 
+      void Keep() const noexcept {
+         if (not mAllocation)
+            return;
+
+         mAllocation->Keep(1);
+
+         if constexpr (DEEP)
+            KeepInner();         
+      }
+      
+      /// Dereference memory block once and destroy all elements if data was  
+      /// fully dereferenced                                                  
+      ///   @attention this never modifies any state, except mEntry           
+      template<CT::Container C>
+      void Free(this C& self) noexcept {
+         if (not mAllocation)
+            return;
+
+         LglsAssumeDev(mAllocation->GetUses() >= 1,
+            "Bad memory dereferencing");
+
+         if (mAllocation->GetUses() == 1) {
+            // Free memory                                              
+            LglsAssumeDev(not self.IsStatic(),
+               "Last reference, but container was marked static"
+               " - make sure initialization of this container was correct, "
+               "did you forget to add a reference?",
+               " Container contains ", self.GetCount(),
+               " elements of ", self.GetType()
+            );
+
+            if (self.GetCount())
+               FreeInner();
+            Allocator::Deallocate(mAllocation);
+         }
+         else {
+            // Dereference memory                                       
+            if (self.GetCount())
+               FreeInner<false>();
+            mAllocation->Free();
+         }
+         
+         mAllocation = nullptr;
+      }
    };
 }

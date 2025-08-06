@@ -33,8 +33,10 @@ namespace Langulus::Anyness::Component
    protected:
       template<unsigned>
       friend struct HeapMovable;
+      template<unsigned>
+      friend struct Removal;
 
       /// Set number of reserved elements                                     
-      constexpr void SetReserved(ReserveType r) noexcept { mReserved = r;    }
+      constexpr void SetReserved(ReserveType r) noexcept { mReserved = r; }
    };
 }

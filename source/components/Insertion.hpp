@@ -94,19 +94,39 @@ namespace Langulus::Anyness::Component
       using PickRangeMut = typename C::PickRangeMut;
 
    public:
-      /// Insertion at specific index                                         
+      /// Insertion one or more elements at specific index                    
       template<bool FORCE = true, class A1, class...AN, CT::IndexedLinearly C>
       auto InsertAt(this C&, CT::Index auto, A1&&, AN&&...)
          -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
+
+      /// Insert a number of elements at a specific place, nullifying them if 
+      /// able to                                                             
+      template<CT::IndexedLinearly C>
+      auto InsertNulledAt(this C&, CT::Index auto, Count<C>)
+         -> Count<C>;
+
+      /// Insert a number of elements at a specific place, default-           
+      /// constructing them if able to                                        
+      template<CT::IndexedLinearly C>
+      auto InsertDefaultAt(this C&, CT::Index auto, Count<C>)
+         -> Count<C>;
 
       template<bool CONCAT = true, bool FORCE = true, CT::IndexedLinearly C>
       auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {})
          -> Count<C>;
 
-      /// Generic insertion                                                   
+      /// Insert one or more elements at the back                             
       template<bool FORCE = true, class A1, class...AN, CT::Container C>
       auto Insert(this C&, A1&&, AN&&...)
          -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
+
+      /// Insert a number of elements at the back, nullifying them if able to 
+      template<CT::Container C>
+      auto InsertNulled(this C&, Count<C>) -> Count<C>;
+
+      /// Insert a number of elements at the back, default-constructing them  
+      template<CT::Container C>
+      auto InsertDefault(this C&, Count<C>) -> Count<C>;
 
       template<bool CONCAT = true, bool FORCE = true, CT::Container C>
       auto SmartPush(this C&, auto&&, State<C> = {})
@@ -115,8 +135,6 @@ namespace Langulus::Anyness::Component
       template<bool TRANSFER_OR = true, CT::Container C>
       auto Deepen(this C&) -> Deep<C>&;
 
-      template<CT::Container C>
-      void Null(this C&, Count<C>);
 
       /// Extend the container's memory and return the newly allocated range  
       ///   @attention if extending memory without ownership, the container   
@@ -130,9 +148,16 @@ namespace Langulus::Anyness::Component
       -> PickRangeMut<C> {
          const auto previousCount = self.GetCount();
          if constexpr (sizeof...(A) == 0)
-            self.template AllocateMore<true>(self.GetCount() + count);
-         else
-            TODO();
+            self.InsertDefault(count);
+         else if (count == 1)
+            self.Emplace(FWD(arguments)...);
+         else {
+            // When creating multiple items, we can't allow arguments   
+            // to be forwarded, because they might be moved away        
+            self.AllocateMore(previousCount + count);
+            for (Count<C> i = 0; i < count; i++)
+               self.Emplace(DeintCast(arguments)...);
+         }
          return self.SelectInner(previousCount, count);
       }
    };

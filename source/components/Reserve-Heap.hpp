@@ -45,6 +45,8 @@ namespace Langulus::Anyness::Component
    protected:
       template<unsigned>
       friend struct HeapMovable;
+      template<unsigned>
+      friend struct Removal;
 
       /// Set number of reserved elements is impossible - we always use what  
       /// the allocation says                                                 

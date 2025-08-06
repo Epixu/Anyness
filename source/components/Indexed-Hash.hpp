@@ -13,8 +13,8 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Provides random element access by hashing a value of the provide ID    
-   /// Uses Robin Hood algorithm to manage collisions                         
+   /// Provides random element access by hashing a value of the provided ID   
+   /// Uses Robin Hood algorithm to reuse table space                         
    ///   @tparam ID - the stack/heap and type ID                              
    ///   @tparam HASH - type of the hash                                      
    template<unsigned ID = 0, class HASH = Hash>

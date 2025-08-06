@@ -39,9 +39,9 @@ namespace Langulus::Anyness::Component
       using CTTI_Typed     = TYPE;
 
       static constexpr bool TypeErased = CT::Void<TYPE>;
-      /// @attention valid only if not TypeErased                       
+      /// @attention valid only if not TypeErased                             
       static constexpr bool Sparse = not TypeErased and CT::Sparse<TYPE>;
-      /// @attention valid only if not TypeErased                       
+      /// @attention valid only if not TypeErased                             
       static constexpr bool Dense = not TypeErased and CT::Dense<TYPE>;
 
    protected:
@@ -49,9 +49,24 @@ namespace Langulus::Anyness::Component
       friend struct IterationForEach;
       template<unsigned>
       friend struct HeapMovable;
+      template<unsigned>
+      friend struct Removal;
 
       // The type                                                       
       T mType;
+
+      /// Reset the type of the container, unless it's type-constrained       
+      /// If this container isn't type-erased, this call is a no-op           
+      template<CT::Container C>
+      constexpr void ResetType(this C& self) noexcept {
+         if constexpr (TypeErased) {
+            if constexpr (requires { self.IsTypeConstrained(); }) {
+               if (not self.IsTypeConstrained())
+                  self.mType = {};
+            }
+            else self.mType = {};
+         }
+      }
 
    public:
       /// Get the contained type                                              

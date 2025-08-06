@@ -22,6 +22,10 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0, class T = size_t>
    struct CountStack {
    protected:
+      template<unsigned>
+      friend struct Removal;
+
+      // The count on the stack                                         
       T mCount;
 
       /// Set a new count                                                     

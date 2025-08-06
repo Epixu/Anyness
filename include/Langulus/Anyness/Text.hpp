@@ -11,11 +11,11 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/Contiguous.hpp"
 #include "../../../source/components/Indexed-Linear.hpp"
-#include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/Emplacement.hpp"
+#include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
+#include "../../../source/components/Concatenate.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
@@ -44,11 +44,11 @@ namespace Langulus::Anyness
       using TextBase = Container<
          Com::HeapMovable<>,              // Pointer to heap memory     
          Com::OwnershipStack<>,           // Allocation is referenced   
-         Com::Contiguous,                 // Heap memory is continuous  
          Com::IndexedLinear<>,            // Indexed directly           
          Com::Emplacement<>,              // Allows emplacement         
          Com::Insertion<0, Text>,         // Serialize + insert         
          Com::InsertionOperators<0, Text>,// << and >> insertion        
+         Com::Concatenate<>,              // Concatenate                
          Com::Removal<>,                  // Allows removal             
          Com::Assignment<>,               // Allows assignment          
          Com::TypedStack<DMeta, char>,    // Type-constrained           
@@ -271,14 +271,12 @@ namespace Langulus::Anyness
       // Range selections                                               
       struct PickRange : Container<
          Com::HeapMovable<>,
-         Com::Contiguous,
          Com::IndexedLinear<>,
          Com::TypedStatic<DMeta, char>,
          Com::CountStack<>
       > {};
       struct PickRangeMut : Container<
          Com::HeapMovable<>,
-         Com::Contiguous,
          Com::IndexedLinear<>,
          Com::Assignment<>,
          Com::TypedStatic<DMeta, char>,
@@ -314,11 +312,12 @@ namespace Langulus::Anyness
          return operator == (Text {Disown(rhs)});
       }
 
-      Text& operator += (CT::Text auto&&);
-
-      template<template<class> class I, CT::Text T>
-      Text& operator += (I<T>&&) requires CT::Intent<I<T>>;
-
+      /// Custom concatenation operator that includes string literals,        
+      /// null-terminated string pointers, and intents                        
+      Text& operator += (CT::Text auto&& rhs) {
+         this->Concat(Text {FWD(rhs)});
+         return *this;
+      }
    };
 }
 
@@ -350,11 +349,7 @@ namespace Langulus::CT
 namespace Langulus
 {
    /// Make a text literal                                                    
-   Anyness::Text operator ""_text(const char* text, ::std::size_t size) {
-      static_assert(CTTI::Sparse<const char*>::Enabled);
-      static_assert(CT::Sparse<const char*>);
-      static_assert(CT::Character<char>);
-      static_assert(CT::Text<Disown<const char*>>);
+   Anyness::Text operator ""_text(const char* text, size_t size) {
       return Anyness::Text::FromText(Disown(text), size);
    }
 }

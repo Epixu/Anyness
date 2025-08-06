@@ -13,8 +13,8 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Implements insertion for containers                                    
-   ///   @tparam AS - type to serialize as before inserting. Useful for byte  
-   ///      and text containers. Use void to insert without serialization     
+   ///   @tparam ID - heap we're inserting to                                 
+   template<unsigned ID = 0>
    struct Concatenate {
       using CTTI_Component = Yes<>;
 
@@ -30,7 +30,7 @@ namespace Langulus::Anyness::Component
       auto ConcatAt(this C&, CT::Index auto, CT::Container auto&&)
          -> Count<C>;
 
-      /// Generic concatenation                                               
+      /// Concatenation at the back                                           
       template<bool FORCE = true, CT::Container C>
       auto Concat(this C&, CT::Container auto&&)
          -> Count<C>;

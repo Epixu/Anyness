@@ -13,16 +13,27 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Adds operators for concatenation (+ and +=)                            
-   ///                                                                        
+   ///   @tparam ID - heap we're inserting to                                 
+   template<unsigned ID = 0>
    struct ConcatenateOperators {
       using CTTI_Component = Yes<>;
 
-      /// Push back                                                           
+      /// Concatenate another container at the back, resulting in a new one   
       template<CT::Container C>
-      C operator + (this C&, CT::Container auto&&);
+      C operator + (this C const& lhs, CT::Container auto&& rhs) {
+         if (lhs.IsEmpty())
+            return C {FWD(rhs)};
 
-      /// Push front                                                          
+         C shallowCopy = lhs;
+         shallowCopy.Concat(FWD(rhs));
+         return shallowCopy;
+      }
+
+      /// Concatenate another container at the back, reusing this one         
       template<CT::Container C>
-      C& operator += (this C&, CT::Container auto&&);
+      C& operator += (this C& self, CT::Container auto&& rhs) {
+         self.Concat(FWD(rhs));
+         return self;
+      }
    };
 }

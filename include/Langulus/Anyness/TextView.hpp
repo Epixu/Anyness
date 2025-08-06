@@ -9,7 +9,6 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Reference.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/Contiguous.hpp"
 #include "../../../source/components/Indexed-Linear.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Count-Stack.hpp"
@@ -33,7 +32,6 @@ namespace Langulus::Anyness
    struct TextView : Container<
       Com::HeapReference<>,               // Pointer to heap memory     
       Com::OwnershipStack<0, false>,      // Pointer to an allocation   
-      Com::Contiguous,                    // Heap memory is continuous  
       Com::IndexedLinear<>,               // Indexed directly           
       Com::TypedStatic<DMeta, char>,      // Type-constrained           
       Com::CountStack<>,                  // Variable count             
