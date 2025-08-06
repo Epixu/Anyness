@@ -63,6 +63,8 @@ namespace Langulus::Anyness::Component
       friend struct HeapMovable;
       template<unsigned>
       friend struct DeepOwnershipHeap;
+      template<unsigned>
+      friend struct Removal;
 
       /// Set a new allocation                                                
       ///   @attention this is very unsafe                                    
@@ -70,49 +72,50 @@ namespace Langulus::Anyness::Component
       
       /// Reference memory block once                                         
       ///   @param DEEP - reference inner pointers/referenced instances, too? 
-      void Keep() const noexcept {
-         if (not mAllocation)
+      template<CT::Container C>
+      void Keep(this C const& self) noexcept {
+         if (not self.mAllocation)
             return;
 
-         mAllocation->Keep(1);
+         self.mAllocation->Keep(1);
 
-         if constexpr (DEEP)
-            KeepInner();         
+         // Keep elements, if DeepOwnership component exists            
+         if constexpr (requires { self.KeepDeep(); })
+            self.KeepDeep();
       }
       
       /// Dereference memory block once and destroy all elements if data was  
       /// fully dereferenced                                                  
-      ///   @attention this never modifies any state, except mEntry           
+      ///   @attention this never modifies any state, except ownership        
       template<CT::Container C>
       void Free(this C& self) noexcept {
-         if (not mAllocation)
+         if (not self.mAllocation)
             return;
 
-         LglsAssumeDev(mAllocation->GetUses() >= 1,
+         LglsAssumeDev(self.mAllocation->GetUses() >= 1,
             "Bad memory dereferencing");
 
-         if (mAllocation->GetUses() == 1) {
-            // Free memory                                              
-            LglsAssumeDev(not self.IsStatic(),
-               "Last reference, but container was marked static"
-               " - make sure initialization of this container was correct, "
-               "did you forget to add a reference?",
-               " Container contains ", self.GetCount(),
-               " elements of ", self.GetType()
-            );
+         if (self.mAllocation->GetUses() == 1) {
+            // Free elements, if DeepOwnership component exists         
+            if constexpr (requires { self.FreeDeep(); })
+               self.FreeDeep();
 
-            if (self.GetCount())
-               FreeInner();
-            Allocator::Deallocate(mAllocation);
+            // Free memory                                              
+            Allocator::Deallocate(self.mAllocation);
          }
          else {
+            // Free elements, if DeepOwnership component exists         
+            // Notice that no element will be destroyed, because in this
+            // case we have a guarantee, that elements are referenced   
+            // from elsewhere as well                                   
+            if constexpr (requires { self.FreeDeep(); })
+               self.template FreeDeep<false>();
+
             // Dereference memory                                       
-            if (self.GetCount())
-               FreeInner<false>();
-            mAllocation->Free();
+            self.mAllocation->Free();
          }
          
-         mAllocation = nullptr;
+         self.mAllocation = nullptr;
       }
    };
 }

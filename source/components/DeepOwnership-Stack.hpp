@@ -38,43 +38,17 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       void KeepDeep(this C const& self) { 
          constexpr bool MASKED = not CT::IndexedLinearly<C>;
-         [[maybe_unused]] Count<C> remaining;
-         if constexpr (MASKED)
-            remaining = self.GetCount();
-         const auto count = MASKED ? self.GetReserved() : self.GetCount();
+         Count<C> remaining = self.GetCount();
+         if (not remaining)
+            return;
 
          if constexpr (not C::TypeErased) {
+            // Container is statically typed                            
             using T = TypeOf<C>;
-            if constexpr (CT::Sparse<T> and CT::Referenced<Deptr<T>>) {
-               // Statically typed and sparse                           
-               const auto entryBeg = GetEntries();
-               auto entry = entryBeg;
-               const auto entryEnd = entry + count;
 
-               while (entry != entryEnd) {
-                  if constexpr (MASKED) {
-                     if (not remaining)
-                        break;
-
-                     if (not mask[entry - entryBeg]) {
-                        ++entry;
-                        continue;
-                     }
-
-                     --remaining;
-                  }
-
-                  if (*entry) {
-                     const_cast<Allocation*>(*entry)->Keep();
-                     DecvqCast(GetRaw()[entry - GetEntries()])->Reference(1);
-                  }
-
-                  ++entry;
-               }
-            }
-            else if constexpr (CT::Referenced<T>) {
-               // Statically typed and dense                            
-               const auto rawBeg = GetRaw();
+            if constexpr (CT::Referenced<T>) {
+               const auto count = MASKED ? self.GetReserved() : self.GetCount();
+               const auto rawBeg = self.GetRaw();
                auto raw = rawBeg;
                const auto rawEnd = raw + count;
 
@@ -83,7 +57,7 @@ namespace Langulus::Anyness::Component
                      if (not remaining)
                         break;
 
-                     if (not mask[raw - rawBeg]) {
+                     if (not self.mTable[raw - rawBeg]) {
                         ++raw;
                         continue;
                      }
@@ -95,58 +69,168 @@ namespace Langulus::Anyness::Component
                }
             }
          }
-         else if (mType->mIsSparse and mType->mReference) {
-            // Type-erased and sparse                                   
-            const auto reference = mType->mReference;
-            const auto entryBeg = GetEntries();
-            auto entry = entryBeg;
-            const auto entryEnd = entry + count;
+         else {
+            // Container is type-erased                                 
+            const auto T = self.GetType();
+            const auto referencer = T.GetReferencer();
 
-            while (entry != entryEnd) {
-               if constexpr (MASKED) {
-                  if (not remaining)
-                     break;
+            if (referencer) {
+               const auto count = MASKED ? self.GetReserved() : self.GetCount();
+               const auto size = T.GetSize();
+               const auto rawBeg = self.template GetRawAs<uint8_t>();
+               auto raw = rawBeg;
+               const auto rawEnd = raw + size * count;
 
-                  if (not mask[entry - entryBeg]) {
-                     ++entry;
-                     continue;
+               while (raw != rawEnd) {
+                  if constexpr (MASKED) {
+                     if (not remaining)
+                        break;
+
+                     if (not self.mTable[raw - rawBeg]) {
+                        raw += size;
+                        continue;
+                     }
+
+                     --remaining;
                   }
 
-                  --remaining;
+                  referencer(raw, 1);
+                  raw += size;
                }
-
-               if (*entry) {
-                  const_cast<Allocation*>(*entry)->Keep();
-                  reference(mRawSparse[entry - GetEntries()], 1);
-               }
-
-               ++entry;
             }
          }
-         else if (mType->mReference) {
-            // Type-erased and dense                                    
-            const auto reference = mType->mReference;
-            const auto rawBeg = mRaw;
-            auto raw = rawBeg;
-            const auto rawEnd = mRaw + mType->mSize * count;
+      }
 
-            while (raw != rawEnd) {
-               if constexpr (MASKED) {
-                  if (not remaining)
-                     break;
+      /// Dereference all referenced initialized items, optionally destroying 
+      /// them, if references reach zero                                      
+      ///   @attention never modifies any block state                         
+      ///   @attention assumes block is not empty                             
+      ///   @attention assumes block is not static                            
+      ///   @tparam DESTROY - used only when GetUses() == 1                   
+      template<bool DESTROY = true, CT::Container C>
+      void FreeDeep(this C& self) {
+         constexpr bool MASKED = not CT::IndexedLinearly<C>;
+         Count<C> remaining = self.GetCount();
+         if (not remaining)
+            return;
 
-                  if (not mask[raw - rawBeg]) {
-                     raw += mType->mSize;
-                     continue;
+         LglsAssumeDev(not DESTROY or self.GetUses() == 1,
+            "Attempting to destroy elements used from multiple locations");
+         LglsAssumeDev(not self.IsStatic(),
+            "Destroying elements in a static container is not allowed");
+
+         if constexpr (not C::TypeErased) {
+            // Container is statically typed                            
+            using T = TypeOf<C>;
+
+            if constexpr (CT::Destroyable<T> and (DESTROY or CT::Referenced<T>)) {
+               const auto count = MASKED ? self.GetReserved() : self.GetCount();
+               auto data = self.GetRaw();
+               const auto dataEnd = data + count;
+               const auto begMarker = data;
+
+               while (data != dataEnd) {
+                  if constexpr (MASKED) {
+                     if (not remaining)
+                        break;
+
+                     if (not self.mTable[data - begMarker]) {
+                        ++data;
+                        continue;
+                     }
+
+                     --remaining;
                   }
 
-                  --remaining;
-               }
+                  if constexpr (DESTROY) {
+                     if constexpr (CT::Referenced<T>)
+                        data->Reference(-1);
+                     data->~T();
+                  }
+                  else if constexpr (CT::Referenced<T>) {
+                     if (not data->Reference(-1))
+                        data->~T();
+                  }
 
-               reference(raw, 1);
-               raw += mType->mSize;
+                  ++data;
+               }
             }
          }
+         else {
+            // Container is type-erased                                 
+            const auto T = self.GetType();
+            const auto referencer = T.GetReferencer();
+            const auto destructor = T.GetDestructor();
+
+            if (destructor and (DESTROY or referencer)) {
+               // Destroy every dense element                           
+               // Notice that fully dereferenced elements WILL be       
+               // destroyed regardless if DESTROY has been requested or 
+               // not. This prevents leaks                              
+               const auto count = MASKED ? self.GetReserved() : self.GetCount();
+               const auto size = T.GetSize();
+               const auto data = self.template GetRawAs<uint8_t>();
+               const auto dataEnd = data + size * count;
+
+               [[maybe_unused]] int index;
+               if constexpr (MASKED)
+                  index = 0;
+
+               if (referencer) {
+                  while (data != dataEnd) {
+                     if constexpr (MASKED) {
+                        if (not remaining)
+                           break;
+
+                        if (not self.mTable[index]) {
+                           data += size;
+                           ++index;
+                           continue;
+                        }
+
+                        --remaining;
+                     }
+
+                     if constexpr (DESTROY) {
+                        referencer(data, -1);
+                        destructor(data);
+                     }
+                     else if (not referencer(data, -1))
+                        destructor(data);
+
+                     data += size;
+
+                     if constexpr (MASKED)
+                        ++index;
+                  }
+               }
+               else if constexpr (DESTROY) {
+                  while (data != dataEnd) {
+                     if constexpr (MASKED) {
+                        if (not remaining)
+                           break;
+
+                        if (not self.mTable[index]) {
+                           data += size;
+                           ++index;
+                           continue;
+                        }
+
+                        --remaining;
+                     }
+
+                     destructor(data);
+                     data += size;
+
+                     if constexpr (MASKED)
+                        ++index;
+                  }
+               }
+            }
+         }
+
+         // Always nullify upon destruction only if we're paranoid         
+         //TODO IF_LANGULUS_PARANOID(ZeroMemory(mRaw, GetBytesize<THIS>()));
       }
 
    public:

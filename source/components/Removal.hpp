@@ -60,10 +60,9 @@ namespace Langulus::Anyness::Component
          if (allocation->GetUses() == 1) {
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the entry and type   
-            if (not self.IsEmpty()) {
-               self.FreeInner();
-               self.SetCount(0);
-            }
+            if constexpr (requires { self.FreeDeep(); })
+               self.FreeDeep();
+            self.SetCount(0);
          }
          else {
             // If reached, then data is referenced from multiple places 
@@ -77,7 +76,16 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// Destroy all elements, deallocate block and reset state              
       template<CT::Container C>
-      void Reset(this C&);
+      void Reset(this C& self) {
+         self.Free();
+         self.SetHeap(nullptr);
+         self.SetAllocation(nullptr);
+         self.SetCount(0);
+         self.SetReserved(0);
+         mState &= DataState::Typed;
+         self.ResetType();
+      }
    };
 }
