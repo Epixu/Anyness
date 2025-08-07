@@ -35,6 +35,9 @@ namespace Langulus::Anyness::Component
       static_assert(StateCount <= 16, "Too many states");
 
    protected:
+      template<unsigned>
+      friend struct Removal;
+      
       template<State::StateValue> friend struct DefineState::Typed;
       template<State::StateValue> friend struct DefineState::Tracked;
       template<State::StateValue> friend struct DefineState::Sorted;
@@ -92,9 +95,26 @@ namespace Langulus::Anyness::Component
          });
       }
 
+      /// Get the default state bits                                          
+      static consteval StateType GetDefaultState() {
+         StateType i = 0;
+         StateType accumulator = 0;
+         StateList::ForEach([&]<class S>{
+            if constexpr (S::Enable)
+               accumulator |= (StateType {1} << i);
+            ++i;
+         });
+         return accumulator;
+      }
+
       template<CT::State S>
       static constexpr bool HasState = CT::SameAsOneOf<S, STATES...>;
 
+      /// Clear the state to the default value                                
+      void ResetState() noexcept {
+         mState.mState = GetDefaultState();
+      }
+      
    public:
       constexpr auto GetState() const noexcept { return mState; }
 

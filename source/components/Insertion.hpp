@@ -125,8 +125,79 @@ namespace Langulus::Anyness::Component
       auto InsertNulled(this C&, Count<C>) -> Count<C>;
 
       /// Insert a number of elements at the back, default-constructing them  
+      ///   @param count - the number of elements to insert                   
       template<CT::Container C>
-      auto InsertDefault(this C&, Count<C>) -> Count<C>;
+      auto InsertDefault(this C& self, Count<C> count) -> Count<C> {
+         const auto previousCount = self.GetCount();
+         self.AllocateMore(previousCount + count);
+
+         if constexpr (not C::TypeErased) {
+            using T = TypeOf<C>;
+            if constexpr (CT::Nullable<T>) {
+               // Zero the dense memory (optimization)                  
+               memset(self.GetRaw() + previousCount, 0, count * sizeof(T));
+            }
+            else if constexpr (CT::Defaultable<T>) {
+               // Construct requested elements one by one               
+               auto to = self.GetRaw() + previousCount;
+               const auto toEnd = to + count;
+               try {
+                  while (to != toEnd) {
+                     new (to) T {};
+                     ++to;
+                  }
+               } catch (...) {
+                  // Partial success                                    
+                  const auto constructed = to - self.GetRaw();
+                  self.SetCount(previousCount + constructed);
+                  throw;
+               }
+            }
+            else static_assert(false,
+               "Trying to default-construct elements that are "
+               "incapable of default-construction/nullification"
+            );
+         }
+         else {
+            const auto T = self.GetType();
+            if (T.IsNullable()) {
+               // Zero the dense memory (optimization)                  
+               const auto stride = T.GetSize();
+               memset(
+                  self.template GetRawAs<uint8_t>() + previousCount * stride,
+                  0,
+                  count * stride
+               );
+            }
+            else {
+               const auto defaultConstructor = T.GetDefaultConstructor();
+               LglsAssert(defaultConstructor,
+                  "Can't default-construct elements"
+                  " - no default constructor/nullification reflected"
+               );
+
+               // Construct requested elements one by one               
+               const auto stride = T.GetSize();
+               auto to = self.template GetRawAs<uint8_t>() + previousCount * stride;
+               const auto toEnd = to + count * stride;
+               try {
+                  while (to != toEnd) {
+                     defaultConstructor(to);
+                     to += stride;
+                  }
+               } catch (...) {
+                  // Partial success                                    
+                  const auto constructed = (to - self.template GetRawAs<uint8_t>()) / stride;
+                  self.SetCount(previousCount + constructed);
+                  throw;
+               }
+            }
+         }
+
+         // Success                                                     
+         self.mCount = previousCount + count;
+         return count;
+      }
 
       template<bool CONCAT = true, bool FORCE = true, CT::Container C>
       auto SmartPush(this C&, auto&&, State<C> = {})

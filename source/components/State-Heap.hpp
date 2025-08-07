@@ -8,7 +8,6 @@
 #pragma once
 #include "../Container.hpp"
 #include "../states/Default.hpp"
-#include <bitset>
 
 
 namespace Langulus::Anyness::Component
@@ -16,11 +15,11 @@ namespace Langulus::Anyness::Component
    template<CT::State...STATES>
    struct StateHeap {
       using CTTI_Component = Yes<>;
-      static constexpr ::std::size_t Count = sizeof...(STATES);
-      using State = ::std::bitset<Count>;
+      static constexpr size_t StateCount = sizeof...(STATES);
+      using StateType = Tif<sizeof...(STATES) <= 8, uint8_t, uint16_t>;
 
       template<class Self>
-      State GetState(this const Self& self) noexcept {
+      StateType GetState(this const Self& self) noexcept {
          return self.GetHeap<HEAP_ID>().GetElement<T, ID>();
       }
    };

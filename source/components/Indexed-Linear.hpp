@@ -119,8 +119,16 @@ namespace Langulus::Anyness::Component
       ///   @param count - number of sequential elements                      
       ///   @return the selected contiguous range                             
       template<CT::Container C>
-      auto SelectInner(this C&&, Count<C> start, Count<C> count)
-      has_assumptions -> PickRange<C>;
+      auto SelectInner(this C&& self, Count<C> start, Count<C> count)
+      has_assumptions -> PickRange<C> {
+         LglsAssumeDev(self.IsAllocated(), "Block is not allocated");
+         LglsAssumeDev(self.IsTyped(),     "Block is not typed");
+         
+         PickRange<C> result {self};
+         result.mCount = count;
+         result.mHeap += start * result.GetStride();
+         return result;
+      }
 
    public:
       /// Subscript operator for accessing element at a specific index        

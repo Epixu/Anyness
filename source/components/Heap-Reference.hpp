@@ -51,11 +51,7 @@ namespace Langulus::Anyness::Component
          void*  mHeap = nullptr;
          void** mSparseHeap;
       };
-
-      /// Set a new heap pointer                                              
-      ///   @attention this is very unsafe                                    
-      void SetHeap(void* a) noexcept { mHeap = a; }
-
+      
    public:
       /// A heap reference can not be default-initialized to avoid errors     
       /// You have to specify a nullptr manually                              
@@ -77,6 +73,9 @@ namespace Langulus::Anyness::Component
          return *this;
       }
 
+      /// Check if the container has valid heap memory associated with it     
+      bool IsAllocated() const noexcept { return mHeap != nullptr; }
+      
       /// Get a direct access to the heap memory                              
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {

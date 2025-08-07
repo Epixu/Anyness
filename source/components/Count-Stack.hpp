@@ -24,16 +24,14 @@ namespace Langulus::Anyness::Component
    protected:
       template<unsigned>
       friend struct Removal;
-
+      template<unsigned, class>
+      friend struct Insertion;
+      template<class>
+      friend struct IndexedLinear;
+      
       // The count on the stack                                         
       T mCount;
 
-      /// Set a new count                                                     
-      ///   @attention this is very unsafe                                    
-      void SetCount(T count) noexcept {
-         mCount = count;
-      }
-      
    public:
       using CTTI_Component = Yes<>;
       using CountType = T;

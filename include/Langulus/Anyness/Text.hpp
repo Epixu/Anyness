@@ -142,7 +142,7 @@ namespace Langulus::Anyness
       constexpr Text(T&& ch) {
          Base::AllocateFresh(Base::RequestSize(1));
          *Base::GetRaw() = DeintCast(ch);
-         Base::SetCount(1);
+         Base::mCount = 1;
       }
 
       //template<class A1, class...AN>
@@ -158,7 +158,7 @@ namespace Langulus::Anyness
 
          Text result {FWD(text)};
          if (count < result.GetCount())
-            result.SetCount(count);
+            result.mCount = count;
          return result;
       }
       
@@ -270,13 +270,15 @@ namespace Langulus::Anyness
 
       // Range selections                                               
       struct PickRange : Container<
-         Com::HeapMovable<>,
+         Com::HeapReference<>,
+         Com::OwnershipStack<0, false>,
          Com::IndexedLinear<>,
          Com::TypedStatic<DMeta, char>,
          Com::CountStack<>
       > {};
       struct PickRangeMut : Container<
-         Com::HeapMovable<>,
+         Com::HeapReference<>,
+         Com::OwnershipStack<0, false>,
          Com::IndexedLinear<>,
          Com::Assignment<>,
          Com::TypedStatic<DMeta, char>,

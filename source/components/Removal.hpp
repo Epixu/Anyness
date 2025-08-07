@@ -84,7 +84,7 @@ namespace Langulus::Anyness::Component
          self.SetAllocation(nullptr);
          self.SetCount(0);
          self.SetReserved(0);
-         mState &= DataState::Typed;
+         self.ResetState();
          self.ResetType();
       }
    };
