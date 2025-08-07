@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "../Core.hpp"
+#include "POD.hpp"
 
 
 namespace Langulus::CT
@@ -15,13 +15,11 @@ namespace Langulus::CT
    /// deallocating their storage. POD types are not destroyable              
    template<class...T>
    concept Destroyable = PartialValidate<T...> and ((
-          not ::std::is_trivially_destructible_v<T>
-          and ::std::is_destructible_v<T>
+          ::std::is_destructible_v<T> and not POD<T>
        ) and ...);
    
    template<class...T>
    concept NotDestroyable = PartialValidate<T...> and ((
-          ::std::is_trivially_destructible_v<T>
-          or not ::std::is_destructible_v<T>
+          not ::std::is_destructible_v<T> or POD<T>
        ) and ...);
 }

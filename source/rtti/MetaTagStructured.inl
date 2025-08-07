@@ -65,4 +65,14 @@ namespace Langulus::RTTI::Inner
    inline auto MetaTagPacked_16::GetVersionMinor()  const noexcept -> unsigned {
       return GetDefinition()->mVersionMinor;
    }
+
+#if LANGULUS(SAFE)
+   inline MetaTagPacked_16::operator bool() const noexcept {
+      if (Base::operator bool()) {
+         LglsAssert(GetDefinition(), "Valid meta with invalid definition");
+         return true;
+      }
+      return false;
+   }
+#endif
 }

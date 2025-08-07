@@ -12,13 +12,14 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// A dynamic reserve derived from the heap directly                       
-   /// As such, it will not increase container's stack size                   
+   /// A dynamic reserve derived from the allocation size directly            
+   /// As such, it will not increase container's stack size, but will require 
+   /// an indirection in order to read/write it                               
    ///   @tparam ID - ID of the heap to track capacity for                    
    ///   @tparam T - type of the counter                                      
    ///                                                                        
    template<unsigned ID = 0, class T = ::std::size_t>
-   struct ReserveHeap {
+   struct ReserveEmergent {
       using CTTI_Component = Yes<>;
       using ReserveType = T;
 
@@ -26,7 +27,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       T GetReserved(this const C& self) noexcept {
          auto allocation = self.GetAllocation();
-         return allocation ? allocation->GetFrontendSize() : 0;
+         return allocation ? allocation->GetFrontendSize() / self.GetStride() : 0;
       }
 
       /// Reserve a number of elements without initializing them              
@@ -41,15 +42,5 @@ namespace Langulus::Anyness::Component
             self.AllocateMore(count);
          return self;
       }
-      
-   protected:
-      template<unsigned>
-      friend struct HeapMovable;
-      template<unsigned>
-      friend struct Removal;
-
-      /// Set number of reserved elements is impossible - we always use what  
-      /// the allocation says                                                 
-      constexpr void SetReserved(ReserveType) const noexcept { LANGULUS(NOOP); }
    };
 }

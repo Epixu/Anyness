@@ -22,8 +22,11 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    template<unsigned ID = 0, bool AUTO = true>
    struct OwnershipStack {
-   protected:
-      AllocationPtr mAllocation = nullptr;
+   private:
+      // The allocation interface on the stack                          
+      // It is private so that it isn't accessible when inherited       
+      // It has to be accessed through GetAllocation()/SetAllocation()  
+      AllocationPtr mAllocation;
 
    public:
       using CTTI_Component = Yes<>;
@@ -66,10 +69,11 @@ namespace Langulus::Anyness::Component
       template<unsigned>
       friend struct Removal;
 
-      /// Set a new allocation                                                
-      ///   @attention this is very unsafe                                    
-      void SetAllocation(AllocationPtr a) noexcept { mAllocation = a; }
-      
+      /// Set the allocation                                                  
+      void SetAllocation(AllocationPtr allocation) noexcept {
+         mAllocation = allocation;
+      }
+
       /// Reference memory block once                                         
       ///   @param DEEP - reference inner pointers/referenced instances, too? 
       template<CT::Container C>

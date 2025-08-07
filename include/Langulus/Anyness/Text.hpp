@@ -20,7 +20,7 @@
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Heap.hpp"
+#include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/Hash-Stack.hpp"
 #include "../../../source/components/State-Stack.hpp"
 #include "../../../source/components/Iteration-ForEach.hpp"
@@ -53,7 +53,7 @@ namespace Langulus::Anyness
          Com::Assignment<>,               // Allows assignment          
          Com::TypedStack<DMeta, char>,    // Type-constrained           
          Com::CountStack<>,               // Variable count             
-         Com::ReserveHeap<>,              // Variable capacity          
+         Com::ReserveEmergent<>,          // Variable capacity          
          Com::HashStack<>,                // Variable hash (cached)     
          Com::IterationForEach<>,         // ForEach iteration          
          Com::IterationRange<>,           // Range iteration            
@@ -76,28 +76,35 @@ namespace Langulus::Anyness
       using Base = Inner::TextBase;
       using CountType = Base::CountType;
       using CTTI_Text = Yes<>;
+      using Base::Base;
 
-      constexpr Text() noexcept = default;
-      constexpr Text(nullptr_t) noexcept : Text() {}
+      // Single element selections                                      
+      using Pick = char const&;
+      using PickMut = char&;
 
-      /// Construction from all kinds of text                                 
-      template<CT::Text T>
+      // Range selections                                               
+      using PickRange = TextView;
+
+      struct PickRangeMut : PickRange::AddComponents<Com::Assignment<>> {};
+
+   public:
+      constexpr Text(nullptr_t) noexcept {}
+
+      /// Construction from any kind of text that isn't an Anyness container  
+      template<CT::Text T> requires CT::NotContainer<T>
       constexpr Text(T&& text) {
-         using S  = IntentOf<T>;
+         using S  = IntentOf<T&&>;
          using ST = TypeOf<S>;
          decltype(auto) source = DeintCast(FWD(text));
+
          if constexpr (CT::TextLiteral<ST>) {
             // Create from a text literal/bounded array                 
             // Type can be either char, or const char                   
             using CHAR = TypeOf<ST>;
-            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             this->mType = MetaDataOf<CHAR>();
-            this->mReadableHeap = DecvqAllCast(source);
-            this->mCount = strnlen(this->mReadableHeap, ExtentOf<T>);
-            
-            // Take ownership if the intent requires it                 
-            if constexpr (S::KeepsOnCopy())
-               this->TakeOwnership();
+            this->mHeapReadable = DecvqAllCast(source);
+            SetCount(strnlen(source, ExtentOf<T>));
          }
          else if constexpr (CT::TextPointer<ST>) {
             // Create from a null-terminated char pointer               
@@ -105,19 +112,10 @@ namespace Langulus::Anyness
             if (not source)
                return;
             using CHAR = Deptr<ST>;
-            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             this->mType = MetaDataOf<CHAR>();
-            this->mReadableHeap = DecvqAllCast(source);
-            this->mCount = strlen(this->mReadableHeap);
-            
-            // Take ownership if the intent requires it                 
-            if constexpr (S::KeepsOnCopy())
-               this->TakeOwnership();
-         }
-         else if constexpr (CT::Container<ST>) {
-            // Create from anyness container                            
-            // Ownership will be handled by the initialization          
-            Base::InitFrom(FWD(text));
+            this->mHeapReadable = DecvqAllCast(source);
+            SetCount(strlen(source));
          }
          else if constexpr (::std::ranges::contiguous_range<ST>) {
             // Create from an std container                             
@@ -125,24 +123,29 @@ namespace Langulus::Anyness
             if (source.empty())
                return;
             using CHAR = Deptr<decltype(source.data())>;
-            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             this->mType = MetaDataOf<CHAR>();
-            this->mReadableHeap = source.data();
-            this->mCount = source.size();
-            
-            // Take ownership if the intent requires it                 
-            if constexpr (S::KeepsOnCopy())
-               this->TakeOwnership();
+            this->mHeapReadable = source.data();
+            SetCount(source.size());
          }
          else static_assert(false, "Unsupported text constructor");
+
+         // Make sure we start off without ownership                    
+         if constexpr (requires { SetAllocation(nullptr); })
+            SetAllocation(nullptr);
+
+         // Take ownership if the intent requires it                    
+         if constexpr (S::KeepsOnCopy() and requires { TakeOwnership(); })
+            TakeOwnership();
       }
 
       /// Construction from all kinds of characters                           
       template<CT::Character T>
       constexpr Text(T&& ch) {
-         Base::AllocateFresh(Base::RequestSize(1));
-         *Base::GetRaw() = DeintCast(ch);
-         Base::mCount = 1;
+         this->mType = MetaDataOf<char>();
+         AllocateFresh(RequestSize(1));
+         *GetRaw() = DeintCast(ch);
+         SetCount(1);
       }
 
       //template<class A1, class...AN>
@@ -158,7 +161,7 @@ namespace Langulus::Anyness
 
          Text result {FWD(text)};
          if (count < result.GetCount())
-            result.mCount = count;
+            result.SetCount(count);
          return result;
       }
       
@@ -190,7 +193,7 @@ namespace Langulus::Anyness
                const auto c = static_cast<CountType>(lastChar - temp);
                result.AllocateFresh(result.RequestSize(c));
                memcpy(result.mHeap, temp, c);
-               result.mCount = c;
+               result.SetCount(c);
                return result;
             }
 
@@ -236,14 +239,14 @@ namespace Langulus::Anyness
                // We've truncated the number, so prepend a '~' symbol to
                // signify it's an approximate representation            
                result.AllocateFresh(result.RequestSize(c + 1));
-               *result.mReadableHeap = '~';
-               memcpy(result.mReadableHeap + 1, temp, c);
-               result.mCount = c + 1;
+               *result.mHeap = '~';
+               memcpy(result.mHeap + 1, temp, c);
+               result.SetCount(c + 1);
             }
             else {
                result.AllocateFresh(result.RequestSize(c));
                memcpy(result.mHeap, temp, c);
-               result.mCount = c;
+               result.SetCount(c);
             }
          }
          else if constexpr (CT::Integer<T>) {
@@ -256,34 +259,11 @@ namespace Langulus::Anyness
             const auto c = static_cast<CountType>(lastChar - temp);
             result.AllocateFresh(result.RequestSize(c));
             memcpy(result.mHeap, temp, c);
-            result.mCount = c;
+            result.SetCount(c);
          }
          else static_assert(false, "Unsupported number type");
          return result;
       }
-
-      using ViewType = TextView;
-      
-      // Single element selections                                      
-      using Pick     = char const&;
-      using PickMut  = char&;
-
-      // Range selections                                               
-      struct PickRange : Container<
-         Com::HeapReference<>,
-         Com::OwnershipStack<0, false>,
-         Com::IndexedLinear<>,
-         Com::TypedStatic<DMeta, char>,
-         Com::CountStack<>
-      > {};
-      struct PickRangeMut : Container<
-         Com::HeapReference<>,
-         Com::OwnershipStack<0, false>,
-         Com::IndexedLinear<>,
-         Com::Assignment<>,
-         Com::TypedStatic<DMeta, char>,
-         Com::CountStack<>
-      > {};
 
       /// Interpret text container as a string_view                           
       ///   @attention the string is null-terminated only after Terminate()   
@@ -315,9 +295,52 @@ namespace Langulus::Anyness
       }
 
       /// Custom concatenation operator that includes string literals,        
-      /// null-terminated string pointers, and intents                        
-      Text& operator += (CT::Text auto&& rhs) {
-         this->Concat(Text {FWD(rhs)});
+      /// null-terminated string pointers, and std::continuous_ranges         
+      ///   @note conventional container concatenation is defined in          
+      ///      Com::Concatenate and Com::ConcatenateOperators                 
+      template<CT::Text T> requires CT::NotContainer<T>
+      Text& operator += (T&& rhs) {
+         if (IsEmpty()) {
+            *this = Text {FWD(rhs)};
+            return *this;
+         }
+
+         using DT = Deint<T>;
+         decltype(auto) source = DeintCast(FWD(rhs));
+         const auto currentCount = GetCount();
+
+         if constexpr (CT::TextLiteral<DT>) {
+            // Create from a text literal/bounded array                 
+            using CHAR = TypeOf<DT>;
+            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            const auto count = strnlen(source, ExtentOf<DT>);
+            AllocateMore(currentCount + count);
+            memcpy(mHeap + currentCount, source, count);
+            SetCount(currentCount + count);
+         }
+         else if constexpr (CT::TextPointer<DT>) {
+            // Create from a null-terminated char pointer               
+            if (not source)
+               return *this;
+            using CHAR = Deptr<DT>;
+            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            const auto count = strlen(source);
+            AllocateMore(currentCount + count);
+            memcpy(mHeap + currentCount, source, count);
+            SetCount(currentCount + count);
+         }
+         else if constexpr (::std::ranges::contiguous_range<DT>) {
+            // Create from an std container                             
+            if (source.empty())
+               return *this;
+            using CHAR = Deptr<decltype(source.data())>;
+            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            const auto count = source.size();
+            AllocateMore(currentCount + count);
+            memcpy(mHeap + currentCount, source.data(), count);
+            SetCount(currentCount + count);
+         }
+         else static_assert(false, "Unsupported text concatenation");
          return *this;
       }
    };

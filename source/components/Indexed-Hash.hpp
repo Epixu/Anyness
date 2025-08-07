@@ -33,7 +33,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Val = Tif<CT::Mutable<C>, typename Deref<C>::ValMut, typename Deref<C>::Val>;
 
-      TableType* mTable = nullptr;
+      TableType* mTable;
 
    public:
       template<CT::Container C>

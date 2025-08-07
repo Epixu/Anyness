@@ -105,8 +105,10 @@ namespace Langulus::Anyness
 
       /// Manual constructor                                                  
       ///   @param element - embedded element                                 
-      /*explicit*/ constexpr THandleDisowned(Deref<T>* element) noexcept 
-         : Base {Base::InitList::Expand, element} {}
+      /*explicit*/ constexpr THandleDisowned(Deref<T>* element) noexcept {
+         this->mHeapVoid = DecvqAllCast(element);
+         //Com::HeapReference<>,
+      }
 
       using Com::Comparison::operator ==;
    };

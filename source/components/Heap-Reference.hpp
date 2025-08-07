@@ -11,10 +11,6 @@
 
 namespace Langulus::Anyness::Component
 {
-   //template<unsigned>
-   //struct IterationOperators;
-
-
    ///                                                                        
    /// Adds a variable to a container that only references a remote heap      
    /// No allocation interface is provided                                    
@@ -32,7 +28,9 @@ namespace Langulus::Anyness::Component
       friend struct IterationOperators;
       template<unsigned>
       friend struct Removal;
-      
+      template<class>
+      friend struct IndexedLinear;
+
       /*using Byte = ::std::uint8_t;
       template<CT::Container C>
       using View = typename C::ViewType;
@@ -45,34 +43,16 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Pick = Tif<CT::Mutable<C>, typename Deref<C>::PickMut, typename Deref<C>::Pick>;*/
 
-      // The raw pointer                                                
       union {
-         char*  mReadableHeap;
-         void*  mHeap = nullptr;
-         void** mSparseHeap;
+         // The heap pointer in char form for easy debugging            
+         char* mHeapReadable;
+         // The heap pointer in a byte form for easy pointer arithmetics
+         uint8_t* mHeap;
+         // The heap pointer in a void form for easy static_cast        
+         void* mHeapVoid;
       };
       
    public:
-      /// A heap reference can not be default-initialized to avoid errors     
-      /// You have to specify a nullptr manually                              
-      HeapReference() = delete;
-
-      constexpr HeapReference(HeapReference const& other) noexcept
-         : mHeap {other.mHeap} {}
-      constexpr HeapReference(HeapReference&& other) noexcept
-         : mHeap {other.mHeap} {}
-      constexpr HeapReference(void* heap) noexcept
-         : mHeap {heap} {}
-
-      constexpr HeapReference& operator = (HeapReference const& other) noexcept {
-         mHeap = other.mHeap;
-         return *this;
-      }
-      constexpr HeapReference& operator = (HeapReference&& other) noexcept {
-         mHeap = other.mHeap;
-         return *this;
-      }
-
       /// Check if the container has valid heap memory associated with it     
       bool IsAllocated() const noexcept { return mHeap != nullptr; }
       
@@ -81,18 +61,18 @@ namespace Langulus::Anyness::Component
       constexpr auto GetRaw(this C&& self) noexcept {
          using T = TypeOf<C>;
          if constexpr (CT::Mutable<C>)
-            return static_cast<      T*>(self.mHeap);
+            return static_cast<      T*>(self.mHeapVoid);
          else
-            return static_cast<const T*>(self.mHeap);
+            return static_cast<const T*>(self.mHeapVoid);
       }
       
       /// Get a direct access to the heap memory as a different type          
       template<class T, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
          if constexpr (CT::Mutable<C>)
-            return static_cast<      T*>(self.mHeap);
+            return static_cast<      T*>(self.mHeapVoid);
          else
-            return static_cast<const T*>(self.mHeap);
+            return static_cast<const T*>(self.mHeapVoid);
       }
 
       /// Get a direct access to the heap memory's end                        
@@ -122,8 +102,8 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        
             if (self.IsSparse())
-               return static_cast<void**&>(self.mHeap);
-            return static_cast<void* &>(self.mHeap);
+               return static_cast<void**&>(self.mHeapVoid);
+            return static_cast<void* &>(self.mHeapVoid);
          }
          else if constexpr (CT::Untyped<C>) {
             // Casting to a desired runtime type                        
@@ -131,29 +111,29 @@ namespace Langulus::Anyness::Component
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TT>)
-                  return **static_cast<TT**>(self.mHeap);
+                  return **static_cast<TT**>(self.mHeapVoid);
                else
-                  return  *static_cast<TT* >(self.mHeap);
+                  return  *static_cast<TT* >(self.mHeapVoid);
             }
          
             if constexpr (CT::Dense<TT>)
-               return *static_cast<TT*>( self.mHeap);
+               return *static_cast<TT*>( self.mHeapVoid);
             else
-               return *reinterpret_cast<TT*>(const_cast<ST*>(&self.mHeap));
+               return *reinterpret_cast<TT*>(const_cast<ST*>(&self.mHeapVoid));
          }
          else {
             // Casting to a desired static type                         
             if constexpr (DC::Sparse) {
                if constexpr (CT::Dense<TT>)
-                  return **static_cast<TT**>(self.mHeap);
+                  return **static_cast<TT**>(self.mHeapVoid);
                else
-                  return  *static_cast<TT* >(self.mHeap);
+                  return  *static_cast<TT* >(self.mHeapVoid);
             }
             else {
                if constexpr (CT::Dense<TT>)
-                  return *static_cast<TT*>( self.mHeap);
+                  return *static_cast<TT*>( self.mHeapVoid);
                else
-                  return *static_cast<TT*>(&self.mHeap);
+                  return *static_cast<TT*>(&self.mHeapVoid);
             }
          }
       }

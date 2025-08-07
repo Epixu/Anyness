@@ -77,21 +77,15 @@ namespace Langulus::Anyness::Component
    struct Insertion {
       using CTTI_Component = Yes<>;
 
-      template<CT::Container C>
-      static consteval bool Validate() {
-         static_assert(C::VariableCount, "You can't insert stuff in a "
-            "container that doesn't provide variable count");
-      }
-
    private:
       template<CT::Container C>
-      using Count = typename C::CountType;
+      using Count = typename Deref<C>::CountType;
       template<CT::Container C>
-      using Deep  = typename C::DeepType;
+      using Deep  = typename Deref<C>::DeepType;
       template<CT::Container C>
-      using State = typename C::StateType;
+      using State = typename Deref<C>::StateType;
       template<CT::Container C>
-      using PickRangeMut = typename C::PickRangeMut;
+      using PickRangeMut = typename Deref<C>::PickRangeMut;
 
    public:
       /// Insertion one or more elements at specific index                    

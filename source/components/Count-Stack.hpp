@@ -22,14 +22,18 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0, class T = size_t>
    struct CountStack {
    protected:
-      template<unsigned>
-      friend struct Removal;
-      template<unsigned, class>
-      friend struct Insertion;
-      template<class>
-      friend struct IndexedLinear;
-      
+      template<unsigned>        friend struct Removal;
+      template<unsigned, class> friend struct Insertion;
+      template<class>           friend struct IndexedLinear;
+      template<unsigned>        friend struct HeapMovable;
+
+      /// Set the number of initialized elements                              
+      void SetCount(T count) noexcept { mCount = count; }
+
+   private:
       // The count on the stack                                         
+      // It is private so that it isn't accessible when inherited       
+      // It has to be accessed through GetCount() and SetCount()        
       T mCount;
 
    public:

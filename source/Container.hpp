@@ -58,6 +58,7 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Pair);
 LANGULUS_CTTI_CONCEPT_DECVQ(Handle);
 LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
+
 namespace Langulus::Anyness
 {
    struct HandleMut;
@@ -91,89 +92,55 @@ namespace Langulus::Anyness
    ///      is still enforced to match for various reasons, the main being    
    ///      build-time optimization: too many superficially different template
    ///      specializations will bloat code generation significantly and slow 
-   ///      down builds...                                                    
+   ///      builds down a lot...                                              
    ///                                                                        
    template<CT::Component...COMPONENTS>
    struct Container : COMPONENTS... {
       using CTTI_Container = Yes<>;
       using ComponentList = Types<COMPONENTS...>;
-      using InitList = Sequence<sizeof...(COMPONENTS)>;
-      
+
       template<CT::Component...MORE_COMPONENTS>
       using AddComponents = Container<COMPONENTS..., MORE_COMPONENTS...>;
+
+      /// Explicitly call ConstructDefault in all of the components           
+      /// Most components should have trivial constructors                    
+      constexpr Container() noexcept {
+         ComponentList::ForEach([&]<class C>{
+            if constexpr (requires { C::ConstructDefault(); })
+               C::ConstructDefault();
+         });
+      }
+
+      /// A generalized container constructor, that takes another container   
+      /// that may have completely different components, and tries to extract 
+      /// relevant information from it. Invokes ConstructFrom for each        
+      /// component of this container that has it. Allows for intents as well 
+      ///   @note ConstructFrom act as validating functions as well           
+      constexpr Container(CT::Container auto&& from) {
+         using I = IntentOf<decltype(from)>;
+         ComponentList::ForEach([&]<class C>{
+            if constexpr (requires { C::ConstructFrom(I {from} ); })
+               C::ConstructFrom(I {from});
+         });
+      }
+      
+      /// Generalized container assignment, that takes another container that 
+      /// may have completely different components, and tries to extract all  
+      /// relevant information from it. Invokes AssignFrom for each component 
+      /// of this container that has it. Allows for intents as well           
+      template<CT::Container LHS, CT::Container RHS>
+      constexpr LHS& operator = (this LHS& lhs, RHS&& rhs) {
+         using I = IntentOf<decltype(rhs)>;
+         LHS::ComponentList::ForEach([&]<class C>{
+            if constexpr (requires { lhs.C::AssignFrom(I {rhs}); })
+               lhs.C::AssignFrom(I {rhs});
+         });
+         return lhs;
+      }
 
    protected:
       template<unsigned>
       friend struct Com::IterationOperators;
-      
-      /// Maps one unfold expression onto another of different length, and    
-      /// returns a default-initialized 'FALLBACK' instance if index goes out 
-      /// of range. Some components aren't default-initializable, and this    
-      /// will result in a compile-time error hinting at bad manual construct 
-      template<class FALLBACK, unsigned INDEX, class A1, class...AN>
-      static constexpr decltype(auto) PickArgument(A1&& a1, AN&&...aN) noexcept {
-         if constexpr (INDEX == 0)
-            return FWD(a1);
-         else if constexpr (INDEX + 1 < sizeof...(AN))
-            return PickArgument<INDEX + 1>(FWD(aN)...);
-         else {
-            static_assert(CT::Defaultable<FALLBACK>,
-               "Container argument mismatch");
-            return FALLBACK {};
-         }
-      }
-
-      /// Maps the components of one container onto components of another     
-      /// Mismatches are attempted to be default-initialized                  
-      /// Some components aren't default-initializable, and this will result  
-      /// in a compile-time error hinting at a container incompatiblity       
-      template<class COM, template<class> class I, CT::Container C>
-      static constexpr decltype(auto) MatchComponent(I<C>&& other) noexcept {
-         if constexpr (C::template HasComponent<COM>)
-            return other.template Forward<COM>();
-         else {
-            static_assert(CT::Defaultable<COM>,
-               "Container component mismatch");
-            return I<C>::Nest(COM {});
-         }
-      }
-
-      constexpr Container() noexcept = default;
-      explicit constexpr Container(Container const&) noexcept = default;
-      explicit constexpr Container(Container&&) noexcept = default;
-
-      /// Intent constructor that accepts any other kind of container         
-      /// Similar components will be constructed with the desired intent,     
-      /// the rest will be default-initialized if possible                    
-      template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
-      constexpr Container(I<C>&& other)
-         : COMPONENTS {MatchComponent<COMPONENTS>(FWD(other))}... {}
-
-      /// Initialization tag dispatch constructor, for manually initializing  
-      /// component list                                                      
-      template<auto...IDX, class...AN>
-      constexpr Container(ExpandedSequence<IDX...>, AN&&...aN)
-         : COMPONENTS {PickArgument<COMPONENTS, IDX>(FWD(aN)...)}... {}
-
-      /// Initialize from any other compatible container                      
-      constexpr void InitFrom(CT::Container auto&& from) {
-         ComponentList::ForEach([&]<class C> {
-            if constexpr (requires { C::InitFrom(FWD(from)); })
-               C::InitFrom(FWD(from));
-         });
-      }
-      
-      constexpr Container& operator = (Container const&) noexcept = default;
-      constexpr Container& operator = (Container&&) noexcept = default;
-
-      /// Intent assignment that accepts any other kind of container          
-      /// Similar components will be reassigned with the desired intent,      
-      /// the rest will be default-reassigned if possible                     
-      template<template<class> class I, CT::Container C> requires CT::Intent<I<C>>
-      constexpr Container& operator = (I<C>&& other) {
-         (COMPONENTS::operator = (MatchComponent<COMPONENTS>(FWD(other))), ...);
-         return *this;
-      }
 
       template<CT::Component C>
       static consteval unsigned GetHeapHeaderOffset() {

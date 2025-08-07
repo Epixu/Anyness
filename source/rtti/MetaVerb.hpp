@@ -72,6 +72,8 @@ namespace Langulus::RTTI
 
          constexpr bool IsReversible()  const noexcept;
          constexpr bool IsContextless() const noexcept;
+
+         IF_SAFE(explicit operator bool() const noexcept);
       };
       #pragma pack(pop)
       

@@ -46,20 +46,6 @@ namespace Langulus::Anyness::Component
    struct Comparison {
       using CTTI_Component = Yes<>;
 
-      constexpr Comparison() noexcept = default;
-      ignore_all_intents(Comparison);
-
-      /*constexpr Comparison() noexcept = default;
-      explicit constexpr Comparison(const Comparison&) noexcept = default;
-      explicit constexpr Comparison(Comparison&&) noexcept = default;
-      template<template<class> class I> requires CT::Intent<I<Comparison>>
-      constexpr Comparison(I<Comparison>&&) noexcept {}
-
-      constexpr Comparison& operator = (Comparison const&) noexcept = default;
-      constexpr Comparison& operator = (Comparison&&) noexcept = default;
-      template<template<class> class I> requires CT::Intent<I<Comparison>>
-      constexpr Comparison& operator = (I<Comparison>&& other) {}*/
-
    private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;

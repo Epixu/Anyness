@@ -20,9 +20,9 @@ namespace Langulus::Anyness::Component
 
    private:
       template<CT::Container C>
-      using Count = typename C::CountType;
+      using Count = typename Deref<C>::CountType;
       template<CT::Container C>
-      using Iterator = typename C::Iterator;
+      using Iterator = typename Deref<C>::Iterator;
 
    public:
       template<bool REVERSE = false, CT::Container C>
@@ -37,8 +37,38 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       auto RemoveIt(this C&, const Iterator<C>&, Count<C> = 1) -> Iterator<C>;
 
+      /// Sets a new smaller count by destroying elements on the back         
+      /// Does nothing if count is larger or equals the current count         
+      /// Never reallocates                                                   
+      ///   @param desiredCount - the new count                               
       template<CT::Container C>
-      void Trim(this C&, Count<C>);
+      void Trim(this C& self, Count<C> desiredCount) noexcept {
+         const auto currentCount = self.GetCount();
+         if (desiredCount >= currentCount)
+            return;
+
+         // If data doesn't need destructors just reduce count          
+         if constexpr (C::TypeErased) {
+            if (not self.GetType().GetDestructor()) {
+               self.SetCount(desiredCount);
+               return;
+            }
+         }
+         else {
+            if constexpr (not CT::Destroyable<TypeOf<C>>) {
+               self.SetCount(desiredCount);
+               return;
+            }
+         }
+
+         // Call destructors and change count                           
+         LglsAssert(self.GetAllocation(),
+            "Can't trim disowned container");
+         LglsAssert(self.GetAllocation()->GetUses() != 1,
+            "Can't trim container used elsewhere");
+         self.SelectInner(desiredCount, currentCount - desiredCount).FreeInner();
+         self.SetCount(desiredCount);
+      }
 
       template<CT::Container C>
       void Optimize(this C&);
@@ -46,32 +76,33 @@ namespace Langulus::Anyness::Component
       /// Destroy all elements but don't deallocate memory                    
       template<CT::Container C>
       void Clear(this C& self) {
-         auto allocation = self.GetAllocation();
-         if (not allocation) {
+         if (not self.mAllocation) {
             // Data is either static or unallocated                     
             // Don't call destructors, just clear it up                 
-            self.SetHeap(nullptr);
-            self.SetCount(0);
-            self.SetReserved(0);
+            self.mHeap = nullptr;
+            self.mCount = 0;
+            if constexpr (requires { self.mReserved; })
+               self.mReserved = 0;
             self.ResetType();
             return;
          }
 
-         if (allocation->GetUses() == 1) {
+         if (self.mAllocation->GetUses() == 1) {
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the entry and type   
             if constexpr (requires { self.FreeDeep(); })
                self.FreeDeep();
-            self.SetCount(0);
+            self.mCount = 0;
          }
          else {
             // If reached, then data is referenced from multiple places 
             // Don't call destructors, just clear it up and dereference 
-            allocation->Free();
-            self.SetHeap(nullptr);
-            self.SetAllocation(nullptr);
-            self.SetCount(0);
-            self.SetReserved(0);
+            self.mAllocation->Free();
+            self.mAllocation = nullptr;
+            self.mHeap = nullptr;
+            self.mCount = 0;
+            if constexpr (requires { self.mReserved; })
+               self.mReserved = 0;
             self.ResetType();
          }
       }
@@ -80,10 +111,11 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       void Reset(this C& self) {
          self.Free();
-         self.SetHeap(nullptr);
-         self.SetAllocation(nullptr);
-         self.SetCount(0);
-         self.SetReserved(0);
+         self.mHeap = nullptr;
+         self.mAllocation = nullptr;
+         self.mCount = 0;
+         if constexpr (requires { self.mReserved; })
+            self.mReserved = 0;
          self.ResetState();
          self.ResetType();
       }

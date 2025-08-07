@@ -395,10 +395,24 @@ TEST_CASE("Testing IntentOf", "[ct]") {
    const std::string_view anArrayOfStrings[] {
       "one", "two", "three", "four"
    };
-
    using AOS = decltype(anArrayOfStrings);
    static_assert(::std::same_as<IntentOf<AOS>,   Refer<AOS>>);
+   static_assert(::std::same_as<IntentOf<AOS&>,  Refer<AOS>>);
    static_assert(::std::same_as<IntentOf<AOS&&>, Refer<AOS>>);
+
+   std::string_view anArrayOfStringsMut[] {
+      "one", "two", "three", "four"
+   };
+   using AOSmut = decltype(anArrayOfStringsMut);
+   static_assert(::std::same_as<IntentOf<AOSmut>,   Refer<AOSmut>>);
+   static_assert(::std::same_as<IntentOf<AOSmut&>,  Refer<AOSmut>>);
+   static_assert(::std::same_as<IntentOf<AOSmut&&>, Move<AOSmut>>);
+
+   const char* nullter = "stuff";
+   using NTS = decltype(nullter);
+   static_assert(::std::same_as<IntentOf<NTS>,   Refer<NTS>>);
+   static_assert(::std::same_as<IntentOf<NTS&>,  Refer<NTS>>);
+   static_assert(::std::same_as<IntentOf<NTS&&>, Move<NTS>>);
 }
 
 

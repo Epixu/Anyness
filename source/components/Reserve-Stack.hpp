@@ -17,10 +17,10 @@ namespace Langulus::Anyness::Component
    ///   @tparam T - type of the counter                                      
    ///   @tparam ID - ID of the heap/stack to track capacity for              
    ///                                                                        
-   template<unsigned ID = 0, class T = ::std::size_t>
+   template<unsigned ID = 0, class T = size_t>
    struct ReserveStack {
    private:
-      T mReserved = 0;
+      T mReserved;
 
    public:
       using CTTI_Component = Yes<>;
@@ -35,8 +35,5 @@ namespace Langulus::Anyness::Component
       friend struct HeapMovable;
       template<unsigned>
       friend struct Removal;
-
-      /// Set number of reserved elements                                     
-      constexpr void SetReserved(ReserveType r) noexcept { mReserved = r; }
    };
 }

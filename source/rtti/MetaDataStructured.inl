@@ -520,6 +520,16 @@ namespace Langulus::RTTI::Inner
          return found->second;
       return nullptr;
    }
+
+#if LANGULUS(SAFE)
+   TEMPLATE() ME()::operator bool() const noexcept {
+      if (Base::operator bool()) {
+         LglsAssert(GetDefinition(), "Valid meta with invalid definition");
+         return true;
+      }
+      return false;
+   }
+#endif
 }
 
 #undef TEMPLATE

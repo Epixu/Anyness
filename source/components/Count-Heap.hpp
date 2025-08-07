@@ -19,10 +19,10 @@ namespace Langulus::Anyness::Component
    /// Heap-based counting keeps the counter inside the container's heap      
    /// allocation, and requires an indirection everytime count is accessed.   
    /// It is a bit slower and less cache-friendly, but results in more        
-   /// compact containers.                                                    
+   /// compact containers                                                     
    ///   @tparam ID - the heap ID to keep count of                            
    ///   @tparam T - the count type                                           
-   template<unsigned ID = 0, class T = ::std::size_t>
+   template<unsigned ID = 0, class T = size_t>
    struct CountHeap {
       using CTTI_Component = Yes<>;
       using CountType = T;
@@ -30,7 +30,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the number of initialized elements                              
       template<CT::Container C>
-      T GetCount(this const C& self) noexcept {
+      T GetCount(this C const& self) noexcept {
          if constexpr (CT::Contiguous<C>) {
             //TODO we can determine count by subtracting the allocation pointer from the heap pointer
             // to at least determine if it is zero (when type-erased) or calculate it exactly (when statically typed),
@@ -41,12 +41,12 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if there are no initialized elements                          
-      bool IsEmpty(this const auto& self) noexcept {
+      bool IsEmpty(this auto const& self) noexcept {
          return self.GetCount() == 0;
       }
 
       /// Explicit boolean conversion to allow using containers in ifs        
-      explicit operator bool(this const auto& self) noexcept {
+      explicit operator bool(this auto const& self) noexcept {
          return self.GetCount() != 0;
       }
    };

@@ -26,13 +26,9 @@ namespace Langulus::Anyness::Component
    template<auto COUNT>
    struct CountStatic {
       static_assert(COUNT > 0, "Can't have a container of zero or negative count");
-
       using CTTI_Component = Yes<>;
       using CountType = decltype(COUNT);
       using IndexType = Index::At<CountType>;
-
-      constexpr CountStatic() noexcept = default;
-      ignore_all_intents(CountStatic);
 
       /// Equal to COUNT if container has a heap component that has been      
       /// allocated. If no heap component exists, then the count is simply    

@@ -36,9 +36,6 @@ namespace Langulus::Anyness::Component
    struct Emplacement {
       using CTTI_Component = Yes<>;
 
-      constexpr Emplacement() noexcept = default;
-      ignore_all_intents(Emplacement);
-
    protected:
       template<unsigned>
       friend struct HeapMovable;

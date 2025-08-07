@@ -26,16 +26,16 @@ namespace Langulus::Anyness::Component
       static constexpr bool HeapCanBeNull = true;
 
    protected:
-      using Byte = ::std::uint8_t;
+      using Byte = uint8_t;
 
       // A heap of heaps - the inner ones are immovable                 
-      Byte** mHeap = nullptr;
+      Byte** mHeap;
       // Number of allocated heaps - each new heap is twice as big      
-      ::std::uint8_t mHeapCount = 0;
+      uint8_t mHeapCount;
 
       // The start of the reusable chain, in the first heap that has    
       // a free cell                                                    
-      Byte* mReusable = nullptr;
+      Byte* mReusable;
 
    public:
    #if LANGULUS(TESTING)

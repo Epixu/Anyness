@@ -135,4 +135,15 @@ namespace Langulus::RTTI::Inner
    constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsContextless() const noexcept {
       return contextless;
    }
+
+#if LANGULUS(SAFE)
+   template<unsigned ID_SIZE>
+   MetaVerbStructured_X8<ID_SIZE>::operator bool() const noexcept {
+      if (Base::operator bool()) {
+         LglsAssert(GetDefinition(), "Valid meta with invalid definition");
+         return true;
+      }
+      return false;
+   }
+#endif
 }

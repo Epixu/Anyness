@@ -61,7 +61,9 @@ namespace Langulus::Fractalloc
       , mAllocatedByBackendLSB  {LSB(size >> size_t {1})}
       , mThreshold              {size}
       , mThresholdPrevious      {size}
-      , mThresholdMin           {Roof2(meta.GetMinAllocation())}
+      , mThresholdMin           {meta 
+         ? Roof2(meta.GetMinAllocation())
+         : ::Langulus::MinimalAllocation}
       , mMeta                   {meta}
       , mHandle                 {memory}
    {

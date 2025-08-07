@@ -29,7 +29,7 @@ namespace Langulus::Anyness::Component
       using Count = typename Deref<C>::CountType;
 
       // Pointer to the first entry                                     
-      AllocationPtr* mEntries = nullptr;
+      AllocationPtr* mEntries;
 
       /// Get entries array                                                   
       auto GetEntries() const noexcept { return mEntries; }
@@ -232,12 +232,5 @@ namespace Langulus::Anyness::Component
          // Always nullify upon destruction only if we're paranoid         
          //TODO IF_LANGULUS_PARANOID(ZeroMemory(mRaw, GetBytesize<THIS>()));
       }
-
-   public:
-      constexpr DeepOwnershipStack() noexcept = default;
-      constexpr DeepOwnershipStack(DeepOwnershipStack const&) noexcept = default;
-      constexpr DeepOwnershipStack(DeepOwnershipStack&&) noexcept = default;
-      constexpr DeepOwnershipStack(AllocationPtr* entries) noexcept
-         : mEntries {entries} {}
    };
 }

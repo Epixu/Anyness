@@ -34,20 +34,6 @@ namespace Langulus::Anyness::Component
       static constexpr bool Sparse     = CT::Sparse<TYPE>;
       static constexpr bool Dense      = CT::Dense<TYPE>;
 
-      constexpr TypedStatic() noexcept = default;
-      ignore_all_intents(TypedStatic);
-
-      /*constexpr TypedStatic() noexcept = default;
-      explicit constexpr TypedStatic(const TypedStatic&) noexcept = default;
-      explicit constexpr TypedStatic(TypedStatic&&) noexcept = default;
-      template<template<class> class I> requires CT::Intent<I<TypedStatic>>
-      constexpr TypedStatic(I<TypedStatic>&&) noexcept {}
-
-      constexpr TypedStatic& operator = (TypedStatic const&) noexcept = default;
-      constexpr TypedStatic& operator = (TypedStatic&&) noexcept = default;
-      template<template<class> class I> requires CT::Intent<I<TypedStatic>>
-      constexpr TypedStatic& operator = (I<TypedStatic>&&) {}*/
-
       /// Get the reflected type definition                                   
       T GetType() const noexcept { return MetaOf<TYPE>(); }
 

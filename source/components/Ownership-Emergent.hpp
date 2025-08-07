@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Component
    ///      not necessarily reference it                                      
    ///                                                                        
    template<unsigned ID = 0, bool AUTO = true>
-   struct OwnershipHeap {
+   struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
       static constexpr bool Owned = AUTO;
 

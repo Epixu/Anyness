@@ -28,7 +28,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<unsigned, class>
-      friend struct ReserveHeap;
+      friend struct ReserveEmergent;
       template<unsigned>
       friend struct IterationOperators;
       template<unsigned, class AS>
@@ -42,8 +42,6 @@ namespace Langulus::Anyness::Component
       using Pick = Tif<CT::Mutable<C>, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
-      template<CT::Container C>
-      using View = typename Deref<C>::ViewType;
             
 
       /// Get a size based on reflected allocation page and count             
@@ -85,23 +83,23 @@ namespace Langulus::Anyness::Component
                // Deeply owned sparse containers have additional memory 
                // allocated for each pointer's entry                    
                al = Allocator::Allocate(self.mType,
-                  request.mByteSize * (self.mType.IsSparse() ? 2 : 1));
+                  request.mByteSize * (self.mType.IsSparse() ? 2 : 1)
+               );
             }
-            else {
-               al = Allocator::Allocate(self.mType,
-                  request.mByteSize);
-            }
+            else al = Allocator::Allocate(self.mType, request.mByteSize);
          }
          else {
             // Deeply owned sparse containers have additional memory    
             // allocated for each pointer's entry                       
             al = Allocator::Allocate(self.GetType(),
-               request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1));
+               request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1)
+            );
          }
 
          LglsAssert(al, "Out of memory");
-         self.SetAllocation(al);
-         self.SetReserved(request.mElementCount);
+         self.mAllocation = al;
+         if constexpr (requires { self.mReserved; })
+            self.mReserved = request.mElementCount;
       }
 
       /// Allocate a number of elements, relying on the type of the container 
@@ -139,17 +137,18 @@ namespace Langulus::Anyness::Component
                );
 
                // Reallocate                                            
-               View<C> previous {self};
+               typename C::PickRange previous {self};
                auto reallocated = Allocator::Reallocate(
                   request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1),
-                  self.GetAllocation()
+                  self.mAllocation
                );
                LglsAssert(reallocated, "Out of memory");
-               self.SetAllocation(reallocated);
-               self.SetReserved(request.mElementCount);
+               self.mAllocation = reallocated;
+               if constexpr (requires { self.mReserved; })
+                  self.mReserved = request.mElementCount;
 
-               if (self.GetAllocation() != previous.GetAllocation()) {
-                  self.mHeap = self.GetAllocation()->GetBlockStart();
+               if (self.mAllocation != previous.mAllocation) {
+                  self.mHeap = self.mAllocation->GetBlockStart();
 
                   if (previous.GetCount()) {
                      // Memory moved, and we should move all elements   
@@ -213,66 +212,81 @@ namespace Langulus::Anyness::Component
 
       /// Shrink the block, depending on currently reserved	elements          
       /// Initialized elements on the back will be destroyed                  
-      ///   @attention assumes 'elements' is smaller than the current reserve 
-      ///   @param elements - number of elements to allocate                  
+      /// When MANAGED_MEMORY is enabled we have a strong guarantee that      
+      /// allocations never move when shrinking                               
+      ///   @param desiredReserve - number of elements to reserve             
       template<CT::Container C>
-      void AllocateLess(this C& self, const Count<C> elements) {
-         LglsAssumeDev(elements < self.GetReserved(), "Bad element count");
+      void AllocateLess(this C& self, const Count<C> desiredReserve) {
+         LglsAssumeDev(desiredReserve < self.GetReserved(),
+            "Can't shrink allocation using more elements");
+         const auto allocation = self.GetAllocation();
+         LglsAssumeDev(allocation,
+            "Invalid allocation");
+         LglsAssumeDev(allocation->GetUses() == 1,
+            "Can't reuse memory of a block used from multiple places, "
+            "BranchOut should've been called prior to AllocateMore"
+         );
 
-         if (self.GetCount() > elements) {
-            // Destroy back entries on smaller allocation               
-            // Allowed even when container is static and out of         
-            // jurisdiction, as in that case this acts as a simple      
-            // count decrease, and no destructors shall be called       
-            self.Trim(elements);
+         const auto request = self.RequestSize(desiredReserve);
+         if (request.mElementCount == self.GetReserved())
             return;
+
+         if constexpr (C::TypeErased) {
+            //                                                          
+            // Type erased shrinking                                    
+            const auto T = self.GetType();
+            LglsAssumeDev(T, "Invalid type");
+
+            const auto currentCount = self.GetCount();
+            if (currentCount > desiredReserve) {
+               // Destroy elements on the back                          
+               if (T.GetDestructor())
+                  self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
+               self.SetCount(desiredReserve);
+            }
+
+            if (T.IsSparse()) {
+               // Move entry data to its new place                      
+               MoveMemory(
+                  self.GetEntries() - self.mReserved + request.mElementCount,
+                  self.GetEntries(), currentCount
+               );
+            }
+
+            self.mAllocation = Allocator::Reallocate(
+               request.mByteSize * (T.IsSparse() ? 2 : 1),
+               self.mAllocation
+            );
+         }
+         else {
+            //                                                          
+            // Statically typed shrinking                               
+            using T = TypeOf<C>;
+
+            const auto currentCount = self.GetCount();
+            if (currentCount > desiredReserve) {
+               // Destroy elements on the back                          
+               if constexpr (CT::Destroyable<T>)
+                  self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
+               self.SetCount(desiredReserve);
+            }
+
+            if constexpr (CT::Sparse<T>) {
+               // Move entry data to its new place                      
+               MoveMemory(
+                  self.GetEntries() - self.mReserved + request.mElementCount,
+                  self.GetEntries(), currentCount
+               );
+            }
+
+            self.mAllocation = Allocator::Reallocate(
+               request.mByteSize * (CT::Sparse<T> ? 2 : 1),
+               self.mAllocation
+            );
          }
 
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            // Shrink the memory block                                  
-            // Guaranteed that entry doesn't move                       
-            const auto request = self.RequestSize(elements);
-            if (request.mElementCount == self.GetReserved())
-               return;
-         
-            LglsAssumeDev(self.GetAllocation()->GetUses() == 1,
-               "Can't reuse memory of a block used from multiple places, "
-               "BranchOut should've been called prior to AllocateMore"
-            );
-
-            if constexpr (not C::TypeErased) {
-               if constexpr (C::Sparse) {
-                  // Move entry data to its new place                   
-                  MoveMemory(
-                     self.GetEntries() - self.mReserved + request.mElementCount,
-                     self.GetEntries(), self.mCount
-                  );
-               }
-
-               self.SetAllocation(Allocator::Reallocate(
-                  request.mByteSize * (C::Sparse ? 2 : 1),
-                  self.GetAllocation()
-               ));
-            }
-            else {
-               LglsAssumeDev(self.mType, "Invalid type");
-
-               if (self.mType->mIsSparse) {
-                  // Move entry data to its new place                   
-                  MoveMemory(
-                     self.GetEntries() - self.mReserved + request.mElementCount,
-                     self.GetEntries(), self.mCount
-                  );
-               }
-
-               self.SetAllocation(Allocator::Reallocate(
-                  request.mByteSize * (self.mType->mIsSparse ? 2 : 1),
-                  self.GetAllocation()
-               ));
-            }
-
-            self.SetReserved(request.mElementCount);
-         #endif
+         if constexpr (requires { self.mReserved; })
+            self.mReserved = request.mElementCount;
       }
       
       /// Reassign new value to the first element, with or without an intent  
@@ -404,12 +418,6 @@ namespace Langulus::Anyness::Component
       }
 
    public:
-      using HeapReference<ID>::HeapReference;
-      using HeapReference<ID>::operator =;
-
-      constexpr HeapMovable() noexcept
-         : HeapReference<ID> {nullptr} {}
-
       template<CT::NotVoid AS, CT::Container C>
       auto As(this C&& self) -> Pick<C>;
 
