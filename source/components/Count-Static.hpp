@@ -22,13 +22,13 @@ namespace Langulus::Anyness::Component
    ///   In these cases, count is equal to COUNT if container has a heap      
    /// component that has been allocated. If no heap component exists, then   
    /// the count is simply always COUNT.                                      
-   ///                                                                        
    template<auto COUNT>
    struct CountStatic {
       static_assert(COUNT > 0, "Can't have a container of zero or negative count");
       using CTTI_Component = Yes<>;
       using CountType = decltype(COUNT);
       using IndexType = Index::At<CountType>;
+      static constexpr int ComponentPrecedence = 1000;
 
       /// Equal to COUNT if container has a heap component that has been      
       /// allocated. If no heap component exists, then the count is simply    
@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
          else return COUNT;
       }
       
-      /// Always returns false                                                
+      /// Check if empty                                                      
       template<CT::Container C>
       constexpr bool IsEmpty(this C const& self) noexcept {
          return self.GetCount() == CountType {};

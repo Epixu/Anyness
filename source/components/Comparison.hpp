@@ -45,6 +45,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    struct Comparison {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
    private:
       template<CT::Container C>
@@ -63,7 +64,8 @@ namespace Langulus::Anyness::Component
       /// Compare to any non-container data                                   
       ///   @return true if data matches contained data                       
       template<CT::Container LHS, CT::NotContainer RHS>
-      constexpr bool operator == (this const LHS& lhs, const RHS& rhs) requires CT::RangeComparable<LHS, RHS> {
+      constexpr bool operator == (this const LHS& lhs, const RHS& rhs)
+      requires CT::RangeComparable<LHS, RHS> {
          return lhs.CompareSingleValue(rhs);
       }
 
@@ -98,7 +100,8 @@ namespace Langulus::Anyness::Component
                   // matter of whether they have the same count         
                   return lhs.GetCount() == rhs.GetCount();
                }
-               else if (lhs.GetCount() != rhs.GetCount()) {
+
+               if (lhs.GetCount() != rhs.GetCount()) {
                   // Early failure if count differs, no point in        
                   // comparing anything at all                          
                   VERBOSE(Logger::Red, "Different count (typed): ",
@@ -354,7 +357,7 @@ namespace Langulus::Anyness::Component
       /// Compare with one single value, if exactly one element is contained  
       ///   @param rhs - the value to compare against                         
       ///   @return true if elements are the same                             
-      template<CT::Container C, CT::NoIntent RT> LANGULUS(INLINED)
+      template<CT::Container C, CT::NoIntent RT>
       constexpr bool CompareSingleValue(this C const& self, const RT& rhs) {
          if (self.GetCount() != 1)
             return false;
@@ -396,23 +399,13 @@ namespace Langulus::Anyness::Component
       }
 
       /// Compare hashes of two containers                                    
-      ///   @tparam FORCE_REHASH - force hash recomputation in case no hash   
-      ///      was yet cached at the time of comparison                       
       ///   @return true if hashes are the same                               
-      template<bool FORCE_REHASH = false, CT::Container LHS, CT::Container RHS> LANGULUS(INLINED)
+      template<CT::Container LHS, CT::Container RHS>
       constexpr bool CompareHashes(this LHS const& lhs, RHS const& rhs) {
-         if constexpr (not FORCE_REHASH
-         and requires {lhs.GetHashNoRecompute(); rhs.GetHashNoRecompute(); }) {
-            const auto lh = lhs.GetHashNoRecompute();
-            const auto rh = rhs.GetHashNoRecompute();
-            return lh and lh == rh;
-         }
-         else if constexpr (requires {lhs.GetHash(); rhs.GetHash(); }) {
-            const auto lh = lhs.GetHash();
-            const auto rh = rhs.GetHash();
-            return lh == rh;
-         }
-         else return false;
+         if constexpr (requires {lhs.GetHash(); rhs.GetHash(); })
+            return lhs.GetHash() == rhs.GetHash();
+         else
+            return false;
       }
    };
 }

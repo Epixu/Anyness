@@ -23,6 +23,7 @@ namespace Langulus::Anyness::Component
 
    public:
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
       /// Merging at specific index                                           
       template<bool FORCE = true, class A1, class...AN, CT::IndexedLinearly C>

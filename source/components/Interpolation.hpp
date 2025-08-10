@@ -12,5 +12,6 @@ namespace Langulus::Anyness::Component
 {
    struct Interpolation {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
    };
 }

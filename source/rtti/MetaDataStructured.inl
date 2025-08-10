@@ -436,7 +436,9 @@ namespace Langulus::RTTI::Inner
    TEMPLATE()
    auto ME()::AddPtr()
    const -> MetaDataStructured_XY {
-      return GetDefinition()->mAddPtr;
+      auto ptr = GetDefinition()->mAddPtr;
+      LglsAssert(ptr, "Pointer type hasn't been reflected yet");
+      return ptr;
    }
    
    /// Add a constant qualifier to the type                                   
@@ -445,7 +447,9 @@ namespace Langulus::RTTI::Inner
    TEMPLATE()
    auto ME()::AddConst()
    const -> MetaDataStructured_XY {
-      return GetDefinition()->mAddConst;
+      auto cnst = GetDefinition()->mAddConst;
+      LglsAssert(cnst, "Constant type hasn't been reflected yet");
+      return cnst;
    }
    
    /// Get the default concretization for an abstract type                    

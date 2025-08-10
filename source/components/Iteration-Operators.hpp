@@ -20,6 +20,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct IterationOperators {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
       /// Offset first element to the right by the desired amount             
       ///   @attention this doesn't check any boundaries, use carefully       

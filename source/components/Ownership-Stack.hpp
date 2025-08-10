@@ -15,11 +15,10 @@ namespace Langulus::Anyness::Component
    /// Keep a pointer to the heap allocation as a member                      
    /// Manage its ownership                                                   
    ///   @tparam ID - which heap are we keeping track of?                     
-   ///   @tparam AUTO - whether ownership will be automatically used on       
-   ///      construction/assignment. False if container is just a view, or in 
-   ///      other cases where you want to carry an allocation pointer, but    
-   ///      not necessarily reference it                                      
-   ///                                                                        
+   ///   @tparam AUTO - whether ownership will be automatically applied on    
+   ///      construction, reassignment and destruction. False if container is 
+   ///      just a view, or in other cases where you want to carry an         
+   ///      allocation pointer, but not necessarily reference it              
    template<unsigned ID = 0, bool AUTO = true>
    struct OwnershipStack {
    private:
@@ -31,11 +30,25 @@ namespace Langulus::Anyness::Component
    public:
       using CTTI_Component = Yes<>;
       static constexpr bool Owned = AUTO;
+      static constexpr int ComponentPrecedence = -1000;
+
+      ~OwnershipStack() has_assumptions {
+         if constexpr (Owned) {
+            if (not mAllocation)
+               return;
+
+            LglsAssumeDev(mAllocation->GetUses() >= 1,
+               "Bad memory dereferencing");
+
+            if (mAllocation->GetUses() == 1)
+               Allocator::Deallocate(mAllocation);
+            else
+               mAllocation->Free();
+         }         
+      }
 
       /// Get the allocation                                                  
-      auto GetAllocation() const noexcept {
-         return mAllocation;
-      }
+      auto GetAllocation() const noexcept { return mAllocation; }
 
       /// Get the memory reference count                                      
       auto GetUses() const noexcept {
@@ -69,10 +82,12 @@ namespace Langulus::Anyness::Component
       template<unsigned>
       friend struct Removal;
 
+      /// Get a pointer to the allocation on the stack                        
+      auto GetAllocationRef()       noexcept { return &mAllocation; }
+      auto GetAllocationRef() const noexcept { return &mAllocation; }
+
       /// Set the allocation                                                  
-      void SetAllocation(AllocationPtr allocation) noexcept {
-         mAllocation = allocation;
-      }
+      void SetAllocation(AllocationPtr a) noexcept { mAllocation = a; }
 
       /// Reference memory block once                                         
       ///   @param DEEP - reference inner pointers/referenced instances, too? 

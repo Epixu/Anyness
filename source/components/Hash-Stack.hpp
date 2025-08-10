@@ -17,17 +17,14 @@ namespace Langulus::Anyness::Component
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0   
    ///   @tparam ID - the stack/heap source for data                          
    ///   @tparam H - the hash type used                                       
-   ///                                                                        
    template<unsigned ID = 0, class H = Hash>
    struct HashStack : HashEmergent<ID, H> {
    private:
       H mHash;
-
+      
    public:
-      /// Get the hash, but never recompute it                                
-      const H& GetHashNoRecompute() const noexcept {
-         return mHash;
-      }
+      /// Reset the hash. It will be recomputed on next comparison            
+      void ResetHash() noexcept { mHash = {}; }
 
       /// Get the hash, recompute it if uninitialized                         
       template<CT::Container C>
@@ -37,5 +34,15 @@ namespace Langulus::Anyness::Component
             const_cast<H&>(cached) = self.HashRecompute();
          return cached;
       }
+
+   protected:
+      template<unsigned>
+      friend struct HeapMovable;
+      
+      /// Set the hash directily (for internal use)                           
+      void SetHash(H hash) noexcept { mHash = hash; }
+      
+      /// Get the hash, but never recompute it                                
+      const H& GetHashNoRecompute() const noexcept { return mHash; }
    };
 }

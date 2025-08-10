@@ -58,7 +58,6 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Pair);
 LANGULUS_CTTI_CONCEPT_DECVQ(Handle);
 LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
-
 namespace Langulus::Anyness
 {
    struct HandleMut;
@@ -85,6 +84,19 @@ namespace Langulus::Anyness
 
    namespace Com = Component;
 
+   namespace Inner
+   {
+      template<class C1, class C2, class...CN>
+      consteval bool ValidateComponentOrder() {
+         static_assert(C1::ComponentPrecedence <= C2::ComponentPrecedence,
+            "Wrong component order");
+         if constexpr (sizeof...(CN))
+            return ValidateComponentOrder<C2, CN...>();
+         else
+            return true;
+      }
+   }
+   
    ///                                                                        
    /// A container definition using composition                               
    ///   @tparam COMPONENTS... - list of components that define the container 
@@ -93,21 +105,23 @@ namespace Langulus::Anyness
    ///      build-time optimization: too many superficially different template
    ///      specializations will bloat code generation significantly and slow 
    ///      builds down a lot...                                              
-   ///                                                                        
    template<CT::Component...COMPONENTS>
+   requires (Inner::ValidateComponentOrder<COMPONENTS...>())
    struct Container : COMPONENTS... {
       using CTTI_Container = Yes<>;
       using ComponentList = Types<COMPONENTS...>;
 
+      /// Generate a new container type with additional components            
+      ///   @attention doesn't check for duplicates                           
       template<CT::Component...MORE_COMPONENTS>
-      using AddComponents = Container<COMPONENTS..., MORE_COMPONENTS...>;
+      using Include = Container<COMPONENTS..., MORE_COMPONENTS...>;
 
       /// Explicitly call ConstructDefault in all of the components           
       /// Most components should have trivial constructors                    
       constexpr Container() noexcept {
-         ComponentList::ForEach([&]<class C>{
-            if constexpr (requires { C::ConstructDefault(); })
-               C::ConstructDefault();
+         ComponentList::ForEach([this]<class C>{
+            if constexpr (requires { this->C::ConstructDefault(); })
+               this->C::ConstructDefault();
          });
       }
 
@@ -118,24 +132,36 @@ namespace Langulus::Anyness
       ///   @note ConstructFrom act as validating functions as well           
       constexpr Container(CT::Container auto&& from) {
          using I = IntentOf<decltype(from)>;
-         ComponentList::ForEach([&]<class C>{
-            if constexpr (requires { C::ConstructFrom(I {from} ); })
-               C::ConstructFrom(I {from});
+         ComponentList::ForEach([&,this]<class C>{
+            if constexpr (requires { this->C::ConstructFrom(I {from}); })
+               this->C::ConstructFrom(I {from});
+            else if constexpr (requires { this->C::ConstructDefault(); })
+               this->C::ConstructDefault();
          });
       }
       
-      /// Generalized container assignment, that takes another container that 
+      /// Generalized container assignment that takes another container, which
       /// may have completely different components, and tries to extract all  
       /// relevant information from it. Invokes AssignFrom for each component 
       /// of this container that has it. Allows for intents as well           
       template<CT::Container LHS, CT::Container RHS>
       constexpr LHS& operator = (this LHS& lhs, RHS&& rhs) {
          using I = IntentOf<decltype(rhs)>;
-         LHS::ComponentList::ForEach([&]<class C>{
+         LHS::ComponentList::ForEach([&lhs,&rhs]<class C>{
             if constexpr (requires { lhs.C::AssignFrom(I {rhs}); })
                lhs.C::AssignFrom(I {rhs});
+            else if constexpr (requires { lhs.C::AssignDefault(); })
+               lhs.C::AssignDefault();
          });
          return lhs;
+      }
+      
+      /// Check if container isn't empty                                      
+      /// This is a fallback in case container has no state components        
+      ///   @return true if container has stuff inserted                      
+      constexpr bool IsValid() const noexcept
+      requires (not requires { typename Container::StateList; }) {
+         return this->GetCount() > 0;
       }
 
    protected:

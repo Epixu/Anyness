@@ -22,6 +22,7 @@ namespace Langulus::Anyness::Component
       using CTTI_Component  = Yes<>;
       using CTTI_Contiguous = No;
       using TableType = uint8_t;
+      static constexpr int ComponentPrecedence = 3000;
 
    protected:
       template<CT::Container C>

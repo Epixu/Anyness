@@ -16,6 +16,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    struct Conversion {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
    private:
       template<CT::Container C>

@@ -97,7 +97,6 @@ namespace Langulus::Anyness
          Iterator  operator ++ (int) noexcept { return mIt++; }
       };
 
-   public:
       Iterator begin() {
          return ::std::apply([](auto&...i) { return Iterator {{i.begin()...}}; }, range);
       }
@@ -157,7 +156,6 @@ namespace Langulus::Anyness
          Iterator  operator ++ (int) noexcept { return mIt++; }
       };
 
-   public:
       Iterator       begin() { return Iterator {range.begin()}; }
       decltype(auto) end  () { return range.end(); }
    };
@@ -186,6 +184,10 @@ namespace Langulus::Anyness
 
       explicit constexpr IterateHandles(C& a) noexcept : range {a} {}
 
+   private:
+      using Count = typename Deref<C>::CountType;
+
+   public:
       /// The iterator                                                        
       struct Iterator {
          using CTTI_Iterator  = Yes<>;
@@ -217,9 +219,16 @@ namespace Langulus::Anyness
 
          Iterator& operator ++ ()    noexcept { ++mIt; return *this; }
          Iterator  operator ++ (int) noexcept { return {mIt++, mRange}; }
+
+         /// Get the integer element difference between two iterators         
+         Count operator - (const Iterator& rhs) const noexcept {
+            if constexpr (C::TypeErased)
+               return static_cast<Count>((mIt.GetRaw() - rhs.mIt.GetRaw()) / mRange.GetStride());
+            else
+               return static_cast<Count>(mIt.GetRaw() - rhs.mIt.GetRaw());
+         }
       };
 
-   public:
       constexpr Iterator    begin() const noexcept { return {range.GetHandle(), range}; }
       constexpr IteratorEnd end  () const noexcept { return {}; }
    };
@@ -290,7 +299,6 @@ namespace Langulus::Anyness
          Iterator  operator ++ (int) noexcept { return {mIt++, mRange}; }
       };
 
-   public:
       constexpr Iterator       begin() const noexcept { return Iterator {range.begin()}; }
       constexpr decltype(auto) end  () const noexcept { return range.end(); }
    };
@@ -308,14 +316,13 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct IterationRange {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
    private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
-
       template<CT::Container C>
       using Iterator = typename IterateDefault<Deref<C>>::Iterator;
-
       template<CT::Container C>
       using IteratorRev = typename IterateInReverse<Deref<C>>::Iterator;
 

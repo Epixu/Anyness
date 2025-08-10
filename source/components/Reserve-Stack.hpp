@@ -25,6 +25,7 @@ namespace Langulus::Anyness::Component
    public:
       using CTTI_Component = Yes<>;
       using ReserveType = T;
+      static constexpr int ComponentPrecedence = 1000;
 
       /// Get the number of reserved (maybe uninitialized) elements           
       ///   @return the number of reserved (maybe uninitialized) elements     

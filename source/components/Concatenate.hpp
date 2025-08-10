@@ -17,6 +17,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct Concatenate {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
    private:
       template<CT::Container C>

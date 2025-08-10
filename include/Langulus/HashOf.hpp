@@ -37,19 +37,26 @@ namespace Langulus
       using CTTI_Nullable = Yes<>;
 
       #if LANGULUS_HASHSIZE == 32
-         uint32_t mHash = 0;
+         using InnerType = uint32_t;
       #elif LANGULUS_HASHSIZE == 64
-         uint64_t mHash = 0;
+         using InnerType = uint64_t;
       #else
          #error "Unsupported hash size"
       #endif
 
-      LANGULUS(ALWAYS_INLINED)
-      explicit constexpr operator bool() const noexcept {
-         return mHash != 0;
-      }
-
+      InnerType value;
+      
+      explicit constexpr operator bool() const noexcept { return value != 0; }
       constexpr bool operator == (const Hash&) const noexcept = default;
+      constexpr bool operator == (InnerType v) const noexcept { return value == v; }
+      
+      constexpr Hash() noexcept = default;
+      constexpr Hash(Hash const&) noexcept = default;
+      constexpr Hash(Hash &&) noexcept = default;
+      constexpr Hash(InnerType v) noexcept : value(v) {}
+      constexpr Hash& operator = (InnerType v) noexcept { value = v; return *this; }
+      constexpr Hash& operator = (Hash const&) noexcept = default;
+      constexpr Hash& operator = (Hash&&) noexcept = default;
    };
 
    /// Default hash seed used in Langulus                                     
@@ -165,7 +172,7 @@ namespace Langulus
    ///   @return the hash                                                     
    constexpr Hash HashBytes(Inner::data_view data, Hash seed) noexcept {
       static_assert(sizeof(Hash) == 4, "Not implemented");
-      return Hash {Inner::mm3_x86_32(data, seed.mHash)};
+      return Hash {Inner::mm3_x86_32(data, seed.value)};
    }
 
    /// Predeclaration required by CT::Hashable                                
@@ -252,7 +259,7 @@ namespace Langulus
             // Hash each element of the array individually, and then    
             // hash that array of hashes as a whole                     
             Hash coal[ExtentOf<T>];
-            for (::std::size_t i = 0; i < ExtentOf<T>; ++i)
+            for (size_t i = 0; i < ExtentOf<T>; ++i)
                coal[i] = HashOf<FORCE_RUNTIME, SEED>(head[i]);
 
             if consteval {
@@ -360,7 +367,7 @@ namespace Langulus
          // will likely result in different ordering inside unsorted    
          // containers. Nothing serious, unless you're pedantic like me 
          ::std::hash<T> hasher;
-         return Hash (hasher(head));
+         return Hash {hasher(head)};
       }
       else {
          // Handle failure statically                                   
@@ -378,7 +385,7 @@ namespace std
    struct hash<H> {
       LANGULUS(INLINED)
       size_t operator()(const H& what) const noexcept {
-         return what.GetHash().mHash;
+         return what.GetHash().value;
       }
    };
 }

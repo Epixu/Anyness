@@ -33,10 +33,11 @@ namespace Langulus::Anyness::Component
    ///   @tparam T    - the type of the variable                              
    ///   @tparam TYPE - optionally static type, use void for type-erasure     
    ///   @tparam ID   - which heap/stack is typed?                            
-   template<class T, class TYPE = void, unsigned ID = 0>
+   template<class META, class TYPE = void, unsigned ID = 0>
    struct TypedStack {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
+      static constexpr int ComponentPrecedence = -3000;
 
       static constexpr bool TypeErased = CT::Void<TYPE>;
       /// @attention valid only if not TypeErased                             
@@ -53,7 +54,7 @@ namespace Langulus::Anyness::Component
       friend struct Removal;
 
       // The type                                                       
-      T mType;
+      META mType;
 
       /// Reset the type of the container, unless it's type-constrained       
       /// If this container isn't type-erased, this call is a no-op           
@@ -70,9 +71,13 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Get the contained type                                              
-      constexpr T GetType() const noexcept { return mType; }
+      constexpr META GetType() const noexcept {
+         if constexpr (not TypeErased)
+            const_cast<META&>(mType) = MetaDataOf<TYPE>();
+         return mType;
+      }
 
-      /// Get the size of a single element of TYPE in bytes                   
+      /// Get the size of a single element in bytes                           
       constexpr size_t GetStride() const noexcept {
          if constexpr (TypeErased)
             return mType.GetSize();
@@ -123,7 +128,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @param type - the type to check for                               
       ///   @return true if this container has similar data                   
-      bool Is(T type) const noexcept {
+      bool Is(META type) const noexcept {
          return mType.Is(type);
       }
 
@@ -157,7 +162,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores only cv-qualifiers                             
       ///   @param type - the type to check for                               
       ///   @return true if this block contains similar data                  
-      bool IsSimilar(T type) const noexcept {
+      bool IsSimilar(META type) const noexcept {
          return mType.IsSimilar(type);
       }
 
@@ -189,7 +194,7 @@ namespace Langulus::Anyness::Component
       /// Check if this type is exactly another                               
       ///   @param type - the type to match                                   
       ///   @return true if data type matches type exactly                    
-      bool IsExact(T type) const noexcept {
+      bool IsExact(META type) const noexcept {
          return mType.IsExact(type);
       }
 
@@ -250,6 +255,11 @@ namespace Langulus::Anyness::Component
             return CT::Deep<Decay<TYPE>>;
       }
 
+      /// Returns true if a type constraint is specified                      
+      constexpr bool IsTypeConstrained() const requires (not TypeErased) {
+         return true;
+      }
+
       /// Get the size of the type times the contained elements               
       ///   @return the size of all elements in bytes                         
       template<CT::Container C>
@@ -258,20 +268,91 @@ namespace Langulus::Anyness::Component
       }
 
       template<bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
-      bool CastsToMeta(T) const;
+      bool CastsToMeta(META) const;
       template<bool BINARY_COMPATIBLE = false>
-      bool CastsToMeta(T, ::std::size_t) const;
+      bool CastsToMeta(META, size_t) const;
 
       template<CT::NotVoid, bool BINARY_COMPATIBLE = false, bool ADVANCED = false>
       bool CastsTo() const;
       template<CT::NotVoid, bool BINARY_COMPATIBLE = false>
-      bool CastsTo(::std::size_t) const;
+      bool CastsTo(size_t) const;
 
-      template<CT::NotVoid>
-      void SetType()  requires TypeErased;
-      void SetType(T) requires TypeErased;
+      /// Set the contained data type if possible                             
+      /// This is still used if statically typed - checks if types are        
+      /// compatible in constructors and assigners                            
+      ///   @tparam T - the new type                                          
+      template<CT::NotVoid T, CT::Container C>
+      void SetType(this C& self) {
+         const auto type = MetaDataOf<T>();
+         if constexpr (C::TypeErased)
+            self.SetType(type);
+         else {
+            static_assert(CT::Exact<T, TYPE>, "Type mismatch");         
+            self.mType = type;
+         }
+      }
 
-      void MakeConstant() noexcept;
-      void MakeMutable() noexcept;
+      /// Set the contained data type if possible                             
+      /// This is still used if statically typed - checks if types are        
+      /// compatible in constructors and assigners                            
+      /// This particular override doesn't benefit from compile-time checks   
+      ///   @param type - the new type                                        
+      template<CT::Container C>
+      void SetType(this C& self, META type) {
+         if constexpr (C::TypeErased) {
+            // This container is type-erased                            
+            if (self.mType == type)
+               return;
+         
+            if (not self.mType) {
+               self.mType = type;
+               return;
+            }
+
+            LglsAssert(not self.IsTypeConstrained(),
+               "Attempting to mutate type-locked container"
+               " of type ", self.mType, " to type ", type
+            );
+
+            if (self.mType->CastsTo(type)) {
+               // Type is compatible, but only sparse data can mutate   
+               // freely. Dense containers can't mutate because their   
+               // destructors might be wrong later                      
+               LglsAssert(self.IsSparse(), "Can't mutate ", self.mType,
+                  " to incompatible type ", type);
+            }
+            else {
+               // Type is not compatible, but container is not typed, so
+               // if it has no constructed elements we can still mutate 
+               LglsAssert(self.IsEmpty(), "Can't mutate ", self.mType,
+                  " to incompatible type ", type);
+            }
+            
+            self.mType = type;
+         }
+         else {
+            // This container is statically typed                       
+            if (not self.mType)
+               self.mType = MetaDataOf<TYPE>();
+            LglsAssert(self.mType.IsExact(type), "Type mismatch");
+         }
+      }
+
+      /// Make container type constant                                        
+      ///   @attention this will throw an exception if constant type hasn't   
+      ///      been reflected yet                                             
+      /*void MakeConstant() {
+         mType = mType.AddConst();
+      }
+      
+      /// Remove the topmost type constness                                   
+      void MakeMutableOnce() noexcept {
+         mType = mType.GetDecvq();
+      }
+
+      /// Remove all qualifier from all levels of indirection                 
+      void MakeMutableAll() noexcept {
+         mType = mType.GetDecvqAll();
+      }*/
    };
 }

@@ -76,6 +76,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0, class AS = void>
    struct Insertion {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
    private:
       template<CT::Container C>
@@ -200,7 +201,6 @@ namespace Langulus::Anyness::Component
       template<bool TRANSFER_OR = true, CT::Container C>
       auto Deepen(this C&) -> Deep<C>&;
 
-
       /// Extend the container's memory and return the newly allocated range  
       ///   @attention if extending memory without ownership, the container   
       ///      will copy the data and diverge into a new allocation           
@@ -217,11 +217,15 @@ namespace Langulus::Anyness::Component
          else if (count == 1)
             self.Emplace(FWD(arguments)...);
          else {
-            // When creating multiple items, we can't allow arguments   
-            // to be forwarded, because they might be moved away        
+            LglsAssert(
+               ((not IntentOf<decltype(arguments)>::IsMoved()) and ...),
+               "Can't use move semantics here - "
+               "the arguments need to be reused multiple times"
+            );
+            
             self.AllocateMore(previousCount + count);
             for (Count<C> i = 0; i < count; i++)
-               self.Emplace(DeintCast(arguments)...);
+               self.Emplace(FWD(arguments)...);
          }
          return self.SelectInner(previousCount, count);
       }

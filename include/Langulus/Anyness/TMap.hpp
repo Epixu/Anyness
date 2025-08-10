@@ -95,7 +95,7 @@ namespace Langulus::Anyness
 
       ///                                                                     
       template<CT::NotVoid K, CT::NotVoid V>
-      using TMapBase = typename TMapCommon<K, V>::template AddComponents<
+      using TMapBase = typename TMapCommon<K, V>::template Include<
          Com::StateStack<              // Variable state                
             DefineState::Sorted<>,     // Maybe unsorted                
             DefineState::Compressed<>, // Adds 'compressed' state       
@@ -106,7 +106,7 @@ namespace Langulus::Anyness
 
       ///                                                                     
       template<CT::NotVoid K, CT::NotVoid V>
-      using TMapUnsortedBase = typename TMapCommon<K, V>::template AddComponents<
+      using TMapUnsortedBase = typename TMapCommon<K, V>::template Include<
          Com::StateStack<              // Variable state                
             DefineState::Sorted<State::Disabled>,  // Always unsorted   
             DefineState::Compressed<>, // Adds 'compressed' state       
@@ -117,7 +117,7 @@ namespace Langulus::Anyness
       
       ///                                                                     
       template<CT::NotVoid K, CT::NotVoid V>
-      using TMapSortedBase = typename TMapCommon<K, V>::template AddComponents<
+      using TMapSortedBase = typename TMapCommon<K, V>::template Include<
          Com::StateStack<              // Variable state                
             DefineState::Sorted<State::Enabled>,   // Always sorted     
             DefineState::Compressed<>, // Adds 'compressed' state       

@@ -18,6 +18,7 @@ namespace Langulus::Anyness::Component
    struct ReserveStatic {
       using CTTI_Component = Yes<>;
       using ReserveType = decltype(SIZE);
+      static constexpr int ComponentPrecedence = 1000;
 
       static_assert(SIZE > 0, "Can't have a container of zero or negative capacity");
 

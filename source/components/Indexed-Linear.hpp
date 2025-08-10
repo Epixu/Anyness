@@ -22,6 +22,7 @@ namespace Langulus::Anyness::Component
    struct IndexedLinear {
       using CTTI_Component = Yes<>;
       static constexpr bool Indexed = true;
+      static constexpr int ComponentPrecedence = 3000;
 
    protected:
       template<unsigned, class>

@@ -17,6 +17,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct Removal {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
    private:
       template<CT::Container C>
@@ -76,7 +77,8 @@ namespace Langulus::Anyness::Component
       /// Destroy all elements but don't deallocate memory                    
       template<CT::Container C>
       void Clear(this C& self) {
-         if (not self.mAllocation) {
+         const auto allocation = self.GetAllocation();
+         if (not allocation) {
             // Data is either static or unallocated                     
             // Don't call destructors, just clear it up                 
             self.mHeap = nullptr;
@@ -87,7 +89,7 @@ namespace Langulus::Anyness::Component
             return;
          }
 
-         if (self.mAllocation->GetUses() == 1) {
+         if (allocation->GetUses() == 1) {
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the entry and type   
             if constexpr (requires { self.FreeDeep(); })
@@ -97,8 +99,8 @@ namespace Langulus::Anyness::Component
          else {
             // If reached, then data is referenced from multiple places 
             // Don't call destructors, just clear it up and dereference 
-            self.mAllocation->Free();
-            self.mAllocation = nullptr;
+            allocation->Free();
+            self.SetAllocation(nullptr);
             self.mHeap = nullptr;
             self.mCount = 0;
             if constexpr (requires { self.mReserved; })
@@ -112,11 +114,12 @@ namespace Langulus::Anyness::Component
       void Reset(this C& self) {
          self.Free();
          self.mHeap = nullptr;
-         self.mAllocation = nullptr;
-         self.mCount = 0;
+         self.SetAllocation(nullptr);
+         self.SetCount(0);
          if constexpr (requires { self.mReserved; })
             self.mReserved = 0;
-         self.ResetState();
+         if constexpr (requires { self.ResetState(); })
+            self.ResetState();
          self.ResetType();
       }
    };

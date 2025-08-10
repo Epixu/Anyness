@@ -22,6 +22,7 @@ namespace Langulus::Anyness::Component
    template<CT::NotVoid T, unsigned ID = 0>
    struct Stack {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = -2000;
 
    protected:
       T mStack;

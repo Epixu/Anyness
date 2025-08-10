@@ -28,6 +28,8 @@ namespace Langulus::Anyness::Component
    template<CT::State...STATES>
    struct StateStack : STATES... {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 0;
+
       using StateList = Types<STATES...>;
       using StateType = Tif<sizeof...(STATES) <= 8, uint8_t, uint16_t>;
       static constexpr StateType StateCount = sizeof...(STATES);
@@ -153,11 +155,6 @@ namespace Langulus::Anyness::Component
             return self.GetCount() or self.GetUnconstrainedState();
          else
             return self.GetUnconstrainedState();
-      }
-
-      template<CT::Container C>
-      constexpr bool IsInvalid(this const C& self) noexcept {
-         return not self.IsValid();
       }
    };
 }

@@ -18,10 +18,10 @@ namespace Langulus::Anyness::Component
    /// The hash is calculated using the data inside the given heap ID         
    ///   @tparam ID - the heap ID                                             
    ///   @tparam H  - the hash type used                                      
-   ///                                                                        
    template<unsigned ID = 0, class H = Hash>
    struct HashEmergent {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 2000;
 
       /// Get the hash, recompute every time                                  
       template<CT::Container C>
@@ -34,7 +34,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       H HashRecompute(this C const& self) {
          if (self.IsEmpty())
-            return {};
+            return {1};
 
          if constexpr (CT::Typed<C>) {
             //                                                          
@@ -73,7 +73,7 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Container is type-erased                                 
             if (self.IsUntyped())
-               return {};
+               return {1};
 
             const DMeta T = self.GetType();
             if (self.GetCount() == 1) {

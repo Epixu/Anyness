@@ -35,6 +35,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct Emplacement {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
    protected:
       template<unsigned>
@@ -44,6 +45,7 @@ namespace Langulus::Anyness::Component
       using PickMut = typename Deref<C>::PickMut;
       
       /// Emplace a new item at the first element, with or without an intent  
+      ///   @attention does not modify count                                  
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
       ///   @param rhs_with_intent - constructor argument. If this container  

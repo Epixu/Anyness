@@ -42,29 +42,23 @@ namespace Langulus::Anyness
    namespace Inner
    {
       using TextBase = Container<
+         Com::TypedStack<DMeta, char>,    // Type-constrained           
          Com::HeapMovable<>,              // Pointer to heap memory     
          Com::OwnershipStack<>,           // Allocation is referenced   
-         Com::IndexedLinear<>,            // Indexed directly           
+         Com::CountStack<>,               // Variable count             
+         Com::ReserveEmergent<>,          // Variable capacity          
+         Com::HashStack<>,                // Variable hash (cached)     
          Com::Emplacement<>,              // Allows emplacement         
          Com::Insertion<0, Text>,         // Serialize + insert         
          Com::InsertionOperators<0, Text>,// << and >> insertion        
          Com::Concatenate<>,              // Concatenate                
          Com::Removal<>,                  // Allows removal             
          Com::Assignment<>,               // Allows assignment          
-         Com::TypedStack<DMeta, char>,    // Type-constrained           
-         Com::CountStack<>,               // Variable count             
-         Com::ReserveEmergent<>,          // Variable capacity          
-         Com::HashStack<>,                // Variable hash (cached)     
-         Com::IterationForEach<>,         // ForEach iteration          
-         Com::IterationRange<>,           // Range iteration            
          Com::Comparison,                 // Allows for comparison      
          Com::Conversion,                 // Allows conversion          
-         Com::StateStack<                 // Variable state             
-            DefineState::Typed<State::Enabled>, // Always typed         
-            DefineState::Compressed<>,    // Adds 'compressed' state    
-            DefineState::Encrypted<>,     // Adds 'encrypted' state     
-            DefineState::Tracked<>        // Adds 'tracked' state       
-         >
+         Com::IndexedLinear<>,            // Indexed directly           
+         Com::IterationForEach<>,         // ForEach iteration          
+         Com::IterationRange<>            // Range iteration            
       >;
    }
 
@@ -76,18 +70,17 @@ namespace Langulus::Anyness
       using Base = Inner::TextBase;
       using CountType = Base::CountType;
       using CTTI_Text = Yes<>;
-      using Base::Base;
 
       // Single element selections                                      
       using Pick = char const&;
       using PickMut = char&;
 
       // Range selections                                               
-      using PickRange = TextView;
-
-      struct PickRangeMut : PickRange::AddComponents<Com::Assignment<>> {};
+      using  PickRange    = TextView;
+      struct PickRangeMut : PickRange::Include<Com::Assignment<>> {};
 
    public:
+      using Base::Base;
       constexpr Text(nullptr_t) noexcept {}
 
       /// Construction from any kind of text that isn't an Anyness container  

@@ -19,6 +19,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0, class AS = void>
    struct InsertionOperators {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
       /// Push back                                                           
       template<CT::Container C, class A>

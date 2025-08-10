@@ -21,15 +21,6 @@ namespace Langulus::Anyness::Component
    ///   @tparam T - the count type                                           
    template<unsigned ID = 0, class T = size_t>
    struct CountStack {
-   protected:
-      template<unsigned>        friend struct Removal;
-      template<unsigned, class> friend struct Insertion;
-      template<class>           friend struct IndexedLinear;
-      template<unsigned>        friend struct HeapMovable;
-
-      /// Set the number of initialized elements                              
-      void SetCount(T count) noexcept { mCount = count; }
-
    private:
       // The count on the stack                                         
       // It is private so that it isn't accessible when inherited       
@@ -40,6 +31,7 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using CountType = T;
       using IndexType = Index::At<T>;
+      static constexpr int ComponentPrecedence = 1000;
 
       /// Check if there are no initialized elements                          
       constexpr bool IsEmpty() const noexcept { return mCount == 0; }
@@ -52,5 +44,14 @@ namespace Langulus::Anyness::Component
 
       T GetCountDeep() const noexcept;
       T GetCountItemsDeep() const noexcept;
+
+   protected:
+      template<unsigned>        friend struct Removal;
+      template<unsigned, class> friend struct Insertion;
+      template<class>           friend struct IndexedLinear;
+      template<unsigned>        friend struct HeapMovable;
+
+      /// Set the number of initialized elements                              
+      void SetCount(T count) noexcept { mCount = count; }
    };
 }

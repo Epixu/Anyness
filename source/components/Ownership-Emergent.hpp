@@ -8,6 +8,10 @@
 #pragma once
 #include "../Container.hpp"
 
+#if not LANGULUS_FEATURE(MANAGED_MEMORY)
+   #error "This file shouldn't be included if managed memory is disabled"
+#endif
+
 
 namespace Langulus::Anyness::Component
 {
@@ -24,6 +28,7 @@ namespace Langulus::Anyness::Component
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
       static constexpr bool Owned = AUTO;
+      static constexpr int ComponentPrecedence = -1000;
 
       /// Get the allocation                                                  
       template<CT::Container C>

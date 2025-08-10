@@ -264,14 +264,18 @@ namespace Langulus::RTTI::Inner
    ///   @attention this is possible only if that level of indirection has    
    ///      already been reflected at runtime prior to calling this function  
    inline auto MetaDataNaked::AddPtr() const -> MetaDataNaked {
-      return mDefinition->mAddPtr;
+      auto ptr = mDefinition->mAddPtr;
+      LglsAssert(ptr, "Pointer type hasn't been reflected yet");
+      return ptr;
    }
 
    /// Add a constant qualifier to the type                                   
    ///   @attention this is possible only if the qualified type has           
    ///      already been reflected at runtime prior to calling this function  
    inline auto MetaDataNaked::AddConst() const -> MetaDataNaked {
-      return mDefinition->mAddConst;
+      auto cnst = mDefinition->mAddConst;
+      LglsAssert(cnst, "Constant type hasn't been reflected yet");
+      return cnst;
    }
 
    /// Get the default concretization for an abstract type                    

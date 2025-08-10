@@ -159,7 +159,7 @@ namespace Catch
    template <>
    struct StringMaker<Langulus::Hash> {
       static std::string convert(Langulus::Hash k) {
-         return "Hash(" + std::to_string(k.mHash) + ")";
+         return "Hash(" + std::to_string(k.value) + ")";
       }
    };
 }
@@ -196,7 +196,7 @@ SCENARIO("Hashing standard containers should result in the same hashes", "[hash]
    STATIC_REQUIRE(HashOf(c_same2arr) == HashOf('S', 'a', 'm', 'e', '2'));
 
    constexpr std::array<Hash, 1> c_wrappedHash = {Hash{666}};
-   STATIC_REQUIRE(HashOf(c_wrappedHash) == Hash {666});
+   REQUIRE(HashOf(c_wrappedHash) == Hash {666});
 
    STATIC_REQUIRE(HashOf(HashableViaConstMethod {}) == Hash {666});
 

@@ -23,10 +23,10 @@ namespace Langulus::Anyness
    {
       template<CT::Reference T>
       using THandleBase = Container<
-         Com::HeapReference<>,
-         Com::DeepOwnershipStack<>,
          Com::TypedStatic<DMeta, Deref<T>>,
+         Com::HeapReference<>,
          Com::CountStatic<1u>,
+         Com::DeepOwnershipStack<>,
          Com::Assignment<>,
          Com::Emplacement<>,
          Com::Comparison,
@@ -35,8 +35,8 @@ namespace Langulus::Anyness
       
       template<CT::Reference T>
       using THandleDisownedBase = Container<
-         Com::HeapReference<>,
          Com::TypedStatic<DMeta, Deref<T>>,
+         Com::HeapReference<>,
          Com::CountStatic<1u>,
          Com::Assignment<>,
          Com::Emplacement<>,

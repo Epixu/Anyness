@@ -34,14 +34,14 @@ namespace Langulus::Anyness
    /// Disallows any modification of the contained data or the container      
    ///                                                                        
    struct TextView : Container<
+      Com::TypedStatic<DMeta, const char>,// Type-constrained           
       Com::HeapReference<>,               // Pointer to heap memory     
       Com::OwnershipStack<0, false>,      // Pointer to an allocation   
-      Com::IndexedLinear<>,               // Indexed directly           
-      Com::TypedStatic<DMeta, const char>,// Type-constrained           
       Com::CountStack<>,                  // Variable count             
-      Com::IterationForEach<>,            // ForEach iteration          
-      Com::IterationRange<>,              // Ranged iteration           
       Com::Comparison,                    // Allows for comparisons     
-      Com::Conversion                     // Allows conversions         
+      Com::Conversion,                    // Allows conversions         
+      Com::IndexedLinear<>,               // Indexed directly           
+      Com::IterationForEach<>,            // ForEach iteration          
+      Com::IterationRange<>               // Ranged iteration           
    > {};
 }

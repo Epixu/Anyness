@@ -18,10 +18,9 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Interfaces a heap allocation                                           
-   /// Adds a pointer member to the raw byte memory                           
+   /// Adds a member that points to the heap memory                           
    /// The pointer is allowed to move on reallocation                         
    ///   @tparam ID - multiple heap interfaces are supported                  
-   ///                                                                        
    template<unsigned ID = 0>
    struct HeapMovable : HeapReference<ID> {
       static constexpr bool HeapCanBeNull = true;
@@ -35,14 +34,228 @@ namespace Langulus::Anyness::Component
       friend struct Insertion;
 
       template<CT::Container C>
-      using Count = typename C::CountType;
+      using Count = typename Deref<C>::CountType;
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
       template<CT::Container C>
       using Pick = Tif<CT::Mutable<C>, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
-            
+
+   public:
+      template<CT::NotVoid AS, CT::Container C>
+      auto As(this C&& self) -> Pick<C>;
+
+      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
+      auto AsCast(this C const& self) -> AS;
+
+      template<CT::Container C>
+      auto GetItem(this C&&) has_assumptions -> Deep<C>;
+
+      /// A safe way to get the first deep entry                              
+      /// Will utilize any statically typed deep containers, if available     
+      ///   @attention ignores sparseness                                     
+      ///   @return a pointer to the first deep item, or nullptr if not deep  
+      template<CT::Container C>
+      auto GetDeep(this C&& self) noexcept -> Deep<C>* {
+         if (not self.IsDeep())
+            return nullptr;
+         return self.template Get<Deep<C>*>();
+      }
+
+      template<CT::Container C>
+      auto GetResolved(this C&&) -> Deep<C>;
+
+      template<CT::Container C>
+      auto GetDense(this C&&, Count<C> = CountMax<C>) -> Deep<C>;
+      
+   protected:      
+      /// Default-initialize the component, zeroing members                   
+      /// A default-constructor isn't used for this to avoid duplication of   
+      /// some calls                                                          
+      template<CT::Container C>
+      void ConstructDefault(this C& self) noexcept {
+         self.mHeap = nullptr;
+         self.SetAllocation(nullptr);
+         if constexpr (requires { self.mReserved; })
+            self.mReserved = 0;
+         self.SetCount(0);
+         self.SetHash(1);
+         // Type should be default-initialized anyways                  
+      }
+      
+      /// Transfer from any kind of container, respecting intents             
+      ///   @param intent - the intent and container to transfer from         
+      template<CT::Container C, CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this C& self, I&& intent) {
+         using IT = Decay<TypeOf<I>>;
+         auto& from = DeintCast(intent);
+         const auto count = from.GetCount();
+         auto type = from.GetType();
+
+         if constexpr (I::IsShallow()) {
+            // Move/Copy/Refer/Abandon/Disown other                     
+            if constexpr (I::IsKept()) {
+               // Move/Copy/Refer other                                 
+               if constexpr (I::IsMoved()) {
+                  // Move                                               
+                  self.SetAllocation(from.GetAllocation());
+                  self.mHeap = from.mHeap;
+                  if constexpr (requires { self.mReserved; })
+                     self.mReserved = from.GetReserved();
+                  self.SetCount(count);
+                  self.SetType(type);
+                  self.SetHash(from.GetHashNoRecompute());
+
+                  if constexpr (not IT::Owned) {
+                     // Since we are not aware if that block is         
+                     // referenced or not we reference it just in case, 
+                     // and we also do not reset 'other' to avoid leaks.
+                     // When using raw Blocks, it's your responsibility 
+                     // to take care of ownership                       
+                     self.Keep();
+                  }
+                  else {
+                     from.mHeap = nullptr;
+                     from.SetAllocation(nullptr);
+                     if constexpr (requires { from.mReserved; })
+                        from.mReserved = 0;
+                     from.SetCount(0);
+                     from.ResetState();
+                     from.ResetType();
+                     from.ResetHash();
+                  }
+               }
+               else {
+                  // Copy/Refer other                                   
+                  if constexpr (CT::Referred<I>) {
+                     // Refer                                           
+                     self.mHeap = from.mHeap;
+                     if constexpr (requires { self.mReserved; })
+                        self.mReserved = from.GetReserved();
+                     self.SetAllocation(from.GetAllocation());
+                     self.SetCount(count);
+                     self.SetType(type);
+                     self.SetHash(from.GetHashNoRecompute());
+                     self.Keep();
+                  }
+                  else {
+                     // Do a shallow copy                               
+                     // We're cloning first layer, so we guarantee,     
+                     // that data is no longer static and constant      
+                     // at first level of indirection                   
+                     type = type.GetDecvq();
+                     self.SetType(type);
+                     if (0 == count) {
+                        self.SetCount(0);
+                        self.SetHash(1);
+                        return;
+                     }
+
+                     // Pick a preferably typed block to optimize       
+                     if constexpr (IT::TypeErased) {
+                        // A runtime check is required before allocating
+                        LglsAssert(type.GetReferConstructor(),
+                           "Can't refer-construct elements"
+                           " - no refer-constructor was reflected for type ",
+                           type
+                        );
+                     }
+                     else {
+                        static_assert(CT::ReferConstructible<TypeOf<IT>>,
+                           "Contained type is not refer-constructible");
+                     }
+
+                     self.AllocateFresh(self.RequestSize(count));
+                     const auto srcStart = IterateHandles(from).begin();
+                     auto src = srcStart;
+                     try {
+                        for (auto dst : IterateHandles(self)) {
+                           dst.EmplaceWithIntent(Refer(*src));
+                           ++src;
+                        }
+                     } catch (...) {
+                        // Partial success                              
+                        self.SetCount(src - srcStart);
+                        //self.ResetHash();
+                        throw;
+                     }
+                     
+                     // Full success                                    
+                     self.SetCount(count);
+                     self.SetHash(from.GetHashNoRecompute());
+                  }
+               }
+            }
+            else if constexpr (I::IsMoved()) {
+               // Abandon                                               
+               self.mHeap = from.mHeap;
+               if constexpr (requires { self.mReserved; })
+                  self.mReserved = from.GetReserved();
+               self.SetAllocation(from.GetAllocation());
+               self.SetCount(count);
+               self.SetType(type);
+               self.SetHash(from.GetHashNoRecompute());
+
+               // Discard only ownership from source container          
+               from.SetAllocation(nullptr);
+            }
+            else {
+               // Disown                                                
+               self.mHeap = from.mHeap;
+               if constexpr (requires { self.mReserved; })
+                  self.mReserved = from.GetReserved();
+               self.SetCount(count);
+               self.SetAllocation(nullptr);
+               self.SetType(type);
+               self.SetHash(from.GetHashNoRecompute());
+            }
+         }
+         else {
+            // We're cloning, so we guarantee, that data is no longer   
+            // constant at any level of indirection                     
+            type = type.GetDecvqAll();
+            self.SetType(type);
+            if (0 == count) {
+               self.SetCount(0);
+               self.SetHash(1);
+               return;
+            }
+
+            // Pick the typed block to optimize the construction        
+            if constexpr (IT::TypeErased) {
+               // A runtime check is required before allocating         
+               LglsAssert(type.GetCloneConstructor(),
+                  "Can't clone-construct elements"
+                  " - no clone-constructor was reflected for type ",
+                  type
+               );
+            }
+            else {
+               static_assert(CT::CloneConstructible<TypeOf<IT>>,
+                  "Contained type is not clone-constructible");
+            }
+
+            self.AllocateFresh(self.RequestSize(count));
+            const auto srcStart = IterateHandles(from).begin();
+            auto src = srcStart;
+            try {
+               for (auto dst : IterateHandles(self)) {
+                  dst.EmplaceWithIntent(Clone(*src));
+                  ++src;
+               }
+            } catch (...) {
+               // Partial success                                       
+               self.SetCount(src - srcStart);
+               //self.ResetHash();
+               throw;
+            }
+                     
+            // Full success                                             
+            self.SetCount(count);
+            self.SetHash(from.GetHashNoRecompute());
+         }
+      }
 
       /// Get a size based on reflected allocation page and count             
       ///   @param count - the number of elements to request                  
@@ -97,7 +310,8 @@ namespace Langulus::Anyness::Component
          }
 
          LglsAssert(al, "Out of memory");
-         self.mAllocation = al;
+         self.mHeap = al->GetBlockStart();
+         self.SetAllocation(al);
          if constexpr (requires { self.mReserved; })
             self.mReserved = request.mElementCount;
       }
@@ -109,13 +323,14 @@ namespace Langulus::Anyness::Component
       ///   @param elements - number of elements to allocate                  
       template<bool CREATE = false, bool SETSIZE = false, CT::Container C>
       void AllocateMore(this C& self, const Count<C> elements) {
+         const auto al = self.GetAllocation();
          LglsAssumeDev(elements > self.GetCount(), "Bad element count");
 
          if constexpr (CT::Typed<C>) {
             // Allocate/reallocate                                      
             using T = TypeOf<C>;
             const auto request = self.RequestSize(elements);
-            if (self.GetAllocation()) {
+            if (al) {
                if (self.GetReserved() >= elements) {
                   // Required memory is already available               
                   if constexpr (CREATE) {
@@ -140,15 +355,16 @@ namespace Langulus::Anyness::Component
                typename C::PickRange previous {self};
                auto reallocated = Allocator::Reallocate(
                   request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1),
-                  self.mAllocation
+                  al
                );
+               
                LglsAssert(reallocated, "Out of memory");
-               self.mAllocation = reallocated;
+               self.SetAllocation(reallocated);
                if constexpr (requires { self.mReserved; })
                   self.mReserved = request.mElementCount;
 
-               if (self.mAllocation != previous.mAllocation) {
-                  self.mHeap = self.mAllocation->GetBlockStart();
+               if (reallocated != previous.GetAllocation()) {
+                  self.mHeap = reallocated->GetBlockStart();
 
                   if (previous.GetCount()) {
                      // Memory moved, and we should move all elements   
@@ -220,8 +436,7 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(desiredReserve < self.GetReserved(),
             "Can't shrink allocation using more elements");
          const auto allocation = self.GetAllocation();
-         LglsAssumeDev(allocation,
-            "Invalid allocation");
+         LglsAssumeDev(allocation, "Invalid allocation");
          LglsAssumeDev(allocation->GetUses() == 1,
             "Can't reuse memory of a block used from multiple places, "
             "BranchOut should've been called prior to AllocateMore"
@@ -253,10 +468,10 @@ namespace Langulus::Anyness::Component
                );
             }
 
-            self.mAllocation = Allocator::Reallocate(
+            self.SetAllocation(Allocator::Reallocate(
                request.mByteSize * (T.IsSparse() ? 2 : 1),
-               self.mAllocation
-            );
+               allocation
+            ));
          }
          else {
             //                                                          
@@ -279,10 +494,10 @@ namespace Langulus::Anyness::Component
                );
             }
 
-            self.mAllocation = Allocator::Reallocate(
+            self.SetAllocation(Allocator::Reallocate(
                request.mByteSize * (CT::Sparse<T> ? 2 : 1),
-               self.mAllocation
-            );
+               allocation
+            ));
          }
 
          if constexpr (requires { self.mReserved; })
@@ -416,32 +631,5 @@ namespace Langulus::Anyness::Component
             }
          }
       }
-
-   public:
-      template<CT::NotVoid AS, CT::Container C>
-      auto As(this C&& self) -> Pick<C>;
-
-      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
-      auto AsCast(this C const& self) -> AS;
-
-      template<CT::Container C>
-      auto GetItem(this C&&) has_assumptions -> Deep<C>;
-
-      /// A safe way to get the first deep entry                              
-      /// Will utilize any statically typed deep containers, if available     
-      ///   @attention ignores sparseness                                     
-      ///   @return a pointer to the first deep item, or nullptr if not deep  
-      template<CT::Container C>
-      auto GetDeep(this C&& self) noexcept -> Deep<C>* {
-         if (not self.IsDeep())
-            return nullptr;
-         return self.template Get<Deep<C>*>();
-      }
-
-      template<CT::Container C>
-      auto GetResolved(this C&&) -> Deep<C>;
-
-      template<CT::Container C>
-      auto GetDense(this C&&, Count<C> = CountMax<C>) -> Deep<C>;
    };
 }

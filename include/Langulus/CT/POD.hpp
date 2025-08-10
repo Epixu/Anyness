@@ -14,6 +14,10 @@ namespace Langulus::CTTI
    /// Affects CT::POD<T>                                                     
    ///   @note: is_trivially_destructible_v is required to strenghten the     
    ///      is_trivial_v check on GCC/Clang due to compiler bugs; MSVC is fine
+   ///   @note: std::array will be considered POD if containing POD elements  
+   ///      so we make sure that ranges are never considered POD by default,  
+   ///      otherwise an array containing one hash will result in a rehash    
+   ///      instead of a reuse                                                
    template<class T>
    struct POD {
       static constexpr bool Default = true;
@@ -22,6 +26,7 @@ namespace Langulus::CTTI
                 ::std::is_trivial_v<T>
             and ::std::is_standard_layout_v<T>
             and ::std::is_trivially_destructible_v<T>
+            and not ::std::ranges::range<T>
          )
       );
    };

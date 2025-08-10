@@ -71,6 +71,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct Assignment {
       using CTTI_Component = Yes<>;
+      static constexpr int ComponentPrecedence = 3000;
 
       template<CT::Container C, class A>
       void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;

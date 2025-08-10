@@ -19,11 +19,11 @@ namespace Langulus::Anyness::Component
    /// Reserves a part of the heap to keep track of sparse element's          
    /// allocations                                                            
    ///   @tparam ID - which heap are we keeping track of?                     
-   ///                                                                        
    template<unsigned ID = 0>
    struct DeepOwnershipHeap {
       using CTTI_Component = Yes<>;
       static constexpr bool DeeplyOwned = true;
+      static constexpr int ComponentPrecedence = 2000;
 
    protected:
       template<unsigned>
@@ -49,7 +49,7 @@ namespace Langulus::Anyness::Component
                   "Entries do not exist for sparse containers which are out of jurisdiction");
                return reinterpret_cast<AllocationPtr*>(self.GetHeapEnd());
             }
-            else return &self.mAllocation;
+            else return self.GetAllocationRef();
          }
          else {
             if constexpr (DC::Sparse) {
@@ -59,7 +59,7 @@ namespace Langulus::Anyness::Component
                   "Entries do not exist for sparse containers which are out of jurisdiction");
                return reinterpret_cast<AllocationPtr*>(self.GetHeapEnd());
             }
-            else return &self.mAllocation;
+            else return self.GetAllocationRef();
          }
       }
 

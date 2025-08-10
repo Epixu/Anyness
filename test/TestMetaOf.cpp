@@ -314,8 +314,8 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    
    REQUIRE(meta.GetDecvqAll() == MetaDataOf<DecvqAll<Deref<T>>>());
    REQUIRE(meta.GetDecvq() == MetaDataOf<Decvq<Deref<T>>>());
-   REQUIRE(meta.AddPtr() == nullptr);
-   REQUIRE(meta.AddConst() == nullptr);
+   REQUIRE_THROWS(meta.AddPtr() == nullptr);
+   REQUIRE_THROWS(meta.AddConst() == nullptr);
    
    REQUIRE(meta.GetSize() == sizeof(Deref<T>));
    REQUIRE(meta.GetAlignment() == alignof(Deref<T>));

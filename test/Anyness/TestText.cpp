@@ -46,9 +46,9 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
 ) {
    using T = TestType;
    static Allocator::State memoryState;
-   static_assert(CT::Typed<T>, "Container not typed");
+   static_assert(    CT::Typed<T>, "Container not typed");
    static_assert(not CT::Array<T>, "Wrongly typed container");
-   static_assert(CT::Exact<TypeOf<T>, char>, "Wrongly typed container");
+   static_assert(    CT::Exact<TypeOf<T>, char>, "Wrongly typed container");
 
    GIVEN("Default text container") {
       T text;
@@ -601,15 +601,12 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", /*Stringifiable,*/ S
 }*/
 
 void Text_CheckState_Default(const Text& text) {
-   REQUIRE_FALSE(text.IsCompressed());
    REQUIRE_FALSE(text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
-   REQUIRE_FALSE(text.IsEncrypted());
    REQUIRE      (text.IsTyped());
    REQUIRE_FALSE(text.IsUntyped());
    REQUIRE_FALSE(text.IsValid());
-   REQUIRE      (text.IsInvalid());
    REQUIRE      (text.IsEmpty());
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
@@ -632,15 +629,12 @@ void Text_CheckState_Default(const Text& text) {
 }
 
 void Text_CheckState_OwnedEmpty(const Text& text) {
-   REQUIRE_FALSE(text.IsCompressed());
    REQUIRE_FALSE(text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
-   REQUIRE_FALSE(text.IsEncrypted());
    REQUIRE      (text.IsTyped());
    REQUIRE_FALSE(text.IsUntyped());
    REQUIRE_FALSE(text.IsValid());
-   REQUIRE      (text.IsInvalid());
    REQUIRE      (text.IsEmpty());
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
@@ -663,15 +657,12 @@ void Text_CheckState_OwnedEmpty(const Text& text) {
 }
 
 void Text_CheckState_OwnedFull(const Text& text) {
-   REQUIRE_FALSE(text.IsCompressed());
    REQUIRE_FALSE(text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
-   REQUIRE_FALSE(text.IsEncrypted());
    REQUIRE      (text.IsTyped());
    REQUIRE_FALSE(text.IsUntyped());
    REQUIRE      (text.IsValid());
-   REQUIRE_FALSE(text.IsInvalid());
    REQUIRE_FALSE(text.IsEmpty());
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
@@ -694,15 +685,12 @@ void Text_CheckState_OwnedFull(const Text& text) {
 }
 
 void Text_CheckState_DisownedFullConst(const Text& text) {
-   REQUIRE_FALSE(text.IsCompressed());
    REQUIRE      (text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
-   REQUIRE_FALSE(text.IsEncrypted());
    REQUIRE      (text.IsTyped());
    REQUIRE_FALSE(text.IsUntyped());
    REQUIRE      (text.IsValid());
-   REQUIRE_FALSE(text.IsInvalid());
    REQUIRE_FALSE(text.IsEmpty());
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
