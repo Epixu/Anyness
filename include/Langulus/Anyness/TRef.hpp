@@ -23,9 +23,9 @@ namespace Langulus::Anyness::Inner
    ///                                                                        
    template<CT::Sparse T>
    using TRefBase = Container<
+      Com::TypedStatic<DMeta, Deptr<T>>,  // Statically typed          
       Com::HeapMovable<>,                 // Data on the heap          
       Com::OwnershipStack<>,              // Allocation is referenced  
-      Com::TypedStatic<DMeta, Deptr<T>>,  // Statically typed          
       Com::CountStatic<1u>,               // Statically sized          
       Com::Emplacement<>,                 // Can be emplaced           
       Com::Assignment<>,                  // Can be reassigned         

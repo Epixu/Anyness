@@ -90,7 +90,7 @@ namespace Langulus::Fractalloc
    ///   @return the size in bytes                                            
    LANGULUS(INLINED)
    constexpr size_t Pool::GetTotalSize() const noexcept {
-      return GetSize() + mAllocatedByBackend;
+      return sizeof(Pool) + mAllocatedByBackend;
    }
 
    /// Get the max number of possible entries                                 
@@ -110,13 +110,6 @@ namespace Langulus::Fractalloc
       free(mHandle);
    }
 
-   /// Get the size of the Pool structure, rounded up for alignment           
-   ///   @return the byte size of the pool, including alignment               
-   LANGULUS(INLINED)
-   constexpr size_t Pool::GetSize() noexcept {
-      return sizeof(Pool) + Alignment - (sizeof(Pool) % Alignment);
-   }
-
    /// Get the size for a new pool allocation, with alignment/additional      
    /// memory requirements                                                    
    ///   @assumes size is a power-of-two                                      
@@ -125,8 +118,8 @@ namespace Langulus::Fractalloc
    ///   @return the number of bytes to allocate for use in the pool          
    LANGULUS(INLINED)
    constexpr size_t Pool::GetNewAllocationSize(size_t size) noexcept {
-      constexpr auto minimum = Pool::DefaultPoolSize + Pool::GetSize();
-      return ::std::max(size + Pool::GetSize(), minimum);
+      constexpr auto minimum = DefaultPoolSize + sizeof(Pool);
+      return ::std::max(size + sizeof(Pool), minimum);
    }
 
    /// Get the start of the usable memory for the pool                        
@@ -134,7 +127,7 @@ namespace Langulus::Fractalloc
    LANGULUS(INLINED)
    auto Pool::GetPoolStart() const noexcept -> uint8_t* {
       const auto poolStart = reinterpret_cast<const uint8_t*>(this);
-      return const_cast<uint8_t*>(poolStart + Pool::GetSize());
+      return const_cast<uint8_t*>(poolStart + sizeof(Pool));
    }
 
    /// Get the true allocation size, as bytes requested from OS               
@@ -166,7 +159,7 @@ namespace Langulus::Fractalloc
          newEntry = mLastFreed;
          mLastFreed = mLastFreed->mNextFreeEntry;
          new (newEntry) Allocation {
-            bytesWithPadding - Allocation::GetHeaderSize(), this
+            bytesWithPadding - sizeof(Allocation), this
          };
       }
       else {
@@ -174,7 +167,7 @@ namespace Langulus::Fractalloc
          // spot, add a new allocation directly	instead                 
          newEntry = const_cast<Allocation*>(AllocationFromIndex(mEntries));
          new (newEntry) Allocation {
-            bytesWithPadding - Allocation::GetHeaderSize(), this
+            bytesWithPadding - sizeof(Allocation), this
          };
 
          ++mEntries;
@@ -207,10 +200,10 @@ namespace Langulus::Fractalloc
          "Removing an invalid entry");
       LglsAssumeDevAndOptimize(mEntries,
          "Bad valid entry count");
-      LglsAssumeDev(mAllocatedByFrontend >= entry->GetFrontendSize(),
+      LglsAssumeDev(mAllocatedByFrontend >= entry->GetBackendSize(),
          "Bad frontend allocation size");
 
-      mAllocatedByFrontend -= entry->GetFrontendSize();
+      mAllocatedByFrontend -= entry->GetBackendSize();
       entry->mReferences = 0;
 
       if (0 == mAllocatedByFrontend) {
@@ -243,11 +236,11 @@ namespace Langulus::Fractalloc
       LglsAssumeDev(bytes and Contains(entry) and entry and entry->GetUses(),
          "Invalid reallocation");
 
-      if (bytes > entry->mAllocatedBytes) {
+      if (bytes > entry->GetFrontendSize()) {
          // We're enlarging the entry                                   
          // Make sure we don't violate threshold                        
-         const auto addition = bytes - entry->mAllocatedBytes;
-         const auto newtotal = entry->GetFrontendSize() + addition;
+         const auto addition = bytes - entry->GetFrontendSize();
+         const auto newtotal = entry->GetBackendSize() + addition;
          if (newtotal > mThreshold)
             return false;
 
@@ -259,7 +252,7 @@ namespace Langulus::Fractalloc
       else {
          // We're shrinking the entry                                   
          // No checks required                                          
-         const auto removal = entry->mAllocatedBytes - bytes;
+         const auto removal = entry->GetFrontendSize() - bytes;
          LglsAssumeDevAndOptimize(mAllocatedByFrontend >= removal,
             "Bad frontend allocation size");
 

@@ -210,15 +210,6 @@ namespace Langulus::Anyness::Component
             return CT::Exact<TYPE, TypeOf<C>>;
       }
       
-      /// Check if container contains dense data                              
-      ///   @returns true if this container refers to dense memory            
-      constexpr bool IsDense() const noexcept {
-         if constexpr (TypeErased)
-            return mType.IsDense();
-         else
-            return CT::Dense<TYPE>;
-      }
-
       /// Check if container contains pointers                                
       ///   @return true if the block contains pointers                       
       constexpr bool IsSparse() const noexcept {
@@ -229,21 +220,13 @@ namespace Langulus::Anyness::Component
       }
       
       /// Check if block is constant                                          
+      ///   @attention disowned containers are always constant                
       ///   @return true if the contents are constant                         
-      constexpr bool IsConstant() const noexcept {
+      constexpr bool IsConstant(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return mType.IsConstant();
+            return not self.GetAllocation() or self.mType.IsConstant();
          else
-            return CT::Constant<TYPE>;
-      }
-
-      /// Check if block is mutable                                           
-      ///   @return true if the contents are mutable                          
-      constexpr bool IsMutable() const noexcept {
-         if constexpr (TypeErased)
-            return mType.IsMutable();
-         else
-            return CT::Mutable<TYPE>;
+            return CT::Constant<TYPE> or not self.GetAllocation();
       }
 
       /// Check if container is made of other containers                      

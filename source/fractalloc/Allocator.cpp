@@ -279,8 +279,6 @@ namespace Langulus::Fractalloc
    void Allocator::Deallocate(Allocation* entry) has_assumptions {
       LglsAssumeDevAndOptimize(entry,
          "Deallocating nullptr");
-      LglsAssumeDev(entry->GetBackendSize(),
-         "Deallocating an empty allocation");
       LglsAssumeDevAndOptimize(entry->mReferences,
          "Deallocating an unused allocation");
       LglsAssumeDevAndOptimize(entry->mReferences == 1,
@@ -293,7 +291,7 @@ namespace Langulus::Fractalloc
 
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
          auto& stats = Instance.mStatistics;
-         stats.mBytesAllocatedByFrontend -= entry->GetFrontendSize();
+         stats.mBytesAllocatedByFrontend -= entry->GetBackendSize();
          stats.mEntries -= 1;
       #endif
 

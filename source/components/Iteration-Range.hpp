@@ -222,10 +222,11 @@ namespace Langulus::Anyness
 
          /// Get the integer element difference between two iterators         
          Count operator - (const Iterator& rhs) const noexcept {
+            const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
             if constexpr (C::TypeErased)
-               return static_cast<Count>((mIt.GetRaw() - rhs.mIt.GetRaw()) / mRange.GetStride());
+               return static_cast<Count>(range / mRange.GetStride());
             else
-               return static_cast<Count>(mIt.GetRaw() - rhs.mIt.GetRaw());
+               return static_cast<Count>(range);
          }
       };
 

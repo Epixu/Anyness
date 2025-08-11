@@ -60,24 +60,9 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using Base = Inner::THandleBase<T>;
-
-      ///                                                                     
-      /// Construction                                                        
-      explicit constexpr THandle(THandle const&) noexcept = default;
-      explicit constexpr THandle(THandle&&) noexcept = default;
-
-      /// Intent constructor                                                  
-      /*template<template<class> class S> requires CT::IntentConstructible<S, T>
-      explicit constexpr THandle(S<THandle>&& other)
-         : Base {other.template Forward<Base>()} {}*/
-
-      /// Manual constructor                                                  
-      ///   @param element - embedded element                                 
-      /*explicit*/ constexpr THandle(Deref<T>* data, AllocationPtr* entry) noexcept
-         : Base {Base::InitList::Expand, data, entry} {}
-
-      using Com::Comparison::operator ==;
+      using Base           = Inner::THandleBase<T>;
+      
+      using Base::Base;
    };
    
 
@@ -91,26 +76,9 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using Base = Inner::THandleDisownedBase<T>;
-
-      ///                                                                     
-      /// Construction                                                        
-      /*explicit*/ constexpr THandleDisowned(THandleDisowned const&) noexcept = default;
-      /*explicit*/ constexpr THandleDisowned(THandleDisowned&&) noexcept = default;
-
-      /// Intent constructor                                                  
-      template<template<class> class S> requires CT::IntentConstructible<S, T>
-      explicit constexpr THandleDisowned(S<THandleDisowned>&& other)
-         : Base {other.template Forward<Base>()} {}
-
-      /// Manual constructor                                                  
-      ///   @param element - embedded element                                 
-      /*explicit*/ constexpr THandleDisowned(Deref<T>* element) noexcept {
-         this->mHeapVoid = DecvqAllCast(element);
-         //Com::HeapReference<>,
-      }
-
-      using Com::Comparison::operator ==;
+      using Base           = Inner::THandleDisownedBase<T>;
+      
+      using Base::Base;
    };
    
 

@@ -65,7 +65,7 @@ namespace Langulus::Anyness::Component
 
       /// This function is called for all container components when the       
       /// allocation changes to update any heap-allocated data pointers       
-      template<CT::Container C>
+      /*template<CT::Container C>
       void OnAllocationChange(this C& self, const View<C>& oldv) {
          AssumeDev(self.GetAllocation() != oldv.GetAllocation(),
             "Allocation didn't change");
@@ -74,13 +74,13 @@ namespace Langulus::Anyness::Component
             // Move entry data to its new place                         
             MoveMemory(self.GetEntry(), oldv.GetEntry(), self.GetCount());
          }
-      }
+      }*/
 
       /// Reference the first pointer in the container                        
       ///   @attention assumes that *self.mSparseHeap has been set prior      
       ///   @tparam S - the intent used                                       
       template<CT::Intent S, CT::Container C>
-      void DeepKeep(this C& self) {
+      void KeepDeep(this C& self) {
          using ST = TypeOf<S>;
          using DT = Deptr<ST>;
          static_assert(S::Shallow);
@@ -122,7 +122,7 @@ namespace Langulus::Anyness::Component
       /// Reference the first pointer in the container                        
       ///   @attention assumes that *self.mSparseHeap and entry have been set 
       ///   @tparam S - the intent used                                       
-      template<CT::Intent S, CT::Container C>
+      /*template<CT::Intent S, CT::Container C>
       void DeepKeep(this C& self, auto allocation) {
          using ST = TypeOf<S>;
          using DT = Deptr<ST>;
@@ -171,6 +171,6 @@ namespace Langulus::Anyness::Component
             }
             else *self.GetEntry() = nullptr;
          }
-      }
+      }*/
    };
 }

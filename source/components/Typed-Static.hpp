@@ -137,12 +137,6 @@ namespace Langulus::Anyness::Component
          else
             return CT::Exact<TYPE, TypeOf<C>>;
       }
-      
-      /// Check if container contains dense data                              
-      ///   @returns true if this container refers to dense memory            
-      constexpr bool IsDense() const noexcept {
-         return CT::Dense<TYPE>;
-      }
 
       /// Check if container contains pointers                                
       ///   @return true if the block contains pointers                       
@@ -152,14 +146,8 @@ namespace Langulus::Anyness::Component
       
       /// Check if contained data is constant                                 
       ///   @return true if the contents are constant                         
-      constexpr bool IsConstant() const noexcept {
-         return CT::Constant<TYPE>;
-      }
-
-      /// Check if constained data is mutable                                 
-      ///   @return true if the contents are mutable                          
-      constexpr bool IsMutable() const noexcept {
-         return CT::Mutable<TYPE>;
+      constexpr bool IsConstant(this auto const& self) noexcept {
+         return CT::Constant<TYPE> or not self.GetAllocation();
       }
 
       /// Check if container is made of other containers                      

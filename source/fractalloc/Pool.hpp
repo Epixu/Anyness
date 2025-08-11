@@ -18,14 +18,13 @@
 
 namespace Langulus::Fractalloc
 {
-
    using RTTI::DMeta;
 
 
    ///                                                                        
    ///   Memory pool                                                          
    ///                                                                        
-   class Pool final {
+   class alignas(Alignment) Pool final {
    friend struct Allocator;
    protected:
       // Bytes allocated by the backend                                 
@@ -74,8 +73,6 @@ namespace Langulus::Fractalloc
       static constexpr size_t DefaultPoolSize = 1024 * 1024;
       static constexpr size_t InvalidIndex = -1;
 
-   public:
-      static constexpr size_t GetSize() noexcept;
       static constexpr size_t GetNewAllocationSize(size_t) noexcept;
 
       auto GetPoolStart() const noexcept -> uint8_t*;
@@ -105,5 +102,4 @@ namespace Langulus::Fractalloc
       auto AllocationFromIndex(size_t) const noexcept -> const Allocation*;
       auto AllocationFromAddress(const void*) const has_assumptions -> const Allocation*;
    };
-
-} // namespace Langulus::Fractalloc
+}

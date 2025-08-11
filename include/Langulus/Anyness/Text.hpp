@@ -77,10 +77,23 @@ namespace Langulus::Anyness
 
       // Range selections                                               
       using  PickRange    = TextView;
-      struct PickRangeMut : PickRange::Include<Com::Assignment<>> {};
+      struct PickRangeMut : Container<
+         Com::TypedStatic<DMeta, char>,   // Type-constrained           
+         Com::HeapReference<>,            // Pointer to heap memory     
+         Com::OwnershipStack<0, false>,   // Pointer to an allocation   
+         Com::CountStack<>,               // Variable count             
+         Com::Comparison,                 // Allows for comparisons     
+         Com::Conversion,                 // Allows conversions         
+         Com::IndexedLinear<>,            // Indexed directly           
+         Com::IterationForEach<>,         // ForEach iteration          
+         Com::IterationRange<>,           // Ranged iteration           
+         Com::Assignment<>                // Assignment is allowed      
+      > {};
 
    public:
       using Base::Base;
+      using Base::operator =;
+      
       constexpr Text(nullptr_t) noexcept {}
 
       /// Construction from any kind of text that isn't an Anyness container  
@@ -89,15 +102,21 @@ namespace Langulus::Anyness
          using S  = IntentOf<T&&>;
          using ST = TypeOf<S>;
          decltype(auto) source = DeintCast(FWD(text));
+         
+         // Make sure we start off without ownership                    
+         if constexpr (requires { SetAllocation(nullptr); })
+            SetAllocation(nullptr);
 
          if constexpr (CT::TextLiteral<ST>) {
             // Create from a text literal/bounded array                 
             // Type can be either char, or const char                   
             using CHAR = TypeOf<ST>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
-            this->mType = MetaDataOf<CHAR>();
+            const auto count = strnlen(source, ExtentOf<T>);
+            if (not count)
+               return;
             this->mHeapReadable = DecvqAllCast(source);
-            SetCount(strnlen(source, ExtentOf<T>));
+            SetCount(count);
          }
          else if constexpr (CT::TextPointer<ST>) {
             // Create from a null-terminated char pointer               
@@ -106,9 +125,11 @@ namespace Langulus::Anyness
                return;
             using CHAR = Deptr<ST>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
-            this->mType = MetaDataOf<CHAR>();
+            const auto count = strlen(source);
+            if (not count)
+               return;
             this->mHeapReadable = DecvqAllCast(source);
-            SetCount(strlen(source));
+            SetCount(count);
          }
          else if constexpr (::std::ranges::contiguous_range<ST>) {
             // Create from an std container                             
@@ -117,15 +138,14 @@ namespace Langulus::Anyness
                return;
             using CHAR = Deptr<decltype(source.data())>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
-            this->mType = MetaDataOf<CHAR>();
             this->mHeapReadable = source.data();
             SetCount(source.size());
          }
          else static_assert(false, "Unsupported text constructor");
 
-         // Make sure we start off without ownership                    
-         if constexpr (requires { SetAllocation(nullptr); })
-            SetAllocation(nullptr);
+         // Reset hash                                                  
+         if constexpr (requires { ResetHash(); })
+            ResetHash();
 
          // Take ownership if the intent requires it                    
          if constexpr (S::KeepsOnCopy() and requires { TakeOwnership(); })
@@ -145,14 +165,19 @@ namespace Langulus::Anyness
       //Text(A1&&, AN&&...) requires CT::RangeInsertable<Text, A1, AN...>;
 
       /// Construction from all kinds of text, trim length to desired count   
+      ///   @attention intent is ignored, this doesn't apply ownership, only  
+      ///      interfaces the data - you can TakeOwnership() after this call  
+      ///   @attention count will shrink if a terminating character was found,
+      ///      or if 'text' is a bounded array of smaller size                
       ///   @param text - text to wrap, assumed valid                         
       ///   @param count - number of characters inside 'text' to use          
+      ///   @return the text wrapped inside a Text container                  
       template<CT::Text T>
       static Text FromText(T&& text, CountType count) {
          if (count == 0)
             return {};
 
-         Text result {FWD(text)};
+         Text result {Disown {text}};
          if (count < result.GetCount())
             result.SetCount(count);
          return result;

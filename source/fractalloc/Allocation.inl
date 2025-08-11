@@ -34,26 +34,20 @@ namespace Langulus::Fractalloc
       , mMallocHandle   {handle} {}
 #endif
 
-   /// Get the size of this header, rounded for alignment                     
-   ///   @return the byte size of the entry, including alignment              
-   consteval size_t Allocation::GetHeaderSize() noexcept {
-      return sizeof(Allocation) + Alignment - (sizeof(Allocation) % Alignment);
-   }
-   
    /// Get the minimum possible allocation, header included                   
    ///   @return the byte size                                                
    consteval size_t Allocation::GetMinAllocation() noexcept {
-      return GetHeaderSize() + Alignment;
+      return sizeof(Allocation) + Alignment;
    }
 
    /// Get the size required for a new entry                                  
-   /// The layout is: [Allocation::GetHeaderSize()][size]                     
+   /// The layout is: [sizeof(Allocation)][size]                     
    ///   @param size - the usable number of bytes required                    
    ///   @return the byte size for a new Allocation, including padding        
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetNewAllocationSize(size_t size) noexcept {
       constexpr auto minimum = GetMinAllocation();
-      const auto proposed = GetHeaderSize() + size;
+      const auto proposed = sizeof(Allocation) + size;
       return proposed > minimum ? proposed : minimum;
    }
 
@@ -61,7 +55,7 @@ namespace Langulus::Fractalloc
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetBackendSize() const noexcept {
-      return GetHeaderSize() + mAllocatedBytes;
+      return sizeof(Allocation) + mAllocatedBytes;
    }
 
    /// Get the user bytes                                                     
@@ -76,7 +70,7 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    uint8_t* Allocation::GetBlockStart() const noexcept {
       const auto entryStart = reinterpret_cast<const uint8_t*>(this);
-      return const_cast<uint8_t*>(entryStart + GetHeaderSize());
+      return const_cast<uint8_t*>(entryStart + sizeof(Allocation));
    }
 
    /// Return the end of usable block memory (always const)                   

@@ -28,20 +28,29 @@
 namespace Langulus::Anyness
 {
    struct Text;
+   
+   namespace Inner
+   {
+      using TextViewBase = Container<
+         Com::TypedStatic<DMeta, const char>,// Type-constrained        
+         Com::HeapReference<>,               // Pointer to heap memory  
+         Com::OwnershipStack<0, false>,      // Pointer to an allocation
+         Com::CountStack<>,                  // Variable count          
+         Com::Comparison,                    // Allows for comparisons  
+         Com::Conversion,                    // Allows conversions      
+         Com::IndexedLinear<>,               // Indexed directly        
+         Com::IterationForEach<>,            // ForEach iteration       
+         Com::IterationRange<>               // Ranged iteration        
+      >;
+   }
 
    ///                                                                        
    /// A lightweight text view of variable size                               
    /// Disallows any modification of the contained data or the container      
    ///                                                                        
-   struct TextView : Container<
-      Com::TypedStatic<DMeta, const char>,// Type-constrained           
-      Com::HeapReference<>,               // Pointer to heap memory     
-      Com::OwnershipStack<0, false>,      // Pointer to an allocation   
-      Com::CountStack<>,                  // Variable count             
-      Com::Comparison,                    // Allows for comparisons     
-      Com::Conversion,                    // Allows conversions         
-      Com::IndexedLinear<>,               // Indexed directly           
-      Com::IterationForEach<>,            // ForEach iteration          
-      Com::IterationRange<>               // Ranged iteration           
-   > {};
+   struct TextView : Inner::TextViewBase {
+      using Base = Inner::TextViewBase;
+      using Base::Base;
+      using Base::operator =;
+   };
 }

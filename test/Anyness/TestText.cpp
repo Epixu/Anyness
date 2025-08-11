@@ -54,13 +54,11 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       T text;
 
       Text_CheckState_Default(text);
-      REQUIRE_FALSE(text.IsConstant());
 
       WHEN("Capacity is reserved") {
          text.Reserve(500);
 
          Text_CheckState_OwnedEmpty(text);
-         REQUIRE_FALSE(text.IsConstant());
          REQUIRE(text.GetReserved() >= 500);
       }
 
@@ -72,7 +70,6 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          LglsDisableWarningPop
          
          Text_CheckState_Default(text);
-         REQUIRE_FALSE(text.IsConstant());
       }
 
       WHEN("Indirectly assigned to itself") {
@@ -80,7 +77,6 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          text = anothertext;
 
          Text_CheckState_Default(text);
-         REQUIRE_FALSE(text.IsConstant());
       }
    }
 
@@ -103,17 +99,16 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       }
 
       WHEN("Constructed with a count-terminated string") {
-         text = new T {Text::FromText("test2", 5)};
+         text = new T {Text::FromText("test2", 2)};
 
          Text_CheckState_DisownedFullConst(*text);
-         REQUIRE((*text).GetCount() == 5);
-         REQUIRE((*text).GetReserved() >= 5);
-         REQUIRE((*text) == "test2");
+         REQUIRE((*text).GetCount() == 2);
+         REQUIRE((*text) == "te");
          REQUIRE((*text)[0] == 't');
          REQUIRE((*text)[1] == 'e');
-         REQUIRE((*text)[2] == 's');
-         REQUIRE((*text)[3] == 't');
-         REQUIRE((*text)[4] == '2');
+         REQUIRE_THROWS((*text)[2] == 's');
+         REQUIRE_THROWS((*text)[3] == 't');
+         REQUIRE_THROWS((*text)[4] == '2');
          REQUIRE_THROWS((*text)[5] == '?');
       }
 
@@ -161,8 +156,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE_THROWS((*text)[1] == '?');
       }
 
-      if (text)
-         delete text;
+      delete text;
    }
 
    GIVEN("Reserved text container") {
@@ -601,7 +595,7 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", /*Stringifiable,*/ S
 }*/
 
 void Text_CheckState_Default(const Text& text) {
-   REQUIRE_FALSE(text.IsConstant());
+   REQUIRE      (text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
    REQUIRE      (text.IsTyped());
@@ -612,7 +606,6 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
    REQUIRE      (text.Is<char>());
-   REQUIRE      (text.IsDense());
    REQUIRE      (text.GetCount() == 0);
    REQUIRE      (text.GetReserved() == 0);
    REQUIRE      (text.GetUses() == 0);
@@ -640,7 +633,6 @@ void Text_CheckState_OwnedEmpty(const Text& text) {
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
    REQUIRE      (text.Is<char>());
-   REQUIRE      (text.IsDense());
    REQUIRE      (text.GetCount() == 0);
    REQUIRE      (text.GetReserved() > 0);
    REQUIRE      (text.GetUses() == 1);
@@ -668,7 +660,6 @@ void Text_CheckState_OwnedFull(const Text& text) {
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
    REQUIRE      (text.Is<char>());
-   REQUIRE      (text.IsDense());
    REQUIRE      (text.GetCount() > 0);
    REQUIRE      (text.GetReserved() > 0);
    REQUIRE      (text.GetUses() > 0);
@@ -696,9 +687,8 @@ void Text_CheckState_DisownedFullConst(const Text& text) {
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
    REQUIRE      (text.Is<char>());
-   REQUIRE      (text.IsDense());
    REQUIRE      (text.GetCount() > 0);
-   REQUIRE      (text.GetReserved() > 0);
+   REQUIRE      (text.GetReserved() == 0);
    REQUIRE      (text.GetUses() == 0);
    REQUIRE      (text.GetRaw());
    REQUIRE      (text != nullptr);

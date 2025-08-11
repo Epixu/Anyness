@@ -99,9 +99,9 @@ namespace Langulus::Anyness
    
    ///                                                                        
    /// A container definition using composition                               
-   ///   @tparam COMPONENTS... - list of components that define the container 
-   ///      behavior. The order doesn't matter (functionally speaking) but    
-   ///      is still enforced to match for various reasons, the main being    
+   ///   @tparam COMPONENTS - list of components that define the container    
+   ///      behavior. Order is verified based on ComponentPrecedence members  
+   ///      for various reasons, the main ones being initialization order and 
    ///      build-time optimization: too many superficially different template
    ///      specializations will bloat code generation significantly and slow 
    ///      builds down a lot...                                              
@@ -125,7 +125,7 @@ namespace Langulus::Anyness
          });
       }
 
-      /// A generalized container constructor, that takes another container   
+      /// A generalized container constructor that takes another container    
       /// that may have completely different components, and tries to extract 
       /// relevant information from it. Invokes ConstructFrom for each        
       /// component of this container that has it. Allows for intents as well 
@@ -140,14 +140,23 @@ namespace Langulus::Anyness
          });
       }
       
+      /// Explicitly call Destroy in all of the components                    
+      /// Most components should have trivial destructors                     
+      ~Container() noexcept {
+         ComponentList::ForEach([this]<class C>{
+            if constexpr (requires { this->C::Destroy(); })
+               this->C::Destroy();
+         });
+      }
+      
       /// Generalized container assignment that takes another container, which
       /// may have completely different components, and tries to extract all  
       /// relevant information from it. Invokes AssignFrom for each component 
-      /// of this container that has it. Allows for intents as well           
-      template<CT::Container LHS, CT::Container RHS>
+      /// of this container that has it. Allows for intents as well.          
+      template<class LHS, CT::Container RHS>
       constexpr LHS& operator = (this LHS& lhs, RHS&& rhs) {
          using I = IntentOf<decltype(rhs)>;
-         LHS::ComponentList::ForEach([&lhs,&rhs]<class C>{
+         LHS::ComponentList::ForEach([&]<class C>{
             if constexpr (requires { lhs.C::AssignFrom(I {rhs}); })
                lhs.C::AssignFrom(I {rhs});
             else if constexpr (requires { lhs.C::AssignDefault(); })

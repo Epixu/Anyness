@@ -70,13 +70,12 @@ namespace Langulus::Anyness::Component
       auto GetDense(this C&&, Count<C> = CountMax<C>) -> Deep<C>;
       
    protected:      
-      /// Default-initialize the component, zeroing members                   
+      /// Default-initialize the component, defaulting members                
       /// A default-constructor isn't used for this to avoid duplication of   
       /// some calls                                                          
       template<CT::Container C>
       void ConstructDefault(this C& self) noexcept {
          self.mHeap = nullptr;
-         self.SetAllocation(nullptr);
          if constexpr (requires { self.mReserved; })
             self.mReserved = 0;
          self.SetCount(0);
@@ -89,7 +88,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent) {
          using IT = Decay<TypeOf<I>>;
-         auto& from = DeintCast(intent);
+         decltype(auto) from = FWD(intent.what);
          const auto count = from.GetCount();
          auto type = from.GetType();
 
@@ -99,7 +98,6 @@ namespace Langulus::Anyness::Component
                // Move/Copy/Refer other                                 
                if constexpr (I::IsMoved()) {
                   // Move                                               
-                  self.SetAllocation(from.GetAllocation());
                   self.mHeap = from.mHeap;
                   if constexpr (requires { self.mReserved; })
                      self.mReserved = from.GetReserved();
@@ -107,21 +105,13 @@ namespace Langulus::Anyness::Component
                   self.SetType(type);
                   self.SetHash(from.GetHashNoRecompute());
 
-                  if constexpr (not IT::Owned) {
-                     // Since we are not aware if that block is         
-                     // referenced or not we reference it just in case, 
-                     // and we also do not reset 'other' to avoid leaks.
-                     // When using raw Blocks, it's your responsibility 
-                     // to take care of ownership                       
-                     self.Keep();
-                  }
-                  else {
+                  if constexpr (IT::Owned) {
                      from.mHeap = nullptr;
-                     from.SetAllocation(nullptr);
                      if constexpr (requires { from.mReserved; })
                         from.mReserved = 0;
                      from.SetCount(0);
-                     from.ResetState();
+                     if constexpr (requires { from.ResetState(); })
+                        from.ResetState();
                      from.ResetType();
                      from.ResetHash();
                   }
@@ -133,11 +123,9 @@ namespace Langulus::Anyness::Component
                      self.mHeap = from.mHeap;
                      if constexpr (requires { self.mReserved; })
                         self.mReserved = from.GetReserved();
-                     self.SetAllocation(from.GetAllocation());
                      self.SetCount(count);
                      self.SetType(type);
                      self.SetHash(from.GetHashNoRecompute());
-                     self.Keep();
                   }
                   else {
                      // Do a shallow copy                               
@@ -167,17 +155,17 @@ namespace Langulus::Anyness::Component
                      }
 
                      self.AllocateFresh(self.RequestSize(count));
-                     const auto srcStart = IterateHandles(from).begin();
-                     auto src = srcStart;
+                     auto src = IterateHandles(from).begin();
+                     auto dst = IterateHandles(self).begin();
                      try {
-                        for (auto dst : IterateHandles(self)) {
-                           dst.EmplaceWithIntent(Refer(*src));
-                           ++src;
+                        while (src != IteratorEnd {}) {
+                           dst->EmplaceWithIntent(Refer(*src));
+                           ++dst; ++src;
                         }
                      } catch (...) {
                         // Partial success                              
-                        self.SetCount(src - srcStart);
-                        //self.ResetHash();
+                        self.SetCount(src - IterateHandles(from).begin());
+                        self.ResetHash();
                         throw;
                      }
                      
@@ -192,13 +180,9 @@ namespace Langulus::Anyness::Component
                self.mHeap = from.mHeap;
                if constexpr (requires { self.mReserved; })
                   self.mReserved = from.GetReserved();
-               self.SetAllocation(from.GetAllocation());
                self.SetCount(count);
                self.SetType(type);
                self.SetHash(from.GetHashNoRecompute());
-
-               // Discard only ownership from source container          
-               from.SetAllocation(nullptr);
             }
             else {
                // Disown                                                
@@ -206,7 +190,6 @@ namespace Langulus::Anyness::Component
                if constexpr (requires { self.mReserved; })
                   self.mReserved = from.GetReserved();
                self.SetCount(count);
-               self.SetAllocation(nullptr);
                self.SetType(type);
                self.SetHash(from.GetHashNoRecompute());
             }
@@ -254,6 +237,27 @@ namespace Langulus::Anyness::Component
             // Full success                                             
             self.SetCount(count);
             self.SetHash(from.GetHashNoRecompute());
+         }
+      }
+
+      /// Reassign from any kind of container, respecting intents             
+      ///   @param intent - the intent and container to assign from           
+      template<class C, CT::Intent I> requires CT::Container<I>
+      void AssignFrom(this C& self, I&& intent) {
+         // Make sure 'self' and 'intent' are different instances       
+         if (&self == &intent.what)
+            return;
+
+         using IT = Decay<TypeOf<I>>;
+         if constexpr (IT::TypeErased) {
+            // Potentially absorb a container                           
+            self.Free();
+            new (&self) C {FWD(intent)};
+         }
+         else {
+            // Potentially absorb a container                           
+            self.Free();
+            new (&self) C {FWD(intent)};
          }
       }
 
@@ -352,7 +356,7 @@ namespace Langulus::Anyness::Component
                );
 
                // Reallocate                                            
-               typename C::PickRange previous {self};
+               typename C::PickRangeMut previous {self};
                auto reallocated = Allocator::Reallocate(
                   request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1),
                   al

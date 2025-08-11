@@ -29,7 +29,7 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
-   struct Allocation {
+   struct alignas(Alignment) Allocation {
    protected:
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       friend class Pool;

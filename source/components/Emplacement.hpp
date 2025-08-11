@@ -45,135 +45,91 @@ namespace Langulus::Anyness::Component
       using PickMut = typename Deref<C>::PickMut;
       
       /// Emplace a new item at the first element, with or without an intent  
-      ///   @attention does not modify count                                  
+      ///   @attention assumes destination memory has been preallocated,      
+      ///      including all levels of indirection                            
+      ///   @attention does not modify any container state                    
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
-      ///   @param rhs_with_intent - constructor argument. If this container  
+      ///   @param intent - constructor argument. If this container           
       ///      is statically typed, this can be any constructor argument,     
       ///      otherwise it has to be an instance of the container type       
       template<CT::Container C, CT::Intent I>
-      void EmplaceWithIntent(this C& self, I&& rhs_with_intent) {
-         using IT = TypeOf<I>;
+      void EmplaceWithIntent(this C& self, I&& intent) {
+         using IT = Decvq<Deref<TypeOf<I>>>;
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
-         decltype(auto) rhs = *rhs_with_intent;
+         decltype(auto) rhs = FWD(intent.what);
 
          if constexpr (CT::Handle<IT>) {
-            // Indirection for handling handles                         
-            TODO();
-         }
-         else if constexpr (CT::Untyped<C>) {
-            //                                                          
-            // This container is type-erased                            
-            //                                                          
-            if (self.IsSparse()) {
-               LglsAssumeDev(CT::Sparse<IT>, "Sparseness mismatch");
-               using DT = Deptr<IT>;
+            // We're emplacing using a handle, which can be faster due  
+            // to carrying allocation data with itself when sparse,     
+            // instead of searching for it when having DeepOwnership    
+            if constexpr (C::TypeErased or IT::TypeErased) {
+               //                                                       
+               // Either this container or the handle is type-erased    
+               auto T = rhs.GetType();
+               LglsAssumeDev(self.IsSimilar(T), "Type mismatch");
 
-               if constexpr (I::IsShallow()) {
-                  // Do a refer/copy/disown/abandon/move sparse LHS     
-                  if constexpr (CT::Null<IT>) {
-                     // RHS is nullptr                                  
-                     *self.mSparseHeap = nullptr;
-                     if constexpr (CT::DeeplyOwned<C>)
-                        *self.GetEntry() = nullptr;
-                  }
-                  else {
-                     // RHS is (maybe) valid pointer                    
-                     LglsAssumeDev(CT::Void<DT> or self.template IsSimilar<IT>(),
-                        "Type mismatch");
+               if constexpr (CT::Moved<I>)
+                  T.GetMoveConstructor()(self.GetRaw(), rhs.GetRaw());
+               else if constexpr (CT::Abandoned<I>)
+                  T.GetAbandonConstructor()(self.GetRaw(), rhs.GetRaw());
+               else if constexpr (CT::Referred<I>)
+                  T.GetReferConstructor()(self.GetRaw(), rhs.GetRaw());
+               else if constexpr (CT::Copied<I>)
+                  T.GetCopyConstructor()(self.GetRaw(), rhs.GetRaw());
+               else if constexpr (CT::Disowned<I>)
+                  T.GetDisownConstructor()(self.GetRaw(), rhs.GetRaw());
+               else if constexpr (CT::Cloned<I>)
+                  T.GetCloneConstructor()(self.GetRaw(), rhs.GetRaw());
+               else
+                  static_assert(false, "Unrecognized intent");
 
-                     *self.mSparseHeap = rhs;
-                     if constexpr (CT::DeeplyOwned<C>)
-                        self.template DeepKeep<I>();
-                  }
-               }
-               else {
-                  //TODO clone type-erased pointers
-                  TODO();
+               if constexpr (CT::DeeplyOwned<C>) {
+                  if constexpr (I::IsKept())
+                     *self.GetEntries() = *rhs.GetEntries();
+                  else
+                     *self.GetEntries() = nullptr;
+                  self.KeepDeep();
                }
             }
             else {
-               // Do a refer/copy/disown/abandon/move/clone dense LHS   
-               LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
-               LglsAssumeDev(self.template IsSimilar<IT>(), "Type mismatch");
-               auto T = self.GetType();
-
-               //TODO calling these shouldn't have checks inside, only assumptions are allowed
-               //because this function is often used in loops, and checking if these
-               //constructors are available can be done once before the loop begins
-               if constexpr (CT::Moved<I>)
-                  T.RunMoveConstruct(self.GetRaw(), &rhs);
-               else if constexpr (CT::Abandoned<I>)
-                  T.RunAbandonConstruct(self.GetRaw(), &rhs);
-               else if constexpr (CT::Referred<I>)
-                  T.RunReferConstruct(self.GetRaw(), &rhs);
-               else if constexpr (CT::Copied<I>)
-                  T.RunCopyConstruct(self.GetRaw(), &rhs);
-               else if constexpr (CT::Disowned<I>)
-                  T.RunDisownConstruct(self.GetRaw(), &rhs);
-               else if constexpr (CT::Cloned<I>)
-                  T.RunCloneConstruct(self.GetRaw(), &rhs);
-               else
-                  static_assert(false, "Unrecognized intent");
+               //                                                       
+               // Both sides are statically-typed and we can benefit    
+               // from a lot of compile-time optimizations              
+               using T = TypeOf<C>;
+               static_assert(CT::Similar<T, TypeOf<IT>>, "Type mismatch");
+               IntentNew(self.GetRaw(), I::Nest(*rhs.GetRaw()));
             }
+         }
+         else if constexpr (C::TypeErased) {
+            //                                                          
+            // This container is type-erased                            
+            LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
+            LglsAssumeDev(self.template IsSimilar<IT>(), "Type mismatch");
+            auto T = self.GetType();
+
+            if constexpr (CT::Moved<I>)
+               T.GetMoveConstructor()(self.GetRaw(), &rhs);
+            else if constexpr (CT::Abandoned<I>)
+               T.GetAbandonConstructor()(self.GetRaw(), &rhs);
+            else if constexpr (CT::Referred<I>)
+               T.GetReferConstructor()(self.GetRaw(), &rhs);
+            else if constexpr (CT::Copied<I>)
+               T.GetCopyConstructor()(self.GetRaw(), &rhs);
+            else if constexpr (CT::Disowned<I>)
+               T.GetDisownConstructor()(self.GetRaw(), &rhs);
+            else if constexpr (CT::Cloned<I>)
+               T.GetCloneConstructor()(self.GetRaw(), &rhs);
+            else
+               static_assert(false, "Unrecognized intent");
          }
          else {
             //                                                          
             // This container is statically-typed                       
-            //                                                          
             using T = TypeOf<C>;
             static_assert(CT::Similar<T, IT>, "Type mismatch");
-
-            if constexpr (I::IsShallow() and CT::Sparse<T>) {
-               // Do a copy/refer/disown/abandon/move sparse RHS        
-               if constexpr (CT::Null<IT>) {
-                  // RHS is nullptr                                     
-                  *self.mSparseHeap = nullptr;
-                  if constexpr (CT::DeeplyOwned<C>)
-                     *self.GetEntry() = nullptr;
-               }
-               else {
-                  *self.mSparseHeap = rhs;
-                  if constexpr (CT::DeeplyOwned<C>)
-                     self.template DeepKeep<I>();
-               }
-            }
-            else if constexpr (CT::Dense<T>) {
-               // Do a copy/disown/abandon/move/clone inside a dense    
-               // handle                                                
-               IntentNew(self.GetRaw(), FWD(rhs_with_intent));
-            }
-            else if constexpr (CT::Dense<Deptr<T>>) {
-               // Clone sparse data with exactly one pointer            
-               if constexpr (CT::Resolvable<Decay<T>>) {
-                  // If T is resolvable, we need to always clone the    
-                  // resolved (a.k.a the most concrete) type            
-                  TODO(); // shouldn't actually happen due to static_assert(CT::Similar<T, IT>, "Type mismatch");
-               }
-               else {
-                  // Otherwise attempt cloning DT conventionally        
-                  static_assert(CT::Similar<T, IT>, "Type mismatch");
-                  auto meta = MetaDataOf<Decay<T>>();
-                  auto entry = Allocator::Allocate(meta, meta.RequestSize(1).mByteSize);
-                  auto pointer = entry->GetBlockStart();
-                  try { IntentNew(pointer, I::Nest(*rhs)); }
-                  catch (...) {
-                     Allocator::Deallocate(entry);
-                     return;
-                  }
-
-                  *self.mSparseHeap = pointer;
-
-                  if constexpr (CT::DeeplyOwned<C>)
-                     *self.GetEntry() = entry;
-               }
-            }
-            else {
-               // Clone sparse data with more than one pointer          
-               // Clone indirection layers by nesting                   
-               TODO();
-            }
+            IntentNew(self.GetRaw(), FWD(intent));
          }
       }
 

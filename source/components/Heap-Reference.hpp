@@ -183,9 +183,28 @@ namespace Langulus::Anyness::Component
                // C isn't deeply owned, so handles are just pointers    
                // They still need to be handles, so that they have the  
                // necessary insertion/emplacement interfaces            
-               return THandleDisowned<TT&> {&self.template Get<TT>()};
+               //return THandleDisowned<TT&> {&self.template Get<TT>()};
+               return THandleDisowned<TT&> {self};
             }
          }
+      }
+
+   protected:
+      /// Default-initialize the component is impossible                      
+      void ConstructDefault() {
+         static_assert(false, "Can't default-construct this component");
+      }
+      
+      /// Transfer from any kind of container                                 
+      /// This is only a reference to a heap allocation and is not allowed    
+      /// to allocate any new memory, so all this does is copy the heap       
+      /// pointer, ignoring any intents                                       
+      ///   @param intent - the intent and container to transfer from         
+      template<CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(I&& intent) {
+         mHeapVoid = const_cast<void*>(static_cast<const void*>(
+            intent.what.GetRaw()
+         ));
       }
    };
 }
