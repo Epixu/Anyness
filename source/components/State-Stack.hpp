@@ -149,12 +149,8 @@ namespace Langulus::Anyness::Component
 
       /// Check if container has either created elements, or a relevant state 
       ///   @return true if either contains state, or has stuff inserted      
-      template<CT::Container C>
-      constexpr bool IsValid(this const C& self) noexcept {
-         if constexpr (requires { self.GetCount(); })
-            return self.GetCount() or self.GetUnconstrainedState();
-         else
-            return self.GetUnconstrainedState();
+      constexpr bool IsValid() const noexcept {
+         return GetUnconstrainedState();
       }
    };
 }

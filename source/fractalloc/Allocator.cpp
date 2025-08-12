@@ -235,7 +235,7 @@ namespace Langulus::Fractalloc
    Allocation* Allocator::Reallocate(size_t size, Allocation* previous) has_assumptions {
       LglsAssumeDevAndOptimize(previous,
          "Reallocating nullptr");
-      [[maybe_unused]] const auto as = previous->GetBackendSize();
+      [[maybe_unused]] const auto as = previous->GetFrontendSize();
       LglsAssumeDevAndOptimize(size != as,
          "Reallocation suboptimal - size is same as previous");
       LglsAssumeDevAndOptimize(size,
