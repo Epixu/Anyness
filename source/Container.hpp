@@ -187,7 +187,9 @@ namespace Langulus::Anyness
          return lhs;
       }
 
-      static constexpr bool Stateful = requires { typename Container::StateList; };
+      static constexpr bool Stateful = requires {
+         typename Container<COMPONENTS...>::StateList;
+      };
       
       /// Check if container isn't empty                                      
       /// This is a fallback in case container has no state components        
