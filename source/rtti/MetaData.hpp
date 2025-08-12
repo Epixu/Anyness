@@ -309,6 +309,7 @@ namespace fmt
    ///                                                                        
    /// Extend FMT to be capable of logging data types                         
    ///                                                                        
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    struct formatter<::Langulus::RTTI::Inner::MetaDataStructured_XY<ID_SIZE, PT_SIZE>> {
       using M = ::Langulus::RTTI::Inner::MetaDataStructured_XY<ID_SIZE, PT_SIZE>;
@@ -321,6 +322,7 @@ namespace fmt
          return format_to(ctx.out(), "{}", c.GetName());
       }
    };
+   #endif
    
    template<>
    struct formatter<::Langulus::RTTI::Inner::MetaDataNaked> {

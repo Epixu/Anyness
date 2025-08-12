@@ -85,6 +85,7 @@ namespace fmt
    ///                                                                        
    /// Extend FMT to be capable of logging tag types                          
    ///                                                                        
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    template<>
    struct formatter<::Langulus::RTTI::Inner::MetaTagPacked_16> {
       using M = ::Langulus::RTTI::Inner::MetaTagPacked_16;
@@ -97,6 +98,7 @@ namespace fmt
          return format_to(ctx.out(), "{}", c.GetName());
       }
    };
+   #endif
    
    template<>
    struct formatter<::Langulus::RTTI::Inner::MetaTagNaked> {

@@ -84,6 +84,7 @@ namespace fmt
    ///                                                                        
    /// Extend FMT to be capable of logging constant types                     
    ///                                                                        
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    template<>
    struct formatter<::Langulus::RTTI::Inner::MetaConstPacked_16> {
       using M = ::Langulus::RTTI::Inner::MetaConstPacked_16;
@@ -96,6 +97,7 @@ namespace fmt
          return format_to(ctx.out(), "{}", c.GetName());
       }
    };
+   #endif
    
    template<>
    struct formatter<::Langulus::RTTI::Inner::MetaConstNaked> {

@@ -124,6 +124,7 @@ namespace fmt
    ///                                                                        
    /// Extend FMT to be capable of logging verb types                         
    ///                                                                        
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    template<unsigned ID_SIZE>
    struct formatter<::Langulus::RTTI::Inner::MetaVerbStructured_X8<ID_SIZE>> {
       using M = ::Langulus::RTTI::Inner::MetaVerbStructured_X8<ID_SIZE>;
@@ -136,6 +137,7 @@ namespace fmt
          return format_to(ctx.out(), "{}", c.GetPositiveName());
       }
    };
+   #endif
    
    template<>
    struct formatter<::Langulus::RTTI::Inner::MetaVerbNaked> {
