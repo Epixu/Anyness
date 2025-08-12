@@ -186,16 +186,18 @@ namespace Langulus::Anyness
          });
          return lhs;
       }
-
-      static constexpr bool Stateful = requires {
-         typename Container<COMPONENTS...>::StateList;
-      };
       
-      /// Check if container isn't empty                                      
-      /// This is a fallback in case container has no state components        
-      ///   @return true if container has stuff inserted                      
-      constexpr bool IsValid() const noexcept requires (not Stateful) {
-         return this->GetCount() > 0;
+      /// Check if container is valid                                         
+      constexpr bool IsValid() const noexcept {
+         if (this->GetCount() > 0)
+            return true;
+
+         bool for_other_reasons = false;
+         ComponentList::ForEach([this, &for_other_reasons]<class C>{
+            if constexpr (requires { this->C::IsValid(); })
+               for_other_reasons |= this->C::IsValid();
+         });
+         return for_other_reasons;
       }
 
    protected:
