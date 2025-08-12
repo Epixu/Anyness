@@ -322,12 +322,6 @@
     },
 
     {
-      "name": "linux-g++-x64-debug-safe-noSIMD-managed",
-      "displayName": "Linux x64 G++ Debug Safe NoSIMD",
-      "description": "Target Linux with the 64bit GNU compiler (debug, safe, no SIMD)",
-      "inherits": [ "linux", "g++-14", "x64", "debug", "NoSIMD" ]
-    },
-    {
       "name": "linux-g++-x64-debug-safe-SSE2-managed",
       "displayName": "Linux x64 G++ Debug Safe SSE2",
       "description": "Target Linux with the 64bit GNU compiler (debug, safe, SSE2)",
@@ -346,12 +340,6 @@
       "inherits": [ "linux", "g++-14", "x64", "debug", "AVX2" ]
     },
 
-    {
-      "name": "windows-v143-x64-debug-safe-noSIMD-managed",
-      "displayName": "v143 x64 Debug Safe NoSIMD (unsupported)",
-      "description": "Target Windows with the 64bit v143 compiler (debug, safe, no SIMD)",
-      "inherits": [ "windows", "cl-v143", "x64", "debug", "NoSIMD" ]
-    },
     {
       "name": "windows-v143-x64-debug-safe-SSE2-managed",
       "displayName": "v143 x64 Debug Safe SSE2 (unsupported)",
@@ -385,12 +373,6 @@
     },
 
     {
-      "name": "windows-v143-x64-release-safe-noSIMD-managed",
-      "displayName": "v143 x64 Release Safe NoSIMD (unsupported)",
-      "description": "Target Windows with the 64bit v143 compiler (release, safe, no SIMD)",
-      "inherits": [ "windows", "cl-v143", "x64", "release", "NoSIMD" ]
-    },
-    {
       "name": "windows-v143-x64-release-safe-SSE2-managed",
       "displayName": "v143 x64 Release Safe SSE2 (unsupported)",
       "description": "Target Windows with the 64bit v143 compiler (release, safe, SSE2)",
@@ -422,12 +404,6 @@
       "inherits": [ "windows", "cl-v143", "x86", "release", "SSE2" ]
     },
 
-    {
-      "name": "windows-clang-cl-x64-debug-safe-noSIMD-managed",
-      "displayName": "clang-cl x64 Debug Safe NoSIMD",
-      "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, no SIMD)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "NoSIMD", "vendor-clang-cl-x64" ]
-    },
     {
       "name": "windows-clang-cl-x64-debug-safe-SSE2-managed",
       "displayName": "clang-cl x64 Debug Safe SSE2",
@@ -461,12 +437,6 @@
     },
 
     {
-      "name": "ubuntu-clang-x64-debug-safe-noSIMD-managed",
-      "displayName": "clang x64 Debug Safe NoSIMD",
-      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, no SIMD)",
-      "inherits": [ "linux", "clang++-19", "x64", "debug", "NoSIMD", "vendor-clang-x64" ]
-    },
-    {
       "name": "ubuntu-clang-x64-debug-safe-SSE2-managed",
       "displayName": "clang x64 Debug Safe SSE2",
       "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, SSE2)",
@@ -498,12 +468,6 @@
       "inherits": [ "linux", "clang++-19", "x64", "release", "AVX", "sanitize-address", "vendor-clang-x64" ]
     },
 
-    {
-      "name": "windows-clang-cl-x64-debug-safe-noSIMD-unmanaged",
-      "displayName": "clang-cl x64 Debug Safe NoSIMD Unmanaged",
-      "description": "Target Windows with the 64bit Clang-Cl compiler (debug, safe, no SIMD, unmanaged)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "debug", "NoSIMD", "unmanaged", "vendor-clang-cl-x64" ]
-    },
     {
       "name": "windows-clang-cl-x64-debug-safe-SSE2-unmanaged",
       "displayName": "clang-cl x64 Debug Safe SSE2 Unmanaged",
@@ -548,12 +512,6 @@
       "inherits": [ "windows", "clang-cl-19", "x86", "debug", "AVX2", "vendor-clang-cl-x86" ]
     },
 
-    {
-      "name": "windows-clang-cl-x64-release-safe-noSIMD-managed",
-      "displayName": "clang-cl x64 Release Safe NoSIMD",
-      "description": "Target Windows with the 64bit Clang-Cl compiler (release, safe, no SIMD)",
-      "inherits": [ "windows", "clang-cl-19", "x64", "release", "NoSIMD", "vendor-clang-cl-x64" ]
-    },
     {
       "name": "windows-clang-cl-x64-release-safe-SSE2-managed",
       "displayName": "clang-cl x64 Release Safe SSE2",

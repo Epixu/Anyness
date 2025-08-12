@@ -15,7 +15,6 @@
 
 namespace Langulus::Fractalloc
 {
-   
    /// Fast log2                                                              
    /// https://stackoverflow.com/questions/11376288                           
    LANGULUS(ALWAYS_INLINED)
@@ -453,5 +452,4 @@ namespace Langulus::Fractalloc
 
       return nullptr;
    }
-
-} // namespace Langulus::Fractalloc
+}

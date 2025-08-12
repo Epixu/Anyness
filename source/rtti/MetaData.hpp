@@ -272,14 +272,15 @@ namespace Langulus::RTTI
          auto AddConst()              const -> MetaDataNaked;
          auto GetConcrete()           const -> MetaDataNaked;
          auto GetProducer()           const -> MetaDataNaked;
-              
+
          auto GetBases()              const noexcept -> DefinitionData::BaseList const&;
          auto GetVerbs()              const noexcept -> DefinitionData::VerbList const&;
          auto GetMembers()            const noexcept -> DefinitionData::MemberList const&;
          auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
-
+         auto GetMorphism(MetaDataNaked) const noexcept -> DefinitionData::FBinary;
+         
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             friend struct Fractalloc::Allocator;

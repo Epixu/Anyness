@@ -10,7 +10,6 @@
 
 namespace Langulus::RTTI::Inner
 {
-
    /// Check if type origins match                                            
    /// Disregards all cv-qualifiers, pointers, array extents, etc.            
    ///   @param other - the type to compare against                           
@@ -328,4 +327,12 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mCurrentBoundary.mMorphismsFrom;
    }
    
-} // namespace Langulus::RTTI::Inner
+   /// Get a specific coverter, if it exists                                  
+   inline auto MetaDataNaked::GetMorphism(MetaDataNaked to)
+   const noexcept -> DefinitionData::FBinary {
+      auto found = mDefinition->mCurrentBoundary.mMorphismsTo.find(to.mDefinition);
+      if (found != mDefinition->mCurrentBoundary.mMorphismsTo.end())
+         return found->second;
+      return nullptr;
+   }
+}

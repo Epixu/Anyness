@@ -49,7 +49,7 @@ namespace Langulus::Fractalloc
       // Associated meta data, when types are reflected with nondefault 
       // PoolTactic                                                     
       DMeta mMeta {};
-      // Handle for the pool allocation, for use with ::std::free       
+      // Handle for the pool allocation, for use with `free(mHandle)`   
       void* mHandle {};
 
       // Next pool in the pool chain                                    

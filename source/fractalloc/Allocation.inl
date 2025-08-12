@@ -11,7 +11,6 @@
 
 namespace Langulus::Fractalloc
 {
-
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    /// Initialize an allocation                                               
    ///   @attention this constructor relies that the allocation is placed in  
@@ -29,7 +28,7 @@ namespace Langulus::Fractalloc
    ///   @param bytes - the number of allocated bytes                         
    ///   @param handle - the handle used to call free() with                  
    LANGULUS(ALWAYS_INLINED)
-   Allocation::Allocation(Size bytes, MallocHandle* handle) noexcept
+   Allocation::Allocation(size_t bytes, MallocHandle* handle) noexcept
       : mAllocatedBytes {bytes}
       , mMallocHandle   {handle} {}
 #endif
@@ -103,5 +102,4 @@ namespace Langulus::Fractalloc
    void Allocation::Free(int c) noexcept {
       mReferences -= c;
    }
-
-} // namespace Langulus::Fractalloc
+}

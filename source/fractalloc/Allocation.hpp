@@ -8,7 +8,6 @@
 #pragma once
 #include <Langulus/Core.hpp>
 
-
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
 namespace Langulus::Unmanaged
 {
@@ -18,13 +17,11 @@ namespace Langulus::Unmanaged
 
 namespace Langulus::Fractalloc
 {
-
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       class Pool;
    #else
       class MallocHandle;
    #endif
-
 
    ///                                                                        
    ///   Memory allocation                                                    
@@ -35,7 +32,7 @@ namespace Langulus::Fractalloc
       friend class Pool;
       friend struct Allocator;
    #else
-      friend class Unmanaged::Allocator;
+      friend struct Unmanaged::Allocator;
    #endif
 
       // The number of references to this memory                        
@@ -76,7 +73,7 @@ namespace Langulus::Fractalloc
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       explicit Allocation(size_t, Pool*) noexcept;
    #else
-      explicit Allocation(Size, MallocHandle*) noexcept;
+      explicit Allocation(size_t, MallocHandle*) noexcept;
    #endif
 
       static consteval size_t GetHeaderSize() noexcept;
@@ -100,7 +97,6 @@ namespace Langulus::Fractalloc
          IF_UNSAFE(constexpr Request() {})
       };
    };
-
-} // namespace Langulus::Fractalloc
+}
 
 #include "Allocation.inl"

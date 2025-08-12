@@ -23,9 +23,6 @@
 
 namespace Langulus::Fractalloc
 {
-   
-   using RTTI::MetaData;
-
    /// MSVC will likely never support std::aligned_alloc, so we use           
    /// a custom portable routine that's almost the same                       
    /// https://stackoverflow.com/questions/62962839                           
@@ -35,21 +32,20 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   @param size - the number of client bytes to allocate                 
    ///   @return a newly allocated memory that is correctly aligned           
-   template<class T>
-   T* AlignedAllocate(DMeta hint, size_t size) has_assumptions {
-      const auto finalSize = T::GetNewAllocationSize(size) + Alignment;
-      const auto base = ::std::malloc(finalSize);
+   Pool* AlignedAllocate(const DMeta& hint, size_t size) has_assumptions {
+      const auto finalSize = Pool::GetNewAllocationSize(size) + Alignment;
+      const auto base = malloc(finalSize);
       if (not base)
          return nullptr;
 
       // Align pointer to the alignment LANGULUS was built with         
-      auto ptr = reinterpret_cast<T*>(
+      auto ptr = reinterpret_cast<Pool*>(
          (reinterpret_cast<uintptr_t>(base) + Alignment)
          & ~(Alignment - uintptr_t {1})
       );
 
       // Place the entry there                                          
-      new (ptr) T {hint, size, base};
+      new (ptr) Pool {hint, size, base};
       return ptr;
    }
 
@@ -305,7 +301,7 @@ namespace Langulus::Fractalloc
    ///   @return a pointer to the new pool                                    
    Pool* Allocator::AllocatePool(DMeta hint, size_t size) has_assumptions {
       const auto poolSize = ::std::max(Pool::DefaultPoolSize, Roof2(size));
-      return AlignedAllocate<Pool>(hint, poolSize);
+      return AlignedAllocate(hint, poolSize);
    }
 
    /// Deallocate a pool                                                      
@@ -1112,5 +1108,4 @@ namespace Langulus::Fractalloc
       return true;
    }
 #endif
-
-} // namespace Langulus::Fractalloc
+}

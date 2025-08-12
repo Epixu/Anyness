@@ -28,7 +28,6 @@
 
 namespace Langulus::Fractalloc
 {
-
    ///                                                                        
    ///   Memory allocator                                                     
    ///                                                                        
@@ -172,9 +171,7 @@ namespace Langulus::Fractalloc
    ///   The global memory manager instance                                   
    ///                                                                        
    LANGULUS_API(FRACTALLOC) extern Allocator Instance;
-
-   
-} // namespace Langulus::Fractalloc
+}
 
 #include "Allocation.inl"
 #include "Pool.inl"
