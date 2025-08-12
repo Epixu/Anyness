@@ -222,16 +222,16 @@ namespace Langulus::Anyness::Component
             }
 
             self.AllocateFresh(self.RequestSize(count));
-            const auto srcStart = IterateHandles(from).begin();
-            auto src = srcStart;
+            auto src = IterateHandles(from).begin();
+            auto dst = IterateHandles(self).begin();
             try {
-               for (auto dst : IterateHandles(self)) {
-                  dst.EmplaceWithIntent(Clone(*src));
-                  ++src;
+               while (src != IteratorEnd {}) {
+                  dst->EmplaceWithIntent(Clone(*src));
+                  ++dst; ++src;
                }
             } catch (...) {
                // Partial success                                       
-               self.SetCount(src - srcStart);
+               self.SetCount(src - IterateHandles(from).begin());
                self.ResetHash();
                throw;
             }
@@ -449,15 +449,11 @@ namespace Langulus::Anyness::Component
          );
 
          const auto request = self.RequestSize(desiredReserve);
-         if (request.mElementCount == self.GetReserved())
-            return;
-
          if constexpr (C::TypeErased) {
             //                                                          
             // Type erased shrinking                                    
             const auto T = self.GetType();
             LglsAssumeDev(T, "Invalid type");
-
             const auto currentCount = self.GetCount();
             if (currentCount > desiredReserve) {
                // Destroy elements on the back                          
@@ -465,6 +461,10 @@ namespace Langulus::Anyness::Component
                   self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
                self.SetCount(desiredReserve);
             }
+
+            // Early return if reserve itself didn't change             
+            if (request.mElementCount == self.GetReserved())
+               return;
 
             if (T.IsSparse()) {
                // Move entry data to its new place                      
@@ -483,7 +483,6 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Statically typed shrinking                               
             using T = TypeOf<C>;
-
             const auto currentCount = self.GetCount();
             if (currentCount > desiredReserve) {
                // Destroy elements on the back                          
@@ -491,6 +490,10 @@ namespace Langulus::Anyness::Component
                   self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
                self.SetCount(desiredReserve);
             }
+            
+            // Early return if reserve itself didn't change             
+            if (request.mElementCount == self.GetReserved())
+               return;
 
             if constexpr (CT::Sparse<T>) {
                // Move entry data to its new place                      

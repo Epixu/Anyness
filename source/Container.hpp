@@ -116,8 +116,8 @@ namespace Langulus::Anyness
       template<CT::Component...MORE_COMPONENTS>
       using Include = Container<COMPONENTS..., MORE_COMPONENTS...>;
 
-      /// Explicitly call ConstructDefault in all of the components           
-      /// Most components should have trivial constructors                    
+      /// Explicitly call ConstructDefault in all of the components.          
+      /// Most components should have trivial constructors.                   
       constexpr Container() noexcept {
          ComponentList::ForEach([this]<class C>{
             if constexpr (requires { this->C::ConstructDefault(); })
@@ -125,10 +125,20 @@ namespace Langulus::Anyness
          });
       }
 
+      /// C++ copy-semantics are mapped onto Refer intent                     
+      /// In other words - a copy is always shallow, unless explicitly Copy   
+      /// or Clone intent is used                                             
+      constexpr Container(Container const& other) noexcept
+         : Container {Refer {other}} {}
+      
+      /// C++ move-semantics are mapped onto Move intent                      
+      constexpr Container(Container&& other) noexcept
+         : Container {Move {other}} {}
+      
       /// A generalized container constructor that takes another container    
       /// that may have completely different components, and tries to extract 
       /// relevant information from it. Invokes ConstructFrom for each        
-      /// component of this container that has it. Allows for intents as well 
+      /// component of this container that has it. Allows for intents as well.
       ///   @note ConstructFrom act as validating functions as well           
       constexpr Container(CT::Container auto&& from) {
          using I = IntentOf<decltype(from)>;
@@ -140,13 +150,25 @@ namespace Langulus::Anyness
          });
       }
       
-      /// Explicitly call Destroy in all of the components                    
-      /// Most components should have trivial destructors                     
+      /// Explicitly call Destroy in all of the components.                   
+      /// Most components should have trivial destructors.                    
       ~Container() noexcept {
          ComponentList::ForEach([this]<class C>{
             if constexpr (requires { this->C::Destroy(); })
                this->C::Destroy();
          });
+      }
+      
+      /// C++ copy-semantics are mapped onto Refer intent                     
+      /// In other words - a copy is always shallow, unless explicitly Copy   
+      /// or Clone intent is used                                             
+      constexpr Container& operator = (Container const& other) noexcept {
+         return operator = (Refer {other});
+      }
+      
+      /// C++ move-semantics are mapped onto Move intent                      
+      constexpr Container& operator = (Container&& other) noexcept {
+         return operator = (Move {other});
       }
       
       /// Generalized container assignment that takes another container, which

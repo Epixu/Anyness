@@ -150,30 +150,30 @@ namespace Langulus::Fractalloc
       else pool = Instance.mMainPoolChain;
 
       //	Attempt to place allocation in the default chain               
-      Allocation* memory = nullptr;
+      Allocation* entry = nullptr;
       while (pool) {
-         memory = pool->Allocate(size);
-         if (memory)
+         entry = pool->Allocate(size);
+         if (entry)
             break;
          pool = pool->mNext;
       }
 
-      if (memory) {
+      if (entry) {
          #if VERBOSE
-            DumpAllocation(hint, pool, memory);
+            DumpAllocation(hint, pool, entry);
          #endif
 
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
             auto& stats = Instance.mStatistics;
             stats.mEntries += 1;
-            stats.mBytesAllocatedByFrontend += memory->GetFrontendSize();
+            stats.mBytesAllocatedByFrontend += entry->GetBackendSize();
             LglsAssumeDev(
                stats.mBytesAllocatedByFrontend <= stats.mBytesAllocatedByBackend,
                "Impossible amount of frontend allocation"
             );
          #endif
 
-         return memory;
+         return entry;
       }
 
       // If reached, pool chain can't contain the memory                
@@ -187,10 +187,10 @@ namespace Langulus::Fractalloc
          " of size ", Logger::Size {pool->GetAllocatedByBackend()}
       );
 
-      memory = pool->Allocate(size);
+      entry = pool->Allocate(size);
 
       #if VERBOSE
-         DumpAllocation(hint, pool, memory);
+         DumpAllocation(hint, pool, entry);
       #endif
 
       if (hint) {
@@ -220,7 +220,7 @@ namespace Langulus::Fractalloc
       }
 
       IF_LANGULUS_MEMORY_STATISTICS(Instance.mStatistics.AddPool(pool));
-      return memory;
+      return entry;
    }
 
    /// Reallocate a memory entry                                              

@@ -26,13 +26,17 @@ namespace
    struct Stringifiable {
       using CTTI_MapsTo = Text;
       // ReSharper disable once CppMemberFunctionMayBeConst
-      explicit operator Text() { return "Stringifiable converted to Text"; }
+      explicit operator Text() {
+         return "Stringifiable converted to Text";
+      }
    };
 
    /// A type that is reflected as convertible to Text                        
    struct StringifiableConst {
       using CTTI_MapsTo = Text;
-      explicit operator Text() const { return "StringifiableConst converted to Text"; }
+      explicit operator Text() const { 
+         return "StringifiableConst converted to Text";
+      }
    };
 }
 
@@ -179,7 +183,6 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE(text.GetCount() == 10);
          REQUIRE(text.GetReserved() >= 500);
          REQUIRE(text.GetRaw() == memory);
-         REQUIRE(text.GetAllocation());
          REQUIRE(region.GetCount() == 10);
          REQUIRE(region.GetRaw() == memory);
       }
@@ -191,7 +194,6 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE(text.GetCount() == 4);
          REQUIRE(text.GetReserved() >= 500);
          REQUIRE(text.GetRaw() == memory);
-         REQUIRE(text.GetAllocation());
          REQUIRE(text == "test");
       }
 
@@ -200,10 +202,8 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          text.Clear();
 
          Text_CheckState_OwnedEmpty(text);
-         REQUIRE(text.GetCount() == 0);
          REQUIRE(text.GetReserved() >= 500);
          REQUIRE(text.GetRaw() == memory);
-         REQUIRE(text.GetAllocation());
          REQUIRE(text != "test");
       }
 
@@ -212,52 +212,41 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          text.Reset();
 
          Text_CheckState_Default(text);
-         REQUIRE(text.GetCount() == 0);
-         REQUIRE(text.GetReserved() == 0);
-         REQUIRE(text.GetRaw() == nullptr);
-         REQUIRE(text.GetType() == MetaOf<char>());
-         REQUIRE_FALSE(text.GetAllocation());
          REQUIRE(text != "test");
       }
    }
 
    GIVEN("Full text container") {
       T text {"test1"};
+      Text_CheckState_OwnedFull(text);
       auto memory = text.GetRaw();
 
       WHEN("Add more text") {
          text += "test2";
 
+         Text_CheckState_OwnedFull(text);
          REQUIRE(text == "test1test2");
          REQUIRE(text.GetCount() == 10);
          REQUIRE(text.GetReserved() >= 10);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(text.GetRaw() == memory);
-         #endif
-         REQUIRE(text.GetAllocation());
-         REQUIRE(text.template Is<char>());
+         IF_LANGULUS_MANAGED_MEMORY(REQUIRE(text.GetRaw() == memory));
       }
 
       WHEN("More capacity is reserved") {
          text.Reserve(20);
 
+         Text_CheckState_OwnedFull(text);
          REQUIRE(text.GetCount() == 5);
          REQUIRE(text.GetReserved() >= 20);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(text.GetRaw() == memory);
-         #endif
-         REQUIRE(text.GetAllocation());
+         IF_LANGULUS_MANAGED_MEMORY(REQUIRE(text.GetRaw() == memory));
       }
 
       WHEN("More capacity is reserved, via Extend()") {
          auto region = text.Extend(10);
 
+         Text_CheckState_OwnedFull(text);
          REQUIRE(text.GetCount() == 15);
          REQUIRE(text.GetReserved() >= 15);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(text.GetRaw() == memory);
-         #endif
-         REQUIRE(text.GetAllocation());
+         IF_LANGULUS_MANAGED_MEMORY(REQUIRE(text.GetRaw() == memory));
          REQUIRE(region.GetCount() == 10);
          REQUIRE(region.GetRaw() == text.GetRaw() + 5);
       }
@@ -265,65 +254,65 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       WHEN("Less capacity is reserved") {
          text.Reserve(2);
 
+         Text_CheckState_OwnedFull(text);
          REQUIRE(text.GetCount() == 2);
          REQUIRE(text.GetReserved() >= 5);
          REQUIRE(text.GetRaw() == memory);
-         REQUIRE(text.GetAllocation());
+         REQUIRE(text == "te");
       }
 
       WHEN("Text is cleared") {
          text.Clear();
 
-         REQUIRE(text.GetCount() == 0);
+         Text_CheckState_OwnedEmpty(text);
          REQUIRE(text.GetReserved() >= 5);
          REQUIRE(text.GetRaw() == memory);
-         REQUIRE(text.GetAllocation());
-         REQUIRE(text.template Is<char>());
+         REQUIRE(text == "");
       }
 
       WHEN("Text is reset") {
          text.Reset();
 
-         REQUIRE(text.GetCount() == 0);
-         REQUIRE(text.GetReserved() == 0);
-         REQUIRE_FALSE(text.GetRaw());
-         REQUIRE(text.template Is<char>());
+         Text_CheckState_Default(text);
+         REQUIRE(text == "");
       }
 
       WHEN("Text is copied shallowly") {
          T copy = text;
 
+         Text_CheckState_OwnedFull(text);
+         Text_CheckState_OwnedFull(copy);
          REQUIRE(text.GetCount() == copy.GetCount());
          REQUIRE(text.GetReserved() == copy.GetReserved());
          REQUIRE(text.GetRaw() == copy.GetRaw());
          REQUIRE(text.GetType() == copy.GetType());
-         REQUIRE(text.GetAllocation());
-         REQUIRE(copy.GetAllocation());
          REQUIRE(copy.GetUses() == 2);
          REQUIRE(text.GetUses() == 2);
+         REQUIRE(text == copy);
       }
 
       WHEN("Text is cloned (deep copy)") {
          T copy = Clone(text);
 
+         Text_CheckState_OwnedFull(text);
+         Text_CheckState_OwnedFull(copy);
          REQUIRE(text.GetCount() == copy.GetCount());
          REQUIRE(text.GetReserved() >= copy.GetReserved());
          REQUIRE(text.GetRaw() != copy.GetRaw());
          REQUIRE(text.GetType() == copy.GetType());
-         REQUIRE(text.GetAllocation());
-         REQUIRE(copy.GetAllocation());
          REQUIRE(copy.GetUses() == 1);
          REQUIRE(text.GetUses() == 1);
+         REQUIRE(text == copy);
       }
 
       WHEN("Text is reset, then allocated again") {
          text.Reset();
          text += "kurec";
 
+         Text_CheckState_OwnedFull(text);
          REQUIRE(text.GetCount() == 5);
          REQUIRE(text.GetReserved() >= 5);
-         REQUIRE(text.GetAllocation());
-         REQUIRE(text.template Is<char>());
+         REQUIRE(text == "kurec");
       }
 
       WHEN("Texts are compared") {
@@ -617,7 +606,7 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.Is<char>());
+   REQUIRE      (text.IsExact<char>());
    REQUIRE      (text.GetCount() == 0);
    REQUIRE      (text.GetReserved() == 0);
    REQUIRE      (text.GetUses() == 0);
@@ -644,7 +633,7 @@ void Text_CheckState_OwnedEmpty(const Text& text) {
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.Is<char>());
+   REQUIRE      (text.IsExact<char>());
    REQUIRE      (text.GetCount() == 0);
    REQUIRE      (text.GetReserved() > 0);
    REQUIRE      (text.GetUses() == 1);
@@ -671,7 +660,7 @@ void Text_CheckState_OwnedFull(const Text& text) {
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.Is<char>());
+   REQUIRE      (text.IsExact<char>());
    REQUIRE      (text.GetCount() > 0);
    REQUIRE      (text.GetReserved() > 0);
    REQUIRE      (text.GetUses() > 0);
@@ -698,7 +687,7 @@ void Text_CheckState_DisownedFullConst(const Text& text) {
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.Is<char>());
+   REQUIRE      (text.IsExact<char>());
    REQUIRE      (text.GetCount() > 0);
    REQUIRE      (text.GetReserved() == 0);
    REQUIRE      (text.GetUses() == 0);
