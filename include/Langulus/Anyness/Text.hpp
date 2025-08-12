@@ -200,8 +200,7 @@ namespace Langulus::Anyness
       ///   @return the text                                                  
       template<CT::Number T>
       static Text FromNumber(T&& number, int precision = 0) {
-         Text result;
-         
+         Text result;         
          if constexpr (CT::Real<T>) {
             // Stringify a real number                                  
             constexpr auto size = ::std::numeric_limits<T>::max_digits10 * 2;
@@ -221,6 +220,7 @@ namespace Langulus::Anyness
                result.AllocateFresh(result.RequestSize(c));
                memcpy(result.mHeap, temp, c);
                result.SetCount(c);
+               result.ResetHash();
                return result;
             }
 
@@ -255,16 +255,15 @@ namespace Langulus::Anyness
                      approximate = true;
                      continue;
                   }
-                  else break;
                }
-               else break;
+               break;
             }
 
             ++lastChar;
             const auto c = static_cast<CountType>(lastChar - temp);
             if (approximate) {
-               // We've truncated the number, so prepend a '~' symbol to
-               // signify it's an approximate representation            
+               // We've truncated the number, so prepend a '~' symbol   
+               // to signify it's an approximate representation         
                result.AllocateFresh(result.RequestSize(c + 1));
                *result.mHeap = '~';
                memcpy(result.mHeap + 1, temp, c);
@@ -289,6 +288,8 @@ namespace Langulus::Anyness
             result.SetCount(c);
          }
          else static_assert(false, "Unsupported number type");
+
+         result.ResetHash();
          return result;
       }
 

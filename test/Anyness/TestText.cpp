@@ -16,6 +16,13 @@ namespace Catch
 {
    template<>
    struct is_range<Text> { static const bool value = false; };
+   
+   template<>
+   struct StringMaker<Text> {
+      static std::string convert(Text const& value) {
+         return "\"" + static_cast<::std::string>(value) + "\"_text";
+      }
+   };
 }
 
 namespace
@@ -333,11 +340,9 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
    WHEN("Constructed Text with a number") {
       Text* text = new Text {Text::FromNumber(TestType{66})};
 
+      Text_CheckState_OwnedFull(*text);
       REQUIRE((*text).GetCount() == 2);
       REQUIRE((*text).GetReserved() >= 2);
-      REQUIRE((*text).Is<char>());
-      REQUIRE((*text).GetRaw());
-      REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "66");
 
       delete text;
@@ -367,12 +372,10 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]",
 
    WHEN("Constructed Text with a number") {
       Text* text = new Text {Text::FromNumber(TestType{-66})};
-
+      
+      Text_CheckState_OwnedFull(*text);
       REQUIRE((*text).GetCount() == 3);
       REQUIRE((*text).GetReserved() >= 3);
-      REQUIRE((*text).Is<char>());
-      REQUIRE((*text).GetRaw());
-      REQUIRE((*text).GetAllocation());
       REQUIRE((*text) == "-66");
 
       delete text;
@@ -403,11 +406,9 @@ TEMPLATE_TEST_CASE("Real number stringification", "[text]",
    WHEN("Constructed Text with a number") {
       Text* text = new Text {Text::FromNumber(TestType{-66.666}, 2)};
 
-      REQUIRE((*text).GetCount() == 3);
-      REQUIRE((*text).GetReserved() >= 3);
-      REQUIRE((*text).Is<char>());
-      REQUIRE((*text).GetRaw());
-      REQUIRE((*text).GetAllocation());
+      Text_CheckState_OwnedFull(*text);
+      REQUIRE((*text).GetCount() == 7);
+      REQUIRE((*text).GetReserved() >= 7);
       REQUIRE((*text) == "~-66.67");
 
       delete text;
@@ -446,7 +447,7 @@ TEMPLATE_TEST_CASE("Logging text containers", "[text]", Text/*TODO , Path*/) {
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", /*Stringifiable,*/ StringifiableConst) {
+TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", Stringifiable, StringifiableConst) {
    static Allocator::State memoryState;
 
    GIVEN("A stringifiable type") {
@@ -455,14 +456,18 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", /*Stringifiable,*/ S
       TestType instance;
 
       WHEN("Converted") {
-         // Calling static_cast<Debug> here doesn't work, because of MSVC bug
+         // @attention calling static_cast<Text>(Stringifiable) won't   
+         // work on MSVC due to a compiler bug with mutable cast        
+         // operators                                                   
          const auto staticallyConverted = instance.operator Text();
-         
          Text rttiConverted;
          meta.GetMorphism(debugMeta)(&instance, &rttiConverted);
 
          REQUIRE(staticallyConverted == rttiConverted);
-         REQUIRE(staticallyConverted == "Stringifiable converted to Text");
+         if constexpr (CT::Same<Stringifiable, TestType>)
+            REQUIRE(staticallyConverted == "Stringifiable converted to Text");
+         else
+            REQUIRE(staticallyConverted == "StringifiableConst converted to Text");            
       }
    }
 
