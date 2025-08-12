@@ -24,8 +24,7 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = 2000;
 
       /// Get the hash, recompute every time                                  
-      template<CT::Container C>
-      H GetHash(this const C& self) noexcept {
+      H GetHash(this auto const& self) noexcept {
          return self.HashRecompute();
       }
 
@@ -104,5 +103,15 @@ namespace Langulus::Anyness::Component
             );
          }
       }
+      
+   protected:
+      template<unsigned>
+      friend struct HeapMovable;
+      
+      /// Set the hash directly (for internal use)                            
+      //void SetHash(H hash) noexcept { mHash = hash; }
+      
+      /// This always returns an invalid hash                                 
+      constexpr H GetHashNoRecompute() const noexcept { return 0; }
    };
 }

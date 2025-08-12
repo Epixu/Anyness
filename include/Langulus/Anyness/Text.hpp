@@ -82,6 +82,7 @@ namespace Langulus::Anyness
          Com::HeapReference<>,            // Pointer to heap memory     
          Com::OwnershipStack<0, false>,   // Pointer to an allocation   
          Com::CountStack<>,               // Variable count             
+         Com::HashEmergent<>,             // Emergent hash              
          Com::Comparison,                 // Allows for comparisons     
          Com::Conversion,                 // Allows conversions         
          Com::IndexedLinear<>,            // Indexed directly           
@@ -104,8 +105,7 @@ namespace Langulus::Anyness
          decltype(auto) source = DeintCast(FWD(text));
          
          // Make sure we start off without ownership                    
-         if constexpr (requires { SetAllocation(nullptr); })
-            SetAllocation(nullptr);
+         SetAllocation(nullptr);
 
          if constexpr (CT::TextLiteral<ST>) {
             // Create from a text literal/bounded array                 
@@ -113,8 +113,11 @@ namespace Langulus::Anyness
             using CHAR = TypeOf<ST>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             const auto count = strnlen(source, ExtentOf<T>);
-            if (not count)
+            if (not count) {
+               SetCount(0);
+               SetHash(1);
                return;
+            }
             this->mHeapReadable = DecvqAllCast(source);
             SetCount(count);
          }
@@ -126,16 +129,22 @@ namespace Langulus::Anyness
             using CHAR = Deptr<ST>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             const auto count = strlen(source);
-            if (not count)
+            if (not count) {
+               SetCount(0);
+               SetHash(1);
                return;
+            }
             this->mHeapReadable = DecvqAllCast(source);
             SetCount(count);
          }
          else if constexpr (::std::ranges::contiguous_range<ST>) {
             // Create from an std container                             
             // Type can be either char, or const char                   
-            if (source.empty())
+            if (source.empty()) {
+               SetCount(0);
+               SetHash(1);
                return;
+            }
             using CHAR = Deptr<decltype(source.data())>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             this->mHeapReadable = source.data();
@@ -144,11 +153,10 @@ namespace Langulus::Anyness
          else static_assert(false, "Unsupported text constructor");
 
          // Reset hash                                                  
-         if constexpr (requires { ResetHash(); })
-            ResetHash();
+         ResetHash();
 
          // Take ownership if the intent requires it                    
-         if constexpr (S::KeepsOnCopy() and requires { TakeOwnership(); })
+         if constexpr (S::KeepsOnCopy())
             TakeOwnership();
       }
 
@@ -159,6 +167,7 @@ namespace Langulus::Anyness
          AllocateFresh(RequestSize(1));
          *GetRaw() = DeintCast(ch);
          SetCount(1);
+         ResetHash();
       }
 
       //template<class A1, class...AN>
@@ -318,7 +327,7 @@ namespace Langulus::Anyness
       ///      Com::Concatenate and Com::ConcatenateOperators                 
       template<CT::Text T> requires CT::NotContainer<T>
       Text& operator += (T&& rhs) {
-         if (IsEmpty()) {
+         if (not IsAllocated()) {
             *this = Text {FWD(rhs)};
             return *this;
          }
@@ -332,6 +341,8 @@ namespace Langulus::Anyness
             using CHAR = TypeOf<DT>;
             static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
             const auto count = strnlen(source, ExtentOf<DT>);
+            if (not count)
+               return *this;
             AllocateMore(currentCount + count);
             memcpy(mHeap + currentCount, source, count);
             SetCount(currentCount + count);
@@ -343,6 +354,8 @@ namespace Langulus::Anyness
             using CHAR = Deptr<DT>;
             static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
             const auto count = strlen(source);
+            if (not count)
+               return *this;
             AllocateMore(currentCount + count);
             memcpy(mHeap + currentCount, source, count);
             SetCount(currentCount + count);
@@ -359,6 +372,8 @@ namespace Langulus::Anyness
             SetCount(currentCount + count);
          }
          else static_assert(false, "Unsupported text concatenation");
+
+         ResetHash();
          return *this;
       }
    };

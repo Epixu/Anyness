@@ -12,6 +12,12 @@ using namespace Langulus;
 using Anyness::Text;
 using Anyness::Allocator;
 
+namespace Catch
+{
+   template<>
+   struct is_range<Text> { static const bool value = false; };
+}
+
 namespace
 {
    /// A type that is reflected, as convertible to Text                       
@@ -152,6 +158,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          Text_CheckState_OwnedFull(*text);
          REQUIRE((*text).GetCount() == 1);
          REQUIRE((*text).GetReserved() >= 1);
+         REQUIRE((*text) == "?");
          REQUIRE((*text)[0] == '?');
          REQUIRE_THROWS((*text)[1] == '?');
       }
@@ -167,6 +174,8 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       WHEN("Text is extended") {
          auto region = text.Extend(10);
 
+         Text_CheckState_OwnedFull(text);
+         Text_CheckState_OwnedFull(region);
          REQUIRE(text.GetCount() == 10);
          REQUIRE(text.GetReserved() >= 500);
          REQUIRE(text.GetRaw() == memory);
@@ -178,6 +187,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       WHEN("Text is concatenated") {
          text += "test";
 
+         Text_CheckState_OwnedFull(text);
          REQUIRE(text.GetCount() == 4);
          REQUIRE(text.GetReserved() >= 500);
          REQUIRE(text.GetRaw() == memory);
@@ -189,6 +199,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          text += "test";
          text.Clear();
 
+         Text_CheckState_OwnedEmpty(text);
          REQUIRE(text.GetCount() == 0);
          REQUIRE(text.GetReserved() >= 500);
          REQUIRE(text.GetRaw() == memory);
@@ -200,6 +211,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          text += "test";
          text.Reset();
 
+         Text_CheckState_Default(text);
          REQUIRE(text.GetCount() == 0);
          REQUIRE(text.GetReserved() == 0);
          REQUIRE(text.GetRaw() == nullptr);

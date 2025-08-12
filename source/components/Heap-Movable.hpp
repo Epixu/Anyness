@@ -120,7 +120,9 @@ namespace Langulus::Anyness::Component
                   // Copy/Refer other                                   
                   if constexpr (CT::Referred<I>) {
                      // Refer                                           
-                     self.mHeap = from.mHeap;
+                     self.mHeapVoid = const_cast<void*>(
+                        static_cast<const void*>(from.GetRaw())
+                     );
                      if constexpr (requires { self.mReserved; })
                         self.mReserved = from.GetReserved();
                      self.SetCount(count);
@@ -230,7 +232,7 @@ namespace Langulus::Anyness::Component
             } catch (...) {
                // Partial success                                       
                self.SetCount(src - srcStart);
-               //self.ResetHash();
+               self.ResetHash();
                throw;
             }
                      
