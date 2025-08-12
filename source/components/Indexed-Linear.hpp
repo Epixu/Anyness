@@ -8,6 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Index.hpp>
+#include <Langulus/CT/Signed.hpp>
 #include <limits>
 
 
