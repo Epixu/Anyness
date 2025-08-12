@@ -406,7 +406,11 @@
    #define LglsDisableWarningPush  LglsDoPragma(GCC diagnostic push)
    #define LglsDisableWarningPop   LglsDoPragma(GCC diagnostic pop)
    #define LglsDisableWarning(W)   LglsDoPragma(GCC diagnostic ignored #W)
-   #define LglsDisableWarning_SelfAssign LglsDisableWarning(-Wself-assign-overloaded)
+   #if LANGULUS_COMPILER(CLANG)
+      #define LglsDisableWarning_SelfAssign LglsDisableWarning(-Wself-assign-overloaded)
+   #else
+      #define LglsDisableWarning_SelfAssign
+   #endif
 #endif
 
 #ifndef LANGULUS_ALIGNMENT
