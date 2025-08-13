@@ -12,7 +12,7 @@
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
-#define LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH() 1
+#define LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH() 0
 
 namespace Langulus::CTTI
 {

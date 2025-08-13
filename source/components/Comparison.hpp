@@ -12,7 +12,7 @@
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Text.hpp>
 
-#if 0 or LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH()
+#if 0 and LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH()
    #include <Langulus/Logger.hpp>
    #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
    #define VERBOSE_SCOPED(...) const auto scope____ = Logger::VerboseScoped(__VA_ARGS__)
