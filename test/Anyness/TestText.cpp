@@ -67,19 +67,47 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
    static_assert(not CT::Array<T>, "Wrongly typed container");
    static_assert(    CT::Exact<TypeOf<T>, char>, "Wrongly typed container");
 
+   GIVEN("Gap test") {
+      alignas(T) char unininitialized[sizeof(T)];
+      memset(unininitialized, 254, sizeof(unininitialized));
+      new (unininitialized) T {};
+      for (auto b : unininitialized) {
+         REQUIRE(b != 254);
+      }
+      Logger::Info("Size of ", NameOf<::std::string>(), " container is: ", sizeof(::std::string), " bytes");
+      auto s = Logger::Section("Size of ", NameOf<TestType>(), " container is: ", sizeof(TestType), " bytes");
+      size_t accumulated_size = 0;
+      T::ComponentList::ForEach([&]<class C> {
+         Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
+         accumulated_size += sizeof(C);
+      });
+      Logger::Info("-----------------------------------------");
+      Logger::Info("For a total of ", accumulated_size, " bytes");
+      if (accumulated_size < sizeof(TestType))
+         Logger::Warning(sizeof(TestType) - accumulated_size, " stray bytes detected");
+      else if (accumulated_size > sizeof(TestType))
+         Logger::Info(Logger::Green, accumulated_size - sizeof(TestType), " empty base data eliminated");
+   }
+   
    GIVEN("Default text container") {
       T text;
 
       Text_CheckState_Default(text);
 
-      WHEN("Capacity is reserved") {
+      WHEN("Cleared") {
+         text.Clear();
+
+         Text_CheckState_Default(text);
+      }
+
+      WHEN("Reserve") {
          text.Reserve(500);
 
          Text_CheckState_OwnedEmpty(text);
          REQUIRE(text.GetReserved() >= 500);
       }
 
-      WHEN("Directly assigned to itself") {
+      WHEN("Self-assign") {
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
          // ReSharper disable once CppIdenticalOperandsInBinaryExpression
@@ -89,7 +117,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          Text_CheckState_Default(text);
       }
 
-      WHEN("Indirectly assigned to itself") {
+      WHEN("Indirect self-assign") {
          const auto anothertext = text;
          text = anothertext;
 
@@ -151,13 +179,13 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          Text_CheckState_Default(*text);
       }
 
-      WHEN("Constructed with a nullptr c-array") {
+      WHEN("Constructed with a nullptr c-string") {
          text = new T {(char*)nullptr};
 
          Text_CheckState_Default(*text);
       }
 
-      WHEN("Constructed with empty c-array") {
+      WHEN("Constructed with empty c-string") {
          text = new T {""};
 
          Text_CheckState_Default(*text);

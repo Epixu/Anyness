@@ -88,6 +88,9 @@ namespace Langulus::Anyness
    {
       template<class C1, class C2, class...CN>
       consteval bool ValidateComponentOrder() {
+         /*static_assert(::std::is_standard_layout_v<C1>);
+         static_assert(::std::is_standard_layout_v<C2>);
+         static_assert((::std::is_standard_layout_v<CN> and ...));*/
          static_assert(C1::ComponentPrecedence <= C2::ComponentPrecedence,
             "Wrong component order");
          if constexpr (sizeof...(CN))
@@ -119,6 +122,7 @@ namespace Langulus::Anyness
       /// Explicitly call ConstructDefault in all of the components.          
       /// Most components should have trivial constructors.                   
       constexpr Container() noexcept {
+         //static_assert(::std::is_standard_layout_v<Container>); //damn it, i overlook one rule and now the entire container is big as heck :(
          ComponentList::ForEach([this]<class C>{
             if constexpr (requires { this->C::ConstructDefault(); })
                this->C::ConstructDefault();
@@ -217,7 +221,7 @@ namespace Langulus::Anyness
       /// Get a reference to the first element of a specific stack/heap       
       ///   @tparam ID - the stack/heap ID                                    
       ///   @tparam TYPE - the type of the data to get                        
-      template<unsigned ID, CT::NotVoid TYPE>
+      /*template<unsigned ID, CT::NotVoid TYPE>
       constexpr auto& GetInner() has_assumptions {
          LglsAssumeDev(not this->IsEmpty(), "Container is empty");
 
@@ -259,7 +263,7 @@ namespace Langulus::Anyness
             return Com::Stack<TYPE**, ID>::template Get<TYPE>();
          else
             static_assert(false, "No heap/stack with that ID and/or TYPE");
-      }
+      }*/
    };
 
    namespace State
