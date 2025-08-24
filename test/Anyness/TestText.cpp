@@ -144,7 +144,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE((*text)[2] == 's');
          REQUIRE((*text)[3] == 't');
          REQUIRE((*text)[4] == '1');
-         REQUIRE_THROWS((*text)[5] == '?');
+         IF_SAFE(REQUIRE_THROWS((*text)[5] == '?'));
       }
 
       WHEN("Constructed with a count-terminated string") {
@@ -155,10 +155,10 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE((*text) == "te");
          REQUIRE((*text)[0] == 't');
          REQUIRE((*text)[1] == 'e');
-         REQUIRE_THROWS((*text)[2] == 's');
-         REQUIRE_THROWS((*text)[3] == 't');
-         REQUIRE_THROWS((*text)[4] == '2');
-         REQUIRE_THROWS((*text)[5] == '?');
+         IF_SAFE(REQUIRE_THROWS((*text)[2] == 's'));
+         IF_SAFE(REQUIRE_THROWS((*text)[3] == 't'));
+         IF_SAFE(REQUIRE_THROWS((*text)[4] == '2'));
+         IF_SAFE(REQUIRE_THROWS((*text)[5] == '?'));
       }
 
       WHEN("Constructed with a bounded array string") {
@@ -174,7 +174,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE((*text)[2] == 's');
          REQUIRE((*text)[3] == 't');
          REQUIRE((*text)[4] == '3');
-         REQUIRE_THROWS((*text)[5] == '?');
+         IF_SAFE(REQUIRE_THROWS((*text)[5] == '?'));
       }
 
       WHEN("Constructed with a nullptr_t") {
@@ -203,7 +203,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE((*text).GetReserved() >= 1);
          REQUIRE((*text) == "?");
          REQUIRE((*text)[0] == '?');
-         REQUIRE_THROWS((*text)[1] == '?');
+         IF_SAFE(REQUIRE_THROWS((*text)[1] == '?'));
       }
 
       delete text;
