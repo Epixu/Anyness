@@ -75,8 +75,8 @@ namespace Langulus::Anyness::Component
 
       /// Set the contained type (inner)                                      
       constexpr void SetTypeInner(this auto& self, const META& type) noexcept {
-         META const& meta = self.GetTypeInner();
-         const_cast<META&>(meta) = type;
+         auto& meta = const_cast<META&>(self.GetTypeInner());
+         meta = type;
       }
       
       /// Default-initialize the component                                    
