@@ -13,7 +13,7 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Defines count as a member                                              
+   /// Tracks count on the stack                                              
    /// Count shows how many elements inside a container are initialized       
    /// Stack-based counting increases the container size, but doesn't require 
    /// indirections, making count lookup faster and more cache-friendly       
@@ -52,7 +52,7 @@ namespace Langulus::Anyness::Component
       template<unsigned>        friend struct HeapMovable;
       
       /// Get count (inner)                                                   
-      constexpr auto const& GetCountInner(this auto const& self) noexcept {
+      constexpr auto& GetCountInner(this auto const& self) noexcept {
          return *reinterpret_cast<T const*>(
             self.mStack + self.template StackOffset<CountStack>
          );

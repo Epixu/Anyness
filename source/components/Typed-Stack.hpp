@@ -54,8 +54,8 @@ namespace Langulus::Anyness::Component
       template<unsigned>
       friend struct HeapMovable;
 
-      /// Reset the type of the container, unless it's type-constrained       
-      /// If this container isn't type-erased, this call is a no-op           
+      /// Reset the type of the container, unless it's type-constrained.      
+      /// If this container isn't type-erased, this call is a no-op.          
       constexpr void ResetType(this auto& self) noexcept {
          if constexpr (TypeErased) {
             if constexpr (requires { self.IsTypeConstrained(); }) {
@@ -71,6 +71,17 @@ namespace Langulus::Anyness::Component
          return *reinterpret_cast<META const*>(
             self.mStack + self.template StackOffset<TypedStack>
          );
+      }
+
+      /// Set the contained type (inner)                                      
+      constexpr void SetTypeInner(this auto& self, const META& type) noexcept {
+         META const& meta = self.GetTypeInner();
+         const_cast<META&>(meta) = type;
+      }
+      
+      /// Default-initialize the component                                    
+      void ConstructDefault(this auto& self) noexcept {
+         self.SetTypeInner({});
       }
 
    public:
@@ -266,7 +277,7 @@ namespace Langulus::Anyness::Component
             self.SetType(type);
          else {
             static_assert(CT::Exact<T, TYPE>, "Type mismatch");         
-            self.mType = type;
+            self.SetTypeInner(type);
          }
       }
 

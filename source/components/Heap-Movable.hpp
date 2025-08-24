@@ -79,7 +79,6 @@ namespace Langulus::Anyness::Component
             self.mReserved = 0;
          self.SetCountInner(0);
          self.SetHashInner(1);
-         // Type should be default-initialized anyways                  
       }
       
       /// Transfer from any kind of container, respecting intents             
@@ -97,11 +96,11 @@ namespace Langulus::Anyness::Component
                // Move/Copy/Refer other                                 
                if constexpr (I::IsMoved()) {
                   // Move                                               
+                  self.SetType(type);
                   self.SetHeapInner(from.GetHeapInner());
                   if constexpr (requires { self.mReserved; })
                      self.mReserved = from.GetReserved();
                   self.SetCountInner(count);
-                  self.SetType(type);
                   self.SetHashInner(from.GetHashInner());
 
                   if constexpr (IT::Owned) {
@@ -119,11 +118,11 @@ namespace Langulus::Anyness::Component
                   // Copy/Refer other                                   
                   if constexpr (CT::Referred<I>) {
                      // Refer                                           
+                     self.SetType(type);
                      self.SetHeapInner(from.GetHeapInner());
                      if constexpr (requires { self.mReserved; })
                         self.mReserved = from.GetReserved();
                      self.SetCountInner(count);
-                     self.SetType(type);
                      self.SetHashInner(from.GetHashInner());
                   }
                   else {
@@ -174,22 +173,22 @@ namespace Langulus::Anyness::Component
                   }
                }
             }
-            else if constexpr (I::IsMoved()) {
+            /*else if constexpr (I::IsMoved()) {
                // Abandon                                               
+               self.SetType(type);
                self.SetHeapInner(from.GetHeapInner());
                if constexpr (requires { self.mReserved; })
                   self.mReserved = from.GetReserved();
                self.SetCountInner(count);
-               self.SetType(type);
                self.SetHashInner(from.GetHashInner());
-            }
+            }*/
             else {
-               // Disown                                                
+               // Abandon/Disown                                        
+               self.SetType(type);
                self.SetHeapInner(from.GetHeapInner());
                if constexpr (requires { self.mReserved; })
                   self.mReserved = from.GetReserved();
                self.SetCountInner(count);
-               self.SetType(type);
                self.SetHashInner(from.GetHashInner());
             }
          }

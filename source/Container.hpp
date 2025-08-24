@@ -125,11 +125,11 @@ namespace Langulus::Anyness
       consteval size_t CalculateStackOffset() {
          static_assert(requires { PICK::StackSize; },
             "Component data is not on the stack");
-         
-         size_t offset = 0;
-         if constexpr (::std::same_as<PICK, C1>)
-            return offset;
+          
+         if constexpr (CT::Same<PICK, C1>)
+            return 0;
          else {
+            size_t offset = 0;
             if constexpr (requires { C1::StackSize; })
                offset += C1::StackSize;
          
