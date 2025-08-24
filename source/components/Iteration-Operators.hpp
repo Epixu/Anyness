@@ -76,14 +76,17 @@ namespace Langulus::Anyness::Component
       constexpr C& operator ++ (this C& self) noexcept {
          // Increment the heap pointer                                  
          if constexpr (C::template HasComponent<HeapReference<ID>>) {
-            auto& heap = self.HeapReference<ID>::mHeap;
-            heap = static_cast<uint8_t*>(heap) + self.GetStride();
+            self.HeapReference<ID>::SetHeapInner(
+               self.HeapReference<ID>::template GetRawAs<uint8_t>() + self.GetStride()
+            );
          }
          else if constexpr (C::template HasComponent<HeapMovable<ID>>) {
-            auto& heap = self.HeapMovable<ID>::mHeap;
-            heap = static_cast<uint8_t*>(heap) + self.GetStride();
+            self.HeapMovable<ID>::SetHeapInner(
+               self.HeapMovable<ID>::template GetRawAs<uint8_t>() + self.GetStride()
+            );
          }
-         else static_assert(false, "Container doesn't have a compatible heap component");
+         else static_assert(false,
+            "Container doesn't have a compatible heap component");
 
          // Increment deep ownership entries, but only if on the stack  
          if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)

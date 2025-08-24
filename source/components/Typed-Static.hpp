@@ -42,11 +42,10 @@ namespace Langulus::Anyness::Component
       constexpr size_t GetStride() const noexcept { return sizeof(TYPE); }
 
       /// Get the reflected type name                                         
-      constexpr auto GetName()   const noexcept { return NameOf<TYPE>(); }
+      constexpr auto GetName() const noexcept { return NameOf<TYPE>(); }
 
       /// Statically typed containers are always typed                        
-      constexpr bool IsTyped()   const noexcept { return true;  }
-      constexpr bool IsUntyped() const noexcept { return false; }
+      constexpr bool IsTyped() const noexcept { return true;  }
 
       /// Check if type origin is the same as one of the provided types       
       /// Always happens at compile-time                                      

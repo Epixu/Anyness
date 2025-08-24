@@ -127,8 +127,8 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.IsTyped(),     "Block is not typed");
          
          PickRange<C> result {self};
-         result.mCount = count;
-         result.mHeap += start * result.GetStride();
+         result.SetCountInner(count);
+         result.SetHeapInner(result.template GetRawAs<uint8_t>() + start * result.GetStride());
          return result;
       }
 

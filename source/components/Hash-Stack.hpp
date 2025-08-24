@@ -19,17 +19,16 @@ namespace Langulus::Anyness::Component
    ///   @tparam H - the hash type used                                       
    template<unsigned ID = 0, class H = Hash>
    struct HashStack : HashEmergent<ID, H> {
-   private:
-      H mHash;
+      static constexpr int StackSize = sizeof(H);
       
-   public:
       /// Reset the hash. It will be recomputed on next comparison            
-      void ResetHash() noexcept { mHash = {}; }
+      void ResetHash(this auto& self) noexcept {
+         self.SetHashInner(0);
+      }
 
       /// Get the hash, recompute it if uninitialized                         
-      template<CT::Container C>
-      H GetHash(this const C& self) noexcept {
-         auto& cached = self.GetHashNoRecompute();
+      H GetHash(this auto const& self) noexcept {
+         auto& cached = self.GetHashInner();
          if (not cached)
             const_cast<H&>(cached) = self.HashRecompute();
          return cached;
@@ -39,10 +38,16 @@ namespace Langulus::Anyness::Component
       template<unsigned>
       friend struct HeapMovable;
       
-      /// Set the hash directily (for internal use)                           
-      void SetHash(H hash) noexcept { mHash = hash; }
+      /// Get hash (inner) - will not recompute it                            
+      constexpr auto& GetHashInner(this auto const& self) noexcept {
+         return *reinterpret_cast<H const*>(
+            self.mStack + self.template StackOffset<HashStack>
+         );
+      }
       
-      /// Get the hash, but never recompute it                                
-      const H& GetHashNoRecompute() const noexcept { return mHash; }
+      /// Set the hash (inner)                                                
+      constexpr void SetHashInner(this auto& self, H h) noexcept {
+         const_cast<H&>(self.GetHashInner()) = h;
+      }
    };
 }

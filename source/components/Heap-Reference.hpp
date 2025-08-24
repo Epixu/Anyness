@@ -20,7 +20,8 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct HeapReference {
       using CTTI_Component = Yes<>;
-      static constexpr int ComponentPrecedence = -2000;
+      static constexpr int  StackSize = sizeof(void*);
+      static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapAllocated = true;
       static constexpr bool HeapCanBeNull = false;
 
@@ -31,6 +32,8 @@ namespace Langulus::Anyness::Component
       friend struct Removal;
       template<class>
       friend struct IndexedLinear;
+      template<unsigned>
+      friend struct HeapMovable;
 
       /*using Byte = ::std::uint8_t;
       template<CT::Container C>
@@ -44,36 +47,52 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Pick = Tif<CT::Mutable<C>, typename Deref<C>::PickMut, typename Deref<C>::Pick>;*/
 
-      union {
+      /*union {
          // The heap pointer in char form for easy debugging            
          char* mHeapReadable;
          // The heap pointer in a byte form for easy pointer arithmetics
          uint8_t* mHeap;
          // The heap pointer in a void form for easy static_cast        
          void* mHeapVoid;
-      };
+      };*/
       
+      /// Get the heap pointer (inner)                                        
+      constexpr auto& GetHeapInner(this auto&& self) noexcept {
+         using R = Tif<CT::Mutable<decltype(self)>, void*, void const*>;
+         return *reinterpret_cast<R const*>(
+            self.mStack + self.template StackOffset<HeapReference>
+         );
+      }
+
+      constexpr void SetHeapInner(this auto& self, auto heap) noexcept {
+         const_cast<void*&>(self.GetHeapInner()) = const_cast<void*>(
+            static_cast<const void*>(heap)
+         );
+      }
+
    public:
       /// Check if the container has valid heap memory associated with it     
-      bool IsAllocated() const noexcept { return mHeap != nullptr; }
+      bool IsAllocated(this auto const& self) noexcept {
+         return self.GetHeapInner() != nullptr;
+      }
       
       /// Get a direct access to the heap memory                              
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
          using T = TypeOf<C>;
          if constexpr (CT::Mutable<C>)
-            return static_cast<      T*>(self.mHeapVoid);
+            return static_cast<      T*>(self.GetHeapInner());
          else
-            return static_cast<const T*>(self.mHeapVoid);
+            return static_cast<const T*>(self.GetHeapInner());
       }
       
       /// Get a direct access to the heap memory as a different type          
       template<class T, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
          if constexpr (CT::Mutable<C>)
-            return static_cast<      T*>(self.mHeapVoid);
+            return static_cast<      T*>(self.GetHeapInner());
          else
-            return static_cast<const T*>(self.mHeapVoid);
+            return static_cast<const T*>(self.GetHeapInner());
       }
 
       /// Get a direct access to the heap memory's end                        
@@ -201,10 +220,8 @@ namespace Langulus::Anyness::Component
       /// pointer, ignoring any intents                                       
       ///   @param intent - the intent and container to transfer from         
       template<CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(I&& intent) {
-         mHeapVoid = const_cast<void*>(static_cast<const void*>(
-            intent.what.GetRaw()
-         ));
+      void ConstructFrom(this auto& self, I&& intent) {
+         self.SetHeapInner(intent.what.GetRaw());
       }
    };
 }

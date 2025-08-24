@@ -71,7 +71,7 @@ namespace Langulus::Anyness::Component
          else {
             //                                                          
             // Container is type-erased                                 
-            if (self.IsUntyped())
+            if (not self.IsTyped())
                return {1};
 
             const DMeta T = self.GetType();
@@ -108,10 +108,7 @@ namespace Langulus::Anyness::Component
       template<unsigned>
       friend struct HeapMovable;
       
-      /// Set the hash directly (for internal use)                            
-      //void SetHash(H hash) noexcept { mHash = hash; }
-      
       /// This always returns an invalid hash                                 
-      constexpr H GetHashNoRecompute() const noexcept { return 0; }
+      constexpr H GetHashInner() const noexcept { return 0; }
    };
 }

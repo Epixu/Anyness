@@ -73,13 +73,12 @@ namespace Langulus::Anyness::Component
       /// Default-initialize the component, defaulting members                
       /// A default-constructor isn't used for this to avoid duplication of   
       /// some calls                                                          
-      template<CT::Container C>
-      void ConstructDefault(this C& self) noexcept {
-         self.mHeap = nullptr;
+      void ConstructDefault(this auto& self) noexcept {
+         self.SetHeapInner(nullptr);
          if constexpr (requires { self.mReserved; })
             self.mReserved = 0;
-         self.SetCount(0);
-         self.SetHash(1);
+         self.SetCountInner(0);
+         self.SetHashInner(1);
          // Type should be default-initialized anyways                  
       }
       
@@ -98,18 +97,18 @@ namespace Langulus::Anyness::Component
                // Move/Copy/Refer other                                 
                if constexpr (I::IsMoved()) {
                   // Move                                               
-                  self.mHeap = from.mHeap;
+                  self.SetHeapInner(from.GetHeapInner());
                   if constexpr (requires { self.mReserved; })
                      self.mReserved = from.GetReserved();
-                  self.SetCount(count);
+                  self.SetCountInner(count);
                   self.SetType(type);
-                  self.SetHash(from.GetHashNoRecompute());
+                  self.SetHashInner(from.GetHashInner());
 
                   if constexpr (IT::Owned) {
-                     from.mHeap = nullptr;
+                     from.SetHeapInner(nullptr);
                      if constexpr (requires { from.mReserved; })
                         from.mReserved = 0;
-                     from.SetCount(0);
+                     from.SetCountInner(0);
                      if constexpr (requires { from.ResetState(); })
                         from.ResetState();
                      from.ResetType();
@@ -120,14 +119,12 @@ namespace Langulus::Anyness::Component
                   // Copy/Refer other                                   
                   if constexpr (CT::Referred<I>) {
                      // Refer                                           
-                     self.mHeapVoid = const_cast<void*>(
-                        static_cast<const void*>(from.GetRaw())
-                     );
+                     self.SetHeapInner(from.GetHeapInner());
                      if constexpr (requires { self.mReserved; })
                         self.mReserved = from.GetReserved();
-                     self.SetCount(count);
+                     self.SetCountInner(count);
                      self.SetType(type);
-                     self.SetHash(from.GetHashNoRecompute());
+                     self.SetHashInner(from.GetHashInner());
                   }
                   else {
                      // Do a shallow copy                               
@@ -137,8 +134,8 @@ namespace Langulus::Anyness::Component
                      type = type.GetDecvq();
                      self.SetType(type);
                      if (0 == count) {
-                        self.SetCount(0);
-                        self.SetHash(1);
+                        self.SetCountInner(0);
+                        self.SetHashInner(1);
                         return;
                      }
 
@@ -166,34 +163,34 @@ namespace Langulus::Anyness::Component
                         }
                      } catch (...) {
                         // Partial success                              
-                        self.SetCount(src - IterateHandles(from).begin());
+                        self.SetCountInner(src - IterateHandles(from).begin());
                         self.ResetHash();
                         throw;
                      }
                      
                      // Full success                                    
-                     self.SetCount(count);
-                     self.SetHash(from.GetHashNoRecompute());
+                     self.SetCountInner(count);
+                     self.SetHashInner(from.GetHashInner());
                   }
                }
             }
             else if constexpr (I::IsMoved()) {
                // Abandon                                               
-               self.mHeap = from.mHeap;
+               self.SetHeapInner(from.GetHeapInner());
                if constexpr (requires { self.mReserved; })
                   self.mReserved = from.GetReserved();
-               self.SetCount(count);
+               self.SetCountInner(count);
                self.SetType(type);
-               self.SetHash(from.GetHashNoRecompute());
+               self.SetHashInner(from.GetHashInner());
             }
             else {
                // Disown                                                
-               self.mHeap = from.mHeap;
+               self.SetHeapInner(from.GetHeapInner());
                if constexpr (requires { self.mReserved; })
                   self.mReserved = from.GetReserved();
-               self.SetCount(count);
+               self.SetCountInner(count);
                self.SetType(type);
-               self.SetHash(from.GetHashNoRecompute());
+               self.SetHashInner(from.GetHashInner());
             }
          }
          else {
@@ -202,8 +199,8 @@ namespace Langulus::Anyness::Component
             type = type.GetDecvqAll();
             self.SetType(type);
             if (0 == count) {
-               self.SetCount(0);
-               self.SetHash(1);
+               self.SetCountInner(0);
+               self.SetHashInner(1);
                return;
             }
 
@@ -231,14 +228,14 @@ namespace Langulus::Anyness::Component
                }
             } catch (...) {
                // Partial success                                       
-               self.SetCount(src - IterateHandles(from).begin());
+               self.SetCountInner(src - IterateHandles(from).begin());
                self.ResetHash();
                throw;
             }
                      
             // Full success                                             
-            self.SetCount(count);
-            self.SetHash(from.GetHashNoRecompute());
+            self.SetCountInner(count);
+            self.SetHashInner(from.GetHashInner());
          }
       }
 
@@ -316,8 +313,8 @@ namespace Langulus::Anyness::Component
          }
 
          LglsAssert(al, "Out of memory");
-         self.mHeap = al->GetBlockStart();
-         self.SetAllocation(al);
+         self.SetHeapInner(al->GetBlockStart());
+         self.SetAllocationInner(al);
          if constexpr (requires { self.mReserved; })
             self.mReserved = request.mElementCount;
       }
@@ -365,12 +362,12 @@ namespace Langulus::Anyness::Component
                );
                
                LglsAssert(reallocated, "Out of memory");
-               self.SetAllocation(reallocated);
+               self.SetAllocationInner(reallocated);
                if constexpr (requires { self.mReserved; })
                   self.mReserved = request.mElementCount;
 
                if (reallocated != previous.GetAllocation()) {
-                  self.mHeap = reallocated->GetBlockStart();
+                  self.SetHeapInner(reallocated->GetBlockStart());
 
                   if (previous.GetCount()) {
                      // Memory moved, and we should move all elements   
@@ -459,7 +456,7 @@ namespace Langulus::Anyness::Component
                // Destroy elements on the back                          
                if (T.GetDestructor())
                   self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
-               self.SetCount(desiredReserve);
+               self.SetCountInner(desiredReserve);
             }
 
             // Early return if reserve itself didn't change             
@@ -488,7 +485,7 @@ namespace Langulus::Anyness::Component
                // Destroy elements on the back                          
                if constexpr (CT::Destroyable<T>)
                   self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
-               self.SetCount(desiredReserve);
+               self.SetCountInner(desiredReserve);
             }
             
             // Early return if reserve itself didn't change             
@@ -503,7 +500,7 @@ namespace Langulus::Anyness::Component
                );
             }
 
-            self.SetAllocation(Allocator::Reallocate(
+            self.SetAllocationInner(Allocator::Reallocate(
                request.mByteSize * (CT::Sparse<T> ? 2 : 1),
                allocation
             ));

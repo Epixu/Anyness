@@ -80,6 +80,14 @@ namespace Langulus::Anyness
       struct Stack;
       template<unsigned>
       struct IterationOperators;
+      template<class, class, unsigned>
+      struct TypedStack;
+      template<unsigned, bool>
+      struct OwnershipStack;
+      template<unsigned, class>
+      struct CountStack;
+      template<unsigned, class>
+      struct HashStack;
    }
 
    namespace Com = Component;
@@ -88,15 +96,48 @@ namespace Langulus::Anyness
    {
       template<class C1, class C2, class...CN>
       consteval bool ValidateComponentOrder() {
-         /*static_assert(::std::is_standard_layout_v<C1>);
+         static_assert(::std::is_standard_layout_v<C1>);
          static_assert(::std::is_standard_layout_v<C2>);
-         static_assert((::std::is_standard_layout_v<CN> and ...));*/
+         static_assert((::std::is_standard_layout_v<CN> and ...));
          static_assert(C1::ComponentPrecedence <= C2::ComponentPrecedence,
             "Wrong component order");
+         static_assert(sizeof(C1) == 1 and sizeof(C2) == 1,
+            "Use StackSize instead of adding non-static members in components");
          if constexpr (sizeof...(CN))
             return ValidateComponentOrder<C2, CN...>();
          else
             return true;
+      }
+      
+      template<class C1, class...CN>
+      consteval size_t CalculateStackSize() {
+         size_t stackSize = 0;
+         if constexpr (requires { C1::StackSize; })
+            stackSize += C1::StackSize;
+         
+         if constexpr (sizeof...(CN))
+            return stackSize + CalculateStackSize<CN...>();
+         else
+            return stackSize;
+      }
+      
+      template<class PICK, class C1, class...CN>
+      consteval size_t CalculateStackOffset() {
+         static_assert(requires { PICK::StackSize; },
+            "Component data is not on the stack");
+         
+         size_t offset = 0;
+         if constexpr (::std::same_as<PICK, C1>)
+            return offset;
+         else {
+            if constexpr (requires { C1::StackSize; })
+               offset += C1::StackSize;
+         
+            if constexpr (sizeof...(CN))
+               return offset + CalculateStackOffset<PICK, CN...>();
+            else
+               return offset;
+         }
       }
    }
    
@@ -122,7 +163,7 @@ namespace Langulus::Anyness
       /// Explicitly call ConstructDefault in all of the components.          
       /// Most components should have trivial constructors.                   
       constexpr Container() noexcept {
-         //static_assert(::std::is_standard_layout_v<Container>); //damn it, i overlook one rule and now the entire container is big as heck :(
+         static_assert(::std::is_standard_layout_v<Container>);
          ComponentList::ForEach([this]<class C>{
             if constexpr (requires { this->C::ConstructDefault(); })
                this->C::ConstructDefault();
@@ -203,20 +244,36 @@ namespace Langulus::Anyness
          });
          return for_other_reasons;
       }
+      
+      /// Check if a component is included at compile-time                    
+      template<class C>
+      static constexpr bool HasComponent = CT::SameAsOneOf<C, COMPONENTS...>;
+
+      template<class C>
+      static constexpr size_t StackOffset = Inner::CalculateStackOffset<C, COMPONENTS...>();
 
    protected:
       template<unsigned>
       friend struct Com::IterationOperators;
-
+      template<class, class, unsigned>
+      friend struct Com::TypedStack;
+      template<unsigned>
+      friend struct Com::HeapReference;
+      template<unsigned, bool>
+      friend struct Com::OwnershipStack;
+      template<unsigned, class>
+      friend struct Com::CountStack;
+      template<unsigned, class>
+      friend struct Com::HashStack;
+      
+      uint8_t mStack[Inner::CalculateStackSize<COMPONENTS...>()];
+      
       template<CT::Component C>
       static consteval unsigned GetHeapHeaderOffset() {
          //TODO accumulate HeapHeaderSize for the provided HeapID up until base C
          return 0;
       }
 
-      /// Check if a component is included at compile-time                    
-      template<class C>
-      static constexpr bool HasComponent = CT::SameAsOneOf<C, COMPONENTS...>;
 
       /// Get a reference to the first element of a specific stack/heap       
       ///   @tparam ID - the stack/heap ID                                    

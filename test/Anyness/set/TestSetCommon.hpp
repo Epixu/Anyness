@@ -49,8 +49,6 @@ void Set_CheckState_Abandoned(const auto&);
 template<class K>
 void Set_Helper_TestType(const auto& set) {
    REQUIRE      (set.IsTyped());
-   REQUIRE_FALSE(set.IsUntyped());
-
    REQUIRE      (set.GetType() == MetaDataOf<K>());
    REQUIRE      (set.GetType()->template IsSimilar<const K>());
    REQUIRE      (set.GetType()->template IsExact<K>());
@@ -83,7 +81,6 @@ void Set_CheckState_Default(const auto& set) {
    }
    else {
       REQUIRE_FALSE(set.IsTyped());
-      REQUIRE      (set.IsUntyped());
       REQUIRE      (set.GetType() == nullptr);
       REQUIRE      (set.IsDense());
       REQUIRE_FALSE(set.IsSparse());

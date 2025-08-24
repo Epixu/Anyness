@@ -371,7 +371,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             // THIS is type-erased, do runtime type checks              
-            if (self.IsUntyped())
+            if (not self.IsTyped())
                return false;
 
             if constexpr (CT::Text<RT>) {

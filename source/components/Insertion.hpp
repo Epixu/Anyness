@@ -144,7 +144,7 @@ namespace Langulus::Anyness::Component
                } catch (...) {
                   // Partial success                                    
                   const auto constructed = to - self.GetRaw();
-                  self.SetCount(previousCount + constructed);
+                  self.SetCountInner(previousCount + constructed);
                   throw;
                }
             }
@@ -183,14 +183,14 @@ namespace Langulus::Anyness::Component
                } catch (...) {
                   // Partial success                                    
                   const auto constructed = (to - self.template GetRawAs<uint8_t>()) / stride;
-                  self.SetCount(previousCount + constructed);
+                  self.SetCountInner(previousCount + constructed);
                   throw;
                }
             }
          }
 
          // Success                                                     
-         self.mCount = previousCount + count;
+         self.SetCountInner(previousCount + count);
          return count;
       }
 

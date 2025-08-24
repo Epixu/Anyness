@@ -77,16 +77,20 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       Logger::Info("Size of ", NameOf<::std::string>(), " container is: ", sizeof(::std::string), " bytes");
       auto s = Logger::Section("Size of ", NameOf<TestType>(), " container is: ", sizeof(TestType), " bytes");
       size_t accumulated_size = 0;
+      size_t accumulated_stack_size = 0;
       T::ComponentList::ForEach([&]<class C> {
-         Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
+         if constexpr (requires {C::StackSize;}) {
+            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", C::StackSize, " bytes on the stack)");
+            accumulated_stack_size += C::StackSize;
+         }
+         else Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
          accumulated_size += sizeof(C);
       });
       Logger::Info("-----------------------------------------");
-      Logger::Info("For a total of ", accumulated_size, " bytes");
-      if (accumulated_size < sizeof(TestType))
-         Logger::Warning(sizeof(TestType) - accumulated_size, " stray bytes detected");
-      else if (accumulated_size > sizeof(TestType))
-         Logger::Info(Logger::Green, accumulated_size - sizeof(TestType), " empty base data eliminated");
+      Logger::Info("For a total of ", accumulated_size, " bytes in components");
+      Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
+      REQUIRE(accumulated_stack_size == sizeof(TestType));
+      STATIC_REQUIRE(sizeof(TestType) <= sizeof(::std::string));
    }
    
    GIVEN("Default text container") {
@@ -633,7 +637,6 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
    REQUIRE      (text.IsTyped());
-   REQUIRE_FALSE(text.IsUntyped());
    REQUIRE_FALSE(text.IsValid());
    REQUIRE      (text.IsEmpty());
    REQUIRE_FALSE(text.GetAllocation());
@@ -660,7 +663,6 @@ void Text_CheckState_OwnedEmpty(const Text& text) {
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
    REQUIRE      (text.IsTyped());
-   REQUIRE_FALSE(text.IsUntyped());
    REQUIRE_FALSE(text.IsValid());
    REQUIRE      (text.IsEmpty());
    REQUIRE      (text.GetAllocation());
@@ -687,7 +689,6 @@ void Text_CheckState_OwnedFull(const Text& text) {
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
    REQUIRE      (text.IsTyped());
-   REQUIRE_FALSE(text.IsUntyped());
    REQUIRE      (text.IsValid());
    REQUIRE_FALSE(text.IsEmpty());
    REQUIRE      (text.GetAllocation());
@@ -714,7 +715,6 @@ void Text_CheckState_DisownedFullConst(const Text& text) {
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
    REQUIRE      (text.IsTyped());
-   REQUIRE_FALSE(text.IsUntyped());
    REQUIRE      (text.IsValid());
    REQUIRE_FALSE(text.IsEmpty());
    REQUIRE_FALSE(text.GetAllocation());

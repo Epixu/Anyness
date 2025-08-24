@@ -30,13 +30,14 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Defines the contained type as a member variable, allowing the use of   
    /// type-erasure. You can optionally constrain the type                    
-   ///   @tparam T    - the type of the variable                              
+   ///   @tparam META - the type of the meta                                  
    ///   @tparam TYPE - optionally static type, use void for type-erasure     
    ///   @tparam ID   - which heap/stack is typed?                            
    template<class META, class TYPE = void, unsigned ID = 0>
    struct TypedStack {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
+      static constexpr int StackSize = sizeof(META);
       static constexpr int ComponentPrecedence = -3000;
 
       static constexpr bool TypeErased = CT::Void<TYPE>;
@@ -46,20 +47,16 @@ namespace Langulus::Anyness::Component
       static constexpr bool Dense = not TypeErased and CT::Dense<TYPE>;
 
    protected:
-      template<unsigned>
-      friend struct IterationForEach;
-      template<unsigned>
-      friend struct HeapMovable;
+      /*template<unsigned>
+      friend struct IterationForEach;*/
       template<unsigned>
       friend struct Removal;
-
-      // The type                                                       
-      META mType;
+      template<unsigned>
+      friend struct HeapMovable;
 
       /// Reset the type of the container, unless it's type-constrained       
       /// If this container isn't type-erased, this call is a no-op           
-      template<CT::Container C>
-      constexpr void ResetType(this C& self) noexcept {
+      constexpr void ResetType(this auto& self) noexcept {
          if constexpr (TypeErased) {
             if constexpr (requires { self.IsTypeConstrained(); }) {
                if (not self.IsTypeConstrained())
@@ -68,47 +65,46 @@ namespace Langulus::Anyness::Component
             else self.mType = {};
          }
       }
+      
+      /// Get the contained type (inner)                                      
+      constexpr auto& GetTypeInner(this auto const& self) noexcept {
+         return *reinterpret_cast<META const*>(
+            self.mStack + self.template StackOffset<TypedStack>
+         );
+      }
 
    public:
       /// Get the contained type                                              
-      constexpr META GetType() const noexcept {
+      constexpr META GetType(this auto const& self) noexcept {
+         META const& meta = self.GetTypeInner();
          if constexpr (not TypeErased)
-            const_cast<META&>(mType) = MetaDataOf<TYPE>();
-         return mType;
+            const_cast<META&>(meta) = MetaDataOf<TYPE>();
+         return meta;
       }
 
       /// Get the size of a single element in bytes                           
-      constexpr size_t GetStride() const noexcept {
+      constexpr size_t GetStride(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return mType.GetSize();
+            return self.GetTypeInner().GetSize();
          else
             return sizeof(TYPE);
       }
 
       /// Get the reflected type name                                         
-      constexpr auto GetName() const noexcept {
+      constexpr auto GetName(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return mType.GetName();
+            return self.GetTypeInner().GetName();
          else
             return NameOf<TYPE>();
       }
 
       /// Check if block has a data type                                      
       ///   @return true if data contained in this pack is specified          
-      constexpr bool IsTyped() const noexcept {
+      constexpr bool IsTyped(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return static_cast<bool>(mType);
+            return static_cast<bool>(self.GetTypeInner());
          else
             return true;
-      }
-
-      /// Check if block has a data type                                      
-      ///   @return true if data contained in this pack is unspecified        
-      constexpr bool IsUntyped() const noexcept {
-         if constexpr (TypeErased)
-            return not static_cast<bool>(mType);
-         else
-            return false;
       }
 
       /// Check if type origin is the same as one of the provided types       
@@ -117,9 +113,9 @@ namespace Langulus::Anyness::Component
       ///   @tparam A1, AN... - the types to compare against                  
       ///   @return true if origin type is same to at least one of the types  
       template<CT::NotVoid A1, CT::NotVoid...AN>
-      constexpr bool Is() const noexcept {
+      constexpr bool Is(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return mType.template Is<A1, AN...>();
+            return self.GetTypeInner().template Is<A1, AN...>();
          else
             return CT::SameAsOneOf<TYPE, A1, AN...>;
       }
@@ -128,8 +124,8 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @param type - the type to check for                               
       ///   @return true if this container has similar data                   
-      bool Is(META type) const noexcept {
-         return mType.Is(type);
+      bool Is(this auto const& self, META type) noexcept {
+         return self.GetTypeInner().Is(type);
       }
 
       /// Check if type origin is the same as another container's type        
@@ -138,9 +134,9 @@ namespace Langulus::Anyness::Component
       ///   @param other - the type to check for                              
       ///   @return true if this container has similar data                   
       template<CT::Container C>
-      constexpr bool Is(C const& other) const noexcept {
+      constexpr bool Is(this auto const& self, C const& other) noexcept {
          if constexpr (TypeErased or C::TypeErased)
-            return mType.Is(other.mType);
+            return self.GetTypeInner().Is(other.mType);
          else
             return CT::Same<TYPE, TypeOf<C>>;
       }
@@ -151,9 +147,9 @@ namespace Langulus::Anyness::Component
       ///   @tparam A1, AN... - the types to compare against                  
       ///   @return true if data type is similar to at least one of the types 
       template<CT::NotVoid A1, CT::NotVoid...AN>
-      constexpr bool IsSimilar() const noexcept {
+      constexpr bool IsSimilar(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return mType.template IsSimilar<A1, AN...>();
+            return self.GetTypeInner().template IsSimilar<A1, AN...>();
          else
             return CT::SimilarAsOneOf<TYPE, A1, AN...>;
       }
@@ -162,8 +158,8 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores only cv-qualifiers                             
       ///   @param type - the type to check for                               
       ///   @return true if this block contains similar data                  
-      bool IsSimilar(META type) const noexcept {
-         return mType.IsSimilar(type);
+      bool IsSimilar(this auto const& self, META type) noexcept {
+         return self.GetTypeInner().IsSimilar(type);
       }
 
       /// Check if unqualified type is the same as another container's type   
@@ -172,9 +168,9 @@ namespace Langulus::Anyness::Component
       ///   @param other - the container to check for                         
       ///   @return true if this container has similar data                   
       template<CT::Container C>
-      constexpr bool IsSimilar(C const& other) const noexcept {
+      constexpr bool IsSimilar(this auto const& self, C const& other) noexcept {
          if constexpr (TypeErased or C::TypeErased)
-            return mType.IsSimilar(other.mType);
+            return self.GetTypeInner().IsSimilar(other.mType);
          else
             return CT::Similar<TYPE, TypeOf<C>>;
       }
@@ -184,9 +180,9 @@ namespace Langulus::Anyness::Component
       ///   @tparam T1, TN... - the types to compare against                  
       ///   @return true if data type matches at least one type               
       template<CT::NotVoid A1, CT::NotVoid...AN>
-      constexpr bool IsExact() const noexcept {
+      constexpr bool IsExact(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return mType.template IsExact<A1, AN...>();
+            return self.GetTypeInner().template IsExact<A1, AN...>();
          else
             return CT::ExactAsOneOf<TYPE, A1, AN...>;
       }
@@ -194,8 +190,8 @@ namespace Langulus::Anyness::Component
       /// Check if this type is exactly another                               
       ///   @param type - the type to match                                   
       ///   @return true if data type matches type exactly                    
-      bool IsExact(META type) const noexcept {
-         return mType.IsExact(type);
+      bool IsExact(this auto const& self, META type) noexcept {
+         return self.GetTypeInner().IsExact(type);
       }
 
       /// Check if this type is exactly another container's type              
@@ -203,18 +199,18 @@ namespace Langulus::Anyness::Component
       ///   @param other - the block to match                                 
       ///   @return true if data type matches type exactly                    
       template<CT::Container C>
-      constexpr bool IsExact(C const& other) const noexcept {
+      constexpr bool IsExact(this auto const& self, C const& other) noexcept {
          if constexpr (TypeErased or C::TypeErased)
-            return mType.IsExact(other.mType);
+            return self.GetTypeInner().IsExact(other.mType);
          else
             return CT::Exact<TYPE, TypeOf<C>>;
       }
       
       /// Check if container contains pointers                                
       ///   @return true if the block contains pointers                       
-      constexpr bool IsSparse() const noexcept {
+      constexpr bool IsSparse(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return mType.IsSparse();
+            return self.GetTypeInner().IsSparse();
          else
             return CT::Sparse<TYPE>;
       }
@@ -231,9 +227,9 @@ namespace Langulus::Anyness::Component
 
       /// Check if container is made of other containers                      
       ///   @return true if the container is deep                             
-      constexpr bool IsDeep() const noexcept {
+      constexpr bool IsDeep(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return mType.IsDeep();
+            return self.GetAllocation().IsDeep();
          else
             return CT::Deep<Decay<TYPE>>;
       }
@@ -245,8 +241,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the size of the type times the contained elements               
       ///   @return the size of all elements in bytes                         
-      template<CT::Container C>
-      constexpr bool GetBytesize(this C const& self) noexcept {
+      constexpr bool GetBytesize(this auto const& self) noexcept {
          return self.GetStride() * self.GetCount();
       }
 
@@ -282,42 +277,44 @@ namespace Langulus::Anyness::Component
       ///   @param type - the new type                                        
       template<CT::Container C>
       void SetType(this C& self, META type) {
+         META& mType = const_cast<META&>(self.GetTypeInner());
+         
          if constexpr (C::TypeErased) {
             // This container is type-erased                            
-            if (self.mType == type)
+            if (mType == type)
                return;
          
-            if (not self.mType) {
-               self.mType = type;
+            if (not mType) {
+               mType = type;
                return;
             }
 
             LglsAssert(not self.IsTypeConstrained(),
                "Attempting to mutate type-locked container"
-               " of type ", self.mType, " to type ", type
+               " of type ", mType, " to type ", type
             );
 
-            if (self.mType->CastsTo(type)) {
+            if (mType->CastsTo(type)) {
                // Type is compatible, but only sparse data can mutate   
                // freely. Dense containers can't mutate because their   
                // destructors might be wrong later                      
-               LglsAssert(self.IsSparse(), "Can't mutate ", self.mType,
+               LglsAssert(self.IsSparse(), "Can't mutate ", mType,
                   " to incompatible type ", type);
             }
             else {
                // Type is not compatible, but container is not typed, so
                // if it has no constructed elements we can still mutate 
-               LglsAssert(self.IsEmpty(), "Can't mutate ", self.mType,
+               LglsAssert(self.IsEmpty(), "Can't mutate ", mType,
                   " to incompatible type ", type);
             }
             
-            self.mType = type;
+            mType = type;
          }
          else {
             // This container is statically typed                       
-            if (not self.mType)
-               self.mType = MetaDataOf<TYPE>();
-            LglsAssert(self.mType.IsExact(type), "Type mismatch");
+            if (not mType)
+               mType = MetaDataOf<TYPE>();
+            LglsAssert(mType.IsExact(type), "Type mismatch");
          }
       }
 

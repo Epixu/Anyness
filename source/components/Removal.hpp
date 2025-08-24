@@ -75,14 +75,13 @@ namespace Langulus::Anyness::Component
       void Optimize(this C&);
 
       /// Destroy all elements but don't deallocate memory                    
-      template<CT::Container C>
-      void Clear(this C& self) {
+      void Clear(this auto& self) {
          const auto allocation = self.GetAllocation();
          if (not allocation) {
             // Data is either static or unallocated                     
             // Don't call destructors, just clear it up                 
-            self.mHeap = nullptr;
-            self.mCount = 0;
+            self.SetHeapInner(nullptr);
+            self.SetCountInner(0);
             if constexpr (requires { self.mReserved; })
                self.mReserved = 0;
             self.ResetType();
@@ -94,15 +93,15 @@ namespace Langulus::Anyness::Component
             // destroy all elements. We will reuse the entry and type   
             if constexpr (requires { self.FreeDeep(); })
                self.FreeDeep();
-            self.mCount = 0;
+            self.SetCountInner(0);
          }
          else {
             // If reached, then data is referenced from multiple places 
             // Don't call destructors, just clear it up and dereference 
             allocation->Free();
-            self.SetAllocation(nullptr);
-            self.mHeap = nullptr;
-            self.mCount = 0;
+            self.SetAllocationInner(nullptr);
+            self.SetHeapInner(nullptr);
+            self.SetCountInner(0);
             if constexpr (requires { self.mReserved; })
                self.mReserved = 0;
             self.ResetType();
@@ -110,12 +109,11 @@ namespace Langulus::Anyness::Component
       }
 
       /// Destroy all elements, deallocate block and reset state              
-      template<CT::Container C>
-      void Reset(this C& self) {
+      void Reset(this auto& self) {
          self.Free();
-         self.mHeap = nullptr;
-         self.SetAllocation(nullptr);
-         self.SetCount(0);
+         self.SetHeapInner(nullptr);
+         self.SetAllocationInner(nullptr);
+         self.SetCountInner(0);
          if constexpr (requires { self.mReserved; })
             self.mReserved = 0;
          if constexpr (requires { self.ResetState(); })

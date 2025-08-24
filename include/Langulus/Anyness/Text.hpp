@@ -22,15 +22,10 @@
 #include "../../../source/components/Count-Stack.hpp"
 #include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/Hash-Stack.hpp"
-#include "../../../source/components/State-Stack.hpp"
 #include "../../../source/components/Iteration-ForEach.hpp"
 #include "../../../source/components/Iteration-Range.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "../../../source/components/Conversion.hpp"
-#include "../../../source/states/Compressed.hpp"
-#include "../../../source/states/Encrypted.hpp"
-#include "../../../source/states/Tracked.hpp"
-#include "../../../source/states/Typed.hpp"
 #include <Langulus/CT/Text.hpp>
 #include <Langulus/CT/Number.hpp>
 
@@ -105,7 +100,7 @@ namespace Langulus::Anyness
          decltype(auto) source = DeintCast(FWD(text));
          
          // Make sure we start off without ownership                    
-         SetAllocation(nullptr);
+         SetAllocationInner(nullptr);
 
          if constexpr (CT::TextLiteral<ST>) {
             // Create from a text literal/bounded array                 
@@ -114,12 +109,12 @@ namespace Langulus::Anyness
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             const auto count = strnlen(source, ExtentOf<T>);
             if (not count) {
-               SetCount(0);
-               SetHash(1);
+               SetCountInner(0);
+               SetHashInner(1);
                return;
             }
-            this->mHeapReadable = DecvqAllCast(source);
-            SetCount(count);
+            SetHeapInner(source);
+            SetCountInner(count);
          }
          else if constexpr (CT::TextPointer<ST>) {
             // Create from a null-terminated char pointer               
@@ -130,25 +125,25 @@ namespace Langulus::Anyness
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             const auto count = strlen(source);
             if (not count) {
-               SetCount(0);
-               SetHash(1);
+               SetCountInner(0);
+               SetHashInner(1);
                return;
             }
-            this->mHeapReadable = DecvqAllCast(source);
-            SetCount(count);
+            SetHeapInner(source);
+            SetCountInner(count);
          }
          else if constexpr (::std::ranges::contiguous_range<ST>) {
             // Create from an std container                             
             // Type can be either char, or const char                   
             if (source.empty()) {
-               SetCount(0);
-               SetHash(1);
+               SetCountInner(0);
+               SetHashInner(1);
                return;
             }
             using CHAR = Deptr<decltype(source.data())>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
-            this->mHeapReadable = source.data();
-            SetCount(source.size());
+            SetHeapInner(source.data());
+            SetCountInner(source.size());
          }
          else static_assert(false, "Unsupported text constructor");
 
@@ -163,10 +158,10 @@ namespace Langulus::Anyness
       /// Construction from all kinds of characters                           
       template<CT::Character T>
       constexpr Text(T&& ch) {
-         this->mType = MetaDataOf<char>();
+         GetType();
          AllocateFresh(RequestSize(1));
-         *GetRaw() = DeintCast(ch);
-         SetCount(1);
+         *GetRawAs<char>() = DeintCast(ch);
+         SetCountInner(1);
          ResetHash();
       }
 
@@ -187,8 +182,8 @@ namespace Langulus::Anyness
             return {};
 
          Text result {Disown {text}};
-         if (count < result.GetCount())
-            result.SetCount(count);
+         if (count < result.GetCountInner())
+            result.SetCountInner(count);
          return result;
       }
       
@@ -218,8 +213,8 @@ namespace Langulus::Anyness
                // There is no dot...                                    
                const auto c = static_cast<CountType>(lastChar - temp);
                result.AllocateFresh(result.RequestSize(c));
-               memcpy(result.mHeap, temp, c);
-               result.SetCount(c);
+               memcpy(result.GetHeapInner(), temp, c);
+               result.SetCountInner(c);
                result.ResetHash();
                return result;
             }
@@ -265,14 +260,15 @@ namespace Langulus::Anyness
                // We've truncated the number, so prepend a '~' symbol   
                // to signify it's an approximate representation         
                result.AllocateFresh(result.RequestSize(c + 1));
-               *result.mHeap = '~';
-               memcpy(result.mHeap + 1, temp, c);
-               result.SetCount(c + 1);
+               auto heap = result.GetRawAs<char>();
+               *heap = '~';
+               memcpy(heap + 1, temp, c);
+               result.SetCountInner(c + 1);
             }
             else {
                result.AllocateFresh(result.RequestSize(c));
-               memcpy(result.mHeap, temp, c);
-               result.SetCount(c);
+               memcpy(result.GetHeapInner(), temp, c);
+               result.SetCountInner(c);
             }
          }
          else if constexpr (CT::Integer<T>) {
@@ -284,8 +280,8 @@ namespace Langulus::Anyness
 
             const auto c = static_cast<CountType>(lastChar - temp);
             result.AllocateFresh(result.RequestSize(c));
-            memcpy(result.mHeap, temp, c);
-            result.SetCount(c);
+            memcpy(result.GetHeapInner(), temp, c);
+            result.SetCountInner(c);
          }
          else static_assert(false, "Unsupported number type");
 
@@ -345,8 +341,8 @@ namespace Langulus::Anyness
             if (not count)
                return *this;
             AllocateMore(currentCount + count);
-            memcpy(mHeap + currentCount, source, count);
-            SetCount(currentCount + count);
+            memcpy(GetRawAs<uint8_t>() + currentCount, source, count);
+            SetCountInner(currentCount + count);
          }
          else if constexpr (CT::TextPointer<DT>) {
             // Create from a null-terminated char pointer               
@@ -358,8 +354,8 @@ namespace Langulus::Anyness
             if (not count)
                return *this;
             AllocateMore(currentCount + count);
-            memcpy(mHeap + currentCount, source, count);
-            SetCount(currentCount + count);
+            memcpy(GetRawAs<uint8_t>() + currentCount, source, count);
+            SetCountInner(currentCount + count);
          }
          else if constexpr (::std::ranges::contiguous_range<DT>) {
             // Create from an std container                             
@@ -369,8 +365,8 @@ namespace Langulus::Anyness
             static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
             const auto count = source.size();
             AllocateMore(currentCount + count);
-            memcpy(mHeap + currentCount, source.data(), count);
-            SetCount(currentCount + count);
+            memcpy(GetRawAs<uint8_t>() + currentCount, source.data(), count);
+            SetCountInner(currentCount + count);
          }
          else static_assert(false, "Unsupported text concatenation");
 

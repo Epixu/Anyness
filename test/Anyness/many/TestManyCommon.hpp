@@ -61,7 +61,6 @@ void Many_CheckState_Abandoned(const auto&);
 template<class E>
 void Many_Helper_TestType(const auto& many) {
    REQUIRE      (many.IsTyped());
-   REQUIRE_FALSE(many.IsUntyped());
    REQUIRE      (many.GetType() == MetaDataOf<E>());
    REQUIRE      (many.GetType()->template IsSimilar<const E>());
    REQUIRE      (many.GetType()->template IsExact<E>());
@@ -103,7 +102,6 @@ void Many_CheckState_Default(const auto& many) {
    }
    else {
       REQUIRE_FALSE(many.IsTyped());
-      REQUIRE      (many.IsUntyped());
       REQUIRE      (many.GetType() == nullptr);
       REQUIRE      (many.IsDense());
       REQUIRE_FALSE(many.IsSparse());

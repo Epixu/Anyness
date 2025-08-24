@@ -21,23 +21,20 @@ namespace Langulus::Anyness::Component
    ///      allocation pointer, but not necessarily reference it              
    template<unsigned ID = 0, bool AUTO = true>
    struct OwnershipStack {
-   private:
-      // The allocation interface on the stack                          
-      // It is private so that it isn't accessible when inherited       
-      // It has to be accessed through GetAllocation()/SetAllocation()  
-      AllocationPtr mAllocation;
-
-   public:
       using CTTI_Component = Yes<>;
       static constexpr bool Owned = AUTO;
-      static constexpr int ComponentPrecedence = -1000;
+      static constexpr int  StackSize = sizeof(AllocationPtr);
+      static constexpr int  ComponentPrecedence = -1000;
 
       /// Get the allocation                                                  
-      auto GetAllocation() const noexcept { return mAllocation; }
+      auto GetAllocation(this auto const& self) noexcept {
+         return self.GetAllocationInner();
+      }
 
       /// Get the memory reference count                                      
-      auto GetUses() const noexcept {
-         return mAllocation ? mAllocation->GetUses() : 0;
+      auto GetUses(this auto const& self) noexcept {
+         auto a = self.GetAllocationInner();
+         return a ? a->GetUses() : 0;
       }
 
       /// Shallow-copy all initialized elements in memory to another          
@@ -48,9 +45,10 @@ namespace Langulus::Anyness::Component
          if (not self.GetRaw())
             return;
 
-         if (self.mAllocation) {
+         auto a = self.GetAllocationInner();
+         if (a) {
             // We already have authority                                
-            self.mAllocation->Keep();
+            a->Keep();
             return;
          }
 
@@ -66,10 +64,21 @@ namespace Langulus::Anyness::Component
       friend struct DeepOwnershipHeap;
       template<unsigned>
       friend struct Removal;
+
+      /// Get allocation (inner)                                              
+      constexpr auto& GetAllocationInner(this auto const& self) noexcept {
+         return *reinterpret_cast<AllocationPtr const*>(
+            self.mStack + self.template StackOffset<OwnershipStack>
+         );
+      }
       
+      constexpr void SetAllocationInner(this auto& self, AllocationPtr a) noexcept {
+         const_cast<AllocationPtr&>(self.GetAllocationInner()) = a;
+      }
+
       /// Default-initialize the component                                    
-      void ConstructDefault() {
-         mAllocation = nullptr;
+      void ConstructDefault(this auto& self) noexcept {
+         self.SetAllocationInner(nullptr);
       }
       
       /// Transfer from any kind of container, respecting intents             
@@ -85,7 +94,7 @@ namespace Langulus::Anyness::Component
                // Move/Copy/Refer other                                 
                if constexpr (I::IsMoved()) {
                   // Move                                               
-                  self.mAllocation = from.GetAllocation();
+                  self.SetAllocationInner(from.GetAllocationInner());
 
                   if constexpr (AUTO and not IT::Owned) {
                      // Since we are not aware if that block is         
@@ -95,45 +104,38 @@ namespace Langulus::Anyness::Component
                      // _your_ responsibility to handle it              
                      self.Keep();
                   }
-                  else from.SetAllocation(nullptr);
+                  else from.SetAllocationInner(nullptr);
                }
                else if constexpr (CT::Referred<I>) {
                   // Refer                                              
-                  self.mAllocation = from.GetAllocation();
+                  self.SetAllocationInner(from.GetAllocationInner());
                   if constexpr (AUTO)
                      self.Keep();
                }
             }
             else if constexpr (I::IsMoved()) {
                // Abandon                                               
-               self.mAllocation = from.GetAllocation();
+               self.SetAllocationInner(from.GetAllocationInner());
                
                // Discard only ownership from source container          
-               from.SetAllocation(nullptr);
+               from.SetAllocationInner(nullptr);
             }
             else {
                // Disown                                                
-               self.mAllocation = nullptr;
+               self.SetAllocationInner(nullptr);
             }
          }
       }
       
-      /// Get a pointer to the allocation on the stack                        
-      auto GetAllocationRef()       noexcept { return &mAllocation; }
-      auto GetAllocationRef() const noexcept { return &mAllocation; }
-
-      /// Set the allocation                                                  
-      void SetAllocation(AllocationPtr a) noexcept { mAllocation = a; }
-
       /// Reference memory block once                                         
       /// If container has DeepOwnership component, all elements will be      
       /// referenced as well, if they're CT::Referenced                       
-      template<CT::Container C>
-      void Keep(this C const& self) noexcept {
-         if (not self.mAllocation)
+      void Keep(this auto const& self) noexcept {
+         auto& a = self.GetAllocationInner();
+         if (not a)
             return;
 
-         self.mAllocation->Keep(1);
+         a->Keep(1);
 
          // Keep elements, if DeepOwnership component exists            
          if constexpr (requires { self.KeepDeep(); })
@@ -146,30 +148,29 @@ namespace Langulus::Anyness::Component
       /// CT::Referenced                                                      
       ///   @attention this never modifies any state except ownership,        
       ///      effectively making the data disowned (and constant) after this 
-      template<CT::Container C>
-      void Free(this C& self) noexcept {
+      void Free(this auto& self) noexcept {
          self.FreeInner();
-         self.mAllocation = nullptr;
+         self.SetAllocationInner(nullptr);
       }
 
       /// Dereference memory block once and destroy all elements if data was  
       /// fully dereferenced                                                  
       ///   @attention this never modifies any state                          
-      template<CT::Container C>
-      void FreeInner(this C& self) noexcept {
-         if (not self.mAllocation)
+      void FreeInner(this auto& self) noexcept {
+         auto& a = self.GetAllocationInner();
+         if (not a)
             return;
 
-         LglsAssumeDev(self.mAllocation->GetUses() >= 1,
+         LglsAssumeDev(a->GetUses() >= 1,
             "Bad memory dereferencing");
 
-         if (self.mAllocation->GetUses() == 1) {
+         if (a->GetUses() == 1) {
             // Free elements, if DeepOwnership component exists         
             if constexpr (requires { self.FreeDeep(); })
                self.FreeDeep();
 
             // Free memory                                              
-            Allocator::Deallocate(self.mAllocation);
+            Allocator::Deallocate(a);
          }
          else {
             // Free elements, if DeepOwnership component exists         
@@ -180,14 +181,13 @@ namespace Langulus::Anyness::Component
                self.template FreeDeep<false>();
 
             // Dereference memory                                       
-            self.mAllocation->Free();
+            a->Free();
          }
       }
       
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
-      template<CT::Container C>
-      void Destroy(this C& self) noexcept requires AUTO {
+      void Destroy(this auto& self) noexcept requires AUTO {
          self.FreeInner();
       }
    };

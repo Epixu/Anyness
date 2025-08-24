@@ -36,6 +36,7 @@ CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception& e) {
    #if LANGULUS(DEBUG)
       return e.mMessage;
    #else
+      (void)e;
       return ::Langulus::Exception::DefaultMessage;
    #endif
 }

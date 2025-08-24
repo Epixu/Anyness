@@ -21,26 +21,26 @@ namespace Langulus::Anyness::Component
    ///   @tparam T - the count type                                           
    template<unsigned ID = 0, class T = size_t>
    struct CountStack {
-   private:
-      // The count on the stack                                         
-      // It is private so that it isn't accessible when inherited       
-      // It has to be accessed through GetCount() and SetCount()        
-      T mCount;
-
-   public:
       using CTTI_Component = Yes<>;
       using CountType = T;
       using IndexType = Index::At<T>;
+      static constexpr int StackSize = sizeof(T);
       static constexpr int ComponentPrecedence = 1000;
 
       /// Check if there are no initialized elements                          
-      constexpr bool IsEmpty() const noexcept { return mCount == 0; }
+      constexpr bool IsEmpty(this auto const& self) noexcept {
+         return self.GetCountInner() == 0;
+      }
 
       /// Get the number of initialized elements                              
-      constexpr T GetCount() const noexcept { return mCount; }
+      constexpr T GetCount(this auto const& self) noexcept {
+         return self.GetCountInner();
+      }
 
       /// Explicit boolean conversion to allow using containers in ifs        
-      explicit operator bool() const noexcept { return mCount != 0; }
+      explicit operator bool(this auto const& self) noexcept {
+         return self.GetCountInner() != 0;
+      }
 
       T GetCountDeep() const noexcept;
       T GetCountItemsDeep() const noexcept;
@@ -50,8 +50,17 @@ namespace Langulus::Anyness::Component
       template<unsigned, class> friend struct Insertion;
       template<class>           friend struct IndexedLinear;
       template<unsigned>        friend struct HeapMovable;
-
+      
+      /// Get count (inner)                                                   
+      constexpr auto const& GetCountInner(this auto const& self) noexcept {
+         return *reinterpret_cast<T const*>(
+            self.mStack + self.template StackOffset<CountStack>
+         );
+      }
+      
       /// Set the number of initialized elements                              
-      void SetCount(T count) noexcept { mCount = count; }
+      constexpr void SetCountInner(this auto& self, T c) noexcept {
+         const_cast<T&>(self.GetCountInner()) = c;
+      }
    };
 }
