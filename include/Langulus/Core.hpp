@@ -214,13 +214,27 @@
    #define LANGULUS_COMPILER_GCC() 0
 #endif
 
+#if defined(__clang__) and not LANGULUS_COMPILER_GCC() and defined(_MSC_VER)
+   // We're on a clang-cl compiler!                                     
+   #if __clang_major__ < 19
+      #error "Langulus can only be built with Clang 19 or above"
+   #endif
+   #define LANGULUS_COMPILER_CLANG_CL() 1
+   #define LANGULUS_EBCO() __declspec(empty_bases)
+#else
+   #define LANGULUS_COMPILER_CLANG_CL() 0
+#endif
+
 #if defined(__clang__) and not LANGULUS_COMPILER_GCC()
    // We're on a clang compiler!                                        
+   // @attention this can be enabled together with clang-cl!            
    #if __clang_major__ < 19
       #error "Langulus can only be built with Clang 19 or above"
    #endif
    #define LANGULUS_COMPILER_CLANG() 1
-   #define LANGULUS_EBCO() __declspec(empty_bases)
+   #ifndef LANGULUS_EBCO
+      #define LANGULUS_EBCO()
+   #endif
 #else
    #define LANGULUS_COMPILER_CLANG() 0
 #endif
