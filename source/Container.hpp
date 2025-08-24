@@ -126,7 +126,7 @@ namespace Langulus::Anyness
          static_assert(requires { PICK::StackSize; },
             "Component data is not on the stack");
           
-         if constexpr (CT::Same<PICK, C1>)
+         if constexpr (CT::DerivedFrom<C1, PICK>)
             return 0;
          else {
             size_t offset = 0;

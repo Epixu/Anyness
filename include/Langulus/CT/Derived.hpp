@@ -62,7 +62,7 @@ namespace Langulus::CT
       }
    }
 
-   /// Check if the origin T publicly inherits (or is) all the BASE(s)        
+   /// Check if the origin T publicly inherits (or is) all the BASE(s).       
    /// Compensates for std::derived_from not returning true for the same      
    /// primitive types...                                                     
    ///   @attention involves only C++ bases, not reflected ones               
