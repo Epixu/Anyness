@@ -151,7 +151,7 @@ namespace Langulus::Anyness
    ///      builds down a lot...                                              
    template<CT::Component...COMPONENTS>
    requires (Inner::ValidateComponentOrder<COMPONENTS...>())
-   struct Container : COMPONENTS... {
+   struct LANGULUS_EBCO() Container : COMPONENTS... {
       using CTTI_Container = Yes<>;
       using ComponentList = Types<COMPONENTS...>;
 
