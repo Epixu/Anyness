@@ -8,7 +8,6 @@
 #pragma once
 #include "../Container.hpp"
 #include "Indexed-Linear.hpp"
-//#include "DeepOwnership.hpp"
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Resolvable.hpp>
 

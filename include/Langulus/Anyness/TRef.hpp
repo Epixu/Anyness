@@ -7,14 +7,13 @@
 ///                                                                           
 #pragma once
 #include "../../../source/Container.hpp"
+#include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Comparison.hpp"
-#include "../../../source/rtti/MetaData.hpp"
 
 
 namespace Langulus::Anyness::Inner
@@ -42,13 +41,24 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::Sparse T>
    struct TRef : Inner::TRefBase<T> {
-      using Base    = Inner::TRefBase<T>;
-      using Pick    = THandle<T const&>;
-      using PickMut = THandle<T&>;
+      using Base = Inner::TRefBase<T>;
+      using Base::Base;
+      using Base::operator =;
+      using Base::operator ==;
+
+      // Single element selections                                      
+      using Pick    = T;
+      using PickMut = T;
+
+      constexpr TRef(nullptr_t) noexcept {}
+
+      constexpr bool operator == (nullptr_t) const noexcept {
+         return IsEmpty();
+      }
 
       ///                                                                     
       ///   Construction                                                      
-      constexpr TRef() noexcept = default;
+      /*constexpr TRef() noexcept = default;
       explicit constexpr TRef(const TRef&) noexcept = default;
       explicit constexpr TRef(TRef&&) noexcept = default;
 
@@ -69,6 +79,6 @@ namespace Langulus::Anyness
          else EmplaceWithIntent(FWD(pointer));
       }
 
-      constexpr ~TRef() = default;
+      constexpr ~TRef() = default;*/
    };
 }

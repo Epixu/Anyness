@@ -210,7 +210,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       /// Default-initialize the component is impossible                      
-      void ConstructDefault() {
+      constexpr void ConstructDefault() {
          static_assert(false, "Can't default-construct this component");
       }
       

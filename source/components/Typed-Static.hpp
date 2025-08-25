@@ -162,16 +162,18 @@ namespace Langulus::Anyness::Component
          return sizeof(TYPE) * self.GetCount();
       }
 
-      /// Dereference the first pointer inside the container, if sparse       
-      constexpr TYPE& operator * (this auto&& self) has_assumptions {
+      /// Dereference the first element inside the container                  
+      constexpr TYPE& operator * (this auto&& self) has_assumptions
+      requires requires { *self.template GetRawAs<TYPE>(); } {
          LglsAssumeDev(not self.IsEmpty(), "Container is empty");
-         return self.template GetInner<ID, TYPE>();
+         return *self.template GetRawAs<TYPE>();
       }
 
-      /// Get the first pointer inside the container, if sparse               
-      constexpr TYPE& operator -> (this auto&& self) has_assumptions {
+      /// Access the first element inside the container                       
+      constexpr TYPE* operator -> (this auto&& self) has_assumptions
+      requires requires { self.template GetRawAs<TYPE>(); } {
          LglsAssumeDev(not self.IsEmpty(), "Container is empty");
-         return self.template GetInner<ID, TYPE>();
+         return self.template GetRawAs<TYPE>();
       }
    };
 }

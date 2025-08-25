@@ -300,7 +300,7 @@ namespace Langulus::Anyness
 
       /// Comparing against nullptr_t checks if text is empty                 
       constexpr bool operator == (nullptr_t) const noexcept {
-         return this->GetCount() == 0;
+         return IsEmpty();
       }
 
       /// Comparing against bounded character arrays and literals             

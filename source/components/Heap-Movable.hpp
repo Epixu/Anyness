@@ -73,12 +73,14 @@ namespace Langulus::Anyness::Component
       /// Default-initialize the component, defaulting members                
       /// A default-constructor isn't used for this to avoid duplication of   
       /// some calls                                                          
-      void ConstructDefault(this auto& self) noexcept {
+      constexpr void ConstructDefault(this auto& self) noexcept {
          self.SetHeapInner(nullptr);
          if constexpr (requires { self.mReserved; })
             self.mReserved = 0;
-         self.SetCountInner(0);
-         self.SetHashInner(1);
+         if constexpr (requires { self.SetCountInner(0); })
+            self.SetCountInner(0);
+         if constexpr (requires { self.SetHashInner(1); })
+            self.SetHashInner(1);
       }
       
       /// Transfer from any kind of container, respecting intents             

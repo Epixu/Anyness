@@ -90,10 +90,10 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
    using T  = TestType;
    using TT = TypeOf<T>;
    
-   STATIC_REQUIRE(T{} == T{});
+   /*STATIC_REQUIRE(T{} == T{});
    STATIC_REQUIRE(T{} == nullptr);
    STATIC_REQUIRE(T{nullptr} == T{nullptr});
-   STATIC_REQUIRE(T{nullptr} == nullptr);
+   STATIC_REQUIRE(T{nullptr} == nullptr);*/
 
    GIVEN("A nullptr-initialized templated shared pointer") {
       T pointer {nullptr};

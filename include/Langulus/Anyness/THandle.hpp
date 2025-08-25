@@ -6,11 +6,12 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/components/Heap-Reference.hpp"
-#include "../../../source/components/DeepOwnership-Stack.hpp"
 #include "../../../source/components/Typed-Static.hpp"
+#include "../../../source/components/Heap-Reference.hpp"
 #include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/DeepOwnership-Stack.hpp"
 #include "../../../source/components/Assignment.hpp"
+#include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "../../../source/components/Iteration-Operators.hpp"
 #include "TOwn.hpp"

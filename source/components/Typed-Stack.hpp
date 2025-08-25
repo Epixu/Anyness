@@ -80,7 +80,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Default-initialize the component                                    
-      void ConstructDefault(this auto& self) noexcept {
+      constexpr void ConstructDefault(this auto& self) noexcept {
          self.SetTypeInner({});
       }
 
