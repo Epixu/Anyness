@@ -48,8 +48,8 @@ namespace Langulus
 
    #define LglsError(...) ErrorInner(HERE() __VA_OPT__(,) __VA_ARGS__)
    
-   /// Assertion that works both at runtime and at compile-time               
-   /// Will throw an exception if condition isn't met at runtime              
+   /// Assertion that works both at runtime and at compile-time.              
+   /// Will throw an exception if condition isn't met at runtime.             
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
@@ -89,8 +89,8 @@ namespace Langulus
    #define LglsAssert(CONDITION, ...) \
       AssertInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
 
-   /// Assertion that works at runtime                                        
-   /// Doesn't throw or ruin compilation                                      
+   /// Assertion that works at runtime.                                       
+   /// Doesn't throw or ruin compilation.                                     
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
@@ -125,9 +125,9 @@ namespace Langulus
       AssertWarnInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
 
    #if LANGULUS(SAFE) > 0
-   /// User assumption that works both at runtime and at compile-time         
-   /// Tested only if LANGULUS(SAFE) >= 1                                     
-   /// Will throw an exception if condition isn't met at runtime              
+   /// User assumption that works both at runtime and at compile-time.        
+   /// Tested only if LANGULUS(SAFE) >= 1.                                    
+   /// Will throw an exception if condition isn't met at runtime.             
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
@@ -164,9 +164,9 @@ namespace Langulus
       }
    }
    
-   /// User assumption at runtime                                             
-   /// Tested only if LANGULUS(SAFE) >= 1                                     
-   /// Doesn't throw or ruin compilation                                      
+   /// User assumption at runtime.                                            
+   /// Tested only if LANGULUS(SAFE) >= 1.                                    
+   /// Doesn't throw or ruin compilation.                                     
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
@@ -214,9 +214,9 @@ namespace Langulus
    #endif
 
    #if LANGULUS(SAFE) > 1
-   /// Developer assumption that works both at runtime and at compile-time    
-   /// Tested only if LANGULUS(SAFE) >= 2                                     
-   /// Will throw an exception if condition isn't met at runtime              
+   /// Developer assumption that works both at runtime and at compile-time.   
+   /// Tested only if LANGULUS(SAFE) >= 2.                                    
+   /// Will throw an exception if condition isn't met at runtime.             
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
@@ -253,9 +253,9 @@ namespace Langulus
       }
    }
    
-   /// Developer assumption at runtime                                        
-   /// Tested only if LANGULUS(SAFE) >= 2                                     
-   /// Doesn't throw or ruin compilation                                      
+   /// Developer assumption at runtime.                                       
+   /// Tested only if LANGULUS(SAFE) >= 2.                                    
+   /// Doesn't throw or ruin compilation.                                     
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     
@@ -302,9 +302,9 @@ namespace Langulus
       #define LglsAssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]
    #endif
 
-   /// Custom assumption that works both at runtime and at compile-time       
-   /// Tested only if LANGULUS(SAFE) >= LEVEL                                 
-   /// Will throw an exception if condition isn't met at runtime              
+   /// Custom assumption that works both at runtime and at compile-time.      
+   /// Tested only if LANGULUS(SAFE) >= LEVEL.                                
+   /// Will throw an exception if condition isn't met at runtime.             
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main error message if condition doesn't hold    
    ///   @param location - optional location of the error                     
@@ -352,9 +352,9 @@ namespace Langulus
       AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__) \
       [[assume(CONDITION)]] 
    
-   /// Custom assumption at runtime                                           
-   /// Tested only if LANGULUS(SAFE) >= LEVEL                                 
-   /// Doesn't throw or ruin compilation                                      
+   /// Custom assumption at runtime.                                          
+   /// Tested only if LANGULUS(SAFE) >= LEVEL.                                
+   /// Doesn't throw or ruin compilation.                                     
    ///   @param condition - the condition that must hold true                 
    ///   @param m1 - optional main warning message if condition doesn't hold  
    ///   @param location - optional location of the error                     

@@ -17,8 +17,8 @@
 
 namespace Langulus::CT
 {
-   /// Anything formattable by fmt is also loggable                           
-   /// You can extend this concept by specializing fmt::formatter yourself    
+   /// Anything formattable by fmt is also loggable.                          
+   /// You can extend this concept by specializing fmt::formatter yourself.   
    template<class...T>
    concept Loggable = Validate<T...> and (::fmt::is_formattable<T>::value and ...);
 
@@ -33,8 +33,8 @@ namespace Langulus::CT
 ///                                                                           
 namespace Langulus::Logger
 {
-   /// Color codes, consistent with ANSI/VT100 escapes                        
-   /// Also consistent with fmt::terminal_color                               
+   /// Color codes, consistent with ANSI/VT100 escapes.                       
+   /// Also consistent with fmt::terminal_color.                              
    enum class Color : unsigned {
       NoForeground = 0,
       NoBackground = 1,

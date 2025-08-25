@@ -53,10 +53,9 @@ namespace Langulus
 
 
    ///                                                                        
-   /// Acts as both a single value, or string literal                         
-   /// You can use it as a template parameter                                 
-   /// The string implementation should be introduced in C++26 as             
-   /// std::fixed_string, supposedly...                                       
+   /// Acts as both a single value, or string literal. You can use it as a    
+   /// template parameter. The string implementation should be introduced in  
+   /// C++26 as std::fixed_string, supposedly...                              
    ///                                                                        
    /// String literals are unique types, they can't be used in ?: statements, 
    /// so I've allowed string literals of the form `? "\0\0\0" : "alt"` to    

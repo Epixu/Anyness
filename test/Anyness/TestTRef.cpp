@@ -5,34 +5,99 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
+#include "../Main.hpp"
 #include <Langulus/Anyness/TRef.hpp>
-#include "Common.hpp"
+
+using namespace Langulus;
+using Anyness::TRef;
+using Anyness::Allocator;
+
+namespace
+{
+   /// Simple type for testing Referenced types                               
+   struct RT : Referenced {
+      int data;
+      const char* t;
+      bool destroyed = false;
+      bool copied_in = false;
+      bool cloned_in = false;
+      bool moved_in  = false;
+      bool moved_out = false;
+
+      RT()
+         : data {0}, t {nullptr} {}
+
+      RT(int a)
+         : data {a}, t {nullptr} {}
+
+      RT(const char* tt)
+         : data(0), t {tt} {}
+
+      RT(const RT& rhs)
+         : data(rhs.data), t {rhs.t}, copied_in {true} {}
+
+      RT(RT&& rhs)
+         : data(rhs.data), t {rhs.t}, moved_in {true} {
+         rhs.moved_in = false;
+         rhs.moved_out = true;
+      }
+
+      RT(Clone<RT>&& rhs)
+         : data(rhs->data), t {rhs->t}, cloned_in {true} {
+      }
+
+      ~RT() {
+         destroyed = true;
+
+         if (GetReferences() == 1)
+            Reference(-1);
+      }
+
+      RT& operator = (const RT& rhs) {
+         data = rhs.data;
+         t = rhs.t;
+         copied_in = true;
+         moved_in = moved_out = false;
+         return *this;
+      }
+
+      RT& operator = (RT&& rhs) {
+         data = rhs.data;
+         t = rhs.t;
+         copied_in = false;
+         moved_in = true;
+         moved_out = false;
+         rhs.copied_in = false;
+         rhs.moved_in = false;
+         rhs.moved_out = true;
+         return *this;
+      }
+
+      operator const int& () const noexcept {
+         return data;
+      }
+   };
+}
 
 
 TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
    TRef<const RT*>,
-   TRef<Many*>,
    TRef<int*>,
    TRef<RT*>,
-   TRef<const Many*>,
    TRef<const int*>
 ) {
    static Allocator::State memoryState;
-
-   using T = TestType;
+   using T  = TestType;
    using TT = TypeOf<T>;
+   
+   STATIC_REQUIRE(T{} == T{});
+   STATIC_REQUIRE(T{} == nullptr);
+   STATIC_REQUIRE(T{nullptr} == T{nullptr});
+   STATIC_REQUIRE(T{nullptr} == nullptr);
 
    GIVEN("A nullptr-initialized templated shared pointer") {
       T pointer {nullptr};
       T pointer2 {nullptr};
-
-      constexpr T pointer_constexpr {nullptr};
-      static_assert(not pointer_constexpr);
-
-      constexpr T pointer2_constexpr {nullptr};
-      static_assert(not pointer2_constexpr);
-
-      static_assert(pointer_constexpr == pointer2_constexpr);
 
       REQUIRE_FALSE(pointer.Get());
       REQUIRE_FALSE(pointer);
@@ -42,14 +107,6 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
    GIVEN("A default-initialized templated shared pointer") {
       T pointer;
       T pointer2;
-
-      constexpr T pointer_constexpr;
-      static_assert(not pointer_constexpr);
-
-      constexpr T pointer2_constexpr;
-      static_assert(not pointer2_constexpr);
-
-      static_assert(pointer_constexpr == pointer2_constexpr);
 
       REQUIRE_FALSE(pointer.Get());
       REQUIRE_FALSE(pointer);
@@ -179,10 +236,5 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
    }
 
    REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }

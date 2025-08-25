@@ -97,7 +97,9 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       T text;
 
       Text_CheckState_Default(text);
-
+      STATIC_REQUIRE(T{} == T{});
+      STATIC_REQUIRE(T{} == "");
+      
       WHEN("Cleared") {
          text.Clear();
 

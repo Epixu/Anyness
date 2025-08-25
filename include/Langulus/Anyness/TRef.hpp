@@ -19,8 +19,6 @@
 
 namespace Langulus::Anyness::Inner
 {
-
-   ///                                                                        
    template<CT::Sparse T>
    using TRefBase = Container<
       Com::TypedStatic<DMeta, Deptr<T>>,  // Statically typed          
@@ -31,12 +29,10 @@ namespace Langulus::Anyness::Inner
       Com::Assignment<>,                  // Can be reassigned         
       Com::Comparison                     // Can be compared           
    >;
-
-} // namespace Langulus::Anyness::Inner
+}
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    ///   A statically typed shared pointer                                    
    ///                                                                        
@@ -75,5 +71,4 @@ namespace Langulus::Anyness
 
       constexpr ~TRef() = default;
    };
-
-} // namespace Langulus::Anyness
+}

@@ -12,11 +12,10 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Adds a variable to a container that only references a remote heap      
-   /// No allocation interface is provided                                    
-   /// Increases the container's bytesize                                     
+   /// Adds a variable to a container that only references a remote heap.     
+   /// No allocation interface is provided.                                   
+   /// Increases the container's bytesize.                                    
    ///   @tparam ID - multiple references are supported                       
-   ///                                                                        
    template<unsigned ID = 0>
    struct HeapReference {
       using CTTI_Component = Yes<>;
@@ -114,46 +113,47 @@ namespace Langulus::Anyness::Component
       template<class T = void, CT::Container C>
       constexpr auto& Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>, "T can't be a handle");
-         static_assert(not CT::Reference<T>, "Strip references");
-         using DC = Deref<C>;
+         static_assert(not CT::Reference<T>, "Strip references first");
          using TT = DecvqAll<Tif<CT::Void<T>, TypeOf<C>, T>>;
-         using ST = DecvqAll<decltype(self.mHeap)>;
+         //using ST = DecvqAll<decltype(self.mHeap)>;
 
+         auto& mHeap = self.GetHeapInner();
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        
             if (self.IsSparse())
-               return static_cast<void**&>(self.mHeapVoid);
-            return static_cast<void* &>(self.mHeapVoid);
+               return static_cast<void**&>(mHeap);
+            return static_cast<void* &>(mHeap);
          }
-         else if constexpr (CT::Untyped<C>) {
+         else if constexpr (Deref<C>::TypeErased) {
             // Casting to a desired runtime type                        
             LglsAssumeDev(self.IsTyped(), "Block is not typed");
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TT>)
-                  return **static_cast<TT**>(self.mHeapVoid);
+                  return **static_cast<TT**>(mHeap);
                else
-                  return  *static_cast<TT* >(self.mHeapVoid);
-            }
-         
-            if constexpr (CT::Dense<TT>)
-               return *static_cast<TT*>( self.mHeapVoid);
-            else
-               return *reinterpret_cast<TT*>(const_cast<ST*>(&self.mHeapVoid));
-         }
-         else {
-            // Casting to a desired static type                         
-            if constexpr (DC::Sparse) {
-               if constexpr (CT::Dense<TT>)
-                  return **static_cast<TT**>(self.mHeapVoid);
-               else
-                  return  *static_cast<TT* >(self.mHeapVoid);
+                  return  *static_cast<TT* >(mHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
-                  return *static_cast<TT*>( self.mHeapVoid);
+                  return *static_cast<TT*>( mHeap);
                else
-                  return *static_cast<TT*>(&self.mHeapVoid);
+                  return *static_cast<TT*>(&mHeap);
+            }
+         }
+         else {
+            // Casting to a desired static type                         
+            if constexpr (Deref<C>::Sparse) {
+               if constexpr (CT::Dense<TT>)
+                  return **static_cast<TT**>(mHeap);
+               else
+                  return  *static_cast<TT* >(mHeap);
+            }
+            else {
+               if constexpr (CT::Dense<TT>)
+                  return *static_cast<TT*>( mHeap);
+               else
+                  return *static_cast<TT*>(&mHeap);
             }
          }
       }

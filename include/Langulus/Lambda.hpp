@@ -14,10 +14,10 @@ namespace Langulus
    namespace Inner
    {
       ///                                                                     
-      /// These function declarations are used to decompose lambdas           
-      /// You can use it to extract the argument types of functions, by using 
+      /// These function declarations are used to decompose lambdas.          
+      /// You can use it to extract the argument types of functions by using  
       /// decltype on the function return.                                    
-      /// Handles functors, member/standing function pointers, lambdas.       
+      /// Handles functors, member/standing function pointers and lambdas.    
       ///                                                                     
       
       ///                                                                     

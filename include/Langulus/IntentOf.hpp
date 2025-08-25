@@ -132,7 +132,7 @@ namespace Langulus
 
 
    ///                                                                        
-   /// Referred value intermediate type, use in constructors and assignments  
+   /// Referred value intermediate type, used in constructors and assignments 
    /// to refer to data explicitly                                            
    ///   @tparam T - the type to refer                                        
    template<class T> requires (not ::std::is_reference_v<T>)
@@ -211,7 +211,7 @@ namespace Langulus
    
    
    ///                                                                        
-   /// Copied value intermediate type, use in constructors and assignments    
+   /// Copied value intermediate type, used in constructors and assignments   
    /// to shallow-copy container explicitly                                   
    ///   @tparam T - the type to copy                                         
    template<class T> requires (not ::std::is_reference_v<T>)
@@ -285,7 +285,7 @@ namespace Langulus
 
 
    ///                                                                        
-   /// Moved value intermediate type, use in constructors and assignments     
+   /// Moved value intermediate type, used in constructors and assignments    
    /// to move data explicitly                                                
    ///   @tparam T - the type to move                                         
    template<class T> requires (not ::std::is_reference_v<T>)
@@ -365,13 +365,13 @@ namespace Langulus
 
 
    ///                                                                        
-   /// Abandoned value intermediate type, can be used in constructors and     
+   /// Abandoned value intermediate type can be used in constructors and      
    /// assignments to provide a guarantee, that the value shall not be used   
    /// after being consumed, so we can save up on resetting it fully.         
    /// For example, you can construct a Many with an abandoned Many, which is 
    /// same as move-construction, but the abandoned Many shall have only its  
-   /// mEntry reset, instead of the entire container, leaving it in a state   
-   /// that is unfit for reuse, but also saving a lot of instructions.        
+   /// allocation reset, instead of the entire container, leaving it in a     
+   /// state that is unfit for reuse, saving a lot of instructions.           
    ///   @tparam T - the type to abandon                                      
    template<class T> requires (not ::std::is_reference_v<T>)
    struct Abandon final : Inner::CommonIntent<0, false, true> {
@@ -450,7 +450,7 @@ namespace Langulus
 
 
    ///                                                                        
-   /// Disowned value intermediate type, use in constructors and assignments  
+   /// Disowned value intermediate type, used in constructors and assignments 
    /// to copy container without gaining ownership                            
    ///   @tparam T - the type to disown                                       
    template<class T> requires (not ::std::is_reference_v<T>)
@@ -699,10 +699,8 @@ namespace Langulus
    
    /// Deduce the proper intent, based on whether T already has a             
    /// specified intent (like when it is an rvalue (&&))                      
-   ///   - if it has one of those, then we get move intent (which can         
-   ///     implicitly fallback to standard move semantics);                   
-   ///   - if it isn't - we get refer intent (which in turn can fallback to   
-   ///     standard copy semantics)                                           
+   ///   - if it has one of those, then we get move intent                    
+   ///   - if it isn't - we get refer intent                                  
    template<class T>
    using IntentOf = Tif<CT::Intent<Decvq<Deref<T>>>,
          Decvq<Deref<T>>,
@@ -717,7 +715,7 @@ namespace Langulus
 /// A handy constructor & assignment pattern that adds all possible intents   
 /// and collapses them for a given type. Useful when you don't want intents   
 /// to get in the way of simple types that need those reflected, but not      
-/// implemented in some particular way.                                       
+/// implemented in some particular way. Basically acts as "= default".        
 #define ignore_all_intents(FOR_TYPE) \
    template<template<class> class I> requires ::Langulus::CT::Intent<I<FOR_TYPE>> \
    explicit constexpr FOR_TYPE(I<FOR_TYPE>&& meta) noexcept \
@@ -732,16 +730,16 @@ namespace Langulus
 namespace Langulus
 {
    /// Create an instance of T at the provided memory using placement new     
-   /// which considers the intent and checks if T's constructors support it   
+   /// which considers the intent and checks if T's constructors support it.  
    /// All intent-related construction concepts are defined in terms of this  
    /// function. Beware, this is very unsafe - make sure all assumptions are  
-   /// correct                                                                
+   /// correct!                                                               
    ///   @attention assumes placement pointer is valid and is of type T       
    ///   @attention when S is a deep intent (like Clone) this function        
    ///      assumes that the 'placement' pointer always points to an          
    ///      instance of type Decay<T>                                         
    ///   @param placement - where to place the new instance                   
-   ///   @param value - the constructor argument and intent                   
+   ///   @param intent - the constructor argument and intent                  
    ///   @return the instance on the heap                                     
    template<bool FAKE = false, template<class> class S, CT::NoIntent T>
    requires CT::Intent<S<T>> LANGULUS(INLINED)
@@ -984,17 +982,17 @@ namespace Langulus
       ///   Constructibles                                                    
       ///                                                                     
       ///   These concepts are bit looser on requirements, compared to their  
-      /// Has*Constructor counterparts, to allow for fallbacks in places where
+      /// Has*Constructor counterparts to allow for fallbacks in places where 
       /// they are required. A type may not explicitly HasAbandonConstructor, 
       /// and yet be AbandonConstructible, because it is movable by the usual 
       /// C++20 semantics. Constructors are remarkably consistent across      
-      /// compilers. Unlike assignments, that is (see below)...               
+      /// compilers. Unlike assignments (see below)...                        
       ///                                                                     
 
-      /// Check if all T are intent-constructible by intent S                 
+      /// Check if all T are intent-constructible by intent S.                
       /// T can be intent-constructible even if not having the specific       
       /// constructor, as long as T and S are compatible with standard C++20  
-      /// semantics                                                           
+      /// semantics.                                                          
       ///   @tparam S - the intent                                            
       ///   @tparam T - the types                                             
       template<template<class> class S, class...T>
@@ -1003,10 +1001,10 @@ namespace Langulus
              {(IntentNew<true>(nullptr, FWD(a)), ...)} -> Supported;
           };
 
-      /// Check if all TypeOf<S> are intent-constructible by intent S         
+      /// Check if all TypeOf<S> are intent-constructible by intent S.        
       /// T can be intent-constructible even if not having the specific       
       /// constructor, as long as T and S are compatible with standard C++20  
-      /// semantics                                                           
+      /// semantics.                                                          
       ///   @tparam S - the intents and types                                 
       template<class...S>
       concept IntentConstructibleAlt = Intent<S...>
@@ -1014,52 +1012,52 @@ namespace Langulus
              {(IntentNew<true>(nullptr, FWD(a)), ...)} -> Supported;
           };
 
-      /// Check if all T are disown-constructible                             
+      /// Check if all T are disown-constructible.                            
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       /// If POD, T can be disown-constructible even if not having the        
-      /// specific disown constructor, as long as T is std::copy_constuctible 
+      /// specific disown constructor, as long as T is std::copy_constuctible.
       template<class...T>
       concept DisownConstructible = Validate<T...>
           and (IntentConstructible<Langulus::Disown, T> and ...);
 
-      /// Check if all Decay<T> are clone-constructible                       
+      /// Check if all Decay<T> are clone-constructible.                      
       /// Does a deep copy. If POD, Decay<T> can be clone-constructible even  
       /// if not having the specific clone constructor, as long as T is       
-      /// std::copy_constuctible                                              
+      /// std::copy_constuctible.                                             
       template<class...T>
       concept CloneConstructible = Validate<T...>
           and (IntentConstructible<Langulus::Clone, T> and ...);
 
-      /// Check if all T are abandon-constructible                            
+      /// Check if all T are abandon-constructible.                           
       /// Does a move but doesn't fully reset source as an optimization -     
       /// assuming that the abandoned instance is never going to be used in   
-      /// more ways, than just calling the destructor. T can be               
+      /// other ways than just calling the destructor. T can be               
       /// abandon-constructible even if not having the specific abandon       
-      /// constructor, as long as it is std::move_constuctible                
+      /// constructor, as long as it is std::move_constuctible.               
       template<class...T>
       concept AbandonConstructible = Validate<T...>
           and (IntentConstructible<Langulus::Abandon, T> and ...);
 
-      /// Check if all T are refer-constructible                              
+      /// Check if all T are refer-constructible.                             
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership. T can be refer-constructible as long as T is             
-      /// std::copy_constuctible                                              
+      /// std::copy_constuctible.                                             
       template<class...T>
       concept ReferConstructible = Validate<T...>
           and (IntentConstructible<Langulus::Refer, T> and ...);
       
-      /// Check if all T are copy-constructible                               
+      /// Check if all T are copy-constructible.                              
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       /// If POD, T can be copy-constructible even if not having the specific 
-      /// shallow-copy constructor, as long as T is std::copy_constuctible    
+      /// shallow-copy constructor, as long as T is std::copy_constuctible.   
       template<class...T>
       concept CopyConstructible = Validate<T...>
           and (IntentConstructible<Langulus::Copy, T> and ...);
 
-      /// Check if all T are move-constructible                               
-      /// Does a move, fully resetting source into a reusable state           
-      /// T is move-constructible as long as it is std::move_constuctible     
+      /// Check if all T are move-constructible.                              
+      /// Does a move, fully resetting source into a reusable state.          
+      /// T is move-constructible as long as it is std::move_constuctible.    
       template<class...T>
       concept MoveConstructible = Validate<T...>
           and (IntentConstructible<Langulus::Move, T> and ...);
@@ -1077,11 +1075,11 @@ namespace Langulus
       /// - it causes ambiguity on Clang 19.1 for refer intents, because      
       ///   the compiler can't decide whether to implicit-cast to && or       
       ///   const&. I've added explicit intent assigners to compensate for    
-      ///   that                                                              
+      ///   that.                                                             
       /// - it causes ambiguity on GCC 14.2 for move/abandon intents, because 
       ///   the compiler can't decide how to implicit-cast to && or           
       ///   const&. I've added explicit intent assigners to compensate for    
-      ///   that                                                              
+      ///   that.                                                             
       /// - there is also this nasty compiler bug on MSVC v143 that affects   
       ///   types is deleted destructors, and implicit copy/move semantics    
       ///   https://stackoverflow.com/questions/79665049                      
@@ -1089,12 +1087,12 @@ namespace Langulus
       /// In that sense, none of these concepts here guarantees, that an      
       /// adequate intent-assignment exists for a type, unless you use        
       /// IntentAssign itself. Implicit mapping onto built-in copy/move       
-      /// semantics has been disabled to avoid all these inconsistencies      
+      /// semantics has been disabled to avoid all these inconsistencies.     
       ///                                                                     
 
-      /// Check if all T are intent-assignable by intent S                    
+      /// Check if all T are intent-assignable by intent S.                   
       /// T can be intent-assignable even if not having an explicit assigner, 
-      /// as long as T and S are compatible with the usual C++20 semantics    
+      /// as long as T and S are compatible with the usual C++20 semantics.   
       ///   @tparam S - the intent                                            
       ///   @tparam T - the types                                             
       template<template<class> class S, class...T>
@@ -1103,62 +1101,59 @@ namespace Langulus
             {(IntentAssign<true>(Fake<Decvq<T>&>(), FWD(a)), ...)} -> Supported;
           };
 
-      /// Check if all TypeOf<S> are intent-assignable by S                   
+      /// Check if all TypeOf<S> are intent-assignable by S.                  
       /// T can be intent-assignable even if not having an explicit assigner  
-      /// as long as T and S are compatible with standard C++20 semantics     
+      /// as long as T and S are compatible with standard C++20 semantics.    
       ///   @tparam S - the intent and type                                   
       template<class...S>
       concept IntentAssignableAlt = Intent<S...> and requires (S&&...a) {
             {(IntentAssign<true>(Fake<Decq<Deref<TypeOf<S>>>&>(), FWD(a)), ...)} -> Supported;
           };
 
-      /// Check if all T are disown-assignable                                
+      /// Check if all T are disown-assignable.                               
       /// Disowning does a shallow copy without referencing contents,         
       /// generating a 'view' of the data that is without ownership.          
       /// If POD, T can be disown-assignable even if not having an explicit   
-      /// disown-assignment, as long as std::copy_assignable<T> holds         
+      /// disown-assignment, as long as std::copy_assignable<T> holds.        
       template<class...T>
       concept DisownAssignable = Validate<T...>
           and (IntentAssignable<Langulus::Disown, T> and ...);
 
-      /// Check if all Decay<T> are clone-assignable                          
-      /// Does a deep copy                                                    
+      /// Check if all Decay<T> are clone-assignable.                         
+      /// Does a deep copy.                                                   
       /// If POD, Decay<T> can be clone-assignable even if not having an      
-      /// explicit clone-assignment, as long as std::copy_assignable<T> holds 
+      /// explicit clone-assignment, as long as std::copy_assignable<T> holds.
       template<class...T>
       concept CloneAssignable = Validate<T...>
           and (IntentAssignable<Langulus::Clone, T> and ...);
 
-      /// Check if all T are abandon-assignable                               
-      /// Does a move, but doesn't fully reset source (optimization)          
+      /// Check if all T are abandon-assignable.                              
+      /// Does a move, but doesn't fully reset source (optimization).         
       /// T can be abandon-assignable even if not having an explicit          
-      /// abandon-assignment, as long as std::move_assignable<T> holds        
+      /// abandon-assignment, as long as std::move_assignable<T> holds.       
       template<class...T>
       concept AbandonAssignable = Validate<T...>
           and (IntentAssignable<Langulus::Abandon, T> and ...);
 
-      /// Check if all T are refer-assignable                                 
+      /// Check if all T are refer-assignable.                                
       /// Refering does a shallow copy while referencing contents, providing  
       /// ownership.                                                          
-      /// T can be refer-assignable as long as std::copy_assignable<T> holds  
+      /// T can be refer-assignable as long as std::copy_assignable<T> holds. 
       template<class...T>
       concept ReferAssignable = Validate<T...>
           and (IntentAssignable<Langulus::Refer, T> and ...);
       
-      /// Check if all T are copy-assignable                                  
+      /// Check if all T are copy-assignable.                                 
       /// Does a shallow copy _of the contents_ (like shallow cloning).       
       /// If POD, T can be copy-assignable even if not having an explicit     
-      /// copy-assigner, as long as std::copy_assignable<T> holds             
+      /// copy-assigner, as long as std::copy_assignable<T> holds.            
       template<class...T>
       concept CopyAssignable = Validate<T...>
           and (IntentAssignable<Langulus::Copy, T> and ...);
 
-      /// Check if all T are move-assignable                                  
-      /// Does a move, fully resetting source                                 
-      /// T is move-assignable as long as std::move_assignable<T> holds       
-      /// @attention you can't have move semantics, if a type has its         
-      ///   destructor deleted - every time you move an instance, the old one 
-      ///   has to be deleted later.                                          
+      /// Check if all T are move-assignable.                                 
+      /// Does a move, fully resetting source.                                
+      /// T is move-assignable as long as std::move_assignable<T> holds.      
       template<class...T>
       concept MoveAssignable = Validate<T...>
           and (IntentAssignable<Langulus::Move, T> and ...);

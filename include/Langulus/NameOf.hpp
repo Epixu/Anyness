@@ -424,14 +424,12 @@ namespace Langulus::RTTI
                   buffer[fill++] = result[prev++];
                }
 
-               //if (IsTransition(result, curr, curr + pattern.what.size())) {
-                  // Replace                                            
-                  buffer.resize(curr + pattern.with.size());
-                  for (char c : pattern.with)
-                     buffer[fill++] = c;
-                  prev += pattern.what.size();
-               //}
-
+               // Replace                                               
+               buffer.resize(curr + pattern.with.size());
+               for (char c : pattern.with)
+                  buffer[fill++] = c;
+               prev += pattern.what.size();
+               
                curr = result.find(pattern.what, prev);
                already_replaced = not pattern.with.empty()
                   ? result.find(pattern.with, prev)
@@ -477,12 +475,10 @@ namespace Langulus::RTTI
                   buffer[fill++] = result[prev++];
                }
 
-               //if (IsTransition(result, curr, curr + pattern.what.size())) {
-                  // Replace                                            
-                  for (char c : pattern.with)
-                     buffer[fill++] = c;
-                  prev += pattern.what.size();
-               //}
+               // Replace                                               
+               for (char c : pattern.with)
+                  buffer[fill++] = c;
+               prev += pattern.what.size();
 
                curr = result.find(pattern.what, prev);
                already_replaced = not pattern.with.empty()

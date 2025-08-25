@@ -292,10 +292,10 @@
    #error "LANGULUS_FUNCTION not implemented"
 #endif
 
-/// Utility macro, that turns its argument to a string literal (inner)        
+/// Utility macro that turns its argument to a string literal (inner)         
 #define LANGULUS_STRINGIFY_INNER(x) #x
 
-/// Utility macro, that turns its argument to a string literal                
+/// Utility macro that turns its argument to a string literal                 
 #define LANGULUS_STRINGIFY(x) LANGULUS_STRINGIFY_INNER(x)
 
 /// Macro that generates a literal with the function name, file, and line     
@@ -304,6 +304,7 @@
 
 #define LANGULUS_OS(a) LANGULUS_OS_##a()
 
+/// Detect operating system                                                   
 #if defined(_WIN32) or defined(__CYGWIN__)
    #define LANGULUS_OS_WINDOWS() 1
 #else 
@@ -362,7 +363,7 @@
    #define LANGULUS_IMPORT()
 #endif
 
-/// Useful for globally exporting everything, when building the framework     
+/// Useful for globally exporting everything when building the framework      
 #ifdef LANGULUS_EXPORT_ALL
    #define LANGULUS_API_ALL() LANGULUS_EXPORT()
 #else
@@ -372,7 +373,7 @@
 /// Used to define imports/exports per module                                 
 #define LANGULUS_API(a) LANGULUS_API_##a()
 
-/// Make the rest of the code aware, that Langulus::Core has been included    
+/// Make the rest of the code aware that Langulus::Core has been included     
 #define LANGULUS_LIBRARY_CORE() 1
 
 /// All non-argument macros should use this facility                          
@@ -433,18 +434,18 @@
 #endif
 
 #ifndef LANGULUS_ALIGNMENT
-   /// The default memory alignment, in bytes                                 
+   /// The default memory alignment in bytes                                  
    #define LANGULUS_ALIGNMENT 16
 #endif
 
 #ifndef LANGULUS_MIN_ALLOC
-   /// The smallest possible allocation, in bytes                             
+   /// The smallest possible allocation in bytes                              
    ///   @attention should be greater or equal to the alignment               
    #define LANGULUS_MIN_ALLOC LANGULUS_ALIGNMENT
 #endif
 
 #ifndef LANGULUS_MIN_POOL
-   /// The smallest possible memory pool size, in bytes                       
+   /// The smallest possible memory pool size in bytes                        
    ///   @attention should be greater than the minimal allocation             
    #define LANGULUS_MIN_POOL 1024*1024
 #endif
@@ -485,7 +486,6 @@
 ///                                                                           
 namespace Langulus
 {
-   
    using ::std::nullptr_t;
    using ::std::size_t;
 
@@ -521,11 +521,11 @@ namespace Langulus
    /// The size of a void* in bits, depends on architecture                   
    constexpr size_t Bitness = Byteness * 8;
 
-   /// The default alignment, depends on configuration and enabled SIMD       
+   /// The default alignment, depends on configuration                        
    constexpr uintptr_t Alignment = LANGULUS_ALIGNMENT;
    static_assert(Alignment >= Byteness);
 
-   /// The default allocation size, depends on configuration and enabled SIMD 
+   /// The default allocation size, depends on configuration                  
    constexpr size_t MinimalAllocation = LANGULUS_MIN_ALLOC;
    static_assert(MinimalAllocation >= Alignment);
    
@@ -538,9 +538,9 @@ namespace Langulus
    // ReSharper disable once CppFunctionDoesntReturnValue               
    T&& Fake() { static_assert(false, "Calling Fake is ill-formed"); }
    
-   /// I don't like how long ::std::conditional_t is to write                 
+   /// I don't like how long ::std::conditional_t is to write.                
    /// Also, std::conditional_t must instantiate both paths, which is a big   
-   /// design flaw. This one adds an additional indirection to compensate     
+   /// design flaw. This one adds an additional indirection to compensate.    
    /// https://reddit.com/r/cpp_questions/comments/lujzhu/template_is_instantiated_in_false_branch_of/
    template<bool CONDITION, class YES, class NO>
    using Tif = typename ::std::conditional_t<CONDITION,
@@ -548,8 +548,8 @@ namespace Langulus
          ::std::type_identity<NO>
       >::type;
    
-   /// Check if a function encapsulated in a lambda is a constexpr            
-   /// Leverages that lambda expressions can be constexpr as of C++17         
+   /// Check if a function encapsulated in a lambda is a constexpr.           
+   /// Leverages that lambda expressions can be constexpr as of C++17.        
    /// https://stackoverflow.com/questions/55288555                           
    template<class Lambda, int = (Lambda {}(), 0)>
    consteval bool IsConstexpr(Lambda) { return true;  }
@@ -566,7 +566,7 @@ namespace Langulus
       /// Check if all T are complete (defined), by exploiting sizeof         
       /// Usefulness of this is limited to the first instantiation, and       
       /// that is how it is used upon reflection. Thankfully, most modern     
-      /// compilers do detect, if a definition changes between completeness   
+      /// compilers do detect if a definition changes between completeness    
       /// checks, so it is unlikely to cause any real harm:                   
       /// https://stackoverflow.com/questions/21119281                        
       template<class...T>
@@ -591,14 +591,14 @@ namespace Langulus
 
       /// Makes sure an error is reported if a CT concept is tested without   
       /// any arguments, or if any argument is an incomplete type, so that    
-      /// failures aren't silent                                              
+      /// failures aren't silent.                                             
       ///   @attention 'void' is not considered incomplete in this context    
       template<class...T>
       concept Validate = Inner::ValidateInner<T...>();
 
       /// Makes sure an error is reported if a CT concept is tested without   
       /// any arguments, so failures aren't silent. This variation allows for 
-      /// incomplete types                                                    
+      /// incomplete types.                                                   
       template<class...T>
       concept PartialValidate = Inner::PartialValidateInner<T...>();
    }

@@ -39,9 +39,9 @@ namespace Langulus
       return RTTI::DefinitionConst::Reflect<E>();
    }
 
-   /// Data definition retrieval                                              
+   /// Data definition retrieval.                                             
    /// Some types, like tags/verbs for example, can be represented both as    
-   /// DMeta and TMeta/VMeta, and this is useful to state a clear intent      
+   /// DMeta and TMeta/VMeta, and this is useful to state a clear intent.     
    ///   @tparam T - type to get data definition from                         
    ///   @return the definition                                               
    template<class T>
@@ -49,9 +49,9 @@ namespace Langulus
       return RTTI::DefinitionData::Reflect<CT::ReflectedAs<T>>();
    }
 
-   /// Tag definition retrieval                                               
+   /// Tag definition retrieval.                                              
    /// Some types, like tags for example, can be represented both as DMeta    
-   /// and TMeta, and this is useful to state a clear intent                  
+   /// and TMeta, and this is useful to state a clear intent.                 
    ///   @tparam T - type to get tag definition from                          
    ///   @return the definition                                               
    template<class T>
@@ -59,9 +59,9 @@ namespace Langulus
       return RTTI::DefinitionTag::Reflect<Decay<T>>();
    }
 
-   /// Verb definition retrieval                                              
+   /// Verb definition retrieval.                                             
    /// Some types, like verbs for example, can be represented both as DMeta   
-   /// and VMeta, and this is useful to state a clear intent                  
+   /// and VMeta, and this is useful to state a clear intent.                 
    ///   @tparam T - type to get verb definition from                         
    ///   @return the definition                                               
    template<class T>

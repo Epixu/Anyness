@@ -14,7 +14,7 @@ namespace Langulus
 {
    ///                                                                        
    ///   Tags are types that give additional context to data without          
-   /// changing its behavior                                                  
+   /// changing its behavior.                                                 
    ///   They can be reflected and serialized, and aid in selecting variables,
    /// describing objects, etc. You can think of them as if variable names    
    /// weren't infinite, but rather a finite set of general usage patterns.   

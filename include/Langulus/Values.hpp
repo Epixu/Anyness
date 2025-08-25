@@ -14,7 +14,6 @@ namespace Langulus
    ///                                                                        
    /// Can be used to handle value sequences at compile-time                  
    ///                                                                        
-   /// Filled values list                                                     
    template<auto E1, auto...EN>
    struct Values {
       using FirstType = decltype(E1);

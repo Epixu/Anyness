@@ -61,7 +61,7 @@ namespace Langulus
    /// Get the type that wraps std::underlying_type_t<T> for enums,           
    /// as well as any bounded array, or anything with CTTI::Typed::Type or    
    /// T::CTTI_Typed/T::value_type that isn't 'void'. Will result in a type   
-   /// list if inner type contains more than one type                         
+   /// list if inner type contains more than one type.                        
    ///   - if T is an array -> return the type (remove extents and refs)      
    ///   - if T has CTTI::Typed is specialized -> return CTTI::Typed::Type    
    ///   - if T is an enum -> return the underlying type                      
@@ -73,7 +73,7 @@ namespace Langulus
    namespace CT
    {
       /// Check if all T are typed by searching for CTTI::Typed<T>            
-      /// specializations, or T::CTTI_Typed / T::value_type members           
+      /// specializations, or T::CTTI_Typed / T::value_type members.          
       ///   @attention the inner type must not be 'void', in order for T to   
       ///      be considered 'typed' (as opposed to 'type-erased')            
       ///   @attention if the inner type is a typelist, that typelist will be 

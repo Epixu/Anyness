@@ -169,7 +169,7 @@ namespace Langulus::Anyness
       //Text(A1&&, AN&&...) requires CT::RangeInsertable<Text, A1, AN...>;
 
       /// Construction from all kinds of text, trim length to desired count   
-      ///   @attention intent is ignored, this doesn't apply ownership, only  
+      ///   @attention intent is ignored - this doesn't apply ownership, only 
       ///      interfaces the data - you can TakeOwnership() after this call  
       ///   @attention count will shrink if a terminating character was found,
       ///      or if 'text' is a bounded array of smaller size                
@@ -289,7 +289,7 @@ namespace Langulus::Anyness
          return result;
       }
 
-      /// Interpret text container as a string_view                           
+      /// Interpret text container as a std::string_view                      
       ///   @attention the string is null-terminated only after Terminate()   
       constexpr operator Token() const noexcept {
          return {this->GetRaw(), this->GetCount()};

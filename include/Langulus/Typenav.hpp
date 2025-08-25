@@ -11,11 +11,11 @@
 
 
 ///                                                                           
-///   A namespace for defining compile-time type information tags             
+///   A namespace for defining compile-time type information tags.            
 ///                                                                           
 ///   Specializing <type_traits> is generally undefined behavior, but here    
 /// we have alternatives that are more flexible, using type_traits as the     
-/// ground truth and building concepts on top of them in Langulus::CT         
+/// ground truth and building concepts on top of them in Langulus::CT.        
 /// Read more: https://stackoverflow.com/questions/25345486                   
 ///   Each of the structures in this namespace correspond to a concept in     
 /// Langulus::CT. These concepts can be affected in two ways (unless          

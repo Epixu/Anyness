@@ -29,6 +29,7 @@ add_langulus_test(LangulusAnynessTest
                 CT/TestUnfold.cpp
         
                 Anyness/TestText.cpp
+                Anyness/TestTRef.cpp
         
 	LIBRARIES	Catch2 LangulusAnyness
 )

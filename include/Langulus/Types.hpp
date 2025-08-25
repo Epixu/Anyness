@@ -37,7 +37,7 @@ namespace Langulus::CT
       /// Concepts with ::std::decay_t<T>::CTTI_Void::Enabled bug out for     
       /// some reason. Probably because T may not be a user type, and         
       /// this isn't well handled as of yet by the compiler. I work around    
-      /// this by using `if constexpr` to constrain the compiler further      
+      /// this by using `if constexpr` to constrain the compiler further.     
       
       template<class T>
       consteval bool IsVoidInner() {
@@ -101,8 +101,8 @@ namespace Langulus
    ///                                                                        
    ///   Compile-time type list                                               
    ///                                                                        
-   /// It doesn't really carry any data, it's just a useful compile-time tool 
-   /// Can be used to generate more complex types or tuples of data           
+   /// It doesn't really carry any data, it's just a useful compile-time tool.
+   /// Can be used to generate more complex types or tuples of data.          
    ///                                                                        
    template<class...T>
    struct Types;
@@ -122,8 +122,8 @@ namespace Langulus
 
 
    ///                                                                        
-   /// An empty typelist                                                      
-   /// Satisfies CT::Void and is considered 'void'                            
+   /// An empty typelist.                                                     
+   /// Satisfies CT::Void and is considered 'void'.                           
    template<>
    struct Types<> {
       using CTTI_Typelist = Yes<>;
@@ -280,9 +280,8 @@ namespace Langulus
              or (... or lambda.template operator()<TN>());
       }
 
-      /// Doesn't generate code for further loops if lambda returns           
-      /// Yes instead of No                                                   
-      /// (utilizes a compile-time short-circuit)                             
+      /// Doesn't generate code for further loops if lambda returns a Yes     
+      /// instead of a No (utilizes a compile-time short-circuit)             
       static constexpr bool ForEachConstOr(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::same_as<Yes<>>;  }
                     or requires{ {lambda.template operator()<T1>()} -> ::std::same_as<No>; },
@@ -369,9 +368,9 @@ namespace Langulus
       using At = typename decltype(AtInner<I>())::First;
 
       /// Generate a type list by providing a consteval generator lambda      
-      ///   @param lambda - the function that will generate the types         
-      ///          the lambda may or may not return Types, which will be      
-      ///          concatenated along if so                                   
+      ///   @param lambda - the function that will generate the types.        
+      ///          The lambda may or may not return Types, which will be      
+      ///          concatenated along if so.                                  
       ///   @return a type list, containing the generated types               
       static consteval CT::Typelist auto GenerateTypes(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },

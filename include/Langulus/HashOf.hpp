@@ -22,14 +22,13 @@
 namespace Langulus
 {
    ///                                                                        
-   /// Type that holds a hash                                                 
-   /// Size is configurable using LANGULUS_HASHSIZE                           
-   ///                                                                        
+   /// Type that holds a hash.                                                
+   /// Size is configurable using LANGULUS_HASHSIZE.                          
    ///   @attention missing hash always has value of 0, and a hashing function
    ///      is very unlikely to ever result in a zero hash, so we can easily  
    ///      detect whether a hash has been generated or not. There's however  
    ///      a very very very small chance, that a hash will end up being      
-   ///      constantly regenerated, if it ends up as 0 after hashing          
+   ///      constantly regenerated, if it ends up as 0 after hashing.         
    ///   @attention hashing a single hash always returns the hash itself      
    ///                                                                        
    struct Hash {
