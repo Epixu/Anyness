@@ -115,8 +115,6 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Handle<T>, "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
          using TT = DecvqAll<Tif<CT::Void<T>, TypeOf<C>, T>>;
-         //using ST = DecvqAll<decltype(self.mHeap)>;
-
          auto& mHeap = self.GetHeapInner();
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        

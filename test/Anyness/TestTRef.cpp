@@ -81,9 +81,9 @@ namespace
 
 
 TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
+   TRef<RT*>,
    TRef<const RT*>,
    TRef<int*>,
-   TRef<RT*>,
    TRef<const int*>
 ) {
    static Allocator::State memoryState;

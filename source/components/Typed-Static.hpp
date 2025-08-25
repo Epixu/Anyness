@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "../Container.hpp"
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/CT/Deep.hpp>
 
@@ -19,12 +20,12 @@ namespace Langulus::Anyness
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Defines the contained type at compile-time                             
-   /// Doesn't allow for type-erasure and doesn't take up space               
-   ///   @tparam T    - the type of the variable                              
+   /// Defines the contained type at compile-time.                            
+   /// Doesn't allow for type-erasure and doesn't take up space.              
+   ///   @tparam META - the type of the definition                            
    ///   @tparam TYPE - static type, can't be void                            
    ///   @tparam ID   - which heap/stack is typed?                            
-   template<class T, CT::NotVoid TYPE, unsigned ID = 0>
+   template<class META, CT::NotVoid TYPE, unsigned ID = 0>
    struct TypedStatic {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
@@ -36,7 +37,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool Dense      = CT::Dense<TYPE>;
 
       /// Get the reflected type definition                                   
-      T GetType() const noexcept { return MetaOf<TYPE>(); }
+      META GetType() const noexcept { return MetaOf<TYPE>(); }
 
       /// Get the size of a single element of TYPE in bytes                   
       constexpr size_t GetStride() const noexcept { return sizeof(TYPE); }
@@ -61,7 +62,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @param type - the type to check for                               
       ///   @return true if this container has similar data                   
-      bool Is(T type) const noexcept {
+      bool Is(META type) const noexcept {
          return GetType().Is(type);
       }
       
@@ -92,7 +93,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores only cv-qualifiers                             
       ///   @param type - the type to check for                               
       ///   @return true if this block contains similar data                  
-      bool IsSimilar(T type) const noexcept {
+      bool IsSimilar(META type) const noexcept {
          return GetType().IsSimilar(type);
       }
 
@@ -121,7 +122,7 @@ namespace Langulus::Anyness::Component
       /// Check if this type is exactly another                               
       ///   @param type - the type to match                                   
       ///   @return true if data type matches type exactly                    
-      bool IsExact(T type) const noexcept {
+      bool IsExact(META type) const noexcept {
          return GetType().IsExact(type);
       }
 

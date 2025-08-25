@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Container.hpp"
+#include "../Allocator.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if managed memory is disabled"
@@ -16,14 +16,13 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Use the memory manager to extract the allocation from heap pointer     
-   /// Manage its ownership                                                   
+   /// Use the memory manager to extract the allocation from heap pointer.    
+   /// Manage its ownership.                                                  
    ///   @tparam ID - which heap are we keeping track of?                     
    ///   @tparam AUTO - whether ownership will be automatically used on       
    ///      construction/assignment. False if container is just a view, or in 
    ///      other cases where you want to carry an allocation pointer, but    
    ///      not necessarily reference it                                      
-   ///                                                                        
    template<unsigned ID = 0, bool AUTO = true>
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
@@ -31,14 +30,12 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = -1000;
 
       /// Get the allocation                                                  
-      template<CT::Container C>
-      auto GetAllocation(this const C& self) noexcept -> AllocationPtr {
-         return Allocator::Find(self.mType, *self.mSparseHeap);
+      auto GetAllocation(this auto const& self) noexcept -> AllocationPtr {
+         return Allocator::Find(self.GetType(), self.GetHeapInner());
       }
 
       /// Get the memory reference count                                      
-      template<CT::Container C>
-      auto GetUses(this const C& self) noexcept {
+      auto GetUses(this auto const& self) noexcept {
          auto allocation = self.GetAllocation();
          return allocation ? allocation->GetUses() : 0;
       }

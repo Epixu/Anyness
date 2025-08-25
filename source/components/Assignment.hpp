@@ -23,10 +23,10 @@ namespace Langulus::CT
 
    namespace Inner
    {
-      /// Test whether a TMany is assignable with the given argument          
-      ///   @tparam T - the contained type in TMany<T>                        
+      /// Test whether a container is assignable with the given argument      
+      ///   @tparam C - the container                                         
       ///   @tparam A - the argument to test                                  
-      ///   @return true if TMany<T> is assignable using = A                  
+      ///   @return true if you can assign A to the container                 
       template<Container C, class A>
       consteval bool DeepAssignable() noexcept {
          using SA = IntentOf<A>;
@@ -57,7 +57,7 @@ namespace Langulus::CT
       };
    }
 
-   /// Concept for recognizing argument, with which a statically typed        
+   /// Concept for recognizing argument with which a statically typed         
    /// container can be assigned                                              
    template<class C, class A>
    concept DeepAssignable = Inner::DeepAssignable<C, A>();
@@ -75,5 +75,8 @@ namespace Langulus::Anyness::Component
 
       template<CT::Container C, class A>
       void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
+      
+      template<CT::Container C, class A>
+      C& operator = (this C& self, A&&) requires CT::RangeAssignable<C, A>;
    };
 }

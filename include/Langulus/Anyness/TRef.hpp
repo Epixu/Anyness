@@ -36,8 +36,8 @@ namespace Langulus::Anyness
    ///   A statically typed shared pointer                                    
    ///                                                                        
    ///   Works fine with packed pointers as well. Has deep ownership, but no  
-   /// states are applied. You can use TAny instead if you want               
-   /// encryption/compression/linking.                                        
+   /// states are applied. You can use TAny instead if you want any           
+   /// combination of encryption, compression and linking.                    
    ///                                                                        
    template<CT::Sparse T>
    struct TRef : Inner::TRefBase<T> {
@@ -52,8 +52,29 @@ namespace Langulus::Anyness
 
       constexpr TRef(nullptr_t) noexcept {}
 
+      constexpr T Get() const has_assumptions { return &Base::Get(); }
+      
       constexpr bool operator == (nullptr_t) const noexcept {
-         return IsEmpty();
+         return this->IsEmpty();
+      }
+      
+      constexpr bool operator == (T rhs) const noexcept {
+         if (rhs == nullptr)
+            return this->IsEmpty();
+         return this->Get() == rhs;
+      }
+
+      constexpr TRef& operator = (T&& other) noexcept {
+         if (other == Get())
+            return *this;
+         
+         if (other) {
+            Base::FreeInner();
+            Base::SetHeapInner(other);
+            Base::FindAllocationInner();
+         }
+         else Base::Free();         
+         return *this;
       }
 
       ///                                                                     

@@ -72,16 +72,28 @@ namespace Langulus::Anyness::Component
          );
       }
       
+      /// Set allocation (inner)                                              
+      ///   @attention this will not dereference previous allocation          
       constexpr void SetAllocationInner(this auto& self, AllocationPtr a) noexcept {
          const_cast<AllocationPtr&>(self.GetAllocationInner()) = a;
       }
 
+      /// Automatically set the allocation by searching for it using the heap 
+      /// pointer. If allocation wasn't found, it will be set to nullptr.     
+      ///   @attention this will not dereference previous allocation          
+      void FindAllocationInner(this auto& self) noexcept {
+         auto found = Allocator::Find(self.GetType(), self.GetHeapInner());
+         self.SetAllocationInner(found ? found : nullptr);
+      }
+
       /// Default-initialize the component                                    
+      ///   @attention this will not dereference previous allocation          
       constexpr void ConstructDefault(this auto& self) noexcept {
          self.SetAllocationInner(nullptr);
       }
       
       /// Transfer from any kind of container, respecting intents             
+      ///   @attention this will not dereference previous allocation          
       ///   @param intent - the intent and container to transfer from         
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
