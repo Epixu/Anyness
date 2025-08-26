@@ -213,10 +213,10 @@ namespace Langulus::Anyness::Component
          static_assert(false, "Can't default-construct this component");
       }
       
-      /// Transfer from any kind of container                                 
+      /// Transfer from any kind of container.                                
       /// This is only a reference to a heap allocation and is not allowed    
       /// to allocate any new memory, so all this does is copy the heap       
-      /// pointer, ignoring any intents                                       
+      /// pointer, ignoring any intents.                                      
       ///   @param intent - the intent and container to transfer from         
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {

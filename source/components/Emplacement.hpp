@@ -28,8 +28,10 @@ namespace Langulus::CT
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Implements emplacement for containers                                  
-   ///   @tparam ID - heap we're inserting to                                 
+   /// Implements emplacement for containers.                                 
+   /// Unlike insertion, emplacement reuses the same memory space and         
+   /// guarantees that nothing moves around.                                  
+   ///   @tparam ID - heap we're emplacing to                                 
    template<unsigned ID = 0>
    struct Emplacement {
       using CTTI_Component = Yes<>;
@@ -42,7 +44,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using PickMut = typename Deref<C>::PickMut;
       
-      /// Emplace a new item at the first element, with or without an intent  
+      /// Emplace a new item at the first element using an intent             
       ///   @attention assumes destination memory has been preallocated,      
       ///      including all levels of indirection                            
       ///   @attention does not modify any container state                    
@@ -130,18 +132,65 @@ namespace Langulus::Anyness::Component
             IntentNew(self.GetRaw(), FWD(intent));
          }
       }
+      
+      /// Emplace a new default-constructed item at the first element         
+      ///   @attention assumes destination memory has been preallocated,      
+      ///      including all levels of indirection                            
+      ///   @attention does not modify any container state                    
+      ///   @attention this overwrites previous handle without dereferencing  
+      ///      it, and without destroying anything                            
+      template<CT::Container C>
+      void EmplaceDefault(this C& self) {
+         LglsAssumeDev(self.GetRaw(), "Invalid heap");
+         LglsAssumeDev(self.IsTyped(), "Invalid type");
+
+         if constexpr (C::TypeErased) {
+            //                                                          
+            // This container is type-erased                            
+            auto T = self.GetType();
+            T.GetDefaultConstructor()(self.GetRaw());
+         }
+         else {
+            //                                                          
+            // This container is statically-typed                       
+            using T = TypeOf<C>;
+            new (self.GetRaw()) T {};
+         }
+      }
 
    public:
-      /// Generic emplacement at specific index                               
+      /// Generic emplacement that constructs/overwrites specific element     
+      /// Any overwritten element will be dereferenced/destroyed first        
       template<CT::IndexedLinearly C, class...A>
       auto EmplaceAt(this C&, CT::Index auto, A&&...)
          -> PickMut<C> requires CT::RangeEmplaceable<C, A...>;
 
-      /// Generic emplacement at the first element                            
+      /// Generic emplacement that constructs/overwrites the first element    
+      /// Any overwritten element will be dereferenced/destroyed first        
       template<CT::Container C, class...A>
-      auto Emplace(this C&, A&&...) -> PickMut<C>
+      auto Emplace(this C& self, A&&...arguments) -> PickMut<C>
       requires CT::RangeEmplaceable<C, A...> {
-         
+         if (not self.IsEmpty()) {
+            // Destroy the first element                                
+            if constexpr (C::TypeErased) {
+               auto T = self.GetType();
+               T.GetDefaultConstructor()(self.GetRaw());
+            }
+            else {
+               using T = TypeOf<C>;
+               new (self.GetRaw()) T {};
+            }
+         }
+
+         self.AllocateMore(1);
+         if constexpr (sizeof...(A) == 0)
+            self.EmplaceDefault();
+         else
+            self.EmplaceConstruct(FWD(arguments)...);
+
+         if (self.IsEmpty())
+            self.SetCountInner(1);
+         return self.GetHandle();
       }
    };
 }

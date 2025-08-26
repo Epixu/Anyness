@@ -69,10 +69,12 @@ namespace Langulus::CT
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Implements insertion for containers                                    
+   /// Implements insertion for containers.                                   
+   /// Insertion (unlike emplacement) extents the memory space and may move   
+   /// things around. It guarantees that nothing gets overwritten.            
    ///   @tparam ID - heap we're inserting to                                 
    ///   @tparam AS - type to serialize as before inserting. Useful for byte  
-   ///      and text containers. Use void to insert without serialization     
+   ///      and text containers. Use void to insert without serialization.    
    template<unsigned ID = 0, class AS = void>
    struct Insertion {
       using CTTI_Component = Yes<>;
@@ -116,8 +118,9 @@ namespace Langulus::Anyness::Component
          -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
 
       /// Insert a number of elements at the back, nullifying them if able to 
+      ///   @param count - the number of elements to insert                   
       template<CT::Container C>
-      auto InsertNulled(this C&, Count<C>) -> Count<C>;
+      auto InsertNulled(this C&, Count<C> count) -> Count<C>;
 
       /// Insert a number of elements at the back, default-constructing them  
       ///   @param count - the number of elements to insert                   
@@ -203,10 +206,10 @@ namespace Langulus::Anyness::Component
 
       /// Extend the container's memory and return the newly allocated range  
       ///   @attention if extending memory without ownership, the container   
-      ///      will copy the data and diverge into a new allocation           
+      ///      will diverge into a new allocation and copy the data           
       ///   @param count - the number of elements to extend by                
       ///   @param arguments - the arguments to use for each constructor call 
-      ///      no arguments will result in default construction               
+      ///      - no arguments will result in default construction             
       ///   @return the newly allocated mutable range                         
       template<CT::Container C, class...A>
       auto Extend(this C& self, Count<C> count = 1, A&&...arguments)
@@ -215,7 +218,7 @@ namespace Langulus::Anyness::Component
          if constexpr (sizeof...(A) == 0)
             self.InsertDefault(count);
          else if (count == 1)
-            self.Emplace(FWD(arguments)...);
+            self.InsertConstruct(FWD(arguments)...);
          else {
             LglsAssert(
                ((not IntentOf<decltype(arguments)>::IsMoved()) and ...),
@@ -225,7 +228,7 @@ namespace Langulus::Anyness::Component
             
             self.AllocateMore(previousCount + count);
             for (Count<C> i = 0; i < count; i++)
-               self.Emplace(FWD(arguments)...);
+               self.InsertConstruct(FWD(arguments)...); //TODO this is a pretty slow way to batch-insert, lots of overhead
          }
          return self.SelectInner(previousCount, count);
       }
