@@ -114,7 +114,8 @@ namespace Langulus::Anyness::Component
       constexpr auto& Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>, "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
-         using TT = DecvqAll<Tif<CT::Void<T>, TypeOf<C>, T>>;
+         using TT = Tif<CT::Void<T>, TypeOf<C>, T>;
+         using TTC = Tif<CT::Mutable<C>, TT, TT const>;
          auto& mHeap = self.GetHeapInner();
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        
@@ -128,30 +129,30 @@ namespace Langulus::Anyness::Component
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TT>)
-                  return **static_cast<TT**>(mHeap);
+                  return **static_cast<TTC**>(mHeap);
                else
-                  return  *static_cast<TT* >(mHeap);
+                  return  *static_cast<TTC* >(mHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
-                  return *static_cast<TT*>( mHeap);
+                  return *static_cast<TTC*>( mHeap);
                else
-                  return *static_cast<TT*>(&mHeap);
+                  return *static_cast<TTC*>(&mHeap);
             }
          }
          else {
             // Casting to a desired static type                         
             if constexpr (Deref<C>::Sparse) {
                if constexpr (CT::Dense<TT>)
-                  return **static_cast<TT**>(mHeap);
+                  return **static_cast<TTC**>(mHeap);
                else
-                  return  *static_cast<TT* >(mHeap);
+                  return  *static_cast<TTC* >(mHeap);
             }
             else {
                if constexpr (CT::Dense<TT>)
-                  return *static_cast<TT*>( mHeap);
+                  return *static_cast<TTC*>( mHeap);
                else
-                  return *static_cast<TT*>(&mHeap);
+                  return *static_cast<TTC*>(&mHeap);
             }
          }
       }

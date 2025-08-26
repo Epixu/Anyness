@@ -8,14 +8,14 @@
 #pragma once
 #include "../Container.hpp"
 #include "Indexed-Linear.hpp"
-#include <Langulus/CT/Allocatable.hpp>
-#include <Langulus/CT/Resolvable.hpp>
+//#include <Langulus/CT/Allocatable.hpp>
+//#include <Langulus/CT/Resolvable.hpp>
 
 
 namespace Langulus::CT
 {
    /// Check if container's elements are emplaceable using the provided       
-   /// argument list. Use empty list to test if default-constructible         
+   /// argument list. Use empty list to test if default-constructible.        
    ///   @attention type-erased elements are always emplaceable, because      
    ///      all arguments will be encapsulated in a descriptor, and will fail 
    ///      at runtime if not reflected as descriptor-constructible           
@@ -30,7 +30,6 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Implements emplacement for containers                                  
    ///   @tparam ID - heap we're inserting to                                 
-   ///                                                                        
    template<unsigned ID = 0>
    struct Emplacement {
       using CTTI_Component = Yes<>;
@@ -133,14 +132,16 @@ namespace Langulus::Anyness::Component
       }
 
    public:
-      /// Emplacement at specific index                                       
+      /// Generic emplacement at specific index                               
       template<CT::IndexedLinearly C, class...A>
       auto EmplaceAt(this C&, CT::Index auto, A&&...)
          -> PickMut<C> requires CT::RangeEmplaceable<C, A...>;
 
-      /// Generic emplacement                                                 
+      /// Generic emplacement at the first element                            
       template<CT::Container C, class...A>
-      auto Emplace(this C&, A&&...)
-         -> PickMut<C> requires CT::RangeEmplaceable<C, A...>;
+      auto Emplace(this C&, A&&...) -> PickMut<C>
+      requires CT::RangeEmplaceable<C, A...> {
+         
+      }
    };
 }

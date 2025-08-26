@@ -12,13 +12,13 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Keep a pointer to the heap allocation as a member                      
-   /// Manage its ownership                                                   
+   /// Keep a pointer to the heap allocation as a member.                     
+   /// Manage its ownership.                                                  
    ///   @tparam ID - which heap are we keeping track of?                     
    ///   @tparam AUTO - whether ownership will be automatically applied on    
    ///      construction, reassignment and destruction. False if container is 
    ///      just a view, or in other cases where you want to carry an         
-   ///      allocation pointer, but not necessarily reference it              
+   ///      allocation pointer, but not necessarily reference it.             
    template<unsigned ID = 0, bool AUTO = true>
    struct OwnershipStack {
       using CTTI_Component = Yes<>;
@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Shallow-copy all initialized elements in memory to another          
-      /// allocation, that is owned once only by this container               
+      /// allocation, that is owned once only by this container.              
       ///   @attention if we already own the memory just Keep() it once       
       template<CT::Container C> requires C::HeapAllocated   
       void TakeOwnership(this C& self) {
@@ -66,6 +66,7 @@ namespace Langulus::Anyness::Component
       friend struct Removal;
 
       /// Get allocation (inner)                                              
+      ///   @attention may be uninitialized                                   
       constexpr auto& GetAllocationInner(this auto const& self) noexcept {
          return *reinterpret_cast<AllocationPtr const*>(
             self.mStack + self.template StackOffset<OwnershipStack>
@@ -83,7 +84,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this will not dereference previous allocation          
       void FindAllocationInner(this auto& self) noexcept {
          auto found = Allocator::Find(self.GetType(), self.GetHeapInner());
-         self.SetAllocationInner(found ? found : nullptr);
+         self.SetAllocationInner(found ? const_cast<AllocationPtr>(found) : nullptr);
       }
 
       /// Default-initialize the component                                    
@@ -139,9 +140,9 @@ namespace Langulus::Anyness::Component
          }
       }
       
-      /// Reference memory block once                                         
+      /// Reference memory block once.                                        
       /// If container has DeepOwnership component, all elements will be      
-      /// referenced as well, if they're CT::Referenced                       
+      /// referenced as well, if they're CT::Referenced.                      
       void Keep(this auto const& self) noexcept {
          auto& a = self.GetAllocationInner();
          if (not a)
@@ -157,7 +158,7 @@ namespace Langulus::Anyness::Component
       /// Dereference memory block once and destroy all elements if data was  
       /// fully dereferenced. If container has DeepOwnership component, all   
       /// elements will be individually dereferenced as well, if they are     
-      /// CT::Referenced                                                      
+      /// CT::Referenced.                                                     
       ///   @attention this never modifies any state except ownership,        
       ///      effectively making the data disowned (and constant) after this 
       void Free(this auto& self) noexcept {

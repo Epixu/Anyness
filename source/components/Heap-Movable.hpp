@@ -89,8 +89,6 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this C& self, I&& intent) {
          using IT = Decay<TypeOf<I>>;
          decltype(auto) from = FWD(intent.what);
-         const auto count = from.GetCount();
-         auto type = from.GetType();
 
          if constexpr (I::IsShallow()) {
             // Move/Copy/Refer/Abandon/Disown other                     
@@ -98,45 +96,55 @@ namespace Langulus::Anyness::Component
                // Move/Copy/Refer other                                 
                if constexpr (I::IsMoved()) {
                   // Move                                               
-                  self.SetType(type);
+                  self.SetType(from.GetType());
                   self.SetHeapInner(from.GetHeapInner());
                   if constexpr (requires { self.mReserved; })
                      self.mReserved = from.GetReserved();
-                  self.SetCountInner(count);
-                  self.SetHashInner(from.GetHashInner());
+                  if constexpr (requires { self.SetCountInner(from.GetCount()); })
+                     self.SetCountInner(from.GetCount());
+                  if constexpr (requires { self.SetHashInner(from.GetHashInner()); })
+                     self.SetHashInner(from.GetHashInner());
 
                   if constexpr (IT::Owned) {
                      from.SetHeapInner(nullptr);
                      if constexpr (requires { from.mReserved; })
                         from.mReserved = 0;
-                     from.SetCountInner(0);
+                     if constexpr (requires { from.SetCountInner(0); })
+                        from.SetCountInner(0);
                      if constexpr (requires { from.ResetState(); })
                         from.ResetState();
-                     from.ResetType();
-                     from.ResetHash();
+                     if constexpr (requires { from.ResetType(); })
+                        from.ResetType();
+                     if constexpr (requires { from.ResetHash(); })
+                        from.ResetHash();
                   }
                }
                else {
                   // Copy/Refer other                                   
                   if constexpr (CT::Referred<I>) {
                      // Refer                                           
-                     self.SetType(type);
+                     self.SetType(from.GetType());
                      self.SetHeapInner(from.GetHeapInner());
                      if constexpr (requires { self.mReserved; })
                         self.mReserved = from.GetReserved();
-                     self.SetCountInner(count);
-                     self.SetHashInner(from.GetHashInner());
+                     if constexpr (requires { self.SetCountInner(from.GetCount()); })
+                        self.SetCountInner(from.GetCount());
+                     if constexpr (requires { self.SetHashInner(from.GetHashInner()); })
+                        self.SetHashInner(from.GetHashInner());
                   }
                   else {
                      // Do a shallow copy                               
                      // We're cloning first layer, so we guarantee,     
                      // that data is no longer static and constant      
                      // at first level of indirection                   
-                     type = type.GetDecvq();
+                     auto type = from.GetType().GetDecvq();
                      self.SetType(type);
+                     auto count = from.GetCount();
                      if (0 == count) {
-                        self.SetCountInner(0);
-                        self.SetHashInner(1);
+                        if constexpr (requires { self.SetCountInner(0); })
+                           self.SetCountInner(0);
+                        if constexpr (requires { self.SetHashInner(1); })
+                           self.SetHashInner(1);
                         return;
                      }
 
@@ -175,30 +183,24 @@ namespace Langulus::Anyness::Component
                   }
                }
             }
-            /*else if constexpr (I::IsMoved()) {
-               // Abandon                                               
-               self.SetType(type);
-               self.SetHeapInner(from.GetHeapInner());
-               if constexpr (requires { self.mReserved; })
-                  self.mReserved = from.GetReserved();
-               self.SetCountInner(count);
-               self.SetHashInner(from.GetHashInner());
-            }*/
             else {
                // Abandon/Disown                                        
-               self.SetType(type);
+               self.SetType(from.GetType());
                self.SetHeapInner(from.GetHeapInner());
                if constexpr (requires { self.mReserved; })
                   self.mReserved = from.GetReserved();
-               self.SetCountInner(count);
-               self.SetHashInner(from.GetHashInner());
+               if constexpr (requires { self.SetCountInner(from.GetCount()); })
+                  self.SetCountInner(from.GetCount());
+               if constexpr (requires { self.SetHashInner(from.GetHashInner()); })
+                  self.SetHashInner(from.GetHashInner());
             }
          }
          else {
             // We're cloning, so we guarantee, that data is no longer   
             // constant at any level of indirection                     
-            type = type.GetDecvqAll();
+            auto type = from.GetType().GetDecvqAll();
             self.SetType(type);
+            auto count = from.GetCount();
             if (0 == count) {
                self.SetCountInner(0);
                self.SetHashInner(1);
