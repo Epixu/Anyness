@@ -158,6 +158,37 @@ namespace Langulus::Anyness::Component
          }
       }
 
+      /// Emplace a new manually constructed item at the first element        
+      /// If zero arguments were provided, this will EmplaceDefault           
+      /// When C is type-erased, this will perform a describe-construction    
+      ///   @attention assumes destination memory has been preallocated,      
+      ///      including all levels of indirection                            
+      ///   @attention does not modify any container state                    
+      ///   @attention this overwrites previous handle without dereferencing  
+      ///      it, and without destroying anything                            
+      template<CT::Container C>
+      void EmplaceConstruct(this C& self, auto&&...arguments) {
+         if constexpr (sizeof...(arguments) == 0)
+            self.EmplaceDefault();
+         else {
+            LglsAssumeDev(self.GetRaw(), "Invalid heap");
+            LglsAssumeDev(self.IsTyped(), "Invalid type");
+
+            if constexpr (C::TypeErased) {
+               //                                                       
+               // This container is type-erased                         
+               auto T = self.GetType();
+               T.GetDescribeConstructor()(self.GetRaw(), {FWD(arguments)...});
+            }
+            else {
+               //                                                       
+               // This container is statically-typed                    
+               using T = TypeOf<C>;
+               new (self.GetRaw()) T {FWD(arguments)...};
+            }
+         }
+      }
+
    public:
       /// Generic emplacement that constructs/overwrites specific element     
       /// Any overwritten element will be dereferenced/destroyed first        
@@ -170,23 +201,12 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class...A>
       auto Emplace(this C& self, A&&...arguments) -> PickMut<C>
       requires CT::RangeEmplaceable<C, A...> {
-         if (not self.IsEmpty()) {
-            // Destroy the first element                                
-            if constexpr (C::TypeErased) {
-               auto T = self.GetType();
-               T.GetDefaultConstructor()(self.GetRaw());
-            }
-            else {
-               using T = TypeOf<C>;
-               new (self.GetRaw()) T {};
-            }
-         }
-
-         self.AllocateMore(1);
-         if constexpr (sizeof...(A) == 0)
-            self.EmplaceDefault();
+         if (self.IsEmpty())
+            self.AllocateMore(1);
          else
-            self.EmplaceConstruct(FWD(arguments)...);
+            self.DestroyElement();
+         
+         self.EmplaceConstruct(FWD(arguments)...);
 
          if (self.IsEmpty())
             self.SetCountInner(1);

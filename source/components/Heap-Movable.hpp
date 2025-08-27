@@ -32,7 +32,9 @@ namespace Langulus::Anyness::Component
       friend struct IterationOperators;
       template<unsigned, class AS>
       friend struct Insertion;
-
+      template<unsigned>
+      friend struct Emplacement;
+      
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
       template<CT::Container C>

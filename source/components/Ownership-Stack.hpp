@@ -11,6 +11,61 @@
 
 namespace Langulus::Anyness::Component
 {
+   namespace Inner
+   {
+      /// Nest-dereference/destroy an element on the heap                     
+      void DestroyElementDeep(auto* ptr, DMeta type, Allocation const* entry) has_assumptions {
+         LglsAssumeDevAndOptimize(ptr, "No heap");
+         LglsAssumeDev(type, "No type");
+         
+         if (type.IsSparse()) {
+            LglsAssumeDevAndOptimize(entry, "No entry");
+            
+            auto subType = type.GetDeptr();
+            if (1 == entry->GetUses()) {
+               // This is the last occurence of that element            
+               if (subType.IsSparse()) {
+                  // Pointer to pointer                                 
+                  // Release all nested indirection layers              
+                  void* subPtr = *static_cast<void**>(ptr); //TODO this won't work for packed pointers
+                  if (auto subEntry = Allocator::Find(subType, subPtr))
+                     DestroyElementDeep(subPtr, subType, subEntry);
+               }
+               else if (subType.GetDestructor()) {
+                  // Pointer to a complete, destroyable dense           
+                  // Call the destructor                                
+                  if (subType.GetReferencer()) {
+                     if (subType.GetReferencer()(ptr, -1) == 0)
+                        subType.GetDestructor()(ptr);
+                  }
+                  else subType.GetDestructor()(ptr);
+               }
+
+               Allocator::Deallocate(const_cast<Allocation*>(entry));
+            }
+            else {
+               // This element occurs in more than one place.           
+               // We're not allowed to deallocate the memory behind it, 
+               // but we must call destructors if T is referencable and 
+               // its individual references have reached 0. This can    
+               // happen when hive elements are dereferenced.           
+               if (not subType.IsSparse() and type.GetReferencer()) {
+                  if (type.GetReferencer()(ptr, -1) == 0)
+                     type.GetDestructor()(ptr);
+               }
+
+               const_cast<Allocation*>(entry)->Free();
+            }
+         }
+         else if (type.GetDestructor()) {
+            // Call destructor of dense element                         
+            if (type.GetReferencer())
+               type.GetReferencer()(ptr, -1);
+            type.GetDestructor()(ptr);
+         }
+      }
+   }
+   
    ///                                                                        
    /// Keep a pointer to the heap allocation as a member.                     
    /// Manage its ownership.                                                  
@@ -203,101 +258,65 @@ namespace Langulus::Anyness::Component
       void Destroy(this auto& self) noexcept requires AUTO {
          self.FreeInner();
       }
-
+      
       /// Dereference, and eventually destroy the first element               
       ///   @attention assumes first element is validly constructed           
       ///   @attention does not modify any container state                    
-      template<CT::Container C>
+      template<bool RESET, CT::Container C>
       void DestroyElement(this C& self) {
-         if constexpr (TypeErased) {
-            LANGULUS_ASSUME(DevAssumes, meta,
-               "Invalid type provided for type-erased handle");
-
-            if constexpr (Sparse) {
-               // Handle is sparse, we should handle each indirection layer
-               LANGULUS_ASSUME(DevAssumes, meta->mIsSparse,
-                  "Provided meta must match T sparseness");
-
-               if (GetEntry()) {
-                  if (1 == GetEntry()->GetUses()) {
-                     // This is the last occurence of that element         
-                     LANGULUS_ASSUME(DevAssumes, Get(), "Null pointer");
-
-                     if (meta->mDeptr->mIsSparse) {
-                        // Pointer to pointer                              
-                        // Release all nested indirection layers           
-                        HandleLocal<void*> {Get()}.FreeInner(meta->mDeptr);
-                     }
-                     else if (meta->mDestructor) {
-                        // Pointer to a complete, destroyable dense        
-                        // Call the destructor                             
-                        if (meta->mReference) {
-                           if (meta->mReference(Get(), -1) == 0)
-                              meta->mDestructor(Get());
-                        }
-                        else meta->mDestructor(Get());
-                     }
-
-                     if constexpr (DEALLOCATE)
-                        Allocator::Deallocate(const_cast<Allocation*>(GetEntry()));
-                  }
-                  else {
-                     // This element occurs in more than one place         
-                     // We're not allowed to deallocate the memory behind  
-                     // it, but we must call destructors if T is           
-                     // referencable, and its individual references have   
-                     // reached 0. This usually happens when elements from 
-                     // a THive are referenced.                            
-                     if (not meta->mDeptr->mIsSparse and meta->mReference) {
-                        if (meta->mReference(Get(), -1) == 0)
-                           meta->mDestructor(Get());
-                     }
-
-                     const_cast<Allocation*>(GetEntry())->Free();
-                  }
+         if constexpr (C::TypeErased) {
+            auto T = self.GetType();
+            if (T.IsSparse()) {
+               auto& ptr = *self.template GetRawAs<void*>();
+               auto& entry = self.GetEntry();
+               if (entry) {
+                  Inner::DestroyElementDeep(ptr, T, entry);
+                  if constexpr (RESET)
+                     entry = nullptr;
                }
-
-               if constexpr (RESET) {
-                  // Handle is dense and embedded, we should call remote   
-                  // destructor, but don't touch the entry, its irrelevant 
-                  const_cast<Type&>(Get()) = nullptr;
-                  const_cast<AllocType&>(GetEntry()) = nullptr;
-               }
+               if constexpr (RESET)
+                  ptr = nullptr;
+            }
+            else if (T.GetDestructor()) {
+               // Call destructor of dense element                      
+               if (T.GetReferencer())
+                  T.GetReferencer()(self.GetRaw(), -1);
+               T.GetDestructor()(self.GetRaw());
             }
          }
          else {
+            using T = TypeOf<C>;
             using DT = Decay<T>;
-
-            if constexpr (Sparse) {
-               // Handle is sparse, we should handle each indirection layer
-               if (GetEntry()) {
-                  if (1 == GetEntry()->GetUses()) {
-                     // This is the last occurence of that element         
-                     LANGULUS_ASSUME(DevAssumes, Get(), "Null pointer");
+            if constexpr (CT::Sparse<T>) {
+               auto& ptr = *self.template GetRawAs<T>();
+               auto& entry = self.GetEntry();
+               if (entry) {
+                  if (1 == entry->GetUses()) {
+                     // This is the last occurence of that element      
+                     LglsAssumeDev(ptr, "Null pointer");
 
                      if constexpr (CT::Sparse<Deptr<T>>) {
-                        // Pointer to pointer                              
-                        // Release all nested indirection layers           
-                        HandleLocal<Deptr<T>> {*Get()}.FreeInner();
+                        // Pointer to pointer                           
+                        // Release all nested indirection layers        
+                        THandle {*ptr}.template DestroyElement<false>();
                      }
-                     else if constexpr (not CT::Complete<DT> and not CT::Function<DT>) {
-                        // CT::Destroyable<DT> will fail silently if DT    
-                        // isn't defined yet, causing nasty leaks. So make 
-                        // it not-so-silent...                             
+                     /*else if constexpr (not CT::Complete<DT> and not CT::Function<DT>) {
+                        // CT::Destroyable<DT> will fail silently if DT 
+                        // isn't defined yet, causing nasty leaks. So   
+                        // make it not-so-silent...                     
                         static_assert(false, "Attempting to destroy an incomplete type");
-                     }
+                     }*/
                      else if constexpr (CT::Destroyable<DT>) {
-                        // Pointer to a complete, destroyable dense        
-                        // Call the destructor                             
-                        if constexpr (CT::Referencable<DT>) {
-                           if (DecvqCast(Get())->Reference(-1) == 0)
-                              Get()->~DT();
+                        // Pointer to a complete, destroyable dense     
+                        // Call the destructor                          
+                        if constexpr (CT::Referenced<DT>) {
+                           if (ptr->Reference(-1) == 0)
+                              ptr->~DT();
                         }
-                        else Get()->~DT();
+                        else ptr->~DT();
                      }
 
-                     if constexpr (DEALLOCATE)
-                        Allocator::Deallocate(const_cast<Allocation*>(GetEntry()));
+                     Allocator::Deallocate(entry);
                   }
                   else {
                      // This element occurs in more than one place         
@@ -306,37 +325,33 @@ namespace Langulus::Anyness::Component
                      // referencable, and its individual references have   
                      // reached 1. This usually happens when elements from 
                      // a THive are referenced.                            
-                     if constexpr (CT::Dense<Deptr<T>> and CT::Referencable<DT>) {
-                        if (DecvqCast(Get())->Reference(-1) == 0)
-                           Get()->~DT();
+                     if constexpr (CT::Dense<Deptr<T>> and CT::Referenced<DT>) {
+                        if (ptr->Reference(-1) == 0)
+                           ptr->~DT();
                      }
 
-                     const_cast<Allocation*>(GetEntry())->Free();
+                     entry->Free();
                   }
                }
 
                if constexpr (RESET) {
-                  const_cast<Type&>(Get()) = nullptr;
-                  const_cast<AllocType&>(GetEntry()) = nullptr;
+                  ptr = nullptr;
+                  entry = nullptr;
                }
             }
-            else if constexpr (not CT::Complete<DT> and not CT::Function<DT>) {
+            /*else if constexpr (not CT::Complete<DT> and not CT::Function<DT>) {
                // CT::Destroyable<DT> will fail silently if DT isn't       
                // defined yet, causing nasty leaks. So make it             
                // not-so-silent...                                         
                static_assert(false, "Attempting to destroy an incomplete type");
-            }
-            else if constexpr (EMBED and CT::Destroyable<DT>) {
-               // Handle is dense and embedded, we should call the remote  
-               // destructor, but don't touch the entry, its irrelevant    
-               //TODO the function above states that this does nothing if dense, but apparently that isn't true
-               // firgure it out!
-               if constexpr (CT::Referencable<DT>)
-                  Get().Reference(-1);
-               Get().~DT();
+            }*/
+            else if constexpr (CT::Destroyable<DT>) {
+               // Call destructor of dense element                      
+               if constexpr (CT::Referenced<DT>)
+                  self.Get().Reference(-1);
+               self.Get().~DT();
             }
          }
       }
-
    };
 }
