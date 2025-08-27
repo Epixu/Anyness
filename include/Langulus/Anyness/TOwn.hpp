@@ -24,8 +24,8 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid T>
    struct TOwn : Container<
-      Com::Stack<T>,                   // Element on the stack          
       Com::TypedStatic<DMeta, T>,      // Statically typed              
+      Com::Stack<T>,                   // Element on the stack          
       Com::Assignment<>,               // Allows for reassignment       
       Com::Comparison                  // Can be compared               
    > {};

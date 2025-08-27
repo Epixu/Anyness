@@ -27,6 +27,7 @@ namespace Langulus::Anyness::Component
       static_assert(COUNT > 0, "Can't have a container of zero or negative count");
       using CTTI_Component = Yes<>;
       using CountType = decltype(COUNT);
+      using ReserveType = CountType;
       using IndexType = Index::At<CountType>;
       static constexpr int ComponentPrecedence = 1000;
 
@@ -45,6 +46,11 @@ namespace Langulus::Anyness::Component
       /// Explicit boolean conversion to allow using containers in ifs        
       constexpr explicit operator bool(this auto const& self) noexcept {
          return self.GetCount() != CountType {};
+      }
+
+      /// Static count means static reserve                                   
+      constexpr auto GetReserved(this auto const& self) noexcept -> CountType {
+         return self.GetCountInner();
       }
 
    protected:

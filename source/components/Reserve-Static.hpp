@@ -20,17 +20,10 @@ namespace Langulus::Anyness::Component
       using ReserveType = decltype(SIZE);
       static constexpr int ComponentPrecedence = 1000;
 
-      static_assert(SIZE > 0, "Can't have a container of zero or negative capacity");
+      static_assert(SIZE > 0,
+         "Can't have a container of zero or negative capacity");
 
       /// Get the number of reserved (maybe uninitialized) elements           
-      ///   @return the number of reserved (maybe uninitialized) elements     
       constexpr auto GetReserved() const noexcept { return SIZE; }
-
-   protected:
-      template<unsigned>
-      friend struct HeapMovable;
-
-      /// Set number of reserved elements is impossible - it's at compile-time
-      constexpr void SetReserved(ReserveType) const noexcept { LANGULUS(NOOP); }
    };
 }

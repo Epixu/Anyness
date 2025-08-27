@@ -204,13 +204,16 @@ namespace Langulus::Anyness::Component
          if (self.IsEmpty())
             self.AllocateMore(1);
          else
-            self.DestroyElement();
+            self.template DestroyElement<false>();
          
          self.EmplaceConstruct(FWD(arguments)...);
 
-         if (self.IsEmpty())
-            self.SetCountInner(1);
-         return self.GetHandle();
+         if constexpr (requires { self.SetCountInner(1); }) {
+            if (self.IsEmpty())
+               self.SetCountInner(1);
+         }
+
+         return self.template GetAs<PickMut<C>>();
       }
    };
 }

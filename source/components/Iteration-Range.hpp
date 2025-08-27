@@ -18,7 +18,7 @@ namespace Langulus::Anyness
    ///   A weightless 'end' iterator helper type                              
    ///                                                                        
    /// Used to return from container's end() methods. It only compares        
-   /// equal to other iterators if they have reached their end marker         
+   /// equal to other iterators if they have reached their end marker.        
    ///                                                                        
    struct IteratorEnd final {
       using CTTI_Iterator  = Yes<>;
@@ -30,7 +30,7 @@ namespace Langulus::Anyness
    ///   Reverse iteration adapter                                            
    ///                                                                        
    /// Use like this: for(auto i : IterateInReverse(container)), where        
-   /// 'container' can be any range, including a std one                      
+   /// 'container' can be any range, including std one.                       
    ///                                                                        
    template<::std::ranges::range C>
    struct IterateInReverse {
@@ -49,75 +49,13 @@ namespace Langulus::Anyness
 
 
    ///                                                                        
-   ///   Iterate multiple containers with the same ranged-for                 
-   ///                                                                        
-   /// Use like this: for(auto i : IterateTogether(pack1, pack2)), where      
-   /// 'packN' can be any range, including a std one. You can retrieve the    
-   /// current element by using i[N], or i.one() i.two() for the first two    
-   ///                                                                        
-   template<::std::ranges::range...C>
-   struct IterateTogether {
-      static_assert(sizeof...(C) > 1,
-         "IterateTogether needs at least two containers");
-
-      using CTTI_ReflectAs = void;
-      ::std::tuple<C&...> range;
-
-      explicit constexpr IterateTogether(C&...a) noexcept : range {a...} {}
-
-      /// A single combined iterator                                          
-      struct Iterator {
-         using CTTI_Iterator  = Yes<>;
-         using CTTI_ReflectAs = void;
-
-      protected:
-         using T = ::std::tuple<decltype(Fake<C>().begin())...>;
-         T mIt;
-
-      public:
-         decltype(auto) one() noexcept { return ::std::get<0>(mIt); }
-         decltype(auto) two() noexcept { return ::std::get<1>(mIt); }
-
-         Iterator() = delete;
-         constexpr Iterator(Iterator const&) noexcept = default;
-         constexpr Iterator(Iterator&&) noexcept = default;
-         /*explicit*/ constexpr Iterator(const T& it) noexcept : mIt {it} {}
-
-         bool operator == (const Iterator& rhs) const noexcept {
-            return mIt == rhs.mIt;
-         }
-         bool operator == (const IteratorEnd&) const noexcept {
-            return mIt == IteratorEnd {};
-         }
-
-         Iterator& operator *  () const noexcept { return *this; }
-         Iterator& operator -> () const noexcept { return *this; }
-
-         Iterator& operator ++ ()    noexcept { ++mIt; return *this; }
-         Iterator  operator ++ (int) noexcept { return mIt++; }
-      };
-
-      Iterator begin() {
-         return ::std::apply([](auto&...i) { return Iterator {{i.begin()...}}; }, range);
-      }
-
-      Iterator end() {
-         return ::std::apply([](auto&...i) { return Iterator {{i.end()...}}; }, range);
-      }
-   };
-   
-   template<::std::ranges::range...C>
-   IterateTogether(C&...) -> IterateTogether<C...>;
-
-
-   ///                                                                        
    ///   Keep iterator when using ranged-for                                  
    ///                                                                        
    /// When doing for(auto i : container), the statement always               
    /// dereferences the iterator and 'i' always ends up with the contained    
-   /// type - counteract this, and make 'i' be the iterator type instead      
+   /// type. Counteract this, and make 'i' be the iterator type instead.      
    /// Use like this: for(auto i : IterateNoDeref(container)), where          
-   /// 'container' can be any range, including a std one                      
+   /// 'container' can be any range, including std one                        
    ///                                                                        
    template<::std::ranges::range C>
    struct IterateNoDeref {
@@ -162,80 +100,6 @@ namespace Langulus::Anyness
 
    template<::std::ranges::range C>
    IterateNoDeref(C&) -> IterateNoDeref<C>;
-
-
-   ///                                                                        
-   ///   Iterate using handles                                                
-   ///                                                                        
-   /// When doing for(auto i : container), the statement always uses the most 
-   /// optimal iteration approach, but often you want to be able to modify    
-   /// values in-place while iterating.                                       
-   /// Use like this: for(auto i : IterateHandles(container)), where          
-   /// 'container' can be any anyness container                               
-   ///                                                                        
-   template<CT::Container C>
-   struct IterateHandles {
-      static_assert(CT::NoIntent<C>, "C can't have an intent");
-      static_assert(CT::NotReference<C>, "C can't be a reference");
-
-      using CTTI_ReflectAs = void;
-
-      C& range;
-
-      explicit constexpr IterateHandles(C& a) noexcept : range {a} {}
-
-   private:
-      using Count = typename Deref<C>::CountType;
-
-   public:
-      /// The iterator                                                        
-      struct Iterator {
-         using CTTI_Iterator  = Yes<>;
-         using CTTI_ReflectAs = void;
-
-      protected:
-         using H = decltype(Fake<C>().GetHandle());
-         mutable H mIt;
-         C const& mRange;
-
-      public:
-         Iterator() = delete;
-         constexpr Iterator(Iterator const&) noexcept = default;
-         constexpr Iterator(Iterator&&) noexcept = default;
-         /*explicit*/ constexpr Iterator(H&& it, const C& range) noexcept
-            : mIt    {FWD(it)}
-            , mRange {range} {}
-
-         constexpr bool operator == (const Iterator& rhs) const noexcept {
-            return mIt.GetRaw() == rhs.mIt.GetRaw();
-         }
-
-         constexpr bool operator == (const IteratorEnd&) const noexcept {
-            return mIt.GetRaw() == mRange.GetRawEnd();
-         }
-
-         H& operator *  () const noexcept { return  mIt; }
-         H* operator -> () const noexcept { return &mIt; }
-
-         Iterator& operator ++ ()    noexcept { ++mIt; return *this; }
-         Iterator  operator ++ (int) noexcept { return {mIt++, mRange}; }
-
-         /// Get the integer element difference between two iterators         
-         Count operator - (const Iterator& rhs) const noexcept {
-            const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
-            if constexpr (C::TypeErased)
-               return static_cast<Count>(range / mRange.GetStride());
-            else
-               return static_cast<Count>(range);
-         }
-      };
-
-      constexpr Iterator    begin() const noexcept { return {range.GetHandle(), range}; }
-      constexpr IteratorEnd end  () const noexcept { return {}; }
-   };
-
-   template<CT::Container C>
-   IterateHandles(C&) -> IterateHandles<C>;
 
 
    ///                                                                        
@@ -300,8 +164,10 @@ namespace Langulus::Anyness
          Iterator  operator ++ (int) noexcept { return {mIt++, mRange}; }
       };
 
-      constexpr Iterator       begin() const noexcept { return Iterator {range.begin()}; }
-      constexpr decltype(auto) end  () const noexcept { return range.end(); }
+      constexpr Iterator begin() const noexcept {
+         return Iterator {range.begin()};
+      }
+      constexpr decltype(auto) end() const noexcept { return range.end(); }
    };
 
    template<CT::Container C>

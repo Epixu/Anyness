@@ -104,11 +104,12 @@ namespace Langulus::Anyness::Component
             return self.template GetRawAs<uint8_t>() + self.GetBytesize();
       }
     
-      /// Get first element pointer or reference, depending on T              
-      /// This is a lower-level routine that does only sparseness checking    
-      /// No conversion or copying occurs, only pointer arithmetic            
+      /// Get reference to first element as sparse or dense, depending on T.  
+      /// This is a lower-level routine that does only sparseness checking.   
+      /// No conversion or copying occurs, only pointer arithmetic.           
       ///   @attention assumes the container is typed                         
-      ///   @tparam T - the type of data we're accessing                      
+      ///   @attention assumes the container is allocated                     
+      ///   @tparam T - the type of data we're accessing -                    
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
       constexpr auto& Get(this C&& self) has_assumptions {
@@ -117,6 +118,7 @@ namespace Langulus::Anyness::Component
          using TT = Tif<CT::Void<T>, TypeOf<C>, T>;
          using TTC = Tif<CT::Mutable<C>, TT, TT const>;
          auto& mHeap = self.GetHeapInner();
+
          if constexpr (CT::Void<TT>) {
             // Type-erased reference, no casting                        
             if (self.IsSparse())
@@ -157,54 +159,41 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Return a handle to the first element                                
+      /// Get first element as a handle, or any desired wrapping type         
       ///   @attention assumes T is of proper sparseness if not void          
-      ///   @tparam T - the type of data we're accessing                      
-      ///      use void to use the type of the container, if statically typed 
-      template<class T = void, CT::Container C>
-      auto GetHandle(this C&& self) has_assumptions {
-         static_assert(not CT::Handle<T>, "T can't be a handle");
-         static_assert(not CT::Reference<T>, "Strip references");
-         using DC = Deref<C>;
-         using TT = Tif<CT::Void<T>, TypeOf<DC>, T>;
+      ///   @tparam T - the type we're wrapping in                            
+      template<class T, CT::Container C>
+      T GetAs(this C&& self) has_assumptions {
+         if constexpr (CT::Handle<T>) {
+            static_assert(not CT::Reference<T>, "Strip references first");
 
-         if constexpr (CT::Void<TT>) {
-            // Type-erased handle                                       
-            if constexpr (CT::DeeplyOwned<DC>) {
-               // C is deeply owned, so each sparse element is coupled  
-               // with an entry that points to its allocation. Dense    
-               // elements simply refer to the container's allocation   
-               return Handle {self.mHeap, self.GetEntries(), self.GetType()};
+            if constexpr (T::TypeErased) {
+               // Type-erased handle                                    
+               if constexpr (requires { T::Owned; }) {
+                  if constexpr (T::Owned)
+                     return {self.Get(), self.GetEntries(), self.GetType()};
+                  else
+                     return {self.Get(), self.GetType()};
+               }
+               else return {self.Get(), self.GetType()};
             }
             else {
-               // C isn't deeply owned, so handles are just pointers    
-               // They still need to be handles, so that they have the  
-               // necessary insertion/emplacement interfaces            
-               return HandleDisowned {self.mHeap, self.GetType()};
-            }
-         }
-         else {
-            // Typed handle required                                    
-            static_assert(CT::NotVoid<TT>, "Logic error");
-            static_assert(CT::Untyped<DC> or CT::Sparse<TypeOf<C>> == CT::Sparse<TT>,
-               "Sparseness mismatch");
-            if constexpr (CT::Untyped<DC>)
-               LglsAssumeDev(self.IsSparse() == CT::Sparse<TT>, "Sparseness mismatch");
+               // Statically typed handle                               
+               if constexpr (CT::Untyped<C>) {
+                  LglsAssumeDev(self.template IsSimilar<TypeOf<T>>(),
+                     "Sparseness mismatch");
+               }
 
-            if constexpr (CT::DeeplyOwned<DC>) {
-               // C is deeply owned, so each sparse element is coupled  
-               // with an entry that points to its allocation. Dense    
-               // elements simply refer to the container's allocation   
-               return THandle<TT&> {&self.template Get<TT>(), self.GetEntries()};
-            }
-            else {
-               // C isn't deeply owned, so handles are just pointers    
-               // They still need to be handles, so that they have the  
-               // necessary insertion/emplacement interfaces            
-               //return THandleDisowned<TT&> {&self.template Get<TT>()};
-               return THandleDisowned<TT&> {self};
+               if constexpr (requires { T::Owned; }) {
+                  if constexpr (T::Owned)
+                     return {&self.Get(), self.GetEntries()};
+                  else
+                     return {&self.Get()};
+               }
+               else return {&self.Get()};
             }
          }
+         else return self.template Get<Deref<T>>();
       }
 
    protected:

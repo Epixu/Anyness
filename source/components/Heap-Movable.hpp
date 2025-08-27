@@ -360,7 +360,7 @@ namespace Langulus::Anyness::Component
                );
 
                // Reallocate                                            
-               typename C::PickRangeMut previous {self};
+               C previous {Disown {self}};
                auto reallocated = Allocator::Reallocate(
                   request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1),
                   al
@@ -371,7 +371,7 @@ namespace Langulus::Anyness::Component
                if constexpr (requires { self.mReserved; })
                   self.mReserved = request.mElementCount;
 
-               if (reallocated != previous.GetAllocation()) {
+               if (reallocated != al) {
                   self.SetHeapInner(reallocated->GetBlockStart());
 
                   if (previous.GetCount()) {
@@ -381,6 +381,8 @@ namespace Langulus::Anyness::Component
                      auto from = IterateHandles(previous).begin();
                      for (auto to : IterateHandles(self))
                         to.EmplaceWithIntent(Abandon(*(from++)));
+
+                     previous.SetAllocationInner(al);
                      previous.Free();
                   }
                }

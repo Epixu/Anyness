@@ -22,9 +22,9 @@ namespace Langulus::Anyness
    ///      destruction - only on reassignment                                
    ///                                                                        
    struct HandleMut : Container<
+      Com::TypedStack<DMeta>,
       Com::HeapReference<>,
       Com::DeepOwnershipStack<>,
-      Com::TypedStack<DMeta>,
       Com::Assignment<>,
       Com::Comparison
    > {
@@ -40,8 +40,8 @@ namespace Langulus::Anyness
    /// It refers to a picked element inside a type-erased container           
    ///                                                                        
    struct HandleDisownedMut : Container<
-      Com::HeapReference<>,
       Com::TypedStack<DMeta>,
+      Com::HeapReference<>,
       Com::Assignment<>,
       Com::Comparison
    > {
@@ -62,9 +62,9 @@ namespace Langulus::Anyness
    ///      instead of sought from the memory manager every time              
    ///                                                                        
    struct Handle : Container<
+      Com::TypedStack<DMeta>,
       Com::HeapReference<>,
       Com::DeepOwnershipStack<>,
-      Com::TypedStack<DMeta>,
       Com::Comparison
    > {
       using CTTI_Handle = Yes<>;
@@ -79,8 +79,8 @@ namespace Langulus::Anyness
    /// It refers to a picked element inside a type-erased container           
    ///                                                                        
    struct HandleDisowned : Container<
-      Com::HeapReference<>,
       Com::TypedStack<DMeta>,
+      Com::HeapReference<>,
       Com::Comparison
    > {
       using CTTI_Handle = Yes<>;

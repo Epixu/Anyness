@@ -43,7 +43,7 @@ namespace Langulus::Anyness
          Com::CountStack<>,               // Variable count             
          Com::ReserveEmergent<>,          // Variable capacity          
          Com::HashStack<>,                // Variable hash (cached)     
-         Com::Emplacement<>,              // Allows emplacement         
+         //Com::Emplacement<>,              // Allows emplacement         
          Com::Insertion<0, Text>,         // Serialize + insert         
          Com::InsertionOperators<0, Text>,// << and >> insertion        
          Com::Concatenate<>,              // Concatenate                

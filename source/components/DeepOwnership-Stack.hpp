@@ -21,18 +21,25 @@ namespace Langulus::Anyness::Component
    template<unsigned ID = 0>
    struct DeepOwnershipStack {
       using CTTI_Component = Yes<>;
+      static constexpr int  StackSize = sizeof(AllocationPtr*);
       static constexpr bool DeeplyOwned = true;
-      static constexpr int ComponentPrecedence = 2000;
+      static constexpr int  ComponentPrecedence = 2000;
 
    protected:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
-      // Pointer to the first entry                                     
-      AllocationPtr* mEntries;
-
-      /// Get entries array                                                   
-      auto GetEntries() const noexcept { return mEntries; }
+      /// Get entries array (inner)                                           
+      constexpr auto& GetEntriesInner(this auto const& self) noexcept {
+         return *reinterpret_cast<AllocationPtr* const*>(
+            self.mStack + self.template StackOffset<DeepOwnershipStack>
+         );
+      }
+      
+      /// Set the entries array ppinter (inner)                               
+      constexpr void SetEntriesInner(this auto& self, AllocationPtr* e) noexcept {
+         const_cast<AllocationPtr*&>(self.GetEntriesInner()) = e;
+      }
 
       /// Reference referencable elements inside the block                    
       template<CT::Container C>
@@ -102,7 +109,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Dereference all referenced initialized items, optionally destroying 
-      /// them, if references reach zero                                      
+      /// them if references reach zero                                       
       ///   @attention never modifies any block state                         
       ///   @attention assumes block is not empty                             
       ///   @attention assumes block is not static                            

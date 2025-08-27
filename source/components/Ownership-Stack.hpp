@@ -119,6 +119,8 @@ namespace Langulus::Anyness::Component
       friend struct DeepOwnershipHeap;
       template<unsigned>
       friend struct Removal;
+      template<unsigned>
+      friend struct Emplacement;
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   
