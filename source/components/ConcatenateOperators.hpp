@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Adds operators for concatenation (+ and +=)                            
    ///   @tparam ID - heap we're inserting to                                 
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct ConcatenateOperators {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

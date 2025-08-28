@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
    /// Reserves a part of the heap to keep track of sparse element's          
    /// allocations                                                            
    ///   @tparam ID - which heap are we keeping track of?                     
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct DeepOwnershipHeap {
       using CTTI_Component = Yes<>;
       static constexpr bool DeeplyOwned = true;
@@ -39,7 +39,7 @@ namespace Langulus::Anyness::Component
       ///   @return the array of entries                                      
       template<CT::Container C>
       auto GetEntries(this C&& self) has_assumptions
-      -> Tif<CT::Mutable<C>, AllocationPtr*, AllocationPtr const*> {
+      -> Tmut<C, AllocationPtr*, AllocationPtr const*> {
          using DC = Deref<C>;
          if constexpr (DC::TypeErased) {
             if (self.IsSparse()) {

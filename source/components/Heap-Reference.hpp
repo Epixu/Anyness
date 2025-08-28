@@ -16,7 +16,7 @@ namespace Langulus::Anyness::Component
    /// No allocation interface is provided.                                   
    /// Increases the container's bytesize.                                    
    ///   @tparam ID - multiple references are supported                       
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct HeapReference {
       using CTTI_Component = Yes<>;
       static constexpr int  StackSize = sizeof(void*);
@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
       template<CT::Container C>
-      using Pick = Tif<CT::Mutable<C>, typename Deref<C>::PickMut, typename Deref<C>::Pick>;*/
+      using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;*/
 
       /*union {
          // The heap pointer in char form for easy debugging            
@@ -57,14 +57,14 @@ namespace Langulus::Anyness::Component
       
       /// Get the heap pointer (inner)                                        
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
-         using R = Tif<CT::Mutable<decltype(self)>, void*, void const*>;
-         return *reinterpret_cast<R const*>(
+         using R = Tmut<decltype(self), void**, void const* const*>;
+         return *reinterpret_cast<R>(
             self.mStack + self.template StackOffset<HeapReference>
          );
       }
 
       constexpr void SetHeapInner(this auto& self, auto heap) noexcept {
-         const_cast<void*&>(self.GetHeapInner()) = const_cast<void*>(
+         self.GetHeapInner() = const_cast<void*>(
             static_cast<const void*>(heap)
          );
       }
@@ -112,49 +112,57 @@ namespace Langulus::Anyness::Component
       ///   @tparam T - the type of data we're accessing -                    
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
-      constexpr auto& Get(this C&& self) has_assumptions {
+      constexpr decltype(auto) Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>, "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
-         using TT = Tif<CT::Void<T>, TypeOf<C>, T>;
-         using TTC = Tif<CT::Mutable<C>, TT, TT const>;
+         using TC = TypeOf<C>;
+         using TH = Tif<CT::Void<T>, TC, T>;
+         using THQ1 = Tmut<C, TH*,  TH const*>;
+         using THQ2 = Tmut<C, TH**, TH const* const*>;
          auto& mHeap = self.GetHeapInner();
 
-         if constexpr (CT::Void<TT>) {
-            // Type-erased reference, no casting                        
-            if (self.IsSparse())
-               return static_cast<void**&>(mHeap);
-            return static_cast<void* &>(mHeap);
+         if constexpr (CT::Void<TH>) {
+            // Unknown type, just return the heap pointer reference     
+            return (mHeap);
          }
          else if constexpr (Deref<C>::TypeErased) {
             // Casting to a desired runtime type                        
             LglsAssumeDev(self.IsTyped(), "Block is not typed");
 
             if (self.IsSparse()) {
-               if constexpr (CT::Dense<TT>)
-                  return **static_cast<TTC**>(mHeap);
+               if constexpr (CT::Dense<TH>)
+                  // Representing sparse as dense                       
+                  return **static_cast<THQ2>(mHeap);
                else
-                  return  *static_cast<TTC* >(mHeap);
+                  // Representing sparse as sparse                      
+                  return  *static_cast<THQ1>(mHeap);
             }
             else {
-               if constexpr (CT::Dense<TT>)
-                  return *static_cast<TTC*>( mHeap);
+               if constexpr (CT::Dense<TH>)
+                  // Representing dense as dense                        
+                  return *static_cast<THQ1>( mHeap);
                else
-                  return *static_cast<TTC*>(&mHeap);
+                  // Representing dense as sparse                       
+                  return *static_cast<THQ1>(&mHeap);
             }
          }
          else {
             // Casting to a desired static type                         
-            if constexpr (Deref<C>::Sparse) {
-               if constexpr (CT::Dense<TT>)
-                  return **static_cast<TTC**>(mHeap);
+            if constexpr (CT::Sparse<TC>) {
+               if constexpr (CT::Dense<TH>)
+                  // Representing sparse as dense                       
+                  return **static_cast<THQ2>(mHeap);
                else
-                  return  *static_cast<TTC* >(mHeap);
+                  // Representing sparse as sparse                      
+                  return  *static_cast<THQ1>(mHeap);
             }
             else {
-               if constexpr (CT::Dense<TT>)
-                  return *static_cast<TTC*>( mHeap);
+               if constexpr (CT::Dense<TH>)
+                  // Representing dense as dense                        
+                  return *static_cast<THQ1>( mHeap);
                else
-                  return *static_cast<TTC*>(&mHeap);
+                  // Representing dense as sparse                       
+                  return static_cast<Deptr<THQ1>>(mHeap);
             }
          }
       }
@@ -179,25 +187,28 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Statically typed handle                               
+               using HT = Deref<TypeOf<T>>;
                if constexpr (CT::Untyped<C>) {
-                  LglsAssumeDev(self.template IsSimilar<TypeOf<T>>(),
+                  LglsAssumeDev(self.template IsSimilar<HT>(),
                      "Sparseness mismatch");
                }
+               else static_assert(CT::Similar<TypeOf<C>, HT>,
+                  "Sparseness mismatch");
 
                if constexpr (requires { T::Owned; }) {
                   if constexpr (T::Owned)
-                     return {&self.Get(), self.GetEntries()};
+                     return {self.HeapReference::template Get<HT*>(), self.GetAllocation()};
                   else
-                     return {&self.Get()};
+                     return {self.HeapReference::template Get<HT*>()};
                }
-               else return {&self.Get()};
+               else return {self.HeapReference::template Get<HT*>()};
             }
          }
          else return self.template Get<Deref<T>>();
       }
 
    protected:
-      /// Default-initialize the component is impossible                      
+      /// Default-initialization of this component is impossible              
       constexpr void ConstructDefault() {
          static_assert(false, "Can't default-construct this component");
       }

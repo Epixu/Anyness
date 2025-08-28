@@ -7,6 +7,8 @@
 ///                                                                           
 #pragma once
 #include "../../../source/components/Iteration-Range.hpp"
+#include <Langulus/Anyness/Handle.hpp>
+#include <Langulus/Anyness/THandle.hpp>
 
 
 namespace Langulus::Anyness
@@ -30,27 +32,19 @@ namespace Langulus::Anyness
          if constexpr (C::TypeErased) {
             // Type-erased handle                                       
             if constexpr (C::Owned) {
-               return Types<
-                  Tif<CT::Mutable<C>, HandleMut, Handle>
-               > {};
+               return Types<Tmut<C, HandleMut, Handle>> {};
             }
             else {
-               return Types<
-                  Tif<CT::Mutable<C>, HandleDisownedMut, HandleDisowned>
-               > {};
+               return Types<Tmut<C, HandleDisownedMut, HandleDisowned>> {};
             }
          }
          else {
             // Statically typed handle                                  
             if constexpr (C::Owned) {
-               return Types<THandle<
-                  Tif<CT::Mutable<C>, TypeOf<C>&, TypeOf<C> const&>
-               >> {};
+               return Types<THandle<Tmut<C, TypeOf<C>&, TypeOf<C> const&>>> {};
             }
             else {
-               return Types<THandleDisowned<
-                  Tif<CT::Mutable<C>, TypeOf<C>&, TypeOf<C> const&>
-               >> {};
+               return Types<THandleDisowned<Tmut<C, TypeOf<C>&, TypeOf<C> const&>>> {};
             }
          }
       }
@@ -77,7 +71,7 @@ namespace Langulus::Anyness
          Iterator() = delete;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
-         /*explicit*/ constexpr Iterator(H&& it, const C& range) noexcept
+         constexpr Iterator(H&& it, const C& range) noexcept
             : mIt    {FWD(it)}
             , mRange {range} {}
 

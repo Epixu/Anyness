@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam T - type of the counter                                      
    ///   @tparam ID - ID of the heap/stack to track capacity for              
    ///                                                                        
-   template<unsigned ID = 0, class T = size_t>
+   template<unsigned ID, class T>
    struct ReserveStack {
    private:
       T mReserved;

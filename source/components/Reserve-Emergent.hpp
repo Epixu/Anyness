@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID - ID of the heap to track capacity for                    
    ///   @tparam T - type of the counter                                      
    ///                                                                        
-   template<unsigned ID = 0, class T = size_t>
+   template<unsigned ID, class T>
    struct ReserveEmergent {
       using CTTI_Component = Yes<>;
       using ReserveType = T;

@@ -19,7 +19,6 @@ namespace Langulus::Anyness
    ///                                                                        
    /// Used to return from container's end() methods. It only compares        
    /// equal to other iterators if they have reached their end marker.        
-   ///                                                                        
    struct IteratorEnd final {
       using CTTI_Iterator  = Yes<>;
       using CTTI_ReflectAs = void;
@@ -31,7 +30,6 @@ namespace Langulus::Anyness
    ///                                                                        
    /// Use like this: for(auto i : IterateInReverse(container)), where        
    /// 'container' can be any range, including std one.                       
-   ///                                                                        
    template<::std::ranges::range C>
    struct IterateInReverse {
       using CTTI_ReflectAs = void;
@@ -56,7 +54,6 @@ namespace Langulus::Anyness
    /// type. Counteract this, and make 'i' be the iterator type instead.      
    /// Use like this: for(auto i : IterateNoDeref(container)), where          
    /// 'container' can be any range, including std one                        
-   ///                                                                        
    template<::std::ranges::range C>
    struct IterateNoDeref {
       using CTTI_ReflectAs = void;
@@ -78,7 +75,7 @@ namespace Langulus::Anyness
          Iterator() = delete;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
-         /*explicit*/ constexpr Iterator(const T& it) noexcept : mIt {it} {}
+         constexpr Iterator(const T& it) noexcept : mIt {it} {}
 
          bool operator == (const Iterator& rhs) const noexcept {
             return mIt == rhs.mIt;
@@ -108,14 +105,13 @@ namespace Langulus::Anyness
    /// Used by default when doing for(auto i : container)                     
    /// When container is type-erased, or mutable and sparse, 'i' will be a    
    /// handle. Otherwise, 'i' will be a direct reference to the element       
-   ///                                                                        
    template<CT::Container C>
    struct IterateDefault {
       static_assert(CT::NoIntent<C>, "C can't have an intent");
       static_assert(CT::NotReference<C>, "C can't be a reference");
       using CTTI_ReflectAs = void;
-
-      static constexpr bool UsingHandles = CT::Untyped<C> or (CT::Mutable<C> and C::Sparse);
+      using Pick    = typename C::Pick;
+      using PickMut = typename C::PickMut;
 
       C& range;
 
@@ -127,9 +123,9 @@ namespace Langulus::Anyness
          using CTTI_ReflectAs = void;
 
       protected:
-         using H = Tif<UsingHandles,
-            decltype(Fake<C>().GetHandle()),
-            Tif<CT::Mutable<C>, TypeOf<C>*, TypeOf<C> const*>
+         using H = Tmut<C,
+            Tif<CT::NotReference<Pick>,    Pick,    Deref<Pick>*>,
+            Tif<CT::NotReference<PickMut>, PickMut, Deref<PickMut>*>
          >;
 
          mutable H mIt;
@@ -139,19 +135,19 @@ namespace Langulus::Anyness
          Iterator() = delete;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
-         /*explicit*/ constexpr Iterator(H&& it, const C& range) noexcept
+         constexpr Iterator(H&& it, const C& range) noexcept
             : mIt    {FWD(it)}
             , mRange {range} {}
 
          constexpr bool operator == (const Iterator& rhs) const noexcept {
-            if constexpr (UsingHandles)
+            if constexpr (CT::Handle<H>)
                return mIt.GetRaw() == rhs.mIt.GetRaw();
             else
                return mIt == rhs.mIt;
          }
 
          constexpr bool operator == (const IteratorEnd&) const noexcept {
-            if constexpr (UsingHandles)
+            if constexpr (CT::Handle<H>)
                return mIt.GetRaw() == mRange.GetRawEnd();
             else
                return mIt == mRange;
@@ -180,7 +176,7 @@ namespace Langulus::Anyness::Component
    /// Implements ranged iteration interface for containers                   
    ///   @tparam ID - heap/stack we're iterating                              
    ///                                                                        
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct IterationRange {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

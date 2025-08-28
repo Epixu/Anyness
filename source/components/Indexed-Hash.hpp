@@ -29,10 +29,10 @@ namespace Langulus::Anyness::Component
       using Count = typename Deref<C>::CountType;
 
       template<CT::Container C>
-      using Key = Tif<CT::Mutable<C>, typename Deref<C>::KeyMut, typename Deref<C>::Key>;
+      using Key = Tmut<C, typename Deref<C>::KeyMut, typename Deref<C>::Key>;
 
       template<CT::Container C>
-      using Val = Tif<CT::Mutable<C>, typename Deref<C>::ValMut, typename Deref<C>::Val>;
+      using Val = Tmut<C, typename Deref<C>::ValMut, typename Deref<C>::Val>;
 
       TableType* mTable;
 

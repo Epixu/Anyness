@@ -66,7 +66,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Implements ForEach iteration interface for containers                  
    ///   @tparam ID - heap/stack we're iterating                              
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct IterationForEach {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;
@@ -76,7 +76,7 @@ namespace Langulus::Anyness::Component
       using Count = typename Deref<C>::CountType;
 
       template<CT::Container C>
-      using Deep = Tif<CT::Mutable<C>, typename Deref<C>::DeepType&, const typename Deref<C>::DeepType&>;
+      using Deep = Tmut<C, typename Deref<C>::DeepType&, typename Deref<C>::DeepType const&>;
 
       /// A helper structure that shows how ForEach iteration went            
       template<CT::Container C>
@@ -447,7 +447,7 @@ namespace Langulus::Anyness::Component
             }
             else if (self.template Is<Neat>()) {
                // Nest inside normalized subblocks                      
-               using SubNeat = Tif<CT::Mutable<C>, Neat&, const Neat&>;
+               using SubNeat = Tmut<C, Neat&, Neat const&>;
 
                loop = self.template ForEachInner<REVERSE>(
                   [&f](SubNeat neat) {
@@ -513,7 +513,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Deep<Decay<T>>) {
                // Iterate subblocks                                     
                Count<C> intermediateCounterSink = 0;
-               using SubBlock = Tif<CT::Mutable<C>, Decay<T>&, const Decay<T>&>;
+               using SubBlock = Tmut<C, Decay<T>&, Decay<T> const&>;
 
                loop = self.template ForEachInner<REVERSE>(
                   [&counter, &f](SubBlock group) {
@@ -525,7 +525,7 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (CT::Same<T, Neat>) {
                // Iterate normalized subblocks                          
-               using SubNeat = Tif<CT::Mutable<C>, Neat&, const Neat&>;
+               using SubNeat = Tmut<C, Neat&, Neat const&>;
 
                loop = self.template ForEachInner<REVERSE>(
                   [&f](SubNeat neat) {

@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Manages deep ownership by holding a pointer to the entries locally     
    ///   @tparam ID - which heap are we keeping track of?                     
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct DeepOwnershipStack {
       using CTTI_Component = Yes<>;
       static constexpr int  StackSize = sizeof(AllocationPtr*);

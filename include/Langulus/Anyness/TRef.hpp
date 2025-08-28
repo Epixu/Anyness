@@ -52,8 +52,8 @@ namespace Langulus::Anyness
 
       constexpr TRef(nullptr_t) noexcept {}
 
-      constexpr auto Get() const has_assumptions { return &Base::Get(); }
-      constexpr auto Get()       has_assumptions { return &Base::Get(); }
+      //constexpr auto Get() const has_assumptions { return &Base::Get(); }
+      //constexpr auto Get()       has_assumptions { return &Base::Get(); }
       
       constexpr bool operator == (nullptr_t) const noexcept {
          return this->IsEmpty();
@@ -62,11 +62,11 @@ namespace Langulus::Anyness
       constexpr bool operator == (T rhs) const noexcept {
          if (rhs == nullptr)
             return this->IsEmpty();
-         return this->Get() == rhs;
+         return this->GetRaw() == rhs;
       }
 
       constexpr TRef& operator = (const T& other) noexcept {
-         if (other == Get())
+         if (other == Base::GetRaw())
             return *this;
          
          if (other) {

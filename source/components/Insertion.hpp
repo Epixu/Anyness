@@ -75,7 +75,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID - heap we're inserting to                                 
    ///   @tparam AS - type to serialize as before inserting. Useful for byte  
    ///      and text containers. Use void to insert without serialization.    
-   template<unsigned ID = 0, class AS = void>
+   template<unsigned ID, class AS>
    struct Insertion {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

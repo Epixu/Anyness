@@ -190,7 +190,7 @@ namespace Langulus
          if constexpr (CT::Aggregate<ALT_T>)
             return DeintCast(value);
          else
-            return Retype<ALT_T> (DeintCast(value));
+            return Retype<ALT_T> (FWD(value));
       }
 
       LANGULUS(ALWAYS_INLINED)
@@ -264,7 +264,7 @@ namespace Langulus
          if constexpr (CT::Aggregate<ALT_T>)
             return DeintCast(value);
          else
-            return Retype<ALT_T> (DeintCast(value));
+            return Retype<ALT_T> (FWD(value));
       }
 
       LANGULUS(ALWAYS_INLINED)
@@ -344,7 +344,7 @@ namespace Langulus
          if constexpr (CT::Aggregate<ALT_T>)
             return DeintCast(FWD(value));
          else
-            return Retype<ALT_T> (DeintCast(FWD(value)));
+            return Retype<ALT_T> (FWD(value));
       }
 
       LANGULUS(ALWAYS_INLINED)
@@ -429,7 +429,7 @@ namespace Langulus
          if constexpr (CT::Aggregate<ALT_T>)
             return DeintCast(FWD(value));
          else
-            return Retype<ALT_T> (DeintCast(FWD(value)));
+            return Retype<ALT_T> (FWD(value));
       }
 
       LANGULUS(ALWAYS_INLINED)
@@ -503,7 +503,7 @@ namespace Langulus
          if constexpr (CT::Aggregate<ALT_T>)
             return DeintCast(value);
          else
-            return Retype<ALT_T> (DeintCast(value));
+            return Retype<ALT_T> (FWD(value));
       }
 
       LANGULUS(ALWAYS_INLINED)
@@ -562,7 +562,7 @@ namespace Langulus
       /// Clone something else                                                
       template<class ALT_T> LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
-         return Retype<ALT_T> (DeintCast(value));
+         return Retype<ALT_T> (FWD(value));
       }
 
       LANGULUS(ALWAYS_INLINED)

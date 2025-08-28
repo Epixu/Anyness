@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Implements insertion for containers                                    
    ///   @tparam ID - heap we're inserting to                                 
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct Concatenate {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

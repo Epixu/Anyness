@@ -14,16 +14,26 @@
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "../../../source/components/Iteration-Operators.hpp"
-#include "TOwn.hpp"
-#include "TRef.hpp"
 
 
 namespace Langulus::Anyness
 {
    namespace Inner
    {
-      template<CT::Reference T>
-      using THandleBase = Container<
+      template<CT::Reference T> requires CT::Dense<T>
+      using THandleEmbeddedDense = Container<
+         Com::TypedStatic<DMeta, Deref<T>>,
+         Com::HeapReference<>,
+         Com::OwnershipStack<>,
+         Com::CountStatic<1u>,
+         Com::Assignment<>,
+         Com::Emplacement<>,
+         Com::Comparison,
+         Com::IterationOperators<>
+      >;
+      
+      template<CT::Reference T> requires CT::Sparse<T>
+      using THandleEmbeddedSparse = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<>,
          Com::CountStatic<1u>,
@@ -35,7 +45,7 @@ namespace Langulus::Anyness
       >;
       
       template<CT::Reference T>
-      using THandleDisownedBase = Container<
+      using THandleDisownedEmbedded = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<>,
          Com::CountStatic<1u>,
@@ -43,6 +53,25 @@ namespace Langulus::Anyness
          Com::Emplacement<>,
          Com::Comparison,
          Com::IterationOperators<>
+      >;
+      
+      template<CT::NotReference T> requires CT::Dense<T>
+      using THandleLocalDense = Container<
+         Com::TypedStatic<DMeta, T>,         // Statically typed        
+         Com::Stack<T>,                      // Element on the stack    
+         Com::Assignment<>,                  // Allows for reassignment 
+         Com::Comparison                     // Can be compared         
+      >;
+      
+      template<CT::NotReference T> requires CT::Sparse<T>
+      using THandleLocalSparse = Container<
+         Com::TypedStatic<DMeta, Deptr<T>>,  // Statically typed        
+         Com::HeapMovable<>,                 // Data on the heap        
+         Com::OwnershipStack<>,              // Allocation is referenced
+         Com::CountStatic<1u>,               // Statically sized        
+         Com::Emplacement<>,                 // Can be emplaced         
+         Com::Assignment<>,                  // Can be reassigned       
+         Com::Comparison                     // Can be compared         
       >;
    }
 
@@ -56,14 +85,36 @@ namespace Langulus::Anyness
    ///      destruction - only on reassignment                                
    ///   @tparam T - the contained type                                       
    ///                                                                        
-   template<CT::Reference T>
-   struct THandle<T> : Inner::THandleBase<T> {
+   template<CT::Reference T> requires CT::Dense<T>
+   struct THandle<T> : Inner::THandleEmbeddedDense<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using Base           = Inner::THandleBase<T>;
-      
+      using Base = Inner::THandleEmbeddedDense<T>;
       using Base::Base;
+
+      THandle() = delete;
+      
+      constexpr THandle(Deref<T>* ptr, AllocationPtr alloc) noexcept {
+         this->SetHeapInner(ptr);
+         this->SetAllocationInner(alloc);
+      }
+   };
+   
+   template<CT::Reference T> requires CT::Sparse<T>
+   struct THandle<T> : Inner::THandleEmbeddedSparse<T> {
+      using CTTI_Handle    = Yes<>;
+      using CTTI_Typed     = Deref<T>;
+      using CTTI_ReflectAs = void;
+      using Base = Inner::THandleEmbeddedSparse<T>;
+      using Base::Base;
+
+      THandle() = delete;
+      
+      constexpr THandle(Deref<T>* ptr, AllocationPtr* entry) noexcept {
+         this->SetHeapInner(ptr);
+         this->SetEntriesInner(entry);
+      }
    };
    
 
@@ -73,13 +124,14 @@ namespace Langulus::Anyness
    ///   @tparam T - the contained type                                       
    ///                                                                        
    template<CT::Reference T>
-   struct THandleDisowned<T> : Inner::THandleDisownedBase<T> {
+   struct THandleDisowned<T> : Inner::THandleDisownedEmbedded<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using Base           = Inner::THandleDisownedBase<T>;
-      
+      using Base = Inner::THandleDisownedEmbedded<T>;
       using Base::Base;
+
+      THandleDisowned() = delete;
    };
    
 
@@ -89,9 +141,13 @@ namespace Langulus::Anyness
    ///   @tparam T - the contained type                                       
    ///                                                                        
    template<CT::NotReference T> requires CT::Dense<T>
-   struct THandle<T> : TOwn<T> {
+   struct THandle<T> : Inner::THandleLocalDense<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
+      using Base = Inner::THandleLocalDense<T>;
+      using Base::Base;
+
+      THandle() = delete;
    };
    
 
@@ -101,8 +157,12 @@ namespace Langulus::Anyness
    ///   @tparam T - the contained type                                       
    ///                                                                        
    template<CT::NotReference T> requires CT::Sparse<T>
-   struct THandle<T> : TRef<T> {
+   struct THandle<T> : Inner::THandleLocalSparse<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
+      using Base = Inner::THandleLocalSparse<T>;
+      using Base::Base;
+      
+      THandle() = delete;
    };
 }

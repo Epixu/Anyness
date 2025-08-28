@@ -68,7 +68,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Implements assignment for containers                                   
    ///   @tparam ID - heap we're removing from                                
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct Assignment {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

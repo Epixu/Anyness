@@ -154,7 +154,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
 
       WHEN("Overwrite an instance") {
          pointer.Emplace(5);
-         IF_LANGULUS_MANAGED_MEMORY(auto backup = pointer.Get());
+         IF_LANGULUS_MANAGED_MEMORY(auto backup = pointer.GetRaw());
          pointer2.Emplace(6);
          pointer = pointer2;
 

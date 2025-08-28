@@ -74,7 +74,7 @@ namespace Langulus::Anyness::Component
    ///      construction, reassignment and destruction. False if container is 
    ///      just a view, or in other cases where you want to carry an         
    ///      allocation pointer, but not necessarily reference it.             
-   template<unsigned ID = 0, bool AUTO = true>
+   template<unsigned ID, bool AUTO>
    struct OwnershipStack {
       using CTTI_Component = Yes<>;
       static constexpr bool Owned = AUTO;

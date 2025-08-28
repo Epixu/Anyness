@@ -32,7 +32,7 @@ namespace Langulus::Anyness::Component
    /// Unlike insertion, emplacement reuses the same memory space and         
    /// guarantees that nothing moves around.                                  
    ///   @tparam ID - heap we're emplacing to                                 
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct Emplacement {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

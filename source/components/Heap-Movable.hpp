@@ -9,19 +9,18 @@
 #include "Heap-Reference.hpp"
 #include "../Allocator.hpp"
 #include <Langulus/MetaOf.hpp>
-#include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Resolvable.hpp>
-#include "Iteration-Range.hpp"
+#include <Langulus/Utils/Iterate-Handles.hpp>
 
 
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Interfaces a heap allocation                                           
-   /// Adds a member that points to the heap memory                           
-   /// The pointer is allowed to move on reallocation                         
-   ///   @tparam ID - multiple heap interfaces are supported                  
-   template<unsigned ID = 0>
+   /// Interfaces a heap allocation.                                          
+   /// Adds a member that points to the heap memory.                          
+   /// The pointer is allowed to move on reallocation.                        
+   ///   @tparam ID - multiple heaps are supported                            
+   template<unsigned ID>
    struct HeapMovable : HeapReference<ID> {
       static constexpr bool HeapCanBeNull = true;
 
@@ -40,7 +39,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
       template<CT::Container C>
-      using Pick = Tif<CT::Mutable<C>, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
+      using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
 

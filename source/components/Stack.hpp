@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
    ///   @attention same IDs serve to identify heap components as well, so    
    ///      make sure they don't overlap                                      
    ///                                                                        
-   template<CT::NotVoid T, unsigned ID = 0>
+   template<CT::NotVoid T, unsigned ID>
    struct Stack {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = -2000;

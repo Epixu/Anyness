@@ -414,6 +414,12 @@ namespace Langulus
    ///   @attention sparse sheddables will contribute to the count            
    template<class T>
    static constexpr size_t IndirectsOf = Inner::CountIndirections<Deref<Shed<T>>>();
+
+   template<class T, class YES, class NO>
+   using Tmut = typename ::std::conditional_t<CT::Mutable<T>,
+         ::std::type_identity<YES>,
+         ::std::type_identity<NO>
+      >::type;
 }
 
 

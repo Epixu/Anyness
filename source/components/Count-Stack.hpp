@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
    /// indirections, making count lookup faster and more cache-friendly       
    ///   @tparam ID - the heap/stack ID to keep count of                      
    ///   @tparam T - the count type                                           
-   template<unsigned ID = 0, class T = size_t>
+   template<unsigned ID, class T>
    struct CountStack {
       using CTTI_Component = Yes<>;
       using CountType = T;

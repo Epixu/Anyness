@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
    /// multiple allocations are chained together                              
    ///   @tparam ID - multiple heap interfaces are supported                  
    ///                                                                        
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct HeapImmovable {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = -2000;

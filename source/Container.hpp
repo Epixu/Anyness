@@ -70,24 +70,47 @@ namespace Langulus::Anyness
 
    namespace Component
    {
-      template<unsigned>
-      struct HeapMovable;
-      template<unsigned>
-      struct HeapImmovable;
-      template<unsigned>
-      struct HeapReference;
-      template<CT::NotVoid, unsigned>
-      struct Stack;
-      template<unsigned>
-      struct IterationOperators;
-      template<class, class, unsigned>
-      struct TypedStack;
-      template<unsigned, bool>
-      struct OwnershipStack;
-      template<unsigned, class>
+      template<unsigned ID = 0> struct Assignment;
+      struct Charge;
+      struct Comparison;
+      template<unsigned ID = 0> struct Concatenate;
+      template<unsigned ID = 0> struct ConcatenateOperators;
+      struct Conversion; template<unsigned ID = 0, class T = size_t>
+      struct CountHeap; template<unsigned ID = 0, class T = size_t>
       struct CountStack;
-      template<unsigned, class>
-      struct HashStack;
+      template<auto COUNT> struct CountStatic;
+      template<unsigned ID = 0> struct DeepOwnershipHeap;
+      template<unsigned ID = 0> struct DeepOwnershipStack;
+      struct Descriptor;
+      template<unsigned ID = 0> struct Emplacement;
+      struct Extrapolation;
+      template<unsigned ID, class H> struct HashEmergent;
+      template<unsigned ID, class H> struct HashHeap;
+      template<unsigned ID, class H> struct HashStack;
+      template<unsigned ID = 0> struct HeapImmovable;
+      template<unsigned ID = 0> struct HeapMovable;
+      template<unsigned ID = 0> struct HeapReference;
+      template<unsigned ID, class HASH> struct IndexedHash;
+      template<class T = void> struct IndexedLinear;
+      template<unsigned ID = 0, class AS = void> struct Insertion;
+      template<unsigned ID = 0, class AS = void> struct InsertionOperators;
+      struct Interpolation;
+      template<unsigned ID = 0> struct IterationForEach;
+      template<unsigned ID = 0> struct IterationOperators;
+      template<unsigned ID = 0> struct IterationRange;
+      struct Merging;
+      template<unsigned ID = 0, bool AUTO = true> struct OwnershipEmergent;
+      template<unsigned ID = 0, bool AUTO = true> struct OwnershipStack;
+      template<unsigned ID = 0> struct Removal;
+      template<unsigned ID = 0, class T = size_t> struct ReserveEmergent;
+      template<unsigned ID = 0, class T = size_t> struct ReserveStack;
+      template<auto SIZE> struct ReserveStatic;
+      template<CT::NotVoid T, unsigned ID = 0> struct Stack;
+      template<CT::State...STATES> struct StateHeap;
+      template<CT::State...STATES> struct StateStack;
+      template<CT::State...STATES> struct StateStatic;
+      template<class META, class TYPE = void, unsigned ID = 0> struct TypedStack;
+      template<class META, CT::NotVoid TYPE,  unsigned ID = 0> struct TypedStatic;
    }
 
    namespace Com = Component;
@@ -162,13 +185,13 @@ namespace Langulus::Anyness
 
       /// Explicitly call ConstructDefault in all of the components.          
       /// Most components should have trivial constructors.                   
-      constexpr Container() noexcept {
+      constexpr Container() noexcept = default; /*{
          static_assert(::std::is_standard_layout_v<Container>);
          ComponentList::ForEach([this]<class C>{
             if constexpr (requires { this->C::ConstructDefault(); })
                this->C::ConstructDefault();
          });
-      }
+      }*/
 
       /// C++ copy-semantics are mapped onto Refer intent                     
       /// In other words - a copy is always shallow, unless explicitly Copy   

@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
    /// mapped directly onto contiguous memory                                 
    ///   @tparam T - constrain the type of allowed indices. Leave as 'void'   
    ///      to allow for all the usual integer types                          
-   template<class T = void>
+   template<class T>
    struct IndexedLinear {
       using CTTI_Component = Yes<>;
       static constexpr bool Indexed = true;
@@ -41,16 +41,10 @@ namespace Langulus::Anyness::Component
       using Deep = typename Deref<C>::DeepType;
 
       template<CT::Container C>
-      using Pick = Tif<CT::Mutable<C>,
-         typename Deref<C>::PickMut,
-         typename Deref<C>::Pick
-      >;
+      using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
 
       template<CT::Container C>
-      using PickRange = Tif<CT::Mutable<C>,
-         typename Deref<C>::PickRangeMut,
-         typename Deref<C>::PickRange
-      >;
+      using PickRange = Tmut<C, typename Deref<C>::PickRangeMut, typename Deref<C>::PickRange>;
       
       /// Convert an index to an offset                                       
       /// Special indices will be contextualized                              

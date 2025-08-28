@@ -20,10 +20,10 @@ namespace Langulus::Anyness
    ///                                                                        
    template<::std::ranges::range...C>
    struct IterateTogether {
+      using CTTI_ReflectAs = void;
       static_assert(sizeof...(C) > 1,
          "IterateTogether needs at least two containers");
 
-      using CTTI_ReflectAs = void;
       ::std::tuple<C&...> range;
 
       explicit constexpr IterateTogether(C&...a) noexcept : range {a...} {}
@@ -44,7 +44,7 @@ namespace Langulus::Anyness
          Iterator() = delete;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
-         /*explicit*/ constexpr Iterator(const T& it) noexcept : mIt {it} {}
+         constexpr Iterator(const T& it) noexcept : mIt {it} {}
 
          bool operator == (const Iterator& rhs) const noexcept {
             return mIt == rhs.mIt;

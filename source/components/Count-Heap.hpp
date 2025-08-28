@@ -22,7 +22,7 @@ namespace Langulus::Anyness::Component
    /// compact containers                                                     
    ///   @tparam ID - the heap ID to keep count of                            
    ///   @tparam T - the count type                                           
-   template<unsigned ID = 0, class T = size_t>
+   template<unsigned ID, class T>
    struct CountHeap {
       using CTTI_Component = Yes<>;
       using CountType = T;

@@ -33,7 +33,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam META - the type of the meta                                  
    ///   @tparam TYPE - optionally static type, use void for type-erasure     
    ///   @tparam ID   - which heap/stack is typed?                            
-   template<class META, class TYPE = void, unsigned ID = 0>
+   template<class META, class TYPE, unsigned ID>
    struct TypedStack {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;

@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
    /// used mainly internally in other components and/or iterators            
    ///   @tparam ID - heap we're iterating                                    
    ///                                                                        
-   template<unsigned ID = 0>
+   template<unsigned ID>
    struct IterationOperators {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;
