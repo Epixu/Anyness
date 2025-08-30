@@ -12,14 +12,14 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Stores a precomputed hash on the stack                                 
-   /// The hash is calculated using the data from the given heap/stack ID     
-   /// The hash is recomputed if GetHash() is invoked when stored hash is 0   
+   /// Stores a precomputed hash on the stack.                                
+   /// The hash is calculated using the data from the given heap/stack ID.    
+   /// The hash is recomputed if GetHash() is invoked when stored hash is 0.  
    ///   @tparam ID - the stack/heap source for data                          
    ///   @tparam H - the hash type used                                       
    template<unsigned ID = 0, class H = Hash>
    struct HashStack : HashEmergent<ID, H> {
-      static constexpr int StackSize = sizeof(H);
+      using StackRequest = H;
       
       /// Reset the hash. It will be recomputed on next comparison            
       void ResetHash(this auto& self) noexcept {
@@ -39,15 +39,13 @@ namespace Langulus::Anyness::Component
       friend struct HeapMovable;
       
       /// Get hash (inner) - will not recompute it                            
-      constexpr auto& GetHashInner(this auto const& self) noexcept {
-         return *reinterpret_cast<H const*>(
-            self.mStack + self.template StackOffset<HashStack>
-         );
+      constexpr auto& GetHashInner(this auto&& self) noexcept {
+         return self.template AccessStack<HashStack>();
       }
       
       /// Set the hash (inner)                                                
       constexpr void SetHashInner(this auto& self, H h) noexcept {
-         const_cast<H&>(self.GetHashInner()) = h;
+         self.GetHashInner() = h;
       }
    };
 }

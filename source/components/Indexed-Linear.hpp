@@ -31,18 +31,15 @@ namespace Langulus::Anyness::Component
       template<unsigned>
       friend struct HeapMovable;
 
+   private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
-
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
-
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
-
       template<CT::Container C>
       using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
-
       template<CT::Container C>
       using PickRange = Tmut<C, typename Deref<C>::PickRangeMut, typename Deref<C>::PickRange>;
       

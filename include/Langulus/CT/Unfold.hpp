@@ -7,17 +7,13 @@
 ///                                                                           
 #pragma once
 #include "Same.hpp"
-//#include "../Typenav.hpp"
 #include "../TypeOf.hpp"
-//#include "../IntentOf.hpp"
 #include "Comparable.hpp"
 
 
 namespace Langulus::CTTI
 {
-   /// Can be used in two ways to satisfy CT::Unfoldable<T>:                  
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Unfoldable = Yes<>;` in T                  
+   /// Affects CT::Unfoldable                                                 
    template<class T>
    struct Unfoldable {
       static constexpr bool Default = true;
@@ -85,5 +81,4 @@ namespace Langulus::CT
    /// either directly or by being unfolded                                   
    template<class T, class...A>
    concept UnfoldComparable = ((Comparable<T, A> or Comparable<T, Unfold<A>>) and ...);
-
-} // namespace Langulus::CT
+}

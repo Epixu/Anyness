@@ -37,9 +37,9 @@ namespace Langulus::Anyness::Component
    struct TypedStack {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
-      static constexpr int StackSize = sizeof(META);
-      static constexpr int ComponentPrecedence = -3000;
+      using StackRequest   = META;
 
+      static constexpr int  ComponentPrecedence = -3000;
       static constexpr bool TypeErased = CT::Void<TYPE>;
       /// @attention valid only if not TypeErased                             
       static constexpr bool Sparse = not TypeErased and CT::Sparse<TYPE>;
@@ -67,22 +67,19 @@ namespace Langulus::Anyness::Component
       }
       
       /// Get the contained type (inner)                                      
-      constexpr auto& GetTypeInner(this auto const& self) noexcept {
-         return *reinterpret_cast<META const*>(
-            self.mStack + self.template StackOffset<TypedStack>
-         );
+      constexpr auto& GetTypeInner(this auto&& self) noexcept {
+         return self.template AccessStack<TypedStack>();
       }
 
       /// Set the contained type (inner)                                      
       constexpr void SetTypeInner(this auto& self, const META& type) noexcept {
-         auto& meta = const_cast<META&>(self.GetTypeInner());
-         meta = type;
+         self.GetTypeInner() = type;
       }
       
       /// Default-initialize the component                                    
-      constexpr void ConstructDefault(this auto& self) noexcept {
+      /*constexpr void ConstructDefault(this auto& self) noexcept {
          self.SetTypeInner({});
-      }
+      }*/
 
    public:
       /// Get the contained type                                              

@@ -70,6 +70,7 @@ namespace Langulus::Anyness
 
    namespace Component
    {
+      /// Components predeclared                                              
       template<unsigned ID = 0> struct Assignment;
       struct Charge;
       struct Comparison;
@@ -117,6 +118,8 @@ namespace Langulus::Anyness
 
    namespace Inner
    {
+      /// Validate all used components in a container are properly ordered,   
+      /// and of standard layout                                              
       template<class C1, class C2, class...CN>
       consteval bool ValidateComponentOrder() {
          static_assert(::std::is_standard_layout_v<C1>);
@@ -125,39 +128,55 @@ namespace Langulus::Anyness
          static_assert(C1::ComponentPrecedence <= C2::ComponentPrecedence,
             "Wrong component order");
          static_assert(sizeof(C1) == 1 and sizeof(C2) == 1,
-            "Use StackSize instead of adding non-static members in components");
+            "Use StackRequest instead of adding non-static members in components");
          if constexpr (sizeof...(CN))
             return ValidateComponentOrder<C2, CN...>();
          else
             return true;
       }
+
+      /// std::tuple default-initializes variables to zero, so I use this     
+      /// wrapper to get back to the biblically accurate behavior             
+      template<class T>
+      struct StackVariable {
+         T value;
+         constexpr StackVariable() noexcept {};
+      };
       
+      /// Go through all components and accumulate their stack requests into  
+      /// a tuple                                                             
       template<class C1, class...CN>
-      consteval size_t CalculateStackSize() {
-         size_t stackSize = 0;
-         if constexpr (requires { C1::StackSize; })
-            stackSize += C1::StackSize;
-         
-         if constexpr (sizeof...(CN))
-            return stackSize + CalculateStackSize<CN...>();
-         else
-            return stackSize;
+      consteval auto DefineStack() {
+         if constexpr (requires { typename C1::StackRequest; }) {
+            if constexpr (sizeof...(CN))
+               return decltype(Types<StackVariable<typename C1::StackRequest>>::Concat(DefineStack<CN...>())) {};
+            else
+               return Types<StackVariable<typename C1::StackRequest>> {};
+         }
+         else {
+            if constexpr (sizeof...(CN))
+               return DefineStack<CN...>();
+            else
+               return Types<>{};
+         }
       }
-      
+
+      /// Go through all components until PICK is reached, and accumulate     
+      /// the offset up to that point, to get the index in the stack tuple    
       template<class PICK, class C1, class...CN>
-      consteval size_t CalculateStackOffset() {
-         static_assert(requires { PICK::StackSize; },
+      consteval size_t GetStackOffset() {
+         static_assert(requires { typename PICK::StackRequest; },
             "Component data is not on the stack");
           
          if constexpr (CT::DerivedFrom<C1, PICK>)
             return 0;
          else {
             size_t offset = 0;
-            if constexpr (requires { C1::StackSize; })
-               offset += C1::StackSize;
+            if constexpr (requires { typename C1::StackRequest; })
+               ++offset;
          
             if constexpr (sizeof...(CN))
-               return offset + CalculateStackOffset<PICK, CN...>();
+               return offset + GetStackOffset<PICK, CN...>();
             else
                return offset;
          }
@@ -183,19 +202,13 @@ namespace Langulus::Anyness
       template<CT::Component...MORE_COMPONENTS>
       using Include = Container<COMPONENTS..., MORE_COMPONENTS...>;
 
-      /// Explicitly call ConstructDefault in all of the components.          
-      /// Most components should have trivial constructors.                   
-      constexpr Container() noexcept = default; /*{
-         static_assert(::std::is_standard_layout_v<Container>);
-         ComponentList::ForEach([this]<class C>{
-            if constexpr (requires { this->C::ConstructDefault(); })
-               this->C::ConstructDefault();
-         });
-      }*/
+      /// Default constructor doesn't initialize anything (except metas)      
+      /// Your container needs to call ConstructDefault manually              
+      constexpr Container() noexcept = default;
 
-      /// C++ copy-semantics are mapped onto Refer intent                     
+      /// C++ copy-semantics are mapped onto Refer intent.                    
       /// In other words - a copy is always shallow, unless explicitly Copy   
-      /// or Clone intent is used                                             
+      /// or Clone intent is used.                                            
       constexpr Container(Container const& other) noexcept
          : Container {Refer {other}} {}
       
@@ -219,12 +232,14 @@ namespace Langulus::Anyness
       }
       
       /// Explicitly call Destroy in all of the components.                   
-      /// Most components should have trivial destructors.                    
-      ~Container() noexcept {
-         ComponentList::ForEach([this]<class C>{
-            if constexpr (requires { this->C::Destroy(); })
-               this->C::Destroy();
-         });
+      constexpr ~Container() noexcept {
+         //static_assert(::std::is_standard_layout_v<Container>);
+         if not consteval {
+            ComponentList::ForEach([this]<class C>{
+               if constexpr (requires { this->C::Destroy(); })
+                  this->C::Destroy();
+            });
+         }
       }
       
       /// C++ copy-semantics are mapped onto Refer intent                     
@@ -272,9 +287,6 @@ namespace Langulus::Anyness
       template<class C>
       static constexpr bool HasComponent = CT::SameAsOneOf<C, COMPONENTS...>;
 
-      template<class C>
-      static constexpr size_t StackOffset = Inner::CalculateStackOffset<C, COMPONENTS...>();
-
    protected:
       template<unsigned>
       friend struct Com::IterationOperators;
@@ -289,15 +301,23 @@ namespace Langulus::Anyness
       template<unsigned, class>
       friend struct Com::HashStack;
       
-      uint8_t mStack[Inner::CalculateStackSize<COMPONENTS...>()];
-      
-      template<CT::Component C>
-      static consteval unsigned GetHeapHeaderOffset() {
-         //TODO accumulate HeapHeaderSize for the provided HeapID up until base C
-         return 0;
+      typename decltype(Inner::DefineStack<COMPONENTS...>())::Tuple mStack;
+
+      /// Access a variable on the stack associated with a component          
+      template<class C>
+      constexpr auto& AccessStack(this auto&& self) noexcept {
+         constexpr size_t IDX = Inner::GetStackOffset<C, COMPONENTS...>();
+         return std::get<IDX>(self.mStack).value;
       }
 
-
+      /// Explicitly call ConstructDefault in all of the components.          
+      constexpr void ConstructDefault() noexcept {
+         ComponentList::ForEach([this]<class C>{
+            if constexpr (requires { this->C::ConstructDefault(); })
+               this->C::ConstructDefault();
+         });
+      }
+      
       /// Get a reference to the first element of a specific stack/heap       
       ///   @tparam ID - the stack/heap ID                                    
       ///   @tparam TYPE - the type of the data to get                        

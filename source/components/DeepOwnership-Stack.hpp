@@ -21,7 +21,8 @@ namespace Langulus::Anyness::Component
    template<unsigned ID>
    struct DeepOwnershipStack {
       using CTTI_Component = Yes<>;
-      static constexpr int  StackSize = sizeof(AllocationPtr*);
+      using StackRequest = AllocationPtr*;
+      
       static constexpr bool DeeplyOwned = true;
       static constexpr int  ComponentPrecedence = 2000;
 

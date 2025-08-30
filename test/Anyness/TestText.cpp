@@ -79,9 +79,9 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       size_t accumulated_size = 0;
       size_t accumulated_stack_size = 0;
       T::ComponentList::ForEach([&]<class C> {
-         if constexpr (requires {C::StackSize;}) {
-            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", C::StackSize, " bytes on the stack)");
-            accumulated_stack_size += C::StackSize;
+         if constexpr (requires { typename C::StackRequest; }) {
+            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", sizeof(typename C::StackRequest), " bytes on the stack)");
+            accumulated_stack_size += sizeof(typename C::StackRequest);
          }
          else Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
          accumulated_size += sizeof(C);

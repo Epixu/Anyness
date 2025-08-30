@@ -19,7 +19,8 @@ namespace Langulus::Anyness::Component
    template<unsigned ID>
    struct HeapReference {
       using CTTI_Component = Yes<>;
-      static constexpr int  StackSize = sizeof(void*);
+      using StackRequest = void*;
+
       static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapAllocated = true;
       static constexpr bool HeapCanBeNull = false;
@@ -33,7 +34,10 @@ namespace Langulus::Anyness::Component
       friend struct IndexedLinear;
       template<unsigned>
       friend struct HeapMovable;
-
+      template<unsigned>
+      friend struct Emplacement;
+      friend struct Comparison;
+      
       /*using Byte = ::std::uint8_t;
       template<CT::Container C>
       using View = typename C::ViewType;
@@ -57,10 +61,8 @@ namespace Langulus::Anyness::Component
       
       /// Get the heap pointer (inner)                                        
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
-         using R = Tmut<decltype(self), void**, void const* const*>;
-         return *reinterpret_cast<R>(
-            self.mStack + self.template StackOffset<HeapReference>
-         );
+         //using R = Tmut<decltype(self), void**, void const* const*>;
+         return self.template AccessStack<HeapReference>();
       }
 
       constexpr void SetHeapInner(this auto& self, auto heap) noexcept {

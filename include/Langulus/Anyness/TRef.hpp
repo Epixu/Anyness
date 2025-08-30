@@ -50,6 +50,7 @@ namespace Langulus::Anyness
       using Pick    = T;
       using PickMut = T;
 
+      constexpr TRef() noexcept { this->ConstructDefault(); }
       constexpr TRef(nullptr_t) noexcept {}
 
       //constexpr auto Get() const has_assumptions { return &Base::Get(); }

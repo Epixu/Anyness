@@ -24,7 +24,8 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using CountType = T;
       using IndexType = Index::At<T>;
-      static constexpr int StackSize = sizeof(T);
+      using StackRequest = T;
+
       static constexpr int ComponentPrecedence = 1000;
 
       /// Check if there are no initialized elements                          
@@ -52,15 +53,13 @@ namespace Langulus::Anyness::Component
       template<unsigned>        friend struct HeapMovable;
       
       /// Get count (inner)                                                   
-      constexpr auto& GetCountInner(this auto const& self) noexcept {
-         return *reinterpret_cast<T const*>(
-            self.mStack + self.template StackOffset<CountStack>
-         );
+      constexpr auto& GetCountInner(this auto&& self) noexcept {
+         return self.template AccessStack<CountStack>();
       }
       
       /// Set the number of initialized elements                              
       constexpr void SetCountInner(this auto& self, T c) noexcept {
-         const_cast<T&>(self.GetCountInner()) = c;
+         self.GetCountInner() = c;
       }
    };
 }

@@ -11,6 +11,8 @@
 
 namespace Langulus::Anyness::Component
 {
+   using RTTI::DMeta;
+   
    namespace Inner
    {
       /// Nest-dereference/destroy an element on the heap                     
@@ -77,8 +79,9 @@ namespace Langulus::Anyness::Component
    template<unsigned ID, bool AUTO>
    struct OwnershipStack {
       using CTTI_Component = Yes<>;
+      using StackRequest   = AllocationPtr;
+
       static constexpr bool Owned = AUTO;
-      static constexpr int  StackSize = sizeof(AllocationPtr);
       static constexpr int  ComponentPrecedence = -1000;
 
       /// Get the allocation                                                  
@@ -97,7 +100,7 @@ namespace Langulus::Anyness::Component
       ///   @attention if we already own the memory just Keep() it once       
       template<CT::Container C> requires C::HeapAllocated   
       void TakeOwnership(this C& self) {
-         if (not self.GetRaw())
+         if (not self.GetHeapInner())
             return;
 
          auto a = self.GetAllocationInner();
@@ -124,16 +127,14 @@ namespace Langulus::Anyness::Component
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   
-      constexpr auto& GetAllocationInner(this auto const& self) noexcept {
-         return *reinterpret_cast<AllocationPtr const*>(
-            self.mStack + self.template StackOffset<OwnershipStack>
-         );
+      constexpr auto& GetAllocationInner(this auto&& self) noexcept {
+         return self.template AccessStack<OwnershipStack>();
       }
       
       /// Set allocation (inner)                                              
       ///   @attention this will not dereference previous allocation          
       constexpr void SetAllocationInner(this auto& self, AllocationPtr a) noexcept {
-         const_cast<AllocationPtr&>(self.GetAllocationInner()) = a;
+         self.GetAllocationInner() = a;
       }
 
       /// Automatically set the allocation by searching for it using the heap 

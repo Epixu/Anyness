@@ -6,13 +6,11 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Langulus/Anyness/THandle.hpp>
-#include <Langulus/Anyness/TextView.hpp>
+#include <Langulus/Anyness/TView.hpp>
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Indexed-Linear.hpp"
-#include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
 #include "../../../source/components/Concatenate.hpp"
@@ -43,7 +41,6 @@ namespace Langulus::Anyness
          Com::CountStack<>,               // Variable count             
          Com::ReserveEmergent<>,          // Variable capacity          
          Com::HashStack<>,                // Variable hash (cached)     
-         //Com::Emplacement<>,              // Allows emplacement         
          Com::Insertion<0, Text>,         // Serialize + insert         
          Com::InsertionOperators<0, Text>,// << and >> insertion        
          Com::Concatenate<>,              // Concatenate                
@@ -67,29 +64,18 @@ namespace Langulus::Anyness
       using CTTI_Text = Yes<>;
 
       // Single element selections                                      
-      using Pick = char const&;
+      using Pick    = char const&;
       using PickMut = char&;
 
       // Range selections                                               
-      using  PickRange    = TextView;
-      struct PickRangeMut : Container<
-         Com::TypedStatic<DMeta, char>,   // Type-constrained           
-         Com::HeapReference<>,            // Pointer to heap memory     
-         Com::OwnershipStack<0, false>,   // Pointer to an allocation   
-         Com::CountStack<>,               // Variable count             
-         Com::HashEmergent<>,             // Emergent hash              
-         Com::Comparison,                 // Allows for comparisons     
-         Com::Conversion,                 // Allows conversions         
-         Com::IndexedLinear<>,            // Indexed directly           
-         Com::IterationForEach<>,         // ForEach iteration          
-         Com::IterationRange<>,           // Ranged iteration           
-         Com::Assignment<>                // Assignment is allowed      
-      > {};
-
-   public:
+      using PickRange    = TView<char const>;
+      using PickRangeMut = TView<char>;
+      
       using Base::Base;
       using Base::operator =;
-      
+      using Base::operator ==;
+
+      constexpr Text() noexcept { this->ConstructDefault(); }
       constexpr Text(nullptr_t) noexcept {}
 
       /// Construction from any kind of text that isn't an Anyness container  
@@ -107,8 +93,9 @@ namespace Langulus::Anyness
             // Type can be either char, or const char                   
             using CHAR = TypeOf<ST>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
-            const auto count = strnlen(source, ExtentOf<T>);
+            const auto count = std::char_traits<char>::length(source);
             if (not count) {
+               SetHeapInner(nullptr);
                SetCountInner(0);
                SetHashInner(1);
                return;
@@ -123,8 +110,9 @@ namespace Langulus::Anyness
                return;
             using CHAR = Deptr<ST>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
-            const auto count = strlen(source);
+            const auto count = std::char_traits<char>::length(source);
             if (not count) {
+               SetHeapInner(nullptr);
                SetCountInner(0);
                SetHashInner(1);
                return;
@@ -136,6 +124,7 @@ namespace Langulus::Anyness
             // Create from an std container                             
             // Type can be either char, or const char                   
             if (source.empty()) {
+               SetHeapInner(nullptr);
                SetCountInner(0);
                SetHashInner(1);
                return;
@@ -295,9 +284,6 @@ namespace Langulus::Anyness
          return {this->GetRaw(), this->GetCount()};
       }
 
-      /// Comparing with other containers or characters                       
-      using Base::operator ==;
-
       /// Comparing against nullptr_t checks if text is empty                 
       constexpr bool operator == (nullptr_t) const noexcept {
          return IsEmpty();
@@ -405,6 +391,6 @@ namespace Langulus
 {
    /// Make a text literal                                                    
    Anyness::Text operator ""_text(const char* text, size_t size) {
-      return Anyness::Text::FromText(Disown(text), size);
+      return Anyness::Text::FromText(text, size);
    }
 }

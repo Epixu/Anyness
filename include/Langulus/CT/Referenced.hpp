@@ -29,7 +29,7 @@ namespace Langulus
    /// required interface for it                                              
    ///                                                                        
    class Referenced {
-      int mReferences = 1;
+      mutable int mReferences = 1;
 
    public:
       using CTTI_Referenced = Yes<>;
@@ -56,7 +56,7 @@ namespace Langulus
       }
 
       LANGULUS(ALWAYS_INLINED)
-      int Reference(int x) has_assumptions {
+      int Reference(int x) const has_assumptions {
          LglsAssumeDev(mReferences or x == 0,
             "Dead instance resurrection/overkill");
          LglsAssumeDev(x >= 0 or mReferences >= -x,

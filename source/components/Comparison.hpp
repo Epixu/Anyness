@@ -11,6 +11,7 @@
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Text.hpp>
+#include <Langulus/CT/Unfold.hpp>
 
 #if 0 and LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH()
    #include <Langulus/Logger.hpp>
@@ -95,7 +96,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Types are similar                                     
-               if (lhs.GetRaw() == rhs.GetRaw()) {
+               if (lhs.GetHeapInner() == rhs.GetHeapInner()) {
                   // Containers point to the same memory, so it's a     
                   // matter of whether they have the same count         
                   return lhs.GetCount() == rhs.GetCount();

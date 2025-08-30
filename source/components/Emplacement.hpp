@@ -8,8 +8,6 @@
 #pragma once
 #include "../Container.hpp"
 #include "Indexed-Linear.hpp"
-//#include <Langulus/CT/Allocatable.hpp>
-//#include <Langulus/CT/Resolvable.hpp>
 
 
 namespace Langulus::CT
@@ -67,7 +65,7 @@ namespace Langulus::Anyness::Component
             if constexpr (C::TypeErased or IT::TypeErased) {
                //                                                       
                // Either this container or the handle is type-erased    
-               auto T = rhs.GetType();
+               auto T = rhs.GetTypeInner();
                LglsAssumeDev(self.IsSimilar(T), "Type mismatch");
 
                if constexpr (CT::Moved<I>)
@@ -99,7 +97,7 @@ namespace Langulus::Anyness::Component
                // from a lot of compile-time optimizations              
                using T = TypeOf<C>;
                static_assert(CT::Similar<T, TypeOf<IT>>, "Type mismatch");
-               IntentNew(self.GetRaw(), I::Nest(*rhs.GetRaw()));
+               IntentNew(self.GetHeapInner(), I::Nest(*rhs.GetRaw()));
             }
          }
          else if constexpr (C::TypeErased) {
@@ -107,7 +105,7 @@ namespace Langulus::Anyness::Component
             // This container is type-erased                            
             LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
             LglsAssumeDev(self.template IsSimilar<IT>(), "Type mismatch");
-            auto T = self.GetType();
+            auto T = self.GetTypeInner();
 
             if constexpr (CT::Moved<I>)
                T.GetMoveConstructor()(self.GetRaw(), &rhs);
@@ -129,7 +127,7 @@ namespace Langulus::Anyness::Component
             // This container is statically-typed                       
             using T = TypeOf<C>;
             static_assert(CT::Similar<T, IT>, "Type mismatch");
-            IntentNew(self.GetRaw(), FWD(intent));
+            IntentNew(self.GetHeapInner(), FWD(intent));
          }
       }
       
@@ -147,7 +145,7 @@ namespace Langulus::Anyness::Component
          if constexpr (C::TypeErased) {
             //                                                          
             // This container is type-erased                            
-            auto T = self.GetType();
+            auto T = self.GetTypeInner();
             T.GetDefaultConstructor()(self.GetRaw());
          }
          else {
@@ -158,9 +156,9 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Emplace a new manually constructed item at the first element        
-      /// If zero arguments were provided, this will EmplaceDefault           
-      /// When C is type-erased, this will perform a describe-construction    
+      /// Emplace a new manually constructed item at the first element.       
+      /// If zero arguments were provided, this will EmplaceDefault.          
+      /// When C is type-erased, this will perform a describe-construction.   
       ///   @attention assumes destination memory has been preallocated,      
       ///      including all levels of indirection                            
       ///   @attention does not modify any container state                    
@@ -184,20 +182,20 @@ namespace Langulus::Anyness::Component
                //                                                       
                // This container is statically-typed                    
                using T = TypeOf<C>;
-               new (self.GetRaw()) T {FWD(arguments)...};
+               new (const_cast<void*>(self.GetHeapInner())) T {FWD(arguments)...};
             }
          }
       }
 
    public:
-      /// Generic emplacement that constructs/overwrites specific element     
-      /// Any overwritten element will be dereferenced/destroyed first        
+      /// Generic emplacement that constructs/overwrites specific element.    
+      /// Any overwritten element will be dereferenced/destroyed first.       
       template<CT::IndexedLinearly C, class...A>
       auto EmplaceAt(this C&, CT::Index auto, A&&...)
          -> PickMut<C> requires CT::RangeEmplaceable<C, A...>;
 
-      /// Generic emplacement that constructs/overwrites the first element    
-      /// Any overwritten element will be dereferenced/destroyed first        
+      /// Generic emplacement that constructs/overwrites the first element.   
+      /// Any overwritten element will be dereferenced/destroyed first.       
       template<CT::Container C, class...A>
       auto Emplace(this C& self, A&&...arguments) -> PickMut<C>
       requires CT::RangeEmplaceable<C, A...> {

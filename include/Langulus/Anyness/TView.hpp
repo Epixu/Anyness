@@ -12,27 +12,20 @@
 #include "../../../source/components/Indexed-Linear.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/Hash-Stack.hpp"
-#include "../../../source/components/State-Stack.hpp"
 #include "../../../source/components/Iteration-ForEach.hpp"
 #include "../../../source/components/Iteration-Range.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "../../../source/components/Conversion.hpp"
-#include "../../../source/states/Compressed.hpp"
-#include "../../../source/states/Encrypted.hpp"
-#include "../../../source/states/Tracked.hpp"
-#include "../../../source/states/Typed.hpp"
 
 
 namespace Langulus::Anyness
 {
-   struct Text;
-   
    namespace Inner
    {
-      using TextViewBase = Container<
-         Com::TypedStatic<DMeta, const char>,// Type-constrained        
+      template<class T>
+      using TViewBase = Container<
+         Com::TypedStatic<DMeta, T>,         // Type-constrained        
          Com::HeapReference<>,               // Pointer to heap memory  
          Com::OwnershipStack<0, false>,      // Pointer to an allocation
          Com::CountStack<>,                  // Variable count          
@@ -41,17 +34,24 @@ namespace Langulus::Anyness
          Com::Conversion,                    // Allows conversions      
          Com::IndexedLinear<>,               // Indexed directly        
          Com::IterationForEach<>,            // ForEach iteration       
-         Com::IterationRange<>               // Ranged iteration        
+         Com::IterationRange<>,              // Ranged iteration        
+         // Assignment is allowed only if T is mutable                  
+         Com::Assignment<>
       >;
    }
 
    ///                                                                        
-   /// A lightweight text view of variable size                               
-   /// Disallows any modification of the contained data or the container      
-   ///                                                                        
-   struct TextView : Inner::TextViewBase {
-      using Base = Inner::TextViewBase;
+   /// A lightweight container view of variable size.                         
+   /// If T is constant, the view becomes immutable.                          
+   template<class T>
+   struct TView : Inner::TViewBase<T> {
+      // Single element selections                                      
+      using Pick    = T const&;
+      using PickMut = T&;
+
+      using Base = Inner::TViewBase<T>;
       using Base::Base;
       using Base::operator =;
+      using Base::operator ==;
    };
 }

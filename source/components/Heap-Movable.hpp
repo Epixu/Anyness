@@ -33,7 +33,8 @@ namespace Langulus::Anyness::Component
       friend struct Insertion;
       template<unsigned>
       friend struct Emplacement;
-      
+
+   private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
       template<CT::Container C>
@@ -378,8 +379,13 @@ namespace Langulus::Anyness::Component
                      // in it. We're moving to new memory, so no reverse
                      // is required                                     
                      auto from = IterateHandles(previous).begin();
-                     for (auto to : IterateHandles(self))
-                        to.EmplaceWithIntent(Abandon(*(from++)));
+                     for (auto to : IterateHandles(self)) {
+                        // We're not allowed to abandon constant items  
+                        if constexpr (CT::Mutable<T>)
+                           to.EmplaceWithIntent(Abandon(*(from++)));
+                        else
+                           to.EmplaceWithIntent(Refer(*(from++)));
+                     }
 
                      previous.SetAllocationInner(al);
                      previous.Free();
