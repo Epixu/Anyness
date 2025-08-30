@@ -61,5 +61,25 @@ namespace Langulus::Anyness::Component
       constexpr void SetCountInner(this auto& self, T c) noexcept {
          self.GetCountInner() = c;
       }
+      
+      /// Default-initialize count to zero                                    
+      constexpr void ConstructDefault(this auto& self) noexcept {
+         self.SetCountInner(0);
+      }
+      
+      /// Transfer from any kind of container, respecting intents             
+      ///   @attention this is noop when constructing from deep intents,      
+      ///      since element constructors might throw and stuff be partially  
+      ///      inserted. In those cases, count is set by the heap components. 
+      ///   @param intent - the intent and container to transfer from         
+      template<CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this auto& self, I&& intent) {
+         if constexpr (I::IsShallow() and not CT::Copied<I>) {
+            decltype(auto) from = FWD(intent.what);
+            self.SetCountInner(from.GetCountInner());
+            if constexpr (I::ResetsOnMove())
+               from.SetCountInner(0);
+         }
+      }
    };
 }

@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Component
    struct HashStack : HashEmergent<ID, H> {
       using StackRequest = H;
       
-      /// Reset the hash. It will be recomputed on next comparison            
+      /// Reset the hash. It will be recomputed on next comparison.           
       void ResetHash(this auto& self) noexcept {
          self.SetHashInner(0);
       }
@@ -46,6 +46,27 @@ namespace Langulus::Anyness::Component
       /// Set the hash (inner)                                                
       constexpr void SetHashInner(this auto& self, H h) noexcept {
          self.GetHashInner() = h;
+      }
+
+      /// Hash is default-initialized to 1, because that's a universal value  
+      /// for an empty container. Prevents rehash until something is pushed.  
+      constexpr void ConstructDefault(this auto& self) noexcept {
+         self.SetHashInner(1);
+      }
+      
+      /// Transfer from any kind of container, respecting intents             
+      ///   @attention this is noop when constructing from deep intents,      
+      ///      since element constructors might throw and stuff be partially  
+      ///      inserted. In those cases, hash is set by the heap components.  
+      ///   @param intent - the intent and container to transfer from         
+      template<CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this auto& self, I&& intent) {
+         if constexpr (I::IsShallow() and not CT::Copied<I>) {
+            decltype(auto) from = FWD(intent.what);
+            self.SetHashInner(from.GetHashInner());
+            if constexpr (I::ResetsOnMove())
+               from.SetHashInner(1);
+         }
       }
    };
 }

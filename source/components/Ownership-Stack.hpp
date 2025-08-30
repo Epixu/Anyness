@@ -81,7 +81,8 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using StackRequest   = AllocationPtr;
 
-      static constexpr bool Owned = AUTO;
+      static constexpr bool Owned = true;
+      static constexpr bool OwnedOnConstructOrAssign = AUTO;
       static constexpr int  ComponentPrecedence = -1000;
 
       /// Get the allocation                                                  
@@ -103,14 +104,18 @@ namespace Langulus::Anyness::Component
          if (not self.GetHeapInner())
             return;
 
-         auto a = self.GetAllocationInner();
-         if (a) {
-            // We already have authority                                
+         auto& a = self.GetAllocationInner();
+         if (a)
+            return; // We have already owned that allocation            
+      
+         // The heap might already be ours but we're just not aware     
+         if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
+            a = const_cast<AllocationPtr>(found);
             a->Keep();
             return;
          }
 
-         // Shallow-copy all elements                                   
+         // Shallow-copy all elements in a new, owned allocation        
          C temp {Copy {self}};
          self = Abandon {temp};
       }
@@ -133,8 +138,8 @@ namespace Langulus::Anyness::Component
       
       /// Set allocation (inner)                                              
       ///   @attention this will not dereference previous allocation          
-      constexpr void SetAllocationInner(this auto& self, AllocationPtr a) noexcept {
-         self.GetAllocationInner() = a;
+      constexpr void SetAllocationInner(this auto& self, Allocation const* a) noexcept {
+         self.GetAllocationInner() = const_cast<Allocation*>(a);
       }
 
       /// Automatically set the allocation by searching for it using the heap 
@@ -142,7 +147,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this will not dereference previous allocation          
       void FindAllocationInner(this auto& self) noexcept {
          auto found = Allocator::Find(self.GetType(), self.GetHeapInner());
-         self.SetAllocationInner(found ? const_cast<AllocationPtr>(found) : nullptr);
+         self.SetAllocationInner(found ? found : nullptr);
       }
 
       /// Default-initialize the component                                    
@@ -167,7 +172,7 @@ namespace Langulus::Anyness::Component
                   // Move                                               
                   self.SetAllocationInner(from.GetAllocationInner());
 
-                  if constexpr (AUTO and not IT::Owned) {
+                  if constexpr (OwnedOnConstructOrAssign and not IT::Owned) {
                      // Since we are not aware if that block is         
                      // referenced or not we reference it just in case, 
                      // and we also do not reset 'from' to avoid leaks. 

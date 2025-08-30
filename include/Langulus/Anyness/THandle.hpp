@@ -24,7 +24,7 @@ namespace Langulus::Anyness
       using THandleEmbeddedDense = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<>,
-         Com::OwnershipStack<>,
+         Com::OwnershipStack<0, false>,
          Com::CountStatic<1u>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -67,7 +67,7 @@ namespace Langulus::Anyness
       using THandleLocalSparse = Container<
          Com::TypedStatic<DMeta, Deptr<T>>,  // Statically typed        
          Com::HeapMovable<>,                 // Data on the heap        
-         Com::OwnershipStack<>,              // Allocation is referenced
+         Com::OwnershipStack<0, false>,      // Allocation is referenced
          Com::CountStatic<1u>,               // Statically sized        
          Com::Emplacement<>,                 // Can be emplaced         
          Com::Assignment<>,                  // Can be reassigned       

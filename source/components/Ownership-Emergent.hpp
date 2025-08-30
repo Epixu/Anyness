@@ -26,8 +26,9 @@ namespace Langulus::Anyness::Component
    template<unsigned ID, bool AUTO>
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
-      static constexpr bool Owned = AUTO;
-      static constexpr int ComponentPrecedence = -1000;
+      static constexpr bool Owned = true;
+      static constexpr bool OwnedOnConstructOrAssign = AUTO;
+      static constexpr int  ComponentPrecedence = -1000;
 
       /// Get the allocation                                                  
       auto GetAllocation(this auto const& self) noexcept -> AllocationPtr {

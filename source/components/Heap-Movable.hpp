@@ -72,17 +72,9 @@ namespace Langulus::Anyness::Component
       auto GetDense(this C&&, Count<C> = CountMax<C>) -> Deep<C>;
       
    protected:      
-      /// Default-initialize the component, defaulting members                
-      /// A default-constructor isn't used for this to avoid duplication of   
-      /// some calls                                                          
+      /// Default-initialize the heap pointer                                 
       constexpr void ConstructDefault(this auto& self) noexcept {
          self.SetHeapInner(nullptr);
-         if constexpr (requires { self.mReserved; })
-            self.mReserved = 0;
-         if constexpr (requires { self.SetCountInner(0); })
-            self.SetCountInner(0);
-         if constexpr (requires { self.SetHashInner(1); })
-            self.SetHashInner(1);
       }
       
       /// Transfer from any kind of container, respecting intents             
@@ -100,25 +92,13 @@ namespace Langulus::Anyness::Component
                   // Move                                               
                   self.SetType(from.GetType());
                   self.SetHeapInner(from.GetHeapInner());
-                  if constexpr (requires { self.mReserved; })
-                     self.mReserved = from.GetReserved();
-                  if constexpr (requires { self.SetCountInner(from.GetCount()); })
-                     self.SetCountInner(from.GetCount());
-                  if constexpr (requires { self.SetHashInner(from.GetHashInner()); })
-                     self.SetHashInner(from.GetHashInner());
 
-                  if constexpr (IT::Owned) {
+                  if constexpr (IT::OwnedOnConstructOrAssign) {
                      from.SetHeapInner(nullptr);
-                     if constexpr (requires { from.mReserved; })
-                        from.mReserved = 0;
-                     if constexpr (requires { from.SetCountInner(0); })
-                        from.SetCountInner(0);
                      if constexpr (requires { from.ResetState(); })
                         from.ResetState();
                      if constexpr (requires { from.ResetType(); })
                         from.ResetType();
-                     if constexpr (requires { from.ResetHash(); })
-                        from.ResetHash();
                   }
                }
                else {
@@ -127,12 +107,6 @@ namespace Langulus::Anyness::Component
                      // Refer                                           
                      self.SetType(from.GetType());
                      self.SetHeapInner(from.GetHeapInner());
-                     if constexpr (requires { self.mReserved; })
-                        self.mReserved = from.GetReserved();
-                     if constexpr (requires { self.SetCountInner(from.GetCount()); })
-                        self.SetCountInner(from.GetCount());
-                     if constexpr (requires { self.SetHashInner(from.GetHashInner()); })
-                        self.SetHashInner(from.GetHashInner());
                   }
                   else {
                      // Do a shallow copy                               
@@ -189,12 +163,6 @@ namespace Langulus::Anyness::Component
                // Abandon/Disown                                        
                self.SetType(from.GetType());
                self.SetHeapInner(from.GetHeapInner());
-               if constexpr (requires { self.mReserved; })
-                  self.mReserved = from.GetReserved();
-               if constexpr (requires { self.SetCountInner(from.GetCount()); })
-                  self.SetCountInner(from.GetCount());
-               if constexpr (requires { self.SetHashInner(from.GetHashInner()); })
-                  self.SetHashInner(from.GetHashInner());
             }
          }
          else {

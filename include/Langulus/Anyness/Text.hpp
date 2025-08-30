@@ -76,7 +76,7 @@ namespace Langulus::Anyness
       using Base::operator ==;
 
       constexpr Text() noexcept { this->ConstructDefault(); }
-      constexpr Text(nullptr_t) noexcept {}
+      constexpr Text(nullptr_t) noexcept : Text {} {}
 
       /// Construction from any kind of text that isn't an Anyness container  
       template<CT::Text T> requires CT::NotContainer<T>
@@ -84,9 +84,6 @@ namespace Langulus::Anyness
          using S  = IntentOf<T&&>;
          using ST = TypeOf<S>;
          decltype(auto) source = DeintCast(FWD(text));
-         
-         // Make sure we start off without ownership                    
-         SetAllocationInner(nullptr);
 
          if constexpr (CT::TextLiteral<ST>) {
             // Create from a text literal/bounded array                 
@@ -95,9 +92,7 @@ namespace Langulus::Anyness
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             const auto count = std::char_traits<char>::length(source);
             if (not count) {
-               SetHeapInner(nullptr);
-               SetCountInner(0);
-               SetHashInner(1);
+               ConstructDefault();
                return;
             }
             SetHeapInner(source);
@@ -106,15 +101,15 @@ namespace Langulus::Anyness
          else if constexpr (CT::TextPointer<ST>) {
             // Create from a null-terminated char pointer               
             // Type can be either char, or const char                   
-            if (not source)
+            if (not source) {
+               ConstructDefault();
                return;
+            }
             using CHAR = Deptr<ST>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
             const auto count = std::char_traits<char>::length(source);
             if (not count) {
-               SetHeapInner(nullptr);
-               SetCountInner(0);
-               SetHashInner(1);
+               ConstructDefault();
                return;
             }
             SetHeapInner(source);
@@ -124,9 +119,7 @@ namespace Langulus::Anyness
             // Create from an std container                             
             // Type can be either char, or const char                   
             if (source.empty()) {
-               SetHeapInner(nullptr);
-               SetCountInner(0);
-               SetHashInner(1);
+               ConstructDefault();
                return;
             }
             using CHAR = Deptr<decltype(source.data())>;
@@ -140,6 +133,7 @@ namespace Langulus::Anyness
          ResetHash();
 
          // Take ownership if the intent requires it                    
+         SetAllocationInner(nullptr);
          if constexpr (S::KeepsOnCopy())
             TakeOwnership();
       }
