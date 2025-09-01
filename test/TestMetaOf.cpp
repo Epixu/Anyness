@@ -7,7 +7,7 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/MetaOf.hpp>
-#include <Langulus/Values.hpp>
+#include <../include/Langulus/Utils/Values.hpp>
 #include <Langulus/Tag.hpp>
 #include <Langulus/CT/Members.hpp>
 

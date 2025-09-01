@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Types.hpp"
+#include "Utils/Types.hpp"
 
 
 namespace Langulus

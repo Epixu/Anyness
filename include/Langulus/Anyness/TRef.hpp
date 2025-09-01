@@ -18,9 +18,9 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<CT::Sparse T>
+   template<class T>
    using TRefBase = Container<
-      Com::TypedStatic<DMeta, Deptr<T>>,  // Statically typed          
+      Com::TypedStatic<DMeta, T>,         // Statically typed          
       Com::HeapMovable<>,                 // Data on the heap          
       Com::OwnershipStack<>,              // Allocation is referenced  
       Com::CountStatic<1u>,               // Statically sized          
@@ -39,7 +39,7 @@ namespace Langulus::Anyness
    /// states are applied. You can use TAny instead if you want any           
    /// combination of encryption, compression and linking.                    
    ///                                                                        
-   template<CT::Sparse T>
+   template<class T>
    struct TRef : Inner::TRefBase<T> {
       using Base = Inner::TRefBase<T>;
       using Base::Base;
@@ -51,22 +51,19 @@ namespace Langulus::Anyness
       using PickMut = T;
 
       constexpr TRef() noexcept { this->ConstructDefault(); }
-      constexpr TRef(nullptr_t) noexcept {}
-
-      //constexpr auto Get() const has_assumptions { return &Base::Get(); }
-      //constexpr auto Get()       has_assumptions { return &Base::Get(); }
+      constexpr TRef(nullptr_t) noexcept : TRef{} {}
       
       constexpr bool operator == (nullptr_t) const noexcept {
          return this->IsEmpty();
       }
       
-      constexpr bool operator == (T rhs) const noexcept {
+      constexpr bool operator == (T* rhs) const noexcept {
          if (rhs == nullptr)
             return this->IsEmpty();
          return this->GetRaw() == rhs;
       }
 
-      constexpr TRef& operator = (const T& other) noexcept {
+      constexpr TRef& operator = (T* other) noexcept {
          if (other == Base::GetRaw())
             return *this;
          
@@ -78,30 +75,5 @@ namespace Langulus::Anyness
          else Base::Free();         
          return *this;
       }
-
-      ///                                                                     
-      ///   Construction                                                      
-      /*constexpr TRef() noexcept = default;
-      explicit constexpr TRef(const TRef&) noexcept = default;
-      explicit constexpr TRef(TRef&&) noexcept = default;
-
-      /// Intent constructor                                                  
-      template<template<class> class S> requires CT::IntentConstructible<S, T>
-      explicit constexpr TRef(S<TRef>&& other)
-         : Base {other.template Forward<Base>()} {}
-
-      /// Raw pointer constructor                                             
-      /// The allocation behind the pointer will be sought                    
-      ///   @param pointer - the pointer to initialize with                   
-      template<class A> requires CT::ConstructibleFrom<T, A>
-      constexpr TRef(A&& pointer) {
-         if constexpr (CT::Null<A>) {
-            (void) pointer;
-            return;
-         }
-         else EmplaceWithIntent(FWD(pointer));
-      }
-
-      constexpr ~TRef() = default;*/
    };
 }

@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "Main.hpp"
-#include <Langulus/Types.hpp>
+#include <../include/Langulus/Utils/Types.hpp>
 
 using namespace Langulus;
 

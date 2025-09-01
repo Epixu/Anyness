@@ -148,9 +148,6 @@ namespace Langulus::Anyness
          ResetHash();
       }
 
-      //template<class A1, class...AN>
-      //Text(A1&&, AN&&...) requires CT::RangeInsertable<Text, A1, AN...>;
-
       /// Construction from all kinds of text, trim length to desired count   
       ///   @attention intent is ignored - this doesn't apply ownership, only 
       ///      interfaces the data - you can TakeOwnership() after this call  
@@ -282,9 +279,6 @@ namespace Langulus::Anyness
       constexpr bool operator == (nullptr_t) const noexcept {
          return IsEmpty();
       }
-
-      /// Comparing against bounded character arrays and literals             
-      //constexpr bool operator == (const CT::TextLiteral auto&) const noexcept;
 
       /// Comparing against null-terminated strings                           
       constexpr bool operator == (const CT::TextPointer auto& rhs) const noexcept {

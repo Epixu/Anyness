@@ -24,17 +24,10 @@ namespace
       bool moved_in  = false;
       bool moved_out = false;
 
-      RT()
-         : data {0}, t {nullptr} {}
-
-      RT(int a)
-         : data {a}, t {nullptr} {}
-
-      RT(const char* tt)
-         : data(0), t {tt} {}
-
-      RT(const RT& rhs)
-         : data(rhs.data), t {rhs.t}, copied_in {true} {}
+      RT() : data {0}, t {nullptr} {}
+      RT(int a) : data {a}, t {nullptr} {}
+      RT(const char* tt) : data(0), t {tt} {}
+      RT(const RT& rhs) : data(rhs.data), t {rhs.t}, copied_in {true} {}
 
       RT(RT&& rhs)
          : data(rhs.data), t {rhs.t}, moved_in {true} {
@@ -42,9 +35,7 @@ namespace
          rhs.moved_out = true;
       }
 
-      RT(Clone<RT>&& rhs)
-         : data(rhs->data), t {rhs->t}, cloned_in {true} {
-      }
+      RT(Clone<RT>&& rhs) : data(rhs->data), t {rhs->t}, cloned_in {true} { }
 
       ~RT() {
          destroyed = true;
@@ -73,33 +64,31 @@ namespace
          return *this;
       }
 
-      operator const int& () const noexcept {
-         return data;
-      }
+      operator const int& () const noexcept { return data; }
    };
 }
 
 
 TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
-   TRef<RT*>,
-   TRef<const RT*>,
-   TRef<int*>,
-   TRef<const int*>
+   TRef<RT>,
+   TRef<const RT>,
+   TRef<int>,
+   TRef<const int>
 ) {
    static Allocator::State memoryState;
    using T  = TestType;
    using TT = TypeOf<T>;
    
-   /*STATIC_REQUIRE(T{} == T{});
+   STATIC_REQUIRE(T{} == T{});
    STATIC_REQUIRE(T{} == nullptr);
    STATIC_REQUIRE(T{nullptr} == T{nullptr});
-   STATIC_REQUIRE(T{nullptr} == nullptr);*/
+   STATIC_REQUIRE(T{nullptr} == nullptr);
 
    GIVEN("A nullptr-initialized templated shared pointer") {
       T pointer {nullptr};
       T pointer2 {nullptr};
 
-      REQUIRE_FALSE(pointer.Get());
+      REQUIRE_FALSE(pointer.GetRaw());
       REQUIRE_FALSE(pointer);
       REQUIRE(pointer == pointer2);
    }
@@ -108,7 +97,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
       T pointer;
       T pointer2;
 
-      REQUIRE_FALSE(pointer.Get());
+      REQUIRE_FALSE(pointer.GetRaw());
       REQUIRE_FALSE(pointer);
       REQUIRE(pointer == pointer2);
 
@@ -134,7 +123,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
          REQUIRE(pointer.GetUses() == 2);
          REQUIRE(pointer2.GetUses() == 2);
          if constexpr (CT::Referenced<TT>)
-            REQUIRE(pointer->GetReferences() == 2);
+            REQUIRE(pointer->GetReferences() == 1); //TODO major design change - TRef is no longer deep referenced for now, let's see how that goes
       }
 
       WHEN("Create and move an instance") {
@@ -169,7 +158,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
          REQUIRE(pointer.GetAllocation());
          REQUIRE(pointer.GetUses() == 2);
          if constexpr (CT::Referenced<TT>)
-            REQUIRE(pointer->GetReferences() == 2);
+            REQUIRE(pointer->GetReferences() == 1); //TODO major design change - TRef is no longer deep referenced for now, let's see how that goes
       }
 
       auto raw = new Decay<TT> {3};

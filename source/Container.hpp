@@ -8,7 +8,7 @@
 #pragma once
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Sequence.hpp>
-#include <Langulus/CT/Defaultable.hpp>
+#include <Langulus/Utils/Tuple.hpp>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
@@ -301,7 +301,7 @@ namespace Langulus::Anyness
       template<unsigned, class>
       friend struct Com::HashStack;
       
-      typename decltype(Inner::DefineStack<COMPONENTS...>())::Tuple mStack;
+      typename decltype(Inner::DefineStack<COMPONENTS...>())::TupleOptimized mStack;
 
       /// Access a variable on the stack associated with a component          
       template<class C>

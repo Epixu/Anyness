@@ -6,8 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Literal.hpp"
-#include <tuple>
+#include "../Literal.hpp"
 
 
 namespace Langulus::CTTI
@@ -104,9 +103,9 @@ namespace Langulus
    /// It doesn't really carry any data, it's just a useful compile-time tool.
    /// Can be used to generate more complex types or tuples of data.          
    ///                                                                        
-   template<class...T>
-   struct Types;
-
+   template<class...> struct Types;
+   template<class...> struct Tuple;
+   
    namespace Inner
    {
       template<CT::Typelist GATHERED, class HEAD, class...TAIL>
@@ -142,6 +141,9 @@ namespace Langulus
 
       template<class N>
       using Cat = decltype(Concat(Fake<N&&>()));
+
+      using Tuple = ::std::tuple<>;
+      using TupleOptimized = ::Langulus::Tuple<>;
    };
 
    using NoTypes = Types<>;
@@ -223,8 +225,15 @@ namespace Langulus
       }
 
       using Tuple = ::std::tuple<T>;
+      using TupleOptimized = ::Langulus::Tuple<T>;
 
       static constexpr Tuple GenerateData(auto&& lambda) {
+         static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
+            "Provided argument is not a lambda of the form []<class> -> non-void type");
+         return {lambda.template operator()<T>()};
+      }
+
+      static constexpr TupleOptimized GenerateDataOptimized(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
          return {lambda.template operator()<T>()};
@@ -379,8 +388,19 @@ namespace Langulus
       }
 
       using Tuple = ::std::tuple<T1, T2, TN...>;
+      using TupleOptimized = ::Langulus::Tuple<T1, T2, TN...>;
 
       static constexpr Tuple GenerateData(auto&& lambda) {
+         static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },
+            "Provided argument is not a lambda of the form []<class> -> non-void type");
+         return {
+            lambda.template operator()<T1>(),
+            lambda.template operator()<T2>(),
+            lambda.template operator()<TN>()...
+         };
+      }
+
+      static constexpr TupleOptimized GenerateDataOptimized(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
          return {

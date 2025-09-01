@@ -37,6 +37,8 @@ namespace Langulus::Anyness::Component
       template<unsigned>
       friend struct Emplacement;
       friend struct Comparison;
+      template<auto COUNT>
+      friend struct CountStatic;
       
       /*using Byte = ::std::uint8_t;
       template<CT::Container C>

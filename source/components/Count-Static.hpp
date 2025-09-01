@@ -40,12 +40,12 @@ namespace Langulus::Anyness::Component
       
       /// Check if empty                                                      
       constexpr bool IsEmpty(this auto const& self) noexcept {
-         return self.GetCount() == CountType {};
+         return self.GetCount() == CountType {0};
       }
 
       /// Explicit boolean conversion to allow using containers in ifs        
       constexpr explicit operator bool(this auto const& self) noexcept {
-         return self.GetCount() != CountType {};
+         return self.GetCount() != CountType {0};
       }
 
       /// Static count means static reserve                                   
@@ -62,7 +62,7 @@ namespace Langulus::Anyness::Component
       constexpr auto GetCountInner(this C const& self) noexcept -> CountType {
          if constexpr (CT::HeapAllocated<C>) {
             if constexpr (C::HeapCanBeNull)
-               return self.GetRaw() ? COUNT : CountType {0};
+               return self.GetHeapInner() ? COUNT : CountType {0};
             else
                return COUNT;
          }
