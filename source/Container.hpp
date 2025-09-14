@@ -307,7 +307,7 @@ namespace Langulus::Anyness
       template<class C>
       constexpr auto& AccessStack(this auto&& self) noexcept {
          constexpr size_t IDX = Inner::GetStackOffset<C, COMPONENTS...>();
-         return std::get<IDX>(self.mStack).value;
+         return self.mStack.template get<IDX>().value;
       }
 
       /// Explicitly call ConstructDefault in all of the components.          
