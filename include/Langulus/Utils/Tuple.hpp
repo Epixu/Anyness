@@ -89,7 +89,7 @@ namespace Langulus
          using DelayedAliasEval = typename ml::Implementations::DelayTemplateEval<(N < 100000)>::template f<F, Ts...>;
 
          /// Creates a metafunction out of a template                         
-         template<template<class...> class F_, class Pipe = Identity>
+         template<template<class...> class F_, class Pipe = ml::Identity>
          struct F {
             template<class...Args>
             using f = ml::f<Pipe, ml::DelayedAliasEval<F_, sizeof...(Args), Args...>>;
@@ -101,7 +101,7 @@ namespace Langulus
             {
                struct GetNext {
                   template<int i>
-                  using f = ml::Int<i >= 32 ? 32 : i >= 16 ? 16 : i >= 8 ? 8 : i >= 4 ? 4 : i >= 2 ? 2 : i >= 1 ? 1 : 0>;
+                  using f = ml::Int<(i >= 32 ? 32 : i >= 16 ? 16 : i >= 8 ? 8 : i >= 4 ? 4 : i >= 2 ? 2 : i >= 1 ? 1 : 0)>;
                };
             }
 
@@ -184,27 +184,25 @@ namespace Langulus
                /// This is used to short circuit when found.                  
                struct FindIfPipeOn {
                   template<class Prev, class I, class Getter, class Pipe, class...Ts>
-                  using f = ml::f<Pipe, ml::f<Getter, Prev, Int<I::value - 1>>>;
+                  using f = ml::f<Pipe, ml::f<Getter, Prev, ml::Int<I::value - 1>>>;
                };
             }
             
             template<bool Continue>
             struct FindIf {
                template<class Prev, class I, class Getter, class Pipe, class Predicate, class T, class...Ts>
-               using f = ml::f<DelayedEval<
-                  ml::f<Implementations::IfElse<ml::f<Predicate, T>::value>,
-                     Detail::FindIfPipeOn,
-                     FindIf<(sizeof...(Ts) > 0)>
-                  >,
+               using f = ml::f<ml::DelayedEval<
+                  ml::f<ml::Implementations::IfElse<
+                  ml::f<Predicate, T>::value>,
+                  Detail::FindIfPipeOn, FindIf<(sizeof...(Ts) > 0)>>,
                   sizeof...(Ts)>,
-                  T, Int<I::value + 1>, Getter, Pipe, Predicate, Ts...
-               >;
+                  T, ml::Int<I::value + 1>, Getter, Pipe, Predicate, Ts...>;
             };
 
             template<>
             struct FindIf<false> {
                template<class Prev, class I, class Getter, class Pipe, class Predicate>
-               using f = ml::f<Pipe, ml::f<Getter, None, I>>;
+               using f = ml::f<Pipe, ml::f<Getter, ml::None, I>>;
             };
          }
 
@@ -231,16 +229,13 @@ namespace Langulus
          template<int N, class Pipe = ToList>
          struct Pivot {
             template<class...Ts>
-            using DE = ml::DelayedEval<Implementations::Pivot<
-                     Implementations::_Pivot::GetNext::f<N>::value
-                  >, sizeof...(Ts)
-               >;
-            
-            template<class...Ts>
-            using f = ml::f<DE<Ts...>, Pipe, Int<N>, Ts...>;
+            using f = ml::f<ml::DelayedEval<Implementations::Pivot<
+                  Implementations::_Pivot::GetNext::f<N>::value
+               >, sizeof...(Ts)
+            >, Pipe, Int<N>, Ts...>;
          };
 
-         template<class Pipe = Identity>
+         template<class Pipe = ml::Identity>
          struct Front {
             template<class...Ts>
             using f = ml::f<ml::DelayedEval<Implementations::Front, sizeof...(Ts)>, Pipe, Ts...>;
@@ -250,7 +245,7 @@ namespace Langulus
          template<int N, class Pipe = ml::Identity>
          struct Get {
             template<class...Ts>
-            using f = ml::f<ml::DelayedEval<ml::Pivot<N, ml::Front<Pipe>>, sizeof...(Ts)>, Ts...>;
+            using f = ml::f<ml::DelayedEval<ml::Pivot<N, Pipe>, sizeof...(Ts)>, Ts...>;
          };
          
          /// Appends elements to a list - like structure                      
@@ -351,7 +346,7 @@ namespace Langulus
             struct Zip<With, Pipe, Result<Rs...>, Next<Ns...>, Rest...> {
                using f = typename Zip<
                   With, Pipe,
-                  Result<typename ml::Unwrap<ml::Append<Ns, With>>::template f<Rs>...>,
+                  Result<typename ml::Unwrap<Append<Ns, With>>::template f<Rs>...>,
                   Rest...
                >::f;
             };
@@ -401,14 +396,15 @@ namespace Langulus
             /// Implementation of Compose. Only ever instantiates two types   
             template<bool Continue>
             struct Compose {
-               template<int i, class Result, class...Ts>
-               using f = typename Result::template f<typename Compose<(sizeof...(Ts) > 0) && (i > 2)>::template f<i - 1, Ts...>>;
+               template <int i, typename Result, typename... Ts>
+               using f = typename Result::template f<typename Compose<
+                  (sizeof...(Ts) >= 0) && (i > 2)>::template f<i - 1, Ts...>>;
             };
-            
             template<>
             struct Compose<false> {
-               template <int i, class Result, class...Us>
-               using f = typename IfElse<( sizeof...(Us) < 100000)>::template f<Result, void>::template f<Us...>;
+               template <int i, typename Result, typename... Us>
+               using f = typename ml::Implementations::IfElse<(
+                  sizeof...(Us) < 100000)>::template f<Result, void>::template f<Us...>;
             };
 
             template<class Pipe, class...Fs>

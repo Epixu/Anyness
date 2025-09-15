@@ -28,6 +28,12 @@ namespace Langulus::CTTI
    struct Typelist;
 }
 
+namespace my
+{
+   template <typename... T>
+   struct tuple;
+}
+
 namespace Langulus::CT
 {
    namespace Inner
@@ -104,7 +110,7 @@ namespace Langulus
    /// Can be used to generate more complex types or tuples of data.          
    ///                                                                        
    template<class...> struct Types;
-   template<class...> struct Tuple;
+   //template<class...> struct Tuple;
    
    namespace Inner
    {
@@ -143,7 +149,7 @@ namespace Langulus
       using Cat = decltype(Concat(Fake<N&&>()));
 
       using Tuple = ::std::tuple<>;
-      using TupleOptimized = ::Langulus::Tuple<>;
+      using TupleOptimized = ::my::tuple<>;
    };
 
    using NoTypes = Types<>;
@@ -225,7 +231,7 @@ namespace Langulus
       }
 
       using Tuple = ::std::tuple<T>;
-      using TupleOptimized = ::Langulus::Tuple<T>;
+      using TupleOptimized = ::my::tuple<T>; //::Langulus::Tuple<T>;
 
       static constexpr Tuple GenerateData(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
@@ -388,7 +394,7 @@ namespace Langulus
       }
 
       using Tuple = ::std::tuple<T1, T2, TN...>;
-      using TupleOptimized = ::Langulus::Tuple<T1, T2, TN...>;
+      using TupleOptimized = ::my::tuple<T1, T2, TN...>; //::Langulus::Tuple<T1, T2, TN...>;
 
       static constexpr Tuple GenerateData(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },
