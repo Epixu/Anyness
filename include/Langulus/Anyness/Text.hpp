@@ -16,7 +16,7 @@
 #include "../../../source/components/Concatenate.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Assignment.hpp"
-#include "../../../source/components/Typed-Stack.hpp"
+#include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Count-Stack.hpp"
 #include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/Hash-Stack.hpp"
@@ -35,7 +35,7 @@ namespace Langulus::Anyness
    namespace Inner
    {
       using TextBase = Container<
-         Com::TypedStack<DMeta, char>,    // Type-constrained           
+         Com::TypedStatic<DMeta, char>,   // Type-constrained           
          Com::HeapMovable<>,              // Pointer to heap memory     
          Com::OwnershipStack<>,           // Allocation is referenced   
          Com::CountStack<>,               // Variable count             

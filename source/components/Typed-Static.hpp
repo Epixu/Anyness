@@ -155,6 +155,11 @@ namespace Langulus::Anyness::Component
       constexpr bool IsDeep() const noexcept {
          return CT::Deep<Decay<TYPE>>;
       }
+      
+      /// Returns true if a type constraint is specified                      
+      constexpr bool IsTypeConstrained() const noexcept {
+         return true;
+      }
 
       /// Get the size of the type times the contained elements               
       ///   @return the size of all elements in bytes                         
@@ -164,14 +169,14 @@ namespace Langulus::Anyness::Component
       }
 
       /// Dereference the first element inside the container                  
-      constexpr TYPE& operator * (this auto&& self) has_assumptions
+      constexpr auto& operator * (this auto&& self) has_assumptions
       requires requires { *self.template GetRawAs<TYPE>(); } {
          LglsAssumeDev(not self.IsEmpty(), "Container is empty");
          return *self.template GetRawAs<TYPE>();
       }
 
       /// Access the first element inside the container                       
-      constexpr TYPE* operator -> (this auto&& self) has_assumptions
+      constexpr auto* operator -> (this auto&& self) has_assumptions
       requires requires { self.template GetRawAs<TYPE>(); } {
          LglsAssumeDev(not self.IsEmpty(), "Container is empty");
          return self.template GetRawAs<TYPE>();

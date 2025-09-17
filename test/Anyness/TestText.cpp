@@ -89,20 +89,19 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       Logger::Info("-----------------------------------------");
       Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
       Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      REQUIRE(accumulated_stack_size == sizeof(TestType));
-      //STATIC_REQUIRE(sizeof(TestType) <= sizeof(::std::string));
+      STATIC_REQUIRE(sizeof(TestType) <= sizeof(::std::string));
    }
    
    GIVEN("Default text container") {
       T text;
 
       Text_CheckState_Default(text);
-      /*STATIC_REQUIRE(T{} == T{});
+      STATIC_REQUIRE(T{} == T{});
       STATIC_REQUIRE(T{} == "");
       STATIC_REQUIRE(T{nullptr} == T{nullptr});
       STATIC_REQUIRE(T{nullptr} == nullptr);
       STATIC_REQUIRE(T{""} == T{""});
-      STATIC_REQUIRE(T{""} == nullptr);*/
+      STATIC_REQUIRE(T{""} == nullptr);
 
       WHEN("Cleared") {
          text.Clear();

@@ -84,7 +84,8 @@ namespace Langulus::Anyness::Component
             self.SetCountInner(0);
             if constexpr (requires { self.mReserved; })
                self.mReserved = 0;
-            self.ResetType();
+            if constexpr (requires { self.ResetType(); })
+               self.ResetType();
             return;
          }
 
@@ -104,7 +105,8 @@ namespace Langulus::Anyness::Component
             self.SetCountInner(0);
             if constexpr (requires { self.mReserved; })
                self.mReserved = 0;
-            self.ResetType();
+            if constexpr (requires { self.ResetType(); })
+               self.ResetType();
          }
       }
 
@@ -118,7 +120,8 @@ namespace Langulus::Anyness::Component
             self.mReserved = 0;
          if constexpr (requires { self.ResetState(); })
             self.ResetState();
-         self.ResetType();
+         if constexpr (requires { self.ResetType(); })
+            self.ResetType();
       }
    };
 }

@@ -267,7 +267,7 @@ namespace Langulus
 
       constexpr compact_tuple() = default;
 
-      explicit compact_tuple(T const&...t)
+      explicit constexpr compact_tuple(T const&...t)
          : storage_type {forward_shuffled(to_interface{}, t...)} {
          static_assert((std::is_copy_constructible_v<T> and ...),
             "All elements must be copy-constructible");
@@ -275,11 +275,11 @@ namespace Langulus
       
       template<class...U>
       requires (std::is_convertible_v<U, T> and ...)
-      explicit compact_tuple(U&&...u)
+      explicit constexpr compact_tuple(U&&...u)
          : storage_type {forward_shuffled(to_interface{}, FWD(u)...)} {}
 
-      compact_tuple(compact_tuple const&) = default;
-      compact_tuple(compact_tuple&&) = default;
+      constexpr compact_tuple(compact_tuple const&) = default;
+      constexpr compact_tuple(compact_tuple&&) = default;
 
       template<class...U>
       requires (std::is_constructible_v<T, U const&> and ...)
@@ -318,11 +318,11 @@ namespace Langulus
          : compact_tuple {forward_shuffled_tuple(to_interface{}, MOV(t))} {}
 
       template<class Alloc>
-      compact_tuple(std::allocator_arg_t tag, Alloc const& a)
+      constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a)
          : storage_type {tag, a} {}
 
       template<class Alloc>
-      compact_tuple(std::allocator_arg_t tag, Alloc const& a, T const&... t)
+      constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, T const&... t)
          : storage_type {tag, a, forward_shuffled(to_interface{}, t...)} {
          static_assert((std::is_copy_constructible_v<T> and ...),
             "All elements must be copy constructible");
@@ -330,15 +330,15 @@ namespace Langulus
       
       template<class Alloc, class...U>
       requires (std::is_convertible_v<U, T> and ...)
-      explicit compact_tuple(std::allocator_arg_t tag, Alloc const& a, U&&... u)
+      explicit constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, U&&... u)
          : storage_type {tag, a, forward_shuffled(to_interface{}, FWD(u)...)} {}
 
       template<class Alloc>
-      compact_tuple(std::allocator_arg_t tag, Alloc const& a, compact_tuple const& t)
+      constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, compact_tuple const& t)
          : storage_type {tag, a, t} {}
       
       template<class Alloc>
-      compact_tuple(std::allocator_arg_t tag, Alloc const& a, compact_tuple&& t)
+      constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, compact_tuple&& t)
          : storage_type {tag, a, MOV(t)} {}
 
       template<class Alloc, class...U>
@@ -376,11 +376,11 @@ namespace Langulus
       constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, std::tuple<U...>&& t)
          : compact_tuple {tag, a, forward_shuffled_tuple(to_interface{}, MOV(t))} {}
 
-      compact_tuple& operator=(compact_tuple const&) = default;
-      compact_tuple& operator=(compact_tuple&&) = default;
+      constexpr compact_tuple& operator=(compact_tuple const&) = default;
+      constexpr compact_tuple& operator=(compact_tuple&&) = default;
 
       template<class...U>
-      compact_tuple& operator = (compact_tuple<U...> const& t) {
+      constexpr compact_tuple& operator = (compact_tuple<U...> const& t) {
          static_assert((std::is_assignable_v<T&, U const&> and ...),
             "All elements must be assignable to the corresponding element");
          storage_type::operator=(forward_shuffled_tuple(MapFor<U...>{}, t));
@@ -388,7 +388,7 @@ namespace Langulus
       }
       
       template<class...U>
-      compact_tuple& operator=(compact_tuple<U...>&& t) {
+      constexpr compact_tuple& operator = (compact_tuple<U...>&& t) {
          static_assert((std::is_assignable_v<T&, U&&> and ...),
             "all elements must be move-assignable to the corresponding element");
          storage_type::operator=(forward_shuffled_tuple(MapFor<U...>{}, MOV(t)));
@@ -396,7 +396,7 @@ namespace Langulus
       }
 
       template<class U1, class U2>
-      compact_tuple& operator = (std::pair<U1, U2> const& p) {
+      constexpr compact_tuple& operator = (std::pair<U1, U2> const& p) {
          static_assert(sizeof...(T) == 2, "tuple size must be 2");
          static_assert(std::is_assignable_v<Inner::PackElement<0, T...>&, U1 const&>,
             "first pair element must be assignable to first tuple element");
@@ -407,7 +407,7 @@ namespace Langulus
       }
       
       template<class U1, class U2>
-      compact_tuple& operator = (std::pair<U1, U2>&& p) {
+      constexpr compact_tuple& operator = (std::pair<U1, U2>&& p) {
          static_assert(sizeof...(T) == 2, "tuple size must be 2");
          static_assert(std::is_assignable_v<Inner::PackElement<0, T...>&, U1&&>,
             "first pair element must be move-assignable to first tuple element");
@@ -418,7 +418,7 @@ namespace Langulus
       }
 
       template<class...U>
-      compact_tuple& operator = (std::tuple<U...> const& t) {
+      constexpr compact_tuple& operator = (std::tuple<U...> const& t) {
          static_assert((std::is_assignable_v<T&, U const&> and ...),
             "all elements must be assignable to the corresponding element");
          storage_type::operator=(forward_shuffled_tuple(to_interface {}, t));
@@ -426,93 +426,93 @@ namespace Langulus
       }
       
       template<class... U>
-      compact_tuple& operator = (std::tuple<U...>&& t) {
+      constexpr compact_tuple& operator = (std::tuple<U...>&& t) {
          static_assert((std::is_assignable_v<T&, U&&> and ...),
             "all elements must be move-assignable to the corresponding element");
          storage_type::operator=(forward_shuffled_tuple(to_interface {}, MOV(t)));
          return *this;
       }
 
-      void swap(compact_tuple& t) noexcept(noexcept(storage_type::swap(t))) {
+      constexpr void swap(compact_tuple& t) noexcept(noexcept(storage_type::swap(t))) {
          storage_type::swap(t);
       }
 
       template<class...U>
       friend struct compact_tuple;
       template<size_t I, class...U>
-      friend auto get(compact_tuple<U...>& t) -> std::tuple_element_t<I, std::tuple<U...>>&;
+      friend constexpr auto get(compact_tuple<U...>& t) -> std::tuple_element_t<I, std::tuple<U...>>&;
       template<size_t I, class...U>
-      friend auto get(compact_tuple<U...>&& t) -> std::tuple_element_t<I, std::tuple<U...>>&&;
+      friend constexpr auto get(compact_tuple<U...>&& t) -> std::tuple_element_t<I, std::tuple<U...>>&&;
       template<size_t I, class...U>
-      friend auto get(compact_tuple<U...> const& t) -> std::tuple_element_t<I, std::tuple<U...>> const&;
+      friend constexpr auto get(compact_tuple<U...> const& t) -> std::tuple_element_t<I, std::tuple<U...>> const&;
       template<class...L, class...R>
-      friend bool operator == (compact_tuple<L...> const& l, compact_tuple<R...> const& r);
+      friend constexpr bool operator == (compact_tuple<L...> const& l, compact_tuple<R...> const& r);
       template<class...L, class...R>
-      friend bool operator <  (compact_tuple<L...> const& l, compact_tuple<R...> const& r);
+      friend constexpr bool operator <  (compact_tuple<L...> const& l, compact_tuple<R...> const& r);
    };
 
    template<size_t I, class...U>
-   auto get(compact_tuple<U...>& t) -> std::tuple_element_t<I, std::tuple<U...>>& {
+   constexpr auto get(compact_tuple<U...>& t) -> std::tuple_element_t<I, std::tuple<U...>>& {
       return std::get<std::tuple_element_t<I, Inner::MapToStorage<U...>>::value>(t);
    }
    
    template<size_t I, class...U>
-   auto get(compact_tuple<U...>&& t) -> std::tuple_element_t<I, std::tuple<U...>>&& {
+   constexpr auto get(compact_tuple<U...>&& t) -> std::tuple_element_t<I, std::tuple<U...>>&& {
       return std::get<std::tuple_element_t<I, Inner::MapToStorage<U...>>::value>(t);
    }
    
    template<size_t I, class...U>
-   auto get(compact_tuple<U...> const& t) -> std::tuple_element_t<I, std::tuple<U...>> const& {
+   constexpr auto get(compact_tuple<U...> const& t) -> std::tuple_element_t<I, std::tuple<U...>> const& {
       return std::get<std::tuple_element_t<I, Inner::MapToStorage<U...>>::value>(t);
    }
 
    template<class...T>
-   auto make_tuple(T&&...t) -> compact_tuple<Inner::DecayReference<T>...> {
+   constexpr auto make_tuple(T&&...t) -> compact_tuple<Inner::DecayReference<T>...> {
       return {FWD(t)...};
    }
    
    template<class...T>
-   auto forward_as_tuple(T&&... t) noexcept -> compact_tuple<T&&...> {
+   constexpr auto forward_as_tuple(T&&... t) noexcept -> compact_tuple<T&&...> {
       return {FWD(t)...};
    }
    
    template<class...T>
-   auto tie(T&... t) noexcept -> compact_tuple<T&...> {
+   constexpr auto tie(T&... t) noexcept -> compact_tuple<T&...> {
       return {t...};
    }
 
    template<class...T>
-   void swap(compact_tuple<T...>& x, compact_tuple<T...>& y) noexcept(noexcept(x.swap(y))) {
+   constexpr void swap(compact_tuple<T...>& x, compact_tuple<T...>& y) noexcept(noexcept(x.swap(y))) {
       x.swap(y);
    }
 
    template<class...T, class...U>
-   bool operator == (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
+   constexpr bool operator == (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
       return static_cast<Inner::OptimalStorage<T...> const&>(t) == u;
    }
    
    template<class...T, class...U>
-   bool operator <  (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
+   constexpr bool operator <  (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
       return static_cast<Inner::OptimalStorage<T...> const&>(t) < u;
    }
    
    template<class...T, class...U>
-   bool operator != (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
+   constexpr bool operator != (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
       return !(t == u);
    }
    
    template<class...T, class...U>
-   bool operator >  (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
+   constexpr bool operator >  (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
       return u < t;
    }
    
    template<class...T, class...U>
-   bool operator <= (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
+   constexpr bool operator <= (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
       return !(u < t);
    }
    
    template<class...T, class...U>
-   bool operator >= (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
+   constexpr bool operator >= (compact_tuple<T...> const& t, compact_tuple<U...> const& u) {
       return !(t < u);
    }
 }
