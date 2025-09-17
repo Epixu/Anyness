@@ -1,16 +1,11 @@
 /// Optimal layout tuple                                                      
 /// Written in 2012 by Martinho Fernandes <martinho.fernandes@gmail.com>      
-/// Modified and modernized for C++23 using concepts in 2025 by               
-/// Dimo Markov <team@langulus.com>                                           
+/// Modified and modernized for C++23 in 2025 by Dimo Markov                  
+/// <team@langulus.com>. Changes made:                                        
+///  - making tuple fully constexpr                                           
+///  - using 'requires' instead of 'std::enable_if' patterns                  
+///  - using concepts for some require checks                                 
 ///                                                                           
-/// To the extent possible under law, the author(s) have dedicated all        
-/// copyright and related and neighboring rights to this software to the      
-/// public domain worldwide. This software is distributed without any         
-/// warranty.                                                                 
-///                                                                           
-/// You should have received a copy of the CC0 Public Domain Dedication along 
-/// with this software. If not, see                                           
-/// http://creativecommons.org/publicdomain/zero/1.0/                         
 /// SPDX-License-Identifier: CC0-1.0                                          
 #pragma once
 #include <tuple>
