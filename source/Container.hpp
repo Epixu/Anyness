@@ -8,7 +8,7 @@
 #pragma once
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Sequence.hpp>
-#include <Langulus/Utils/Tuple2.hpp>
+#include <Langulus/Utils/Tuple.hpp>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
@@ -307,7 +307,7 @@ namespace Langulus::Anyness
       template<class C>
       constexpr auto& AccessStack(this auto&& self) noexcept {
          constexpr size_t IDX = Inner::GetStackOffset<C, COMPONENTS...>();
-         return ::my::get<IDX>(self.mStack).value;
+         return ::Langulus::get<IDX>(self.mStack).value;
       }
 
       /// Explicitly call ConstructDefault in all of the components.          

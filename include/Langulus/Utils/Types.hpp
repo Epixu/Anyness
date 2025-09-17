@@ -28,10 +28,10 @@ namespace Langulus::CTTI
    struct Typelist;
 }
 
-namespace my
+namespace Langulus
 {
-   template <typename... T>
-   struct tuple;
+   template<class...T>
+   struct compact_tuple;
 }
 
 namespace Langulus::CT
@@ -149,7 +149,7 @@ namespace Langulus
       using Cat = decltype(Concat(Fake<N&&>()));
 
       using Tuple = ::std::tuple<>;
-      using TupleOptimized = ::my::tuple<>;
+      using TupleOptimized = compact_tuple<>;
    };
 
    using NoTypes = Types<>;
@@ -231,7 +231,7 @@ namespace Langulus
       }
 
       using Tuple = ::std::tuple<T>;
-      using TupleOptimized = ::my::tuple<T>; //::Langulus::Tuple<T>;
+      using TupleOptimized = compact_tuple<T>;
 
       static constexpr Tuple GenerateData(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
@@ -394,7 +394,7 @@ namespace Langulus
       }
 
       using Tuple = ::std::tuple<T1, T2, TN...>;
-      using TupleOptimized = ::my::tuple<T1, T2, TN...>; //::Langulus::Tuple<T1, T2, TN...>;
+      using TupleOptimized = compact_tuple<T1, T2, TN...>;
 
       static constexpr Tuple GenerateData(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1>()} -> CT::NotVoid; },
