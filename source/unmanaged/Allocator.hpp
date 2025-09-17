@@ -32,7 +32,7 @@ namespace Langulus::Unmanaged
    ///                                                                        
    ///   @param size - the number of client bytes to allocate                 
    ///   @return a newly allocated memory that is correctly aligned           
-   Allocation* AlignedAllocate(size_t size) has_assumptions {
+   inline Allocation* AlignedAllocate(size_t size) has_assumptions {
       const auto finalSize = Allocation::GetNewAllocationSize(size) + Alignment;
       const auto base = static_cast<MallocHandle*>(malloc(finalSize));
       if (not base)
