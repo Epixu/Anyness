@@ -98,49 +98,22 @@ namespace Langulus::Anyness::Component
          using THQ2 = Tmut<C, TH**, TH const* const*>;
          auto& mStack = self.GetStackInner();
 
-         if constexpr (CT::Void<TH>) {
-            // Unknown type, just return the heap pointer reference     
-            return (mStack);
-         }
-         else if constexpr (Deref<C>::TypeErased) {
-            // Casting to a desired runtime type                        
-            LglsAssumeDev(self.IsTyped(), "Block is not typed");
-
-            if (self.IsSparse()) {
-               if constexpr (CT::Dense<TH>)
-                  // Representing sparse as dense                       
-                  return **static_cast<THQ2>(mStack);
-               else
-                  // Representing sparse as sparse                      
-                  return  *static_cast<THQ1>(mStack);
-            }
-            else {
-               if constexpr (CT::Dense<TH>)
-                  // Representing dense as dense                        
-                  return *static_cast<THQ1>( mStack);
-               else
-                  // Representing dense as sparse                       
-                  return *static_cast<THQ1>(&mStack);
-            }
+         // Casting to a desired static type                            
+         if constexpr (CT::Sparse<TC>) {
+            if constexpr (CT::Dense<TH>)
+               // Representing sparse as dense                          
+               return **static_cast<THQ2>(mStack);
+            else
+               // Representing sparse as sparse                         
+               return  *static_cast<THQ1>(mStack);
          }
          else {
-            // Casting to a desired static type                         
-            if constexpr (CT::Sparse<TC>) {
-               if constexpr (CT::Dense<TH>)
-                  // Representing sparse as dense                       
-                  return **static_cast<THQ2>(mStack);
-               else
-                  // Representing sparse as sparse                      
-                  return  *static_cast<THQ1>(mStack);
-            }
-            else {
-               if constexpr (CT::Dense<TH>)
-                  // Representing dense as dense                        
-                  return *static_cast<THQ1>( mStack);
-               else
-                  // Representing dense as sparse                       
-                  return static_cast<Deptr<THQ1>>(mStack);
-            }
+            if constexpr (CT::Dense<TH>)
+               // Representing dense as dense                           
+               return *static_cast<THQ1>( mStack);
+            else
+               // Representing dense as sparse                          
+               return static_cast<Deptr<THQ1>>(mStack);
          }
       }
 
@@ -169,11 +142,11 @@ namespace Langulus::Anyness::Component
 
                if constexpr (requires { ALT::Owned; }) {
                   if constexpr (ALT::Owned)
-                     return {self.HeapReference::template Get<HT*>(), self.GetAllocation()};
+                     return {self.Stack::template Get<HT*>(), self.GetAllocation()};
                   else
-                     return {self.HeapReference::template Get<HT*>()};
+                     return {self.Stack::template Get<HT*>()};
                }
-               else return {self.HeapReference::template Get<HT*>()};
+               else return {self.Stack::template Get<HT*>()};
             }
          }
          else return self.template Get<Deref<ALT>>();
