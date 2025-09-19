@@ -24,11 +24,12 @@ namespace Langulus::Anyness::Component
    /// component exists, then the count is always COUNT.                      
    template<auto COUNT>
    struct CountStatic {
-      static_assert(COUNT > 0, "Can't have a container of zero or negative count");
       using CTTI_Component = Yes<>;
-      using CountType = decltype(COUNT);
+
+      static_assert(COUNT > 0, "Can't have a container of zero or negative count");
+      using CountType   = decltype(COUNT);
       using ReserveType = CountType;
-      using IndexType = Index::At<CountType>;
+      using IndexType   = Index::At<CountType>;
       static constexpr int ComponentPrecedence = 1000;
 
       /// Equal to COUNT if container has a heap component that has been      

@@ -46,7 +46,7 @@ namespace Langulus::Anyness
          Com::Concatenate<>,              // Concatenate                
          Com::Removal<>,                  // Allows removal             
          Com::Assignment<>,               // Allows assignment          
-         Com::Comparison,                 // Allows for comparison      
+         Com::Comparison<>,               // Allows for comparison      
          Com::Conversion,                 // Allows conversion          
          Com::IndexedLinear<>,            // Indexed directly           
          Com::IterationForEach<>,         // ForEach iteration          

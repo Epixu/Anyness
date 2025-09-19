@@ -30,7 +30,7 @@ namespace Langulus::Anyness
          Com::OwnershipStack<0, false>,      // Pointer to an allocation
          Com::CountStack<>,                  // Variable count          
          Com::HashEmergent<>,                // Emergent hash           
-         Com::Comparison,                    // Allows for comparisons  
+         Com::Comparison<>,                  // Allows for comparisons  
          Com::Conversion,                    // Allows conversions      
          Com::IndexedLinear<>,               // Indexed directly        
          Com::IterationForEach<>,            // ForEach iteration       

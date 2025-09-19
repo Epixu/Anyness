@@ -97,11 +97,12 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
 
       Text_CheckState_Default(text);
       STATIC_REQUIRE(T{} == T{});
+      STATIC_REQUIRE(T{} == nullptr);
       STATIC_REQUIRE(T{} == "");
       STATIC_REQUIRE(T{nullptr} == T{nullptr});
-      STATIC_REQUIRE(T{nullptr} == nullptr);
       STATIC_REQUIRE(T{""} == T{""});
-      STATIC_REQUIRE(T{""} == nullptr);
+      STATIC_REQUIRE(T{nullptr} == nullptr);
+      STATIC_REQUIRE(T{""} == "");
 
       WHEN("Cleared") {
          text.Clear();

@@ -43,7 +43,10 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Implements comparison for containers                                   
-   ///                                                                        
+   ///   @tparam ID - heap/stack we're comparing                              
+   ///   @tparam HASH - whether to compare hashes before elements. This is
+   ///      mostly useful when hash is cachable, otherwise kind of pointless. 
+   template<unsigned ID, bool HASH>
    struct Comparison {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;
@@ -96,7 +99,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Types are similar                                     
-               if (lhs.GetHeapInner() == rhs.GetHeapInner()) {
+               if (lhs.template AccessStackById<ID>() == rhs.template AccessStackById<ID>()) {
                   // Containers point to the same memory, so it's a     
                   // matter of whether they have the same count         
                   return lhs.GetCount() == rhs.GetCount();
@@ -110,11 +113,13 @@ namespace Langulus::Anyness::Component
                   return false;
                }
 
-               if (not lhs.CompareHashes(rhs)) {
-                  // Early failure if valid hashes differ - no point    
-                  // in comparing anything at all                       
-                  VERBOSE(Logger::Red, "Different hashes (typed)");
-                  return false;
+               if constexpr (HASH) {
+                  if (not lhs.CompareHashes(rhs)) {
+                     // Early failure if valid hashes differ - no point 
+                     // in comparing anything at all                    
+                     VERBOSE(Logger::Red, "Different hashes (typed)");
+                     return false;
+                  }
                }
 
                if constexpr (CT::POD<LT>) {
@@ -145,8 +150,7 @@ namespace Langulus::Anyness::Component
                   return t1 == t1end;
                }
                else {
-                  VERBOSE(Logger::Red,
-                     "Type not comparable (typed): ", NameOf<LT>());
+                  VERBOSE(Logger::Red, "Type not comparable (typed): ", NameOf<LT>());
                   return false;
                }
             }
@@ -165,7 +169,7 @@ namespace Langulus::Anyness::Component
             }
 
             // Types are similar                                        
-            if (lhs.GetRaw() == rhs.GetRaw()) {
+            if (lhs.GetHeapInner() == rhs.GetHeapInner()) {
                // Containers point to the same memory, so it's a        
                // matter of whether they have the same count            
                return lhs.GetCount() == rhs.GetCount();
@@ -177,11 +181,13 @@ namespace Langulus::Anyness::Component
                return false;
             }
 
-            if (not lhs.CompareHashes(rhs)) {
-               // Early failure if valid hashes differ - no point       
-               // in comparing anything at all                          
-               VERBOSE(Logger::Red, "Different hashes (type-erased)");
-               return false;
+            if constexpr (HASH) {
+               if (not lhs.CompareHashes(rhs)) {
+                  // Early failure if valid hashes differ - no point    
+                  // in comparing anything at all                       
+                  VERBOSE(Logger::Red, "Different hashes (type-erased)");
+                  return false;
+               }
             }
 
             if (LT.IsPOD()) {
@@ -289,7 +295,7 @@ namespace Langulus::Anyness::Component
                   return Index::None;
             }
 
-            // If this is reached reached, then types are comparable    
+            // If this is reached, then types are comparable            
             auto rhs = range.GetRaw();
             auto lhs = REVERSE ? self.GetRawEnd() - cookie - range.GetCount() : self.GetRaw() + cookie;
 
@@ -308,7 +314,8 @@ namespace Langulus::Anyness::Component
                   ++lhs;
                   ++rhs;
 
-                  if constexpr (CT::BinaryCompatible<TypeOf<C1>, TypeOf<C2>> and CT::POD<TypeOf<C1>, TypeOf<C2>>) {
+                  if constexpr (CT::BinaryCompatible<TypeOf<C1>, TypeOf<C2>>
+                  and CT::POD<TypeOf<C1>, TypeOf<C2>>) {
                      // We can use batch-compare                        
                      if (0 == memcmp(rhs, lhs, bytesize))
                         return cookie;
@@ -401,7 +408,7 @@ namespace Langulus::Anyness::Component
 
       /// Compare hashes of two containers                                    
       ///   @return true if hashes are the same                               
-      template<CT::Container LHS, CT::Container RHS>
+      template<CT::Container LHS, CT::Container RHS> requires HASH
       constexpr bool CompareHashes(this LHS const& lhs, RHS const& rhs) {
          if constexpr (requires {lhs.GetHash(); rhs.GetHash(); })
             return lhs.GetHash() == rhs.GetHash();

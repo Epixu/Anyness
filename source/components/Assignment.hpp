@@ -77,6 +77,9 @@ namespace Langulus::Anyness::Component
       void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
       
       template<CT::Container C, class A>
-      C& operator = (this C& self, A&&) requires CT::RangeAssignable<C, A>;
+      C& operator = (this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
+         self.template AccessStackById<ID>() = FWD(argument);
+         return self;
+      }
    };
 }

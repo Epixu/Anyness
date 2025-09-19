@@ -21,6 +21,7 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using StackRequest = void*;
 
+      static constexpr unsigned Id = ID;
       static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapAllocated = true;
       static constexpr bool HeapCanBeNull = false;
@@ -36,6 +37,7 @@ namespace Langulus::Anyness::Component
       friend struct HeapMovable;
       template<unsigned>
       friend struct Emplacement;
+      template<unsigned, bool>
       friend struct Comparison;
       template<auto COUNT>
       friend struct CountStatic;
@@ -63,7 +65,6 @@ namespace Langulus::Anyness::Component
       
       /// Get the heap pointer (inner)                                        
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
-         //using R = Tmut<decltype(self), void**, void const* const*>;
          return self.template AccessStack<HeapReference>();
       }
 
@@ -84,18 +85,18 @@ namespace Langulus::Anyness::Component
       constexpr auto GetRaw(this C&& self) noexcept {
          using T = TypeOf<C>;
          if constexpr (CT::Mutable<C>)
-            return static_cast<      T*>(self.GetHeapInner());
+            return static_cast<T*      >(self.GetHeapInner());
          else
-            return static_cast<const T*>(self.GetHeapInner());
+            return static_cast<T const*>(self.GetHeapInner());
       }
       
       /// Get a direct access to the heap memory as a different type          
       template<class T, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
          if constexpr (CT::Mutable<C>)
-            return static_cast<      T*>(self.GetHeapInner());
+            return static_cast<T*      >(self.GetHeapInner());
          else
-            return static_cast<const T*>(self.GetHeapInner());
+            return static_cast<T const*>(self.GetHeapInner());
       }
 
       /// Get a direct access to the heap memory's end                        
@@ -117,7 +118,7 @@ namespace Langulus::Anyness::Component
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) has_assumptions {
-         static_assert(not CT::Handle<T>, "T can't be a handle");
+         static_assert(not CT::Handle<T>,    "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
          using TC = TypeOf<C>;
          using TH = Tif<CT::Void<T>, TC, T>;

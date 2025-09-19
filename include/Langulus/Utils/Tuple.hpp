@@ -218,14 +218,14 @@ namespace Langulus::Inner
    using ShuffleTuple   = std::tuple<std::tuple_element_t<I, Decay<Tuple>>...>;
 
    template<size_t...I, class Tuple>
-   auto forward_shuffled_tuple(indices<I...>, Tuple&& t)
+   constexpr auto forward_shuffled_tuple(indices<I...>, Tuple&& t)
    -> ShuffleTuple<Tuple, I...> {
       using std::get;
       return std::forward_as_tuple(get<I>(FWD(t))...);
    }
    
    template<size_t...I, class...T>
-   auto forward_shuffled(indices<I...> map, T&&... t)
+   constexpr auto forward_shuffled(indices<I...> map, T&&... t)
    -> ShuffleTuple<std::tuple<T&&...>, I...> {
       return forward_shuffled_tuple(map, std::forward_as_tuple(FWD(t)...));
    }

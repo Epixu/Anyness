@@ -16,15 +16,173 @@ namespace Langulus::Anyness::Component
    /// Increases the container's bytesize                                     
    ///   @tparam T - type of the variable                                     
    ///   @tparam ID - multiple variables are supported                        
-   ///   @attention same IDs serve to identify heap components as well, so    
-   ///      make sure they don't overlap                                      
-   ///                                                                        
    template<CT::NotVoid T, unsigned ID>
    struct Stack {
       using CTTI_Component = Yes<>;
+      using StackRequest   = T;
+      
+      static constexpr unsigned Id = ID;
       static constexpr int ComponentPrecedence = -2000;
+      
+   protected:
+      /*template<unsigned>
+      friend struct IterationOperators;
+      template<unsigned>
+      friend struct Removal;
+      template<class>
+      friend struct IndexedLinear;
+      template<unsigned>
+      friend struct HeapMovable;
+      template<unsigned>
+      friend struct Emplacement;
+      template<unsigned>
+      friend struct Comparison;
+      template<auto COUNT>
+      friend struct CountStatic;*/
+      
+      /// Get the heap pointer (inner)                                        
+      constexpr auto& GetStackInner(this auto&& self) noexcept {
+         return self.template AccessStack<Stack>();
+      }
+
+      constexpr void SetStackInner(this auto& self, T&& data) noexcept {
+         self.GetStackInner() = FWD(data);
+      }
+
+   public:
+      /// Always allocated on the stack                                       
+      constexpr bool IsAllocated() const noexcept {
+         return true;
+      }
+
+      /// Get a direct access to the stack memory                             
+      template<CT::Container C>
+      constexpr auto GetRaw(this C&& self) noexcept {
+         if constexpr (CT::Mutable<C>)
+            return &self.GetStackInner();
+         else
+            return &self.GetStackInner();
+      }
+
+      /// Get a direct access to the stack memory as a different type         
+      template<class ALT, CT::Container C>
+      constexpr auto GetRawAs(this C&& self) noexcept {
+         if constexpr (CT::Mutable<C>)
+            return static_cast<ALT*      >(&self.GetStackInner());
+         else
+            return static_cast<ALT const*>(&self.GetStackInner());
+      }
+
+      /// Get a direct access to the stack memory's end                       
+      template<CT::Container C>
+      constexpr auto GetRawEnd(this C&& self) noexcept {
+         if constexpr (CT::Typed<C>)
+            return self.GetRaw() + self.GetCount();
+         else
+            return self.template GetRawAs<uint8_t>() + self.GetBytesize();
+      }
+
+      /// Get reference to first element as sparse or dense, depending on T.  
+      /// This is a lower-level routine that does only sparseness checking.   
+      /// No conversion or copying occurs, only pointer arithmetic.           
+      ///   @attention assumes the container is typed                         
+      ///   @attention assumes the container is allocated                     
+      ///   @tparam ALT - optional type override, use T if void               
+      template<class ALT = void, CT::Container C>
+      constexpr decltype(auto) Get(this C&& self) has_assumptions {
+         static_assert(not CT::Handle<ALT>,    "ALT can't be a handle");
+         static_assert(not CT::Reference<ALT>, "Strip references first");
+         using TC = T;
+         using TH = Tif<CT::Void<ALT>, TC, ALT>;
+         using THQ1 = Tmut<C, TH*,  TH const*>;
+         using THQ2 = Tmut<C, TH**, TH const* const*>;
+         auto& mStack = self.GetStackInner();
+
+         if constexpr (CT::Void<TH>) {
+            // Unknown type, just return the heap pointer reference     
+            return (mStack);
+         }
+         else if constexpr (Deref<C>::TypeErased) {
+            // Casting to a desired runtime type                        
+            LglsAssumeDev(self.IsTyped(), "Block is not typed");
+
+            if (self.IsSparse()) {
+               if constexpr (CT::Dense<TH>)
+                  // Representing sparse as dense                       
+                  return **static_cast<THQ2>(mStack);
+               else
+                  // Representing sparse as sparse                      
+                  return  *static_cast<THQ1>(mStack);
+            }
+            else {
+               if constexpr (CT::Dense<TH>)
+                  // Representing dense as dense                        
+                  return *static_cast<THQ1>( mStack);
+               else
+                  // Representing dense as sparse                       
+                  return *static_cast<THQ1>(&mStack);
+            }
+         }
+         else {
+            // Casting to a desired static type                         
+            if constexpr (CT::Sparse<TC>) {
+               if constexpr (CT::Dense<TH>)
+                  // Representing sparse as dense                       
+                  return **static_cast<THQ2>(mStack);
+               else
+                  // Representing sparse as sparse                      
+                  return  *static_cast<THQ1>(mStack);
+            }
+            else {
+               if constexpr (CT::Dense<TH>)
+                  // Representing dense as dense                        
+                  return *static_cast<THQ1>( mStack);
+               else
+                  // Representing dense as sparse                       
+                  return static_cast<Deptr<THQ1>>(mStack);
+            }
+         }
+      }
+
+      /// Get first element as a handle, or any desired wrapping type         
+      ///   @attention assumes ALT is of proper sparseness if not void        
+      ///   @tparam ALT - the type we're wrapping in                          
+      template<class ALT, CT::Container C>
+      ALT GetAs(this C&& self) has_assumptions {
+         if constexpr (CT::Handle<ALT>) {
+            static_assert(not CT::Reference<ALT>, "Strip references first");
+
+            if constexpr (ALT::TypeErased) {
+               // Type-erased handle                                    
+               if constexpr (requires { ALT::Owned; }) {
+                  if constexpr (ALT::Owned)
+                     return {self.Get(), self.GetEntries(), self.GetType()};
+                  else
+                     return {self.Get(), self.GetType()};
+               }
+               else return {self.Get(), self.GetType()};
+            }
+            else {
+               // Statically typed handle                               
+               using HT = Deref<TypeOf<ALT>>;
+               static_assert(CT::Similar<T, HT>, "Sparseness mismatch");
+
+               if constexpr (requires { ALT::Owned; }) {
+                  if constexpr (ALT::Owned)
+                     return {self.HeapReference::template Get<HT*>(), self.GetAllocation()};
+                  else
+                     return {self.HeapReference::template Get<HT*>()};
+               }
+               else return {self.HeapReference::template Get<HT*>()};
+            }
+         }
+         else return self.template Get<Deref<ALT>>();
+      }
 
    protected:
-      T mStack;
+      /// Default-initialize count to zero                                    
+      constexpr void ConstructDefault(this auto& self) noexcept {
+         self.SetStackInner({});
+      }
    };
 }

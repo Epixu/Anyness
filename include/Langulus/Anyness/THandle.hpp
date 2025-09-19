@@ -28,7 +28,7 @@ namespace Langulus::Anyness
          Com::CountStatic<1u>,
          Com::Assignment<>,
          Com::Emplacement<>,
-         Com::Comparison,
+         Com::Comparison<>,
          Com::IterationOperators<>
       >;
       
@@ -40,7 +40,7 @@ namespace Langulus::Anyness
          Com::DeepOwnershipStack<>,
          Com::Assignment<>,
          Com::Emplacement<>,
-         Com::Comparison,
+         Com::Comparison<>,
          Com::IterationOperators<>
       >;
       
@@ -51,7 +51,7 @@ namespace Langulus::Anyness
          Com::CountStatic<1u>,
          Com::Assignment<>,
          Com::Emplacement<>,
-         Com::Comparison,
+         Com::Comparison<>,
          Com::IterationOperators<>
       >;
       
@@ -60,7 +60,7 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, T>,         // Statically typed        
          Com::Stack<T>,                      // Element on the stack    
          Com::Assignment<>,                  // Allows for reassignment 
-         Com::Comparison                     // Can be compared         
+         Com::Comparison<>                   // Can be compared         
       >;
       
       template<CT::NotReference T> requires CT::Sparse<T>
@@ -71,7 +71,7 @@ namespace Langulus::Anyness
          Com::CountStatic<1u>,               // Statically sized        
          Com::Emplacement<>,                 // Can be emplaced         
          Com::Assignment<>,                  // Can be reassigned       
-         Com::Comparison                     // Can be compared         
+         Com::Comparison<>                   // Can be compared         
       >;
    }
 

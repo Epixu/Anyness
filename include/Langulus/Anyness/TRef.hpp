@@ -26,7 +26,7 @@ namespace Langulus::Anyness::Inner
       Com::CountStatic<1u>,               // Statically sized          
       Com::Emplacement<>,                 // Can be emplaced           
       Com::Assignment<>,                  // Can be reassigned         
-      Com::Comparison                     // Can be compared           
+      Com::Comparison<>                   // Can be compared           
    >;
 }
 
@@ -52,11 +52,18 @@ namespace Langulus::Anyness
 
       constexpr TRef() noexcept { this->ConstructDefault(); }
       constexpr TRef(nullptr_t) noexcept : TRef{} {}
-      
+      constexpr TRef(T* pointer) noexcept {
+         if (pointer) {
+            Base::SetHeapInner(pointer);
+            Base::FindAllocationInner();
+         }
+         else this->ConstructDefault();
+      }
+
       constexpr bool operator == (nullptr_t) const noexcept {
          return this->IsEmpty();
       }
-      
+
       constexpr bool operator == (T* rhs) const noexcept {
          if (rhs == nullptr)
             return this->IsEmpty();

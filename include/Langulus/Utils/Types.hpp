@@ -297,22 +297,17 @@ namespace Langulus
 
       /// Doesn't generate code for further loops if lambda returns a Yes     
       /// instead of a No (utilizes a compile-time short-circuit)             
-      static constexpr bool ForEachConstOr(auto&& lambda) {
-         static_assert(requires{ {lambda.template operator()<T1>()} -> ::std::same_as<Yes<>>;  }
-                    or requires{ {lambda.template operator()<T1>()} -> ::std::same_as<No>; },
-            "Provided argument is not a lambda of the form []<class> -> Yes<>/No<>");
-         if constexpr (::std::same_as<Yes<>, decltype(lambda.template operator()<T1>())>) {
-            lambda.template operator()<T1>();
-            return true;
+      static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
+         if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<T1>())>) {
+            return lambda.template operator()<T1>();
          }
-         else if constexpr (::std::same_as<Yes<>, decltype(lambda.template operator()<T2>())>) {
-            lambda.template operator()<T2>();
-            return true;
+         else if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<T2>())>) {
+            return lambda.template operator()<T2>();
          }
          else if constexpr (sizeof...(TN))
             return Types<TN...>::ForEachConstOr(lambda);
          else
-            return false;
+            return No {};
       }
 
       template<unsigned IDX = 0>
@@ -427,12 +422,12 @@ namespace Langulus
       using Cat = decltype(Concat(Fake<N&&>()));
 
       template<class N>
-      static constexpr bool Contains = ForEachConstOr([]<class A> {
+      static constexpr bool Contains = decltype(ForEachConstOr([]<class A> {
          if constexpr (::std::same_as<N, A>)
             return Yes {};
          else
             return No {};
-      });
+      }))::Enabled;
    };
 
    #define LglsTypegen(TYPES, LAMBDA) decltype(TYPES::GenerateTypes(LAMBDA));

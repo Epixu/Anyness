@@ -7,27 +7,47 @@
 ///                                                                           
 #pragma once
 #include "../../../source/Container.hpp"
-#include "../../../source/components/Stack.hpp"
 #include "../../../source/components/Typed-Static.hpp"
+#include "../../../source/components/Stack.hpp"
+#include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Comparison.hpp"
-#include "../../../source/rtti/MetaData.hpp"
 
+
+namespace Langulus::Anyness::Inner
+{
+   template<class T>
+   using TOwnBase = Container<
+      Com::TypedStatic<DMeta, T>,         // Statically typed          
+      Com::Stack<T>,                      // Element on the stack      
+      Com::CountStatic<1u>,               // Statically sized          
+      Com::Assignment<>,                  // Can be reassigned         
+      Com::Comparison<>                   // Can be compared           
+   >;
+}
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// A statically typed stack-based container of size 1                     
-   /// Mainly serves to transfer values and/or pointers on move               
-   /// No ownership or states are applied - if you need those use TAny instead
+   /// Mainly serves to transfer values and/or pointers on move.              
    ///                                                                        
    template<CT::NotVoid T>
-   struct TOwn : Container<
-      Com::TypedStatic<DMeta, T>,      // Statically typed              
-      Com::Stack<T>,                   // Element on the stack          
-      Com::Assignment<>,               // Allows for reassignment       
-      Com::Comparison                  // Can be compared               
-   > {};
+   struct TOwn : Inner::TOwnBase<T> {
+      using Base = Inner::TOwnBase<T>;
+      using Base::Base;
+      using Base::operator =;
+      using Com::Assignment<>::operator =;
+      using Base::operator ==;
 
-} // namespace Langulus::Anyness
+      constexpr TOwn() noexcept { this->ConstructDefault(); }
+      constexpr TOwn(const T& source)
+         : Base {typename Base::Stackwise {}, source} {}
+      constexpr TOwn(T&& source) noexcept
+         : Base {typename Base::Stackwise {}, FWD(source)} {}
+      
+      constexpr bool operator == (const T& rhs) const noexcept {
+         return this->GetStackInner() == rhs;
+      }
+   };
+}

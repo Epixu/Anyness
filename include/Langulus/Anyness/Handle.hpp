@@ -26,7 +26,7 @@ namespace Langulus::Anyness
       Com::HeapReference<>,
       Com::DeepOwnershipStack<>,
       Com::Assignment<>,
-      Com::Comparison
+      Com::Comparison<>
    > {
       using CTTI_Handle = Yes<>;
       using CTTI_ReflectAs = void;
@@ -43,7 +43,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
       Com::Assignment<>,
-      Com::Comparison
+      Com::Comparison<>
    > {
       using CTTI_Handle = Yes<>;
       using CTTI_ReflectAs = void;
@@ -65,7 +65,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
       Com::DeepOwnershipStack<>,
-      Com::Comparison
+      Com::Comparison<>
    > {
       using CTTI_Handle = Yes<>;
       using CTTI_ReflectAs = void;
@@ -81,7 +81,7 @@ namespace Langulus::Anyness
    struct HandleDisowned : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
-      Com::Comparison
+      Com::Comparison<>
    > {
       using CTTI_Handle = Yes<>;
       using CTTI_ReflectAs = void;

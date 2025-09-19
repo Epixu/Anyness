@@ -209,7 +209,7 @@
       #error "Langulus can only be built with GCC 14.2 or above"
    #endif
    #define LANGULUS_COMPILER_GCC() 1
-   #define LANGULUS_EBCO()
+   #define LANGULUS_EBCO
 #else
    #define LANGULUS_COMPILER_GCC() 0
 #endif
@@ -220,7 +220,7 @@
       #error "Langulus can only be built with Clang 19 or above"
    #endif
    #define LANGULUS_COMPILER_CLANG_CL() 1
-   #define LANGULUS_EBCO() __declspec(empty_bases)
+   #define LANGULUS_EBCO __declspec(empty_bases)
 #else
    #define LANGULUS_COMPILER_CLANG_CL() 0
 #endif
@@ -233,7 +233,7 @@
    #endif
    #define LANGULUS_COMPILER_CLANG() 1
    #ifndef LANGULUS_EBCO
-      #define LANGULUS_EBCO()
+      #define LANGULUS_EBCO
    #endif
 #else
    #define LANGULUS_COMPILER_CLANG() 0
@@ -245,7 +245,7 @@
       #error "Langulus can only be built with MSVC 19.44 or above"
    #endif
    #define LANGULUS_COMPILER_MSVC() 1
-   #define LANGULUS_EBCO() __declspec(empty_bases)
+   #define LANGULUS_EBCO __declspec(empty_bases)
 #else
    #define LANGULUS_COMPILER_MSVC() 0
 #endif
@@ -253,7 +253,7 @@
 #if defined(__wasm__)
    // We're on a web assembly compiler!                                 
    #define LANGULUS_COMPILER_WASM() 1
-   #define LANGULUS_EBCO()
+   #define LANGULUS_EBCO
 #else
    #define LANGULUS_COMPILER_WASM() 0
 #endif
@@ -261,7 +261,7 @@
 #if defined(__MINGW32__) or defined(__MINGW64__) 
    // We're on a mingw compiler!                                        
    #define LANGULUS_COMPILER_MINGW() 1
-   #define LANGULUS_EBCO() __declspec(empty_bases)
+   #define LANGULUS_EBCO __declspec(empty_bases)
 #else
    #define LANGULUS_COMPILER_MINGW() 0
 #endif

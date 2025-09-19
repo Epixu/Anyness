@@ -1,0 +1,59 @@
+///                                                                           
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
+///                                                                           
+#pragma once
+#include <Langulus/Typenav.hpp>
+
+
+/// Useful for creating instances of types on the heap, with multiple levels  
+/// of indirection                                                            
+template<class T>
+struct ScopedElement {
+private:
+   T* element = nullptr;
+
+   template<class INNER, class...A>
+   static void NestedConstructor(INNER*& place, A&&...arguments) {
+      using namespace Langulus;
+      if constexpr (CT::Dense<INNER>) {
+         place = new INNER {FWD(arguments)...};
+      }
+      else {
+         place = new INNER {nullptr};
+         NestedConstructor(*place, FWD(arguments)...);
+      }
+   }
+   
+   template<class INNER>
+   static void NestedDestructor(INNER* place) {
+      using namespace Langulus;
+      if constexpr (CT::Dense<INNER>) {
+         #if not LANGULUS_FEATURE(NEWDELETE)
+            if constexpr (CT::Referenced<INNER>)
+               place->Reference(-1);
+         #endif
+         delete place;
+      }
+      else if (place) {
+         NestedDestructor(*place);
+         delete place;
+      }   
+   }
+
+public:
+   template<class...A>
+   ScopedElement(A&&...arguments) {
+      NestedConstructor(element, FWD(arguments)...);
+   }
+   
+   ~ScopedElement() {
+      NestedDestructor(element);
+   }
+
+   T& operator*() {return *element;}
+   T const& operator*() const {return *element;}
+};

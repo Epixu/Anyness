@@ -73,7 +73,7 @@ namespace Langulus::Anyness
       /// Components predeclared                                              
       template<unsigned ID = 0> struct Assignment;
       struct Charge;
-      struct Comparison;
+      template<unsigned ID = 0, bool HASH = true> struct Comparison;
       template<unsigned ID = 0> struct Concatenate;
       template<unsigned ID = 0> struct ConcatenateOperators;
       struct Conversion; template<unsigned ID = 0, class T = size_t>
@@ -120,19 +120,29 @@ namespace Langulus::Anyness
    {
       /// Validate all used components in a container are properly ordered,   
       /// and of standard layout                                              
-      template<class C1, class C2, class...CN>
+      template<unsigned ACC, class C1, class C2, class...CN>
       consteval bool ValidateComponentOrder() {
          static_assert(::std::is_standard_layout_v<C1>);
          static_assert(::std::is_standard_layout_v<C2>);
-         static_assert((::std::is_standard_layout_v<CN> and ...));
+
          static_assert(C1::ComponentPrecedence <= C2::ComponentPrecedence,
             "Wrong component order");
          static_assert(sizeof(C1) == 1 and sizeof(C2) == 1,
             "Use StackRequest instead of adding non-static members in components");
-         if constexpr (sizeof...(CN))
-            return ValidateComponentOrder<C2, CN...>();
-         else
-            return true;
+         
+         if constexpr (requires { C1::Id; }) {
+            static_assert(C1::Id == ACC, "Invalid heap/stack ID");
+            if constexpr (sizeof...(CN))
+               return ValidateComponentOrder<ACC+1, C2, CN...>();
+            else
+               return true;
+         }
+         else {
+            if constexpr (sizeof...(CN))
+               return ValidateComponentOrder<ACC, C2, CN...>();
+            else
+               return true;
+         }
       }
 
       /// std::tuple default-initializes variables to zero, so I use this     
@@ -141,6 +151,8 @@ namespace Langulus::Anyness
       struct StackVariable {
          T value;
          constexpr StackVariable() noexcept {};
+         constexpr StackVariable(T const& v) noexcept : value {v} {}
+         constexpr StackVariable(T&& v) noexcept : value {FWD(v)} {}
       };
       
       /// Go through all components and accumulate their stack requests into  
@@ -192,8 +204,8 @@ namespace Langulus::Anyness
    ///      specializations will bloat code generation significantly and slow 
    ///      builds down a lot...                                              
    template<CT::Component...COMPONENTS>
-   requires (Inner::ValidateComponentOrder<COMPONENTS...>())
-   struct LANGULUS_EBCO() Container : COMPONENTS... {
+   requires (Inner::ValidateComponentOrder<0, COMPONENTS...>())
+   struct /*LANGULUS_EBCO*/ Container : COMPONENTS... {
       using CTTI_Container = Yes<>;
       using ComponentList = Types<COMPONENTS...>;
 
@@ -230,25 +242,32 @@ namespace Langulus::Anyness
                this->C::ConstructDefault();
          });
       }
-      
+
+      struct Stackwise {};
+
+      /// A tag-dispatch constructor that forwards arguments to mStack        
+      constexpr Container(Stackwise, auto&&...arguments)
+         : mStack {FWD(arguments)...} {}
+
       /// Explicitly call Destroy in all of the components.                   
       constexpr ~Container() noexcept {
          //static_assert(::std::is_standard_layout_v<Container>);
          if not consteval {
-            ComponentList::ForEach([this]<class C>{
-               if constexpr (requires { this->C::Destroy(); })
-                  this->C::Destroy();
-            });
+            ComponentList::ForEach(
+               [this]<class C> {
+                  if constexpr (requires { this->C::Destroy(); }) this->C::Destroy();
+               }
+            );
          }
       }
-      
+
       /// C++ copy-semantics are mapped onto Refer intent                     
       /// In other words - a copy is always shallow, unless explicitly Copy   
       /// or Clone intent is used                                             
-      constexpr Container& operator = (Container const& other) noexcept {
-         return operator = (Refer {other});
+      constexpr Container& operator =(Container const& other) noexcept {
+         return operator =(Refer {other});
       }
-      
+
       /// C++ move-semantics are mapped onto Move intent                      
       constexpr Container& operator = (Container&& other) noexcept {
          return operator = (Move {other});
@@ -292,6 +311,8 @@ namespace Langulus::Anyness
       friend struct Com::IterationOperators;
       template<class, class, unsigned>
       friend struct Com::TypedStack;
+      template<CT::NotVoid, unsigned>
+      friend struct Com::Stack;
       template<unsigned>
       friend struct Com::HeapReference;
       template<unsigned, bool>
@@ -300,6 +321,10 @@ namespace Langulus::Anyness
       friend struct Com::CountStack;
       template<unsigned, class>
       friend struct Com::HashStack;
+      template<unsigned, bool>
+      friend struct Com::Comparison;
+      template<unsigned>
+      friend struct Com::Assignment;
       
       typename decltype(Inner::DefineStack<COMPONENTS...>())::TupleOptimized mStack;
 
@@ -308,6 +333,29 @@ namespace Langulus::Anyness
       constexpr auto& AccessStack(this auto&& self) noexcept {
          constexpr size_t IDX = Inner::GetStackOffset<C, COMPONENTS...>();
          return ::Langulus::get<IDX>(self.mStack).value;
+      }
+
+      /// Access a variable on the stack associated with an ID                
+      template<unsigned ID>
+      constexpr auto& AccessStackById(this auto&& self) noexcept {
+         return ComponentList::ForEachConstOr([&self]<class C> -> decltype(auto) {
+            if constexpr (requires { C::Id; }) {
+               if constexpr (C::Id == ID)
+                  return (self.template AccessStack<C>());
+               else return No {};
+            }
+            else return No {};
+         });
+      }
+
+      /// Access a component on the stack associated with an ID               
+      template<unsigned ID>
+      constexpr auto& AccessComById(this auto&& self) noexcept {
+         return ComponentList::ForEachConstOr([&self]<class C>{
+            if constexpr (C::Id == ID)
+               return (self.C);
+            else return No {};
+         });
       }
 
       /// Explicitly call ConstructDefault in all of the components.          
