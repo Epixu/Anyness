@@ -25,12 +25,13 @@ namespace Langulus::Anyness::Component
    template<auto COUNT>
    struct CountStatic {
       using CTTI_Component = Yes<>;
+      static constexpr int  ComponentPrecedence = 1000;
+      static constexpr bool ContainsMany = COUNT > 1;
 
       static_assert(COUNT > 0, "Can't have a container of zero or negative count");
       using CountType   = decltype(COUNT);
       using ReserveType = CountType;
       using IndexType   = Index::At<CountType>;
-      static constexpr int ComponentPrecedence = 1000;
 
       /// Equal to COUNT if container has a heap component that has been      
       /// allocated - zero otherwise. If no heap component exists, then the   
@@ -41,12 +42,12 @@ namespace Langulus::Anyness::Component
       
       /// Check if empty                                                      
       constexpr bool IsEmpty(this auto const& self) noexcept {
-         return self.GetCount() == CountType {0};
+         return self.GetCountInner() == CountType {0};
       }
 
       /// Explicit boolean conversion to allow using containers in ifs        
       constexpr explicit operator bool(this auto const& self) noexcept {
-         return self.GetCount() != CountType {0};
+         return self.GetCountInner() != CountType {0};
       }
 
       /// Static count means static reserve                                   
@@ -61,13 +62,10 @@ namespace Langulus::Anyness::Component
       /// Get count (inner)                                                   
       template<CT::Container C>
       constexpr auto GetCountInner(this C const& self) noexcept -> CountType {
-         if constexpr (CT::HeapAllocated<C>) {
-            if constexpr (C::HeapCanBeNull)
-               return self.GetHeapInner() ? COUNT : CountType {0};
-            else
-               return COUNT;
-         }
-         else return COUNT;
+         if constexpr (CT::HasVariableCount<C>)
+            return self.GetHeapInner() ? COUNT : CountType {0};
+         else
+            return COUNT;
       }
    };
 }

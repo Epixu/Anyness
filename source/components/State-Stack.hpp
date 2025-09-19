@@ -28,7 +28,7 @@ namespace Langulus::Anyness::Component
    template<CT::State...STATES>
    struct StateStack : STATES... {
       using CTTI_Component = Yes<>;
-      static constexpr int ComponentPrecedence = 0;
+      static constexpr int ComponentPrecedence = 4000;
 
       using StateList = Types<STATES...>;
       using StateType = Tif<sizeof...(STATES) <= 8, uint8_t, uint16_t>;

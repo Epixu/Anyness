@@ -100,7 +100,7 @@ namespace Langulus::Anyness
       };
 
       constexpr Iterator begin() const noexcept {
-         return {range.template GetAs<H>(), range};
+         return {range.template As<H>(), range};
       }
       constexpr IteratorEnd end() const noexcept { return {}; }
    };

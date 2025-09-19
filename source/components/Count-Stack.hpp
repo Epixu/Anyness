@@ -26,7 +26,8 @@ namespace Langulus::Anyness::Component
       using IndexType = Index::At<T>;
       using StackRequest = T;
 
-      static constexpr int ComponentPrecedence = 1000;
+      static constexpr int  ComponentPrecedence = 1000;
+      static constexpr bool ContainsMany = true;
 
       /// Check if there are no initialized elements                          
       constexpr bool IsEmpty(this auto const& self) noexcept {

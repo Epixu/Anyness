@@ -8,8 +8,9 @@
 #pragma once
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Heap-Reference.hpp"
-#include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/DeepOwnership-Stack.hpp"
+#include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/Stack.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Comparison.hpp"
@@ -84,7 +85,6 @@ namespace Langulus::Anyness
    ///   @attention memory is never (de)referenced upon construction and      
    ///      destruction - only on reassignment                                
    ///   @tparam T - the contained type                                       
-   ///                                                                        
    template<CT::Reference T> requires CT::Dense<T>
    struct THandle<T> : Inner::THandleEmbeddedDense<T> {
       using CTTI_Handle    = Yes<>;
@@ -122,7 +122,6 @@ namespace Langulus::Anyness
    /// When T is a dense reference, then element is embedded inside container 
    /// This handle never propagates or modifies ownership                     
    ///   @tparam T - the contained type                                       
-   ///                                                                        
    template<CT::Reference T>
    struct THandleDisowned<T> : Inner::THandleDisownedEmbedded<T> {
       using CTTI_Handle    = Yes<>;
@@ -139,7 +138,6 @@ namespace Langulus::Anyness
    /// When T is not a reference, then it is not embedded                     
    /// Such dense handles are isomorphic to TOwn<T> - data is on the stack    
    ///   @tparam T - the contained type                                       
-   ///                                                                        
    template<CT::NotReference T> requires CT::Dense<T>
    struct THandle<T> : Inner::THandleLocalDense<T> {
       using CTTI_Handle    = Yes<>;
@@ -155,7 +153,6 @@ namespace Langulus::Anyness
    /// When T is not a reference, then it is not embedded                     
    /// Such sparse handles are isomorphic to TRef<T>                          
    ///   @tparam T - the contained type                                       
-   ///                                                                        
    template<CT::NotReference T> requires CT::Sparse<T>
    struct THandle<T> : Inner::THandleLocalSparse<T> {
       using CTTI_Handle    = Yes<>;

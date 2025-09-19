@@ -7,13 +7,15 @@
 ///                                                                           
 #pragma once
 #include "../../../source/Container.hpp"
+#include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership-Heap.hpp"
-#include "../../../source/components/Assignment.hpp"
-#include "../../../source/components/Conversion.hpp"
-#include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/DeepOwnership-Heap.hpp"
+#include "../../../source/components/Emplacement.hpp"
+#include "../../../source/components/Assignment.hpp"
+#include "../../../source/components/Removal.hpp"
+#include "../../../source/components/Conversion.hpp"
 #include "../../../source/components/State-Stack.hpp"
 #include "../../../source/states/Typed.hpp"
 #include "../../../source/states/Future.hpp"
@@ -32,15 +34,16 @@ namespace Langulus::Anyness
    /// and so on. For a slightly smaller and faster representation, consider  
    /// using Own or Ref instead. If you want to contain a number of similar   
    /// elements use Many instead.                                             
-   ///                                                                        
    struct Any : Container<
+      Com::TypedStack<DMeta>,          // Variable type                 
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<>,           // Allocation is referenced      
-      Com::DeepOwnershipHeap<>,        // Sparse elements are referenced
-      Com::Assignment<>,               // Allows assignment             
-      Com::Conversion,                 // Allows conversion             
-      Com::TypedStack<DMeta>,          // Variable type                 
       Com::CountStatic<1>,             // Statically sized to 1         
+      Com::DeepOwnershipHeap<>,        // Sparse elements are referenced
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Assignment<>,               // Allows assignment             
+      Com::Removal<>,                  // Allows clear/reset            
+      Com::Conversion,                 // Allows conversion             
       Com::StateStack<                 // Variable state                
          DefineState::Typed<>,         // Can be type-constrained       
          DefineState::Future<>,        // Adds a 'missing future' state 

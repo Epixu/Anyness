@@ -7,47 +7,66 @@
 ///                                                                           
 #pragma once
 #include "Any.hpp"
+#include "THandle.hpp"
 
+
+namespace Langulus::Anyness::Inner
+{
+   template<CT::NotVoid T>
+   using TAnyBase = Container<
+      Com::TypedStack<DMeta, T>,       // Type-constrained              
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::OwnershipStack<>,           // Allocation is referenced      
+      Com::CountStatic<1>,             // Statically sized to 1         
+      Com::DeepOwnershipHeap<>,        // Sparse elements are referenced
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Assignment<>,               // Allows assignment             
+      Com::Removal<>,                  // Allows clear/reset            
+      Com::Comparison<>,               // Allows comparisons            
+      Com::StateStack<                 // Variable state                
+         DefineState::Future<>,        // Adds a 'missing future' state 
+         DefineState::Past<>,          // Adds a 'missing past' state   
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
+      >
+   >;
+}
 
 namespace Langulus::Anyness
 {
-   /// A statically typed container of size 1 that is binary compatible with  
-   /// the type-erased alternative above                                      
+   /// A statically-typed container of size 1 that is binary-compatible with  
+   /// the type-erased alternative `Any`.                                     
    template<CT::NotVoid T>
-   struct TAny : Container<
-      Com::HeapMovable<>,              // Pointer to heap memory        
-      Com::OwnershipStack<>,           // Allocation is referenced      
-      Com::DeepOwnership,              // Sparse elements are referenced
-      Com::Assignment,                 // Allows assignment             
-      Com::TypedStack<DMeta, T>,       // Type-constrained              
-      Com::CountStatic<1>,             // Statically sized to 1         
-      Com::StateStack<                 // Variable state                
-         State::Future<>,              // Adds a 'missing future' state 
-         State::Past<>,                // Adds a 'missing past' state   
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Tracked<>              // Adds 'tracked' state          
-      >
-   > {
+   struct TAny : Inner::TAnyBase<T> {
       using CTTI_ReflectAs = Any;
+      using Base = Inner::TAnyBase<T>;
+      using Base::Base;
+      using Base::operator =;
+      using Com::Assignment<>::operator =;
+      using Base::operator ==;
+
+      // Single element selections                                      
+      using Pick    = T const&;
+      using PickMut = THandle<T&>;
    };
    
    /// A statically typed container of size 1 that is binary compatible with  
    /// the type-erased alternative above                                      
-   template<CT::NotVoid T>
+   /*template<CT::NotVoid T>
    struct TAnyView : Container<
-      Com::HeapMovable<>,              // Pointer to heap memory        
-      Com::NoOwnershipStack<>,         // Pointer to an allocation      
       Com::TypedStack<DMeta, T>,       // Type-constrained              
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::OwnershipStack<0, false>,   // Pointer to an allocation      
       Com::CountStatic<1>,             // Statically sized to 1         
       Com::StateStack<                 // Variable state                
-         State::Future<>,              // Adds a 'missing future' state 
-         State::Past<>,                // Adds a 'missing past' state   
-         State::Compressed<>,          // Adds 'compressed' state       
-         State::Encrypted<>,           // Adds 'encrypted' state        
-         State::Tracked<>              // Adds 'tracked' state          
+         DefineState::Future<>,        // Adds a 'missing future' state 
+         DefineState::Past<>,          // Adds a 'missing past' state   
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
       >
    > {
       using CTTI_ReflectAs = AnyView;
-   };
+   };*/
 }

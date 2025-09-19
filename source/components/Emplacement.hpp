@@ -211,7 +211,7 @@ namespace Langulus::Anyness::Component
                self.SetCountInner(1);
          }
 
-         return self.template GetAs<PickMut<C>>();
+         return self.template As<PickMut<C>>();
       }
    };
 }

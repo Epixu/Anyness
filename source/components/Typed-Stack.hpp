@@ -263,6 +263,20 @@ namespace Langulus::Anyness::Component
       template<CT::NotVoid, bool BINARY_COMPATIBLE = false>
       bool CastsTo(size_t) const;
 
+      /// Dereference the first element inside the container                  
+      constexpr auto& operator * (this auto&& self) has_assumptions
+      requires (not TypeErased and requires { *self.template GetRawAs<TYPE>(); }) {
+         LglsAssumeDev(not self.IsEmpty(), "Container is empty");
+         return *self.template GetRawAs<TYPE>();
+      }
+
+      /// Access the first element inside the container                       
+      constexpr auto* operator -> (this auto&& self) has_assumptions
+      requires (not TypeErased and requires { self.template GetRawAs<TYPE>(); }) {
+         LglsAssumeDev(not self.IsEmpty(), "Container is empty");
+         return self.template GetRawAs<TYPE>();
+      }
+      
       /// Set the contained data type if possible                             
       /// This is still used if statically typed - checks if types are        
       /// compatible in constructors and assigners                            

@@ -12,7 +12,8 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Implements removal for containers                                      
+   /// Implements removal for containers. This includes Trim, Clear, Reset    
+   /// and other destruction-associated services.                             
    ///   @tparam ID - heap we're removing from                                
    template<unsigned ID>
    struct Removal {
@@ -26,23 +27,23 @@ namespace Langulus::Anyness::Component
       using Iterator = typename Deref<C>::Iterator;
 
    public:
-      template<bool REVERSE = false, CT::Container C>
+      template<bool REVERSE = false, CT::Container C> requires CT::ContainsMany<C>
       auto Remove(this C&, const CT::NoIntent auto&) -> Count<C>;
 
-      template<CT::Container C>
+      template<CT::Container C> requires CT::ContainsMany<C>
       auto RemoveAt(this C&, CT::Index auto, Count<C> = 1) -> Count<C>;
 
-      template<CT::Container C>
-      auto RemoveAtDeep(this C&, CT::Index auto) -> Count<C>;
-
-      template<CT::Container C>
+      template<CT::Container C> requires CT::ContainsMany<C>
       auto RemoveIt(this C&, const Iterator<C>&, Count<C> = 1) -> Iterator<C>;
-
-      /// Sets a new smaller count by destroying elements on the back         
-      /// Does nothing if count is larger or equals the current count         
-      /// Never reallocates                                                   
-      ///   @param desiredCount - the new count                               
+      
       template<CT::Container C>
+      auto RemoveDeepAt(this C&, CT::Index auto) -> Count<C>;
+
+      /// Sets a new smaller count by destroying elements on the back.        
+      /// Does nothing if count is larger or equals the current count.        
+      ///   @attention never reallocates                                      
+      ///   @param desiredCount - the new count                               
+      template<CT::Container C> requires CT::ContainsMany<C>
       void Trim(this C& self, Count<C> desiredCount) noexcept {
          const auto currentCount = self.GetCount();
          if (desiredCount >= currentCount)
@@ -71,7 +72,7 @@ namespace Langulus::Anyness::Component
          self.SetCount(desiredCount);
       }
 
-      template<CT::Container C>
+      template<CT::Container C> requires CT::ContainsMany<C>
       void Optimize(this C&);
 
       /// Destroy all elements but don't deallocate memory                    

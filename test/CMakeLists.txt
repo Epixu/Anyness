@@ -32,6 +32,8 @@ add_langulus_test(LangulusAnynessTest
                 Anyness/TestTRef.cpp
                 Anyness/TestTOwn.cpp
         
+                Anyness/any/TestAnyDense.cpp
+        
 	LIBRARIES	Catch2 LangulusAnyness
 )
 

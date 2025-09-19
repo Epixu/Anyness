@@ -60,13 +60,13 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
 namespace Langulus::Anyness
 {
-   struct HandleMut;
+   /*struct HandleMut;
    struct HandleDisownedMut;
    struct Handle;
    struct HandleDisowned;
 
    template<class T> struct THandle;
-   template<class T> struct THandleDisowned;
+   template<class T> struct THandleDisowned;*/
 
    namespace Component
    {
@@ -119,7 +119,7 @@ namespace Langulus::Anyness
    namespace Inner
    {
       /// Validate all used components in a container are properly ordered,   
-      /// and of standard layout                                              
+      /// of standard layout, and containing proper ID sequences.             
       template<unsigned ACC, class C1, class C2, class...CN>
       consteval bool ValidateComponentOrder() {
          static_assert(::std::is_standard_layout_v<C1>);
@@ -194,6 +194,7 @@ namespace Langulus::Anyness
          }
       }
    }
+
    
    ///                                                                        
    /// A container definition using composition                               
@@ -253,11 +254,9 @@ namespace Langulus::Anyness
       constexpr ~Container() noexcept {
          //static_assert(::std::is_standard_layout_v<Container>);
          if not consteval {
-            ComponentList::ForEach(
-               [this]<class C> {
-                  if constexpr (requires { this->C::Destroy(); }) this->C::Destroy();
-               }
-            );
+            ComponentList::ForEach([this]<class C> {
+               if constexpr (requires { this->C::Destroy(); }) this->C::Destroy();
+            });
          }
       }
 
@@ -452,4 +451,16 @@ namespace Langulus::CT
    /// Check if listed types are containers with any kind of heap memory      
    template<class...T>
    concept HeapAllocated = Container<T...> and (Deref<T>::HeapAllocated and ...);
+   
+   /// Check if listed types are containers with variable count               
+   /// @attention this includes containers with Com::CountStatic, but have    
+   ///   nullifiable heap pointer                                             
+   template<class...T>
+   concept HasVariableCount = Container<T...> and HeapAllocated<T...>
+       and []{ return (Decay<T>::HeapCanBeNull and ...); }();
+   
+   /// Check if listed types are containers that can have multiple elements   
+   template<class...T>
+   concept ContainsMany = Container<T...>
+       and []{ return (Decay<T>::ContainsMany and ...); }();
 }

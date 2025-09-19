@@ -16,7 +16,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<class T>
+   template<CT::NotVoid T>
    using TOwnBase = Container<
       Com::TypedStatic<DMeta, T>,         // Statically typed          
       Com::Stack<T>,                      // Element on the stack      

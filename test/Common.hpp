@@ -201,12 +201,6 @@ void DestroyElement(auto& e) {
 }
 #endif
 
-template<class L, class R>
-struct TypePair {
-   using LHS = L;
-   using RHS = R;
-};
-
 /// Used to configure a map test                                              
 ///   @param C - the map type we're testing                                   
 ///   @param K - the tested key type                                          
@@ -351,70 +345,6 @@ namespace Langulus::Flow
    class constConstructconst {};
    class constconst {};
 }
-
-/// Simple type for testing Referenced types                                  
-struct RT : Referenced {
-   int data;
-   const char* t;
-   bool destroyed = false;
-   bool copied_in = false;
-   bool cloned_in = false;
-   bool moved_in = false;
-   bool moved_out = false;
-
-   RT()
-      : data {0}, t {nullptr} {}
-
-   RT(int a)
-      : data {a}, t {nullptr} {}
-
-   RT(const char* tt)
-      : data(0), t {tt} {}
-
-   RT(const RT& rhs)
-      : data(rhs.data), t {rhs.t}, copied_in {true} {}
-
-   RT(RT&& rhs)
-      : data(rhs.data), t {rhs.t}, moved_in {true} {
-      rhs.moved_in = false;
-      rhs.moved_out = true;
-   }
-
-   RT(Clone<RT>&& rhs)
-      : data(rhs->data), t {rhs->t}, cloned_in {true} {
-   }
-
-   ~RT() {
-      destroyed = true;
-
-      if (GetReferences() == 1)
-         Reference(-1);
-   }
-
-   RT& operator = (const RT& rhs) {
-      data = rhs.data;
-      t = rhs.t;
-      copied_in = true;
-      moved_in = moved_out = false;
-      return *this;
-   }
-
-   RT& operator = (RT&& rhs) {
-      data = rhs.data;
-      t = rhs.t;
-      copied_in = false;
-      moved_in = true;
-      moved_out = false;
-      rhs.copied_in = false;
-      rhs.moved_in = false;
-      rhs.moved_out = true;
-      return *this;
-   }
-
-   operator const int& () const noexcept {
-      return data;
-   }
-};
 
 /// An empty trivial type                                                     
 class ImplicitlyConstructible {};

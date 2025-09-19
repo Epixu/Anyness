@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../rtti/Intent.hpp"
+#include "../Allocator.hpp"
 #include <Langulus/Assume.hpp>
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
@@ -22,6 +22,8 @@ namespace Langulus::Anyness::Component
    template<unsigned ID>
    struct DeepOwnershipHeap {
       using CTTI_Component = Yes<>;
+      using HeapRequest = AllocationPtr;
+      
       static constexpr bool DeeplyOwned = true;
       static constexpr int ComponentPrecedence = 2000;
 
@@ -43,9 +45,9 @@ namespace Langulus::Anyness::Component
          using DC = Deref<C>;
          if constexpr (DC::TypeErased) {
             if (self.IsSparse()) {
-               AssumeDev(self.GetHeap(),
+               LglsAssumeDev(self.GetHeap(),
                   "No memory available");
-               AssumeDev(self.GetAllocation(),
+               LglsAssumeDev(self.GetAllocation(),
                   "Entries do not exist for sparse containers which are out of jurisdiction");
                return reinterpret_cast<AllocationPtr*>(self.GetHeapEnd());
             }
@@ -53,9 +55,9 @@ namespace Langulus::Anyness::Component
          }
          else {
             if constexpr (DC::Sparse) {
-               AssumeDev(self.GetHeap(),
+               LglsAssumeDev(self.GetHeap(),
                   "No memory available");
-               AssumeDev(self.GetAllocation(),
+               LglsAssumeDev(self.GetAllocation(),
                   "Entries do not exist for sparse containers which are out of jurisdiction");
                return reinterpret_cast<AllocationPtr*>(self.GetHeapEnd());
             }
@@ -90,7 +92,7 @@ namespace Langulus::Anyness::Component
          // Raw pointers are always referenced, even when moved, as     
          // long as it's a keeper intent                                
          if constexpr (C::TypeErased) {
-            AssumeDev(self.IsSparse() and (CT::Void<DT> or self.template IsSimilar<ST>()),
+            LglsAssumeDev(self.IsSparse() and (CT::Void<DT> or self.template IsSimilar<ST>()),
                "Type mismatch");
 
             if constexpr (S::Keep and CT::Allocatable<DT>) {

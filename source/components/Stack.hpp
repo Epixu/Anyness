@@ -118,10 +118,11 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get first element as a handle, or any desired wrapping type         
-      ///   @attention assumes ALT is of proper sparseness if not void        
       ///   @tparam ALT - the type we're wrapping in                          
+      ///   @return ALT, either as a reference if possible, or as a value if  
+      ///      an incompatible pointer arithmetic happened                    
       template<class ALT, CT::Container C>
-      ALT GetAs(this C&& self) has_assumptions {
+      decltype(auto) As(this C&& self) has_assumptions {
          if constexpr (CT::Handle<ALT>) {
             static_assert(not CT::Reference<ALT>, "Strip references first");
 
@@ -129,11 +130,11 @@ namespace Langulus::Anyness::Component
                // Type-erased handle                                    
                if constexpr (requires { ALT::Owned; }) {
                   if constexpr (ALT::Owned)
-                     return {self.Get(), self.GetEntries(), self.GetType()};
+                     return ALT {self.Get(), self.GetEntries(), self.GetType()};
                   else
-                     return {self.Get(), self.GetType()};
+                     return ALT {self.Get(), self.GetType()};
                }
-               else return {self.Get(), self.GetType()};
+               else return ALT {self.Get(), self.GetType()};
             }
             else {
                // Statically typed handle                               
@@ -142,11 +143,11 @@ namespace Langulus::Anyness::Component
 
                if constexpr (requires { ALT::Owned; }) {
                   if constexpr (ALT::Owned)
-                     return {self.Stack::template Get<HT*>(), self.GetAllocation()};
+                     return ALT {self.Stack::template Get<HT*>(), self.GetAllocation()};
                   else
-                     return {self.Stack::template Get<HT*>()};
+                     return ALT {self.Stack::template Get<HT*>()};
                }
-               else return {self.Stack::template Get<HT*>()};
+               else return ALT {self.Stack::template Get<HT*>()};
             }
          }
          else return self.template Get<Deref<ALT>>();

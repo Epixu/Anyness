@@ -45,14 +45,14 @@ namespace Langulus::Anyness::Component
       using Deep = typename Deref<C>::DeepType;
 
    public:
-      template<CT::NotVoid AS, CT::Container C>
+      /*template<CT::NotVoid AS, CT::Container C>
       auto As(this C&& self) -> Pick<C>;
 
       template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
       auto AsCast(this C const& self) -> AS;
 
       template<CT::Container C>
-      auto GetItem(this C&&) has_assumptions -> Deep<C>;
+      auto GetItem(this C&&) has_assumptions -> Deep<C>;*/
 
       /// A safe way to get the first deep entry                              
       /// Will utilize any statically typed deep containers, if available     

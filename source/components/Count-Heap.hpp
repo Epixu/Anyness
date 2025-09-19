@@ -27,7 +27,9 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using CountType = T;
       using IndexType = Index::At<T>;
-      static constexpr int ComponentPrecedence = 1000;
+      
+      static constexpr int  ComponentPrecedence = 1000;
+      static constexpr bool ContainsMany = true;
 
       /// Get the number of initialized elements                              
       template<CT::Container C>

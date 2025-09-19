@@ -7,12 +7,15 @@
 ///                                                                           
 #pragma once
 #include <Langulus/Typenav.hpp>
+#include <Langulus/CT/Referenced.hpp>
 
 
 /// Useful for creating instances of types on the heap, with multiple levels  
 /// of indirection                                                            
 template<class T>
 struct ScopedElement {
+   using CTTI_ReflectAs = void;
+   
 private:
    T* element = nullptr;
 

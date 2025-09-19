@@ -10,7 +10,6 @@
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/DeepOwnership-Heap.hpp"
-#include "../../../source/components/Contiguous.hpp"
 #include "../../../source/components/Indexed-Linear.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"

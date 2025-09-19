@@ -173,10 +173,11 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get first element as a handle, or any desired wrapping type         
-      ///   @attention assumes T is of proper sparseness if not void          
       ///   @tparam T - the type we're wrapping in                            
+      ///   @return T, either as a reference if possible, or as a value if    
+      ///      an incompatible pointer arithmetic happened                    
       template<class T, CT::Container C>
-      T GetAs(this C&& self) has_assumptions {
+      decltype(auto) As(this C&& self) has_assumptions {
          if constexpr (CT::Handle<T>) {
             static_assert(not CT::Reference<T>, "Strip references first");
 
@@ -184,11 +185,11 @@ namespace Langulus::Anyness::Component
                // Type-erased handle                                    
                if constexpr (requires { T::Owned; }) {
                   if constexpr (T::Owned)
-                     return {self.Get(), self.GetEntries(), self.GetType()};
+                     return T {self.Get(), self.GetEntries(), self.GetType()};
                   else
-                     return {self.Get(), self.GetType()};
+                     return T {self.Get(), self.GetType()};
                }
-               else return {self.Get(), self.GetType()};
+               else return T {self.Get(), self.GetType()};
             }
             else {
                // Statically typed handle                               
@@ -202,15 +203,21 @@ namespace Langulus::Anyness::Component
 
                if constexpr (requires { T::Owned; }) {
                   if constexpr (T::Owned)
-                     return {self.HeapReference::template Get<HT*>(), self.GetAllocation()};
+                     return T {self.HeapReference::template Get<HT*>(), self.GetAllocation()};
                   else
-                     return {self.HeapReference::template Get<HT*>()};
+                     return T {self.HeapReference::template Get<HT*>()};
                }
-               else return {self.HeapReference::template Get<HT*>()};
+               else return T {self.HeapReference::template Get<HT*>()};
             }
          }
          else return self.template Get<Deref<T>>();
       }
+      
+      /// Get first element by casting it to any desirable compatible type    
+      ///   @tparam AS - the type we're casting to                            
+      ///   @return the resulting value                                       
+      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
+      AS Cast(this C const&);
 
    protected:
       /// Default-initialization of this component is impossible              
