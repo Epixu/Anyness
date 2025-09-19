@@ -41,7 +41,7 @@ struct RT : Langulus::Referenced {
          Reference(-1);
    }
 
-   RT& operator = (const RT& rhs) {
+   constexpr RT& operator = (const RT& rhs) {
       data = rhs.data;
       t = rhs.t;
       copied_in = true;
@@ -49,7 +49,7 @@ struct RT : Langulus::Referenced {
       return *this;
    }
 
-   RT& operator = (RT&& rhs) {
+   constexpr RT& operator = (RT&& rhs) {
       data = rhs.data;
       t = rhs.t;
       copied_in = false;
@@ -61,5 +61,5 @@ struct RT : Langulus::Referenced {
       return *this;
    }
 
-   operator const int& () const noexcept { return data; }
+   constexpr operator const int& () const noexcept { return data; }
 };

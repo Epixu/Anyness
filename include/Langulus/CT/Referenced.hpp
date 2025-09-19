@@ -13,7 +13,8 @@
 namespace Langulus::CTTI
 {
    /// Can be used in two ways to satisfy CT::Referenced<T>:                  
-   /// @attention T has to posses the referencing interface for this to work  
+   /// @attention T has to posses the referencing interface for this to work. 
+   ///  - easiest way to achieve this is to simply inherit Referenced.        
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_Referenced = Yes<>;` in T                  
    template<class T>
@@ -34,8 +35,7 @@ namespace Langulus
    public:
       using CTTI_Referenced = Yes<>;
 
-      LANGULUS(INLINED)
-      ~Referenced() {
+      constexpr ~Referenced() {
          LglsAssumeDev(mReferences <= 1,
             "Leftover references (", mReferences,") on instance destruction. "
             "When inheriting from Referenced, you're supposed to "
@@ -50,13 +50,11 @@ namespace Langulus
          );
       }
 
-      LANGULUS(ALWAYS_INLINED)
-      int GetReferences() const noexcept {
+      constexpr int GetReferences() const noexcept {
          return mReferences;
       }
 
-      LANGULUS(ALWAYS_INLINED)
-      int Reference(int x) const has_assumptions {
+      constexpr int Reference(int x) const has_assumptions {
          LglsAssumeDev(mReferences or x == 0,
             "Dead instance resurrection/overkill");
          LglsAssumeDev(x >= 0 or mReferences >= -x,

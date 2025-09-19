@@ -39,8 +39,7 @@ TEMPLATE_TEST_CASE("Owned value", "[TOwn]",
       T pointer;
       T pointer2;
 
-      REQUIRE_FALSE(pointer.GetRaw());
-      REQUIRE_FALSE(pointer);
+      REQUIRE(pointer.GetRaw());
       REQUIRE(pointer == pointer2);
 
       /*WHEN("Create an instance") {

@@ -260,8 +260,7 @@ namespace Langulus
       template<class...U>
       using MapFor = Inner::ConvertLayoutMap<typename compact_tuple<U...>::to_interface, to_interface>;
 
-      constexpr  compact_tuple() = default;
-      constexpr ~compact_tuple() {}
+      constexpr compact_tuple() = default;
 
       explicit constexpr compact_tuple(T const&...t)
          : storage_type {forward_shuffled(to_interface{}, t...)} {

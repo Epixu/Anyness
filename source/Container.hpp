@@ -153,7 +153,6 @@ namespace Langulus::Anyness
          constexpr StackVariable() noexcept {};
          constexpr StackVariable(T const& v) noexcept : value {v} {}
          constexpr StackVariable(T&& v) noexcept : value {FWD(v)} {}
-         constexpr ~StackVariable() noexcept = default;
       };
       
       /// Go through all components and accumulate their stack requests into  
