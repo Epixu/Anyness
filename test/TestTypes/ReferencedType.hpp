@@ -34,7 +34,7 @@ struct RT : Langulus::Referenced {
    constexpr RT(Langulus::Clone<RT>&& rhs)
       : data(rhs->data), t {rhs->t}, cloned_in {true} { }
 
-   ~RT() {
+   constexpr ~RT() {
       destroyed = true;
 
       if (GetReferences() == 1)

@@ -45,7 +45,7 @@ namespace Langulus::Anyness
          : Base {typename Base::Stackwise {}, source} {}
       constexpr TOwn(T&& source) noexcept
          : Base {typename Base::Stackwise {}, FWD(source)} {}
-      constexpr ~TOwn() = default;
+      constexpr ~TOwn() {}
       
       constexpr bool operator == (const T& rhs) const noexcept {
          return this->GetStackInner() == rhs;
