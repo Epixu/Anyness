@@ -58,6 +58,8 @@ namespace Langulus::Anyness
 
          Iterator& operator ++ ()    noexcept { ++mIt; return *this; }
          Iterator  operator ++ (int) noexcept { return mIt++; }
+         Iterator& operator -- ()    noexcept { --mIt; return *this; }
+         Iterator  operator -- (int) noexcept { return mIt--; }
       };
 
       Iterator begin() {

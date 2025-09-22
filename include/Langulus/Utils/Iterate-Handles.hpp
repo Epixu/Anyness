@@ -88,6 +88,8 @@ namespace Langulus::Anyness
 
          Iterator& operator ++ ()    noexcept { ++mIt; return *this; }
          Iterator  operator ++ (int) noexcept { return {mIt++, mRange}; }
+         Iterator& operator -- ()    noexcept { --mIt; return *this; }
+         Iterator  operator -- (int) noexcept { return {mIt--, mRange}; }
 
          /// Get the integer element difference between two iterators         
          Count operator - (const Iterator& rhs) const noexcept {

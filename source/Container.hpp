@@ -235,13 +235,7 @@ namespace Langulus::Anyness
       /// component of this container that has it. Allows for intents as well.
       ///   @note ConstructFrom act as validating functions as well           
       constexpr Container(CT::Container auto&& from) {
-         using I = IntentOf<decltype(from)>;
-         ComponentList::ForEach([&,this]<class C>{
-            if constexpr (requires { this->C::ConstructFrom(I {from}); })
-               this->C::ConstructFrom(I {from});
-            else if constexpr (requires { this->C::ConstructDefault(); })
-               this->C::ConstructDefault();
-         });
+         ConstructFrom(FWD(from));
       }
 
       struct Stackwise {};
@@ -365,52 +359,17 @@ namespace Langulus::Anyness
          });
       }
       
-      /// Get a reference to the first element of a specific stack/heap       
-      ///   @tparam ID - the stack/heap ID                                    
-      ///   @tparam TYPE - the type of the data to get                        
-      /*template<unsigned ID, CT::NotVoid TYPE>
-      constexpr auto& GetInner() has_assumptions {
-         LglsAssumeDev(not this->IsEmpty(), "Container is empty");
-
-         if constexpr (HasComponent<Com::HeapMovable<ID>>)
-            return Com::HeapMovable<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::HeapImmovable<ID>>)
-            return Com::HeapImmovable<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::HeapReference<ID>>)
-            return Com::HeapReference<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::Stack<TYPE, ID>>)
-            return Com::Stack<TYPE, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::Stack<TYPE&, ID>>)
-            return Com::Stack<TYPE&, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::Stack<TYPE*, ID>>)
-            return Com::Stack<TYPE*, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::Stack<TYPE**, ID>>)
-            return Com::Stack<TYPE**, ID>::template Get<TYPE>();
-         else
-            static_assert(false, "No heap/stack with that ID and/or TYPE");
+      /// Call ConstructFrom whenever possible, and fallback to               
+      /// ConstructDefault where not supported.                               
+      constexpr void ConstructFrom(CT::Container auto&& from) {
+         using I = IntentOf<decltype(from)>;
+         ComponentList::ForEach([&,this]<class C>{
+            if constexpr (requires { this->C::ConstructFrom(I {from}); })
+               this->C::ConstructFrom(I {from});
+            else if constexpr (requires { this->C::ConstructDefault(); })
+               this->C::ConstructDefault();
+         });
       }
-
-      template<unsigned ID, CT::NotVoid TYPE>
-      constexpr auto const& GetInner() const has_assumptions {
-         LglsAssumeDev(not this->IsEmpty(), "Container is empty");
-
-         if constexpr (HasComponent<Com::HeapMovable<ID>>)
-            return Com::HeapMovable<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::HeapImmovable<ID>>)
-            return Com::HeapImmovable<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::HeapReference<ID>>)
-            return Com::HeapReference<ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::Stack<TYPE, ID>>)
-            return Com::Stack<TYPE, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::Stack<TYPE&, ID>>)
-            return Com::Stack<TYPE&, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::Stack<TYPE*, ID>>)
-            return Com::Stack<TYPE*, ID>::template Get<TYPE>();
-         else if constexpr (HasComponent<Com::Stack<TYPE**, ID>>)
-            return Com::Stack<TYPE**, ID>::template Get<TYPE>();
-         else
-            static_assert(false, "No heap/stack with that ID and/or TYPE");
-      }*/
    };
 
    namespace State
@@ -441,26 +400,28 @@ namespace Langulus::CT
    /// Check if listed types are containers with any kind of DeepOwnership    
    /// component                                                              
    template<class...T>
-   concept DeeplyOwned = Container<T...> and (Deref<T>::DeeplyOwned and ...);
+   concept DeeplyOwned = Container<T...> and (Deref<Shed<T>>::DeeplyOwned and ...);
 
    /// Check if listed types are containers with any kind of linear indexing  
    /// component                                                              
    template<class...T>
-   concept IndexedLinearly = Container<T...> and (Deref<T>::Indexed and ...);
+   concept IndexedLinearly = Container<T...> and (Deref<Shed<T>>::Indexed and ...);
    
    /// Check if listed types are containers with any kind of heap memory      
    template<class...T>
-   concept HeapAllocated = Container<T...> and (Deref<T>::HeapAllocated and ...);
+   concept HeapAllocated = Container<T...> and (Deref<Shed<T>>::HeapAllocated and ...);
    
    /// Check if listed types are containers with variable count               
    /// @attention this includes containers with Com::CountStatic, but have    
    ///   nullifiable heap pointer                                             
    template<class...T>
-   concept HasVariableCount = Container<T...> and HeapAllocated<T...>
-       and []{ return (Decay<T>::HeapCanBeNull and ...); }();
+   concept HasVariableCount = HeapAllocated<T...> and (Deref<Shed<T>>::HeapCanBeNull and ...);
    
    /// Check if listed types are containers that can have multiple elements   
    template<class...T>
-   concept ContainsMany = Container<T...>
-       and []{ return (Decay<T>::ContainsMany and ...); }();
+   concept ContainsMany = Container<T...> and (Deref<Shed<T>>::ContainsMany and ...);
+   
+   /// Check if listed types are containers that can have single element      
+   template<class...T>
+   concept ContainsOne = Container<T...> and ((not Deref<Shed<T>>::ContainsMany) and ...);
 }

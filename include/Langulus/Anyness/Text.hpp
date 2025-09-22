@@ -90,62 +90,61 @@ namespace Langulus::Anyness
             // Type can be either char, or const char                   
             using CHAR = TypeOf<ST>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
-            const auto count = std::char_traits<char>::length(source);
+            const auto count = ::std::char_traits<char>::length(source);
             if (not count) {
-               ConstructDefault();
+               this->ConstructDefault();
                return;
             }
-            SetHeapInner(source);
-            SetCountInner(count);
+            this->SetHeapInner(source);
+            this->SetCountInner(count);
          }
          else if constexpr (CT::TextPointer<ST>) {
             // Create from a null-terminated char pointer               
             // Type can be either char, or const char                   
             if (not source) {
-               ConstructDefault();
+               this->ConstructDefault();
                return;
             }
             using CHAR = Deptr<ST>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
-            const auto count = std::char_traits<char>::length(source);
+            const auto count = ::std::char_traits<char>::length(source);
             if (not count) {
-               ConstructDefault();
+               this->ConstructDefault();
                return;
             }
-            SetHeapInner(source);
-            SetCountInner(count);
+            this->SetHeapInner(source);
+            this->SetCountInner(count);
          }
          else if constexpr (::std::ranges::contiguous_range<ST>) {
             // Create from an std container                             
             // Type can be either char, or const char                   
             if (source.empty()) {
-               ConstructDefault();
+               this->ConstructDefault();
                return;
             }
             using CHAR = Deptr<decltype(source.data())>;
             static_assert(CT::Similar<CHAR, char>, "Type mismatch");
-            SetHeapInner(source.data());
-            SetCountInner(source.size());
+            this->SetHeapInner(source.data());
+            this->SetCountInner(source.size());
          }
          else static_assert(false, "Unsupported text constructor");
 
          // Reset hash                                                  
-         ResetHash();
+         this->ResetHash();
 
          // Take ownership if the intent requires it                    
-         SetAllocationInner(nullptr);
+         this->SetAllocationInner(nullptr);
          if constexpr (S::KeepsOnCopy())
-            TakeOwnership();
+            this->TakeOwnership();
       }
 
       /// Construction from all kinds of characters                           
       template<CT::Character T>
       constexpr Text(T&& ch) {
-         GetType();
-         AllocateFresh(RequestSize(1));
-         *GetRawAs<char>() = DeintCast(ch);
-         SetCountInner(1);
-         ResetHash();
+         this->AllocateFresh(this->RequestSize(1));
+         *this->GetRawAs<char>() = DeintCast(ch);
+         this->SetCountInner(1);
+         this->ResetHash();
       }
 
       /// Construction from all kinds of text, trim length to desired count   
@@ -277,7 +276,7 @@ namespace Langulus::Anyness
 
       /// Comparing against nullptr_t checks if text is empty                 
       constexpr bool operator == (nullptr_t) const noexcept {
-         return IsEmpty();
+         return this->IsEmpty();
       }
 
       /// Comparing against null-terminated strings                           
@@ -298,14 +297,14 @@ namespace Langulus::Anyness
       ///      Com::Concatenate and Com::ConcatenateOperators                 
       template<CT::Text T> requires CT::NotContainer<T>
       Text& operator += (T&& rhs) {
-         if (not IsAllocated()) {
+         if (not this->IsAllocated()) {
             *this = Text {FWD(rhs)};
             return *this;
          }
 
          using DT = Deint<T>;
          decltype(auto) source = DeintCast(FWD(rhs));
-         const auto currentCount = GetCount();
+         const auto currentCount = this->GetCount();
 
          if constexpr (CT::TextLiteral<DT>) {
             // Create from a text literal/bounded array                 
@@ -314,9 +313,9 @@ namespace Langulus::Anyness
             const auto count = strnlen(source, ExtentOf<DT>);
             if (not count)
                return *this;
-            AllocateMore(currentCount + count);
-            memcpy(GetRawAs<uint8_t>() + currentCount, source, count);
-            SetCountInner(currentCount + count);
+            this->AllocateMore(currentCount + count);
+            memcpy(this->GetRawAs<uint8_t>() + currentCount, source, count);
+            this->SetCountInner(currentCount + count);
          }
          else if constexpr (CT::TextPointer<DT>) {
             // Create from a null-terminated char pointer               
@@ -327,9 +326,9 @@ namespace Langulus::Anyness
             const auto count = strlen(source);
             if (not count)
                return *this;
-            AllocateMore(currentCount + count);
-            memcpy(GetRawAs<uint8_t>() + currentCount, source, count);
-            SetCountInner(currentCount + count);
+            this->AllocateMore(currentCount + count);
+            memcpy(this->GetRawAs<uint8_t>() + currentCount, source, count);
+            this->SetCountInner(currentCount + count);
          }
          else if constexpr (::std::ranges::contiguous_range<DT>) {
             // Create from an std container                             
@@ -338,13 +337,13 @@ namespace Langulus::Anyness
             using CHAR = Deptr<decltype(source.data())>;
             static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
             const auto count = source.size();
-            AllocateMore(currentCount + count);
-            memcpy(GetRawAs<uint8_t>() + currentCount, source.data(), count);
-            SetCountInner(currentCount + count);
+            this->AllocateMore(currentCount + count);
+            memcpy(this->GetRawAs<uint8_t>() + currentCount, source.data(), count);
+            this->SetCountInner(currentCount + count);
          }
          else static_assert(false, "Unsupported text concatenation");
 
-         ResetHash();
+         this->ResetHash();
          return *this;
       }
    };

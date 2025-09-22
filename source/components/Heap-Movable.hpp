@@ -45,15 +45,6 @@ namespace Langulus::Anyness::Component
       using Deep = typename Deref<C>::DeepType;
 
    public:
-      /*template<CT::NotVoid AS, CT::Container C>
-      auto As(this C&& self) -> Pick<C>;
-
-      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
-      auto AsCast(this C const& self) -> AS;
-
-      template<CT::Container C>
-      auto GetItem(this C&&) has_assumptions -> Deep<C>;*/
-
       /// A safe way to get the first deep entry                              
       /// Will utilize any statically typed deep containers, if available     
       ///   @attention ignores sparseness                                     
@@ -138,7 +129,7 @@ namespace Langulus::Anyness::Component
                            "Contained type is not refer-constructible");
                      }
 
-                     self.AllocateFresh(self.RequestSize(count));
+                     auto al  = self.AllocateFresh(self.RequestSize(count));
                      auto src = IterateHandles(from).begin();
                      auto dst = IterateHandles(self).begin();
                      try {
@@ -148,14 +139,36 @@ namespace Langulus::Anyness::Component
                         }
                      } catch (...) {
                         // Partial success                              
-                        self.SetCountInner(src - IterateHandles(from).begin());
-                        self.ResetHash();
+                        auto n = src - IterateHandles(from).begin();
+                        if constexpr (requires { self.SetCountInner(1); }) {
+                           self.SetCountInner(n);
+                           self.ResetHash();
+                        }
+                        else {
+                           // Partial success is not allowed - we have  
+                           // to deallocate and make sure CountStatic   
+                           // reports as empty                          
+                           while (n) {
+                              dst->template DestroyElement<false>();
+                              --dst; --n;
+                           }
+                           Allocator::Deallocate(al);
+                           self.SetAllocationInner(nullptr);
+                           if constexpr (requires { self.SetHashInner(1); })
+                              self.SetHashInner(1);
+                        }
                         throw;
                      }
                      
                      // Full success                                    
-                     self.SetCountInner(count);
-                     self.SetHashInner(from.GetHashInner());
+                     if constexpr (requires { self.SetCountInner(count); })
+                        self.SetCountInner(count);
+                     if constexpr (requires { from.GetHashInner(); }) {
+                        if constexpr (requires { self.SetHashInner(1); })
+                           self.SetHashInner(from.GetHashInner());
+                        else if constexpr (requires { self.ResetHash(); })
+                           self.ResetHash();
+                     }
                   }
                }
             }
@@ -265,7 +278,7 @@ namespace Langulus::Anyness::Component
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request - request to fulfill                               
       template<CT::Container C>
-      void AllocateFresh(this C& self, const Allocation::Request& request) {
+      auto AllocateFresh(this C& self, const Allocation::Request& request) -> Allocation* {
          Allocation* al;
          if constexpr (C::TypeErased) {
             if constexpr (CT::DeeplyOwned<C>) {
@@ -290,6 +303,7 @@ namespace Langulus::Anyness::Component
          self.SetAllocationInner(al);
          if constexpr (requires { self.mReserved; })
             self.mReserved = request.mElementCount;
+         return al;
       }
 
       /// Allocate a number of elements, relying on the type of the container 

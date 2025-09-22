@@ -12,6 +12,7 @@
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/DeepOwnership-Heap.hpp"
+#include "../../../source/components/Hash-Emergent.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Removal.hpp"
@@ -40,6 +41,7 @@ namespace Langulus::Anyness
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::CountStatic<1>,             // Statically sized to 1         
       Com::DeepOwnershipHeap<>,        // Sparse elements are referenced
+      Com::HashEmergent<>,             // Hash is retrieved from item   
       Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            

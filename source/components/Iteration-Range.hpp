@@ -7,9 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../Iterator.hpp"
 #include <ranges>
-#include <tuple>
 
 
 namespace Langulus::Anyness
@@ -89,6 +87,8 @@ namespace Langulus::Anyness
 
          Iterator& operator ++ ()    noexcept { ++mIt; return *this; }
          Iterator  operator ++ (int) noexcept { return mIt++; }
+         Iterator& operator -- ()    noexcept { --mIt; return *this; }
+         Iterator  operator -- (int) noexcept { return mIt--; }
       };
 
       Iterator       begin() { return Iterator {range.begin()}; }
@@ -158,6 +158,8 @@ namespace Langulus::Anyness
 
          Iterator& operator ++ ()    noexcept { ++mIt; return *this; }
          Iterator  operator ++ (int) noexcept { return {mIt++, mRange}; }
+         Iterator& operator -- ()    noexcept { --mIt; return *this; }
+         Iterator  operator -- (int) noexcept { return {mIt--, mRange}; }
       };
 
       constexpr Iterator begin() const noexcept {

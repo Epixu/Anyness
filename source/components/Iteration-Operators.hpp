@@ -16,7 +16,6 @@ namespace Langulus::Anyness::Component
    /// These operators are fundamentally unsafe, so the API is protected,     
    /// used mainly internally in other components and/or iterators            
    ///   @tparam ID - heap we're iterating                                    
-   ///                                                                        
    template<unsigned ID>
    struct IterationOperators {
       using CTTI_Component = Yes<>;

@@ -20,9 +20,6 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    static Allocator::State memoryState;
    using T = typename TestType::First;
    using E = typename TestType::Second;
-   const ScopedElement<E> element    {555};
-   const ScopedElement<E> darray1[1] {{1}};
-   const ScopedElement<E> darray2[1] {{6}};
 
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              
@@ -42,21 +39,45 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       static_assert(CT::CloneAssignable<T>);
       static_assert(CT::DisownAssignable<T>);
    }
+   else {
+      // Statically-typed containers behave the same as their inner     
+      // type                                                           
+      static_assert(CT::CopyConstructible<T> == CT::CopyConstructible<E>);
+      static_assert(CT::ReferConstructible<T> == CT::ReferConstructible<E>);
+      static_assert(CT::AbandonConstructible<T> == CT::AbandonConstructible<E>);
+      static_assert(CT::MoveConstructible<T> == CT::MoveConstructible<E>);
+      static_assert(CT::CloneConstructible<T> == CT::CloneConstructible<E>);
+      static_assert(CT::DisownConstructible<T> == CT::DisownConstructible<E>);
 
-   GIVEN("Default constructed container") {
+      static_assert(CT::CopyAssignable<T> == CT::CopyAssignable<E>);
+      static_assert(CT::ReferAssignable<T> == CT::ReferAssignable<E>);
+      static_assert(CT::AbandonAssignable<T> == CT::AbandonAssignable<E>);
+      static_assert(CT::MoveAssignable<T> == CT::MoveAssignable<E>);
+      static_assert(CT::CloneAssignable<T> == CT::CloneAssignable<E>);
+      static_assert(CT::DisownAssignable<T> == CT::DisownAssignable<E>);      
+   }
+   
+   static_assert(not requires (T pack, E item) { pack.operator +   (item); });
+   static_assert(not requires (T pack, E item) { pack.operator +=  (item); });
+   static_assert(not requires (T pack, E item) { pack.operator <<  (item); });
+   static_assert(not requires (T pack, E item) { pack.operator >>  (item); });
+   static_assert(not requires (T pack, E item) { pack.operator <<= (item); });
+   static_assert(not requires (T pack, E item) { pack.operator >>= (item); });
+   static_assert(not requires (T pack, E item) { pack.InsertAt (Index::Back, item); });
+   static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+   static_assert(not requires (T pack, E item) { pack.Remove(item); });
+   static_assert(not requires (T pack, E item) { pack.RemoveAt(Index::Front); });
+   static_assert(not requires (T pack, E item) { pack.Reserve(20); });
+   static_assert(not requires (T pack, E item) { pack.EnableOr(); });
+   static_assert(not requires (T pack, E item) { pack.Find(item); });
+   static_assert(not requires (T pack, E item) { pack.ForEach([](const int&){}); });
+   static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&){}); });
+      
+   GIVEN("Default-constructed container") {
+      const ScopedElement<E> element {555};
       T pack;
 
       Any_CheckState_Default<E>(pack);
-      
-      static_assert(not requires { pack.operator << (darray2[0]); });
-      static_assert(not requires { pack.operator >> (darray2[0]); });
-      static_assert(not requires { pack.InsertAt (Index::Back, darray2   ); });
-      static_assert(not requires { pack.InsertAt (Index::Back, darray2[0]); });
-      static_assert(not requires { pack.EmplaceAt(Index::Back, darray2[0]); });
-      static_assert(not requires { pack.Remove(*element); });
-      static_assert(not requires { pack.RemoveAt(Index::Front); });
-      static_assert(not requires { pack.Reserve(20); });
-      static_assert(not requires { pack.EnableOr(); });
       
       #ifdef LANGULUS_STD_BENCHMARK
          BENCHMARK_ADVANCED("default construction") (timer meter) {
@@ -312,7 +333,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          #endif
       }
 
-      WHEN("Emplace item") {
+      WHEN("Emplace") {
          ScopedElement<E> i666 {666};
          const auto i666backup = *i666;
          if constexpr (CT::Typed<T>) {
@@ -354,13 +375,13 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          }
       }
 
-      WHEN("Clearing empty") {
+      WHEN("Cleared") {
          pack.Clear();
 
          Any_CheckState_Default<E>(pack);
       }
 
-      WHEN("Resetting empty") {
+      WHEN("Reset") {
          pack.Reset();
 
          Any_CheckState_Default<E>(pack);
@@ -382,7 +403,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          Any_CheckState_Default<E>(pack);
       }
 
-      WHEN("Empty pack with state is moved") {
+      WHEN("Moved empty") {
          T movable = pack;
          const T moved = ::std::move(movable);
 
@@ -392,13 +413,11 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          Any_CheckState_Default<E>(pack);
       }
 
-      WHEN("Packs are compared") {
-         T another_pack1;
-         another_pack1  << CreateElement<E>(1);
-
-         T another_pack2;
-         another_pack2  << CreateElement<E>(2);
-
+      WHEN("Compared") {
+         ScopedElement<E> e1 {1};
+         ScopedElement<E> e2 {2};
+         T another_pack1 {*e1};
+         T another_pack2 {*e2};
          T defaulted_pack1;
 
          REQUIRE(pack != another_pack1);
@@ -406,220 +425,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack == defaulted_pack1);
       }
 
-      WHEN("A forward value-based search is performed on non-exitent value") {
-         const auto found = pack.Find(darray2[2]);
-
-         REQUIRE(found == Index::None);
-         REQUIRE_FALSE(found);
-      }
-
-      WHEN("A backward value-based search is performed on non-exitent value") {
-         const auto found = pack.template Find<true>(darray2[2]);
-
-         REQUIRE(found == Index::None);
-         REQUIRE_FALSE(found);
-      }
-      
-      WHEN("Merge-copy an element to the back, if not found (<<=)") {
-         pack <<= darray2[3];
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 1);
-         REQUIRE(pack.GetReserved() >= 1);
-         REQUIRE(pack[0] == darray2[3]);
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge copy to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge copy to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(darray2[3]);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Merge-copy an element to the front, if not found (>>=)") {
-         pack >>= darray2[3];
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 1);
-         REQUIRE(pack.GetReserved() >= 1);
-         REQUIRE(pack[0] == darray2[3]);
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (merge copy to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge copy to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(darray2[3]);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Merge-move an element to the back, if not found (<<=)") {
-         auto moved = darray2[3];
-         pack <<= ::std::move(moved);
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 1);
-         REQUIRE(pack.GetReserved() >= 1);
-         REQUIRE(pack[0] == darray2[3]);
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge move to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge move to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(::std::move(moved));
-               });
-            };
-         #endif
-      }
-
-      WHEN("Merge-move an element to the front, if not found (>>=)") {
-         auto moved = darray2[3];
-         pack >>= ::std::move(moved);
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 1);
-         REQUIRE(pack.GetReserved() >= 1);
-         REQUIRE(pack[0] == darray2[3]);
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >>= (merge move to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge move to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(::std::move(moved));
-               });
-            };
-         #endif
-      }
-
-      WHEN("ForEach flat dense element (immutable)") {
-         const auto foreachit = const_cast<const T&>(pack).ForEach(
-            [&](const int&)   {FAIL();},
-            [&](const bool&)  {FAIL();},
-            [&](const Any&)   {FAIL();}
-         );
-
-         REQUIRE(0 == foreachit);
-      }
-
-      WHEN("ForEach flat dense element (mutable)") {
-         const auto foreachit = const_cast<T&>(pack).ForEach(
-            [&](int&)  {FAIL(); },
-            [&](bool&) {FAIL(); },
-            [&](Any&)  {FAIL(); }
-         );
-
-         REQUIRE(0 == foreachit);
-      }
-
-      WHEN("ForEach flat sparse element (immutable)") {
-         const auto foreachit = const_cast<const T&>(pack).ForEach(
-            [&](const int*)  {FAIL(); },
-            [&](const bool*) {FAIL(); },
-            [&](const Any*)  {FAIL(); }
-         );
-
-         REQUIRE(0 == foreachit);
-      }
-
-      WHEN("ForEach flat sparse element (mutable)") {
-         const auto foreachit = const_cast<T&>(pack).ForEach(
-            [&](int*)   {FAIL(); },
-            [&](bool*)  {FAIL(); },
-            [&](Any*)   {FAIL(); }
-         );
-
-         REQUIRE(0 == foreachit);
-      }
-
-      WHEN("ForEachRev flat dense element (immutable)") {
-         const auto foreachit = const_cast<const T&>(pack).ForEachRev(
-            [&](const int&)  {FAIL(); },
-            [&](const bool&) {FAIL(); },
-            [&](const Any&)  {FAIL(); }
-         );
-
-         REQUIRE(0 == foreachit);
-      }
-
-      WHEN("ForEachRev flat dense element (mutable)") {
-         const auto foreachit = pack.ForEachRev(
-            [&](const int&)  {FAIL(); },
-            [&](const bool&) {FAIL(); },
-            [&](const Any&)  {FAIL(); }
-         );
-
-         REQUIRE(0 == foreachit);
-      }
-
-      WHEN("ForEachRev flat sparse element (immutable)") {
-         const auto foreachit = const_cast<const T&>(pack).ForEachRev(
-            [&](const int*)  {FAIL(); },
-            [&](const bool*) {FAIL(); },
-            [&](const Any*)  {FAIL(); }
-         );
-
-         REQUIRE(0 == foreachit);
-      }
-
-      WHEN("ForEachRev flat sparse element (mutable)") {
-         const auto foreachit = pack.ForEachRev(
-            [&](const int*)  {FAIL(); },
-            [&](const bool*) {FAIL(); },
-            [&](const Any*)  {FAIL(); }
-         );
-
-         REQUIRE(0 == foreachit);
+      WHEN("Contains when empty") {
+         REQUIRE_FALSE(pack.Contains(*element));
       }
 
       if constexpr (CT::Exact<E, Text>) {
@@ -631,18 +438,19 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    }
 
    GIVEN("Container constructed by same container copy") {
-      const T source {element};
+      const ScopedElement<E> element {555};
+      const T source {*element};
       T pack {source};
 
       if constexpr (CT::Flat<E>) {
          Any_CheckState_OwnedFull<E>(pack);
          
-         REQUIRE(pack.template As<E>() == element);
-         REQUIRE(*pack.template As<E*>() == element);
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 2);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
+         Any_Helper_TestSame(pack, *element);
          Any_Helper_TestSame(pack, source);
          
          REQUIRE(pack.GetUses() == 3);
@@ -680,17 +488,18 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    }
 
    GIVEN("Container constructed by value copy") {
-      T pack {element};
+      const ScopedElement<E> element {555};
+      T pack {*element};
 
       if constexpr (CT::Flat<E>) {
          Any_CheckState_OwnedFull<E>(pack);
          
-         REQUIRE(pack.template As<E>() == element);
-         REQUIRE(*pack.template As<E*>() == element);
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 1);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
+         Any_Helper_TestSame(pack, *element);
          
          REQUIRE(pack.GetUses() == 2);
       }
@@ -724,17 +533,17 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       #endif
 
       WHEN("Assigned compatible value by copy") {
-         pack = element;
+         pack = *element;
 
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
             
-            REQUIRE(pack.template As<E>() == element);
-            REQUIRE(*pack.template As<E*>() == element);
+            REQUIRE(pack.template As<E>() == *element);
+            REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
          else if constexpr (CT::Same<E, T>) {
-            Any_Helper_TestSame(pack, element);
+            Any_Helper_TestSame(pack, *element);
             
             REQUIRE(pack.GetUses() == element.GetUses());
             REQUIRE(pack.GetUses() == 2);
@@ -772,7 +581,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
       
       WHEN("Assigned compatible value by move") {
-         auto movable = element;
+         auto movable = *element;
          pack = ::std::move(movable);
 
          if constexpr (CT::Container<E>)
@@ -781,12 +590,12 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
             
-            REQUIRE(pack.template As<E>() == element);
-            REQUIRE(*pack.template As<E*>() == element);
+            REQUIRE(pack.template As<E>() == *element);
+            REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
          else if constexpr (CT::Same<E, T>) {
-            Any_Helper_TestSame(pack, element);
+            Any_Helper_TestSame(pack, *element);
             
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.IsStatic() == element.IsStatic());
@@ -823,17 +632,17 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
 
       WHEN("Assigned compatible disowned value") {
-         pack = Disown(element);
+         pack = Disown(*element);
 
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
             
-            REQUIRE(pack.template As<E>() == element);
-            REQUIRE(*pack.template As<E*>() == element);
+            REQUIRE(pack.template As<E>() == *element);
+            REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
          else if constexpr (CT::Same<E, T>) {
-            Any_Helper_TestSame(pack, element);
+            Any_Helper_TestSame(pack, *element);
             
             REQUIRE(pack.GetUses() == 0);
             REQUIRE(pack.IsStatic());
@@ -870,7 +679,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
       
       WHEN("Assigned compatible abandoned value") {
-         auto movable = element;
+         auto movable = *element;
          pack = Abandon(movable);
 
          if constexpr (CT::Container<E>)
@@ -879,12 +688,12 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
             
-            REQUIRE(pack.template As<E>() == element);
-            REQUIRE(*pack.template As<E*>() == element);
+            REQUIRE(pack.template As<E>() == *element);
+            REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
          else if constexpr (CT::Same<E, T>) {
-            Any_Helper_TestSame(pack, element);
+            Any_Helper_TestSame(pack, *element);
             
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.IsStatic() == element.IsStatic());
@@ -950,7 +759,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
 
       WHEN("Assigned compatible full self") {
-         pack = element;
+         pack = *element;
          auto packbackup = pack;
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
@@ -991,7 +800,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    }
 
    GIVEN("Container constructed by value move") {
-      E movable = element;
+      const ScopedElement<E> element {555};
+      E movable = *element;
       T pack {::std::move(movable)};
 
       if constexpr (CT::Container<E>)
@@ -1000,12 +810,12 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       if constexpr (CT::Flat<E>) {
          Any_CheckState_OwnedFull<E>(pack);
          
-         REQUIRE(pack.template As<E>() == element);
-         REQUIRE(*pack.template As<E*>() == element);
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 1);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
+         Any_Helper_TestSame(pack, *element);
          
          REQUIRE(pack.GetUses() == 2);
          REQUIRE(pack.IsStatic() == element.IsStatic());
@@ -1015,15 +825,15 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack.template As<E>().GetRaw() == element.GetRaw());
          if constexpr (CT::Typed<T>)
             REQUIRE(pack.template IsExact<TypeOf<T>>());
-         REQUIRE(pack.template As<E>() == element);
-         REQUIRE(*pack.template As<E*>() == element);
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE_FALSE(pack.template As<E>().IsStatic());
          REQUIRE_FALSE(pack.template As<E>().IsConstant());
          REQUIRE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 2);
-         REQUIRE(pack.template As<E>() == element);
+         REQUIRE(pack.template As<E>() == *element);
          //REQUIRE(pack != element);
-         REQUIRE(pack == element);
+         REQUIRE(pack == *element);
          REQUIRE(pack.GetUses() == 1);
          REQUIRE(pack.IsDeep());
          REQUIRE_FALSE(pack.IsStatic());
@@ -1061,17 +871,18 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    }
 
    GIVEN("Container constructed by disowned value") {
-      T pack {Disown(element)};
+      const ScopedElement<E> element {555};
+      T pack {Disown(*element)};
 
       if constexpr (CT::Flat<E>) {
          Any_CheckState_OwnedFull<E>(pack);
          
-         REQUIRE(pack.template As<E>() == element);
-         REQUIRE(*pack.template As<E*>() == element);
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 1);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
+         Any_Helper_TestSame(pack, *element);
          
          REQUIRE(pack.GetUses() == 0);
          REQUIRE(pack.IsStatic());
@@ -1081,14 +892,14 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack.template As<E>().GetRaw() == element.GetRaw());
          if constexpr (CT::Typed<T>)
             REQUIRE(pack.template IsExact<TypeOf<T>>());
-         REQUIRE(pack.template As<E>() == element);
-         REQUIRE(*pack.template As<E*>() == element);
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.template As<E>().IsStatic());
          REQUIRE_FALSE(pack.template As<E>().IsConstant());
          REQUIRE_FALSE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 0);
-         REQUIRE(pack.template As<E>() == element);
-         REQUIRE(pack == element);
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(pack == *element);
          //REQUIRE(pack != element);
          REQUIRE(pack.GetUses() == 1);
          REQUIRE_FALSE(pack.IsStatic());
@@ -1127,7 +938,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    }
     
    GIVEN("Container constructed by abandoned value") {
-      E movable = element;
+      const ScopedElement<E> element {555};
+      E movable = *element;
       T pack {Abandon(movable)};
 
       if constexpr (CT::Container<E>)
@@ -1136,12 +948,12 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       if constexpr (CT::Flat<E>) {
          Any_CheckState_OwnedFull<E>(pack);
          
-         REQUIRE(pack.template As<E>() == element);
-         REQUIRE(*pack.template As<E*>() == element);
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 1);
       }
       else if constexpr (CT::Same<E, T>) {
-         Any_Helper_TestSame(pack, element);
+         Any_Helper_TestSame(pack, *element);
 
          REQUIRE(pack.GetUses() == 2);
          REQUIRE(pack.IsStatic() == element.IsStatic());
@@ -1151,15 +963,15 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack.template As<E>().GetRaw() == element.GetRaw());
          if constexpr (CT::Typed<T>)
             REQUIRE(pack.template IsExact<TypeOf<T>>());
-         REQUIRE(pack.template As<E>() == element);
-         REQUIRE(*pack.template As<E*>() == element);
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE_FALSE(pack.template As<E>().IsStatic());
          REQUIRE_FALSE(pack.template As<E>().IsConstant());
          REQUIRE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 2);
-         REQUIRE(pack.template As<E>() == element);
+         REQUIRE(pack.template As<E>() == *element);
          //REQUIRE(pack != element);
-         REQUIRE(pack == element);
+         REQUIRE(pack == *element);
          REQUIRE(pack.GetUses() == 1);
          REQUIRE(pack.IsDeep());
          REQUIRE_FALSE(pack.IsStatic());
@@ -1196,598 +1008,39 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    #endif
    }
 
-   GIVEN("Container constructed by static list of exactly the same shallow-copied elements") {
-      if constexpr (CT::Untyped<T>) {
-         const T pack {element, element};
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 2);
-         REQUIRE(pack.GetReserved() >= 2);
-         for (auto& e : pack)
-            REQUIRE(e == element);
-      }
-   }
-
-   GIVEN("Container constructed by static list of somewhat different shallow-copied elements") {
-      if constexpr (CT::Untyped<T>) {
-         const T pack {element, &element};
-
-         Any_CheckState_OwnedFull<Many>(pack);
-         
-         REQUIRE(pack.GetCount() == 2);
-         REQUIRE(pack.GetReserved() >= 2);
-         REQUIRE(pack[0] == Many {element});
-         REQUIRE(pack[1] == Many {&element});
-      }
-   }
-
-   GIVEN("Container with some items") {
-      T pack {};
-      pack << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-      const auto previousReserved = pack.GetReserved();
+   GIVEN("Full container") {
+      const ScopedElement<E> element {555};
+      T pack {*element};
       const auto memory = pack.GetRaw();
       
       Any_CheckState_OwnedFull<E>(pack);
       
-      REQUIRE(pack.GetCount() == 5);
-      REQUIRE(pack.GetReserved() >= 5);
+      REQUIRE(pack.GetCount() == 1);
+      REQUIRE(pack.GetReserved() == 1);
       REQUIRE(pack.GetRaw());
-      for (unsigned i = 0; i < pack.GetCount(); ++i)
-         REQUIRE(pack[i] == darray1[i]);
-
-      WHEN("Shallow-copy more of the same stuff to the back (<<)") {
-         pack << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 10);
-         REQUIRE(pack.GetReserved() >= 10);
-
-         for (unsigned i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray1[i]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
-            REQUIRE(pack[i] == darray2[i-5]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::Same<E, int>)
-               REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] << darray2[0] << darray2[1] << darray2[2] << darray2[3] << darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_back(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_back(darray2[0]);
-                  s.push_back(darray2[1]);
-                  s.push_back(darray2[2]);
-                  s.push_back(darray2[3]);
-                  return s.push_back(darray2[4]);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Shallow-copy more of the same stuff to the front (>>)") {
-         pack >> darray2[0] >> darray2[1] >> darray2[2] >> darray2[3] >> darray2[4];
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 10);
-         REQUIRE(pack.GetReserved() >= 10);
-
-         for (unsigned i = 5; i > 0; --i)
-            REQUIRE(pack[5 - i] == darray2[i - 1]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
-            REQUIRE(pack[i] == darray1[i-5]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::Same<E, int>)
-               REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >> darray2[0] >> darray2[1] >> darray2[2] >> darray2[3] >> darray2[4];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::push_front(5 consecutive trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.push_front(darray2[0]);
-                  s.push_front(darray2[1]);
-                  s.push_front(darray2[2]);
-                  s.push_front(darray2[3]);
-                  return s.push_front(darray2[4]);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Shallow-copy an array to the back") {
-         pack.InsertAt(Index::Back, darray2);
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 10);
-         REQUIRE(pack.GetReserved() >= 10);
-
-         for (unsigned i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray1[i]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
-            REQUIRE(pack[i] == darray2[i-5]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::Same<E, int>) {
-               REQUIRE(pack.GetRaw() == memory);
-            }
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexBack> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexBack>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to back (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].end(), darray2, darray2 + 5);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Shallow-copy an array to the front") {
-         pack.InsertAt(Index::Front, darray2);
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 10);
-         REQUIRE(pack.GetReserved() >= 10);
-
-         for (unsigned i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray2[i]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
-            REQUIRE(pack[i] == darray1[i-5]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::Same<E, int>) {
-               REQUIRE(pack.GetRaw() == memory);
-            }
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::Insert<IndexFront> (5 trivial copies)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].template Insert<IndexFront>(darray2, darray2 + 5);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert to front (5 trivial copies)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin(), darray2, darray2 + 5);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Move more of the same stuff to the back (<<)") {
-         E darray3[5] {
-            CreateElement<E>(6),
-            CreateElement<E>(7),
-            CreateElement<E>(8),
-            CreateElement<E>(9),
-            CreateElement<E>(10)
-         };
-
-         const E darray3backup[5] {
-            darray3[0],
-            darray3[1],
-            darray3[2],
-            darray3[3],
-            darray3[4],
-         };
-
-         pack
-            << ::std::move(darray3[0])
-            << ::std::move(darray3[1])
-            << ::std::move(darray3[2])
-            << ::std::move(darray3[3])
-            << ::std::move(darray3[4]);
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 10);
-         REQUIRE(pack.GetReserved() >= 10);
-
-         for (unsigned i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray1[i]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
-            REQUIRE(pack[i] == darray3backup[i - 5]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator << (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     << ::std::move(darray2[0])
-                     << ::std::move(darray2[1])
-                     << ::std::move(darray2[2])
-                     << ::std::move(darray2[3])
-                     << ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_back(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_back(::std::move(darray2[0]));
-                  s.emplace_back(::std::move(darray2[1]));
-                  s.emplace_back(::std::move(darray2[2]));
-                  s.emplace_back(::std::move(darray2[3]));
-                  return s.emplace_back(::std::move(darray2[4]));
-               });
-            };
-         #endif
-      }
-
-      WHEN("Move more of the same stuff to the front (>>)") {
-         E darray3[5] {
-            CreateElement<E>(6),
-            CreateElement<E>(7),
-            CreateElement<E>(8),
-            CreateElement<E>(9),
-            CreateElement<E>(10)
-         };
-
-         const E darray3backup[5] {
-            darray3[0],
-            darray3[1],
-            darray3[2],
-            darray3[3],
-            darray3[4],
-         };
-
-         pack >> ::std::move(darray3[0])
-              >> ::std::move(darray3[1])
-              >> ::std::move(darray3[2])
-              >> ::std::move(darray3[3])
-              >> ::std::move(darray3[4]);
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 10);
-         REQUIRE(pack.GetReserved() >= 10);
-
-         for (unsigned i = 5; i > 0; --i)
-            REQUIRE(pack[5 - i] == darray3backup[i - 1]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
-            REQUIRE(pack[i] == darray1[i - 5]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (5 consecutive trivial moves)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i]
-                     >> ::std::move(darray2[0])
-                     >> ::std::move(darray2[1])
-                     >> ::std::move(darray2[2])
-                     >> ::std::move(darray2[3])
-                     >> ::std::move(darray2[4]);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_front(5 consecutive trivial moves)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  s.emplace_front(::std::move(darray2[0]));
-                  s.emplace_front(::std::move(darray2[1]));
-                  s.emplace_front(::std::move(darray2[2]));
-                  s.emplace_front(::std::move(darray2[3]));
-                  return s.emplace_front(::std::move(darray2[4]));
-               });
-            };
-         #endif
-      }
+      REQUIRE(pack == *element);
       
-      WHEN("Insert single item at a specific place by shallow-copy") {
-         const auto i666 = CreateElement<E>(666);
-         pack.InsertAt(3, i666);
+      WHEN("Emplace (overwrite existing)") {
+         ScopedElement<E> i666 {666};
+         const auto i666backup = *i666;
+         if constexpr (CT::Typed<T>) {
+            decltype(auto) instance = pack.Emplace(::std::move(*i666));
 
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 6);
-         REQUIRE(pack.GetReserved() >= 6);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetRaw() == memory);
-         #endif
-         REQUIRE(pack[0] == darray1[0]);
-         REQUIRE(pack[1] == darray1[1]);
-         REQUIRE(pack[2] == darray1[2]);
-         REQUIRE(pack[3] == i666);
-         REQUIRE(pack[4] == darray1[3]);
-         REQUIRE(pack[5] == darray1[4]);
+            Any_CheckState_OwnedFull<E>(pack);
+            
+            REQUIRE(pack.GetCount() == 1);
+            REQUIRE(pack.GetReserved() >= 1);
+            REQUIRE(*pack == i666backup);
+            REQUIRE(&*pack == &*instance);
 
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::InsertAt(single copy in middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].InsertAt(&i666, &i666 + 1, 3);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(single copy in middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, i666d);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Insert multiple items at a specific place by shallow-copy") {
-         pack.InsertAt(3, darray2);
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 10);
-         REQUIRE(pack.GetReserved() >= 10);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetRaw() == memory);
-         #endif
-         REQUIRE(pack[0] == darray1[0]);
-         REQUIRE(pack[1] == darray1[1]);
-         REQUIRE(pack[2] == darray1[2]);
-         REQUIRE(pack[3] == darray2[0]);
-         REQUIRE(pack[4] == darray2[1]);
-         REQUIRE(pack[5] == darray2[2]);
-         REQUIRE(pack[6] == darray2[3]);
-         REQUIRE(pack[7] == darray2[4]);
-         REQUIRE(pack[8] == darray1[3]);
-         REQUIRE(pack[9] == darray1[4]);
-
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::InsertAt(5 copies in the middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].InsertAt(darray2, darray2 + 5, 3);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(5 copies in the middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, darray2, darray2+5);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Insert single item at a specific place by move") {
-         auto i666 = CreateElement<E>(666);
-         const auto i666backup = i666;
-         pack.InsertAt(3, ::std::move(i666));
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 6);
-         REQUIRE(pack.GetReserved() >= 6);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetRaw() == memory);
-         #endif
-         REQUIRE(pack[0] == darray1[0]);
-         REQUIRE(pack[1] == darray1[1]);
-         REQUIRE(pack[2] == darray1[2]);
-         REQUIRE(pack[3] == i666backup);
-         REQUIRE(pack[4] == darray1[3]);
-         REQUIRE(pack[5] == darray1[4]);
-
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move in middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].InsertAt(::std::move(i666d), 3);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(single move in middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, ::std::move(i666d));
-               });
-            };
-         #endif
-      }
-
-      WHEN("Emplace item at a specific place") {
-         auto i666 = CreateElement<E>(666);
-         const auto i666backup = i666;
-         decltype(auto) instance = pack.EmplaceAt(3, ::std::move(i666));
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 6);
-         REQUIRE(pack.GetReserved() >= 6);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetRaw() == memory);
-         #endif
-         REQUIRE(pack[0] == darray1[0]);
-         REQUIRE(pack[1] == darray1[1]);
-         REQUIRE(pack[2] == darray1[2]);
-         REQUIRE(pack[3] == i666backup);
-         REQUIRE(pack[4] == darray1[3]);
-         REQUIRE(pack[5] == darray1[4]);
-
-         if constexpr (CT::Typed<T>)
-            REQUIRE(&pack[3] == &instance);
-         else {
-            REQUIRE(pack[3].GetRaw() == instance.GetRaw());
-            REQUIRE(pack[3].GetCount() == 1);
-         }
-
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move in middle)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].EmplaceAt(3, ::std::move(i666d));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::insert(single move in middle)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].insert(storage[i].begin() + 3, ::std::move(i666d));
-               });
-            };
-         #endif
-      }
-
-      WHEN("Emplace item at the front") {
-         auto i666 = CreateElement<E>(666);
-         const auto i666backup = i666;
-         decltype(auto) instance = pack.EmplaceAt(Index::Front, ::std::move(i666));
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 6);
-         REQUIRE(pack.GetReserved() >= 6);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetRaw() == memory);
-         #endif
-         REQUIRE(pack[0] == i666backup);
-         REQUIRE(pack[1] == darray1[0]);
-         REQUIRE(pack[2] == darray1[1]);
-         REQUIRE(pack[3] == darray1[2]);
-         REQUIRE(pack[4] == darray1[3]);
-         REQUIRE(pack[5] == darray1[4]);
-
-         if constexpr (CT::Typed<T>)
-            REQUIRE(&pack[0] == &instance);
-         else {
-            REQUIRE(pack[0].GetRaw() == instance.GetRaw());
-            REQUIRE(pack[0].GetCount() == 1);
-         }
-
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the front)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].template Emplace<IndexFront>(::std::move(i666d));
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::emplace_front(single move)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  return storage[i].emplace_front(::std::move(i666d));
-               });
-            };
-         #endif
-      }
-      
-      WHEN("Emplace item at the back") {
-         auto i666 = CreateElement<E>(666);
-         const auto i666backup = i666;
-         decltype(auto) instance = pack.EmplaceAt(Index::Back, ::std::move(i666));
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 6);
-         REQUIRE(pack.GetReserved() >= 6);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetRaw() == memory);
-         #endif
-         REQUIRE(pack[0] == darray1[0]);
-         REQUIRE(pack[1] == darray1[1]);
-         REQUIRE(pack[2] == darray1[2]);
-         REQUIRE(pack[3] == darray1[3]);
-         REQUIRE(pack[4] == darray1[4]);
-         REQUIRE(pack[5] == i666backup);
-
-         if constexpr (CT::Typed<T>)
-            REQUIRE(&pack[5] == &instance);
-         else {
-            REQUIRE(pack[5].GetRaw() == instance.GetRaw());
-            REQUIRE(pack[5].GetCount() == 1);
-         }
-
-         #ifdef LANGULUS_STD_BENCHMARK
+            #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("Anyness::TMany::Emplace(single move at the back)") (timer meter) {
                some<T> storage(meter.runs());
                for (auto&& o : storage)
                   o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
 
                meter.measure([&](int i) {
-                  return storage[i].template Emplace<IndexBack>(::std::move(i666d));
+                  return storage[i].Emplace(IndexBack, ::std::move(i666d));
                });
             };
 
@@ -1800,459 +1053,119 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
                   return storage[i].emplace_back(::std::move(i666d));
                });
             };
-         #endif
+            #endif
+         }
+         else {
+            REQUIRE_THROWS(pack.Emplace(::std::move(*i666)));
+            
+            Any_CheckState_Default<E>(pack);
+         }
       }
-
-      WHEN("The size is reduced by finding and removing elements, but reserved memory should remain the same on shrinking") {
-         const auto removed2 = pack.Remove(darray1[1]);
-         const auto removed4 = pack.Remove(darray1[3]);
-
-         REQUIRE(removed2 == 1);
-         REQUIRE(removed4 == 1);
-         REQUIRE(pack[0] == darray1[0]);
-         REQUIRE(pack[1] == darray1[2]);
-         REQUIRE(pack[2] == darray1[4]);
-         REQUIRE_THROWS(pack[3] == CreateElement<E>(666));
-         REQUIRE(pack.GetCount() == 3);
-         REQUIRE(pack.GetReserved() >= 5);
-         REQUIRE(pack.GetRaw() == memory);
-
-         #ifdef LANGULUS_STD_BENCHMARK // Last result: 2:1 performance - needs more optimizations in Index handling
-            BENCHMARK_ADVANCED("Anyness::TMany::Remove(single element by value)") (timer meter) {
-               some<T> storage(meter.runs());
-               for (auto&& o : storage)
-                  o << darray1[0] << darray1[1] << darray1[2] << darray1[3] << darray1[4];
-
-               meter.measure([&](int i) {
-                  return storage[i].Remove(2);
-               });
-            };
-
-            BENCHMARK_ADVANCED("Anyness::vector::erase-remove(single element by value)") (timer meter) {
-               some<StdT> storage(meter.runs());
-               for (auto&& o : storage)
-                  o = { darray1[0], darray1[1], darray1[2], darray1[3], darray1[4] };
-
-               meter.measure([&](int i) {
-                  // Erase-remove idiom											
-                  return storage[i].erase(std::remove(storage[i].begin(), storage[i].end(), 2), storage[i].end());
-               });
-            };
-         #endif
-      }
-
-      WHEN("Removing non-available elements") {
-         const auto removed9 = pack.Remove(darray2[3]);
-
-         REQUIRE(removed9 == 0);
-         REQUIRE(pack[0] == darray1[0]);
-         REQUIRE(pack[1] == darray1[1]);
-         REQUIRE(pack[2] == darray1[2]);
-         REQUIRE(pack[3] == darray1[3]);
-         REQUIRE(pack[4] == darray1[4]);
-         REQUIRE(pack.GetCount() == 5);
-         REQUIRE(pack.GetReserved() >= 5);
-         REQUIRE(pack.GetRaw() == memory);
-      }    
-
-      WHEN("More capacity is reserved") {
-         pack.Reserve(20);
-
-         REQUIRE(pack.GetCount() == 5);
-         REQUIRE(pack.GetReserved() >= 20);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::POD<E>) {
-               // Test works only for POD types, because containers shift entries around
-               REQUIRE(pack.GetRaw() == memory);
-            }
-         #endif
-      }
-
-      WHEN("Less capacity is reserved") {
-         pack.Reserve(2);
-
-         REQUIRE(pack.GetCount() == 2);
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(pack.GetReserved() <= previousReserved);
-         #else
-            REQUIRE(pack.GetReserved() == previousReserved);
-         #endif
-         REQUIRE(pack.GetRaw() == memory);
-      }
-
-      WHEN("Pack is cleared") {
+      
+      WHEN("Cleared") {
          pack.Clear();
 
          Any_CheckState_OwnedEmpty<E>(pack);
       }
 
-      WHEN("Pack is reset") {
+      WHEN("Reset") {
          pack.Reset();
 
          Any_CheckState_Default<E>(pack);
       }
 
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         if constexpr (CT::Same<E, int>) {
-            // Works only if E doesn't move entries around
-            WHEN("Pack is reset, then immediately allocated again") {
-               pack.Reset();
-               pack  << CreateElement<E>(6) 
-                     << CreateElement<E>(7) 
-                     << CreateElement<E>(8) 
-                     << CreateElement<E>(9) 
-                     << CreateElement<E>(10);
+      if constexpr (LANGULUS_FEATURE(MANAGED_MEMORY) and not CT::Container<E>) {
+         // Works only if E doesn't move entries around
+         WHEN("Reset, and then immediately allocated again") {
+            pack.Reset();
+            pack = *element;
 
-               REQUIRE(pack.GetRaw() == memory);
-            }
+            REQUIRE(pack.GetRaw() == memory);
          }
-      #endif
+      }
 
-      WHEN("Pack is shallow-copied") {
-         pack.EnableOr();
+      WHEN("Shallow-copied") {
          auto copy = pack;
 
          REQUIRE(copy.GetRaw() == pack.GetRaw());
+         REQUIRE(copy.GetCount() == 1);
          REQUIRE(copy.GetCount() == pack.GetCount());
+         REQUIRE(copy.GetReserved() == 1);
          REQUIRE(copy.GetReserved() == pack.GetReserved());
          REQUIRE(copy.GetState() == pack.GetState());
          REQUIRE(copy.GetType() == pack.GetType());
          REQUIRE(copy.GetUses() == 2);
+         REQUIRE(pack.GetUses() == 2);
       }
 
-      WHEN("Pack is cloned") {
-         pack.EnableOr();
+      WHEN("Cloned") {
          T clone = Clone(pack);
 
          REQUIRE(clone.GetRaw() != pack.GetRaw());
+         REQUIRE(clone.GetCount() == 1);
          REQUIRE(clone.GetCount() == pack.GetCount());
+         REQUIRE(clone.GetReserved() == 1);
          REQUIRE(clone.GetReserved() >= clone.GetCount());
          REQUIRE(clone.GetState() == pack.GetState());
          REQUIRE(clone.GetType() == pack.GetType());
          REQUIRE(clone.GetUses() == 1);
          REQUIRE(pack.GetUses() == 1);
-
-         for (unsigned i = 0; i < 5; ++i) {
-            REQUIRE(pack[i] == darray1[i]);
-            REQUIRE(clone[i] == darray1[i]);
-         }
+         REQUIRE(pack == *element);
+         REQUIRE(clone == *element);
       }
 
-      WHEN("Pack is moved") {
+      WHEN("Moved") {
          T movable = pack;
          const T moved = ::std::move(movable);
 
-         REQUIRE(movable.GetRaw() == nullptr);
-         REQUIRE(movable.GetCount() == 0);
-         REQUIRE(movable.GetReserved() == 0);
-         REQUIRE(movable.IsTypeConstrained() == CT::Typed<T>);
+         Any_CheckState_Default<E>(movable);
+
          REQUIRE(pack.GetRaw() == moved.GetRaw());
+         REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetCount() == moved.GetCount());
+         REQUIRE(pack.GetReserved() == 1);
          REQUIRE(pack.GetReserved() == moved.GetReserved());
          REQUIRE(pack.GetState() == moved.GetState());
          REQUIRE(pack.GetType() == moved.GetType());
+         REQUIRE(moved.GetUses() == 2);
+         REQUIRE(pack.GetUses() == 2);
       }
 
-      WHEN("Packs are compared") {
-         T another_pack1;
-         another_pack1 << CreateElement<E>(1);
-         T another_pack2;
-         another_pack2 << CreateElement<E>(2);
+      WHEN("Compared") {
+         ScopedElement<E> e1 {1};
+         ScopedElement<E> e2 {2};
+         T another_pack1 {*e1};
+         T another_pack2 {*e2};
+         T defaulted_pack;
+         T same_pack {pack};
 
-         REQUIRE(pack == another_pack1);
+         REQUIRE(pack != another_pack1);
          REQUIRE(pack != another_pack2);
+         REQUIRE(pack != defaulted_pack);
+         REQUIRE(pack != same_pack);
       }
 
-      WHEN("A forward value-based search is performed on existent value") {
-         const auto found = pack.Find(darray1[2]);
-
-         REQUIRE(found);
-         REQUIRE(found == 2);
-      }
-
-      WHEN("A forward value-based search is performed on non-exitent value") {
-         const auto found = pack.Find(darray2[2]);
-
-         REQUIRE(found == Index::None);
-         REQUIRE_FALSE(found);
-      }
-
-      WHEN("A backward value-based search is performed on existent value") {
-         const auto found = pack.template Find<true>(darray1[2]);
-
-         REQUIRE(found);
-         REQUIRE(found == 2);
-      }
-
-      WHEN("A backward value-based search is performed on non-exitent value") {
-         const auto found = pack.template Find<true>(darray2[2]);
-
-         REQUIRE(found == Index::None);
-         REQUIRE_FALSE(found);
-      }
-      
-      WHEN("Merge-copy an element to the back, if not found (<<=)") {
-         pack <<= darray2[3];
-
-         Any_CheckState_OwnedFull<E>(pack);
+      WHEN("Contains when full") {
+         ScopedElement<E> e1 {1};
          
-         REQUIRE(pack.GetCount() == 6);
-         REQUIRE(pack.GetReserved() >= 6);
-         for (unsigned i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray1[i]);
-         REQUIRE(pack[5] == darray2[3]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::Same<E, int>)
-               REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge copy to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge copy to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(darray2[3]);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Merge-copy an element to the front, if not found (>>=)") {
-         pack >>= darray2[3];
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 6);
-         REQUIRE(pack.GetReserved() >= 6);
-         REQUIRE(pack[0] == darray2[3]);
-         for (unsigned i = 1; i < 6; ++i)
-            REQUIRE(pack[i] == darray1[i-1]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::Same<E, int>)
-               REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >> (merge copy to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= darray2[3];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge copy to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(darray2[3]);
-               });
-            };
-         #endif
-      }
-
-      WHEN("Merge-move an element to the back, if not found (<<=)") {
-         auto moved = darray2[3];
-         pack <<= ::std::move(moved);
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 6);
-         REQUIRE(pack.GetReserved() >= 6);
-         for (unsigned i = 0; i < 5; ++i)
-            REQUIRE(pack[i] == darray1[i]);
-         REQUIRE(pack[5] == darray2[3]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::Same<E, int>)
-               REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator <<= (merge move to the back)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] <<= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_back (merge move to the back)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_back(::std::move(moved));
-               });
-            };
-         #endif
-      }
-
-      WHEN("Merge-move an element to the front, if not found (>>=)") {
-         auto moved = darray2[3];
-         pack >>= ::std::move(moved);
-
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.GetCount() == 6);
-         REQUIRE(pack.GetReserved() >= 6);
-         REQUIRE(pack[0] == darray2[3]);
-         for (unsigned i = 1; i < 6; ++i)
-            REQUIRE(pack[i] == darray1[i-1]);
-
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if constexpr (CT::Same<E, int>)
-               REQUIRE(pack.GetRaw() == memory);
-         #endif
-         
-         #ifdef LANGULUS_STD_BENCHMARK
-            BENCHMARK_ADVANCED("Anyness::TMany::operator >>= (merge move to the front)") (timer meter) {
-               some<T> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  return storage[i] >>= ::std::move(moved);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::vector::find & push_front (merge move to the front)") (timer meter) {
-               some<StdT> storage(meter.runs());
-
-               meter.measure([&](int i) {
-                  auto& s = storage[i];
-                  if (std::find(s.begin(), s.end(), darray2[3]) == s.end())
-                     s.push_front(::std::move(moved));
-               });
-            };
-         #endif
-      }
-
-      WHEN("ForEach flat dense element (immutable)") {
-         int it = 0;
-         const auto foreachit = const_cast<const T&>(pack).ForEach(
-            [&](const int& i) {
-               REQUIRE(i == it + 1);
-               ++it;
-            },
-            [&](const bool& i) {
-               REQUIRE(i == it + 1);
-               ++it;
-            },
-            [&](const Any& i) {
-               const auto item = CreateElement<E>(it + 1);
-               REQUIRE(i == *item);
-               ++it;
-            }
-         );
-
-         REQUIRE(static_cast<unsigned>(it) == foreachit);
-         if constexpr (CT::Text<E>)
-            REQUIRE(it == 0);
-         else
-            REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
-      }
-
-      WHEN("ForEach flat dense element (mutable)") {
-         int it = 0;
-         const auto foreachit = const_cast<T&>(pack).ForEach(
-            [&](int& i) {
-               REQUIRE(i == it + 1);
-               ++it;
-            },
-            [&](const bool& i) {
-               REQUIRE(i == it + 1);
-               ++it;
-            },
-            [&](const Any& i) {
-               const auto item = CreateElement<E>(it + 1);
-               REQUIRE(i == *item);
-               ++it;
-            }
-         );
-
-         REQUIRE(static_cast<unsigned>(it) == foreachit);
-
-         if constexpr (CT::Same<E, Text>)
-            REQUIRE(it == 0);
-         else
-            REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
-      }
-
-      WHEN("ForEachRev flat dense element (immutable)") {
-         int it = 0;
-         const auto foreachit = const_cast<const T&>(pack).template ForEach<true>(
-            [&](const int& i) {
-               REQUIRE(i == 5 - it);
-               ++it;
-            },
-            [&](const bool& i) {
-               REQUIRE(i == 5 - it);
-               ++it;
-            },
-            [&](const Any& i) {
-               const auto item = CreateElement<E>(5 - it);
-               REQUIRE(i == *item);
-               ++it;
-            }
-         );
-
-         REQUIRE(static_cast<unsigned>(it) == foreachit);
-
-         if constexpr (CT::Same<E, Text>)
-            REQUIRE(it == 0);
-         else
-            REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
-      }
-
-      WHEN("ForEachRev flat dense element (mutable)") {
-         int it = 0;
-         const auto foreachit = pack.template ForEach<true>(
-            [&](int& i) {
-               REQUIRE(i == 5 - it);
-               ++it;
-            },
-            [&](const bool& i) {
-               REQUIRE(i == 5 - it);
-               ++it;
-            },
-            [&](const Any& i) {
-               const auto item = CreateElement<E>(5 - it);
-               REQUIRE(i == *item);
-               ++it;
-            }
-         );
-
-         REQUIRE(static_cast<unsigned>(it) == foreachit);
-
-         if constexpr (CT::Same<E, Text>)
-            REQUIRE(it == 0);
-         else
-            REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
+         REQUIRE      (pack.Contains(*element));
+         REQUIRE_FALSE(pack.Contains(*e1));
       }
    }
 
-   GIVEN("Two containers with some items") {
-      T pack1 {darray1[0], darray1[1], darray1[2], darray1[3], darray1[4]};
-      T pack2 {darray2[0], darray2[1], darray2[2], darray2[3], darray2[4]};
+   GIVEN("Two full containers") {
+      const ScopedElement<E> e1 {555};
+      const ScopedElement<E> e2 {666};
+      T pack1 {*e1};
+      T pack2 {*e2};
       const T memory1 = pack1;
       const T memory2 = pack2;
 
-      WHEN("Copy-assign pack1 in pack2") {
+      WHEN("Copy-assign pack1 to pack2") {
          pack2 = Copy(pack1);
+         
+         Any_CheckState_OwnedFull<E>(pack1);
+         Any_CheckState_OwnedFull<E>(pack2);
 
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 1);
@@ -2260,27 +1173,32 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack1 == pack2);
          REQUIRE(pack2 == memory1);
          REQUIRE(pack2 != memory2);
-         for (int i = 0; i < 5; ++i)
-            REQUIRE(pack2[i] == darray1[i]);
+         REQUIRE(pack2 == *e1);
       }
       
       WHEN("Refer-assign pack1 in pack2") {
          pack2 = pack1;
 
+         Any_CheckState_OwnedFull<E>(pack1);
+         Any_CheckState_OwnedFull<E>(pack2);
+         
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
          REQUIRE(pack1 == pack2);
          REQUIRE(pack2 == memory1);
          REQUIRE(pack2 != memory2);
-         for (int i = 0; i < 5; ++i)
-            REQUIRE(pack2[i] == darray1[i]);
+         REQUIRE(pack2 == *e1);
       }
 
       WHEN("Move-assign pack1 in pack2") {
          auto movable = pack1;
          pack2 = ::std::move(movable);
 
+         Any_CheckState_Default<E>(movable);
+         Any_CheckState_OwnedFull<E>(pack1);
+         Any_CheckState_OwnedFull<E>(pack2);
+         
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
@@ -2291,6 +1209,9 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
 
       WHEN("Disown-assign pack1 in pack2") {
          pack2 = Disown(pack1);
+         
+         Any_CheckState_OwnedFull<E>(pack1);
+         Any_CheckState_DisownedFull<E>(pack2);
 
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 0);
@@ -2299,40 +1220,42 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack2 == memory1);
          REQUIRE(pack2 != memory2);
          REQUIRE(pack2.GetAllocation() == nullptr);
-         for (int i = 0; i < 5; ++i)
-            REQUIRE(pack2[i] == darray1[i]);
+         REQUIRE(pack2 == *e1);
       }
 
       WHEN("Abandon-assign pack1 in pack2") {
          auto movable = pack1;
          pack2 = Abandon(movable);
 
+         Any_CheckState_Abandoned<E>(movable);
+         Any_CheckState_OwnedFull<E>(pack1);
+         Any_CheckState_OwnedFull<E>(pack2);
+
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
          REQUIRE(pack1 == pack2);
-         REQUIRE(movable.GetAllocation() == nullptr);
       }
 
       WHEN("Copy-assign pack1 in pack2, then reset pack1") {
          pack2 = Copy(pack1);
          pack1.Reset();
+         
+         Any_CheckState_Default<E>(pack1);
+         Any_CheckState_OwnedFull<E>(pack2);
 
-         REQUIRE_FALSE(pack1.GetAllocation());
          REQUIRE(pack2.GetUses() == 1);
-         REQUIRE_FALSE(pack1.GetRaw());
-         REQUIRE(pack1.GetReserved() == 0);
          REQUIRE(pack2 == memory1);
       }
       
       WHEN("Refer-assign pack1 in pack2, then reset pack1") {
          pack2 = pack1;
          pack1.Reset();
+         
+         Any_CheckState_Default<E>(pack1);
+         Any_CheckState_OwnedFull<E>(pack2);
 
-         REQUIRE_FALSE(pack1.GetAllocation());
          REQUIRE(pack2.GetUses() == 2);
-         REQUIRE_FALSE(pack1.GetRaw());
-         REQUIRE(pack1.GetReserved() == 0);
          REQUIRE(pack2 == memory1);
       }
 
@@ -2355,23 +1278,6 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack2.GetUses() == 2);
          REQUIRE(memory3.GetUses() == 2);
       }
-
-      WHEN("Concatenate both packs to a third pack") {
-         const auto pack3 = pack1 + pack2;
-
-         for (int i = 0; i < 5; ++i)
-            REQUIRE(pack3[i] == darray1[i]);
-         for (int i = 5; i < 10; ++i)
-            REQUIRE(pack3[i] == darray2[i - 5]);
-      }
-   }
-
-   if constexpr (requires(E e) { e.Reset(); }) {
-      const_cast<E&>(element).Reset();
-      for (auto& i : darray1)
-         const_cast<E&>(i).Reset();
-      for (auto& i : darray2)
-         const_cast<E&>(i).Reset();
    }
 
    REQUIRE(memoryState.Assert());
