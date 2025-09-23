@@ -86,47 +86,55 @@ namespace Langulus::Anyness::Component
       ///   @return reference to self                                         
       template<CT::Container C, class A>
       C& operator = (this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
-         // This container is statically-typed                          
-         using T = Tif<C::TypeErased, A, TypeOf<C>>;
-         if constexpr (C::TypeErased)
-            LglsAssert(self.template IsSimilar<A>(), "Type mismatch");
-
-         if (self.IsEmpty()) {
-            // Container is empty, we might have to fresh-allocate      
-            if constexpr (CT::UnfoldConstructible<T, A&&>) {
-               // Just construct the first element                      
-               self.PrepareForReconstruction();
-               self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
-            }
-            else static_assert(false, "T can't be reconstructed");
+         if constexpr (not CT::HeapAllocated<C>) {
+            // This container is on the stack, and by extension         
+            // statically-typed                                         
+            auto& data = self.template AccessStackById<ID>();
+            data = FWD(argument);       
          }
          else {
-            // Container has at least one element                       
-            if constexpr (CT::UnfoldAssignable<T, A&&>) {
-               // Reduce to one item and reassign if possible           
-               if (self.PrepareForReassignment())
-                  self.AssignWithIntent(IntentOf<A&&> {FWD(argument)});
-               else
-                  self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
-            }
-            else if constexpr (CT::UnfoldConstructible<T, A&&>) {
-               // Assignment isn't available for T - destroy all items  
-               // and reconstruct the first one                         
-               self.PrepareForReconstruction();
-               self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
-            }
-            else static_assert(false, "T can't be reassigned or reconstructed");
-         }
+            // This container is statically-typed and heap-allocated    
+            using T = Tif<C::TypeErased, A, TypeOf<C>>;
+            if constexpr (C::TypeErased)
+               LglsAssert(self.template IsSimilar<A>(), "Type mismatch");
 
-         if constexpr (requires { self.SetCountInner(1); })
-            self.SetCountInner(1);
+            if (self.IsEmpty()) {
+               // Container is empty, we might have to fresh-allocate   
+               if constexpr (CT::UnfoldConstructible<T, A&&>) {
+                  // Just construct the first element                   
+                  self.PrepareForReconstruction();
+                  self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+               }
+               else static_assert(false, "T can't be reconstructed");
+            }
+            else {
+               // Container has at least one element                    
+               if constexpr (CT::UnfoldAssignable<T, A&&>) {
+                  // Reduce to one item and reassign if possible        
+                  if (self.PrepareForReassignment())
+                     self.AssignWithIntent(IntentOf<A&&> {FWD(argument)});
+                  else
+                     self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+               }
+               else if constexpr (CT::UnfoldConstructible<T, A&&>) {
+                  // Assignment isn't available for T - destroy all     
+                  // items and reconstruct the first one                
+                  self.PrepareForReconstruction();
+                  self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+               }
+               else static_assert(false, "T can't be reassigned or reconstructed");
+            }
+
+            if_available(self.SetCountInner(1));
+         }
+         
          return self;
       }
 
    protected:
       /// A helper for clearing and allocating memory before construction     
       /// Calls destructors on all elements, if any were initialized          
-      template<CT::Container C>
+      template<CT::HeapAllocated C>
       void PrepareForReconstruction(this C& self) {
          // 1. We free if we have to                                    
          auto& a = self.GetAllocationInner();
@@ -135,16 +143,14 @@ namespace Langulus::Anyness::Component
 
             if (a->GetUses() == 1) {
                // We don't deallocate the memory - we can reuse it      
-               if constexpr (requires { self.FreeDeep(); })
-                  self.FreeDeep();
+               if_available(self.FreeDeep());
                self.AllocateLess(1);
             }
             else {
                // Notice that no element will be destroyed, because in  
                // this case we have a guarantee, that elements are      
                // referenced from elsewhere as well                     
-               if constexpr (requires { self.FreeDeep(); })
-                  self.template FreeDeep<false>();
+               if_available(self.template FreeDeep<false>());
 
                // Dereference memory and reset state                    
                a->Free();
@@ -160,7 +166,7 @@ namespace Langulus::Anyness::Component
       /// A helper for clearing and allocating memory before assignment       
       /// Calls destructors on all elements, except the first one             
       ///   @return true if first element is valid and can be assigned to     
-      template<CT::Container C>
+      template<CT::HeapAllocated C>
       bool PrepareForReassignment(this C& self) {
          // 1. We free if we have to                                    
          auto& a = self.GetAllocationInner();
@@ -172,17 +178,15 @@ namespace Langulus::Anyness::Component
                self.SelectInner(1, self.GetCount() - 1).FreeInner();
                return true;
             }
-            else {
-               // Notice that no element will be destroyed, because in  
-               // this case we have a guarantee, that elements are      
-               // referenced from elsewhere as well                     
-               if constexpr (requires { self.FreeDeep(); })
-                  self.template FreeDeep<false>();
 
-               // Dereference memory and reset state                    
-               a->Free();
-               a = nullptr;
-            }
+            // Notice that no element will be destroyed, because in     
+            // this case we have a guarantee, that elements are         
+            // referenced from elsewhere as well                        
+            if_available(self.template FreeDeep<false>());
+            
+            // Dereference memory and reset state                       
+            a->Free();
+            a = nullptr;
          }
 
          // 2. We allocate if we have to                                

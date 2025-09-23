@@ -182,15 +182,15 @@ namespace Langulus::Anyness::Component
          return self.template GetRawAs<TYPE>();
       }
       
-      /// This is still used if statically typed - checks if types are        
+      /// This is still used if statically-typed - checks if types are        
       /// compatible in constructors and assigners                            
       ///   @tparam T - the new type                                          
       template<CT::NotVoid T>
-      consteval void SetType() {
+      constexpr void SetType() {
          static_assert(CT::Exact<T, TYPE>, "Type mismatch");
       }
 
-      /// This is still used if statically typed - checks if types are        
+      /// This is still used if statically-typed - checks if types are        
       /// compatible in constructors and assigners                            
       /// This particular override doesn't benefit from compile-time checks   
       ///   @param type - the new type                                        

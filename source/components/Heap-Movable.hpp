@@ -9,7 +9,6 @@
 #include "Heap-Reference.hpp"
 #include "../Allocator.hpp"
 #include <Langulus/MetaOf.hpp>
-#include <Langulus/CT/Resolvable.hpp>
 #include <Langulus/Utils/Iterate-Handles.hpp>
 
 
@@ -80,10 +79,8 @@ namespace Langulus::Anyness::Component
             self.SetType(type);
             auto count = from.GetCount();
             if (0 == count) {
-               if constexpr (requires { self.SetCountInner(0); })
-                  self.SetCountInner(0);
-               if constexpr (requires { self.SetHashInner(1); })
-                  self.SetHashInner(1);
+               if_available(self.SetCountInner(0));
+               if_available(self.SetHashInner(1));
                return;
             }
 
@@ -142,20 +139,19 @@ namespace Langulus::Anyness::Component
                   }
                   Allocator::Deallocate(al);
                   self.SetAllocationInner(nullptr);
-                  if constexpr (requires { self.SetHashInner(1); })
-                     self.SetHashInner(1);
+                  if_available(self.SetHashInner(1));
                }
                throw;
             }
                      
             // Full success                                             
-            if constexpr (requires { self.SetCountInner(count); })
-               self.SetCountInner(count);
+            if_available(self.SetCountInner(count));
+
             if constexpr (requires { from.GetHashInner(); }) {
                if constexpr (requires { self.SetHashInner(1); })
                   self.SetHashInner(from.GetHashInner());
-               else if constexpr (requires { self.ResetHash(); })
-                  self.ResetHash();
+               else
+                  if_available(self.ResetHash());
             }
          }
          else {
@@ -170,10 +166,8 @@ namespace Langulus::Anyness::Component
 
                   if constexpr (IT::OwnedOnConstructOrAssign) {
                      from.SetHeapInner(nullptr);
-                     if constexpr (requires { from.ResetState(); })
-                        from.ResetState();
-                     if constexpr (requires { from.ResetType(); })
-                        from.ResetType();
+                     if_available(from.ResetState());
+                     if_available(from.ResetType());
                   }
                }
                else {
@@ -267,8 +261,7 @@ namespace Langulus::Anyness::Component
          LglsAssert(al, "Out of memory");
          self.SetHeapInner(al->GetBlockStart());
          self.SetAllocationInner(al);
-         if constexpr (requires { self.mReserved; })
-            self.mReserved = request.mElementCount;
+         if_available(self.SetReserveInner(request.mElementCount));
          return al;
       }
 
@@ -316,8 +309,7 @@ namespace Langulus::Anyness::Component
                
                LglsAssert(reallocated, "Out of memory");
                self.SetAllocationInner(reallocated);
-               if constexpr (requires { self.mReserved; })
-                  self.mReserved = request.mElementCount;
+               if_available(self.SetReserveInner(request.mElementCount));
 
                if (reallocated != al) {
                   self.SetHeapInner(reallocated->GetBlockStart());
@@ -355,9 +347,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Allocate a fresh set of elements                      
-               if constexpr (requires { self.mType; })
-                  self.mType = MetaDataOf<T>();
-
+               self.template SetType<T>();
                self.AllocateFresh(request);
 
                if constexpr (CREATE) {
@@ -412,11 +402,12 @@ namespace Langulus::Anyness::Component
             const auto T = self.GetType();
             LglsAssumeDev(T, "Invalid type");
             const auto currentCount = self.GetCount();
+            
             if (currentCount > desiredReserve) {
                // Destroy elements on the back                          
                if (T.GetDestructor())
                   self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
-               self.SetCountInner(desiredReserve);
+               if_available(self.SetCountInner(desiredReserve));
             }
 
             // Early return if reserve itself didn't change             
@@ -441,11 +432,12 @@ namespace Langulus::Anyness::Component
             // Statically typed shrinking                               
             using T = TypeOf<C>;
             const auto currentCount = self.GetCount();
+            
             if (currentCount > desiredReserve) {
                // Destroy elements on the back                          
                if constexpr (CT::Destroyable<T>)
                   self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
-               self.SetCountInner(desiredReserve);
+               if_available(self.SetCountInner(desiredReserve));
             }
             
             // Early return if reserve itself didn't change             
@@ -466,8 +458,7 @@ namespace Langulus::Anyness::Component
             ));
          }
 
-         if constexpr (requires { self.mReserved; })
-            self.mReserved = request.mElementCount;
+         if_available(self.SetReserveInner(request.mElementCount));
       }
    };
 }

@@ -419,3 +419,5 @@ namespace Langulus::CT
    template<class...T>
    concept ContainsOne = Container<T...> and ((not Deref<Shed<T>>::ContainsMany) and ...);
 }
+
+#define if_available(WHAT) if constexpr (requires { WHAT; }) { WHAT; }
