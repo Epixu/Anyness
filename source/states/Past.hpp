@@ -20,25 +20,26 @@ namespace Langulus::Anyness::DefineState
       static constexpr bool Static  = V != State::Variable;
       static constexpr bool Dynamic = V == State::Variable;
       static constexpr bool Enable  = V == State::Enabled;
+      static constexpr bool CanBeMissing = Dynamic or Enable;
 
       constexpr bool IsPast() const requires Static {
          return Enable;
       }
 
       template<CT::Container C>
-      constexpr bool IsPast(this const C& self) noexcept requires Dynamic {
-         return self.mState & Past {};
+      constexpr bool IsPast(this C const& self) noexcept requires Dynamic {
+         return self.GetStateInner() & Past {};
       }
 
       template<CT::Container C>
       auto EnablePast(this C& self) noexcept -> C& requires Dynamic {
-         self.mState += Past {};
+         self.GetStateInner() += Past {};
          return self;
       }
 
       template<CT::Container C>
       auto DisablePast(this C& self) noexcept -> C& requires Dynamic {
-         self.mState -= Past {};
+         self.GetStateInner() -= Past {};
          return self;
       }
    };

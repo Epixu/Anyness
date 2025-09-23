@@ -69,6 +69,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    static_assert(not requires (T pack, E item) { pack.RemoveAt(Index::Front); });
    static_assert(not requires (T pack, E item) { pack.Reserve(20); });
    static_assert(not requires (T pack, E item) { pack.EnableOr(); });
+   static_assert(not requires (T pack, E item) { pack.IsOr(); });
    static_assert(not requires (T pack, E item) { pack.Find(item); });
    static_assert(not requires (T pack, E item) { pack.ForEach([](const int&){}); });
    static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&){}); });

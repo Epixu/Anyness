@@ -25,7 +25,7 @@ namespace Langulus::Anyness::Component
       using HeapRequest = AllocationPtr;
       
       static constexpr bool DeeplyOwned = true;
-      static constexpr int ComponentPrecedence = 2000;
+      static constexpr int  ComponentPrecedence = 2000;
 
    protected:
       template<unsigned>

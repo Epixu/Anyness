@@ -15,18 +15,17 @@
    #include "../states/Tracked.hpp"
 #endif
 #include <Langulus/Sequence.hpp>
-//#include <utility>
 
 
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Adds a variable state to a container                                   
+   /// Adds a variable state to a container.                                  
    /// Increases the container's bytesize to the smallest possible integer    
-   /// capable of containing all state bits                                   
+   /// capable of containing all state bits.                                  
    ///   @tparam STATES... - the possible states                              
    template<CT::State...STATES>
-   struct StateStack : STATES... {
+   struct LANGULUS_EBCO StateStack : STATES... {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 4000;
 
@@ -87,9 +86,9 @@ namespace Langulus::Anyness::Component
          constexpr explicit operator bool() const noexcept {
             return mState != 0;
          }
-      } mState;
+      };
 
-      /// Get the value of a speicific state                                  
+      /// Get the value of a specific state                                   
       template<CT::State S>
       static consteval StateType GetStateBit() {
          return LglsSequence(StateCount, {
@@ -97,7 +96,7 @@ namespace Langulus::Anyness::Component
          });
       }
 
-      /// Get the default state bits                                          
+      /// Get the default set of state bits                                   
       static consteval StateType GetDefaultState() {
          StateType i = 0;
          StateType accumulator = 0;
@@ -109,23 +108,49 @@ namespace Langulus::Anyness::Component
          return accumulator;
       }
 
+      /// Check if container has future/past linking point states             
+      static consteval bool CheckCanBeMissing() {
+         bool result = false;
+         StateList::ForEach([&result]<class S>{
+            if constexpr (requires { S::CanBeMissing; })
+               result = result or S::CanBeMissing;
+         });
+         return result;
+      }
+
       template<CT::State S>
       static constexpr bool HasState = CT::SameAsOneOf<S, STATES...>;
+      static constexpr bool CanBeMissing = CheckCanBeMissing();
 
       /// Clear the state to the default value                                
-      void ResetState() noexcept {
-         mState.mState = GetDefaultState();
+      void ResetState(this auto& self) noexcept {
+         self.SetStateInner(GetDefaultState());
+      }
+
+      /// Get the contained state (inner)                                     
+      constexpr auto& GetStateInner(this auto&& self) noexcept {
+         return self.template AccessStack<StateStack>();
+      }
+
+      /// Set the contained state (inner)                                     
+      constexpr void SetStateInner(this auto& self, const StateWrapper& type) noexcept {
+         self.GetStateInner() = type;
       }
       
    public:
-      constexpr auto GetState() const noexcept { return mState; }
+      using StackRequest = StateWrapper;
 
-      /// Get the relevant state when relaying one block	to another           
+      /// Get the current state of the container                              
+      constexpr auto GetState(this auto const& self) noexcept -> StateWrapper {
+         return self.GetStateInner();
+      }
+
+      /// Get the relevant state when relaying one container to another.      
       /// Relevant states exclude size and type constraints, as well as       
-      /// tracking in order to avoid changes in behavior due to debugging     
-      ///   @return the current unconstrained block state                     
-      constexpr auto GetUnconstrainedState() const noexcept {
-         auto r = mState;
+      /// tracking in order to avoid changes in behavior due to debugging.    
+      ///   @return the current unconstrained container state                 
+      constexpr auto GetUnconstrainedState(this auto const& self) noexcept -> StateWrapper {
+         auto r = self.GetStateInner();
          r -= State::Typed;
          DEBUGGERY(r -= State::Tracked);
          return r;
@@ -133,24 +158,22 @@ namespace Langulus::Anyness::Component
 
       /// Check if container is marked as missing past/future                 
       ///   @return true if this container is marked as missing               
-      constexpr bool IsMissing() const noexcept requires (
-            HasState<DefineState::Past   <State::Variable>>
-         or HasState<DefineState::Future <State::Variable>>
-         or HasState<DefineState::Past   <State::Enabled >>
-         or HasState<DefineState::Future <State::Enabled >>
-      ) {
-         if constexpr (
-               HasState<DefineState::Past   <State::Enabled >>
-            or HasState<DefineState::Future <State::Enabled >>)
+      constexpr bool IsMissing(this auto const& self) noexcept requires CanBeMissing {
+         if constexpr (HasState<DefineState::Past   <State::Enabled >>
+                    or HasState<DefineState::Future <State::Enabled >>) {
+            (void)self;
             return true;
-         else
-            return mState & State::Past or mState & State::Future;
+         }
+         else {
+            auto& state = self.GetStateInner();
+            return state & State::Past or state & State::Future;
+         }
       }
 
       /// Check if container has either created elements, or a relevant state 
       ///   @return true if either contains state, or has stuff inserted      
-      constexpr bool IsValid() const noexcept {
-         return GetUnconstrainedState();
+      constexpr bool IsValid(this auto const& self) noexcept {
+         return static_cast<bool>(self.GetUnconstrainedState());
       }
    };
 }

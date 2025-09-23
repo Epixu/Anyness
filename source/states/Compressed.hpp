@@ -26,19 +26,19 @@ namespace Langulus::Anyness::DefineState
       }
 
       template<CT::Container C>
-      constexpr bool IsCompressed(this const C& self) noexcept requires Dynamic {
-         return self.mState & Compressed {};
+      constexpr bool IsCompressed(this C const& self) noexcept requires Dynamic {
+         return self.GetStateInner() & Compressed {};
       }
 
       template<CT::Container C>
       auto EnableCompressed(this C& self) noexcept -> C& requires Dynamic {
-         self.mState += Compressed {};
+         self.GetStateInner() += Compressed {};
          return self;
       }
 
       template<CT::Container C>
       auto DisableCompressed(this C& self) noexcept -> C& requires Dynamic {
-         self.mState -= Compressed {};
+         self.GetStateInner() -= Compressed {};
          return self;
       }
    };

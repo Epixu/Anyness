@@ -223,7 +223,8 @@ namespace Langulus::Anyness::Component
       /// elements will be individually dereferenced as well, if they are     
       /// CT::Referenced.                                                     
       ///   @attention this never modifies any state except ownership,        
-      ///      effectively making the data disowned (and constant) after this 
+      ///      effectively making the data disowned (and by extension         
+      ///      constant) after this                                           
       void Free(this auto& self) noexcept {
          self.FreeInner();
          self.SetAllocationInner(nullptr);
@@ -237,8 +238,7 @@ namespace Langulus::Anyness::Component
          if (not a)
             return;
 
-         LglsAssumeDev(a->GetUses() >= 1,
-            "Bad memory dereferencing");
+         LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
 
          if (a->GetUses() == 1) {
             // Free elements, if DeepOwnership component exists         
@@ -306,7 +306,7 @@ namespace Langulus::Anyness::Component
                      if constexpr (CT::Sparse<Deptr<T>>) {
                         // Pointer to pointer                           
                         // Release all nested indirection layers        
-                        THandle {*ptr}.template DestroyElement<false>();
+                        /*THandle*/ C {*ptr}.template DestroyElement<false>();
                      }
                      /*else if constexpr (not CT::Complete<DT> and not CT::Function<DT>) {
                         // CT::Destroyable<DT> will fail silently if DT 

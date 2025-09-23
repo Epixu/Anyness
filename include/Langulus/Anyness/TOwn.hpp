@@ -10,6 +10,7 @@
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Stack.hpp"
 #include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Comparison.hpp"
 
@@ -18,20 +19,20 @@ namespace Langulus::Anyness::Inner
 {
    template<CT::NotVoid T>
    using TOwnBase = Container<
-      Com::TypedStatic<DMeta, T>,         // Statically typed          
-      Com::Stack<T>,                      // Element on the stack      
-      Com::CountStatic<1u>,               // Statically sized          
-      Com::Assignment<>,                  // Can be reassigned         
-      Com::Comparison<>                   // Can be compared           
+      Com::TypedStatic<DMeta, T>,         // Statically typed           
+      Com::Stack<T>,                      // Element on the stack       
+      Com::CountStatic<1u>,               // Statically sized           
+      Com::Emplacement<>,                 // Can be emplaced            
+      Com::Assignment<>,                  // Can be reassigned          
+      Com::Comparison<>                   // Can be compared            
    >;
 }
 
 namespace Langulus::Anyness
 {
    ///                                                                        
-   /// A statically typed stack-based container of size 1                     
+   /// A statically typed stack-based container of size 1.                    
    /// Mainly serves to transfer values and/or pointers on move.              
-   ///                                                                        
    template<CT::NotVoid T>
    struct TOwn : Inner::TOwnBase<T> {
       using Base = Inner::TOwnBase<T>;

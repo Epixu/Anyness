@@ -71,10 +71,98 @@ namespace Langulus::Anyness::Component
          using IT = Decay<TypeOf<I>>;
          decltype(auto) from = FWD(intent.what);
 
-         if constexpr (I::IsShallow()) {
-            // Move/Copy/Refer/Abandon/Disown other                     
+         if constexpr (CT::Copied<I> or CT::Cloned<I>) {
+            // Do a copy or clone                                       
+            // When copying, we're cloning just the first layer, so we  
+            // guarantee that data is no longer static and constant at  
+            // the first level of indirection                           
+            auto type = from.GetType().GetDecvq();
+            self.SetType(type);
+            auto count = from.GetCount();
+            if (0 == count) {
+               if constexpr (requires { self.SetCountInner(0); })
+                  self.SetCountInner(0);
+               if constexpr (requires { self.SetHashInner(1); })
+                  self.SetHashInner(1);
+               return;
+            }
+
+            // Pick a preferably typed block to optimize                
+            if constexpr (IT::TypeErased) {
+               // A runtime check is required before allocating         
+               if constexpr (CT::Copied<I>) {
+                  LglsAssert(type.GetReferConstructor(),
+                     "Can't refer-construct elements"
+                     " - no refer-constructor was reflected for type ",
+                     type
+                  );
+               }
+               else {
+                  LglsAssert(type.GetCloneConstructor(),
+                     "Can't clone-construct elements"
+                     " - no clone-constructor was reflected for type ",
+                     type
+                  );
+               }
+            }
+            else if constexpr (CT::Copied<I>) {
+               static_assert(CT::ReferConstructible<TypeOf<IT>>,
+                  "Contained type is not refer-constructible");
+            }
+            else {
+               static_assert(CT::CloneConstructible<TypeOf<IT>>,
+                  "Contained type is not clone-constructible");
+            }
+
+            auto al  = self.AllocateFresh(self.RequestSize(count));
+            auto src = IterateHandles(from).begin();
+            auto dst = IterateHandles(self).begin();
+            try {
+               while (src != IteratorEnd {}) {
+                  if constexpr (CT::Copied<I>)
+                     dst->EmplaceWithIntent(Refer(*src));
+                  else
+                     dst->EmplaceWithIntent(Clone(*src));
+                  ++dst; ++src;
+               }
+            } catch (...) {
+               // Partial success                                       
+               auto n = src - IterateHandles(from).begin();
+               if constexpr (requires { self.SetCountInner(1); }) {
+                  self.SetCountInner(n);
+                  self.ResetHash();
+               }
+               else {
+                  // Partial success is not allowed - we have to        
+                  // deallocate and make sure CountStatic reports as    
+                  // empty                                              
+                  while (n) {
+                     dst->template DestroyElement<false>();
+                     --dst; --n;
+                  }
+                  Allocator::Deallocate(al);
+                  self.SetAllocationInner(nullptr);
+                  if constexpr (requires { self.SetHashInner(1); })
+                     self.SetHashInner(1);
+               }
+               throw;
+            }
+                     
+            // Full success                                             
+            if constexpr (requires { self.SetCountInner(count); })
+               self.SetCountInner(count);
+            if constexpr (requires { from.GetHashInner(); }) {
+               if constexpr (requires { self.SetHashInner(1); })
+                  self.SetHashInner(from.GetHashInner());
+               else if constexpr (requires { self.ResetHash(); })
+                  self.ResetHash();
+            }
+         }
+         else {
+            // Move/Refer/Abandon/Disown other                          
+            static_assert(I::IsShallow());
             if constexpr (I::IsKept()) {
-               // Move/Copy/Refer other                                 
+               // Move/Refer other                                      
                if constexpr (I::IsMoved()) {
                   // Move                                               
                   self.SetType(from.GetType());
@@ -89,83 +177,10 @@ namespace Langulus::Anyness::Component
                   }
                }
                else {
-                  // Copy/Refer other                                   
-                  if constexpr (CT::Referred<I>) {
-                     // Refer                                           
-                     self.SetType(from.GetType());
-                     self.SetHeapInner(from.GetHeapInner());
-                  }
-                  else {
-                     // Do a shallow copy                               
-                     // We're cloning first layer, so we guarantee,     
-                     // that data is no longer static and constant      
-                     // at first level of indirection                   
-                     auto type = from.GetType().GetDecvq();
-                     self.SetType(type);
-                     auto count = from.GetCount();
-                     if (0 == count) {
-                        if constexpr (requires { self.SetCountInner(0); })
-                           self.SetCountInner(0);
-                        if constexpr (requires { self.SetHashInner(1); })
-                           self.SetHashInner(1);
-                        return;
-                     }
-
-                     // Pick a preferably typed block to optimize       
-                     if constexpr (IT::TypeErased) {
-                        // A runtime check is required before allocating
-                        LglsAssert(type.GetReferConstructor(),
-                           "Can't refer-construct elements"
-                           " - no refer-constructor was reflected for type ",
-                           type
-                        );
-                     }
-                     else {
-                        static_assert(CT::ReferConstructible<TypeOf<IT>>,
-                           "Contained type is not refer-constructible");
-                     }
-
-                     auto al  = self.AllocateFresh(self.RequestSize(count));
-                     auto src = IterateHandles(from).begin();
-                     auto dst = IterateHandles(self).begin();
-                     try {
-                        while (src != IteratorEnd {}) {
-                           dst->EmplaceWithIntent(Refer(*src));
-                           ++dst; ++src;
-                        }
-                     } catch (...) {
-                        // Partial success                              
-                        auto n = src - IterateHandles(from).begin();
-                        if constexpr (requires { self.SetCountInner(1); }) {
-                           self.SetCountInner(n);
-                           self.ResetHash();
-                        }
-                        else {
-                           // Partial success is not allowed - we have  
-                           // to deallocate and make sure CountStatic   
-                           // reports as empty                          
-                           while (n) {
-                              dst->template DestroyElement<false>();
-                              --dst; --n;
-                           }
-                           Allocator::Deallocate(al);
-                           self.SetAllocationInner(nullptr);
-                           if constexpr (requires { self.SetHashInner(1); })
-                              self.SetHashInner(1);
-                        }
-                        throw;
-                     }
-                     
-                     // Full success                                    
-                     if constexpr (requires { self.SetCountInner(count); })
-                        self.SetCountInner(count);
-                     if constexpr (requires { from.GetHashInner(); }) {
-                        if constexpr (requires { self.SetHashInner(1); })
-                           self.SetHashInner(from.GetHashInner());
-                        else if constexpr (requires { self.ResetHash(); })
-                           self.ResetHash();
-                     }
-                  }
+                  // Refer other                                        
+                  static_assert(CT::Referred<I>);
+                  self.SetType(from.GetType());
+                  self.SetHeapInner(from.GetHeapInner());
                }
             }
             else {
@@ -173,53 +188,6 @@ namespace Langulus::Anyness::Component
                self.SetType(from.GetType());
                self.SetHeapInner(from.GetHeapInner());
             }
-         }
-         else {
-            // We're cloning, so we guarantee, that data is no longer   
-            // constant at any level of indirection                     
-            auto type = from.GetType().GetDecvqAll();
-            self.SetType(type);
-            auto count = from.GetCount();
-            if (0 == count) {
-               if constexpr (requires { self.SetCountInner(0); })
-                  self.SetCountInner(0);
-               if constexpr (requires { self.SetHashInner(1); })
-                  self.SetHashInner(1);
-               return;
-            }
-
-            // Pick the typed block to optimize the construction        
-            if constexpr (IT::TypeErased) {
-               // A runtime check is required before allocating         
-               LglsAssert(type.GetCloneConstructor(),
-                  "Can't clone-construct elements"
-                  " - no clone-constructor was reflected for type ",
-                  type
-               );
-            }
-            else {
-               static_assert(CT::CloneConstructible<TypeOf<IT>>,
-                  "Contained type is not clone-constructible");
-            }
-
-            self.AllocateFresh(self.RequestSize(count));
-            auto src = IterateHandles(from).begin();
-            auto dst = IterateHandles(self).begin();
-            try {
-               while (src != IteratorEnd {}) {
-                  dst->EmplaceWithIntent(Clone(*src));
-                  ++dst; ++src;
-               }
-            } catch (...) {
-               // Partial success                                       
-               self.SetCountInner(src - IterateHandles(from).begin());
-               self.ResetHash();
-               throw;
-            }
-                     
-            // Full success                                             
-            self.SetCountInner(count);
-            self.SetHashInner(from.GetHashInner());
          }
       }
 
@@ -500,134 +468,6 @@ namespace Langulus::Anyness::Component
 
          if constexpr (requires { self.mReserved; })
             self.mReserved = request.mElementCount;
-      }
-      
-      /// Reassign new value to the first element, with or without an intent  
-      ///   @attention this overwrites previous handle without dereferencing  
-      ///      it, and without destroying anything                            
-      ///   @param rhs_with_intent - container to assign from?                
-      template<CT::Container C>
-      void AssignWithIntent(this C& self, CT::Container auto&& rhs_with_intent) {
-         using S  = IntentOf<decltype(rhs_with_intent)>;
-         using ST = TypeOf<S>;
-         using STT = TypeOf<ST>;
-         LglsAssumeDev(self.IsTyped(), "Invalid type");
-         LglsAssumeDev(self.mHeap, "Invalid heap");
-         auto& rhs = DeintCast(rhs_with_intent);
-
-         if constexpr (C::TypeErased) {
-            //                                                          
-            // This container is type-erased                            
-            //                                                          
-            if (self.mType.IsSparse()) {
-               LglsAssumeDev(rhs.IsSparse(), "Sparseness mismatch");
-
-               if constexpr (S::Shallow) {
-                  // Do a refer/copy/disown/abandon/move sparse LHS     
-                  *self.mSparseHeap = *rhs.mSparseHeap;
-                  if constexpr (CT::DeeplyOwned<C, ST>)
-                     *self.GetEntry() = *rhs.GetEntry();
-
-                  if constexpr (S::ResetsOnMove) {
-                     *rhs.mSparseHeap = nullptr;
-                     if constexpr (CT::DeeplyOwned<C, ST>)
-                        *rhs.GetEntry() = nullptr;
-                  }
-
-                  if constexpr (CT::DeeplyOwned<C>) {
-                     if constexpr (CT::DeeplyOwned<ST>)
-                        self.template DeepKeep<S>(*rhs.GetEntry());
-                     else
-                        self.template DeepKeep<S>(nullptr);
-                  }
-               }
-               else {
-                  //TODO clone pointers
-                  TODO();
-               }
-            }
-            else {
-               // Do a refer/copy/disown/abandon/move/clone dense LHS   
-               LglsAssumeDev(CT::Dense<STT>, "Sparseness mismatch");
-
-               if constexpr (CT::Moved<S>)
-                  self.mType.MoveAssign   (self.mHeap, rhs.mHeap);
-               else if constexpr (CT::Abandoned<S>)
-                  self.mType.AbandonAssign(self.mHeap, rhs.mHeap);
-               else if constexpr (CT::Referred<S>)
-                  self.mType.ReferAssign  (self.mHeap, rhs.mHeap);
-               else if constexpr (CT::Copied<S>)
-                  self.mType.CopyAssign   (self.mHeap, rhs.mHeap);
-               else if constexpr (CT::Disowned<S>)
-                  self.mType.DisownAssign (self.mHeap, rhs.mHeap);
-               else if constexpr (CT::Cloned<S>)
-                  self.mType.CloneAssign  (self.mHeap, rhs.mHeap);
-               else
-                  static_assert(false, "Unsupported intent");
-            }
-         }
-         else {
-            //                                                          
-            // This container is statically-typed                       
-            //                                                          
-            using T = TypeOf<C>;
-
-            if constexpr (S::Shallow and CT::Sparse<T>) {
-               // Do a copy/refer/disown/abandon/move sparse RHS        
-               if constexpr (CT::AssignableFrom<T, STT>) {
-                  *self.mSparseHeap = *rhs.mSparseHeap;
-                  if constexpr (CT::DeeplyOwned<C, ST>)
-                     *self.GetEntry() = *rhs.GetEntry();
-
-                  if constexpr (S::ResetsOnMove) {
-                     *rhs.mSparseHeap = nullptr;
-                     if constexpr (CT::DeeplyOwned<C, ST>)
-                        *rhs.GetEntry() = nullptr;
-                  }
-
-                  if constexpr (CT::DeeplyOwned<C>) {
-                     if constexpr (CT::DeeplyOwned<ST>)
-                        self.template DeepKeep<S>(*rhs.GetEntry());
-                     else
-                        self.template DeepKeep<S>(nullptr);
-                  }
-               }
-               else static_assert(false, "Can't construct sparse T");
-            }
-            else if constexpr (CT::Dense<T>) {
-               // Do a copy/disown/abandon/move/clone inside a dense    
-               // handle                                                
-               if constexpr (CT::AssignableFrom<T, typename S::template As<STT>>)
-                  *self.GetRaw() = S::Nest(*rhs.GetRaw());
-               else
-                  static_assert(false, "Can't construct dense T");
-            }
-            else if constexpr (CT::Dense<Deptr<T>>) {
-               // Clone sparse/dense data                               
-               if constexpr (CT::Resolvable<Decay<T>>) {
-                  // If T is resolvable, we need to always clone the    
-                  // resolved (a.k.a the most concrete) type            
-                  TODO();
-               }
-               else {
-                  // Otherwise attempt cloning DT conventionally        
-                  using DT = Decay<T>;
-                  auto meta = MetaDataOf<DT>();
-                  auto entry = Allocator::Allocate(meta, meta->RequestSize(1).mByteSize);
-                  auto pointer = entry->template As<DT>();
-                  IntentAssign(pointer, S::Nest(*rhs->Get()));
-
-                  *self.GetRaw() = pointer;
-                  if constexpr (CT::DeeplyOwned<C>)
-                     *rhs.GetEntry() = entry;
-               }
-            }
-            else {
-               // Pointers of pointers                                  
-               // Clone indirection layers by nesting                   
-               TODO();
-            }
-         }
       }
    };
 }

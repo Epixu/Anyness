@@ -50,7 +50,7 @@ namespace Langulus::Anyness::Component
       ///      it, and without destroying anything                            
       ///   @param intent - constructor argument. If this container           
       ///      is statically typed, this can be any constructor argument,     
-      ///      otherwise it has to be an instance of the container type       
+      ///      otherwise it has to be an instance of the contained type.      
       template<CT::Container C, CT::Intent I>
       void EmplaceWithIntent(this C& self, I&& intent) {
          using IT = Decvq<Deref<TypeOf<I>>>;

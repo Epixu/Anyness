@@ -16,9 +16,13 @@ namespace Langulus::CT
    /// Check if container's elements are unfold-assignable                    
    ///   @attention type-erased elements are always assignable, and will fail 
    ///      at runtime if not reflected as such                               
+   ///   @attention we allow a fallback for elements that are not assignable, 
+   ///      but constructible - this is detected by the container, and we can 
+   ///      just destroy and reconstruct the element in its place.            
    template<class C, class A>
    concept RangeAssignable = Container<C> and (
       Untyped<C> or UnfoldAssignable<TypeOf<C>, A>
+                 or UnfoldConstructible<TypeOf<C>, A>
    );
 
    namespace Inner
@@ -76,10 +80,206 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class A>
       void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
       
+      /// Assign a value to the first element, overwriting it.                
+      /// If the element isn't initialized yet it will be constructed.        
+      ///   @param argument - the argument to assign                          
+      ///   @return reference to self                                         
       template<CT::Container C, class A>
       C& operator = (this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
-         self.template AccessStackById<ID>() = FWD(argument);
+         // This container is statically-typed                          
+         using T = Tif<C::TypeErased, A, TypeOf<C>>;
+         if constexpr (C::TypeErased)
+            LglsAssert(self.template IsSimilar<A>(), "Type mismatch");
+
+         if (self.IsEmpty()) {
+            // Container is empty, we might have to fresh-allocate      
+            if constexpr (CT::UnfoldConstructible<T, A&&>) {
+               // Just construct the first element                      
+               self.PrepareForReconstruction();
+               self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+            }
+            else static_assert(false, "T can't be reconstructed");
+         }
+         else {
+            // Container has at least one element                       
+            if constexpr (CT::UnfoldAssignable<T, A&&>) {
+               // Reduce to one item and reassign if possible           
+               if (self.PrepareForReassignment())
+                  self.AssignWithIntent(IntentOf<A&&> {FWD(argument)});
+               else
+                  self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+            }
+            else if constexpr (CT::UnfoldConstructible<T, A&&>) {
+               // Assignment isn't available for T - destroy all items  
+               // and reconstruct the first one                         
+               self.PrepareForReconstruction();
+               self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+            }
+            else static_assert(false, "T can't be reassigned or reconstructed");
+         }
+
+         if constexpr (requires { self.SetCountInner(1); })
+            self.SetCountInner(1);
          return self;
       }
+
+   protected:
+      /// A helper for clearing and allocating memory before construction     
+      /// Calls destructors on all elements, if any were initialized          
+      template<CT::Container C>
+      void PrepareForReconstruction(this C& self) {
+         // 1. We free if we have to                                    
+         auto& a = self.GetAllocationInner();
+         if (a) {
+            LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
+
+            if (a->GetUses() == 1) {
+               // We don't deallocate the memory - we can reuse it      
+               if constexpr (requires { self.FreeDeep(); })
+                  self.FreeDeep();
+               self.AllocateLess(1);
+            }
+            else {
+               // Notice that no element will be destroyed, because in  
+               // this case we have a guarantee, that elements are      
+               // referenced from elsewhere as well                     
+               if constexpr (requires { self.FreeDeep(); })
+                  self.template FreeDeep<false>();
+
+               // Dereference memory and reset state                    
+               a->Free();
+               a = nullptr;
+            }
+         }
+
+         // 2. We allocate if we have to                                
+         if (not a)
+            self.AllocateFresh(self.RequestSize(1));
+      }
+
+      /// A helper for clearing and allocating memory before assignment       
+      /// Calls destructors on all elements, except the first one             
+      ///   @return true if first element is valid and can be assigned to     
+      template<CT::Container C>
+      bool PrepareForReassignment(this C& self) {
+         // 1. We free if we have to                                    
+         auto& a = self.GetAllocationInner();
+         if (a) {
+            LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
+
+            if (a->GetUses() == 1) {
+               // We don't deallocate the memory - we can reuse it      
+               self.SelectInner(1, self.GetCount() - 1).FreeInner();
+               return true;
+            }
+            else {
+               // Notice that no element will be destroyed, because in  
+               // this case we have a guarantee, that elements are      
+               // referenced from elsewhere as well                     
+               if constexpr (requires { self.FreeDeep(); })
+                  self.template FreeDeep<false>();
+
+               // Dereference memory and reset state                    
+               a->Free();
+               a = nullptr;
+            }
+         }
+
+         // 2. We allocate if we have to                                
+         if (not a)
+            self.AllocateFresh(self.RequestSize(1));
+         return false;
+      }
+      
+      /// Overwrite first element using an intent                             
+      ///   @attention assumes destination memory has been constructed,       
+      ///      including all levels of indirection                            
+      ///   @attention does not modify any container state                    
+      ///   @param intent - assignment argument. If this container            
+      ///      is statically typed, this can be any assignment argument,      
+      ///      otherwise it has to be an instance of the contained type.      
+      template<CT::Container C, CT::Intent I>
+      void AssignWithIntent(this C& self, I&& intent) {
+         using IT = Decvq<Deref<TypeOf<I>>>;
+         LglsAssumeDev(self.GetRaw(), "Invalid heap");
+         LglsAssumeDev(self.IsTyped(), "Invalid type");
+         decltype(auto) rhs = FWD(intent.what);
+
+         if constexpr (CT::Handle<IT>) {
+            // We're emplacing using a handle, which can be faster due  
+            // to carrying allocation data with itself when sparse,     
+            // instead of searching for it when having DeepOwnership    
+            if constexpr (C::TypeErased or IT::TypeErased) {
+               //                                                       
+               // Either this container or the handle is type-erased    
+               auto T = rhs.GetTypeInner();
+               LglsAssumeDev(self.IsSimilar(T), "Type mismatch");
+               void* data = self.template AccessStackById<ID>();
+
+               if constexpr (CT::Moved<I>)
+                  T.GetMoveAssigner()(data, rhs.GetRaw());
+               else if constexpr (CT::Abandoned<I>)
+                  T.GetAbandonAssigner()(data, rhs.GetRaw());
+               else if constexpr (CT::Referred<I>)
+                  T.GetReferAssigner()(data, rhs.GetRaw());
+               else if constexpr (CT::Copied<I>)
+                  T.GetCopyAssigner()(data, rhs.GetRaw());
+               else if constexpr (CT::Disowned<I>)
+                  T.GetDisownAssigner()(data, rhs.GetRaw());
+               else if constexpr (CT::Cloned<I>)
+                  T.GetCloneAssigner()(data, rhs.GetRaw());
+               else
+                  static_assert(false, "Unrecognized intent");
+
+               if constexpr (CT::DeeplyOwned<C>) {
+                  if constexpr (I::IsKept())
+                     *self.GetEntries() = *rhs.GetEntries();
+                  else
+                     *self.GetEntries() = nullptr;
+                  self.KeepDeep();
+               }
+            }
+            else {
+               //                                                       
+               // Both sides are statically-typed and we can benefit    
+               // from a lot of compile-time optimizations              
+               using T = TypeOf<C>;
+               static_assert(CT::Similar<T, TypeOf<IT>>, "Type mismatch");
+               T* data = static_cast<T*>(self.template AccessStackById<ID>());
+               IntentAssign(*data, I::Nest(*rhs.GetRaw()));
+            }
+         }
+         else if constexpr (C::TypeErased) {
+            //                                                          
+            // This container is type-erased                            
+            LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
+            LglsAssumeDev(self.template IsSimilar<IT>(), "Type mismatch");
+            auto T = self.GetTypeInner();
+            void* data = self.template AccessStackById<ID>();
+
+            if constexpr (CT::Moved<I>)
+               T.GetMoveAssigner()(data, &rhs);
+            else if constexpr (CT::Abandoned<I>)
+               T.GetAbandonAssigner()(data, &rhs);
+            else if constexpr (CT::Referred<I>)
+               T.GetReferAssigner()(data, &rhs);
+            else if constexpr (CT::Copied<I>)
+               T.GetCopyAssigner()(data, &rhs);
+            else if constexpr (CT::Disowned<I>)
+               T.GetDisownAssigner()(data, &rhs);
+            else if constexpr (CT::Cloned<I>)
+               T.GetCloneAssigner()(data, &rhs);
+            else
+               static_assert(false, "Unrecognized intent");
+         }
+         else {
+            //                                                          
+            // This container is statically-typed                       
+            using T = TypeOf<C>;
+            static_assert(CT::Similar<T, IT>, "Type mismatch");
+            T* data = static_cast<T*>(self.template AccessStackById<ID>());
+            IntentAssign(*data, FWD(intent));
+         }
+      }      
    };
 }

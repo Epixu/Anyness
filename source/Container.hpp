@@ -106,10 +106,10 @@ namespace Langulus::Anyness
       template<unsigned ID = 0, class T = size_t> struct ReserveEmergent;
       template<unsigned ID = 0, class T = size_t> struct ReserveStack;
       template<auto SIZE> struct ReserveStatic;
-      template<CT::NotVoid T, unsigned ID = 0> struct Stack;
-      template<CT::State...STATES> struct StateHeap;
-      template<CT::State...STATES> struct StateStack;
-      template<CT::State...STATES> struct StateStatic;
+      template<CT::NotVoid, unsigned ID = 0> struct Stack;
+      template<CT::State...> struct StateHeap;
+      template<CT::State...> struct StateStack;
+      template<CT::State...> struct StateStatic;
       template<class META, class TYPE = void, unsigned ID = 0> struct TypedStack;
       template<class META, CT::NotVoid TYPE,  unsigned ID = 0> struct TypedStatic;
    }
@@ -309,7 +309,10 @@ namespace Langulus::Anyness
       template<unsigned, class>        friend struct Com::HashStack;
       template<unsigned, bool>         friend struct Com::Comparison;
       template<unsigned>               friend struct Com::Assignment;
-      
+      template<CT::State...>           friend struct Com::StateStack;
+
+      // Here lies the stack. It is an optimized tuple that is filled   
+      // with requests from components.                                 
       typename decltype(Inner::DefineStack<COMPONENTS...>())::TupleOptimized mStack;
 
       /// Access a variable on the stack associated with a component          
