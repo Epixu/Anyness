@@ -25,14 +25,10 @@ namespace Langulus::Anyness::Component
       static constexpr bool HeapCanBeNull = true;
 
    protected:
-      template<unsigned, class>
-      friend struct ReserveEmergent;
-      template<unsigned>
-      friend struct IterationOperators;
-      template<unsigned, class AS>
-      friend struct Insertion;
-      template<unsigned>
-      friend struct Emplacement;
+      template<unsigned, class>     friend struct ReserveEmergent;
+      template<unsigned>            friend struct IterationOperators;
+      template<unsigned, class AS>  friend struct Insertion;
+      template<unsigned>            friend struct Emplacement;
 
    private:
       template<CT::Container C>
@@ -185,8 +181,10 @@ namespace Langulus::Anyness::Component
             self.SetType(type);
             auto count = from.GetCount();
             if (0 == count) {
-               self.SetCountInner(0);
-               self.SetHashInner(1);
+               if constexpr (requires { self.SetCountInner(0); })
+                  self.SetCountInner(0);
+               if constexpr (requires { self.SetHashInner(1); })
+                  self.SetHashInner(1);
                return;
             }
 

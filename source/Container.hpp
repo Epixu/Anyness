@@ -300,24 +300,15 @@ namespace Langulus::Anyness
       static constexpr bool HasComponent = CT::SameAsOneOf<C, COMPONENTS...>;
 
    protected:
-      template<unsigned>
-      friend struct Com::IterationOperators;
-      template<class, class, unsigned>
-      friend struct Com::TypedStack;
-      template<CT::NotVoid, unsigned>
-      friend struct Com::Stack;
-      template<unsigned>
-      friend struct Com::HeapReference;
-      template<unsigned, bool>
-      friend struct Com::OwnershipStack;
-      template<unsigned, class>
-      friend struct Com::CountStack;
-      template<unsigned, class>
-      friend struct Com::HashStack;
-      template<unsigned, bool>
-      friend struct Com::Comparison;
-      template<unsigned>
-      friend struct Com::Assignment;
+      template<unsigned>               friend struct Com::IterationOperators;
+      template<class, class, unsigned> friend struct Com::TypedStack;
+      template<CT::NotVoid, unsigned>  friend struct Com::Stack;
+      template<unsigned>               friend struct Com::HeapReference;
+      template<unsigned, bool>         friend struct Com::OwnershipStack;
+      template<unsigned, class>        friend struct Com::CountStack;
+      template<unsigned, class>        friend struct Com::HashStack;
+      template<unsigned, bool>         friend struct Com::Comparison;
+      template<unsigned>               friend struct Com::Assignment;
       
       typename decltype(Inner::DefineStack<COMPONENTS...>())::TupleOptimized mStack;
 
@@ -359,8 +350,8 @@ namespace Langulus::Anyness
          });
       }
       
-      /// Call ConstructFrom whenever possible, and fallback to               
-      /// ConstructDefault where not supported.                               
+      /// Call ConstructFrom whenever possible, fallback to                   
+      /// ConstructDefault otherwise                                          
       constexpr void ConstructFrom(CT::Container auto&& from) {
          using I = IntentOf<decltype(from)>;
          ComponentList::ForEach([&,this]<class C>{
