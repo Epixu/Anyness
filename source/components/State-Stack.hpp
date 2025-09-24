@@ -97,7 +97,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get the default set of state bits                                   
-      static consteval StateType GetDefaultState() {
+      static consteval StateWrapper GetDefaultState() {
          StateType i = 0;
          StateType accumulator = 0;
          StateList::ForEach([&]<class S>{
@@ -105,7 +105,7 @@ namespace Langulus::Anyness::Component
                accumulator |= (StateType {1} << i);
             ++i;
          });
-         return accumulator;
+         return {accumulator};
       }
 
       /// Check if container has future/past linking point states             

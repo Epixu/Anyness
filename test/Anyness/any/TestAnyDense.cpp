@@ -42,19 +42,19 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    else {
       // Statically-typed containers behave the same as their inner     
       // type                                                           
-      static_assert(CT::CopyConstructible<T> == CT::CopyConstructible<E>);
-      static_assert(CT::ReferConstructible<T> == CT::ReferConstructible<E>);
+      static_assert(CT::CopyConstructible<T>    == CT::CopyConstructible<E>);
+      static_assert(CT::ReferConstructible<T>   == CT::ReferConstructible<E>);
       static_assert(CT::AbandonConstructible<T> == CT::AbandonConstructible<E>);
-      static_assert(CT::MoveConstructible<T> == CT::MoveConstructible<E>);
-      static_assert(CT::CloneConstructible<T> == CT::CloneConstructible<E>);
-      static_assert(CT::DisownConstructible<T> == CT::DisownConstructible<E>);
+      static_assert(CT::MoveConstructible<T>    == CT::MoveConstructible<E>);
+      static_assert(CT::CloneConstructible<T>   == CT::CloneConstructible<E>);
+      static_assert(CT::DisownConstructible<T>  == CT::DisownConstructible<E>);
 
-      static_assert(CT::CopyAssignable<T> == CT::CopyAssignable<E>);
-      static_assert(CT::ReferAssignable<T> == CT::ReferAssignable<E>);
-      static_assert(CT::AbandonAssignable<T> == CT::AbandonAssignable<E>);
-      static_assert(CT::MoveAssignable<T> == CT::MoveAssignable<E>);
-      static_assert(CT::CloneAssignable<T> == CT::CloneAssignable<E>);
-      static_assert(CT::DisownAssignable<T> == CT::DisownAssignable<E>);      
+      static_assert(CT::CopyAssignable<T>       == CT::CopyAssignable<E>);
+      static_assert(CT::ReferAssignable<T>      == CT::ReferAssignable<E>);
+      static_assert(CT::AbandonAssignable<T>    == CT::AbandonAssignable<E>);
+      static_assert(CT::MoveAssignable<T>       == CT::MoveAssignable<E>);
+      static_assert(CT::CloneAssignable<T>      == CT::CloneAssignable<E>);
+      static_assert(CT::DisownAssignable<T>     == CT::DisownAssignable<E>);      
    }
    
    static_assert(not requires (T pack, E item) { pack.operator +   (item); });

@@ -169,7 +169,6 @@ void Any_CheckState_DisownedFull(const auto& many) {
    REQUIRE      (many.IsConstant() == CT::Constant<E>);
    REQUIRE_FALSE(many.IsEncrypted());
    REQUIRE      (many.IsValid());
-   REQUIRE_FALSE(many.IsInvalid());
    REQUIRE_FALSE(many.GetAllocation());
    REQUIRE_FALSE(many.IsEmpty());
    REQUIRE      (many.GetCount() > 0);
@@ -191,7 +190,6 @@ void Any_CheckState_DisownedFullConst(const auto& many) {
    REQUIRE      (many.IsConstant());
    REQUIRE_FALSE(many.IsEncrypted());
    REQUIRE      (many.IsValid());
-   REQUIRE_FALSE(many.IsInvalid());
    REQUIRE_FALSE(many.GetAllocation());
    REQUIRE_FALSE(many.IsEmpty());
    REQUIRE      (many.GetCount() > 0);

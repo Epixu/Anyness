@@ -175,7 +175,8 @@ namespace Langulus::Anyness::Component
 
             if (a->GetUses() == 1) {
                // We don't deallocate the memory - we can reuse it      
-               self.SelectInner(1, self.GetCount() - 1).FreeInner();
+               if constexpr (CT::ContainsMany<C>)
+                  self.SelectInner(1, self.GetCount() - 1).FreeInner();
                return true;
             }
 
@@ -284,6 +285,6 @@ namespace Langulus::Anyness::Component
             T* data = static_cast<T*>(self.template AccessStackById<ID>());
             IntentAssign(*data, FWD(intent));
          }
-      }      
+      }
    };
 }

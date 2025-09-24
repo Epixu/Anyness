@@ -82,32 +82,27 @@ namespace Langulus::Anyness::Component
             // Data is either static or unallocated                     
             // Don't call destructors, just clear it up                 
             self.SetHeapInner(nullptr);
-            self.SetCountInner(0);
-            if constexpr (requires { self.mReserved; })
-               self.mReserved = 0;
-            if constexpr (requires { self.ResetType(); })
-               self.ResetType();
+            if_available(self.SetCountInner(0));
+            if_available(self.SetReserveInner(0));
+            if_available(self.ResetType());
             return;
          }
 
          if (allocation->GetUses() == 1) {
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the entry and type   
-            if constexpr (requires { self.FreeDeep(); })
-               self.FreeDeep();
-            self.SetCountInner(0);
+            if_available(self.FreeDeep());
+            if_available(self.SetCountInner(0));
          }
          else {
             // If reached, then data is referenced from multiple places 
             // Don't call destructors, just clear it up and dereference 
             allocation->Free();
-            self.SetAllocationInner(nullptr);
             self.SetHeapInner(nullptr);
-            self.SetCountInner(0);
-            if constexpr (requires { self.mReserved; })
-               self.mReserved = 0;
-            if constexpr (requires { self.ResetType(); })
-               self.ResetType();
+            if_available(self.SetAllocationInner(nullptr));
+            if_available(self.SetCountInner(0));
+            if_available(self.SetReserveInner(0));
+            if_available(self.ResetType());
          }
       }
 
@@ -115,14 +110,11 @@ namespace Langulus::Anyness::Component
       void Reset(this auto& self) {
          self.Free();
          self.SetHeapInner(nullptr);
-         self.SetAllocationInner(nullptr);
-         self.SetCountInner(0);
-         if constexpr (requires { self.mReserved; })
-            self.mReserved = 0;
-         if constexpr (requires { self.ResetState(); })
-            self.ResetState();
-         if constexpr (requires { self.ResetType(); })
-            self.ResetType();
+         if_available(self.SetAllocationInner(nullptr));
+         if_available(self.SetCountInner(0));
+         if_available(self.SetReserveInner(0));
+         if_available(self.ResetState());
+         if_available(self.ResetType());
       }
    };
 }

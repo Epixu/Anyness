@@ -26,6 +26,30 @@
 #include "../../../source/states/Tracked.hpp"
 
 
+namespace Langulus::Anyness::Inner
+{
+   using AnyBase = Container<
+      Com::TypedStack<DMeta>,          // Type-erased                   
+      Com::HeapMovable<>,              // Pointer to heap memory        
+      Com::OwnershipStack<>,           // Allocation is referenced      
+      Com::CountStatic<1u>,            // Statically sized to 1         
+      Com::DeepOwnershipHeap<>,        // Sparse elements are referenced
+      Com::HashEmergent<>,             // Hash is retrieved from item   
+      Com::Emplacement<>,              // Allows emplacement            
+      Com::Assignment<>,               // Allows assignment             
+      Com::Removal<>,                  // Allows clear/reset            
+      Com::Comparison<>,               // Allows comparisons            
+      Com::StateStack<                 // Variable state                
+         DefineState::Typed<>,         // Can be type-constrained       
+         DefineState::Future<>,        // Adds a 'missing future' state 
+         DefineState::Past<>,          // Adds a 'missing past' state   
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
+      >
+   >;
+}
+
 namespace Langulus::Anyness
 {
    ///                                                                        
@@ -35,24 +59,27 @@ namespace Langulus::Anyness
    /// and so on. For a slightly smaller and faster representation, consider  
    /// using Own or Ref instead. If you want to contain a number of similar   
    /// elements use Many instead.                                             
-   struct Any : Container<
-      Com::TypedStack<DMeta>,          // Variable type                 
-      Com::HeapMovable<>,              // Pointer to heap memory        
-      Com::OwnershipStack<>,           // Allocation is referenced      
-      Com::CountStatic<1>,             // Statically sized to 1         
-      Com::DeepOwnershipHeap<>,        // Sparse elements are referenced
-      Com::HashEmergent<>,             // Hash is retrieved from item   
-      Com::Emplacement<>,              // Allows emplacement            
-      Com::Assignment<>,               // Allows assignment             
-      Com::Removal<>,                  // Allows clear/reset            
-      Com::Conversion,                 // Allows conversion             
-      Com::StateStack<                 // Variable state                
-         DefineState::Typed<>,         // Can be type-constrained       
-         DefineState::Future<>,        // Adds a 'missing future' state 
-         DefineState::Past<>,          // Adds a 'missing past' state   
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >
-   > {};  
+   struct Any : Inner::AnyBase {
+      using Base = Inner::AnyBase;
+      //using Base::Base;
+      using Base::operator =;
+      using Com::Assignment<>::operator =;
+      using Base::operator ==;
+
+      // Single element selections                                      
+      using Pick    = Handle;
+      using PickMut = HandleMut;
+
+      /// Construction that emplaces A in the container                       
+      template<class A>
+      constexpr Any(A&& argument) {
+         if constexpr (CT::ContainsOne<A>)
+            Base::ConstructFrom(FWD(argument));
+         else {
+            this->GetType();
+            this->AllocateFresh(this->RequestSize(1));
+            this->EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+         }
+      }
+   };  
 }
