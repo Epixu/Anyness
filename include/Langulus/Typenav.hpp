@@ -346,7 +346,7 @@ namespace Langulus
       template<class...T>
       concept NotDecayed = PartialValidate<T...> and ((not Decayed<T>) and ...);
 
-      /// True if T is not a pointer, has no extent with [], and isn't a      
+      /// True if T is not a pointer, has no extent with [] and isn't a       
       /// reference                                                           
       ///   @attention still allowed to be cv-qualified                       
       template<class...T>
@@ -359,9 +359,8 @@ namespace Langulus
 
    namespace Inner
    {
-      /// Removes all const/volatile qualifiers from all indirections         
-      /// Preserves references                                                
-      ///   @return a pointer to the stripped T                               
+      /// Removes all const/volatile qualifiers from all indirections.        
+      /// Preserves references.                                               
       template<class T>
       consteval CT::Typelist auto NestedDecvq() {
          if constexpr (::std::is_rvalue_reference_v<T>)
@@ -376,6 +375,21 @@ namespace Langulus
             return Types<::std::remove_cv_t<T>> {};
       }
 
+      /// Adds const qualifier to all levels of indirection                   
+      template<class T>
+      consteval CT::Typelist auto NestedConst() {
+         if constexpr (::std::is_rvalue_reference_v<T>)
+            return Types<typename decltype(NestedConst<::std::remove_reference_t<T>>())::First const&&> {};
+         else if constexpr (::std::is_lvalue_reference_v<T>)
+            return Types<typename decltype(NestedConst<::std::remove_reference_t<T>>())::First const&> {};
+         else if constexpr (::std::is_pointer_v<T>)
+            return Types<typename decltype(NestedConst<::std::remove_pointer_t<T>>())::First const*> {};
+         else if constexpr (::std::is_bounded_array_v<T>)
+            return Types<typename decltype(NestedConst<::std::remove_extent_t<T>>())::First const [::std::extent_v<T>]> {};
+         else
+            return Types<const T> {};
+      }
+
       /// Count the number of indirections                                    
       ///   @return the number of pointers in a type                          
       template<class T>
@@ -387,12 +401,15 @@ namespace Langulus
       }
    }
 
-   /// Strip all qualifiers on all levels of indirection of a type            
-   /// const volatile void * const * const becomes void**                     
-   /// This strongly guarantees, that it strips EVERYTHING, including nested  
-   /// pointer/array constness/volatileness, etc.                             
+   /// Strip all qualifiers on all levels of indirection of a type.           
+   /// For example: `void const volatile* const* const` becomes `void**`.     
    template<class T>
    using DecvqAll = typename decltype(Inner::NestedDecvq<T>())::First;
+
+   /// Adds const qualifiers to all levels of indirection of a type.          
+   /// For example: `void**` becomes `void const* const* const`.              
+   template<class T>
+   using ConstAll = typename decltype(Inner::NestedConst<T>())::First;
 
    /// Strips all cv-qualifiers from the provided argument                    
    ///   @attention this will return pointers for bounded array arguments     

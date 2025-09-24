@@ -43,8 +43,8 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = Any;
       using Base = Inner::TAnyBase<T>;
       //using Base::Base;
-      using Base::operator =;
-      using Com::Assignment<>::operator =;
+      //using Base::operator =;
+      //using Com::Assignment<>::operator =;
       using Base::operator ==;
 
       // Single element selections                                      
@@ -73,6 +73,16 @@ namespace Langulus::Anyness
             }
             else new (this->GetRaw()) T {FWD(arguments)...};
          }
+      }
+
+      /// Assignment                                                          
+      template<class A>
+      constexpr TAny& operator = (A&& argument) {
+         if constexpr (CT::ContainsOne<A>)
+            Base::AssignFrom(FWD(argument));
+         else
+            Com::Assignment<>::operator = (FWD(argument));
+         return *this;
       }
    };
    

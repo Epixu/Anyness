@@ -39,24 +39,6 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
 
-   public:
-      /// A safe way to get the first deep entry                              
-      /// Will utilize any statically typed deep containers, if available     
-      ///   @attention ignores sparseness                                     
-      ///   @return a pointer to the first deep item, or nullptr if not deep  
-      template<CT::Container C>
-      auto GetDeep(this C&& self) noexcept -> Deep<C>* {
-         if (not self.IsDeep())
-            return nullptr;
-         return self.template Get<Deep<C>*>();
-      }
-
-      template<CT::Container C>
-      auto GetResolved(this C&&) -> Deep<C>;
-
-      template<CT::Container C>
-      auto GetDense(this C&&, Count<C> = CountMax<C>) -> Deep<C>;
-      
    protected:      
       /// Default-initialize the heap pointer                                 
       constexpr void ConstructDefault(this auto& self) noexcept {

@@ -358,9 +358,9 @@ static_assert(not CT::NoIntent<Refer<int>*, SheddableType<int>, Refer<int>>);
 TEST_CASE("Testing IntentOf", "[ct]") {
    static_assert(::std::same_as<IntentOf<int>,                 Refer<int>>);
    static_assert(::std::same_as<IntentOf<int&&>,               Move<int>>);
-   static_assert(::std::same_as<IntentOf<int const&&>,         Refer<const int>>);
+   static_assert(::std::same_as<IntentOf<int const&&>,         Refer<int>>);
    static_assert(::std::same_as<IntentOf<int&>,                Refer<int>>);
-   static_assert(::std::same_as<IntentOf<int const&>,          Refer<const int>>);
+   static_assert(::std::same_as<IntentOf<int const&>,          Refer<int>>);
 
    static_assert(::std::same_as<IntentOf<Copy<int>>,           Copy<int>>);
    static_assert(::std::same_as<IntentOf<Copy<int>&>,          Copy<int>>);
@@ -396,9 +396,9 @@ TEST_CASE("Testing IntentOf", "[ct]") {
       "one", "two", "three", "four"
    };
    using AOS = decltype(anArrayOfStrings);
-   static_assert(::std::same_as<IntentOf<AOS>,   Refer<AOS>>);
-   static_assert(::std::same_as<IntentOf<AOS&>,  Refer<AOS>>);
-   static_assert(::std::same_as<IntentOf<AOS&&>, Refer<AOS>>);
+   static_assert(::std::same_as<IntentOf<AOS>,   Refer<Decq<AOS>>>);
+   static_assert(::std::same_as<IntentOf<AOS&>,  Refer<Decq<AOS>>>);
+   static_assert(::std::same_as<IntentOf<AOS&&>, Refer<Decq<AOS>>>);
 
    std::string_view anArrayOfStringsMut[] {
       "one", "two", "three", "four"

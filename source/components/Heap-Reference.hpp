@@ -35,15 +35,16 @@ namespace Langulus::Anyness::Component
       template<unsigned, bool>   friend struct Comparison;
       template<auto COUNT>       friend struct CountStatic;
       
-      /*using Byte = ::std::uint8_t;
       template<CT::Container C>
-      using View = typename C::ViewType;
-      template<CT::Container C>
-      using Count = typename C::CountType;
+      using Count = typename Deref<C>::CountType;
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
+
+      /*using Byte = ::std::uint8_t;
+      template<CT::Container C>
+      using View = typename C::ViewType;
       template<CT::Container C>
       using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;*/
 
@@ -92,8 +93,8 @@ namespace Langulus::Anyness::Component
             return static_cast<T const*>(self.GetHeapInner());
       }
 
-      /// Get a direct access to the heap memory's end                        
-      /// Depends on the number of initialized elements                       
+      /// Get a direct access to the heap memory's end.                       
+      /// Depends on the number of initialized elements.                      
       template<CT::Container C>
       constexpr auto GetRawEnd(this C&& self) noexcept {
          if constexpr (CT::Typed<C>)
@@ -105,19 +106,20 @@ namespace Langulus::Anyness::Component
       /// Get reference to first element as sparse or dense, depending on T.  
       /// This is a lower-level routine that does only sparseness checking.   
       /// No conversion or copying occurs, only pointer arithmetic.           
+      ///   @attention no type-safety                                         
       ///   @attention assumes the container is typed                         
       ///   @attention assumes the container is allocated                     
       ///   @tparam T - the type of data we're accessing -                    
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
-      constexpr decltype(auto) Get(this C&& self) has_assumptions {
+      constexpr /*decltype(auto)*/ auto& Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>,    "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
          using TC = TypeOf<C>;
          using TH = Tif<CT::Void<T>, TC, T>;
-         using THQ1 = Tmut<C, TH*,  TH const*>;
-         using THQ2 = Tmut<C, TH**, TH const* const*>;
-         auto& mHeap = self.GetHeapInner();
+         using THQ1 = Tmut<C, TH*,  ConstAll<TH* >>;
+         using THQ2 = Tmut<C, TH**, ConstAll<TH**>>;
+         auto /*Tmut<C, void*, void const* const>*/& mHeap = self.GetHeapInner();
 
          if constexpr (CT::Void<TH>) {
             // Unknown type, just return the heap pointer reference     
@@ -141,7 +143,7 @@ namespace Langulus::Anyness::Component
                   return *static_cast<THQ1>( mHeap);
                else
                   // Representing dense as sparse                       
-                  return *static_cast<THQ1>(&mHeap);
+                  return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
             }
          }
          else {
@@ -160,21 +162,21 @@ namespace Langulus::Anyness::Component
                   return *static_cast<THQ1>( mHeap);
                else
                   // Representing dense as sparse                       
-                  return static_cast<Deptr<THQ1>>(mHeap);
+                  return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
+                  //return static_cast<Deptr<THQ1>>(mHeap);
             }
          }
       }
 
       /// Get first element as a handle, or any desired wrapping type         
       ///   @tparam T - the type we're wrapping in                            
-      ///   @return T, either as a reference if possible, or as a value if    
-      ///      an incompatible pointer arithmetic happened                    
+      ///   @return the element, as a reference if possible                   
       template<class T, CT::Container C>
       decltype(auto) As(this C&& self) has_assumptions {
-         if constexpr (CT::Handle<T>) {
-            static_assert(not CT::Reference<T>, "Strip references first");
+         static_assert(not CT::Reference<T>, "Strip references first");
 
-            if constexpr (T::TypeErased) {
+         if constexpr (CT::Handle<T>) {
+            if constexpr (CT::TypeErased<T>) {
                // Type-erased handle                                    
                if constexpr (requires { T::Owned; }) {
                   if constexpr (T::Owned)
@@ -187,12 +189,10 @@ namespace Langulus::Anyness::Component
             else {
                // Statically typed handle                               
                using HT = Deref<TypeOf<T>>;
-               if constexpr (CT::Untyped<C>) {
-                  LglsAssumeDev(self.template IsSimilar<HT>(),
-                     "Sparseness mismatch");
-               }
-               else static_assert(CT::Similar<TypeOf<C>, HT>,
-                  "Sparseness mismatch");
+               if constexpr (CT::TypeErased<C>)
+                  LglsAssumeDev(self.template IsSimilar<HT>(), "Type mismatch");
+               else
+                  static_assert(CT::Similar<TypeOf<C>, HT>, "Type mismatch");
 
                if constexpr (requires { T::Owned; }) {
                   if constexpr (T::Owned)
@@ -203,7 +203,15 @@ namespace Langulus::Anyness::Component
                else return T {self.HeapReference::template Get<HT*>()};
             }
          }
-         else return self.template Get<Deref<T>>();
+         else {
+            // Access directly                                          
+            if constexpr (CT::TypeErased<C>)
+               LglsAssumeDev(self.template Is<T>(), "Type mismatch");
+            else
+               static_assert(CT::Same<TypeOf<C>, T>, "Type mismatch");
+
+            return self.template Get<T>();
+         }
       }
       
       /// Get first element by casting it to any desirable compatible type    
@@ -211,6 +219,110 @@ namespace Langulus::Anyness::Component
       ///   @return the resulting value                                       
       template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
       AS Cast(this C const&);
+
+      /// A safe way to get the first deep entry                              
+      ///   @attention ignores sparseness                                     
+      ///   @return a pointer to the first deep item, or nullptr if not deep  
+      template<class AS = void, CT::Container C>
+      auto GetDeep(this C&& self) noexcept {
+         using D = Tif<CT::Void<AS>,
+            Tmut<C, Deep<C>*, Deep<C> const*>,
+            Tmut<C, AS*,      AS const*>
+         >;
+         if (self.IsEmpty() or not self.IsDeep())
+            return D {nullptr};
+         return self.template As<D>();
+      }
+
+      /// A safe way to get the first sparse entry after being resolved to    
+      /// the most concrete type.                                             
+      ///   @return the most concrete representation of the first item        
+      template<class AS = void, CT::Container C>
+      auto GetResolved(this C&& self) {
+         using D = Tif<CT::Void<AS>, Deep<C>, AS>;
+         static_assert(CT::Container<D>, "D must result in a container type");
+         static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
+
+         if (self.IsEmpty())
+            return D {};
+         if (self.IsDense())
+            return self.template GetItem<D>();
+
+         if constexpr (C::TypeErased) {
+            const auto T = self.GetType();
+            const auto resolver = T.GetResolver();
+            if (resolver)
+               return D {resolver(self.GetDense().GetRaw())};
+            else
+               return self.template GetDense<D>();
+
+         }
+         else {
+            using T = TypeOf<C>;
+            if constexpr (CT::Resolvable<T>)
+               return D {DenseCast(self.template Get<T>()).GetResolved()};
+            else
+               return D {DenseCast(self.template Get<T>())};
+         }
+      }
+
+      /// Get the first contained element, removing 'count' indirections      
+      ///   @attention throws if type is incomplete and origin was reached    
+      ///   @param count - how many levels of indirection to remove?          
+      ///   @return the dense first element                                   
+      template<class AS = void, CT::Container C>
+      auto GetDense(this C&& self, Count<C> const count = CountMax<C>) {
+         using D = Tif<CT::Void<AS>, Deep<C>, AS>;
+         static_assert(CT::Container<D>, "D must result in a container type");
+         static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
+
+         if (self.IsEmpty())
+            return D {};
+         if (self.IsDense() or count <= 0)
+            return self.template GetItem<D>();
+
+         // Check if origin type is complete before attempting anything 
+         if constexpr (CT::TypeErased<C>) {
+            const auto T = self.GetType();
+            if (count >= T.GetIndirections()) {
+               LglsAssert(T.GetOrigin(),
+                  "Trying to interface incomplete data `", self.GetType(), "` as dense");
+            }
+         }
+         else {
+            using T = TypeOf<C>;
+            if (count >= IndirectsOf<T>) {
+               LglsAssert(CT::Complete<Decay<T>>,
+                  "Trying to interface incomplete data `", self.GetType(), "` as dense");
+            }
+         }
+
+         // Start iterating until dense                                 
+         auto counter = count;
+         auto first = self.GetItem();
+         constexpr bool first_was_referenced = decltype(first)::OwnedOnConstructOrAssign;
+
+         while (counter and first.IsSparse()) {
+            auto& a = first.GetAllocationInner();
+            if constexpr (first_was_referenced)
+               if (a) a->Free(); //TODO deep deref?
+
+            first.SetHeapInner(*static_cast<void const* const*>(first.GetHeapInner()));
+            first.SetTypeInner(first.GetType().GetDeptr());
+
+            const auto entries = first.GetEntries();
+            if (entries) {
+               a = *entries;
+               if constexpr (first_was_referenced)
+                  if (a) a->Keep();//TODO deep ref?
+            }
+            else first.SetAllocationInner(nullptr);
+
+            --counter;
+         }
+
+         return D {Abandon {first}};
+      }
 
    protected:
       /// Default-initialization of this component is impossible              

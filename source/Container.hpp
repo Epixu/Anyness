@@ -258,7 +258,7 @@ namespace Langulus::Anyness
       /// In other words - a copy is always shallow, unless explicitly Copy   
       /// or Clone intent is used                                             
       constexpr Container& operator =(Container const& other) noexcept {
-         return operator =(Refer {other});
+         return operator = (Refer {other});
       }
 
       /// C++ move-semantics are mapped onto Move intent                      
@@ -272,13 +272,7 @@ namespace Langulus::Anyness
       /// of this container that has it. Allows for intents as well.          
       template<class LHS, CT::Container RHS>
       constexpr LHS& operator = (this LHS& lhs, RHS&& rhs) {
-         using I = IntentOf<decltype(rhs)>;
-         LHS::ComponentList::ForEach([&]<class C>{
-            if constexpr (requires { lhs.C::AssignFrom(I {rhs}); })
-               lhs.C::AssignFrom(I {rhs});
-            else if constexpr (requires { lhs.C::AssignDefault(); })
-               lhs.C::AssignDefault();
-         });
+         lhs.AssignFrom(FWD(rhs));
          return lhs;
       }
       
@@ -364,6 +358,18 @@ namespace Langulus::Anyness
                this->C::ConstructDefault();
          });
       }
+      
+      /// Call AssignFrom whenever possible, fallback to                      
+      /// AssignDefault otherwise                                             
+      constexpr void AssignFrom(CT::Container auto&& rhs) {
+         using I = IntentOf<decltype(rhs)>;
+         ComponentList::ForEach([&]<class C>{
+            if constexpr (requires { this->C::AssignFrom(I {rhs}); })
+               this->C::AssignFrom(I {rhs});
+            else if constexpr (requires { this->C::AssignDefault(); })
+               this->C::AssignDefault();
+         });
+      }
    };
 
    namespace State
@@ -418,6 +424,10 @@ namespace Langulus::CT
    /// Check if listed types are containers that can have single element      
    template<class...T>
    concept ContainsOne = Container<T...> and ((not Deref<Shed<T>>::ContainsMany) and ...);
+   
+   /// Check if listed types are type-erased containers                       
+   template<class...T>
+   concept TypeErased = Container<T...> and ((Deref<Shed<T>>::TypeErased) and ...);
 }
 
 #define if_available(WHAT) if constexpr (requires { WHAT; }) { WHAT; }

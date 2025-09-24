@@ -121,7 +121,7 @@ namespace Langulus::RTTI
       using FUnary         = void (*)(void* self);
       using FBinary        = void (*)(void* from, void* to);
       using FDescribe      = void (*)(void* self, const Anyness::Many& describe);
-      using FCompare       = Compared (*)(void* lhs, void* rhs);
+      using FCompare       = Compared (*)(const void* lhs, const void* rhs);
       using FResolve       = Anyness::Any (*)(void* self);
       using FHash          = Hash (*)(void* self);
       using FReference     = int (*)(void* self, int modifier);

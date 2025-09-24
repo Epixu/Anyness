@@ -206,11 +206,11 @@ namespace Langulus::Anyness::Component
                // Call compare operator for each element pair           
                auto t1 = lhs.template GetRawAs<uint8_t>();
                auto t2 = rhs.template GetRawAs<uint8_t>();
-               const auto t1_start = t1;
+               [[maybe_unused]] const auto t1_start = t1;
                const auto t1end = t1 + lhs.GetBytesize();
                const auto size = LT.GetSize();
                while (t1 < t1end) {
-                  if (0 != LT.GetComparer()(t1, t2)) {
+                  if (LT.GetComparer()(t1, t2) != Compared::Equal) {
                      VERBOSE(Logger::Red,
                         "Element #", (t1 - t1_start) / size, " differs (type-erased)");
                      return false;
@@ -392,9 +392,11 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::Container<RT>) {
                // Containers can be more loosely compared               
-               if (self.IsSparse() or not self.IsDeep())
-                  return false;
-               return *self.GetDeep() == rhs;
+               if (not self.IsSparse()) {
+                  auto deep = self.template GetDeep<RT>();
+                  return deep ? *deep == rhs : false;
+               }
+               else return false;
             }
             else if constexpr (CT::Comparable<RT, RT>) {
                // Non-deep element compare                              

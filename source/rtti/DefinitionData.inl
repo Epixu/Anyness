@@ -66,11 +66,11 @@ namespace Langulus::RTTI
       };
 
       LANGULUS(NOINLINE)
-      inline auto SparseCompare(void* lhs, void* rhs) noexcept -> Compared {
+      inline auto SparseCompare(const void* lhs, const void* rhs) noexcept -> Compared {
          // Pointers are either the same or not - not                   
          // ordered for security reasons                                
-         auto lhsT = static_cast<void**>(lhs);
-         auto rhsT = static_cast<void**>(rhs);
+         auto lhsT = static_cast<void const* const*>(lhs);
+         auto rhsT = static_cast<void const* const*>(rhs);
          return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;
       };
 
@@ -358,9 +358,9 @@ namespace Langulus::RTTI
       if constexpr (CT::Comparable<T, T>) {
          // Generate a three-way comparison function                    
          definition.mCurrentBoundary.mComparer =
-            [](void* t1, void* t2) -> Compared {
-               auto t1T = static_cast<const T*>(t1);
-               auto t2T = static_cast<const T*>(t2);
+            [](void const* t1, void const* t2) -> Compared {
+               auto t1T = static_cast<T const*>(t1);
+               auto t2T = static_cast<T const*>(t2);
                
                if constexpr (CT::ComparableStrong<T>) {
                   switch (*t1T <=> *t2T) {

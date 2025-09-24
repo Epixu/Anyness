@@ -164,42 +164,39 @@ namespace Langulus::Anyness::Component
          using IT = Decay<TypeOf<I>>;
          decltype(auto) from = FWD(intent.what);
 
-         if constexpr (I::IsShallow()) {
-            // Move/Copy/Refer/Abandon/Disown other                     
-            if constexpr (I::IsKept()) {
-               // Move/Copy/Refer other                                 
-               if constexpr (I::IsMoved()) {
-                  // Move                                               
-                  self.SetAllocationInner(from.GetAllocationInner());
+         // @important notice that Copy and Clone intents are not       
+         //    handled here. They're handled in heap components instead,
+         //    in case something throws an exception while constructing 
+         if constexpr (CT::Moved<I>) {
+            // Move                                                     
+            self.SetAllocationInner(from.GetAllocationInner());
 
-                  if constexpr (OwnedOnConstructOrAssign and not IT::Owned) {
-                     // Since we are not aware if that block is         
-                     // referenced or not we reference it just in case, 
-                     // and we also do not reset 'from' to avoid leaks. 
-                     // When using containers without ownership, it's   
-                     // _your_ responsibility to handle it              
-                     self.Keep();
-                  }
-                  else from.SetAllocationInner(nullptr);
-               }
-               else if constexpr (CT::Referred<I>) {
-                  // Refer                                              
-                  self.SetAllocationInner(from.GetAllocationInner());
-                  if constexpr (AUTO)
-                     self.Keep();
-               }
+            if constexpr (OwnedOnConstructOrAssign and not IT::Owned) {
+               // Since we are not aware if that block is referenced or 
+               // not we reference it just in case, and we also do not  
+               // reset 'from' to avoid leaks. When using containers    
+               // without ownership, it's _your_ responsibility to      
+               // handle it                                             
+               self.Keep();
             }
-            else if constexpr (I::IsMoved()) {
-               // Abandon                                               
-               self.SetAllocationInner(from.GetAllocationInner());
-               
-               // Discard only ownership from source container          
-               from.SetAllocationInner(nullptr);
-            }
-            else {
-               // Disown                                                
-               self.SetAllocationInner(nullptr);
-            }
+            else from.SetAllocationInner(nullptr);
+         }
+         else if constexpr (CT::Referred<I>) {
+            // Refer                                                    
+            self.SetAllocationInner(from.GetAllocationInner());
+            if constexpr (AUTO)
+               self.Keep();
+         }
+         else if constexpr (CT::Abandoned<I>) {
+            // Abandon                                                  
+            self.SetAllocationInner(from.GetAllocationInner());
+
+            // Discard only ownership from source container             
+            from.SetAllocationInner(nullptr);
+         }
+         else if constexpr (CT::Disowned<I>) {
+            // Disown                                                   
+            self.SetAllocationInner(nullptr);
          }
       }
       

@@ -116,16 +116,16 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if type origin is the same as one of the provided types       
-      /// This can potentially happen at compile-time                         
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @tparam A1, AN... - the types to compare against                  
       ///   @return true if origin type is same to at least one of the types  
       template<CT::NotVoid A1, CT::NotVoid...AN>
       constexpr bool Is(this auto const& self) noexcept {
-         if constexpr (TypeErased)
-            return self.GetTypeInner().template Is<A1, AN...>();
-         else
-            return CT::SameAsOneOf<TYPE, A1, AN...>;
+         if constexpr (TypeErased) {
+            const auto& t = self.GetTypeInner();
+            return t.Is(MetaDataOf<A1>()) or (t.Is(MetaDataOf<AN>()) or ...);
+         }
+         else return CT::SameAsOneOf<TYPE, A1, AN...>;
       }
 
       /// Check if type origin is the same as another                         
@@ -137,7 +137,6 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if type origin is the same as another container's type        
-      /// This can potentially happen at compile-time                         
       ///   @attention ignores sparsity and cv-qualifiers                     
       ///   @param other - the type to check for                              
       ///   @return true if this container has similar data                   
@@ -150,16 +149,16 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if unqualified type is the same as one of the provided types  
-      /// This can potentially happen at compile-time                         
       ///   @attention ignores only cv-qualifiers                             
       ///   @tparam A1, AN... - the types to compare against                  
       ///   @return true if data type is similar to at least one of the types 
       template<CT::NotVoid A1, CT::NotVoid...AN>
       constexpr bool IsSimilar(this auto const& self) noexcept {
-         if constexpr (TypeErased)
-            return self.GetTypeInner().template IsSimilar<A1, AN...>();
-         else
-            return CT::SimilarAsOneOf<TYPE, A1, AN...>;
+         if constexpr (TypeErased) {
+            const auto& t = self.GetTypeInner();
+            return t.IsSimilar(MetaDataOf<A1>()) or (t.IsSimilar(MetaDataOf<AN>()) or ...);
+         }
+         else return CT::SimilarAsOneOf<TYPE, A1, AN...>;
       }
 
       /// Check if unqualified type is the same as another                    
@@ -171,7 +170,6 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if unqualified type is the same as another container's type   
-      /// This can potentially happen at compile-time                         
       ///   @attention ignores only cv-qualifiers                             
       ///   @param other - the container to check for                         
       ///   @return true if this container has similar data                   
@@ -184,15 +182,15 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if this type is exactly one of the provided types             
-      /// This can potentially happen at compile-time                         
       ///   @tparam T1, TN... - the types to compare against                  
       ///   @return true if data type matches at least one type               
       template<CT::NotVoid A1, CT::NotVoid...AN>
       constexpr bool IsExact(this auto const& self) noexcept {
-         if constexpr (TypeErased)
-            return self.GetTypeInner().template IsExact<A1, AN...>();
-         else
-            return CT::ExactAsOneOf<TYPE, A1, AN...>;
+         if constexpr (TypeErased) {
+            const auto& t = self.GetTypeInner();
+            return t.IsExact(MetaDataOf<A1>()) or (t.IsExact(MetaDataOf<AN>()) or ...);
+         }
+         else return CT::ExactAsOneOf<TYPE, A1, AN...>;
       }
 
       /// Check if this type is exactly another                               
@@ -203,7 +201,6 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if this type is exactly another container's type              
-      /// This can potentially happen at compile-time                         
       ///   @param other - the block to match                                 
       ///   @return true if data type matches type exactly                    
       template<CT::Container C>
@@ -228,7 +225,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if the contents are constant                         
       constexpr bool IsConstant(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return not self.GetAllocation() or self.mType.IsConstant();
+            return not self.GetAllocation() or self.GetTypeInner().IsConstant();
          else
             return CT::Constant<TYPE> or not self.GetAllocation();
       }
@@ -237,7 +234,7 @@ namespace Langulus::Anyness::Component
       ///   @return true if the container is deep                             
       constexpr bool IsDeep(this auto const& self) noexcept {
          if constexpr (TypeErased)
-            return self.GetAllocation().IsDeep();
+            return self.GetTypeInner().IsDeep();
          else
             return CT::Deep<Decay<TYPE>>;
       }

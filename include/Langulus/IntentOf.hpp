@@ -703,10 +703,10 @@ namespace Langulus
    ///   - if it isn't - we get refer intent                                  
    template<class T>
    using IntentOf = Tif<CT::Intent<Decvq<Deref<T>>>,
-         Decvq<Deref<T>>,
+         Decq<Deref<T>>,
          Tif<::std::is_rvalue_reference_v<T> and CT::Mutable<Deref<T>>,
             Move<Deref<T>>,
-            Refer<Deref<T>>
+            Refer<Decq<Deref<T>>>
          >
       >;
 }

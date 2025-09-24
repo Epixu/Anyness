@@ -62,13 +62,14 @@ namespace Langulus::Anyness
    struct Any : Inner::AnyBase {
       using Base = Inner::AnyBase;
       //using Base::Base;
-      using Base::operator =;
-      using Com::Assignment<>::operator =;
+      //using Base::operator =;
+      //using Com::Assignment<>::operator =;
       using Base::operator ==;
 
       // Single element selections                                      
-      using Pick    = Handle;
-      using PickMut = HandleMut;
+      using Pick     = Handle;
+      using PickMut  = HandleMut;
+      using DeepType = Any;
 
       /// Construction that emplaces A in the container                       
       template<class A>
@@ -81,5 +82,15 @@ namespace Langulus::Anyness
             this->EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
          }
       }
-   };  
+
+      /// Assignment                                                          
+      template<class A>
+      constexpr Any& operator = (A&& argument) {
+         if constexpr (CT::ContainsOne<A>)
+            Base::AssignFrom(FWD(argument));
+         else
+            Com::Assignment<>::operator = (FWD(argument));
+         return *this;
+      }
+   };
 }
