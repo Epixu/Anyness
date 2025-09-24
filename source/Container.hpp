@@ -299,6 +299,7 @@ namespace Langulus::Anyness
       template<CT::NotVoid, unsigned>  friend struct Com::Stack;
       template<unsigned>               friend struct Com::HeapReference;
       template<unsigned, bool>         friend struct Com::OwnershipStack;
+      template<unsigned>               friend struct Com::DeepOwnershipStack;
       template<unsigned, class>        friend struct Com::CountStack;
       template<unsigned, class>        friend struct Com::HashStack;
       template<unsigned, bool>         friend struct Com::Comparison;
@@ -401,6 +402,11 @@ namespace Langulus::CT
    /// component                                                              
    template<class...T>
    concept DeeplyOwned = Container<T...> and (Deref<Shed<T>>::DeeplyOwned and ...);
+
+   /// Check if listed types are containers with any kind of Ownership        
+   /// component                                                              
+   template<class...T>
+   concept Owned = Container<T...> and (Deref<Shed<T>>::Owned and ...);
 
    /// Check if listed types are containers with any kind of linear indexing  
    /// component                                                              

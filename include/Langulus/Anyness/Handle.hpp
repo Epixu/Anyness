@@ -16,11 +16,10 @@
 namespace Langulus::Anyness
 {
    ///                                                                        
-   /// A type-erased mutable handle with ownership                            
-   /// It refers to a picked element inside a type-erased container           
+   /// A type-erased mutable handle with ownership.                           
+   /// It refers to a picked element inside a type-erased container.          
    ///   @attention handles are never (de)referenced upon construction and    
    ///      destruction - only on reassignment                                
-   ///                                                                        
    struct HandleMut : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
@@ -32,13 +31,18 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
 
       HandleMut() = delete;
+      
+      constexpr HandleMut(void* ptr, AllocationPtr* entry, DMeta type) noexcept {
+         this->SetHeapInner(ptr);
+         this->SetEntriesInner(entry);
+         this->SetTypeInner(type);
+      }
    };
    
 
    ///                                                                        
-   /// A type-erased mutable handle without ownership                         
-   /// It refers to a picked element inside a type-erased container           
-   ///                                                                        
+   /// A type-erased mutable handle without ownership.                        
+   /// It refers to a picked element inside a type-erased container.          
    struct HandleDisownedMut : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
@@ -49,18 +53,22 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
 
       HandleDisownedMut() = delete;
+      
+      constexpr HandleDisownedMut(void* ptr, DMeta type) noexcept {
+         this->SetHeapInner(ptr);
+         this->SetTypeInner(type);
+      }
    };
    
 
    ///                                                                        
-   /// A type-erased immutable handle with ownership                          
-   /// It refers to a picked element inside a type-erased container           
+   /// A type-erased immutable handle with ownership.                         
+   /// It refers to a picked element inside a type-erased container.          
    ///   @attention handles are never (de)referenced upon construction and    
    ///      destruction - only on reassignment. Since this handle is not      
    ///      mutable, this isn't possible either, however the handle still     
    ///      carries ownership information, so that it can be used on demand   
    ///      instead of sought from the memory manager every time              
-   ///                                                                        
    struct Handle : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
@@ -71,13 +79,18 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
 
       Handle() = delete;
+
+      constexpr Handle(void* ptr, AllocationPtr* entry, DMeta type) noexcept {
+         this->SetHeapInner(ptr);
+         this->SetEntriesInner(entry);
+         this->SetTypeInner(type);
+      }
    };
    
 
    ///                                                                        
-   /// A type-erased immutable handle without ownership                       
-   /// It refers to a picked element inside a type-erased container           
-   ///                                                                        
+   /// A type-erased immutable handle without ownership.                      
+   /// It refers to a picked element inside a type-erased container.          
    struct HandleDisowned : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
@@ -87,5 +100,10 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
 
       HandleDisowned() = delete;
+      
+      constexpr HandleDisowned(void* ptr, DMeta type) noexcept {
+         this->SetHeapInner(ptr);
+         this->SetTypeInner(type);
+      }
    };
 }

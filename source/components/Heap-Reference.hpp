@@ -178,13 +178,12 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Handle<T>) {
             if constexpr (CT::TypeErased<T>) {
                // Type-erased handle                                    
-               if constexpr (requires { T::Owned; }) {
-                  if constexpr (T::Owned)
-                     return T {self.Get(), self.GetEntries(), self.GetType()};
-                  else
-                     return T {self.Get(), self.GetType()};
-               }
-               else return T {self.Get(), self.GetType()};
+               if constexpr (CT::DeeplyOwned<T>)
+                  return T {self.Get(), self.GetEntries(), self.GetType()};
+               else if constexpr (CT::Owned<T>)
+                  return T {self.Get(), self.GetAllocation(), self.GetType()};
+               else
+                  return T {self.Get(), self.GetType()};
             }
             else {
                // Statically typed handle                               
@@ -194,13 +193,12 @@ namespace Langulus::Anyness::Component
                else
                   static_assert(CT::Similar<TypeOf<C>, HT>, "Type mismatch");
 
-               if constexpr (requires { T::Owned; }) {
-                  if constexpr (T::Owned)
-                     return T {self.HeapReference::template Get<HT*>(), self.GetAllocation()};
-                  else
-                     return T {self.HeapReference::template Get<HT*>()};
-               }
-               else return T {self.HeapReference::template Get<HT*>()};
+               if constexpr (CT::DeeplyOwned<T>)
+                  return T {self.HeapReference::template Get<HT*>(), self.GetEntries()};
+               if constexpr (CT::Owned<T>)
+                  return T {self.HeapReference::template Get<HT*>(), self.GetAllocation()};
+               else
+                  return T {self.HeapReference::template Get<HT*>()};
             }
          }
          else {

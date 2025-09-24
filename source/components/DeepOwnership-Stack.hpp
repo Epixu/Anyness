@@ -30,16 +30,14 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
-      /// Get entries array (inner)                                           
-      constexpr auto& GetEntriesInner(this auto const& self) noexcept {
-         return *reinterpret_cast<AllocationPtr* const*>(
-            self.mStack + self.template StackOffset<DeepOwnershipStack>
-         );
+      /// Get the entry array (inner)                                         
+      constexpr auto& GetEntriesInner(this auto&& self) noexcept {
+         return self.template AccessStack<DeepOwnershipStack>();
       }
-      
-      /// Set the entries array ppinter (inner)                               
-      constexpr void SetEntriesInner(this auto& self, AllocationPtr* e) noexcept {
-         const_cast<AllocationPtr*&>(self.GetEntriesInner()) = e;
+
+      /// Set the entry array (inner)                                         
+      constexpr void SetEntriesInner(this auto& self, StackRequest entries) noexcept {
+         self.GetEntriesInner() = entries;
       }
 
       /// Reference referencable elements inside the block                    
