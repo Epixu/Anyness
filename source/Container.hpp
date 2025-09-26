@@ -14,6 +14,8 @@
 #define LANGULUS_LIBRARY_ANYNESS() 1
 #define LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH() 0
 
+#define if_available(WHAT) if constexpr (requires { WHAT; }) { WHAT; }
+
 namespace Langulus::CTTI
 {
    /// Affects CT::State<T>                                                   
@@ -248,7 +250,7 @@ namespace Langulus::Anyness
          //static_assert(::std::is_standard_layout_v<Container>);
          if not consteval {
             ComponentList::ForEach([this]<class C> {
-               if constexpr (requires { this->C::Destroy(); }) this->C::Destroy();
+               if_available(this->C::Destroy());
             });
          }
       }
@@ -282,8 +284,7 @@ namespace Langulus::Anyness
 
          bool for_other_reasons = false;
          ComponentList::ForEach([this, &for_other_reasons]<class C>{
-            if constexpr (requires { this->C::IsValid(); })
-               for_other_reasons |= this->C::IsValid();
+            if_available(for_other_reasons |= this->C::IsValid());
          });
          return for_other_reasons;
       }
@@ -340,34 +341,36 @@ namespace Langulus::Anyness
       }
 
       /// Explicitly call ConstructDefault in all of the components.          
-      constexpr void ConstructDefault() noexcept {
-         ComponentList::ForEach([this]<class C>{
-            if constexpr (requires { this->C::ConstructDefault(); })
-               this->C::ConstructDefault();
+      constexpr void ConstructDefault(this auto& self) noexcept {
+         ComponentList::ForEach([&]<class C>{
+            if_available(self.C::ConstructDefault());
          });
       }
       
       /// Call ConstructFrom whenever possible, fallback to                   
       /// ConstructDefault otherwise                                          
-      constexpr void ConstructFrom(CT::Container auto&& from) {
+      constexpr void ConstructFrom(this auto& self, CT::Container auto&& from) {
          using I = IntentOf<decltype(from)>;
-         ComponentList::ForEach([&,this]<class C>{
-            if constexpr (requires { this->C::ConstructFrom(I {from}); })
-               this->C::ConstructFrom(I {from});
-            else if constexpr (requires { this->C::ConstructDefault(); })
-               this->C::ConstructDefault();
+         ComponentList::ForEach([&]<class C>{
+                 if_available(self.C::ConstructFrom(I {from}))
+            else if_available(self.C::ConstructDefault())
          });
       }
-      
-      /// Call AssignFrom whenever possible, fallback to                      
-      /// AssignDefault otherwise                                             
-      constexpr void AssignFrom(CT::Container auto&& rhs) {
+
+      /// Explicitly call AssignDefault in all of the components.             
+      constexpr void AssignDefault(this auto& self) noexcept {
+         ComponentList::ForEach([&]<class C>{
+            if_available(self.C::AssignDefault());
+         });
+      }
+
+      /// Call AssignFrom whenever possible, fallback to AssignDefault        
+      /// otherwise                                                           
+      constexpr void AssignFrom(this auto& self, CT::Container auto&& rhs) {
          using I = IntentOf<decltype(rhs)>;
          ComponentList::ForEach([&]<class C>{
-            if constexpr (requires { this->C::AssignFrom(I {rhs}); })
-               this->C::AssignFrom(I {rhs});
-            else if constexpr (requires { this->C::AssignDefault(); })
-               this->C::AssignDefault();
+                 if_available(self.C::AssignFrom(I {rhs}))
+            else if_available(self.C::AssignDefault())
          });
       }
    };
@@ -407,6 +410,11 @@ namespace Langulus::CT
    template<class...T>
    concept Owned = Container<T...> and (Deref<Shed<T>>::Owned and ...);
 
+   /// Check if listed containers are referenced upon construction/assignment 
+   /// and then automatically dereferenced on destruction                     
+   template<class...T>
+   concept AutoOwned = Container<T...> and ((Deref<Shed<T>>::AutoOwned) and ...);
+
    /// Check if listed types are containers with any kind of linear indexing  
    /// component                                                              
    template<class...T>
@@ -434,5 +442,3 @@ namespace Langulus::CT
    template<class...T>
    concept TypeErased = Container<T...> and ((Deref<Shed<T>>::TypeErased) and ...);
 }
-
-#define if_available(WHAT) if constexpr (requires { WHAT; }) { WHAT; }

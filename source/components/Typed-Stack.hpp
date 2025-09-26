@@ -269,9 +269,9 @@ namespace Langulus::Anyness::Component
          return self.template GetRawAs<TYPE>();
       }
       
-      /// Set the contained data type if possible                             
+      /// Set the contained data type if possible.                            
       /// This is still used if statically typed - checks if types are        
-      /// compatible in constructors and assigners                            
+      /// compatible in constructors and assigners.                           
       ///   @tparam T - the new type                                          
       template<CT::NotVoid T, CT::Container C>
       void SetType(this C& self) {
@@ -284,51 +284,51 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Set the contained data type if possible                             
+      /// Set the contained data type if possible.                            
       /// This is still used if statically typed - checks if types are        
-      /// compatible in constructors and assigners                            
-      /// This particular override doesn't benefit from compile-time checks   
+      /// compatible in constructors and assigners.                           
+      /// This particular override doesn't benefit from compile-time checks.  
       ///   @param type - the new type                                        
       template<CT::Container C>
       void SetType(this C& self, META type) {
-         META& mType = const_cast<META&>(self.GetTypeInner());
+         auto& t = self.GetTypeInner();
          
-         if constexpr (C::TypeErased) {
+         if constexpr (CT::TypeErased<C>) {
             // This container is type-erased                            
-            if (mType == type)
+            if (t == type)
                return;
          
-            if (not mType) {
-               mType = type;
+            if (not t) {
+               t = type;
                return;
             }
 
             LglsAssert(not self.IsTypeConstrained(),
                "Attempting to mutate type-locked container"
-               " of type ", mType, " to type ", type
+               " of type ", t, " to type ", type
             );
 
-            if (mType->CastsTo(type)) {
+            if (t.CastsTo(type)) {
                // Type is compatible, but only sparse data can mutate   
                // freely. Dense containers can't mutate because their   
                // destructors might be wrong later                      
-               LglsAssert(self.IsSparse(), "Can't mutate ", mType,
+               LglsAssert(t.IsSparse(), "Can't mutate ", t,
                   " to incompatible type ", type);
             }
             else {
                // Type is not compatible, but container is not typed, so
                // if it has no constructed elements we can still mutate 
-               LglsAssert(self.IsEmpty(), "Can't mutate ", mType,
+               LglsAssert(self.IsEmpty(), "Can't mutate ", t,
                   " to incompatible type ", type);
             }
             
-            mType = type;
+            t = type;
          }
          else {
             // This container is statically typed                       
-            if (not mType)
-               mType = MetaDataOf<TYPE>();
-            LglsAssert(mType.IsExact(type), "Type mismatch");
+            if (not t)
+               t = MetaDataOf<TYPE>();
+            LglsAssert(t.IsExact(type), "Type mismatch");
          }
       }
    };

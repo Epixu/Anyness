@@ -46,6 +46,8 @@ namespace Langulus::Anyness
       //using Base::operator =;
       //using Com::Assignment<>::operator =;
       using Base::operator ==;
+      using Com::OwnershipDeepHeap<>::DestroyElement;
+      using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       // Single element selections                                      
       using Pick    = T const&;

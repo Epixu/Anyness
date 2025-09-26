@@ -15,9 +15,8 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Interfaces a heap allocation.                                          
-   /// Adds a member that points to the heap memory.                          
-   /// The pointer is allowed to move on reallocation.                        
+   /// Interfaces a heap. Adds a member that points to the heap memory.       
+   /// The heap is allowed to move on reallocation.                           
    ///   @tparam ID - multiple heaps are supported                            
    template<unsigned ID>
    struct HeapMovable : HeapReference<ID> {
@@ -130,10 +129,8 @@ namespace Langulus::Anyness::Component
             if_available(self.SetCountInner(count));
 
             if constexpr (requires { from.GetHashInner(); }) {
-               if constexpr (requires { self.SetHashInner(1); })
-                  self.SetHashInner(from.GetHashInner());
-               else
-                  if_available(self.ResetHash());
+                    if_available(self.SetHashInner(from.GetHashInner()))
+               else if_available(self.ResetHash())
             }
          }
          else {
@@ -146,7 +143,7 @@ namespace Langulus::Anyness::Component
                   self.SetType(from.GetType());
                   self.SetHeapInner(from.GetHeapInner());
 
-                  if constexpr (IT::OwnedOnConstructOrAssign) {
+                  if constexpr (CT::AutoOwned<I>) {
                      from.SetHeapInner(nullptr);
                      if_available(from.ResetState());
                      if_available(from.ResetType());
@@ -192,22 +189,23 @@ namespace Langulus::Anyness::Component
       ///   @param count - the number of elements to request                  
       ///   @return both the provided byte size and reserved count            
       template<CT::Container C>
-      auto RequestSize(this const C& self, const Count<C> count) has_assumptions
-      -> Allocation::Request {
-         using T = TypeOf<C>;
+      auto RequestSize(this const C& self, const Count<C> count) has_assumptions -> Allocation::Request {
          Allocation::Request result;
 
-         if constexpr (C::TypeErased) {
-            LglsAssumeDev(self.mType,
-               "Requesting allocation size for an untyped container");
+         if constexpr (CT::TypeErased<C>) {
+            const auto T = self.GetType();
+            LglsAssumeDev(T, "Requesting allocation size for an untyped container");
 
             // Check for reflected minimal allocation at runtime        
+            const auto size = T.GetSize();
             result.mByteSize = Roof2(::std::max<Count<C>>(
-               count * self.mType.GetSize(), self.mType.GetMinAlloc()));
-            result.mElementCount = result.mByteSize / self.mType.GetSize();
+               count * size, T.GetMinAllocation()));
+            result.mElementCount = result.mByteSize / size;
          }
          else {
             // Check for reflected minimal allocation at compile-time   
+            using T = TypeOf<C>;
+
             result.mByteSize = Roof2(::std::max<Count<C>>(
                count * sizeof(T), CT::GetMinAlloc<T>()));
             result.mElementCount = result.mByteSize / sizeof(T);
@@ -222,21 +220,20 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       auto AllocateFresh(this C& self, const Allocation::Request& request) -> Allocation* {
          Allocation* al;
-         if constexpr (C::TypeErased) {
-            if constexpr (CT::DeeplyOwned<C>) {
-               // Deeply owned sparse containers have additional memory 
-               // allocated for each pointer's entry                    
-               al = Allocator::Allocate(self.mType,
-                  request.mByteSize * (self.mType.IsSparse() ? 2 : 1)
-               );
-            }
-            else al = Allocator::Allocate(self.mType, request.mByteSize);
+
+         if constexpr (CT::TypeErased<C>) {
+            const auto T = self.GetType();
+            LglsAssumeDev(T, "Allocating an untyped container");
+
+            al = Allocator::Allocate(T,
+               request.mByteSize * (CT::DeeplyOwned<C> and T.IsSparse() ? 2 : 1)
+            );
          }
          else {
-            // Deeply owned sparse containers have additional memory    
-            // allocated for each pointer's entry                       
+            using T = TypeOf<C>;
+
             al = Allocator::Allocate(self.GetType(),
-               request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1)
+               request.mByteSize * (CT::DeeplyOwned<C> and CT::Sparse<T> ? 2 : 1)
             );
          }
 

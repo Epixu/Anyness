@@ -227,6 +227,7 @@ namespace Langulus::Anyness::Component
             Tmut<C, Deep<C>*, Deep<C> const*>,
             Tmut<C, AS*,      AS const*>
          >;
+
          if (self.IsEmpty() or not self.IsDeep())
             return D {nullptr};
          return self.template As<D>();
@@ -243,7 +244,7 @@ namespace Langulus::Anyness::Component
 
          if (self.IsEmpty())
             return D {};
-         if (self.IsDense())
+         if (not self.IsSparse())
             return self.template GetItem<D>();
 
          if constexpr (C::TypeErased) {
@@ -298,12 +299,12 @@ namespace Langulus::Anyness::Component
          // Start iterating until dense                                 
          auto counter = count;
          auto first = self.GetItem();
-         constexpr bool first_was_referenced = decltype(first)::OwnedOnConstructOrAssign;
+         constexpr bool first_was_referenced = CT::AutoOwned<decltype(first)>;
 
          while (counter and first.IsSparse()) {
             auto& a = first.GetAllocationInner();
             if constexpr (first_was_referenced)
-               if (a) a->Free(); //TODO deep deref?
+               if (a) a->Free();
 
             first.SetHeapInner(*static_cast<void const* const*>(first.GetHeapInner()));
             first.SetTypeInner(first.GetType().GetDeptr());
@@ -312,7 +313,7 @@ namespace Langulus::Anyness::Component
             if (entries) {
                a = *entries;
                if constexpr (first_was_referenced)
-                  if (a) a->Keep();//TODO deep ref?
+                  if (a) a->Keep();
             }
             else first.SetAllocationInner(nullptr);
 

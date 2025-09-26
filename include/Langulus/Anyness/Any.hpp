@@ -65,6 +65,8 @@ namespace Langulus::Anyness
       //using Base::operator =;
       //using Com::Assignment<>::operator =;
       using Base::operator ==;
+      using Com::OwnershipDeepHeap<>::DestroyElement;
+      using DefineState::Typed<>::IsTypeConstrained;
 
       // Single element selections                                      
       using Pick     = Handle;

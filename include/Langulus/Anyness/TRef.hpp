@@ -75,11 +75,11 @@ namespace Langulus::Anyness
             return *this;
          
          if (other) {
-            Base::FreeInner();
+            Base::Free();
             Base::SetHeapInner(other);
             Base::FindAllocationInner();
          }
-         else Base::Free();         
+         else this->AssignDefault();
          return *this;
       }
    };

@@ -12,8 +12,9 @@
 namespace Langulus::Anyness::DefineState
 {
    ///                                                                        
-   /// If enabled, data won't ever change type - useful for templated packs   
-   /// Used to constrain the memory manipulations for safety                  
+   /// If enabled, data won't ever change type. Very useful when a type-      
+   /// erased container has to represent a templated counterpart.             
+   /// Needed to constrain the memory manipulations for safety.               
    ///   @tparam V - decides whether state is dynamic or static               
    template<State::StateValue V>
    struct Typed {
@@ -29,18 +30,18 @@ namespace Langulus::Anyness::DefineState
 
       template<CT::TypeErased C>
       constexpr bool IsTypeConstrained(this const C& self) noexcept requires Dynamic {
-         return self.mState & Typed {};
+         return self.GetStateInner() & Typed {};
       }
 
       template<CT::TypeErased C>
       auto EnableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
-         self.mState += Typed {};
+         self.GetStateInner() += Typed {};
          return self;
       }
 
       template<CT::TypeErased C>
       auto DisableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
-         self.mState -= Typed {};
+         self.GetStateInner() -= Typed {};
          return self;
       }
    };
