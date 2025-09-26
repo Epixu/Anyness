@@ -7,10 +7,12 @@
 ///                                                                           
 #pragma once
 #include "../../../source/components/Heap-Reference.hpp"
-#include "../../../source/components/DeepOwnership-Stack.hpp"
+#include "../../../source/components/OwnershipDeep-Stack.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Assignment.hpp"
+#include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Comparison.hpp"
+#include "../../../source/components/Iteration-Operators.hpp"
 
 
 namespace Langulus::Anyness
@@ -23,16 +25,18 @@ namespace Langulus::Anyness
    struct HandleMut : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
-      Com::DeepOwnershipStack<>,
+      Com::OwnershipDeepStack<>,
       Com::Assignment<>,
-      Com::Comparison<>
+      Com::Emplacement<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
    > {
-      using CTTI_Handle = Yes<>;
+      using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
 
       HandleMut() = delete;
       
-      constexpr HandleMut(void* ptr, AllocationPtr* entry, DMeta type) noexcept {
+      constexpr HandleMut(void* ptr, EntryPtr entry, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
          this->SetTypeInner(type);
@@ -47,9 +51,11 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
       Com::Assignment<>,
-      Com::Comparison<>
+      Com::Emplacement<>,
+      Com::Comparison<>,
+      Com::IterationOperators<>
    > {
-      using CTTI_Handle = Yes<>;
+      using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
 
       HandleDisownedMut() = delete;
@@ -72,15 +78,15 @@ namespace Langulus::Anyness
    struct Handle : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
-      Com::DeepOwnershipStack<>,
+      Com::OwnershipDeepStack<>,
       Com::Comparison<>
    > {
-      using CTTI_Handle = Yes<>;
+      using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
 
       Handle() = delete;
 
-      constexpr Handle(void* ptr, AllocationPtr* entry, DMeta type) noexcept {
+      constexpr Handle(void* ptr, EntryPtr entry, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
          this->SetTypeInner(type);
@@ -96,7 +102,7 @@ namespace Langulus::Anyness
       Com::HeapReference<>,
       Com::Comparison<>
    > {
-      using CTTI_Handle = Yes<>;
+      using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
 
       HandleDisowned() = delete;

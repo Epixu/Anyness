@@ -13,76 +13,24 @@ namespace Langulus::Anyness::Component
 {
    using RTTI::DMeta;
    
-   namespace Inner
-   {
-      /// Nest-dereference/destroy an element on the heap                     
-      void DestroyElementDeep(auto* ptr, DMeta type, Allocation const* entry) has_assumptions {
-         LglsAssumeDevAndOptimize(ptr, "No heap");
-         LglsAssumeDev(type, "No type");
-         
-         if (type.IsSparse()) {
-            LglsAssumeDevAndOptimize(entry, "No entry");
-            
-            auto subType = type.GetDeptr();
-            if (1 == entry->GetUses()) {
-               // This is the last occurence of that element            
-               if (subType.IsSparse()) {
-                  // Pointer to pointer                                 
-                  // Release all nested indirection layers              
-                  void* subPtr = *static_cast<void**>(ptr); //TODO this won't work for packed pointers
-                  if (auto subEntry = Allocator::Find(subType, subPtr))
-                     DestroyElementDeep(subPtr, subType, subEntry);
-               }
-               else if (subType.GetDestructor()) {
-                  // Pointer to a complete, destroyable dense           
-                  // Call the destructor                                
-                  if (subType.GetReferencer()) {
-                     if (subType.GetReferencer()(ptr, -1) == 0)
-                        subType.GetDestructor()(ptr);
-                  }
-                  else subType.GetDestructor()(ptr);
-               }
-
-               Allocator::Deallocate(const_cast<Allocation*>(entry));
-            }
-            else {
-               // This element occurs in more than one place.           
-               // We're not allowed to deallocate the memory behind it, 
-               // but we must call destructors if T is referencable and 
-               // its individual references have reached 0. This can    
-               // happen when hive elements are dereferenced.           
-               if (not subType.IsSparse() and type.GetReferencer()) {
-                  if (type.GetReferencer()(ptr, -1) == 0)
-                     type.GetDestructor()(ptr);
-               }
-
-               const_cast<Allocation*>(entry)->Free();
-            }
-         }
-         else if (type.GetDestructor()) {
-            // Call destructor of dense element                         
-            if (type.GetReferencer())
-               type.GetReferencer()(ptr, -1);
-            type.GetDestructor()(ptr);
-         }
-      }
-   }
-   
    ///                                                                        
    /// Keep a pointer to the heap allocation as a member.                     
-   /// Manage its ownership.                                                  
+   /// Manage its ownership by referencing and dereferencing it.              
+   /// Can also reference on per-element basis if enabled via DEEPREF.        
    ///   @tparam ID - which heap are we keeping track of?                     
    ///   @tparam AUTO - whether ownership will be automatically applied on    
    ///      construction, reassignment and destruction. False if container is 
    ///      just a view, or in other cases where you want to carry an         
    ///      allocation pointer, but not necessarily reference it.             
-   template<unsigned ID, bool AUTO>
+   ///   @tparam DEEPREF - whether to reference individual elements.          
+   template<unsigned ID, bool AUTO, bool DEEPREF>
    struct OwnershipStack {
       using CTTI_Component = Yes<>;
       using StackRequest   = AllocationPtr;
 
       static constexpr bool Owned = true;
       static constexpr bool OwnedOnConstructOrAssign = AUTO;
+      static constexpr bool DeeplyReferenced = DEEPREF;
       static constexpr int  ComponentPrecedence = -1000;
 
       /// Get the allocation                                                  
@@ -106,29 +54,25 @@ namespace Langulus::Anyness::Component
 
          auto& a = self.GetAllocationInner();
          if (a)
-            return; // We have already owned that allocation            
+            return; // We already own this allocation                   
       
-         // The heap might already be ours but we're just not aware     
+         // The heap might already be ours and we just don't know it    
          if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
             a = const_cast<AllocationPtr>(found);
             a->Keep();
             return;
          }
 
-         // Shallow-copy all elements in a new, owned allocation        
+         // Shallow-copy all elements in a fresh allocation             
          C temp {Copy {self}};
          self = Abandon {temp};
       }
 
    protected:
-      template<unsigned>
-      friend struct HeapMovable;
-      template<unsigned>
-      friend struct DeepOwnershipHeap;
-      template<unsigned>
-      friend struct Removal;
-      template<unsigned>
-      friend struct Emplacement;
+      template<unsigned> friend struct HeapMovable;
+      template<unsigned> friend struct DeepOwnershipHeap;
+      template<unsigned> friend struct Removal;
+      template<unsigned> friend struct Emplacement;
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   
@@ -200,9 +144,9 @@ namespace Langulus::Anyness::Component
          }
       }
       
-      /// Reference memory block once.                                        
-      /// If container has DeepOwnership component, all elements will be      
-      /// referenced as well, if they're CT::Referenced.                      
+      /// Reference the allocation once.                                      
+      /// If container has DeepOwnership component, all entries will be       
+      /// referenced as well.                                                 
       void Keep(this auto const& self) noexcept {
          auto& a = self.GetAllocationInner();
          if (not a)
@@ -210,9 +154,8 @@ namespace Langulus::Anyness::Component
 
          a->Keep(1);
 
-         // Keep elements, if DeepOwnership component exists            
-         if constexpr (requires { self.KeepDeep(); })
-            self.KeepDeep();
+         // Keep all entries if DeepOwnership component exists          
+         if_available(self.KeepDeep());
       }
       
       /// Dereference memory block once and destroy all elements if data was  
@@ -238,20 +181,18 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
 
          if (a->GetUses() == 1) {
-            // Free elements, if DeepOwnership component exists         
-            if constexpr (requires { self.FreeDeep(); })
-               self.FreeDeep();
+            // Free all entries if DeepOwnership component exists       
+            if_available(self.FreeDeep());
 
             // Free memory                                              
             Allocator::Deallocate(a);
          }
          else {
-            // Free elements, if DeepOwnership component exists         
+            // Free all entries if DeepOwnership component exists.      
             // Notice that no element will be destroyed, because in this
-            // case we have a guarantee, that elements are referenced   
-            // from elsewhere as well                                   
-            if constexpr (requires { self.FreeDeep(); })
-               self.template FreeDeep<false>();
+            // case we have a guarantee that elements are referenced    
+            // from elsewhere as well.                                  
+            if_available(self.template FreeDeep<false>());
 
             // Dereference memory                                       
             a->Free();
@@ -264,97 +205,31 @@ namespace Langulus::Anyness::Component
          self.FreeInner();
       }
       
-      /// Dereference, and eventually destroy the first element               
+      /// Dereference and eventually destroy the first element                
+      /// This function is completely overridden by OwnershipDeep component,  
+      /// if present.                                                         
       ///   @attention assumes first element is validly constructed           
       ///   @attention does not modify any container state                    
-      template<bool RESET, CT::Container C>
-      void DestroyElement(this C& self) {
-         if constexpr (C::TypeErased) {
+      template<CT::Container C> requires (not CT::DeeplyOwned<C>)
+      void DestroyElement(this C& self) noexcept {
+         static_assert(CT::ContainsOne<C>);
+         if constexpr (CT::TypeErased<C>) {
+            // Destroying a type-erased element                         
             auto T = self.GetType();
-            if (T.IsSparse()) {
-               auto& ptr = *self.template GetRawAs<void*>();
-               auto& entry = self.GetEntry();
-               if (entry) {
-                  Inner::DestroyElementDeep(ptr, T, entry);
-                  if constexpr (RESET)
-                     entry = nullptr;
-               }
-               if constexpr (RESET)
-                  ptr = nullptr;
-            }
-            else if (T.GetDestructor()) {
-               // Call destructor of dense element                      
-               if (T.GetReferencer())
-                  T.GetReferencer()(self.GetRaw(), -1);
-               T.GetDestructor()(self.GetRaw());
+            if (const auto destructor = T.GetDestructor()) {
+               if (const auto referencer = T.GetReferencer())
+                  referencer(self.GetRaw(), -1);
+               destructor(self.GetRaw());
             }
          }
          else {
-            using T = TypeOf<C>;
-            using DT = Decay<T>;
-            if constexpr (CT::Sparse<T>) {
-               auto& ptr = *self.template GetRawAs<T>();
-               auto& entry = self.GetEntry();
-               if (entry) {
-                  if (1 == entry->GetUses()) {
-                     // This is the last occurence of that element      
-                     LglsAssumeDev(ptr, "Null pointer");
-
-                     if constexpr (CT::Sparse<Deptr<T>>) {
-                        // Pointer to pointer                           
-                        // Release all nested indirection layers        
-                        /*THandle*/ C {*ptr}.template DestroyElement<false>();
-                     }
-                     /*else if constexpr (not CT::Complete<DT> and not CT::Function<DT>) {
-                        // CT::Destroyable<DT> will fail silently if DT 
-                        // isn't defined yet, causing nasty leaks. So   
-                        // make it not-so-silent...                     
-                        static_assert(false, "Attempting to destroy an incomplete type");
-                     }*/
-                     else if constexpr (CT::Destroyable<DT>) {
-                        // Pointer to a complete, destroyable dense     
-                        // Call the destructor                          
-                        if constexpr (CT::Referenced<DT>) {
-                           if (ptr->Reference(-1) == 0)
-                              ptr->~DT();
-                        }
-                        else ptr->~DT();
-                     }
-
-                     Allocator::Deallocate(entry);
-                  }
-                  else {
-                     // This element occurs in more than one place         
-                     // We're not allowed to deallocate the memory behind  
-                     // it, but we must call destructors if T is           
-                     // referencable, and its individual references have   
-                     // reached 1. This usually happens when elements from 
-                     // a THive are referenced.                            
-                     if constexpr (CT::Dense<Deptr<T>> and CT::Referenced<DT>) {
-                        if (ptr->Reference(-1) == 0)
-                           ptr->~DT();
-                     }
-
-                     entry->Free();
-                  }
-               }
-
-               if constexpr (RESET) {
-                  ptr = nullptr;
-                  entry = nullptr;
-               }
-            }
-            /*else if constexpr (not CT::Complete<DT> and not CT::Function<DT>) {
-               // CT::Destroyable<DT> will fail silently if DT isn't       
-               // defined yet, causing nasty leaks. So make it             
-               // not-so-silent...                                         
-               static_assert(false, "Attempting to destroy an incomplete type");
-            }*/
-            else if constexpr (CT::Destroyable<DT>) {
-               // Call destructor of dense element                      
-               if constexpr (CT::Referenced<DT>)
-                  self.Get().Reference(-1);
-               self.Get().~DT();
+            // Destroying a statically-typed element                    
+            using T = TypeOf<C>;            
+            if constexpr (CT::Destroyable<T>) {
+               auto& element = self.Get();
+               if constexpr (CT::Referenced<T>)
+                  element.Reference(-1);
+               element.~T();
             }
          }
       }

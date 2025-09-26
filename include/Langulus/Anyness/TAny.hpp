@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::CountStatic<1u>,            // Statically sized to 1         
-      Com::DeepOwnershipHeap<>,        // Sparse elements are referenced
+      Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashEmergent<>,             // Hash is retrieved from item   
       Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             

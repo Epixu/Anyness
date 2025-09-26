@@ -60,13 +60,12 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
 namespace Langulus::Anyness
 {
-   /*struct HandleMut;
-   struct HandleDisownedMut;
-   struct Handle;
-   struct HandleDisowned;
-
-   template<class T> struct THandle;
-   template<class T> struct THandleDisowned;*/
+   /// Used for requesting dynamic data from the heap in container components 
+   template<class T>
+   struct PerElement {
+      static constexpr bool AllocatedPerElement = true;
+      using Type = T;
+   };
 
    namespace Component
    {
@@ -80,8 +79,8 @@ namespace Langulus::Anyness
       struct CountHeap; template<unsigned ID = 0, class T = size_t>
       struct CountStack;
       template<auto COUNT> struct CountStatic;
-      template<unsigned ID = 0> struct DeepOwnershipHeap;
-      template<unsigned ID = 0> struct DeepOwnershipStack;
+      template<unsigned ID = 0> struct OwnershipDeepHeap;
+      template<unsigned ID = 0> struct OwnershipDeepStack;
       struct Descriptor;
       template<unsigned ID = 0> struct Emplacement;
       struct Extrapolation;
@@ -100,8 +99,8 @@ namespace Langulus::Anyness
       template<unsigned ID = 0> struct IterationOperators;
       template<unsigned ID = 0> struct IterationRange;
       struct Merging;
-      template<unsigned ID = 0, bool AUTO = true> struct OwnershipEmergent;
-      template<unsigned ID = 0, bool AUTO = true> struct OwnershipStack;
+      template<unsigned ID = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipEmergent;
+      template<unsigned ID = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipStack;
       template<unsigned ID = 0> struct Removal;
       template<unsigned ID = 0, class T = size_t> struct ReserveEmergent;
       template<unsigned ID = 0, class T = size_t> struct ReserveStack;
@@ -298,8 +297,8 @@ namespace Langulus::Anyness
       template<class, class, unsigned> friend struct Com::TypedStack;
       template<CT::NotVoid, unsigned>  friend struct Com::Stack;
       template<unsigned>               friend struct Com::HeapReference;
-      template<unsigned, bool>         friend struct Com::OwnershipStack;
-      template<unsigned>               friend struct Com::DeepOwnershipStack;
+      template<unsigned, bool, bool>   friend struct Com::OwnershipStack;
+      template<unsigned>               friend struct Com::OwnershipDeepStack;
       template<unsigned, class>        friend struct Com::CountStack;
       template<unsigned, class>        friend struct Com::HashStack;
       template<unsigned, bool>         friend struct Com::Comparison;

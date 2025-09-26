@@ -8,7 +8,7 @@
 #pragma once
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Heap-Reference.hpp"
-#include "../../../source/components/DeepOwnership-Stack.hpp"
+#include "../../../source/components/OwnershipDeep-Stack.hpp"
 #include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/Stack.hpp"
 #include "../../../source/components/Assignment.hpp"
@@ -38,7 +38,7 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<>,
          Com::CountStatic<1u>,
-         Com::DeepOwnershipStack<>,
+         Com::OwnershipDeepStack<>,
          Com::Assignment<>,
          Com::Emplacement<>,
          Com::Comparison<>,
@@ -111,7 +111,7 @@ namespace Langulus::Anyness
 
       THandle() = delete;
       
-      constexpr THandle(Deref<T>* ptr, AllocationPtr* entry) noexcept {
+      constexpr THandle(Deref<T>* ptr, EntryPtr entry) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
       }

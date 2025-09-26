@@ -22,22 +22,23 @@ namespace Langulus::Anyness::DefineState
       static constexpr bool Dynamic = V == State::Variable;
       static constexpr bool Enable  = V == State::Enabled;
 
-      constexpr bool IsTypeConstrained() const requires Static {
+      template<CT::TypeErased C>
+      constexpr bool IsTypeConstrained(this const C&) requires Static {
          return Enable;
       }
 
-      template<CT::Container C>
+      template<CT::TypeErased C>
       constexpr bool IsTypeConstrained(this const C& self) noexcept requires Dynamic {
          return self.mState & Typed {};
       }
 
-      template<CT::Container C>
+      template<CT::TypeErased C>
       auto EnableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
          self.mState += Typed {};
          return self;
       }
 
-      template<CT::Container C>
+      template<CT::TypeErased C>
       auto DisableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
          self.mState -= Typed {};
          return self;

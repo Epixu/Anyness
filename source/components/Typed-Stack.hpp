@@ -75,11 +75,6 @@ namespace Langulus::Anyness::Component
       constexpr void SetTypeInner(this auto& self, const META& type) noexcept {
          self.GetTypeInner() = type;
       }
-      
-      /// Default-initialize the component                                    
-      /*constexpr void ConstructDefault(this auto& self) noexcept {
-         self.SetTypeInner({});
-      }*/
 
    public:
       /// Get the contained type                                              
@@ -336,22 +331,5 @@ namespace Langulus::Anyness::Component
             LglsAssert(mType.IsExact(type), "Type mismatch");
          }
       }
-
-      /// Make container type constant                                        
-      ///   @attention this will throw an exception if constant type hasn't   
-      ///      been reflected yet                                             
-      /*void MakeConstant() {
-         mType = mType.AddConst();
-      }
-      
-      /// Remove the topmost type constness                                   
-      void MakeMutableOnce() noexcept {
-         mType = mType.GetDecvq();
-      }
-
-      /// Remove all qualifier from all levels of indirection                 
-      void MakeMutableAll() noexcept {
-         mType = mType.GetDecvqAll();
-      }*/
    };
 }

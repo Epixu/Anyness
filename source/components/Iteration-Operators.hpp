@@ -33,8 +33,7 @@ namespace Langulus::Anyness::Component
          data = static_cast<uint8_t*>(data) + copy.GetStride() * offset;
 
          // Increment deep ownership entries, but only if on the stack  
-         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
-            copy.DeepOwnershipStack<ID>::mEntries += offset;
+         if_available(copy.template GetEntriesInner<ID>() += offset);
          return copy;
       }
 
@@ -49,8 +48,7 @@ namespace Langulus::Anyness::Component
          data = static_cast<uint8_t*>(data) + self.GetStride() * offset;
          
          // Increment deep ownership entries, but only if on the stack  
-         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
-            self.DeepOwnershipStack<ID>::mEntries += offset;
+         if_available(self.template GetEntriesInner<ID>() += offset);
          return self;
       }
 
@@ -64,8 +62,7 @@ namespace Langulus::Anyness::Component
          data = static_cast<uint8_t*>(data) + self.GetStride();
 
          // Increment deep ownership entries, but only if on the stack  
-         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
-            ++self.DeepOwnershipStack<ID>::mEntries;
+         if_available(++self.template GetEntriesInner<ID>());
          return self;
       }
 
@@ -91,8 +88,7 @@ namespace Langulus::Anyness::Component
          data = static_cast<uint8_t*>(data) - copy.GetStride() * offset;
          
          // Increment deep ownership entries, but only if on the stack  
-         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
-            copy.DeepOwnershipStack<ID>::mEntries -= offset;
+         if_available(copy.template GetEntriesInner<ID>() -= offset);
          return copy;
       }
 
@@ -107,8 +103,7 @@ namespace Langulus::Anyness::Component
          data = static_cast<uint8_t*>(data) - self.GetStride() * offset;
          
          // Increment deep ownership entries, but only if on the stack  
-         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
-            self.DeepOwnershipStack<ID>::mEntries -= offset;
+         if_available(self.template GetEntriesInner<ID>() -= offset);
          return self;
       }
 
@@ -122,8 +117,7 @@ namespace Langulus::Anyness::Component
          data = static_cast<uint8_t*>(data) - self.GetStride();
          
          // Decrement deep ownership entries, but only if on the stack  
-         if constexpr (C::template HasComponent<DeepOwnershipStack<ID>>)
-            --self.DeepOwnershipStack<ID>::mEntries;
+         if_available(--self.template GetEntriesInner<ID>());
          return self;
       }
 

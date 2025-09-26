@@ -202,7 +202,7 @@ namespace Langulus::Anyness::Component
          if (self.IsEmpty())
             self.AllocateMore(1);
          else
-            self.template DestroyElement<false>();
+            self.DestroyElement();
          
          self.EmplaceConstruct(FWD(arguments)...);
 

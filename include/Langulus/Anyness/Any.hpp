@@ -11,7 +11,7 @@
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Count-Static.hpp"
-#include "../../../source/components/DeepOwnership-Heap.hpp"
+#include "../../../source/components/OwnershipDeep-Heap.hpp"
 #include "../../../source/components/Hash-Emergent.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Assignment.hpp"
@@ -33,7 +33,7 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::CountStatic<1u>,            // Statically sized to 1         
-      Com::DeepOwnershipHeap<>,        // Sparse elements are referenced
+      Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashEmergent<>,             // Hash is retrieved from item   
       Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             

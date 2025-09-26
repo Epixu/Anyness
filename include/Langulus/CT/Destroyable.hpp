@@ -14,12 +14,12 @@ namespace Langulus::CT
    /// Checks whether all T need their destructor to be called before         
    /// deallocating their storage. POD types are not destroyable              
    template<class...T>
-   concept Destroyable = /*Partial*/Validate<T...> and ((
+   concept Destroyable = Validate<T...> and ((
           ::std::is_destructible_v<T> and not POD<T>
        ) and ...);
    
    template<class...T>
-   concept NotDestroyable = /*Partial*/Validate<T...> and ((
+   concept NotDestroyable = Validate<T...> and ((
           not ::std::is_destructible_v<T> or POD<T>
        ) and ...);
 }

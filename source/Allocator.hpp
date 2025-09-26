@@ -17,8 +17,12 @@ namespace Langulus::Anyness
 {
    /// Allocation is the same for managed and unmanaged builds                
    using Fractalloc::Allocation;
+   
    /// Can be a packed pointer                                                
    using AllocationPtr = Fractalloc::Allocation*;
+
+   /// Can be a packed pointer                                                
+   using EntryPtr = AllocationPtr*;
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       using Fractalloc::Allocator;
