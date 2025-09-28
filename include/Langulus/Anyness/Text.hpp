@@ -10,7 +10,7 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/Indexed-Linear.hpp"
+#include "../../../source/components/IndexedLinear.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
 #include "../../../source/components/Concatenate.hpp"
@@ -81,7 +81,7 @@ namespace Langulus::Anyness
       /// Construction from any kind of text that isn't an Anyness container  
       template<CT::Text T> requires CT::NotContainer<T>
       constexpr Text(T&& text) {
-         using S  = IntentOf<T&&>;
+         using S  = IntentOf(text);
          using ST = TypeOf<S>;
          decltype(auto) source = DeintCast(FWD(text));
 

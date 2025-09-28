@@ -702,7 +702,7 @@ namespace Langulus
    ///   - if it has one of those, then we get move intent                    
    ///   - if it isn't - we get refer intent                                  
    template<class T>
-   using IntentOf = Tif<CT::Intent<Decvq<Deref<T>>>,
+   using IntentOfT = Tif<CT::Intent<Decvq<Deref<T>>>,
          Decq<Deref<T>>,
          Tif<::std::is_rvalue_reference_v<T> and CT::Mutable<Deref<T>>,
             Move<Deref<T>>,
@@ -711,6 +711,8 @@ namespace Langulus
       >;
 }
 
+#define IntentOf(a) ::Langulus::IntentOfT<decltype(a)>
+#define FWDIntent(a) IntentOf(a) {FWD(a)}
 
 /// A handy constructor & assignment pattern that adds all possible intents   
 /// and collapses them for a given type. Useful when you don't want intents   

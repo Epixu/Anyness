@@ -356,63 +356,63 @@ static_assert(not CT::NoIntent<Refer<int>*, SheddableType<int>, Refer<int>>);
 /// IntentOf                                                                  
 ///                                                                           
 TEST_CASE("Testing IntentOf", "[ct]") {
-   static_assert(::std::same_as<IntentOf<int>,                 Refer<int>>);
-   static_assert(::std::same_as<IntentOf<int&&>,               Move<int>>);
-   static_assert(::std::same_as<IntentOf<int const&&>,         Refer<int>>);
-   static_assert(::std::same_as<IntentOf<int&>,                Refer<int>>);
-   static_assert(::std::same_as<IntentOf<int const&>,          Refer<int>>);
+   static_assert(::std::same_as<IntentOfT<int>,                 Refer<int>>);
+   static_assert(::std::same_as<IntentOfT<int&&>,               Move<int>>);
+   static_assert(::std::same_as<IntentOfT<int const&&>,         Refer<int>>);
+   static_assert(::std::same_as<IntentOfT<int&>,                Refer<int>>);
+   static_assert(::std::same_as<IntentOfT<int const&>,          Refer<int>>);
 
-   static_assert(::std::same_as<IntentOf<Copy<int>>,           Copy<int>>);
-   static_assert(::std::same_as<IntentOf<Copy<int>&>,          Copy<int>>);
-   static_assert(::std::same_as<IntentOf<Copy<int>&&>,         Copy<int>>);
-   static_assert(::std::same_as<IntentOf<Copy<int> const&>,    Copy<int>>);
+   static_assert(::std::same_as<IntentOfT<Copy<int>>,           Copy<int>>);
+   static_assert(::std::same_as<IntentOfT<Copy<int>&>,          Copy<int>>);
+   static_assert(::std::same_as<IntentOfT<Copy<int>&&>,         Copy<int>>);
+   static_assert(::std::same_as<IntentOfT<Copy<int> const&>,    Copy<int>>);
                                                                
-   static_assert(::std::same_as<IntentOf<Refer<int>>,          Refer<int>>);
-   static_assert(::std::same_as<IntentOf<Refer<int>&>,         Refer<int>>);
-   static_assert(::std::same_as<IntentOf<Refer<int>&&>,        Refer<int>>);
-   static_assert(::std::same_as<IntentOf<Refer<int> const&>,   Refer<int>>);
+   static_assert(::std::same_as<IntentOfT<Refer<int>>,          Refer<int>>);
+   static_assert(::std::same_as<IntentOfT<Refer<int>&>,         Refer<int>>);
+   static_assert(::std::same_as<IntentOfT<Refer<int>&&>,        Refer<int>>);
+   static_assert(::std::same_as<IntentOfT<Refer<int> const&>,   Refer<int>>);
                                                                
-   static_assert(::std::same_as<IntentOf<Move<int>>,           Move<int>>);
-   static_assert(::std::same_as<IntentOf<Move<int>&>,          Move<int>>);
-   static_assert(::std::same_as<IntentOf<Move<int>&&>,         Move<int>>);
-   static_assert(::std::same_as<IntentOf<Move<int> const&>,    Move<int>>);
+   static_assert(::std::same_as<IntentOfT<Move<int>>,           Move<int>>);
+   static_assert(::std::same_as<IntentOfT<Move<int>&>,          Move<int>>);
+   static_assert(::std::same_as<IntentOfT<Move<int>&&>,         Move<int>>);
+   static_assert(::std::same_as<IntentOfT<Move<int> const&>,    Move<int>>);
 
-   static_assert(::std::same_as<IntentOf<Abandon<int>>,        Abandon<int>>);
-   static_assert(::std::same_as<IntentOf<Abandon<int>&>,       Abandon<int>>);
-   static_assert(::std::same_as<IntentOf<Abandon<int>&&>,      Abandon<int>>);
-   static_assert(::std::same_as<IntentOf<Abandon<int> const&>, Abandon<int>>);
+   static_assert(::std::same_as<IntentOfT<Abandon<int>>,        Abandon<int>>);
+   static_assert(::std::same_as<IntentOfT<Abandon<int>&>,       Abandon<int>>);
+   static_assert(::std::same_as<IntentOfT<Abandon<int>&&>,      Abandon<int>>);
+   static_assert(::std::same_as<IntentOfT<Abandon<int> const&>, Abandon<int>>);
 
-   static_assert(::std::same_as<IntentOf<Disown<int>>,         Disown<int>>);
-   static_assert(::std::same_as<IntentOf<Disown<int>&>,        Disown<int>>);
-   static_assert(::std::same_as<IntentOf<Disown<int>&&>,       Disown<int>>);
-   static_assert(::std::same_as<IntentOf<Disown<int> const&>,  Disown<int>>);
+   static_assert(::std::same_as<IntentOfT<Disown<int>>,         Disown<int>>);
+   static_assert(::std::same_as<IntentOfT<Disown<int>&>,        Disown<int>>);
+   static_assert(::std::same_as<IntentOfT<Disown<int>&&>,       Disown<int>>);
+   static_assert(::std::same_as<IntentOfT<Disown<int> const&>,  Disown<int>>);
 
-   static_assert(::std::same_as<IntentOf<Clone<int>>,          Clone<int>>);
-   static_assert(::std::same_as<IntentOf<Clone<int>&>,         Clone<int>>);
-   static_assert(::std::same_as<IntentOf<Clone<int>&&>,        Clone<int>>);
-   static_assert(::std::same_as<IntentOf<Clone<int> const&>,   Clone<int>>);
+   static_assert(::std::same_as<IntentOfT<Clone<int>>,          Clone<int>>);
+   static_assert(::std::same_as<IntentOfT<Clone<int>&>,         Clone<int>>);
+   static_assert(::std::same_as<IntentOfT<Clone<int>&&>,        Clone<int>>);
+   static_assert(::std::same_as<IntentOfT<Clone<int> const&>,   Clone<int>>);
 
    const std::string_view anArrayOfStrings[] {
       "one", "two", "three", "four"
    };
    using AOS = decltype(anArrayOfStrings);
-   static_assert(::std::same_as<IntentOf<AOS>,   Refer<Decq<AOS>>>);
-   static_assert(::std::same_as<IntentOf<AOS&>,  Refer<Decq<AOS>>>);
-   static_assert(::std::same_as<IntentOf<AOS&&>, Refer<Decq<AOS>>>);
+   static_assert(::std::same_as<IntentOfT<AOS>,   Refer<Decq<AOS>>>);
+   static_assert(::std::same_as<IntentOfT<AOS&>,  Refer<Decq<AOS>>>);
+   static_assert(::std::same_as<IntentOfT<AOS&&>, Refer<Decq<AOS>>>);
 
    std::string_view anArrayOfStringsMut[] {
       "one", "two", "three", "four"
    };
    using AOSmut = decltype(anArrayOfStringsMut);
-   static_assert(::std::same_as<IntentOf<AOSmut>,   Refer<AOSmut>>);
-   static_assert(::std::same_as<IntentOf<AOSmut&>,  Refer<AOSmut>>);
-   static_assert(::std::same_as<IntentOf<AOSmut&&>, Move<AOSmut>>);
+   static_assert(::std::same_as<IntentOfT<AOSmut>,   Refer<AOSmut>>);
+   static_assert(::std::same_as<IntentOfT<AOSmut&>,  Refer<AOSmut>>);
+   static_assert(::std::same_as<IntentOfT<AOSmut&&>, Move<AOSmut>>);
 
    const char* nullter = "stuff";
    using NTS = decltype(nullter);
-   static_assert(::std::same_as<IntentOf<NTS>,   Refer<NTS>>);
-   static_assert(::std::same_as<IntentOf<NTS&>,  Refer<NTS>>);
-   static_assert(::std::same_as<IntentOf<NTS&&>, Move<NTS>>);
+   static_assert(::std::same_as<IntentOfT<NTS>,   Refer<NTS>>);
+   static_assert(::std::same_as<IntentOfT<NTS&>,  Refer<NTS>>);
+   static_assert(::std::same_as<IntentOfT<NTS&&>, Move<NTS>>);
 }
 
 

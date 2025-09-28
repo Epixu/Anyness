@@ -13,12 +13,14 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Manages deep ownership by holding a pointer to the entries locally     
-   ///   @tparam ID - which heap are we keeping track of?                     
+   ///   @tparam ID - which heap/stack are we keeping track of                
    template<unsigned ID>
    struct OwnershipDeepStack : OwnershipDeepEmergent<ID> {
       using StackRequest = EntryPtr;
 
    protected:
+      template<unsigned> friend struct Emplacement;
+      
       /// Get the entry array (inner)                                         
       template<unsigned SELECTOR = ID> requires (SELECTOR == ID)
       constexpr auto& GetEntriesInner(this auto&& self) noexcept {
@@ -29,6 +31,15 @@ namespace Langulus::Anyness::Component
       template<unsigned SELECTOR = ID> requires (SELECTOR == ID)
       constexpr void SetEntriesInner(this auto& self, StackRequest entries) noexcept {
          self.template GetEntriesInner<SELECTOR>() = entries;
+      }
+
+      /// Get entry array if containing pointers                              
+      auto GetEntries(this auto&& self) has_assumptions -> EntryPtr {
+         if (self.IsSparse()) {
+            LglsAssumeDev(self.GetRaw(), "No memory available");
+            return self.GetEntriesInner();
+         }
+         return nullptr;
       }
    };
 }

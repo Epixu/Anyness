@@ -8,6 +8,7 @@
 #pragma once
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Sequence.hpp>
+#include <Langulus/HashOf.hpp>
 #include <Langulus/Utils/Tuple.hpp>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
@@ -92,8 +93,9 @@ namespace Langulus::Anyness
       template<unsigned ID = 0> struct HeapImmovable;
       template<unsigned ID = 0> struct HeapMovable;
       template<unsigned ID = 0> struct HeapReference;
-      template<unsigned ID, class HASH> struct IndexedHash;
-      template<class T = void> struct IndexedLinear;
+      template<unsigned ID = 0, class HASH = Hash> struct IndexedHashHeap;
+      template<unsigned ID = 0, class HASH = Hash> struct IndexedHashStack;
+      template<unsigned ID = 0, class T = void> struct IndexedLinear;
       template<unsigned ID = 0, class AS = void> struct Insertion;
       template<unsigned ID = 0, class AS = void> struct InsertionOperators;
       struct Interpolation;
@@ -190,6 +192,32 @@ namespace Langulus::Anyness
          
             if constexpr (sizeof...(CN))
                return offset + GetStackOffset<PICK, CN...>();
+            else
+               return offset;
+         }
+      }
+      
+      /// Go through all components until PICK is reached, and accumulate     
+      /// the offset up to that point, to get the byte offset in the heap     
+      template<class PICK, class C1, class...CN>
+      constexpr size_t GetHeapOffset(const size_t count) noexcept {
+         static_assert(requires { typename PICK::HeapRequest; },
+            "Component data is not on the heap");
+          
+         if constexpr (CT::DerivedFrom<C1, PICK>)
+            return 0;
+         else {
+            size_t offset = 0;
+            if constexpr (requires { typename C1::HeapRequest; }) {
+               using R = typename C1::HeapRequest;
+               if constexpr (requires { R::AllocatedPerElement; })
+                  offset += sizeof(typename R::Type) * count;
+               else
+                  offset += sizeof(R);
+            }
+         
+            if constexpr (sizeof...(CN))
+               return offset + GetHeapOffset<PICK, CN...>(count);
             else
                return offset;
          }
@@ -300,6 +328,7 @@ namespace Langulus::Anyness
       template<unsigned>               friend struct Com::HeapReference;
       template<unsigned, bool, bool>   friend struct Com::OwnershipStack;
       template<unsigned>               friend struct Com::OwnershipDeepStack;
+      template<unsigned>               friend struct Com::OwnershipDeepHeap;
       template<unsigned, class>        friend struct Com::CountStack;
       template<unsigned, class>        friend struct Com::HashStack;
       template<unsigned, bool>         friend struct Com::Comparison;
@@ -317,10 +346,27 @@ namespace Langulus::Anyness
          return ::Langulus::get<IDX>(self.mStack).value;
       }
 
+      /// Access a variable on the heap associated with a component           
+      template<CT::Component COM, CT::Container CON>
+      constexpr auto AccessHeap(this CON&& self) noexcept {
+         size_t IDX = Inner::GetHeapOffset<COM, COMPONENTS...>(
+            static_cast<size_t>(self.GetReserved()));
+
+         using R = typename COM::HeapRequest;
+         if constexpr (requires { R::AllocatedPerElement; }) {
+            using RC = Tmut<CON, typename R::Type*, typename R::Type const*>;
+            return reinterpret_cast<RC>(self.template GetRawAs<uint8_t>() + IDX);
+         }
+         else {
+            using RC = Tmut<CON, R*, R const*>;
+            return reinterpret_cast<RC>(self.template GetRawAs<uint8_t>() + IDX);
+         }
+      }
+
       /// Access a variable on the stack associated with an ID                
       template<unsigned ID>
       constexpr auto& AccessStackById(this auto&& self) noexcept {
-         return ComponentList::ForEachConstOr([&self]<class C> -> decltype(auto) {
+         return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { C::Id; }) {
                if constexpr (C::Id == ID)
                   return (self.template AccessStack<C>());
@@ -333,7 +379,7 @@ namespace Langulus::Anyness
       /// Access a component on the stack associated with an ID               
       template<unsigned ID>
       constexpr auto& AccessComById(this auto&& self) noexcept {
-         return ComponentList::ForEachConstOr([&self]<class C>{
+         return ComponentList::ForEachConstOr([&]<class C>{
             if constexpr (C::Id == ID)
                return (self.C);
             else return No {};
@@ -350,7 +396,7 @@ namespace Langulus::Anyness
       /// Call ConstructFrom whenever possible, fallback to                   
       /// ConstructDefault otherwise                                          
       constexpr void ConstructFrom(this auto& self, CT::Container auto&& from) {
-         using I = IntentOf<decltype(from)>;
+         using I = IntentOf(from);
          ComponentList::ForEach([&]<class C>{
                  if_available(self.C::ConstructFrom(I {from}))
             else if_available(self.C::ConstructDefault())
@@ -367,7 +413,7 @@ namespace Langulus::Anyness
       /// Call AssignFrom whenever possible, fallback to AssignDefault        
       /// otherwise                                                           
       constexpr void AssignFrom(this auto& self, CT::Container auto&& rhs) {
-         using I = IntentOf<decltype(rhs)>;
+         using I = IntentOf(rhs);
          ComponentList::ForEach([&]<class C>{
                  if_available(self.C::AssignFrom(I {rhs}))
             else if_available(self.C::AssignDefault())
@@ -414,11 +460,6 @@ namespace Langulus::CT
    /// and then automatically dereferenced on destruction                     
    template<class...T>
    concept AutoOwned = Container<T...> and ((Deref<Shed<T>>::AutoOwned) and ...);
-
-   /// Check if listed types are containers with any kind of linear indexing  
-   /// component                                                              
-   template<class...T>
-   concept IndexedLinearly = Container<T...> and (Deref<Shed<T>>::Indexed and ...);
    
    /// Check if listed types are containers with any kind of heap memory      
    template<class...T>

@@ -49,10 +49,9 @@ namespace Langulus::Anyness::Component
    protected:
       /*template<unsigned>
       friend struct IterationForEach;*/
-      template<unsigned>
-      friend struct Removal;
-      template<unsigned>
-      friend struct HeapMovable;
+      template<unsigned> friend struct Removal;
+      template<unsigned> friend struct HeapMovable;
+      template<unsigned> friend struct Emplacement;
 
       /// Reset the type of the container, unless it's type-constrained.      
       /// If this container isn't type-erased, this call is a no-op.          
@@ -308,19 +307,19 @@ namespace Langulus::Anyness::Component
                " of type ", t, " to type ", type
             );
 
-            if (t.CastsTo(type)) {
+            /*if (t.CastsTo(type)) {
                // Type is compatible, but only sparse data can mutate   
                // freely. Dense containers can't mutate because their   
                // destructors might be wrong later                      
                LglsAssert(t.IsSparse(), "Can't mutate ", t,
                   " to incompatible type ", type);
             }
-            else {
+            else {*/
                // Type is not compatible, but container is not typed, so
                // if it has no constructed elements we can still mutate 
                LglsAssert(self.IsEmpty(), "Can't mutate ", t,
                   " to incompatible type ", type);
-            }
+            /*}*/
             
             t = type;
          }

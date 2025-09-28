@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include <Langulus/CT/Contiguous.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -27,7 +28,7 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Concatenation at specific index                                     
-      template<bool FORCE = true, CT::IndexedLinearly C>
+      template<bool FORCE = true, CT::Contiguous C>
       auto ConcatAt(this C&, CT::Index auto, CT::Container auto&&)
          -> Count<C>;
 

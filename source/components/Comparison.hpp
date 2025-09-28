@@ -12,6 +12,7 @@
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Text.hpp>
 #include <Langulus/CT/Unfold.hpp>
+#include <Langulus/CT/Contiguous.hpp>
 
 #if 0 and LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH()
    #include <Langulus/Logger.hpp>
@@ -42,9 +43,10 @@ namespace Langulus::Anyness
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Implements comparison for containers                                   
+   /// Implements comparison for containers. This includes functions for      
+   /// searching.                                                             
    ///   @tparam ID - heap/stack we're comparing                              
-   ///   @tparam HASH - whether to compare hashes before elements. This is
+   ///   @tparam HASH - whether to compare hashes before elements. This is    
    ///      mostly useful when hash is cachable, otherwise kind of pointless. 
    template<unsigned ID, bool HASH>
    struct Comparison {
@@ -240,7 +242,7 @@ namespace Langulus::Anyness::Component
       ///   @param item - the item to search for                              
       ///   @param cookie - resume search from a given index                  
       ///   @return the index of the found item, or 'npos' if none found      
-      template<bool REVERSE = false, CT::IndexedLinearly C, CT::NoIntent T>
+      template<bool REVERSE = false, CT::ContainsMany C, CT::NoIntent T>
       auto Find(this const C& self, const T& item, Count<C> cookie = 0) noexcept
          -> At<C> requires CT::RangeComparable<C, T>
       {
@@ -276,7 +278,7 @@ namespace Langulus::Anyness::Component
       ///   @param range - sequence of items to search for                    
       ///   @param cookie - resume search from a given index                  
       ///   @return the index of the found item, or 'npos' if not found       
-      template<bool REVERSE = false, CT::IndexedLinearly C1, CT::Container C2>
+      template<bool REVERSE = false, CT::ContainsMany C1, CT::Container C2>
       auto FindRange(this const C1& self, const C2& range, Count<C1> cookie = 0) noexcept -> At<C1> {
          if (cookie >= self.GetCount() or range.GetCount() > self.GetCount() - cookie)
             return Index::None;

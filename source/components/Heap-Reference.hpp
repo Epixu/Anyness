@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include <Langulus/CT/Resolvable.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -29,7 +30,7 @@ namespace Langulus::Anyness::Component
    protected:
       template<unsigned>         friend struct IterationOperators;
       template<unsigned>         friend struct Removal;
-      template<class>            friend struct IndexedLinear;
+      template<unsigned, class>  friend struct IndexedLinear;
       template<unsigned>         friend struct HeapMovable;
       template<unsigned>         friend struct Emplacement;
       template<unsigned, bool>   friend struct Comparison;

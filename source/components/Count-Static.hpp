@@ -21,10 +21,11 @@ namespace Langulus::Anyness::Component
    /// still need the API required to function alongside other components.    
    ///   In these cases, count is equal to COUNT if container has a heap      
    /// component that has been allocated - otherwise it is 0. If no heap      
-   /// component exists, then the count is always COUNT.                      
+   /// component exists or can't be null, then the count is always COUNT.     
    template<auto COUNT>
    struct CountStatic {
-      using CTTI_Component = Yes<>;
+      using CTTI_Component  = Yes<>;
+      using CTTI_Contiguous = Maybe<COUNT == 1>;
       static constexpr int  ComponentPrecedence = 1000;
       static constexpr bool ContainsMany = COUNT > 1;
 
@@ -56,8 +57,7 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<unsigned>
-      friend struct HeapMovable;
+      template<unsigned> friend struct HeapMovable;
 
       /// Get count (inner)                                                   
       template<CT::Container C>

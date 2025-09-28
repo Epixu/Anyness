@@ -50,7 +50,7 @@ namespace Langulus::Anyness::Component
    protected:
       template<unsigned>        friend struct Removal;
       template<unsigned, class> friend struct Insertion;
-      template<class>           friend struct IndexedLinear;
+      template<unsigned, class> friend struct IndexedLinear;
       template<unsigned>        friend struct HeapMovable;
       
       /// Get count (inner)                                                   

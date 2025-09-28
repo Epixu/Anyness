@@ -33,7 +33,7 @@ namespace Langulus::CT
       ///   @return true if you can assign A to the container                 
       template<Container C, class A>
       consteval bool DeepAssignable() noexcept {
-         using SA = IntentOf<A>;
+         using SA = IntentOfT<A>;
          using T  = TypeOf<C>;
 
          if constexpr (Untyped<C>) {
@@ -103,7 +103,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::UnfoldConstructible<T, A&&>) {
                   // Just construct the first element                   
                   self.PrepareForReconstruction();
-                  self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+                  self.EmplaceWithIntent(FWDIntent(argument));
                }
                else static_assert(false, "T can't be reconstructed");
             }
@@ -112,15 +112,15 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::UnfoldAssignable<T, A&&>) {
                   // Reduce to one item and reassign if possible        
                   if (self.PrepareForReassignment())
-                     self.AssignWithIntent(IntentOf<A&&> {FWD(argument)});
+                     self.AssignWithIntent(FWDIntent(argument));
                   else
-                     self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+                     self.EmplaceWithIntent(FWDIntent(argument));
                }
                else if constexpr (CT::UnfoldConstructible<T, A&&>) {
                   // Assignment isn't available for T - destroy all     
                   // items and reconstruct the first one                
                   self.PrepareForReconstruction();
-                  self.EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+                  self.EmplaceWithIntent(FWDIntent(argument));
                }
                else static_assert(false, "T can't be reassigned or reconstructed");
             }

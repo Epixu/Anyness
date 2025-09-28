@@ -9,7 +9,7 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Reference.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/Indexed-Linear.hpp"
+#include "../../../source/components/IndexedLinear.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Count-Stack.hpp"
 #include "../../../source/components/Hash-Stack.hpp"

@@ -11,6 +11,7 @@
 #include <Langulus/Assume.hpp>
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
+#include <Langulus/CT/Contiguous.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -36,7 +37,7 @@ namespace Langulus::Anyness::Component
       /// Reference referencable elements inside the block                    
       template<CT::Container C>
       void KeepDeep(this C const& self) { 
-         constexpr bool MASKED = not CT::IndexedLinearly<C>;
+         constexpr bool MASKED = not CT::Contiguous<C>;
          Count<C> remaining = self.GetCount();
          if (not remaining)
             return;
@@ -100,15 +101,15 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Dereference all referenced initialized items, optionally destroying 
-      /// them if references reach zero                                       
+      /// Dereference all referenced initialized items, eventually destroying 
+      /// them if their individual references reach zero.                     
       ///   @attention never modifies any block state                         
       ///   @attention assumes block is not empty                             
       ///   @attention assumes block is not static                            
       ///   @tparam DESTROY - used only when GetUses() == 1                   
       template<bool DESTROY = true, CT::Container C>
       void FreeDeep(this C& self) {
-         constexpr bool MASKED = not CT::IndexedLinearly<C>;
+         constexpr bool MASKED = not CT::Contiguous<C>;
          Count<C> remaining = self.GetCount();
          if (not remaining)
             return;

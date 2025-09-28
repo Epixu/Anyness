@@ -69,7 +69,7 @@ namespace Langulus::Anyness
                if constexpr (CT::Intent<A1> and CT::Similar<TypeOf<A1>, T>)
                   IntentNew(this->GetRaw(), FWD(arguments)...);
                else if constexpr (CT::Similar<A1, T>)
-                  IntentNew(this->GetRaw(), IntentOf<A1&&> {FWD(arguments)...});
+                  IntentNew(this->GetRaw(), IntentOfT<A1&&> {FWD(arguments)...});
                else
                   new (this->GetRaw()) T {FWD(arguments)...};
             }

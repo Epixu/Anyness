@@ -6,9 +6,10 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/components/Heap-Reference.hpp"
-#include "../../../source/components/OwnershipDeep-Stack.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
+#include "../../../source/components/Heap-Reference.hpp"
+#include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/OwnershipDeep-Stack.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Comparison.hpp"
@@ -25,6 +26,7 @@ namespace Langulus::Anyness
    struct HandleMut : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
+      Com::CountStatic<1u>,
       Com::OwnershipDeepStack<>,
       Com::Assignment<>,
       Com::Emplacement<>,
@@ -50,6 +52,7 @@ namespace Langulus::Anyness
    struct HandleDisownedMut : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
+      Com::CountStatic<1u>,
       Com::Assignment<>,
       Com::Emplacement<>,
       Com::Comparison<>,
@@ -78,6 +81,7 @@ namespace Langulus::Anyness
    struct Handle : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
+      Com::CountStatic<1u>,
       Com::OwnershipDeepStack<>,
       Com::Comparison<>
    > {
@@ -100,6 +104,7 @@ namespace Langulus::Anyness
    struct HandleDisowned : Container<
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
+      Com::CountStatic<1u>,
       Com::Comparison<>
    > {
       using CTTI_Handle    = Yes<>;

@@ -81,7 +81,7 @@ namespace Langulus::Anyness
          else {
             this->GetType();
             this->AllocateFresh(this->RequestSize(1));
-            this->EmplaceWithIntent(IntentOf<A&&> {FWD(argument)});
+            this->EmplaceWithIntent(FWDIntent(argument));
          }
       }
 

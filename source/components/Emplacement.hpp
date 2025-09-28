@@ -7,7 +7,8 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "Indexed-Linear.hpp"
+#include "IndexedLinear.hpp"
+#include <Langulus/CT/Contiguous.hpp>
 
 
 namespace Langulus::CT
@@ -68,18 +69,20 @@ namespace Langulus::Anyness::Component
                auto T = rhs.GetTypeInner();
                LglsAssumeDev(self.IsSimilar(T), "Type mismatch");
 
+               const auto src = const_cast<void*>(rhs.GetRaw());
+               const auto dst = self.GetRaw();
                if constexpr (CT::Moved<I>)
-                  T.GetMoveConstructor()(self.GetRaw(), rhs.GetRaw());
+                  T.GetMoveConstructor()(dst, src);
                else if constexpr (CT::Abandoned<I>)
-                  T.GetAbandonConstructor()(self.GetRaw(), rhs.GetRaw());
+                  T.GetAbandonConstructor()(dst, src);
                else if constexpr (CT::Referred<I>)
-                  T.GetReferConstructor()(self.GetRaw(), rhs.GetRaw());
+                  T.GetReferConstructor()(dst, src);
                else if constexpr (CT::Copied<I>)
-                  T.GetCopyConstructor()(self.GetRaw(), rhs.GetRaw());
+                  T.GetCopyConstructor()(dst, src);
                else if constexpr (CT::Disowned<I>)
-                  T.GetDisownConstructor()(self.GetRaw(), rhs.GetRaw());
+                  T.GetDisownConstructor()(dst, src);
                else if constexpr (CT::Cloned<I>)
-                  T.GetCloneConstructor()(self.GetRaw(), rhs.GetRaw());
+                  T.GetCloneConstructor()(dst, src);
                else
                   static_assert(false, "Unrecognized intent");
 
@@ -190,7 +193,7 @@ namespace Langulus::Anyness::Component
    public:
       /// Generic emplacement that constructs/overwrites specific element.    
       /// Any overwritten element will be dereferenced/destroyed first.       
-      template<CT::IndexedLinearly C, class...A>
+      template<CT::ContainsMany C, class...A>
       auto EmplaceAt(this C&, CT::Index auto, A&&...)
          -> PickMut<C> requires CT::RangeEmplaceable<C, A...>;
 

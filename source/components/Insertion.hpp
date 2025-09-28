@@ -10,6 +10,7 @@
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
+#include <Langulus/CT/Contiguous.hpp>
 
 
 namespace Langulus::CT
@@ -31,7 +32,7 @@ namespace Langulus::CT
       template<Container C, class...A>
       consteval bool DeepConstructible() noexcept {
          using FA = FirstOf<A...>;
-         using SA = IntentOf<FA>;
+         using SA = IntentOfT<FA>;
          using T  = TypeOf<C>;
 
          if constexpr (Untyped<C>) {
@@ -91,24 +92,24 @@ namespace Langulus::Anyness::Component
       using PickRangeMut = typename Deref<C>::PickRangeMut;
 
    public:
-      /// Insertion one or more elements at specific index                    
-      template<bool FORCE = true, class A1, class...AN, CT::IndexedLinearly C>
+      /// Insert one or more elements at specific index                       
+      template<bool FORCE = true, class A1, class...AN, CT::Contiguous C>
       auto InsertAt(this C&, CT::Index auto, A1&&, AN&&...)
          -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
 
       /// Insert a number of elements at a specific place, nullifying them if 
       /// able to                                                             
-      template<CT::IndexedLinearly C>
+      template<CT::Contiguous C>
       auto InsertNulledAt(this C&, CT::Index auto, Count<C>)
          -> Count<C>;
 
       /// Insert a number of elements at a specific place, default-           
       /// constructing them if able to                                        
-      template<CT::IndexedLinearly C>
+      template<CT::Contiguous C>
       auto InsertDefaultAt(this C&, CT::Index auto, Count<C>)
          -> Count<C>;
 
-      template<bool CONCAT = true, bool FORCE = true, CT::IndexedLinearly C>
+      template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
       auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {})
          -> Count<C>;
 
@@ -221,7 +222,7 @@ namespace Langulus::Anyness::Component
             self.InsertConstruct(FWD(arguments)...);
          else {
             LglsAssert(
-               ((not IntentOf<decltype(arguments)>::IsMoved()) and ...),
+               ((not IntentOfT<decltype(arguments)>::IsMoved()) and ...),
                "Can't use move semantics here - "
                "the arguments need to be reused multiple times"
             );
