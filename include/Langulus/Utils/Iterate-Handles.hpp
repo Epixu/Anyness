@@ -20,7 +20,7 @@ namespace Langulus::Anyness
    /// optimal iteration approach, but often you want to be able to modify    
    /// values in-place while iterating.                                       
    /// Use like this: for(auto i : IterateHandles(container)), where          
-   /// 'container' can be any anyness container.                              
+   /// 'container' can be any CT::container.                                  
    ///                                                                        
    template<CT::Container C>
    struct IterateHandles {
@@ -93,11 +93,14 @@ namespace Langulus::Anyness
 
          /// Get the integer element difference between two iterators         
          Count operator - (const Iterator& rhs) const noexcept {
-            const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
-            if constexpr (C::TypeErased)
+            if constexpr (C::TypeErased) {
+               const auto range = mIt.template GetRawAs<uint8_t>() - rhs.mIt.template GetRawAs<uint8_t>();
                return static_cast<Count>(range / mRange.GetStride());
-            else
+            }
+            else {
+               const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
                return static_cast<Count>(range);
+            }
          }
       };
 

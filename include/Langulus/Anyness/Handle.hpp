@@ -83,7 +83,8 @@ namespace Langulus::Anyness
       Com::HeapReference<>,
       Com::CountStatic<1u>,
       Com::OwnershipDeepStack<>,
-      Com::Comparison<>
+      Com::Comparison<>,
+      Com::IterationOperators<>
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
@@ -105,7 +106,8 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
-      Com::Comparison<>
+      Com::Comparison<>,
+      Com::IterationOperators<>
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;

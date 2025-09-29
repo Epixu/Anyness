@@ -94,7 +94,7 @@ namespace Langulus::Anyness::Component
                      --remaining;
                   }
 
-                  referencer(raw, 1);
+                  referencer(const_cast<uint8_t*>(raw), 1);
                   raw += size;
                }
             }
