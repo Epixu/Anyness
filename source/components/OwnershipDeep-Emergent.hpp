@@ -245,32 +245,36 @@ namespace Langulus::Anyness::Component
             const auto T = self.GetType();
             
             if (T.IsSparse()) {
-               auto& entry = self.GetEntry();
-               if (not entry)
+               EntryPtr entries = self.GetEntries();
+               if (not entries or not *entries)
                   return;
+
                const auto subT = T.GetDeptr();
                
-               if (1 == entry->GetUses()) {
+               if (1 == (*entries)->GetUses()) {
                   const auto ptr = *static_cast<void**>(self.GetRaw()); //TODO this won't work for packed pointers
                   LglsAssumeDev(ptr, "Null pointer");
 
                   if (subT.IsSparse()) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
-                     if (auto subEntry = Allocator::Find(subT, ptr)) //TODO extract entry from previous entry?
-                        C {ptr, subEntry, subT}.DestroyElement();
+                     if (auto subEntry = Allocator::Find(subT, ptr)) {
+                        //TODO extract entry from previous entry?
+                        C temp {ptr, const_cast<EntryPtr>(&subEntry), subT};
+                        temp.DestroyElement();
+                     }
                   }
-                  else if (subT.GetDestructor()) {
+                  else if (auto destructor = subT.GetDestructor()) {
                      // Pointer to a complete, destroyable dense.       
                      // Call the destructor.                            
                      if (const auto referencer = subT.GetReferencer()) {
                         if (referencer(ptr, -1) == 0)
-                           subT.GetDestructor()(ptr);
+                           destructor(ptr);
                      }
-                     else subT.GetDestructor()(ptr);
+                     else destructor(ptr);
                   }
 
-                  Allocator::Deallocate(entry);
+                  Allocator::Deallocate(*entries);
                }
                else {
                   // This element occurs in more than one place.        
@@ -286,7 +290,7 @@ namespace Langulus::Anyness::Component
                         subT.GetDestructor()(ptr);
                   }
 
-                  entry->Free();
+                  (*entries)->Free();
                }
             }
             else {

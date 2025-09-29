@@ -20,7 +20,8 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<unsigned> friend struct Emplacement;
-      
+      template<unsigned> friend struct OwnershipDeepEmergent;
+
       /// Get the entry array (inner)                                         
       template<unsigned SELECTOR = ID> requires (SELECTOR == ID)
       constexpr auto& GetEntriesInner(this auto&& self) noexcept {

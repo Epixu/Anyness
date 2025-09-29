@@ -53,13 +53,17 @@ namespace Langulus::Anyness
       using Pick    = T const&;
       using PickMut = THandle<T&>;
 
+      constexpr TAny() { this->ConstructDefault(); }
+      constexpr TAny(TAny const& other) : TAny {Refer {other}} {}
+      constexpr TAny(TAny&& other)      : TAny {Move  {other}} {}
+
       /// Construction that emplaces T in the container                       
       template<class...A>
       constexpr TAny(A&&...arguments) {
          if constexpr (sizeof...(A) == 0)
-            Base::ConstructDefault();
+            this->ConstructDefault();
          else if constexpr (sizeof...(A) == 1 and CT::ContainsOne<A...>)
-            Base::ConstructFrom(FWD(arguments)...);
+            this->ConstructFrom(FWD(arguments)...);
          else {
             // Emplace                                                  
             this->GetType();
@@ -81,7 +85,7 @@ namespace Langulus::Anyness
       template<class A>
       constexpr TAny& operator = (A&& argument) {
          if constexpr (CT::ContainsOne<A>)
-            Base::AssignFrom(FWD(argument));
+            this->AssignFrom(FWD(argument));
          else
             Com::Assignment<>::operator = (FWD(argument));
          return *this;

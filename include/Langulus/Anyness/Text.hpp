@@ -59,7 +59,7 @@ namespace Langulus::Anyness
    /// A continuous text container of variable size                           
    ///                                                                        
    struct Text : Inner::TextBase {
-      using Base = Inner::TextBase;
+      //using Base = Inner::TextBase;
       using CountType = Base::CountType;
       using CTTI_Text = Yes<>;
 
@@ -71,12 +71,20 @@ namespace Langulus::Anyness
       using PickRange    = TView<char const>;
       using PickRangeMut = TView<char>;
       
-      using Base::Base;
+      //using Base::Base;
       using Base::operator =;
       using Base::operator ==;
 
       constexpr Text() noexcept { this->ConstructDefault(); }
       constexpr Text(nullptr_t) noexcept : Text {} {}
+      constexpr Text(Text const& other)  : Text {Refer {other}} {}
+      constexpr Text(Text&& other)       : Text {Move  {other}} {}
+
+      /// Construction from any kind of text that is an Anyness container     
+      template<CT::Text T> requires CT::Container<T>
+      constexpr Text(T&& text) {
+         this->ConstructFrom(FWD(text));
+      }
 
       /// Construction from any kind of text that isn't an Anyness container  
       template<CT::Text T> requires CT::NotContainer<T>
@@ -174,7 +182,8 @@ namespace Langulus::Anyness
       ///   @return the text                                                  
       template<CT::Number T>
       static Text FromNumber(T&& number, int precision = 0) {
-         Text result;         
+         Text result;
+
          if constexpr (CT::Real<T>) {
             // Stringify a real number                                  
             constexpr auto size = ::std::numeric_limits<T>::max_digits10 * 2;

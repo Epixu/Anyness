@@ -26,7 +26,8 @@ namespace Langulus::Anyness::Component
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;
-      
+      template<unsigned> friend struct OwnershipDeepEmergent;
+
       /*template<CT::Container C>
       using Count = typename Deref<C>::CountType;*/
 
@@ -48,7 +49,6 @@ namespace Langulus::Anyness::Component
       //using View = typename C::ViewType;
 
       /// Get entry array if containing pointers                              
-      /// If container is dense, it returns the main allocation               
       ///   @return the array of entries                                      
       template<CT::Container C>
       auto GetEntries(this C&& self) has_assumptions -> EntryPtr {

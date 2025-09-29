@@ -14,17 +14,17 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Doesn't cache hash - recalculates it every time                        
-   /// The hash is calculated using the data inside the given heap ID         
-   ///   @tparam ID - the heap ID                                             
+   /// Doesn't cache hash - recalculates it every time.                       
+   /// The hash is calculated using the data inside the given heap/stack ID.  
+   ///   @tparam ID - the heap/stack ID                                       
    ///   @tparam H  - the hash type used                                      
    template<unsigned ID = 0, class H = Hash>
    struct HashEmergent {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 2000;
 
-      /// Get the hash, recompute every time                                  
-      H GetHash(this auto const& self) noexcept {
+      /// Get the hash, recompute it every time                               
+      H GetHash(this auto const& self) {
          return self.HashRecompute();
       }
 
@@ -55,8 +55,16 @@ namespace Langulus::Anyness::Component
                   DefaultHashSeed
                );
             }
+            else if constexpr (CT::ContainsOne<C>) {
+               // Return the hash of the single element                 
+               // @note this is reached only if GetCount() > 1, so      
+               // technically shouldn't ever be reached, but iteration  
+               // won't work on single-element containers either way.   
+               return HashOf(*self.GetRaw());
+            }
             else {
                // Hash each element, and then combine hashes            
+               // @note this is reached only if GetCount() > 1          
                ::std::vector<H> h;
                h.reserve(self.GetCount());
                for (T& element : self)
@@ -75,9 +83,11 @@ namespace Langulus::Anyness::Component
                return {1};
 
             const DMeta T = self.GetType();
+            const auto data = const_cast<void*>(self.GetRaw());
+
             if (self.GetCount() == 1) {
                // Exactly one element means exactly one hash            
-               return T.GetHasher()(self.GetRaw());
+               return T.GetHasher()(data);
             }
 
             // Hashing multiple elements                                
@@ -86,21 +96,31 @@ namespace Langulus::Anyness::Component
                // Hash all PODs at once, this includes any pointers     
                // That is unless T::GetHash() method exists             
                return HashBytes(
-                  {reinterpret_cast<const uint8_t*>(self.GetRaw()), self.GetBytesize()},
+                  {static_cast<uint8_t*>(data), self.GetBytesize()},
                   DefaultHashSeed
                );
             }
             
-            // Hash each element, and then combine hashes               
-            ::std::vector<H> h;
-            h.reserve(self.GetCount());
-            for (auto element : self)
-               h.emplace_back(T.GetHasher()(element.GetRaw()));
-            
-            return HashBytes(
-               {reinterpret_cast<const uint8_t*>(h.data()), h.size() * sizeof(H)},
-               DefaultHashSeed
-            );
+            if constexpr (CT::ContainsOne<C>) {
+               // Return the hash of the single element                 
+               // @note this is reached only if GetCount() > 1, so      
+               // technically shouldn't ever be reached, but iteration  
+               // won't work on single-element containers either way.   
+               return T.GetHasher()(data);
+            }
+            else {
+               // Hash each element, and then combine hashes            
+               // @note this is reached only if GetCount() > 1          
+               ::std::vector<H> h;
+               h.reserve(self.GetCount());
+               for (auto element : self)
+                  h.emplace_back(T.GetHasher()(element.GetRaw()));
+
+               return HashBytes(
+                  { reinterpret_cast<const uint8_t*>(h.data()), h.size() * sizeof(H) },
+                  DefaultHashSeed
+               );
+            }
          }
       }
       
@@ -108,7 +128,7 @@ namespace Langulus::Anyness::Component
       template<unsigned>
       friend struct HeapMovable;
       
-      /// This always returns an invalid hash                                 
+      /// This always returns an invalid hash to enforce regeneration         
       constexpr H GetHashInner() const noexcept { return 0; }
    };
 }

@@ -80,7 +80,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class A>
       void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
       
-      /// Assign a value to the first element, overwriting it.                
+      /// Assign a value to the first element, if that element is initialized.
       /// If the element isn't initialized yet it will be constructed.        
       ///   @param argument - the argument to assign                          
       ///   @return reference to self                                         
@@ -88,14 +88,14 @@ namespace Langulus::Anyness::Component
       C& operator = (this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
          if constexpr (not CT::HeapAllocated<C>) {
             // This container is on the stack, and by extension         
-            // statically-typed                                         
+            // statically-typed and always initialized                  
             auto& data = self.template AccessStackById<ID>();
             data = FWD(argument);       
          }
          else {
-            // This container is statically-typed and heap-allocated    
-            using T = Tif<C::TypeErased, A, TypeOf<C>>;
-            if constexpr (C::TypeErased)
+            // This container is heap-allocated                         
+            using T = Tif<CT::TypeErased<C>, A, TypeOf<C>>;
+            if constexpr (CT::TypeErased<C>)
                LglsAssert(self.template IsSimilar<A>(), "Type mismatch");
 
             if (self.IsEmpty()) {
@@ -132,8 +132,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      /// A helper for clearing and allocating memory before construction     
-      /// Calls destructors on all elements, if any were initialized          
+      /// A helper for clearing and allocating memory before construction.    
+      /// Calls destructors on all elements, if any were initialized.         
       template<CT::HeapAllocated C>
       void PrepareForReconstruction(this C& self) {
          // 1. We free if we have to                                    
@@ -144,7 +144,9 @@ namespace Langulus::Anyness::Component
             if (a->GetUses() == 1) {
                // We don't deallocate the memory - we can reuse it      
                if_available(self.FreeDeep());
-               self.AllocateLess(1);
+
+               if constexpr (CT::ContainsMany<C>)
+                  self.AllocateLess(1);
             }
             else {
                // Notice that no element will be destroyed, because in  
@@ -163,8 +165,8 @@ namespace Langulus::Anyness::Component
             self.AllocateFresh(self.RequestSize(1));
       }
 
-      /// A helper for clearing and allocating memory before assignment       
-      /// Calls destructors on all elements, except the first one             
+      /// A helper for clearing and allocating memory before assignment.      
+      /// Calls destructors on all elements, except the first one.            
       ///   @return true if first element is valid and can be assigned to     
       template<CT::HeapAllocated C>
       bool PrepareForReassignment(this C& self) {

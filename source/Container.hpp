@@ -238,6 +238,7 @@ namespace Langulus::Anyness
    struct LANGULUS_EBCO Container : COMPONENTS... {
       using CTTI_Container = Yes<>;
       using ComponentList = Types<COMPONENTS...>;
+      using Base = Container;
 
       /// Generate a new container type with additional components            
       ///   @attention doesn't check for duplicates                           
@@ -396,9 +397,8 @@ namespace Langulus::Anyness
       /// Call ConstructFrom whenever possible, fallback to                   
       /// ConstructDefault otherwise                                          
       constexpr void ConstructFrom(this auto& self, CT::Container auto&& from) {
-         using I = IntentOf(from);
-         ComponentList::ForEach([&]<class C>{
-                 if_available(self.C::ConstructFrom(I {from}))
+         ComponentList::ForEach([&self, &from]<class C>{
+                 if_available(self.C::ConstructFrom(FWDIntent(from)))
             else if_available(self.C::ConstructDefault())
          });
       }
@@ -413,9 +413,8 @@ namespace Langulus::Anyness
       /// Call AssignFrom whenever possible, fallback to AssignDefault        
       /// otherwise                                                           
       constexpr void AssignFrom(this auto& self, CT::Container auto&& rhs) {
-         using I = IntentOf(rhs);
          ComponentList::ForEach([&]<class C>{
-                 if_available(self.C::AssignFrom(I {rhs}))
+                 if_available(self.C::AssignFrom(FWDIntent(rhs)))
             else if_available(self.C::AssignDefault())
          });
       }

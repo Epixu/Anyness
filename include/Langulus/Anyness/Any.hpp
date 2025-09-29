@@ -60,7 +60,7 @@ namespace Langulus::Anyness
    /// using Own or Ref instead. If you want to contain a number of similar   
    /// elements use Many instead.                                             
    struct Any : Inner::AnyBase {
-      using Base = Inner::AnyBase;
+      //using Base = Inner::AnyBase;
       //using Base::Base;
       //using Base::operator =;
       //using Com::Assignment<>::operator =;
@@ -73,11 +73,15 @@ namespace Langulus::Anyness
       using PickMut  = HandleMut;
       using DeepType = Any;
 
+      constexpr Any() { this->ConstructDefault(); }
+      constexpr Any(Any const& other) : Any {Refer {other}} {}
+      constexpr Any(Any&& other)      : Any {Move  {other}} {}
+
       /// Construction that emplaces A in the container                       
       template<class A>
       constexpr Any(A&& argument) {
          if constexpr (CT::ContainsOne<A>)
-            Base::ConstructFrom(FWD(argument));
+            this->ConstructFrom(FWD(argument));
          else {
             this->GetType();
             this->AllocateFresh(this->RequestSize(1));
@@ -89,9 +93,9 @@ namespace Langulus::Anyness
       template<class A>
       constexpr Any& operator = (A&& argument) {
          if constexpr (CT::ContainsOne<A>)
-            Base::AssignFrom(FWD(argument));
+            this->AssignFrom(FWD(argument));
          else
-            Com::Assignment<>::operator = (FWD(argument));
+            this->Com::Assignment<>::operator = (FWD(argument));
          return *this;
       }
    };

@@ -137,7 +137,6 @@ namespace Langulus::Anyness::Component
             // Move/Refer/Abandon/Disown other                          
             static_assert(I::IsShallow());
             if constexpr (I::IsKept()) {
-               // Move/Refer other                                      
                if constexpr (I::IsMoved()) {
                   // Move                                               
                   self.SetType(from.GetType());
@@ -168,21 +167,15 @@ namespace Langulus::Anyness::Component
       ///   @param intent - the intent and container to assign from           
       template<class C, CT::Intent I> requires CT::Container<I>
       void AssignFrom(this C& self, I&& intent) {
-         // Make sure 'self' and 'intent' are different instances       
-         if (&self == &intent.what)
-            return;
+         if constexpr (requires { &self == &intent.what; }) {
+            // Make sure 'lhs' and 'rhs' are different instances,       
+            // otherwise we lose rhs if we free lhs                     
+            if (&self == &intent.what)
+               return;
+         }
 
-         using IT = Decay<TypeOf<I>>;
-         if constexpr (IT::TypeErased) {
-            // Potentially absorb a container                           
-            self.Free();
-            new (&self) C {FWD(intent)};
-         }
-         else {
-            // Potentially absorb a container                           
-            self.Free();
-            new (&self) C {FWD(intent)};
-         }
+         self.Free();
+         new (&self) C {FWD(intent)};
       }
 
       /// Get a size based on reflected allocation page and count             
@@ -296,7 +289,7 @@ namespace Langulus::Anyness::Component
                   if (previous.GetCount()) {
                      // Memory moved, and we should move all elements   
                      // in it. We're moving to new memory, so no reverse
-                     // is required                                     
+                     // is required.                                    
                      auto from = IterateHandles(previous).begin();
                      for (auto to : IterateHandles(self)) {
                         // We're not allowed to abandon constant items  
@@ -377,7 +370,7 @@ namespace Langulus::Anyness::Component
          const auto request = self.RequestSize(desiredReserve);
          if constexpr (C::TypeErased) {
             //                                                          
-            // Type erased shrinking                                    
+            // Type-erased shrinking                                    
             const auto T = self.GetType();
             LglsAssumeDev(T, "Invalid type");
             const auto currentCount = self.GetCount();
@@ -408,7 +401,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             //                                                          
-            // Statically typed shrinking                               
+            // Statically-typed shrinking                               
             using T = TypeOf<C>;
             const auto currentCount = self.GetCount();
             

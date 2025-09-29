@@ -29,7 +29,7 @@ namespace Langulus::Anyness::Component
 
    ///                                                                        
    /// Defines the contained type as a member variable, allowing the use of   
-   /// type-erasure. You can optionally constrain the type                    
+   /// type-erasure. You can optionally constrain the type.                   
    ///   @tparam META - the type of the meta                                  
    ///   @tparam TYPE - optionally static type, use void for type-erasure     
    ///   @tparam ID   - which heap/stack is typed?                            
@@ -59,9 +59,9 @@ namespace Langulus::Anyness::Component
          if constexpr (TypeErased) {
             if constexpr (requires { self.IsTypeConstrained(); }) {
                if (not self.IsTypeConstrained())
-                  self.mType = {};
+                  self.SetTypeInner({});
             }
-            else self.mType = {};
+            else self.SetTypeInner({});
          }
       }
       

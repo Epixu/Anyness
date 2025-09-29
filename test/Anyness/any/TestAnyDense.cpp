@@ -431,9 +431,9 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
 
       if constexpr (CT::Exact<E, Text>) {
-         WHEN("Given an element that will be destroyed before the pack") {
+         WHEN("Given text that will be destroyed before the pack") {
             Text owned_text = "666";
-            pack << Text(owned_text.operator Token());
+            pack = Text(owned_text.operator Token());
          }
       }
    }

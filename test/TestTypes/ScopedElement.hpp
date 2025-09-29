@@ -23,7 +23,12 @@ private:
    static void NestedConstructor(INNER*& place, A&&...arguments) {
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
-         place = new INNER {FWD(arguments)...};
+         if constexpr (requires { new INNER {FWD(arguments)...}; })
+            place = new INNER {FWD(arguments)...};
+         else if constexpr (requires { new INNER {INNER::FromNumber(FWD(arguments)...)}; })
+            place = new INNER {INNER::FromNumber(FWD(arguments)...)};
+         else
+            static_assert(false, "Unable to construct");
       }
       else {
          place = new INNER {nullptr};

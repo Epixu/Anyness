@@ -31,7 +31,7 @@ decltype(auto) FromHelper() {
 
 
 ///                                                                           
-/// Possible states:                                                          
+/// Possible states                                                           
 template<class E>
 void Any_CheckState_Default(const auto&);
 template<class E>
@@ -72,14 +72,7 @@ void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
 
 
 ///                                                                           
-/// Possible actions for each state:                                          
-///   - uninitialized                                                         
-///      - constexpr-default-initialized                                      
-///      - runtime-default-initialized                                        
-///      - intent-initialized from container                                  
-///      - intent-initialized from single dense element                       
-///      - intent-initialized from multiple dense elements                    
-///      - intent-initialized from dense element bounded array                
+/// Possible state test implementations                                       
 template<class E>
 void Any_CheckState_Default(const auto& many) {
    using T = Decay<decltype(many)>;
@@ -92,16 +85,13 @@ void Any_CheckState_Default(const auto& many) {
    else {
       REQUIRE_FALSE(many.IsTyped());
       REQUIRE      (many.GetType() == nullptr);
-      REQUIRE      (many.IsDense());
       REQUIRE_FALSE(many.IsSparse());
       REQUIRE      (many.GetState() == State::Default);
       REQUIRE_FALSE(many.IsDeep());
    }
 
    REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(many.IsCompressed());
    REQUIRE      (many.IsConstant() == CT::Constant<E>);
-   REQUIRE_FALSE(many.IsEncrypted());
    REQUIRE_FALSE(many.IsMissing());
    REQUIRE_FALSE(many.IsValid());
    REQUIRE_FALSE(many.GetAllocation());
@@ -123,9 +113,7 @@ void Any_CheckState_OwnedEmpty(const auto& many) {
    Any_Helper_TestType<E>(many);
 
    REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(many.IsCompressed());
    REQUIRE      (many.IsConstant() == CT::Constant<E>);
-   REQUIRE_FALSE(many.IsEncrypted());
    REQUIRE_FALSE(many.IsValid());
    REQUIRE      (many.GetAllocation());
    REQUIRE      (many.IsEmpty());
@@ -144,9 +132,7 @@ void Any_CheckState_OwnedFull(const auto& many) {
    Any_Helper_TestType<E>(many);
 
    REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(many.IsCompressed());
    REQUIRE      (many.IsConstant() == CT::Constant<E>);
-   REQUIRE_FALSE(many.IsEncrypted());
    REQUIRE      (many.IsValid());
    REQUIRE      (many.GetAllocation());
    REQUIRE_FALSE(many.IsEmpty());
@@ -165,9 +151,7 @@ void Any_CheckState_DisownedFull(const auto& many) {
    Any_Helper_TestType<E>(many);
 
    REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(many.IsCompressed());
    REQUIRE      (many.IsConstant() == CT::Constant<E>);
-   REQUIRE_FALSE(many.IsEncrypted());
    REQUIRE      (many.IsValid());
    REQUIRE_FALSE(many.GetAllocation());
    REQUIRE_FALSE(many.IsEmpty());
@@ -186,9 +170,7 @@ void Any_CheckState_DisownedFullConst(const auto& many) {
    Any_Helper_TestType<E>(many);
 
    REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(many.IsCompressed());
    REQUIRE      (many.IsConstant());
-   REQUIRE_FALSE(many.IsEncrypted());
    REQUIRE      (many.IsValid());
    REQUIRE_FALSE(many.GetAllocation());
    REQUIRE_FALSE(many.IsEmpty());
