@@ -33,8 +33,10 @@ namespace Langulus::CT
       /// would mean that the type is not reflectable at all. It also makes   
       /// sure that if ReflectAs is specified, then the involved types are    
       /// binary-compatible.                                                  
-      template<NotReference T>
+      template<class T>
       consteval auto IsReflectable() {
+         static_assert(NotReference<T>, "Strip references first");
+         static_assert(NotSheddable<T>, "Strip sheddable types first");
          using DT = Decay<T>;
 
          if constexpr (Void<T>) {
@@ -43,8 +45,8 @@ namespace Langulus::CT
          }
          else if constexpr (Complete<CTTI::ReflectAs<T>>) {
             // Substitution through external template                   
-            // Despite this, all participating types much be complete,  
-            // because their `sizeof` and `alignof` are checked         
+            // Despite this, all participating types must be complete   
+            // because their `sizeof` and `alignof` are checked.        
             using AS = typename CTTI::ReflectAs<T>::Type;
             if constexpr (Void<AS>)
                return static_cast<void*>(nullptr);
@@ -76,7 +78,7 @@ namespace Langulus::CT
    /// Check if all T are reflectable                                         
    template<class...T>
    concept Reflectable = Validate<T...>
-       and (CT::NotVoid<Deptr<decltype(Inner::IsReflectable<Deref<T>>())>> and ...);
+       and (CT::NotVoid<Deptr<decltype(Inner::IsReflectable<T>())>> and ...);
 
    /// Get the type a given T is reflected as. This is very useful as a       
    /// a build-time optimization, because many type-erased containers are     
@@ -86,5 +88,5 @@ namespace Langulus::CT
    ///   @attention this is designed only for affecting the reflection of     
    ///      data types, not tag, verb, or constant definitions                
    template<class T>
-   using ReflectedAs = Deptr<decltype(Inner::IsReflectable<Deref<T>>())>;
+   using ReflectedAs = Deptr<decltype(Inner::IsReflectable<T>())>;
 }

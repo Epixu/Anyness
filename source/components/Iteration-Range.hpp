@@ -124,8 +124,8 @@ namespace Langulus::Anyness
 
       protected:
          using H = Tmut<C,
-            Tif<CT::NotReference<Pick>,    Pick,    Deref<Pick>*>,
-            Tif<CT::NotReference<PickMut>, PickMut, Deref<PickMut>*>
+            Tif<CT::NotReference<Pick>,    PickMut, Deref<PickMut>*>,
+            Tif<CT::NotReference<PickMut>, Pick,    Deref<Pick>*>
          >;
 
          mutable H mIt;
@@ -194,7 +194,7 @@ namespace Langulus::Anyness::Component
       /// Return an iterator to the first element                             
       template<CT::Container C>
       constexpr auto begin(this C&& self) noexcept -> Iterator<C> {
-         if constexpr (CT::Untyped<C> or (CT::Mutable<C> and Deref<C>::Sparse))
+         if constexpr (CT::TypeErased<C> or (CT::Mutable<C> and Deref<C>::Sparse))
             return {self.GetHandle(), self};
          else
             return {self.GetRaw(), self};
@@ -205,7 +205,7 @@ namespace Langulus::Anyness::Component
       constexpr auto last(this C&& self) noexcept -> Iterator<C> {
          const auto offset = self.IsEmpty() ? 0 : self.GetCount() - 1;
 
-         if constexpr (CT::Untyped<C> or (CT::Mutable<C> and Deref<C>::Sparse))
+         if constexpr (CT::TypeErased<C> or (CT::Mutable<C> and Deref<C>::Sparse))
             return {self.GetHandle() + offset, self};
          else
             return {self.GetRaw() + offset, self};

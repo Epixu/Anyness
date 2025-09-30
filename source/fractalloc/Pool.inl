@@ -60,12 +60,12 @@ namespace Langulus::Fractalloc
       , mAllocatedByBackendLSB  {LSB(size >> size_t {1})}
       , mThreshold              {size}
       , mThresholdPrevious      {size}
-      , mThresholdMin           {meta 
-         ? Roof2(meta.GetMinAllocation())
-         : ::Langulus::MinimalAllocation}
       , mMeta                   {meta}
       , mHandle                 {memory}
    {
+      const size_t alignment = mMeta.GetAlignment();
+      mAlign = alignment > Alignment ? alignment : Alignment;
+      mThresholdMin = Roof2(Align(sizeof(Allocation), mAlign) + mMeta.GetMinAllocation());
       mMemory = GetPoolStart();
       mMemoryEnd = mMemory + mAllocatedByBackend;
 
@@ -74,7 +74,7 @@ namespace Langulus::Fractalloc
       // Touching is mandatory for pools - without touching the         
       // memory, it might remain just a promise by the OS, making       
       // initial pool allocations very, very, VERY slow at the most     
-      // inappropriate of times                                         
+      // inappropriate of timesл                                        
       Touch();
    }
 
@@ -148,8 +148,9 @@ namespace Langulus::Fractalloc
    ///   @return the new allocation, or nullptr if pool is full               
    inline auto Pool::Allocate(const size_t bytes) has_assumptions -> Allocation* {
       // Check if we can add a new entry                                
-      const auto bytesWithPadding = Allocation::GetNewAllocationSize(bytes);
-      if (not CanContain(bytesWithPadding))
+      const size_t padding = Align(sizeof(Allocation), mAlign);
+      const size_t backendSize = padding + (mAlign > bytes ? mAlign : bytes);
+      if (not CanContain(backendSize))
          return nullptr;
 
       Allocation* newEntry;
@@ -157,17 +158,13 @@ namespace Langulus::Fractalloc
          // Recycle entries                                             
          newEntry = mLastFreed;
          mLastFreed = mLastFreed->mNextFreeEntry;
-         new (newEntry) Allocation {
-            bytesWithPadding - sizeof(Allocation), this
-         };
+         new (newEntry) Allocation {backendSize - padding, this};
       }
       else {
          // The entire pool is full (or empty), skip search for free    
          // spot, add a new allocation directly	instead                 
          newEntry = const_cast<Allocation*>(AllocationFromIndex(mEntries));
-         new (newEntry) Allocation {
-            bytesWithPadding - sizeof(Allocation), this
-         };
+         new (newEntry) Allocation {backendSize - padding, this};
 
          ++mEntries;
 
@@ -179,62 +176,27 @@ namespace Langulus::Fractalloc
       }
 
       // Always adapt min threshold if bigger entry is introduced       
-      if (bytesWithPadding > mThresholdMin)
-         mThresholdMin = Roof2(bytesWithPadding);
+      if (backendSize > mThresholdMin)
+         mThresholdMin = Roof2(backendSize);
 
       LglsAssumeDevAndOptimize(
-         mAllocatedByFrontend + bytesWithPadding >= mAllocatedByFrontend,
+         mAllocatedByFrontend + backendSize >= mAllocatedByFrontend,
          "Frontend byte counter overflow"
       );
-      mAllocatedByFrontend += bytesWithPadding;
+      mAllocatedByFrontend += backendSize;
       IF_LANGULUS_MEMORY_STATISTICS(++mValidEntries);
       return newEntry;
-   }
-
-   /// Remove an entry                                                        
-   ///   @attention assumes entry is valid                                    
-   ///   @param entry - entry to remove                                       
-   inline void Pool::Deallocate(Allocation* entry) has_assumptions {
-      LglsAssumeDevAndOptimize(entry->mReferences != 0,
-         "Removing an invalid entry");
-      LglsAssumeDevAndOptimize(mEntries,
-         "Bad valid entry count");
-      LglsAssumeDev(mAllocatedByFrontend >= entry->GetBackendSize(),
-         "Bad frontend allocation size");
-
-      mAllocatedByFrontend -= entry->GetBackendSize();
-      entry->mReferences = 0;
-
-      if (0 == mAllocatedByFrontend) {
-         // The freed entry was the last used entry                     
-         // Reset the entire pool                                       
-         mThreshold = mThresholdPrevious = mAllocatedByBackend;
-         mThresholdMin = Allocation::GetMinAllocation();
-         mLastFreed = nullptr;
-         mEntries = 0;
-         IF_LANGULUS_MEMORY_STATISTICS(mValidEntries = 0);
-      }
-      else {
-         // Push the removed entry to the last freed list               
-         // The removed entry becomes the last freed entry, and its     
-         // pool pointer becomes a jump to the previous last freed      
-         entry->mNextFreeEntry = mLastFreed;
-         mLastFreed = entry;
-         IF_LANGULUS_MEMORY_STATISTICS(--mValidEntries);
-
-         //TODO: keep track of size distrubution, 
-         // shrink min threshold if all leading buckets go empty
-      }
    }
 
    /// Resize an entry                                                        
    ///   @param entry - entry to resize                                       
    ///   @param bytes - new number of bytes                                   
    ///   @return true if entry was enlarged without conflict                  
-   inline bool Pool::Reallocate(Allocation* entry, const size_t bytes) has_assumptions {
-      LglsAssumeDev(bytes and Contains(entry) and entry and entry->GetUses(),
+   inline bool Pool::Reallocate(Allocation* entry, size_t bytes) has_assumptions {
+      LglsAssumeDev(bytes and Contains(entry) /*and entry*/ and entry->GetUses(),
          "Invalid reallocation");
 
+      bytes = Align(bytes, mAlign);
       if (bytes > entry->GetFrontendSize()) {
          // We're enlarging the entry                                   
          // Make sure we don't violate threshold                        
@@ -258,11 +220,47 @@ namespace Langulus::Fractalloc
          mAllocatedByFrontend -= removal;
 
          //TODO: keep track of size distrubution, 
-         // shrink min threshold if all leading buckets go empty
+         // shrink mThresholdMin if all leading buckets go empty
       }
 
       entry->mAllocatedBytes = bytes;
       return true;
+   }
+
+   /// Remove an entry                                                        
+   ///   @attention assumes entry is valid                                    
+   ///   @param entry - entry to remove                                       
+   inline void Pool::Deallocate(Allocation* entry) has_assumptions {
+      LglsAssumeDevAndOptimize(entry->mReferences != 0,
+         "Removing an invalid entry");
+      LglsAssumeDevAndOptimize(mEntries,
+         "Bad valid entry count");
+      LglsAssumeDev(mAllocatedByFrontend >= entry->GetBackendSize(),
+         "Bad frontend allocation size");
+
+      mAllocatedByFrontend -= entry->GetBackendSize();
+      entry->mReferences = 0;
+
+      if (0 == mAllocatedByFrontend) {
+         // The freed entry was the last used entry.                    
+         // Reset the entire pool.                                      
+         mThreshold = mThresholdPrevious = mAllocatedByBackend;
+         mThresholdMin = Roof2(Align(sizeof(Allocation), mAlign) + mMeta.GetMinAllocation());
+         mLastFreed = nullptr;
+         mEntries = 0;
+         IF_LANGULUS_MEMORY_STATISTICS(mValidEntries = 0);
+      }
+      else {
+         // Push the removed entry to the last freed list.              
+         // The removed entry becomes the last freed entry, and its     
+         // pool pointer becomes a jump to the previous last freed.     
+         entry->mNextFreeEntry = mLastFreed;
+         mLastFreed = entry;
+         IF_LANGULUS_MEMORY_STATISTICS(--mValidEntries);
+
+         //TODO: keep track of size distrubution, 
+         // shrink min threshold if all leading buckets go empty
+      }
    }
 
    /// Get valid entry that corresponds to an arbitrary pointer               

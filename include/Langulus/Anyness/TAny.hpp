@@ -67,7 +67,7 @@ namespace Langulus::Anyness
          else {
             // Emplace                                                  
             this->GetType();
-            this->AllocateFresh(this->RequestSize(1));
+            this->AllocateFresh(this->RequestHeap(1));
             if constexpr (sizeof...(A) == 1) {
                using A1 = typename Types<A...>::First;
                if constexpr (CT::Intent<A1> and CT::Similar<TypeOf<A1>, T>)

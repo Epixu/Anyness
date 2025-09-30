@@ -62,8 +62,8 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Handle<IT>) {
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
-            // instead of searching for it when having DeepOwnership    
-            if constexpr (C::TypeErased or IT::TypeErased) {
+            // instead of searching for it when having DeepOwnership.   
+            if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
                //                                                       
                // Either this container or the handle is type-erased    
                auto T = rhs.GetTypeInner();
@@ -71,10 +71,18 @@ namespace Langulus::Anyness::Component
 
                const auto src = const_cast<void*>(rhs.GetRaw());
                const auto dst = self.GetRaw();
-               if constexpr (CT::Moved<I>)
-                  T.GetMoveConstructor()(dst, src);
-               else if constexpr (CT::Abandoned<I>)
-                  T.GetAbandonConstructor()(dst, src);
+               if constexpr (CT::Moved<I>) {
+                  if (rhs.IsConstant())
+                     T.GetReferConstructor()(dst, src);
+                  else
+                     T.GetMoveConstructor()(dst, src);
+               }
+               else if constexpr (CT::Abandoned<I>) {
+                  if (rhs.IsConstant())
+                     T.GetReferConstructor()(dst, src);
+                  else
+                     T.GetAbandonConstructor()(dst, src);
+               }
                else if constexpr (CT::Referred<I>)
                   T.GetReferConstructor()(dst, src);
                else if constexpr (CT::Copied<I>)
@@ -97,13 +105,16 @@ namespace Langulus::Anyness::Component
             else {
                //                                                       
                // Both sides are statically-typed and we can benefit    
-               // from a lot of compile-time optimizations              
+               // from a lot of compile-time optimizations.             
                using T = TypeOf<C>;
                static_assert(CT::Similar<T, TypeOf<IT>>, "Type mismatch");
-               IntentNew(self.GetHeapInner(), I::Nest(*rhs.GetRaw()));
+               if constexpr (CT::Mutable<TypeOf<IT>> or not I::IsMoved())
+                  IntentNew(self.GetHeapInner(), I::Nest(*rhs.GetRaw()));
+               else
+                  IntentNew(self.GetHeapInner(), Refer(*rhs.GetRaw()));
             }
          }
-         else if constexpr (C::TypeErased) {
+         else if constexpr (CT::TypeErased<C>) {
             //                                                          
             // This container is type-erased                            
             LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
@@ -145,7 +156,7 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
 
-         if constexpr (C::TypeErased) {
+         if constexpr (CT::TypeErased<C>) {
             //                                                          
             // This container is type-erased                            
             auto T = self.GetTypeInner();
@@ -175,7 +186,7 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(self.GetRaw(), "Invalid heap");
             LglsAssumeDev(self.IsTyped(), "Invalid type");
 
-            if constexpr (C::TypeErased) {
+            if constexpr (CT::TypeErased<C>) {
                //                                                       
                // This container is type-erased                         
                auto T = self.GetType();

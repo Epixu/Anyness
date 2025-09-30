@@ -49,6 +49,8 @@ namespace Langulus::Fractalloc
       // Associated meta data, when types are reflected with nondefault 
       // PoolTactic                                                     
       DMeta mMeta {};
+      // Alignment used when allocating entries                         
+      size_t mAlign = Alignment;
       // Handle for the pool allocation, for use with `free(mHandle)`   
       void* mHandle {};
 
@@ -76,6 +78,7 @@ namespace Langulus::Fractalloc
       static constexpr size_t GetNewAllocationSize(size_t) noexcept;
 
       auto GetPoolStart() const noexcept -> uint8_t*;
+      auto GetAlignment() const noexcept -> size_t { return mMeta.GetAlignment(); }
 
       constexpr auto GetMinAllocation() const noexcept -> size_t;
       constexpr auto GetTotalSize() const noexcept -> size_t;

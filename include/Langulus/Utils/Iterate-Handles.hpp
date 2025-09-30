@@ -28,6 +28,7 @@ namespace Langulus::Anyness
 
       static_assert(CT::NoIntent<C>, "C can't have an intent");
       static_assert(CT::NotReference<C>, "C can't be a reference");
+      
       static consteval auto DecideHandleType() {
          if constexpr (C::TypeErased) {
             // Type-erased handle                                       

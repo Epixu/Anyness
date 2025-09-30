@@ -121,11 +121,13 @@ namespace Langulus::Fractalloc
    /// Allocate a memory entry                                                
    ///   @attention doesn't call any constructors                             
    ///   @attention doesn't throw - check if return is nullptr                
+   ///   @attention assumes hint is valid                                     
    ///   @attention assumes size is not zero                                  
-   ///   @param hint - optional meta data to associate pool with              
+   ///   @param hint - meta data to associate pool with                       
    ///   @param size - the number of bytes to allocate                        
    ///   @return the allocation, or nullptr if out of memory                  
    auto Allocator::Allocate(DMeta hint, size_t size) has_assumptions -> Allocation* {
+      LglsAssumeDev(hint, "Invalid hint");
       LglsAssumeDevAndOptimize(size, "Zero allocation is not allowed");
 
       // Decide pool chain based on hint                                
@@ -172,9 +174,9 @@ namespace Langulus::Fractalloc
          return entry;
       }
 
-      // If reached, pool chain can't contain the memory                
-      // Allocate a new pool and add it at the front of hinted chain    
-      pool = AllocatePool({}, Allocation::GetNewAllocationSize(size));
+      // If reached, pool chain can't contain the memory.               
+      // Allocate a new pool and add it at the front of hinted chain.   
+      pool = AllocatePool(hint, size);
       if (not pool)
          return nullptr;
 
@@ -296,11 +298,16 @@ namespace Langulus::Fractalloc
 
    /// Allocate a pool                                                        
    ///   @attention the pool must be deallocated with DeallocatePool          
-   ///   @param hint - optional meta data to associate pool with              
-   ///   @param size - size of the pool (in bytes)                            
+   ///   @param hint - meta data to associate pool with                       
+   ///   @param size - size of the pool (in bytes). This does not include     
+   ///      any padding bytes, like the size of the first entry.              
    ///   @return a pointer to the new pool                                    
    Pool* Allocator::AllocatePool(DMeta hint, size_t size) has_assumptions {
-      const auto poolSize = ::std::max(Pool::DefaultPoolSize, Roof2(size));
+      const size_t alignment = hint.GetAlignment();
+      const size_t align = alignment > Alignment? alignment : Alignment;
+      const size_t padding = Align(sizeof(Allocation), align);
+      const size_t backendSize = Roof2(padding + (align > size ? align : size));
+      const size_t poolSize = ::std::max(Pool::DefaultPoolSize, backendSize);
       return AlignedAllocate(hint, poolSize);
    }
 

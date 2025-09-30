@@ -339,5 +339,43 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this auto& self, I&& intent) {
          self.SetHeapInner(intent.what.GetRaw());
       }
+
+      /// A simple request for allocating memory, which includes heap         
+      /// byte size, number of reserved elements, and optional header offset. 
+      struct Request {
+         size_t mTotalBytes   IF_SAFE(= 0);
+         size_t mHeaderBytes  IF_SAFE(= 0);
+         size_t mReserved     IF_SAFE(= 0);
+         IF_UNSAFE(constexpr Request() {})
+      };
+      
+      /// Get a size based on reflected allocation page and count             
+      ///   @param count - the number of elements to request                  
+      template<CT::Container C>
+      auto RequestHeap(this C const& self, const size_t count) has_assumptions -> Request {
+         Request result;
+         const size_t header = self.GetHeapHeaderSize();
+         
+         if constexpr (CT::TypeErased<C>) {
+            const auto T = self.GetType();
+            LglsAssumeDev(T, "Requesting allocation size for an untyped container");
+
+            // Check for reflected minimal allocation at runtime        
+            const auto size = T.GetSize();
+            result.mHeaderBytes = Align(header, T.GetAlignment());
+            result.mTotalBytes = Roof2(::std::max(count * size + result.mHeaderBytes, T.GetMinAllocation()));
+            result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / size;
+         }
+         else {
+            // Check for reflected minimal allocation at compile-time   
+            using T = TypeOf<C>;
+
+            result.mHeaderBytes = Align(header, alignof(T));
+            result.mTotalBytes = Roof2(::std::max(count * sizeof(T) + result.mHeaderBytes, CT::GetMinAlloc<T>()));
+            result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / sizeof(T);
+         }
+
+         return result;
+      }
    };
 }

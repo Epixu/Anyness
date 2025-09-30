@@ -28,7 +28,6 @@ namespace Langulus::Anyness::Component
       template<unsigned, class AS>  friend struct Insertion;
       template<unsigned>            friend struct Emplacement;
 
-   private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
       template<CT::Container C>
@@ -38,7 +37,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
 
-   protected:      
+      using typename HeapReference<ID>::Request;
+      
       /// Default-initialize the heap pointer                                 
       constexpr void ConstructDefault(this auto& self) noexcept {
          self.SetHeapInner(nullptr);
@@ -52,10 +52,10 @@ namespace Langulus::Anyness::Component
          decltype(auto) from = FWD(intent.what);
 
          if constexpr (CT::Copied<I> or CT::Cloned<I>) {
-            // Do a copy or clone                                       
+            // Do a copy or clone.                                      
             // When copying, we're cloning just the first layer, so we  
             // guarantee that data is no longer static and constant at  
-            // the first level of indirection                           
+            // the first level of indirection.                          
             auto type = from.GetType().GetDecvq();
             self.SetType(type);
             auto count = from.GetCount();
@@ -92,7 +92,7 @@ namespace Langulus::Anyness::Component
                   "Contained type is not clone-constructible");
             }
 
-            auto al  = self.AllocateFresh(self.RequestSize(count));
+            auto al  = self.AllocateFresh(self.RequestHeap(count));
             auto src = IterateHandles(from).begin();
             auto dst = IterateHandles(self).begin();
             try {
@@ -113,7 +113,7 @@ namespace Langulus::Anyness::Component
                else {
                   // Partial success is not allowed - we have to        
                   // deallocate and make sure CountStatic reports as    
-                  // empty                                              
+                  // empty.                                             
                   while (n) {
                      dst->DestroyElement();
                      --dst; --n;
@@ -177,198 +177,132 @@ namespace Langulus::Anyness::Component
          self.Free();
          new (&self) C {FWD(intent)};
       }
-
-      /// Get a size based on reflected allocation page and count             
-      ///   @param count - the number of elements to request                  
-      ///   @return both the provided byte size and reserved count            
-      template<CT::Container C>
-      auto RequestSize(this const C& self, const Count<C> count) has_assumptions -> Allocation::Request {
-         Allocation::Request result;
-
-         if constexpr (CT::TypeErased<C>) {
-            const auto T = self.GetType();
-            LglsAssumeDev(T, "Requesting allocation size for an untyped container");
-
-            // Check for reflected minimal allocation at runtime        
-            const auto size = T.GetSize();
-            result.mByteSize = Roof2(::std::max<Count<C>>(
-               count * size, T.GetMinAllocation()));
-            result.mElementCount = result.mByteSize / size;
-         }
-         else {
-            // Check for reflected minimal allocation at compile-time   
-            using T = TypeOf<C>;
-
-            result.mByteSize = Roof2(::std::max<Count<C>>(
-               count * sizeof(T), CT::GetMinAlloc<T>()));
-            result.mElementCount = result.mByteSize / sizeof(T);
-         }
-
-         return result;
-      }
       
       /// Allocate a fresh allocation                                         
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request - request to fulfill                               
       template<CT::Container C>
-      auto AllocateFresh(this C& self, const Allocation::Request& request) -> Allocation* {
-         Allocation* al;
-
-         if constexpr (CT::TypeErased<C>) {
-            const auto T = self.GetType();
-            LglsAssumeDev(T, "Allocating an untyped container");
-
-            al = Allocator::Allocate(T,
-               request.mByteSize * (CT::DeeplyOwned<C> and T.IsSparse() ? 2 : 1)
-            );
-         }
-         else {
-            using T = TypeOf<C>;
-
-            al = Allocator::Allocate(self.GetType(),
-               request.mByteSize * (CT::DeeplyOwned<C> and CT::Sparse<T> ? 2 : 1)
-            );
-         }
-
+      auto AllocateFresh(this C& self, const Request& request) -> Allocation* {
+         auto al = Allocator::Allocate(self.GetType(), request.mTotalBytes);
          LglsAssert(al, "Out of memory");
-         self.SetHeapInner(al->GetBlockStart());
+         
+         self.SetHeapInner(al->GetBlockStart() + request.mHeaderBytes);
          self.SetAllocationInner(al);
-         if_available(self.SetReserveInner(request.mElementCount));
+         if_available(self.SetReserveInner(request.mReserved));
          return al;
       }
 
       /// Allocate a number of elements, relying on the type of the container 
-      ///   @attention assumes a valid and non-abstract type, if dense        
+      ///   @attention assumes container is typed                             
       ///   @tparam CREATE - true to call constructors and set count          
       ///   @tparam SETSIZE - true to set count, despite not constructing     
       ///   @param elements - number of elements to allocate                  
       template<bool CREATE = false, bool SETSIZE = false, CT::Container C>
       void AllocateMore(this C& self, const Count<C> elements) {
-         const auto al = self.GetAllocation();
          LglsAssumeDev(elements > self.GetCount(), "Bad element count");
+         const auto al = self.GetAllocation();
+         const auto request = self.RequestHeap(elements);
 
-         if constexpr (CT::Typed<C>) {
-            // Allocate/reallocate                                      
-            using T = TypeOf<C>;
-            const auto request = self.RequestSize(elements);
-            if (al) {
-               if (self.GetReserved() >= elements) {
-                  // Required memory is already available               
-                  if constexpr (CREATE) {
-                     // But is not yet initialized, so initialize it    
-                     if (self.GetCount() < elements) {
-                        const auto count = elements - self.GetCount();
-                        self.SelectInner(self.GetCount(), count).CreateDefault();
-                     }
-                  }
+         if (not al) {
+            //                                                          
+            // Allocate a fresh set of elements                         
+            self.AllocateFresh(request);
 
-                  if constexpr (CREATE or SETSIZE)
-                     self.SetCount(elements);
-                  return;
-               }
+            if constexpr (CREATE) {
+               // Default-construct everything                          
+               self.CropInner(self.GetCount(), elements).CreateDefault();
+            }
+            
+            if constexpr (CREATE or SETSIZE)
+               self.SetCount(elements);
+            return;
+         }
 
-               LglsAssumeDev(self.GetUses() == 1,
-                  "Can't reuse memory of a heap used from multiple places, "
-                  "BranchOut should've been called prior to AllocateMore"
-               );
-
-               // Reallocate                                            
-               C previous {Disown {self}};
-               auto reallocated = Allocator::Reallocate(
-                  request.mByteSize * (CT::DeeplyOwned<C> and C::Sparse ? 2 : 1),
-                  al
-               );
-               
-               LglsAssert(reallocated, "Out of memory");
-               self.SetAllocationInner(reallocated);
-               if_available(self.SetReserveInner(request.mElementCount));
-
-               if (reallocated != al) {
-                  self.SetHeapInner(reallocated->GetBlockStart());
-
-                  if (previous.GetCount()) {
-                     // Memory moved, and we should move all elements   
-                     // in it. We're moving to new memory, so no reverse
-                     // is required.                                    
-                     auto from = IterateHandles(previous).begin();
-                     for (auto to : IterateHandles(self)) {
-                        // We're not allowed to abandon constant items  
-                        if constexpr (CT::Mutable<T>)
-                           to.EmplaceWithIntent(Abandon(*(from++)));
-                        else
-                           to.EmplaceWithIntent(Refer(*(from++)));
-                     }
-
-                     previous.SetAllocationInner(al);
-                     previous.Free();
-                  }
-               }
-               else {
-                  // Memory didn't move, but reserved count changed     
-                  if constexpr (C::Sparse) {
-                     // Move entry data to its new place                
-                     MoveMemory(self.GetEntries(), previous.GetEntries(), self.GetCount());
-                  }
-               }
-
-               if constexpr (CREATE) {
-                  // Default-construct the rest                         
+         //                                                             
+         // Reallocate                                                  
+         if (self.GetReserved() >= elements) {
+            // Required memory is already available               
+            if constexpr (CREATE) {
+               // But is not yet initialized, so initialize it    
+               if (self.GetCount() < elements) {
                   const auto count = elements - self.GetCount();
-                  self.CropInner(self.GetCount(), count).CreateDefault();
+                  self.SelectInner(self.GetCount(), count).CreateDefault();
                }
             }
-            else {
-               // Allocate a fresh set of elements                      
-               self.template SetType<T>();
-               self.AllocateFresh(request);
 
-               if constexpr (CREATE) {
-                  // Default-construct everything                       
-                  self.CropInner(self.GetCount(), elements).CreateDefault();
+            if constexpr (CREATE or SETSIZE)
+               self.SetCount(elements);
+            return;
+         }
+
+         LglsAssumeDev(self.GetUses() == 1,
+            "Can't reuse memory of a heap used from multiple places, "
+            "BranchOut should've been called prior to AllocateMore"
+         );
+
+         // Reallocate                                            
+         C previous {Disown {self}};
+         auto reallocated = Allocator::Reallocate(request.mTotalBytes, al);         
+         LglsAssert(reallocated, "Out of memory");
+         self.SetAllocationInner(reallocated);
+
+         if (reallocated != al) {
+            self.SetHeapInner(reallocated->GetBlockStart() + request.mHeaderBytes);
+
+            if (previous.GetCount()) {
+               // Memory moved, and we should move all elements   
+               // in it. We're moving to new memory, so no reverse
+               // is required.                                    
+               auto from = IterateHandles(previous).begin();
+               for (auto to : IterateHandles(self)) {
+                  // We're not allowed to abandon constant items  
+                  //if constexpr (CT::Mutable<T>)
+                     to.EmplaceWithIntent(Abandon(*(from++)));
+                  //else
+                  //   to.EmplaceWithIntent(Refer(*(from++)));
                }
+
+               previous.SetAllocationInner(al);
+               previous.Free();
             }
          }
          else {
-            LglsAssert(self.mType,
-               "Can't instantiate unknown type");
-            LglsAssert(self.mType.IsSparse() or not self.mType.IsAbstract(),
-               "Unable to instantiate ", elements, " elements of abstract type ", self.mType);
+            // Memory didn't move, but reserved count changed     
+            // so all HeapRequests which are PerElement need to   
+            // be moved around.                                   
+            self.RemapHeapRequests(request.mReserved);
+         }
 
-            if (self.GetReserved() >= elements) {
-               // Required memory is already available                  
-               if constexpr (CREATE) {
-                  // But is not yet initialized, so initialize it       
-                  if (self.GetCount() < elements) {
-                     const auto count = elements - self.GetCount();
-                     self.CropInner(self.GetCount(), count).CreateDefault();
-                  }
-               }
-            }
-            else AllocateInner<CREATE>(elements);
+         if_available(self.SetReserveInner(request.mReserved));
+         
+         if constexpr (CREATE) {
+            // Default-construct the rest                         
+            const auto count = elements - self.GetCount();
+            self.CropInner(self.GetCount(), count).CreateDefault();
          }
 
          if constexpr (CREATE or SETSIZE)
             self.SetCount(elements);
       }
 
-      /// Shrink the block, depending on currently reserved	elements          
-      /// Initialized elements on the back will be destroyed                  
+      /// Shrink the block, depending on currently reserved	elements.         
+      /// Initialized elements on the back will be destroyed.                 
       /// When MANAGED_MEMORY is enabled we have a strong guarantee that      
-      /// allocations never move when shrinking                               
+      /// allocations never move when shrinking.                              
       ///   @param desiredReserve - number of elements to reserve             
       template<CT::Container C>
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
          LglsAssumeDev(desiredReserve < self.GetReserved(),
             "Can't shrink allocation using more elements");
-         const auto allocation = self.GetAllocation();
-         LglsAssumeDev(allocation, "Invalid allocation");
-         LglsAssumeDev(allocation->GetUses() == 1,
+         const auto al = self.GetAllocation();
+         LglsAssumeDev(al, "Invalid allocation");
+         LglsAssumeDev(al->GetUses() == 1,
             "Can't reuse memory of a block used from multiple places, "
             "BranchOut should've been called prior to AllocateMore"
          );
 
          const auto request = self.RequestSize(desiredReserve);
-         if constexpr (C::TypeErased) {
+         if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Type-erased shrinking                                    
             const auto T = self.GetType();
@@ -386,18 +320,8 @@ namespace Langulus::Anyness::Component
             if (request.mElementCount == self.GetReserved())
                return;
 
-            if (T.IsSparse()) {
-               // Move entry data to its new place                      
-               MoveMemory(
-                  self.GetEntries() - self.mReserved + request.mElementCount,
-                  self.GetEntries(), currentCount
-               );
-            }
-
-            self.SetAllocation(Allocator::Reallocate(
-               request.mByteSize * (T.IsSparse() ? 2 : 1),
-               allocation
-            ));
+            self.RemapHeapRequests(request.mReserved);
+            self.SetAllocation(Allocator::Reallocate(request.mByteSize, al));
          }
          else {
             //                                                          
@@ -416,21 +340,66 @@ namespace Langulus::Anyness::Component
             if (request.mElementCount == self.GetReserved())
                return;
 
-            if constexpr (CT::Sparse<T>) {
-               // Move entry data to its new place                      
-               MoveMemory(
-                  self.GetEntries() - self.mReserved + request.mElementCount,
-                  self.GetEntries(), currentCount
-               );
-            }
-
-            self.SetAllocationInner(Allocator::Reallocate(
-               request.mByteSize * (CT::Sparse<T> ? 2 : 1),
-               allocation
-            ));
+            self.RemapHeapRequests(request.mReserved);
+            self.SetAllocationInner(Allocator::Reallocate(request.mByteSize, al));
          }
 
-         if_available(self.SetReserveInner(request.mElementCount));
+         if_available(self.SetReserveInner(request.mReserved));
+      }
+
+      /// Remap all heap requests onto the newly reserved count               
+      template<CT::Container C>
+      void RemapHeapRequests(this C& self, const Count<C> newReserved) {
+         if (self.GetHeapHeaderSize() == 0)
+            return;
+
+         //TODO when newReserved is larger than reserved stuff has to move to the right,
+         // so it must be done in reverse so that we don't destroy any data. otherwise stuff moves to the left, and all that from/to calculations are not necessary
+         const auto reserved = self.GetReserved();
+         size_t from[C::ComponentList::Count];
+         size_t to  [C::ComponentList::Count];
+         size_t idx = 1;
+         bool continuous = false;
+         from[0] = to[0] = 0;
+         
+         C::ComponentList::ForEach([&]<class COM>{
+            if constexpr (requires { typename COM::HeapRequest; }) {
+               using R = typename COM::HeapRequest;
+               if constexpr (requires { R::AllocatedPerElement; }) {
+                  if (continuous) {
+                     from[idx] += sizeof(typename R::Type) * reserved;
+                     to  [idx] += sizeof(typename R::Type) * newReserved;
+                  }
+                  else {
+                     from[idx] = from[idx-1] + sizeof(typename R::Type) * reserved;
+                     to  [idx] = to  [idx-1] + sizeof(typename R::Type) * newReserved;
+                  }
+                  
+                  // Move index only when a gap forms, so that we       
+                  // minimize the 'memmove' calls                       
+                  ++idx;
+                  continuous = false;
+               }
+               else {
+                  if (continuous) {
+                     from[idx] += sizeof(R);
+                     to  [idx] += sizeof(R);
+                  }
+                  else {
+                     from[idx] = from[idx-1] + sizeof(R);
+                     to  [idx] = to  [idx-1] + sizeof(R);
+                     continuous = true;
+                  }
+               }
+            }            
+         });
+
+         // Move regions, starting from the back ones                   
+         auto header = self.GetAllocation()->GetBlockStart();
+         while (idx) {
+            --idx;
+            memmove(header + to[idx], header + from[idx], from[idx+1] - from[idx]);
+         }
       }
    };
 }

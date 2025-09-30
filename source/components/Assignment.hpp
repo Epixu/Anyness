@@ -162,7 +162,7 @@ namespace Langulus::Anyness::Component
 
          // 2. We allocate if we have to                                
          if (not a)
-            self.AllocateFresh(self.RequestSize(1));
+            self.AllocateFresh(self.RequestHeap(1));
       }
 
       /// A helper for clearing and allocating memory before assignment.      
@@ -194,7 +194,7 @@ namespace Langulus::Anyness::Component
 
          // 2. We allocate if we have to                                
          if (not a)
-            self.AllocateFresh(self.RequestSize(1));
+            self.AllocateFresh(self.RequestHeap(1));
          return false;
       }
       

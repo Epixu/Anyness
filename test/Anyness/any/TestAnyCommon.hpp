@@ -74,117 +74,124 @@ void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
 ///                                                                           
 /// Possible state test implementations                                       
 template<class E>
-void Any_CheckState_Default(const auto& many) {
-   using T = Decay<decltype(many)>;
+void Any_CheckState_Default(const auto& any) {
+   using T = Decay<decltype(any)>;
 
    if constexpr (CT::Typed<T>) {
       static_assert(CT::Exact<TypeOf<T>, E>);
-      Any_Helper_TestType<E>(many);
-      REQUIRE      (many.GetState() == State::Typed);
+      Any_Helper_TestType<E>(any);
+
+      if constexpr (requires { any.GetState(); })
+         REQUIRE(any.GetState() == State::Typed);
    }
    else {
-      REQUIRE_FALSE(many.IsTyped());
-      REQUIRE      (many.GetType() == nullptr);
-      REQUIRE_FALSE(many.IsSparse());
-      REQUIRE      (many.GetState() == State::Default);
-      REQUIRE_FALSE(many.IsDeep());
+      REQUIRE_FALSE(any.IsTyped());
+      REQUIRE      (any.GetType() == nullptr);
+      REQUIRE_FALSE(any.IsSparse());
+      REQUIRE_FALSE(any.IsDeep());
+      
+      if constexpr (requires { any.GetState(); })
+         REQUIRE(any.GetState() == State::Default);
    }
 
-   REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (many.IsConstant() == CT::Constant<E>);
-   REQUIRE_FALSE(many.IsMissing());
-   REQUIRE_FALSE(many.IsValid());
-   REQUIRE_FALSE(many.GetAllocation());
-   REQUIRE_FALSE(many.IsFuture());
-   REQUIRE_FALSE(many.IsPast());
-   REQUIRE      (many.IsEmpty());
-   REQUIRE      (many.GetCount() == 0);
-   REQUIRE      (many.GetReserved() == 0);
-   REQUIRE      (many.GetUses() == 0);
-   REQUIRE      (many.GetRaw() == nullptr);
-   REQUIRE_FALSE(many);
-   REQUIRE      (not many);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
+   REQUIRE      (any.IsConstant() == CT::Constant<E>);
+   REQUIRE_FALSE(any.IsValid());
+   REQUIRE_FALSE(any.GetAllocation());
+   REQUIRE      (any.IsEmpty());
+   REQUIRE      (any.GetCount() == 0);
+   REQUIRE      (any.GetReserved() == 0);
+   REQUIRE      (any.GetUses() == 0);
+   REQUIRE      (any.GetRaw() == nullptr);
+   REQUIRE_FALSE(any);
+   REQUIRE      (not any);
+
+   if constexpr (requires { any.GetState(); }) {
+      REQUIRE_FALSE(any.IsMissing());
+      REQUIRE_FALSE(any.IsFuture());
+      REQUIRE_FALSE(any.IsPast());      
+   }
 }
 
 template<class E>
-void Any_CheckState_OwnedEmpty(const auto& many) {
-   using T = Decay<decltype(many)>;
+void Any_CheckState_OwnedEmpty(const auto& any) {
+   using T = Decay<decltype(any)>;
 
-   Any_Helper_TestType<E>(many);
+   Any_Helper_TestType<E>(any);
 
-   REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (many.IsConstant() == CT::Constant<E>);
-   REQUIRE_FALSE(many.IsValid());
-   REQUIRE      (many.GetAllocation());
-   REQUIRE      (many.IsEmpty());
-   REQUIRE      (many.GetCount() == 0);
-   REQUIRE      (many.GetReserved() > 0);
-   REQUIRE      (many.GetUses() == 1);
-   REQUIRE      (many.GetRaw());
-   REQUIRE_FALSE(many);
-   REQUIRE      (not many);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
+   REQUIRE      (any.IsConstant() == CT::Constant<E>);
+   REQUIRE_FALSE(any.IsValid());
+   REQUIRE      (any.GetAllocation());
+   REQUIRE      (any.IsEmpty());
+   REQUIRE      (any.GetCount() == 0);
+   REQUIRE      (any.GetReserved() > 0);
+   REQUIRE      (any.GetUses() == 1);
+   REQUIRE      (any.GetRaw());
+   REQUIRE_FALSE(any);
+   REQUIRE      (not any);
 }
 
 template<class E>
-void Any_CheckState_OwnedFull(const auto& many) {
-   using T = Decay<decltype(many)>;
+void Any_CheckState_OwnedFull(const auto& any) {
+   using T = Decay<decltype(any)>;
 
-   Any_Helper_TestType<E>(many);
+   Any_Helper_TestType<E>(any);
 
-   REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (many.IsConstant() == CT::Constant<E>);
-   REQUIRE      (many.IsValid());
-   REQUIRE      (many.GetAllocation());
-   REQUIRE_FALSE(many.IsEmpty());
-   REQUIRE      (many.GetCount() > 0);
-   REQUIRE      (many.GetReserved() > 0);
-   REQUIRE      (many.GetUses() > 0);
-   REQUIRE      (many.GetRaw());
-   REQUIRE      (many);
-   REQUIRE_FALSE(not many);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
+   REQUIRE      (any.IsConstant() == CT::Constant<E>);
+   REQUIRE      (any.IsValid());
+   REQUIRE      (any.GetAllocation());
+   REQUIRE_FALSE(any.IsEmpty());
+   REQUIRE      (any.GetCount() > 0);
+   REQUIRE      (any.GetReserved() > 0);
+   REQUIRE      (any.GetUses() > 0);
+   REQUIRE      (any.GetRaw());
+   REQUIRE      (any);
+   REQUIRE_FALSE(not any);
 }
 
 template<class E>
-void Any_CheckState_DisownedFull(const auto& many) {
-   using T = Decay<decltype(many)>;
+void Any_CheckState_DisownedFull(const auto& any) {
+   using T = Decay<decltype(any)>;
 
-   Any_Helper_TestType<E>(many);
+   Any_Helper_TestType<E>(any);
 
-   REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (many.IsConstant() == CT::Constant<E>);
-   REQUIRE      (many.IsValid());
-   REQUIRE_FALSE(many.GetAllocation());
-   REQUIRE_FALSE(many.IsEmpty());
-   REQUIRE      (many.GetCount() > 0);
-   REQUIRE      (many.GetReserved() > 0);
-   REQUIRE      (many.GetUses() == 0);
-   REQUIRE      (many.GetRaw());
-   REQUIRE      (many);
-   REQUIRE_FALSE(not many);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
+   REQUIRE      (any.IsConstant() == CT::Constant<E>);
+   REQUIRE      (any.IsValid());
+   REQUIRE_FALSE(any.GetAllocation());
+   REQUIRE_FALSE(any.IsEmpty());
+   REQUIRE      (any.GetCount() > 0);
+   REQUIRE      (any.GetReserved() > 0);
+   REQUIRE      (any.GetUses() == 0);
+   REQUIRE      (any.GetRaw());
+   REQUIRE      (any);
+   REQUIRE_FALSE(not any);
 }
 
 template<class E>
-void Any_CheckState_DisownedFullConst(const auto& many) {
-   using T = Decay<decltype(many)>;
+void Any_CheckState_DisownedFullConst(const auto& any) {
+   using T = Decay<decltype(any)>;
 
-   Any_Helper_TestType<E>(many);
+   Any_Helper_TestType<E>(any);
 
-   REQUIRE      (many.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (many.IsConstant());
-   REQUIRE      (many.IsValid());
-   REQUIRE_FALSE(many.GetAllocation());
-   REQUIRE_FALSE(many.IsEmpty());
-   REQUIRE      (many.GetCount() > 0);
-   REQUIRE      (many.GetReserved() > 0);
-   REQUIRE      (many.GetUses() == 0);
-   REQUIRE      (many.GetRaw());
-   REQUIRE      (many);
-   REQUIRE_FALSE(not many);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
+   REQUIRE      (any.IsConstant());
+   REQUIRE      (any.IsValid());
+   REQUIRE_FALSE(any.GetAllocation());
+   REQUIRE_FALSE(any.IsEmpty());
+   REQUIRE      (any.GetCount() > 0);
+   REQUIRE      (any.GetReserved() > 0);
+   REQUIRE      (any.GetUses() == 0);
+   REQUIRE      (any.GetRaw());
+   REQUIRE      (any);
+   REQUIRE_FALSE(not any);
 }
 
 template<class E>
-void Any_CheckState_Abandoned(const auto& many) {
-   REQUIRE_FALSE(many.GetAllocation());
+void Any_CheckState_Abandoned(const auto& any) {
+   REQUIRE_FALSE(any.GetAllocation());
 }
 
 void Any_CheckState_ContainsOne(const auto& pack, const auto& e, Allocation* entry = nullptr) {

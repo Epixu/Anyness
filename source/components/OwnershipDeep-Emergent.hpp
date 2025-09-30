@@ -169,7 +169,7 @@ namespace Langulus::Anyness::Component
                // not. This prevents leaks                              
                const auto count = MASKED ? self.GetReserved() : self.GetCount();
                const auto size = T.GetSize();
-               const auto data = self.template GetRawAs<uint8_t>();
+               auto data = self.template GetRawAs<uint8_t>();
                const auto dataEnd = data + size * count;
 
                [[maybe_unused]] int index;

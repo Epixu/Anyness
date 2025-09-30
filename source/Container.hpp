@@ -197,10 +197,35 @@ namespace Langulus::Anyness
          }
       }
       
+      /// Go through all components and accumulate their heap requests into   
+      /// a byte amount, used for header size when allocating                 
+      template<class C1, class...CN>
+      constexpr size_t DefineHeap([[maybe_unused]] const size_t count) noexcept {
+         if constexpr (requires { typename C1::HeapRequest; }) {
+            size_t offset = 0;
+            using R = typename C1::HeapRequest;
+            if constexpr (requires { R::AllocatedPerElement; })
+               offset += sizeof(typename R::Type) * count;
+            else
+               offset += sizeof(R);
+            
+            if constexpr (sizeof...(CN))
+               return offset + DefineHeap<CN...>(count);
+            else
+               return offset;
+         }
+         else {
+            if constexpr (sizeof...(CN))
+               return DefineHeap<CN...>(count);
+            else
+               return 0;
+         }
+      }
+      
       /// Go through all components until PICK is reached, and accumulate     
       /// the offset up to that point, to get the byte offset in the heap     
       template<class PICK, class C1, class...CN>
-      constexpr size_t GetHeapOffset(const size_t count) noexcept {
+      constexpr size_t GetHeapOffset([[maybe_unused]] const size_t count) noexcept {
          static_assert(requires { typename PICK::HeapRequest; },
             "Component data is not on the heap");
           
@@ -327,6 +352,7 @@ namespace Langulus::Anyness
       template<class, class, unsigned> friend struct Com::TypedStack;
       template<CT::NotVoid, unsigned>  friend struct Com::Stack;
       template<unsigned>               friend struct Com::HeapReference;
+      template<unsigned>               friend struct Com::HeapMovable;
       template<unsigned, bool, bool>   friend struct Com::OwnershipStack;
       template<unsigned>               friend struct Com::OwnershipDeepStack;
       template<unsigned>               friend struct Com::OwnershipDeepHeap;
@@ -362,6 +388,13 @@ namespace Langulus::Anyness
             using RC = Tmut<CON, R*, R const*>;
             return reinterpret_cast<RC>(self.template GetRawAs<uint8_t>() + IDX);
          }
+      }
+      
+      /// Calculate the heap header size                                      
+      template<CT::Container C>
+      constexpr size_t GetHeapHeaderSize(this C const& self) noexcept {
+         return Inner::DefineHeap<COMPONENTS...>(
+            static_cast<size_t>(self.GetReserved()));
       }
 
       /// Access a variable on the stack associated with an ID                

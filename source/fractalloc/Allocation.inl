@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Allocation.hpp"
+#include "Pool.hpp"
 
 
 namespace Langulus::Fractalloc
@@ -15,7 +16,8 @@ namespace Langulus::Fractalloc
    /// Initialize an allocation                                               
    ///   @attention this constructor relies that the allocation is placed in  
    ///      the beginning of a heap allocation of size GetNewAllocationSize() 
-   ///   @param bytes - the number of allocated bytes                         
+   ///   @param bytes - the number of allocated bytes (not including the      
+   ///      allocation and padding, just the user bytes)                      
    ///   @param pool - the pool this allocation belongs to                    
    LANGULUS(ALWAYS_INLINED)
    Allocation::Allocation(size_t bytes, Pool* pool) noexcept
@@ -35,26 +37,27 @@ namespace Langulus::Fractalloc
 
    /// Get the minimum possible allocation, header included                   
    ///   @return the byte size                                                
-   consteval size_t Allocation::GetMinAllocation() noexcept {
-      return sizeof(Allocation) + Alignment;
-   }
+   /*LANGULUS(ALWAYS_INLINED)
+   size_t Allocation::GetMinAllocation(size_t alignment) noexcept {
+      return Align(sizeof(Allocation), alignment)
+          + (Alignment < alignment ? alignment : Alignment);
+   }*/
 
    /// Get the size required for a new entry                                  
-   /// The layout is: [sizeof(Allocation)][size]                     
-   ///   @param size - the usable number of bytes required                    
-   ///   @return the byte size for a new Allocation, including padding        
-   LANGULUS(ALWAYS_INLINED)
-   size_t Allocation::GetNewAllocationSize(size_t size) noexcept {
-      constexpr auto minimum = GetMinAllocation();
-      const auto proposed = sizeof(Allocation) + size;
-      return proposed > minimum ? proposed : minimum;
-   }
+   /// The layout is: [sizeof(Allocation)][padding for alignment][size]       
+   ///   @param size - the user bytes required                                
+   ///   @return the size for a new Allocation, including header & padding    
+   /*LANGULUS(ALWAYS_INLINED)
+   size_t Allocation::GetNewAllocationSize(size_t alignment, size_t size) noexcept {
+      const size_t align = alignment > Alignment ? alignment : Alignment;
+      return Align(sizeof(Allocation), align) + (align > size ? align : size);
+   }*/
 
    /// User bytes + the header size                                           
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetBackendSize() const noexcept {
-      return sizeof(Allocation) + mAllocatedBytes;
+      return Align(sizeof(Allocation), mPool->GetAlignment()) + mAllocatedBytes;
    }
 
    /// Get the user bytes                                                     
@@ -65,15 +68,16 @@ namespace Langulus::Fractalloc
    }
 
    /// Return the aligned start of usable block memory (const)                
-   ///   @return pointer to the entry's memory                                
+   ///   @return aligned pointer to the entry's memory                        
    LANGULUS(ALWAYS_INLINED)
    uint8_t* Allocation::GetBlockStart() const noexcept {
       const auto entryStart = reinterpret_cast<const uint8_t*>(this);
-      return const_cast<uint8_t*>(entryStart + sizeof(Allocation));
+      return const_cast<uint8_t*>(entryStart)
+           + Align(sizeof(Allocation), mPool->GetAlignment());
    }
 
    /// Return the end of usable block memory (always const)                   
-   ///   @return pointer to the entry's memory end                            
+   ///   @return aligned pointer to the entry's memory end                    
    LANGULUS(ALWAYS_INLINED)
    uint8_t const* Allocation::GetBlockEnd() const noexcept {
       return GetBlockStart() + mAllocatedBytes;

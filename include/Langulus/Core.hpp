@@ -611,5 +611,11 @@ namespace Langulus
    struct PooledBySize;
    template<unsigned = MinimalPoolSize>
    struct PooledByType;
-   
+
+   /// Align a value to a given alignment                                     
+   template<class T>
+   constexpr T Align(T valueToAlign, T alignment) {
+      const T r = valueToAlign % alignment;
+      return r ? valueToAlign + (alignment - r) : valueToAlign;
+   }
 } // namespace Langulus

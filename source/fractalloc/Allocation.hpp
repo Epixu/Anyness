@@ -35,18 +35,20 @@ namespace Langulus::Fractalloc
       friend struct Unmanaged::Allocator;
    #endif
 
-      // The number of references to this memory                        
-      // Most often used, so first for immediate access                 
+      // The number of references to this memory.                       
+      // Most often used, so first for immediate access.                
       int mReferences = 1;
 
       // Allocated bytes for this chunk                                 
       size_t mAllocatedBytes;
 
-      // This pointer has three uses, depending on mReferences          
+      // This pointer has three uses, depending on mReferences:         
       // If mReferences > 0 and MANAGED_MEMORY is enabled, it points    
-      //    to the pool this allocation was allocated in                
+      //    to the pool this allocation was allocated in.               
       // If mReferences > 0 and MANAGED_MEMORY is disabled, it          
-      //    refers to the handle for std::free()                        
+      //    refers to the handle for std::free().                       
+      // If mReferences == 0, it refers to the next free entry to be    
+      //    reused.                                                     
       union {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             Pool* mPool;
@@ -54,8 +56,6 @@ namespace Langulus::Fractalloc
             MallocHandle* mMallocHandle;
          #endif
 
-         // If mReferences == 0, it refers to the next free entry to be 
-         //    reused                                                   
          Allocation* mNextFreeEntry;
       };
 
@@ -76,9 +76,9 @@ namespace Langulus::Fractalloc
       explicit Allocation(size_t, MallocHandle*) noexcept;
    #endif
 
-      static consteval size_t GetHeaderSize() noexcept;
-      static consteval size_t GetMinAllocation() noexcept;
-      static size_t GetNewAllocationSize(size_t) noexcept;
+      /*static consteval size_t GetHeaderSize() noexcept;
+      static size_t GetMinAllocation(size_t align) noexcept;
+      static size_t GetNewAllocationSize(size_t align, size_t size) noexcept;*/
 
       auto GetUses() const noexcept { return mReferences; }
       auto GetBackendSize() const noexcept -> size_t;
@@ -88,15 +88,7 @@ namespace Langulus::Fractalloc
       bool Contains(const void*) const noexcept;
       void Keep(int = 1) noexcept;
       void Free(int = 1) noexcept;
-
-      /// A simple request for allocating memory                              
-      /// It is used as optimization to avoid divisions by stride             
-      struct Request {
-         size_t mByteSize IF_SAFE(= 0);
-         size_t mElementCount IF_SAFE(= 0);
-         IF_UNSAFE(constexpr Request() {})
-      };
    };
 }
 
-#include "Allocation.inl"
+//#include "Allocation.inl"
