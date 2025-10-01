@@ -36,6 +36,7 @@ namespace Langulus::Anyness::Inner
 
 namespace Langulus::Anyness
 {
+   ///                                                                        
    /// A statically-typed container of size 1 that is binary-compatible with  
    /// the type-erased alternative `Any`.                                     
    template<CT::NotVoid T>
@@ -50,8 +51,11 @@ namespace Langulus::Anyness
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       // Single element selections                                      
-      using Pick    = T const&;
-      using PickMut = THandle<T&>;
+      using Pick          = T const&;
+      using PickMut       = THandle<T&>;
+      using HandleType    = THandle<T const&>;
+      using HandleMutType = THandle<T&>;
+      using DeepType      = Any;
 
       constexpr TAny() { this->ConstructDefault(); }
       constexpr TAny(TAny const& other) : TAny {Refer {other}} {}

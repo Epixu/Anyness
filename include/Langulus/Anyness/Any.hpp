@@ -24,6 +24,7 @@
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
+#include "Handle.hpp"
 
 
 namespace Langulus::Anyness::Inner
@@ -53,7 +54,7 @@ namespace Langulus::Anyness::Inner
 namespace Langulus::Anyness
 {
    ///                                                                        
-   /// A universal type-erased container of size 1                            
+   /// A universal type-erased container of size 1.                           
    /// This is the most universal and feature-complete container, that        
    /// supports all kinds of data states: compression, encryption, linking,   
    /// and so on. For a slightly smaller and faster representation, consider  
@@ -68,10 +69,11 @@ namespace Langulus::Anyness
       using Com::OwnershipDeepHeap<>::DestroyElement;
       using DefineState::Typed<>::IsTypeConstrained;
 
-      // Single element selections                                      
-      using Pick     = Handle;
-      using PickMut  = HandleMut;
-      using DeepType = Any;
+      using Pick          = Handle;
+      using PickMut       = HandleMut;
+      using HandleType    = Handle;
+      using HandleMutType = HandleMut;
+      using DeepType      = Any;
 
       constexpr Any() { this->ConstructDefault(); }
       constexpr Any(Any const& other) : Any {Refer {other}} {}

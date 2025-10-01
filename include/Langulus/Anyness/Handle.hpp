@@ -35,6 +35,7 @@ namespace Langulus::Anyness
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
+      using HandleMutType  = HandleMut;
 
       HandleMut() = delete;
       
@@ -60,6 +61,7 @@ namespace Langulus::Anyness
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
+      using HandleMutType  = HandleDisownedMut;
 
       HandleDisownedMut() = delete;
       
@@ -88,6 +90,7 @@ namespace Langulus::Anyness
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
+      using HandleType     = Handle;
 
       Handle() = delete;
 
@@ -111,6 +114,7 @@ namespace Langulus::Anyness
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
+      using HandleType     = HandleDisowned;
 
       HandleDisowned() = delete;
       

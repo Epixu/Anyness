@@ -121,18 +121,20 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(self.template IsSimilar<IT>(), "Type mismatch");
             auto T = self.GetTypeInner();
 
+            const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
+            const auto dst = self.GetRaw();
             if constexpr (CT::Moved<I>)
-               T.GetMoveConstructor()(self.GetRaw(), &rhs);
+               T.GetMoveConstructor()(dst, src);
             else if constexpr (CT::Abandoned<I>)
-               T.GetAbandonConstructor()(self.GetRaw(), &rhs);
+               T.GetAbandonConstructor()(dst, src);
             else if constexpr (CT::Referred<I>)
-               T.GetReferConstructor()(self.GetRaw(), &rhs);
+               T.GetReferConstructor()(dst, src);
             else if constexpr (CT::Copied<I>)
-               T.GetCopyConstructor()(self.GetRaw(), &rhs);
+               T.GetCopyConstructor()(dst, src);
             else if constexpr (CT::Disowned<I>)
-               T.GetDisownConstructor()(self.GetRaw(), &rhs);
+               T.GetDisownConstructor()(dst, src);
             else if constexpr (CT::Cloned<I>)
-               T.GetCloneConstructor()(self.GetRaw(), &rhs);
+               T.GetCloneConstructor()(dst, src);
             else
                static_assert(false, "Unrecognized intent");
          }

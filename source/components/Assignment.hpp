@@ -221,20 +221,21 @@ namespace Langulus::Anyness::Component
                // Either this container or the handle is type-erased    
                auto T = rhs.GetTypeInner();
                LglsAssumeDev(self.IsSimilar(T), "Type mismatch");
-               void* data = self.template AccessStackById<ID>();
 
+               const auto src = const_cast<void*>(rhs.GetRaw());
+               const auto dst = self.template AccessStackById<ID>();
                if constexpr (CT::Moved<I>)
-                  T.GetMoveAssigner()(data, rhs.GetRaw());
+                  T.GetMoveAssigner()(dst, src);
                else if constexpr (CT::Abandoned<I>)
-                  T.GetAbandonAssigner()(data, rhs.GetRaw());
+                  T.GetAbandonAssigner()(dst, src);
                else if constexpr (CT::Referred<I>)
-                  T.GetReferAssigner()(data, rhs.GetRaw());
+                  T.GetReferAssigner()(dst, src);
                else if constexpr (CT::Copied<I>)
-                  T.GetCopyAssigner()(data, rhs.GetRaw());
+                  T.GetCopyAssigner()(dst, src);
                else if constexpr (CT::Disowned<I>)
-                  T.GetDisownAssigner()(data, rhs.GetRaw());
+                  T.GetDisownAssigner()(dst, src);
                else if constexpr (CT::Cloned<I>)
-                  T.GetCloneAssigner()(data, rhs.GetRaw());
+                  T.GetCloneAssigner()(dst, src);
                else
                   static_assert(false, "Unrecognized intent");
 
@@ -262,20 +263,21 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
             LglsAssumeDev(self.template IsSimilar<IT>(), "Type mismatch");
             auto T = self.GetTypeInner();
-            void* data = self.template AccessStackById<ID>();
 
+            const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
+            const auto dst = self.template AccessStackById<ID>();
             if constexpr (CT::Moved<I>)
-               T.GetMoveAssigner()(data, &rhs);
+               T.GetMoveAssigner()(dst, src);
             else if constexpr (CT::Abandoned<I>)
-               T.GetAbandonAssigner()(data, &rhs);
+               T.GetAbandonAssigner()(dst, src);
             else if constexpr (CT::Referred<I>)
-               T.GetReferAssigner()(data, &rhs);
+               T.GetReferAssigner()(dst, src);
             else if constexpr (CT::Copied<I>)
-               T.GetCopyAssigner()(data, &rhs);
+               T.GetCopyAssigner()(dst, src);
             else if constexpr (CT::Disowned<I>)
-               T.GetDisownAssigner()(data, &rhs);
+               T.GetDisownAssigner()(dst, src);
             else if constexpr (CT::Cloned<I>)
-               T.GetCloneAssigner()(data, &rhs);
+               T.GetCloneAssigner()(dst, src);
             else
                static_assert(false, "Unrecognized intent");
          }

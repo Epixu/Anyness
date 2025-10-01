@@ -7,8 +7,8 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include <Langulus/CT/Same.hpp>
 #include <Langulus/MetaOf.hpp>
+#include <Langulus/CT/Same.hpp>
 #include <Langulus/CT/Deep.hpp>
 
 
@@ -218,10 +218,18 @@ namespace Langulus::Anyness::Component
       ///   @attention disowned containers are always constant                
       ///   @return true if the contents are constant                         
       constexpr bool IsConstant(this auto const& self) noexcept {
-         if constexpr (TypeErased)
-            return not self.GetAllocation() or self.GetTypeInner().IsConstant();
-         else
-            return CT::Constant<TYPE> or not self.GetAllocation();
+         if constexpr (requires { self.GetAllocation(); }) {
+            if constexpr (TypeErased)
+               return not self.GetAllocation() or self.GetTypeInner().IsConstant();
+            else
+               return CT::Constant<TYPE> or not self.GetAllocation();
+         }
+         else {
+            if constexpr (TypeErased)
+               return self.GetTypeInner().IsConstant();
+            else
+               return CT::Constant<TYPE>;
+         }
       }
 
       /// Check if container is made of other containers                      

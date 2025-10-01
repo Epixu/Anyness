@@ -152,12 +152,12 @@ namespace Langulus::Anyness::Component
       ///   @attention does not modify any container state                    
       template<CT::Container C> requires (not CT::DeeplyOwned<C>)
       void DestroyElement(this C& self) noexcept {
-         static_assert(CT::ContainsOne<C>);
+         static_assert(CT::ContainsOne<C>,
+            "Destroying only first element in a container with many");
 
          if constexpr (CT::TypeErased<C>) {
             // Destroying a type-erased element                         
             auto T = self.GetType();
-
             if (const auto destructor = T.GetDestructor()) {
                const auto ptr = self.GetRaw();
                if (const auto referencer = T.GetReferencer())
@@ -167,8 +167,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Destroying a statically-typed element                    
-            using T = TypeOf<C>;    
-
+            using T = TypeOf<C>;
             if constexpr (CT::Destroyable<T>) {
                auto& element = self.Get();
                if constexpr (CT::Referenced<T>)

@@ -238,8 +238,10 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't change any container state                     
       template<CT::Container C>
       void DestroyElement(this C& self) has_assumptions {
-         static_assert(CT::ContainsOne<C>);
+         static_assert(CT::ContainsOne<C>,
+            "Destroying only first element in a container with many");
 
+         using H = typename C::HandleMutType;
          if constexpr (CT::TypeErased<C>) {
             // Destroying a type-erased element                         
             const auto T = self.GetType();
@@ -260,7 +262,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      if (auto subEntry = Allocator::Find(subT, ptr)) {
                         //TODO extract entry from previous entry?
-                        C temp {ptr, const_cast<EntryPtr>(&subEntry), subT};
+                        H temp {ptr, const_cast<EntryPtr>(&subEntry), subT};
                         temp.DestroyElement();
                      }
                   }
@@ -320,7 +322,7 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Sparse<DT>) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
-                     C {ptr}.DestroyElement();
+                     H {ptr}.DestroyElement();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
                      // Pointer to a complete, destroyable dense.       

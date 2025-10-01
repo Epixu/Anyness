@@ -8,6 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Resolvable.hpp>
+#include <Langulus/CT/MinAlloc.hpp>
 
 
 namespace Langulus::Anyness::Component
