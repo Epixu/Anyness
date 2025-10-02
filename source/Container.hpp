@@ -391,10 +391,8 @@ namespace Langulus::Anyness
       }
       
       /// Calculate the heap header size                                      
-      template<CT::Container C>
-      constexpr size_t GetHeapHeaderSize(this C const& self) noexcept {
-         return Inner::DefineHeap<COMPONENTS...>(
-            static_cast<size_t>(self.GetReserved()));
+      static constexpr size_t GetHeapHeaderSize(size_t count) noexcept {
+         return Inner::DefineHeap<COMPONENTS...>(count);
       }
 
       /// Access a variable on the stack associated with an ID                

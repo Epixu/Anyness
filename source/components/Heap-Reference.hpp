@@ -353,9 +353,9 @@ namespace Langulus::Anyness::Component
       /// Get a size based on reflected allocation page and count             
       ///   @param count - the number of elements to request                  
       template<CT::Container C>
-      auto RequestHeap(this C const& self, const size_t count) has_assumptions -> Request {
+      Request RequestHeap(this C const& self, const size_t count) has_assumptions {
          Request result;
-         const size_t header = self.GetHeapHeaderSize();
+         const size_t header = self.GetHeapHeaderSize(count);
          
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.GetType();

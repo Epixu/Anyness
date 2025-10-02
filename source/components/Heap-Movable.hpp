@@ -350,12 +350,12 @@ namespace Langulus::Anyness::Component
       /// Remap all heap requests onto the newly reserved count               
       template<CT::Container C>
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
-         if (self.GetHeapHeaderSize() == 0)
+         const auto reserved = self.GetReserved();
+         if (self.GetHeapHeaderSize(reserved) == 0)
             return;
 
          //TODO when newReserved is larger than reserved stuff has to move to the right,
          // so it must be done in reverse so that we don't destroy any data. otherwise stuff moves to the left, and all that from/to calculations are not necessary
-         const auto reserved = self.GetReserved();
          size_t from[C::ComponentList::Count];
          size_t to  [C::ComponentList::Count];
          size_t idx = 1;
