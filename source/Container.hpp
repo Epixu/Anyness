@@ -312,7 +312,7 @@ namespace Langulus::Anyness
       /// C++ copy-semantics are mapped onto Refer intent                     
       /// In other words - a copy is always shallow, unless explicitly Copy   
       /// or Clone intent is used                                             
-      constexpr Container& operator =(Container const& other) noexcept {
+      constexpr Container& operator = (Container const& other) {
          return operator = (Refer {other});
       }
 

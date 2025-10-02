@@ -214,7 +214,7 @@ namespace Langulus::Anyness::Component
       ///   @return the newly allocated mutable range                         
       template<CT::Container C, class...A>
       auto Extend(this C& self, Count<C> count = 1, A&&...arguments)
-      -> PickRangeMut<C> {
+      -> C /*PickRangeMut<C>*/ {
          const auto previousCount = self.GetCount();
          if constexpr (sizeof...(A) == 0)
             self.InsertDefault(count);

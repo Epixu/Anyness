@@ -247,8 +247,10 @@ namespace Langulus::Anyness::Component
          -> At<C> requires CT::RangeComparable<C, T>
       {
          if constexpr (not C::TypeErased) {
-            auto start = REVERSE ? self.GetRawEnd() - 1 - cookie : self.GetRaw() + cookie;
-            auto end   = REVERSE ? start - self.GetCount() : start + self.GetCount();
+            auto start = REVERSE ? self.GetRawEnd() - 1 - cookie
+                                 : self.GetRaw() + cookie;
+            auto end   = REVERSE ? start - self.GetCount()
+                                 : start + self.GetCount();
 
             while (start != end) {
                if (*start == item)
@@ -259,7 +261,8 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            Count<C> i = REVERSE ? self.GetCount() - 1 - cookie : cookie;
+            Count<C> i = REVERSE ? self.GetCount() - 1 - cookie
+                                 : cookie;
             while (i < self.GetCount()) {
                if (self.GetElementInner(i) == item)
                   return i;
@@ -299,10 +302,12 @@ namespace Langulus::Anyness::Component
 
             // If this is reached, then types are comparable            
             auto rhs = range.GetRaw();
-            auto lhs = REVERSE ? self.GetRawEnd() - cookie - range.GetCount() : self.GetRaw() + cookie;
+            auto lhs = REVERSE ? self.GetRawEnd() - cookie - range.GetCount()
+                               : self.GetRaw() + cookie;
 
             const auto rhsEnd = range.GetRawEnd();
-            const auto lhsEnd = REVERSE ? self.GetRaw() - 1 : self.GetRawEnd() - range.GetCount() + 1;
+            const auto lhsEnd = REVERSE ? self.GetRaw() - 1
+                                        : self.GetRawEnd() - range.GetCount() + 1;
 
             // This byte size is used ONLY IF both types are binary     
             // compatible. It is simply precomputed here, so that it    
@@ -311,7 +316,8 @@ namespace Langulus::Anyness::Component
 
             while (lhs != lhsEnd) {
                if (*lhs == *rhs) {
-                  cookie = REVERSE ? self.GetRawEnd() - lhs - 1 : lhs - self.GetRaw();
+                  cookie = REVERSE ? self.GetRawEnd() - lhs - 1
+                                   : lhs - self.GetRaw();
 
                   ++lhs;
                   ++rhs;
@@ -334,7 +340,8 @@ namespace Langulus::Anyness::Component
                         return cookie;
                   }
 
-                  lhs = REVERSE ? self.GetRawEnd() - cookie - 1 : self.GetRaw() + cookie;
+                  lhs = REVERSE ? self.GetRawEnd() - cookie - 1
+                                : self.GetRaw() + cookie;
                   rhs = range.GetRaw();
                }
 
@@ -345,8 +352,10 @@ namespace Langulus::Anyness::Component
             return Index::None;
          }
          else {
-            Count<C1> i = REVERSE ? self.GetCount() - 1 - cookie : cookie;
-            const auto iend = REVERSE ? static_cast<Count<C1>>(-1) : self.GetCount() - range.GetCount() + 1;
+            Count<C1> i = REVERSE ? self.GetCount() - 1 - cookie
+                                  : cookie;
+            const auto iend = REVERSE ? static_cast<Count<C1>>(-1)
+                                      : self.GetCount() - range.GetCount() + 1;
 
             while (i != iend) {
                if (self.CropInner(i, range.GetCount()) == range)
@@ -361,7 +370,14 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      bool Contains(const CT::NoIntent auto&) const;
+      /// Check if the container contains an element                          
+      template<CT::Container C>
+      bool Contains(this C const& self, const CT::NoIntent auto& item) {
+         if constexpr (CT::ContainsMany<C>)
+            return self.Find(item) != Index::None;
+         else
+            return self.CompareSingleValue(item);
+      }      
 
    protected:
       /// Compare with one single value, if exactly one element is contained  
@@ -372,14 +388,7 @@ namespace Langulus::Anyness::Component
          if (self.GetCount() != 1)
             return false;
 
-         if constexpr (CT::Typed<C>) {
-            // Both sides are statically typed                          
-            if constexpr (CT::Comparable<TypeOf<C>, RT>)
-               return *self.GetRaw() == rhs;
-            else
-               return false;
-         }
-         else {
+         if constexpr (CT::TypeErased<C>) {
             // THIS is type-erased, do runtime type checks              
             if (not self.IsTyped())
                return false;
@@ -408,13 +417,20 @@ namespace Langulus::Anyness::Component
             }
             else return false;
          }
+         else {
+            // Both sides are statically typed                          
+            if constexpr (CT::Comparable<TypeOf<C>, RT>)
+               return *self.GetRaw() == rhs;
+            else
+               return false;
+         }
       }
 
       /// Compare hashes of two containers                                    
       ///   @return true if hashes are the same                               
       template<CT::Container LHS, CT::Container RHS> requires HASH
       constexpr bool CompareHashes(this LHS const& lhs, RHS const& rhs) {
-         if constexpr (requires {lhs.GetHash(); rhs.GetHash(); })
+         if constexpr (requires { lhs.GetHash(); rhs.GetHash(); })
             return lhs.GetHash() == rhs.GetHash();
          else
             return false;

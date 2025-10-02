@@ -9,6 +9,7 @@
 #include "../Container.hpp"
 #include "IndexedLinear.hpp"
 #include <Langulus/CT/Contiguous.hpp>
+#include "Langulus/CT/Describable.hpp"
 
 
 namespace Langulus::CT
@@ -192,7 +193,16 @@ namespace Langulus::Anyness::Component
                //                                                       
                // This container is type-erased                         
                auto T = self.GetType();
-               T.GetDescribeConstructor()(self.GetRaw(), {FWD(arguments)...});
+               if constexpr (sizeof...(arguments) == 1) {
+                  using A1 = typename Types<decltype(arguments)...>::First;
+                  if constexpr (CT::Similar<A1, Describe>)
+                     T.GetDescribeConstructor()(self.GetRaw(), FWD(arguments.what)...);
+                  else static_assert(false,
+                     "Argument must be a Describe instance");
+               }
+               else static_assert(false,
+                  "Too many arguments for emplacing a type-erased instance. "
+                  "You should group all arguments inside a Describe first");
             }
             else {
                //                                                       

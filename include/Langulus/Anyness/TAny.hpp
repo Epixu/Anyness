@@ -57,9 +57,9 @@ namespace Langulus::Anyness
       using HandleMutType = THandle<T&>;
       using DeepType      = Any;
 
-      constexpr TAny() { this->ConstructDefault(); }
+      constexpr TAny() noexcept { this->ConstructDefault(); }
       constexpr TAny(TAny const& other) : TAny {Refer {other}} {}
-      constexpr TAny(TAny&& other)      : TAny {Move  {other}} {}
+      constexpr TAny(TAny&& other) noexcept : TAny {Move  {other}} {}
 
       /// Construction that emplaces T in the container                       
       template<class...A>
@@ -86,6 +86,13 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
+      constexpr TAny& operator = (TAny const& other) {
+         return operator = (Refer {other});
+      }
+      constexpr TAny& operator = (TAny&& other) noexcept {
+         return operator = (Move {other});
+      }
+
       template<class A>
       constexpr TAny& operator = (A&& argument) {
          if constexpr (CT::ContainsOne<A>)

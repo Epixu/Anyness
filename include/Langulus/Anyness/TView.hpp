@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/Container.hpp"
+/*#include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Reference.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/IndexedLinear.hpp"
@@ -29,6 +29,7 @@ namespace Langulus::Anyness
          Com::HeapReference<>,               // Pointer to heap memory  
          Com::OwnershipStack<0, false>,      // Pointer to an allocation
          Com::CountStack<>,                  // Variable count          
+         Com::ReserveEmergent<>,             // Capacity derived from al
          Com::HashEmergent<>,                // Emergent hash           
          Com::Comparison<>,                  // Allows for comparisons  
          Com::Conversion,                    // Allows conversions      
@@ -54,4 +55,4 @@ namespace Langulus::Anyness
       using Base::operator =;
       using Base::operator ==;
    };
-}
+}*/

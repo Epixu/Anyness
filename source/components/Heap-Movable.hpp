@@ -301,7 +301,7 @@ namespace Langulus::Anyness::Component
             "BranchOut should've been called prior to AllocateMore"
          );
 
-         const auto request = self.RequestSize(desiredReserve);
+         const auto request = self.RequestHeap(desiredReserve);
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Type-erased shrinking                                    
@@ -337,11 +337,11 @@ namespace Langulus::Anyness::Component
             }
             
             // Early return if reserve itself didn't change             
-            if (request.mElementCount == self.GetReserved())
+            if (request.mReserved == self.GetReserved())
                return;
 
             self.RemapHeapRequests(request.mReserved);
-            self.SetAllocationInner(Allocator::Reallocate(request.mByteSize, al));
+            self.SetAllocationInner(Allocator::Reallocate(request.mTotalBytes, al));
          }
 
          if_available(self.SetReserveInner(request.mReserved));

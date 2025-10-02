@@ -48,14 +48,14 @@ namespace
 }
 
 /// Possible states:                                                          
-void Text_CheckState_Default(const Text&);
-void Text_CheckState_Invariant(const Text&);
-void Text_CheckState_OwnedFull(const Text&);
-void Text_CheckState_OwnedFullConst(const Text&);
-void Text_CheckState_OwnedEmpty(const Text&);
-void Text_CheckState_DisownedFull(const Text&);
-void Text_CheckState_DisownedFullConst(const Text&);
-void Text_CheckState_Abandoned(const Text&);
+void Text_CheckState_Default(const CT::Container auto&);
+void Text_CheckState_Invariant(const CT::Container auto&);
+void Text_CheckState_OwnedFull(const CT::Container auto&);
+void Text_CheckState_OwnedFullConst(const CT::Container auto&);
+void Text_CheckState_OwnedEmpty(const CT::Container auto&);
+void Text_CheckState_DisownedFull(const CT::Container auto&);
+void Text_CheckState_DisownedFullConst(const CT::Container auto&);
+void Text_CheckState_Abandoned(const CT::Container auto&);
 
 TEMPLATE_TEST_CASE("Testing text containers", "[text]",
    Text
@@ -638,7 +638,7 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", Stringifiable, Strin
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }*/
 
-void Text_CheckState_Default(const Text& text) {
+void Text_CheckState_Default(const CT::Container auto& text) {
    REQUIRE      (text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
@@ -648,7 +648,7 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.IsExact<char>());
+   REQUIRE      (text.template IsExact<char>());
    REQUIRE      (text.GetCount() == 0);
    REQUIRE      (text.GetReserved() == 0);
    REQUIRE      (text.GetUses() == 0);
@@ -664,7 +664,7 @@ void Text_CheckState_Default(const Text& text) {
    REQUIRE_FALSE(text == "no match");
 }
 
-void Text_CheckState_OwnedEmpty(const Text& text) {
+void Text_CheckState_OwnedEmpty(const CT::Container auto& text) {
    REQUIRE_FALSE(text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
@@ -674,7 +674,7 @@ void Text_CheckState_OwnedEmpty(const Text& text) {
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.IsExact<char>());
+   REQUIRE      (text.template IsExact<char>());
    REQUIRE      (text.GetCount() == 0);
    REQUIRE      (text.GetReserved() > 0);
    REQUIRE      (text.GetUses() == 1);
@@ -690,7 +690,7 @@ void Text_CheckState_OwnedEmpty(const Text& text) {
    REQUIRE_FALSE(text == "no match");
 }
 
-void Text_CheckState_OwnedFull(const Text& text) {
+void Text_CheckState_OwnedFull(const CT::Container auto& text) {
    REQUIRE_FALSE(text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
@@ -700,7 +700,7 @@ void Text_CheckState_OwnedFull(const Text& text) {
    REQUIRE      (text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.IsExact<char>());
+   REQUIRE      (text.template IsExact<char>());
    REQUIRE      (text.GetCount() > 0);
    REQUIRE      (text.GetReserved() > 0);
    REQUIRE      (text.GetUses() > 0);
@@ -716,7 +716,7 @@ void Text_CheckState_OwnedFull(const Text& text) {
    REQUIRE_FALSE(text == "no match");
 }
 
-void Text_CheckState_DisownedFullConst(const Text& text) {
+void Text_CheckState_DisownedFullConst(const CT::Container auto& text) {
    REQUIRE      (text.IsConstant());
    REQUIRE_FALSE(text.IsDeep());
    REQUIRE_FALSE(text.IsSparse());
@@ -726,7 +726,7 @@ void Text_CheckState_DisownedFullConst(const Text& text) {
    REQUIRE_FALSE(text.GetAllocation());
    REQUIRE      (text.IsTypeConstrained());
    REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.IsExact<char>());
+   REQUIRE      (text.template IsExact<char>());
    REQUIRE      (text.GetCount() > 0);
    REQUIRE      (text.GetReserved() == 0);
    REQUIRE      (text.GetUses() == 0);

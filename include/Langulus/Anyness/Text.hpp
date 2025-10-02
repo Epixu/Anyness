@@ -39,7 +39,7 @@ namespace Langulus::Anyness
          Com::HeapMovable<>,              // Pointer to heap memory     
          Com::OwnershipStack<>,           // Allocation is referenced   
          Com::CountStack<>,               // Variable count             
-         Com::ReserveEmergent<>,          // Variable capacity          
+         Com::ReserveEmergent<>,          // Capacity derived from alloc
          Com::HashStack<>,                // Variable hash (cached)     
          Com::Insertion<0, Text>,         // Serialize + insert         
          Com::InsertionOperators<0, Text>,// << and >> insertion        
@@ -68,17 +68,17 @@ namespace Langulus::Anyness
       using PickMut = char&;
 
       // Range selections                                               
-      using PickRange    = TView<char const>;
-      using PickRangeMut = TView<char>;
+      //using PickRange    = TView<char const>;
+      //using PickRangeMut = TView<char>;
       
       //using Base::Base;
       using Base::operator =;
       using Base::operator ==;
 
       constexpr Text() noexcept { this->ConstructDefault(); }
-      constexpr Text(nullptr_t) noexcept : Text {} {}
-      constexpr Text(Text const& other)  : Text {Refer {other}} {}
-      constexpr Text(Text&& other)       : Text {Move  {other}} {}
+      constexpr Text(nullptr_t) noexcept    : Text {} {}
+      constexpr Text(Text const& other)     : Text {Refer {other}} {}
+      constexpr Text(Text&& other) noexcept : Text {Move  {other}} {}
 
       /// Construction from any kind of text that is an Anyness container     
       template<CT::Text T> requires CT::Container<T>
@@ -153,6 +153,14 @@ namespace Langulus::Anyness
          *this->GetRawAs<char>() = DeintCast(ch);
          this->SetCountInner(1);
          this->ResetHash();
+      }
+      
+      /// Assignment                                                          
+      constexpr Text& operator = (Text const& other) {
+         return this->operator = (Refer {other});
+      }
+      constexpr Text& operator = (Text&& other) noexcept {
+         return this->operator = (Move {other});
       }
 
       /// Construction from all kinds of text, trim length to desired count   
@@ -386,7 +394,7 @@ namespace Langulus::CT
 namespace Langulus
 {
    /// Make a text literal                                                    
-   Anyness::Text operator ""_text(const char* text, size_t size) {
+   inline Anyness::Text operator ""_text(const char* text, size_t size) {
       return Anyness::Text::FromText(text, size);
    }
 }

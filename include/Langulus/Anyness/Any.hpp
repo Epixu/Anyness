@@ -75,9 +75,9 @@ namespace Langulus::Anyness
       using HandleMutType = HandleMut;
       using DeepType      = Any;
 
-      constexpr Any() { this->ConstructDefault(); }
+      constexpr Any() noexcept { this->ConstructDefault(); }
       constexpr Any(Any const& other) : Any {Refer {other}} {}
-      constexpr Any(Any&& other)      : Any {Move  {other}} {}
+      constexpr Any(Any&& other) noexcept : Any {Move  {other}} {}
 
       /// Construction that emplaces A in the container                       
       template<class A>
@@ -92,6 +92,13 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
+      constexpr Any& operator = (Any const& other) {
+         return operator = (Refer {other});
+      }
+      constexpr Any& operator = (Any&& other) noexcept {
+         return operator = (Move {other});
+      }
+      
       template<class A>
       constexpr Any& operator = (A&& argument) {
          if constexpr (CT::ContainsOne<A>)
