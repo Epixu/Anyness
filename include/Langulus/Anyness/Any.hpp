@@ -63,12 +63,8 @@ namespace Langulus::Anyness
    /// using Own or Ref instead. If you want to contain a number of similar   
    /// elements use Many instead.                                             
    struct Any : Inner::AnyBase {
-      //using Base = Inner::AnyBase;
-      //using Base::Base;
-      //using Base::operator =;
-      //using Com::Assignment<>::operator =;
       using Base::operator ==;
-      using Com::OwnershipDeepHeap<>::DestroyElement;
+      //using Com::OwnershipDeepHeap<>::DestroyElement;
       using DefineState::Typed<>::IsTypeConstrained;
 
       using Pick          = Handle;
@@ -78,8 +74,9 @@ namespace Langulus::Anyness
       using DeepType      = Any;
 
       constexpr Any() noexcept { this->ConstructDefault(); }
-      constexpr Any(Any const& other) : Any {Refer {other}} {}
+      constexpr Any(Any const& other)     : Any {Refer {other}} {}
       constexpr Any(Any&& other) noexcept : Any {Move  {other}} {}
+      constexpr ~Any() noexcept { this->Destroy(); }
 
       /// Construction that emplaces A in the container                       
       template<class A>
@@ -104,10 +101,16 @@ namespace Langulus::Anyness
       
       template<class A>
       constexpr Any& operator = (A&& argument) {
-         if constexpr (CT::ContainsOne<A>)
+         if constexpr (CT::ContainsOne<A>) {
+            LglsAssumeUser(not IsDeep(), "Ambiguous use of assignment "
+               "- you should use either AssignFrom (if you want to overwrite "
+               "the container itself) or Assign (if you want to overwrite the "
+               "first item) in order to clearly state your intent. "
+               "AssignFrom will be used by default"
+            );
             this->AssignFrom(FWD(argument));
-         else
-            this->Com::Assignment<>::operator = (FWD(argument));
+         }
+         else Com::Assignment<>::operator = (FWD(argument));
          return *this;
       }
    };

@@ -117,7 +117,10 @@ namespace Langulus::Anyness::Component
                   // deallocate and make sure CountStatic reports as    
                   // empty.                                             
                   while (n) {
-                     dst->DestroyElement();
+                     if constexpr (requires { dst->DestroyElementDeep(); })
+                        dst->DestroyElementDeep();
+                     else
+                        dst->DestroyElement();
                      --dst; --n;
                   }
                   Allocator::Deallocate(al);

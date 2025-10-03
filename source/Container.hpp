@@ -300,14 +300,14 @@ namespace Langulus::Anyness
          : mStack {FWD(arguments)...} {}
 
       /// Explicitly call Destroy in all of the components.                   
-      constexpr ~Container() noexcept {
+      constexpr ~Container() noexcept = default;// {
          //static_assert(::std::is_standard_layout_v<Container>);
-         if not consteval {
-            ComponentList::ForEach([this]<class C> {
-               if_available(this->C::Destroy());
+         /*if not consteval {
+            ComponentList::ForEach([&]<class C> {
+               if_available(self.C::Destroy());
             });
-         }
-      }
+         }*/
+      //}
 
       /// C++ copy-semantics are mapped onto Refer intent                     
       /// In other words - a copy is always shallow, unless explicitly Copy   
@@ -434,6 +434,15 @@ namespace Langulus::Anyness
          });
       }
 
+      /// Call Destroy whenever possible                                      
+      constexpr void Destroy(this auto& self) {
+         if not consteval {
+            ComponentList::ForEach([&]<class C> {
+               if_available(self.C::Destroy());
+            });
+         }
+      }
+
       /// Explicitly call AssignDefault in all of the components.             
       constexpr void AssignDefault(this auto& self) noexcept {
          ComponentList::ForEach([&]<class C>{
@@ -441,6 +450,7 @@ namespace Langulus::Anyness
          });
       }
 
+   public:
       /// Call AssignFrom whenever possible, fallback to AssignDefault        
       /// otherwise                                                           
       constexpr void AssignFrom(this auto& self, CT::Container auto&& rhs) {

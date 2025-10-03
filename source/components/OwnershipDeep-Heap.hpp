@@ -19,34 +19,14 @@ namespace Langulus::Anyness::Component
    struct OwnershipDeepHeap : OwnershipDeepEmergent<ID> {
       using HeapRequest = PerElement<AllocationPtr>;
 
-      static constexpr bool DeeplyOwned = true;
-      static constexpr int  ComponentPrecedence = 2000;
+      //static constexpr bool DeeplyOwned = true;
+      //static constexpr int  ComponentPrecedence = 2000;
 
    protected:
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;
       template<unsigned> friend struct OwnershipDeepEmergent;
-
-      /*template<CT::Container C>
-      using Count = typename Deref<C>::CountType;*/
-
-      /// Get the array of entries (inner)                                    
-      /*constexpr auto GetEntriesInner(this auto&& self) noexcept -> EntryPtr {
-         return self.template AccessHeap<OwnershipDeepHeap>();
-      }*/
-      
-      /// Set the array of entries                                            
-      /*template<CT::Container C>
-      constexpr void SetEntriesInner(this C& self, EntryPtr entries, Count<C> count) noexcept {
-         self.GetCountInner() = c;
-      }*/
-
-      //template<unsigned>
-      //friend struct HeapMovable;
-
-      //template<CT::Container C>
-      //using View = typename C::ViewType;
 
       /// Get entry array if containing pointers                              
       ///   @return the array of entries                                      

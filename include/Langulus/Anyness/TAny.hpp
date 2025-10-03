@@ -45,14 +45,10 @@ namespace Langulus::Anyness
    struct TAny : Inner::TAnyBase<T> {
       using CTTI_ReflectAs = Any;
       using Base = Inner::TAnyBase<T>;
-      //using Base::Base;
-      //using Base::operator =;
-      //using Com::Assignment<>::operator =;
       using Base::operator ==;
-      using Com::OwnershipDeepHeap<>::DestroyElement;
+      //using Com::OwnershipDeepHeap<>::DestroyElement;
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
-      // Single element selections                                      
       using Pick          = T const&;
       using PickMut       = THandle<T&>;
       using HandleType    = THandle<T const&>;
@@ -60,8 +56,9 @@ namespace Langulus::Anyness
       using DeepType      = Any;
 
       constexpr TAny() noexcept { this->ConstructDefault(); }
-      constexpr TAny(TAny const& other) : TAny {Refer {other}} {}
+      constexpr TAny(TAny const& other)     : TAny {Refer {other}} {}
       constexpr TAny(TAny&& other) noexcept : TAny {Move  {other}} {}
+      constexpr ~TAny() noexcept { this->Destroy(); }
 
       /// Construction that emplaces T in the container                       
       template<class...A>
@@ -99,10 +96,16 @@ namespace Langulus::Anyness
 
       template<class A>
       constexpr TAny& operator = (A&& argument) {
-         if constexpr (CT::ContainsOne<A>)
+         if constexpr (CT::ContainsOne<A>) {
+            LglsAssumeUser(CT::NotContainer<T>, "Ambiguous use of assignment "
+               "- you should use either AssignFrom (if you want to overwrite "
+               "the container itself) or Assign (if you want to overwrite the "
+               "first item) in order to clearly state your intent. "
+               "AssignFrom will be used by default"
+            );
             this->AssignFrom(FWD(argument));
-         else
-            Com::Assignment<>::operator = (FWD(argument));
+         }
+         else Com::Assignment<>::operator = (FWD(argument));
          return *this;
       }
    };

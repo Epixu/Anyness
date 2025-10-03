@@ -85,7 +85,7 @@ namespace Langulus::Anyness::Component
       ///   @param argument - the argument to assign                          
       ///   @return reference to self                                         
       template<CT::Container C, class A>
-      C& operator = (this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
+      C& Assign(this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
          if constexpr (not CT::HeapAllocated<C>) {
             // This container is on the stack, and by extension         
             // statically-typed and always initialized                  
@@ -129,6 +129,15 @@ namespace Langulus::Anyness::Component
          }
          
          return self;
+      }
+
+      /// Assign a value to the first element, if that element is initialized.
+      /// If the element isn't initialized yet it will be constructed.        
+      ///   @param argument - the argument to assign                          
+      ///   @return reference to self                                         
+      template<CT::Container C, class A>
+      C& operator = (this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
+         return self.Assign(FWD(argument));
       }
 
    protected:

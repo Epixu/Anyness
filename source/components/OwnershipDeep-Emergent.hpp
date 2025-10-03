@@ -30,6 +30,7 @@ namespace Langulus::Anyness::Component
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;
+      template<unsigned, bool, bool> friend struct OwnershipEmergent;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -237,7 +238,7 @@ namespace Langulus::Anyness::Component
       /// elements and entries if they're fully dereferenced                  
       ///   @attention doesn't change any container state                     
       template<CT::Container C>
-      void DestroyElement(this C& self) has_assumptions {
+      void DestroyElementDeep(this C& self) has_assumptions {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
 
@@ -263,7 +264,7 @@ namespace Langulus::Anyness::Component
                      if (auto subEntry = Allocator::Find(subT, ptr)) {
                         //TODO extract entry from previous entry?
                         H temp {ptr, const_cast<EntryPtr>(&subEntry), subT};
-                        temp.DestroyElement();
+                        temp.DestroyElementDeep();
                      }
                   }
                   else if (auto destructor = subT.GetDestructor()) {
@@ -322,7 +323,7 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Sparse<DT>) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
-                     H {ptr}.DestroyElement();
+                     H {ptr}.DestroyElementDeep();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
                      // Pointer to a complete, destroyable dense.       

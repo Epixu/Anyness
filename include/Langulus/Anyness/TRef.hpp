@@ -59,6 +59,7 @@ namespace Langulus::Anyness
          }
          else this->ConstructDefault();
       }
+      constexpr ~TRef() noexcept { this->Destroy(); }
 
       constexpr bool operator == (nullptr_t) const noexcept {
          return this->IsEmpty();

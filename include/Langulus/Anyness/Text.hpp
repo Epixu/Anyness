@@ -79,6 +79,7 @@ namespace Langulus::Anyness
       constexpr Text(nullptr_t) noexcept    : Text {} {}
       constexpr Text(Text const& other)     : Text {Refer {other}} {}
       constexpr Text(Text&& other) noexcept : Text {Move  {other}} {}
+      constexpr ~Text() noexcept { this->Destroy(); }
 
       /// Construction from any kind of text that is an Anyness container     
       template<CT::Text T> requires CT::Container<T>

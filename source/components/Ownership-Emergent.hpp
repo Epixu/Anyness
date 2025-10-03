@@ -46,7 +46,7 @@ namespace Langulus::Anyness::Component
       /// Shallow-copy all initialized elements in memory to another          
       /// allocation, that is owned once only by this container.              
       ///   @attention does nothing if we already have ownership              
-      template<CT::Container C> requires C::HeapAllocated   
+      template<CT::Container C> requires C::HeapAllocated
       void TakeOwnership(this C& self) {
          if (not self.GetHeapInner() or self.GetAllocation())
             return;
@@ -62,6 +62,7 @@ namespace Langulus::Anyness::Component
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;
+      template<unsigned, bool, bool> friend struct OwnershipEmergent;
 
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this will not dereference previous allocation          
@@ -119,7 +120,8 @@ namespace Langulus::Anyness::Component
       /// Dereference memory block once and destroy all elements if data was  
       /// fully dereferenced                                                  
       ///   @attention this never modifies any state                          
-      void Free(this auto& self) noexcept {
+      template<CT::Container C>
+      void Free(this C& self) noexcept {
          auto a = self.GetAllocation();
          if (not a)
             return;
@@ -127,7 +129,25 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
 
          if (a->GetUses() == 1) {
-            // Free all entries if DeepOwnership component exists       
+            // Destroy all elements (and indirections if deeply owned)  
+            if constexpr (CT::ContainsOne<C>) {
+               if constexpr (CT::DeeplyOwned<C>)
+                  self.DestroyElementDeep();
+               else
+                  self.DestroyElement();
+            }
+            else {
+               auto item = IterateHandles(self).begin();
+               while (item != IteratorEnd {}) {
+                  if constexpr (CT::DeeplyOwned<C>)
+                     item->DestroyElementDeep();
+                  else
+                     item->DestroyElement();
+                  
+                  ++item;
+               }
+            }
+
             if_available(self.FreeDeep());
 
             // Free memory                                              

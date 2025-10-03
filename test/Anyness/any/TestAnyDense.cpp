@@ -9,8 +9,9 @@
 
 
 TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
+(Types<TAny<Any>, Any>),
    (Types<TAny<int>, int>),
-   (Types<TAny<Any>, Any>),
+   
    (Types<TAny<Text>, Text>),
 
    (Types<Any, int>),
@@ -104,7 +105,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       #endif
 
       WHEN("Assigned value by copy") {
-         pack = *element;
+         pack.Assign(*element);
+         
+         if constexpr (CT::Typed<T> and CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = *element);
 
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
@@ -153,7 +157,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       
       WHEN("Assigned value by move") {
          auto movable = *element;
-         pack = ::std::move(movable);
+         pack.Assign(::std::move(movable));
+
+         if constexpr (CT::Typed<T> and CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = ::std::move(movable));
 
          if constexpr (CT::Container<E>)
             Any_CheckState_Default<TypeOf<E>>(movable);
@@ -204,7 +211,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
 
       WHEN("Assigned disowned value") {
-         pack = Disown(*element);
+         pack.Assign(Disown(*element));
+
+         if constexpr (CT::Typed<T> and CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = Disown(*element));
 
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
@@ -252,7 +262,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       
       WHEN("Assigned abandoned value") {
          auto movable = *element;
-         pack = Abandon(movable);
+         pack.Assign(Abandon(movable));
+
+         if constexpr (CT::Typed<T> and CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = Abandon(movable));
 
          if constexpr (CT::Container<E>)
             Any_CheckState_Abandoned<E>(movable);

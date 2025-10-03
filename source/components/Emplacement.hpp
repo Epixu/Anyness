@@ -227,6 +227,8 @@ namespace Langulus::Anyness::Component
       requires CT::RangeEmplaceable<C, A...> {
          if (self.IsEmpty())
             self.AllocateMore(1);
+         else if constexpr (CT::DeeplyOwned<C>)
+            self.DestroyElementDeep();
          else
             self.DestroyElement();
          
