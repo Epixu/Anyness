@@ -11,6 +11,7 @@
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/OwnershipDeep-Heap.hpp"
 #include "../../../source/components/Hash-Emergent.hpp"
 #include "../../../source/components/Emplacement.hpp"
@@ -34,6 +35,7 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::CountStatic<1u>,            // Statically sized to 1         
+      Com::ReserveEmergent<>,          // Reserve derived from alloc    
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashEmergent<>,             // Hash is retrieved from item   
       Com::Emplacement<>,              // Allows emplacement            
@@ -85,8 +87,9 @@ namespace Langulus::Anyness
          if constexpr (CT::ContainsOne<A>)
             this->ConstructFrom(FWD(argument));
          else {
-            this->GetType();
+            this->SetType<Decvq<Deref<A>>>();
             this->AllocateFresh(this->RequestHeap(1));
+            this->ResetState();
             this->EmplaceWithIntent(FWDIntent(argument));
          }
       }

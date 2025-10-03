@@ -75,34 +75,42 @@ namespace Langulus::Anyness::Component
       template<CT::Container C> requires CT::ContainsMany<C>
       void Optimize(this C&);
 
-      /// Destroy all elements but don't deallocate memory                    
-      void Clear(this auto& self) {
-         const auto allocation = self.GetAllocation();
-         if (not allocation) {
-            // Data is either static or unallocated                     
-            // Don't call destructors, just clear it up                 
+      /// Destroy all elements but don't deallocate memory, unless this pack  
+      /// can only contain one element, in which case we have to deallocate   
+      /// in order to reset count.                                            
+      ///   @attention won't reset state                                      
+      template<CT::Container C>
+      void Clear(this C& self) {
+         const auto al = self.GetAllocation();
+         if (not al) {
+            // Data is either static or unallocated.                    
+            // Don't call destructors, just clear it up.                
             self.SetHeapInner(nullptr);
             if_available(self.SetCountInner(0));
-            if_available(self.SetReserveInner(0));
-            if_available(self.ResetType());
             return;
          }
 
-         if (allocation->GetUses() == 1) {
+         if (al->GetUses() == 1) {
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the entry and type   
+            // only if the container keeps track of the count separately
             if_available(self.FreeDeep());
-            if_available(self.SetCountInner(0));
+            
+            if constexpr (CT::ContainsOne<C>)
+               self.SetHeapInner(nullptr);
+            else {
+               if_available(self.SetCountInner(0));
+               //TODO in this case type is not reset, but wouldn't that cause problems if type changes, but the same memory is reused, because pools are designed for specific data types and specific alignments. anything aligned to more than Alignment is potentially UB
+            }
          }
          else {
             // If reached, then data is referenced from multiple places 
             // Don't call destructors, just clear it up and dereference 
-            allocation->Free();
+            al->Free();
             self.SetHeapInner(nullptr);
             if_available(self.SetAllocationInner(nullptr));
             if_available(self.SetCountInner(0));
             if_available(self.SetReserveInner(0));
-            if_available(self.ResetType());
          }
       }
 

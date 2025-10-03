@@ -18,6 +18,7 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::CountStatic<1u>,            // Statically sized to 1         
+      Com::ReserveEmergent<>,          // Reserve derived from alloc    
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashEmergent<>,             // Hash is retrieved from item   
       Com::Emplacement<>,              // Allows emplacement            
@@ -25,6 +26,7 @@ namespace Langulus::Anyness::Inner
       Com::Removal<>,                  // Allows clear/reset            
       Com::Comparison<>,               // Allows comparisons            
       Com::StateStack<                 // Variable state                
+         DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Future<>,        // Adds a 'missing future' state 
          DefineState::Past<>,          // Adds a 'missing past' state   
          DefineState::Compressed<>,    // Adds 'compressed' state       
@@ -72,6 +74,8 @@ namespace Langulus::Anyness
             // Emplace                                                  
             this->GetType();
             this->AllocateFresh(this->RequestHeap(1));
+            this->ResetState();
+            
             if constexpr (sizeof...(A) == 1) {
                using A1 = typename Types<A...>::First;
                if constexpr (CT::Intent<A1> and CT::Similar<TypeOf<A1>, T>)

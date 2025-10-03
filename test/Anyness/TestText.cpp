@@ -289,6 +289,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          auto region = text.Extend(10);
 
          Text_CheckState_OwnedFull(text);
+         Text_CheckState_OwnedFull(region);
          REQUIRE(text.GetCount() == 15);
          REQUIRE(text.GetReserved() >= 15);
          IF_LANGULUS_MANAGED_MEMORY(REQUIRE(text.GetRaw() == memory));

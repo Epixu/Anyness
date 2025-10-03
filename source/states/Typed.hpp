@@ -22,6 +22,10 @@ namespace Langulus::Anyness::DefineState
       static constexpr bool Static  = V != State::Variable;
       static constexpr bool Dynamic = V == State::Variable;
       static constexpr bool Enable  = V == State::Enabled;
+      
+      // Every state needs a unique ID in order to find matches even    
+      // when template arguments are different                          
+      static constexpr int UID = 7;
 
       template<CT::TypeErased C>
       constexpr bool IsTypeConstrained(this const C&) requires Static {

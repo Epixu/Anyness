@@ -30,10 +30,10 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = 4000;
 
       using StateList = Types<STATES...>;
-      using StateType = Tif<sizeof...(STATES) <= 8, uint8_t, uint16_t>;
+      using StateType = Tif<sizeof...(STATES) < 8, uint8_t, uint16_t>;
       static constexpr StateType StateCount = sizeof...(STATES);
-      static_assert(StateCount  >  0, "Has to have at least one state");
-      static_assert(StateCount <= 16, "Too many states");
+      static_assert(StateCount >  0, "Has to have at least one state");
+      static_assert(StateCount < 16, "Too many states");
 
    protected:
       template<unsigned>
@@ -89,15 +89,20 @@ namespace Langulus::Anyness::Component
       };
 
       /// Get the value of a specific state                                   
-      template<CT::State S>
-      static consteval StateType GetStateBit() {
-         return LglsSequence(StateCount, {
-            return ((::std::same_as<S, STATES> * (StateType {1} << I)) | ...);
+      template<CT::State B>
+      static StateType GetStateBit() {
+         StateType i = 0;
+         StateType accumulator = 0;
+         StateList::ForEach([&]<class S>{
+            if constexpr (B::UID == S::UID)
+               accumulator = (StateType {1} << i);
+            ++i;
          });
+         return accumulator;
       }
 
       /// Get the default set of state bits                                   
-      static consteval StateWrapper GetDefaultState() {
+      static consteval StateType GetDefaultState() {
          StateType i = 0;
          StateType accumulator = 0;
          StateList::ForEach([&]<class S>{
@@ -105,7 +110,7 @@ namespace Langulus::Anyness::Component
                accumulator |= (StateType {1} << i);
             ++i;
          });
-         return {accumulator};
+         return accumulator;
       }
 
       /// Check if container has future/past linking point states             
@@ -133,8 +138,25 @@ namespace Langulus::Anyness::Component
       }
 
       /// Set the contained state (inner)                                     
-      constexpr void SetStateInner(this auto& self, const StateWrapper& type) noexcept {
-         self.GetStateInner() = type;
+      constexpr void SetStateInner(this auto& self, const StateType& type) noexcept {
+         self.GetStateInner().mState = type;
+      }
+      
+      /// Default-initialize state                                            
+      constexpr void ConstructDefault(this auto& self) noexcept {
+         self.ResetState();
+      }
+      
+      /// Transfer from any kind of container, respecting intents             
+      ///   @param intent - the intent and container to transfer from         
+      template<CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this auto& self, I&& intent) {
+         //if constexpr (I::IsShallow() and not CT::Copied<I>) {
+            decltype(auto) from = FWD(intent.what);
+            self.SetStateInner(from.GetStateInner().mState);
+            if constexpr (I::ResetsOnMove())
+               from.ResetState();
+         //}
       }
       
    public:

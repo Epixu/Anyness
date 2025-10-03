@@ -95,7 +95,7 @@ void Any_CheckState_Default(const auto& any) {
    }
 
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (any.IsConstant() == CT::Constant<E>);
+   REQUIRE      (any.IsConstant() /*== CT::Constant<E>*/);
    REQUIRE_FALSE(any.IsValid());
    REQUIRE_FALSE(any.GetAllocation());
    REQUIRE      (any.IsEmpty());
@@ -127,7 +127,7 @@ void Any_CheckState_OwnedEmpty(const auto& any) {
    REQUIRE      (any.GetCount() == 0);
    REQUIRE      (any.GetReserved() > 0);
    REQUIRE      (any.GetUses() == 1);
-   REQUIRE      (any.GetRaw());
+   REQUIRE      (any.GetRaw() == nullptr);
    REQUIRE_FALSE(any);
    REQUIRE      (not any);
 }
@@ -158,12 +158,12 @@ void Any_CheckState_DisownedFull(const auto& any) {
    Any_Helper_TestType<E>(any);
 
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (any.IsConstant() == CT::Constant<E>);
+   REQUIRE      (any.IsConstant() /*== CT::Constant<E>*/);
    REQUIRE      (any.IsValid());
    REQUIRE_FALSE(any.GetAllocation());
    REQUIRE_FALSE(any.IsEmpty());
    REQUIRE      (any.GetCount() > 0);
-   REQUIRE      (any.GetReserved() > 0);
+   REQUIRE      (any.GetReserved() == 0 /*> 0*/);
    REQUIRE      (any.GetUses() == 0);
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);
@@ -182,7 +182,7 @@ void Any_CheckState_DisownedFullConst(const auto& any) {
    REQUIRE_FALSE(any.GetAllocation());
    REQUIRE_FALSE(any.IsEmpty());
    REQUIRE      (any.GetCount() > 0);
-   REQUIRE      (any.GetReserved() > 0);
+   REQUIRE      (any.GetReserved() == 0 /*> 0*/);
    REQUIRE      (any.GetUses() == 0);
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);

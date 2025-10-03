@@ -60,6 +60,8 @@ namespace Langulus::Anyness::Component
             self.SetType(type);
             auto count = from.GetCount();
             if (0 == count) {
+               self.SetHeapInner(nullptr);
+               self.SetAllocationInner(nullptr);
                if_available(self.SetCountInner(0));
                if_available(self.SetHashInner(1));
                return;
@@ -221,9 +223,9 @@ namespace Langulus::Anyness::Component
          //                                                             
          // Reallocate                                                  
          if (self.GetReserved() >= elements) {
-            // Required memory is already available               
+            // Required memory is already available                     
             if constexpr (CREATE) {
-               // But is not yet initialized, so initialize it    
+               // But is not yet initialized, so do it                  
                if (self.GetCount() < elements) {
                   const auto count = elements - self.GetCount();
                   self.SelectInner(self.GetCount(), count).CreateDefault();
@@ -240,7 +242,7 @@ namespace Langulus::Anyness::Component
             "BranchOut should've been called prior to AllocateMore"
          );
 
-         // Reallocate                                            
+         // Reallocate                                                  
          C previous {Disown {self}};
          auto reallocated = Allocator::Reallocate(request.mTotalBytes, al);         
          LglsAssert(reallocated, "Out of memory");
@@ -250,12 +252,12 @@ namespace Langulus::Anyness::Component
             self.SetHeapInner(reallocated->GetBlockStart() + request.mHeaderBytes);
 
             if (previous.GetCount()) {
-               // Memory moved, and we should move all elements   
-               // in it. We're moving to new memory, so no reverse
-               // is required.                                    
+               // Memory moved, and we should move all elements         
+               // in it. We're moving to new memory, so no reverse      
+               // is required.                                          
                auto from = IterateHandles(previous).begin();
                for (auto to : IterateHandles(self)) {
-                  // We're not allowed to abandon constant items  
+                  // We're not allowed to abandon constant items        
                   //if constexpr (CT::Mutable<T>)
                      to.EmplaceWithIntent(Abandon(*(from++)));
                   //else
@@ -267,16 +269,16 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            // Memory didn't move, but reserved count changed     
-            // so all HeapRequests which are PerElement need to   
-            // be moved around.                                   
+            // Memory didn't move, but reserved count changed           
+            // so all HeapRequests which are PerElement need to         
+            // be moved around.                                         
             self.RemapHeapRequests(request.mReserved);
          }
 
          if_available(self.SetReserveInner(request.mReserved));
          
          if constexpr (CREATE) {
-            // Default-construct the rest                         
+            // Default-construct the rest                               
             const auto count = elements - self.GetCount();
             self.CropInner(self.GetCount(), count).CreateDefault();
          }

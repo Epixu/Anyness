@@ -24,6 +24,6 @@ namespace Langulus::Anyness::Component
          "Can't have a container of zero or negative capacity");
 
       /// Get the number of reserved (maybe uninitialized) elements           
-      constexpr auto GetReserved() const noexcept { return SIZE; }
+      constexpr auto GetReserved() const noexcept -> ReserveType { return SIZE; }
    };
 }

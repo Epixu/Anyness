@@ -29,7 +29,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the number of reserved (maybe uninitialized) elements           
       ///   @return the number of reserved (maybe uninitialized) elements     
-      constexpr auto GetReserved() const noexcept { return mReserved; }
+      constexpr T GetReserved() const noexcept { return mReserved; }
 
    protected:
       template<unsigned>

@@ -428,7 +428,7 @@ namespace Langulus::Anyness
       /// Call ConstructFrom whenever possible, fallback to                   
       /// ConstructDefault otherwise                                          
       constexpr void ConstructFrom(this auto& self, CT::Container auto&& from) {
-         ComponentList::ForEach([&self, &from]<class C>{
+         ComponentList::ForEach([&]<class C>{
                  if_available(self.C::ConstructFrom(FWDIntent(from)))
             else if_available(self.C::ConstructDefault())
          });

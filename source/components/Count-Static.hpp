@@ -52,9 +52,9 @@ namespace Langulus::Anyness::Component
       }
 
       /// Static count means static reserve                                   
-      constexpr auto GetReserved(this auto const& self) noexcept -> CountType {
+      /*constexpr auto GetReserved(this auto const& self) noexcept -> CountType {
          return self.GetCountInner();
-      }
+      }*/
 
    protected:
       template<unsigned> friend struct HeapMovable;

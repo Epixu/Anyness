@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// A dynamic reserve derived from the allocation size directly.           
    /// As such, it will not increase container's stack size, but will require 
-   /// an indirection in order to read/write it.                              
+   /// an indirection (and a division) in order to read/write it.             
    ///   @tparam ID - ID of the heap to track capacity for                    
    ///   @tparam T - type of the counter                                      
    template<unsigned ID, class T>
@@ -26,15 +26,33 @@ namespace Langulus::Anyness::Component
       /// Get the number of reserved (maybe uninitialized) elements           
       template<CT::Container C>
       T GetReserved(this const C& self) noexcept {
-         auto allocation = self.GetAllocation();
-         return allocation ? allocation->GetFrontendSize() / self.GetStride() : 0;
+         if constexpr (requires { self.GetAllocation(); }) {
+            const auto al = self.GetAllocation();
+            if (not al)
+               return 0;
+
+            if constexpr (CT::ContainsOne<C>) {
+               // Compile-time benefit for statically sized containers  
+               return 1;
+            }
+            else return al->GetFrontendSize() / self.GetStride();
+         }
+         else if constexpr (CT::ContainsOne<C>)
+            return 1;
+         else {
+            static_assert(false,
+               "Emergent reserve can't derive the amount of reserved items, "
+               "because container supporting multiple elements "
+               "has no ownership component"
+            );
+         }
       }
 
       /// Reserve a number of elements without initializing them.             
       /// If reserved data is smaller than currently initialized count, the   
       /// excess elements will be dereferenced/destroyed.                     
       ///   @param count - number of elements to reserve                      
-      template<CT::Container C>
+      template<CT::ContainsMany C>
       C& Reserve(this C& self, const T count) {
          if (count < self.GetCount())
             self.AllocateLess(count);

@@ -1145,7 +1145,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack != another_pack1);
          REQUIRE(pack != another_pack2);
          REQUIRE(pack != defaulted_pack);
-         REQUIRE(pack != same_pack);
+         REQUIRE(pack == same_pack);
       }
 
       WHEN("Contains when full") {

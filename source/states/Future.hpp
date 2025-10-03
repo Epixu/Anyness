@@ -21,6 +21,10 @@ namespace Langulus::Anyness::DefineState
       static constexpr bool Dynamic = V == State::Variable;
       static constexpr bool Enable  = V == State::Enabled;
       static constexpr bool CanBeMissing = Dynamic or Enable;
+      
+      // Every state needs a unique ID in order to find matches even    
+      // when template arguments are different                          
+      static constexpr int UID = 2;
 
       constexpr bool IsFuture() const requires Static {
          return Enable;

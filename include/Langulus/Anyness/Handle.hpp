@@ -9,6 +9,7 @@
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Heap-Reference.hpp"
 #include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/OwnershipDeep-Stack.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Emplacement.hpp"
@@ -27,6 +28,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
+      Com::ReserveEmergent<>,
       Com::OwnershipDeepStack<>,
       Com::Assignment<>,
       Com::Emplacement<>,

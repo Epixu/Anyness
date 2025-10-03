@@ -11,6 +11,7 @@
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/Count-Static.hpp"
+#include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Comparison.hpp"
@@ -24,6 +25,7 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<>,                 // Data on the heap          
       Com::OwnershipStack<>,              // Allocation is referenced  
       Com::CountStatic<1u>,               // Statically sized          
+      Com::ReserveEmergent<>,             // Reserve derived from alloc
       Com::Emplacement<>,                 // Can be emplaced           
       Com::Assignment<>,                  // Can be reassigned         
       Com::Comparison<>                   // Can be compared           
@@ -36,9 +38,7 @@ namespace Langulus::Anyness
    ///   A statically typed shared pointer                                    
    ///                                                                        
    ///   Works fine with packed pointers as well. Has deep ownership, but no  
-   /// states are applied. You can use TAny instead if you want any           
-   /// combination of encryption, compression and linking.                    
-   ///                                                                        
+   /// states are applied. You can use TAny instead if you want states.       
    template<class T>
    struct TRef : Inner::TRefBase<T> {
       using Base = Inner::TRefBase<T>;
