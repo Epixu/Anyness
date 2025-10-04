@@ -36,17 +36,15 @@ namespace Langulus::Anyness
    template<CT::NotVoid T>
    struct TOwn : Inner::TOwnBase<T> {
       using Base = Inner::TOwnBase<T>;
-      using Base::Base;
+      //using Base::Base;
       using Base::operator =;
       using Com::Assignment<>::operator =;
       using Base::operator ==;
 
       constexpr TOwn() noexcept { this->ConstructDefault(); }
-      constexpr TOwn(const T& source)
-         : Base {typename Base::Stackwise {}, source} {}
-      constexpr TOwn(T&& source) noexcept
-         : Base {typename Base::Stackwise {}, FWD(source)} {}
-      constexpr ~TOwn() {}
+      constexpr TOwn(const T& source)     : Base {Stackwise, source} {}
+      constexpr TOwn(T&& source) noexcept : Base {Stackwise, FWD(source)} {}
+      constexpr ~TOwn() noexcept = default;
       
       constexpr bool operator == (const T& rhs) const noexcept {
          return this->GetStackInner() == rhs;

@@ -388,7 +388,7 @@ namespace Langulus::Anyness::Component
                      if (not f(argument))
                         return Loop::Break;
                   }
-                  else if constexpr (CT::Exact<R, LoopControl>) {
+                  else if constexpr (Exact<R, LoopControl>) {
                      // Do things depending on the F's return           
                      R loop = f(argument);
 
@@ -429,7 +429,7 @@ namespace Langulus::Anyness::Component
                Count<C> intermediateCounterSink = 0;
                loop = self.template ForEachInner<REVERSE>(
                   [&counter, &f](D group) {
-                     if constexpr (CT::Same<A, D>) {
+                     if constexpr (Akin<A, D>) {
                         // Loop control is available only if iterator   
                         // is deep, too...                              
                         return group.template ForEachDeepInner<REVERSE, SKIP>(
@@ -475,7 +475,7 @@ namespace Langulus::Anyness::Component
                   if (not f(argument))
                      return Loop::Break;
                }
-               else if constexpr (CT::Exact<R, LoopControl>) {
+               else if constexpr (Exact<R, LoopControl>) {
                   // Do things depending on the F's return              
                   R loop = f(argument);
 
@@ -523,7 +523,7 @@ namespace Langulus::Anyness::Component
                   intermediateCounterSink
                );
             }
-            else if constexpr (CT::Same<T, Neat>) {
+            else if constexpr (Akin<T, Neat>) {
                // Iterate normalized subblocks                          
                using SubNeat = Tmut<C, Neat&, Neat const&>;
 
@@ -592,7 +592,7 @@ namespace Langulus::Anyness::Component
                   return Loop::Break;
                next();
             }
-            else if constexpr (CT::Exact<R, LoopControl>) {
+            else if constexpr (Exact<R, LoopControl>) {
                // Do things depending on the F's return                 
                const R loop = f(*data);
                switch (loop.mControl) {

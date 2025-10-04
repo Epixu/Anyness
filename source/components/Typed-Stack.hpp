@@ -8,7 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/MetaOf.hpp>
-#include <Langulus/CT/Same.hpp>
+#include <Langulus/CT/Akin.hpp>
 #include <Langulus/CT/Deep.hpp>
 
 
@@ -20,11 +20,11 @@ namespace Langulus::Anyness
 
 namespace Langulus::Anyness::Component
 {
-   template<unsigned>
+   /*template<unsigned>
    struct IterationForEach;
 
    template<unsigned>
-   struct HeapMovable;
+   struct HeapMovable;*/
 
 
    ///                                                                        
@@ -119,7 +119,7 @@ namespace Langulus::Anyness::Component
             const auto& t = self.GetTypeInner();
             return t.Is(MetaDataOf<A1>()) or (t.Is(MetaDataOf<AN>()) or ...);
          }
-         else return CT::SameAsOneOf<TYPE, A1, AN...>;
+         else return AkinAsOneOf<TYPE, A1, AN...>;
       }
 
       /// Check if type origin is the same as another                         
@@ -139,7 +139,7 @@ namespace Langulus::Anyness::Component
          if constexpr (TypeErased or C::TypeErased)
             return self.GetTypeInner().Is(other.mType);
          else
-            return CT::Same<TYPE, TypeOf<C>>;
+            return Akin<TYPE, TypeOf<C>>;
       }
 
       /// Check if unqualified type is the same as one of the provided types  
@@ -147,20 +147,20 @@ namespace Langulus::Anyness::Component
       ///   @tparam A1, AN... - the types to compare against                  
       ///   @return true if data type is similar to at least one of the types 
       template<CT::NotVoid A1, CT::NotVoid...AN>
-      constexpr bool IsSimilar(this auto const& self) noexcept {
+      constexpr bool IsSame(this auto const& self) noexcept {
          if constexpr (TypeErased) {
             const auto& t = self.GetTypeInner();
-            return t.IsSimilar(MetaDataOf<A1>()) or (t.IsSimilar(MetaDataOf<AN>()) or ...);
+            return t.IsSame(MetaDataOf<A1>()) or (t.IsSame(MetaDataOf<AN>()) or ...);
          }
-         else return CT::SimilarAsOneOf<TYPE, A1, AN...>;
+         else return SameAsOneOf<TYPE, A1, AN...>;
       }
 
       /// Check if unqualified type is the same as another                    
       ///   @attention ignores only cv-qualifiers                             
       ///   @param type - the type to check for                               
       ///   @return true if this block contains similar data                  
-      bool IsSimilar(this auto const& self, META type) noexcept {
-         return self.GetTypeInner().IsSimilar(type);
+      bool IsSame(this auto const& self, META type) noexcept {
+         return self.GetTypeInner().IsSame(type);
       }
 
       /// Check if unqualified type is the same as another container's type   
@@ -168,11 +168,11 @@ namespace Langulus::Anyness::Component
       ///   @param other - the container to check for                         
       ///   @return true if this container has similar data                   
       template<CT::Container C>
-      constexpr bool IsSimilar(this auto const& self, C const& other) noexcept {
+      constexpr bool IsSame(this auto const& self, C const& other) noexcept {
          if constexpr (TypeErased or C::TypeErased)
-            return self.GetTypeInner().IsSimilar(other.mType);
+            return self.GetTypeInner().IsSame(other.mType);
          else
-            return CT::Similar<TYPE, TypeOf<C>>;
+            return Same<TYPE, TypeOf<C>>;
       }
 
       /// Check if this type is exactly one of the provided types             
@@ -184,7 +184,7 @@ namespace Langulus::Anyness::Component
             const auto& t = self.GetTypeInner();
             return t.IsExact(MetaDataOf<A1>()) or (t.IsExact(MetaDataOf<AN>()) or ...);
          }
-         else return CT::ExactAsOneOf<TYPE, A1, AN...>;
+         else return ExactAsOneOf<TYPE, A1, AN...>;
       }
 
       /// Check if this type is exactly another                               
@@ -202,7 +202,7 @@ namespace Langulus::Anyness::Component
          if constexpr (TypeErased or C::TypeErased)
             return self.GetTypeInner().IsExact(other.mType);
          else
-            return CT::Exact<TYPE, TypeOf<C>>;
+            return Exact<TYPE, TypeOf<C>>;
       }
       
       /// Check if container contains pointers                                
@@ -286,7 +286,7 @@ namespace Langulus::Anyness::Component
          if constexpr (C::TypeErased)
             self.SetType(type);
          else {
-            static_assert(CT::Exact<T, TYPE>, "Type mismatch");         
+            static_assert(Exact<T, TYPE>, "Type mismatch");         
             self.SetTypeInner(type);
          }
       }

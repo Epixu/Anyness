@@ -191,9 +191,9 @@ namespace Langulus::Anyness::Component
                // Statically typed handle                               
                using HT = Deref<TypeOf<T>>;
                if constexpr (CT::TypeErased<C>)
-                  LglsAssumeDev(self.template IsSimilar<HT>(), "Type mismatch");
+                  LglsAssumeDev(self.template IsSame<HT>(), "Type mismatch");
                else
-                  static_assert(CT::Similar<TypeOf<C>, HT>, "Type mismatch");
+                  static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
 
                if constexpr (CT::DeeplyOwned<T>)
                   return T {self.HeapReference::template Get<HT*>(), self.GetEntries()};
@@ -208,7 +208,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C>)
                LglsAssumeDev(self.template Is<T>(), "Type mismatch");
             else
-               static_assert(CT::Same<TypeOf<C>, T>, "Type mismatch");
+               static_assert(Akin<TypeOf<C>, T>, "Type mismatch");
 
             return self.template Get<T>();
          }

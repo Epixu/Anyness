@@ -65,7 +65,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
    static Allocator::State memoryState;
    static_assert(    CT::Typed<T>, "Container not typed");
    static_assert(not CT::Array<T>, "Wrongly typed container");
-   static_assert(    CT::Exact<TypeOf<T>, char>, "Wrongly typed container");
+   static_assert(    Exact<TypeOf<T>, char>, "Wrongly typed container");
 
    GIVEN("Gap test") {
       alignas(T) char unininitialized[sizeof(T)];
@@ -503,7 +503,7 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", Stringifiable, Strin
          meta.GetMorphism(debugMeta)(&instance, &rttiConverted);
 
          REQUIRE(staticallyConverted == rttiConverted);
-         if constexpr (CT::Same<Stringifiable, TestType>)
+         if constexpr (Akin<Stringifiable, TestType>)
             REQUIRE(staticallyConverted == "Stringifiable converted to Text");
          else
             REQUIRE(staticallyConverted == "StringifiableConst converted to Text");            

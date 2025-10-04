@@ -44,9 +44,10 @@ namespace Langulus::Anyness
    template<CT::NotVoid T>
    struct TAny : Inner::TAnyBase<T> {
       using CTTI_ReflectAs = Any;
+      using CTTI_Deep = Yes<>;
+
       using Base = Inner::TAnyBase<T>;
       using Base::operator ==;
-      //using Com::OwnershipDeepHeap<>::DestroyElement;
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       using Pick          = T const&;
@@ -60,24 +61,31 @@ namespace Langulus::Anyness
       constexpr TAny(TAny&& other) noexcept : TAny {Move  {other}} {}
       constexpr ~TAny() noexcept { this->Destroy(); }
 
-      /// Construction that emplaces T in the container                       
+      /// Construction that either absorbs the provided container, or         
+      /// emplaces T in the container, using A... as constructor arguments    
       template<class...A>
       constexpr TAny(A&&...arguments) {
-         if constexpr (sizeof...(A) == 0)
-            this->ConstructDefault();
-         else if constexpr (sizeof...(A) == 1 and CT::ContainsOne<A...>)
+         if constexpr (sizeof...(A) == 1 and CT::ContainsOne<A...>) {
+            LglsAssumeUser(
+               ((Same<Deint<A>, TAny> or Same<TypeOf<Deint<A>>, T>) and ...),
+               "Ambiguous use of construction "
+               "- you should use tag-dispatch with first argument either Absorb "
+               "(if you want to overwrite the container itself) or Piecewise "
+               "(if you want to overwrite the first item) in order to clearly "
+               "state your intent. Absorb will be used by default"
+            );
             this->ConstructFrom(FWD(arguments)...);
+         }
          else {
-            // Emplace                                                  
             this->GetType();
             this->AllocateFresh(this->RequestHeap(1));
             this->ResetState();
             
             if constexpr (sizeof...(A) == 1) {
                using A1 = typename Types<A...>::First;
-               if constexpr (CT::Intent<A1> and CT::Similar<TypeOf<A1>, T>)
+               if constexpr (CT::Intent<A1> and Same<TypeOf<A1>, T>)
                   IntentNew(this->GetRaw(), FWD(arguments)...);
-               else if constexpr (CT::Similar<A1, T>)
+               else if constexpr (Same<A1, T>)
                   IntentNew(this->GetRaw(), IntentOfT<A1&&> {FWD(arguments)...});
                else
                   new (this->GetRaw()) T {FWD(arguments)...};
@@ -85,19 +93,48 @@ namespace Langulus::Anyness
             else new (this->GetRaw()) T {FWD(arguments)...};
          }
       }
+      
+      /// Construction that absorbs the provided container                    
+      template<class A>
+      constexpr TAny(Inner::Absorb, A&& argument) {
+         this->ConstructFrom(FWD(argument));
+      }
+      
+      /// Emplaces T inside, using A... as constructor arguments              
+      template<class...A>
+      constexpr TAny(Inner::Piecewise, A&&...arguments) {
+         this->GetType();
+         this->AllocateFresh(this->RequestHeap(1));
+         this->ResetState();
+            
+         if constexpr (sizeof...(A) == 1) {
+            using A1 = typename Types<A...>::First;
+            if constexpr (CT::Intent<A1> and Same<TypeOf<A1>, T>)
+               IntentNew(this->GetRaw(), FWD(arguments)...);
+            else if constexpr (Same<A1, T>)
+               IntentNew(this->GetRaw(), IntentOfT<A1&&> {FWD(arguments)...});
+            else
+               new (this->GetRaw()) T {FWD(arguments)...};
+         }
+         else new (this->GetRaw()) T {FWD(arguments)...};
+      }
 
       /// Assignment                                                          
       constexpr TAny& operator = (TAny const& other) {
-         return operator = (Refer {other});
+         this->AssignFrom(Refer(other));
+         return *this;
       }
       constexpr TAny& operator = (TAny&& other) noexcept {
-         return operator = (Move {other});
+         this->AssignFrom(Move(other));
+         return *this;
       }
 
       template<class A>
       constexpr TAny& operator = (A&& argument) {
          if constexpr (CT::ContainsOne<A>) {
-            LglsAssumeUser(CT::NotContainer<T>, "Ambiguous use of assignment "
+            LglsAssumeUser(
+               (Same<Deint<A>, TAny> or Same<TypeOf<Deint<A>>, T>),
+               "Ambiguous use of assignment "
                "- you should use either AssignFrom (if you want to overwrite "
                "the container itself) or Assign (if you want to overwrite the "
                "first item) in order to clearly state your intent. "

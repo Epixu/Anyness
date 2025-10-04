@@ -12,7 +12,7 @@
 #include "Assume.hpp"
 #include "CT/Support.hpp"
 #include "CT/POD.hpp"
-#include "CT/Same.hpp"
+#include "CT/Akin.hpp"
 #include <bit>
 #include <type_traits>
 #include <array>
@@ -193,7 +193,7 @@ namespace Langulus
       /// It is always preferred when hashing data                            
       template<class...T>
       concept HasGetHashMethod = Validate<T...> and requires (Shed<T>...a) {
-         { (a.GetHash(), ...) } -> Similar<Hash>;
+         { (a.GetHash(), ...) } -> Same<Hash>;
       };
       
       /// Check if T has a GetHash() method                                   
@@ -288,7 +288,7 @@ namespace Langulus
             return HashBytes({reinterpret_cast<const uint8_t*>(&head), sizeof(T)}, SEED);
          }
       }
-      else if constexpr (CT::Similar<T, Hash>) {
+      else if constexpr (Same<T, Hash>) {
          // Provided type is already a hash, just propagate it          
          return head;
       }

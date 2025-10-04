@@ -139,7 +139,7 @@ namespace Langulus::Anyness::Component
             else {
                // Statically typed handle                               
                using HT = Deref<TypeOf<ALT>>;
-               static_assert(CT::Similar<T, HT>, "Sparseness mismatch");
+               static_assert(Same<T, HT>, "Sparseness mismatch");
 
                if constexpr (requires { ALT::Owned; }) {
                   if constexpr (ALT::Owned)

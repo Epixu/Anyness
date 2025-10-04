@@ -53,7 +53,7 @@ template<class E>
 void Any_Helper_TestType(const auto& many) {
    REQUIRE(many.IsTyped());
    REQUIRE(many.GetType() == MetaDataOf<E>());
-   REQUIRE(many.template IsSimilar<E>());
+   REQUIRE(many.template IsSame<E>());
    REQUIRE(many.template IsExact<E>());
    REQUIRE(many.template Is<E>());
    REQUIRE(many.IsSparse() == CT::Sparse<E>);
@@ -78,7 +78,7 @@ void Any_CheckState_Default(const auto& any) {
    using T = Decay<decltype(any)>;
 
    if constexpr (CT::Typed<T>) {
-      static_assert(CT::Exact<TypeOf<T>, E>);
+      static_assert(Exact<TypeOf<T>, E>);
       Any_Helper_TestType<E>(any);
 
       if constexpr (requires { any.GetState(); })
@@ -212,7 +212,7 @@ void Any_CheckState_ContainsOne(const auto& pack, const auto& e, Allocation* ent
       REQUIRE(*pack.template As<E>() == *e);
       REQUIRE(*pack.template GetRaw<E>() == e);
    }
-   else if constexpr (T::TypeErased or CT::Same<TypeOf<T>, E>) {
+   else if constexpr (T::TypeErased or Akin<TypeOf<T>, E>) {
       REQUIRE(pack.template As<E>() == e);
    }
 

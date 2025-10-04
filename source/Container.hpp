@@ -247,8 +247,21 @@ namespace Langulus::Anyness
                return offset;
          }
       }
+      
+      /// Tag for calling container constructors that initalize the           
+      /// internal stack tuple                                                
+      struct Stackwise {};
+
+      /// Tag for calling container constructors that emplaces elements       
+      struct Piecewise {};
+
+      /// Tag for calling container constructors that absorb container        
+      struct Absorb {};
    }
 
+   constexpr Inner::Stackwise Stackwise {};
+   constexpr Inner::Piecewise Piecewise {};
+   constexpr Inner::Absorb    Absorb {};
    
    ///                                                                        
    /// A container definition using composition                               
@@ -270,48 +283,42 @@ namespace Langulus::Anyness
       template<CT::Component...MORE_COMPONENTS>
       using Include = Container<COMPONENTS..., MORE_COMPONENTS...>;
 
-      /// Default constructor doesn't initialize anything (except metas)      
-      /// Your container needs to call ConstructDefault manually              
+      /// Default constructor doesn't initialize anything.                    
+      /// Your container needs to call ConstructDefault manually.             
       constexpr Container() noexcept = default;
 
       /// C++ copy-semantics are mapped onto Refer intent.                    
       /// In other words - a copy is always shallow, unless explicitly Copy   
       /// or Clone intent is used.                                            
       constexpr Container(Container const& other) noexcept
-         : Container {Refer {other}} {}
+         : Container {Absorb, Refer {other}} {}
       
       /// C++ move-semantics are mapped onto Move intent                      
       constexpr Container(Container&& other) noexcept
-         : Container {Move {other}} {}
+         : Container {Absorb, Move {other}} {}
       
       /// A generalized container constructor that takes another container    
       /// that may have completely different components, and tries to extract 
       /// relevant information from it. Invokes ConstructFrom for each        
-      /// component of this container that has it. Allows for intents as well.
+      /// component of this container that has it. Respects intents.          
       ///   @note ConstructFrom act as validating functions as well           
-      constexpr Container(CT::Container auto&& from) {
+      constexpr Container(Inner::Absorb, CT::Container auto&& from) {
          ConstructFrom(FWD(from));
       }
 
-      struct Stackwise {};
-
-      /// A tag-dispatch constructor that forwards arguments to mStack        
-      constexpr Container(Stackwise, auto&&...arguments)
+      /// A tag-dispatch constructor that forwards arguments to mStack.       
+      /// Used in some niche container cases, like TOwn.                      
+      constexpr Container(Inner::Stackwise, auto&&...arguments)
          : mStack {FWD(arguments)...} {}
 
-      /// Explicitly call Destroy in all of the components.                   
-      constexpr ~Container() noexcept = default;// {
-         //static_assert(::std::is_standard_layout_v<Container>);
-         /*if not consteval {
-            ComponentList::ForEach([&]<class C> {
-               if_available(self.C::Destroy());
-            });
-         }*/
-      //}
+      /// Default destructor does nothing. Each container has to implement    
+      /// it, most likely by calling this->Destroy(). This is needed, because 
+      /// the destructor relies on properly deducing 'this'.                  
+      constexpr ~Container() noexcept = default;
 
-      /// C++ copy-semantics are mapped onto Refer intent                     
+      /// C++ copy-semantics are mapped onto Refer intent.                    
       /// In other words - a copy is always shallow, unless explicitly Copy   
-      /// or Clone intent is used                                             
+      /// or Clone intent is used.                                            
       constexpr Container& operator = (Container const& other) {
          return operator = (Refer {other});
       }
@@ -324,7 +331,7 @@ namespace Langulus::Anyness
       /// Generalized container assignment that takes another container, which
       /// may have completely different components, and tries to extract all  
       /// relevant information from it. Invokes AssignFrom for each component 
-      /// of this container that has it. Allows for intents as well.          
+      /// of this container that has it. Respects intents.                    
       template<class LHS, CT::Container RHS>
       constexpr LHS& operator = (this LHS& lhs, RHS&& rhs) {
          lhs.AssignFrom(FWD(rhs));
@@ -345,7 +352,7 @@ namespace Langulus::Anyness
       
       /// Check if a component is included at compile-time                    
       template<class C>
-      static constexpr bool HasComponent = CT::SameAsOneOf<C, COMPONENTS...>;
+      static constexpr bool HasComponent = AkinAsOneOf<C, COMPONENTS...>;
 
    protected:
       template<unsigned>               friend struct Com::IterationOperators;

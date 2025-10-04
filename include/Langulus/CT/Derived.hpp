@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Same.hpp"
+#include "Akin.hpp"
 
 
 namespace Langulus::CTTI
@@ -89,7 +89,7 @@ namespace Langulus::CT
    /// similar or related                                                     
    template<class T1, class...TN>
    concept BinaryCompatible = PartialValidate<TN...> and ((
-         Similar<T1, TN> or (Related<T1, TN> and sizeof(T1) == sizeof(TN))
+         Same<T1, TN> or (Related<T1, TN> and sizeof(T1) == sizeof(TN))
       ) and ...);
 }
 

@@ -26,6 +26,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
       // be thrown as exceptions at runtime                             
+      static_assert(CT::TypeErased<T>);
       static_assert(CT::CopyConstructible<T>);
       static_assert(CT::ReferConstructible<T>);
       static_assert(CT::AbandonConstructible<T>);
@@ -43,6 +44,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    else {
       // Statically-typed containers behave the same as their inner     
       // type                                                           
+      static_assert(not CT::TypeErased<T>);
       static_assert(CT::CopyConstructible<T>    == CT::CopyConstructible<E>);
       static_assert(CT::ReferConstructible<T>   == CT::ReferConstructible<E>);
       static_assert(CT::AbandonConstructible<T> == CT::AbandonConstructible<E>);
@@ -58,6 +60,9 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       static_assert(CT::DisownAssignable<T>     == CT::DisownAssignable<E>);      
    }
    
+   static_assert(CT::Deep<T>);
+   static_assert(CT::ContainsOne<T>);
+
    static_assert(not requires (T pack, E item) { pack.operator +   (item); });
    static_assert(not requires (T pack, E item) { pack.operator +=  (item); });
    static_assert(not requires (T pack, E item) { pack.operator <<  (item); });
@@ -104,11 +109,15 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          };
       #endif
 
+      WHEN("Ambiguous assign value by copy") {
+         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = *element);
+         else
+            REQUIRE_NOTHROW(pack = *element);
+      }
+
       WHEN("Assigned value by copy") {
          pack.Assign(*element);
-         
-         if constexpr (CT::Typed<T> and CT::Deep<E> and LANGULUS(SAFE))
-            REQUIRE_THROWS(pack = *element);
 
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
@@ -117,12 +126,11 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
-         else if constexpr (CT::Same<E, T>) {
+         else if constexpr (Akin<E, T>) {
             Any_Helper_TestSame(pack, *element);
             
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.IsStatic() == element->IsStatic());
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
          }
 
@@ -155,13 +163,19 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          #endif
       }
       
+      WHEN("Ambiguous assign value by move") {
+         auto movable = *element;
+
+         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = ::std::move(movable));
+         else
+            REQUIRE_NOTHROW(pack = ::std::move(movable));
+      }
+      
       WHEN("Assigned value by move") {
          auto movable = *element;
          pack.Assign(::std::move(movable));
-
-         if constexpr (CT::Typed<T> and CT::Deep<E> and LANGULUS(SAFE))
-            REQUIRE_THROWS(pack = ::std::move(movable));
-
+         
          if constexpr (CT::Container<E>)
             Any_CheckState_Default<TypeOf<E>>(movable);
 
@@ -172,12 +186,11 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
-         else if constexpr (CT::Same<E, T>) {
+         else if constexpr (Akin<E, T>) {
             Any_Helper_TestSame(pack, *element);
 
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.IsStatic() == element->IsStatic());
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
          }
 
@@ -210,11 +223,15 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          #endif
       }
 
+      WHEN("Ambiguous assign disowned value") {
+         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = Disown(*element));
+         else
+            REQUIRE_NOTHROW(pack = Disown(*element));
+      }
+      
       WHEN("Assigned disowned value") {
          pack.Assign(Disown(*element));
-
-         if constexpr (CT::Typed<T> and CT::Deep<E> and LANGULUS(SAFE))
-            REQUIRE_THROWS(pack = Disown(*element));
 
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
@@ -223,11 +240,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
-         else if constexpr (CT::Same<E, T>) {
+         else if constexpr (Akin<E, T>) {
             Any_Helper_TestSame(pack, *element);
 
             REQUIRE(pack.GetUses() == 0);
-            REQUIRE(pack.IsStatic());
             REQUIRE_FALSE(pack.GetAllocation());
          }
 
@@ -260,12 +276,18 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          #endif
       }
       
+      WHEN("Ambiguous assigned abandoned value") {
+         auto movable = *element;
+
+         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = Abandon(movable));
+         else
+            REQUIRE_NOTHROW(pack = Abandon(movable));
+      }
+      
       WHEN("Assigned abandoned value") {
          auto movable = *element;
          pack.Assign(Abandon(movable));
-
-         if constexpr (CT::Typed<T> and CT::Deep<E> and LANGULUS(SAFE))
-            REQUIRE_THROWS(pack = Abandon(movable));
 
          if constexpr (CT::Container<E>)
             Any_CheckState_Abandoned<E>(movable);
@@ -277,11 +299,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
-         else if constexpr (CT::Same<E, T>) {
+         else if constexpr (Akin<E, T>) {
             Any_Helper_TestSame(pack, *element);
 
             REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.IsStatic() == element->IsStatic());
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
          }
 
@@ -314,12 +335,20 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          #endif
       }
 
-      WHEN("Assigned empty self") {
+      WHEN("Ambigous assigned empty self") {
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
-         // ReSharper disable once CppIdenticalOperandsInBinaryExpression
-         pack = pack;
+         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+            // ReSharper disable once CppIdenticalOperandsInBinaryExpression
+            REQUIRE_THROWS(pack = pack);
+         else
+            // ReSharper disable once CppIdenticalOperandsInBinaryExpression
+            REQUIRE_NOTHROW(pack = pack);
          LglsDisableWarningPop
+      }
+      
+      WHEN("Assigned empty self") {
+         pack.AssignFrom(pack);
 
          Any_CheckState_Default<E>(pack);
 
@@ -431,8 +460,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       WHEN("Compared") {
          ScopedElement<E> e1 {1};
          ScopedElement<E> e2 {2};
-         T another_pack1 {*e1};
-         T another_pack2 {*e2};
+         T another_pack1 {Piecewise, *e1};
+         T another_pack2 {Piecewise, *e2};
          T defaulted_pack1;
 
          REQUIRE(pack != another_pack1);
@@ -444,7 +473,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE_FALSE(pack.Contains(*element));
       }
 
-      if constexpr (CT::Exact<E, Text>) {
+      if constexpr (Exact<E, Text>) {
          WHEN("Given text that will be destroyed before the pack") {
             Text owned_text = "666";
             pack = Text(owned_text.operator Token());
@@ -464,7 +493,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 2);
       }
-      else if constexpr (CT::Same<E, T>) {
+      else if constexpr (Akin<E, T>) {
          Any_Helper_TestSame(pack, *element);
          Any_Helper_TestSame(pack, source);
          
@@ -513,7 +542,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 1);
       }
-      else if constexpr (CT::Same<E, T>) {
+      else if constexpr (Akin<E, T>) {
          Any_Helper_TestSame(pack, *element);
          
          REQUIRE(pack.GetUses() == 2);
@@ -557,13 +586,12 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
-         else if constexpr (CT::Same<E, T>) {
+         else if constexpr (Akin<E, T>) {
             Any_Helper_TestSame(pack, *element);
             
-            REQUIRE(pack.GetUses() == element.GetUses());
+            REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.IsStatic() == element.IsStatic());
-            REQUIRE(pack.GetAllocation() == element.GetAllocation());
+            REQUIRE(pack.GetAllocation() == element->GetAllocation());
          }
 
          if constexpr (not CT::Typed<T>) {
@@ -609,12 +637,11 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
-         else if constexpr (CT::Same<E, T>) {
+         else if constexpr (Akin<E, T>) {
             Any_Helper_TestSame(pack, *element);
             
             REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.IsStatic() == element.IsStatic());
-            REQUIRE(pack.GetAllocation() == element.GetAllocation());
+            REQUIRE(pack.GetAllocation() == element->GetAllocation());
          }
 
          if constexpr (not CT::Typed<T>) {
@@ -656,11 +683,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
-         else if constexpr (CT::Same<E, T>) {
+         else if constexpr (Akin<E, T>) {
             Any_Helper_TestSame(pack, *element);
             
             REQUIRE(pack.GetUses() == 0);
-            REQUIRE(pack.IsStatic());
             REQUIRE_FALSE(pack.GetAllocation());
          }
 
@@ -707,12 +733,11 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE(*pack.template As<E*>() == *element);
             REQUIRE(pack.GetUses() == 1);
          }
-         else if constexpr (CT::Same<E, T>) {
+         else if constexpr (Akin<E, T>) {
             Any_Helper_TestSame(pack, *element);
             
             REQUIRE(pack.GetUses() == 2);
-            REQUIRE(pack.IsStatic() == element.IsStatic());
-            REQUIRE(pack.GetAllocation() == element.GetAllocation());
+            REQUIRE(pack.GetAllocation() == element->GetAllocation());
          }
 
          if constexpr (not CT::Typed<T>) {
@@ -785,8 +810,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          Any_Helper_TestSame(pack, packbackup);
 
          REQUIRE(pack.IsTypeConstrained() == CT::Typed<T>);
-         REQUIRE(pack.GetUses() == (CT::Deep<E> and CT::Same<T, E> ? 3 : 2));
-         REQUIRE(pack.IsDeep() == (CT::Deep<Decay<E>> and not CT::Same<T, E>));
+         REQUIRE(pack.GetUses() == (CT::Deep<E> and Akin<T, E> ? 3 : 2));
+         REQUIRE(pack.IsDeep() == (CT::Deep<Decay<E>> and not Akin<T, E>));
          REQUIRE(pack.IsAllocated());
 
       #ifdef LANGULUS_STD_BENCHMARK
@@ -829,20 +854,18 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 1);
       }
-      else if constexpr (CT::Same<E, T>) {
+      else if constexpr (Akin<E, T>) {
          Any_Helper_TestSame(pack, *element);
          
          REQUIRE(pack.GetUses() == 2);
-         REQUIRE(pack.IsStatic() == element.IsStatic());
-         REQUIRE(pack.GetAllocation() == element.GetAllocation());
+         REQUIRE(pack.GetAllocation() == element->GetAllocation());
       }
       else {
-         REQUIRE(pack.template As<E>().GetRaw() == element.GetRaw());
+         REQUIRE(pack.template As<E>().GetRaw() == element->GetRaw());
          if constexpr (CT::Typed<T>)
             REQUIRE(pack.template IsExact<TypeOf<T>>());
          REQUIRE(pack.template As<E>() == *element);
          REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE_FALSE(pack.template As<E>().IsStatic());
          REQUIRE_FALSE(pack.template As<E>().IsConstant());
          REQUIRE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 2);
@@ -851,7 +874,6 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack == *element);
          REQUIRE(pack.GetUses() == 1);
          REQUIRE(pack.IsDeep());
-         REQUIRE_FALSE(pack.IsStatic());
          REQUIRE_FALSE(pack.IsConstant());
          REQUIRE(pack.GetAllocation());
       }
@@ -896,20 +918,18 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 1);
       }
-      else if constexpr (CT::Same<E, T>) {
+      else if constexpr (Akin<E, T>) {
          Any_Helper_TestSame(pack, *element);
          
          REQUIRE(pack.GetUses() == 0);
-         REQUIRE(pack.IsStatic());
          REQUIRE_FALSE(pack.GetAllocation());
       }
       else {
-         REQUIRE(pack.template As<E>().GetRaw() == element.GetRaw());
+         REQUIRE(pack.template As<E>().GetRaw() == element->GetRaw());
          if constexpr (CT::Typed<T>)
             REQUIRE(pack.template IsExact<TypeOf<T>>());
          REQUIRE(pack.template As<E>() == *element);
          REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE(pack.template As<E>().IsStatic());
          REQUIRE_FALSE(pack.template As<E>().IsConstant());
          REQUIRE_FALSE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 0);
@@ -917,7 +937,6 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack == *element);
          //REQUIRE(pack != element);
          REQUIRE(pack.GetUses() == 1);
-         REQUIRE_FALSE(pack.IsStatic());
          REQUIRE_FALSE(pack.IsConstant());
          REQUIRE(pack.GetAllocation());
          REQUIRE(pack.IsDeep());
@@ -967,20 +986,18 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(*pack.template As<E*>() == *element);
          REQUIRE(pack.GetUses() == 1);
       }
-      else if constexpr (CT::Same<E, T>) {
+      else if constexpr (Akin<E, T>) {
          Any_Helper_TestSame(pack, *element);
 
          REQUIRE(pack.GetUses() == 2);
-         REQUIRE(pack.IsStatic() == element.IsStatic());
-         REQUIRE(pack.GetAllocation() == element.GetAllocation());
+         REQUIRE(pack.GetAllocation() == element->GetAllocation());
       }
       else {
-         REQUIRE(pack.template As<E>().GetRaw() == element.GetRaw());
+         REQUIRE(pack.template As<E>().GetRaw() == element->GetRaw());
          if constexpr (CT::Typed<T>)
             REQUIRE(pack.template IsExact<TypeOf<T>>());
          REQUIRE(pack.template As<E>() == *element);
          REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE_FALSE(pack.template As<E>().IsStatic());
          REQUIRE_FALSE(pack.template As<E>().IsConstant());
          REQUIRE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 2);
@@ -989,7 +1006,6 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack == *element);
          REQUIRE(pack.GetUses() == 1);
          REQUIRE(pack.IsDeep());
-         REQUIRE_FALSE(pack.IsStatic());
          REQUIRE_FALSE(pack.IsConstant());
          REQUIRE(pack.GetAllocation());
       }

@@ -109,7 +109,7 @@ namespace Langulus::RTTI
          "Unsupported qualifiers detected");
       static_assert(CT::Reflectable<T>,
          "Can't reflect data that was explicitly marked unreflectable");
-      static_assert(CT::Exact<CT::ReflectedAs<T>, T>,
+      static_assert(Exact<CT::ReflectedAs<T>, T>,
          "Data is marked to be reflected as something else, "
          "make sure this is respected before reaching this function");
       static_assert(not ::std::is_function_v<T>,
@@ -566,7 +566,7 @@ namespace Langulus::RTTI
          "Can't reflect constant as data");
       static_assert(CT::Reflectable<T>,
          "Can't reflect data that was explicitly marked unreflectable");
-      static_assert(CT::Exact<CT::ReflectedAs<T>, T>,
+      static_assert(Exact<CT::ReflectedAs<T>, T>,
          "Data is marked to be reflected as something else, "
          "make sure this is respected before reaching this function");
       static_assert(not ::std::is_function_v<T>,
@@ -755,7 +755,7 @@ namespace Langulus::RTTI
          "Can't reflect reference type, use Deref before reflection");
       static_assert(CT::Reflectable<T>,
          "Can't reflect data that was explicitly marked unreflectable");
-      static_assert(CT::Exact<CT::ReflectedAs<T>, T>,
+      static_assert(Exact<CT::ReflectedAs<T>, T>,
          "Data is marked to be reflected as something else, "
          "make sure this is respected before reaching this function");
       static_assert(not ::std::is_function_v<T>,
@@ -1040,7 +1040,7 @@ namespace Langulus::RTTI
          "Can't have void as base");
       static_assert(CT::NotConvoluted<T, BASE>,
          "Can't have qualifiers here");
-      static_assert(not CT::Same<T, BASE>,
+      static_assert(not Akin<T, BASE>,
          "Can't have base of the same type as the derived");
       static_assert(NameOf<T, false>() != NameOf<BASE, false>(),
          "T and BASE have the same NameOf, possibly due to inheritance. "

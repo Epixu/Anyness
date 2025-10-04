@@ -120,7 +120,7 @@ namespace Langulus::RTTI
 
          bool Is(const MetaDataStructured_XY&) const noexcept;
          constexpr bool IsExact(const MetaDataStructured_XY&) const noexcept;
-         constexpr bool IsSimilar(const MetaDataStructured_XY&) const noexcept;
+         constexpr bool IsSame(const MetaDataStructured_XY&) const noexcept;
          constexpr bool operator == (const MetaDataStructured_XY&) const noexcept;
 
          constexpr auto GetSize()     const noexcept -> size_t;
@@ -219,7 +219,7 @@ namespace Langulus::RTTI
          using Base::operator bool;
 
          bool Is(const MetaDataNaked&) const noexcept;
-         bool IsSimilar(const MetaDataNaked&) const noexcept;
+         bool IsSame(const MetaDataNaked&) const noexcept;
 
          auto GetSize()               const noexcept -> size_t;
          auto GetAlignment()          const noexcept -> size_t;

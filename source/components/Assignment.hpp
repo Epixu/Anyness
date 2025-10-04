@@ -96,7 +96,7 @@ namespace Langulus::Anyness::Component
             // This container is heap-allocated                         
             using T = Tif<CT::TypeErased<C>, A, TypeOf<C>>;
             if constexpr (CT::TypeErased<C>)
-               LglsAssert(self.template IsSimilar<A>(), "Type mismatch");
+               LglsAssert(self.template IsSame<A>(), "Type mismatch");
 
             if (self.IsEmpty()) {
                // Container is empty, we might have to fresh-allocate   
@@ -229,7 +229,7 @@ namespace Langulus::Anyness::Component
                //                                                       
                // Either this container or the handle is type-erased    
                auto T = rhs.GetTypeInner();
-               LglsAssumeDev(self.IsSimilar(T), "Type mismatch");
+               LglsAssumeDev(self.IsSame(T), "Type mismatch");
 
                const auto src = const_cast<void*>(rhs.GetRaw());
                const auto dst = self.template AccessStackById<ID>();
@@ -261,7 +261,7 @@ namespace Langulus::Anyness::Component
                // Both sides are statically-typed and we can benefit    
                // from a lot of compile-time optimizations              
                using T = TypeOf<C>;
-               static_assert(CT::Similar<T, TypeOf<IT>>, "Type mismatch");
+               static_assert(Same<T, TypeOf<IT>>, "Type mismatch");
                T* data = static_cast<T*>(self.template AccessStackById<ID>());
                IntentAssign(*data, I::Nest(*rhs.GetRaw()));
             }
@@ -270,7 +270,7 @@ namespace Langulus::Anyness::Component
             //                                                          
             // This container is type-erased                            
             LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
-            LglsAssumeDev(self.template IsSimilar<IT>(), "Type mismatch");
+            LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
             auto T = self.GetTypeInner();
 
             const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
@@ -294,7 +294,7 @@ namespace Langulus::Anyness::Component
             //                                                          
             // This container is statically-typed                       
             using T = TypeOf<C>;
-            static_assert(CT::Similar<T, IT>, "Type mismatch");
+            static_assert(Same<T, IT>, "Type mismatch");
             T* data = static_cast<T*>(self.template AccessStackById<ID>());
             IntentAssign(*data, FWD(intent));
          }

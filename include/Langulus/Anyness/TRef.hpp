@@ -42,8 +42,6 @@ namespace Langulus::Anyness
    template<class T>
    struct TRef : Inner::TRefBase<T> {
       using Base = Inner::TRefBase<T>;
-      using Base::Base;
-      using Base::operator =;
       using Base::operator ==;
 
       // Single element selections                                      
@@ -51,15 +49,26 @@ namespace Langulus::Anyness
       using PickMut = T;
 
       constexpr TRef() noexcept { this->ConstructDefault(); }
-      constexpr TRef(nullptr_t) noexcept : TRef{} {}
-      constexpr TRef(T* pointer) noexcept {
-         if (pointer) {
-            Base::SetHeapInner(pointer);
-            Base::FindAllocationInner();
-         }
-         else this->ConstructDefault();
-      }
+      constexpr TRef(nullptr_t) noexcept    : TRef {} {}
+      constexpr TRef(TRef const& other)     : Base {Absorb, Refer {other}} {}
+      constexpr TRef(TRef&& other) noexcept : Base {Absorb, Move  {other}} {}
       constexpr ~TRef() noexcept { this->Destroy(); }
+
+      /// Initialize with a pointer. Respects intents.                        
+      template<class A>
+      constexpr TRef(A&& pointer) noexcept {
+         if constexpr (CT::ContainsOne<A>)
+            this->ConstructFrom(FWDIntent(pointer));
+         else if constexpr (CT::Sparse<A>) {
+            if (DeintCast(pointer)) {
+               this->SetHeapInner(DeintCast(pointer));
+               if constexpr (not CT::Disowned<A>)
+                  this->FindAllocationInner();
+            }
+            else this->ConstructDefault();
+         }
+         else static_assert(false, "A must be a pointer (intent is optional)");
+      }
 
       constexpr bool operator == (nullptr_t) const noexcept {
          return this->IsEmpty();
@@ -70,17 +79,35 @@ namespace Langulus::Anyness
             return this->IsEmpty();
          return this->GetRaw() == rhs;
       }
+      
+      /// Assignment                                                          
+      constexpr TRef& operator = (TRef const& other) {
+         this->AssignFrom(Refer(other));
+         return *this;
+      }
+      constexpr TRef& operator = (TRef&& other) noexcept {
+         this->AssignFrom(Move(other));
+         return *this;
+      }
 
-      constexpr TRef& operator = (T* other) noexcept {
-         if (other == Base::GetRaw())
-            return *this;
+      /// Assign a pointer. Respects intents.                                 
+      template<class A>
+      constexpr TRef& operator = (A&& pointer) noexcept {
+         if constexpr (CT::ContainsOne<A>)
+            this->AssignFrom(FWDIntent(pointer));
+         else if constexpr (CT::Sparse<A>) {
+            if (DeintCast(pointer) == this->GetRaw())
+               return *this;
          
-         if (other) {
-            Base::Free();
-            Base::SetHeapInner(other);
-            Base::FindAllocationInner();
+            if (DeintCast(pointer)) {
+               this->Free();
+               this->SetHeapInner(DeintCast(pointer));
+               if constexpr (not CT::Disowned<A>)
+                  this->FindAllocationInner();
+            }
+            else this->AssignDefault();
          }
-         else this->AssignDefault();
+         else static_assert(false, "A must be a pointer (intent is optional)");
          return *this;
       }
    };

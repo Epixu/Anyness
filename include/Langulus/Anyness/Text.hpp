@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Langulus/Anyness/TView.hpp>
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
@@ -59,19 +58,13 @@ namespace Langulus::Anyness
    /// A continuous text container of variable size                           
    ///                                                                        
    struct Text : Inner::TextBase {
-      //using Base = Inner::TextBase;
       using CountType = Base::CountType;
       using CTTI_Text = Yes<>;
 
       // Single element selections                                      
       using Pick    = char const&;
       using PickMut = char&;
-
-      // Range selections                                               
-      //using PickRange    = TView<char const>;
-      //using PickRangeMut = TView<char>;
       
-      //using Base::Base;
       using Base::operator =;
       using Base::operator ==;
 
@@ -98,7 +91,7 @@ namespace Langulus::Anyness
             // Create from a text literal/bounded array                 
             // Type can be either char, or const char                   
             using CHAR = TypeOf<ST>;
-            static_assert(CT::Similar<CHAR, char>, "Type mismatch");
+            static_assert(Same<CHAR, char>, "Type mismatch");
             const auto count = ::std::char_traits<char>::length(source);
             if (not count) {
                this->ConstructDefault();
@@ -115,7 +108,7 @@ namespace Langulus::Anyness
                return;
             }
             using CHAR = Deptr<ST>;
-            static_assert(CT::Similar<CHAR, char>, "Type mismatch");
+            static_assert(Same<CHAR, char>, "Type mismatch");
             const auto count = ::std::char_traits<char>::length(source);
             if (not count) {
                this->ConstructDefault();
@@ -132,7 +125,7 @@ namespace Langulus::Anyness
                return;
             }
             using CHAR = Deptr<decltype(source.data())>;
-            static_assert(CT::Similar<CHAR, char>, "Type mismatch");
+            static_assert(Same<CHAR, char>, "Type mismatch");
             this->SetHeapInner(source.data());
             this->SetCountInner(source.size());
          }

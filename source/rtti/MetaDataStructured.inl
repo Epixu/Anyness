@@ -100,7 +100,7 @@ namespace Langulus::RTTI::Inner
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
    TEMPLATE()
-   constexpr bool ME()::IsSimilar(const MetaDataStructured_XY& other) const noexcept {
+   constexpr bool ME()::IsSame(const MetaDataStructured_XY& other) const noexcept {
       return Base::operator == (other);
    }
 

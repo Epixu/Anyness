@@ -148,7 +148,7 @@ namespace Langulus::Anyness::Component
                }
             }
 
-            if_available(self.FreeDeep());
+            //if_available(self.FreeDeep());
 
             // Free memory                                              
             Allocator::Deallocate(a);

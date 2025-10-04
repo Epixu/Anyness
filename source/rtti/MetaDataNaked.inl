@@ -24,7 +24,7 @@ namespace Langulus::RTTI::Inner
    /// on the current level of indirection, but on the entire way to origin   
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
-   inline bool MetaDataNaked::IsSimilar(const MetaDataNaked& other) const noexcept {
+   inline bool MetaDataNaked::IsSame(const MetaDataNaked& other) const noexcept {
       return other and mDefinition->mDecvqAll == other.mDefinition->mDecvqAll;
    }
 

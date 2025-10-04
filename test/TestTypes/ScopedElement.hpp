@@ -62,6 +62,8 @@ public:
       NestedDestructor(element);
    }
 
-   T& operator*() {return *element;}
-   T const& operator*() const {return *element;}
+   auto operator *  ()       -> T&       {return *element;}
+   auto operator *  () const -> T const& {return *element;}
+   auto operator -> ()       -> T*       {return  element;}
+   auto operator -> () const -> T const* {return  element;}
 };

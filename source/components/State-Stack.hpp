@@ -124,7 +124,7 @@ namespace Langulus::Anyness::Component
       }
 
       template<CT::State S>
-      static constexpr bool HasState = CT::SameAsOneOf<S, STATES...>;
+      static constexpr bool HasState = AkinAsOneOf<S, STATES...>;
       static constexpr bool CanBeMissing = CheckCanBeMissing();
 
       /// Clear the state to the default value                                

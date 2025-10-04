@@ -63,8 +63,9 @@ namespace Langulus::Anyness
    /// using Own or Ref instead. If you want to contain a number of similar   
    /// elements use Many instead.                                             
    struct Any : Inner::AnyBase {
+      using CTTI_Deep = Yes<>;
+      
       using Base::operator ==;
-      //using Com::OwnershipDeepHeap<>::DestroyElement;
       using DefineState::Typed<>::IsTypeConstrained;
 
       using Pick          = Handle;
@@ -78,11 +79,20 @@ namespace Langulus::Anyness
       constexpr Any(Any&& other) noexcept : Any {Move  {other}} {}
       constexpr ~Any() noexcept { this->Destroy(); }
 
-      /// Construction that emplaces A in the container                       
+      /// Construction that either absorbs the provided container, or         
+      /// emplaces A in the container                                         
       template<class A>
       constexpr Any(A&& argument) {
-         if constexpr (CT::ContainsOne<A>)
+         if constexpr (CT::ContainsOne<A>) {
+            LglsAssumeUser((Same<Deint<A>, Any>),
+               "Ambiguous use of construction "
+               "- you should use tag-dispatch with first argument either Absorb "
+               "(if you want to overwrite the container itself) or Piecewise "
+               "(if you want to overwrite the first item) in order to clearly "
+               "state your intent. Absorb will be used by default"
+            );
             this->ConstructFrom(FWD(argument));
+         }
          else {
             this->SetType<Decvq<Deref<A>>>();
             this->AllocateFresh(this->RequestHeap(1));
@@ -90,19 +100,37 @@ namespace Langulus::Anyness
             this->EmplaceWithIntent(FWDIntent(argument));
          }
       }
-
+      
+      /// Construction that absorbs the provided container                    
+      template<class A>
+      constexpr Any(Inner::Absorb, A&& argument) {
+         this->ConstructFrom(FWD(argument));
+      }
+      
+      /// Construction that emplaces A inside                                 
+      template<class A>
+      constexpr Any(Inner::Piecewise, A&& argument) {
+         this->SetType<Decvq<Deref<A>>>();
+         this->AllocateFresh(this->RequestHeap(1));
+         this->ResetState();
+         this->EmplaceWithIntent(FWDIntent(argument));
+      }
+      
       /// Assignment                                                          
       constexpr Any& operator = (Any const& other) {
-         return operator = (Refer {other});
+         this->AssignFrom(Refer(other));
+         return *this;
       }
       constexpr Any& operator = (Any&& other) noexcept {
-         return operator = (Move {other});
+         this->AssignFrom(Move(other));
+         return *this;
       }
       
       template<class A>
       constexpr Any& operator = (A&& argument) {
          if constexpr (CT::ContainsOne<A>) {
-            LglsAssumeUser(not IsDeep(), "Ambiguous use of assignment "
+            LglsAssumeUser((Same<Deint<A>, Any>),
+               "Ambiguous use of assignment "
                "- you should use either AssignFrom (if you want to overwrite "
                "the container itself) or Assign (if you want to overwrite the "
                "first item) in order to clearly state your intent. "

@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #pragma once
-#include "Same.hpp"
+#include "Akin.hpp"
 #include "../TypeOf.hpp"
 #include "Comparable.hpp"
 
@@ -31,7 +31,7 @@ namespace Langulus::CT
    {
       template<class T, class UNLESS = void>
       consteval auto UnfoldInner() {
-         if constexpr (Similar<T, UNLESS> or not Unfoldable<T>) {
+         if constexpr (Same<T, UNLESS> or not Unfoldable<T>) {
             // Immediately break the nesting if UNLESS condition is met 
             // Alternatively, break nesting if T is reflected as not    
             // unfoldable                                               

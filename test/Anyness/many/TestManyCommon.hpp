@@ -62,7 +62,7 @@ template<class E>
 void Many_Helper_TestType(const auto& many) {
    REQUIRE      (many.IsTyped());
    REQUIRE      (many.GetType() == MetaDataOf<E>());
-   REQUIRE      (many.GetType()->template IsSimilar<const E>());
+   REQUIRE      (many.GetType()->template IsSame<const E>());
    REQUIRE      (many.GetType()->template IsExact<E>());
    REQUIRE      (many.GetType()->template Is<E*>());
    REQUIRE      (many.IsDense() == CT::Dense<E>);

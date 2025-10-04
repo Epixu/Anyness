@@ -7,7 +7,7 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/Typenav.hpp>
-#include <Langulus/CT/Same.hpp>
+#include <Langulus/CT/Akin.hpp>
 
 using namespace Langulus;
 
@@ -33,7 +33,7 @@ TEMPLATE_TEST_CASE("Testing sheddable types", "[ct]",
 ) {
    static_assert(    CT::Sheddable<TestType>);
    static_assert(not CT::NotSheddable<TestType>);
-   static_assert(    CT::Exact<Shed<TestType>, int&>);
+   static_assert(    Exact<Shed<TestType>, int&>);
 }
 
 TEMPLATE_TEST_CASE("Testing non-sheddable types", "[ct]",
@@ -50,7 +50,7 @@ TEMPLATE_TEST_CASE("Testing non-sheddable types", "[ct]",
 ) {
    static_assert(not CT::Sheddable<TestType>);
    static_assert(    CT::NotSheddable<TestType>);
-   static_assert(    CT::Exact<Shed<TestType>, TestType>);
+   static_assert(    Exact<Shed<TestType>, TestType>);
 }
 
 //static_assert(CT::Sheddable<>); // shouldn't compile at all

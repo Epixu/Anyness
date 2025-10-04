@@ -93,7 +93,7 @@ namespace Langulus::Anyness::Component
             using LT = TypeOf<LHS>;
             using RT = TypeOf<RHS>;
 
-            if constexpr (not CT::Similar<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
+            if constexpr (not Same<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
                // Types are different                                   
                VERBOSE(Logger::Red, "Types differ (typed): ",
                   NameOf<LT>(), " != ", NameOf<RT>());
@@ -164,7 +164,7 @@ namespace Langulus::Anyness::Component
             const DMeta LT = lhs.GetType();
             const DMeta RT = rhs.GetType();
 
-            if (not LT.IsSimilar(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
+            if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
                VERBOSE(Logger::Red, "Types differ (type-erased): ",
                   LT, " != ", RT);
                return false;
@@ -296,7 +296,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // One or none of the participants is typed              
-               if (not IsSimilar(range))
+               if (not IsSame(range))
                   return Index::None;
             }
 
@@ -395,7 +395,7 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::Text<RT>) {
                // Text types can be more loosely compared               
-               if (self.template IsSimilar<Text>()) {
+               if (self.template IsSame<Text>()) {
                   // Implicitly make a text container                   
                   return self.template Get<Text>() == Text {Disown(rhs)};
                }
@@ -411,7 +411,7 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (CT::Comparable<RT, RT>) {
                // Non-deep element compare                              
-               if (self.template IsSimilar<RT>())
+               if (self.template IsSame<RT>())
                   return self.template Get<RT>() == rhs;
                return false;
             }
