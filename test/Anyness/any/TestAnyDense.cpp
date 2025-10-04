@@ -26,6 +26,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       // All type-erased containers should have all intent              
       // constructors and assigners available, and errors will instead  
       // be thrown as exceptions at runtime                             
+      static_assert(Exact<TypeOf<T>, void>);
       static_assert(CT::TypeErased<T>);
       static_assert(CT::CopyConstructible<T>);
       static_assert(CT::ReferConstructible<T>);
@@ -44,6 +45,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    else {
       // Statically-typed containers behave the same as their inner     
       // type                                                           
+      static_assert(Exact<TypeOf<T>, E>);
       static_assert(not CT::TypeErased<T>);
       static_assert(CT::CopyConstructible<T>    == CT::CopyConstructible<E>);
       static_assert(CT::ReferConstructible<T>   == CT::ReferConstructible<E>);
@@ -62,6 +64,12 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    
    static_assert(CT::Deep<T>);
    static_assert(CT::ContainsOne<T>);
+   static_assert(not CT::ContainsMany<T>);
+   static_assert(CT::HasVariableCount<T>);
+   static_assert(CT::HeapAllocated<T>);
+   static_assert(CT::DeeplyOwned<T>);
+   static_assert(CT::Owned<T>);
+   static_assert(CT::AutoOwned<T>);
 
    static_assert(not requires (T pack, E item) { pack.operator +   (item); });
    static_assert(not requires (T pack, E item) { pack.operator +=  (item); });
@@ -109,14 +117,19 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          };
       #endif
 
-      WHEN("Ambiguous assign value by copy") {
+      WHEN("Ambiguous assign value by referral") {
          if constexpr (CT::Deep<E> and LANGULUS(SAFE))
             REQUIRE_THROWS(pack = *element);
          else
             REQUIRE_NOTHROW(pack = *element);
+         
+         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = Refer(*element));
+         else
+            REQUIRE_NOTHROW(pack = Refer(*element));
       }
 
-      WHEN("Assigned value by copy") {
+      WHEN("Assigned value by referral") {
          pack.Assign(*element);
 
          if constexpr (CT::Flat<E>) {
@@ -170,6 +183,11 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE_THROWS(pack = ::std::move(movable));
          else
             REQUIRE_NOTHROW(pack = ::std::move(movable));
+         
+         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack = Move(movable));
+         else
+            REQUIRE_NOTHROW(pack = Move(movable));
       }
       
       WHEN("Assigned value by move") {
@@ -338,12 +356,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       WHEN("Ambigous assigned empty self") {
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
-         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
-            // ReSharper disable once CppIdenticalOperandsInBinaryExpression
-            REQUIRE_THROWS(pack = pack);
-         else
-            // ReSharper disable once CppIdenticalOperandsInBinaryExpression
-            REQUIRE_NOTHROW(pack = pack);
+         // ReSharper disable once CppIdenticalOperandsInBinaryExpression
+         REQUIRE_NOTHROW(pack = pack);
          LglsDisableWarningPop
       }
       
@@ -481,59 +495,23 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
    }
 
-   GIVEN("Container constructed by same container copy") {
+   GIVEN("Container ambiguously constructed by value referral") {
       const ScopedElement<E> element {555};
-      const T source {*element};
-      T pack {source};
-
-      if constexpr (CT::Flat<E>) {
-         Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE(pack.GetUses() == 2);
-      }
-      else if constexpr (Akin<E, T>) {
-         Any_Helper_TestSame(pack, *element);
-         Any_Helper_TestSame(pack, source);
-         
-         REQUIRE(pack.GetUses() == 3);
-      }
-
-      if constexpr (not CT::Typed<T>) {
-         REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-         REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-      }
-
-      #ifdef LANGULUS_STD_BENCHMARK
-         BENCHMARK_ADVANCED("construction (single container copy)") (timer meter) {
-            some<uninitialized<T>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct(source);
-            });
-         };
-
-         BENCHMARK_ADVANCED("std::vector::construction (single container copy)") (timer meter) {
-            StdT source {1, 555};
-            some<uninitialized<StdT>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct(source);
-            });
-         };
-
-         BENCHMARK_ADVANCED("std::any::construction (single container copy)") (timer meter) {
-            std::any source {555};
-            some<uninitialized<std::any>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct(source);
-            });
-         };
-      #endif
+      
+      if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+         REQUIRE_THROWS(T {*element});
+      else
+         REQUIRE_NOTHROW(T {*element});
+      
+      if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+         REQUIRE_THROWS(T {Refer(*element)});
+      else
+         REQUIRE_NOTHROW(T {Refer(*element)});
    }
 
-   GIVEN("Container constructed by value copy") {
+   GIVEN("Container constructed by value referral") {
       const ScopedElement<E> element {555};
-      T pack {*element};
+      T pack {Piecewise, *element};
 
       if constexpr (CT::Flat<E>) {
          Any_CheckState_OwnedFull<E>(pack);
@@ -576,8 +554,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          };
       #endif
 
-      WHEN("Assigned compatible value by copy") {
-         pack = *element;
+      WHEN("Assigned compatible value by referral") {
+         pack.Assign(*element);
 
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
@@ -625,7 +603,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       
       WHEN("Assigned compatible value by move") {
          auto movable = *element;
-         pack = ::std::move(movable);
+         pack.Assign(::std::move(movable));
 
          if constexpr (CT::Container<E>)
             Any_CheckState_Default<TypeOf<E>>(movable);
@@ -674,7 +652,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
 
       WHEN("Assigned compatible disowned value") {
-         pack = Disown(*element);
+         pack.Assign(Disown(*element));
 
          if constexpr (CT::Flat<E>) {
             Any_CheckState_OwnedFull<E>(pack);
@@ -721,7 +699,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       
       WHEN("Assigned compatible abandoned value") {
          auto movable = *element;
-         pack = Abandon(movable);
+         pack.Assign(Abandon(movable));
 
          if constexpr (CT::Container<E>)
             Any_CheckState_Abandoned<TypeOf<E>>(movable);
@@ -799,7 +777,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
 
       WHEN("Assigned compatible full self") {
-         pack = *element;
+         pack.Assign(*element);
          auto packbackup = pack;
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
@@ -838,11 +816,76 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       #endif
       }
    }
+   
+   GIVEN("Container constructed by same container referral") {
+      const ScopedElement<E> element {555};
+      const T source {Piecewise, *element};
+      T pack {source};
 
-   GIVEN("Container constructed by value move") {
+      if constexpr (CT::Flat<E>) {
+         Any_CheckState_OwnedFull<E>(pack);
+         
+         REQUIRE(pack.template As<E>() == *element);
+         REQUIRE(*pack.template As<E*>() == *element);
+         REQUIRE(pack.GetUses() == 2);
+      }
+      else if constexpr (Akin<E, T>) {
+         Any_Helper_TestSame(pack, *element);
+         Any_Helper_TestSame(pack, source);
+         
+         REQUIRE(pack.GetUses() == 3);
+      }
+
+      if constexpr (not CT::Typed<T>) {
+         REQUIRE_THROWS(pack.template As<float>() == 0.0f);
+         REQUIRE_THROWS(pack.template As<float*>() == nullptr);
+      }
+
+      #ifdef LANGULUS_STD_BENCHMARK
+      BENCHMARK_ADVANCED("construction (single container copy)") (timer meter) {
+         some<uninitialized<T>> storage(meter.runs());
+         meter.measure([&](int i) {
+            return storage[i].construct(source);
+         });
+      };
+
+      BENCHMARK_ADVANCED("std::vector::construction (single container copy)") (timer meter) {
+         StdT source {1, 555};
+         some<uninitialized<StdT>> storage(meter.runs());
+         meter.measure([&](int i) {
+            return storage[i].construct(source);
+         });
+      };
+
+      BENCHMARK_ADVANCED("std::any::construction (single container copy)") (timer meter) {
+         std::any source {555};
+         some<uninitialized<std::any>> storage(meter.runs());
+         meter.measure([&](int i) {
+            return storage[i].construct(source);
+         });
+      };
+      #endif
+   }
+
+   GIVEN("Container ambiguously constructed by moved value") {
       const ScopedElement<E> element {555};
       E movable = *element;
-      T pack {::std::move(movable)};
+      
+      if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+         REQUIRE_THROWS(T {::std::move(movable)});
+      else
+         REQUIRE_NOTHROW(T {::std::move(movable)});
+      
+      if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+         REQUIRE_THROWS(T {Move(movable)});
+      else
+         REQUIRE_NOTHROW(T {Move(movable)});
+   }
+
+   GIVEN("Container constructed by moved value") {
+      const ScopedElement<E> element {555};
+      E movable = *element;
+      T pack {Piecewise, ::std::move(movable)};
 
       if constexpr (CT::Container<E>)
          Any_CheckState_Default<TypeOf<E>>(movable);
@@ -906,10 +949,19 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          };
       #endif
    }
+   
+   GIVEN("Container ambiguously constructed by disowned value") {
+      const ScopedElement<E> element {555};
+      
+      if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+         REQUIRE_THROWS(T {Disown(*element)});
+      else
+         REQUIRE_NOTHROW(T {Disown(*element)});
+   }
 
    GIVEN("Container constructed by disowned value") {
       const ScopedElement<E> element {555};
-      T pack {Disown(*element)};
+      T pack {Piecewise, Disown(*element)};
 
       if constexpr (CT::Flat<E>) {
          Any_CheckState_OwnedFull<E>(pack);
@@ -930,7 +982,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             REQUIRE(pack.template IsExact<TypeOf<T>>());
          REQUIRE(pack.template As<E>() == *element);
          REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE_FALSE(pack.template As<E>().IsConstant());
+         REQUIRE(pack.template As<E>().IsConstant());
          REQUIRE_FALSE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 0);
          REQUIRE(pack.template As<E>() == *element);
@@ -970,11 +1022,21 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       };
    #endif
    }
+   
+   GIVEN("Container ambiguously constructed by abandoned value") {
+      const ScopedElement<E> element {555};
+      E movable = *element;
+      
+      if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+         REQUIRE_THROWS(T {Abandon(movable)});
+      else
+         REQUIRE_NOTHROW(T {Abandon(movable)});
+   }
     
    GIVEN("Container constructed by abandoned value") {
       const ScopedElement<E> element {555};
       E movable = *element;
-      T pack {Abandon(movable)};
+      T pack {Piecewise, Abandon(movable)};
 
       if constexpr (CT::Container<E>)
          Any_CheckState_Abandoned<TypeOf<E>>(movable);
@@ -1041,7 +1103,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
 
    GIVEN("Full container") {
       const ScopedElement<E> element {555};
-      T pack {*element};
+      T pack {Piecewise, *element};
       const auto memory = pack.GetRaw();
       
       Any_CheckState_OwnedFull<E>(pack);
@@ -1166,8 +1228,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       WHEN("Compared") {
          ScopedElement<E> e1 {1};
          ScopedElement<E> e2 {2};
-         T another_pack1 {*e1};
-         T another_pack2 {*e2};
+         T another_pack1 {Piecewise, *e1};
+         T another_pack2 {Piecewise, *e2};
          T defaulted_pack;
          T same_pack {pack};
 
@@ -1188,8 +1250,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    GIVEN("Two full containers") {
       const ScopedElement<E> e1 {555};
       const ScopedElement<E> e2 {666};
-      T pack1 {*e1};
-      T pack2 {*e2};
+      T pack1 {Piecewise, *e1};
+      T pack2 {Piecewise, *e2};
       const T memory1 = pack1;
       const T memory2 = pack2;
 

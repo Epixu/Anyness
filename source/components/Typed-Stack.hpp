@@ -76,6 +76,29 @@ namespace Langulus::Anyness::Component
       }
 
    public:
+      /// Transfer from any kind of container, respecting intents             
+      ///   @attention this is noop when constructing from deep intents,      
+      ///      since element constructors might throw and stuff be partially  
+      ///      inserted. In those cases, count is set by the heap components. 
+      ///   @param intent - the intent and container to transfer from         
+      template<CT::Intent I, CT::Container C> requires CT::Container<I>
+      void ConstructFrom(this C& self, I&& intent) {
+         if constexpr (I::IsShallow() and not CT::Copied<I>) {
+            if constexpr (CT::TypeErased<C>) {
+               self.SetType(intent->GetType());
+
+               // While we are interfacing external memory, we have to  
+               // keep the type-constrained state, otherwise we risk    
+               // interpreting contents the wrong way                   
+               if constexpr (not CT::TypeErased<I>)
+                  self.EnableTypeConstrained();
+               else if (intent->IsTypeConstrained())
+                  self.EnableTypeConstrained();
+            }
+            else self.template SetType<TypeOf<Deint<I>>>();
+         }
+      }
+      
       /// Get the contained type                                              
       constexpr META GetType(this auto const& self) noexcept {
          META const& meta = self.GetTypeInner();

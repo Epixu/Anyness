@@ -72,7 +72,7 @@ namespace Langulus::Anyness
                "- you should use tag-dispatch with first argument either Absorb "
                "(if you want to overwrite the container itself) or Piecewise "
                "(if you want to overwrite the first item) in order to clearly "
-               "state your intent. Absorb will be used by default"
+               "state your intent. Absorb will be used by default!"
             );
             this->ConstructFrom(FWD(arguments)...);
          }
@@ -138,7 +138,7 @@ namespace Langulus::Anyness
                "- you should use either AssignFrom (if you want to overwrite "
                "the container itself) or Assign (if you want to overwrite the "
                "first item) in order to clearly state your intent. "
-               "AssignFrom will be used by default"
+               "AssignFrom will be used by default!"
             );
             this->AssignFrom(FWD(argument));
          }

@@ -20,7 +20,7 @@ namespace Langulus::Anyness::DefineState
    struct Typed {
       using CTTI_State = Yes<>;
       static constexpr bool Static  = V != State::Variable;
-      static constexpr bool Dynamic = V == State::Variable;
+      static constexpr bool Dynamic = not Static;
       static constexpr bool Enable  = V == State::Enabled;
       
       // Every state needs a unique ID in order to find matches even    

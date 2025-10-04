@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Implements comparison for containers. This includes functions for      
-   /// searching.                                                             
+   /// searching and pattern-matching.                                        
    ///   @tparam ID - heap/stack we're comparing                              
    ///   @tparam HASH - whether to compare hashes before elements. This is    
    ///      mostly useful when hash is cachable, otherwise kind of pointless. 
@@ -64,15 +64,15 @@ namespace Langulus::Anyness::Component
       ///   @return true if containers match                                  
       template<CT::Container LHS, CT::Container RHS>
       constexpr bool operator == (this const LHS& lhs, const RHS& rhs) {
-         return lhs.Compare(rhs) or lhs.CompareSingleValue(rhs);
+         return lhs.Compare(rhs) or lhs.CompareOne(rhs);
       }
 
-      /// Compare to any non-container data                                   
+      /// Compare to any non-container                                        
       ///   @return true if data matches contained data                       
       template<CT::Container LHS, CT::NotContainer RHS>
       constexpr bool operator == (this const LHS& lhs, const RHS& rhs)
       requires CT::RangeComparable<LHS, RHS> {
-         return lhs.CompareSingleValue(rhs);
+         return lhs.CompareOne(rhs);
       }
 
       /// Compare two containers for equality                                 
@@ -376,15 +376,14 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::ContainsMany<C>)
             return self.Find(item) != Index::None;
          else
-            return self.CompareSingleValue(item);
+            return self.CompareOne(item);
       }      
 
-   protected:
       /// Compare with one single value, if exactly one element is contained  
       ///   @param rhs - the value to compare against                         
       ///   @return true if elements are the same                             
       template<CT::Container C, CT::NoIntent RT>
-      constexpr bool CompareSingleValue(this C const& self, const RT& rhs) {
+      constexpr bool CompareOne(this C const& self, const RT& rhs) {
          if (self.GetCount() != 1)
             return false;
 

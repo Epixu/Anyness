@@ -73,7 +73,7 @@ namespace Langulus
    namespace CT
    {
       /// Check if all T are typed by searching for CTTI::Typed<T>            
-      /// specializations, or T::CTTI_Typed / T::value_type members.          
+      /// specializations, or T::CTTI_Typed/T::value_type members.            
       ///   @attention the inner type must not be 'void', in order for T to   
       ///      be considered 'typed' (as opposed to 'type-erased')            
       ///   @attention if the inner type is a typelist, that typelist will be 
