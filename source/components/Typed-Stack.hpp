@@ -269,6 +269,20 @@ namespace Langulus::Anyness::Component
          return not TypeErased;
       }
 
+      constexpr void EnableTypeConstrained() const noexcept {
+         static_assert(not TypeErased,
+            "Can't enable type-constraint in type-erased container. "
+            "Make sure you've added Typed state and properly disambiguated it"
+         );
+      }
+
+      constexpr void DisableTypeConstrained() const noexcept {
+         static_assert(TypeErased,
+            "Can't disable type-constraint in a statically-typed container. "
+            "Make sure you've added Typed state and properly disambiguated it"
+         );
+      }
+
       /// Get the size of the type times the contained elements               
       ///   @return the size of all elements in bytes                         
       constexpr bool GetBytesize(this auto const& self) noexcept {

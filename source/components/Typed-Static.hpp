@@ -156,9 +156,17 @@ namespace Langulus::Anyness::Component
          return CT::Deep<Decay<TYPE>>;
       }
       
-      /// Returns true if a type constraint is specified                      
+      /// Always returns true                                                 
       constexpr bool IsTypeConstrained() const noexcept {
          return true;
+      }
+
+      /// Does nothing                                                        
+      constexpr void EnableTypeConstrained() const noexcept {}
+      constexpr void DisableTypeConstrained() const noexcept {
+         static_assert(false,
+            "Can't disable type-constraint in a statically-typed container"
+         );
       }
 
       /// Get the size of the type times the contained elements               
