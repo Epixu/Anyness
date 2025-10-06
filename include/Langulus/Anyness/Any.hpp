@@ -56,7 +56,7 @@ namespace Langulus::Anyness::Inner
 namespace Langulus::Anyness
 {
    ///                                                                        
-   /// A universal type-erased container of size 1.                           
+   /// A type-erased container of size 1.                                     
    /// This is the most universal and feature-complete container, that        
    /// supports all kinds of data states: compression, encryption, linking,   
    /// and so on. For a slightly smaller and faster representation, consider  
@@ -64,7 +64,8 @@ namespace Langulus::Anyness
    /// elements use Many instead.                                             
    struct Any : Inner::AnyBase {
       using CTTI_Deep = Yes<>;
-      
+
+      using Base = Inner::AnyBase;
       using Base::operator ==;
       using DefineState::Typed<>::IsTypeConstrained;
 
@@ -74,10 +75,18 @@ namespace Langulus::Anyness
       using HandleMutType = HandleMut;
       using DeepType      = Any;
 
-      constexpr Any() noexcept { this->ConstructDefault(); }
-      constexpr Any(Any const& other)     : Any {Refer {other}} {}
-      constexpr Any(Any&& other) noexcept : Any {Move  {other}} {}
-      constexpr ~Any() noexcept { this->Destroy(); }
+      constexpr Any() noexcept {
+         this->ConstructDefault();
+      }
+      constexpr Any(Any const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr Any(Any&& other) noexcept  {
+         this->ConstructFrom(Move(other));
+      }
+      constexpr ~Any() noexcept {
+         this->Destroy();
+      }
 
       /// Construction that either absorbs the provided container, or         
       /// emplaces A in the container                                         
@@ -138,7 +147,7 @@ namespace Langulus::Anyness
             );
             this->AssignFrom(FWD(argument));
          }
-         else Com::Assignment<>::operator = (FWD(argument));
+         else this->Com::Assignment<>::operator = (FWD(argument));
          return *this;
       }
    };

@@ -93,10 +93,20 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Base = Inner::THandleEmbeddedDense<T>;
-      using Base::Base;
+      //using Base::Base;
 
       THandle() = delete;
       
+      constexpr THandle(THandle const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr THandle(THandle&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
+      constexpr ~THandle() noexcept {
+         this->Destroy();
+      }
+
       constexpr THandle(Deref<T>* ptr, AllocationPtr alloc) noexcept {
          this->SetHeapInner(ptr);
          this->SetAllocationInner(alloc);
@@ -109,10 +119,20 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Base = Inner::THandleEmbeddedSparse<T>;
-      using Base::Base;
+      //using Base::Base;
 
       THandle() = delete;
       
+      constexpr THandle(THandle const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr THandle(THandle&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
+      constexpr ~THandle() noexcept {
+         this->Destroy();
+      }
+
       constexpr THandle(Deref<T>* ptr, EntryPtr entry) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
@@ -130,9 +150,19 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Base = Inner::THandleDisownedEmbedded<T>;
-      using Base::Base;
+      //using Base::Base;
 
       THandleDisowned() = delete;
+      
+      constexpr THandleDisowned(THandleDisowned const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr THandleDisowned(THandleDisowned&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
+      constexpr ~THandleDisowned() noexcept {
+         this->Destroy();
+      }
    };
    
 
@@ -145,9 +175,19 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using Base = Inner::THandleLocalDense<T>;
-      using Base::Base;
+      //using Base::Base;
 
       THandle() = delete;
+      
+      constexpr THandle(THandle const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr THandle(THandle&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
+      constexpr ~THandle() noexcept {
+         this->Destroy();
+      }
    };
    
 
@@ -163,5 +203,15 @@ namespace Langulus::Anyness
       using Base::Base;
       
       THandle() = delete;
+      
+      constexpr THandle(THandle const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr THandle(THandle&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
+      constexpr ~THandle() noexcept {
+         this->Destroy();
+      }
    };
 }

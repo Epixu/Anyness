@@ -290,21 +290,21 @@ namespace Langulus::Anyness
       /// C++ copy-semantics are mapped onto Refer intent.                    
       /// In other words - a copy is always shallow, unless explicitly Copy   
       /// or Clone intent is used.                                            
-      constexpr Container(Container const& other) noexcept
-         : Container {Absorb, Refer {other}} {}
+      /*constexpr Container(Container const& other) noexcept
+         : Container {Absorb, Refer {other}} {}*/
       
       /// C++ move-semantics are mapped onto Move intent                      
-      constexpr Container(Container&& other) noexcept
-         : Container {Absorb, Move {other}} {}
+      /*constexpr Container(Container&& other) noexcept
+         : Container {Absorb, Move {other}} {}*/
       
       /// A generalized container constructor that takes another container    
       /// that may have completely different components, and tries to extract 
       /// relevant information from it. Invokes ConstructFrom for each        
       /// component of this container that has it. Respects intents.          
       ///   @note ConstructFrom act as validating functions as well           
-      constexpr Container(Inner::Absorb, CT::Container auto&& from) {
+      /*constexpr Container(Inner::Absorb, CT::Container auto&& from) {
          ConstructFrom(FWD(from));
-      }
+      }*/
 
       /// A tag-dispatch constructor that forwards arguments to mStack.       
       /// Used in some niche container cases, like TOwn.                      

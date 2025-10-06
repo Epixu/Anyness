@@ -265,8 +265,8 @@ namespace Langulus::Anyness::Component
       }
 
       /// Returns true if a type constraint is specified                      
-      constexpr bool IsTypeConstrained() const requires (not TypeErased) {
-         return true;
+      constexpr bool IsTypeConstrained() const noexcept {
+         return not TypeErased;
       }
 
       /// Get the size of the type times the contained elements               

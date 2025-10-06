@@ -56,10 +56,18 @@ namespace Langulus::Anyness
       using HandleMutType = THandle<T&>;
       using DeepType      = Any;
 
-      constexpr TAny() noexcept { this->ConstructDefault(); }
-      constexpr TAny(TAny const& other)     : TAny {Refer {other}} {}
-      constexpr TAny(TAny&& other) noexcept : TAny {Move  {other}} {}
-      constexpr ~TAny() noexcept { this->Destroy(); }
+      constexpr TAny() noexcept {
+         this->ConstructDefault();
+      }
+      constexpr TAny(TAny const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr TAny(TAny&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
+      constexpr ~TAny() noexcept {
+         this->Destroy();
+      }
 
       /// Construction that either absorbs the provided container, or         
       /// emplaces T in the container, using A... as constructor arguments    
@@ -142,7 +150,7 @@ namespace Langulus::Anyness
             );
             this->AssignFrom(FWD(argument));
          }
-         else Com::Assignment<>::operator = (FWD(argument));
+         else this->Com::Assignment<>::operator = (FWD(argument));
          return *this;
       }
    };

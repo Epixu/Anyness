@@ -41,6 +41,13 @@ namespace Langulus::Anyness
 
       HandleMut() = delete;
       
+      constexpr HandleMut(HandleMut const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr HandleMut(HandleMut&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
+
       constexpr HandleMut(void* ptr, EntryPtr entry, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
@@ -67,6 +74,13 @@ namespace Langulus::Anyness
 
       HandleDisownedMut() = delete;
       
+      constexpr HandleDisownedMut(HandleDisownedMut const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr HandleDisownedMut(HandleDisownedMut&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
+
       constexpr HandleDisownedMut(void* ptr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
@@ -95,6 +109,13 @@ namespace Langulus::Anyness
       using HandleType     = Handle;
 
       Handle() = delete;
+      
+      constexpr Handle(Handle const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr Handle(Handle&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
 
       constexpr Handle(void* ptr, EntryPtr entry, DMeta type) noexcept {
          this->SetHeapInner(ptr);
@@ -120,6 +141,13 @@ namespace Langulus::Anyness
 
       HandleDisowned() = delete;
       
+      constexpr HandleDisowned(HandleDisowned const& other) {
+         this->ConstructFrom(Refer(other));
+      }
+      constexpr HandleDisowned(HandleDisowned&& other) noexcept {
+         this->ConstructFrom(Move(other));
+      }
+
       constexpr HandleDisowned(void* ptr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
