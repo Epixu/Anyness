@@ -47,7 +47,7 @@ namespace Langulus::Anyness
       using CTTI_Deep = Yes<>;
 
       using Base = Inner::TAnyBase<T>;
-      using Base::operator ==;
+      //using Base::operator ==;
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       using Pick          = T const&;
@@ -129,12 +129,10 @@ namespace Langulus::Anyness
 
       /// Assignment                                                          
       constexpr TAny& operator = (TAny const& other) {
-         this->AssignFrom(Refer(other));
-         return *this;
+         return this->AssignFrom(Refer(other));
       }
       constexpr TAny& operator = (TAny&& other) noexcept {
-         this->AssignFrom(Move(other));
-         return *this;
+         return this->AssignFrom(Move(other));
       }
 
       template<class A>
@@ -148,29 +146,32 @@ namespace Langulus::Anyness
                "first item) in order to clearly state your intent. "
                "AssignFrom will be used by default!"
             );
-            this->AssignFrom(FWD(argument));
+            return this->AssignFrom(FWD(argument));
          }
-         else this->Com::Assignment<>::operator = (FWD(argument));
-         return *this;
+         else return this->Assign(FWD(argument));
+      }
+      
+      /// Comparison                                                          
+      constexpr auto operator <=> (TAny const& other) const noexcept
+      -> decltype(Fake<T>() <=> Fake<T>()) {
+         return this->Compare(other);
+      }
+
+      template<class A>
+      constexpr auto operator <=> (const A& argument) const has_assumptions
+      -> decltype(Fake<T>() <=> argument) {
+         if constexpr (CT::ContainsOne<A>) {
+            LglsAssumeUser(
+               (Same<Deint<A>, TAny> or Same<TypeOf<Deint<A>>, T>),
+               "Ambiguous use of comparison "
+               "- you should use either Compare (if you want to compare "
+               "containers) or CompareOne (if you want to compare the "
+               "first item) in order to clearly state your intent. "
+               "Compare will be used by default!"
+            );
+            return this->Compare(argument);
+         }
+         else return this->CompareOne(argument);
       }
    };
-   
-   /// A statically typed container of size 1 that is binary compatible with  
-   /// the type-erased alternative above                                      
-   /*template<CT::NotVoid T>
-   struct TAnyView : Container<
-      Com::TypedStack<DMeta, T>,       // Type-constrained              
-      Com::HeapMovable<>,              // Pointer to heap memory        
-      Com::OwnershipStack<0, false>,   // Pointer to an allocation      
-      Com::CountStatic<1>,             // Statically sized to 1         
-      Com::StateStack<                 // Variable state                
-         DefineState::Future<>,        // Adds a 'missing future' state 
-         DefineState::Past<>,          // Adds a 'missing past' state   
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >
-   > {
-      using CTTI_ReflectAs = AnyView;
-   };*/
 }

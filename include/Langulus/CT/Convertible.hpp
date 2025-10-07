@@ -48,10 +48,15 @@ namespace Langulus::CT
       };
    }
 
-   /// Convertible concept                                                    
+   /// Check if 'FROM' is convertible to all 'TO'                             
    template<class FROM, class...TO>
    concept Convertible = PartialValidate<TO...>
        and (::std::convertible_to<FROM, TO> and ...);
+
+   /// Check if 'FROM' is convertible to one of 'TO'                          
+   template<class FROM, class...TO>
+   concept ConvertibleToOneOf = PartialValidate<TO...>
+       and (::std::convertible_to<FROM, TO> or ...);
 }
 
 namespace Langulus

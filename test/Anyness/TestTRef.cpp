@@ -26,11 +26,15 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
    
    STATIC_REQUIRE(T{} == T{});
    STATIC_REQUIRE(T{} == nullptr);
+   STATIC_REQUIRE(nullptr == T{});
    STATIC_REQUIRE(T{} == (TT*){});
+   STATIC_REQUIRE((TT*){} == T{});
    STATIC_REQUIRE(T{nullptr} == T{nullptr});
    STATIC_REQUIRE(T{(TT*){}} == T{(TT*){}});
    STATIC_REQUIRE(T{nullptr} == nullptr);
+   STATIC_REQUIRE(nullptr == T{nullptr});
    STATIC_REQUIRE(T{(TT*){}} == (TT*){});
+   STATIC_REQUIRE((TT*){} == T{(TT*){}});
 
    GIVEN("Nullptr-initialized") {
       T pointer {nullptr};

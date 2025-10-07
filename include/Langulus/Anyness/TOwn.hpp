@@ -37,17 +37,24 @@ namespace Langulus::Anyness
    struct TOwn : Inner::TOwnBase<T> {
       using Base = Inner::TOwnBase<T>;
       //using Base::Base;
-      using Base::operator =;
+      /*using Base::operator =;
       using Com::Assignment<>::operator =;
-      using Base::operator ==;
+      using Base::operator ==;*/
 
-      constexpr TOwn() noexcept { this->ConstructDefault(); }
-      constexpr TOwn(const T& source)     : Base {Stackwise, source} {}
-      constexpr TOwn(T&& source) noexcept : Base {Stackwise, FWD(source)} {}
+      constexpr  TOwn() noexcept { this->ConstructDefault(); }
+      constexpr  TOwn(const T& source) : Base {Stackwise, source} {}
+      constexpr  TOwn(T&& source) noexcept : Base {Stackwise, FWD(source)} {}
       constexpr ~TOwn() noexcept = default;
       
-      constexpr bool operator == (const T& rhs) const noexcept {
-         return this->GetStackInner() == rhs;
+      /// Comparison                                                          
+      friend constexpr auto operator <=> (const TOwn& lhs, const TOwn& rhs) noexcept {
+         return lhs.GetStackInner() <=> rhs.GetStackInner();
       }
+      friend constexpr auto operator <=> (const TOwn& lhs, const T& rhs) noexcept {
+         return lhs.GetStackInner() <=> rhs;
+      }
+      friend constexpr bool operator ==  (const TOwn& lhs, const TOwn& rhs) noexcept {
+         return lhs.GetStackInner() == rhs.GetStackInner();
+      }      
    };
 }

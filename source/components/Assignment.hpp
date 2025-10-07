@@ -135,10 +135,10 @@ namespace Langulus::Anyness::Component
       /// If the element isn't initialized yet it will be constructed.        
       ///   @param argument - the argument to assign                          
       ///   @return reference to self                                         
-      template<CT::Container C, class A>
+      /*template<CT::Container C, class A>
       C& operator = (this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
          return self.Assign(FWD(argument));
-      }
+      }*/
 
    protected:
       /// A helper for clearing and allocating memory before construction.    

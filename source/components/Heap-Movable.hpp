@@ -171,16 +171,17 @@ namespace Langulus::Anyness::Component
       /// Reassign from any kind of container, respecting intents             
       ///   @param intent - the intent and container to assign from           
       template<class C, CT::Intent I> requires CT::Container<I>
-      void AssignFrom(this C& self, I&& intent) {
+      auto AssignFrom(this C& self, I&& intent) -> C& {
          if constexpr (requires { &self == &intent.what; }) {
             // Make sure 'lhs' and 'rhs' are different instances,       
             // otherwise we lose rhs if we free lhs                     
             if (&self == &intent.what)
-               return;
+               return self;
          }
 
          self.Free();
          new (&self) C {FWD(intent)};
+         return self;
       }
       
       /// Allocate a fresh allocation                                         

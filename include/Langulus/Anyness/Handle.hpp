@@ -25,7 +25,7 @@ namespace Langulus::Anyness
    ///   @attention handles are never (de)referenced upon construction and    
    ///      destruction - only on reassignment                                
    struct HandleMut : Container<
-      Com::TypedStack<DMeta>,
+      Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
       Com::ReserveEmergent<>,
@@ -60,7 +60,7 @@ namespace Langulus::Anyness
    /// A type-erased mutable handle without ownership.                        
    /// It refers to a picked element inside a type-erased container.          
    struct HandleDisownedMut : Container<
-      Com::TypedStack<DMeta>,
+      Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
       Com::Assignment<>,
@@ -97,7 +97,7 @@ namespace Langulus::Anyness
    ///      carries ownership information, so that it can be used on demand   
    ///      instead of sought from the memory manager every time              
    struct Handle : Container<
-      Com::TypedStack<DMeta>,
+      Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
       Com::OwnershipDeepStack<>,
@@ -129,7 +129,7 @@ namespace Langulus::Anyness
    /// A type-erased immutable handle without ownership.                      
    /// It refers to a picked element inside a type-erased container.          
    struct HandleDisowned : Container<
-      Com::TypedStack<DMeta>,
+      Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
       Com::Comparison<>,

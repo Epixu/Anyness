@@ -32,8 +32,17 @@ TEMPLATE_TEST_CASE("Owned value", "[TOwn]",
    
    STATIC_REQUIRE(T{} == T{});
    STATIC_REQUIRE(T{} == TT{});
+   STATIC_REQUIRE(TT{} == T{});
    STATIC_REQUIRE(T{TT{}} == T{TT{}});
    STATIC_REQUIRE(T{TT{}} == TT{});
+   STATIC_REQUIRE(TT{} == T{TT{}});
+
+   if constexpr (CT::Dense<TT>) {
+      STATIC_REQUIRE(T{} != static_cast<TT>(1));
+      STATIC_REQUIRE(static_cast<TT>(1) != T{});
+      STATIC_REQUIRE(T{TT{}} != static_cast<TT>(1));
+      STATIC_REQUIRE(static_cast<TT>(1) != T{TT{}});
+   }
 
    GIVEN("Default-initialized") {
       T pointer;

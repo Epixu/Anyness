@@ -28,6 +28,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       // be thrown as exceptions at runtime                             
       static_assert(Exact<TypeOf<T>, void>);
       static_assert(CT::TypeErased<T>);
+
       static_assert(CT::CopyConstructible<T>);
       static_assert(CT::ReferConstructible<T>);
       static_assert(CT::AbandonConstructible<T>);
@@ -47,6 +48,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       // type                                                           
       static_assert(Exact<TypeOf<T>, E>);
       static_assert(not CT::TypeErased<T>);
+      static_assert(CT::Comparable<TypeOf<T>, E>);
+
       static_assert(CT::CopyConstructible<T>    == CT::CopyConstructible<E>);
       static_assert(CT::ReferConstructible<T>   == CT::ReferConstructible<E>);
       static_assert(CT::AbandonConstructible<T> == CT::AbandonConstructible<E>);
@@ -70,6 +73,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    static_assert(CT::DeeplyOwned<T>);
    static_assert(CT::Owned<T>);
    static_assert(CT::AutoOwned<T>);
+   static_assert(CT::Comparable<T, T>);
+   static_assert(CT::Comparable<T, E>);
 
    static_assert(not requires (T pack, E item) { pack.operator +   (item); });
    static_assert(not requires (T pack, E item) { pack.operator +=  (item); });
@@ -88,6 +93,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    static_assert(not requires (T pack, E item) { pack.ForEach([](const int&){}); });
    static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&){}); });
       
+   STATIC_REQUIRE(T{} == T{});
+   STATIC_REQUIRE(T{} != E{});
+   STATIC_REQUIRE(E{} != T{});
+   
    GIVEN("Default-constructed container") {
       const ScopedElement<E> element {555};
       T pack;
@@ -914,7 +923,13 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack.template As<E>().GetUses() == 2);
          REQUIRE(pack.template As<E>() == *element);
          //REQUIRE(pack != element);
-         REQUIRE(pack == *element);
+         REQUIRE(pack.CompareOne(*element));
+         
+         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+            REQUIRE_THROWS(pack == *element);
+         else
+            REQUIRE_NOTHROW(pack == *element);
+
          REQUIRE(pack.GetUses() == 1);
          REQUIRE(pack.IsDeep());
          REQUIRE_FALSE(pack.IsConstant());

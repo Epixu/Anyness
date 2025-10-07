@@ -32,8 +32,9 @@ namespace Langulus::Anyness::Component
    /// type-erasure. You can optionally constrain the type.                   
    ///   @tparam META - the type of the meta                                  
    ///   @tparam TYPE - optionally static type, use void for type-erasure     
+   ///   @tparam CONSTRAIN - override type-constraint                         
    ///   @tparam ID   - which heap/stack is typed?                            
-   template<class META, class TYPE, unsigned ID>
+   template<class META, class TYPE, bool CONSTRAIN, unsigned ID>
    struct TypedStack {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
@@ -95,7 +96,12 @@ namespace Langulus::Anyness::Component
                else if (intent->IsTypeConstrained())
                   self.EnableTypeConstrained();
             }
-            else self.template SetType<TypeOf<Deint<I>>>();
+            else {
+               if constexpr (not CT::TypeErased<I>)
+                  self.template SetType<TypeOf<Deint<I>>>();
+               else
+                  self.SetType(intent->GetType());
+            }
          }
       }
       
@@ -266,18 +272,18 @@ namespace Langulus::Anyness::Component
 
       /// Returns true if a type constraint is specified                      
       constexpr bool IsTypeConstrained() const noexcept {
-         return not TypeErased;
+         return CONSTRAIN;
       }
 
       constexpr void EnableTypeConstrained() const noexcept {
-         static_assert(not TypeErased,
+         static_assert(CONSTRAIN,
             "Can't enable type-constraint in type-erased container. "
             "Make sure you've added Typed state and properly disambiguated it"
          );
       }
 
       constexpr void DisableTypeConstrained() const noexcept {
-         static_assert(TypeErased,
+         static_assert(not CONSTRAIN,
             "Can't disable type-constraint in a statically-typed container. "
             "Make sure you've added Typed state and properly disambiguated it"
          );

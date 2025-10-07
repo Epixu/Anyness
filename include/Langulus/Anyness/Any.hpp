@@ -66,8 +66,9 @@ namespace Langulus::Anyness
       using CTTI_Deep = Yes<>;
 
       using Base = Inner::AnyBase;
-      using Base::operator ==;
+      //using Base::operator ==;
       using DefineState::Typed<>::IsTypeConstrained;
+      using DefineState::Typed<>::EnableTypeConstrained;
 
       using Pick          = Handle;
       using PickMut       = HandleMut;
@@ -127,12 +128,10 @@ namespace Langulus::Anyness
       
       /// Assignment                                                          
       constexpr Any& operator = (Any const& other) {
-         this->AssignFrom(Refer(other));
-         return *this;
+         return this->AssignFrom(Refer(other));
       }
       constexpr Any& operator = (Any&& other) noexcept {
-         this->AssignFrom(Move(other));
-         return *this;
+         return this->AssignFrom(Move(other));
       }
       
       template<class A>
@@ -145,10 +144,29 @@ namespace Langulus::Anyness
                "first item) in order to clearly state your intent. "
                "AssignFrom will be used by default!"
             );
-            this->AssignFrom(FWD(argument));
+            return this->AssignFrom(FWD(argument));
          }
-         else this->Com::Assignment<>::operator = (FWD(argument));
-         return *this;
+         else return this->Assign(FWD(argument));
+      }
+
+      /// Comparison                                                          
+      constexpr Compared operator <=> (Any const& other) const noexcept {
+         return this->Compare(other);
+      }
+
+      template<class A>
+      constexpr Compared operator <=> (const A& argument) const has_assumptions {
+         if constexpr (CT::ContainsOne<A>) {
+            LglsAssumeUser((Same<Deint<A>, Any>),
+               "Ambiguous use of comparison "
+               "- you should use either Compare (if you want to compare "
+               "containers) or CompareOne (if you want to compare the "
+               "first item) in order to clearly state your intent. "
+               "Compare will be used by default!"
+            );
+            return this->Compare(argument);
+         }
+         else return this->CompareOne(argument);
       }
    };
 }

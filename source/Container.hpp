@@ -113,7 +113,7 @@ namespace Langulus::Anyness
       template<CT::State...> struct StateHeap;
       template<CT::State...> struct StateStack;
       template<CT::State...> struct StateStatic;
-      template<class META, class TYPE = void, unsigned ID = 0> struct TypedStack;
+      template<class META, class TYPE = void, bool CONSTRAIN = not ::std::is_void_v<TYPE>, unsigned ID = 0> struct TypedStack;
       template<class META, CT::NotVoid TYPE,  unsigned ID = 0> struct TypedStatic;
    }
 
@@ -319,7 +319,7 @@ namespace Langulus::Anyness
       /// C++ copy-semantics are mapped onto Refer intent.                    
       /// In other words - a copy is always shallow, unless explicitly Copy   
       /// or Clone intent is used.                                            
-      constexpr Container& operator = (Container const& other) {
+      /*constexpr Container& operator = (Container const& other) {
          return operator = (Refer {other});
       }
 
@@ -336,7 +336,7 @@ namespace Langulus::Anyness
       constexpr LHS& operator = (this LHS& lhs, RHS&& rhs) {
          lhs.AssignFrom(FWD(rhs));
          return lhs;
-      }
+      }*/
       
       /// Check if container is valid                                         
       constexpr bool IsValid() const noexcept {
@@ -356,7 +356,7 @@ namespace Langulus::Anyness
 
    protected:
       template<unsigned>               friend struct Com::IterationOperators;
-      template<class, class, unsigned> friend struct Com::TypedStack;
+      template<class, class, bool, unsigned> friend struct Com::TypedStack;
       template<CT::NotVoid, unsigned>  friend struct Com::Stack;
       template<unsigned>               friend struct Com::HeapReference;
       template<unsigned>               friend struct Com::HeapMovable;
@@ -451,20 +451,22 @@ namespace Langulus::Anyness
       }
 
       /// Explicitly call AssignDefault in all of the components.             
-      constexpr void AssignDefault(this auto& self) noexcept {
+      constexpr auto& AssignDefault(this auto& self) noexcept {
          ComponentList::ForEach([&]<class C>{
             if_available(self.C::AssignDefault());
          });
+         return self;
       }
 
    public:
       /// Call AssignFrom whenever possible, fallback to AssignDefault        
       /// otherwise                                                           
-      constexpr void AssignFrom(this auto& self, CT::Container auto&& rhs) {
+      constexpr auto& AssignFrom(this auto& self, CT::Container auto&& rhs) {
          ComponentList::ForEach([&]<class C>{
                  if_available(self.C::AssignFrom(FWDIntent(rhs)))
             else if_available(self.C::AssignDefault())
          });
+         return self;
       }
    };
 

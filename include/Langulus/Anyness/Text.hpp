@@ -65,8 +65,8 @@ namespace Langulus::Anyness
       using Pick    = char const&;
       using PickMut = char&;
       
-      using Base::operator =;
-      using Base::operator ==;
+      //using Base::operator =;
+      //using Base::operator ==;
 
       constexpr Text() noexcept { this->ConstructDefault(); }
       constexpr Text(nullptr_t) noexcept    : Text {} {}
@@ -151,10 +151,10 @@ namespace Langulus::Anyness
       
       /// Assignment                                                          
       constexpr Text& operator = (Text const& other) {
-         return this->operator = (Refer {other});
+         return this->AssignFrom(Refer {other});
       }
       constexpr Text& operator = (Text&& other) noexcept {
-         return this->operator = (Move {other});
+         return this->AssignFrom(Move {other});
       }
 
       /// Construction from all kinds of text, trim length to desired count   

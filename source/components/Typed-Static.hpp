@@ -97,8 +97,8 @@ namespace Langulus::Anyness::Component
          return GetType().IsSame(type);
       }
 
-      /// Check if unqualified type is the same as another container's type   
-      /// This can potentially happen at compile-time                         
+      /// Check if unqualified type is the same as another container's type.  
+      /// This can potentially happen at compile-time.                        
       ///   @attention ignores only cv-qualifiers                             
       ///   @param other - the container to check for                         
       ///   @return true if this container has similar data                   
@@ -199,8 +199,8 @@ namespace Langulus::Anyness::Component
       }
 
       /// This is still used if statically-typed - checks if types are        
-      /// compatible in constructors and assigners                            
-      /// This particular override doesn't benefit from compile-time checks   
+      /// compatible in constructors and assigners.                           
+      /// This particular override doesn't benefit from compile-time checks.  
       ///   @param type - the new type                                        
       void SetType(META type) {
          LglsAssert(type.IsExact(MetaDataOf<TYPE>()), "Type mismatch");
