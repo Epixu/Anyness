@@ -97,17 +97,6 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
 
       Text_CheckState_Default(text);
       
-      STATIC_REQUIRE(T{} == T{});
-      STATIC_REQUIRE(T{} == nullptr);
-      STATIC_REQUIRE(nullptr == T{});
-      STATIC_REQUIRE(T{} == "");
-      STATIC_REQUIRE("" == T{});
-      STATIC_REQUIRE(T{nullptr} == T{nullptr});
-      STATIC_REQUIRE(T{""} == T{""});
-      STATIC_REQUIRE(nullptr == T{nullptr});
-      STATIC_REQUIRE(T{""} == "");
-      STATIC_REQUIRE("" == T{""});
-
       WHEN("Cleared") {
          text.Clear();
 
@@ -136,6 +125,19 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          text = anothertext;
 
          Text_CheckState_Default(text);
+      }
+
+      WHEN("Compared") {
+         STATIC_REQUIRE(T{} == T{});
+         STATIC_REQUIRE(T{} == nullptr);
+         STATIC_REQUIRE(nullptr == T{});
+         STATIC_REQUIRE(T{} == "");
+         STATIC_REQUIRE("" == T{});
+         STATIC_REQUIRE(T{ nullptr } == T{ nullptr });
+         STATIC_REQUIRE(T{ "" } == T{ "" });
+         STATIC_REQUIRE(nullptr == T{ nullptr });
+         STATIC_REQUIRE(T{ "" } == "");
+         STATIC_REQUIRE("" == T{ "" });
       }
    }
 

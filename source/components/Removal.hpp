@@ -94,8 +94,24 @@ namespace Langulus::Anyness::Component
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the entry and type   
             // only if the container keeps track of the count separately
-            if_available(self.FreeDeep());
-            
+            if constexpr (CT::ContainsOne<C>) {
+               if constexpr (CT::DeeplyOwned<C>)
+                  self.DestroyElementDeep();
+               else
+                  self.DestroyElement();
+            }
+            else {
+               auto item = IterateHandles(self).begin();
+               while (item != IteratorEnd{}) {
+                  if constexpr (CT::DeeplyOwned<C>)
+                     item->DestroyElementDeep();
+                  else
+                     item->DestroyElement();
+
+                  ++item;
+               }
+            }
+
             if constexpr (CT::ContainsOne<C>)
                self.SetHeapInner(nullptr);
             else {
@@ -106,6 +122,9 @@ namespace Langulus::Anyness::Component
          else {
             // If reached, then data is referenced from multiple places 
             // Don't call destructors, just clear it up and dereference 
+            if_available(self.FreeDeep());
+
+            // Dereference memory                                       
             al->Free();
             self.SetHeapInner(nullptr);
             if_available(self.SetAllocationInner(nullptr));

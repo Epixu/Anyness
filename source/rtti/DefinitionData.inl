@@ -361,44 +361,7 @@ namespace Langulus::RTTI
             [](void const* t1, void const* t2) -> Compared {
                auto t1T = static_cast<T const*>(t1);
                auto t2T = static_cast<T const*>(t2);
-               
-               if constexpr (CT::ComparableStrong<T>) {
-                  switch (*t1T <=> *t2T) {
-                  case ::std::strong_ordering::less:
-                     return Compared::Less;
-                  case ::std::strong_ordering::greater:
-                     return Compared::Greater;
-                  default:
-                     return Compared::Equal;
-                  }
-               }
-               else if constexpr (CT::ComparableWeak<T>) {
-                  switch (*t1T <=> *t2T) {
-                  case ::std::weak_ordering::less:
-                     return Compared::Less;
-                  case ::std::weak_ordering::greater:
-                     return Compared::Greater;
-                  default:
-                     return Compared::Equivalent;
-                  }
-               }
-               else if constexpr (CT::ComparablePartial<T>) {
-                  switch (*t1T <=> *t2T) {
-                  case ::std::partial_ordering::unordered:
-                     return Compared::Unordered;
-                  case ::std::partial_ordering::less:
-                     return Compared::Less;
-                  case ::std::partial_ordering::greater:
-                     return Compared::Greater;
-                  default:
-                     return Compared::Equivalent;
-                  }
-               }
-               else {
-                  if (*t1T == *t2T)  return Compared::Equal;
-                  if (*t1T <  *t2T)  return Compared::Less;
-                  return Compared::Greater;
-               }
+               return FromOrdering(*t1T, *t2T);
             };
       }
 

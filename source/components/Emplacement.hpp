@@ -94,14 +94,6 @@ namespace Langulus::Anyness::Component
                   T.GetCloneConstructor()(dst, src);
                else
                   static_assert(false, "Unrecognized intent");
-
-               if constexpr (CT::DeeplyOwned<C>) {
-                  if constexpr (I::IsKept())
-                     *self.GetEntries() = *rhs.GetEntries();
-                  else
-                     *self.GetEntries() = nullptr;
-                  self.KeepDeep();
-               }
             }
             else {
                //                                                       
@@ -114,37 +106,64 @@ namespace Langulus::Anyness::Component
                else
                   IntentNew(self.GetHeapInner(), Refer(*rhs.GetRaw()));
             }
-         }
-         else if constexpr (CT::TypeErased<C>) {
-            //                                                          
-            // This container is type-erased                            
-            LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
-            LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
-            auto T = self.GetTypeInner();
 
-            const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
-            const auto dst = self.GetRaw();
-            if constexpr (CT::Moved<I>)
-               T.GetMoveConstructor()(dst, src);
-            else if constexpr (CT::Abandoned<I>)
-               T.GetAbandonConstructor()(dst, src);
-            else if constexpr (CT::Referred<I>)
-               T.GetReferConstructor()(dst, src);
-            else if constexpr (CT::Copied<I>)
-               T.GetCopyConstructor()(dst, src);
-            else if constexpr (CT::Disowned<I>)
-               T.GetDisownConstructor()(dst, src);
-            else if constexpr (CT::Cloned<I>)
-               T.GetCloneConstructor()(dst, src);
-            else
-               static_assert(false, "Unrecognized intent");
+            // Transfer deep ownership from handle                      
+            if constexpr (CT::DeeplyOwned<C>) {
+               if (self.IsSparse()) {
+                  if constexpr (I::IsKept())
+                     *self.GetEntries() = *rhs.GetEntries();
+                  else
+                     *self.GetEntries() = nullptr;
+                  self.KeepDeep();
+               }
+            }
          }
          else {
-            //                                                          
-            // This container is statically-typed                       
-            using T = TypeOf<C>;
-            static_assert(Same<T, IT>, "Type mismatch");
-            IntentNew(self.GetHeapInner(), FWD(intent));
+            if constexpr (CT::TypeErased<C>) {
+               //                                                       
+               // This container is type-erased                         
+               LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
+               LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
+               auto T = self.GetTypeInner();
+
+               const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
+               const auto dst = self.GetRaw();
+               if constexpr (CT::Moved<I>)
+                  T.GetMoveConstructor()(dst, src);
+               else if constexpr (CT::Abandoned<I>)
+                  T.GetAbandonConstructor()(dst, src);
+               else if constexpr (CT::Referred<I>)
+                  T.GetReferConstructor()(dst, src);
+               else if constexpr (CT::Copied<I>)
+                  T.GetCopyConstructor()(dst, src);
+               else if constexpr (CT::Disowned<I>)
+                  T.GetDisownConstructor()(dst, src);
+               else if constexpr (CT::Cloned<I>)
+                  T.GetCloneConstructor()(dst, src);
+               else
+                  static_assert(false, "Unrecognized intent");
+            }
+            else {
+               //                                                       
+               // This container is statically-typed                    
+               using T = TypeOf<C>;
+               static_assert(Same<T, IT>, "Type mismatch");
+               IntentNew(self.GetHeapInner(), FWD(intent));
+            }
+
+            // Transfer deep ownership by searching for it              
+            if constexpr (CT::DeeplyOwned<C>) {
+               if (self.IsSparse()) {
+                  if constexpr (I::IsKept()) {
+                     *self.GetEntries() = const_cast<AllocationPtr>(Allocator::Find(
+                        self.GetType().GetDeptr(),
+                        *self.template GetRawAs<void*>()
+                     ));
+                  }
+                  else *self.GetEntries() = nullptr;
+                  self.KeepDeep();
+               }
+            }
          }
       }
       

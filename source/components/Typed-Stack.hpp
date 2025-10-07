@@ -105,12 +105,17 @@ namespace Langulus::Anyness::Component
          }
       }
       
-      /// Get the contained type                                              
+      /// Get the contained type - not possible at compile-time yet           
       constexpr META GetType(this auto const& self) noexcept {
-         META const& meta = self.GetTypeInner();
-         if constexpr (not TypeErased)
-            const_cast<META&>(meta) = MetaDataOf<TYPE>();
-         return meta;
+         if consteval {
+            return META {};
+         }
+         else {
+            META const& meta = self.GetTypeInner();
+            if constexpr (not TypeErased)
+               const_cast<META&>(meta) = MetaDataOf<TYPE>();
+            return meta;
+         }
       }
 
       /// Get the size of a single element in bytes                           
@@ -291,7 +296,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the size of the type times the contained elements               
       ///   @return the size of all elements in bytes                         
-      constexpr bool GetBytesize(this auto const& self) noexcept {
+      constexpr size_t GetBytesize(this auto const& self) noexcept {
          return self.GetStride() * self.GetCount();
       }
 

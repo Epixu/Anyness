@@ -128,7 +128,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool CanBeMissing = CheckCanBeMissing();
 
       /// Clear the state to the default value                                
-      void ResetState(this auto& self) noexcept {
+      constexpr void ResetState(this auto& self) noexcept {
          self.SetStateInner(GetDefaultState());
       }
 

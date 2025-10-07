@@ -151,8 +151,24 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
 
             if (a->GetUses() == 1) {
-               // We don't deallocate the memory - we can reuse it      
-               if_available(self.FreeDeep());
+               // Destroy all elements (& indirections if deeply owned) 
+               if constexpr (CT::ContainsOne<C>) {
+                  if constexpr (CT::DeeplyOwned<C>)
+                     self.DestroyElementDeep();
+                  else
+                     self.DestroyElement();
+               }
+               else {
+                  auto item = IterateHandles(self).begin();
+                  while (item != IteratorEnd{}) {
+                     if constexpr (CT::DeeplyOwned<C>)
+                        item->DestroyElementDeep();
+                     else
+                        item->DestroyElement();
+
+                     ++item;
+                  }
+               }
 
                if constexpr (CT::ContainsMany<C>)
                   self.AllocateLess(1);
@@ -161,7 +177,7 @@ namespace Langulus::Anyness::Component
                // Notice that no element will be destroyed, because in  
                // this case we have a guarantee, that elements are      
                // referenced from elsewhere as well                     
-               if_available(self.template FreeDeep<false>());
+               if_available(self.FreeDeep());
 
                // Dereference memory and reset state                    
                a->Free();
@@ -186,15 +202,27 @@ namespace Langulus::Anyness::Component
 
             if (a->GetUses() == 1) {
                // We don't deallocate the memory - we can reuse it      
-               if constexpr (CT::ContainsMany<C>)
-                  self.SelectInner(1, self.GetCount() - 1).FreeInner();
+               // Destroy all but the first element                     
+               if constexpr (CT::ContainsMany<C>) {
+                  auto item = IterateHandles(self).begin();
+                  ++item;
+
+                  while (item != IteratorEnd{}) {
+                     if constexpr (CT::DeeplyOwned<C>)
+                        item->DestroyElementDeep();
+                     else
+                        item->DestroyElement();
+
+                     ++item;
+                  }
+               }
                return true;
             }
 
             // Notice that no element will be destroyed, because in     
             // this case we have a guarantee, that elements are         
             // referenced from elsewhere as well                        
-            if_available(self.template FreeDeep<false>());
+            if_available(self.FreeDeep());
             
             // Dereference memory and reset state                       
             a->Free();

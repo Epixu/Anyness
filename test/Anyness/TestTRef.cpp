@@ -24,18 +24,6 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
    using T  = TestType;
    using TT = TypeOf<T>;
    
-   STATIC_REQUIRE(T{} == T{});
-   STATIC_REQUIRE(T{} == nullptr);
-   STATIC_REQUIRE(nullptr == T{});
-   STATIC_REQUIRE(T{} == (TT*){});
-   STATIC_REQUIRE((TT*){} == T{});
-   STATIC_REQUIRE(T{nullptr} == T{nullptr});
-   STATIC_REQUIRE(T{(TT*){}} == T{(TT*){}});
-   STATIC_REQUIRE(T{nullptr} == nullptr);
-   STATIC_REQUIRE(nullptr == T{nullptr});
-   STATIC_REQUIRE(T{(TT*){}} == (TT*){});
-   STATIC_REQUIRE((TT*){} == T{(TT*){}});
-
    GIVEN("Nullptr-initialized") {
       T pointer {nullptr};
       T pointer2 {nullptr};
@@ -167,6 +155,20 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
             if constexpr (CT::Referenced<TT>)
                REQUIRE(pointer->GetReferences() == 1);
          #endif
+      }
+
+      WHEN("Compared") {
+         STATIC_REQUIRE(T{} == T{});
+         STATIC_REQUIRE(T{} == nullptr);
+         STATIC_REQUIRE(nullptr == T{});
+         STATIC_REQUIRE(T{} == (TT*) {});
+         STATIC_REQUIRE((TT*) {} == T{});
+         STATIC_REQUIRE(T{ nullptr } == T{ nullptr });
+         STATIC_REQUIRE(T{ (TT*) {} } == T{ (TT*) {} });
+         STATIC_REQUIRE(T{ nullptr } == nullptr);
+         STATIC_REQUIRE(nullptr == T{ nullptr });
+         STATIC_REQUIRE(T{ (TT*) {} } == (TT*) {});
+         STATIC_REQUIRE((TT*) {} == T{ (TT*) {} });
       }
 
       #if not LANGULUS_FEATURE(NEWDELETE)

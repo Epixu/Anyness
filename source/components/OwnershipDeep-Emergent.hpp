@@ -35,7 +35,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
-      /// Reference referencable elements inside the block                    
+      /// Reference all referencable elements inside the container            
       template<CT::Container C>
       void KeepDeep(this C const& self) { 
          constexpr bool MASKED = not CT::Contiguous<C>;
@@ -43,34 +43,8 @@ namespace Langulus::Anyness::Component
          if (not remaining)
             return;
 
-         if constexpr (not C::TypeErased) {
-            // Container is statically typed                            
-            using T = TypeOf<C>;
-
-            if constexpr (CT::Referenced<T>) {
-               const auto count = MASKED ? self.GetReserved() : self.GetCount();
-               const auto rawBeg = self.GetRaw();
-               auto raw = rawBeg;
-               const auto rawEnd = raw + count;
-
-               while (raw != rawEnd) {
-                  if constexpr (MASKED) {
-                     if (not remaining)
-                        break;
-
-                     if (not self.mTable[raw - rawBeg]) {
-                        ++raw;
-                        continue;
-                     }
-
-                     --remaining;
-                  }
-
-                  DecvqCast(raw++)->Reference(1);
-               }
-            }
-         }
-         else {
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
             // Container is type-erased                                 
             const auto T = self.GetType();
             const auto referencer = T.GetReferencer();
@@ -100,31 +74,103 @@ namespace Langulus::Anyness::Component
                }
             }
          }
+         else {
+            //                                                          
+            // Container is statically-typed                            
+            using T = TypeOf<C>;
+
+            if constexpr (CT::Referenced<T>) {
+               const auto count = MASKED ? self.GetReserved() : self.GetCount();
+               const auto rawBeg = self.GetRaw();
+               auto raw = rawBeg;
+               const auto rawEnd = raw + count;
+
+               while (raw != rawEnd) {
+                  if constexpr (MASKED) {
+                     if (not remaining)
+                        break;
+
+                     if (not self.mTable[raw - rawBeg]) {
+                        ++raw;
+                        continue;
+                     }
+
+                     --remaining;
+                  }
+
+                  DecvqCast(raw++)->Reference(1);
+               }
+            }
+         }
       }
 
       /// Dereference all referenced initialized items, eventually destroying 
       /// them if their individual references reach zero.                     
       ///   @attention never modifies any block state                         
-      ///   @attention assumes block is not empty                             
-      ///   @attention assumes block is not static                            
-      ///   @tparam DESTROY - used only when GetUses() == 1                   
-      template<bool DESTROY = true, CT::Container C>
+      ///   @attention assumes container has a valid ownership                
+      template<CT::Container C>
       void FreeDeep(this C& self) {
          constexpr bool MASKED = not CT::Contiguous<C>;
          Count<C> remaining = self.GetCount();
          if (not remaining)
             return;
 
-         LglsAssumeDev(not DESTROY or self.GetUses() == 1,
-            "Attempting to destroy elements used from multiple locations");
+         LglsAssumeDev(self.GetUses() != 1,
+            "You should call DestroyElementDeep instead");
          LglsAssumeDev(self.GetAllocation(),
-            "Destroying elements in a static container is not allowed");
+            "Invalid ownership");
 
-         if constexpr (not C::TypeErased) {
-            // Container is statically typed                            
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // Container is type-erased                                 
+            const auto T = self.GetType();
+            const auto referencer = T.GetReferencer();
+            const auto destructor = T.GetDestructor();
+
+            if (destructor and referencer) {
+               // Destroy every dense element                           
+               // Notice that fully dereferenced elements WILL be       
+               // destroyed regardless if DESTROY has been requested or 
+               // not. This prevents leaks                              
+               const auto count = MASKED ? self.GetReserved() : self.GetCount();
+               const auto size = T.GetSize();
+               auto data = self.template GetRawAs<uint8_t>();
+               const auto dataEnd = data + size * count;
+
+               [[maybe_unused]] int index;
+               if constexpr (MASKED)
+                  index = 0;
+
+               while (data != dataEnd) {
+                  if constexpr (MASKED) {
+                     if (not remaining)
+                        break;
+
+                     if (not self.mTable[index]) {
+                        data += size;
+                        ++index;
+                        continue;
+                     }
+
+                     --remaining;
+                  }
+
+                  if (not referencer(data, -1))
+                     destructor(data);
+
+                  data += size;
+
+                  if constexpr (MASKED)
+                     ++index;
+               }
+            }
+         }
+         else {
+            //                                                          
+            // Container is statically-typed                            
             using T = TypeOf<C>;
 
-            if constexpr (CT::Destroyable<T> and (DESTROY or CT::Referenced<T>)) {
+            if constexpr (CT::Destroyable<T> and CT::Referenced<T>) {
                const auto count = MASKED ? self.GetReserved() : self.GetCount();
                auto data = self.GetRaw();
                const auto dataEnd = data + count;
@@ -143,12 +189,7 @@ namespace Langulus::Anyness::Component
                      --remaining;
                   }
 
-                  if constexpr (DESTROY) {
-                     if constexpr (CT::Referenced<T>)
-                        data->Reference(-1);
-                     data->~T();
-                  }
-                  else if constexpr (CT::Referenced<T>) {
+                  if constexpr (CT::Referenced<T>) {
                      if (not data->Reference(-1))
                         data->~T();
                   }
@@ -157,93 +198,21 @@ namespace Langulus::Anyness::Component
                }
             }
          }
-         else {
-            // Container is type-erased                                 
-            const auto T = self.GetType();
-            const auto referencer = T.GetReferencer();
-            const auto destructor = T.GetDestructor();
-
-            if (destructor and (DESTROY or referencer)) {
-               // Destroy every dense element                           
-               // Notice that fully dereferenced elements WILL be       
-               // destroyed regardless if DESTROY has been requested or 
-               // not. This prevents leaks                              
-               const auto count = MASKED ? self.GetReserved() : self.GetCount();
-               const auto size = T.GetSize();
-               auto data = self.template GetRawAs<uint8_t>();
-               const auto dataEnd = data + size * count;
-
-               [[maybe_unused]] int index;
-               if constexpr (MASKED)
-                  index = 0;
-
-               if (referencer) {
-                  while (data != dataEnd) {
-                     if constexpr (MASKED) {
-                        if (not remaining)
-                           break;
-
-                        if (not self.mTable[index]) {
-                           data += size;
-                           ++index;
-                           continue;
-                        }
-
-                        --remaining;
-                     }
-
-                     if constexpr (DESTROY) {
-                        referencer(data, -1);
-                        destructor(data);
-                     }
-                     else if (not referencer(data, -1))
-                        destructor(data);
-
-                     data += size;
-
-                     if constexpr (MASKED)
-                        ++index;
-                  }
-               }
-               else if constexpr (DESTROY) {
-                  while (data != dataEnd) {
-                     if constexpr (MASKED) {
-                        if (not remaining)
-                           break;
-
-                        if (not self.mTable[index]) {
-                           data += size;
-                           ++index;
-                           continue;
-                        }
-
-                        --remaining;
-                     }
-
-                     destructor(data);
-                     data += size;
-
-                     if constexpr (MASKED)
-                        ++index;
-                  }
-               }
-            }
-         }
-
-         // Always nullify upon destruction only if we're paranoid         
-         //TODO IF_LANGULUS_PARANOID(ZeroMemory(mRaw, GetBytesize<THIS>()));
       }
 
-      /// Nests through all indirection layers and destroys                   
-      /// elements and entries if they're fully dereferenced                  
+      /// Nests through all indirection layers and destroys elements and      
+      /// entries if they're fully dereferenced                               
       ///   @attention doesn't change any container state                     
       template<CT::Container C>
       void DestroyElementDeep(this C& self) has_assumptions {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
+         if (self.IsEmpty())
+            return;
 
          using H = typename C::HandleMutType;
          if constexpr (CT::TypeErased<C>) {
+            //                                                          
             // Destroying a type-erased element                         
             const auto T = self.GetType();
             
@@ -307,6 +276,7 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
+            //                                                          
             // Destroying a statically-typed element                    
             using T = TypeOf<C>;
             

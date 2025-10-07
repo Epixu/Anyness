@@ -29,6 +29,28 @@ decltype(auto) FromHelper() {
    else return T {};
 }*/
 
+namespace Catch
+{
+   template<>
+   struct is_range<Any> { static const bool value = false; };
+   template<class T>
+   struct is_range<TAny<T>> { static const bool value = false; };
+
+   template<>
+   struct StringMaker<Any> {
+      static std::string convert(Any const& value) {
+         return NameOf<Any>() + "(" + static_cast<::std::string>(value) + ")";
+      }
+   };
+   template<class T>
+   struct StringMaker<TAny<T>> {
+      static std::string convert(TAny<T> const& value) {
+         return NameOf<TAny<T>>() + "(" + static_cast<::std::string>(value) + ")";
+      }
+   };
+}
+
+
 
 ///                                                                           
 /// Possible states                                                           
@@ -222,4 +244,21 @@ void Any_CheckState_ContainsOne(const auto& pack, const auto& e, Allocation* ent
       REQUIRE_THROWS(pack.template As<float>() == 0.0f);
       REQUIRE_THROWS(pack.template As<float*>() == nullptr);
    }
+}
+
+template<class T, class E>
+void Any_Helper_CompareOne(const T& pack, const E& e) {
+   if constexpr (CT::TypeErased<T>) {
+      REQUIRE(pack.CompareOne(e) == Compared::Equal);
+      REQUIRE(pack.CompareOneEqual(e) == true);
+   }
+   else {
+      REQUIRE(pack.CompareOne(e) == ::std::partial_ordering::equivalent);
+      REQUIRE(pack.CompareOneEqual(e) == true);
+   }
+
+   if constexpr (CT::Deep<E> and LANGULUS(SAFE))
+      REQUIRE_THROWS(pack == e);
+   else
+      REQUIRE_NOTHROW(pack == e);
 }

@@ -148,8 +148,6 @@ namespace Langulus::Anyness::Component
                }
             }
 
-            //if_available(self.FreeDeep());
-
             // Free memory                                              
             Allocator::Deallocate(a);
          }
@@ -158,7 +156,7 @@ namespace Langulus::Anyness::Component
             // Notice that no element will be destroyed, because in this
             // case we have a guarantee that elements are referenced    
             // from elsewhere as well.                                  
-            if_available(self.template FreeDeep<false>());
+            if_available(self.FreeDeep());
 
             // Dereference memory                                       
             a->Free();
@@ -174,6 +172,8 @@ namespace Langulus::Anyness::Component
       void DestroyElement(this C& self) noexcept {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
+         if (self.IsEmpty())
+            return;
 
          if constexpr (CT::TypeErased<C>) {
             // Destroying a type-erased element                         

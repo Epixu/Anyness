@@ -12,7 +12,6 @@
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Text.hpp>
 #include <Langulus/CT/Unfold.hpp>
-//#include <Langulus/CT/Contiguous.hpp>
 
 #if 0 and LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH()
    #include <Langulus/Logger.hpp>
@@ -235,14 +234,78 @@ namespace Langulus::Anyness::Component
       ///      compare all elements until short-circuited                     
       ///   @return the ordering result                                       
       template<CT::Container LHS, CT::Container RHS>
-      constexpr auto Compare(this const LHS& lhs, const RHS& rhs) {
+      constexpr auto Compare(this const LHS& lhs, const RHS& rhs)
+      -> Tif<CT::TypeErased<LHS, RHS>, Compared, ::std::partial_ordering> {
          VERBOSE_SCOPED("Comparing ",
             Logger::White, lhs.GetCount(), "x of ", lhs.GetName(),
             Logger::Reset, " with ",
             Logger::White, rhs.GetCount(), "x of ", rhs.GetName()
          );
 
-         if constexpr (CT::Typed<LHS, RHS>) {
+         if constexpr (CT::TypeErased<LHS, RHS>) {
+            //                                                          
+            // Both container are type-erased - all we can do is call   
+            // the reflected comparison functions                       
+            const DMeta LT = lhs.GetType();
+            const DMeta RT = rhs.GetType();
+
+            if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
+               VERBOSE(Logger::Red, "Types differ (type-erased): ",
+                  LT, " != ", RT);
+               return Compared::Unordered;
+            }
+
+            // Types are similar                                        
+            if (lhs.GetHeapInner() == rhs.GetHeapInner()) {
+               // Containers point to the same memory, so it's a        
+               // matter of whether they have the same count            
+               return lhs.GetCount() == rhs.GetCount() ? Compared::Equal
+                                                       : Compared::Unordered;
+            }
+            
+            if (lhs.GetCount() != rhs.GetCount()) {
+               VERBOSE(Logger::Red, "Different count (type-erased): ",
+                  lhs.GetCount(), " != ", rhs.GetCount());
+               return Compared::Unordered;
+            }
+
+            if (LT.IsPOD()) {
+               // Batch-compare memory if POD or sparse                 
+               const auto order = ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize());
+               if (order != 0) {
+                  VERBOSE(Logger::Red,
+                     "Different POD memory after memcmp (type-erased)");
+                  VERBOSE(Logger::Red,
+                     "Most likely padding bytes filled with junk - pack your struct: ", LT);
+               }
+               return static_cast<Compared>(order);
+            }
+
+            if (LT.GetComparer()) {
+               // Call compare operator for each element pair           
+               auto t1 = lhs.template GetRawAs<uint8_t>();
+               auto t2 = rhs.template GetRawAs<uint8_t>();
+               [[maybe_unused]] const auto t1_start = t1;
+               const auto t1end = t1 + lhs.GetBytesize();
+               const auto size = LT.GetSize();
+               while (t1 < t1end) {
+                  const Compared last_compare = LT.GetComparer()(t1, t2);
+                  if (last_compare != Compared::Equal) {
+                     VERBOSE(Logger::Red,
+                        "Element #", (t1 - t1_start) / size, " differs (type-erased)");
+                     return last_compare;
+                  }
+
+                  t1 += size;
+                  t2 += size;
+               }
+               return Compared::Equal;
+            }
+
+            VERBOSE(Logger::Red, "Type not comparable (type-erased): ", LT);
+            return Compared::Unordered;
+         }
+         else {
             //                                                          
             // Both blocks are statically-typed - leverage it by using  
             // static comparisons                                       
@@ -307,69 +370,6 @@ namespace Langulus::Anyness::Component
                }
             }
          }
-         else {
-            //                                                          
-            // Both container are type-erased - all we can do is call   
-            // the reflected comparison functions                       
-            const DMeta LT = lhs.GetType();
-            const DMeta RT = rhs.GetType();
-
-            if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
-               VERBOSE(Logger::Red, "Types differ (type-erased): ",
-                  LT, " != ", RT);
-               return Compared::Unordered;
-            }
-
-            // Types are similar                                        
-            if (lhs.GetHeapInner() == rhs.GetHeapInner()) {
-               // Containers point to the same memory, so it's a        
-               // matter of whether they have the same count            
-               return lhs.GetCount() == rhs.GetCount() ? Compared::Equal
-                                                       : Compared::Unordered;
-            }
-            
-            if (lhs.GetCount() != rhs.GetCount()) {
-               VERBOSE(Logger::Red, "Different count (type-erased): ",
-                  lhs.GetCount(), " != ", rhs.GetCount());
-               return Compared::Unordered;
-            }
-
-            if (LT.IsPOD()) {
-               // Batch-compare memory if POD or sparse                 
-               const auto order = ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize());
-               if (order != 0) {
-                  VERBOSE(Logger::Red,
-                     "Different POD memory after memcmp (type-erased)");
-                  VERBOSE(Logger::Red,
-                     "Most likely padding bytes filled with junk - pack your struct: ", LT);
-               }
-               return static_cast<Compared>(order);
-            }
-
-            if (LT.GetComparer()) {
-               // Call compare operator for each element pair           
-               auto t1 = lhs.template GetRawAs<uint8_t>();
-               auto t2 = rhs.template GetRawAs<uint8_t>();
-               [[maybe_unused]] const auto t1_start = t1;
-               const auto t1end = t1 + lhs.GetBytesize();
-               const auto size = LT.GetSize();
-               while (t1 < t1end) {
-                  const Compared last_compare = LT.GetComparer()(t1, t2);
-                  if (last_compare != Compared::Equal) {
-                     VERBOSE(Logger::Red,
-                        "Element #", (t1 - t1_start) / size, " differs (type-erased)");
-                     return last_compare;
-                  }
-
-                  t1 += size;
-                  t2 += size;
-               }
-               return Compared::Equal;
-            }
-
-            VERBOSE(Logger::Red, "Type not comparable (type-erased): ", LT);
-            return Compared::Unordered;
-         }
       }
 
       /// Equality-compare with one single value, if exactly one element is   
@@ -378,46 +378,52 @@ namespace Langulus::Anyness::Component
       ///   @return true if elements are the same                             
       template<CT::Container C, CT::NoIntent RT>
       constexpr bool CompareOneEqual(this C const& self, const RT& rhs) {
-         if constexpr (CT::TypeErased<C>) {
-            //                                                          
-            // THIS is type-erased, do runtime type checks              
+         if consteval {
+            // Heap should be empty at compile-time                     
+            return false;
+         }
+         else {
             if (self.GetCount() != 1)
                return false;
 
-            if (not self.IsTyped())
-               return false;
+            if constexpr (CT::TypeErased<C>) {
+               //                                                       
+               // THIS is type-erased, do runtime type checks           
+               if (not self.IsTyped())
+                  return false;
 
-            if constexpr (CT::Text<RT>) {
-               // Text types can be more loosely compared               
-               if (self.template IsSame<Text>()) {
-                  // Implicitly make a text container                   
-                  return self.template Get<Text>() == Text {Disown(rhs)};
+               if constexpr (CT::Text<RT>) {
+                  // Text types can be more loosely compared            
+                  if (self.template IsSame<Text>()) {
+                     // Implicitly make a text container                
+                     return self.template Get<Text>() == Text {Disown(rhs)};
+                  }
                }
-            }
 
-            /*if constexpr (CT::Container<RT>) {
-               // Containers can be more loosely compared               
-               if (not self.IsSparse()) {
-                  auto deep = self.template GetDeep<RT>();
-                  return deep ? *deep == rhs : false;
+               /*if constexpr (CT::Container<RT>) {
+                  // Containers can be more loosely compared            
+                  if (not self.IsSparse()) {
+                     auto deep = self.template GetDeep<RT>();
+                     return deep ? *deep == rhs : false;
+                  }
+                  else return false;
+               }
+               else*/ if constexpr (CT::Comparable<RT, RT>) {
+                  // Non-deep element compare                           
+                  if (self.template IsSame<RT>())
+                     return self.template Get<RT>() == rhs;
+                  return false;
                }
                else return false;
             }
-            else*/ if constexpr (CT::Comparable<RT, RT>) {
-               // Non-deep element compare                              
-               if (self.template IsSame<RT>())
-                  return self.template Get<RT>() == rhs;
-               return false;
+            else {
+               //                                                       
+               // Both sides are statically typed                       
+               if constexpr (CT::Comparable<TypeOf<C>, RT>)
+                  return *self.GetRaw() == rhs;
+               else
+                  return false;
             }
-            else return false;
-         }
-         else {
-            //                                                          
-            // Both sides are statically typed                          
-            if constexpr (CT::Comparable<TypeOf<C>, RT>)
-               return *self.GetRaw() == rhs;
-            else
-               return false;
          }
       }
 
@@ -427,7 +433,8 @@ namespace Langulus::Anyness::Component
       ///   @param rhs - the value to compare against                         
       ///   @return true if elements are the same                             
       template<CT::Container C, CT::NoIntent RT>
-      constexpr auto CompareOne(this C const& self, const RT& rhs) {
+      constexpr auto CompareOne(this C const& self, const RT& rhs)
+      -> Tif<CT::TypeErased<C>, Compared, ::std::partial_ordering> {
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // THIS is type-erased, do runtime type checks              
@@ -441,7 +448,7 @@ namespace Langulus::Anyness::Component
                // Text types can be more loosely compared               
                if (self.template IsSame<Text>()) {
                   // Implicitly make a text container                   
-                  return self.template Get<Text>() <=> Text {Disown(rhs)};
+                  return FromOrdering(self.template Get<Text>() <=> Text {Disown(rhs)});
                }
             }
 
@@ -456,7 +463,7 @@ namespace Langulus::Anyness::Component
             else*/ if constexpr (CT::Comparable<RT, RT>) {
                // Non-deep element compare                              
                if (self.template IsSame<RT>())
-                  return self.template Get<RT>() <=> rhs;
+                  return FromOrdering(self.template Get<RT>() <=> rhs);
                return Compared::Unordered;
             }
             else return Compared::Unordered;
@@ -468,7 +475,7 @@ namespace Langulus::Anyness::Component
                return ::std::partial_ordering::unordered;
             
             if constexpr (CT::Comparable<TypeOf<C>, RT>)
-               return *self.GetRaw() <=> rhs;
+               return ToPartialOrdering(*self.GetRaw() <=> rhs);
             else
                return ::std::partial_ordering::unordered;
          }
@@ -503,11 +510,24 @@ namespace Langulus::Anyness::Component
       auto Find(this const C& self, const T& item, Count<C> cookie = 0) noexcept
          -> At<C> requires CT::RangeComparable<C, T>
       {
-         if constexpr (not C::TypeErased) {
+         if constexpr (CT::TypeErased<C>) {
+            Count<C> i = REVERSE ? self.GetCount() - 1 - cookie
+               : cookie;
+
+            while (i < self.GetCount()) {
+               if (self.GetElementInner(i) == item)
+                  return i;
+
+               if constexpr (REVERSE) --i;
+               else                   ++i;
+            }
+
+         }
+         else {
             auto start = REVERSE ? self.GetRawEnd() - 1 - cookie
-                                 : self.GetRaw() + cookie;
-            auto end   = REVERSE ? start - self.GetCount()
-                                 : start + self.GetCount();
+               : self.GetRaw() + cookie;
+            auto end = REVERSE ? start - self.GetCount()
+               : start + self.GetCount();
 
             while (start != end) {
                if (*start == item)
@@ -515,18 +535,6 @@ namespace Langulus::Anyness::Component
 
                if constexpr (REVERSE) --start;
                else                   ++start;
-            }
-         }
-         else {
-            Count<C> i = REVERSE ? self.GetCount() - 1 - cookie
-                                 : cookie;
-            
-            while (i < self.GetCount()) {
-               if (self.GetElementInner(i) == item)
-                  return i;
-
-               if constexpr (REVERSE) --i;
-               else                   ++i;
             }
          }
 

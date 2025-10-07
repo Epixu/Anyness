@@ -92,10 +92,6 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
    static_assert(not requires (T pack, E item) { pack.Find(item); });
    static_assert(not requires (T pack, E item) { pack.ForEach([](const int&){}); });
    static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&){}); });
-      
-   STATIC_REQUIRE(T{} == T{});
-   STATIC_REQUIRE(T{} != E{});
-   STATIC_REQUIRE(E{} != T{});
    
    GIVEN("Default-constructed container") {
       const ScopedElement<E> element {555};
@@ -490,6 +486,17 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack != another_pack1);
          REQUIRE(pack != another_pack2);
          REQUIRE(pack == defaulted_pack1);
+
+         STATIC_REQUIRE(T{} == T{});
+
+         if constexpr (CT::Deep<E>) {
+            STATIC_REQUIRE(T{} == E{});
+            STATIC_REQUIRE(E{} == T{});
+         }
+         else {
+            STATIC_REQUIRE(T{} != E{});
+            STATIC_REQUIRE(E{} != T{});
+         }
       }
 
       WHEN("Contains when empty") {
@@ -922,13 +929,8 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 2);
          REQUIRE(pack.template As<E>() == *element);
-         //REQUIRE(pack != element);
-         REQUIRE(pack.CompareOne(*element));
-         
-         if constexpr (CT::Deep<E> and LANGULUS(SAFE))
-            REQUIRE_THROWS(pack == *element);
-         else
-            REQUIRE_NOTHROW(pack == *element);
+
+         Any_Helper_CompareOne(pack, *element);
 
          REQUIRE(pack.GetUses() == 1);
          REQUIRE(pack.IsDeep());
@@ -1001,8 +1003,9 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE_FALSE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 0);
          REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(pack == *element);
-         //REQUIRE(pack != element);
+
+         Any_Helper_CompareOne(pack, *element);
+
          REQUIRE(pack.GetUses() == 1);
          REQUIRE_FALSE(pack.IsConstant());
          REQUIRE(pack.GetAllocation());
@@ -1079,8 +1082,9 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack.template As<E>().GetAllocation());
          REQUIRE(pack.template As<E>().GetUses() == 2);
          REQUIRE(pack.template As<E>() == *element);
-         //REQUIRE(pack != element);
-         REQUIRE(pack == *element);
+
+         Any_Helper_CompareOne(pack, *element);
+
          REQUIRE(pack.GetUses() == 1);
          REQUIRE(pack.IsDeep());
          REQUIRE_FALSE(pack.IsConstant());
@@ -1122,11 +1126,11 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       const auto memory = pack.GetRaw();
       
       Any_CheckState_OwnedFull<E>(pack);
-      
+      Any_Helper_CompareOne(pack, *element);
+
       REQUIRE(pack.GetCount() == 1);
       REQUIRE(pack.GetReserved() == 1);
       REQUIRE(pack.GetRaw());
-      REQUIRE(pack == *element);
       
       WHEN("Emplace (overwrite existing)") {
          ScopedElement<E> i666 {666};
@@ -1205,6 +1209,9 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(copy.GetType() == pack.GetType());
          REQUIRE(copy.GetUses() == 2);
          REQUIRE(pack.GetUses() == 2);
+
+         Any_Helper_CompareOne(pack, *element);
+         Any_Helper_CompareOne(copy, *element);
       }
 
       WHEN("Cloned") {
@@ -1219,8 +1226,9 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(clone.GetType() == pack.GetType());
          REQUIRE(clone.GetUses() == 1);
          REQUIRE(pack.GetUses() == 1);
-         REQUIRE(pack == *element);
-         REQUIRE(clone == *element);
+
+         Any_Helper_CompareOne(pack, *element);
+         Any_Helper_CompareOne(clone, *element);
       }
 
       WHEN("Moved") {
@@ -1238,6 +1246,9 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack.GetType() == moved.GetType());
          REQUIRE(moved.GetUses() == 2);
          REQUIRE(pack.GetUses() == 2);
+
+         Any_Helper_CompareOne(pack, *element);
+         Any_Helper_CompareOne(moved, *element);
       }
 
       WHEN("Compared") {
@@ -1279,10 +1290,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 1);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack1 == pack2);
-         REQUIRE(pack2 == memory1);
-         REQUIRE(pack2 != memory2);
-         REQUIRE(pack2 == *e1);
+         REQUIRE(pack1.CompareEqual(pack2));
+         REQUIRE(pack2.CompareEqual(memory1));
+         REQUIRE(not pack2.CompareEqual(memory2));
+         REQUIRE(pack2.CompareOneEqual(*e1));
       }
       
       WHEN("Refer-assign pack1 in pack2") {
@@ -1294,10 +1305,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack1 == pack2);
-         REQUIRE(pack2 == memory1);
-         REQUIRE(pack2 != memory2);
-         REQUIRE(pack2 == *e1);
+         REQUIRE(pack1.CompareEqual(pack2));
+         REQUIRE(pack2.CompareEqual(memory1));
+         REQUIRE(not pack2.CompareEqual(memory2));
+         REQUIRE(pack2.CompareOneEqual(*e1));
       }
 
       WHEN("Move-assign pack1 in pack2") {
@@ -1329,7 +1340,7 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack2 == memory1);
          REQUIRE(pack2 != memory2);
          REQUIRE(pack2.GetAllocation() == nullptr);
-         REQUIRE(pack2 == *e1);
+         REQUIRE(pack2.CompareOneEqual(*e1));
       }
 
       WHEN("Abandon-assign pack1 in pack2") {

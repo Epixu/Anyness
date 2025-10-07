@@ -149,7 +149,7 @@ namespace Langulus::Anyness
          else return this->Assign(FWD(argument));
       }
 
-      /// Comparison                                                          
+      /// Three-way comparison                                                
       constexpr Compared operator <=> (Any const& other) const noexcept {
          return this->Compare(other);
       }
@@ -158,7 +158,7 @@ namespace Langulus::Anyness
       constexpr Compared operator <=> (const A& argument) const has_assumptions {
          if constexpr (CT::ContainsOne<A>) {
             LglsAssumeUser((Same<Deint<A>, Any>),
-               "Ambiguous use of comparison "
+               "Ambiguous use of three-way comparison "
                "- you should use either Compare (if you want to compare "
                "containers) or CompareOne (if you want to compare the "
                "first item) in order to clearly state your intent. "
@@ -167,6 +167,26 @@ namespace Langulus::Anyness
             return this->Compare(argument);
          }
          else return this->CompareOne(argument);
+      }
+
+      /// Equality comparison                                                 
+      constexpr bool operator == (Any const& other) const noexcept {
+         return this->CompareEqual(other);
+      }
+
+      template<class A>
+      constexpr bool operator == (const A& argument) const has_assumptions {
+         if constexpr (CT::ContainsOne<A>) {
+            LglsAssumeUser((Same<Deint<A>, Any>),
+               "Ambiguous use of equality comparison "
+               "- you should use either CompareEqual (if you want to compare "
+               "containers) or CompareOneEqual (if you want to compare the "
+               "first item) in order to clearly state your intent. "
+               "Compare will be used by default!"
+            );
+            return this->CompareEqual(argument);
+         }
+         else return this->CompareOneEqual(argument);
       }
    };
 }

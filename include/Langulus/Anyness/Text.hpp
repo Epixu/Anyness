@@ -302,6 +302,15 @@ namespace Langulus::Anyness
          return operator == (Text {Disown(rhs)});
       }
 
+      /// Comparison                                                          
+      constexpr auto operator <=> (Text const& other) const noexcept -> ::std::partial_ordering {
+         return this->Compare(other);
+      }
+
+      constexpr bool operator == (Text const& other) const noexcept {
+         return this->CompareEqual(other);
+      }
+
       /// Custom concatenation operator that includes string literals,        
       /// null-terminated string pointers, and std::continuous_ranges         
       ///   @note conventional container concatenation is defined in          

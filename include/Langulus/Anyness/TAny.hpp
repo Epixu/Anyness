@@ -151,9 +151,9 @@ namespace Langulus::Anyness
          else return this->Assign(FWD(argument));
       }
       
-      /// Comparison                                                          
+      /// Three-way comparison                                                
       constexpr auto operator <=> (TAny const& other) const noexcept
-      -> decltype(Fake<T>() <=> Fake<T>()) {
+      -> ::std::partial_ordering {
          return this->Compare(other);
       }
 
@@ -163,7 +163,7 @@ namespace Langulus::Anyness
          if constexpr (CT::ContainsOne<A>) {
             LglsAssumeUser(
                (Same<Deint<A>, TAny> or Same<TypeOf<Deint<A>>, T>),
-               "Ambiguous use of comparison "
+               "Ambiguous use of three-way comparison "
                "- you should use either Compare (if you want to compare "
                "containers) or CompareOne (if you want to compare the "
                "first item) in order to clearly state your intent. "
@@ -172,6 +172,27 @@ namespace Langulus::Anyness
             return this->Compare(argument);
          }
          else return this->CompareOne(argument);
+      }
+      
+      /// Equality comparison                                                 
+      constexpr bool operator == (TAny const& other) const noexcept {
+         return this->CompareEqual(other);
+      }
+
+      template<class A>
+      constexpr bool operator == (const A& argument) const has_assumptions {
+         if constexpr (CT::ContainsOne<A>) {
+            LglsAssumeUser(
+               (Same<Deint<A>, TAny> or Same<TypeOf<Deint<A>>, T>),
+               "Ambiguous use of equality comparison "
+               "- you should use either CompareEqual (if you want to compare "
+               "containers) or CompareOneEqual (if you want to compare the "
+               "first item) in order to clearly state your intent. "
+               "Compare will be used by default!"
+            );
+            return this->CompareEqual(argument);
+         }
+         else return this->CompareOneEqual(argument);
       }
    };
 }

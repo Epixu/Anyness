@@ -172,7 +172,7 @@ namespace Langulus::Anyness::Component
       /// Get the size of the type times the contained elements               
       ///   @return the size of all elements in bytes                         
       template<CT::Container C>
-      constexpr bool GetBytesize(this C const& self) noexcept {
+      constexpr size_t GetBytesize(this C const& self) noexcept {
          return sizeof(TYPE) * self.GetCount();
       }
 
