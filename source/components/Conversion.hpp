@@ -33,6 +33,7 @@ namespace Langulus::Anyness::Component
             return false;
 
          if constexpr (not CT::TypeErased<C> and not CT::TypeErased<OUT>) {
+            //                                                          
             // Both containers are statically-typed, so leverage it to  
             // generate a well inlined routine for conversion           
             using TO   = TypeOf<OUT>;
@@ -55,16 +56,9 @@ namespace Langulus::Anyness::Component
             if (self.IsSame(out)) {
                // Types are already the same, don't convert anything    
                if (out.IsEmpty())
-                  out = *this;
-               else if constexpr ((not TypeErased and CT::ReferMakable<TYPE>)
-                         or  (not OUT::TypeErased and CT::ReferMakable<TO>))
-                  out.InsertBlock(IndexBack, Refer(*this));
-               else if constexpr ((not TypeErased and CT::CopyMakable<TYPE>)
-                         or  (not OUT::TypeErased and CT::CopyMakable<TO>))
-                  out.InsertBlock(IndexBack, Copy(*this));
-               else LANGULUS_OOPS(Convert, 
-                  "Unable to append uncopyable elements of type ",
-                  '`', GetType(), "` - use pointers instead?");
+                  out.AssignFrom(self);
+               else
+                  out.Concat(self);
             }
             
             // Search for a reflected conversion routine                
