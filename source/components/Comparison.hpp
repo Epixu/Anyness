@@ -269,7 +269,7 @@ namespace Langulus::Anyness::Component
                return Compared::Unordered;
             }
 
-            if (LT.IsPOD()) {
+            /*if (LT.IsPOD()) {
                // Batch-compare memory if POD or sparse                 
                const auto order = ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize());
                if (order != 0) {
@@ -279,7 +279,7 @@ namespace Langulus::Anyness::Component
                      "Most likely padding bytes filled with junk - pack your struct: ", LT);
                }
                return static_cast<Compared>(order);
-            }
+            }*/
 
             if (LT.GetComparer()) {
                // Call compare operator for each element pair           
@@ -335,7 +335,7 @@ namespace Langulus::Anyness::Component
                   return ::std::partial_ordering::unordered;
                }
                
-               if constexpr (CT::POD<LT>) {
+               /*if constexpr (CT::POD<LT>) {
                   // Batch compare POD data, including pointers         
                   const auto order = ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize());
                   if (order != 0) {
@@ -346,7 +346,8 @@ namespace Langulus::Anyness::Component
                   }
                   return static_cast<::std::partial_ordering>(order);
                }
-               else if constexpr (CT::Comparable<LT>) {
+               else*/
+               if constexpr (CT::Comparable<LT>) {
                   // Use comparison operator between all elements       
                   auto t1 = lhs.GetRaw();
                   auto t2 = rhs.GetRaw();
