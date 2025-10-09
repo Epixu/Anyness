@@ -51,7 +51,6 @@ namespace Catch
 }
 
 
-
 ///                                                                           
 /// Possible states                                                           
 template<class E>
