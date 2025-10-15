@@ -188,7 +188,7 @@ namespace Langulus::RTTI
          auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
-         auto GetMorphism(MetaDataStructured_XY) const noexcept -> DefinitionData::FBinary;
+         auto GetMorphism(MetaDataStructured_XY) const noexcept -> DefinitionData::Morphism;
 
          IF_SAFE(explicit operator bool() const noexcept);
 
@@ -279,7 +279,7 @@ namespace Langulus::RTTI
          auto GetNamedValues()        const noexcept -> DefinitionData::ValuesList const&;
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
-         auto GetMorphism(MetaDataNaked) const noexcept -> DefinitionData::FBinary;
+         auto GetMorphism(MetaDataNaked) const noexcept -> DefinitionData::Morphism;
          
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)

@@ -120,6 +120,7 @@ namespace Langulus::RTTI
       // only the main code is used, because it is most persistent.     
       using FUnary         = void (*)(void* self);
       using FBinary        = void (*)(void* from, void* to);
+      using FSerialize     = size_t (*)(void* from, void* to, void* context);
       using FDescribe      = void (*)(void* self, const Anyness::Many& describe);
       using FCompare       = Compared (*)(const void* lhs, const void* rhs);
       using FResolve       = Anyness::Any (*)(void* self);
@@ -148,7 +149,7 @@ namespace Langulus::RTTI
          static auto From() -> Member;
       };
       
-      /// Used to reflect a base for a t                                      
+      /// Used to reflect a base                                              
       struct Base {
          using CTTI_ReflectAs = void;
 
@@ -166,13 +167,25 @@ namespace Langulus::RTTI
          From() has_assumptions -> Base;
       };
       
+      /// Used to reflect a morphism                                          
+      struct Morphism {
+         using CTTI_ReflectAs = void;
+
+         // Simple converter, encapsulating a static_cast               
+         FBinary convert;
+         // A serializer if supported, also takes in a context          
+         FSerialize serialize;
+      };
+      
       using MemberList   = ::std::vector<Member>;
       using VerbList     = ::std::unordered_map<DefinitionVerb const*, FDispatch>;
       using BaseList     = ::std::vector<Base>;
-      using MorphismList = ::std::unordered_map<DefinitionData const*, FBinary>;
+      using MorphismList = ::std::unordered_map<DefinitionData const*, Morphism>;
       using ValuesList   = ::std::vector<DefinitionConst const*>;
       
-      ///                                                                     
+      /// Pointers in this structure depend on the library in which the type  
+      /// was reflected from. These pointers become invalid when a DLL is     
+      /// unloaded, for example, and should be managed separately.            
       struct BoundaryDependent {
          using CTTI_ReflectAs = void;
 

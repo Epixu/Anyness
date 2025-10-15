@@ -128,12 +128,14 @@ namespace Langulus::Anyness::Component
       }
 
       
-      /// Serialize data into a desired serial format, by following the       
-      /// serializer's rules                                                  
+      /// Serialize data into a desired serial format by following the        
+      /// serializer's rules. Unlike ConvertTo, here all converted elements   
+      /// are concatenated inside a single container.                         
       ///   @param out - the resulting serialized data                        
+      ///   @param context - the serialization context                        
       ///   @return the number of bytes/chars written to 'out'                
       template<CT::Container C, CT::Serializer OUT>
-      auto SerializeTo(this C const& self, OUT& out) -> Count<C> {
+      auto SerializeTo(this C const& self, OUT& out, typename OUT::SerializationRules::Context* context = nullptr) -> Count<C> {
          const auto initial = out.GetCount();
 
          if (self.IsEmpty()) {
@@ -169,8 +171,10 @@ namespace Langulus::Anyness::Component
             else if (self.CastsTo<Map>()) {
                // Nest inside maps                                      
                for (Count<C> i = 0; i < self.GetCount(); ++i) {
-                  //auto& map = As<BlockMap>(i);
-                  TODO();
+                  AsAt<Map>(i).Serialize(out);
+
+                  if (i < self.GetCount() - 1)
+                     OUT::SerializationRules::Separate(self, out);
                }
             }
             else if (self.CastsTo<Set>()) {
@@ -196,7 +200,7 @@ namespace Langulus::Anyness::Component
                for (Count<C> i = 0; i < self.GetCount(); ++i) {
                   As<Neat>(i).Serialize(to);
 
-                  if (i < GetCount() - 1)
+                  if (i < self.GetCount() - 1)
                      OUT::SerializationRules::Separate(*this, to);
                }
             }
@@ -204,12 +208,11 @@ namespace Langulus::Anyness::Component
                // If reached, then contents are no longer nested           
                if constexpr (requires { typename OUT::SerializationRules::Rules; }) {
                   // Abide by serializer's rules - wrap things accordingly 
-                  const auto satisfied = SerializeByRules<NEXT>(
-                     to, typename OUT::SerializationRules::Rules {});
+                  const auto satisfied = SerializeByRules<NEXT>(out, typename OUT::SerializationRules::Rules {});
                   if (satisfied) {
                      // Early exit, if conversion was satisfied by rule    
                      //OUT::SerializationRules::EndScope(*this, to);
-                     return to.GetCount() - initial;
+                     return out.GetCount() - initial;
                   }
                }
 

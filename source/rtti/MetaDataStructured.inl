@@ -517,12 +517,12 @@ namespace Langulus::RTTI::Inner
    /// Get a specific coverter, if it exists                                  
    TEMPLATE()
    auto ME()::GetMorphism(MetaDataStructured_XY to)
-   const noexcept -> DefinitionData::FBinary {
+   const noexcept -> DefinitionData::Morphism {
       auto toDef = to.GetDefinition();
       auto found = GetDefinition()->mCurrentBoundary.mMorphismsTo.find(toDef);
       if (found != GetDefinition()->mCurrentBoundary.mMorphismsTo.end())
          return found->second;
-      return nullptr;
+      return {nullptr, nullptr};
    }
 
 #if LANGULUS(SAFE)

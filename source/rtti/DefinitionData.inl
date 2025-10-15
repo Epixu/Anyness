@@ -26,6 +26,7 @@
 #include <Langulus/CT/MinAlloc.hpp>
 #include <Langulus/CT/Files.hpp>
 #include <Langulus/CT/Suffix.hpp>
+#include <Langulus/CT/Serializer.hpp>
 #include <Langulus/IntentOf.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -458,12 +459,33 @@ namespace Langulus::RTTI
                   );
                }
             };
-            definition.mCurrentBoundary.mMorphismsTo.emplace(
-               destination_type, converter_function
-            );
-            destination_type->mCurrentBoundary.mMorphismsFrom.emplace( //TODO modifying destination type from the questionably-same boundary may cause problems?
-               &definition, converter_function
-            );
+            
+            if constexpr (CT::Serializer<TO>) {
+               // Destination type can act as a serializer, too         
+               // @attention serialization assumes both sides are valid 
+               // and constructed pointers. Context is optional.        
+               auto serializer_function = [](void* from, void* to, void* context) -> size_t {
+                  auto fromT = static_cast<T*>(from);
+                  auto toT   = static_cast<TO*>(to);
+                  auto conT  = static_cast<typename TO::SerializationRules::Context*>(context);
+                  return Langulus::Serialize(*fromT, *toT, conT);
+               };
+            
+               definition.mCurrentBoundary.mMorphismsTo.emplace(
+                  destination_type, {converter_function, serializer_function}
+               );
+               destination_type->mCurrentBoundary.mMorphismsFrom.emplace( //TODO modifying destination type from the questionably-same boundary may cause problems?
+                  &definition, {converter_function, serializer_function}
+               );
+            }
+            else {
+               definition.mCurrentBoundary.mMorphismsTo.emplace(
+                  destination_type, {converter_function, nullptr}
+               );
+               destination_type->mCurrentBoundary.mMorphismsFrom.emplace( //TODO modifying destination type from the questionably-same boundary may cause problems?
+                  &definition, {converter_function, nullptr}
+               );               
+            }
          });
       }
 

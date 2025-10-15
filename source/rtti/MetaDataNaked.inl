@@ -329,10 +329,10 @@ namespace Langulus::RTTI::Inner
    
    /// Get a specific coverter, if it exists                                  
    inline auto MetaDataNaked::GetMorphism(MetaDataNaked to)
-   const noexcept -> DefinitionData::FBinary {
+   const noexcept -> DefinitionData::Morphism {
       auto found = mDefinition->mCurrentBoundary.mMorphismsTo.find(to.mDefinition);
       if (found != mDefinition->mCurrentBoundary.mMorphismsTo.end())
          return found->second;
-      return nullptr;
+      return {nullptr, nullptr};
    }
 }
