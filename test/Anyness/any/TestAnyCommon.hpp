@@ -10,7 +10,7 @@
 #include "../../TestTypes/ScopedElement.hpp"
 #include <Langulus/Anyness/Any.hpp>
 #include <Langulus/Anyness/TAny.hpp>
-#include <Langulus/Anyness/Text.hpp>
+#include <Langulus/Anyness/SerializeText.hpp>
 
 using namespace Langulus;
 using namespace Anyness;
@@ -32,20 +32,28 @@ decltype(auto) FromHelper() {
 namespace Catch
 {
    template<>
-   struct is_range<Any> { static const bool value = false; };
+   struct is_range<Any> {
+      static const bool value = false;
+   };
    template<class T>
-   struct is_range<TAny<T>> { static const bool value = false; };
+   struct is_range<TAny<T>> {
+      static const bool value = false;
+   };
 
    template<>
    struct StringMaker<Any> {
-      static std::string convert(Any const& value) {
-         return NameOf<Any>() + "(" + static_cast<::std::string>(value) + ")";
+      static ::std::string convert(Any const& value) {
+         return static_cast<::std::string>(
+            NameOf<Any>() + "(" + Convert<Text>(value) + ")"
+         );
       }
    };
    template<class T>
    struct StringMaker<TAny<T>> {
-      static std::string convert(TAny<T> const& value) {
-         return NameOf<TAny<T>>() + "(" + static_cast<::std::string>(value) + ")";
+      static ::std::string convert(TAny<T> const& value) {
+         return static_cast<::std::string>(
+            NameOf<TAny<T>>() + "(" + Convert<Text>(value) + ")"
+         );
       }
    };
 }

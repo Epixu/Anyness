@@ -747,22 +747,22 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
 
    const auto intmeta = RTTI::DefinitionData::Reflect<int>();
    REQUIRE(meta.GetMorphismsTo().size() == 1);
-   REQUIRE(meta.GetMorphismsTo().at(intmeta) != nullptr);
+   REQUIRE(meta.GetMorphismsTo().at(intmeta).convert != nullptr);
 
    const auto pimeta = RTTI::DefinitionData::Reflect<Pi>();
    REQUIRE(meta.GetMorphismsFrom().size() == 1);
-   REQUIRE(meta.GetMorphismsFrom().at(pimeta) != nullptr);
+   REQUIRE(meta.GetMorphismsFrom().at(pimeta).convert != nullptr);
 
    const auto impmeta = RTTI::DefinitionData::Reflect<ImplicitlyReflectedDataWithTraits>();
-   REQUIRE(DMeta(pimeta).GetMorphismsTo().at(impmeta) == meta.GetMorphismsFrom().at(pimeta));
+   REQUIRE(DMeta(pimeta).GetMorphismsTo().at(impmeta).convert == meta.GetMorphismsFrom().at(pimeta).convert);
 
    int converted = 1;
-   meta.GetMorphismsTo().at(intmeta)(&instance, &converted);
+   meta.GetMorphismsTo().at(intmeta).convert(&instance, &converted);
    REQUIRE(converted == 664);
 
    Pi source;
    ImplicitlyReflectedDataWithTraits convertedFromPi1;
-   meta.GetMorphismsFrom().at(pimeta)(&source, &convertedFromPi1);
+   meta.GetMorphismsFrom().at(pimeta).convert(&source, &convertedFromPi1);
    REQUIRE(convertedFromPi1.member == 314);
 }
 

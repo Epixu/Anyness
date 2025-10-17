@@ -447,17 +447,7 @@ namespace Langulus::RTTI
             auto converter_function = [](void* from, void* to) {
                auto fromT = static_cast<T*>(from);
                auto toT   = static_cast<TO*>(to);
-
-               if constexpr (requires { TO (*fromT); })
-                  new (toT) TO (*fromT);
-               else if constexpr (requires { TO (static_cast<TO>(*fromT)); })
-                  new (toT) TO (static_cast<TO>(*fromT));
-               else {
-                  static_assert(false,
-                     "T can't be converted to TO - add "
-                     "explicit/implicit constructors and/or cast operators"
-                  );
-               }
+               Langulus::Convert(*fromT, *toT);
             };
             
             if constexpr (CT::Serializer<TO>) {
@@ -472,18 +462,22 @@ namespace Langulus::RTTI
                };
             
                definition.mCurrentBoundary.mMorphismsTo.emplace(
-                  destination_type, {converter_function, serializer_function}
+                  destination_type,
+                  Morphism {converter_function, serializer_function}
                );
                destination_type->mCurrentBoundary.mMorphismsFrom.emplace( //TODO modifying destination type from the questionably-same boundary may cause problems?
-                  &definition, {converter_function, serializer_function}
+                  &definition,
+                  Morphism {converter_function, serializer_function}
                );
             }
             else {
                definition.mCurrentBoundary.mMorphismsTo.emplace(
-                  destination_type, {converter_function, nullptr}
+                  destination_type,
+                  Morphism {converter_function, nullptr}
                );
                destination_type->mCurrentBoundary.mMorphismsFrom.emplace( //TODO modifying destination type from the questionably-same boundary may cause problems?
-                  &definition, {converter_function, nullptr}
+                  &definition,
+                  Morphism {converter_function, nullptr}
                );               
             }
          });

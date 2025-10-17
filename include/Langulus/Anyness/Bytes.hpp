@@ -9,98 +9,91 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/Contiguous.hpp"
-#include "../../../source/components/Indexed-Linear.hpp"
+#include "../../../source/components/IndexedLinear.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
 #include "../../../source/components/Concatenate.hpp"
-#include "../../../source/components/ConcatenateOperators.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Heap.hpp"
+#include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/Hash-Stack.hpp"
 #include "../../../source/components/Iteration-Range.hpp"
 #include "../../../source/components/Comparison.hpp"
-#include "../../../source/components/State-Stack.hpp"
-#include "../../../source/states/Compressed.hpp"
-#include "../../../source/states/Encrypted.hpp"
-#include "../../../source/states/Tracked.hpp"
-#include "../../../source/states/Typed.hpp"
+#include <Langulus/Utils/Byte.hpp>
 
 
 namespace Langulus::Anyness
 {
    struct Bytes;
-   struct BytesView;
 
-
+   namespace Inner
+   {
+      using BytesBase = Container<
+         Com::TypedStatic<DMeta, Byte>,   // Type-constrained           
+         Com::HeapMovable<>,              // Pointer to heap memory     
+         Com::OwnershipStack<>,           // Allocation is referenced   
+         Com::CountStack<>,               // Variable count             
+         Com::ReserveEmergent<>,          // Capacity derived from alloc
+         Com::HashStack<>,                // Variable hash (cached)     
+         Com::Insertion<0, Bytes>,        // Serialize + insert         
+         Com::InsertionOperators<0, Bytes>,// << and >> insertion       
+         Com::Concatenate<>,              // Concatenate                
+         Com::Removal<>,                  // Allows removal             
+         Com::Assignment<>,               // Allows assignment          
+         Com::Comparison<>,               // Allows for comparison      
+         Com::Conversion,                 // Allows conversion          
+         Com::IndexedLinear<>,            // Indexed directly           
+         Com::IterationForEach<>,         // ForEach iteration          
+         Com::IterationRange<>            // Range iteration            
+      >;
+   }
+   
    ///                                                                        
    /// A continuous byte container of variable size                           
    ///                                                                        
-   struct Bytes : Container<
-      Com::HeapMovable<>,                 // Pointer to heap memory     
-      Com::OwnershipStack<>,              // Allocation is referenced   
-      Com::Contiguous,                    // Heap memory is continuous  
-      Com::IndexedLinear<>,               // Indexed directly           
-      Com::Emplacement<>,                 // Allows emplacement         
-      Com::Insertion<0, Bytes>,           // Serialize + insert         
-      Com::InsertionOperators<0, Bytes>,  // << and >> insertion        
-      Com::Concatenate,                   // Concatenation              
-      Com::ConcatenateOperators,          // + += concatenation         
-      Com::Removal<>,                     // Allows removal             
-      Com::Assignment<>,                  // Allows assignment          
-      Com::TypedStatic<DMeta, Byte>,      // Type-constrained           
-      Com::CountStack<>,                  // Variable count             
-      Com::ReserveHeap<>,                 // Variable capacity          
-      Com::HashStack<>,                   // Variable hash (cached)     
-      Com::IterationRange<>,              // Ranged iteration           
-      Com::Comparison,                    // Comparisons                
-      Com::StateStack<                    // Variable state             
-         DefineState::Typed<State::Enabled>, // Always type-constrained 
-         DefineState::Compressed<>,       // Adds 'compressed' state    
-         DefineState::Encrypted<>,        // Adds 'encrypted' state     
-         DefineState::Tracked<>           // Adds 'tracked' state       
-      >
-   > {
-      // View                                                           
-      using  ViewType = BytesView;
+   struct Bytes : Inner::BytesBase {
+      using CountType = Base::CountType;
 
       // Single element selections                                      
-      using  Pick     = Byte const&;
-      using  PickMut  = Byte&;
+      using Pick    = Byte const&;
+      using PickMut = Byte&;
 
-      // Range selections                                               
-      struct PickRange : Container<
-         Com::HeapMovable<>,
-         Com::Contiguous,
-         Com::IndexedLinear<>,
-         Com::TypedStatic<DMeta, Byte>,
-         Com::CountStack<>
-      > {};
-      struct PickRangeMut : Container<
-         Com::HeapMovable<>,
-         Com::Contiguous,
-         Com::IndexedLinear<>,
-         Com::Assignment<>,
-         Com::TypedStatic<DMeta, Byte>,
-         Com::CountStack<>
-      > {};
-
-      constexpr Bytes() noexcept = default;
-      constexpr Bytes(const Bytes&) noexcept = default;
-      constexpr Bytes(Bytes&&) noexcept = default;
-
-      //template<template<class> class I> requires CT::Intent<I<Bytes>>
-      //constexpr Bytes(I<Bytes>&&) noexcept;
-
-      template<class A1>
-      constexpr Bytes(A1&&) requires CT::DeepConstructible<Bytes, A1>;
-      template<class A1, class...AN>
-      constexpr Bytes(A1&&, AN&&...) requires CT::RangeInsertable<Bytes, A1, AN...>;
+      constexpr Bytes() noexcept {
+         this->ConstructDefault();
+      }
+      constexpr Bytes(Bytes const& other) {
+         this->ConstructFrom(Refer {other});
+      }
+      constexpr Bytes(Bytes&& other) noexcept {
+         this->ConstructFrom(Move {other});
+      }
+      constexpr ~Bytes() noexcept {
+         this->Destroy();
+      }
+      
+      /// Construction from any kind of other bytes with intent               
+      template<template<class> class I> requires CT::Intent<I<Bytes>>
+      constexpr Bytes(I<Bytes>&& bytes) {
+         this->ConstructFrom(FWD(bytes));
+      }
+      
+      /// Assignment                                                          
+      constexpr Bytes& operator = (Bytes const& other) {
+         return this->AssignFrom(Refer {other});
+      }
+      constexpr Bytes& operator = (Bytes&& other) noexcept {
+         return this->AssignFrom(Move {other});
+      }
+      
+      /// Comparison                                                          
+      constexpr auto operator <=> (Bytes const& other) const noexcept -> ::std::partial_ordering {
+         return this->Compare(other);
+      }
+      constexpr bool operator == (Bytes const& other) const noexcept {
+         return this->CompareEqual(other);
+      }
    };
 }
-
-#include "BytesView.hpp"

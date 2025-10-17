@@ -312,10 +312,13 @@ namespace Langulus::Anyness
          return this->CompareEqual(other);
       }
 
+      /// Append a serial operator                                            
+      Text& operator += (Serial::Operator const& rhs) {
+         return operator += (rhs.mToken);
+      }
+      
       /// Custom concatenation operator that includes string literals,        
       /// null-terminated string pointers, and std::continuous_ranges         
-      ///   @note conventional container concatenation is defined in          
-      ///      Com::Concatenate and Com::ConcatenateOperators                 
       template<CT::Text T> requires CT::NotContainer<T>
       Text& operator += (T&& rhs) {
          if (not this->IsAllocated()) {
@@ -367,10 +370,104 @@ namespace Langulus::Anyness
          this->ResetHash();
          return *this;
       }
+
+      /// Custom concatenation operator for other text/containers.            
+      /// Automatically serializes non-text items.                            
+      template<CT::Container T>
+      Text& operator += (T&& rhs) {
+         if constexpr (CT::Text<T>)
+            return operator += (FWD(rhs));
+         else {
+            Serialize(rhs, *this);
+            return *this;
+         }
+      }
+      
+      /// Custom concatenation operator that includes string literals,        
+      /// null-terminated string pointers, and std::continuous_ranges         
+      template<CT::Text T> requires CT::NotContainer<T>
+      Text operator + (T const& rhs) const {
+         if (not this->IsAllocated())
+            return Text {FWD(rhs)};
+
+         using DT = Deint<T>;
+         decltype(auto) source = DeintCast(FWD(rhs));
+         const auto currentCount = this->GetCount();
+         Text result;
+
+         if constexpr (CT::TextLiteral<DT>) {
+            // Create from a text literal/bounded array                 
+            using CHAR = TypeOf<DT>;
+            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            const auto count = strnlen(source, ExtentOf<DT>);
+            if (not count)
+               return *this;            
+            result.AllocateMore(currentCount + count);
+            memcpy(result.GetRawAs<uint8_t>(), this->GetRaw(), currentCount);
+            memcpy(result.GetRawAs<uint8_t>() + currentCount, source, count);
+            result.SetCountInner(currentCount + count);
+         }
+         else if constexpr (CT::TextPointer<DT>) {
+            // Create from a null-terminated char pointer               
+            if (not source)
+               return *this;
+            using CHAR = Deptr<DT>;
+            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            const auto count = strlen(source);
+            if (not count)
+               return *this;            
+            result.AllocateMore(currentCount + count);
+            memcpy(result.GetRawAs<uint8_t>(), this->GetRaw(), currentCount);
+            memcpy(result.GetRawAs<uint8_t>() + currentCount, source, count);
+            result.SetCountInner(currentCount + count);
+         }
+         else if constexpr (::std::ranges::contiguous_range<DT>) {
+            // Create from an std container                             
+            if (source.empty())
+               return *this;
+            using CHAR = Deptr<decltype(source.data())>;
+            static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
+            const auto count = source.size();            
+            result.AllocateMore(currentCount + count);
+            memcpy(result.GetRawAs<uint8_t>(), this->GetRaw(), currentCount);
+            memcpy(result.GetRawAs<uint8_t>() + currentCount, source.data(), count);
+            result.SetCountInner(currentCount + count);
+         }
+         else static_assert(false, "Unsupported text concatenation");
+
+         result.ResetHash();
+         return result;
+      }
+
+      /// Custom concatenation operator for other text/containers.            
+      /// Automatically serializes non-text items.                            
+      /*template<CT::Container T>
+      Text operator + (T const& rhs) const {
+         if constexpr (CT::Text<T>)
+            return operator + (rhs);
+         else
+            return Convert<Text>(rhs);
+      }*/
+      
+      template<CT::Text T> requires CT::NotContainer<T>
+      friend Text operator + (T const& lhs, Text const& rhs) {
+         return Text {lhs} + rhs;
+      }
+      
+      template<CT::Container T>
+      friend Text operator + (T const& lhs, Text const& rhs) {
+         if constexpr (CT::Text<T>)
+            return lhs.operator + (rhs);
+         else
+            return Convert<Text>(lhs).operator + (rhs);
+      }
+
+      explicit operator ::std::string() const {
+         return {GetRaw(), GetCount()};
+      }
    };
 
    struct Code : Text {};
-   struct Bytes;
    
 }
 
@@ -397,204 +494,4 @@ namespace Langulus::CT
    template<class...T>
    concept Stringifiable = ((Inner::StringifiableByOperator<T>
                           or Inner::StringifiableByConstructor<T>) and ...);
-}
-
-namespace Langulus
-{
-   /// Make a text literal                                                    
-   inline Anyness::Text operator ""_text(const char* text, size_t size) {
-      return Anyness::Text::FromText(text, size);
-   }
-}
-
-namespace Langulus::CTTI
-{
-   /// The presence of this structure makes Text a CT::Serializer             
-   template<>
-   struct Serializer<Anyness::Text> {
-      using Text = Anyness::Text;
-      using Count = Text::CountType;
-      
-      // Text serializer can be lossy to omit unnecessary details,      
-      // and you can configure how many elements to show                
-      #ifdef LANGULUS_MAX_DEBUGGABLE_ELEMENTS
-         static constexpr Count MaxIterations = LANGULUS_MAX_DEBUGGABLE_ELEMENTS;
-      #elif LANGULUS(DEBUG) or LANGULUS(SAFE)
-         static constexpr Count MaxIterations = 32;
-      #else
-         static constexpr Count MaxIterations = 8;
-      #endif
-
-      struct Context {};
-      
-      //using Operator = Serial::Operator;
-
-      //static constexpr auto Operators = Serial::Operators;
-      static constexpr bool CriticalFailure = false;
-      static constexpr bool SkipElements = true;
-
-      static void BeginScope(const CT::Container auto& from, Text& to, Context*) {
-         const bool scoped = from.GetCount() > 1 or from.IsInvalid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
-         if (scoped) {
-            if (from.IsPast())
-               to += Operator::Past;
-            else if (from.IsFuture())
-               to += Operator::Future;
-
-            to += Operator::OpenScope;
-         }
-      }
-      
-      static void EndScope(const CT::Container auto& from, Text& to, Context*) {
-         const bool scoped = from.GetCount() > 1 or from.IsInvalid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
-         if (scoped)
-            to += Operator::CloseScope;
-      }
-      
-      static void Separate(const CT::Container auto& from, Text& to, Context*) {
-         to += (from.IsOr() ? " or " : ", ");
-      }
-      
-      static void Empty(RTTI::DMeta type, Count i, Text& to, Context*) {
-         if constexpr (CriticalFailure) {
-            LglsError("Item #", i, " of type `", type.GetName(),
-               "` was serialized to an empty `Text`");
-         }
-         else {
-            to += "/*";
-            to += type.GetName();
-            to += " -> empty Text*/";            
-         }
-      }
-      
-      static void Error(RTTI::DMeta type, Count i, Text& to, Context*) {
-         if constexpr (CriticalFailure) {
-            LglsError("Item #", i, " of type `", type.GetName(),
-               "` failed to convert to `Text`");
-         }
-         else {
-            to += "/*";
-            to += type.GetName();
-            to += " -> Text failed*/";            
-         }
-      }
-   };
-
-   /// A rule for serializing any deep container.                             
-   /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
-   /// as well as any templated equivalents. It basically places scopes,      
-   /// separators and state decorators, depending on the kind of container.   
-   template<CT::Deep C>
-   struct SerializationRule<Anyness::Text, C> {
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-      using Count = Anyness::Text::CountType;
-      
-      static void Serialize(C const& self, Anyness::Text& out, Context* context) {
-         if constexpr (CT::TypeErased<C>) {
-            //                                                          
-            // Serialize a type-erased container                        
-            const auto T = self.GetType();
-            if (T.IsDeep()) {
-               for (Count i = 0; i < self.GetCount(); ++i) {
-                  auto item = self.template CastAt<typename C::DeepType>(i);
-                  S::BeginScope(item, out, context);
-                  try { Langulus::Serialize(item, out, context); }
-                  catch (...) {
-                     
-                  }
-                  S::EndScope(item, out, context);
-
-                  if (i < self.GetCount() - 1)
-                     S::Separate(self, out, context);
-               }
-            }
-            else {
-               auto serializer = T.GetMorphism(MetaDataOf<Text>()).serialize;
-               for (Count i = 0; i < self.GetCount(); ++i) {
-                  serializer(self.GetAt(i), &out, context);
-
-                  if (i < self.GetCount() - 1)
-                     S::Separate(self, out, context);
-               }                  
-            }
-         }
-         else {
-            //                                                          
-            // Serialize a statically-typed container                   
-            using T = TypeOf<C>;
-            if constexpr (CT::Deep<Decay<T>>) {
-               for (Count i = 0; i < self.GetCount(); ++i) {
-                  Decay<T> const& item = DenseCast(self[i]);
-                  S::BeginScope(item, out, context);
-                  Langulus::Serialize(item, out, context);
-                  S::EndScope(item, out, context);
-
-                  if (i < self.GetCount() - 1)
-                     S::Separate(self, out, context);
-               }
-            }
-            else {
-               for (Count i = 0; i < self.GetCount(); ++i) {
-                  Decay<T> const& item = DenseCast(self[i]);
-                  Langulus::Serialize(item, out, context);
-
-                  if (i < self.GetCount() - 1)
-                     S::Separate(self, out, context);
-               }
-            }
-         }
-      }
-   };
-
-   /// Rule for serializing Code to Text. Wraps it in {} symbols.             
-   template<>
-   struct SerializationRule<Anyness::Text, Anyness::Code> {
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-
-      static void Serialize(const Anyness::Code& item, Anyness::Text& out, Context* context) {
-         out += Operator::OpenCode;
-         out += static_cast<Anyness::Text>(item);
-         out += Operator::CloseCode;
-      }
-   };
-   
-   /// Rule for serializing Text to Text. Wraps it in "".                     
-   template<>
-   struct SerializationRule<Anyness::Text, Anyness::Text> {
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-
-      static auto Serialize(const Anyness::Text& item, Anyness::Text& out, Context* context) {
-         out += Operator::OpenString;
-         out += item;
-         out += Operator::CloseString;
-      }
-   };
-   
-   /// Rule for serializing Bytes to Text. Prepends 0x.                       
-   template<>
-   struct SerializationRule<Anyness::Text, Anyness::Bytes> {
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-
-      static auto Serialize(const Anyness::Bytes& item, Anyness::Text& out, Context* context) {
-         out += Operator::OpenByte;
-         out += static_cast<Anyness::Text>(item);
-      }
-   };
-   
-   /// Rule for serializing characters to Text. Wraps them in ''.             
-   template<CT::Character C>
-   struct SerializationRule<Anyness::Text, C> {
-      using S = SerializerOf<Anyness::Text>;
-      using Context = typename S::Context;
-
-      static auto Serialize(C const& item, Anyness::Text& out, Context* context) {
-         out += Operator::OpenCharacter;
-         out += static_cast<Anyness::Text>(item);
-         out += Operator::CloseCharacter;
-      }
-   };
 }

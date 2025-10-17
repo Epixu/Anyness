@@ -63,7 +63,7 @@ namespace Langulus
 
    /// Serialize                                                              
    template<class FROM, CT::Serializer TO>
-   auto Serialize(FROM const& from, TO& to, typename TO::Context* context = nullptr)
+   auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr)
    -> typename TO::CountType {
       const typename TO::CountType initial = to.GetCount();
       if constexpr (CT::Complete<CTTI::SerializationRule<TO, FROM>>) {
@@ -77,4 +77,43 @@ namespace Langulus
       }
       return to.GetCount() - initial;
    }
+}
+
+namespace Langulus::Serial
+{
+   struct Operator {
+      Token mToken;
+      bool mCharge = false;
+   };
+
+   /// Built-in operator properties                                           
+   constexpr Operator OpenScope      { "(" };
+   constexpr Operator CloseScope     { ")" };
+   constexpr Operator OpenScopeAlt   { "[" };
+   constexpr Operator CloseScopeAlt  { "]" };
+   constexpr Operator OpenCode       { "{" };
+   constexpr Operator CloseCode      { "}" };
+   constexpr Operator OpenComment    { "/*" };
+   constexpr Operator CloseComment   { "*/" };
+   constexpr Operator LineComment    { "//" };
+   constexpr Operator OpenString     { "\"" };
+   constexpr Operator CloseString    { "\"" };
+   constexpr Operator OpenStringAlt  { "`" };
+   constexpr Operator CloseStringAlt { "`" };
+   constexpr Operator OpenCharacter  { "'" };
+   constexpr Operator CloseCharacter { "'" };
+   constexpr Operator OpenByte       { "0x" };
+   constexpr Operator CloseByte      { "" };
+   constexpr Operator SelectIdea     { "##" };
+   constexpr Operator SelectThing    { "#" };
+   constexpr Operator Future         { "??" };
+   constexpr Operator Past           { "?" };
+   constexpr Operator Null           { "null" };
+   constexpr Operator Mass           { "*", true };
+   constexpr Operator Rate           { "^", true };
+   constexpr Operator Time           { "@", true };
+   constexpr Operator Priority       { "!", true };
+   constexpr Operator And            { ", " };
+   constexpr Operator Or             { " or " };
+   constexpr Operator AndUnordered   { "; " };
 }

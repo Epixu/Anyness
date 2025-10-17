@@ -15,7 +15,12 @@ namespace Langulus::CTTI
    /// 1. Specialize for T/concept                                            
    /// 2. Add a public `using CTTI_MapsTo = <type or Types<...>>;` in T       
    template<class T>
-   struct MapsTo;;
+   struct MapsTo;
+   
+   /// Custom converter that can be defined from outside types.               
+   /// Used as an alternative to custom constructors and cast operators.      
+   template<class FROM, class TO>
+   struct Converter;
 }
 
 namespace Langulus::CT
@@ -51,12 +56,14 @@ namespace Langulus::CT
    /// Check if 'FROM' is convertible to all 'TO'                             
    template<class FROM, class...TO>
    concept Convertible = PartialValidate<TO...>
-       and (::std::convertible_to<FROM, TO> and ...);
+       and ((::std::convertible_to<FROM, TO>
+          or CT::Complete<CTTI::Converter<FROM, TO>>) and ...);
 
    /// Check if 'FROM' is convertible to one of 'TO'                          
    template<class FROM, class...TO>
    concept ConvertibleToOneOf = PartialValidate<TO...>
-       and (::std::convertible_to<FROM, TO> or ...);
+       and ((::std::convertible_to<FROM, TO>
+          or CT::Complete<CTTI::Converter<FROM, TO>>) or ...);
 }
 
 namespace Langulus
@@ -64,4 +71,43 @@ namespace Langulus
    /// Get the reflected morphisms, CT::Void if none                          
    template<class T>
    using MorphismsOf = decltype(CT::Inner::GetMorphisms<Decvq<Deref<T>>>());
+
+   /// Convert from one type to another, utilizing CTTI definitions.          
+   /// This can work even if no CTTI::MapsTo is defined.                      
+   ///   @attention assumes 'from' is constructed                             
+   ///   @attention assumes 'to' is NOT constructed                           
+   template<class FROM, class TO>
+   constexpr void Convert(const FROM& from, TO& to) {
+      if constexpr (CT::Complete<CTTI::Converter<FROM, TO>>)
+         CTTI::Converter<FROM, TO>::Convert(from, to);
+      else if constexpr (requires { TO (from); })
+         new (&to) TO (from);
+      else if constexpr (requires { TO (static_cast<TO>(from)); })
+         new (&to) TO (static_cast<TO>(from));
+      else {
+         static_assert(false,
+            "FROM can't be converted to TO - add CTTI::Converter, "
+            "explicit/implicit constructor, or cast operator"
+         );
+      }
+   }
+   
+   /// Convert from one type to another, utilizing CTTI definitions           
+   /// This can work even if no CTTI::MapsTo is defined.                      
+   ///   @attention assumes 'from' is constructed                             
+   template<class TO, class FROM>
+   constexpr TO Convert(const FROM& from) {
+      if constexpr (CT::Complete<CTTI::Converter<FROM, TO>>)
+         return CTTI::Converter<FROM, TO>::Convert(from);
+      else if constexpr (requires { TO (from); })
+         return TO (from);
+      else if constexpr (requires { TO (static_cast<TO>(from)); })
+         return TO (static_cast<TO>(from));
+      else {
+         static_assert(false,
+            "FROM can't be converted to TO - add CTTI::Converter, "
+            "explicit/implicit constructor, or cast operator"
+         );
+      }
+   }
 }
