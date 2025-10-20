@@ -10,6 +10,7 @@
 
 using namespace Langulus;
 using Anyness::Text;
+using Anyness::operator""_text;
 using Anyness::Allocator;
 
 namespace Catch

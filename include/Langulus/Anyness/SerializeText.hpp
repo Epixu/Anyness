@@ -98,7 +98,7 @@ namespace Langulus::CTTI
             const auto T = self.GetType();
             if (T.IsDeep()) {
                for (Count i = 0; i < self.GetCount(); ++i) {
-                  auto item = self.template CastAt<typename C::DeepType>(i);
+                  auto item = self.template AsAt<typename C::DeepType>(i);
                   S::BeginScope(item, out, context);
                   try { Langulus::Serialize(item, out, context); }
                   catch (...) {
@@ -154,7 +154,7 @@ namespace Langulus::CTTI
             // Serialize a type-erased container                        
             const auto T = self.GetType();
             if (T.IsDeep()) {
-               auto item = self.template Cast<typename C::DeepType>();
+               auto item = self.template As<typename C::DeepType>();
                try { Langulus::Serialize(item, out, context); }
                catch (...) {
                   

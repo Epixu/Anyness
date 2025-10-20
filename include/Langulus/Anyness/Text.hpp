@@ -469,7 +469,7 @@ namespace Langulus::Anyness
 
    struct Code : Text {};
    
-   Text operator ""_text(const char* token, unsigned long long size) noexcept {
+   inline Text operator ""_text(const char* token, unsigned long size) noexcept {
       return Text::FromText(token, size);
    }
 }

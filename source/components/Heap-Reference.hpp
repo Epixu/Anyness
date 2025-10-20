@@ -217,8 +217,8 @@ namespace Langulus::Anyness::Component
       /// Get first element by casting it to any desirable compatible type    
       ///   @tparam AS - the type we're casting to                            
       ///   @return the resulting value                                       
-      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
-      AS Cast(this C const&);
+      /*template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
+      AS Cast(this C const&);*/
 
       /// A safe way to get the first deep entry                              
       ///   @attention ignores sparseness                                     
