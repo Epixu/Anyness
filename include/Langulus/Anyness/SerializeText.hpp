@@ -90,7 +90,8 @@ namespace Langulus::CTTI
       using Context = typename S::Context;
       using Count = Anyness::Text::CountType;
       
-      static void Serialize(C const& self, Anyness::Text& out, Context* context) {
+      static void Serialize(C const& self, Anyness::Text& out, Context* context)
+      requires CT::ContainsMany<C> {
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Serialize a type-erased container                        
@@ -142,6 +143,39 @@ namespace Langulus::CTTI
                   if (i < self.GetCount() - 1)
                      S::Separate(self, out, context);
                }
+            }
+         }
+      }
+      
+      static void Serialize(C const& self, Anyness::Text& out, Context* context)
+      requires CT::ContainsOne<C> {
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // Serialize a type-erased container                        
+            const auto T = self.GetType();
+            if (T.IsDeep()) {
+               auto item = self.template Cast<typename C::DeepType>();
+               try { Langulus::Serialize(item, out, context); }
+               catch (...) {
+                  
+               }
+            }
+            else {
+               auto serializer = T.GetMorphism(MetaDataOf<Anyness::Text>()).serialize;
+               serializer(self.Get(), &out, context);
+            }
+         }
+         else {
+            //                                                          
+            // Serialize a statically-typed container                   
+            using T = TypeOf<C>;
+            if constexpr (CT::Deep<Decay<T>>) {
+               Decay<T> const& item = DenseCast(*self);
+               Langulus::Serialize(item, out, context);
+            }
+            else {
+               Decay<T> const& item = DenseCast(*self);
+               Langulus::Serialize(item, out, context);
             }
          }
       }
@@ -207,13 +241,40 @@ namespace Langulus::CTTI
       }
    };
 
+   /// Convert Number -> Text                                                 
+   template<CT::Number T>
+   struct Converter<T, Anyness::Text> {
+      static constexpr void Convert(T const& from, Anyness::Text& to) {
+         to += Anyness::Text::FromNumber(from);
+      }
+      
+      static constexpr Anyness::Text Convert(T const& from) {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
+   
    /// Convert Any -> Text                                                    
    template<>
    struct Converter<Anyness::Any, Anyness::Text> {
       static constexpr void Convert(Anyness::Any const& from, Anyness::Text& to) {
-         
+         Serialize(from, to);
       }
+      
       static constexpr Anyness::Text Convert(Anyness::Any const& from) {
+         Anyness::Text result;
+         Serialize(from, result);
+         return result;
+      }
+   };
+   
+   /// Convert TAny -> Text                                                   
+   template<class T>
+   struct Converter<Anyness::TAny<T>, Anyness::Text> {
+      static constexpr void Convert(Anyness::TAny<T> const& from, Anyness::Text& to) {
+         Serialize(from, to);
+      }
+      
+      static constexpr Anyness::Text Convert(Anyness::TAny<T> const& from) {
          Anyness::Text result;
          Serialize(from, result);
          return result;

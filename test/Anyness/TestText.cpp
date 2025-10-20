@@ -506,7 +506,7 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", Stringifiable, Strin
          // operators                                                   
          const auto staticallyConverted = instance.operator Text();
          Text rttiConverted;
-         meta.GetMorphism(debugMeta)(&instance, &rttiConverted);
+         meta.GetMorphism(debugMeta).convert(&instance, &rttiConverted);
 
          REQUIRE(staticallyConverted == rttiConverted);
          if constexpr (Akin<Stringifiable, TestType>)

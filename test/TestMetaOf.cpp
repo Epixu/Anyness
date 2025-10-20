@@ -214,7 +214,7 @@ namespace
       using CTTI_Values    = No;
 
       using Self = ImplicitlyReflectedDataWithTraits;
-      using CTTI_Members   = Members<
+      using CTTI_Members = Members<
          &Self::member,
          &Self::anotherMember,
          &Self::anotherMemberArray,

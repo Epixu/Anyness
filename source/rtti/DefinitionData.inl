@@ -445,8 +445,8 @@ namespace Langulus::RTTI
             using TO = CT::ReflectedAs<TO_RAW>;
             auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
             auto converter_function = [](void* from, void* to) {
-               auto fromT = static_cast<T*>(from);
-               auto toT   = static_cast<TO*>(to);
+               auto fromT = static_cast<T const*>(from);
+               auto toT   = static_cast<TO const*>(to);
                Langulus::Convert(*fromT, *toT);
             };
             
@@ -455,7 +455,7 @@ namespace Langulus::RTTI
                // @attention serialization assumes both sides are valid 
                // and constructed pointers. Context is optional.        
                auto serializer_function = [](void* from, void* to, void* context) -> size_t {
-                  auto fromT = static_cast<T*>(from);
+                  auto fromT = static_cast<T const*>(from);
                   auto toT   = static_cast<TO*>(to);
                   auto conT  = static_cast<typename TO::SerializationRules::Context*>(context);
                   return Langulus::Serialize(*fromT, *toT, conT);

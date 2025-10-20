@@ -92,7 +92,7 @@ namespace Langulus
       }
    }
    
-   /// Convert from one type to another, utilizing CTTI definitions           
+   /// Convert from one type to another, utilizing CTTI definitions.          
    /// This can work even if no CTTI::MapsTo is defined.                      
    ///   @attention assumes 'from' is constructed                             
    template<class TO, class FROM>

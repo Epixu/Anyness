@@ -73,7 +73,7 @@ namespace Langulus
       else {
          // No rule exists, just cast and concatenate                   
          (void) context;
-         to += static_cast<TO>(from);
+         to += Convert<TO>(from);
       }
       return to.GetCount() - initial;
    }
@@ -114,6 +114,6 @@ namespace Langulus::Serial
    constexpr Operator Time           { "@", true };
    constexpr Operator Priority       { "!", true };
    constexpr Operator And            { ", " };
-   constexpr Operator Or             { " or " };
    constexpr Operator AndUnordered   { "; " };
+   constexpr Operator Or             { " or " };
 }

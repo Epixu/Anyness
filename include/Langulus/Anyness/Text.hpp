@@ -456,10 +456,10 @@ namespace Langulus::Anyness
       
       template<CT::Container T>
       friend Text operator + (T const& lhs, Text const& rhs) {
-         if constexpr (CT::Text<T>)
+         /*if constexpr (CT::Text<T>)
             return lhs.operator + (rhs);
-         else
-            return Convert<Text>(lhs).operator + (rhs);
+         else*/
+            return Convert<Text>(lhs) + rhs;
       }
 
       explicit operator ::std::string() const {
