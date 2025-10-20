@@ -77,13 +77,16 @@ namespace Langulus
    ///   @attention assumes 'from' is constructed                             
    ///   @attention assumes 'to' is NOT constructed                           
    template<class FROM, class TO>
-   constexpr void Convert(const FROM& from, TO& to) {
-      if constexpr (CT::Complete<CTTI::Converter<FROM, TO>>)
-         CTTI::Converter<FROM, TO>::Convert(from, to);
-      else if constexpr (requires { TO (from); })
-         new (&to) TO (from);
-      else if constexpr (requires { TO (static_cast<TO>(from)); })
-         new (&to) TO (static_cast<TO>(from));
+   constexpr void Convert(FROM& from, TO& to) {
+      using DF = DecvqAll<FROM>;
+      using TF = DecvqAll<TO>;
+
+      if constexpr (CT::Complete<CTTI::Converter<DF, TF>>)
+         CTTI::Converter<DF, TF>::Convert(from, to);
+      else if constexpr (requires { TF(from); })
+         new (&to) TF(from);
+      else if constexpr (requires { TF(static_cast<TF>(from)); })
+         new (&to) TF(static_cast<TF>(from));
       else {
          static_assert(false,
             "FROM can't be converted to TO - add CTTI::Converter, "
@@ -96,13 +99,16 @@ namespace Langulus
    /// This can work even if no CTTI::MapsTo is defined.                      
    ///   @attention assumes 'from' is constructed                             
    template<class TO, class FROM>
-   constexpr TO Convert(const FROM& from) {
-      if constexpr (CT::Complete<CTTI::Converter<FROM, TO>>)
-         return CTTI::Converter<FROM, TO>::Convert(from);
-      else if constexpr (requires { TO (from); })
-         return TO (from);
-      else if constexpr (requires { TO (static_cast<TO>(from)); })
-         return TO (static_cast<TO>(from));
+   constexpr TO Convert(FROM& from) {
+      using DF = DecvqAll<FROM>;
+      using TF = DecvqAll<TO>;
+
+      if constexpr (CT::Complete<CTTI::Converter<DF, TF>>)
+         return CTTI::Converter<DF, TF>::Convert(from);
+      else if constexpr (requires { TF(from); })
+         return TF(from);
+      else if constexpr (requires { TF(static_cast<TF>(from)); })
+         return TF(static_cast<TF>(from));
       else {
          static_assert(false,
             "FROM can't be converted to TO - add CTTI::Converter, "

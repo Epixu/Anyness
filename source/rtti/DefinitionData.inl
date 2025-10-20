@@ -443,10 +443,11 @@ namespace Langulus::RTTI
          // but destination is only allocated and not yet constructed   
          MAPTO::ForEach([&definition]<class TO_RAW>{
             using TO = CT::ReflectedAs<TO_RAW>;
+
             auto destination_type = const_cast<DefinitionData*>(Reflect<TO>());
             auto converter_function = [](void* from, void* to) {
-               auto fromT = static_cast<T const*>(from);
-               auto toT   = static_cast<TO const*>(to);
+               auto fromT = static_cast<T*>(from);
+               auto toT   = static_cast<TO*>(to);
                Langulus::Convert(*fromT, *toT);
             };
             
@@ -454,10 +455,12 @@ namespace Langulus::RTTI
                // Destination type can act as a serializer, too         
                // @attention serialization assumes both sides are valid 
                // and constructed pointers. Context is optional.        
+               using S = SerializerOf<TO>;
+
                auto serializer_function = [](void* from, void* to, void* context) -> size_t {
-                  auto fromT = static_cast<T const*>(from);
+                  auto fromT = static_cast<T*>(from);
                   auto toT   = static_cast<TO*>(to);
-                  auto conT  = static_cast<typename TO::SerializationRules::Context*>(context);
+                  auto conT  = static_cast<typename S::Context*>(context);
                   return Langulus::Serialize(*fromT, *toT, conT);
                };
             

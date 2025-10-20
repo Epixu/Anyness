@@ -63,7 +63,8 @@ namespace Langulus::Anyness
    /// using Own or Ref instead. If you want to contain a number of similar   
    /// elements use Many instead.                                             
    struct Any : Inner::AnyBase {
-      using CTTI_Deep = Yes<>;
+      using CTTI_Deep   = Yes<>;
+      using CTTI_MapsTo = Text;
 
       using Base = Inner::AnyBase;
       //using Base::operator ==;

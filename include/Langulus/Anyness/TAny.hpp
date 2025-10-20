@@ -44,7 +44,8 @@ namespace Langulus::Anyness
    template<CT::NotVoid T>
    struct TAny : Inner::TAnyBase<T> {
       using CTTI_ReflectAs = Any;
-      using CTTI_Deep = Yes<>;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_MapsTo    = Text;
 
       using Base = Inner::TAnyBase<T>;
       //using Base::operator ==;

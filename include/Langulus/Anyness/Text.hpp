@@ -469,6 +469,9 @@ namespace Langulus::Anyness
 
    struct Code : Text {};
    
+   Text operator ""_text(const char* token, unsigned long long size) noexcept {
+      return Text::FromText(token, size);
+   }
 }
 
 namespace Langulus::CT
