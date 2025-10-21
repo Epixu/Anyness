@@ -111,7 +111,11 @@ namespace Langulus::CTTI
                }
             }
             else {
+               const auto text_meta = MetaDataOf<Anyness::Text>();
                auto serializer = T.GetMorphism(MetaDataOf<Anyness::Text>()).serialize;
+               LglsAssert(serializer, "Missing serializer",
+                  " from ", T.GetName(), " to ", text_meta.GetName());
+
                for (Count i = 0; i < self.GetCount(); ++i) {
                   serializer(self.GetAt(i), &out, context);
 
@@ -161,7 +165,10 @@ namespace Langulus::CTTI
                }
             }
             else {
-               auto serializer = T.GetMorphism(MetaDataOf<Anyness::Text>()).serialize;
+               const auto text_meta = MetaDataOf<Anyness::Text>();
+               const auto serializer = T.GetMorphism(text_meta).serialize;
+               LglsAssert(serializer, "Missing serializer",
+                  " from ", T.GetName(), " to ", text_meta.GetName());
                serializer(self.Get(), &out, context);
             }
          }

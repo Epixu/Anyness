@@ -12,7 +12,6 @@
 #include "../../../source/components/IndexedLinear.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
-#include "../../../source/components/Concatenate.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Static.hpp"
@@ -43,7 +42,6 @@ namespace Langulus::Anyness
          Com::HashStack<>,                // Variable hash (cached)     
          Com::Insertion<0, Text>,         // Serialize + insert         
          Com::InsertionOperators<0, Text>,// << and >> insertion        
-         Com::Concatenate<>,              // Concatenate                
          Com::Removal<>,                  // Allows removal             
          Com::Assignment<>,               // Allows assignment          
          Com::Comparison<>,               // Allows for comparison      
@@ -376,11 +374,10 @@ namespace Langulus::Anyness
       template<CT::Container T>
       Text& operator += (T&& rhs) {
          if constexpr (CT::Text<T>)
-            return operator += (FWD(rhs));
-         else {
+            this->Concat(FWD(rhs));
+         else
             Serialize(rhs, *this);
-            return *this;
-         }
+         return *this;
       }
       
       /// Custom concatenation operator that includes string literals,        
@@ -456,10 +453,14 @@ namespace Langulus::Anyness
       
       template<CT::Container T>
       friend Text operator + (T const& lhs, Text const& rhs) {
-         /*if constexpr (CT::Text<T>)
-            return lhs.operator + (rhs);
-         else*/
-            return Convert<Text>(lhs) + rhs;
+         Text temp;
+         if constexpr (CT::Text<T>) {
+            temp.Reserve(lhs.GetCount() + rhs.GetCount());
+            temp.Concat(lhs);
+         }
+         else temp = Convert<Text>(lhs);
+         temp.Concat(rhs);
+         return temp;
       }
 
       explicit operator ::std::string() const {
@@ -469,7 +470,7 @@ namespace Langulus::Anyness
 
    struct Code : Text {};
    
-   inline Text operator ""_text(const char* token, unsigned long size) noexcept {
+   inline Text operator ""_text(const char* token, size_t size) noexcept {
       return Text::FromText(token, size);
    }
 }

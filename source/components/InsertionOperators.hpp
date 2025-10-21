@@ -28,5 +28,23 @@ namespace Langulus::Anyness::Component
       /// Push front                                                          
       template<CT::Container C, class A>
       C& operator >> (this C&, A&&) requires CT::RangeInsertable<C, A>;
+
+      /// Concatenate another container at the back, resulting in a new one   
+      template<CT::Container C>
+      C operator + (this C const& lhs, CT::Container auto&& rhs) {
+         if (lhs.IsEmpty())
+            return C {FWD(rhs)};
+
+         C shallowCopy = lhs;
+         shallowCopy.Concat(FWD(rhs));
+         return shallowCopy;
+      }
+
+      /// Concatenate another container at the back, reusing this one         
+      template<CT::Container C>
+      C& operator += (this C& self, CT::Container auto&& rhs) {
+         self.Concat(FWD(rhs));
+         return self;
+      }
    };
 }

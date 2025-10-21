@@ -518,9 +518,9 @@ namespace Langulus::RTTI::Inner
    TEMPLATE()
    auto ME()::GetMorphism(MetaDataStructured_XY to)
    const noexcept -> DefinitionData::Morphism {
-      auto toDef = to.GetDefinition();
-      auto found = GetDefinition()->mCurrentBoundary.mMorphismsTo.find(toDef);
-      if (found != GetDefinition()->mCurrentBoundary.mMorphismsTo.end())
+      auto& morphisms = GetDefinition()->mCurrentBoundary.mMorphismsTo;
+      auto found = morphisms.find(to.GetDefinition()->mDecvqAll);
+      if (found != morphisms.end())
          return found->second;
       return {nullptr, nullptr};
    }

@@ -76,8 +76,6 @@ namespace Langulus::Anyness
       template<unsigned ID = 0> struct Assignment;
       struct Charge;
       template<unsigned ID = 0, bool HASH = true> struct Comparison;
-      template<unsigned ID = 0> struct Concatenate;
-      template<unsigned ID = 0> struct ConcatenateOperators;
       struct Conversion; template<unsigned ID = 0, class T = size_t>
       struct CountHeap; template<unsigned ID = 0, class T = size_t>
       struct CountStack;

@@ -13,7 +13,6 @@
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
-#include "../../../source/components/Concatenate.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Static.hpp"
@@ -40,7 +39,6 @@ namespace Langulus::Anyness
          Com::HashStack<>,                // Variable hash (cached)     
          Com::Insertion<0, Bytes>,        // Serialize + insert         
          Com::InsertionOperators<0, Bytes>,// << and >> insertion       
-         Com::Concatenate<>,              // Concatenate                
          Com::Removal<>,                  // Allows removal             
          Com::Assignment<>,               // Allows assignment          
          Com::Comparison<>,               // Allows for comparison      
