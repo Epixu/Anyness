@@ -194,7 +194,8 @@ namespace Langulus::Anyness::Component
 
             if (LT.IsPOD()) {
                // Batch-compare memory if POD or sparse                 
-               const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
+               const auto bytesize = lhs.GetBytesize();
+               const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), bytesize));
                if (not same) {
                   VERBOSE(Logger::Red,
                      "Different POD memory after memcmp (type-erased)");

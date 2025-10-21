@@ -260,17 +260,17 @@ namespace Langulus::Anyness::Component
                const auto src = const_cast<void*>(rhs.GetRaw());
                const auto dst = self.template AccessStackById<ID>();
                if constexpr (CT::Moved<I>)
-                  T.GetMoveAssigner()(dst, src);
+                  T.GetMoveAssigner()(src, dst);
                else if constexpr (CT::Abandoned<I>)
-                  T.GetAbandonAssigner()(dst, src);
+                  T.GetAbandonAssigner()(src, dst);
                else if constexpr (CT::Referred<I>)
-                  T.GetReferAssigner()(dst, src);
+                  T.GetReferAssigner()(src, dst);
                else if constexpr (CT::Copied<I>)
-                  T.GetCopyAssigner()(dst, src);
+                  T.GetCopyAssigner()(src, dst);
                else if constexpr (CT::Disowned<I>)
-                  T.GetDisownAssigner()(dst, src);
+                  T.GetDisownAssigner()(src, dst);
                else if constexpr (CT::Cloned<I>)
-                  T.GetCloneAssigner()(dst, src);
+                  T.GetCloneAssigner()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
 
@@ -302,17 +302,17 @@ namespace Langulus::Anyness::Component
             const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
             const auto dst = self.template AccessStackById<ID>();
             if constexpr (CT::Moved<I>)
-               T.GetMoveAssigner()(dst, src);
+               T.GetMoveAssigner()(src, dst);
             else if constexpr (CT::Abandoned<I>)
-               T.GetAbandonAssigner()(dst, src);
+               T.GetAbandonAssigner()(src, dst);
             else if constexpr (CT::Referred<I>)
-               T.GetReferAssigner()(dst, src);
+               T.GetReferAssigner()(src, dst);
             else if constexpr (CT::Copied<I>)
-               T.GetCopyAssigner()(dst, src);
+               T.GetCopyAssigner()(src, dst);
             else if constexpr (CT::Disowned<I>)
-               T.GetDisownAssigner()(dst, src);
+               T.GetDisownAssigner()(src, dst);
             else if constexpr (CT::Cloned<I>)
-               T.GetCloneAssigner()(dst, src);
+               T.GetCloneAssigner()(src, dst);
             else
                static_assert(false, "Unrecognized intent");
          }

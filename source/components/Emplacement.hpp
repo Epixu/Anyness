@@ -74,24 +74,24 @@ namespace Langulus::Anyness::Component
                const auto dst = self.GetRaw();
                if constexpr (CT::Moved<I>) {
                   if (rhs.IsConstant())
-                     T.GetReferConstructor()(dst, src);
+                     T.GetReferConstructor()(src, dst);
                   else
-                     T.GetMoveConstructor()(dst, src);
+                     T.GetMoveConstructor()(src, dst);
                }
                else if constexpr (CT::Abandoned<I>) {
                   if (rhs.IsConstant())
-                     T.GetReferConstructor()(dst, src);
+                     T.GetReferConstructor()(src, dst);
                   else
-                     T.GetAbandonConstructor()(dst, src);
+                     T.GetAbandonConstructor()(src, dst);
                }
                else if constexpr (CT::Referred<I>)
-                  T.GetReferConstructor()(dst, src);
+                  T.GetReferConstructor()(src, dst);
                else if constexpr (CT::Copied<I>)
-                  T.GetCopyConstructor()(dst, src);
+                  T.GetCopyConstructor()(src, dst);
                else if constexpr (CT::Disowned<I>)
-                  T.GetDisownConstructor()(dst, src);
+                  T.GetDisownConstructor()(src, dst);
                else if constexpr (CT::Cloned<I>)
-                  T.GetCloneConstructor()(dst, src);
+                  T.GetCloneConstructor()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
             }
@@ -129,17 +129,17 @@ namespace Langulus::Anyness::Component
                const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
                const auto dst = self.GetRaw();
                if constexpr (CT::Moved<I>)
-                  T.GetMoveConstructor()(dst, src);
+                  T.GetMoveConstructor()(src, dst);
                else if constexpr (CT::Abandoned<I>)
-                  T.GetAbandonConstructor()(dst, src);
+                  T.GetAbandonConstructor()(src, dst);
                else if constexpr (CT::Referred<I>)
-                  T.GetReferConstructor()(dst, src);
+                  T.GetReferConstructor()(src, dst);
                else if constexpr (CT::Copied<I>)
-                  T.GetCopyConstructor()(dst, src);
+                  T.GetCopyConstructor()(src, dst);
                else if constexpr (CT::Disowned<I>)
-                  T.GetDisownConstructor()(dst, src);
+                  T.GetDisownConstructor()(src, dst);
                else if constexpr (CT::Cloned<I>)
-                  T.GetCloneConstructor()(dst, src);
+                  T.GetCloneConstructor()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
             }
