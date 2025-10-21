@@ -378,5 +378,16 @@ namespace Langulus::Anyness::Component
 
          return result;
       }
+
+      /// Branch off the container, by doing a shallow copy                   
+      /*template<CT::Container C>
+      bool BranchOut(this C& self) {
+         if (self.GetUses() <= 1)
+            return false;
+
+         const C backup {Abandon{self}};
+         new (&self) C {Copy{backup}};
+         return true;
+      }*/
    };
 }

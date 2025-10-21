@@ -98,7 +98,7 @@ namespace Langulus::Anyness::Component
             auto src = IterateHandles(from).begin();
             auto dst = IterateHandles(self).begin();
             try {
-               while (src != IteratorEnd {}) {
+               while (src) {
                   if constexpr (CT::Copied<I>)
                      dst->EmplaceWithIntent(Refer(*src));
                   else
@@ -246,7 +246,6 @@ namespace Langulus::Anyness::Component
             "BranchOut should've been called prior to AllocateMore"
          );
 
-         // Reallocate                                                  
          C previous {Disown {self}};
          auto reallocated = Allocator::Reallocate(request.mTotalBytes, al);         
          LglsAssert(reallocated, "Out of memory");
@@ -260,13 +259,8 @@ namespace Langulus::Anyness::Component
                // in it. We're moving to new memory, so no reverse      
                // is required.                                          
                auto from = IterateHandles(previous).begin();
-               for (auto to : IterateHandles(self)) {
-                  // We're not allowed to abandon constant items        
-                  //if constexpr (CT::Mutable<T>)
-                     to.EmplaceWithIntent(Abandon(*(from++)));
-                  //else
-                  //   to.EmplaceWithIntent(Refer(*(from++)));
-               }
+               for (auto to : IterateHandles(self))
+                  to.EmplaceWithIntent(Abandon(*(from++)));
 
                previous.SetAllocationInner(al);
                previous.Free();

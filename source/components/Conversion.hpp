@@ -93,7 +93,7 @@ namespace Langulus::Anyness::Component
             auto from = IterateHandles(self).begin();
             auto to   = IterateHandles(out).begin() + out.GetCount();
             try {
-               while (from != IteratorEnd {}) {
+               while (from) {
                   converter(from.GetRaw(), to.GetRaw());
                   ++to; ++from;
                }

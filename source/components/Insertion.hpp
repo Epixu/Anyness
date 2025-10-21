@@ -238,17 +238,19 @@ namespace Langulus::Anyness::Component
       /// Concatenation at specific index                                     
       template<CT::Contiguous C>
       auto ConcatAt(this C& self, CT::Index auto index, CT::Container auto&& data) -> Count<C> {
+         const auto rhs_count = DeintCast(data).GetCount();
+         if (not rhs_count)
+            return 0;
+
          using S = IntentOf(data);
-         using T = Tif<CT::TypeErased<C>, TypeOf<Deint<S>>, TypeOf<C>>;
+         //using T = Tif<CT::TypeErased<C>, TypeOf<Deint<S>>, TypeOf<C>>;
          if constexpr (CT::TypeErased<C>)
             self.SetType(DeintCast(data).GetType());
          else
             self.template SetType<TypeOf<Deint<S>>>();
 
-         // If reached we have binary compatible type, so allocate      
          self.BranchOut();
          const auto lhs_count = self.GetCount();
-         const auto rhs_count = DeintCast(data).GetCount();
          const auto idx = self.SimplifyIndex<false>(index);
          self.AllocateMore(lhs_count + rhs_count);
 
@@ -263,25 +265,56 @@ namespace Langulus::Anyness::Component
          // Construct data in place                                     
          self.SelectInner(idx, rhs_count).CreateWithIntent(FWD(data));
          self.SetCount(lhs_count + rhs_count);
+         return rhs_count;
       }
 
       /// Concatenation at the back                                           
       template<CT::Container C>
       auto Concat(this C& self, CT::Container auto&& data) -> Count<C> {
+         const auto rhs_count = DeintCast(data).GetCount();
+         if (not rhs_count)
+            return 0;
+         
          using S = IntentOf(data);
-         using T = Tif<CT::TypeErased<C>, TypeOf<Deint<S>>, TypeOf<C>>;
+         //using T = Tif<CT::TypeErased<C>, TypeOf<Deint<S>>, TypeOf<C>>;
          if constexpr (CT::TypeErased<C>)
             self.SetType(DeintCast(data).GetType());
          else
             self.template SetType<TypeOf<Deint<S>>>();
-
-         // If reached we have binary compatible type, so allocate      
-         BranchOut();
+         
          const auto lhs_count = self.GetCount();
-         const auto rhs_count = DeintCast(data).GetCount();
-         self.AllocateMore(lhs_count + rhs_count);
-         self.SelectInner(lhs_count, rhs_count).CreateWithIntent(FWD(data));
-         self.SetCount(lhs_count + rhs_count);
+         if (self.GetUses() > 1) {
+            // We have to branch out                                    
+            const C backup {Abandon{self}};
+            self.AllocateFresh(self.RequestHeap(lhs_count + rhs_count));
+            
+            auto from1 = IterateHandles(backup).begin();
+            auto to    = IterateHandles(self).begin();
+            while (from1) {
+               to->EmplaceWithIntent(Refer(*from1));
+               ++from1; ++to;
+            }
+            
+            auto from2 = IterateHandles(data).begin();
+            while (from2) {
+               to->EmplaceWithIntent(S::Nest(*from2));
+               ++from2; ++to;
+            }
+         }
+         else {
+            // No need to branch out - reuse memory instead             
+            self.AllocateMore(lhs_count + rhs_count);
+            
+            auto from2 = IterateHandles(data).begin();
+            auto to    = IterateHandles(self).begin() + lhs_count;
+            while (from2) {
+               to->EmplaceWithIntent(S::Nest(*from2));
+               ++from2; ++to;
+            }
+         }
+         
+         self.SetCountInner(lhs_count + rhs_count);
+         return rhs_count;
       }
    };
 }

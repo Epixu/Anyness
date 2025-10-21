@@ -52,6 +52,10 @@ namespace Langulus::Anyness
          bool operator == (const IteratorEnd&) const noexcept {
             return mIt == IteratorEnd {};
          }
+         
+         explicit constexpr operator bool() const noexcept {
+            return mIt != IteratorEnd {};
+         }
 
          Iterator& operator *  () const noexcept { return *this; }
          Iterator& operator -> () const noexcept { return *this; }

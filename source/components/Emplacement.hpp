@@ -38,9 +38,9 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = 3000;
 
    protected:
-      template<unsigned>
-      friend struct HeapMovable;
-
+      template<unsigned> friend struct HeapMovable;
+      template<unsigned, class> friend struct Insertion;
+      
       template<CT::Container C>
       using PickMut = typename Deref<C>::PickMut;
       

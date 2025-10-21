@@ -84,9 +84,16 @@ namespace Langulus::Anyness
             return mIt.GetRaw() == mRange.GetRawEnd();
          }
 
+         explicit constexpr operator bool() const noexcept {
+            return mIt.GetRaw() != mRange.GetRawEnd();
+         }
+         
          H& operator *  () const noexcept { return  mIt; }
          H* operator -> () const noexcept { return &mIt; }
 
+         Iterator  operator + (Count c) const noexcept { return {mIt + c, mRange}; }
+         Iterator  operator - (Count c) const noexcept { return {mIt - c, mRange}; }
+         
          Iterator& operator ++ ()    noexcept { ++mIt; return *this; }
          Iterator  operator ++ (int) noexcept { return {mIt++, mRange}; }
          Iterator& operator -- ()    noexcept { --mIt; return *this; }

@@ -81,6 +81,10 @@ namespace Langulus::Anyness
          bool operator == (const IteratorEnd&) const noexcept {
             return mIt == IteratorEnd {};
          }
+         
+         explicit constexpr operator bool() const noexcept {
+            return mIt != IteratorEnd {};
+         }
 
          T& operator *  () const noexcept { return mIt; }
          T& operator -> () const noexcept { return mIt; }
@@ -150,7 +154,14 @@ namespace Langulus::Anyness
             if constexpr (CT::Handle<H>)
                return mIt.GetRaw() == mRange.GetRawEnd();
             else
-               return mIt == mRange;
+               return mIt == mRange;//TODO wtf???
+         }
+         
+         explicit constexpr operator bool() const noexcept {
+            if constexpr (CT::Handle<H>)
+               return mIt.GetRaw() != mRange.GetRawEnd();
+            else
+               return mIt != mRange;//TODO wtf???
          }
 
          H& operator *  () const noexcept { return  mIt; }

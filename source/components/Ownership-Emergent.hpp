@@ -138,7 +138,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                auto item = IterateHandles(self).begin();
-               while (item != IteratorEnd {}) {
+               while (item) {
                   if constexpr (CT::DeeplyOwned<C>)
                      item->DestroyElementDeep();
                   else

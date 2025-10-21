@@ -160,7 +160,7 @@ namespace Langulus::Anyness::Component
                }
                else {
                   auto item = IterateHandles(self).begin();
-                  while (item != IteratorEnd{}) {
+                  while (item) {
                      if constexpr (CT::DeeplyOwned<C>)
                         item->DestroyElementDeep();
                      else
@@ -204,10 +204,8 @@ namespace Langulus::Anyness::Component
                // We don't deallocate the memory - we can reuse it      
                // Destroy all but the first element                     
                if constexpr (CT::ContainsMany<C>) {
-                  auto item = IterateHandles(self).begin();
-                  ++item;
-
-                  while (item != IteratorEnd{}) {
+                  auto item = IterateHandles(self).begin() + 1;
+                  while (item) {
                      if constexpr (CT::DeeplyOwned<C>)
                         item->DestroyElementDeep();
                      else
