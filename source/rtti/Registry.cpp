@@ -37,9 +37,8 @@ namespace Langulus::RTTI
    ///   @param where - where to search in                                    
    ///   @param id - the id to search for                                     
    ///   @return the found element, or nullptr if not found                   
-   auto Registry::GetMetaByID(const auto& where, size_t id) const noexcept {
-      if (id == 0)
-         return static_cast<TypeOf<decltype(where)>>(nullptr);
+   auto Registry::GetMetaByID(const auto& where, size_t id) const has_assumptions {
+      LglsAssumeDevAndOptimize(id != 0, "Invalid ID");
       return where[id-1];
    }
 
@@ -147,10 +146,10 @@ namespace Langulus::RTTI
    ///   @param constant - is the data type constant?                         
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByID(size_t id, bool sparse, bool constant)
-   const noexcept -> DefinitionData const* {
+   const has_assumptions -> DefinitionData const* {
+      LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       DefinitionData const* found = GetMetaByID(mMetaDataByID, id);
-      if (not found)
-         return nullptr;
+      LglsAssumeDevAndOptimize(found, "ID wasn't found");
 
       if (sparse and not found->mPtrIncludedInID) {
          LglsAssumeDevAndOptimize(found->mAddPtr,
@@ -174,21 +173,27 @@ namespace Langulus::RTTI
    /// Get an existing tag definition by unpacking an ID                      
    ///   @param id - the ID                                                   
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaTagByID(size_t id) const noexcept -> DefinitionTag const* {
+   auto Registry::GetMetaTagByID(size_t id)
+   const has_assumptions -> DefinitionTag const* {
+      LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       return GetMetaByID(mMetaTagsByID, id);
    }
 
    /// Get an existing verb definition by unpacking an ID                     
    ///   @param id - the ID                                                   
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaVerbByID(size_t id) const noexcept -> DefinitionVerb const* {
+   auto Registry::GetMetaVerbByID(size_t id)
+   const has_assumptions -> DefinitionVerb const* {
+      LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       return GetMetaByID(mMetaVerbsByID, id);
    }
 
    /// Get an existing constant definition by unpacking an ID                 
    ///   @param id - the ID                                                   
    ///   @return the definition, or nullptr if not found                      
-   auto Registry::GetMetaConstByID(size_t id) const noexcept -> DefinitionConst const* {
+   auto Registry::GetMetaConstByID(size_t id)
+   const has_assumptions -> DefinitionConst const* {
+      LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       return GetMetaByID(mMetaConstantsByID, id);
    }
 
@@ -403,8 +408,8 @@ namespace Langulus::RTTI
       return *meta;
    }
 
-   /// Reserves a data ID for more compact representation of metadata         
-   /// Used in packed pointers to definitions                                 
+   /// Reserves a data ID for more compact representation of metadata.        
+   /// Used in packed pointers to definitions.                                
    ///   @param meta - the definition to reserve ID for                       
    ///   @attention assumes meta definition is stripped from a single level   
    ///      of indirection, constness and volatileness                        

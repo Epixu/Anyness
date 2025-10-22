@@ -180,6 +180,7 @@ namespace Langulus::Anyness::Component
          }
 
          self.Free();
+         self.SetHeapInner(nullptr);
          self.ConstructFrom(FWD(intent));
          return self;
       }

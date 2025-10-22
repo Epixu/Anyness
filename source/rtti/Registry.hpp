@@ -75,7 +75,7 @@ namespace Langulus::RTTI
       // Meta data definitions, indexed by file extensions              
       MetaMap<MetaSet> mFileDatabase;
       
-      auto GetMetaByID(const auto& where, size_t id) const noexcept;
+      auto GetMetaByID(const auto& where, size_t id) const has_assumptions;
 
    protected:
       friend class DefinitionVerb;
@@ -119,13 +119,13 @@ namespace Langulus::RTTI
       auto GetMetaConstByCppName(Token const&) const noexcept -> DefinitionConst const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaDataByID(size_t, bool sparse, bool constant) const noexcept -> DefinitionData const*;
+      auto GetMetaDataByID(size_t, bool sparse, bool constant) const has_assumptions-> DefinitionData const*;
       LANGULUS_API(RTTI)
-      auto GetMetaTagByID(size_t) const noexcept -> DefinitionTag const*;
+      auto GetMetaTagByID(size_t) const has_assumptions-> DefinitionTag const*;
       LANGULUS_API(RTTI)
-      auto GetMetaVerbByID(size_t) const noexcept -> DefinitionVerb const*;
+      auto GetMetaVerbByID(size_t) const has_assumptions-> DefinitionVerb const*;
       LANGULUS_API(RTTI)
-      auto GetMetaConstByID(size_t) const noexcept -> DefinitionConst const*;
+      auto GetMetaConstByID(size_t) const has_assumptions-> DefinitionConst const*;
 
    public:
       LANGULUS_API(RTTI)

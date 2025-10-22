@@ -94,9 +94,8 @@ namespace Langulus::Anyness::Component
          }
          else {
             // This container is heap-allocated                         
-            using T = Tif<CT::TypeErased<C>, A, TypeOf<C>>;
-            if constexpr (CT::TypeErased<C>)
-               LglsAssert(self.template IsSame<A>(), "Type mismatch");
+            using T = Tif<CT::TypeErased<C>, Decvq<Deref<A>>, TypeOf<C>>;
+            self.template SetType<T>();
 
             if (self.IsEmpty()) {
                // Container is empty, we might have to fresh-allocate   

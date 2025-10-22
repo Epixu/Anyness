@@ -35,6 +35,11 @@ namespace Langulus::RTTI::Inner
          referenced = d->mCurrentBoundary.mReferencer != nullptr;
          resolvable = d->mCurrentBoundary.mResolver != nullptr;
          dispatcher = d->mCurrentBoundary.mDispatcher != nullptr;
+
+         if constexpr (PT_SIZE > 1) {
+            if (d->mSize < (1 << sizeof(Structured<PT_SIZE>::size) * 8))
+               Structured<PT_SIZE>::size = d->mSize;
+         }
       }
    }
 
@@ -61,6 +66,11 @@ namespace Langulus::RTTI::Inner
          referenced = d->mCurrentBoundary.mReferencer != nullptr;
          resolvable = d->mCurrentBoundary.mResolver != nullptr;
          dispatcher = d->mCurrentBoundary.mDispatcher != nullptr;
+
+         if constexpr (PT_SIZE > 1) {
+            if (d->mSize < (1 << sizeof(Structured<PT_SIZE>::size) * 8))
+               Structured<PT_SIZE>::size = d->mSize;
+         }
       }
       return *this;
    }
@@ -69,16 +79,26 @@ namespace Langulus::RTTI::Inner
    TEMPLATE()
    auto ME()::GetDefinition() const noexcept
    -> DefinitionData const* {
-      return Instance.GetMetaDataByID(Base::GetID(), sparse, constant);
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant);
+      return nullptr;
    }
 
-   /// Check if type origins match                                            
+   /// Check if type origins match.                                           
    /// Disregards all cv-qualifiers, pointers, array extents, etc.            
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
    TEMPLATE()
    bool ME()::Is(const MetaDataStructured_XY& other) const noexcept {
-      return GetDefinition()->mOrigin == other.GetDefinition()->mOrigin;
+      const auto lid = Base::GetID();
+      const auto rid = other.Base::GetID();
+      if (lid == rid)
+         return true;
+      if (lid and rid)
+         return Instance.GetMetaDataByID(lid,       sparse,       constant)->mOrigin
+             == Instance.GetMetaDataByID(rid, other.sparse, other.constant)->mOrigin;
+      return false;
    }
 
    /// Check if two meta definitions match exactly                            
@@ -96,7 +116,7 @@ namespace Langulus::RTTI::Inner
    
    /// Check if two meta definitions match origin and sparseness, but ignores 
    /// `const` and `volatile` qualifiers. The qualifiers aren't ignored only  
-   /// on the current level of indirection, but on the entire way to origin   
+   /// on the current level of indirection, but on the entire way to origin.  
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
    TEMPLATE()
@@ -107,101 +127,153 @@ namespace Langulus::RTTI::Inner
    /// Get the size of the type                                               
    TEMPLATE()
    constexpr auto ME()::GetSize() const noexcept -> size_t {
-      if constexpr (PT_SIZE > 1)
-         return Structured<PT_SIZE>::size ? Structured<PT_SIZE>::size : GetDefinition()->mSize;
-      else
-         return GetDefinition()->mSize;
+      const auto id = Base::GetID();
+      if (id) {
+         if constexpr (PT_SIZE > 1) {
+            return Structured<PT_SIZE>::size
+               ? Structured<PT_SIZE>::size
+               : Instance.GetMetaDataByID(id, sparse, constant)->mSize;
+         }
+         else return Instance.GetMetaDataByID(id, sparse, constant)->mSize;
+      }
+      return 0;
    }
 
    /// Get the alignment of the type                                          
    TEMPLATE()
    auto ME()::GetAlignment() const noexcept -> size_t {
-      return GetDefinition()->mAlign;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mAlign;
+      return 0;
    }
 
    /// Get the name of the type, the result of NameOf                         
    TEMPLATE()
    auto ME()::GetName() const noexcept -> Token {
-      return GetDefinition()->mNameOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mNameOf;
+      return {};
    }
    
    /// Get the info of the type, the result of InfoOf                         
    TEMPLATE()
    auto ME()::GetInfo() const noexcept -> Token {
-      return GetDefinition()->mInfoOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mInfoOf;
+      return {};
    }
 
    /// Get the name of the type as it appearch in C++                         
    TEMPLATE()
    auto ME()::GetCppName() const noexcept -> Token {
-      return GetDefinition()->mCppNameOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCppNameOf;
+      return {};
    }
 
    /// Get the type hash                                                      
    TEMPLATE()
    auto ME()::GetHash() const noexcept -> Hash {
-      return GetDefinition()->mHash;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mHash;
+      return {};
    }
 
    /// Get the associated file extensions, separated with commas              
    TEMPLATE()
    auto ME()::GetFiles() const noexcept -> Token {
-      return GetDefinition()->mFilesOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mFilesOf;
+      return {};
    }
 
    /// Get the associated suffix                                              
    TEMPLATE()
    auto ME()::GetSuffix() const noexcept -> Token {
-      return GetDefinition()->mSuffixOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mSuffixOf;
+      return {};
    }
 
    /// Get the type boundaries                                                
    TEMPLATE()
    auto ME()::GetBoundaries() const noexcept -> Definition::BoundarySet const& {
-      return GetDefinition()->mBoundaries;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mBoundaries;
+
+      static const Definition::BoundarySet fallback;
+      return fallback;
    }
 
    /// Get the major version                                                  
    TEMPLATE()
-   auto ME()::GetVersionMajor()  const noexcept -> unsigned {
-      return GetDefinition()->mVersionMajor;
+   auto ME()::GetVersionMajor() const noexcept -> unsigned {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mVersionMajor;
+      return {};
    }
 
    /// Get the minor version                                                  
    TEMPLATE()
-   auto ME()::GetVersionMinor()  const noexcept -> unsigned {
-      return GetDefinition()->mVersionMinor;
+   auto ME()::GetVersionMinor() const noexcept -> unsigned {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mVersionMinor;
+      return {};
    }
    
    /// Get the minimal allocation size in bytes                               
    TEMPLATE()
    auto ME()::GetMinAllocation() const noexcept -> size_t {
-      return GetDefinition()->mMinimalAllocation;      
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mMinimalAllocation;
+      return {};
    }
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Get the reflected allocation page                                   
       TEMPLATE()
       auto ME()::GetMinPoolsize() const noexcept -> size_t {
-         return GetDefinition()->mMinimalPoolSize;      
+         const auto id = Base::GetID();
+         if (id)
+            return Instance.GetMetaDataByID(id, sparse, constant)->mMinimalPoolSize;
+         return {};
       }
    
       /// Get the reflected pool tactic                                       
       TEMPLATE()
       auto ME()::GetPoolTactic() const noexcept -> PoolTactic {
-         return GetDefinition()->mPoolTactic;
+         const auto id = Base::GetID();
+         if (id)
+            return Instance.GetMetaDataByID(id, sparse, constant)->mPoolTactic;
+         return {};
       }
 
       /// Get the poolchain                                                   
       TEMPLATE()
       auto ME()::GetPoolchain() const noexcept -> Fractalloc::Pool* {
-         return GetDefinition()->mPoolChain;
+         const auto id = Base::GetID();
+         if (id)
+            return Instance.GetMetaDataByID(id, sparse, constant)->mPoolChain;
+         return {};
       }
       
       /// Allows the memory manager to set a new pool chain                   
       TEMPLATE()
       void ME()::SetPoolchain(Fractalloc::Pool* pool) const noexcept {
-         GetDefinition()->mPoolChain = pool;
+         const auto id = Base::GetID();
+         if (id)
+            Instance.GetMetaDataByID(id, sparse, constant)->mPoolChain = pool;
       }
    #endif
 
@@ -250,278 +322,383 @@ namespace Langulus::RTTI::Inner
    /// Check if type is CT::Abstract                                          
    TEMPLATE()
    constexpr bool ME()::IsAbstract() const noexcept {
-      return GetDefinition()->mAbstract;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mAbstract;
+      return {};
    }
 
    /// Check if type has an explicit GetHash() method                         
    TEMPLATE()
    constexpr bool ME()::HasGetHashMethod() const noexcept {
-      return GetDefinition()->mHasGetHashMethod;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mHasGetHashMethod;
+      return {};
    }
    
    /// Get the reflected destructor                                           
    TEMPLATE()
    auto ME()::GetDestructor()
    const noexcept -> DefinitionData::FUnary {
-      return GetDefinition()->mCurrentBoundary.mDestructor;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDestructor;
+      return {};
    }
 
    /// Get the reflected referencer                                           
    TEMPLATE()
    auto ME()::GetReferencer()
    const noexcept -> DefinitionData::FReference {
-      return GetDefinition()->mCurrentBoundary.mReferencer;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mReferencer;
+      return {};
    }
 
    /// Get the reflected resolver                                             
    TEMPLATE()
    auto ME()::GetResolver()
    const noexcept -> DefinitionData::FResolve {
-      return GetDefinition()->mCurrentBoundary.mResolver;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mResolver;
+      return {};
    }
 
    /// Get the reflected default constructor                                  
    TEMPLATE()
    auto ME()::GetDefaultConstructor() const noexcept -> DefinitionData::FUnary {
-      return GetDefinition()->mCurrentBoundary.mDefaultConstructor;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDefaultConstructor;
+      return {};
    }
    
    /// Get the reflected describe-constructo                                  
    TEMPLATE()
    auto ME()::GetDescribeConstructor() const noexcept -> DefinitionData::FDescribe {
-      return GetDefinition()->mCurrentBoundary.mDescribeConstructor;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDescribeConstructor;
+      return {};
    }   
 
    /// Get the reflected refer-constructor                                    
    TEMPLATE()
-   auto ME()::GetReferConstructor()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mReferConstructor;
+   auto ME()::GetReferConstructor() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mReferConstructor;
+      return {};
    }
 
    /// Get the reflected refer-assigner                                       
    TEMPLATE()
-   auto ME()::GetReferAssigner()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mReferAssigner;
+   auto ME()::GetReferAssigner() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mReferAssigner;
+      return {};
    }
 
    /// Get the reflected move-constructor                                     
    TEMPLATE()
-   auto ME()::GetMoveConstructor()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mMoveConstructor;
+   auto ME()::GetMoveConstructor() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMoveConstructor;
+      return {};
    }
 
    /// Get the reflected move-assigner                                        
    TEMPLATE()
-   auto ME()::GetMoveAssigner()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mMoveAssigner;
+   auto ME()::GetMoveAssigner() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMoveAssigner;
+      return {};
    }
 
    /// Get the reflected abandon-constructor                                  
    TEMPLATE()
-   auto ME()::GetAbandonConstructor()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mAbandonConstructor;
+   auto ME()::GetAbandonConstructor() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mAbandonConstructor;
+      return {};
    }
 
    /// Get the reflected abandon-assigner                                     
    TEMPLATE()
-   auto ME()::GetAbandonAssigner()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mAbandonAssigner;
+   auto ME()::GetAbandonAssigner() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mAbandonAssigner;
+      return {};
    }
 
    /// Get the reflected disown-constructor                                   
    TEMPLATE()
-   auto ME()::GetDisownConstructor()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mDisownConstructor;
+   auto ME()::GetDisownConstructor() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDisownConstructor;
+      return {};
    }
 
    /// Get the reflected disown-assigner                                      
    TEMPLATE()
-   auto ME()::GetDisownAssigner()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mDisownAssigner;
+   auto ME()::GetDisownAssigner() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDisownAssigner;
+      return {};
    }
 
    /// Get the reflected clone-constructor                                    
    TEMPLATE()
-   auto ME()::GetCloneConstructor()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mCloneConstructor;
+   auto ME()::GetCloneConstructor() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCloneConstructor;
+      return {};
    }
 
    /// Get the reflected clone-assigner                                       
    TEMPLATE()
-   auto ME()::GetCloneAssigner()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mCloneAssigner;
+   auto ME()::GetCloneAssigner() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCloneAssigner;
+      return {};
    }
 
    /// Get the reflected copy-constructor                                     
    TEMPLATE()
-   auto ME()::GetCopyConstructor()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mCopyConstructor;
+   auto ME()::GetCopyConstructor() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCopyConstructor;
+      return {};
    }
 
    /// Get the reflected copy-assigner                                        
    TEMPLATE()
-   auto ME()::GetCopyAssigner()
-   const noexcept -> DefinitionData::FBinary {
-      return GetDefinition()->mCurrentBoundary.mCopyAssigner;
+   auto ME()::GetCopyAssigner() const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mCopyAssigner;
+      return {};
    }
 
    /// Get the reflected comparer                                             
    TEMPLATE()
-   auto ME()::GetComparer()
-   const noexcept -> DefinitionData::FCompare {
-      return GetDefinition()->mCurrentBoundary.mComparer;
+   auto ME()::GetComparer() const noexcept -> DefinitionData::FCompare {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mComparer;
+      return {};
    }
 
    /// Get the reflected hasher                                               
    TEMPLATE()
-   auto ME()::GetHasher()
-   const noexcept -> DefinitionData::FHash {
-      return GetDefinition()->mCurrentBoundary.mHasher;
+   auto ME()::GetHasher() const noexcept -> DefinitionData::FHash {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mHasher;
+      return {};
    }
 
    /// Get the reflected dispatcher                                           
    TEMPLATE()
-   auto ME()::GetDispatcher()
-   const noexcept -> DefinitionData::FDispatch {
-      return GetDefinition()->mCurrentBoundary.mDispatcher;  
+   auto ME()::GetDispatcher() const noexcept -> DefinitionData::FDispatch {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDispatcher;
+      return {};
    }
 
    /// Remove a layer of indirection                                          
    ///   @attention will return invalid meta if type is incomplete            
    TEMPLATE()
-   auto ME()::GetDeptr()
-   const -> MetaDataStructured_XY {
-      auto d = GetDefinition();
-      return d->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t {1})
-         ? nullptr
-         : d->mDeptr;
+   auto ME()::GetDeptr() const -> MetaDataStructured_XY {
+      const auto id = Base::GetID();
+      if (id) {
+         auto d = Instance.GetMetaDataByID(id, sparse, constant);
+         return d->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t {1})
+            ? nullptr
+            : d->mDeptr;
+      }
+      return {};
    }
    
    /// Get the origin type, if complete                                       
    /// The origin type has all indirections and qualifiers removed            
    TEMPLATE()
-   auto ME()::GetOrigin()
-   const -> MetaDataStructured_XY {
-      return GetDefinition()->mOrigin;
+   auto ME()::GetOrigin() const -> MetaDataStructured_XY {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mOrigin;
+      return {};
    }
    
    /// Strip all qualifiers from all levels of indirection                    
    TEMPLATE()
-   auto ME()::GetDecvqAll()
-   const -> MetaDataStructured_XY {
-      return GetDefinition()->mDecvqAll;
+   auto ME()::GetDecvqAll() const -> MetaDataStructured_XY {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mDecvqAll;
+      return {};
    }
    
    /// Strip topmost qualifiers                                               
    TEMPLATE()
-   auto ME()::GetDecvq()
-   const -> MetaDataStructured_XY {
-      return GetDefinition()->mDecvqOnce;
+   auto ME()::GetDecvq() const -> MetaDataStructured_XY {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mDecvqOnce;
+      return {};
    }
    
    /// Add a level of indirection to the type                                 
    ///   @attention this is possible only if that level of indirection has    
    ///      already been reflected at runtime prior to calling this function  
    TEMPLATE()
-   auto ME()::AddPtr()
-   const -> MetaDataStructured_XY {
-      auto ptr = GetDefinition()->mAddPtr;
-      LglsAssert(ptr, "Pointer type hasn't been reflected yet");
-      return ptr;
+   auto ME()::AddPtr() const -> MetaDataStructured_XY {
+      const auto id = Base::GetID();
+      if (id) {
+         auto ptr = Instance.GetMetaDataByID(id, sparse, constant)->mAddPtr;
+         LglsAssert(ptr, "Pointer type hasn't been reflected yet");
+         return ptr;
+      }
+      return {};
    }
    
    /// Add a constant qualifier to the type                                   
    ///   @attention this is possible only if the qualified type has           
    ///      already been reflected at runtime prior to calling this function  
    TEMPLATE()
-   auto ME()::AddConst()
-   const -> MetaDataStructured_XY {
-      auto cnst = GetDefinition()->mAddConst;
-      LglsAssert(cnst, "Constant type hasn't been reflected yet");
-      return cnst;
+   auto ME()::AddConst() const -> MetaDataStructured_XY {
+      const auto id = Base::GetID();
+      if (id) {
+         auto cnst = Instance.GetMetaDataByID(id, sparse, constant)->mAddConst;
+         LglsAssert(cnst, "Constant type hasn't been reflected yet");
+         return cnst;
+      }
+      return {};
    }
    
    /// Get the default concretization for an abstract type                    
    TEMPLATE()
-   auto ME()::GetConcrete()
-   const -> MetaDataStructured_XY {
-      auto d = GetDefinition();
-      return d->mCurrentBoundary.mConcrete
-         ? d->mCurrentBoundary.mConcrete()
-         : nullptr;
+   auto ME()::GetConcrete() const -> MetaDataStructured_XY {
+      const auto id = Base::GetID();
+      if (id) {
+         auto d = Instance.GetMetaDataByID(id, sparse, constant);
+         return d->mCurrentBoundary.mConcrete
+            ? d->mCurrentBoundary.mConcrete()
+            : nullptr;
+      }
+      return {};
    }
    
    /// Get the runtime producer of the type, if any                           
    TEMPLATE()
-   auto ME()::GetProducer()
-   const -> MetaDataStructured_XY {
-      auto d = GetDefinition();
-      return d->mCurrentBoundary.mProducer
-         ? d->mCurrentBoundary.mProducer()
-         : nullptr;
+   auto ME()::GetProducer() const -> MetaDataStructured_XY {
+      const auto id = Base::GetID();
+      if (id) {
+         auto d = Instance.GetMetaDataByID(id, sparse, constant);
+         return d->mCurrentBoundary.mProducer
+            ? d->mCurrentBoundary.mProducer()
+            : nullptr;
+      }
+      return {};
    }
 
    /// Get the reflected bases                                                
    TEMPLATE()
-   auto ME()::GetBases()
-   const noexcept -> DefinitionData::BaseList const& {
-      return GetDefinition()->mCurrentBoundary.mBases;
+   auto ME()::GetBases() const noexcept -> DefinitionData::BaseList const& {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mBases;
+
+      static const DefinitionData::BaseList fallback;
+      return fallback;
    }
    
    /// Get the reflected verbs                                                
    TEMPLATE()
-   auto ME()::GetVerbs()
-   const noexcept -> DefinitionData::VerbList const& {
-      return GetDefinition()->mCurrentBoundary.mVerbs;
+   auto ME()::GetVerbs() const noexcept -> DefinitionData::VerbList const& {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mVerbs;
+
+      static const DefinitionData::VerbList fallback;
+      return fallback;
    }
    
    /// Get the reflected members                                              
    TEMPLATE()
-   auto ME()::GetMembers()
-   const noexcept -> DefinitionData::MemberList const& {
-      return GetDefinition()->mCurrentBoundary.mMembers;
+   auto ME()::GetMembers() const noexcept -> DefinitionData::MemberList const& {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMembers;
+
+      static const DefinitionData::MemberList fallback;
+      return fallback;
    }
    
    /// Get the reflected named values                                         
    TEMPLATE()
    auto ME()::GetNamedValues()
    const noexcept -> DefinitionData::ValuesList const& {
-      return GetDefinition()->mNamedValues;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mNamedValues;
+
+      static const DefinitionData::ValuesList fallback;
+      return fallback;
    }
    
    /// Get morphisms to other types                                           
    TEMPLATE()
    auto ME()::GetMorphismsTo()
    const noexcept -> DefinitionData::MorphismList const& {
-      return GetDefinition()->mCurrentBoundary.mMorphismsTo;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMorphismsTo;
+
+      static const DefinitionData::MorphismList fallback;
+      return fallback;
    }
    
    /// Get morphisms from other types                                         
    TEMPLATE()
    auto ME()::GetMorphismsFrom()
    const noexcept -> DefinitionData::MorphismList const& {
-      return GetDefinition()->mCurrentBoundary.mMorphismsFrom;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mMorphismsFrom;
+
+      static const DefinitionData::MorphismList fallback;
+      return fallback;
    }
 
    /// Get a specific coverter, if it exists                                  
    TEMPLATE()
    auto ME()::GetMorphism(MetaDataStructured_XY to)
    const noexcept -> DefinitionData::Morphism {
-      auto& morphisms = GetDefinition()->mCurrentBoundary.mMorphismsTo;
-      auto found = morphisms.find(to.GetDefinition()->mDecvqAll);
-      if (found != morphisms.end())
-         return found->second;
+      const auto from_id = Base::GetID();
+      const auto to_id = to.Base::GetID();
+      if (from_id and to_id) {
+         const auto dfrom = Instance.GetMetaDataByID(from_id, sparse, constant);
+         const auto dto = Instance.GetMetaDataByID(to_id, to.sparse, to.constant);
+         auto& morphisms = dfrom->mCurrentBoundary.mMorphismsTo;
+         auto found = morphisms.find(dto->mDecvqAll);
+         if (found != morphisms.end())
+            return found->second;
+      }
       return {nullptr, nullptr};
    }
 
