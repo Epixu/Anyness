@@ -134,33 +134,44 @@ namespace Langulus
 
 namespace Langulus::CT
 {
+   /// Equality comparison check for any LHS and RHS                          
+   template<class LHS, class...RHS>
+   concept ComparableEqual = PartialValidate<RHS...>
+      and requires (const LHS& lhs, const RHS&...rhs) {
+         { ((lhs == rhs), ...) } -> Convertible<bool>;
+      };
+
    /// Three-way comparison check for any LHS and RHS                         
    template<class LHS, class...RHS>
-   concept Comparable = requires (const LHS& lhs, const RHS&...rhs) {
-      { ((lhs <=> rhs), ...) } -> ConvertibleToOneOf<::std::partial_ordering, Compared>;
-   };
+   concept Comparable = PartialValidate<RHS...>
+      and requires (const LHS& lhs, const RHS&...rhs) {
+         { ((lhs <=> rhs), ...) } -> ConvertibleToOneOf<::std::partial_ordering, Compared>;
+      };
 
    /// Three-way comparison check for any LHS and RHS.                        
    /// Checks whether the comparison involves strong ordering.                
    /// https://en.cppreference.com/w/cpp/utility/compare/strong_ordering.html 
    template<class LHS, class...RHS>
-   concept ComparableStrong = requires (const LHS& lhs, const RHS&...rhs) {
-      { ((lhs <=> rhs), ...) } -> ::std::same_as<::std::strong_ordering>;
-   };
+   concept ComparableStrong = PartialValidate<RHS...>
+      and requires (const LHS& lhs, const RHS&...rhs) {
+         { ((lhs <=> rhs), ...) } -> ::std::same_as<::std::strong_ordering>;
+      };
 
    /// Three-way comparison check for any LHS and RHS.                        
    /// Checks whether the comparison involves weak ordering.                  
    /// https://en.cppreference.com/w/cpp/utility/compare/weak_ordering.html   
    template<class LHS, class...RHS>
-   concept ComparableWeak = requires (const LHS& lhs, const RHS&...rhs) {
-      { ((lhs <=> rhs), ...) } -> ::std::same_as<::std::weak_ordering>;
-   };
+   concept ComparableWeak = PartialValidate<RHS...>
+      and requires (const LHS& lhs, const RHS&...rhs) {
+         { ((lhs <=> rhs), ...) } -> ::std::same_as<::std::weak_ordering>;
+      };
 
    /// Three-way comparison check for any LHS and RHS.                        
    /// Checks whether the comparison involves partial ordering.               
    /// https://en.cppreference.com/w/cpp/utility/compare/partial_ordering.html
    template<class LHS, class...RHS>
-   concept ComparablePartial = requires (const LHS& lhs, const RHS&...rhs) {
-      { ((lhs <=> rhs), ...) } -> ::std::same_as<::std::partial_ordering>;
-   };
+   concept ComparablePartial = PartialValidate<RHS...>
+      and requires (const LHS& lhs, const RHS&...rhs) {
+         { ((lhs <=> rhs), ...) } -> ::std::same_as<::std::partial_ordering>;
+      };
 }

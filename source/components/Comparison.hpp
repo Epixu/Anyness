@@ -135,7 +135,7 @@ namespace Langulus::Anyness::Component
                   }
                   return same;
                }
-               else if constexpr (CT::Comparable<LT>) {
+               else if constexpr (CT::ComparableEqual<LT, LT>) {
                   // Use comparison operator between all elements       
                   auto t1 = lhs.GetRaw();
                   auto t2 = rhs.GetRaw();
@@ -348,7 +348,7 @@ namespace Langulus::Anyness::Component
                   return static_cast<::std::partial_ordering>(order);
                }
                else*/
-               if constexpr (CT::Comparable<LT>) {
+               if constexpr (CT::Comparable<LT, LT>) {
                   // Use comparison operator between all elements       
                   auto t1 = lhs.GetRaw();
                   auto t2 = rhs.GetRaw();
@@ -410,7 +410,7 @@ namespace Langulus::Anyness::Component
                   }
                   else return false;
                }
-               else*/ if constexpr (CT::Comparable<RT, RT>) {
+               else*/ if constexpr (CT::ComparableEqual<RT, RT>) {
                   // Non-deep element compare                           
                   if (self.template IsSame<RT>())
                      return self.template Get<RT>() == rhs;

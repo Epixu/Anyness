@@ -1290,10 +1290,13 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 1);
          REQUIRE(memory2.GetUses() == 1);
-         REQUIRE(pack1.CompareEqual(pack2));
-         REQUIRE(pack2.CompareEqual(memory1));
+         
+         REQUIRE(    pack1.CompareEqual(pack1));
+         REQUIRE(    pack1.CompareEqual(pack2));
+         REQUIRE(    pack2.CompareEqual(memory1));
          REQUIRE(not pack2.CompareEqual(memory2));
-         REQUIRE(pack2.CompareOneEqual(*e1));
+         REQUIRE(    pack2.CompareOneEqual(*e1));
+         REQUIRE(not pack2.CompareOneEqual(*e2));
       }
       
       WHEN("Refer-assign pack1 in pack2") {

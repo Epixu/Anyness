@@ -180,7 +180,7 @@ namespace Langulus::Anyness::Component
          }
 
          self.Free();
-         new (&self) C {FWD(intent)};
+         self.ConstructFrom(FWD(intent));
          return self;
       }
       
