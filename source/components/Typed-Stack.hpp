@@ -330,6 +330,9 @@ namespace Langulus::Anyness::Component
       ///   @tparam T - the new type                                          
       template<CT::NotVoid T, CT::Container C>
       void SetType(this C& self) {
+         static_assert(CT::NotSheddable<T>, "Strip all sheddables first");
+         static_assert(CT::NotReference<T>, "Strip all references first");
+         
          const auto type = MetaDataOf<T>();
          if constexpr (C::TypeErased)
             self.SetType(type);

@@ -79,14 +79,25 @@ template<class E>
 void Any_CheckState_Abandoned(const auto&);
 
 template<class E>
-void Any_Helper_TestType(const auto& many) {
-   REQUIRE(many.IsTyped());
-   REQUIRE(many.GetType() == MetaDataOf<E>());
-   REQUIRE(many.template IsSame<E>());
-   REQUIRE(many.template IsExact<E>());
-   REQUIRE(many.template Is<E>());
-   REQUIRE(many.IsSparse() == CT::Sparse<E>);
-   REQUIRE(many.IsDeep() == CT::Deep<Decay<E>>);
+void Any_Helper_TestType(const auto& any) {
+   if constexpr (CT::Void<E>) {
+      REQUIRE(any.template IsSame<int>());
+      REQUIRE(any.template IsExact<int>());
+      REQUIRE(any.template Is<int>());
+      REQUIRE(not any.IsSparse());
+      REQUIRE(not any.IsDeep());
+      REQUIRE(any.GetType() == MetaDataOf<int>());
+   }
+   else {
+      REQUIRE(any.template IsSame<E>());
+      REQUIRE(any.template IsExact<E>());
+      REQUIRE(any.template Is<E>());
+      REQUIRE(any.IsSparse() == CT::Sparse<E>);
+      REQUIRE(any.IsDeep() == CT::Deep<Decay<E>>);
+      REQUIRE(any.GetType() == MetaDataOf<E>());      
+   }
+   
+   REQUIRE(any.IsTyped());
 }
 
 template<CT::Container LHS, CT::Container RHS>

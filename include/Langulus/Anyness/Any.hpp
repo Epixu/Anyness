@@ -105,7 +105,7 @@ namespace Langulus::Anyness
             this->ConstructFrom(FWD(argument));
          }
          else {
-            this->SetType<Decvq<Deref<A>>>();
+            this->SetType<Decvq<Deref<Deint<A>>>>();
             this->AllocateFresh(this->RequestHeap(1));
             this->ResetState();
             this->EmplaceWithIntent(FWDIntent(argument));
@@ -121,7 +121,7 @@ namespace Langulus::Anyness
       /// Construction that emplaces A inside                                 
       template<class A>
       constexpr Any(Inner::Piecewise, A&& argument) {
-         this->SetType<Decvq<Deref<A>>>();
+         this->SetType<Decvq<Deref<Deint<A>>>>();
          this->AllocateFresh(this->RequestHeap(1));
          this->ResetState();
          this->EmplaceWithIntent(FWDIntent(argument));

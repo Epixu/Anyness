@@ -94,7 +94,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             // This container is heap-allocated                         
-            using T = Tif<CT::TypeErased<C>, Decvq<Deref<A>>, TypeOf<C>>;
+            using T = Tif<CT::TypeErased<C>, Decvq<Deref<Deint<A>>>, TypeOf<C>>;
             self.template SetType<T>();
 
             if (self.IsEmpty()) {
