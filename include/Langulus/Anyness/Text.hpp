@@ -57,8 +57,9 @@ namespace Langulus::Anyness
    /// A continuous text container of variable size                           
    ///                                                                        
    struct Text : Inner::TextBase {
-      using CountType = Base::CountType;
-      using CTTI_Text = Yes<>;
+      using CountType   = Base::CountType;
+      using CTTI_Text   = Yes<>;
+      using CTTI_MapsTo = Text;
 
       // Single element selections                                      
       using Pick    = char const&;
@@ -466,6 +467,70 @@ namespace Langulus::Anyness
       explicit operator ::std::string() const {
          return {GetRaw(), GetCount()};
       }
+
+      /// The presence of this structure makes Text a CT::Serializer          
+      struct CTTI_Serializer {         
+         // Text serializer can be lossy to omit unnecessary details,   
+         // and you can configure how many elements to show             
+         #ifdef LANGULUS_MAX_DEBUGGABLE_ELEMENTS
+            static constexpr Count MaxIterations = LANGULUS_MAX_DEBUGGABLE_ELEMENTS;
+         #elif LANGULUS(DEBUG) or LANGULUS(SAFE)
+            static constexpr CountType MaxIterations = 32;
+         #else
+            static constexpr CountType MaxIterations = 8;
+         #endif
+
+         struct Context {};
+         
+         static constexpr bool CriticalFailure = false;
+         static constexpr bool SkipElements = true;
+
+         static void BeginScope(const CT::Container auto& from, Text& to, Context*) {
+            const bool scoped = from.GetCount() > 1 or from.IsInvalid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
+            if (scoped) {
+               if (from.IsPast())
+                  to += Serial::Past;
+               else if (from.IsFuture())
+                  to += Serial::Future;
+
+               to += Serial::OpenScope;
+            }
+         }
+         
+         static void EndScope(const CT::Container auto& from, Text& to, Context*) {
+            const bool scoped = from.GetCount() > 1 or from.IsInvalid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
+            if (scoped)
+               to += Serial::CloseScope;
+         }
+         
+         static void Separate(const CT::Container auto& from, Text& to, Context*) {
+            to += (from.IsOr() ? " or " : ", ");
+         }
+         
+         static void Empty(RTTI::DMeta type, CountType i, Text& to, Context*) {
+            if constexpr (CriticalFailure) {
+               LglsError("Item #", i, " of type `", type.GetName(),
+                  "` was serialized to an empty `Text`");
+            }
+            else {
+               to += "/*";
+               to += type.GetName();
+               to += " -> empty Text*/";            
+            }
+         }
+         
+         static void Error(RTTI::DMeta type, CountType i, Text& to, Context*) {
+            if constexpr (CriticalFailure) {
+               LglsError("Item #", i, " of type `", type.GetName(),
+                  "` failed to convert to `Text`");
+            }
+            else {
+               to += "/*";
+               to += type.GetName();
+               to += " -> Text failed*/";            
+            }
+         }
+      };
    };
 
    struct Code : Text {};
@@ -498,4 +563,72 @@ namespace Langulus::CT
    template<class...T>
    concept Stringifiable = ((Inner::StringifiableByOperator<T>
                           or Inner::StringifiableByConstructor<T>) and ...);
+}
+
+namespace Langulus::CTTI
+{
+   /// A rule for serializing any deep container.                             
+   /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
+   /// as well as any templated equivalents. It basically places scopes,      
+   /// separators and state decorators, depending on the kind of container.   
+   template<CT::Deep C>
+   struct SerializationRule<Anyness::Text, C> {
+      using S = SerializerOf<Anyness::Text>;
+      using Context = typename S::Context;
+      using Count = Anyness::Text::CountType;
+      
+      static void Serialize(C const& self, Anyness::Text& out, Context* context)
+      requires CT::ContainsMany<C>;
+      
+      static void Serialize(C const& self, Anyness::Text& out, Context* context)
+      requires CT::ContainsOne<C>;
+   };
+
+   /// Rule for serializing Code to Text. Wraps it in {} symbols.             
+   template<>
+   struct SerializationRule<Anyness::Text, Anyness::Code> {
+      using S = SerializerOf<Anyness::Text>;
+      using Context = typename S::Context;
+
+      static void Serialize(const Anyness::Code& item, Anyness::Text& out, Context*);
+   };
+   
+   /// Rule for serializing Text to Text. Wraps it in "".                     
+   template<>
+   struct SerializationRule<Anyness::Text, Anyness::Text> {
+      using S = SerializerOf<Anyness::Text>;
+      using Context = typename S::Context;
+
+      static auto Serialize(const Anyness::Text& item, Anyness::Text& out, Context*);
+   };
+   
+   /// Rule for serializing characters to Text. Wraps them in ''.             
+   template<CT::Character C>
+   struct SerializationRule<Anyness::Text, C> {
+      using S = SerializerOf<Anyness::Text>;
+      using Context = typename S::Context;
+
+      static auto Serialize(C const& item, Anyness::Text& out, Context*);
+   };
+
+   /// Rule for serializing Bytes to Text. Prepends 0x.                       
+   template<>
+   struct SerializationRule<Anyness::Text, Anyness::Bytes> {
+      using S = SerializerOf<Anyness::Text>;
+      using Context = typename S::Context;
+
+      static auto Serialize(const Anyness::Bytes& item, Anyness::Text& out, Context*);
+   };
+   
+   /// Convert Number -> Text                                                 
+   template<CT::Number T>
+   struct Converter<T, Anyness::Text> {
+      static constexpr void Convert(T const& from, Anyness::Text& to) {
+         to += Anyness::Text::FromNumber(from);
+      }
+      
+      static constexpr auto Convert(T const& from) -> Anyness::Text {
+         return Anyness::Text::FromNumber(from);
+      }
+   };
 }

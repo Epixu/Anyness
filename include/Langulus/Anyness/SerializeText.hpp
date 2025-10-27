@@ -8,78 +8,11 @@
 #pragma once
 #include "Text.hpp"
 #include "Bytes.hpp"
+#include "TAny.hpp"
 
 
 namespace Langulus::CTTI
-{   
-   /// The presence of this structure makes Text a CT::Serializer             
-   template<>
-   struct Serializer<Anyness::Text> {
-      using Text = Anyness::Text;
-      using Count = Text::CountType;
-      
-      // Text serializer can be lossy to omit unnecessary details,      
-      // and you can configure how many elements to show                
-      #ifdef LANGULUS_MAX_DEBUGGABLE_ELEMENTS
-         static constexpr Count MaxIterations = LANGULUS_MAX_DEBUGGABLE_ELEMENTS;
-      #elif LANGULUS(DEBUG) or LANGULUS(SAFE)
-         static constexpr Count MaxIterations = 32;
-      #else
-         static constexpr Count MaxIterations = 8;
-      #endif
-
-      struct Context {};
-      
-      static constexpr bool CriticalFailure = false;
-      static constexpr bool SkipElements = true;
-
-      static void BeginScope(const CT::Container auto& from, Text& to, Context*) {
-         const bool scoped = from.GetCount() > 1 or from.IsInvalid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
-         if (scoped) {
-            if (from.IsPast())
-               to += Serial::Past;
-            else if (from.IsFuture())
-               to += Serial::Future;
-
-            to += Serial::OpenScope;
-         }
-      }
-      
-      static void EndScope(const CT::Container auto& from, Text& to, Context*) {
-         const bool scoped = from.GetCount() > 1 or from.IsInvalid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
-         if (scoped)
-            to += Serial::CloseScope;
-      }
-      
-      static void Separate(const CT::Container auto& from, Text& to, Context*) {
-         to += (from.IsOr() ? " or " : ", ");
-      }
-      
-      static void Empty(RTTI::DMeta type, Count i, Text& to, Context*) {
-         if constexpr (CriticalFailure) {
-            LglsError("Item #", i, " of type `", type.GetName(),
-               "` was serialized to an empty `Text`");
-         }
-         else {
-            to += "/*";
-            to += type.GetName();
-            to += " -> empty Text*/";            
-         }
-      }
-      
-      static void Error(RTTI::DMeta type, Count i, Text& to, Context*) {
-         if constexpr (CriticalFailure) {
-            LglsError("Item #", i, " of type `", type.GetName(),
-               "` failed to convert to `Text`");
-         }
-         else {
-            to += "/*";
-            to += type.GetName();
-            to += " -> Text failed*/";            
-         }
-      }
-   };
-
+{
    /// A rule for serializing any deep container.                             
    /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
    /// as well as any templated equivalents. It basically places scopes,      
@@ -247,44 +180,28 @@ namespace Langulus::CTTI
          out += Serial::CloseByte;
       }
    };
-
-   /// Convert Number -> Text                                                 
-   template<CT::Number T>
-   struct Converter<T, Anyness::Text> {
-      static constexpr void Convert(T const& from, Anyness::Text& to) {
-         to += Anyness::Text::FromNumber(from);
-      }
-      
-      static constexpr Anyness::Text Convert(T const& from) {
-         return Anyness::Text::FromNumber(from);
-      }
-   };
    
    /// Convert Any -> Text                                                    
-   template<>
-   struct Converter<Anyness::Any, Anyness::Text> {
-      static constexpr void Convert(Anyness::Any const& from, Anyness::Text& to) {
-         Serialize(from, to);
-      }
-      
-      static constexpr Anyness::Text Convert(Anyness::Any const& from) {
-         Anyness::Text result;
-         Serialize(from, result);
-         return result;
-      }
-   };
+   constexpr void Converter<Anyness::Any, Anyness::Text>::Convert(Anyness::Any const& from, Anyness::Text& to) {
+      Serialize(from, to);
+   }
+   
+   constexpr auto Converter<Anyness::Any, Anyness::Text>::Convert(Anyness::Any const& from) -> Anyness::Text {
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
    
    /// Convert TAny -> Text                                                   
    template<class T>
-   struct Converter<Anyness::TAny<T>, Anyness::Text> {
-      static constexpr void Convert(Anyness::TAny<T> const& from, Anyness::Text& to) {
-         Serialize(from, to);
-      }
-      
-      static constexpr Anyness::Text Convert(Anyness::TAny<T> const& from) {
-         Anyness::Text result;
-         Serialize(from, result);
-         return result;
-      }
-   };
+   constexpr void Converter<Anyness::TAny<T>, Anyness::Text>::Convert(Anyness::TAny<T> const& from, Anyness::Text& to) {
+      Serialize(from, to);
+   }
+
+   template<class T>
+   constexpr auto Converter<Anyness::TAny<T>, Anyness::Text>::Convert(Anyness::TAny<T> const& from) -> Anyness::Text {
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
 }

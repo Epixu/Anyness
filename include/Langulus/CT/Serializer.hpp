@@ -63,17 +63,20 @@ namespace Langulus
 
    /// Serialize                                                              
    template<class FROM, CT::Serializer TO>
-   auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr)
+   auto Serialize(FROM& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr)
    -> typename TO::CountType {
-      const typename TO::CountType initial = to.GetCount();
-      if constexpr (CT::Complete<CTTI::SerializationRule<TO, FROM>>) {
+      using DFROM = DecvqAll<FROM>;
+      using DTO   = DecvqAll<TO>;
+      const typename DTO::CountType initial = to.GetCount();
+      
+      if constexpr (CT::Complete<CTTI::SerializationRule<DTO, DFROM>>) {
          // Custom rule exists                                          
-         CTTI::SerializationRule<TO, FROM>::Serialize(from, to, context);
+         CTTI::SerializationRule<DTO, DFROM>::Serialize(from, to, context);
       }
       else {
          // No rule exists, just cast and concatenate                   
          (void) context;
-         to += Convert<TO>(from);
+         to += Convert<DTO>(from);
       }
       return to.GetCount() - initial;
    }

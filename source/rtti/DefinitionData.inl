@@ -440,7 +440,7 @@ namespace Langulus::RTTI
       if constexpr (not CT::Void<MAPTO>) {
          // Set reflected morphisms                                     
          // @attention morphisms assume that source is initialized,     
-         // but destination is only allocated and not yet constructed   
+         //    but destination is only allocated and not yet constructed
          MAPTO::ForEach([&definition]<class TO_RAW>{
             using TO = CT::ReflectedAs<TO_RAW>;
 
@@ -454,7 +454,7 @@ namespace Langulus::RTTI
             if constexpr (CT::Serializer<TO>) {
                // Destination type can act as a serializer, too         
                // @attention serialization assumes both sides are valid 
-               // and constructed pointers. Context is optional.        
+               //    and constructed pointers. Context is optional.     
                using S = SerializerOf<TO>;
 
                auto serializer_function = [](void* from, void* to, void* context) -> size_t {

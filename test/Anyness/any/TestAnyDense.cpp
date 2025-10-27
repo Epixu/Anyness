@@ -9,9 +9,9 @@
 
 
 TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
+   (Types<Any, Text>),
    (Types<Any, int>),
    (Types<Any, Any>),
-   (Types<Any, Text>),
 
    (Types<TAny<Any>, Any>),
    (Types<TAny<int>, int>),

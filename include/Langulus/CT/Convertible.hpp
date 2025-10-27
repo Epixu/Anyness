@@ -78,15 +78,15 @@ namespace Langulus
    ///   @attention assumes 'to' is NOT constructed                           
    template<class FROM, class TO>
    constexpr void Convert(FROM& from, TO& to) {
-      using DF = DecvqAll<FROM>;
-      using TF = DecvqAll<TO>;
+      using DFROM = DecvqAll<FROM>;
+      using DTO   = DecvqAll<TO>;
 
-      if constexpr (CT::Complete<CTTI::Converter<DF, TF>>)
-         CTTI::Converter<DF, TF>::Convert(from, to);
+      if constexpr (CT::Complete<CTTI::Converter<DFROM, DTO>>)
+         CTTI::Converter<DFROM, DTO>::Convert(from, to);
       else if constexpr (requires { TF(from); })
-         new (&to) TF(from);
-      else if constexpr (requires { TF(static_cast<TF>(from)); })
-         new (&to) TF(static_cast<TF>(from));
+         new (&to) DTO(from);
+      else if constexpr (requires { DTO(static_cast<DTO>(from)); })
+         new (&to) DTO(static_cast<DTO>(from));
       else {
          static_assert(false,
             "FROM can't be converted to TO - add CTTI::Converter, "
@@ -100,15 +100,15 @@ namespace Langulus
    ///   @attention assumes 'from' is constructed                             
    template<class TO, class FROM>
    constexpr TO Convert(FROM& from) {
-      using DF = DecvqAll<FROM>;
-      using TF = DecvqAll<TO>;
+      using DFROM = DecvqAll<FROM>;
+      using DTO   = DecvqAll<TO>;
 
-      if constexpr (CT::Complete<CTTI::Converter<DF, TF>>)
-         return CTTI::Converter<DF, TF>::Convert(from);
+      if constexpr (CT::Complete<CTTI::Converter<DFROM, DTO>>)
+         return CTTI::Converter<DFROM, DTO>::Convert(from);
       else if constexpr (requires { TF(from); })
-         return TF(from);
-      else if constexpr (requires { TF(static_cast<TF>(from)); })
-         return TF(static_cast<TF>(from));
+         return DTO(from);
+      else if constexpr (requires { DTO(static_cast<DTO>(from)); })
+         return DTO(static_cast<DTO>(from));
       else {
          static_assert(false,
             "FROM can't be converted to TO - add CTTI::Converter, "
