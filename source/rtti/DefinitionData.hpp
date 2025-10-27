@@ -123,6 +123,7 @@ namespace Langulus::RTTI
       using FSerialize     = size_t (*)(void* from, void* to, void* context);
       using FDescribe      = void (*)(void* self, const Anyness::Many& describe);
       using FCompare       = Compared (*)(const void* lhs, const void* rhs);
+      using FCompareEqual  = bool (*)(const void* lhs, const void* rhs);
       using FResolve       = Anyness::Any (*)(void* self);
       using FHash          = Hash (*)(void* self);
       using FReference     = int (*)(void* self, int modifier);
@@ -213,6 +214,8 @@ namespace Langulus::RTTI
 
          // The <=> operator, wrapped in lambda expression if available 
          FCompare mComparer = nullptr;
+         // The == operator, wrapped in lambda expression if available  
+         FCompareEqual mComparerEqual = nullptr;
 
          // The refer/copy/disown/clone/move/abandon assignments, all   
          // wrapped in lambdas                                          

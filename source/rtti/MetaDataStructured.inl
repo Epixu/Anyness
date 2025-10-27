@@ -502,6 +502,15 @@ namespace Langulus::RTTI::Inner
       return {};
    }
 
+   /// Get the reflected comparer                                             
+   TEMPLATE()
+   auto ME()::GetComparerEqual() const noexcept -> DefinitionData::FCompareEqual {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mComparerEqual;
+      return {};
+   }
+
    /// Get the reflected hasher                                               
    TEMPLATE()
    auto ME()::GetHasher() const noexcept -> DefinitionData::FHash {

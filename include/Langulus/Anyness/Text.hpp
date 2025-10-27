@@ -30,6 +30,7 @@
 namespace Langulus::Anyness
 {
    struct Text;
+   struct Bytes;
 
    namespace Inner
    {
@@ -577,11 +578,8 @@ namespace Langulus::CTTI
       using Context = typename S::Context;
       using Count = Anyness::Text::CountType;
       
-      static void Serialize(C const& self, Anyness::Text& out, Context* context)
-      requires CT::ContainsMany<C>;
-      
-      static void Serialize(C const& self, Anyness::Text& out, Context* context)
-      requires CT::ContainsOne<C>;
+      static void Serialize(C const&, Anyness::Text&, Context*) requires CT::ContainsMany<C>;
+      static void Serialize(C const&, Anyness::Text&, Context*) requires CT::ContainsOne<C>;
    };
 
    /// Rule for serializing Code to Text. Wraps it in {} symbols.             
@@ -590,7 +588,7 @@ namespace Langulus::CTTI
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
 
-      static void Serialize(const Anyness::Code& item, Anyness::Text& out, Context*);
+      static void Serialize(const Anyness::Code&, Anyness::Text&, Context*);
    };
    
    /// Rule for serializing Text to Text. Wraps it in "".                     
@@ -599,7 +597,7 @@ namespace Langulus::CTTI
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
 
-      static auto Serialize(const Anyness::Text& item, Anyness::Text& out, Context*);
+      static void Serialize(const Anyness::Text&, Anyness::Text&, Context*);
    };
    
    /// Rule for serializing characters to Text. Wraps them in ''.             
@@ -608,7 +606,7 @@ namespace Langulus::CTTI
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
 
-      static auto Serialize(C const& item, Anyness::Text& out, Context*);
+      static void Serialize(C const&, Anyness::Text&, Context*);
    };
 
    /// Rule for serializing Bytes to Text. Prepends 0x.                       
@@ -617,7 +615,7 @@ namespace Langulus::CTTI
       using S = SerializerOf<Anyness::Text>;
       using Context = typename S::Context;
 
-      static auto Serialize(const Anyness::Bytes& item, Anyness::Text& out, Context*);
+      static void Serialize(const Anyness::Bytes&, Anyness::Text&, Context*);
    };
    
    /// Convert Number -> Text                                                 

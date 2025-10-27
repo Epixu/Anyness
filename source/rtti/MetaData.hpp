@@ -170,6 +170,7 @@ namespace Langulus::RTTI
          auto GetCopyConstructor()    const noexcept -> DefinitionData::FBinary;
          auto GetCopyAssigner()       const noexcept -> DefinitionData::FBinary;
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
+         auto GetComparerEqual()      const noexcept -> DefinitionData::FCompareEqual;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          auto GetDispatcher()         const noexcept -> DefinitionData::FDispatch;
          
@@ -261,6 +262,7 @@ namespace Langulus::RTTI
          auto GetCopyConstructor()    const noexcept -> DefinitionData::FBinary;
          auto GetCopyAssigner()       const noexcept -> DefinitionData::FBinary;
          auto GetComparer()           const noexcept -> DefinitionData::FCompare;
+         auto GetComparerEqual()      const noexcept -> DefinitionData::FCompareEqual;
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          auto GetDispatcher()         const noexcept -> DefinitionData::FDispatch;
 

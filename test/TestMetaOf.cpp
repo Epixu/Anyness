@@ -341,8 +341,9 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.GetMoveConstructor()    != nullptr);
    REQUIRE(meta.GetAbandonConstructor() != nullptr);
    
-   REQUIRE(meta.GetDestructor() == nullptr);
-   REQUIRE(meta.GetComparer()   != nullptr);
+   REQUIRE(meta.GetDestructor()    == nullptr);
+   REQUIRE(meta.GetComparer()      != nullptr);
+   REQUIRE(meta.GetComparerEqual() != nullptr);
 
    if constexpr (CT::Constant<T>) {
       REQUIRE(meta.GetReferAssigner()   == nullptr);

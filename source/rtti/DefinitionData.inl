@@ -76,6 +76,13 @@ namespace Langulus::RTTI
       };
 
       LANGULUS(NOINLINE)
+      inline bool SparseCompareEqual(const void* lhs, const void* rhs) noexcept {
+         auto lhsT = static_cast<void const* const*>(lhs);
+         auto rhsT = static_cast<void const* const*>(rhs);
+         return *lhsT == *rhsT;
+      };
+
+      LANGULUS(NOINLINE)
       inline auto SparseHash(void* lhs) noexcept -> Hash {
          auto lhsT = static_cast<void**>(lhs);
          return HashOf<true>(*lhsT);
@@ -364,6 +371,14 @@ namespace Langulus::RTTI
                auto t2T = static_cast<T const*>(t2);
                return FromOrdering(*t1T, *t2T);
             };
+
+         // Generate an equality comparison function                    
+         definition.mCurrentBoundary.mComparerEqual =
+            [](void const* t1, void const* t2) -> bool {
+               auto t1T = static_cast<T const*>(t1);
+               auto t2T = static_cast<T const*>(t2);
+               return *t1T == *t2T;
+            };
       }
 
       if constexpr (CT::Resolvable<T>) {
@@ -643,6 +658,8 @@ namespace Langulus::RTTI
          = definition.mOrigin->mCurrentBoundary.mReferencer;
       definition.mCurrentBoundary.mComparer
          = definition.mOrigin->mCurrentBoundary.mComparer;
+      definition.mCurrentBoundary.mComparerEqual
+         = definition.mOrigin->mCurrentBoundary.mComparerEqual;
       definition.mCurrentBoundary.mResolver
          = definition.mOrigin->mCurrentBoundary.mResolver;
       definition.mMinimalAllocation
@@ -918,6 +935,8 @@ namespace Langulus::RTTI
          = Inner::SparseHash;   
       definition.mCurrentBoundary.mComparer
          = Inner::SparseCompare;         
+      definition.mCurrentBoundary.mComparerEqual
+         = Inner::SparseCompareEqual;         
 
       // Reflect the minimal allocation in bytes                        
       definition.mMinimalAllocation = CT::GetMinAlloc<T>();

@@ -205,7 +205,8 @@ namespace Langulus::Anyness::Component
                return same;
             }
 
-            if (LT.GetComparer()) {
+            const auto comparer = LT.GetComparerEqual();
+            if (comparer) {
                // Call compare operator for each element pair           
                auto t1 = lhs.template GetRawAs<uint8_t>();
                auto t2 = rhs.template GetRawAs<uint8_t>();
@@ -213,7 +214,7 @@ namespace Langulus::Anyness::Component
                const auto t1end = t1 + lhs.GetBytesize();
                const auto size = LT.GetSize();
                while (t1 < t1end) {
-                  if (LT.GetComparer()(t1, t2) != Compared::Equal) {
+                  if (not comparer(t1, t2)) {
                      VERBOSE(Logger::Red,
                         "Element #", (t1 - t1_start) / size, " differs (type-erased)");
                      return false;
@@ -282,7 +283,8 @@ namespace Langulus::Anyness::Component
                return static_cast<Compared>(order);
             }*/
 
-            if (LT.GetComparer()) {
+            const auto comparer = LT.GetComparer();
+            if (comparer) {
                // Call compare operator for each element pair           
                auto t1 = lhs.template GetRawAs<uint8_t>();
                auto t2 = rhs.template GetRawAs<uint8_t>();
@@ -290,7 +292,7 @@ namespace Langulus::Anyness::Component
                const auto t1end = t1 + lhs.GetBytesize();
                const auto size = LT.GetSize();
                while (t1 < t1end) {
-                  const Compared last_compare = LT.GetComparer()(t1, t2);
+                  const Compared last_compare = comparer(t1, t2);
                   if (last_compare != Compared::Equal) {
                      VERBOSE(Logger::Red,
                         "Element #", (t1 - t1_start) / size, " differs (type-erased)");

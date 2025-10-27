@@ -223,6 +223,12 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mCurrentBoundary.mComparer;
    }
 
+   /// Get the reflected comparer                                             
+   inline auto MetaDataNaked::GetComparerEqual()
+   const noexcept -> DefinitionData::FCompareEqual {
+      return mDefinition->mCurrentBoundary.mComparerEqual;
+   }
+
    /// Get the reflected hasher                                               
    inline auto MetaDataNaked::GetHasher()
    const noexcept -> DefinitionData::FHash {
