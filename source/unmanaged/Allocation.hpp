@@ -1,45 +1,38 @@
 ///                                                                           
-/// Langulus::Fractalloc                                                      
-/// Copyright (c) 2015 Dimo Markov <team@langulus.com>                        
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
 /// Part of the Langulus framework, see https://langulus.com                  
 ///                                                                           
-/// SPDX-License-Identifier: MIT                                              
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
 #include <Langulus/Core.hpp>
 
-#if not LANGULUS_FEATURE(MANAGED_MEMORY)
-   #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
+   #error "This file shouldn't be included if MANAGED_MEMORY is enabled"
 #endif
 
-namespace Langulus::Fractalloc
+namespace Langulus::Unmanaged
 {
-   class Pool;
+   class MallocHandle;
+   struct Allocator;
 
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
    struct alignas(Alignment) Allocation {
    protected:
-      friend class Pool;
       friend struct Allocator;
 
       // The number of references to this memory.                       
       // Most often used, so first for immediate access.                
       int mReferences = 1;
-
       // Allocated bytes for this chunk                                 
       size_t mAllocatedBytes;
-
-      // This pointer has three uses, depending on mReferences:         
-      // If mReferences > 0, it points to the pool this allocation was  
-      //    allocated in.                                               
-      // If mReferences == 0, it refers to the next free entry to be    
-      //    reused.                                                     
-      union {
-         Pool* mPool;
-         Allocation* mNextFreeEntry;
-      };
+      // The alignment of the contained data                            
+      size_t mAlignment;
+      // Refers to the handle for std::free().                          
+      MallocHandle* mMallocHandle;
 
    #if LANGULUS_FEATURE(MEMORY_STATISTICS)
       // Acts like a timestamp of when the allocation happened          
@@ -52,8 +45,8 @@ namespace Langulus::Fractalloc
        Allocation(Allocation&&) = delete;
       ~Allocation() = delete;
 
-      explicit Allocation(size_t, Pool*) noexcept;
-
+      explicit Allocation(size_t alignment, size_t size, MallocHandle*) noexcept;
+      
       auto GetUses() const noexcept { return mReferences; }
       auto GetBackendSize() const noexcept -> size_t;
       auto GetFrontendSize() const noexcept -> size_t;

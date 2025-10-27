@@ -613,9 +613,16 @@ namespace Langulus
    struct PooledByType;
 
    /// Align a value to a given alignment                                     
-   template<class T>
-   constexpr T Align(T valueToAlign, T alignment) {
-      const T r = valueToAlign % alignment;
-      return r ? valueToAlign + (alignment - r) : valueToAlign;
+   template<class T, class A>
+   constexpr T Align(T valueToAlign, A alignment) {
+      if constexpr (::std::is_pointer_v<T>) {
+         const uintptr_t as_bytes = reinterpret_cast<uintptr_t>(valueToAlign);
+         const uintptr_t r = as_bytes % alignment;
+         return reinterpret_cast<T>(r ? as_bytes + (alignment - r) : as_bytes);         
+      }
+      else {
+         const T r = valueToAlign % alignment;
+         return r ? valueToAlign + (alignment - r) : valueToAlign;
+      }
    }
 } // namespace Langulus

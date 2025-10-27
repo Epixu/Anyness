@@ -423,7 +423,7 @@ namespace Langulus::Anyness::Component
             else {
                //                                                       
                // Both sides are statically typed                       
-               if constexpr (CT::Comparable<TypeOf<C>, RT>)
+               if constexpr (CT::ComparableEqual<TypeOf<C>, RT>)
                   return *self.GetRaw() == rhs;
                else
                   return false;

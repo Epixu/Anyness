@@ -341,6 +341,76 @@
     },
 
     {
+      "name": "linux-clang-x64-debug-safe-SSE2-managed",
+      "displayName": "clang x64 Debug Safe SSE2",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, SSE2)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "SSE2", "vendor-clang-x64" ]
+    },
+    {
+      "name": "linux-clang-x64-debug-safe-AVX-managed",
+      "displayName": "clang x64 Debug Safe AVX",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX", "vendor-clang-x64" ]
+    },
+    {
+      "name": "linux-clang-x64-debug-safe-AVX2-managed",
+      "displayName": "clang x64 Debug Safe AVX2",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX2)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX2", "vendor-clang-x64" ]
+    },
+    
+    {
+      "name": "linux-g++-x64-debug-safe-SSE2-unmanaged",
+      "displayName": "Linux x64 G++ Debug Safe SSE2 Unamanged",
+      "description": "Target Linux with the 64bit GNU compiler (debug, safe, SSE2, unmanaged)",
+      "inherits": [ "linux", "g++-14", "x64", "debug", "SSE2", "unmanaged" ]
+    },
+    {
+      "name": "linux-g++-x64-debug-safe-AVX-unmanaged",
+      "displayName": "Linux x64 G++ Debug Safe AVX Unamanged",
+      "description": "Target Linux with the 64bit GNU compiler (debug, safe, AVX, unmanaged)",
+      "inherits": [ "linux", "g++-14", "x64", "debug", "AVX", "unmanaged" ]
+    },
+    {
+      "name": "linux-g++-x64-debug-safe-AVX2-unmanaged",
+      "displayName": "Linux x64 G++ Debug Safe AVX2 Unamanged",
+      "description": "Target Linux with the 64bit GNU compiler (debug, safe, AVX2, unmanaged)",
+      "inherits": [ "linux", "g++-14", "x64", "debug", "AVX2", "unmanaged" ]
+    },
+
+    {
+      "name": "linux-clang-x64-debug-safe-SSE2-unmanaged",
+      "displayName": "clang x64 Debug Safe SSE2 Unamanged",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, SSE2, unmanaged)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "SSE2", "vendor-clang-x64", "unmanaged" ]
+    },
+    {
+      "name": "linux-clang-x64-debug-safe-AVX-unmanaged",
+      "displayName": "clang x64 Debug Safe AVX Unamanged",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX, unmanaged)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX", "vendor-clang-x64", "unmanaged" ]
+    },
+    {
+      "name": "linux-clang-x64-debug-safe-AVX2-unmanaged",
+      "displayName": "clang x64 Debug Safe AVX2 Unamanged",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX2, unmanaged)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX2", "vendor-clang-x64", "unmanaged" ]
+    },
+    
+    {
+      "name": "linux-clang-x64-debug-safe-AVX-managed-coverage",
+      "displayName": "clang x64 Debug Safe AVX Coverage",
+      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX)",
+      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX", "coverage", "vendor-clang-x64" ]
+    },
+    {
+      "name": "linux-clang-x64-release-safe-AVX-managed-sanitize",
+      "displayName": "clang x64 Release Safe AVX SanitizeAddress",
+      "description": "Target Ubuntu with the 64bit Clang compiler (release, safe, AVX)",
+      "inherits": [ "linux", "clang++-19", "x64", "release", "AVX", "sanitize-address", "vendor-clang-x64" ]
+    },
+
+    {
       "name": "windows-v143-x64-debug-safe-SSE2-managed",
       "displayName": "v143 x64 Debug Safe SSE2 (unsupported)",
       "description": "Target Windows with the 64bit v143 compiler (debug, safe, SSE2)",
@@ -434,38 +504,6 @@
       "displayName": "clang-cl x64 Release Safe AVX SanitizeAddress",
       "description": "Target Windows with the 64bit Clang-Cl compiler (release, safe, AVX)",
       "inherits": [ "windows", "clang-cl-19", "x64", "release", "AVX", "sanitize-address", "vendor-clang-cl-x64" ]
-    },
-
-    {
-      "name": "ubuntu-clang-x64-debug-safe-SSE2-managed",
-      "displayName": "clang x64 Debug Safe SSE2",
-      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, SSE2)",
-      "inherits": [ "linux", "clang++-19", "x64", "debug", "SSE2", "vendor-clang-x64" ]
-    },
-    {
-      "name": "ubuntu-clang-x64-debug-safe-AVX-managed",
-      "displayName": "clang x64 Debug Safe AVX",
-      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX)",
-      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX", "vendor-clang-x64" ]
-    },
-    {
-      "name": "ubuntu-clang-x64-debug-safe-AVX2-managed",
-      "displayName": "clang x64 Debug Safe AVX2",
-      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX2)",
-      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX2", "vendor-clang-x64" ]
-    },
-    
-    {
-      "name": "ubuntu-clang-x64-debug-safe-AVX-managed-coverage",
-      "displayName": "clang x64 Debug Safe AVX Coverage",
-      "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX)",
-      "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX", "coverage", "vendor-clang-x64" ]
-    },
-    {
-      "name": "ubuntu-clang-x64-release-safe-AVX-managed-sanitize",
-      "displayName": "clang x64 Release Safe AVX SanitizeAddress",
-      "description": "Target Ubuntu with the 64bit Clang compiler (release, safe, AVX)",
-      "inherits": [ "linux", "clang++-19", "x64", "release", "AVX", "sanitize-address", "vendor-clang-x64" ]
     },
 
     {

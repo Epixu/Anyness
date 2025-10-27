@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Allocation.hpp"
-#include "Pool.hpp"
 
 
 namespace Langulus::Fractalloc
@@ -15,13 +14,14 @@ namespace Langulus::Fractalloc
    /// Initialize an allocation                                               
    ///   @attention this constructor relies that the allocation is placed in  
    ///      the beginning of a heap allocation of size GetNewAllocationSize() 
-   ///   @param bytes - the number of allocated bytes (not including the      
-   ///      allocation and padding, just the user bytes)                      
-   ///   @param pool - the pool this allocation belongs to                    
+   ///   @param alignment - data alignment                                    
+   ///   @param size - the number of allocated bytes                          
+   ///   @param handle - the handle used to call free() with                  
    LANGULUS(ALWAYS_INLINED)
-   Allocation::Allocation(size_t bytes, Pool* pool) noexcept
-      : mAllocatedBytes {bytes}
-      , mPool           {pool} {}
+   Allocation::Allocation(size_t alignment, size_t size, MallocHandle* handle) noexcept
+      : mAllocatedBytes {size}
+      , mAlignment      {alignment}
+      , mMallocHandle   {handle} {}
 
    /// User bytes + the header size                                           
    ///   @return the byte size of the entry plus the usable region after it   
