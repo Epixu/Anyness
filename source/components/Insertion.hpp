@@ -251,7 +251,7 @@ namespace Langulus::Anyness::Component
 
          self.BranchOut();
          const auto lhs_count = self.GetCount();
-         const auto idx = self.SimplifyIndex<false>(index);
+         const auto idx = self.template SimplifyIndex<false>(index);
          self.AllocateMore(lhs_count + rhs_count);
 
          if (idx < lhs_count) {
