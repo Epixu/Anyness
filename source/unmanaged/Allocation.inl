@@ -1,15 +1,15 @@
 ///                                                                           
-/// Langulus::Fractalloc                                                      
-/// Copyright (c) 2015 Dimo Markov <team@langulus.com>                        
+/// Langulus::Anyness                                                         
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
 /// Part of the Langulus framework, see https://langulus.com                  
 ///                                                                           
-/// SPDX-License-Identifier: MIT                                              
+/// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
 #include "Allocation.hpp"
 
 
-namespace Langulus::Fractalloc
+namespace Langulus::Unmanaged
 {
    /// Initialize an allocation                                               
    ///   @attention this constructor relies that the allocation is placed in  
@@ -27,7 +27,7 @@ namespace Langulus::Fractalloc
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetBackendSize() const noexcept {
-      return Align(sizeof(Allocation), mPool->GetAlignment()) + mAllocatedBytes;
+      return Align(sizeof(Allocation), mAlignment) + mAllocatedBytes;
    }
 
    /// Get the user bytes                                                     
@@ -42,8 +42,7 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    uint8_t* Allocation::GetBlockStart() const noexcept {
       const auto entryStart = reinterpret_cast<const uint8_t*>(this);
-      return const_cast<uint8_t*>(entryStart)
-           + Align(sizeof(Allocation), mPool->GetAlignment());
+      return const_cast<uint8_t*>(entryStart) + Align(sizeof(Allocation), mAlignment);
    }
 
    /// Return the end of usable block memory (always const)                   

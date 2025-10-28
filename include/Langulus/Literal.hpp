@@ -9,6 +9,7 @@
 #include "Core.hpp"
 #include <array>
 #include <string_view>
+#include <bit>
 
 #if LANGULUS(SAFE)
    #include <stdexcept>
@@ -64,6 +65,8 @@ namespace Langulus
    ///                                                                        
    template<class T, size_t N>
    struct Literal {
+      static_assert(N == 0 or N == 1 or (::std::bit_ceil(N) == N),
+         "Modify N to minimize the number of templates");
       static constexpr bool CTTI_Literal = true;
       static constexpr bool Undefined = ::std::same_as<T, Unsupported>;
       static constexpr size_t ArraySize = N;
@@ -153,7 +156,7 @@ namespace Langulus
             // This is a slow implementation, but Literals are mostly   
             // used at compile-time, so it shouldn't be an issue        
             auto ptr = _data.data();
-            const auto ptrEnd = _data.data() + N;
+            const auto ptrEnd = ptr + N;
             while(ptr != ptrEnd and *ptr)
                ++ptr;
             return ptr - _data.data();
@@ -215,7 +218,7 @@ namespace Langulus
       ///                                                                     
       /// Get a resized Literal with the same properties                      
       template<size_t M>
-      using Resized = Literal<value_type, M>;
+      using Resized = Literal<value_type, ::std::bit_ceil(M)>;
 
    protected:
       template<class, size_t>
@@ -462,7 +465,7 @@ namespace Langulus
    Literal(const T&) -> Literal<T, 0>;
    
    template<class T, size_t N>
-   Literal(const T(&)[N]) -> Literal<T, N>;
+   Literal(const T(&)[N]) -> Literal<T, (N == 0 or N == 1 ? N : ::std::bit_ceil(N))>;
 
 
    /// Swap two strings                                                       

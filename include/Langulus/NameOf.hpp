@@ -365,11 +365,12 @@ namespace Langulus::RTTI
       /// Decide buffer size by checking all replacement patterns             
       ///   @tparam SRC - search where?                                       
       constexpr size_t DecideBufferSize(const CT::Literal auto& SRC) {
+         const size_t src_size = SRC.size();
          size_t result = 0;
          for (const auto& pattern : ReplacePatterns) {
             size_t occurences = 0;
             size_t cookie = 0;
-            while (cookie + pattern.what.size() <= SRC.size()) {
+            while (cookie + pattern.what.size() <= src_size) {
                size_t scan = 0;
                while (scan < pattern.what.size()) {
                   if (SRC[cookie + scan] == pattern.what[scan]) {
@@ -387,7 +388,7 @@ namespace Langulus::RTTI
                else ++cookie;
             }
             
-            const auto candidate = SRC.size()
+            const auto candidate = src_size
                - occurences * pattern.what.size()
                + occurences * pattern.with.size();
             

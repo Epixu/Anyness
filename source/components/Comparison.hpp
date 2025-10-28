@@ -86,31 +86,104 @@ namespace Langulus::Anyness::Component
             Logger::White, rhs.GetCount(), "x of ", rhs.GetName()
          );
 
-         if constexpr (CT::Typed<LHS, RHS>) {
-            //                                                          
-            // Both blocks are statically-typed - leverage it by using  
-            // static comparisons                                       
-            using LT = TypeOf<LHS>;
-            using RT = TypeOf<RHS>;
+         if consteval {
+            // Heap should be empty at compile-time                     
+            return true;
+         }
+         else {
+            if constexpr (CT::Typed<LHS, RHS>) {
+               //                                                       
+               // Both blocks are statically-typed - leverage it by     
+               // using static comparisons                              
+               using LT = TypeOf<LHS>;
+               using RT = TypeOf<RHS>;
 
-            if constexpr (not Same<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
-               // Types are different                                   
-               VERBOSE(Logger::Red, "Types differ (typed): ",
-                  NameOf<LT>(), " != ", NameOf<RT>());
-               return false;
+               if constexpr (not Same<LT, RT>) { //TODO but what if differently typed pointers to the same virtual objects?
+                  // Types are different                                
+                  VERBOSE(Logger::Red, "Types differ (typed): ",
+                     NameOf<LT>(), " != ", NameOf<RT>());
+                  return false;
+               }
+               else {
+                  // Types are similar                                  
+                  if (lhs.template AccessStackById<ID>() == rhs.template AccessStackById<ID>()) {
+                     // Containers point to the same memory, so it's a  
+                     // matter of whether they have the same count      
+                     return lhs.GetCount() == rhs.GetCount();
+                  }
+
+                  if (lhs.GetCount() != rhs.GetCount()) {
+                     // Early failure if count differs, no point in     
+                     // comparing anything at all                       
+                     VERBOSE(Logger::Red, "Different count (typed): ",
+                        lhs.GetCount(), " != ", rhs.GetCount());
+                     return false;
+                  }
+
+                  if constexpr (HASH) {
+                     if (not lhs.CompareHashes(rhs)) {
+                        // Early failure if valid hashes differ - no    
+                        // point  in comparing anything at all          
+                        VERBOSE(Logger::Red, "Different hashes (typed)");
+                        return false;
+                     }
+                  }
+
+                  if constexpr (CT::POD<LT>) {
+                     // Batch compare POD data, including pointers      
+                     const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
+                     if (not same) {
+                        VERBOSE(Logger::Red,
+                           "Different POD memory after memcmp (typed)");
+                        VERBOSE(Logger::Red,
+                           "Most likely padding bytes filled with junk - pack your struct: ", NameOf<LT>());
+                     }
+                     return same;
+                  }
+                  else if constexpr (CT::ComparableEqual<LT, LT>) {
+                     // Use comparison operator between all elements    
+                     auto t1 = lhs.GetRaw();
+                     auto t2 = rhs.GetRaw();
+                     const auto t1end = t1 + lhs.GetCount();
+                     while (t1 < t1end and *t1 == *t2) {
+                        ++t1;
+                        ++t2;
+                     }
+
+                     if (t1 != t1end) {
+                        VERBOSE(Logger::Red,
+                           "Element #", t1 - lhs.GetRaw(), " differs (typed)");
+                     }
+                     return t1 == t1end;
+                  }
+                  else {
+                     VERBOSE(Logger::Red, "Type not comparable (typed): ", NameOf<LT>());
+                     return false;
+                  }
+               }
             }
             else {
+               //                                                       
+               // Both container are type-erased - all we can do is     
+               // call the reflected comparison functions               
+               const DMeta LT = lhs.GetType();
+               const DMeta RT = rhs.GetType();
+
+               if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
+                  VERBOSE(Logger::Red, "Types differ (type-erased): ",
+                     LT, " != ", RT);
+                  return false;
+               }
+
                // Types are similar                                     
-               if (lhs.template AccessStackById<ID>() == rhs.template AccessStackById<ID>()) {
+               if (lhs.GetHeapInner() == rhs.GetHeapInner()) {
                   // Containers point to the same memory, so it's a     
                   // matter of whether they have the same count         
                   return lhs.GetCount() == rhs.GetCount();
                }
 
                if (lhs.GetCount() != rhs.GetCount()) {
-                  // Early failure if count differs, no point in        
-                  // comparing anything at all                          
-                  VERBOSE(Logger::Red, "Different count (typed): ",
+                  VERBOSE(Logger::Red, "Different count (type-erased): ",
                      lhs.GetCount(), " != ", rhs.GetCount());
                   return false;
                }
@@ -119,115 +192,48 @@ namespace Langulus::Anyness::Component
                   if (not lhs.CompareHashes(rhs)) {
                      // Early failure if valid hashes differ - no point 
                      // in comparing anything at all                    
-                     VERBOSE(Logger::Red, "Different hashes (typed)");
+                     VERBOSE(Logger::Red, "Different hashes (type-erased)");
                      return false;
                   }
                }
 
-               if constexpr (CT::POD<LT>) {
-                  // Batch compare POD data, including pointers         
-                  const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
+               if (LT.IsPOD()) {
+                  // Batch-compare memory if POD or sparse              
+                  const auto bytesize = lhs.GetBytesize();
+                  const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), bytesize));
                   if (not same) {
                      VERBOSE(Logger::Red,
-                        "Different POD memory after memcmp (typed)");
+                        "Different POD memory after memcmp (type-erased)");
                      VERBOSE(Logger::Red,
-                        "Most likely padding bytes filled with junk - pack your struct: ", NameOf<LT>());
+                        "Most likely padding bytes filled with junk - pack your struct: ", LT);
                   }
                   return same;
                }
-               else if constexpr (CT::ComparableEqual<LT, LT>) {
-                  // Use comparison operator between all elements       
-                  auto t1 = lhs.GetRaw();
-                  auto t2 = rhs.GetRaw();
-                  const auto t1end = t1 + lhs.GetCount();
-                  while (t1 < t1end and *t1 == *t2) {
-                     ++t1;
-                     ++t2;
-                  }
 
-                  if (t1 != t1end) {
-                     VERBOSE(Logger::Red,
-                        "Element #", t1 - lhs.GetRaw(), " differs (typed)");
-                  }
-                  return t1 == t1end;
-               }
-               else {
-                  VERBOSE(Logger::Red, "Type not comparable (typed): ", NameOf<LT>());
-                  return false;
-               }
-            }
-         }
-         else {
-            //                                                          
-            // Both container are type-erased - all we can do is call   
-            // the reflected comparison functions                       
-            const DMeta LT = lhs.GetType();
-            const DMeta RT = rhs.GetType();
+               const auto comparer = LT.GetComparerEqual();
+               if (comparer) {
+                  // Call compare operator for each element pair        
+                  auto t1 = lhs.template GetRawAs<uint8_t>();
+                  auto t2 = rhs.template GetRawAs<uint8_t>();
+                  [[maybe_unused]] const auto t1_start = t1;
+                  const auto t1end = t1 + lhs.GetBytesize();
+                  const auto size = LT.GetSize();
+                  while (t1 < t1end) {
+                     if (not comparer(t1, t2)) {
+                        VERBOSE(Logger::Red,
+                           "Element #", (t1 - t1_start) / size, " differs (type-erased)");
+                        return false;
+                     }
 
-            if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
-               VERBOSE(Logger::Red, "Types differ (type-erased): ",
-                  LT, " != ", RT);
+                     t1 += size;
+                     t2 += size;
+                  }
+                  return true;
+               }
+
+               VERBOSE(Logger::Red, "Type not comparable (type-erased): ", LT);
                return false;
             }
-
-            // Types are similar                                        
-            if (lhs.GetHeapInner() == rhs.GetHeapInner()) {
-               // Containers point to the same memory, so it's a        
-               // matter of whether they have the same count            
-               return lhs.GetCount() == rhs.GetCount();
-            }
-            
-            if (lhs.GetCount() != rhs.GetCount()) {
-               VERBOSE(Logger::Red, "Different count (type-erased): ",
-                  lhs.GetCount(), " != ", rhs.GetCount());
-               return false;
-            }
-
-            if constexpr (HASH) {
-               if (not lhs.CompareHashes(rhs)) {
-                  // Early failure if valid hashes differ - no point    
-                  // in comparing anything at all                       
-                  VERBOSE(Logger::Red, "Different hashes (type-erased)");
-                  return false;
-               }
-            }
-
-            if (LT.IsPOD()) {
-               // Batch-compare memory if POD or sparse                 
-               const auto bytesize = lhs.GetBytesize();
-               const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), bytesize));
-               if (not same) {
-                  VERBOSE(Logger::Red,
-                     "Different POD memory after memcmp (type-erased)");
-                  VERBOSE(Logger::Red,
-                     "Most likely padding bytes filled with junk - pack your struct: ", LT);
-               }
-               return same;
-            }
-
-            const auto comparer = LT.GetComparerEqual();
-            if (comparer) {
-               // Call compare operator for each element pair           
-               auto t1 = lhs.template GetRawAs<uint8_t>();
-               auto t2 = rhs.template GetRawAs<uint8_t>();
-               [[maybe_unused]] const auto t1_start = t1;
-               const auto t1end = t1 + lhs.GetBytesize();
-               const auto size = LT.GetSize();
-               while (t1 < t1end) {
-                  if (not comparer(t1, t2)) {
-                     VERBOSE(Logger::Red,
-                        "Element #", (t1 - t1_start) / size, " differs (type-erased)");
-                     return false;
-                  }
-
-                  t1 += size;
-                  t2 += size;
-               }
-               return true;
-            }
-
-            VERBOSE(Logger::Red, "Type not comparable (type-erased): ", LT);
-            return false;
          }
       }
       

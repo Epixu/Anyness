@@ -20,6 +20,7 @@ namespace Langulus
    /// Round to the upper power-of-two                                        
    ///   @param x - the unsigned integer to round up                          
    ///   @return the closest upper power-of-two to x                          
+   ///TODO test if std::bit_ceil is better, benchmark it!
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr T Roof2(const T x) IF_UNSAFE(noexcept) {
       #if LANGULUS(SAFE)
@@ -28,7 +29,6 @@ namespace Langulus
          LglsAssumeDev(x <= lastPowerOfTwo, "Roof2 overflowed");
       #endif
 
-      // Pick a well optimized intrinsic function if not constexpr      
       if consteval {
          T n = x;
          --n;
@@ -47,7 +47,8 @@ namespace Langulus
          return n;
       }
       else {
-         return x <= 1 ? x : static_cast<T>((T {1}) << 
+         // Pick a well optimized intrinsic function if not constexpr   
+         return x <= 1 ? x : static_cast<T>((T {1}) <<
             static_cast<T>(sizeof(T) * 8 - ::std::countl_zero(static_cast<T>(x - 1))));
       }
    }

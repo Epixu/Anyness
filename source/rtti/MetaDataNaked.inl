@@ -10,265 +10,276 @@
 
 namespace Langulus::RTTI::Inner
 {
-   /// Check if type origins match                                            
+   /// Check if type origins match.                                           
    /// Disregards all cv-qualifiers, pointers, array extents, etc.            
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
    inline bool MetaDataNaked::Is(const MetaDataNaked& other) const noexcept {
-      return mDefinition->mOrigin and other
-         and mDefinition->mOrigin == other.mDefinition->mOrigin;
+      return mDefinition == other.mDefinition or (
+                mDefinition and other.mDefinition and mDefinition->mOrigin
+            and mDefinition->mOrigin == other.mDefinition->mOrigin
+         );
    }
 
    /// Check if two meta definitions match origin and sparseness, but ignores 
    /// `const` and `volatile` qualifiers. The qualifiers aren't ignored only  
-   /// on the current level of indirection, but on the entire way to origin   
+   /// on the current level of indirection, but on the entire way to origin.  
    ///   @param other - the type to compare against                           
    ///   @return true if types match                                          
    inline bool MetaDataNaked::IsSame(const MetaDataNaked& other) const noexcept {
-      return other and mDefinition->mDecvqAll == other.mDefinition->mDecvqAll;
+      return mDefinition == other.mDefinition or (
+                mDefinition and other.mDefinition
+            and mDefinition->mDecvqAll == other.mDefinition->mDecvqAll
+         );
    }
 
    /// Get the size of the type                                               
    inline auto MetaDataNaked::GetSize() const noexcept -> size_t {
-      return mDefinition->mSize;
+      return mDefinition ? mDefinition->mSize : 0;
    }
 
    /// Get the alignment of the type                                          
    inline auto MetaDataNaked::GetAlignment() const noexcept -> size_t {
-      return mDefinition->mAlign;
+      return mDefinition ? mDefinition->mAlign : 0;
    }
 
    /// Get the reflected file extensions, separated with commas               
    inline auto MetaDataNaked::GetFiles() const noexcept -> Token {
-      return mDefinition->mFilesOf;
+      return mDefinition ? mDefinition->mFilesOf : Token{};
    }
 
    /// Get the reflected suffix                                               
    inline auto MetaDataNaked::GetSuffix() const noexcept -> Token {
-      return mDefinition->mSuffixOf;
+      return mDefinition ? mDefinition->mSuffixOf : Token{};
    }
 
    /// Get the minimal allocation of the type in bytes                        
    inline auto MetaDataNaked::GetMinAllocation() const noexcept -> size_t {
-      return mDefinition->mMinimalAllocation;
+      return mDefinition ? mDefinition->mMinimalAllocation : 0;
    }
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    /// Get the minimal allocation page                                        
    inline auto MetaDataNaked::GetMinPoolsize() const noexcept -> size_t {
-      return mDefinition->mMinimalPoolSize;
+      return mDefinition ? mDefinition->mMinimalPoolSize : 0;
    }
    
    /// Get the reflected pool tactic                                          
    inline auto MetaDataNaked::GetPoolTactic() const noexcept -> PoolTactic {
-      return mDefinition->mPoolTactic;
+      return mDefinition ? mDefinition->mPoolTactic : PoolTactic::Type;
    }
 
    /// Get the active pool chain                                              
    inline auto MetaDataNaked::GetPoolchain() const noexcept -> Fractalloc::Pool* {
-      return mDefinition->mPoolChain;
+      return mDefinition ? mDefinition->mPoolChain : nullptr;
    }
 #endif
 
    /// Check if type is CT::Dense                                             
    inline bool MetaDataNaked::IsDense() const noexcept {
-      return not mDefinition->mDeptr;
+      return mDefinition ? not mDefinition->mDeptr : true;
    }
 
    /// Check if type is CT::Sparse                                            
    inline bool MetaDataNaked::IsSparse() const noexcept {
-      return mDefinition->mDeptr;
+      return mDefinition ? mDefinition->mDeptr : false;
    }
 
    /// Check if the type is CT::Constant                                      
    inline bool MetaDataNaked::IsConstant() const noexcept {
-      return mDefinition->mConst;
+      return mDefinition ? mDefinition->mConst : false;
    }
 
    /// Check if the type is CT::Mutable                                       
    inline bool MetaDataNaked::IsMutable() const noexcept {
-      return not mDefinition->mConst;
+      return mDefinition ? not mDefinition->mConst : true;
    }
 
    /// Check if type is CT::Deep                                              
    inline bool MetaDataNaked::IsDeep() const noexcept {
-      return mDefinition->mDeep;
+      return mDefinition ? mDefinition->mDeep : false;
    }
 
    /// Check if type is CT::POD                                               
    inline bool MetaDataNaked::IsPOD() const noexcept {
-      return mDefinition->mPOD;
+      return mDefinition ? mDefinition->mPOD : false;
    }
 
    /// Check if type is CT::Nullable                                          
    inline bool MetaDataNaked::IsNullable() const noexcept {
-      return mDefinition->mNullable;
+      return mDefinition ? mDefinition->mNullable : false;
    }
 
    /// Check if type is CT::Abstract                                          
    inline bool MetaDataNaked::IsAbstract() const noexcept {
-      return mDefinition->mAbstract;
+      return mDefinition ? mDefinition->mAbstract : false;
    }
 
    /// Check if type has an explicit GetHash() method                         
    inline bool MetaDataNaked::HasGetHashMethod() const noexcept {
-      return mDefinition->mHasGetHashMethod;
+      return mDefinition ? mDefinition->mHasGetHashMethod : false;
    }
    
    /// Get the reflected destructor                                           
    inline auto MetaDataNaked::GetDestructor()
    const noexcept -> DefinitionData::FUnary {
-      return mDefinition->mCurrentBoundary.mDestructor;
+      return mDefinition ? mDefinition->mCurrentBoundary.mDestructor : nullptr;
    }
 
    /// Get the reflected referencer                                           
    inline auto MetaDataNaked::GetReferencer()
    const noexcept -> DefinitionData::FReference {
-      return mDefinition->mCurrentBoundary.mReferencer;
+      return mDefinition ? mDefinition->mCurrentBoundary.mReferencer : nullptr;
    }
 
    /// Get the reflected resolver                                             
    inline auto MetaDataNaked::GetResolver()
    const noexcept -> DefinitionData::FResolve {
-      return mDefinition->mCurrentBoundary.mResolver;
+      return mDefinition ? mDefinition->mCurrentBoundary.mResolver : nullptr;
    }
 
    /// Get the reflected default-constructor                                  
    inline auto MetaDataNaked::GetDefaultConstructor()
    const noexcept -> DefinitionData::FUnary {
-      return mDefinition->mCurrentBoundary.mDefaultConstructor;
+      return mDefinition ? mDefinition->mCurrentBoundary.mDefaultConstructor : nullptr;
    }
    
    /// Get the reflected describe-constructor                                 
    inline auto MetaDataNaked::GetDescribeConstructor()
    const noexcept -> DefinitionData::FDescribe {
-      return mDefinition->mCurrentBoundary.mDescribeConstructor;
+      return mDefinition ? mDefinition->mCurrentBoundary.mDescribeConstructor : nullptr;
    }
    
    /// Get the reflected refer-constructor                                    
    inline auto MetaDataNaked::GetReferConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mReferConstructor;
+      return mDefinition ? mDefinition->mCurrentBoundary.mReferConstructor : nullptr;
    }
 
    /// Get the reflected refer-assigner                                       
    inline auto MetaDataNaked::GetReferAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mReferAssigner;
+      return mDefinition ? mDefinition->mCurrentBoundary.mReferAssigner : nullptr;
    }
 
    /// Get the reflected move-constructor                                     
    inline auto MetaDataNaked::GetMoveConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mMoveConstructor;
+      return mDefinition ? mDefinition->mCurrentBoundary.mMoveConstructor : nullptr;
    }
 
    /// Get the reflected move-assigner                                        
    inline auto MetaDataNaked::GetMoveAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mMoveAssigner;
+      return mDefinition ? mDefinition->mCurrentBoundary.mMoveAssigner : nullptr;
    }
 
    /// Get the reflected abandon-constructor                                  
    inline auto MetaDataNaked::GetAbandonConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mAbandonConstructor;
+      return mDefinition ? mDefinition->mCurrentBoundary.mAbandonConstructor : nullptr;
    }
 
    /// Get the reflected abandon-assigner                                     
    inline auto MetaDataNaked::GetAbandonAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mAbandonAssigner;
+      return mDefinition ? mDefinition->mCurrentBoundary.mAbandonAssigner : nullptr;
    }
 
    /// Get the reflected disown-constructor                                   
    inline auto MetaDataNaked::GetDisownConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mDisownConstructor;
+      return mDefinition ? mDefinition->mCurrentBoundary.mDisownConstructor : nullptr;
    }
 
    /// Get the reflected disown-assigner                                      
    inline auto MetaDataNaked::GetDisownAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mDisownAssigner;
+      return mDefinition ? mDefinition->mCurrentBoundary.mDisownAssigner : nullptr;
    }
 
    /// Get the reflected clone-constructor                                    
    inline auto MetaDataNaked::GetCloneConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mCloneConstructor;
+      return mDefinition ? mDefinition->mCurrentBoundary.mCloneConstructor : nullptr;
    }
 
    /// Get the reflected clone-assigner                                       
    inline auto MetaDataNaked::GetCloneAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mCloneAssigner;
+      return mDefinition ? mDefinition->mCurrentBoundary.mCloneAssigner : nullptr;
    }
 
    /// Get the reflected copy-constructor                                     
    inline auto MetaDataNaked::GetCopyConstructor()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mCopyConstructor;
+      return mDefinition ? mDefinition->mCurrentBoundary.mCopyConstructor : nullptr;
    }
 
    /// Get the reflected copy-assigner                                        
    inline auto MetaDataNaked::GetCopyAssigner()
    const noexcept -> DefinitionData::FBinary {
-      return mDefinition->mCurrentBoundary.mCopyAssigner;
+      return mDefinition ? mDefinition->mCurrentBoundary.mCopyAssigner : nullptr;
    }
 
    /// Get the reflected comparer                                             
    inline auto MetaDataNaked::GetComparer()
    const noexcept -> DefinitionData::FCompare {
-      return mDefinition->mCurrentBoundary.mComparer;
+      return mDefinition ? mDefinition->mCurrentBoundary.mComparer : nullptr;
    }
 
    /// Get the reflected comparer                                             
    inline auto MetaDataNaked::GetComparerEqual()
    const noexcept -> DefinitionData::FCompareEqual {
-      return mDefinition->mCurrentBoundary.mComparerEqual;
+      return mDefinition ? mDefinition->mCurrentBoundary.mComparerEqual : nullptr;
    }
 
    /// Get the reflected hasher                                               
    inline auto MetaDataNaked::GetHasher()
    const noexcept -> DefinitionData::FHash {
-      return mDefinition->mCurrentBoundary.mHasher;
+      return mDefinition ? mDefinition->mCurrentBoundary.mHasher : nullptr;
    }
 
    /// Get the reflected dispatcher                                           
    inline auto MetaDataNaked::GetDispatcher()
    const noexcept -> DefinitionData::FDispatch {
-      return mDefinition->mCurrentBoundary.mDispatcher;
+      return mDefinition ? mDefinition->mCurrentBoundary.mDispatcher : nullptr;
    }
 
    /// Remove a layer of indirection                                          
    ///   @attention will return invalid meta if type is incomplete            
    inline auto MetaDataNaked::GetDeptr() const -> MetaDataNaked {
+      if (not mDefinition)
+         return {};
+
       return mDefinition->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t {1})
          ? nullptr
          : mDefinition->mDeptr;
    }
 
-   /// Get the origin type, if complete                                       
-   /// The origin type has all indirections and qualifiers removed            
+   /// Get the origin type, if complete.                                      
+   /// The origin type has all indirections and qualifiers removed.           
    inline auto MetaDataNaked::GetOrigin() const -> MetaDataNaked {
-      return mDefinition->mOrigin;
+      return mDefinition ? mDefinition->mOrigin : nullptr;
    }
 
    /// Strip all qualifiers from all levels of indirection                    
    inline auto MetaDataNaked::GetDecvqAll() const -> MetaDataNaked {
-      return mDefinition->mDecvqAll;
+      return mDefinition ? mDefinition->mDecvqAll : nullptr;
    }
 
    /// Strip topmost qualifiers                                               
    inline auto MetaDataNaked::GetDecvq() const -> MetaDataNaked {
-      return mDefinition->mDecvqOnce;
+      return mDefinition ? mDefinition->mDecvqOnce : nullptr;
    }
 
    /// Add a level of indirection to the type                                 
    ///   @attention this is possible only if that level of indirection has    
    ///      already been reflected at runtime prior to calling this function  
    inline auto MetaDataNaked::AddPtr() const -> MetaDataNaked {
+      if (not mDefinition)
+         return {};
+
       auto ptr = mDefinition->mAddPtr;
       LglsAssert(ptr, "Pointer type hasn't been reflected yet");
       return ptr;
@@ -278,6 +289,9 @@ namespace Langulus::RTTI::Inner
    ///   @attention this is possible only if the qualified type has           
    ///      already been reflected at runtime prior to calling this function  
    inline auto MetaDataNaked::AddConst() const -> MetaDataNaked {
+      if (not mDefinition)
+         return {};
+
       auto cnst = mDefinition->mAddConst;
       LglsAssert(cnst, "Constant type hasn't been reflected yet");
       return cnst;
@@ -285,6 +299,9 @@ namespace Langulus::RTTI::Inner
 
    /// Get the default concretization for an abstract type                    
    inline auto MetaDataNaked::GetConcrete() const -> MetaDataNaked {
+      if (not mDefinition)
+         return {};
+
       return mDefinition->mCurrentBoundary.mConcrete
          ? mDefinition->mCurrentBoundary.mConcrete()
          : nullptr;
@@ -292,6 +309,9 @@ namespace Langulus::RTTI::Inner
 
    /// Get the runtime producer of the type, if any                           
    inline auto MetaDataNaked::GetProducer() const -> MetaDataNaked {
+      if (not mDefinition)
+         return {};
+
       return mDefinition->mCurrentBoundary.mProducer
          ? mDefinition->mCurrentBoundary.mProducer()
          : nullptr;
@@ -300,42 +320,75 @@ namespace Langulus::RTTI::Inner
    /// Get the reflected bases                                                
    inline auto MetaDataNaked::GetBases()
    const noexcept -> DefinitionData::BaseList const& {
+      if (not mDefinition) {
+         static const DefinitionData::BaseList fallback;
+         return fallback;
+      }
+
       return mDefinition->mCurrentBoundary.mBases;
    }
 
    /// Get the reflected verbs                                                
    inline auto MetaDataNaked::GetVerbs()
    const noexcept -> DefinitionData::VerbList const& {
+      if (not mDefinition) {
+         static const DefinitionData::VerbList fallback;
+         return fallback;
+      }
+
       return mDefinition->mCurrentBoundary.mVerbs;
    }
 
    /// Get the reflected members                                              
    inline auto MetaDataNaked::GetMembers()
    const noexcept -> DefinitionData::MemberList const& {
+      if (not mDefinition) {
+         static const DefinitionData::MemberList fallback;
+         return fallback;
+      }
+
       return mDefinition->mCurrentBoundary.mMembers;
    }
 
    /// Get the reflected named values                                         
    inline auto MetaDataNaked::GetNamedValues()
    const noexcept -> DefinitionData::ValuesList const& {
+      if (not mDefinition) {
+         static const DefinitionData::ValuesList fallback;
+         return fallback;
+      }
+
       return mDefinition->mNamedValues;
    }
 
    /// Get morphisms to other types                                           
    inline auto MetaDataNaked::GetMorphismsTo()
    const noexcept -> DefinitionData::MorphismList const& {
+      if (not mDefinition) {
+         static const DefinitionData::MorphismList fallback;
+         return fallback;
+      }
+
       return mDefinition->mCurrentBoundary.mMorphismsTo;
    }
    
    /// Get morphisms from other types                                         
    inline auto MetaDataNaked::GetMorphismsFrom()
    const noexcept -> DefinitionData::MorphismList const& {
+      if (not mDefinition) {
+         static const DefinitionData::MorphismList fallback;
+         return fallback;
+      }
+
       return mDefinition->mCurrentBoundary.mMorphismsFrom;
    }
    
    /// Get a specific coverter, if it exists                                  
    inline auto MetaDataNaked::GetMorphism(MetaDataNaked to)
    const noexcept -> DefinitionData::Morphism {
+      if (not mDefinition)
+         return {nullptr, nullptr};
+
       auto found = mDefinition->mCurrentBoundary.mMorphismsTo.find(to.mDefinition);
       if (found != mDefinition->mCurrentBoundary.mMorphismsTo.end())
          return found->second;
