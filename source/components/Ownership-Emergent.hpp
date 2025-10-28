@@ -34,7 +34,12 @@ namespace Langulus::Anyness::Component
 
       /// Get the allocation                                                  
       auto GetAllocation(this auto const& self) noexcept {
-         return Allocator::Find(self.GetType(), self.GetHeapInner());
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            return Allocator::Find(self.GetType(), self.GetHeapInner());
+         #else
+            (void)self;
+            static_assert(false, "Emergent ownership is not allowed when managed memory is disabled");
+         #endif
       }
 
       /// Get the memory reference count                                      

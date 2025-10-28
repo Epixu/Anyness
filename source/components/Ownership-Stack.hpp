@@ -41,13 +41,15 @@ namespace Langulus::Anyness::Component
          auto& a = self.GetAllocationInner();
          if (a)
             return; // We already own this allocation                   
-      
-         // The heap might already be ours and we just don't know it    
-         if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
-            a = const_cast<AllocationPtr>(found);
-            a->Keep();
-            return;
-         }
+
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            // The heap might already be ours and we just don't know it 
+            if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
+               a = const_cast<AllocationPtr>(found);
+               a->Keep();
+               return;
+            }
+         #endif
 
          // Shallow-copy all elements in a fresh allocation             
          C temp {Copy {self}};
@@ -55,9 +57,6 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      /*
-      template<unsigned> friend struct DeepOwnershipHeap;
-      */
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;
@@ -78,8 +77,12 @@ namespace Langulus::Anyness::Component
       /// pointer. If allocation wasn't found, it will be set to nullptr.     
       ///   @attention this will not dereference previous allocation          
       void FindAllocationInner(this auto& self) noexcept {
-         auto found = Allocator::Find(self.GetType(), self.GetHeapInner());
-         self.SetAllocationInner(found ? found : nullptr);
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            auto found = Allocator::Find(self.GetType(), self.GetHeapInner());
+            self.SetAllocationInner(found ? found : nullptr);
+         #else
+            self.SetAllocationInner(nullptr);
+         #endif
       }
 
       /// Default-initialize the component                                    

@@ -230,9 +230,8 @@ namespace Langulus::Anyness::Component
                   if (subT.IsSparse()) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
-                     if (auto subEntry = Allocator::Find(subT, ptr)) {
-                        //TODO extract entry from previous entry?
-                        H temp {ptr, const_cast<EntryPtr>(&subEntry), subT};
+                     if (auto subEntry = entries + 1) {
+                        H temp {ptr, subEntry, subT};
                         temp.DestroyElementDeep();
                      }
                   }
@@ -282,18 +281,18 @@ namespace Langulus::Anyness::Component
             
             if constexpr (CT::Sparse<T>) {
                using DT = Deptr<T>;
-               auto& entry = self.GetEntry();
-               if (not entry)
+               EntryPtr entries = self.GetEntries();
+               if (not entries or not *entries)
                   return;
 
-               if (1 == entry->GetUses()) {
+               if (1 == (*entries)->GetUses()) {
                   auto& ptr = *self.template GetRawAs<T>();
                   LglsAssumeDev(ptr, "Null pointer");
 
                   if constexpr (CT::Sparse<DT>) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
-                     H {ptr}.DestroyElementDeep();
+                     H {ptr, entries + 1}.DestroyElementDeep();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
                      // Pointer to a complete, destroyable dense.       
@@ -305,7 +304,7 @@ namespace Langulus::Anyness::Component
                      else ptr->~DT();
                   }
 
-                  Allocator::Deallocate(entry);
+                  Allocator::Deallocate(*entries);
                }
                else {
                   // This element occurs in more than one place.        
@@ -320,7 +319,7 @@ namespace Langulus::Anyness::Component
                         ptr->~DT();
                   }
 
-                  entry->Free();
+                  (*entries)->Free();
                }
             }
             else if constexpr (CT::Destroyable<T>) {
@@ -329,6 +328,58 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Referenced<T>)
                   element.Reference(-1);
                element.~T();
+            }
+         }
+      }
+      
+      /// Emplace on top of the first element using an intent                 
+      ///   @attention assumes destination memory has been preallocated,      
+      ///      including all levels of indirection                            
+      ///   @attention does not modify any container state                    
+      ///   @attention this overwrites previous handle without dereferencing  
+      ///      it, and without destroying anything                            
+      ///   @param intent - constructor argument. If this container           
+      ///      is statically typed, this can be any constructor argument,     
+      ///      otherwise it has to be an instance of the contained type.      
+      template<CT::Container C, CT::Intent I>
+      void EmplaceEntries(this C& self, I&& intent) {
+         using IT = Decvq<Deref<TypeOf<I>>>;
+         decltype(auto) rhs = FWD(intent.what);
+
+         if constexpr (CT::Handle<IT>) {
+            // We're emplacing using a handle, which can be faster due  
+            // to carrying allocation data with itself when sparse,     
+            // instead of searching for it when having DeepOwnership.   
+            if (self.IsSparse()) {
+               const auto entries_size = sizeof(AllocationPtr) * self.GetIndirections();
+               if constexpr (I::IsKept())
+                  memcpy(self.GetEntries(), rhs.GetEntries(), entries_size);
+               else
+                  memset(self.GetEntries(), 0, entries_size);
+               self.KeepDeep();
+            }
+         }
+         else {
+            // Transfer deep ownership by searching for it.             
+            // Obviously, this is available only if memory is managed.  
+            if (self.IsSparse()) {
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               if constexpr (I::IsKept()) {
+                  auto entries = self.GetEntries();
+                  auto meta = self.GetType().GetDeptr();
+                  void** handle = self.template GetRawAs<void*>();
+                  
+                  while (meta and *handle) {
+                     *entries = const_cast<AllocationPtr>(Allocator::Find(meta, *handle));
+                     meta = meta.GetDeptr();
+                     handle = reinterpret_cast<void**>(*handle);
+                     ++entries;
+                  }
+               }
+               else
+               #endif
+                  memset(self.GetEntries(), 0, sizeof(AllocationPtr) * self.GetIndirections());
+               self.KeepDeep();
             }
          }
       }

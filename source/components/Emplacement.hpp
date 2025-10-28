@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using PickMut = typename Deref<C>::PickMut;
       
-      /// Emplace a new item at the first element using an intent             
+      /// Emplace on top of the first element using an intent                 
       ///   @attention assumes destination memory has been preallocated,      
       ///      including all levels of indirection                            
       ///   @attention does not modify any container state                    
@@ -106,17 +106,6 @@ namespace Langulus::Anyness::Component
                else
                   IntentNew(self.GetHeapInner(), Refer(*rhs.GetRaw()));
             }
-
-            // Transfer deep ownership from handle                      
-            if constexpr (CT::DeeplyOwned<C>) {
-               if (self.IsSparse()) {
-                  if constexpr (I::IsKept())
-                     *self.GetEntries() = *rhs.GetEntries();
-                  else
-                     *self.GetEntries() = nullptr;
-                  self.KeepDeep();
-               }
-            }
          }
          else {
             if constexpr (CT::TypeErased<C>) {
@@ -150,21 +139,9 @@ namespace Langulus::Anyness::Component
                static_assert(Same<T, IT>, "Type mismatch");
                IntentNew(self.GetHeapInner(), FWD(intent));
             }
-
-            // Transfer deep ownership by searching for it              
-            if constexpr (CT::DeeplyOwned<C>) {
-               if (self.IsSparse()) {
-                  if constexpr (I::IsKept()) {
-                     *self.GetEntries() = const_cast<AllocationPtr>(Allocator::Find(
-                        self.GetType().GetDeptr(),
-                        *self.template GetRawAs<void*>()
-                     ));
-                  }
-                  else *self.GetEntries() = nullptr;
-                  self.KeepDeep();
-               }
-            }
          }
+
+         if_available(self.EmplaceEntries(FWD(intent)));
       }
       
       /// Emplace a new default-constructed item at the first element         
