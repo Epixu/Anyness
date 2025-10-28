@@ -77,12 +77,12 @@ namespace Langulus::RTTI::Inner
 
    /// Check if type is CT::Dense                                             
    inline bool MetaDataNaked::IsDense() const noexcept {
-      return mDefinition ? not mDefinition->mDeptr : true;
+      return mDefinition ? mDefinition->mDeptr == nullptr : true;
    }
 
    /// Check if type is CT::Sparse                                            
    inline bool MetaDataNaked::IsSparse() const noexcept {
-      return mDefinition ? mDefinition->mDeptr : false;
+      return mDefinition ? mDefinition->mDeptr != nullptr : false;
    }
 
    /// Check if the type is CT::Constant                                      
