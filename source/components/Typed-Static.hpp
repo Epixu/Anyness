@@ -42,6 +42,9 @@ namespace Langulus::Anyness::Component
       /// Get the size of a single element of TYPE in bytes                   
       constexpr size_t GetStride() const noexcept { return sizeof(TYPE); }
 
+      /// Get the alignment of a single element of TYPE in bytes              
+      constexpr size_t GetAlignment() const noexcept { return alignof(TYPE); }
+
       /// Get the reflected type name                                         
       constexpr auto GetName() const noexcept { return NameOf<TYPE>(); }
 

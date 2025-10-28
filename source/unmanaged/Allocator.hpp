@@ -60,10 +60,9 @@ namespace Langulus::Unmanaged
       };
 
       LANGULUS(INLINED)
-      static auto Allocate(DMeta type, size_t size) has_assumptions -> Allocation* {
-         LglsAssumeDev(type, "Type must be provided");
+      static auto Allocate(size_t alignment, size_t size) has_assumptions -> Allocation* {
          LglsAssumeDev(size, "Zero allocation is not allowed");
-         return AlignedAllocate(size, type.GetAlignment());
+         return AlignedAllocate(size, alignment);
       }
 
       LANGULUS(INLINED)
@@ -78,7 +77,7 @@ namespace Langulus::Unmanaged
             "Deallocating an unused allocation");
 
          (void) previous;
-         return Allocate(nullptr, size);
+         return Allocate(previous->mAlignment, size);
       }
 
       LANGULUS(INLINED)

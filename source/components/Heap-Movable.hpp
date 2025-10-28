@@ -190,7 +190,11 @@ namespace Langulus::Anyness::Component
       ///   @param request - request to fulfill                               
       template<CT::Container C>
       auto AllocateFresh(this C& self, const Request& request) -> Allocation* {
-         auto al = Allocator::Allocate(self.GetType(), request.mTotalBytes);
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            auto al = Allocator::Allocate(self.GetType(), request.mTotalBytes);
+         #else
+            auto al = Allocator::Allocate(self.GetAlignment(), request.mTotalBytes);
+         #endif
          LglsAssert(al, "Out of memory");
          
          self.SetHeapInner(al->GetBlockStart() + request.mHeaderBytes);

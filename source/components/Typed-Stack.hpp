@@ -20,13 +20,6 @@ namespace Langulus::Anyness
 
 namespace Langulus::Anyness::Component
 {
-   /*template<unsigned>
-   struct IterationForEach;
-
-   template<unsigned>
-   struct HeapMovable;*/
-
-
    ///                                                                        
    /// Defines the contained type as a member variable, allowing the use of   
    /// type-erasure. You can optionally constrain the type.                   
@@ -48,8 +41,6 @@ namespace Langulus::Anyness::Component
       static constexpr bool Dense = not TypeErased and CT::Dense<TYPE>;
 
    protected:
-      /*template<unsigned>
-      friend struct IterationForEach;*/
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Emplacement;
@@ -124,6 +115,14 @@ namespace Langulus::Anyness::Component
             return self.GetTypeInner().GetSize();
          else
             return sizeof(TYPE);
+      }
+
+      /// Get the alignment of a single element in bytes                      
+      constexpr size_t GetAlignment(this auto const& self) noexcept {
+         if constexpr (TypeErased)
+            return self.GetTypeInner().GetAlignment();
+         else
+            return alignof(TYPE);
       }
 
       /// Get the reflected type name                                         
