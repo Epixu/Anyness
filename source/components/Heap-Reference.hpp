@@ -43,21 +43,6 @@ namespace Langulus::Anyness::Component
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
-
-      /*using Byte = ::std::uint8_t;
-      template<CT::Container C>
-      using View = typename C::ViewType;
-      template<CT::Container C>
-      using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;*/
-
-      /*union {
-         // The heap pointer in char form for easy debugging            
-         char* mHeapReadable;
-         // The heap pointer in a byte form for easy pointer arithmetics
-         uint8_t* mHeap;
-         // The heap pointer in a void form for easy static_cast        
-         void* mHeapVoid;
-      };*/
       
       /// Get the heap pointer (inner)                                        
       constexpr auto& GetHeapInner(this auto&& self) noexcept {

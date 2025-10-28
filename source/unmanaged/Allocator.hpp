@@ -94,14 +94,6 @@ namespace Langulus::Unmanaged
          free(entry->mMallocHandle);
       }
 
-      static constexpr auto Find(DMeta, const void*) noexcept -> const Allocation* {
-         return nullptr;
-      }
-
-      static constexpr bool CheckAuthority(DMeta, const void*) noexcept {
-         return false;
-      }
-
       static consteval bool CollectGarbage() noexcept {
          return false;
       }

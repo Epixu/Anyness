@@ -20,9 +20,8 @@ namespace Langulus
    /// Round to the upper power-of-two                                        
    ///   @param x - the unsigned integer to round up                          
    ///   @return the closest upper power-of-two to x                          
-   ///TODO test if std::bit_ceil is better, benchmark it!
    template<class T> LANGULUS(ALWAYS_INLINED)
-   constexpr T Roof2(const T x) IF_UNSAFE(noexcept) {
+   constexpr T Roof2(const T x) has_assumptions {
       #if LANGULUS(SAFE)
          static_assert(CT::Unsigned<T>, "T should be unsigned");
          constexpr T lastPowerOfTwo = (T {1}) << (T {sizeof(T) * 8 - 1});

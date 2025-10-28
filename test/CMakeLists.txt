@@ -27,7 +27,11 @@ add_langulus_test(LangulusAnynessTest
                 CT/TestCharacter.cpp
                 CT/TestSuffix.cpp
                 CT/TestUnfold.cpp
+
+                Utils/TestRoof.cpp
         
+                $<IF:$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>,Allocator/TestManaged.cpp,Allocator/TestUnmanaged.cpp>
+
                 Anyness/TestText.cpp
                 Anyness/TestTRef.cpp
                 Anyness/TestTOwn.cpp

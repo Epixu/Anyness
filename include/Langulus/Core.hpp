@@ -521,15 +521,15 @@ namespace Langulus
    /// The size of a void* in bits, depends on architecture                   
    constexpr size_t Bitness = Byteness * 8;
 
-   /// The default alignment, depends on configuration                        
+   /// The default alignment, configure via LANGULUS_ALIGNMENT                
    constexpr uintptr_t Alignment = LANGULUS_ALIGNMENT;
    static_assert(Alignment >= Byteness);
 
-   /// The default allocation size, depends on configuration                  
+   /// The default allocation size, configure via LANGULUS_MIN_ALLOC          
    constexpr size_t MinimalAllocation = LANGULUS_MIN_ALLOC;
    static_assert(MinimalAllocation >= Alignment);
    
-   /// The smallest possible pool size, depends on configuration              
+   /// The smallest possible pool size, configure via LANGULUS_MIN_POOL       
    constexpr size_t MinimalPoolSize = LANGULUS_MIN_POOL;
    static_assert(MinimalPoolSize > MinimalAllocation);
    
