@@ -5,52 +5,12 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-#include "../Main.hpp"
-#include <Langulus/Allocator.hpp>
-#include <random>
+#include "TestAllocatorCommon.hpp"
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is enabled"
 #endif
 
-using namespace Langulus;
-using namespace Anyness;
-
-static_assert(alignof(Allocation) % Alignment == 0);
-
-std::random_device rd;
-std::mt19937 gen(rd());
-
-using Type1 = uint8_t;
-using Type2 = uint16_t;
-
-#pragma pack(push, 1)
-struct Type3 {
-   uint16_t m1;
-   uint8_t  m2;
-};
-#pragma pack(pop)
-
-using Type4 = uint32_t;
-using Type8 = uint64_t;
-
-struct TypeBig {
-   Type1 t1;
-   Type2 t2;
-   Type4 t4;
-   Type8 t8;
-};
-
-struct TypeVeryBig {
-   TypeBig t1;
-   TypeBig t2;
-   TypeBig t4;
-   TypeBig t8[5];
-};
-
-bool IsAligned(const void* a) noexcept {
-   return 0 == (reinterpret_cast<uintptr_t>(a) & uintptr_t { Alignment - 1 });
-}
 
 TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
    Type1,
@@ -59,21 +19,21 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
    Type4,
    Type8,
    TypeBig,
-   TypeVeryBig
+   TypeVeryBig,
+   TypeVeryBigAligned,
+   TypeVeryBigPacked
 ) {
    static Allocator::State memoryState;
 
    GIVEN("An allocation") {
-      Allocation* entry = nullptr;
+      Allocation* entry = Allocator::Allocate(alignof(TestType), 512);
+      REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
-         entry = Allocator::Allocate(alignof(TestType), 512);
-
-         REQUIRE(entry);
          REQUIRE(entry->GetBlockStart() != nullptr);
-         REQUIRE(entry->GetBlockStart() != reinterpret_cast<uint8_t*>(entry));
-         REQUIRE(reinterpret_cast<uintptr_t>(entry) % Alignment == 0);
-         REQUIRE(reinterpret_cast<uintptr_t>(entry->GetBlockStart()) % Alignment == 0);
+         REQUIRE(entry->GetBlockStart() <= (reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation)));
+         REQUIRE(reinterpret_cast<uintptr_t>(entry) % alignof(Allocation) == 0);
+         REQUIRE(reinterpret_cast<uintptr_t>(entry->GetBlockStart()) % alignof(TestType) == 0);
          REQUIRE(entry->GetFrontendSize() >= 512);
          REQUIRE(entry->GetBackendSize() >= 512 + sizeof(Allocation));
          REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + entry->GetFrontendSize());
@@ -81,13 +41,15 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
          REQUIRE(entry->GetUses() == 1);
 
          for (size_t i = 0; i < 512; ++i) {
-            auto p = entry->GetBlockStart() + i;
-            REQUIRE(entry->Contains(p));
+            auto p1 = entry->GetBlockStart() + i;
+            auto p2 = entry->GetBlockStart() - (i+1);
+            REQUIRE(entry->Contains(p1));
+            REQUIRE_FALSE(entry->Contains(p2));
          }
 
          for (size_t i = 512; i < 513; ++i) {
-            auto p = entry->GetBlockStart() + i;
-            REQUIRE_FALSE(entry->Contains(p));
+            auto p1 = entry->GetBlockStart() + i;
+            REQUIRE_FALSE(entry->Contains(p1));
          }
 
          Allocator::Deallocate(entry);
@@ -180,32 +142,30 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
       }
 
       WHEN("Referenced once") {
-         entry = Allocator::Allocate(alignof(TestType), 512);
-         REQUIRE(entry);
          entry->Keep();
 
          REQUIRE(entry->GetUses() == 2);
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
+         IF_SAFE(REQUIRE(entry->GetUses() == 2));
+
          entry->Free();
          Allocator::Deallocate(entry);
       }
 
       WHEN("Referenced multiple times") {
-         entry = Allocator::Allocate(alignof(TestType), 512);
-         REQUIRE(entry);
          entry->Keep(5);
 
          REQUIRE(entry->GetUses() == 6);
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
+         IF_SAFE(REQUIRE(entry->GetUses() == 6));
+
          entry->Free(5);
          Allocator::Deallocate(entry);
       }
 
       WHEN("Dereferenced once without deletion") {
-         entry = Allocator::Allocate(alignof(TestType), 512);
-         REQUIRE(entry);
          entry->Keep();
          entry->Free();
 
@@ -215,31 +175,28 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
       }
 
       WHEN("Dereferenced multiple times without deletion") {
-         entry = Allocator::Allocate(alignof(TestType), 512);
-         REQUIRE(entry);
          entry->Keep(5);
          entry->Free(4);
 
          REQUIRE(entry->GetUses() == 2);
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
+         IF_SAFE(REQUIRE(entry->GetUses() == 2));
+
          entry->Free(1);
          Allocator::Deallocate(entry);
       }
 
       WHEN("Dereferenced once with deletion") {
-         entry = Allocator::Allocate(alignof(TestType), 512);
-         REQUIRE(entry);
          Allocator::Deallocate(entry);
-
       }
 
       WHEN("Dereferenced multiple times with deletion") {
-         entry = Allocator::Allocate(alignof(TestType), 512);
-         REQUIRE(entry);
          entry->Keep(5);
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
+         IF_SAFE(REQUIRE(entry->GetUses() == 6));
+
          entry->Free(5);
          Allocator::Deallocate(entry);
       }

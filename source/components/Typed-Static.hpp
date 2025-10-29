@@ -146,7 +146,13 @@ namespace Langulus::Anyness::Component
       constexpr bool IsSparse() const noexcept {
          return CT::Sparse<TYPE>;
       }
-      
+
+      /// Get the number of indirections                                      
+      /// int**** will result in 4; int* will result in 1, int results in 0.  
+      constexpr bool GetIndirections() const noexcept {
+         return IndirectsOf<TYPE>;
+      }
+
       /// Check if contained data is constant                                 
       ///   @return true if the contents are constant                         
       constexpr bool IsConstant(this auto const& self) noexcept {

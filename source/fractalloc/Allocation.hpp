@@ -7,10 +7,12 @@
 ///                                                                           
 #pragma once
 #include <Langulus/Core.hpp>
+#include <Langulus/Utils/Pot.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
+
 
 namespace Langulus::Fractalloc
 {
@@ -19,32 +21,31 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
-   struct alignas(Alignment) Allocation {
-   protected:
-      friend class Pool;
-      friend struct Allocator;
-
+   class alignas(Alignment) Allocation {
       // The number of references to this memory.                       
       // Most often used, so first for immediate access.                
-      int mReferences = 1;
+      int32_t mReferences = 1;
 
-      // Allocated bytes for this chunk                                 
-      size_t mAllocatedBytes;
-
-      // This pointer has three uses, depending on mReferences:         
-      // If mReferences > 0, it points to the pool this allocation was  
-      //    allocated in.                                               
-      // If mReferences == 0, it refers to the next free entry to be    
-      //    reused.                                                     
+      // This has two states depending on mReferences:                  
+      // If mReferences > 0, the first struct is used                   
+      // If mReferences == 0, the second struct is used                 
       union {
-         Pool* mPool;
-         Allocation* mNextFreeEntry;
-      };
+         struct {
+            #if LANGULUS_FEATURE(MEMORY_STATISTICS)
+               // Acts like a timestamp of when the allocation happened 
+               uint64_t mStep;
+            #endif
 
-   #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-      // Acts like a timestamp of when the allocation happened          
-      unsigned mStep;
-   #endif
+            // Used to find the pool pointer by rounding 'this'         
+            pot_t mPoolSizeMSB;
+
+            // Allocated bytes usable by client                         
+            pot_t mSizeMSB;
+         };
+         struct {
+            int32_t mNextFreeEntryFinder;
+         };
+      };
 
    public:
        Allocation() = delete;
@@ -52,15 +53,16 @@ namespace Langulus::Fractalloc
        Allocation(Allocation&&) = delete;
       ~Allocation() = delete;
 
-      explicit Allocation(size_t, Pool*) noexcept;
+      explicit Allocation(pot_t size, Pool const*) has_assumptions;
 
+      auto GetPool() const noexcept -> Pool const*;
       auto GetUses() const noexcept { return mReferences; }
       auto GetBackendSize() const noexcept -> size_t;
       auto GetFrontendSize() const noexcept -> size_t;
       auto GetBlockStart() const noexcept -> uint8_t*;
       auto GetBlockEnd() const noexcept -> uint8_t const*;
       bool Contains(const void*) const noexcept;
-      void Keep(int = 1) noexcept;
-      void Free(int = 1) noexcept;
+      void Keep(int32_t = 1) noexcept;
+      void Free(int32_t = 1) noexcept;
    };
 }

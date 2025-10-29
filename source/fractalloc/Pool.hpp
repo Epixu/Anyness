@@ -51,9 +51,6 @@ namespace Langulus::Fractalloc
       DMeta mMeta {};
       // Alignment used when allocating entries                         
       size_t mAlign = Alignment;
-      // Handle for the pool allocation, for use with `free(mHandle)`   
-      void* mHandle {};
-
       // Next pool in the pool chain                                    
       Pool* mNext {};
 
@@ -67,17 +64,16 @@ namespace Langulus::Fractalloc
       Pool() = delete;
       Pool(const Pool&) = delete;
       Pool(Pool&&) = delete;
-      ~Pool() = delete;
+      //~Pool() = delete;
 
-      Pool(DMeta, size_t, void*) noexcept;
+      Pool(DMeta) has_assumptions;
+      Pool(DMeta, size_t) has_assumptions;
 
       // Default pool allocation is 1 MB                                
-      static constexpr size_t DefaultPoolSize = 1024 * 1024;
       static constexpr size_t InvalidIndex = -1;
 
-      static constexpr size_t GetNewAllocationSize(size_t) noexcept;
-
       auto GetPoolStart() const noexcept -> uint8_t*;
+      auto GetPoolEnd() const noexcept -> uint8_t*;
       auto GetAlignment() const noexcept -> size_t { return mMeta.GetAlignment(); }
 
       constexpr auto GetMinAllocation() const noexcept -> size_t;

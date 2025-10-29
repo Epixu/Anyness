@@ -333,14 +333,8 @@ namespace Langulus::Anyness::Component
       }
       
       /// Emplace on top of the first element using an intent                 
-      ///   @attention assumes destination memory has been preallocated,      
-      ///      including all levels of indirection                            
-      ///   @attention does not modify any container state                    
-      ///   @attention this overwrites previous handle without dereferencing  
-      ///      it, and without destroying anything                            
-      ///   @param intent - constructor argument. If this container           
-      ///      is statically typed, this can be any constructor argument,     
-      ///      otherwise it has to be an instance of the contained type.      
+      ///   @attention this overwrites previous entries without dereferencing 
+      ///   @param intent - entries will be copied/sought if handle/sparse    
       template<CT::Container C, CT::Intent I>
       void EmplaceEntries(this C& self, I&& intent) {
          using IT = Decvq<Deref<TypeOf<I>>>;

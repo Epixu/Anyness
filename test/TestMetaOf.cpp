@@ -212,6 +212,7 @@ namespace
       using CTTI_Verbs     = Verbs::Create;
       using CTTI_MapsTo    = int;
       using CTTI_Values    = No;
+      using CTTI_MinAlloc  = Yes<1024>;
 
       using Self = ImplicitlyReflectedDataWithTraits;
       using CTTI_Members = Members<
@@ -697,6 +698,12 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
    REQUIRE(meta.IsPOD() == false);       // not POD due to being abstract     
    REQUIRE(meta.IsNullable() == false);  // not nullable due to being abstract
    REQUIRE(meta.IsAbstract() == true);
+
+   REQUIRE(meta.GetMinAllocation() == 1024);
+   for (size_t bit = 0; bit < Bitness; ++bit) {
+      meta.GetAllocationTable()[bit] == bit < 10 ? 8 : ((size_t {1} << bit) / size_t {128});
+   }
+
    REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
    IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
    IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetMinPoolsize() == MinimalPoolSize));

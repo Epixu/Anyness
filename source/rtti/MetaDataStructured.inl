@@ -240,6 +240,15 @@ namespace Langulus::RTTI::Inner
       return {};
    }
 
+   /// Get the precomputed allocation table for the type                      
+   TEMPLATE()
+   auto ME()::GetAllocationTable() const noexcept -> size_t const* {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mAllocationTable;
+      return {};
+   }
+
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Get the reflected allocation page                                   
       TEMPLATE()
@@ -276,6 +285,23 @@ namespace Langulus::RTTI::Inner
             Instance.GetMetaDataByID(id, sparse, constant)->mPoolChain = pool;
       }
    #endif
+
+   /// Count the number of indirections.                                      
+   /// int**** will result in 4; int* will result in 1, int will result in 0. 
+   TEMPLATE()
+   constexpr size_t ME()::GetIndirections() const noexcept {
+      const auto id = Base::GetID();
+      if (not id or not sparse)
+         return 0;
+
+      size_t result = 0;
+      auto d = Instance.GetMetaDataByID(id, sparse, constant);
+      while (d->mDeptr) {
+         ++result;
+         d = d->mDeptr;
+      }
+      return result;
+   }
 
    /// Check if type is CT::Dense                                             
    TEMPLATE()

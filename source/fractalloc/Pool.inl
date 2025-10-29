@@ -46,26 +46,43 @@ namespace Langulus::Fractalloc
       return DeBruijnBitPosition[(uint64_t {n & (0 - n)} * f) >> uint64_t {58}];
    }
 
-   /// Initialize a pool                                                      
-   ///   @attention relies that size is a power-of-two                        
+   /// Initialize a pool of the default pool size used by 'meta'              
+   ///   @param meta - data associated with pool                              
+   ///   @param size - size requested by client                               
+   LANGULUS(INLINED)
+   Pool::Pool(DMeta meta) has_assumptions
+      : Pool {meta, meta.GetMinPoolsize()} {}
+
+   /// Initialize a pool with custom size                                     
+   ///   @attention assumes that size is a power-of-two                       
+   ///   @assumes size can contain at least one mMeta.GetMinAllocation()      
+   ///      + Align(sizeof(Allocation), mMeta.GetAlignment())                 
    ///   @attention this constructor relies that instance is placed in the    
    ///      beginning of a heap allocation of size Pool::NewAllocationSize()  
    ///   @param meta - optional meta data associated with pool                
    ///   @param size - bytes of the usable block to initialize with           
-   ///   @param memory - handle for use with std::free()                      
    LANGULUS(INLINED)
-   Pool::Pool(DMeta meta, size_t size, void* memory) noexcept
+   Pool::Pool(DMeta meta, size_t size) has_assumptions
       : mAllocatedByBackend     {size}
       , mAllocatedByBackendLog2 {FastLog2(size)}
       , mAllocatedByBackendLSB  {LSB(size >> size_t {1})}
       , mThreshold              {size}
       , mThresholdPrevious      {size}
       , mMeta                   {meta}
-      , mHandle                 {memory}
    {
+      LglsAssumeDev(meta,
+         "Invalid type is not allowed");
+      LglsAssumeDevAndOptimize(size,
+         "Invalid size is not allowed");
+      LglsAssumeDev(::std::has_single_bit(size),
+         "Size must be a power-of-two");
+
       const size_t alignment = mMeta.GetAlignment();
       mAlign = alignment > Alignment ? alignment : Alignment;
-      mThresholdMin = Roof2(Align(sizeof(Allocation), mAlign) + mMeta.GetMinAllocation());
+      const size_t minAllocBackend = Align(sizeof(Allocation), mAlign) + mMeta.GetMinAllocation();
+      LglsAssumeDev(size >= minAllocBackend,
+         "Size must be able to hold at least one allocation");
+      mThresholdMin = Roof2(minAllocBackend);
       mMemory = GetPoolStart();
       mMemoryEnd = mMemory + mAllocatedByBackend;
 
@@ -74,7 +91,7 @@ namespace Langulus::Fractalloc
       // Touching is mandatory for pools - without touching the         
       // memory, it might remain just a promise by the OS, making       
       // initial pool allocations very, very, VERY slow at the most     
-      // inappropriate of timesл                                        
+      // inappropriate of times.                                        
       Touch();
    }
 
@@ -106,19 +123,7 @@ namespace Langulus::Fractalloc
    void Pool::FreePoolChain() {
       if (mNext)
          mNext->FreePoolChain();
-      free(mHandle);
-   }
-
-   /// Get the size for a new pool allocation, with alignment/additional      
-   /// memory requirements                                                    
-   ///   @assumes size is a power-of-two                                      
-   ///   @assumes size can contain at least one Allocation::GetMinAllocation  
-   ///   @param size - the number of bytes to request for the pool            
-   ///   @return the number of bytes to allocate for use in the pool          
-   LANGULUS(INLINED)
-   constexpr size_t Pool::GetNewAllocationSize(size_t size) noexcept {
-      constexpr auto minimum = DefaultPoolSize + sizeof(Pool);
-      return ::std::max(size + sizeof(Pool), minimum);
+      ::std::free(this);
    }
 
    /// Get the start of the usable memory for the pool                        

@@ -7,10 +7,12 @@
 ///                                                                           
 #pragma once
 #include <Langulus/Core.hpp>
+#include <Langulus/Utils/Pot.hpp>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is enabled"
 #endif
+
 
 namespace Langulus::Unmanaged
 {
@@ -20,24 +22,21 @@ namespace Langulus::Unmanaged
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
-   struct alignas(Alignment) Allocation {
-   protected:
-      friend struct Allocator;
-
+   class alignas(Alignment) Allocation {
       // The number of references to this memory.                       
       // Most often used, so first for immediate access.                
-      int mReferences = 1;
-      // Allocated bytes for this chunk                                 
-      size_t mAllocatedBytes;
-      // The alignment of the contained data                            
-      size_t mAlignment;
-      // Refers to the handle for std::free().                          
-      MallocHandle* mMallocHandle;
+      int32_t mReferences = 1;
 
-   #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-      // Acts like a timestamp of when the allocation happened          
-      unsigned mStep;
-   #endif
+      #if LANGULUS_FEATURE(MEMORY_STATISTICS)
+         // Acts like a timestamp of when the allocation happened       
+         uint64_t mStep;
+      #endif
+
+      // Allocated bytes usable by client. This is always a power-of-   
+      // two, so it is compressed as the most significant bit index     
+      pot_t mSizeMSB;
+      // The alignment of the contained data                            
+      pot_t mAlignmentMSB;
 
    public:
        Allocation() = delete;
@@ -45,7 +44,7 @@ namespace Langulus::Unmanaged
        Allocation(Allocation&&) = delete;
       ~Allocation() = delete;
 
-      explicit Allocation(size_t alignment, size_t size, MallocHandle*) noexcept;
+      explicit Allocation(pot_t alignment, pot_t size, MallocHandle*) has_assumptions;
       
       auto GetUses() const noexcept { return mReferences; }
       auto GetBackendSize() const noexcept -> size_t;
@@ -53,7 +52,7 @@ namespace Langulus::Unmanaged
       auto GetBlockStart() const noexcept -> uint8_t*;
       auto GetBlockEnd() const noexcept -> uint8_t const*;
       bool Contains(const void*) const noexcept;
-      void Keep(int = 1) noexcept;
-      void Free(int = 1) noexcept;
+      void Keep(int32_t = 1) noexcept;
+      void Free(int32_t = 1) noexcept;
    };
 }

@@ -135,6 +135,7 @@ namespace Langulus::RTTI
          auto GetVersionMajor()       const noexcept -> unsigned;
          auto GetVersionMinor()       const noexcept -> unsigned;
          auto GetMinAllocation()      const noexcept -> size_t;
+         auto GetAllocationTable()    const noexcept -> size_t const*;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetMinPoolsize()     const noexcept -> size_t;
@@ -142,6 +143,7 @@ namespace Langulus::RTTI
             auto GetPoolchain()       const noexcept -> Fractalloc::Pool*;
          #endif
 
+         constexpr size_t GetIndirections() const noexcept;
          constexpr bool IsDense()     const noexcept;
          constexpr bool IsSparse()    const noexcept;
          constexpr bool IsConstant()  const noexcept;
@@ -227,6 +229,7 @@ namespace Langulus::RTTI
          auto GetFiles()              const noexcept -> Token;
          auto GetSuffix()             const noexcept -> Token;
          auto GetMinAllocation()      const noexcept -> size_t;
+         auto GetAllocationTable()    const noexcept -> size_t const*;
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetMinPoolsize()     const noexcept -> size_t;
@@ -234,6 +237,7 @@ namespace Langulus::RTTI
             auto GetPoolchain()       const noexcept -> Fractalloc::Pool*;
          #endif
                                       
+         size_t GetIndirections()     const noexcept;
          bool IsDense()               const noexcept;
          bool IsSparse()              const noexcept;
          bool IsConstant()            const noexcept;

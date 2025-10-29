@@ -12,6 +12,7 @@
    #error "This file shouldn't be included if MANAGED_MEMORY is enabled"
 #endif
 
+
 namespace Langulus::Unmanaged
 {
    /// Initialize an allocation                                               

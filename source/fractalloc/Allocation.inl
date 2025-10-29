@@ -13,21 +13,38 @@
 namespace Langulus::Fractalloc
 {
    /// Initialize an allocation                                               
-   ///   @attention this constructor relies that the allocation is placed in  
-   ///      the beginning of a heap allocation of size GetNewAllocationSize() 
-   ///   @param bytes - the number of allocated bytes (not including the      
-   ///      allocation and padding, just the user bytes)                      
+   ///   @param bytes - the number of allocated bytes in bitshift form        
    ///   @param pool - the pool this allocation belongs to                    
    LANGULUS(ALWAYS_INLINED)
-   Allocation::Allocation(size_t bytes, Pool* pool) noexcept
-      : mAllocatedBytes {bytes}
-      , mPool           {pool} {}
+   Allocation::Allocation(pot_t bytes, Pool* pool) has_assumptions {
+      LglsAssumeDev(bytes, "Invalid bytes");
+      LglsAssumeDev(pool,  "Invalid pool");
+
+      const auto pool_begin = pool->GetPoolStart();
+      LglsAssumeDev(reinterpret_cast<uint8_t*>(this) >= pool_begin,
+         "Entry isn't after pool's beginning");
+
+      const auto pool_diff = (reinterpret_cast<uint8_t*>(this) - pool_begin)
+         / Roof2(sizeof(Allocation) + Alignment);
+      LglsAssumeDev(pool_begin + pool_diff < pool->GetPoolEnd(),
+         "Entry isn't before pool's end");
+      LglsAssumeDev(pool_diff <= ::std::numeric_limits<decltype(mPoolFinder)>::max(),
+         "Pool finder is too far to fit in variable");
+
+      mSizeMSB = bytes;
+      mPoolFinder = static_cast<decltype(mPoolFinder)>(pool_diff);
+   }
+
+   /// Get the pool this allocation belongs to                                
+   auto Allocation::GetPool() const noexcept -> Pool const* {
+
+   }
 
    /// User bytes + the header size                                           
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetBackendSize() const noexcept {
-      return Align(sizeof(Allocation), mPool->GetAlignment()) + mAllocatedBytes;
+      return Align(sizeof(Allocation), mPool->GetAlignment()) + GetFrontendSize();
    }
 
    /// Get the user bytes                                                     

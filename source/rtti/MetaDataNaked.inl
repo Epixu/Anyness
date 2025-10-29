@@ -58,6 +58,11 @@ namespace Langulus::RTTI::Inner
       return mDefinition ? mDefinition->mMinimalAllocation : 0;
    }
 
+   /// Get the precomputed allocation table for the type                      
+   inline auto MetaDataNaked::GetAllocationTable() const noexcept -> size_t const* {
+      return mDefinition ? mDefinition->mAllocationTable : nullptr;
+   }
+
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    /// Get the minimal allocation page                                        
    inline auto MetaDataNaked::GetMinPoolsize() const noexcept -> size_t {
@@ -74,6 +79,21 @@ namespace Langulus::RTTI::Inner
       return mDefinition ? mDefinition->mPoolChain : nullptr;
    }
 #endif
+
+   /// Count the number of indirections.                                      
+   /// int**** will result in 4; int* will result in 1, int will result in 0. 
+   inline size_t MetaDataNaked::GetIndirections() const noexcept {
+      if (not mDefinition)
+         return 0;
+
+      size_t result = 0;
+      auto d = mDefinition;
+      while (d->mDeptr) {
+         ++result;
+         d = d->mDeptr;
+      }
+      return result;
+   }
 
    /// Check if type is CT::Dense                                             
    inline bool MetaDataNaked::IsDense() const noexcept {

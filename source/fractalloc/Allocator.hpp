@@ -138,6 +138,9 @@ namespace Langulus::Fractalloc
       static bool CheckAuthority(DMeta, const void*) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
+      static Pool* AllocatePool(DMeta) has_assumptions;
+
+      LANGULUS_API(FRACTALLOC)
       static Pool* AllocatePool(DMeta, size_t) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)

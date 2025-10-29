@@ -247,6 +247,15 @@ namespace Langulus::Anyness::Component
             return CT::Sparse<TYPE>;
       }
       
+      /// Get the number of indirections                                      
+      /// int**** will result in 4; int* will result in 1, int results in 0.  
+      constexpr bool GetIndirections(this auto const& self) noexcept {
+         if constexpr (TypeErased)
+            return self.GetTypeInner().GetIndirections();
+         else
+            return IndirectsOf<TYPE>;
+      }
+      
       /// Check if block is constant                                          
       ///   @attention disowned containers are always constant                
       ///   @return true if the contents are constant                         

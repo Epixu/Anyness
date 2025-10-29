@@ -23,30 +23,29 @@
 
 namespace Langulus::Fractalloc
 {
-   /// MSVC will likely never support std::aligned_alloc, so we use           
-   /// a custom portable routine that's almost the same                       
-   /// https://stackoverflow.com/questions/62962839                           
-   ///                                                                        
-   /// Each allocation has the following prefixed bytes:                      
-   /// [padding][T::GetSize()][client bytes...]                               
-   ///                                                                        
+   /// Each allocation has the following order:                               
+   /// [sizeof(Pool)][padding for client data][client bytes...]               
+   ///   @param type - the pooled type                                        
    ///   @param size - the number of client bytes to allocate                 
    ///   @return a newly allocated memory that is correctly aligned           
-   Pool* AlignedAllocate(const DMeta& hint, size_t size) has_assumptions {
-      const auto finalSize = Pool::GetNewAllocationSize(size) + Alignment;
-      const auto base = malloc(finalSize);
-      if (not base)
+   Pool* AlignedAllocate(const DMeta& type, pot_t size) has_assumptions {
+      LglsAssumeDev(type,
+         "Invalid type is not allowed");
+      LglsAssumeDevAndOptimize(size,
+         "Invalid size is not allowed");
+
+      const auto backendSize = Align(sizeof(Pool), alignof(Allocation)) + size;
+      #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
+         const auto pool = _aligned_malloc(backendSize, Roof2(size));
+      #else
+         const auto pool = ::std::aligned_alloc(Roof2(size), backendSize);
+      #endif
+
+      if (not pool)
          return nullptr;
 
-      // Align pointer to the alignment LANGULUS was built with         
-      auto ptr = reinterpret_cast<Pool*>(
-         (reinterpret_cast<uintptr_t>(base) + Alignment)
-         & ~(Alignment - uintptr_t {1})
-      );
-
-      // Place the entry there                                          
-      new (ptr) Pool {hint, size, base};
-      return ptr;
+      new (pool) Pool {type, size};
+      return static_cast<Pool*>(pool);
    }
 
    /// Global allocator interface                                             
@@ -296,29 +295,35 @@ namespace Langulus::Fractalloc
       entry->mPool->Deallocate(entry);
    }
 
-   /// Allocate a pool                                                        
+   /// Allocate a pool with size provided by reflection                       
    ///   @attention the pool must be deallocated with DeallocatePool          
-   ///   @param hint - meta data to associate pool with                       
-   ///   @param size - size of the pool (in bytes). This does not include     
-   ///      any padding bytes, like the size of the first entry.              
+   ///   @param type - meta data to associate pool with                       
    ///   @return a pointer to the new pool                                    
-   Pool* Allocator::AllocatePool(DMeta hint, size_t size) has_assumptions {
-      const size_t alignment = hint.GetAlignment();
-      const size_t align = alignment > Alignment? alignment : Alignment;
-      const size_t padding = Align(sizeof(Allocation), align);
-      const size_t backendSize = Roof2(padding + (align > size ? align : size));
-      const size_t poolSize = ::std::max(Pool::DefaultPoolSize, backendSize);
-      return AlignedAllocate(hint, poolSize);
+   Pool* Allocator::AllocatePool(DMeta type) has_assumptions {
+      return AlignedAllocate(type, type.GetMinPoolsize());
+   }
+
+   /// Allocate a pool of custom size                                         
+   ///   @attention the pool must be deallocated with DeallocatePool          
+   ///   @param type - meta data to associate pool with                       
+   ///   @param size - the client requested size of the pool (in bytes)       
+   ///   @return a pointer to the new pool                                    
+   Pool* Allocator::AllocatePool(DMeta type, size_t size) has_assumptions {
+      return AlignedAllocate(type, size);
    }
 
    /// Deallocate a pool                                                      
    ///   @attention doesn't call any destructors                              
-   ///   @attention pool or any entry inside is no longer valid after this    
+   ///   @attention entries inside are no longer valid after this             
    ///   @attention assumes pool is a valid pointer                           
    ///   @param pool - the pool to deallocate                                 
    void Allocator::DeallocatePool(Pool* pool) has_assumptions {
       LglsAssumeDevAndOptimize(pool, "Nullptr provided");
-      ::std::free(pool->mHandle);
+      #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
+         _aligned_free(pool);
+      #else
+         ::std::free(pool);
+      #endif
    }
 
    /// Deallocates all unused pools in a chain                                
@@ -1006,7 +1011,7 @@ namespace Langulus::Fractalloc
    /// Account for a newly allocated pool                                     
    ///   @param pool - the pool to account for                                
    void Allocator::Statistics::AddPool(const Pool* pool) IF_UNSAFE(noexcept) {
-      mBytesAllocatedByBackend += pool->GetTotalSize();
+      mBytesAllocatedByBackend  += pool->GetTotalSize();
       mBytesAllocatedByFrontend += pool->GetAllocatedByFrontend();
       LglsAssumeDevAndOptimize(
          mBytesAllocatedByFrontend <= mBytesAllocatedByBackend,

@@ -5,248 +5,179 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-#include "../Main.hpp"
-#include <Langulus/Allocator.hpp>
+#include "TestAllocatorCommon.hpp"
+#include <Langulus/MetaOf.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
-using namespace Langulus;
-using namespace Anyness;
 
-
-std::random_device rd;
-std::mt19937 gen(rd());
-
-using Type1 = uint8_t;
-using Type2 = uint16_t;
-using Type4 = uint32_t;
-using Type8 = uint64_t;
-
-struct TypeBig {
-   Type1 t1;
-   Type2 t2;
-   Type4 t4;
-   Type8 t8;
-};
-
-struct TypeVeryBig {
-   TypeBig t1;
-   TypeBig t2;
-   TypeBig t4;
-   TypeBig t8[5];
-};
-
-bool IsAligned(const void* a) noexcept {
-   return 0 == (reinterpret_cast<Pointer>(a) & Pointer { Alignment - 1 });
-}
-
-SCENARIO("Testing CountLeadingZeroes calls", "[allocator]") {
-   const std::size_t numbers[]{
+SCENARIO("Testing FastLog2 calls", "[fractalloc]") {
+   const size_t numbers[]{
       0, 1, 2, 3, 4, 5, 6, 11, 16, 64, 99, 120, 128
    };
-
-#if LANGULUS(BITNESS) == 32
-   const std::size_t results[]{
-      32, 31, 30, 30, 29, 29, 29, 28, 27, 25, 25, 25, 24
-   };
-#elif LANGULUS(BITNESS) == 64
-   const std::size_t results[]{
-      64, 63, 62, 62, 61, 61, 61, 60, 59, 57, 57, 57, 56
-   };
-#endif
-
-   static_assert(sizeof(numbers) == sizeof(results), "Oops");
-
-   for (unsigned i = 0; i < sizeof(numbers) / sizeof(Offset); ++i) {
-      REQUIRE(CountLeadingZeroes(numbers[i]) == static_cast<int>(results[i]));
-   }
-}
-
-SCENARIO("Testing CountTrailingZeroes calls", "[allocator]") {
-   const std::size_t numbers[]{
-      0, 1, 2, 3, 4, 5, 6, 11, 16, 64, 99, 120, 128
-   };
-
-#if LANGULUS(BITNESS) == 32
-   const std::size_t results[]{
-      32, 0, 1, 0, 2, 0, 1, 0, 4, 6, 0, 3, 7
-   };
-#elif LANGULUS(BITNESS) == 64
-   const std::size_t results[]{
-      64, 0, 1, 0, 2, 0, 1, 0, 4, 6, 0, 3, 7
-   };
-#endif
-
-   static_assert(sizeof(numbers) == sizeof(results), "Oops");
-
-   for (unsigned i = 0; i < sizeof(numbers) / sizeof(Offset); ++i) {
-      REQUIRE(CountTrailingZeroes(numbers[i]) == static_cast<int>(results[i]));
-   }
-}
-
-TEMPLATE_TEST_CASE("Testing IsPowerOfTwo calls", "[allocator]",
-   uint8_t, uint16_t, uint32_t, uint64_t
-) {
-   using T = TestType;
-   const T numbers[]{
-      0, 1, 2, 3, 4, 5, 6, 11, 16, 64, 99, 120, 128
-   };
-   const bool results[]{
-      false, true, true, false, true, false, false, false, true, true, false, false, true
-   };
-   static_assert(sizeof(numbers) / sizeof(T) == sizeof(results) / sizeof(bool), "Oops");
-
-   for (unsigned i = 0; i < sizeof(numbers) / sizeof(T); ++i) {
-      REQUIRE(IsPowerOfTwo(numbers[i]) == results[i]);
-   }
-}
-
-TEMPLATE_TEST_CASE("Testing Roof2 calls", "[allocator]",
-   uint8_t, uint16_t, uint32_t, uint64_t
-) {
-   using T = TestType;
-   const T numbers[]{
-      0, 1, 2, 3, 4, 5, 6, 11, 16, 64, 99, 120, 128
-   };
-   const T results[]{
-      0, 1, 2, 4, 4, 8, 8, 16, 16, 64, 128, 128, 128
-   };
-   static_assert(sizeof(numbers) == sizeof(results), "Oops");
-
-   WHEN("Roof2 is executed") {
-      for (unsigned i = 0; i < sizeof(numbers) / sizeof(T); ++i) {
-         if (numbers[i] <= 128 || sizeof(T) > 1) {
-            REQUIRE(Roof2<true>(numbers[i]) == results[i]);
-         }
-         else {
-            REQUIRE_THROWS_AS(Roof2<true>(numbers[i]), Except::Overflow);
-         }
-      }
-
-#ifdef LANGULUS_STD_BENCHMARK // Last result: 
-      BENCHMARK_ADVANCED("Roof2 with instrinsics") (timer meter) {
-         meter.measure([&](int i) {
-            return Roof2(static_cast<T>(i % 256));
-            });
-      };
-      BENCHMARK_ADVANCED("Roof2 without intrinsics") (timer meter) {
-         meter.measure([&](int i) {
-            return Roof2cexpr(static_cast<T>(i % 256));
-            });
-      };
-#endif
-   }
-}
-
-SCENARIO("Testing FastLog2 calls", "[allocator]") {
-   const Offset numbers[]{
-      0, 1, 2, 3, 4, 5, 6, 11, 16, 64, 99, 120, 128
-   };
-   const Offset results[]{
+   const size_t results[]{
       0, 0, 1, 1, 2, 2, 2,  3,  4,  6,  6,   6,   7
    };
    static_assert(sizeof(numbers) == sizeof(results), "Oops");
 
-   for (unsigned i = 0; i < sizeof(numbers) / sizeof(Offset); ++i) {
-      REQUIRE(Fractalloc::Inner::FastLog2(numbers[i]) == results[i]);
+   for (unsigned i = 0; i < sizeof(numbers) / sizeof(size_t); ++i) {
+      REQUIRE(Fractalloc::FastLog2(numbers[i]) == results[i]);
    }
 }
 
-TEMPLATE_TEST_CASE("Testing GetAllocationPageOf<T> calls", "[allocator]",
-   Type1, Type2, Type4, Type8, TypeBig, TypeVeryBig
+TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
+   Type1,
+   Type2,
+   Type3,
+   Type4,
+   Type8,
+   TypeBig,
+   TypeVeryBig,
+   TypeVeryBigAligned,
+   TypeVeryBigPacked
 ) {
-   static_assert(IsPowerOfTwo(RTTI::GetAllocationPageOf<TestType>()));
-   static_assert(RTTI::GetAllocationPageOf<TestType>() >= sizeof(TestType));
-}
+   using Fractalloc::Pool;
+   const auto meta = MetaDataOf<TestType>();
+   constexpr size_t default_size = CT::GetMinPool<TestType>();
+   constexpr size_t min_alloc = CT::GetMinAlloc<TestType>();
 
-SCENARIO("Testing pool functions", "[allocator]") {
-   GIVEN("A pool") {
-      Pool* pool = nullptr;
+   REQUIRE(meta);
+   IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(nullptr)));
+   IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(meta, 0)));
+   IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(meta, sizeof(TestType))));
 
-      WHEN("Default pool size is allocated on the pool") {
-         pool = Allocator::AllocatePool(nullptr, Pool::DefaultPoolSize);
-         REQUIRE(pool);
+   GIVEN("A default-sized pool") {
+      Pool* pool = Allocator::AllocatePool(meta);
+      REQUIRE(pool);
 
-         const auto originPtr = pool->GetPoolStart<Byte>();
-         const auto smallest = pool->GetMinAllocation();
-         const auto origin = reinterpret_cast<Pointer>(originPtr);
+      const auto originPtr = pool->GetPoolStart();
+      const auto smallest = pool->GetMinAllocation();
+      const auto origin = reinterpret_cast<uintptr_t>(originPtr);
+      const auto full = pool->GetAllocatedByBackend();
+      const auto half = full / 2;
+      const auto quarter = half / 2;
+
+      REQUIRE(::std::has_single_bit(pool->GetAllocatedByBackend()));
+      REQUIRE(::std::has_single_bit(pool->GetMinAllocation()));
+      REQUIRE(::std::has_single_bit(pool->GetMaxEntries()));
+      REQUIRE(IsAligned(pool->GetPoolStart()));
+      REQUIRE(pool->GetAllocatedByBackend() == default_size);
+      REQUIRE(reinterpret_cast<uintptr_t>(pool->AllocationFromIndex(0)) == origin);
+      REQUIRE(reinterpret_cast<uintptr_t>(pool->AllocationFromIndex(1)) == origin + half);
+      REQUIRE(reinterpret_cast<uintptr_t>(pool->AllocationFromIndex(2)) == origin + quarter);
+      REQUIRE(reinterpret_cast<uintptr_t>(pool->AllocationFromIndex(3)) == origin + quarter + half);
+      REQUIRE(pool->ThresholdFromIndex(1) == half);
+      REQUIRE(pool->ThresholdFromIndex(2) == quarter);
+      REQUIRE(pool->ThresholdFromIndex(3) == quarter);
+      REQUIRE(pool->ThresholdFromIndex(4) == quarter / 2);
+      REQUIRE(pool->ThresholdFromIndex(5) == quarter / 2);
+      REQUIRE(pool->ThresholdFromIndex(6) == quarter / 2);
+      REQUIRE(pool->ThresholdFromIndex(7) == quarter / 2);
+      REQUIRE(pool->ThresholdFromIndex(8) == quarter / 4);
+      REQUIRE(pool->ThresholdFromIndex(pool->GetMaxEntries() - 1) == smallest);
+      REQUIRE(pool->ThresholdFromIndex(pool->GetMaxEntries()) == smallest / 2);
+      REQUIRE(pool->CanContain(1));
+      REQUIRE(pool->CanContain(Alignment));
+      REQUIRE(pool->CanContain(smallest));
+      REQUIRE(pool->CanContain(half));
+      REQUIRE(pool->CanContain(full));
+      REQUIRE_FALSE(pool->CanContain(full + 1));
+      REQUIRE(pool->GetAllocatedByFrontend() == 0);
+      REQUIRE(pool->GetMaxEntries() == full / smallest);
+      REQUIRE(pool->Contains(originPtr));
+      REQUIRE(pool->Contains(originPtr + half));
+      REQUIRE(pool->Contains(originPtr + half * 2 - 1));
+      REQUIRE_FALSE(pool->Contains(originPtr + half * 2));
+      REQUIRE_FALSE(pool->Contains(nullptr));
+      REQUIRE_FALSE(pool->IsInUse());
+
+      WHEN("Small entry is allocated") {
+         auto entry = pool->Allocate(sizeof(TestType));
          const auto full = pool->GetAllocatedByBackend();
-         const auto half = full / 2;
-         const auto quarter = half / 2;
+         const auto smallest = pool->GetMinAllocation();
 
-         REQUIRE(IsPowerOfTwo(pool->GetAllocatedByBackend()));
-         REQUIRE(IsPowerOfTwo(pool->GetMinAllocation()));
-         REQUIRE(IsPowerOfTwo(pool->GetMaxEntries()));
-         REQUIRE(IsAligned(pool->GetPoolStart()));
-         REQUIRE(pool->GetAllocatedByBackend() <= Pool::DefaultPoolSize * 2);
-         REQUIRE(reinterpret_cast<Pointer>(pool->AllocationFromIndex(0)) == origin);
-         REQUIRE(reinterpret_cast<Pointer>(pool->AllocationFromIndex(1)) == origin + half);
-         REQUIRE(reinterpret_cast<Pointer>(pool->AllocationFromIndex(2)) == origin + quarter);
-         REQUIRE(reinterpret_cast<Pointer>(pool->AllocationFromIndex(3)) == origin + quarter + half);
-         REQUIRE(pool->ThresholdFromIndex(1) == half);
-         REQUIRE(pool->ThresholdFromIndex(2) == quarter);
-         REQUIRE(pool->ThresholdFromIndex(3) == quarter);
-         REQUIRE(pool->ThresholdFromIndex(4) == quarter / 2);
-         REQUIRE(pool->ThresholdFromIndex(5) == quarter / 2);
-         REQUIRE(pool->ThresholdFromIndex(6) == quarter / 2);
-         REQUIRE(pool->ThresholdFromIndex(7) == quarter / 2);
-         REQUIRE(pool->ThresholdFromIndex(8) == quarter / 4);
-         REQUIRE(pool->ThresholdFromIndex(pool->GetMaxEntries() - 1) == smallest);
-         REQUIRE(pool->ThresholdFromIndex(pool->GetMaxEntries()) == smallest / 2);
-         REQUIRE(pool->CanContain(1));
-         REQUIRE(pool->CanContain(Alignment));
-         REQUIRE(pool->CanContain(smallest));
-         REQUIRE(pool->CanContain(half));
-         REQUIRE(pool->CanContain(full));
-         REQUIRE_FALSE(pool->CanContain(full + 1));
+         REQUIRE(pool->GetAllocatedByFrontend() == entry->GetBackendSize());
+         REQUIRE(pool->GetMaxEntries() == full / smallest);
+         REQUIRE(pool->Contains(entry));
+         REQUIRE(pool->IsInUse());
+      }
+
+      WHEN("Filled with all possible small entries") {
+         // Fill up                                                     
+         for (size_t i = 0; i < pool->GetMaxEntries(); ++i) {
+            auto entry = pool->Allocate(sizeof(TestType));
+            REQUIRE(entry);
+            REQUIRE(entry->GetFrontendSize() == min_alloc);
+            entry->Keep(i);
+
+            // Fill the entire entry to check for heap corruptions      
+            for (size_t i2 = 0; i2 < entry->GetFrontendSize(); ++i2) {
+               entry->GetBlockStart()[i2] = 66;
+            }
+         }
+
+         // Fail to add more                                            
+         for (int i = 0; i < 5; ++i) {
+            auto entry = pool->Allocate(1);
+            REQUIRE(entry == nullptr);
+         }
+
+         const auto full = pool->GetAllocatedByBackend();
+         const auto smallest = pool->GetMinAllocation();
+
+         REQUIRE(pool->GetAllocatedByFrontend() == pool->GetAllocatedByBackend());
+         REQUIRE(pool->GetAllocatedByFrontend() == pool->GetMaxEntries() * (Align(sizeof(Allocation), alignof(TestType)) + min_alloc));
+         REQUIRE(pool->GetMaxEntries() == full / smallest);
+
+         for (size_t i = 0; i < pool->GetMaxEntries(); ++i) {
+            auto entry = pool->AllocationFromIndex(i);
+            REQUIRE(pool->Contains(entry));
+            REQUIRE(entry->GetUses() == 1 + i);
+
+            for (size_t i2 = 0; i2 < entry->GetFrontendSize(); ++i2) {
+               REQUIRE(entry->GetBlockStart()[i2] == 66);
+            }
+         }
+      }
+
+      WHEN("An entry larger than the minimum is allocated") {
+         auto entry = pool->Allocate(min_alloc * 2);
+         REQUIRE(entry);
+
+         REQUIRE(pool->GetAllocatedByFrontend() == entry->GetBackendSize());
+         REQUIRE(pool->GetMinAllocation() == Roof2(entry->GetBackendSize()));
+         REQUIRE(pool->GetMaxEntries() == pool->GetAllocatedByBackend() / pool->GetMinAllocation());
+         REQUIRE(pool->Contains(entry));
+         REQUIRE(pool->IsInUse());
+      }
+
+      WHEN("An entry larger than the pool itself is allocated") {
+         auto entry = pool->Allocate(default_size + 1);
+
+         REQUIRE(entry == nullptr);
          REQUIRE(pool->GetAllocatedByFrontend() == 0);
-         REQUIRE(pool->GetMaxEntries() == full / smallest);
-         REQUIRE(pool->Contains(originPtr));
-         REQUIRE(pool->Contains(originPtr + half));
-         REQUIRE(pool->Contains(originPtr + half * 2 - 1));
-         REQUIRE_FALSE(pool->Contains(originPtr + half * 2));
-         REQUIRE_FALSE(pool->Contains(nullptr));
          REQUIRE_FALSE(pool->IsInUse());
-
-         Allocator::DeallocatePool(pool);
       }
 
-      WHEN("A small entry is allocated inside a new default-sized pool") {
-         pool = Allocator::AllocatePool(nullptr, Pool::DefaultPoolSize);
-         REQUIRE(pool);
+      Allocator::DeallocatePool(pool);
+   }
+   
+   GIVEN("A custom huge pool") {
+      Pool* pool = Allocator::AllocatePool(meta, default_size * 1024);
+      REQUIRE(pool);
 
-         auto entry = pool->Allocate(5);
-         const auto full = pool->GetAllocatedByBackend();
-         const auto smallest = pool->GetMinAllocation();
+      auto entry = pool->Allocate(5);
+      const auto full = pool->GetAllocatedByBackend();
+      const auto smallest = pool->GetMinAllocation();
 
-         REQUIRE(pool->GetAllocatedByFrontend() == entry->GetTotalSize());
-         REQUIRE(pool->GetMaxEntries() == full / smallest);
-         REQUIRE(pool->Contains(entry));
-         REQUIRE(pool->IsInUse());
+      REQUIRE(pool->GetAllocatedByFrontend() == entry->GetBackendSize());
+      REQUIRE(pool->GetMaxEntries() == full / smallest);
+      REQUIRE(pool->Contains(entry));
+      REQUIRE(pool->IsInUse());
 
-         Allocator::DeallocatePool(pool);
-      }
-
-      WHEN("A small entry is allocated inside a new huge pool") {
-         if constexpr (Bitness == 32)
-            pool = Allocator::AllocatePool(nullptr, Pool::DefaultPoolSize * 1024);
-         else
-            pool = Allocator::AllocatePool(nullptr, Pool::DefaultPoolSize * 1024 * 4);
-
-         REQUIRE(pool);
-
-         auto entry = pool->Allocate(5);
-         const auto full = pool->GetAllocatedByBackend();
-         const auto smallest = pool->GetMinAllocation();
-
-         REQUIRE(pool->GetAllocatedByFrontend() == entry->GetTotalSize());
-         REQUIRE(pool->GetMaxEntries() == full / smallest);
-         REQUIRE(pool->Contains(entry));
-         REQUIRE(pool->IsInUse());
-
-#ifdef LANGULUS_STD_BENCHMARK // Last result: 
+      #ifdef LANGULUS_STD_BENCHMARK // Last result: 
          BENCHMARK_ADVANCED("Pool::Allocate(5)") (timer meter) {
             std::vector<Allocation*> storage(meter.runs());
             meter.measure([&](int i) {
@@ -394,194 +325,144 @@ SCENARIO("Testing pool functions", "[allocator]") {
             for (auto& i : storage)
                ::std::free(i);
          };
-#endif
+      #endif
 
-         Allocator::DeallocatePool(pool);
-      }
-
-      WHEN("A new default-sized pool is filled with all possible small entries") {
-         pool = Allocator::AllocatePool(nullptr, Pool::DefaultPoolSize);
-         REQUIRE(pool);
-
-         // Fill up
-         for (Count i = 0; i < pool->GetMaxEntries(); ++i) {
-            auto entry = pool->Allocate(5);
-            REQUIRE(entry);
-            entry->Keep(i);
-
-            // Fill the entire entry to check for heap corruptions
-            for (Offset i2 = 0; i2 < entry->GetAllocatedSize(); ++i2) {
-               entry->GetBlockStart()[i2] = {};
-            }
-         }
-
-         // Add more
-         for (int i = 0; i < 5; ++i) {
-            auto entry = pool->Allocate(5);
-            REQUIRE(entry == nullptr);
-         }
-
-         const auto full = pool->GetAllocatedByBackend();
-         const auto smallest = pool->GetMinAllocation();
-
-         REQUIRE(pool->GetAllocatedByFrontend() == pool->GetMaxEntries() * Allocation::GetNewAllocationSize(5));
-         REQUIRE(pool->GetMaxEntries() == full / smallest);
-         for (Count i = 0; i < pool->GetMaxEntries(); ++i) {
-            auto entry = pool->AllocationFromIndex(i);
-            REQUIRE(pool->Contains(entry));
-            REQUIRE(entry->GetUses() == 1 + i);
-         }
-
-         Allocator::DeallocatePool(pool);
-      }
-
-      WHEN("An entry larger than the minimum is allocated inside a new default-sized pool") {
-         pool = Allocator::AllocatePool(nullptr, Pool::DefaultPoolSize);
-         auto entry = pool->Allocate(Allocation::GetMinAllocation());
-
-         REQUIRE(entry);
-         REQUIRE(pool->GetAllocatedByFrontend() == entry->GetTotalSize());
-         REQUIRE(pool->GetMinAllocation() == Roof2(entry->GetTotalSize()));
-         REQUIRE(pool->GetMaxEntries() == pool->GetAllocatedByBackend() / pool->GetMinAllocation());
-         REQUIRE(pool->Contains(entry));
-         REQUIRE(pool->IsInUse());
-
-         Allocator::DeallocatePool(pool);
-      }
-
-      WHEN("An entry larger than the pool itself is allocated inside a new default-sized pool") {
-         pool = Allocator::AllocatePool(nullptr, Pool::DefaultPoolSize);
-         auto entry = pool->Allocate(Pool::DefaultPoolSize * 2);
-
-         REQUIRE(entry == nullptr);
-         REQUIRE(pool->GetAllocatedByFrontend() == 0);
-         REQUIRE_FALSE(pool->IsInUse());
-
-         Allocator::DeallocatePool(pool);
-      }
+      Allocator::DeallocatePool(pool);
    }
 }
 
-SCENARIO("Testing allocator functions", "[allocator]") {
-   (void)Allocator::CollectGarbage();
+TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
+   Type1,
+   Type2,
+   Type3,
+   Type4,
+   Type8,
+   TypeBig,
+   TypeVeryBig,
+   TypeVeryBigAligned,
+   TypeVeryBigPacked
+) {
+   constexpr size_t data_offset = Align(sizeof(Allocation), alignof(TestType));
 
    GIVEN("An allocation") {
-      Allocation* entry = nullptr;
+      Allocation* entry = Allocator::Allocate(nullptr, 512);
+      REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
          entry = Allocator::Allocate(nullptr, 512);
 
-         REQUIRE(entry);
          REQUIRE(entry->GetBlockStart() != nullptr);
-         REQUIRE(entry->GetBlockStart() != reinterpret_cast<Byte*>(entry));
-         REQUIRE(reinterpret_cast<Pointer>(entry) % Alignment == 0);
-         REQUIRE(reinterpret_cast<Pointer>(entry->GetBlockStart()) % Alignment == 0);
-         REQUIRE(entry->GetAllocatedSize() >= 512);
-         REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + entry->GetAllocatedSize());
-         REQUIRE(entry->GetSize() % Alignment == 0);
-         REQUIRE(entry->GetBlockStart() == reinterpret_cast<Byte*>(entry) + entry->GetSize());
+         REQUIRE(entry->GetBlockStart() != reinterpret_cast<uint8_t*>(entry));
+         REQUIRE(IsAligned(entry, alignof(Allocation)));
+         REQUIRE(IsAligned(entry->GetBlockStart(), alignof(TestType)));
+         REQUIRE(entry->GetBackendSize() == data_offset + 512);
+         REQUIRE(entry->GetFrontendSize() == 512);
+         REQUIRE(entry->GetBlockStart() == reinterpret_cast<uint8_t*>(entry) + data_offset);
+         REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + 512);
          REQUIRE(entry->GetUses() == 1);
-         for (Offset i = 0; i < 512; ++i) {
-            auto p = entry->GetBlockStart() + i;
-            REQUIRE(entry->Contains(p));
+
+         for (size_t i = 0; i < 512; ++i) {
+            auto p1 = entry->GetBlockStart() + i;
+            auto p2 = entry->GetBlockStart() - (i+1);
+            REQUIRE(entry->Contains(p1));
+            REQUIRE_FALSE(entry->Contains(p2));
          }
-         for (Offset i = 512; i < 513; ++i) {
+
+         for (size_t i = 512; i < 513; ++i) {
             auto p = entry->GetBlockStart() + i;
             REQUIRE_FALSE(entry->Contains(p));
          }
 
          Allocator::Deallocate(entry);
 
-#ifdef LANGULUS_STD_BENCHMARK // Last result: 
-         BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = Allocator::Allocate(5);
-               });
+         #ifdef LANGULUS_STD_BENCHMARK // Last result: 
+            BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
+               std::vector<Allocation*> storage(meter.runs());
+               meter.measure([&](int i) {
+                  return storage[i] = Allocator::Allocate(5);
+                  });
 
-            for (auto& i : storage) {
-               if (i)
-                  Allocator::Deallocate(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
+               for (auto& i : storage) {
+                  if (i)
+                     Allocator::Deallocate(i);
+                  else
+                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+               }
+            };
 
-         BENCHMARK_ADVANCED("malloc(5)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = ::std::malloc(5);
-               });
+            BENCHMARK_ADVANCED("malloc(5)") (timer meter) {
+               std::vector<void*> storage(meter.runs());
+               meter.measure([&](int i) {
+                  return storage[i] = ::std::malloc(5);
+                  });
 
-            for (auto& i : storage) {
-               if (i)
-                  ::std::free(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
+               for (auto& i : storage) {
+                  if (i)
+                     ::std::free(i);
+                  else
+                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+               }
+            };
 
-         BENCHMARK_ADVANCED("Allocator::Allocate(512)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = Allocator::Allocate(512);
-               });
+            BENCHMARK_ADVANCED("Allocator::Allocate(512)") (timer meter) {
+               std::vector<Allocation*> storage(meter.runs());
+               meter.measure([&](int i) {
+                  return storage[i] = Allocator::Allocate(512);
+                  });
 
-            for (auto& i : storage) {
-               if (i)
-                  Allocator::Deallocate(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
+               for (auto& i : storage) {
+                  if (i)
+                     Allocator::Deallocate(i);
+                  else
+                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+               }
+            };
 
-         BENCHMARK_ADVANCED("malloc(512)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = ::std::malloc(512);
-               });
+            BENCHMARK_ADVANCED("malloc(512)") (timer meter) {
+               std::vector<void*> storage(meter.runs());
+               meter.measure([&](int i) {
+                  return storage[i] = ::std::malloc(512);
+                  });
 
-            for (auto& i : storage) {
-               if (i)
-                  ::std::free(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
+               for (auto& i : storage) {
+                  if (i)
+                     ::std::free(i);
+                  else
+                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+               }
+            };
 
-         BENCHMARK_ADVANCED("Allocator::Allocate(Pool::DefaultPoolSize)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = Allocator::Allocate(1024 * 1024);
-               });
+            BENCHMARK_ADVANCED("Allocator::Allocate(Pool::DefaultPoolSize)") (timer meter) {
+               std::vector<Allocation*> storage(meter.runs());
+               meter.measure([&](int i) {
+                  return storage[i] = Allocator::Allocate(1024 * 1024);
+                  });
 
-            for (auto& i : storage) {
-               if (i)
-                  Allocator::Deallocate(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
+               for (auto& i : storage) {
+                  if (i)
+                     Allocator::Deallocate(i);
+                  else
+                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+               }
+            };
 
-         BENCHMARK_ADVANCED("malloc(Pool::DefaultPoolSize)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = ::std::malloc(1024 * 1024);
-               });
+            BENCHMARK_ADVANCED("malloc(Pool::DefaultPoolSize)") (timer meter) {
+               std::vector<void*> storage(meter.runs());
+               meter.measure([&](int i) {
+                  return storage[i] = ::std::malloc(1024 * 1024);
+                  });
 
-            for (auto& i : storage) {
-               if (i)
-                  ::std::free(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
-#endif
+               for (auto& i : storage) {
+                  if (i)
+                     ::std::free(i);
+                  else
+                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+               }
+            };
+         #endif
       }
 
       WHEN("Referenced once") {
-         entry = Allocator::Allocate(nullptr, 512);
-         REQUIRE(entry);
          entry->Keep();
 
          REQUIRE(entry->GetUses() == 2);
@@ -595,8 +476,6 @@ SCENARIO("Testing allocator functions", "[allocator]") {
       }
 
       WHEN("Referenced multiple times") {
-         entry = Allocator::Allocate(nullptr, 512);
-         REQUIRE(entry);
          entry->Keep(5);
 
          REQUIRE(entry->GetUses() == 6);
@@ -610,8 +489,6 @@ SCENARIO("Testing allocator functions", "[allocator]") {
       }
 
       WHEN("Dereferenced once without deletion") {
-         entry = Allocator::Allocate(nullptr, 512);
-         REQUIRE(entry);
          entry->Keep();
          entry->Free();
 
@@ -624,8 +501,6 @@ SCENARIO("Testing allocator functions", "[allocator]") {
       }
 
       WHEN("Dereferenced multiple times without deletion") {
-         entry = Allocator::Allocate(nullptr, 512);
-         REQUIRE(entry);
          entry->Keep(5);
          entry->Free(4);
 
@@ -640,8 +515,6 @@ SCENARIO("Testing allocator functions", "[allocator]") {
       }
 
       WHEN("Dereferenced once with deletion") {
-         entry = Allocator::Allocate(nullptr, 512);
-         REQUIRE(entry);
          Allocator::Deallocate(entry);
 
          REQUIRE(Allocator::CheckAuthority(nullptr, entry));
@@ -650,8 +523,6 @@ SCENARIO("Testing allocator functions", "[allocator]") {
       }
 
       WHEN("Dereferenced multiple times with deletion") {
-         entry = Allocator::Allocate(nullptr, 512);
-         REQUIRE(entry);
          entry->Keep(5);
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
