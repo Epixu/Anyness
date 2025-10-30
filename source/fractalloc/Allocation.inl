@@ -16,42 +16,40 @@ namespace Langulus::Fractalloc
    ///   @param bytes - the number of allocated bytes in bitshift form        
    ///   @param pool - the pool this allocation belongs to                    
    LANGULUS(ALWAYS_INLINED)
-   Allocation::Allocation(pot_t bytes, Pool* pool) has_assumptions {
-      LglsAssumeDev(bytes, "Invalid bytes");
-      LglsAssumeDev(pool,  "Invalid pool");
+   Allocation::Allocation(pot_t bytes, Pool const* pool) has_assumptions {
+      LglsAssumeDevAndOptimize(pool, "Invalid pool");
+      mPoolSize = pool->GetAllocatedByFrontend();
+      mSize = bytes;
+      mAlignment = pool->GetAlignment();
+      LglsAssumeDev(GetPool() == pool, "Incorrect pool pointer deduction");
+   }
 
-      const auto pool_begin = pool->GetPoolStart();
-      LglsAssumeDev(reinterpret_cast<uint8_t*>(this) >= pool_begin,
-         "Entry isn't after pool's beginning");
-
-      const auto pool_diff = (reinterpret_cast<uint8_t*>(this) - pool_begin)
-         / Roof2(sizeof(Allocation) + Alignment);
-      LglsAssumeDev(pool_begin + pool_diff < pool->GetPoolEnd(),
-         "Entry isn't before pool's end");
-      LglsAssumeDev(pool_diff <= ::std::numeric_limits<decltype(mPoolFinder)>::max(),
-         "Pool finder is too far to fit in variable");
-
-      mSizeMSB = bytes;
-      mPoolFinder = static_cast<decltype(mPoolFinder)>(pool_diff);
+   /// Get the cost of allocating a single allocation - this includes         
+   /// sizeof(Allocation) together with any padding for data alignment        
+   size_t Allocation::Cost(pot_t alignment) noexcept {
+      return Align(sizeof(Allocation), alignment);
    }
 
    /// Get the pool this allocation belongs to                                
+   /// Pools are always aligned, so all we have to do is mask out 'this'      
    auto Allocation::GetPool() const noexcept -> Pool const* {
-
+      return reinterpret_cast<Pool const*>(
+         reinterpret_cast<uintptr_t>(this) & ~mPoolSize.mask()
+      );
    }
 
    /// User bytes + the header size                                           
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetBackendSize() const noexcept {
-      return Align(sizeof(Allocation), mPool->GetAlignment()) + GetFrontendSize();
+      return Cost(mAlignment) + GetFrontendSize();
    }
 
    /// Get the user bytes                                                     
    ///   @return the byte size of usable memory region                        
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetFrontendSize() const noexcept {
-      return mAllocatedBytes;
+      return static_cast<size_t>(mSize);
    }
 
    /// Return the aligned start of usable block memory (const)                
@@ -59,15 +57,14 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    uint8_t* Allocation::GetBlockStart() const noexcept {
       const auto entryStart = reinterpret_cast<const uint8_t*>(this);
-      return const_cast<uint8_t*>(entryStart)
-           + Align(sizeof(Allocation), mPool->GetAlignment());
+      return const_cast<uint8_t*>(entryStart) + Cost(mAlignment);
    }
 
    /// Return the end of usable block memory (always const)                   
    ///   @return aligned pointer to the entry's memory end                    
    LANGULUS(ALWAYS_INLINED)
    uint8_t const* Allocation::GetBlockEnd() const noexcept {
-      return GetBlockStart() + mAllocatedBytes;
+      return GetBlockStart() + GetFrontendSize();
    }
    
    /// Check if memory address is inside this entry                           
@@ -77,7 +74,7 @@ namespace Langulus::Fractalloc
    bool Allocation::Contains(const void* address) const noexcept {
       const auto a = static_cast<const uint8_t*>(address);
       const auto blockStart = GetBlockStart();
-      return a >= blockStart and a < blockStart + mAllocatedBytes;
+      return a >= blockStart and a < blockStart + GetFrontendSize();
    }
 
    /// Reference the entry 'c' times                                          

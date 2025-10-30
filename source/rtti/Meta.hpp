@@ -70,6 +70,7 @@ namespace Langulus::RTTI::Inner
          return *this;
       }
 
+      LglsNoSideEffects
       constexpr explicit operator bool() const noexcept {
          return mHandle != Zero;
       }
@@ -125,6 +126,7 @@ namespace Langulus::RTTI::Inner
          return *this;
       }
 
+      LglsNoSideEffects
       constexpr explicit operator bool() const noexcept {
          return mDefinition != nullptr;
       }

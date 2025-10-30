@@ -19,19 +19,15 @@ namespace Langulus::Unmanaged
    ///   @param alignment - data alignment                                    
    ///   @param size - the number of allocated bytes                          
    LANGULUS(ALWAYS_INLINED)
-   Allocation::Allocation(pot_t alignment, pot_t size) has_assumptions
+   Allocation::Allocation(pot_t alignment, pot_t size) noexcept
       : mSizeMSB      {size}
-      , mAlignmentMSB {alignment} {
-      LglsAssumeDev(alignment, "Invalid alignment");
-      LglsAssumeDev(size,      "Invalid size");
-   }
+      , mAlignmentMSB {alignment} {}
 
    /// User bytes + the header size                                           
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetBackendSize() const noexcept {
-      return Align(sizeof(Allocation), static_cast<size_t>(mAlignmentMSB))
-           + GetFrontendSize();
+      return Cost(mAlignmentMSB) + GetFrontendSize();
    }
 
    /// Get the user bytes                                                     
@@ -46,7 +42,7 @@ namespace Langulus::Unmanaged
    LANGULUS(ALWAYS_INLINED)
    uint8_t* Allocation::GetBlockStart() const noexcept {
       const auto entryStart = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(this));
-      return entryStart + Align(sizeof(Allocation), static_cast<size_t>(mAlignmentMSB));
+      return entryStart + Cost(mAlignmentMSB);
    }
 
    /// Return the end of usable block memory (always const)                   

@@ -193,7 +193,7 @@ namespace Langulus::RTTI
          auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphism(MetaDataStructured_XY) const noexcept -> DefinitionData::Morphism;
 
-         IF_SAFE(explicit operator bool() const noexcept);
+         IF_SAFE(LglsNoSideEffects explicit operator bool() const noexcept);
 
       protected:
          #if LANGULUS_FEATURE(MANAGED_MEMORY)

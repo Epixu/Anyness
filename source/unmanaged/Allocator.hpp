@@ -32,9 +32,7 @@ namespace Langulus::Unmanaged
       if (align < Alignment)
          align = Alignment;
       
-      // We don't know what kind of alignment malloc() will return, so  
-      // add some additional bytes in order to move pointer if needed   
-      const size_t padding = Align(sizeof(Allocation), align);
+      const size_t padding = Allocation::Cost(align);
       const size_t backendSize = padding + static_cast<size_t>(align > size ? align : size);
       #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
          const auto entry = _aligned_malloc(backendSize, alignof(Allocation));

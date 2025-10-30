@@ -46,7 +46,7 @@ namespace Langulus::Unmanaged
        Allocation(Allocation&&) = delete;
       ~Allocation() = delete;
 
-      explicit Allocation(pot_t alignment, pot_t size) has_assumptions;
+      explicit Allocation(pot_t alignment, pot_t size) noexcept;
       
       auto GetUses() const noexcept { return mReferences; }
       auto GetBackendSize() const noexcept -> size_t;

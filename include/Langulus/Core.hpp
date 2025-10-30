@@ -390,6 +390,9 @@
 /// obscure errors                                                            
 #define LANGULUS_NOOP() ((void)0)
 
+#define LglsNoSideEffects __attribute__((const))
+#define LglsPure __attribute__((pure))
+
 #if LANGULUS_COMPILER(MSVC)
    /// Force no inlining                                                      
    #define LANGULUS_NOINLINE() __declspec(noinline)

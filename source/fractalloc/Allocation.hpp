@@ -21,7 +21,10 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
-   class alignas(Alignment) Allocation {
+   struct alignas(Alignment) Allocation {
+   protected:
+      friend class Pool;
+
       // The number of references to this memory.                       
       // Most often used, so first for immediate access.                
       int32_t mReferences = 1;
@@ -37,10 +40,11 @@ namespace Langulus::Fractalloc
             #endif
 
             // Used to find the pool pointer by rounding 'this'         
-            pot_t mPoolSizeMSB;
-
+            pot_t mPoolSize;
             // Allocated bytes usable by client                         
-            pot_t mSizeMSB;
+            pot_t mSize;
+            // Data alignment                                           
+            pot_t mAlignment;
          };
          struct {
             int32_t mNextFreeEntryFinder;
@@ -54,6 +58,7 @@ namespace Langulus::Fractalloc
       ~Allocation() = delete;
 
       explicit Allocation(pot_t size, Pool const*) has_assumptions;
+      static size_t Cost(pot_t alignment) noexcept;
 
       auto GetPool() const noexcept -> Pool const*;
       auto GetUses() const noexcept { return mReferences; }
