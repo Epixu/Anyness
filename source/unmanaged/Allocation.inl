@@ -16,44 +16,44 @@
 namespace Langulus::Unmanaged
 {
    /// Initialize an allocation                                               
-   ///   @attention this constructor relies that the allocation is placed in  
-   ///      the beginning of a heap allocation of size GetNewAllocationSize() 
    ///   @param alignment - data alignment                                    
    ///   @param size - the number of allocated bytes                          
-   ///   @param handle - the handle used to call free() with                  
    LANGULUS(ALWAYS_INLINED)
-   Allocation::Allocation(size_t alignment, size_t size, MallocHandle* handle) noexcept
-      : mAllocatedBytes {size}
-      , mAlignment      {alignment}
-      , mMallocHandle   {handle} {}
+   Allocation::Allocation(pot_t alignment, pot_t size) has_assumptions
+      : mSizeMSB      {size}
+      , mAlignmentMSB {alignment} {
+      LglsAssumeDev(alignment, "Invalid alignment");
+      LglsAssumeDev(size,      "Invalid size");
+   }
 
    /// User bytes + the header size                                           
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetBackendSize() const noexcept {
-      return Align(sizeof(Allocation), mAlignment) + mAllocatedBytes;
+      return Align(sizeof(Allocation), static_cast<size_t>(mAlignmentMSB))
+           + GetFrontendSize();
    }
 
    /// Get the user bytes                                                     
    ///   @return the byte size of usable memory region                        
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetFrontendSize() const noexcept {
-      return mAllocatedBytes;
+      return static_cast<size_t>(mSizeMSB);
    }
 
    /// Return the aligned start of usable block memory (const)                
    ///   @return aligned pointer to the entry's memory                        
    LANGULUS(ALWAYS_INLINED)
    uint8_t* Allocation::GetBlockStart() const noexcept {
-      const auto entryStart = reinterpret_cast<const uint8_t*>(this);
-      return const_cast<uint8_t*>(entryStart) + Align(sizeof(Allocation), mAlignment);
+      const auto entryStart = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(this));
+      return entryStart + Align(sizeof(Allocation), static_cast<size_t>(mAlignmentMSB));
    }
 
    /// Return the end of usable block memory (always const)                   
    ///   @return aligned pointer to the entry's memory end                    
    LANGULUS(ALWAYS_INLINED)
    uint8_t const* Allocation::GetBlockEnd() const noexcept {
-      return GetBlockStart() + mAllocatedBytes;
+      return GetBlockStart() + GetFrontendSize();
    }
    
    /// Check if memory address is inside this entry                           
@@ -63,7 +63,7 @@ namespace Langulus::Unmanaged
    bool Allocation::Contains(const void* address) const noexcept {
       const auto a = static_cast<const uint8_t*>(address);
       const auto blockStart = GetBlockStart();
-      return a >= blockStart and a < blockStart + mAllocatedBytes;
+      return a >= blockStart and a < blockStart + GetFrontendSize();
    }
 
    /// Reference the entry 'c' times                                          

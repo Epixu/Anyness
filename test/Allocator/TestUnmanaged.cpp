@@ -25,32 +25,34 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
 ) {
    static Allocator::State memoryState;
 
-   GIVEN("An allocation") {
-      Allocation* entry = Allocator::Allocate(alignof(TestType), 512);
+   REQUIRE_THROWS(Allocator::Allocate(alignof(TestType), 511u));
+   
+   GIVEN("A small allocation") {
+      auto s = GENERATE(1u, 2u, 512u);
+      Allocation* entry = Allocator::Allocate(alignof(TestType), s);
       REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
-         REQUIRE(entry->GetBlockStart() != nullptr);
-         REQUIRE(entry->GetBlockStart() <= (reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation)));
-         REQUIRE(reinterpret_cast<uintptr_t>(entry) % alignof(Allocation) == 0);
-         REQUIRE(reinterpret_cast<uintptr_t>(entry->GetBlockStart()) % alignof(TestType) == 0);
-         REQUIRE(entry->GetFrontendSize() >= 512);
-         REQUIRE(entry->GetBackendSize() >= 512 + sizeof(Allocation));
-         REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + entry->GetFrontendSize());
-         REQUIRE(entry->GetBlockStart() == reinterpret_cast<uint8_t*>(entry) + Align(sizeof(Allocation), alignof(TestType)));
+         REQUIRE(entry->GetBlockStart() == Align(reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation), alignof(TestType)));
+         REQUIRE(IsAligned(entry, alignof(Allocation)));
+         REQUIRE(IsAligned(entry->GetBlockStart(), alignof(TestType)));
+         REQUIRE(entry->GetFrontendSize() == s);
+         REQUIRE(entry->GetBackendSize() == s + Align(sizeof(Allocation), alignof(TestType)));
+         REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + s);
          REQUIRE(entry->GetUses() == 1);
 
-         for (size_t i = 0; i < 512; ++i) {
-            auto p1 = entry->GetBlockStart() + i;
-            auto p2 = entry->GetBlockStart() - (i+1);
-            REQUIRE(entry->Contains(p1));
-            REQUIRE_FALSE(entry->Contains(p2));
+         size_t matches = 0;
+         size_t mismatches = 0;
+         for (size_t i = 0; i < s; ++i) {
+            if (entry->Contains(entry->GetBlockStart() + i))
+               ++matches;
+            if (not entry->Contains(entry->GetBlockStart() - (i+1)))
+               ++mismatches;
          }
+         REQUIRE(matches == s);
+         REQUIRE(mismatches == s);
 
-         for (size_t i = 512; i < 513; ++i) {
-            auto p1 = entry->GetBlockStart() + i;
-            REQUIRE_FALSE(entry->Contains(p1));
-         }
+         REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + s));
 
          Allocator::Deallocate(entry);
 
@@ -201,7 +203,111 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
          Allocator::Deallocate(entry);
       }
    }
+   
+   GIVEN("A large allocation") {
+      auto s = 4096u*1024u;
+      Allocation* entry = Allocator::Allocate(alignof(TestType), s);
+      REQUIRE(entry);
 
+      WHEN("Memory is allocated on the heap") {
+         REQUIRE(entry->GetBlockStart() == reinterpret_cast<uint8_t*>(Align(entry + 1, alignof(TestType))));
+         REQUIRE(IsAligned(entry, alignof(Allocation)));
+         REQUIRE(IsAligned(entry->GetBlockStart(), alignof(TestType)));
+         REQUIRE(entry->GetFrontendSize() == s);
+         REQUIRE(entry->GetBackendSize() == s + Align(sizeof(Allocation), alignof(TestType)));
+         REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + s);
+         REQUIRE(entry->GetUses() == 1);
+
+         #ifdef LANGULUS_STD_BENCHMARK
+         BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
+            std::vector<Allocation*> storage(meter.runs());
+            meter.measure([&](int i) {
+               return storage[i] = Allocator::Allocate(5);
+               });
+
+            for (auto& i : storage) {
+               if (i)
+                  Allocator::Deallocate(i);
+               else
+                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+            }
+         };
+
+         BENCHMARK_ADVANCED("malloc(5)") (timer meter) {
+            std::vector<void*> storage(meter.runs());
+            meter.measure([&](int i) {
+               return storage[i] = ::std::malloc(5);
+               });
+
+            for (auto& i : storage) {
+               if (i)
+                  ::std::free(i);
+               else
+                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+            }
+         };
+
+         BENCHMARK_ADVANCED("Allocator::Allocate(512)") (timer meter) {
+            std::vector<Allocation*> storage(meter.runs());
+            meter.measure([&](int i) {
+               return storage[i] = Allocator::Allocate(512);
+               });
+
+            for (auto& i : storage) {
+               if (i)
+                  Allocator::Deallocate(i);
+               else
+                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+            }
+         };
+
+         BENCHMARK_ADVANCED("malloc(512)") (timer meter) {
+            std::vector<void*> storage(meter.runs());
+            meter.measure([&](int i) {
+               return storage[i] = ::std::malloc(512);
+               });
+
+            for (auto& i : storage) {
+               if (i)
+                  ::std::free(i);
+               else
+                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+            }
+         };
+
+         BENCHMARK_ADVANCED("Allocator::Allocate(Pool::DefaultPoolSize)") (timer meter) {
+            std::vector<Allocation*> storage(meter.runs());
+            meter.measure([&](int i) {
+               return storage[i] = Allocator::Allocate(1024 * 1024);
+               });
+
+            for (auto& i : storage) {
+               if (i)
+                  Allocator::Deallocate(i);
+               else
+                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+            }
+         };
+
+         BENCHMARK_ADVANCED("malloc(Pool::DefaultPoolSize)") (timer meter) {
+            std::vector<void*> storage(meter.runs());
+            meter.measure([&](int i) {
+               return storage[i] = ::std::malloc(1024 * 1024);
+               });
+
+            for (auto& i : storage) {
+               if (i)
+                  ::std::free(i);
+               else
+                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
+            }
+         };
+         #endif
+      }
+
+      Allocator::Deallocate(entry);
+   }
+   
    REQUIRE(memoryState.Assert());
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }

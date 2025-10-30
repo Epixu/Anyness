@@ -16,13 +16,15 @@
 
 namespace Langulus::Unmanaged
 {
-   class MallocHandle;
    struct Allocator;
 
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
-   class alignas(Alignment) Allocation {
+   struct alignas(Alignment) Allocation {
+   protected:
+      friend struct Allocator;
+      
       // The number of references to this memory.                       
       // Most often used, so first for immediate access.                
       int32_t mReferences = 1;
@@ -44,7 +46,7 @@ namespace Langulus::Unmanaged
        Allocation(Allocation&&) = delete;
       ~Allocation() = delete;
 
-      explicit Allocation(pot_t alignment, pot_t size, MallocHandle*) has_assumptions;
+      explicit Allocation(pot_t alignment, pot_t size) has_assumptions;
       
       auto GetUses() const noexcept { return mReferences; }
       auto GetBackendSize() const noexcept -> size_t;

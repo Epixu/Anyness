@@ -22,31 +22,31 @@ namespace Langulus::Unmanaged
 {
    using RTTI::DMeta;
 
-   /// MSVC will likely never support std::aligned_alloc, so we use           
-   /// a custom portable routine that's almost the same                       
-   /// https://stackoverflow.com/questions/62962839                           
-   ///                                                                        
-   /// Each allocation has the following prefixed bytes:                      
-   /// [allocation padding][allocation][client padding][client bytes...]      
-   ///                                                                        
+   /// Each allocation has the following order:                               
+   /// [sizeof(Allocation)][padding for client data][client bytes...]         
    ///   @param size - the number of client bytes to allocate                 
    ///   @param align - the alignment of the data                             
    ///   @return a newly allocated memory that is correctly aligned           
-   inline Allocation* AlignedAllocate(size_t size, size_t align) has_assumptions {
+   inline Allocation* AlignedAllocate(pot_t size, pot_t align) has_assumptions {
+      LglsAssumeDev(size, "Invalid size");
       if (align < Alignment)
          align = Alignment;
       
       // We don't know what kind of alignment malloc() will return, so  
       // add some additional bytes in order to move pointer if needed   
-      const size_t padding = Align(sizeof(Allocation) + Alignment, align);
-      const size_t backendSize = padding + (align > size ? align : size);
-      const auto base = static_cast<uint8_t*>(malloc(backendSize));
-      if (not base)
+      const size_t padding = Align(sizeof(Allocation), align);
+      const size_t backendSize = padding + static_cast<size_t>(align > size ? align : size);
+      #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
+         const auto entry = _aligned_malloc(backendSize, alignof(Allocation));
+      #else
+         const auto entry = ::std::aligned_alloc(alignof(Allocation), backendSize);
+      #endif
+      
+      if (not entry)
          return nullptr;
 
-      const auto aligned_base = Align(base, alignof(Allocation));
-      new (aligned_base) Allocation {align, size, reinterpret_cast<MallocHandle*>(base)};
-      return reinterpret_cast<Allocation*>(aligned_base);
+      new (entry) Allocation {align, size};
+      return reinterpret_cast<Allocation*>(entry);
    }
    
    ///                                                                        
@@ -60,16 +60,17 @@ namespace Langulus::Unmanaged
       };
 
       LANGULUS(INLINED)
-      static auto Allocate(size_t alignment, size_t size) has_assumptions -> Allocation* {
-         LglsAssumeDev(size, "Zero allocation is not allowed");
+      static auto Allocate(pot_t alignment, pot_t size) has_assumptions
+      -> Allocation* {
          return AlignedAllocate(size, alignment);
       }
 
       LANGULUS(INLINED)
-      static auto Reallocate(size_t size, Allocation* previous) has_assumptions -> Allocation* {
+      static auto Reallocate(pot_t size, Allocation* previous) has_assumptions
+      -> Allocation* {
          LglsAssumeDev(previous,
             "Reallocating nullptr");
-         LglsAssumeDev(size != previous->GetFrontendSize(),
+         LglsAssumeDev(size != previous->mSizeMSB,
             "Reallocation suboptimal - size is same as previous");
          LglsAssumeDev(size,
             "Zero reallocation is not allowed - deallocate instead");
@@ -77,29 +78,31 @@ namespace Langulus::Unmanaged
             "Deallocating an unused allocation");
 
          (void) previous;
-         return Allocate(previous->mAlignment, size);
+         return Allocate(previous->mAlignmentMSB, size);
       }
 
       LANGULUS(INLINED)
       static void Deallocate(Allocation* entry) has_assumptions {
          LglsAssumeDev(entry,
             "Deallocating nullptr");
-         LglsAssumeDev(entry->GetFrontendSize(),
+         LglsAssumeDev(entry->mSizeMSB,
             "Deallocating an empty allocation");
          LglsAssumeDev(entry->mReferences,
             "Deallocating an unused allocation");
          LglsAssumeDev(entry->mReferences == 1,
             "Deallocating an allocation used from multiple places");
-
-         free(entry->mMallocHandle);
+         
+         #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
+            _aligned_free(entry);
+         #else
+            ::std::free(entry);
+         #endif
       }
 
-      static consteval bool CollectGarbage() noexcept {
-         return false;
-      }
+      static consteval bool CollectGarbage() { return false; }
 
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-         static consteval void DumpPools() noexcept {}
+         static consteval void DumpPools() {}
       #endif
    };
 }
