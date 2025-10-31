@@ -54,8 +54,8 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the minimal allocation of the type in bytes                        
-   inline auto MetaDataNaked::GetMinAllocation() const noexcept -> size_t {
-      return mDefinition ? mDefinition->mMinimalAllocation : 0;
+   inline auto MetaDataNaked::GetMinAllocation() const noexcept -> pot_t {
+      return mDefinition ? mDefinition->mMinimalAllocation : pot_t(MinimalAllocation);
    }
 
    /// Get the precomputed allocation table for the type                      
@@ -65,8 +65,8 @@ namespace Langulus::RTTI::Inner
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    /// Get the minimal allocation page                                        
-   inline auto MetaDataNaked::GetMinPoolsize() const noexcept -> size_t {
-      return mDefinition ? mDefinition->mMinimalPoolSize : 0;
+   inline auto MetaDataNaked::GetMinPoolsize() const noexcept -> pot_t {
+      return mDefinition ? mDefinition->mMinimalPoolSize : pot_t(MinimalPoolSize);
    }
    
    /// Get the reflected pool tactic                                          

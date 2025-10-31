@@ -26,21 +26,27 @@ namespace Langulus
       constexpr pot_t(pot_t const&) noexcept = default;
 
       template<::std::unsigned_integral T>
-      constexpr pot_t(T const& other) has_assumptions {
+      explicit constexpr pot_t(T const& other) has_assumptions {
          LglsAssumeDev(::std::has_single_bit(other),
             "bad construction of pot_t");
-         bit = ::std::bit_width(other);
+         bit = ::std::bit_width(other) - 1;
       }
       
       constexpr pot_t& operator = (pot_t const& rhs) noexcept = default;
       constexpr pot_t& operator = (::std::unsigned_integral auto const& rhs) has_assumptions {
          LglsAssumeDev(::std::has_single_bit(rhs),
             "bad assignment to pot_t");
-         bit = ::std::bit_width(rhs);
+         bit = ::std::bit_width(rhs) - 1;
          return *this;
       }
 
+      constexpr bool operator == (pot_t const& rhs) const noexcept = default;
       constexpr auto operator <=> (pot_t const& rhs) const noexcept = default;
+
+      template<::std::unsigned_integral T>
+      constexpr bool operator == (T const& rhs) const noexcept {
+         return operator T () == rhs;
+      }
 
       template<::std::unsigned_integral T>
       constexpr auto operator <=> (T const& rhs) const noexcept {
@@ -61,8 +67,19 @@ namespace Langulus
       constexpr size_t operator + (pot_t const& rhs) const noexcept {
          return (size_t {1} << bit) + (size_t {1} << rhs.bit);
       }
+
+      template<::std::unsigned_integral T>
+      constexpr T operator + (T const& rhs) const noexcept {
+         return (T {1} << bit) + rhs;
+      }
+      
       constexpr size_t operator - (pot_t const& rhs) const noexcept {
          return (size_t {1} << bit) - (size_t {1} << rhs.bit);
+      }
+      
+      template<::std::unsigned_integral T>
+      constexpr T operator - (T const& rhs) const noexcept {
+         return (T {1} << bit) - rhs;
       }
 
       constexpr pot_t operator / (pot_t const& rhs) const has_assumptions {
@@ -73,12 +90,22 @@ namespace Langulus
          return result;
       }
 
+      template<::std::unsigned_integral T>
+      constexpr size_t operator / (T const& rhs) const noexcept {
+         return (T {1} << bit) / rhs;
+      }
+
       constexpr pot_t operator * (pot_t const& rhs) const has_assumptions {
          LglsAssumeDev(rhs.bit + bit <= 255u,
             "pot_t multiplication overflowed");
          pot_t result;
          result.bit = bit + rhs.bit;
          return result;
+      }
+      
+      template<::std::unsigned_integral T>
+      constexpr size_t operator * (T const& rhs) const noexcept {
+         return (T {1} << bit) * rhs;
       }
 
       constexpr pot_t operator % (pot_t const& rhs) const has_assumptions {
@@ -103,4 +130,21 @@ namespace Langulus
          return *this;
       }
    };
+
+   constexpr pot_t operator""_pot(unsigned long long int num) has_assumptions {
+      return pot_t(num);
+   }
 }
+
+
+#ifdef TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
+namespace Catch
+{
+   template<>
+   struct StringMaker<::Langulus::pot_t> {
+      static ::std::string convert(::Langulus::pot_t const& value) {
+         return std::to_string(static_cast<size_t>(value));
+      }
+   };
+}
+#endif

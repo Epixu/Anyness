@@ -18,7 +18,7 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    Allocation::Allocation(pot_t bytes, Pool const* pool) has_assumptions {
       LglsAssumeDevAndOptimize(pool, "Invalid pool");
-      mPoolSize = pool->GetAllocatedByFrontend();
+      mPoolSize = pool->GetAllocatedByBackend();
       mSize = bytes;
       mAlignment = pool->GetAlignment();
       LglsAssumeDev(GetPool() == pool, "Incorrect pool pointer deduction");
@@ -26,15 +26,17 @@ namespace Langulus::Fractalloc
 
    /// Get the cost of allocating a single allocation - this includes         
    /// sizeof(Allocation) together with any padding for data alignment        
+   LANGULUS(ALWAYS_INLINED)
    size_t Allocation::Cost(pot_t alignment) noexcept {
       return Align(sizeof(Allocation), alignment);
    }
 
    /// Get the pool this allocation belongs to                                
    /// Pools are always aligned, so all we have to do is mask out 'this'      
+   LANGULUS(ALWAYS_INLINED)
    auto Allocation::GetPool() const noexcept -> Pool const* {
       return reinterpret_cast<Pool const*>(
-         reinterpret_cast<uintptr_t>(this) & ~mPoolSize.mask()
+         (reinterpret_cast<uintptr_t>(this) - Pool::Cost(mAlignment)) & ~mPoolSize.mask()
       );
    }
 
@@ -42,7 +44,7 @@ namespace Langulus::Fractalloc
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetBackendSize() const noexcept {
-      return Cost(mAlignment) + GetFrontendSize();
+      return Roof2(Cost(mAlignment) + GetFrontendSize());
    }
 
    /// Get the user bytes                                                     

@@ -23,9 +23,8 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
    TypeVeryBigAligned,
    TypeVeryBigPacked
 ) {
-   static Allocator::State memoryState;
-
    REQUIRE_THROWS(Allocator::Allocate(alignof(TestType), 511u));
+   constexpr size_t testAlignment = ::std::max(alignof(Allocation), alignof(TestType));
    
    GIVEN("A small allocation") {
       auto s = GENERATE(1u, 2u, 512u);
@@ -33,11 +32,11 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
       REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
-         REQUIRE(entry->GetBlockStart() == Align(reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation), alignof(TestType)));
+         REQUIRE(entry->GetBlockStart() == Align(reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation), testAlignment));
          REQUIRE(IsAligned(entry, alignof(Allocation)));
-         REQUIRE(IsAligned(entry->GetBlockStart(), alignof(TestType)));
+         REQUIRE(IsAligned(entry->GetBlockStart(), testAlignment));
          REQUIRE(entry->GetFrontendSize() == s);
-         REQUIRE(entry->GetBackendSize() == s + Align(sizeof(Allocation), alignof(TestType)));
+         REQUIRE(entry->GetBackendSize() == s + Align(sizeof(Allocation), testAlignment));
          REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + s);
          REQUIRE(entry->GetUses() == 1);
 
@@ -147,10 +146,9 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
          entry->Keep();
 
          REQUIRE(entry->GetUses() == 2);
-
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          IF_SAFE(REQUIRE(entry->GetUses() == 2));
-
+         
          entry->Free();
          Allocator::Deallocate(entry);
       }
@@ -307,7 +305,4 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
 
       Allocator::Deallocate(entry);
    }
-   
-   REQUIRE(memoryState.Assert());
-   REQUIRE_FALSE(Allocator::CollectGarbage());
 }

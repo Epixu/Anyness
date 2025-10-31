@@ -16,14 +16,15 @@
 
 namespace Langulus::Fractalloc
 {
-   class Pool;
+   struct Pool;
 
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
    struct alignas(Alignment) Allocation {
    protected:
-      friend class Pool;
+      friend struct Pool;
+      friend struct Allocator;
 
       // The number of references to this memory.                       
       // Most often used, so first for immediate access.                
@@ -58,6 +59,7 @@ namespace Langulus::Fractalloc
       ~Allocation() = delete;
 
       explicit Allocation(pot_t size, Pool const*) has_assumptions;
+      
       static size_t Cost(pot_t alignment) noexcept;
 
       auto GetPool() const noexcept -> Pool const*;

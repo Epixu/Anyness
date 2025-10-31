@@ -24,7 +24,7 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   Memory pool                                                          
    ///                                                                        
-   class alignas(Alignment) Pool final {
+   struct alignas(Alignment) Pool {
    friend struct Allocator;
    protected:
       // Next pool in the pool chain                                    
@@ -79,11 +79,12 @@ namespace Langulus::Fractalloc
       Pool(DMeta) has_assumptions;
       Pool(DMeta, pot_t) has_assumptions;
 
+      static size_t Cost(pot_t alignment) noexcept;
+
       // Default pool allocation is 1 MB                                
       static constexpr size_t InvalidIndex = -1;
 
       auto GetPoolStart() const noexcept -> uint8_t*;
-      auto GetPoolEnd() const noexcept -> uint8_t*;
       auto GetAlignment() const noexcept -> size_t { return mMeta.GetAlignment(); }
 
       constexpr auto GetMaxEntries() const noexcept -> pot_t;

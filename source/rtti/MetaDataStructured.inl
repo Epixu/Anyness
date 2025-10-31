@@ -233,11 +233,11 @@ namespace Langulus::RTTI::Inner
    
    /// Get the minimal allocation size in bytes                               
    TEMPLATE()
-   auto ME()::GetMinAllocation() const noexcept -> size_t {
+   auto ME()::GetMinAllocation() const noexcept -> pot_t {
       const auto id = Base::GetID();
       if (id)
          return Instance.GetMetaDataByID(id, sparse, constant)->mMinimalAllocation;
-      return {};
+      return pot_t(MinimalAllocation);
    }
 
    /// Get the precomputed allocation table for the type                      
@@ -252,11 +252,11 @@ namespace Langulus::RTTI::Inner
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Get the reflected allocation page                                   
       TEMPLATE()
-      auto ME()::GetMinPoolsize() const noexcept -> size_t {
+      auto ME()::GetMinPoolsize() const noexcept -> pot_t {
          const auto id = Base::GetID();
          if (id)
             return Instance.GetMetaDataByID(id, sparse, constant)->mMinimalPoolSize;
-         return {};
+         return pot_t(MinimalPoolSize);
       }
    
       /// Get the reflected pool tactic                                       

@@ -699,7 +699,7 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
    REQUIRE(meta.IsNullable() == false);  // not nullable due to being abstract
    REQUIRE(meta.IsAbstract() == true);
 
-   REQUIRE(meta.GetMinAllocation() == 1024);
+   REQUIRE(meta.GetMinAllocation() == 1024_pot);
    for (size_t bit = 0; bit < Bitness; ++bit) {
       meta.GetAllocationTable()[bit] == bit < 10 ? 8 : ((size_t {1} << bit) / size_t {128});
    }

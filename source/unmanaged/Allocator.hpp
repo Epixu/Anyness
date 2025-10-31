@@ -28,16 +28,15 @@ namespace Langulus::Unmanaged
    ///   @param align - the alignment of the data                             
    ///   @return a newly allocated memory that is correctly aligned           
    inline Allocation* AlignedAllocate(pot_t size, pot_t align) has_assumptions {
-      LglsAssumeDev(size, "Invalid size");
-      if (align < Alignment)
-         align = Alignment;
+      if (align < alignof(Allocation))
+         align = alignof(Allocation);
       
       const size_t padding = Allocation::Cost(align);
       const size_t backendSize = padding + static_cast<size_t>(align > size ? align : size);
       #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
-         const auto entry = _aligned_malloc(backendSize, alignof(Allocation));
+         const auto entry = _aligned_malloc(backendSize, static_cast<size_t>(align));
       #else
-         const auto entry = ::std::aligned_alloc(alignof(Allocation), backendSize);
+         const auto entry = ::std::aligned_alloc(static_cast<size_t>(align), backendSize);
       #endif
       
       if (not entry)
@@ -68,23 +67,19 @@ namespace Langulus::Unmanaged
       -> Allocation* {
          LglsAssumeDev(previous,
             "Reallocating nullptr");
-         LglsAssumeDev(size != previous->mSizeMSB,
+         LglsAssumeDev(size != previous->mSize,
             "Reallocation suboptimal - size is same as previous");
-         LglsAssumeDev(size,
-            "Zero reallocation is not allowed - deallocate instead");
          LglsAssumeDev(previous->mReferences,
             "Deallocating an unused allocation");
 
          (void) previous;
-         return Allocate(previous->mAlignmentMSB, size);
+         return Allocate(previous->mAlignment, size);
       }
 
       LANGULUS(INLINED)
       static void Deallocate(Allocation* entry) has_assumptions {
          LglsAssumeDev(entry,
             "Deallocating nullptr");
-         LglsAssumeDev(entry->mSizeMSB,
-            "Deallocating an empty allocation");
          LglsAssumeDev(entry->mReferences,
             "Deallocating an unused allocation");
          LglsAssumeDev(entry->mReferences == 1,

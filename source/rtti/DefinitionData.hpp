@@ -9,6 +9,7 @@
 #include "Definition.hpp"
 #include <Langulus/CT/Comparable.hpp>
 #include <Langulus/CT/DefineTag.hpp>
+#include <Langulus/Utils/Pot.hpp>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -31,7 +32,7 @@ namespace Langulus::Flow
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    namespace Langulus::Fractalloc
    {
-      class Pool;
+      struct Pool;
    }
 #endif
 
@@ -92,7 +93,7 @@ namespace Langulus::RTTI
       // Data instance alignment in bytes, set by alignof()             
       size_t mAlign IF_SAFE(= 0);
       // Minimal element allocation, in bytes                           
-      size_t mMinimalAllocation IF_SAFE(= 0);
+      pot_t mMinimalAllocation;
       // Precomputed counts indexed by MSB (avoids division by stride   
       // for that extra oompf)                                          
       size_t mAllocationTable[sizeof(size_t) * 8 + 1] IF_SAFE(= {});
@@ -103,7 +104,7 @@ namespace Langulus::RTTI
       
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          // Minimal pool allocation, in bytes                           
-         size_t mMinimalPoolSize IF_SAFE(= 0);
+         pot_t mMinimalPoolSize;
          // The reflected pool tactic                                   
          PoolTactic mPoolTactic = PoolTactic::Default;
          // The start of the pool chain for the type                    

@@ -20,29 +20,36 @@ namespace Langulus::Unmanaged
    ///   @param size - the number of allocated bytes                          
    LANGULUS(ALWAYS_INLINED)
    Allocation::Allocation(pot_t alignment, pot_t size) noexcept
-      : mSizeMSB      {size}
-      , mAlignmentMSB {alignment} {}
+      : mSize      {size}
+      , mAlignment {alignment} {}
+
+   /// Get the cost of allocating a single allocation - this includes         
+   /// sizeof(Allocation) together with any padding for data alignment        
+   LANGULUS(ALWAYS_INLINED)
+   size_t Allocation::Cost(pot_t alignment) noexcept {
+      return Align(sizeof(Allocation), alignment);
+   }
 
    /// User bytes + the header size                                           
    ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetBackendSize() const noexcept {
-      return Cost(mAlignmentMSB) + GetFrontendSize();
+      return Cost(mAlignment) + GetFrontendSize();
    }
 
    /// Get the user bytes                                                     
    ///   @return the byte size of usable memory region                        
    LANGULUS(ALWAYS_INLINED)
    size_t Allocation::GetFrontendSize() const noexcept {
-      return static_cast<size_t>(mSizeMSB);
+      return static_cast<size_t>(mSize);
    }
 
    /// Return the aligned start of usable block memory (const)                
    ///   @return aligned pointer to the entry's memory                        
    LANGULUS(ALWAYS_INLINED)
    uint8_t* Allocation::GetBlockStart() const noexcept {
-      const auto entryStart = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(this));
-      return entryStart + Cost(mAlignmentMSB);
+      const auto entryStart = reinterpret_cast<const uint8_t*>(this);
+      return const_cast<uint8_t*>(entryStart + Cost(mAlignment));
    }
 
    /// Return the end of usable block memory (always const)                   

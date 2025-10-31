@@ -42,14 +42,14 @@ namespace Langulus::Anyness::Component
          if (a)
             return; // We already own this allocation                   
 
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            // The heap might already be ours and we just don't know it 
-            if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
-               a = const_cast<AllocationPtr>(found);
-               a->Keep();
-               return;
-            }
-         #endif
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         // The heap might already be ours and we just don't know it 
+         if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
+            a = const_cast<AllocationPtr>(found);
+            a->Keep();
+            return;
+         }
+      #endif
 
          // Shallow-copy all elements in a fresh allocation             
          C temp {Copy {self}};

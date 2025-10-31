@@ -123,10 +123,10 @@ namespace Langulus::Fractalloc
 
    public:
       LANGULUS_API(FRACTALLOC)
-      static auto Allocate(DMeta, size_t) has_assumptions -> Allocation*;
+      static auto Allocate(DMeta, pot_t) has_assumptions -> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
-      static auto Reallocate(size_t, Allocation*) has_assumptions-> Allocation*;
+      static auto Reallocate(pot_t, Allocation*) has_assumptions-> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
       static void Deallocate(Allocation*) has_assumptions;
@@ -141,7 +141,7 @@ namespace Langulus::Fractalloc
       static Pool* AllocatePool(DMeta) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
-      static Pool* AllocatePool(DMeta, size_t) has_assumptions;
+      static Pool* AllocatePool(DMeta, pot_t) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
       static void DeallocatePool(Pool*) has_assumptions;

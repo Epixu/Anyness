@@ -34,11 +34,10 @@ namespace Langulus::Unmanaged
          uint64_t mStep;
       #endif
 
-      // Allocated bytes usable by client. This is always a power-of-   
-      // two, so it is compressed as the most significant bit index     
-      pot_t mSizeMSB;
+      // Allocated bytes usable by client                               
+      pot_t mSize;
       // The alignment of the contained data                            
-      pot_t mAlignmentMSB;
+      pot_t mAlignment;
 
    public:
        Allocation() = delete;
@@ -46,7 +45,9 @@ namespace Langulus::Unmanaged
        Allocation(Allocation&&) = delete;
       ~Allocation() = delete;
 
-      explicit Allocation(pot_t alignment, pot_t size) noexcept;
+      Allocation(pot_t alignment, pot_t size) noexcept;
+      
+      static size_t Cost(pot_t alignment) noexcept;
       
       auto GetUses() const noexcept { return mReferences; }
       auto GetBackendSize() const noexcept -> size_t;

@@ -9,6 +9,7 @@
 #include "../Container.hpp"
 #include <Langulus/CT/Resolvable.hpp>
 #include <Langulus/CT/MinAlloc.hpp>
+#include <Langulus/Utils/Pot.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -329,10 +330,9 @@ namespace Langulus::Anyness::Component
       /// A simple request for allocating memory, which includes heap         
       /// byte size, number of reserved elements, and optional header offset. 
       struct Request {
-         size_t mTotalBytes   IF_SAFE(= 0);
-         size_t mHeaderBytes  IF_SAFE(= 0);
-         size_t mReserved     IF_SAFE(= 0);
-         IF_UNSAFE(constexpr Request() {})
+         pot_t  mTotalBytes;
+         size_t mHeaderBytes;
+         size_t mReserved;
       };
       
       /// Get a size based on reflected allocation page and count             
@@ -349,7 +349,10 @@ namespace Langulus::Anyness::Component
             // Check for reflected minimal allocation at runtime        
             const auto size = T.GetSize();
             result.mHeaderBytes = Align(header, T.GetAlignment());
-            result.mTotalBytes = Roof2(::std::max(count * size + result.mHeaderBytes, T.GetMinAllocation()));
+            result.mTotalBytes = Roof2(::std::max(
+               count * size + result.mHeaderBytes,
+               static_cast<size_t>(T.GetMinAllocation())
+            ));
             result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / size;
          }
          else {
@@ -357,7 +360,10 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C>;
 
             result.mHeaderBytes = Align(header, alignof(T));
-            result.mTotalBytes = Roof2(::std::max(count * sizeof(T) + result.mHeaderBytes, CT::GetMinAlloc<T>()));
+            result.mTotalBytes = Roof2(::std::max(
+               count * sizeof(T) + result.mHeaderBytes,
+               CT::GetMinAlloc<T>()
+            ));
             result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / sizeof(T);
          }
 
