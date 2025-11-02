@@ -142,16 +142,11 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          };
       #endif
 
-      WHEN("Ambiguous assign value by referral") {
-         if constexpr (Ambiguous)
+      if constexpr (Ambiguous) {
+         WHEN("Ambiguous assign value by referral") {
             REQUIRE_THROWS(pack = *element);
-         else
-            REQUIRE_NOTHROW(pack = *element);
-         
-         if constexpr (Ambiguous)
             REQUIRE_THROWS(pack = Refer(*element));
-         else
-            REQUIRE_NOTHROW(pack = Refer(*element));
+         }
       }
 
       WHEN("Assigned value by referral") {
@@ -217,19 +212,13 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             #endif
          }
       }
-      
-      WHEN("Ambiguous assign value by move") {
-         auto movable = *element;
 
-         if constexpr (Ambiguous)
+      if constexpr (Ambiguous) {
+         WHEN("Ambiguous assign value by move") {
+            auto movable = *element;
             REQUIRE_THROWS(pack = ::std::move(movable));
-         else
-            REQUIRE_NOTHROW(pack = ::std::move(movable));
-         
-         if constexpr (Ambiguous)
             REQUIRE_THROWS(pack = Move(movable));
-         else
-            REQUIRE_NOTHROW(pack = Move(movable));
+         }
       }
       
       WHEN("Assigned value by move") {
@@ -304,11 +293,10 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          }
       }
 
-      WHEN("Ambiguous assign disowned value") {
-         if constexpr (Ambiguous)
+      if constexpr (Ambiguous) {
+         WHEN("Ambiguous assign disowned value") {
             REQUIRE_THROWS(pack = Disown(*element));
-         else
-            REQUIRE_NOTHROW(pack = Disown(*element));
+         }
       }
       
       WHEN("Assigned disowned value") {
@@ -378,14 +366,12 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
             #endif
          }
       }
-      
-      WHEN("Ambiguous assigned abandoned value") {
-         auto movable = *element;
 
-         if constexpr (Ambiguous)
+      if constexpr (Ambiguous) {
+         WHEN("Ambiguous assigned abandoned value") {
+            auto movable = *element;
             REQUIRE_THROWS(pack = Abandon(movable));
-         else
-            REQUIRE_NOTHROW(pack = Abandon(movable));
+         }
       }
       
       WHEN("Assigned abandoned value") {
@@ -583,18 +569,12 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
    }
 
-   GIVEN("Container ambiguously constructed by value referral") {
-      const ScopedElement<E> element {555};
-      
-      if constexpr (Ambiguous)
-         REQUIRE_THROWS(T {*element});
-      else
-         REQUIRE_NOTHROW(T {*element});
-      
-      if constexpr (Ambiguous)
+   if constexpr (Ambiguous) {
+      GIVEN("Container ambiguously constructed by value referral") {
+         const ScopedElement<E> element {555};
+         REQUIRE_THROWS(T {*element});      
          REQUIRE_THROWS(T {Refer(*element)});
-      else
-         REQUIRE_NOTHROW(T {Refer(*element)});
+      }
    }
 
    GIVEN("Container constructed by value referral") {
@@ -1099,19 +1079,14 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       }
    }
 
-   GIVEN("Container ambiguously constructed by moved value") {
-      const ScopedElement<E> element {555};
-      E movable = *element;
+   if constexpr (Ambiguous) {
+      GIVEN("Container ambiguously constructed by moved value") {
+         const ScopedElement<E> element {555};
+         E movable = *element;     
       
-      if constexpr (Ambiguous)
          REQUIRE_THROWS(T {::std::move(movable)});
-      else
-         REQUIRE_NOTHROW(T {::std::move(movable)});
-      
-      if constexpr (Ambiguous)
          REQUIRE_THROWS(T {Move(movable)});
-      else
-         REQUIRE_NOTHROW(T {Move(movable)});
+      }
    }
 
    GIVEN("Container constructed by moved value") {
@@ -1149,14 +1124,12 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
          };
       #endif
    }
-   
-   GIVEN("Container ambiguously constructed by disowned value") {
-      const ScopedElement<E> element {555};
-      
-      if constexpr (Ambiguous)
+
+   if constexpr (Ambiguous) {
+      GIVEN("Container ambiguously constructed by disowned value") {
+         const ScopedElement<E> element {555};
          REQUIRE_THROWS(T {Disown(*element)});
-      else
-         REQUIRE_NOTHROW(T {Disown(*element)});
+      }
    }
 
    GIVEN("Container constructed by disowned value") {
@@ -1193,15 +1166,14 @@ TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
       };
    #endif
    }
-   
-   GIVEN("Container ambiguously constructed by abandoned value") {
-      const ScopedElement<E> element {555};
-      E movable = *element;
-      
-      if constexpr (Ambiguous)
+
+   if constexpr (Ambiguous) {
+      GIVEN("Container ambiguously constructed by abandoned value") {
+         const ScopedElement<E> element {555};
+         E movable = *element;
+         
          REQUIRE_THROWS(T {Abandon(movable)});
-      else
-         REQUIRE_NOTHROW(T {Abandon(movable)});
+      }
    }
     
    GIVEN("Container constructed by abandoned value") {
