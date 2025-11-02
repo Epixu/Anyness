@@ -30,11 +30,10 @@ namespace Langulus::Unmanaged
    inline Allocation* AlignedAllocate(pot_t size, pot_t align) has_assumptions {
       if (align < Alignment)
          align = Alignment;
-      if (size < Alignment)
-         size = Alignment;
       const size_t alignment = ::std::max(alignof(Allocation), static_cast<size_t>(align));
       const size_t allocation_cost = Align(sizeof(Allocation), alignment);
-      const size_t backendSize = allocation_cost + static_cast<size_t>(size);
+      const size_t size_aligned = Align(static_cast<size_t>(size), alignment);
+      const size_t backendSize = allocation_cost + size_aligned;
       #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
          const auto entry = _aligned_malloc(backendSize, alignment);
       #else
@@ -44,7 +43,7 @@ namespace Langulus::Unmanaged
       if (not entry)
          return nullptr;
 
-      new (entry) Allocation {align, size};
+      new (entry) Allocation {pot_t(alignment), pot_t(size_aligned)};
       return reinterpret_cast<Allocation*>(entry);
    }
    

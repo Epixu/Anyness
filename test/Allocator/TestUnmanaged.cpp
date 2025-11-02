@@ -24,7 +24,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
    TypeVeryBigPacked
 ) {
    IF_SAFE(REQUIRE_THROWS(Allocator::Allocate(pot_t(alignof(TestType)), 511_pot)));
-   constexpr size_t testAlignment = alignof(TestType);
+   constexpr size_t testAlignment = ::std::max(alignof(TestType), Alignment);
    
    GIVEN("A small allocation") {
       auto s = GENERATE(1_pot, 2_pot, 512_pot);
@@ -32,10 +32,10 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
       REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
-         REQUIRE(entry->GetBlockStart() == reinterpret_cast<uint8_t*>(entry) + Align(sizeof(Allocation), testAlignment));
+         REQUIRE(entry->GetBlockStart() == Align(reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation), testAlignment));
          REQUIRE(IsAligned(entry, alignof(Allocation)));
          REQUIRE(IsAligned(entry->GetBlockStart(), testAlignment));
-         REQUIRE(entry->GetSize() == s);
+         REQUIRE(entry->GetSize() == pot_t(Align(static_cast<size_t>(s), testAlignment)));
          REQUIRE(entry->GetUses() == 1);
 
          size_t matches = 0;
@@ -49,7 +49,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
          REQUIRE(matches == s);
          REQUIRE(mismatches == s);
 
-         REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + static_cast<size_t>(s)));
+         REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + Align(static_cast<size_t>(s), testAlignment)));
 
          Allocator::Deallocate(entry);
 
@@ -206,10 +206,10 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
       REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
-         REQUIRE(entry->GetBlockStart() == (reinterpret_cast<uint8_t*>(entry) + Align(sizeof(Allocation), testAlignment)));
+         REQUIRE(entry->GetBlockStart() == Align(reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation), testAlignment));
          REQUIRE(IsAligned(entry, alignof(Allocation)));
          REQUIRE(IsAligned(entry->GetBlockStart(), alignof(TestType)));
-         REQUIRE(entry->GetSize() == s);
+         REQUIRE(entry->GetSize() == pot_t(Align(static_cast<size_t>(s), testAlignment)));
          REQUIRE(entry->GetUses() == 1);
 
          #ifdef LANGULUS_STD_BENCHMARK

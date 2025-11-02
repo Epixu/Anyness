@@ -84,11 +84,8 @@ namespace Langulus::Fractalloc
 
       static size_t Cost(DMeta, pot_t) noexcept;
 
-      //static constexpr size_t InvalidIndex = -1;
-
       auto GetAllocationData() const noexcept -> Allocation*;
       auto GetClientData() const noexcept -> uint8_t*;
-      //auto GetPoolAlignment() const noexcept -> pot_t;
 
       auto GetMaxEntries() const noexcept -> pot_t;
       auto GetMinAllocation() const noexcept -> pot_t;
@@ -106,7 +103,6 @@ namespace Langulus::Fractalloc
       
       auto ThresholdFromIndex(size_t) const noexcept -> pot_t;
       auto IndexFromAddress(const void*) const has_assumptions -> size_t;
-      //auto ValidateIndex(size_t) const noexcept -> size_t;
       auto UpIndex(size_t) const noexcept -> size_t;
       auto AllocationFromIndex(size_t) const noexcept -> Allocation*;
       auto AllocationFromAddress(const void*) const has_assumptions -> Allocation*;

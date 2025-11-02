@@ -9,7 +9,7 @@
 #include "Pool.inl"
 #include "Allocation.inl"
 
-#if 1
+#if 0
    #include <Langulus/Logger.hpp>
    #define VERBOSE 1
    #define LOG_VERBOSE(...) Logger::Verbose(__VA_ARGS__)
@@ -54,72 +54,6 @@ namespace Langulus::Fractalloc
    /// Global allocator interface                                             
    Allocator Instance {};
 
-/*#if VERBOSE
-   void Allocator::DumpAllocation(RTTI::DMeta hint, const Pool* pool, const Allocation* memory) noexcept {
-      LOG_VERBOSE_SCOPED(
-         "Fractalloc: ", Logger::Green, "New allocation ", Logger::Hex(memory),
-         " of size ", Logger::Size {static_cast<size_t>(memory->GetSize())}, ", in pool ", Logger::Hex(pool)
-      );
-
-      if (hint) {
-         switch (hint.GetPoolTactic()) {
-         case PoolTactic::Size:
-            VERBOSE("Type was: ", hint.GetName(), " (size pool tactic)");
-            break;
-         case PoolTactic::Type:
-            VERBOSE("Type was: ", hint.GetName(), " (type pool tactic)");
-            break;
-         case PoolTactic::Main:
-            VERBOSE("Type was: ", hint.GetName(), " (default pool tactic)");
-            break;
-         }
-      }
-      else VERBOSE("Type was unknown (default pool tactic)");
-
-      constexpr size_t wideness = 128;
-      const auto bytesPerChar = pool->GetAllocatedByBackend() / wideness;
-      char buffer[wideness + 3];
-      memset(buffer, ' ', wideness + 3);
-      char buffer2[wideness + 3];
-      memset(buffer2, ' ', wideness + 3);
-      buffer[0] = '[';
-      buffer[wideness+1] = ']';
-      buffer[wideness+2] = '\0';
-      buffer2[wideness+2] = '\0';
-
-      bool encountered = false;
-      for (size_t entry = 0; entry < pool->mNextEntry; ++entry) {
-         auto a = pool->AllocationFromIndex(entry);
-         if (a->GetUses()) {
-            auto start = (reinterpret_cast<const char*>(a)
-                       -  reinterpret_cast<const char*>(pool->GetClientData()))
-                       / bytesPerChar;
-            auto end   = start + a->GetTotalSize() / bytesPerChar;
-
-            if (end == start)
-               end = start + 1;
-
-            for (auto i = start; i != end; ++i)
-               buffer[i + 1] = (buffer[i] == '#' ? 'E' : '#');
-
-            if (a == memory) {
-               for (auto i = start; i != end; ++i)
-                  buffer2[i + 1] = '^';
-               encountered = true;
-            }
-         }
-      }
-
-      if (not encountered) {
-         Logger::Error("Entry ", Logger::Hex(memory),
-            " was not encountered in pool ", Logger::Hex(pool));
-      }
-
-      VERBOSE(buffer);
-      VERBOSE(buffer2);
-   }
-#endif*/
-
    /// Allocate a memory entry                                                
    ///   @attention doesn't call any constructors                             
    ///   @attention doesn't throw - check if return is nullptr                
@@ -158,10 +92,6 @@ namespace Langulus::Fractalloc
       }
 
       if (entry) {
-         /*#if VERBOSE
-            DumpAllocation(hint, pool, entry);
-         #endif*/
-
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
             auto& stats = Instance.mStatistics;
             stats.mEntries += 1;
@@ -187,10 +117,6 @@ namespace Langulus::Fractalloc
       );
 
       entry = pool->Allocate(size);
-
-      /*#if VERBOSE
-         DumpAllocation(hint, pool, entry);
-      #endif*/
 
       if (hint) {
          switch (hint.GetPoolTactic()) {

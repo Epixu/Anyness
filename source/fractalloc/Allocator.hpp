@@ -119,8 +119,6 @@ namespace Langulus::Fractalloc
       auto FindInChain(const void*, const Pool*) const has_assumptions -> const Allocation*;
       bool ContainedInChain(const void*, const Pool*) const has_assumptions;
 
-      //static void DumpAllocation(DMeta, const Pool*, const Allocation*) noexcept;
-
    public:
       LANGULUS_API(FRACTALLOC)
       static auto Allocate(DMeta, pot_t) has_assumptions -> Allocation*;
@@ -136,9 +134,6 @@ namespace Langulus::Fractalloc
 
       LANGULUS_API(FRACTALLOC)
       static bool CheckAuthority(DMeta, const void*) has_assumptions;
-
-      //LANGULUS_API(FRACTALLOC)
-      //static Pool* AllocatePool(DMeta) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
       static Pool* AllocatePool(DMeta, pot_t) has_assumptions;
