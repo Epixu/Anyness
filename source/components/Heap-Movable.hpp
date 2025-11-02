@@ -251,7 +251,7 @@ namespace Langulus::Anyness::Component
             "BranchOut should've been called prior to AllocateMore"
          );
 
-         C previous {Disown {self}};
+         C previous {Abandon {self}};
          auto reallocated = Allocator::Reallocate(request.mTotalBytes, al);         
          LglsAssert(reallocated, "Out of memory");
          self.SetAllocationInner(reallocated);
@@ -266,9 +266,6 @@ namespace Langulus::Anyness::Component
                auto from = IterateHandles(previous).begin();
                for (auto to : IterateHandles(self))
                   to.EmplaceWithIntent(Abandon(*(from++)));
-
-               previous.SetAllocationInner(al);
-               previous.Free();
             }
          }
          else {
@@ -276,6 +273,7 @@ namespace Langulus::Anyness::Component
             // so all HeapRequests which are PerElement need to         
             // be moved around.                                         
             self.RemapHeapRequests(request.mReserved);
+            previous.SetAllocationInner(nullptr);
          }
 
          if_available(self.SetReserveInner(request.mReserved));
