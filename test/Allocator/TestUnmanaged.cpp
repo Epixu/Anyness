@@ -206,7 +206,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
       REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
-         REQUIRE(entry->GetBlockStart() == reinterpret_cast<uint8_t*>(Align(entry + 1, alignof(TestType))));
+         REQUIRE(entry->GetBlockStart() == Align(reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation), testAlignment));
          REQUIRE(IsAligned(entry, alignof(Allocation)));
          REQUIRE(IsAligned(entry->GetBlockStart(), alignof(TestType)));
          REQUIRE(entry->GetSize() == s);

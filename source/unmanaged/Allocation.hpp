@@ -21,7 +21,7 @@ namespace Langulus::Unmanaged
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
-   struct alignas(Alignment) Allocation {
+   struct Allocation {
    protected:
       friend struct Allocator;
       
