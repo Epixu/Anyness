@@ -205,8 +205,9 @@ namespace Langulus
       /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
       /// test the assumption when safety is enabled, and instruct the        
       /// compiler to generate more performant code                           
-      #define LglsAssumeUserAndOptimize(CONDITION, ...) [[assume(CONDITION)]]; \
-         AssumeUserInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
+      #define LglsAssumeUserAndOptimize(CONDITION, ...) \
+         AssumeUserInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
+         [[assume(CONDITION)]];
    #else
       #define LglsAssumeUser(CONDITION, ...) LANGULUS(NOOP)
       #define LglsAssumeUserWarn(CONDITION, ...) LANGULUS(NOOP)
@@ -294,8 +295,9 @@ namespace Langulus
       /// Leverages C++23's [[assume(condition)]] attribute, in order to both 
       /// test the assumption when safety is enabled, and instruct the        
       /// compiler to generate more performant code                           
-      #define LglsAssumeDevAndOptimize(CONDITION, ...) [[assume(CONDITION)]]; \
-         AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
+      #define LglsAssumeDevAndOptimize(CONDITION, ...) \
+         AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
+         [[assume(CONDITION)]] 
    #else
       #define LglsAssumeDev(CONDITION, ...) LANGULUS(NOOP)
       #define LglsAssumeDevWarn(CONDITION, ...) LANGULUS(NOOP)

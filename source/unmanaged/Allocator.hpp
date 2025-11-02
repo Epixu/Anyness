@@ -28,6 +28,10 @@ namespace Langulus::Unmanaged
    ///   @param align - the alignment of the data                             
    ///   @return a newly allocated memory that is correctly aligned           
    inline Allocation* AlignedAllocate(pot_t size, pot_t align) has_assumptions {
+      if (align < Alignment)
+         align = Alignment;
+      if (size < Alignment)
+         size = Alignment;
       const size_t alignment = ::std::max(alignof(Allocation), static_cast<size_t>(align));
       const size_t allocation_cost = Align(sizeof(Allocation), alignment);
       const size_t backendSize = allocation_cost + static_cast<size_t>(size);

@@ -282,7 +282,7 @@ namespace Langulus::Fractalloc
       [[maybe_unused]] const auto backupSize = static_cast<size_t>(entry->GetSize());
       LOG_VERBOSE(
          "Fractalloc: ", Logger::Red, "Allocation ", Logger::Hex(entry),
-         " of size ", Logger::Size {backupSize}, " was deallocated (had",
+         " of size ", Logger::Size {backupSize}, " was deallocated (had ",
          entry->mReferences, " references)"
       );
 
