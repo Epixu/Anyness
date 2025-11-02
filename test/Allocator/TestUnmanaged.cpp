@@ -23,21 +23,19 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
    TypeVeryBigAligned,
    TypeVeryBigPacked
 ) {
-   REQUIRE_THROWS(Allocator::Allocate(alignof(TestType), 511u));
-   constexpr size_t testAlignment = ::std::max(alignof(Allocation), alignof(TestType));
+   REQUIRE_THROWS(Allocator::Allocate(pot_t(alignof(TestType)), 511_pot));
+   constexpr size_t testAlignment = alignof(TestType);
    
    GIVEN("A small allocation") {
-      auto s = GENERATE(1u, 2u, 512u);
-      Allocation* entry = Allocator::Allocate(alignof(TestType), s);
+      auto s = GENERATE(1_pot, 2_pot, 512_pot);
+      Allocation* entry = Allocator::Allocate(pot_t(alignof(TestType)), s);
       REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
          REQUIRE(entry->GetBlockStart() == Align(reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation), testAlignment));
          REQUIRE(IsAligned(entry, alignof(Allocation)));
          REQUIRE(IsAligned(entry->GetBlockStart(), testAlignment));
-         REQUIRE(entry->GetFrontendSize() == s);
-         REQUIRE(entry->GetBackendSize() == s + Align(sizeof(Allocation), testAlignment));
-         REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + s);
+         REQUIRE(entry->GetSize() == s);
          REQUIRE(entry->GetUses() == 1);
 
          size_t matches = 0;
@@ -51,7 +49,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
          REQUIRE(matches == s);
          REQUIRE(mismatches == s);
 
-         REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + s));
+         REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + static_cast<size_t>(s)));
 
          Allocator::Deallocate(entry);
 
@@ -203,17 +201,15 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
    }
    
    GIVEN("A large allocation") {
-      auto s = 4096u*1024u;
-      Allocation* entry = Allocator::Allocate(alignof(TestType), s);
+      auto s = 4096_pot*1024_pot;
+      Allocation* entry = Allocator::Allocate(pot_t(alignof(TestType)), s);
       REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
          REQUIRE(entry->GetBlockStart() == reinterpret_cast<uint8_t*>(Align(entry + 1, alignof(TestType))));
          REQUIRE(IsAligned(entry, alignof(Allocation)));
          REQUIRE(IsAligned(entry->GetBlockStart(), alignof(TestType)));
-         REQUIRE(entry->GetFrontendSize() == s);
-         REQUIRE(entry->GetBackendSize() == s + Align(sizeof(Allocation), alignof(TestType)));
-         REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + s);
+         REQUIRE(entry->GetSize() == s);
          REQUIRE(entry->GetUses() == 1);
 
          #ifdef LANGULUS_STD_BENCHMARK

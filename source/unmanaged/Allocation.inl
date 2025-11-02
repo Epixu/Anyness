@@ -30,18 +30,11 @@ namespace Langulus::Unmanaged
       return Align(sizeof(Allocation), alignment);
    }
 
-   /// User bytes + the header size                                           
-   ///   @return the byte size of the entry plus the usable region after it   
-   LANGULUS(ALWAYS_INLINED)
-   size_t Allocation::GetBackendSize() const noexcept {
-      return Cost(mAlignment) + GetFrontendSize();
-   }
-
    /// Get the user bytes                                                     
    ///   @return the byte size of usable memory region                        
    LANGULUS(ALWAYS_INLINED)
-   size_t Allocation::GetFrontendSize() const noexcept {
-      return static_cast<size_t>(mSize);
+   pot_t Allocation::GetSize() const noexcept {
+      return mSize;
    }
 
    /// Return the aligned start of usable block memory (const)                
@@ -51,13 +44,6 @@ namespace Langulus::Unmanaged
       const auto entryStart = reinterpret_cast<const uint8_t*>(this);
       return const_cast<uint8_t*>(entryStart + Cost(mAlignment));
    }
-
-   /// Return the end of usable block memory (always const)                   
-   ///   @return aligned pointer to the entry's memory end                    
-   LANGULUS(ALWAYS_INLINED)
-   uint8_t const* Allocation::GetBlockEnd() const noexcept {
-      return GetBlockStart() + GetFrontendSize();
-   }
    
    /// Check if memory address is inside this entry                           
    ///   @param address - address to check if inside this entry               
@@ -66,7 +52,7 @@ namespace Langulus::Unmanaged
    bool Allocation::Contains(const void* address) const noexcept {
       const auto a = static_cast<const uint8_t*>(address);
       const auto blockStart = GetBlockStart();
-      return a >= blockStart and a < blockStart + GetFrontendSize();
+      return a >= blockStart and a < blockStart + static_cast<size_t>(mSize);
    }
 
    /// Reference the entry 'c' times                                          

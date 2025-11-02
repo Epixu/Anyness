@@ -17,8 +17,13 @@ namespace Langulus::Fractalloc
    ///   @param pool_alignment - the pool alignment                           
    LANGULUS(ALWAYS_INLINED)
    Allocation::Allocation(pot_t bytes, pot_t pool_alignment) noexcept {
-      mPoolAlignment = pool_alignment;
-      mSize = bytes;
+      mPoolAlignment = pool_alignment.bit;
+      mSize = bytes.bit;
+   }
+
+   LANGULUS(ALWAYS_INLINED)
+   auto Allocation::GetNextFreeEntry() const noexcept -> Allocation* {
+      return const_cast<Allocation*>(this + mNextFreeEntryFinder);
    }
 
    /// Get the pool this allocation belongs to                                
@@ -26,7 +31,7 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    auto Allocation::GetPool() const noexcept -> Pool const* {
       return reinterpret_cast<Pool const*>(
-         reinterpret_cast<uintptr_t>(this) & ~mPoolAlignment.mask()
+         reinterpret_cast<uintptr_t>(this) & ~((uintptr_t{1} << mPoolAlignment) - uintptr_t{1})
       );
    }
 
@@ -39,7 +44,8 @@ namespace Langulus::Fractalloc
    ///   @return the byte size of usable memory region                        
    LANGULUS(ALWAYS_INLINED)
    pot_t Allocation::GetSize() const noexcept {
-      return mSize;
+      pot_t result; result.bit = mSize;
+      return result;
    }
 
    /// Return the aligned start of usable block memory (const)                
@@ -58,7 +64,7 @@ namespace Langulus::Fractalloc
    bool Allocation::Contains(const void* address) const noexcept {
       const auto a = reinterpret_cast<uintptr_t>(address);
       const auto blockStart = reinterpret_cast<uintptr_t>(GetBlockStart());
-      return a >= blockStart and a < blockStart + static_cast<uintptr_t>(mSize);
+      return a >= blockStart and a < blockStart + static_cast<uintptr_t>(GetSize());
    }
 
    /// Reference the entry 'c' times                                          

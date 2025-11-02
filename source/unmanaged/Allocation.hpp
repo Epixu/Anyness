@@ -50,10 +50,8 @@ namespace Langulus::Unmanaged
       static size_t Cost(pot_t alignment) noexcept;
       
       auto GetUses() const noexcept { return mReferences; }
-      auto GetBackendSize() const noexcept -> size_t;
-      auto GetFrontendSize() const noexcept -> size_t;
+      auto GetSize() const noexcept -> pot_t;
       auto GetBlockStart() const noexcept -> uint8_t*;
-      auto GetBlockEnd() const noexcept -> uint8_t const*;
       bool Contains(const void*) const noexcept;
       void Keep(int32_t = 1) noexcept;
       void Free(int32_t = 1) noexcept;

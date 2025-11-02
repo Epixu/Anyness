@@ -176,7 +176,7 @@ namespace Langulus::Fractalloc
       if (mLastFreed) {
          // Recycle entries                                             
          newEntry = mLastFreed;
-         mLastFreed = mLastFreed + mLastFreed->mNextFreeEntryFinder;
+         mLastFreed = mLastFreed->GetNextFreeEntry();
          new (newEntry) Allocation {bytes, mPoolAlignment};
       }
       else {
@@ -218,7 +218,7 @@ namespace Langulus::Fractalloc
       if (mThresholdMin > bytes)
          bytes = mThresholdMin;
       
-      if (bytes > entry->mSize) {
+      if (bytes > entry->GetSize()) {
          // We're enlarging the entry                                   
          // Make sure we don't violate max threshold                    
          if (bytes > mThresholdMax)
@@ -227,9 +227,9 @@ namespace Langulus::Fractalloc
          // Update the distribution                                     
          if (bytes > mBiggestEntry)
             mBiggestEntry = bytes;
-         mAllocatedByFrontend += bytes - entry->mSize;
+         mAllocatedByFrontend += bytes - entry->GetSize();
 
-         size_t it = entry->mSize.bit;
+         size_t it = entry->mSize;
          LglsAssumeDev(mDistribution[it], "Distribution underflow");
          --mDistribution[it];
          ++mDistribution[bytes.bit];
@@ -237,16 +237,16 @@ namespace Langulus::Fractalloc
       else {
          // We're shrinking the entry                                   
          // No checks required, just update the distribution            
-         const size_t removal = entry->mSize - bytes;
+         const size_t removal = entry->GetSize() - bytes;
          LglsAssumeDevAndOptimize(mAllocatedByFrontend >= removal,
             "mAllocatedByFrontend underflowed");
          mAllocatedByFrontend -= removal;
 
-         size_t it = entry->mSize.bit;
+         size_t it = entry->mSize;
          LglsAssumeDev(mDistribution[it], "Distribution underflow");
          --mDistribution[it];
          ++mDistribution[bytes.bit];
-         if (mBiggestEntry == entry->mSize and 0 == mDistribution[it]) {
+         if (mBiggestEntry == entry->GetSize() and 0 == mDistribution[it]) {
             // All biggest entries have been removed and we can safely  
             // increase mThresholdMax, so collisions are less likely    
             do { mThresholdMax <<= 1u; }
@@ -255,7 +255,7 @@ namespace Langulus::Fractalloc
          }
       }
 
-      entry->mSize = bytes;
+      entry->mSize = bytes.bit;
       return true;
    }
 
@@ -269,10 +269,10 @@ namespace Langulus::Fractalloc
          "Invalid deallocation");
       LglsAssumeDevAndOptimize(mNextEntry,
          "Bad valid entry count");
-      LglsAssumeDev(mAllocatedByFrontend >= entry->mSize,
+      LglsAssumeDev(mAllocatedByFrontend >= entry->GetSize(),
          "Bad frontend allocation size");
 
-      mAllocatedByFrontend -= static_cast<size_t>(entry->mSize);
+      mAllocatedByFrontend -= static_cast<size_t>(entry->GetSize());
       entry->mReferences = 0;
 
       if (0 == mAllocatedByFrontend) {
@@ -282,7 +282,7 @@ namespace Langulus::Fractalloc
          mBiggestEntry = mThresholdMin;
          mLastFreed = nullptr;
          mNextEntry = 0;
-         mDistribution[entry->mSize.bit] = 0;
+         mDistribution[entry->mSize] = 0;
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
             LglsAssumeDev(mValidEntries == 1, "Incorrect mValidEntries");
             mValidEntries = 0;
@@ -290,9 +290,9 @@ namespace Langulus::Fractalloc
       }
       else {
          // Update the distribution                                     
-         size_t it = entry->mSize.bit;
+         size_t it = entry->mSize;
          --mDistribution[it];
-         if (mBiggestEntry == entry->mSize and 0 == mDistribution[it]) {
+         if (mBiggestEntry == entry->GetSize() and 0 == mDistribution[it]) {
             // All biggest entries have been removed and we can safely  
             // increase mThresholdMax, so collisions are less likely    
             do { mThresholdMax <<= 1u; }

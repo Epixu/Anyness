@@ -165,7 +165,7 @@ namespace Langulus::Fractalloc
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
             auto& stats = Instance.mStatistics;
             stats.mEntries += 1;
-            stats.mBytesAllocatedByFrontend += static_cast<size_t>(entry->mSize);
+            stats.mBytesAllocatedByFrontend += static_cast<size_t>(entry->GetSize());
             LglsAssumeDev(
                stats.mBytesAllocatedByFrontend <= stats.mBytesAllocatedByBackend,
                "Impossible amount of frontend allocation"
@@ -234,7 +234,7 @@ namespace Langulus::Fractalloc
    auto Allocator::Reallocate(pot_t size, Allocation* previous) has_assumptions -> Allocation* {
       LglsAssumeDevAndOptimize(previous,
          "Reallocating nullptr");
-      LglsAssumeDev(size != previous->mSize,
+      LglsAssumeDev(size != previous->GetSize(),
          "Reallocation suboptimal - size is same as previous");
       LglsAssumeDevAndOptimize(previous->mReferences,
          "Reallocating an unused allocation");
@@ -242,13 +242,13 @@ namespace Langulus::Fractalloc
          "Reallocating allocation used from multiple places");
 
       // New size is bigger, precautions must be taken                  
-      IF_LANGULUS_MEMORY_STATISTICS(const size_t oldSize = static_cast<size_t>(previous->mSize));
+      IF_LANGULUS_MEMORY_STATISTICS(const size_t oldSize = static_cast<size_t>(previous->GetSize()));
       auto pool = const_cast<Pool*>(previous->GetPool());
       if (pool->Reallocate(previous, size)) {
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
             auto& stats = Instance.mStatistics;
             stats.mBytesAllocatedByFrontend -= oldSize;
-            stats.mBytesAllocatedByFrontend += static_cast<size_t>(previous->mSize);
+            stats.mBytesAllocatedByFrontend += static_cast<size_t>(previous->GetSize());
             LglsAssumeDev(
                stats.mBytesAllocatedByFrontend <= stats.mBytesAllocatedByBackend,
                "Impossible amount of frontend allocation"
@@ -257,7 +257,7 @@ namespace Langulus::Fractalloc
 
          LOG_VERBOSE(
             "Fractalloc: ", Logger::Yellow, "Allocation ", Logger::Hex(previous),
-            " was reallocated from ", Logger::Size {previous->mSize}, " to ",
+            " was reallocated from ", Logger::Size {previous->GetSize()}, " to ",
             Logger::Size {size}
          );
          return previous;
@@ -284,7 +284,7 @@ namespace Langulus::Fractalloc
          " of size ", Logger::Size {entry->GetBackendSize()}, " was deallocated"
       );
 
-      IF_LANGULUS_MEMORY_STATISTICS(const auto backupSize = static_cast<size_t>(entry->mSize));
+      IF_LANGULUS_MEMORY_STATISTICS(const auto backupSize = static_cast<size_t>(entry->GetSize()));
       auto pool = const_cast<Pool*>(entry->GetPool());
       pool->Deallocate(entry);
 
@@ -790,19 +790,19 @@ namespace Langulus::Fractalloc
 
                Logger::Line(
                   Logger::Green, ecounter, "] ", Logger::Hex(entry), " ",
-                  Logger::Size {static_cast<size_t>(entry->mSize)}, ", ",
+                  Logger::Size {static_cast<size_t>(entry->GetSize())}, ", ",
                   entry->mReferences, " references: `"
                );
 
                auto raw = entry->GetBlockStart();
-               for (size_t i = 0; i < ::std::min(size_t {16}, static_cast<size_t>(entry->mSize)); ++i) {
+               for (size_t i = 0; i < ::std::min(size_t {16}, static_cast<size_t>(entry->GetSize())); ++i) {
                   if (::isprint(raw[i]))
                      Logger::Append(static_cast<char>(raw[i]));
                   else
                      Logger::Append('?');
                }
 
-               if (entry->mSize > 16u)
+               if (entry->GetSize() > 16u)
                   Logger::Append("...`");
                else
                   Logger::Append('`');
@@ -1038,13 +1038,13 @@ namespace Langulus::Fractalloc
                   if (allocation->mReferences > 100000) {
                      Logger::Warning(
                         "Fractalloc: Suspicious reference count in allocation ",
-                        Logger::Hex(allocation), " of size ", allocation->mSize,
+                        Logger::Hex(allocation), " of size ", allocation->GetSize(),
                         " in pool ", Logger::Hex(pool), ", entry #", i, " of ", pool->mNextEntry
                      );
                   }
 
                   ++validAllocations;
-                  validBytes += static_cast<size_t>(allocation->mSize);
+                  validBytes += static_cast<size_t>(allocation->GetSize());
                }
             }
 

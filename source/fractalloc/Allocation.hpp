@@ -22,10 +22,7 @@ namespace Langulus::Fractalloc
    ///   Memory allocation                                                    
    ///                                                                        
    struct Allocation {
-   protected:
-      friend struct Pool;
-      friend struct Allocator;
-
+   private:
       // The number of references to this memory.                       
       // Most often used, so first for immediate access.                
       int32_t mReferences = 1;
@@ -40,9 +37,11 @@ namespace Langulus::Fractalloc
                uint64_t mStep;
             #endif
             // Used to find the pool pointer by rounding 'this'         
-            pot_t mPoolAlignment;
+            // Represented as a bit number                              
+            uint8_t mPoolAlignment;
             // Allocated bytes usable by client                         
-            pot_t mSize;
+            // Represented as a bit number                              
+            uint8_t mSize;
          };
          int32_t mNextFreeEntryFinder;
       };
@@ -54,12 +53,18 @@ namespace Langulus::Fractalloc
 
       Allocation(pot_t size, pot_t pool_alignment) noexcept;
       
-      auto GetPool() const noexcept -> Pool const*;
       auto GetUses() const noexcept -> int32_t;
       auto GetSize() const noexcept -> pot_t;
       auto GetBlockStart() const noexcept -> uint8_t*;
       bool Contains(const void*) const noexcept;
       void Keep(int32_t = 1) noexcept;
       void Free(int32_t = 1) noexcept;
+
+   protected:
+      friend struct Pool;
+      friend struct Allocator;
+      
+      auto GetNextFreeEntry() const noexcept -> Allocation*;
+      auto GetPool() const noexcept -> Pool const*;
    };
 }

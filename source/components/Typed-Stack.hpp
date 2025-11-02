@@ -118,11 +118,11 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get the alignment of a single element in bytes                      
-      constexpr size_t GetAlignment(this auto const& self) noexcept {
+      constexpr pot_t GetAlignment(this auto const& self) noexcept {
          if constexpr (TypeErased)
             return self.GetTypeInner().GetAlignment();
          else
-            return alignof(TYPE);
+            return pot_t(alignof(TYPE));
       }
 
       /// Get the reflected type name                                         
