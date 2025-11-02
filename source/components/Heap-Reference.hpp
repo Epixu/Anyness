@@ -100,14 +100,14 @@ namespace Langulus::Anyness::Component
       ///   @tparam T - the type of data we're accessing -                    
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
-      constexpr /*decltype(auto)*/ auto& Get(this C&& self) has_assumptions {
+      constexpr auto& Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>,    "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
          using TC = TypeOf<C>;
          using TH = Tif<CT::Void<T>, TC, T>;
          using THQ1 = Tmut<C, TH*,  ConstAll<TH* >>;
          using THQ2 = Tmut<C, TH**, ConstAll<TH**>>;
-         auto /*Tmut<C, void*, void const* const>*/& mHeap = self.GetHeapInner();
+         auto& mHeap = self.GetHeapInner();
 
          if constexpr (CT::Void<TH>) {
             // Unknown type, just return the heap pointer reference     
@@ -151,7 +151,6 @@ namespace Langulus::Anyness::Component
                else
                   // Representing dense as sparse                       
                   return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
-                  //return static_cast<Deptr<THQ1>>(mHeap);
             }
          }
       }
@@ -176,10 +175,11 @@ namespace Langulus::Anyness::Component
             else {
                // Statically typed handle                               
                using HT = Deref<TypeOf<T>>;
-               if constexpr (CT::TypeErased<C>)
-                  LglsAssert(self.template IsSame<HT>(), "Type mismatch");
-               else
-                  static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
+               if constexpr (CT::TypeErased<C>) {
+                  LglsAssert(self.template IsSame<HT>(), "Type mismatch",
+                     ": ", self.GetType(), " not same as ", MetaDataOf<HT>());
+               }
+               else static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
 
                if constexpr (CT::DeeplyOwned<T>)
                   return T {self.HeapReference::template Get<HT*>(), self.GetEntries()};
@@ -191,20 +191,14 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Access directly                                          
-            if constexpr (CT::TypeErased<C>)
-               LglsAssert(self.template Is<T>(), "Type mismatch");
-            else
-               static_assert(Akin<TypeOf<C>, T>, "Type mismatch");
-
+            if constexpr (CT::TypeErased<C>) {
+               LglsAssert(self.template Is<T>(), "Type mismatch",
+                  ": ", self.GetType(), " not akin to ", MetaDataOf<T>());
+            }
+            else static_assert(Akin<TypeOf<C>, T>, "Type mismatch");
             return self.template Get<T>();
          }
       }
-      
-      /// Get first element by casting it to any desirable compatible type    
-      ///   @tparam AS - the type we're casting to                            
-      ///   @return the resulting value                                       
-      /*template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
-      AS Cast(this C const&);*/
 
       /// A safe way to get the first deep entry                              
       ///   @attention ignores sparseness                                     
@@ -369,16 +363,5 @@ namespace Langulus::Anyness::Component
 
          return result;
       }
-
-      /// Branch off the container, by doing a shallow copy                   
-      /*template<CT::Container C>
-      bool BranchOut(this C& self) {
-         if (self.GetUses() <= 1)
-            return false;
-
-         const C backup {Abandon{self}};
-         new (&self) C {Copy{backup}};
-         return true;
-      }*/
    };
 }
