@@ -9,7 +9,7 @@
 #include "Pool.inl"
 #include "Allocation.inl"
 
-#if 0
+#if 1
    #include <Langulus/Logger.hpp>
    #define VERBOSE 1
    #define LOG_VERBOSE(...) Logger::Verbose(__VA_ARGS__)
@@ -183,7 +183,7 @@ namespace Langulus::Fractalloc
 
       LOG_VERBOSE(
          "Fractalloc: ", Logger::Cyan, "New pool ", Logger::Hex(pool),
-         " of size ", Logger::Size {pool->GetAllocatedByBackend()}
+         " of size ", Logger::Size {static_cast<size_t>(pool->GetAllocatedByBackend())}
       );
 
       entry = pool->Allocate(size);
@@ -257,7 +257,7 @@ namespace Langulus::Fractalloc
 
          LOG_VERBOSE(
             "Fractalloc: ", Logger::Yellow, "Allocation ", Logger::Hex(previous),
-            " was reallocated from ", Logger::Size {previous->GetSize()}, " to ",
+            " was reallocated from ", Logger::Size {static_cast<size_t>(previous->GetSize())}, " to ",
             Logger::Size {size}
          );
          return previous;
@@ -279,12 +279,12 @@ namespace Langulus::Fractalloc
       LglsAssumeDevAndOptimize(entry->mReferences == 1,
          "Deallocating an allocation used from multiple places");
 
+      IF_LANGULUS_MEMORY_STATISTICS(const auto backupSize = static_cast<size_t>(entry->GetSize()));
       LOG_VERBOSE(
          "Fractalloc: ", Logger::Red, "Allocation ", Logger::Hex(entry),
-         " of size ", Logger::Size {entry->GetBackendSize()}, " was deallocated"
+         " of size ", Logger::Size {backupSize}, " was deallocated"
       );
 
-      IF_LANGULUS_MEMORY_STATISTICS(const auto backupSize = static_cast<size_t>(entry->GetSize()));
       auto pool = const_cast<Pool*>(entry->GetPool());
       pool->Deallocate(entry);
 
@@ -332,7 +332,7 @@ namespace Langulus::Fractalloc
          auto next = chainStart->mNext;
          LOG_VERBOSE(
             "Fractalloc: ", Logger::DarkCyan, "Pool ", Logger::Hex(chainStart),
-            " of size ", Logger::Size {chainStart->GetAllocatedByBackend()},
+            " of size ", Logger::Size {static_cast<size_t>(chainStart->GetAllocatedByBackend())},
             " was deallocated"
          );
          DeallocatePool(chainStart);
@@ -357,7 +357,7 @@ namespace Langulus::Fractalloc
          const auto next = pool->mNext;
          LOG_VERBOSE(
             "Fractalloc: ", Logger::DarkCyan, "Pool ", Logger::Hex(pool),
-            " of size ", Logger::Size {pool->GetAllocatedByBackend()},
+            " of size ", Logger::Size {static_cast<size_t>(pool->GetAllocatedByBackend())},
             " was deallocated"
          );
          DeallocatePool(pool);
