@@ -9,6 +9,7 @@
 #include "../Container.hpp"
 #include <Langulus/CT/Resolvable.hpp>
 #include <Langulus/CT/MinAlloc.hpp>
+#include <Langulus/MetaOf.hpp>
 #include <Langulus/Utils/Pot.hpp>
 
 
