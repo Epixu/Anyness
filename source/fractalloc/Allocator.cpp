@@ -54,29 +54,29 @@ namespace Langulus::Fractalloc
    /// Global allocator interface                                             
    Allocator Instance {};
 
-#if VERBOSE
+/*#if VERBOSE
    void Allocator::DumpAllocation(RTTI::DMeta hint, const Pool* pool, const Allocation* memory) noexcept {
-      auto tab = Logger::VerboseTab(
+      LOG_VERBOSE_SCOPED(
          "Fractalloc: ", Logger::Green, "New allocation ", Logger::Hex(memory),
-         " of size ", Size {memory->mAllocatedBytes}, ", in pool ", Logger::Hex(pool)
+         " of size ", Logger::Size {static_cast<size_t>(memory->GetSize())}, ", in pool ", Logger::Hex(pool)
       );
 
       if (hint) {
-         switch (hint->mPoolTactic) {
-         case RTTI::PoolTactic::Size:
-            VERBOSE("Type was: ", hint->mToken, " (size pool tactic)");
+         switch (hint.GetPoolTactic()) {
+         case PoolTactic::Size:
+            VERBOSE("Type was: ", hint.GetName(), " (size pool tactic)");
             break;
-         case RTTI::PoolTactic::Type:
-            VERBOSE("Type was: ", hint->mToken, " (type pool tactic)");
+         case PoolTactic::Type:
+            VERBOSE("Type was: ", hint.GetName(), " (type pool tactic)");
             break;
-         case RTTI::PoolTactic::Main:
-            VERBOSE("Type was: ", hint->mToken, " (default pool tactic)");
+         case PoolTactic::Main:
+            VERBOSE("Type was: ", hint.GetName(), " (default pool tactic)");
             break;
          }
       }
       else VERBOSE("Type was unknown (default pool tactic)");
 
-      constexpr Count wideness = 128;
+      constexpr size_t wideness = 128;
       const auto bytesPerChar = pool->GetAllocatedByBackend() / wideness;
       char buffer[wideness + 3];
       memset(buffer, ' ', wideness + 3);
@@ -88,11 +88,11 @@ namespace Langulus::Fractalloc
       buffer2[wideness+2] = '\0';
 
       bool encountered = false;
-      for (Offset entry = 0; entry < pool->mEntries; ++entry) {
+      for (size_t entry = 0; entry < pool->mNextEntry; ++entry) {
          auto a = pool->AllocationFromIndex(entry);
          if (a->GetUses()) {
             auto start = (reinterpret_cast<const char*>(a)
-                       -  reinterpret_cast<const char*>(pool->mMemory))
+                       -  reinterpret_cast<const char*>(pool->GetClientData()))
                        / bytesPerChar;
             auto end   = start + a->GetTotalSize() / bytesPerChar;
 
@@ -118,7 +118,7 @@ namespace Langulus::Fractalloc
       VERBOSE(buffer);
       VERBOSE(buffer2);
    }
-#endif
+#endif*/
 
    /// Allocate a memory entry                                                
    ///   @attention doesn't call any constructors                             
@@ -158,9 +158,9 @@ namespace Langulus::Fractalloc
       }
 
       if (entry) {
-         #if VERBOSE
+         /*#if VERBOSE
             DumpAllocation(hint, pool, entry);
-         #endif
+         #endif*/
 
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
             auto& stats = Instance.mStatistics;
@@ -188,9 +188,9 @@ namespace Langulus::Fractalloc
 
       entry = pool->Allocate(size);
 
-      #if VERBOSE
+      /*#if VERBOSE
          DumpAllocation(hint, pool, entry);
-      #endif
+      #endif*/
 
       if (hint) {
          switch (hint.GetPoolTactic()) {
@@ -242,7 +242,7 @@ namespace Langulus::Fractalloc
          "Reallocating allocation used from multiple places");
 
       // New size is bigger, precautions must be taken                  
-      IF_LANGULUS_MEMORY_STATISTICS(const size_t oldSize = static_cast<size_t>(previous->GetSize()));
+      [[maybe_unused]] const auto oldSize = static_cast<size_t>(previous->GetSize());
       auto pool = const_cast<Pool*>(previous->GetPool());
       if (pool->Reallocate(previous, size)) {
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
@@ -257,8 +257,8 @@ namespace Langulus::Fractalloc
 
          LOG_VERBOSE(
             "Fractalloc: ", Logger::Yellow, "Allocation ", Logger::Hex(previous),
-            " was reallocated from ", Logger::Size {static_cast<size_t>(previous->GetSize())}, " to ",
-            Logger::Size {size}
+            " was reallocated from ", Logger::Size {oldSize}, " to ",
+            Logger::Size {static_cast<size_t>(previous->GetSize())}
          );
          return previous;
       }
@@ -279,7 +279,7 @@ namespace Langulus::Fractalloc
       LglsAssumeDevAndOptimize(entry->mReferences == 1,
          "Deallocating an allocation used from multiple places");
 
-      IF_LANGULUS_MEMORY_STATISTICS(const auto backupSize = static_cast<size_t>(entry->GetSize()));
+      [[maybe_unused]] const auto backupSize = static_cast<size_t>(entry->GetSize());
       LOG_VERBOSE(
          "Fractalloc: ", Logger::Red, "Allocation ", Logger::Hex(entry),
          " of size ", Logger::Size {backupSize}, " was deallocated"

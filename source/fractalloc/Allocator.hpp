@@ -119,7 +119,7 @@ namespace Langulus::Fractalloc
       auto FindInChain(const void*, const Pool*) const has_assumptions -> const Allocation*;
       bool ContainedInChain(const void*, const Pool*) const has_assumptions;
 
-      static void DumpAllocation(DMeta, const Pool*, const Allocation*) noexcept;
+      //static void DumpAllocation(DMeta, const Pool*, const Allocation*) noexcept;
 
    public:
       LANGULUS_API(FRACTALLOC)
