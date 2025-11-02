@@ -21,7 +21,7 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
-   struct alignas(Alignment) Allocation {
+   struct Allocation {
    protected:
       friend struct Pool;
       friend struct Allocator;
@@ -39,35 +39,25 @@ namespace Langulus::Fractalloc
                // Acts like a timestamp of when the allocation happened 
                uint64_t mStep;
             #endif
-
             // Used to find the pool pointer by rounding 'this'         
-            pot_t mPoolSize;
+            pot_t mPoolAlignment;
             // Allocated bytes usable by client                         
             pot_t mSize;
-            // Data alignment                                           
-            pot_t mAlignment;
          };
-         struct {
-            int32_t mNextFreeEntryFinder;
-         };
+         int32_t mNextFreeEntryFinder;
       };
 
    public:
-       Allocation() = delete;
-       Allocation(const Allocation&) = delete;
-       Allocation(Allocation&&) = delete;
-      ~Allocation() = delete;
+      Allocation() = delete;
+      Allocation(const Allocation&) = delete;
+      Allocation(Allocation&&) = delete;
 
-      explicit Allocation(pot_t size, Pool const*) has_assumptions;
+      Allocation(pot_t size, pot_t pool_alignment) noexcept;
       
-      static size_t Cost(pot_t alignment) noexcept;
-
       auto GetPool() const noexcept -> Pool const*;
-      auto GetUses() const noexcept { return mReferences; }
-      auto GetBackendSize() const noexcept -> size_t;
-      auto GetFrontendSize() const noexcept -> size_t;
+      auto GetUses() const noexcept -> int32_t;
+      auto GetSize() const noexcept -> pot_t;
       auto GetBlockStart() const noexcept -> uint8_t*;
-      auto GetBlockEnd() const noexcept -> uint8_t const*;
       bool Contains(const void*) const noexcept;
       void Keep(int32_t = 1) noexcept;
       void Free(int32_t = 1) noexcept;

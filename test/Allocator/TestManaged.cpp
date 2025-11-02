@@ -27,16 +27,16 @@ SCENARIO("Testing FastLog2 calls", "[fractalloc]") {
    }
 }
 
-TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
+TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",   
+   TypeVeryBigAligned,
+   TypeVeryBigPacked,
    Type1,
    Type2,
    Type3,
    Type4,
    Type8,
    TypeBig,
-   TypeVeryBig,
-   TypeVeryBigAligned,
-   TypeVeryBigPacked
+   TypeVeryBig
 ) {
    static Allocator::State memoryState;
    
@@ -44,31 +44,31 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
    const auto meta = MetaDataOf<TestType>();
    constexpr size_t default_size = CT::GetMinPool<TestType>();
    constexpr size_t min_alloc = CT::GetMinAlloc<TestType>();
-   constexpr size_t testAlignment = ::std::max(alignof(Allocation), alignof(TestType));
+   constexpr size_t testAlignment = alignof(TestType);
 
    REQUIRE(meta);
-   IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(nullptr)));
+   //IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(nullptr)));
    IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(meta, 0_pot)));
-   IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(meta, pot_t(sizeof(TestType)))));
+   IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(meta, 3_pot)));
 
    GIVEN("A default-sized pool") {
-      Pool* pool = Allocator::AllocatePool(meta);
+      Pool* pool = Allocator::AllocatePool(meta, pot_t(default_size));
       REQUIRE(pool);
 
-      const auto originPtr = pool->GetPoolStart();
+      const auto allocData = pool->GetAllocationData();
+      const auto origin = pool->GetClientData();
       const auto smallest = static_cast<size_t>(pool->GetMinAllocation());
-      const auto origin = reinterpret_cast<uintptr_t>(originPtr);
       const auto full = static_cast<size_t>(pool->GetAllocatedByBackend());
       const auto half = full / 2;
       const auto quarter = half / 2;
 
-      REQUIRE(smallest == Roof2(min_alloc + Align(sizeof(Allocation), testAlignment)));
-      REQUIRE(IsAligned(pool->GetPoolStart()));
+      REQUIRE(smallest == min_alloc);
+      REQUIRE(IsAligned(pool->GetClientData(), testAlignment));
       REQUIRE(pool->GetAllocatedByBackend() == default_size);
-      REQUIRE(reinterpret_cast<uintptr_t>(pool->AllocationFromIndex(0)) == origin);
-      REQUIRE(reinterpret_cast<uintptr_t>(pool->AllocationFromIndex(1)) == origin + half);
-      REQUIRE(reinterpret_cast<uintptr_t>(pool->AllocationFromIndex(2)) == origin + quarter);
-      REQUIRE(reinterpret_cast<uintptr_t>(pool->AllocationFromIndex(3)) == origin + quarter + half);
+      REQUIRE(pool->AllocationFromIndex(0) == allocData);
+      REQUIRE(pool->AllocationFromIndex(1) == allocData + half/smallest);
+      REQUIRE(pool->AllocationFromIndex(2) == allocData + quarter/smallest);
+      REQUIRE(pool->AllocationFromIndex(3) == allocData + (quarter + half)/smallest);
       REQUIRE(pool->ThresholdFromIndex(0) == full);
       REQUIRE(pool->ThresholdFromIndex(1) == half);
       REQUIRE(pool->ThresholdFromIndex(2) == quarter);
@@ -87,19 +87,19 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
       REQUIRE(pool->CanContain(pot_t(full)));
       REQUIRE(pool->GetAllocatedByFrontend() == 0);
       REQUIRE(pool->GetMaxEntries() == full / smallest);
-      REQUIRE(pool->Contains(originPtr));
-      REQUIRE(pool->Contains(originPtr + half));
-      REQUIRE(pool->Contains(originPtr + half * 2 - 1));
-      REQUIRE_FALSE(pool->Contains(originPtr + half * 2));
+      REQUIRE(pool->Contains(origin));
+      REQUIRE(pool->Contains(origin + half));
+      REQUIRE(pool->Contains(origin + half * 2 - 1));
+      REQUIRE_FALSE(pool->Contains(origin + half * 2));
       REQUIRE_FALSE(pool->Contains(nullptr));
       REQUIRE_FALSE(pool->IsInUse());
 
       WHEN("Small entry is allocated") {
          auto entry = pool->Allocate(pot_t(Roof2(sizeof(TestType))));
 
-         REQUIRE(pool->GetAllocatedByFrontend() == entry->GetBackendSize());
+         REQUIRE(pool->GetAllocatedByFrontend() == entry->GetSize());
          REQUIRE(pool->GetMaxEntries() == full / smallest);
-         REQUIRE(pool->Contains(entry));
+         REQUIRE(pool->Contains(entry->GetBlockStart()));
          REQUIRE(pool->IsInUse());
       }
 
@@ -108,11 +108,13 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          for (size_t i = 0; i < pool->GetMaxEntries(); ++i) {
             auto entry = pool->Allocate(pot_t(Roof2(sizeof(TestType))));
             REQUIRE(entry);
-            REQUIRE(entry->GetFrontendSize() == min_alloc);
+            REQUIRE(entry->GetSize() == min_alloc);
+            REQUIRE(IsAligned(entry->GetBlockStart(), testAlignment));
+
             entry->Keep(i);
 
             // Fill the entire entry to check for heap corruptions      
-            for (size_t i2 = 0; i2 < entry->GetFrontendSize(); ++i2) {
+            for (size_t i2 = 0; i2 < entry->GetSize(); ++i2) {
                entry->GetBlockStart()[i2] = 66;
             }
          }
@@ -124,15 +126,20 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          }
 
          REQUIRE(pool->GetAllocatedByFrontend() == pool->GetAllocatedByBackend());
-         REQUIRE(pool->GetAllocatedByFrontend() == static_cast<size_t>(pool->GetMaxEntries()) * (Allocation::Cost(pot_t(testAlignment)) + min_alloc));
+         REQUIRE(pool->GetAllocatedByFrontend() == static_cast<size_t>(pool->GetMaxEntries()) * min_alloc);
          REQUIRE(pool->GetMaxEntries() == full / smallest);
+         REQUIRE(pool->AllocationFromIndex(0)->GetBlockStart() == origin);
+         REQUIRE(pool->AllocationFromIndex(1)->GetBlockStart() == origin + half);
+         REQUIRE(pool->AllocationFromIndex(2)->GetBlockStart() == origin + quarter);
+         REQUIRE(pool->AllocationFromIndex(3)->GetBlockStart() == origin + quarter + half);
+         REQUIRE(pool->AllocationFromIndex(static_cast<size_t>(pool->GetMaxEntries()) - 1)->GetBlockStart() == origin + half + half - min_alloc);
 
          for (size_t i = 0; i < pool->GetMaxEntries(); ++i) {
             auto entry = pool->AllocationFromIndex(i);
-            REQUIRE(pool->Contains(entry));
+            REQUIRE(pool->Contains(entry->GetBlockStart()));
             REQUIRE(entry->GetUses() == static_cast<int32_t>(1 + i));
 
-            for (size_t i2 = 0; i2 < entry->GetFrontendSize(); ++i2) {
+            for (size_t i2 = 0; i2 < entry->GetSize(); ++i2) {
                REQUIRE(entry->GetBlockStart()[i2] == 66);
             }
          }
@@ -142,9 +149,9 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          auto entry = pool->Allocate(pot_t(min_alloc * 2));
          REQUIRE(entry);
 
-         REQUIRE(pool->GetAllocatedByFrontend() == entry->GetBackendSize());
+         REQUIRE(pool->GetAllocatedByFrontend() == entry->GetSize());
          REQUIRE(pool->GetMaxEntries() == pool->GetAllocatedByBackend() / smallest);
-         REQUIRE(pool->Contains(entry));
+         REQUIRE(pool->Contains(entry->GetBlockStart()));
          REQUIRE(pool->IsInUse());
       }
 
@@ -167,9 +174,9 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
       const auto full = pool->GetAllocatedByBackend();
       const auto smallest = pool->GetMinAllocation();
 
-      REQUIRE(pool->GetAllocatedByFrontend() == entry->GetBackendSize());
+      REQUIRE(pool->GetAllocatedByFrontend() == entry->GetSize());
       REQUIRE(pool->GetMaxEntries() == full / smallest);
-      REQUIRE(pool->Contains(entry));
+      REQUIRE(pool->Contains(entry->GetBlockStart()));
       REQUIRE(pool->IsInUse());
 
       #ifdef LANGULUS_STD_BENCHMARK 
@@ -344,34 +351,35 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
 
    const auto meta = MetaDataOf<TestType>();
    IF_SAFE(REQUIRE_THROWS(Allocator::Allocate(meta, 511_pot)));
-   constexpr size_t testAlignment = ::std::max(alignof(Allocation), alignof(TestType));
+   constexpr size_t testAlignment = alignof(TestType);
+   constexpr size_t min_alloc = CT::GetMinAlloc<TestType>();
 
    GIVEN("A small allocation") {
-      auto s = GENERATE(1_pot, 2_pot, 512_pot);
+      auto s = GENERATE(pot_t(Roof2(sizeof(TestType))),
+                        pot_t(Roof2(sizeof(TestType)*2)),
+                        pot_t(Roof2(sizeof(TestType)*16)));
+      auto rounded_s = ::std::max(static_cast<size_t>(s), min_alloc);
       Allocation* entry = Allocator::Allocate(meta, s);
       REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
-         REQUIRE(entry->GetBlockStart() == Align(reinterpret_cast<uint8_t*>(entry) + sizeof(Allocation), testAlignment));
          REQUIRE(IsAligned(entry, alignof(Allocation)));
          REQUIRE(IsAligned(entry->GetBlockStart(), testAlignment));
-         REQUIRE(entry->GetFrontendSize() == s);
-         REQUIRE(entry->GetBackendSize() == s + Align(sizeof(Allocation), testAlignment));
-         REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + static_cast<size_t>(s));
+         REQUIRE(entry->GetSize() == rounded_s);
          REQUIRE(entry->GetUses() == 1);
 
          size_t matches = 0;
          size_t mismatches = 0;
-         for (size_t i = 0; i < s; ++i) {
+         for (size_t i = 0; i < rounded_s; ++i) {
             if (entry->Contains(entry->GetBlockStart() + i))
                ++matches;
             if (not entry->Contains(entry->GetBlockStart() - (i+1)))
                ++mismatches;
          }
-         REQUIRE(matches == s);
-         REQUIRE(mismatches == s);
+         REQUIRE(matches == rounded_s);
+         REQUIRE(mismatches == rounded_s);
 
-         REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + static_cast<size_t>(s)));
+         REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + rounded_s + 1));
 
          Allocator::Deallocate(entry);
 
@@ -466,9 +474,14 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          entry->Keep();
 
          REQUIRE(entry->GetUses() == 2);
-         REQUIRE(Allocator::CheckAuthority(nullptr, entry));
+         REQUIRE(Allocator::CheckAuthority(nullptr, entry->GetBlockStart()));
+         REQUIRE_FALSE(Allocator::CheckAuthority(nullptr, entry));
+         REQUIRE(Allocator::CheckAuthority(meta, entry->GetBlockStart()));
+         REQUIRE_FALSE(Allocator::CheckAuthority(meta, entry));
          REQUIRE(Allocator::Find(nullptr, entry->GetBlockStart()));
+         REQUIRE(Allocator::Find(meta, entry->GetBlockStart()));
          REQUIRE_FALSE(Allocator::Find(nullptr, entry));
+         REQUIRE_FALSE(Allocator::Find(meta, entry));
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          entry->Free();
@@ -479,10 +492,6 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          entry->Keep(5);
 
          REQUIRE(entry->GetUses() == 6);
-         REQUIRE(Allocator::CheckAuthority(nullptr, entry));
-         REQUIRE(Allocator::Find(nullptr, entry->GetBlockStart()));
-         REQUIRE_FALSE(Allocator::Find(nullptr, entry));
-
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          entry->Free(5);
          Allocator::Deallocate(entry);
@@ -493,10 +502,6 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          entry->Free();
 
          REQUIRE(entry->GetUses() == 1);
-         REQUIRE(Allocator::CheckAuthority(nullptr, entry));
-         REQUIRE(Allocator::Find(nullptr, entry->GetBlockStart()));
-         REQUIRE_FALSE(Allocator::Find(nullptr, entry));
-
          Allocator::Deallocate(entry);
       }
 
@@ -505,10 +510,6 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          entry->Free(4);
 
          REQUIRE(entry->GetUses() == 2);
-         REQUIRE(Allocator::CheckAuthority(nullptr, entry));
-         REQUIRE(Allocator::Find(nullptr, entry->GetBlockStart()));
-         REQUIRE_FALSE(Allocator::Find(nullptr, entry));
-
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          entry->Free(1);
          Allocator::Deallocate(entry);
@@ -517,36 +518,22 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
       WHEN("Dereferenced once with deletion") {
          Allocator::Deallocate(entry);
 
-         REQUIRE(Allocator::CheckAuthority(nullptr, entry));
-         REQUIRE_FALSE(Allocator::Find(nullptr, entry->GetBlockStart()));
-         REQUIRE_FALSE(Allocator::Find(nullptr, entry));
-      }
-
-      WHEN("Dereferenced multiple times with deletion") {
-         entry->Keep(5);
-
-         IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
-         entry->Free(5);
-         Allocator::Deallocate(entry);
-
-         REQUIRE(Allocator::CheckAuthority(nullptr, entry));
+         REQUIRE_FALSE(Allocator::CheckAuthority(nullptr, entry));
+         REQUIRE(Allocator::CheckAuthority(nullptr, entry->GetBlockStart()));
          REQUIRE_FALSE(Allocator::Find(nullptr, entry->GetBlockStart()));
          REQUIRE_FALSE(Allocator::Find(nullptr, entry));
       }
    }
    
    GIVEN("A large allocation") {
-      pot_t s = 4096_pot * 1024_pot;
+      pot_t s = 1024_pot * 1024_pot;
       Allocation* entry = Allocator::Allocate(meta, s);
       REQUIRE(entry);
 
       WHEN("Memory is allocated on the heap") {
-         REQUIRE(entry->GetBlockStart() == reinterpret_cast<uint8_t*>(Align(entry + 1, alignof(TestType))));
          REQUIRE(IsAligned(entry, alignof(Allocation)));
          REQUIRE(IsAligned(entry->GetBlockStart(), alignof(TestType)));
-         REQUIRE(entry->GetFrontendSize() == s);
-         REQUIRE(entry->GetBackendSize() == s + Align(sizeof(Allocation), alignof(TestType)));
-         REQUIRE(entry->GetBlockEnd() == entry->GetBlockStart() + static_cast<size_t>(s));
+         REQUIRE(entry->GetSize() == s);
          REQUIRE(entry->GetUses() == 1);
 
          #ifdef LANGULUS_STD_BENCHMARK

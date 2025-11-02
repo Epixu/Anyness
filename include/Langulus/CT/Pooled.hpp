@@ -63,6 +63,8 @@ namespace Langulus
    ///   @tparam MIN_POOL - what's the minimal pool size in bytes             
    template<unsigned MIN_POOL>
    struct PooledByType {
+      static_assert(::std::has_single_bit(MIN_POOL),
+         "MIN_POOL must be a power-of-two");
       static constexpr auto   Tactic   = PoolTactic::Type;
       static constexpr size_t MinPool  = MIN_POOL;
       static constexpr bool   Enabled  = true;
@@ -90,20 +92,16 @@ namespace Langulus::CT
    /// Get the minimal pool size in bytes at compile time for T               
    template<class T>
    consteval size_t GetMinPool() {
-      static_assert(Roof2(MinimalPoolSize),
+      static_assert(::std::has_single_bit(MinimalPoolSize),
          "MinimalPoolSize must be a power-of-two");
 
       using ST = Shed<T>;
       if constexpr (Complete<CTTI::Pooled<ST>>) {
          constexpr size_t minpool = Roof2(CTTI::Pooled<ST>::MinPool);
-         static_assert(Roof2(minpool),
-            "Reflected MinPool must be a power-of-two");
          return minpool < MinimalPoolSize ? MinimalPoolSize : minpool;
       }
       else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled)) {
          constexpr size_t minpool = Roof2(Decay<ST>::CTTI_Pooled::MinPool);
-         static_assert(Roof2(minpool),
-            "Reflected MinPool must be a power-of-two");
          return minpool < MinimalPoolSize ? MinimalPoolSize : minpool;
       }
       else return Roof2(sizeof(ST) * 256 <= MinimalPoolSize

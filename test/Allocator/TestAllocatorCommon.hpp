@@ -12,8 +12,6 @@
 using namespace Langulus;
 using namespace Anyness;
 
-static_assert(alignof(Allocation) % Alignment == 0);
-
 std::random_device rd;
 std::mt19937 gen(rd());
 

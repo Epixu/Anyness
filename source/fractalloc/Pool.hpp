@@ -24,22 +24,29 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   Memory pool                                                          
    ///                                                                        
-   struct alignas(Alignment) Pool {
-   friend struct Allocator;
+   /// Aligned to a dynamically determined cache size, with the following     
+   /// data structure:                                                        
+   /// [pool data][padding][allocation data...][padding][client data...]      
+   struct Pool {
    protected:
+      friend struct Allocator;
+      
+      // A chain of freed entries in the range [0; mEntries)            
+      Allocation* mLastFreed = nullptr;
+      // Allocation table                                               
+      Allocation* mAllocationData;
+      // The size distribution of entries                               
+      //    @attention this is indexed by log2(entry->mSize)            
+      size_t mDistribution[sizeof(size_t) * 8] = {};
+      // Pointer to start of client data                                
+      uint8_t* const mClientData;
       // Next pool in the pool chain                                    
       Pool* mNext = nullptr;
-      // A chain of freed entries in the range [0-mEntries)             
-      Allocation* mLastFreed = nullptr;
-
-      // Associated meta data, when types are reflected with nondefault 
-      // PoolTactic                                                     
-      DMeta mMeta;
 
       // Bytes allocated by the frontend                                
-      size_t mAllocatedByFrontend;
-      // Number of entries that have been used overall                  
-      size_t mEntries = 0;
+      size_t mAllocatedByFrontend = 0;
+      // An index that guarantees a new unused entry                    
+      size_t mNextEntry = 0;
 
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
          // Acts like a timestamp of when the allocation happened       
@@ -47,69 +54,66 @@ namespace Langulus::Fractalloc
          // Keeps track of how many entries are currently in use        
          size_t mValidEntries = 0;
       #endif
+      
+      // Associated meta data                                           
+      DMeta mMeta;
 
-      // Bytes allocated by the backend                                 
+      // Bytes allocated by the backend (aka the reserved client bytes) 
       const pot_t mAllocatedByBackend;
       // Alignment used when allocating entries                         
       const pot_t mAlign;
+      // Alignment used when allocating entries                         
+      const pot_t mPoolAlignment;
       // Smallest allocation possible for the pool                      
       const pot_t mThresholdMin;
 
-      //const pot_t mAllocatedByBackendLSB {};
       // Current threshold, that is, max allowed size of a new entry    
       pot_t mThresholdMax;
       // Currently the biggest allocation present in the pool           
       //    @attention this is provided by entry->mSize                 
       pot_t mBiggestEntry;
+      // The biggest possible amount of entries                         
+      const pot_t mMaxEntries;
 
-      // Pointer to start of usable memory                              
-      uint8_t* const mMemory;
-      // Pointer to the end of usable memory                            
-      uint8_t* const mMemoryEnd;
-
-      // The size distribution of entries                               
-      //    @attention this is indexed by log2(entry->mSize)            
-      size_t mDistribution[sizeof(size_t) * 8] = {};
-
-   public:
+   IF_LANGULUS_TESTING(public:)
       Pool() = delete;
       Pool(const Pool&) = delete;
       Pool(Pool&&) = delete;
 
-      Pool(DMeta) has_assumptions;
-      Pool(DMeta, pot_t) has_assumptions;
+      Pool(DMeta, pot_t pool_alignment, pot_t client_size) has_assumptions;
 
-      static size_t Cost(pot_t alignment) noexcept;
+      static size_t Cost(DMeta, pot_t) noexcept;
 
-      // Default pool allocation is 1 MB                                
-      static constexpr size_t InvalidIndex = -1;
+      //static constexpr size_t InvalidIndex = -1;
 
-      auto GetPoolStart() const noexcept -> uint8_t*;
-      auto GetAlignment() const noexcept -> size_t { return mMeta.GetAlignment(); }
+      auto GetAllocationData() const noexcept -> Allocation*;
+      auto GetClientData() const noexcept -> uint8_t*;
+      //auto GetPoolAlignment() const noexcept -> pot_t;
 
-      constexpr auto GetMaxEntries() const noexcept -> pot_t;
-      constexpr auto GetMinAllocation() const noexcept -> pot_t;
-      constexpr auto GetTotalSize() const noexcept -> size_t;
-      constexpr auto GetAllocatedByBackend() const noexcept -> pot_t;
-      constexpr auto GetAllocatedByFrontend() const noexcept -> size_t;
-      constexpr bool IsInUse() const noexcept;
-      constexpr bool CanContain(pot_t) const noexcept;
+      auto GetMaxEntries() const noexcept -> pot_t;
+      auto GetMinAllocation() const noexcept -> pot_t;
+      auto GetTotalSize() const noexcept -> size_t;
+      auto GetAllocatedByBackend() const noexcept -> pot_t;
+      auto GetAllocatedByFrontend() const noexcept -> size_t;
+      bool IsInUse() const noexcept;
+      bool CanContain(pot_t) const noexcept;
       bool Contains(const void*) const noexcept;
       auto Find(const void*) const has_assumptions -> const Allocation*;
 
       auto Allocate(pot_t) has_assumptions -> Allocation*;
       bool Reallocate(Allocation*, pot_t) has_assumptions;
       void Deallocate(Allocation*) has_assumptions;
+      
+      auto ThresholdFromIndex(size_t) const noexcept -> pot_t;
+      auto IndexFromAddress(const void*) const has_assumptions -> size_t;
+      //auto ValidateIndex(size_t) const noexcept -> size_t;
+      auto UpIndex(size_t) const noexcept -> size_t;
+      auto AllocationFromIndex(size_t) const noexcept -> Allocation*;
+      auto AllocationFromAddress(const void*) const has_assumptions -> Allocation*;
+
       void FreePoolChain();
       void Null();
       void Touch();
       void Trim();
-
-      auto ThresholdFromIndex(size_t) const noexcept -> pot_t;
-      auto IndexFromAddress(const void*) const has_assumptions -> size_t;
-      auto ValidateIndex(size_t) const noexcept -> size_t;
-      auto UpIndex(size_t) const noexcept -> size_t;
-      auto AllocationFromIndex(size_t) const noexcept -> const Allocation*;
-      auto AllocationFromAddress(const void*) const has_assumptions -> const Allocation*;
    };
 }

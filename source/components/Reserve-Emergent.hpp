@@ -35,7 +35,7 @@ namespace Langulus::Anyness::Component
                // Compile-time benefit for statically sized containers  
                return 1;
             }
-            else return al->GetFrontendSize() / self.GetStride();
+            else return al->GetSize() / self.GetStride();
          }
          else if constexpr (CT::ContainsOne<C>)
             return 1;

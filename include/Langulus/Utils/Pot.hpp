@@ -148,3 +148,24 @@ namespace Catch
    };
 }
 #endif
+
+#if LANGULUS_FEATURE(LOGGING)
+namespace fmt
+{
+   ///                                                                        
+   /// Extend FMT to be capable of logging pot_t                              
+   ///                                                                        
+   template<>
+   struct formatter<::Langulus::pot_t> {
+      template<class CONTEXT>
+      constexpr auto parse(CONTEXT& ctx) {
+         return ctx.begin();
+      }
+
+      template<class CONTEXT> LANGULUS(INLINED)
+      auto format(::Langulus::pot_t const& c, CONTEXT& ctx) const {
+         return format_to(ctx.out(), "{}", static_cast<size_t>(c));
+      }
+   };
+}
+#endif

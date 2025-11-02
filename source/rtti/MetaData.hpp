@@ -124,7 +124,7 @@ namespace Langulus::RTTI
          constexpr bool operator == (const MetaDataStructured_XY&) const noexcept;
 
          constexpr auto GetSize()     const noexcept -> size_t;
-         auto GetAlignment()          const noexcept -> size_t;
+         auto GetAlignment()          const noexcept -> pot_t;
          auto GetName()               const noexcept -> Token;
          auto GetInfo()               const noexcept -> Token;
          auto GetCppName()            const noexcept -> Token;
@@ -225,7 +225,7 @@ namespace Langulus::RTTI
          bool IsSame(const MetaDataNaked&) const noexcept;
 
          auto GetSize()               const noexcept -> size_t;
-         auto GetAlignment()          const noexcept -> size_t;
+         auto GetAlignment()          const noexcept -> pot_t;
          auto GetFiles()              const noexcept -> Token;
          auto GetSuffix()             const noexcept -> Token;
          auto GetMinAllocation()      const noexcept -> pot_t;

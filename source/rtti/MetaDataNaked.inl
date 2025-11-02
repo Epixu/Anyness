@@ -39,8 +39,8 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the alignment of the type                                          
-   inline auto MetaDataNaked::GetAlignment() const noexcept -> size_t {
-      return mDefinition ? mDefinition->mAlign : 0;
+   inline auto MetaDataNaked::GetAlignment() const noexcept -> pot_t {
+      return mDefinition ? mDefinition->mAlign : pot_t(Alignment);
    }
 
    /// Get the reflected file extensions, separated with commas               

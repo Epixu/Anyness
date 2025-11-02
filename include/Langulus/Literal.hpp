@@ -65,7 +65,7 @@ namespace Langulus
    ///                                                                        
    template<class T, size_t N>
    struct Literal {
-      static_assert(N == 0 or N == 1 or (::std::bit_ceil(N) == N),
+      static_assert(N == 0 or ::std::has_single_bit(N),
          "Modify N to minimize the number of templates");
       static constexpr bool CTTI_Literal = true;
       static constexpr bool Undefined = ::std::same_as<T, Unsupported>;
@@ -465,7 +465,7 @@ namespace Langulus
    Literal(const T&) -> Literal<T, 0>;
    
    template<class T, size_t N>
-   Literal(const T(&)[N]) -> Literal<T, (N == 0 or N == 1 ? N : ::std::bit_ceil(N))>;
+   Literal(const T(&)[N]) -> Literal<T, ::std::bit_ceil(N)>;
 
 
    /// Swap two strings                                                       

@@ -141,11 +141,11 @@ namespace Langulus::RTTI::Inner
 
    /// Get the alignment of the type                                          
    TEMPLATE()
-   auto ME()::GetAlignment() const noexcept -> size_t {
+   auto ME()::GetAlignment() const noexcept -> pot_t {
       const auto id = Base::GetID();
       if (id)
          return Instance.GetMetaDataByID(id, sparse, constant)->mAlign;
-      return 0;
+      return pot_t(Alignment);
    }
 
    /// Get the name of the type, the result of NameOf                         

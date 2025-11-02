@@ -91,9 +91,9 @@ namespace Langulus::RTTI
       // Data instance size in bytes, set by sizeof()                   
       size_t mSize IF_SAFE(= 0);
       // Data instance alignment in bytes, set by alignof()             
-      size_t mAlign IF_SAFE(= 0);
+      pot_t mAlign IF_SAFE(= pot_t(Alignment));
       // Minimal element allocation, in bytes                           
-      pot_t mMinimalAllocation;
+      pot_t mMinimalAllocation IF_SAFE(= pot_t(MinimalAllocation));
       // Precomputed counts indexed by MSB (avoids division by stride   
       // for that extra oompf)                                          
       size_t mAllocationTable[sizeof(size_t) * 8 + 1] IF_SAFE(= {});
@@ -104,7 +104,7 @@ namespace Langulus::RTTI
       
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          // Minimal pool allocation, in bytes                           
-         pot_t mMinimalPoolSize;
+         pot_t mMinimalPoolSize IF_SAFE(= pot_t(MinimalPoolSize));
          // The reflected pool tactic                                   
          PoolTactic mPoolTactic = PoolTactic::Default;
          // The start of the pool chain for the type                    

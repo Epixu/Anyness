@@ -13,22 +13,12 @@
 namespace Langulus::Fractalloc
 {
    /// Initialize an allocation                                               
-   ///   @param bytes - the number of allocated bytes in bitshift form        
-   ///   @param pool - the pool this allocation belongs to                    
+   ///   @param bytes - the number of allocated bytes                         
+   ///   @param pool_alignment - the pool alignment                           
    LANGULUS(ALWAYS_INLINED)
-   Allocation::Allocation(pot_t bytes, Pool const* pool) has_assumptions {
-      LglsAssumeDevAndOptimize(pool, "Invalid pool");
-      mPoolSize = pool->GetAllocatedByBackend();
+   Allocation::Allocation(pot_t bytes, pot_t pool_alignment) noexcept {
+      mPoolAlignment = pool_alignment;
       mSize = bytes;
-      mAlignment = pool->GetAlignment();
-      LglsAssumeDev(GetPool() == pool, "Incorrect pool pointer deduction");
-   }
-
-   /// Get the cost of allocating a single allocation - this includes         
-   /// sizeof(Allocation) together with any padding for data alignment        
-   LANGULUS(ALWAYS_INLINED)
-   size_t Allocation::Cost(pot_t alignment) noexcept {
-      return Align(sizeof(Allocation), alignment);
    }
 
    /// Get the pool this allocation belongs to                                
@@ -36,37 +26,29 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    auto Allocation::GetPool() const noexcept -> Pool const* {
       return reinterpret_cast<Pool const*>(
-         (reinterpret_cast<uintptr_t>(this) - Pool::Cost(mAlignment)) & ~mPoolSize.mask()
+         reinterpret_cast<uintptr_t>(this) & ~mPoolAlignment.mask()
       );
    }
 
-   /// User bytes + the header size                                           
-   ///   @return the byte size of the entry plus the usable region after it   
    LANGULUS(ALWAYS_INLINED)
-   size_t Allocation::GetBackendSize() const noexcept {
-      return Roof2(Cost(mAlignment) + GetFrontendSize());
+   auto Allocation::GetUses() const noexcept -> int32_t {
+      return mReferences;
    }
 
    /// Get the user bytes                                                     
    ///   @return the byte size of usable memory region                        
    LANGULUS(ALWAYS_INLINED)
-   size_t Allocation::GetFrontendSize() const noexcept {
-      return static_cast<size_t>(mSize);
+   pot_t Allocation::GetSize() const noexcept {
+      return mSize;
    }
 
    /// Return the aligned start of usable block memory (const)                
    ///   @return aligned pointer to the entry's memory                        
    LANGULUS(ALWAYS_INLINED)
    uint8_t* Allocation::GetBlockStart() const noexcept {
-      const auto entryStart = reinterpret_cast<const uint8_t*>(this);
-      return const_cast<uint8_t*>(entryStart) + Cost(mAlignment);
-   }
-
-   /// Return the end of usable block memory (always const)                   
-   ///   @return aligned pointer to the entry's memory end                    
-   LANGULUS(ALWAYS_INLINED)
-   uint8_t const* Allocation::GetBlockEnd() const noexcept {
-      return GetBlockStart() + GetFrontendSize();
+      const auto pool = GetPool();
+      const size_t offset = this - pool->GetAllocationData();
+      return GetPool()->GetClientData() + GetPool()->GetMinAllocation() * offset;
    }
    
    /// Check if memory address is inside this entry                           
@@ -74,9 +56,9 @@ namespace Langulus::Fractalloc
    ///   @return true if address is inside                                    
    LANGULUS(ALWAYS_INLINED)
    bool Allocation::Contains(const void* address) const noexcept {
-      const auto a = static_cast<const uint8_t*>(address);
-      const auto blockStart = GetBlockStart();
-      return a >= blockStart and a < blockStart + GetFrontendSize();
+      const auto a = reinterpret_cast<uintptr_t>(address);
+      const auto blockStart = reinterpret_cast<uintptr_t>(GetBlockStart());
+      return a >= blockStart and a < blockStart + static_cast<uintptr_t>(mSize);
    }
 
    /// Reference the entry 'c' times                                          

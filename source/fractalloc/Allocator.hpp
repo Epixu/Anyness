@@ -110,7 +110,7 @@ namespace Langulus::Fractalloc
          static void DumpPool(size_t, const Pool*) noexcept;
          
          LANGULUS_API(FRACTALLOC)
-         bool IntegrityCheckChain(const Pool*);
+         static bool IntegrityCheckChain(const Pool*);
       #endif
 
       LANGULUS_API(FRACTALLOC)
@@ -137,8 +137,8 @@ namespace Langulus::Fractalloc
       LANGULUS_API(FRACTALLOC)
       static bool CheckAuthority(DMeta, const void*) has_assumptions;
 
-      LANGULUS_API(FRACTALLOC)
-      static Pool* AllocatePool(DMeta) has_assumptions;
+      //LANGULUS_API(FRACTALLOC)
+      //static Pool* AllocatePool(DMeta) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
       static Pool* AllocatePool(DMeta, pot_t) has_assumptions;
