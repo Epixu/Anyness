@@ -185,6 +185,18 @@
         }
       }
     },
+
+    {
+      "name": "vendor-clang-x86",
+      "description": "Enables vendor specific toolchains for clang x86",
+      "inherits": "base",
+      "hidden": true,
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "WSL Clang x86"
+        }
+      }
+    },
     
     {
       "name": "vendor-clang-x64",
@@ -396,7 +408,14 @@
       "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX2, unmanaged)",
       "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX2", "vendor-clang-x64", "unmanaged" ]
     },
-    
+
+    {
+      "name": "linux-clang-x86-debug-safe-SSE2-unmanaged",
+      "displayName": "clang x86 Debug Safe SSE2 Unamanged",
+      "description": "Target Ubuntu with the 32bit Clang compiler (debug, safe, SSE2, unmanaged)",
+      "inherits": [ "linux", "clang++-19", "x86", "debug", "SSE2", "vendor-clang-x86", "unmanaged" ]
+    },
+
     {
       "name": "linux-clang-x64-debug-safe-AVX-managed-coverage",
       "displayName": "clang x64 Debug Safe AVX Coverage",
