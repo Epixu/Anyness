@@ -27,10 +27,10 @@ option(LANGULUS_OPTION_SHARED_LIBRARIES
     "Will build shared libraries (DLL/SO/WASM) if enabled, \
     true by default" ON)
     
-option(LANGULUS_OPTION_SAFE_MODE 
+#[[option(LANGULUS_OPTION_SAFE_MODE 
     "Overrides additional error checking and sanity checks, \
-    incurs a serious runtime overhead, disabled by default" OFF)
-
+    incurs a serious runtime overhead, disabled by default" OFF)]]
+set(LANGULUS_OPTION_SAFE_MODE ON CACHE STRING "" FORCE)
 option(LANGULUS_OPTION_PARANOIA 
     "Make sure that any unused memory is nullified, \
     incurs a serious runtime overhead, disabled by default" OFF)
