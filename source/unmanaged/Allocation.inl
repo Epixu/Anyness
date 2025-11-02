@@ -25,10 +25,10 @@ namespace Langulus::Unmanaged
 
    /// Get the cost of allocating a single allocation - this includes         
    /// sizeof(Allocation) together with any padding for data alignment        
-   LANGULUS(ALWAYS_INLINED)
+   /*LANGULUS(ALWAYS_INLINED)
    size_t Allocation::Cost(pot_t alignment) noexcept {
       return Align(sizeof(Allocation), alignment);
-   }
+   }*/
 
    /// Get the user bytes                                                     
    ///   @return the byte size of usable memory region                        
@@ -42,7 +42,7 @@ namespace Langulus::Unmanaged
    LANGULUS(ALWAYS_INLINED)
    uint8_t* Allocation::GetBlockStart() const noexcept {
       const auto entryStart = reinterpret_cast<const uint8_t*>(this);
-      return const_cast<uint8_t*>(entryStart + Cost(mAlignment));
+      return const_cast<uint8_t*>(Align(entryStart + sizeof(Allocation), mAlignment));
    }
    
    /// Check if memory address is inside this entry                           

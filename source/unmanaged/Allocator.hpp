@@ -28,12 +28,13 @@ namespace Langulus::Unmanaged
    ///   @param align - the alignment of the data                             
    ///   @return a newly allocated memory that is correctly aligned           
    inline Allocation* AlignedAllocate(pot_t size, pot_t align) has_assumptions {
-      const size_t allocation_cost = Allocation::Cost(align);
+      const size_t alignment = ::std::max(alignof(Allocation), static_cast<size_t>(align));
+      const size_t allocation_cost = Align(sizeof(Allocation), alignment);
       const size_t backendSize = allocation_cost + static_cast<size_t>(size);
       #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
-         const auto entry = _aligned_malloc(backendSize, alignof(Allocation));
+         const auto entry = _aligned_malloc(backendSize, alignment);
       #else
-         const auto entry = ::std::aligned_alloc(alignof(Allocation), backendSize);
+         const auto entry = ::std::aligned_alloc(alignment, backendSize);
       #endif
       
       if (not entry)
