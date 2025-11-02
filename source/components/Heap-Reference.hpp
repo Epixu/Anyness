@@ -177,7 +177,7 @@ namespace Langulus::Anyness::Component
                // Statically typed handle                               
                using HT = Deref<TypeOf<T>>;
                if constexpr (CT::TypeErased<C>)
-                  LglsAssumeDev(self.template IsSame<HT>(), "Type mismatch");
+                  LglsAssert(self.template IsSame<HT>(), "Type mismatch");
                else
                   static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
 
@@ -192,7 +192,7 @@ namespace Langulus::Anyness::Component
          else {
             // Access directly                                          
             if constexpr (CT::TypeErased<C>)
-               LglsAssumeDev(self.template Is<T>(), "Type mismatch");
+               LglsAssert(self.template Is<T>(), "Type mismatch");
             else
                static_assert(Akin<TypeOf<C>, T>, "Type mismatch");
 
