@@ -160,7 +160,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam T - the type we're wrapping in                            
       ///   @return the element, as a reference if possible                   
       template<class T, CT::Container C>
-      decltype(auto) As(this C&& self) has_assumptions {
+      decltype(auto) As(this C&& self) {
          static_assert(not CT::Reference<T>, "Strip references first");
 
          if constexpr (CT::Handle<T>) {
