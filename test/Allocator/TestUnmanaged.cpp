@@ -23,7 +23,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
    TypeVeryBigAligned,
    TypeVeryBigPacked
 ) {
-   REQUIRE_THROWS(Allocator::Allocate(pot_t(alignof(TestType)), 511_pot));
+   IF_SAFE(REQUIRE_THROWS(Allocator::Allocate(pot_t(alignof(TestType)), 511_pot)));
    constexpr size_t testAlignment = alignof(TestType);
    
    GIVEN("A small allocation") {

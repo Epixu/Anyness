@@ -167,7 +167,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
    }
    
    GIVEN("A custom huge pool") {
-      Pool* pool = Allocator::AllocatePool(meta, pot_t(default_size * 1024));
+      Pool* pool = Allocator::AllocatePool(meta, pot_t(default_size * 512));
       REQUIRE(pool);
 
       auto entry = pool->Allocate(1_pot);

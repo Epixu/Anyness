@@ -138,16 +138,6 @@ namespace Langulus::Fractalloc
       return mClientData;
    }
 
-   /*LANGULUS(INLINED)
-   auto Pool::GetPoolAlignment() const noexcept -> pot_t {
-      return mPoolAlignment;
-   }*/
-
-   /*LANGULUS(INLINED)
-   auto Pool::GetAlignment() const noexcept -> pot_t {
-      return mMeta.GetAlignment();
-   }*/
-
    /// Get the bytes reserved for the bool                                    
    ///   @return bytes allocated for the pool                                 
    LANGULUS(INLINED)
@@ -318,8 +308,6 @@ namespace Langulus::Fractalloc
    ///   @return pointer to the valid allocation, or nullptr if unused        
    LANGULUS(INLINED)
    auto Pool::AllocationFromAddress(const void* ptr) const has_assumptions -> Allocation* {
-      //LglsAssumeDev(mNextEntry != 0, "Pool shouldn't be empty");
-
       // Step up until a valid entry inside bounds is hit               
       auto index = IndexFromAddress(ptr);
       while (index != 0
@@ -466,25 +454,6 @@ namespace Langulus::Fractalloc
          index = UpIndex(index);
       return index;
    }
-
-   /// Validate an index, check if corresponding to a valid allocation        
-   /// or shift it up until one is found                                      
-   ///   @param index - index to validate                                     
-   ///   @returns the valid index, or InvalidIndex if invalid                 
-   /*LANGULUS(INLINED)
-   size_t Pool::ValidateIndex(size_t index) const noexcept {
-      LglsAssumeDev(mNextEntry != 0, "Pool shouldn't be empty");
-
-      // Step up until a valid entry inside bounds is hit               
-      while (index != 0
-        and (index >= mNextEntry or 0 == AllocationFromIndex(index)->GetUses()))
-         index = UpIndex(index);
-
-      // Check if we reached root of pool and it is unused              
-      if (index == 0 and 0 == mAllocationData->GetUses())
-         return InvalidIndex;
-      return index;
-   }*/
 
    /// Get index above another index                                          
    ///   @param index                                                         
