@@ -24,14 +24,12 @@ namespace Langulus
       MORE&&...mn
    ) {
       if not consteval {
-         //#if LANGULUS(DEBUG)
-            // Log location first, because message might cause          
-            // additional errors                                        
-            if (location) {
-               Logger::Error("At ");
-               Logger::Append(location);
-            }
-         //#endif
+         // Log location first, because message might cause             
+         // additional errors                                           
+         if (location) {
+            Logger::Error("At ");
+            Logger::Append(location);
+         }
 
          // Log error message                                           
          Logger::Error("Assertion failure: ");
@@ -63,14 +61,12 @@ namespace Langulus
    ) {
       if not consteval {
          if (not condition) {
-            //#if LANGULUS(DEBUG)
-               // Log location first, because message might cause       
-               // additional errors                                     
-               if (location) {
-                  Logger::Error("At ");
-                  Logger::Append(location);
-               }
-            //#endif
+            // Log location first, because message might cause          
+            // additional errors                                        
+            if (location) {
+               Logger::Error("At ");
+               Logger::Append(location);
+            }
 
             // Log error message                                        
             Logger::Error("Assertion failure: ");
@@ -104,14 +100,12 @@ namespace Langulus
    ) noexcept {
       if not consteval {
          if (not condition) {
-            //#if LANGULUS(DEBUG)
-               // Log location first, because message might cause       
-               // additional errors                                     
-               if (location) {
-                  Logger::Warning("At ");
-                  Logger::Append(location);
-               }
-            //#endif
+            // Log location first, because message might cause          
+            // additional errors                                        
+            if (location) {
+               Logger::Warning("At ");
+               Logger::Append(location);
+            }
 
             // Log error message                                        
             Logger::Warning("Assertion failure: ");
@@ -141,14 +135,12 @@ namespace Langulus
    ) {
       if not consteval {
          if (not condition) {
-            //#if LANGULUS(DEBUG)
-               // Log location first, because message might cause       
-               // additional errors                                     
-               if (location) {
-                  Logger::Error("At ");
-                  Logger::Append(location);
-               }
-            //#endif
+            // Log location first, because message might cause          
+            // additional errors                                        
+            if (location) {
+               Logger::Error("At ");
+               Logger::Append(location);
+            }
 
             // Log error message                                        
             Logger::Error("User assumption failure: ");
@@ -180,14 +172,12 @@ namespace Langulus
    ) noexcept {
       if not consteval {
          if (not condition) {
-            //#if LANGULUS(DEBUG)
-               // Log location first, because message might cause       
-               // additional errors                                     
-               if (location) {
-                  Logger::Warning("At ");
-                  Logger::Append(location);
-               }
-            //#endif
+            // Log location first, because message might cause          
+            // additional errors                                        
+            if (location) {
+               Logger::Warning("At ");
+               Logger::Append(location);
+            }
 
             // Log error message                                        
             Logger::Warning("User assumption failure: ");
@@ -231,14 +221,12 @@ namespace Langulus
    ) {
       if not consteval {
          if (not condition) {
-            //#if LANGULUS(DEBUG)
-               // Log location first, because message might cause       
-               // additional errors                                     
-               if (location) {
-                  Logger::Error("At ");
-                  Logger::Append(location);
-               }
-            //#endif
+            // Log location first, because message might cause          
+            // additional errors                                        
+            if (location) {
+               Logger::Error("At ");
+               Logger::Append(location);
+            }
 
             // Log error message                                        
             Logger::Error("Dev assumption failure: ");
@@ -270,14 +258,12 @@ namespace Langulus
    ) noexcept {
       if not consteval {
          if (not condition) {
-            //#if LANGULUS(DEBUG)
-               // Log location first, because message might cause       
-               // additional errors                                     
-               if (location) {
-                  Logger::Warning("At ");
-                  Logger::Append(location);
-               }
-            //#endif
+            // Log location first, because message might cause          
+            // additional errors                                        
+            if (location) {
+               Logger::Warning("At ");
+               Logger::Append(location);
+            }
 
             // Log error message                                        
             Logger::Warning("Dev assumption failure: ");
@@ -321,14 +307,12 @@ namespace Langulus
       if constexpr (LANGULUS(SAFE) >= LEVEL) {
          if not consteval {
             if (not condition) {
-               //#if LANGULUS(DEBUG)
-                  // Log location first, because message might cause    
-                  // additional errors                                  
-                  if (location) {
-                     Logger::Error("At ");
-                     Logger::Append(location);
-                  }
-               //#endif
+               // Log location first, because message might cause       
+               // additional errors                                     
+               if (location) {
+                  Logger::Error("At ");
+                  Logger::Append(location);
+               }
 
                // Log error message                                     
                Logger::Error("Assumption level ", LEVEL, " failure: ");
@@ -371,14 +355,12 @@ namespace Langulus
       if constexpr (LANGULUS(SAFE) >= LEVEL) {
          if not consteval {
             if (not condition) {
-               //#if LANGULUS(DEBUG)
-                  // Log location first, because message might cause    
-                  // additional errors                                  
-                  if (location) {
-                     Logger::Error("At ");
-                     Logger::Append(location);
-                  }
-               //#endif
+               // Log location first, because message might cause       
+               // additional errors                                     
+               if (location) {
+                  Logger::Error("At ");
+                  Logger::Append(location);
+               }
 
                // Log error message                                     
                Logger::Warning("Assumption level ", LEVEL, " failure: ");
