@@ -111,7 +111,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C>) {
                //                                                       
                // This container is type-erased                         
-               LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
+               //LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
                LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
                auto T = self.GetTypeInner();
 

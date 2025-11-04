@@ -9,7 +9,9 @@
 #include <any>
 
 
-TEMPLATE_TEST_CASE("Dense Any/TAny", "[any]",
+TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
+   (Types<Any, Text*>),
+
    (Types<Any, Text>),
    (Types<Any, int>),
    (Types<Any, Any>),

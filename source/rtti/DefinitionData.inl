@@ -63,7 +63,7 @@ namespace Langulus::RTTI
       inline void SparseCopyConstructor(void* from, void* to) noexcept {
          auto fromT = static_cast<void**>(from);
          auto toT = static_cast<void**>(to);
-         *fromT = *toT;
+         *toT = *fromT;
       };
 
       LANGULUS(NOINLINE)

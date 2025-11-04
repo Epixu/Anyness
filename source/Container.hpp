@@ -381,17 +381,17 @@ namespace Langulus::Anyness
       /// Access a variable on the heap associated with a component           
       template<CT::Component COM, CT::Container CON>
       constexpr auto AccessHeap(this CON&& self) noexcept {
-         size_t IDX = Inner::GetHeapOffset<COM, COMPONENTS...>(
+         size_t offset = Inner::GetHeapOffset<COM, COMPONENTS...>(
             static_cast<size_t>(self.GetReserved()));
 
          using R = typename COM::HeapRequest;
          if constexpr (requires { R::AllocatedPerElement; }) {
             using RC = Tmut<CON, typename R::Type*, typename R::Type const*>;
-            return reinterpret_cast<RC>(self.template GetRawAs<uint8_t>() + IDX);
+            return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
          }
          else {
             using RC = Tmut<CON, R*, R const*>;
-            return reinterpret_cast<RC>(self.template GetRawAs<uint8_t>() + IDX);
+            return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
          }
       }
       
