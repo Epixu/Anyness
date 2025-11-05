@@ -249,7 +249,7 @@ namespace Langulus::Anyness::Component
       
       /// Get the number of indirections                                      
       /// int**** will result in 4; int* will result in 1, int results in 0.  
-      constexpr bool GetIndirections(this auto const& self) noexcept {
+      constexpr size_t GetIndirections(this auto const& self) noexcept {
          if constexpr (TypeErased)
             return self.GetTypeInner().GetIndirections();
          else

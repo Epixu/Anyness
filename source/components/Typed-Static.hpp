@@ -149,7 +149,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the number of indirections                                      
       /// int**** will result in 4; int* will result in 1, int results in 0.  
-      constexpr bool GetIndirections() const noexcept {
+      constexpr size_t GetIndirections() const noexcept {
          return IndirectsOf<TYPE>;
       }
 

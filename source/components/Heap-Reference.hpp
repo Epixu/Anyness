@@ -114,7 +114,7 @@ namespace Langulus::Anyness::Component
             // Unknown type, just return the heap pointer reference     
             return (mHeap);
          }
-         else if constexpr (Deref<C>::TypeErased) {
+         else if constexpr (CT::TypeErased<C>) {
             // Casting to a desired runtime type                        
             LglsAssumeDev(self.IsTyped(), "Block is not typed");
 
