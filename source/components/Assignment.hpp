@@ -130,15 +130,6 @@ namespace Langulus::Anyness::Component
          return self;
       }
 
-      /// Assign a value to the first element, if that element is initialized.
-      /// If the element isn't initialized yet it will be constructed.        
-      ///   @param argument - the argument to assign                          
-      ///   @return reference to self                                         
-      /*template<CT::Container C, class A>
-      C& operator = (this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
-         return self.Assign(FWD(argument));
-      }*/
-
    protected:
       /// A helper for clearing and allocating memory before construction.    
       /// Calls destructors on all elements, if any were initialized.         
@@ -250,7 +241,7 @@ namespace Langulus::Anyness::Component
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership    
-            if constexpr (C::TypeErased or IT::TypeErased) {
+            if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
                //                                                       
                // Either this container or the handle is type-erased    
                auto T = rhs.GetTypeInner();
@@ -291,10 +282,9 @@ namespace Langulus::Anyness::Component
                IntentAssign(*data, I::Nest(*rhs.GetRaw()));
             }
          }
-         else if constexpr (C::TypeErased) {
+         else if constexpr (CT::TypeErased<C>) {
             //                                                          
             // This container is type-erased                            
-            LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
             LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
             auto T = self.GetTypeInner();
 

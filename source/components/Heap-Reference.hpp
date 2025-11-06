@@ -101,11 +101,12 @@ namespace Langulus::Anyness::Component
       ///   @tparam T - the type of data we're accessing -                    
       ///      use void to use the type of the container, if statically typed 
       template<class T = void, CT::Container C>
-      constexpr auto& Get(this C&& self) has_assumptions {
+      constexpr decltype(auto) Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>,    "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
          using TC = TypeOf<C>;
          using TH = Tif<CT::Void<T>, TC, T>;
+         using THQ0 = Tmut<C, TH,   ConstAll<TH  >>;
          using THQ1 = Tmut<C, TH*,  ConstAll<TH* >>;
          using THQ2 = Tmut<C, TH**, ConstAll<TH**>>;
          auto& mHeap = self.GetHeapInner();
@@ -117,41 +118,46 @@ namespace Langulus::Anyness::Component
          else if constexpr (CT::TypeErased<C>) {
             // Casting to a desired runtime type                        
             LglsAssumeDev(self.IsTyped(), "Block is not typed");
+            LglsAssert(self.GetIndirections()+1 >= IndirectsOf<TH>,
+               "Indirection mismatch");
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TH>)
-                  // Representing sparse as dense                       
-                  return **static_cast<THQ2>(mHeap);
+                  return (**static_cast<THQ2>(mHeap)); // * -> & 
+               else if constexpr (IndirectsOf<TH> == 1)
+                  return ( *static_cast<THQ1>(mHeap)); // * -> *&
                else
-                  // Representing sparse as sparse                      
-                  return  *static_cast<THQ1>(mHeap);
+                  return  const_cast<THQ0>(reinterpret_cast<ConstAll<THQ0>>(mHeap)); // * -> **
             }
             else {
                if constexpr (CT::Dense<TH>)
-                  // Representing dense as dense                        
-                  return *static_cast<THQ1>( mHeap);
+                  return (*static_cast<THQ1>( mHeap)); // & -> &
+               else if constexpr (IndirectsOf<TH> == 1)
+                  return (*const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap))); // & -> *&
                else
-                  // Representing dense as sparse                       
-                  return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
+                  return  const_cast<THQ0>(reinterpret_cast<ConstAll<THQ0>>(&mHeap)); // & -> **
             }
          }
          else {
             // Casting to a desired static type                         
+            static_assert(IndirectsOf<TC>+1 >= IndirectsOf<TH>,
+               "Indirection mismatch");
+            
             if constexpr (CT::Sparse<TC>) {
                if constexpr (CT::Dense<TH>)
                   // Representing sparse as dense                       
-                  return **static_cast<THQ2>(mHeap);
+                  return (**static_cast<THQ2>(mHeap));
                else
                   // Representing sparse as sparse                      
-                  return  *static_cast<THQ1>(mHeap);
+                  return ( *static_cast<THQ1>(mHeap));
             }
             else {
                if constexpr (CT::Dense<TH>)
                   // Representing dense as dense                        
-                  return *static_cast<THQ1>( mHeap);
+                  return (*static_cast<THQ1>( mHeap));
                else
                   // Representing dense as sparse                       
-                  return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
+                  return (*const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap)));
             }
          }
       }
@@ -230,7 +236,7 @@ namespace Langulus::Anyness::Component
          if (not self.IsSparse())
             return self.template GetItem<D>();
 
-         if constexpr (C::TypeErased) {
+         if constexpr (CT::TypeErased<C>) {
             const auto T = self.GetType();
             const auto resolver = T.GetResolver();
             if (resolver)

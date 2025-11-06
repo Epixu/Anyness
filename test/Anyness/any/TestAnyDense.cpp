@@ -157,7 +157,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
          Any_CheckState_OwnedFull<E>(pack);
 
          REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(*pack.template As<E*>() == *element);
+         REQUIRE((*pack.template As<E*>()) == *element);
          REQUIRE(pack.GetUses() == 1);
 
          if constexpr (not CT::Typed<T>) {

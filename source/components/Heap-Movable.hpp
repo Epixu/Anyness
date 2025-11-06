@@ -141,29 +141,19 @@ namespace Langulus::Anyness::Component
          else {
             // Move/Refer/Abandon/Disown other                          
             static_assert(I::IsShallow());
+            self.SetType(from.GetType());
+            self.SetHeapInner(from.GetHeapInner());
+
             if constexpr (I::IsKept()) {
                if constexpr (I::IsMoved()) {
                   // Move                                               
-                  self.SetType(from.GetType());
-                  self.SetHeapInner(from.GetHeapInner());
-
                   if constexpr (CT::AutoOwned<I>) {
                      from.SetHeapInner(nullptr);
                      if_available(from.ResetState());
                      if_available(from.ResetType());
                   }
                }
-               else {
-                  // Refer other                                        
-                  static_assert(CT::Referred<I>);
-                  self.SetType(from.GetType());
-                  self.SetHeapInner(from.GetHeapInner());
-               }
-            }
-            else {
-               // Abandon/Disown                                        
-               self.SetType(from.GetType());
-               self.SetHeapInner(from.GetHeapInner());
+               else static_assert(CT::Referred<I>);
             }
          }
       }
