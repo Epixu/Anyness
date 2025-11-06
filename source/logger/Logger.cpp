@@ -27,10 +27,10 @@ using namespace Langulus::Logger;
 
 
 /// Scoped tabulator destruction                                              
-Scope::~Scope() noexcept {
+/*Scope::~Scope() noexcept {
    if (mTabs > 0)
       GlobalState.Write(Tabs {-mTabs});
-}
+}*/
 
 /// Logger construction                                                       
 State::State() {

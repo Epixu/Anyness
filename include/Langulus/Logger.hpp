@@ -183,7 +183,7 @@ namespace Langulus::Logger
       using Tabs::Tabs;
       constexpr Scope(Scope&& other) noexcept
          : Tabs {FWD(other)} {}
-      LANGULUS_API(LOGGER) ~Scope() noexcept;
+      constexpr ~Scope() noexcept;
    };
 
    /// Returned from disabled scoped functions, should be optimized-out       
@@ -285,7 +285,13 @@ namespace Langulus::Logger
    ///                                                                        
    LANGULUS_API(LOGGER) extern State GlobalState;
 
-   
+   constexpr Scope::~Scope() noexcept {
+      if not consteval {
+         if (mTabs > 0)
+            GlobalState.Write(Tabs {-mTabs});
+      }
+   }
+
    /// A general new-line write function that continues the last intent/style 
    template<class...T> LANGULUS(INLINED)
    constexpr void Line(T&&...arguments) noexcept {

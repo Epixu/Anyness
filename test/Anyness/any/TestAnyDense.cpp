@@ -1010,8 +1010,8 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_OwnedFull<E>(absorbed);
-         
-         REQUIRE(absorbed == pack);         
+
+         REQUIRE((absorbed == pack) == CT::Dense<E>);        
          REQUIRE(absorbed.GetUses() == 1);
       }
       
@@ -1348,8 +1348,8 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
 
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 1);
-         REQUIRE(pack1 == pack2);
-         REQUIRE(pack2 == memory1);
+         REQUIRE((pack1 == pack2) == CT::Dense<E>);
+         REQUIRE((pack2 == memory1) == CT::Dense<E>);
          REQUIRE(pack2 != memory2);
       }
 

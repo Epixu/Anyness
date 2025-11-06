@@ -79,18 +79,17 @@ namespace Langulus::Anyness::Component
       ///   @return true if the two containers are identical                  
       template<CT::Container LHS, CT::Container RHS>
       constexpr bool CompareEqual(this const LHS& lhs, const RHS& rhs) {
-         // Toggle logging at compile-time in this function scope       
-         VERBOSE_SCOPED("Comparing ",
-            Logger::White, lhs.GetCount(), "x of ", lhs.GetName(),
-            Logger::Reset, " with ",
-            Logger::White, rhs.GetCount(), "x of ", rhs.GetName()
-         );
-
          if consteval {
             // Heap should be empty at compile-time                     
             return true;
          }
          else {
+            VERBOSE_SCOPED("Comparing ",
+               Logger::White, lhs.GetCount(), "x of ", lhs.GetName(),
+               Logger::Reset, " with ",
+               Logger::White, rhs.GetCount(), "x of ", rhs.GetName()
+            );
+
             if constexpr (CT::Typed<LHS, RHS>) {
                //                                                       
                // Both blocks are statically-typed - leverage it by     
