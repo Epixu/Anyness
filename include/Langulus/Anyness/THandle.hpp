@@ -92,8 +92,9 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using Base = Inner::THandleEmbeddedDense<T>;
-      //using Base::Base;
+      //using Base = Inner::THandleEmbeddedDense<T>;
+
+      using HandleMutType  = THandle<DecvqAll<T>>;
 
       THandle() = delete;
       
@@ -107,6 +108,10 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
+      constexpr THandle(T ptr, AllocationPtr alloc) noexcept {
+         this->SetHeapInner(&ptr);
+         this->SetAllocationInner(alloc);
+      }
       constexpr THandle(Deref<T>* ptr, AllocationPtr alloc) noexcept {
          this->SetHeapInner(ptr);
          this->SetAllocationInner(alloc);
@@ -118,8 +123,9 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using Base = Inner::THandleEmbeddedSparse<T>;
-      //using Base::Base;
+      //using Base = Inner::THandleEmbeddedSparse<T>;
+
+      using HandleMutType  = THandle<DecvqAll<T>>;
 
       THandle() = delete;
       
@@ -141,16 +147,18 @@ namespace Langulus::Anyness
    
 
    ///                                                                        
-   /// When T is a dense reference, then element is embedded inside container 
-   /// This handle never propagates or modifies ownership                     
+   /// When T is a dense reference, then element is embedded inside container.
+   /// This handle never propagates or modifies ownership.                    
    ///   @tparam T - the contained type                                       
    template<CT::Reference T>
    struct THandleDisowned<T> : Inner::THandleDisownedEmbedded<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using Base = Inner::THandleDisownedEmbedded<T>;
+      //using Base = Inner::THandleDisownedEmbedded<T>;
       //using Base::Base;
+
+      using HandleMutType  = THandleDisowned<DecvqAll<T>>;
 
       THandleDisowned() = delete;
       
@@ -167,15 +175,17 @@ namespace Langulus::Anyness
    
 
    ///                                                                        
-   /// When T is not a reference, then it is not embedded                     
-   /// Such dense handles are isomorphic to TOwn<T> - data is on the stack    
+   /// When T is not a reference, then it is not embedded.                    
+   /// Such dense handles are isomorphic to TOwn<T> - data is on the stack.   
    ///   @tparam T - the contained type                                       
    template<CT::NotReference T> requires CT::Dense<T>
    struct THandle<T> : Inner::THandleLocalDense<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using Base = Inner::THandleLocalDense<T>;
+      //using Base = Inner::THandleLocalDense<T>;
       //using Base::Base;
+      
+      using HandleMutType  = THandle<DecvqAll<T>>;
 
       THandle() = delete;
       
@@ -192,16 +202,18 @@ namespace Langulus::Anyness
    
 
    ///                                                                        
-   /// When T is not a reference, then it is not embedded                     
-   /// Such sparse handles are isomorphic to TRef<T>                          
+   /// When T is not a reference, then it is not embedded.                    
+   /// Such sparse handles are isomorphic to TRef<T>.                         
    ///   @tparam T - the contained type                                       
    template<CT::NotReference T> requires CT::Sparse<T>
    struct THandle<T> : Inner::THandleLocalSparse<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using Base = Inner::THandleLocalSparse<T>;
-      using Base::Base;
+      //using Base = Inner::THandleLocalSparse<T>;
+      //using Base::Base;
       
+      using HandleMutType  = THandle<DecvqAll<T>>;
+
       THandle() = delete;
       
       constexpr THandle(THandle const& other) {

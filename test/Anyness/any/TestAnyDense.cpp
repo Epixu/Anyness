@@ -10,15 +10,22 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
-   (Types<Any, Text*>),
+   (Types<TAny<Any*>, Any*>),
 
    (Types<Any, Text>),
    (Types<Any, int>),
    (Types<Any, Any>),
+   
+   (Types<Any, Text*>),
+   (Types<Any, int*>),
+   (Types<Any, Any*>),
 
    (Types<TAny<Any>, Any>),
    (Types<TAny<int>, int>),
-   (Types<TAny<Text>, Text>)
+   (Types<TAny<Text>, Text>),
+   
+   (Types<TAny<int*>, int*>),
+   (Types<TAny<Text*>, Text*>)
 ) {
    static Allocator::State memoryState;
    using T = typename TestType::First;
@@ -95,7 +102,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
    static_assert(not requires (T pack, E item) { pack.ForEach([](const int&){}); });
    static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&){}); });
 
-   constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and LANGULUS(SAFE);
+   constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);
    
    GIVEN("Gap test") {
       alignas(T) char unininitialized[sizeof(T)];
@@ -549,7 +556,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
 
          STATIC_REQUIRE(T{} == T{});
 
-         if constexpr (CT::Deep<E>) {
+         if constexpr (CT::Deep<E> and CT::Dense<E>) {
             STATIC_REQUIRE(T{} == E{});
             STATIC_REQUIRE(E{} == T{});
          }

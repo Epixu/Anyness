@@ -93,7 +93,7 @@ void Any_Helper_TestType(const auto& any) {
       REQUIRE(any.template IsExact<E>());
       REQUIRE(any.template Is<E>());
       REQUIRE(any.IsSparse() == CT::Sparse<E>);
-      REQUIRE(any.IsDeep() == CT::Deep<Decay<E>>);
+      REQUIRE(any.IsDeep() == CT::Deep<E>);
       REQUIRE(any.GetType() == MetaDataOf<E>());      
    }
    

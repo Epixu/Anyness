@@ -56,7 +56,7 @@ namespace Langulus::CTTI
          //                                                             
          // Serialize a statically-typed container                      
          using T = TypeOf<C>;
-         if constexpr (CT::Deep<Decay<T>>) {
+         if constexpr (CT::Deep<T>) {
             for (Count i = 0; i < self.GetCount(); ++i) {
                Decay<T> const& item = DenseCast(self[i]);
                S::BeginScope(item, out, context);
@@ -105,7 +105,7 @@ namespace Langulus::CTTI
          //                                                             
          // Serialize a statically-typed container                      
          using T = TypeOf<C>;
-         if constexpr (CT::Deep<Decay<T>>) {
+         if constexpr (CT::Deep<T>) {
             Decay<T> const& item = DenseCast(*self);
             Langulus::Serialize(item, out, context);
          }

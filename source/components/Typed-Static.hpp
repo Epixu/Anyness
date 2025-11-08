@@ -162,7 +162,7 @@ namespace Langulus::Anyness::Component
       /// Check if container is made of other containers                      
       ///   @return true if the container is deep                             
       constexpr bool IsDeep() const noexcept {
-         return CT::Deep<Decay<TYPE>>;
+         return CT::Deep<TYPE>;
       }
       
       /// Always returns true                                                 

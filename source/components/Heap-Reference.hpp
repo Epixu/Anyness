@@ -123,15 +123,15 @@ namespace Langulus::Anyness::Component
 
             if (self.IsSparse()) {
                if constexpr (CT::Dense<TH>)
-                  return (**static_cast<THQ2>(mHeap)); // * -> & 
+                  return (**static_cast<THQ2>(mHeap));   // * -> & 
                else if constexpr (IndirectsOf<TH> == 1)
-                  return ( *static_cast<THQ1>(mHeap)); // * -> *&
+                  return ( *static_cast<THQ1>(mHeap));   // * -> *&
                else
                   return  const_cast<THQ0>(reinterpret_cast<ConstAll<THQ0>>(mHeap)); // * -> **
             }
             else {
                if constexpr (CT::Dense<TH>)
-                  return (*static_cast<THQ1>( mHeap)); // & -> &
+                  return (*static_cast<THQ1>( mHeap));   // & -> &
                else if constexpr (IndirectsOf<TH> == 1)
                   return (*const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap))); // & -> *&
                else
@@ -145,19 +145,19 @@ namespace Langulus::Anyness::Component
             
             if constexpr (CT::Sparse<TC>) {
                if constexpr (CT::Dense<TH>)
-                  // Representing sparse as dense                       
-                  return (**static_cast<THQ2>(mHeap));
+                  return (**static_cast<THQ2>(mHeap));   // * -> & 
+               else if constexpr (IndirectsOf<TH> == 1)
+                  return ( *static_cast<THQ1>(mHeap));   // * -> *&
                else
-                  // Representing sparse as sparse                      
-                  return ( *static_cast<THQ1>(mHeap));
+                  return  const_cast<THQ0>(reinterpret_cast<ConstAll<THQ0>>(mHeap)); // * -> **
             }
             else {
                if constexpr (CT::Dense<TH>)
-                  // Representing dense as dense                        
-                  return (*static_cast<THQ1>( mHeap));
+                  return (*static_cast<THQ1>( mHeap));   // & -> &
+               else if constexpr (IndirectsOf<TH> == 1)
+                  return (*const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap))); // & -> *&
                else
-                  // Representing dense as sparse                       
-                  return (*const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap)));
+                  return  const_cast<THQ0>(reinterpret_cast<ConstAll<THQ0>>(&mHeap)); // & -> **
             }
          }
       }
@@ -189,11 +189,11 @@ namespace Langulus::Anyness::Component
                else static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
 
                if constexpr (CT::DeeplyOwned<T>)
-                  return T {self.HeapReference::template Get<HT*>(), self.GetEntries()};
-               if constexpr (CT::Owned<T>)
-                  return T {self.HeapReference::template Get<HT*>(), self.GetAllocation()};
+                  return T {&self.Get(), self.GetEntries()};
+               else if constexpr (CT::Owned<T>)
+                  return T {&self.Get(), self.GetAllocation()};
                else
-                  return T {self.HeapReference::template Get<HT*>()};
+                  return T {&self.Get()};
             }
          }
          else {

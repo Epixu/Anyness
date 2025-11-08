@@ -280,7 +280,7 @@ namespace Langulus::Anyness::Component
          if constexpr (TypeErased)
             return self.GetTypeInner().IsDeep();
          else
-            return CT::Deep<Decay<TYPE>>;
+            return CT::Deep<TYPE>;
       }
 
       /// Returns true if a type constraint is specified                      

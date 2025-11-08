@@ -811,7 +811,10 @@ namespace Langulus::RTTI
       definition.mSize      = sizeof(T);
       definition.mAlign     = alignof(T);
       definition.mConst     = CT::Constant<T>;
-      definition.mDeep      = CT::Deep<T>;
+      if constexpr (CT::Complete<Decay<T>>)
+         definition.mDeep   = CT::Deep<T>;
+      else
+         definition.mDeep   = false;
       definition.mPOD       = true;
       definition.mNullable  = true;
       definition.mAbstract  = false;

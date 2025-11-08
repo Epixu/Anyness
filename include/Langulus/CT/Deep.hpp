@@ -11,17 +11,24 @@
 
 namespace Langulus::CTTI
 {
-   /// Can be used in two ways to satisfy CT::Deep<T>:                        
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Deep = Yes<>;` in T                        
+   /// Affects CT::Deep<T> and CT::Flat<T>                                    
    template<class T>
    struct Deep;
 }
 
-LANGULUS_CTTI_CONCEPT_DECVQ(Deep);
-
 namespace Langulus::CT
 {
+   /// Checks whether all decayed T are marked as deep                        
    template<class...T>
-   concept Flat = PartialValidate<T...> and (NotDeep<T> and ...);
+   concept Deep = Validate<Decay<Shed<T>>...>
+       and (LANGULUS_CTTI_CHECK(Decay<Deref<Shed<T>>>, Deep) and ...);
+   
+   /// Checks whether all decayed T are not marked as deep                    
+   template<class...T>
+   concept NotDeep = Validate<Decay<Shed<T>>...>
+       and ((not LANGULUS_CTTI_CHECK(Decay<Deref<Shed<T>>>, Deep)) and ...);
+
+   /// Same as CT::NotDeep                                                    
+   template<class...T>
+   concept Flat = NotDeep<T...>;
 }

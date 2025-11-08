@@ -8,7 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include "IndexedLinear.hpp"
-#include <Langulus/CT/Contiguous.hpp>
+//#include <Langulus/CT/Contiguous.hpp>
 #include "Langulus/CT/Describable.hpp"
 
 
@@ -27,6 +27,15 @@ namespace Langulus::CT
 
 namespace Langulus::Anyness::Component
 {
+
+   template<class T>
+   void ForEachIndirection(auto&& lambda) {
+      if constexpr (CT::Sparse<T>) {
+         lambda();
+         ForEachIndirection<Deptr<T>>(FWD(lambda));
+      }
+   }
+   
    ///                                                                        
    /// Implements emplacement for containers.                                 
    /// Unlike insertion, emplacement reuses the same memory space and         
@@ -44,6 +53,155 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using PickMut = typename Deref<C>::PickMut;
       
+      template<CT::Container C, CT::NoIntent IT>
+      void EmplaceByCloning(this C& self, IT const& rhs) {
+         [[maybe_unused]] DMeta T;
+         void* src;
+         void* dst;
+         
+         if constexpr (CT::Handle<IT>) {
+            if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
+               T = rhs.GetTypeInner();
+               LglsAssumeDev(self.IsSame(T), "Type mismatch");               
+            }
+            else static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
+            src = const_cast<void*>(rhs.GetHeapInner());
+            dst = self.GetHeapInner();
+         }
+         else {
+            if constexpr (CT::TypeErased<C>) {
+               LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
+               T = self.GetTypeInner();
+            }
+            else static_assert(Same<TypeOf<C>, IT>, "Type mismatch");   
+            src = const_cast<void*>(static_cast<const void*>(&rhs));
+            dst = self.GetHeapInner();
+         }
+      
+         if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
+            const size_t indirects = T.GetIndirections();
+            if (indirects > 0) {
+               // Clone the origin first                                
+               const auto originT = T.GetOrigin();
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  const auto cloned_origin = Allocator::Allocate(
+                     originT,
+                     pot_t(Roof2(originT.GetSize()))
+                  );
+               #else
+                  const auto cloned_origin = Allocator::Allocate(
+                     originT.GetAlignment(),
+                     pot_t(Roof2(originT.GetSize()))
+                  );
+               #endif
+               LglsAssert(cloned_origin, "Out of memory");
+               auto ent = self.GetEntries();
+               
+               if (indirects > 1) {
+                  // Multiple indirections                              
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     const auto cloned_ptrs = Allocator::Allocate(
+                        T,
+                        pot_t(Roof2(T.GetSize() * (indirects - 1)))
+                     );
+                  #else
+                     const auto cloned_ptrs = Allocator::Allocate(
+                        T.GetAlignment(),
+                        pot_t(Roof2(T.GetSize() * (indirects - 1)))
+                     );
+                  #endif
+                  
+                  if (not cloned_ptrs) {
+                     Allocator::Deallocate(cloned_origin);
+                     LglsError("Out of memory");
+                  }
+                  void** ptrs = reinterpret_cast<void**>(cloned_ptrs->GetBlockStart());
+                  cloned_ptrs->Keep(indirects - 2);
+
+                  while (T.IsSparse()) {
+                     *ptrs = ptrs + 1;
+                     *static_cast<void**>(dst) = *(ptrs++);
+                     src = *static_cast<void**>(src);//TODO won't work for packed pointers
+                     dst = *static_cast<void**>(dst);
+                     T = T.GetDeptr();
+                     *(ent++) = cloned_ptrs;
+                  }
+               }
+               
+               *static_cast<void**>(dst) = cloned_origin->GetBlockStart();
+               *ent = cloned_origin;
+
+               src = *static_cast<void**>(src);//TODO won't work for packed pointers
+               dst = *static_cast<void**>(dst);
+               T = T.GetDeptr();
+            }
+            
+            T.GetCloneConstructor()(src, dst);
+         }
+         else {
+            //                                                          
+            // Both sides are statically-typed and we can benefit       
+            // from a lot of compile-time optimizations.                
+            using T = TypeOf<C>;
+            constexpr size_t indirects = IndirectsOf<T>;
+            if constexpr (indirects > 0) {
+               // Clone the origin first                                
+               using originT = Decay<T>;
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  const auto cloned_origin = Allocator::Allocate(
+                     MetaDataOf<originT>(),
+                     pot_t(Roof2(sizeof(originT)))
+                  );
+               #else
+                  const auto cloned_origin = Allocator::Allocate(
+                     pot_t(alignof(originT)),
+                     pot_t(Roof2(sizeof(originT)))
+                  );
+               #endif
+               LglsAssert(cloned_origin, "Out of memory");
+               auto ent = self.GetEntries();
+               
+               if constexpr (indirects > 1) {
+                  // Multiple indirections                              
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     const auto cloned_ptrs = Allocator::Allocate(
+                        MetaDataOf<T>(),
+                        pot_t(Roof2(sizeof(T) * (indirects - 1)))
+                     );
+                  #else
+                     const auto cloned_ptrs = Allocator::Allocate(
+                        pot_t(alignof(T)),
+                        pot_t(Roof2(sizeof(T) * (indirects - 1)))
+                     );
+                  #endif
+                  
+                  if (not cloned_ptrs) {
+                     Allocator::Deallocate(cloned_origin);
+                     LglsError("Out of memory");
+                  }
+                  void** ptrs = reinterpret_cast<void**>(cloned_ptrs->GetBlockStart());
+                  cloned_ptrs->Keep(indirects - 2);
+
+                  ForEachIndirection<T>([&ptrs, &src, &dst, &ent, &cloned_ptrs] {
+                     *ptrs = ptrs + 1;
+                     *static_cast<void**>(dst) = *(ptrs++);
+                     src = *static_cast<void**>(src);//TODO won't work for packed pointers
+                     dst = *static_cast<void**>(dst);
+                     *(ent++) = cloned_ptrs;                     
+                  });
+               }
+               
+               *static_cast<void**>(dst) = cloned_origin->GetBlockStart();
+               *ent = cloned_origin;
+
+               src = *static_cast<void**>(src);//TODO won't work for packed pointers
+               dst = *static_cast<void**>(dst);
+            }
+
+            IntentNew(dst, Clone(*static_cast<Decay<T>*>(src)));
+         }
+      }
+
       /// Emplace on top of the first element using an intent                 
       ///   @attention assumes destination memory has been preallocated,      
       ///      including all levels of indirection                            
@@ -60,18 +218,23 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.IsTyped(), "Invalid type");
          decltype(auto) rhs = FWD(intent.what);
 
-         if constexpr (CT::Handle<IT>) {
+         if constexpr (CT::Copied<I>)
+            self.EmplaceByCopying(rhs);
+         else if constexpr (CT::Cloned<I>)
+            self.EmplaceByCloning(rhs);
+         else if constexpr (CT::Handle<IT>) {
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership.   
+            // Doesn't matter if managed memory is disabled.            
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
                //                                                       
                // Either this container or the handle is type-erased    
                auto T = rhs.GetTypeInner();
                LglsAssumeDev(self.IsSame(T), "Type mismatch");
-
                auto src = const_cast<void*>(rhs.GetRaw());
                auto dst = self.GetRaw();
+               
                if constexpr (CT::Moved<I>) {
                   if (rhs.IsConstant())
                      T.GetReferConstructor()(src, dst);
@@ -86,76 +249,10 @@ namespace Langulus::Anyness::Component
                }
                else if constexpr (CT::Referred<I>)
                   T.GetReferConstructor()(src, dst);
-               else if constexpr (CT::Copied<I>)
-                  T.GetCopyConstructor()(src, dst);
                else if constexpr (CT::Disowned<I>)
                   T.GetDisownConstructor()(src, dst);
-               else if constexpr (CT::Cloned<I>) {
-                  const auto indirects = T.GetIndirections();
-                  if (indirects > 0) {
-                     // Clone the origin first                          
-                     const auto originT = T.GetOrigin();
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        const auto cloned_origin = Allocator::Allocate(
-                           originT,
-                           pot_t(Roof2(originT.GetSize()))
-                        );
-                     #else
-                        const auto cloned_origin = Allocator::Allocate(
-                           originT.GetAlignment(),
-                           pot_t(Roof2(originT.GetSize()))
-                        );
-                     #endif
-                     LglsAssert(cloned_origin, "Out of memory");
-                     auto ent = self.GetEntries();
-                     
-                     if (indirects > 1) {
-                        // Multiple indirections                        
-                        #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                           const auto cloned_ptrs = Allocator::Allocate(
-                              T,
-                              pot_t(Roof2(T.GetSize() * (indirects - 1)))
-                           );
-                        #else
-                           const auto cloned_ptrs = Allocator::Allocate(
-                              T.GetAlignment(),
-                              pot_t(Roof2(T.GetSize() * (indirects - 1)))
-                           );
-                        #endif
-                        
-                        if (not cloned_ptrs) {
-                           Allocator::Deallocate(cloned_origin);
-                           LglsError("Out of memory");
-                        }
-                        void** ptrs = reinterpret_cast<void**>(cloned_ptrs->GetBlockStart());
-                        cloned_ptrs->Keep(indirects - 2);
-
-                        while (T.IsSparse()) {
-                           *ptrs = ptrs + 1;
-                           *static_cast<void**>(dst) = *(ptrs++);
-                           src = *static_cast<void**>(src);//TODO won't work for packed pointers
-                           dst = *static_cast<void**>(dst);
-                           T = T.GetDeptr();
-                           *(ent++) = cloned_ptrs;
-                        }
-                     }
-                     /*else {
-                        src = *static_cast<void**>(src);//TODO won't work for packed pointers
-                        dst = *static_cast<void**>(dst);
-                        T = T.GetDeptr();
-                     }*/
-                     
-                     *static_cast<void**>(dst) = cloned_origin->GetBlockStart();
-                     *ent = cloned_origin;
-
-                     src = *static_cast<void**>(src);//TODO won't work for packed pointers
-                     dst = *static_cast<void**>(dst);
-                     T = T.GetDeptr();
-                  }
-                  
-                  T.GetCloneConstructor()(src, dst);
-               }
-               else static_assert(false, "Unrecognized intent");
+               else
+                  static_assert(false, "Unrecognized intent");
             }
             else {
                //                                                       
@@ -168,29 +265,26 @@ namespace Langulus::Anyness::Component
                else
                   IntentNew(self.GetHeapInner(), Refer(*rhs.GetRaw()));
             }
+            
+            if_available(self.EmplaceEntries(FWD(intent)));
          }
          else {
             if constexpr (CT::TypeErased<C>) {
                //                                                       
                // This container is type-erased                         
-               //LglsAssumeDev(CT::Dense<IT>, "Sparseness mismatch");
                LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
                auto T = self.GetTypeInner();
-
                const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
                const auto dst = self.GetRaw();
+               
                if constexpr (CT::Moved<I>)
                   T.GetMoveConstructor()(src, dst);
                else if constexpr (CT::Abandoned<I>)
                   T.GetAbandonConstructor()(src, dst);
                else if constexpr (CT::Referred<I>)
                   T.GetReferConstructor()(src, dst);
-               else if constexpr (CT::Copied<I>)
-                  T.GetCopyConstructor()(src, dst);
                else if constexpr (CT::Disowned<I>)
                   T.GetDisownConstructor()(src, dst);
-               else if constexpr (CT::Cloned<I>)
-                  T.GetCloneConstructor()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
             }
@@ -201,9 +295,7 @@ namespace Langulus::Anyness::Component
                static_assert(Same<T, IT>, "Type mismatch");
                IntentNew(self.GetHeapInner(), FWD(intent));
             }
-         }
 
-         if constexpr (not CT::Cloned<I> and not CT::Copied<I>) {
             if_available(self.EmplaceEntries(FWD(intent)));
          }
       }
@@ -224,12 +316,20 @@ namespace Langulus::Anyness::Component
             // This container is type-erased                            
             auto T = self.GetTypeInner();
             T.GetDefaultConstructor()(self.GetRaw());
+            
+            if (T.IsSparse()) {
+               if_available(*self.GetEntries() = nullptr);
+            }
          }
          else {
             //                                                          
             // This container is statically-typed                       
             using T = TypeOf<C>;
             new (self.GetRaw()) T {};
+            
+            if constexpr (CT::Sparse<T>) {
+               if_available(*self.GetEntries() = nullptr);
+            }
          }
       }
 
@@ -243,33 +343,37 @@ namespace Langulus::Anyness::Component
       ///      it, and without destroying anything                            
       template<CT::Container C>
       void EmplaceConstruct(this C& self, auto&&...arguments) {
-         if constexpr (sizeof...(arguments) == 0)
-            self.EmplaceDefault();
-         else {
-            LglsAssumeDev(self.GetRaw(), "Invalid heap");
-            LglsAssumeDev(self.IsTyped(), "Invalid type");
+         static_assert(sizeof...(arguments) > 0,
+            "No arguments - use EmplaceDefault instead");      
+         LglsAssumeDev(self.GetRaw(), "Invalid heap");
+         LglsAssumeDev(self.IsTyped(), "Invalid type");
 
-            if constexpr (CT::TypeErased<C>) {
-               //                                                       
-               // This container is type-erased                         
-               auto T = self.GetType();
-               if constexpr (sizeof...(arguments) == 1) {
-                  using A1 = typename Types<decltype(arguments)...>::First;
-                  if constexpr (Same<A1, Describe>)
-                     T.GetDescribeConstructor()(self.GetRaw(), FWD(arguments.what)...);
-                  else static_assert(false,
-                     "Argument must be a Describe instance");
-               }
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // This container is type-erased                            
+            auto T = self.GetType();
+            LglsAssert(T.IsDense(),
+               "EmplaceConstruct works only for dense containers");
+            
+            if constexpr (sizeof...(arguments) == 1) {
+               using A1 = typename Types<decltype(arguments)...>::First;
+               if constexpr (Same<A1, Describe>)
+                  T.GetDescribeConstructor()(self.GetRaw(), FWD(arguments.what)...);
                else static_assert(false,
-                  "Too many arguments for emplacing a type-erased instance. "
-                  "You should group all arguments inside a Describe first");
+                  "Argument must be a Describe instance");
             }
-            else {
-               //                                                       
-               // This container is statically-typed                    
-               using T = TypeOf<C>;
-               new (const_cast<void*>(self.GetHeapInner())) T {FWD(arguments)...};
-            }
+            else static_assert(false,
+               "Too many arguments for emplacing a type-erased instance. "
+               "You should group all arguments inside a Describe first");
+         }
+         else {
+            //                                                          
+            // This container is statically-typed                       
+            using T = TypeOf<C>;
+            static_assert(CT::Dense<T>,
+               "EmplaceConstruct works only for dense containers");
+            
+            new (const_cast<void*>(self.GetHeapInner())) T {FWD(arguments)...};
          }
       }
 
@@ -291,8 +395,11 @@ namespace Langulus::Anyness::Component
             self.DestroyElementDeep();
          else
             self.DestroyElement();
-         
-         self.EmplaceConstruct(FWD(arguments)...);
+
+         if constexpr (sizeof...(arguments) > 0)
+            self.EmplaceConstruct(FWD(arguments)...);
+         else
+            self.EmplaceDefault();
 
          if constexpr (requires { self.SetCountInner(1); }) {
             if (self.IsEmpty())

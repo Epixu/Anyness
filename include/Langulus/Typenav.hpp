@@ -375,7 +375,8 @@ namespace Langulus
             return Types<::std::remove_cv_t<T>> {};
       }
 
-      /// Adds const qualifier to all levels of indirection                   
+      /// Adds const qualifier to all levels of indirection.                  
+      /// Preserves references.                                               
       template<class T>
       consteval CT::Typelist auto NestedConst() {
          if constexpr (::std::is_rvalue_reference_v<T>)
@@ -402,12 +403,16 @@ namespace Langulus
    }
 
    /// Strip all qualifiers on all levels of indirection of a type.           
+   /// Preserves references, makes them mutable.                              
    /// For example: `void const volatile* const* const` becomes `void**`.     
+   /// For example: `void const volatile* const&` becomes `void*&`.           
    template<class T>
    using DecvqAll = typename decltype(Inner::NestedDecvq<T>())::First;
 
    /// Adds const qualifiers to all levels of indirection of a type.          
+   /// Preserves references, makes them constant.                             
    /// For example: `void**` becomes `void const* const* const`.              
+   /// For example: `void*&` becomes `void const* const&`.                    
    template<class T>
    using ConstAll = typename decltype(Inner::NestedConst<T>())::First;
 
@@ -442,7 +447,7 @@ namespace Langulus
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
-/// Used to reduce boilerplate                                                
+/// Used to reduce boilerplate. Removes only references.                      
 ///   @attention types need to be complete only if we end up 'delving in'     
 ///   @attention will only shed references                                    
 ///   @attention use this macro in the global namespace                       
@@ -474,7 +479,7 @@ namespace Langulus
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
-/// Used to reduce boilerplate                                                
+/// Used to reduce boilerplate. Removes sheddables and references.            
 ///   @attention types need to be complete only if we end up 'delving in'     
 ///   @attention will shed all sheddables, as well as references after that   
 ///   @attention use this macro in the global namespace                       
@@ -490,7 +495,7 @@ namespace Langulus
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
 /// concepts, based on the provided Langulus::CTTI::<structure name>          
-/// Used to reduce boilerplate                                                
+/// Used to reduce boilerplate. Removes qualifiers from argument.             
 ///   @attention types need to be complete only if we end up 'delving in'     
 ///   @attention will shed all sheddables, as well as references and cv       
 ///      qualifiers after that                                                
@@ -503,6 +508,23 @@ namespace Langulus
       template<class...T> \
       concept Not##NAME = PartialValidate<T...> \
           and ((not LANGULUS_CTTI_CHECK(Decvq<Deref<Shed<T>>>, NAME)) and ...); \
+   }
+
+/// Automatically populates the Langulus::CT namespace with the appropriate   
+/// concepts, based on the provided Langulus::CTTI::<structure name>          
+/// Used to reduce boilerplate. Decays the argument.                          
+///   @attention types need to be complete only if we end up 'delving in'     
+///   @attention will shed all sheddables, as well as references, pointers,   
+///      and cv qualifiers after that                                         
+///   @attention use this macro in the global namespace                       
+#define LANGULUS_CTTI_CONCEPT_DECAY(NAME) \
+   namespace Langulus::CT { \
+      template<class...T> \
+      concept NAME = PartialValidate<T...> \
+          and (LANGULUS_CTTI_CHECK(Decay<Deref<Shed<T>>>, NAME) and ...); \
+      template<class...T> \
+      concept Not##NAME = PartialValidate<T...> \
+          and ((not LANGULUS_CTTI_CHECK(Decay<Deref<Shed<T>>>, NAME)) and ...); \
    }
 
 LANGULUS_CTTI_CONCEPT(Null);

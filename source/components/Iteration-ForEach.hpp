@@ -465,7 +465,7 @@ namespace Langulus::Anyness::Component
          else {
             using T = TypeOf<C>;
 
-            if constexpr (CT::Deep<A> and (not SKIP or not CT::Deep<Decay<T>>)) {
+            if constexpr (CT::Deep<A> and (not SKIP or not CT::Deep<T>)) {
                // Always execute for intermediate/non-deep *this        
                ++counter;
 
@@ -510,7 +510,7 @@ namespace Langulus::Anyness::Component
                else f(argument);
             }
 
-            if constexpr (CT::Deep<Decay<T>>) {
+            if constexpr (CT::Deep<T>) {
                // Iterate subblocks                                     
                Count<C> intermediateCounterSink = 0;
                using SubBlock = Tmut<C, Decay<T>&, Decay<T> const&>;

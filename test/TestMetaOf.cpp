@@ -320,8 +320,11 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    
    REQUIRE(meta.GetSize() == sizeof(Deref<T>));
    REQUIRE(meta.GetAlignment() == alignof(Deref<T>));
-   REQUIRE(meta.IsConstant() == CT::Constant<T>);      
-   REQUIRE(meta.IsDeep() == CT::Deep<Deref<T>>);
+   REQUIRE(meta.IsConstant() == CT::Constant<T>);
+   if constexpr (CT::Complete<Decay<T>>)
+      REQUIRE(meta.IsDeep() == CT::Deep<T>);
+   else
+      REQUIRE(meta.IsDeep() == false);
    REQUIRE(meta.IsPOD() == CT::POD<Deref<T>>);
    REQUIRE(meta.IsNullable() == CT::Nullable<Deref<T>>);
    REQUIRE(meta.IsAbstract() == CT::Abstract<Deref<T>>);

@@ -55,7 +55,7 @@ void Set_Helper_TestType(const auto& set) {
    REQUIRE      (set.GetType()->template Is<K*>());
    REQUIRE      (set.IsDense() == CT::Dense<K>);
    REQUIRE      (set.IsSparse() == CT::Sparse<K>);
-   REQUIRE      (set.IsDeep() == CT::Deep<Decay<K>>);
+   REQUIRE      (set.IsDeep() == CT::Deep<K>);
 }
 
 template<CT::Set LHS, CT::Set RHS>

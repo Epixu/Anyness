@@ -67,7 +67,7 @@ void Many_Helper_TestType(const auto& many) {
    REQUIRE      (many.GetType()->template Is<E*>());
    REQUIRE      (many.IsDense() == CT::Dense<E>);
    REQUIRE      (many.IsSparse() == CT::Sparse<E>);
-   REQUIRE      (many.IsDeep() == CT::Deep<Decay<E>>);
+   REQUIRE      (many.IsDeep() == CT::Deep<E>);
 }
 
 template<CT::Container LHS, CT::Container RHS>

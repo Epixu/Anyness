@@ -20,9 +20,6 @@ namespace Langulus::Anyness::Component
    struct OwnershipDeepHeap : OwnershipDeepEmergent<ID> {
       using HeapRequest = PerElement<AllocationPtr>;
 
-      //static constexpr bool DeeplyOwned = true;
-      //static constexpr int  ComponentPrecedence = 2000;
-
    protected:
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;

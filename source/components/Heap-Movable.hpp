@@ -68,7 +68,7 @@ namespace Langulus::Anyness::Component
             }
 
             // Pick a preferably typed block to optimize                
-            if constexpr (IT::TypeErased) {
+            if constexpr (CT::TypeErased<IT>) {
                // A runtime check is required before allocating         
                if constexpr (CT::Copied<I>) {
                   LglsAssert(type.GetReferConstructor(),

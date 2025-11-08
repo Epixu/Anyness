@@ -42,10 +42,10 @@ namespace Langulus::Anyness
          else {
             // Statically typed handle                                  
             if constexpr (C::Owned) {
-               return Types<THandle<Tmut<C, TypeOf<C>&, TypeOf<C> const&>>> {};
+               return Types<THandle<Tmut<C, TypeOf<C>&, ConstAll<TypeOf<C>&>>>> {};
             }
             else {
-               return Types<THandleDisowned<Tmut<C, TypeOf<C>&, TypeOf<C> const&>>> {};
+               return Types<THandleDisowned<Tmut<C, TypeOf<C>&, ConstAll<TypeOf<C>&>>>> {};
             }
          }
       }
