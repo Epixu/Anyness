@@ -70,8 +70,8 @@ namespace Langulus::Anyness::Component
                auto T = rhs.GetTypeInner();
                LglsAssumeDev(self.IsSame(T), "Type mismatch");
 
-               const auto src = const_cast<void*>(rhs.GetRaw());
-               const auto dst = self.GetRaw();
+               auto src = const_cast<void*>(rhs.GetRaw());
+               auto dst = self.GetRaw();
                if constexpr (CT::Moved<I>) {
                   if (rhs.IsConstant())
                      T.GetReferConstructor()(src, dst);
@@ -90,10 +90,72 @@ namespace Langulus::Anyness::Component
                   T.GetCopyConstructor()(src, dst);
                else if constexpr (CT::Disowned<I>)
                   T.GetDisownConstructor()(src, dst);
-               else if constexpr (CT::Cloned<I>)
+               else if constexpr (CT::Cloned<I>) {
+                  const auto indirects = T.GetIndirections();
+                  if (indirects > 0) {
+                     // Clone the origin first                          
+                     const auto originT = T.GetOrigin();
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        const auto cloned_origin = Allocator::Allocate(
+                           originT,
+                           pot_t(Roof2(originT.GetSize()))
+                        );
+                     #else
+                        const auto cloned_origin = Allocator::Allocate(
+                           originT.GetAlignment(),
+                           pot_t(Roof2(originT.GetSize()))
+                        );
+                     #endif
+                     LglsAssert(cloned_origin, "Out of memory");
+                     auto ent = self.GetEntries();
+                     
+                     if (indirects > 1) {
+                        // Multiple indirections                        
+                        #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                           const auto cloned_ptrs = Allocator::Allocate(
+                              T,
+                              pot_t(Roof2(T.GetSize() * (indirects - 1)))
+                           );
+                        #else
+                           const auto cloned_ptrs = Allocator::Allocate(
+                              T.GetAlignment(),
+                              pot_t(Roof2(T.GetSize() * (indirects - 1)))
+                           );
+                        #endif
+                        
+                        if (not cloned_ptrs) {
+                           Allocator::Deallocate(cloned_origin);
+                           LglsError("Out of memory");
+                        }
+                        void** ptrs = reinterpret_cast<void**>(cloned_ptrs->GetBlockStart());
+                        cloned_ptrs->Keep(indirects - 2);
+
+                        while (T.IsSparse()) {
+                           *ptrs = ptrs + 1;
+                           *static_cast<void**>(dst) = *(ptrs++);
+                           src = *static_cast<void**>(src);//TODO won't work for packed pointers
+                           dst = *static_cast<void**>(dst);
+                           T = T.GetDeptr();
+                           *(ent++) = cloned_ptrs;
+                        }
+                     }
+                     /*else {
+                        src = *static_cast<void**>(src);//TODO won't work for packed pointers
+                        dst = *static_cast<void**>(dst);
+                        T = T.GetDeptr();
+                     }*/
+                     
+                     *static_cast<void**>(dst) = cloned_origin->GetBlockStart();
+                     *ent = cloned_origin;
+
+                     src = *static_cast<void**>(src);//TODO won't work for packed pointers
+                     dst = *static_cast<void**>(dst);
+                     T = T.GetDeptr();
+                  }
+                  
                   T.GetCloneConstructor()(src, dst);
-               else
-                  static_assert(false, "Unrecognized intent");
+               }
+               else static_assert(false, "Unrecognized intent");
             }
             else {
                //                                                       
@@ -141,7 +203,9 @@ namespace Langulus::Anyness::Component
             }
          }
 
-         if_available(self.EmplaceEntries(FWD(intent)));
+         if constexpr (not CT::Cloned<I> and not CT::Copied<I>) {
+            if_available(self.EmplaceEntries(FWD(intent)));
+         }
       }
       
       /// Emplace a new default-constructed item at the first element         

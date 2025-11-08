@@ -730,7 +730,7 @@ namespace Langulus
 
 
 namespace Langulus
-{
+{   
    /// Create an instance of T at the provided memory using placement new     
    /// which considers the intent and checks if T's constructors support it.  
    /// All intent-related construction concepts are defined in terms of this  
