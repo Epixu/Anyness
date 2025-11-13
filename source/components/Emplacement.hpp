@@ -52,7 +52,8 @@ namespace Langulus::Anyness::Component
       
       template<CT::Container C>
       using PickMut = typename Deref<C>::PickMut;
-      
+
+      /// Clone the 'rhs'                                                     
       template<CT::Container C, CT::NoIntent IT>
       void EmplaceByCloning(this C& self, IT const& rhs) {
          [[maybe_unused]] DMeta T;
@@ -359,21 +360,23 @@ namespace Langulus::Anyness::Component
                using A1 = typename Types<decltype(arguments)...>::First;
                if constexpr (Same<A1, Describe>)
                   T.GetDescribeConstructor()(self.GetRaw(), FWD(arguments.what)...);
-               else static_assert(false,
-                  "Argument must be a Describe instance");
+               else
+                  static_assert(false, "Argument must be a Describe instance");
             }
             else static_assert(false,
                "Too many arguments for emplacing a type-erased instance. "
-               "You should group all arguments inside a Describe first");
+               "You should group all arguments inside a Describe first"
+            );
          }
          else {
             //                                                          
             // This container is statically-typed                       
             using T = TypeOf<C>;
-            static_assert(CT::Dense<T>,
+            self.EmplaceWithIntent(Abandon {Decvq<T> {FWD(arguments)...}});
+            /*static_assert(CT::Dense<T>,
                "EmplaceConstruct works only for dense containers");
             
-            new (const_cast<void*>(self.GetHeapInner())) T {FWD(arguments)...};
+            new (const_cast<void*>(self.GetHeapInner())) T {FWD(arguments)...};*/
          }
       }
 
