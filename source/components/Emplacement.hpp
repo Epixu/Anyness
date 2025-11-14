@@ -342,9 +342,9 @@ namespace Langulus::Anyness::Component
       ///   @attention does not modify any container state                    
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
-      template<CT::Container C>
-      void EmplaceConstruct(this C& self, auto&&...arguments) {
-         static_assert(sizeof...(arguments) > 0,
+      template<CT::Container C, class...A>
+      void EmplaceConstruct(this C& self, A&&...arguments) {
+         static_assert(sizeof...(A) > 0,
             "No arguments - use EmplaceDefault instead");      
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
@@ -356,8 +356,8 @@ namespace Langulus::Anyness::Component
             LglsAssert(T.IsDense(),
                "EmplaceConstruct works only for dense containers");
             
-            if constexpr (sizeof...(arguments) == 1) {
-               using A1 = typename Types<decltype(arguments)...>::First;
+            if constexpr (sizeof...(A) == 1) {
+               using A1 = typename Types<A...>::First;
                if constexpr (Same<A1, Describe>)
                   T.GetDescribeConstructor()(self.GetRaw(), FWD(arguments.what)...);
                else
@@ -372,7 +372,13 @@ namespace Langulus::Anyness::Component
             //                                                          
             // This container is statically-typed                       
             using T = TypeOf<C>;
-            self.EmplaceWithIntent(Abandon {Decvq<T> {FWD(arguments)...}});
+            if constexpr (sizeof...(A) == 1 and (CT::Sparse<T> or Same<T, Deint<A>...>))
+               self.EmplaceWithIntent(FWDIntent(arguments)...);
+            else if constexpr (CT::Dense<T>)
+               self.EmplaceWithIntent(Abandon {Decvq<T> {FWD(arguments)...}});
+            else static_assert(false,
+               "Too many arguments for emplacing a sparse instance");
+               
             /*static_assert(CT::Dense<T>,
                "EmplaceConstruct works only for dense containers");
             

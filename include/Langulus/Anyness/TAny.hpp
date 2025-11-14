@@ -89,8 +89,8 @@ namespace Langulus::Anyness
             this->GetType();
             this->AllocateFresh(this->RequestHeap(1));
             this->ResetState();
-            
-            if constexpr (sizeof...(A) == 1) {
+            this->EmplaceConstruct(FWD(arguments)...);
+            /*if constexpr (sizeof...(A) == 1) {
                using A1 = typename Types<A...>::First;
                if constexpr (CT::Intent<A1> and Same<TypeOf<A1>, T>)
                   IntentNew(this->GetRaw(), FWD(arguments)...);
@@ -99,7 +99,7 @@ namespace Langulus::Anyness
                else
                   new (this->GetRaw()) T {FWD(arguments)...};
             }
-            else new (this->GetRaw()) T {FWD(arguments)...};
+            else new (this->GetRaw()) T {FWD(arguments)...};*/
          }
       }
       
@@ -115,8 +115,9 @@ namespace Langulus::Anyness
          this->GetType();
          this->AllocateFresh(this->RequestHeap(1));
          this->ResetState();
+         this->EmplaceConstruct(FWD(arguments)...);
             
-         if constexpr (sizeof...(A) == 1) {
+         /*if constexpr (sizeof...(A) == 1) {
             using A1 = typename Types<A...>::First;
             if constexpr (CT::Intent<A1> and Same<TypeOf<A1>, T>)
                IntentNew(this->GetRaw(), FWD(arguments)...);
@@ -125,7 +126,7 @@ namespace Langulus::Anyness
             else
                new (this->GetRaw()) T {FWD(arguments)...};
          }
-         else new (this->GetRaw()) T {FWD(arguments)...};
+         else new (this->GetRaw()) T {FWD(arguments)...};*/
       }
 
       /// Assignment                                                          
