@@ -92,8 +92,6 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      //using Base = Inner::THandleEmbeddedDense<T>;
-
       using HandleMutType  = THandle<DecvqAll<T>>;
 
       THandle() = delete;
@@ -123,8 +121,6 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      //using Base = Inner::THandleEmbeddedSparse<T>;
-
       using HandleMutType  = THandle<DecvqAll<T>>;
 
       THandle() = delete;
@@ -155,9 +151,6 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      //using Base = Inner::THandleDisownedEmbedded<T>;
-      //using Base::Base;
-
       using HandleMutType  = THandleDisowned<DecvqAll<T>>;
 
       THandleDisowned() = delete;
@@ -182,9 +175,6 @@ namespace Langulus::Anyness
    struct THandle<T> : Inner::THandleLocalDense<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      //using Base = Inner::THandleLocalDense<T>;
-      //using Base::Base;
-      
       using HandleMutType  = THandle<DecvqAll<T>>;
 
       THandle() = delete;
@@ -209,9 +199,6 @@ namespace Langulus::Anyness
    struct THandle<T> : Inner::THandleLocalSparse<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      //using Base = Inner::THandleLocalSparse<T>;
-      //using Base::Base;
-      
       using HandleMutType  = THandle<DecvqAll<T>>;
 
       THandle() = delete;

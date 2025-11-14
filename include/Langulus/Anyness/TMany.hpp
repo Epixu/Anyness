@@ -40,7 +40,6 @@
 
 namespace Langulus::Anyness
 {
-
    struct Many;
    template<CT::NotVoid> struct TMany;
    template<CT::NotVoid> struct TManyView;
@@ -139,5 +138,4 @@ namespace Langulus::Anyness
       template<class A1> requires CT::RangeAssignable<TMany, A1>
       TMany& operator = (A1&&);
    };
-   
-} // namespace Langulus::Anyness
+}

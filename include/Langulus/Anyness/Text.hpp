@@ -65,9 +65,6 @@ namespace Langulus::Anyness
       // Single element selections                                      
       using Pick    = char const&;
       using PickMut = char&;
-      
-      //using Base::operator =;
-      //using Base::operator ==;
 
       constexpr Text() noexcept { this->ConstructDefault(); }
       constexpr Text(nullptr_t) noexcept    : Text {} {}
@@ -437,16 +434,6 @@ namespace Langulus::Anyness
          result.ResetHash();
          return result;
       }
-
-      /// Custom concatenation operator for other text/containers.            
-      /// Automatically serializes non-text items.                            
-      /*template<CT::Container T>
-      Text operator + (T const& rhs) const {
-         if constexpr (CT::Text<T>)
-            return operator + (rhs);
-         else
-            return Convert<Text>(rhs);
-      }*/
       
       template<CT::Text T> requires CT::NotContainer<T>
       friend Text operator + (T const& lhs, Text const& rhs) {

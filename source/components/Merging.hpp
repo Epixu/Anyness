@@ -13,7 +13,6 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Implements merging for containers                                      
-   ///                                                                        
    struct Merging {
    private:
       template<CT::Container C>

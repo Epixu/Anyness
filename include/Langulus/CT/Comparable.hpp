@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Convertible.hpp"
-//#include <compare>
 
 
 namespace Langulus

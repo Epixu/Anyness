@@ -17,23 +17,20 @@ namespace Langulus::Anyness::Component
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0   
    ///   @tparam ID - the heap ID                                             
    ///   @tparam H  - the hash type used                                      
-   ///                                                                        
    template<unsigned ID = 0, class H = Hash>
    struct HashHeap : HashEmergent<ID, H> {
-      static constexpr unsigned HeapID = ID;
-      static constexpr unsigned HeapHeaderSize = sizeof(H);
+      using HeapRequest = H;
 
       /// Get the hash, but never recompute it                                
       template<CT::Container C>
-      const H& GetHashNoRecompute(this const C& self) noexcept {
-         constexpr unsigned heapOffset = C::template GetHeapHeaderOffset<HashHeap>();
-         return *static_cast<const H*>(self.GetAllocation()->GetBlockStart() + heapOffset);
+      H const& GetHashNoRecompute(this const C& self) noexcept {
+         return self.template AccessHeap<HashHeap>();
       }
 
       /// Get the hash, recompute it if uninitialized                         
       template<CT::Container C>
       H GetHash(this const C& self) noexcept {
-         auto& cached = self.GetHashNoRecompute();
+         H const& cached = self.GetHashNoRecompute();
          if (not cached)
             const_cast<H&>(cached) = self.HashRecompute();
          return cached;

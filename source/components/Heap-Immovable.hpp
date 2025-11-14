@@ -18,7 +18,6 @@ namespace Langulus::Anyness::Component
    /// The pointer is not allowed to move on reallocation, and instead        
    /// multiple allocations are chained together                              
    ///   @tparam ID - multiple heap interfaces are supported                  
-   ///                                                                        
    template<unsigned ID>
    struct HeapImmovable {
       using CTTI_Component = Yes<>;

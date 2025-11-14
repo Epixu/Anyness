@@ -34,7 +34,6 @@
 
 namespace Langulus::Anyness
 {
-
    struct Many;
 
 
@@ -69,5 +68,4 @@ namespace Langulus::Anyness
    > {
       using CTTI_ReflectAs = Many;
    };
-
-} // namespace Langulus::Anyness
+}

@@ -978,8 +978,7 @@ namespace Langulus::RTTI
       // Full token returned as fallback                                
       return mToken;
    }*/
-
-} // namespace Langulus::RTTI
+}
 
 #undef VERBOSE
 #undef VERBOSE_SCOPED

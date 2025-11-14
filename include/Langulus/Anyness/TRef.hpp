@@ -42,7 +42,6 @@ namespace Langulus::Anyness
    template<class T>
    struct TRef : Inner::TRefBase<T> {
       using Base = Inner::TRefBase<T>;
-      //using Base::operator ==;
 
       // Single element selections                                      
       using Pick    = T;
@@ -69,16 +68,6 @@ namespace Langulus::Anyness
          }
          else static_assert(false, "A must be a pointer (intent is optional)");
       }
-
-      /*constexpr bool operator == (nullptr_t) const noexcept {
-         return this->IsEmpty();
-      }
-
-      constexpr bool operator == (T* rhs) const noexcept {
-         if (rhs == nullptr)
-            return this->IsEmpty();
-         return this->GetRaw() == rhs;
-      }*/
       
       /// Assignment                                                          
       constexpr TRef& operator = (TRef const& other) {

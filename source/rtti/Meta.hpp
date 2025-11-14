@@ -173,5 +173,4 @@ namespace Langulus::RTTI::Inner
          return mDefinition->mVersionMinor;
       }
    };
-
-} // namespace Langulus::RTTI::Inner
+}

@@ -13,7 +13,6 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// A static reserve                                                       
-   ///                                                                        
    template<auto SIZE>
    struct ReserveStatic {
       using CTTI_Component = Yes<>;

@@ -63,8 +63,7 @@ namespace Langulus::RTTI
          using Base::operator =;
          using Base::operator bool;
       };
-
-   } // namespace Langulus::RTTI::Inner
+   }
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       using MetaTag = Inner::MetaTagPacked_16;

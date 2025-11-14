@@ -285,25 +285,6 @@ namespace Langulus::Anyness
       /// Your container needs to call ConstructDefault manually.             
       constexpr Container() noexcept = default;
 
-      /// C++ copy-semantics are mapped onto Refer intent.                    
-      /// In other words - a copy is always shallow, unless explicitly Copy   
-      /// or Clone intent is used.                                            
-      /*constexpr Container(Container const& other) noexcept
-         : Container {Absorb, Refer {other}} {}*/
-      
-      /// C++ move-semantics are mapped onto Move intent                      
-      /*constexpr Container(Container&& other) noexcept
-         : Container {Absorb, Move {other}} {}*/
-      
-      /// A generalized container constructor that takes another container    
-      /// that may have completely different components, and tries to extract 
-      /// relevant information from it. Invokes ConstructFrom for each        
-      /// component of this container that has it. Respects intents.          
-      ///   @note ConstructFrom act as validating functions as well           
-      /*constexpr Container(Inner::Absorb, CT::Container auto&& from) {
-         ConstructFrom(FWD(from));
-      }*/
-
       /// A tag-dispatch constructor that forwards arguments to mStack.       
       /// Used in some niche container cases, like TOwn.                      
       constexpr Container(Inner::Stackwise, auto&&...arguments)
@@ -313,28 +294,6 @@ namespace Langulus::Anyness
       /// it, most likely by calling this->Destroy(). This is needed, because 
       /// the destructor relies on properly deducing 'this'.                  
       constexpr ~Container() noexcept = default;
-
-      /// C++ copy-semantics are mapped onto Refer intent.                    
-      /// In other words - a copy is always shallow, unless explicitly Copy   
-      /// or Clone intent is used.                                            
-      /*constexpr Container& operator = (Container const& other) {
-         return operator = (Refer {other});
-      }
-
-      /// C++ move-semantics are mapped onto Move intent                      
-      constexpr Container& operator = (Container&& other) noexcept {
-         return operator = (Move {other});
-      }
-      
-      /// Generalized container assignment that takes another container, which
-      /// may have completely different components, and tries to extract all  
-      /// relevant information from it. Invokes AssignFrom for each component 
-      /// of this container that has it. Respects intents.                    
-      template<class LHS, CT::Container RHS>
-      constexpr LHS& operator = (this LHS& lhs, RHS&& rhs) {
-         lhs.AssignFrom(FWD(rhs));
-         return lhs;
-      }*/
       
       /// Check if container is valid                                         
       constexpr bool IsValid() const noexcept {

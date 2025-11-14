@@ -59,21 +59,6 @@ namespace Langulus::Anyness::Component
       using At = typename Deref<C>::IndexType;
 
    public:
-      /// Compare with any other kind of container                            
-      ///   @return true if contents match                                    
-      //template<CT::Container LHS, CT::Container RHS>
-      //constexpr bool operator == (this const LHS& lhs, const RHS& rhs) {
-      //   return lhs.Compare(rhs) /*or lhs.CompareOne(rhs)*/;
-      //}
-
-      /// Compare to any non-container                                        
-      ///   @return true if first container element matches the argument      
-      //template<CT::Container LHS, CT::NotContainer RHS>
-      //constexpr bool operator == (this const LHS& lhs, const RHS& rhs)
-      //requires CT::RangeComparable<LHS, RHS> {
-      //   return lhs.CompareOne(rhs);
-      //}
-
       /// Compare two containers for equality.                                
       /// This has much greater performance when hashed.                      
       ///   @return true if the two containers are identical                  

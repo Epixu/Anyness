@@ -8,7 +8,6 @@
 #pragma once
 #include "../Container.hpp"
 #include "IndexedLinear.hpp"
-//#include <Langulus/CT/Contiguous.hpp>
 #include "Langulus/CT/Describable.hpp"
 
 
@@ -378,11 +377,6 @@ namespace Langulus::Anyness::Component
                self.EmplaceWithIntent(Abandon {Decvq<T> {FWD(arguments)...}});
             else static_assert(false,
                "Too many arguments for emplacing a sparse instance");
-               
-            /*static_assert(CT::Dense<T>,
-               "EmplaceConstruct works only for dense containers");
-            
-            new (const_cast<void*>(self.GetHeapInner())) T {FWD(arguments)...};*/
          }
       }
 

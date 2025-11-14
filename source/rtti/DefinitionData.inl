@@ -1073,7 +1073,6 @@ namespace Langulus::RTTI
 
       return result;
    }
-
-} // namespace Langulus::RTTI
+}
 
 #undef VERBOSE

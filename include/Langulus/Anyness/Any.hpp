@@ -67,7 +67,6 @@ namespace Langulus::Anyness
       using CTTI_MapsTo = Text;
 
       using Base = Inner::AnyBase;
-      //using Base::operator ==;
       using DefineState::Typed<>::IsTypeConstrained;
       using DefineState::Typed<>::EnableTypeConstrained;
 

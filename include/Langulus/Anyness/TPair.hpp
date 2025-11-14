@@ -12,7 +12,6 @@
 
 namespace Langulus::CT
 {
-
    /// Concept for recognizing arguments, with which a statically typed       
    /// pair can be constructed                                                
    template<class K, class V, class...P>
@@ -37,12 +36,10 @@ namespace Langulus::CT
            Comparable<K, typename Deint<P>::Key>
        and Comparable<V, typename Deint<P>::Val>
       ) and ...);
-
-} // namespace Langulus::CT
+}
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    ///   A helper structure for pairing keys and values of any type           
    ///                                                                        
@@ -100,5 +97,4 @@ namespace Langulus::Anyness
       auto& GetKey(this auto&& self) noexcept { return self.mKey; }
       auto& GetVal(this auto&& self) noexcept { return self.mVal; }
    };
-
-} // namespace Langulus::Anyness
+}

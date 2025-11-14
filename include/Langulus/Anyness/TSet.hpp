@@ -11,7 +11,6 @@
 
 namespace Langulus::Anyness
 {
-
    ///                                                                        
    /// Statically typed set of unspecified state                              
    ///                                                                        
@@ -48,7 +47,6 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       TSet(A1&&, AN&&...) requires CT::RangeInsertable<TSet, A1, AN...>;
    };
-   
 
    ///                                                                        
    /// Unsorted statically typed set                                          
@@ -86,7 +84,6 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       TSetUnsorted(A1&&, AN&&...) requires CT::RangeInsertable<TSetUnsorted, A1, AN...>;
    };
-   
 
    ///                                                                        
    /// Sorted statically typed set                                            
@@ -124,5 +121,4 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       TSetSorted(A1&&, AN&&...) requires CT::RangeInsertable<TSetSorted, A1, AN...>;
    };
-
-} // namespace Langulus::Anyness
+}

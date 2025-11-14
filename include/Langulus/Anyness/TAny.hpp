@@ -48,7 +48,6 @@ namespace Langulus::Anyness
       using CTTI_MapsTo    = Text;
 
       using Base = Inner::TAnyBase<T>;
-      //using Base::operator ==;
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       using Pick          = T const&;
@@ -90,16 +89,6 @@ namespace Langulus::Anyness
             this->AllocateFresh(this->RequestHeap(1));
             this->ResetState();
             this->EmplaceConstruct(FWD(arguments)...);
-            /*if constexpr (sizeof...(A) == 1) {
-               using A1 = typename Types<A...>::First;
-               if constexpr (CT::Intent<A1> and Same<TypeOf<A1>, T>)
-                  IntentNew(this->GetRaw(), FWD(arguments)...);
-               else if constexpr (Same<A1, T>)
-                  IntentNew(this->GetRaw(), IntentOfT<A1&&> {FWD(arguments)...});
-               else
-                  new (this->GetRaw()) T {FWD(arguments)...};
-            }
-            else new (this->GetRaw()) T {FWD(arguments)...};*/
          }
       }
       
@@ -116,17 +105,6 @@ namespace Langulus::Anyness
          this->AllocateFresh(this->RequestHeap(1));
          this->ResetState();
          this->EmplaceConstruct(FWD(arguments)...);
-            
-         /*if constexpr (sizeof...(A) == 1) {
-            using A1 = typename Types<A...>::First;
-            if constexpr (CT::Intent<A1> and Same<TypeOf<A1>, T>)
-               IntentNew(this->GetRaw(), FWD(arguments)...);
-            else if constexpr (Same<A1, T>)
-               IntentNew(this->GetRaw(), IntentOfT<A1&&> {FWD(arguments)...});
-            else
-               new (this->GetRaw()) T {FWD(arguments)...};
-         }
-         else new (this->GetRaw()) T {FWD(arguments)...};*/
       }
 
       /// Assignment                                                          

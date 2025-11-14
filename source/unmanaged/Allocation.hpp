@@ -43,11 +43,7 @@ namespace Langulus::Unmanaged
       Allocation() = delete;
       Allocation(const Allocation&) = delete;
       Allocation(Allocation&&) = delete;
-      //~Allocation() = delete;
-
       Allocation(pot_t alignment, pot_t size) noexcept;
-      
-      //static size_t Cost(pot_t alignment) noexcept;
       
       auto GetUses() const noexcept { return mReferences; }
       auto GetSize() const noexcept -> pot_t;

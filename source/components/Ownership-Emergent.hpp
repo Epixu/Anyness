@@ -62,8 +62,6 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      /*
-      template<unsigned> friend struct DeepOwnershipHeap;*/
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;

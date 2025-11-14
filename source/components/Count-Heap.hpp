@@ -25,32 +25,66 @@ namespace Langulus::Anyness::Component
    template<unsigned ID, class T>
    struct CountHeap {
       using CTTI_Component = Yes<>;
-      using CountType = T;
-      using IndexType = Index::At<T>;
-      
+      using CountType   = T;
+      using IndexType   = Index::At<T>;
+      using HeapRequest = T;
+
       static constexpr int  ComponentPrecedence = 1000;
       static constexpr bool ContainsMany = true;
+      
+      /// Check if there are no initialized elements                          
+      constexpr bool IsEmpty(this auto const& self) noexcept {
+         return self.GetCountInner() == 0;
+      }
 
       /// Get the number of initialized elements                              
       template<CT::Container C>
-      T GetCount(this C const& self) noexcept {
-         if constexpr (CT::Contiguous<C>) {
-            //TODO we can determine count by subtracting the allocation pointer from the heap pointer
-            // to at least determine if it is zero (when type-erased) or calculate it exactly (when statically typed),
-            // which can save on an indirection in many cases. this won't work for maps for obvious reasons
-            // but is very efficient for contiguous containers
-         }
-         else return self.GetHeap<ID>().GetElement<T>();
-      }
-
-      /// Check if there are no initialized elements                          
-      bool IsEmpty(this auto const& self) noexcept {
-         return self.GetCount() == 0;
+      constexpr T GetCount(this C const& self) noexcept {
+         return self.GetCountInner();
       }
 
       /// Explicit boolean conversion to allow using containers in ifs        
       explicit operator bool(this auto const& self) noexcept {
-         return self.GetCount() != 0;
+         return self.GetCountInner() != 0;
+      }
+
+      T GetCountDeep() const noexcept;
+      T GetCountItemsDeep() const noexcept;
+
+   protected:
+      template<unsigned>        friend struct Removal;
+      template<unsigned, class> friend struct Insertion;
+      template<unsigned, class> friend struct IndexedLinear;
+      template<unsigned>        friend struct HeapMovable;
+      
+      /// Get count (inner)                                                   
+      constexpr auto& GetCountInner(this auto&& self) noexcept {
+         return self.template AccessHeap<CountStack>();
+      }
+      
+      /// Set the number of initialized elements                              
+      constexpr void SetCountInner(this auto& self, T c) noexcept {
+         self.GetCountInner() = c;
+      }
+      
+      /// Default-initialize count to zero                                    
+      constexpr void ConstructDefault(this auto& self) noexcept {
+         self.SetCountInner(0);
+      }
+      
+      /// Transfer from any kind of container, respecting intents             
+      ///   @attention this is noop when constructing from deep intents,      
+      ///      since element constructors might throw and stuff be partially  
+      ///      inserted. In those cases, count is set by the heap components. 
+      ///   @param intent - the intent and container to transfer from         
+      template<CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this auto& self, I&& intent) {
+         if constexpr (I::IsShallow() and not CT::Copied<I>) {
+            decltype(auto) from = FWD(intent.what);
+            self.SetCountInner(from.GetCountInner());
+            if constexpr (I::ResetsOnMove())
+               from.SetCountInner(0);
+         }
       }
    };
 }

@@ -25,21 +25,6 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = -2000;
       
    protected:
-      /*template<unsigned>
-      friend struct IterationOperators;
-      template<unsigned>
-      friend struct Removal;
-      template<class>
-      friend struct IndexedLinear;
-      template<unsigned>
-      friend struct HeapMovable;
-      template<unsigned>
-      friend struct Emplacement;
-      template<unsigned>
-      friend struct Comparison;
-      template<auto COUNT>
-      friend struct CountStatic;*/
-      
       /// Get the heap pointer (inner)                                        
       constexpr auto& GetStackInner(this auto&& self) noexcept {
          return self.template AccessStack<Stack>();

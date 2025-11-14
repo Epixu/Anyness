@@ -21,13 +21,8 @@ namespace Langulus::Anyness::Component
    private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
-      //template<CT::Container C>
-      //using At = typename C::IndexType;
 
    public:
-      //template<CT::Container C, CT::NotContainer TO>
-      //bool ConvertTo(this C const&, TO&);
-
       /// Convert block's contents to another kind of contents, by iterating  
       /// all elements, and casting them one by one                           
       ///   @param out - what are we converting to?                           

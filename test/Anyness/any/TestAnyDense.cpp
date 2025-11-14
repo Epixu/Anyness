@@ -10,8 +10,6 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
-   (Types<TAny<Any*>, Any*>),
-
    (Types<Any, Text>),
    (Types<Any, int>),
    (Types<Any, Any>),
@@ -24,6 +22,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
    (Types<TAny<int>, int>),
    (Types<TAny<Text>, Text>),
    
+   (Types<TAny<Any*>, Any*>),
    (Types<TAny<int*>, int*>),
    (Types<TAny<Text*>, Text*>)
 ) {

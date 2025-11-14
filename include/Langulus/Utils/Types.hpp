@@ -110,7 +110,6 @@ namespace Langulus
    /// Can be used to generate more complex types or tuples of data.          
    ///                                                                        
    template<class...> struct Types;
-   //template<class...> struct Tuple;
    
    namespace Inner
    {
