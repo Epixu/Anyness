@@ -11,6 +11,7 @@
 #include <Langulus/Anyness/Any.hpp>
 #include <Langulus/Anyness/TAny.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
+#include <ranges>
 
 using namespace Langulus;
 using namespace Anyness;
@@ -198,12 +199,12 @@ void Any_CheckState_DisownedFull(const auto& any) {
    Any_Helper_TestType<E>(any);
 
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (any.IsConstant() /*== CT::Constant<E>*/);
+   REQUIRE      (any.IsConstant());
    REQUIRE      (any.IsValid());
    REQUIRE_FALSE(any.GetAllocation());
    REQUIRE_FALSE(any.IsEmpty());
    REQUIRE      (any.GetCount() > 0);
-   REQUIRE      (any.GetReserved() == 0 /*> 0*/);
+   REQUIRE      (any.GetReserved() == 0);
    REQUIRE      (any.GetUses() == 0);
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);
@@ -222,7 +223,7 @@ void Any_CheckState_DisownedFullConst(const auto& any) {
    REQUIRE_FALSE(any.GetAllocation());
    REQUIRE_FALSE(any.IsEmpty());
    REQUIRE      (any.GetCount() > 0);
-   REQUIRE      (any.GetReserved() == 0 /*> 0*/);
+   REQUIRE      (any.GetReserved() == 0);
    REQUIRE      (any.GetUses() == 0);
    REQUIRE      (any.GetRaw());
    REQUIRE      (any);
@@ -234,37 +235,49 @@ void Any_CheckState_Abandoned(const auto& any) {
    REQUIRE_FALSE(any.GetAllocation());
 }
 
-void Any_CheckState_ContainsOne(const auto& pack, const auto& e, Allocation* entry = nullptr) {
-   using T = Deref<decltype(pack)>;
-   using E = Deref<decltype(e)>;
-   (void) entry;
+template<CT::Container T, class E>
+void Any_CheckState_ContainsOne(T const& pack, E const& e, Allocation* entry = nullptr) {
+   //(void) entry;
 
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == 1);
    REQUIRE(pack.GetReserved() >= 1);
 
-   for (auto& it : pack)
-      REQUIRE(it == e);
+   REQUIRE(pack.template As<Decay<E>>() == DenseCast(e));
+   REQUIRE(pack.template As<E>() == e);
+   REQUIRE((*pack.template As<E*>()) == e);
+   REQUIRE(*pack.template GetRawAs<E>() == e);
 
-   if constexpr (CT::Sparse<E>) {
-      REQUIRE(&pack.template As<Deptr<E>>() ==  e);
+   if constexpr(::std::ranges::range<T>) {
+      for (auto& it : pack)
+         REQUIRE(it == e);
+   }
+
+   //if constexpr (CT::Sparse<E>) {
+      /*REQUIRE(&pack.template As<Deptr<E>>() ==  e);
       REQUIRE( pack.template As<Deptr<E>>() == *e);
       REQUIRE(*pack.template As<E>() == *e);
       REQUIRE(*pack.template GetRaw<E>() == e);
    }
-   else if constexpr (T::TypeErased or Akin<TypeOf<T>, E>) {
+   else if constexpr (CT::TypeErased<T> or Akin<TypeOf<T>, E>) {
       REQUIRE(pack.template As<E>() == e);
+   }*/
+
+   //IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == entry));
+   if constexpr (CT::Dense<E>)
+      REQUIRE(pack.GetEntries() == nullptr);
+   else {
+      REQUIRE(pack.GetEntries() != nullptr);
+      REQUIRE(*pack.GetEntries() == entry);
    }
 
-   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == entry));
-
-   if constexpr (T::TypeErased) {
+   if constexpr (CT::TypeErased<T>) {
       REQUIRE_THROWS(pack.template As<float>() == 0.0f);
       REQUIRE_THROWS(pack.template As<float*>() == nullptr);
    }
 }
 
-template<class T, class E>
+template<CT::Container T, class E>
 void Any_Helper_CompareOne(const T& pack, const E& e) {
    if constexpr (CT::TypeErased<T>) {
       REQUIRE(pack.CompareOne(e) == Compared::Equal);

@@ -26,6 +26,7 @@ namespace Langulus::Anyness::Component
       template<unsigned> friend struct Emplacement;
       template<unsigned> friend struct OwnershipDeepEmergent;
 
+   IF_LANGULUS_TESTING(public:)
       /// Get entry array if containing pointers                              
       ///   @return the array of entries                                      
       template<CT::Container C>

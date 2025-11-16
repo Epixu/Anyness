@@ -35,15 +35,6 @@ namespace Langulus::Anyness::Component
       constexpr void SetEntriesInner(this auto& self, EntryPtr entries) noexcept {
          self.template GetEntriesInner<SELECTOR>() = entries;
       }
-
-      /// Get entry array if containing pointers                              
-      auto GetEntries(this auto&& self) has_assumptions -> EntryPtr {
-         if (self.IsSparse()) {
-            LglsAssumeDev(self.GetRaw(), "No memory available");
-            return self.GetEntriesInner();
-         }
-         return nullptr;
-      }
       
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent - the intent and container to transfer from         
@@ -65,6 +56,16 @@ namespace Langulus::Anyness::Component
             static_assert(I::IsShallow());
             self.SetEntriesInner(from.GetEntries());
          }
+      }
+      
+   IF_LANGULUS_TESTING(public:)
+      /// Get entry array if containing pointers                              
+      auto GetEntries(this auto&& self) has_assumptions -> EntryPtr {
+         if (self.IsSparse()) {
+            LglsAssumeDev(self.GetRaw(), "No memory available");
+            return self.GetEntriesInner();
+         }
+         return nullptr;
       }
    };
 }

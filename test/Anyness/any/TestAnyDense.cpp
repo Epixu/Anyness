@@ -83,6 +83,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
    static_assert(CT::AutoOwned<T>);
    static_assert(CT::Comparable<T, T>);
    static_assert(CT::Comparable<T, E>);
+   static_assert(not ::std::ranges::range<T>);
 
    static_assert(not requires (T pack, E item) { pack.operator +   (item); });
    static_assert(not requires (T pack, E item) { pack.operator +=  (item); });
@@ -161,6 +162,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
          pack.Assign(*element);
 
          Any_CheckState_OwnedFull<E>(pack);
+         Any_CheckState_ContainsOne(pack, *element);
 
          REQUIRE(pack.template As<E>() == *element);
          REQUIRE((*pack.template As<E*>()) == *element);
