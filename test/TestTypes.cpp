@@ -144,6 +144,17 @@ static_assert(not CT::Typelist<Types<>, CustomTypelist, CustomNonTypelistDerived
 static_assert(    CT::NotTypelist<void, CustomNonTypelistDerived, int>);
 static_assert(not CT::NotTypelist<void, CustomNonTypelistDerived, Types<>>);
 
+using TestingList7 = Types<void, int, float, bool, char, CustomTypelist, CustomTypelistExternal>;
+static_assert(TestingList7::Count == 7);
+static_assert(::std::same_as<typename TestingList7::First, void>);
+static_assert(::std::same_as<typename TestingList7::Second, int>);
+static_assert(::std::same_as<typename TestingList7::template At<0>, void>);
+static_assert(::std::same_as<typename TestingList7::template At<1>, int>);
+static_assert(::std::same_as<typename TestingList7::template At<2>, float>);
+static_assert(::std::same_as<typename TestingList7::template At<3>, bool>);
+static_assert(::std::same_as<typename TestingList7::template At<4>, char>);
+static_assert(::std::same_as<typename TestingList7::template At<5>, CustomTypelist>);
+static_assert(::std::same_as<typename TestingList7::template At<6>, CustomTypelistExternal>);
 
 SCENARIO("Types", "[types]") {
 

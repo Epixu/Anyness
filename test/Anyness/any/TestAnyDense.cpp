@@ -10,25 +10,38 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
-   (Types<Any, Text>),
-   (Types<Any, int>),
-   (Types<Any, Any>),
+   (Types<Any, Text, ScopedElement<Text>>),
+   (Types<Any, Text, ScopedElement<Text, true>>),
+   (Types<Any, int, ScopedElement<int>>),
+   (Types<Any, int, ScopedElement<int, true>>),
+   (Types<Any, Any, ScopedElement<Any>>),
+   (Types<Any, Any, ScopedElement<Any, true>>),
    
-   (Types<Any, Text*>),
-   (Types<Any, int*>),
-   (Types<Any, Any*>),
+   (Types<Any, Text*, ScopedElement<Text*>>),
+   (Types<Any, Text*, ScopedElement<Text*, true>>),
+   (Types<Any, int*, ScopedElement<int*>>),
+   (Types<Any, int*, ScopedElement<int*, true>>),
+   (Types<Any, Any*, ScopedElement<Any*>>),
+   (Types<Any, Any*, ScopedElement<Any*, true>>),
 
-   (Types<TAny<Any>, Any>),
-   (Types<TAny<int>, int>),
-   (Types<TAny<Text>, Text>),
+   (Types<TAny<Any>, Any, ScopedElement<Any>>),
+   (Types<TAny<Any>, Any, ScopedElement<Any, true>>),
+   (Types<TAny<int>, int, ScopedElement<int>>),
+   (Types<TAny<int>, int, ScopedElement<int, true>>),
+   (Types<TAny<Text>, Text, ScopedElement<Text>>),
+   (Types<TAny<Text>, Text, ScopedElement<Text, true>>),
    
-   (Types<TAny<Any*>, Any*>),
-   (Types<TAny<int*>, int*>),
-   (Types<TAny<Text*>, Text*>)
+   (Types<TAny<Any*>, Any*, ScopedElement<Any*>>),
+   (Types<TAny<Any*>, Any*, ScopedElement<Any*, true>>),
+   (Types<TAny<int*>, int*, ScopedElement<int*>>),
+   (Types<TAny<int*>, int*, ScopedElement<int*, true>>),
+   (Types<TAny<Text*>, Text*, ScopedElement<Text*>>),
+   (Types<TAny<Text*>, Text*, ScopedElement<Text*, true>>)
 ) {
    static Allocator::State memoryState;
    using T = typename TestType::First;
    using E = typename TestType::Second;
+   using ScopedE = typename TestType::template At<2>;
 
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              
@@ -130,7 +143,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
    }
 
    GIVEN("Default-constructed container") {
-      const ScopedElement<E> element {555};
+      const ScopedE element {555};
       T pack;
 
       Any_CheckState_Default<E>(pack);
@@ -486,7 +499,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
       }
 
       WHEN("Emplace") {
-         ScopedElement<E> i666 {666};
+         ScopedE i666 {666};
          const auto i666backup = *i666;
          if constexpr (CT::Typed<T>) {
             decltype(auto) instance = pack.Emplace(::std::move(*i666));
@@ -545,8 +558,8 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
       }
 
       WHEN("Compared") {
-         ScopedElement<E> e1 {1};
-         ScopedElement<E> e2 {2};
+         ScopedE e1 {1};
+         ScopedE e2 {2};
          T another_pack1 {Piecewise, *e1};
          T another_pack2 {Piecewise, *e2};
          T defaulted_pack1;
@@ -581,14 +594,14 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
 
    if constexpr (Ambiguous) {
       GIVEN("Container ambiguously constructed by value referral") {
-         const ScopedElement<E> element {555};
+         const ScopedE element {555};
          REQUIRE_THROWS(T {*element});      
          REQUIRE_THROWS(T {Refer(*element)});
       }
    }
 
    GIVEN("Container constructed by value referral") {
-      const ScopedElement<E> element {555};
+      const ScopedE element {555};
       T pack {Piecewise, *element};
 
       Any_CheckState_OwnedFull<E>(pack);
@@ -1024,7 +1037,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
       }
       
       WHEN("Emplace (overwrite existing)") {
-         ScopedElement<E> i666 {666};
+         ScopedE i666 {666};
          const auto i666backup = *i666;
          if constexpr (CT::Typed<T>) {
             decltype(auto) instance = pack.Emplace(::std::move(*i666));
@@ -1068,8 +1081,8 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
       }
 
       WHEN("Compared") {
-         ScopedElement<E> e1 {1};
-         ScopedElement<E> e2 {2};
+         ScopedE e1 {1};
+         ScopedE e2 {2};
          T another_pack1 {Piecewise, *e1};
          T another_pack2 {Piecewise, *e2};
          T defaulted_pack;
@@ -1082,7 +1095,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
       }
 
       WHEN("Contains when full") {
-         ScopedElement<E> e1 {1};
+         ScopedE e1 {1};
          
          REQUIRE      (pack.Contains(*element));
          REQUIRE_FALSE(pack.Contains(*e1));
@@ -1091,7 +1104,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
 
    if constexpr (Ambiguous) {
       GIVEN("Container ambiguously constructed by moved value") {
-         const ScopedElement<E> element {555};
+         const ScopedE element {555};
          E movable = *element;     
       
          REQUIRE_THROWS(T {::std::move(movable)});
@@ -1100,7 +1113,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
    }
 
    GIVEN("Container constructed by moved value") {
-      const ScopedElement<E> element {555};
+      const ScopedE element {555};
       E movable = *element;
       T pack {Piecewise, ::std::move(movable)};
 
@@ -1137,13 +1150,13 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
 
    if constexpr (Ambiguous) {
       GIVEN("Container ambiguously constructed by disowned value") {
-         const ScopedElement<E> element {555};
+         const ScopedE element {555};
          REQUIRE_THROWS(T {Disown(*element)});
       }
    }
 
    GIVEN("Container constructed by disowned value") {
-      const ScopedElement<E> element {555};
+      const ScopedE element {555};
       T pack {Piecewise, Disown(*element)};
       
       if constexpr (CT::Container<E>)
@@ -1179,7 +1192,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
 
    if constexpr (Ambiguous) {
       GIVEN("Container ambiguously constructed by abandoned value") {
-         const ScopedElement<E> element {555};
+         const ScopedE element {555};
          E movable = *element;
          
          REQUIRE_THROWS(T {Abandon(movable)});
@@ -1187,7 +1200,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
    }
     
    GIVEN("Container constructed by abandoned value") {
-      const ScopedElement<E> element {555};
+      const ScopedE element {555};
       E movable = *element;
       T pack {Piecewise, Abandon(movable)};
 
@@ -1223,8 +1236,8 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
    }
 
    GIVEN("Two full containers") {
-      const ScopedElement<E> e1 {555};
-      const ScopedElement<E> e2 {666};
+      const ScopedE e1 {555};
+      const ScopedE e2 {666};
       T pack1 {Piecewise, *e1};
       T pack2 {Piecewise, *e2};
       const T memory1 = pack1;

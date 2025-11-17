@@ -8,58 +8,94 @@
 #pragma once
 #include <Langulus/Typenav.hpp>
 #include <Langulus/CT/Referenced.hpp>
+#include <Langulus/Allocator.hpp>
+#include <Langulus/MetaOf.hpp>
 
 
 /// Useful for creating instances of types on the heap, with multiple levels  
 /// of indirection                                                            
-template<class T>
+template<class T, bool MANAGED = false>
 struct ScopedElement {
    using CTTI_ReflectAs = void;
+   using Allocation = Langulus::Anyness::Allocation;
+   using Allocator = Langulus::Anyness::Allocator;
    
-private:
    T* element = nullptr;
+   Allocation* entries[Langulus::IndirectsOf<T> + 1] = {};
 
+protected:
    template<class INNER, class...A>
-   static void NestedConstructor(INNER*& place, A&&...arguments) {
+   static void NestedConstructor(INNER*& place, Allocation** entry, A&&...arguments) {
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
-         if constexpr (requires { new INNER {FWD(arguments)...}; })
-            place = new INNER {FWD(arguments)...};
-         else if constexpr (requires { new INNER {INNER::FromNumber(FWD(arguments)...)}; })
-            place = new INNER {INNER::FromNumber(FWD(arguments)...)};
-         else
-            static_assert(false, "Unable to construct");
+         if constexpr (MANAGED) {
+            *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Roof2(sizeof(INNER))));
+            place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
+
+            if constexpr (requires { new INNER{ FWD(arguments)... }; })
+               new (place) INNER{ FWD(arguments)... };
+            else if constexpr (requires { new INNER{ INNER::FromNumber(FWD(arguments)...) }; })
+               new (place) INNER{ INNER::FromNumber(FWD(arguments)...) };
+            else
+               static_assert(false, "Unable to construct");
+         }
+         else {
+            if constexpr (requires { new INNER{ FWD(arguments)... }; })
+               place = new INNER{ FWD(arguments)... };
+            else if constexpr (requires { new INNER{ INNER::FromNumber(FWD(arguments)...) }; })
+               place = new INNER{ INNER::FromNumber(FWD(arguments)...) };
+            else
+               static_assert(false, "Unable to construct");
+         }
       }
       else {
-         place = new INNER {nullptr};
-         NestedConstructor(*place, FWD(arguments)...);
+         if constexpr (MANAGED) {
+            *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Roof2(sizeof(INNER))));
+            place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
+         }
+         else {
+            place = new INNER{ nullptr };
+         }
+
+         NestedConstructor(*place, entry + 1, FWD(arguments)...);
       }
    }
    
    template<class INNER>
-   static void NestedDestructor(INNER* place) {
+   static void NestedDestructor(INNER* place, Allocation** entry) {
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
          #if not LANGULUS_FEATURE(NEWDELETE)
             if constexpr (CT::Referenced<INNER>)
                place->Reference(-1);
          #endif
-         delete place;
+
+         if (not *entry)
+            delete place;
+         else if constexpr (MANAGED) {
+            if constexpr (requires { place->~INNER(); })
+               place->~INNER();
+            Allocator::Deallocate(*entry);
+         }
       }
       else if (place) {
-         NestedDestructor(*place);
-         delete place;
-      }   
+         NestedDestructor(*place, entry + 1);
+
+         if (not *entry)
+            delete place;
+         else if constexpr (MANAGED)
+            Allocator::Deallocate(*entry);
+      }
    }
 
 public:
    template<class...A>
    ScopedElement(A&&...arguments) {
-      NestedConstructor(element, FWD(arguments)...);
+      NestedConstructor(element, entries, FWD(arguments)...);
    }
    
    ~ScopedElement() {
-      NestedDestructor(element);
+      NestedDestructor(element, entries);
    }
 
    auto operator *  ()       -> T&       {return *element;}
