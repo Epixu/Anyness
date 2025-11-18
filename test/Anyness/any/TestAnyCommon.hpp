@@ -236,7 +236,7 @@ void Any_CheckState_Abandoned(const auto& any) {
 }
 
 template<CT::Container T, class E, bool MANAGED>
-void Any_CheckState_ContainsOne(T const& pack, const ScopedElement<E,MANAGED>& e) {
+void Any_CheckState_ContainsOne(T const& pack, const ScopedElement<E,MANAGED>& e, bool disowned = false) {
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == 1);
    REQUIRE(pack.GetReserved() >= 1);
@@ -255,8 +255,14 @@ void Any_CheckState_ContainsOne(T const& pack, const ScopedElement<E,MANAGED>& e
       REQUIRE(pack.GetEntries() == nullptr);
    else {
       REQUIRE(pack.GetEntries() != nullptr);
-      for (size_t i = 0; i < IndirectsOf<E>; ++i)
-         REQUIRE(pack.GetEntries()[i] == e.entries[i+1]);
+      if (not disowned) {
+         for (size_t i = 0; i < IndirectsOf<E>; ++i)
+            REQUIRE(pack.GetEntries()[i] == e.entries[i+1]);
+      }
+      else {
+         for (size_t i = 0; i < IndirectsOf<E>; ++i)
+            REQUIRE(pack.GetEntries()[i] == nullptr);         
+      }
    }
 
    if constexpr (CT::TypeErased<T>) {

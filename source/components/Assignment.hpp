@@ -227,6 +227,8 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes destination memory has been constructed,       
       ///      including all levels of indirection                            
       ///   @attention does not modify any container state                    
+      ///   @attention this overwrites previous entry without dereferencing   
+      ///      it, and without destroying anything                            
       ///   @param intent - assignment argument. If this container            
       ///      is statically typed, this can be any assignment argument,      
       ///      otherwise it has to be an instance of the contained type.      
@@ -237,7 +239,11 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.IsTyped(), "Invalid type");
          decltype(auto) rhs = FWD(intent.what);
 
-         if constexpr (CT::Handle<IT>) {
+         if constexpr (CT::Copied<I>)
+            self.AssignByCopying(rhs);
+         else if constexpr (CT::Cloned<I>)
+            self.AssignByCloning(rhs);
+         else if constexpr (CT::Handle<IT>) {
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership    
@@ -255,22 +261,10 @@ namespace Langulus::Anyness::Component
                   T.GetAbandonAssigner()(src, dst);
                else if constexpr (CT::Referred<I>)
                   T.GetReferAssigner()(src, dst);
-               else if constexpr (CT::Copied<I>)
-                  T.GetCopyAssigner()(src, dst);
                else if constexpr (CT::Disowned<I>)
                   T.GetDisownAssigner()(src, dst);
-               else if constexpr (CT::Cloned<I>)
-                  T.GetCloneAssigner()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
-
-               if constexpr (CT::DeeplyOwned<C>) {
-                  if constexpr (I::IsKept())
-                     *self.GetEntries() = *rhs.GetEntries();
-                  else
-                     *self.GetEntries() = nullptr;
-                  self.KeepDeep();
-               }
             }
             else {
                //                                                       
@@ -281,37 +275,39 @@ namespace Langulus::Anyness::Component
                T* data = static_cast<T*>(self.template AccessStackById<ID>());
                IntentAssign(*data, I::Nest(*rhs.GetRaw()));
             }
-         }
-         else if constexpr (CT::TypeErased<C>) {
-            //                                                          
-            // This container is type-erased                            
-            LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
-            auto T = self.GetTypeInner();
-
-            const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
-            const auto dst = self.template AccessStackById<ID>();
-            if constexpr (CT::Moved<I>)
-               T.GetMoveAssigner()(src, dst);
-            else if constexpr (CT::Abandoned<I>)
-               T.GetAbandonAssigner()(src, dst);
-            else if constexpr (CT::Referred<I>)
-               T.GetReferAssigner()(src, dst);
-            else if constexpr (CT::Copied<I>)
-               T.GetCopyAssigner()(src, dst);
-            else if constexpr (CT::Disowned<I>)
-               T.GetDisownAssigner()(src, dst);
-            else if constexpr (CT::Cloned<I>)
-               T.GetCloneAssigner()(src, dst);
-            else
-               static_assert(false, "Unrecognized intent");
+            
+            if_available(self.EmplaceEntries(FWD(intent)));
          }
          else {
-            //                                                          
-            // This container is statically-typed                       
-            using T = TypeOf<C>;
-            static_assert(Same<T, IT>, "Type mismatch");
-            T* data = static_cast<T*>(self.template AccessStackById<ID>());
-            IntentAssign(*data, FWD(intent));
+            if constexpr (CT::TypeErased<C>) {
+               //                                                       
+               // This container is type-erased                         
+               LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
+               auto T = self.GetTypeInner();
+
+               const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
+               const auto dst = self.template AccessStackById<ID>();
+               if constexpr (CT::Moved<I>)
+                  T.GetMoveAssigner()(src, dst);
+               else if constexpr (CT::Abandoned<I>)
+                  T.GetAbandonAssigner()(src, dst);
+               else if constexpr (CT::Referred<I>)
+                  T.GetReferAssigner()(src, dst);
+               else if constexpr (CT::Disowned<I>)
+                  T.GetDisownAssigner()(src, dst);
+               else
+                  static_assert(false, "Unrecognized intent");
+            }
+            else {
+               //                                                       
+               // This container is statically-typed                    
+               using T = TypeOf<C>;
+               static_assert(Same<T, IT>, "Type mismatch");
+               T* data = static_cast<T*>(self.template AccessStackById<ID>());
+               IntentAssign(*data, FWD(intent));
+            }
+
+            if_available(self.EmplaceEntries(FWD(intent)));
          }
       }
    };

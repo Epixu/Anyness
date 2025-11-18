@@ -10,6 +10,8 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
+, (Types<Any, Text*, ScopedElement<Text*, true>>)
+
    , (Types<Any, Text, ScopedElement<Text>>)
    , (Types<Any, int, ScopedElement<int>>)
    , (Types<Any, Any, ScopedElement<Any>>)
@@ -31,7 +33,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<Any, int, ScopedElement<int, true>>)
    , (Types<Any, Any, ScopedElement<Any, true>>)
 
-   , (Types<Any, Text*, ScopedElement<Text*, true>>)
    , (Types<Any, int*, ScopedElement<int*, true>>)
    , (Types<Any, Any*, ScopedElement<Any*, true>>)
 
@@ -182,16 +183,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
-
-         REQUIRE(pack.template As<E>() == *element);
-         REQUIRE((*pack.template As<E*>()) == *element);
-         REQUIRE(pack.GetUses() == 1);
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
-
+         
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
                some<T> storage(meter.runs());
@@ -258,15 +250,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             Any_CheckState_Default<TypeOf<E>>(movable);
 
          Any_CheckState_OwnedFull<E>(pack);
-
-         REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE(pack.GetUses() == 1);
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
+         Any_CheckState_ContainsOne(pack, element);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
@@ -332,16 +316,8 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          pack.Assign(Disown(*element));
 
          Any_CheckState_OwnedFull<E>(pack);
-
-         REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE(pack.GetUses() == 1);
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
-
+         Any_CheckState_ContainsOne(pack, element, true);
+         
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
                some<T> storage(meter.runs());
@@ -411,15 +387,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             Any_CheckState_Abandoned<E>(movable);
 
          Any_CheckState_OwnedFull<E>(pack);
-
-         REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE(pack.GetUses() == 1);
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
+         Any_CheckState_ContainsOne(pack, element);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
@@ -607,19 +575,12 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    }
 
    GIVEN("Container constructed by value referral") {
+      const ScopedE originalElement {556};
       const ScopedE element {555};
-      T pack {Piecewise, *element};
+      T pack {Piecewise, *originalElement};
 
       Any_CheckState_OwnedFull<E>(pack);
-      
-      REQUIRE(pack.template As<E>() == *element);
-      REQUIRE(*pack.template As<E*>() == *element);
-      REQUIRE(pack.GetUses() == 1);
-
-      if constexpr (not CT::Typed<T>) {
-         REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-         REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-      }
+      Any_CheckState_ContainsOne(pack, originalElement);
 
       #ifdef LANGULUS_STD_BENCHMARK
          BENCHMARK_ADVANCED("construction (single value copy)") (timer meter) {
@@ -641,15 +602,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          pack.Assign(*element);
 
          Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE(pack.GetUses() == 1);
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
+         Any_CheckState_ContainsOne(pack, element);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
@@ -709,15 +662,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             Any_CheckState_Default<TypeOf<E>>(movable);
 
          Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE(pack.GetUses() == 1);
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
+         Any_CheckState_ContainsOne(pack, element);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
@@ -776,15 +721,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          pack.Assign(Disown(*element));
 
          Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE(pack.GetUses() == 1);
-         
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
+         Any_CheckState_ContainsOne(pack, element, true);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
@@ -848,15 +785,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             Any_CheckState_Abandoned<TypeOf<E>>(movable);
 
          Any_CheckState_OwnedFull<E>(pack);
-         
-         REQUIRE(pack.template As<E>() == *element);
-         REQUIRE(*pack.template As<E*>() == *element);
-         REQUIRE(pack.GetUses() == 1);
-
-         if constexpr (not CT::Typed<T>) {
-            REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-            REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-         }
+         Any_CheckState_ContainsOne(pack, element);
 
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
@@ -1103,7 +1032,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       WHEN("Contains when full") {
          ScopedE e1 {1};
          
-         REQUIRE      (pack.Contains(*element));
+         REQUIRE      (pack.Contains(*originalElement));
          REQUIRE_FALSE(pack.Contains(*e1));
       }
    }
@@ -1127,15 +1056,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_Default<TypeOf<E>>(movable);
 
       Any_CheckState_OwnedFull<E>(pack);
-      
-      REQUIRE(pack.template As<E>() == *element);
-      REQUIRE(*pack.template As<E*>() == *element);
-      REQUIRE(pack.GetUses() == 1);
-
-      if constexpr (not CT::Typed<T>) {
-         REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-         REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-      }
+      Any_CheckState_ContainsOne(pack, element);
 
       #ifdef LANGULUS_STD_BENCHMARK
          BENCHMARK_ADVANCED("construction (single value move)") (timer meter) {
@@ -1169,16 +1090,8 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<TypeOf<E>>(*element);
 
       Any_CheckState_OwnedFull<E>(pack);
+      Any_CheckState_ContainsOne(pack, element, true);
       
-      REQUIRE(pack.template As<E>() == *element);
-      REQUIRE(*pack.template As<E*>() == *element);
-      REQUIRE(pack.GetUses() == 1);
-
-      if constexpr (not CT::Typed<T>) {
-         REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-         REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-      }
-
    #ifdef LANGULUS_STD_BENCHMARK
       BENCHMARK_ADVANCED("construction (single disowned value)") (timer meter) {
          some<uninitialized<T>> storage(meter.runs());
@@ -1214,15 +1127,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_Abandoned<TypeOf<E>>(movable);
 
       Any_CheckState_OwnedFull<E>(pack);
-      
-      REQUIRE(pack.template As<E>() == *element);
-      REQUIRE(*pack.template As<E*>() == *element);
-      REQUIRE(pack.GetUses() == 1);
-
-      if constexpr (not CT::Typed<T>) {
-         REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-         REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-      }
+      Any_CheckState_ContainsOne(pack, element);
 
    #ifdef LANGULUS_STD_BENCHMARK
       BENCHMARK_ADVANCED("construction (single abandoned value)") (timer meter) {
@@ -1254,6 +1159,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          
          Any_CheckState_OwnedFull<E>(pack1);
          Any_CheckState_OwnedFull<E>(pack2);
+         Any_CheckState_ContainsOne(pack2, e1);
 
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 1);

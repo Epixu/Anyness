@@ -345,6 +345,7 @@ namespace Langulus::Anyness::Component
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership.   
             if (self.IsSparse()) {
+               LglsAssumeDev(rhs.IsSparse(), "Sparseness mismatch");
                const auto entries_size = sizeof(AllocationPtr) * self.GetIndirections();
                if constexpr (I::IsKept())
                   memcpy(self.GetEntries(), rhs.GetEntries(), entries_size);
@@ -357,8 +358,9 @@ namespace Langulus::Anyness::Component
             // Transfer deep ownership by searching for it.             
             // Obviously, this is available only if memory is managed.  
             if (self.IsSparse()) {
+               LglsAssumeDev(CT::Sparse<decltype(rhs)>, "Sparseness mismatch");
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               if constexpr (I::IsKept()) {
+               if constexpr (not CT::Disowned<I>) {
                   auto entries = self.GetEntries();
                   auto meta = self.GetType().GetDeptr();
                   void** handle = self.template GetRawAs<void*>();
