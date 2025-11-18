@@ -235,40 +235,28 @@ void Any_CheckState_Abandoned(const auto& any) {
    REQUIRE_FALSE(any.GetAllocation());
 }
 
-template<CT::Container T, class E>
-void Any_CheckState_ContainsOne(T const& pack, E const& e, Allocation* entry = nullptr) {
-   //(void) entry;
-
+template<CT::Container T, class E, bool MANAGED>
+void Any_CheckState_ContainsOne(T const& pack, const ScopedElement<E,MANAGED>& e) {
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == 1);
    REQUIRE(pack.GetReserved() >= 1);
 
-   REQUIRE(pack.template As<Decay<E>>() == DenseCast(e));
-   REQUIRE(pack.template As<E>() == e);
-   REQUIRE((*pack.template As<E*>()) == e);
-   REQUIRE(*pack.template GetRawAs<E>() == e);
+   REQUIRE(pack.template As<Decay<E>>() == DenseCast(*e));
+   REQUIRE(pack.template As<E>() == *e);
+   REQUIRE((*pack.template As<E*>()) == *e);
+   REQUIRE(*pack.template GetRawAs<E>() == *e);
 
    if constexpr(::std::ranges::range<T>) {
       for (auto& it : pack)
-         REQUIRE(it == e);
+         REQUIRE(it == *e);
    }
 
-   //if constexpr (CT::Sparse<E>) {
-      /*REQUIRE(&pack.template As<Deptr<E>>() ==  e);
-      REQUIRE( pack.template As<Deptr<E>>() == *e);
-      REQUIRE(*pack.template As<E>() == *e);
-      REQUIRE(*pack.template GetRaw<E>() == e);
-   }
-   else if constexpr (CT::TypeErased<T> or Akin<TypeOf<T>, E>) {
-      REQUIRE(pack.template As<E>() == e);
-   }*/
-
-   //IF_LANGULUS_MANAGED_MEMORY(REQUIRE(*pack.GetEntries() == entry));
    if constexpr (CT::Dense<E>)
       REQUIRE(pack.GetEntries() == nullptr);
    else {
       REQUIRE(pack.GetEntries() != nullptr);
-      REQUIRE(*pack.GetEntries() == entry);
+      for (size_t i = 0; i < IndirectsOf<E>; ++i)
+         REQUIRE(pack.GetEntries()[i] == e.entries[i+1]);
    }
 
    if constexpr (CT::TypeErased<T>) {

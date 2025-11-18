@@ -73,9 +73,11 @@ protected:
          if (not *entry)
             delete place;
          else if constexpr (MANAGED) {
-            if constexpr (requires { place->~INNER(); })
-               place->~INNER();
-            Allocator::Deallocate(*entry);
+            if ((*entry)->GetUses() == 1) {
+               if constexpr (requires { place->~INNER(); })
+                  place->~INNER();
+               Allocator::Deallocate(*entry);
+            }
          }
       }
       else if (place) {
@@ -83,8 +85,11 @@ protected:
 
          if (not *entry)
             delete place;
-         else if constexpr (MANAGED)
-            Allocator::Deallocate(*entry);
+         else if constexpr (MANAGED) {
+            if ((*entry)->GetUses() == 1) {
+               Allocator::Deallocate(*entry);
+            }
+         }
       }
    }
 

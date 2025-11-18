@@ -9,34 +9,40 @@
 #include <any>
 
 
-TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
-   (Types<Any, Text, ScopedElement<Text>>),
-   (Types<Any, Text, ScopedElement<Text, true>>),
-   (Types<Any, int, ScopedElement<int>>),
-   (Types<Any, int, ScopedElement<int, true>>),
-   (Types<Any, Any, ScopedElement<Any>>),
-   (Types<Any, Any, ScopedElement<Any, true>>),
-   
-   (Types<Any, Text*, ScopedElement<Text*>>),
-   (Types<Any, Text*, ScopedElement<Text*, true>>),
-   (Types<Any, int*, ScopedElement<int*>>),
-   (Types<Any, int*, ScopedElement<int*, true>>),
-   (Types<Any, Any*, ScopedElement<Any*>>),
-   (Types<Any, Any*, ScopedElement<Any*, true>>),
+TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
+   , (Types<Any, Text, ScopedElement<Text>>)
+   , (Types<Any, int, ScopedElement<int>>)
+   , (Types<Any, Any, ScopedElement<Any>>)
 
-   (Types<TAny<Any>, Any, ScopedElement<Any>>),
-   (Types<TAny<Any>, Any, ScopedElement<Any, true>>),
-   (Types<TAny<int>, int, ScopedElement<int>>),
-   (Types<TAny<int>, int, ScopedElement<int, true>>),
-   (Types<TAny<Text>, Text, ScopedElement<Text>>),
-   (Types<TAny<Text>, Text, ScopedElement<Text, true>>),
+   , (Types<Any, Text*, ScopedElement<Text*>>)
+   , (Types<Any, int*, ScopedElement<int*>>)
+   , (Types<Any, Any*, ScopedElement<Any*>>)
+
+   , (Types<TAny<Any>, Any, ScopedElement<Any>>)
+   , (Types<TAny<int>, int, ScopedElement<int>>)
+   , (Types<TAny<Text>, Text, ScopedElement<Text>>)
+
+   , (Types<TAny<Any*>, Any*, ScopedElement<Any*>>)
+   , (Types<TAny<int*>, int*, ScopedElement<int*>>)
+   , (Types<TAny<Text*>, Text*, ScopedElement<Text*>>)
+
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
+   , (Types<Any, Text, ScopedElement<Text, true>>)
+   , (Types<Any, int, ScopedElement<int, true>>)
+   , (Types<Any, Any, ScopedElement<Any, true>>)
+
+   , (Types<Any, Text*, ScopedElement<Text*, true>>)
+   , (Types<Any, int*, ScopedElement<int*, true>>)
+   , (Types<Any, Any*, ScopedElement<Any*, true>>)
+
+   , (Types<TAny<Any>, Any, ScopedElement<Any, true>>)
+   , (Types<TAny<int>, int, ScopedElement<int, true>>)
+   , (Types<TAny<Text>, Text, ScopedElement<Text, true>>)
    
-   (Types<TAny<Any*>, Any*, ScopedElement<Any*>>),
-   (Types<TAny<Any*>, Any*, ScopedElement<Any*, true>>),
-   (Types<TAny<int*>, int*, ScopedElement<int*>>),
-   (Types<TAny<int*>, int*, ScopedElement<int*, true>>),
-   (Types<TAny<Text*>, Text*, ScopedElement<Text*>>),
-   (Types<TAny<Text*>, Text*, ScopedElement<Text*, true>>)
+   , (Types<TAny<Any*>, Any*, ScopedElement<Any*, true>>)
+   , (Types<TAny<int*>, int*, ScopedElement<int*, true>>)
+   , (Types<TAny<Text*>, Text*, ScopedElement<Text*, true>>)
+   #endif
 ) {
    static Allocator::State memoryState;
    using T = typename TestType::First;
@@ -175,7 +181,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]",
          pack.Assign(*element);
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, *element);
+         Any_CheckState_ContainsOne(pack, element);
 
          REQUIRE(pack.template As<E>() == *element);
          REQUIRE((*pack.template As<E*>()) == *element);
