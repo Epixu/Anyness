@@ -29,7 +29,12 @@ protected:
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
          if constexpr (MANAGED) {
-            *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Roof2(sizeof(INNER))));
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Roof2(sizeof(INNER))));
+            #else
+               *entry = Allocator::Allocate(pot_t(alignof(INNER)), pot_t(Roof2(sizeof(INNER))));
+            #endif
+
             place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
 
             if constexpr (requires { new INNER{ FWD(arguments)... }; })
@@ -50,7 +55,12 @@ protected:
       }
       else {
          if constexpr (MANAGED) {
-            *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Roof2(sizeof(INNER))));
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Roof2(sizeof(INNER))));
+            #else
+               *entry = Allocator::Allocate(pot_t(alignof(INNER)), pot_t(Roof2(sizeof(INNER))));
+            #endif
+
             place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
          }
          else {
