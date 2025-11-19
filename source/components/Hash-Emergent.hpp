@@ -35,10 +35,57 @@ namespace Langulus::Anyness::Component
          if (self.IsEmpty())
             return {1};
 
-         if constexpr (CT::Typed<C>) {
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // Container is type-erased                                 
+            const DMeta T = self.GetType();
+            LglsAssumeDev(T, "Can't hash untyped container");
+            const auto hasher = T.GetHasher();
+            LglsAssumeDev(hasher, "Not hashable");
+
+            const auto data = const_cast<void*>(self.GetRaw());
+            if (self.GetCount() == 1) {
+               // Exactly one element means exactly one hash            
+               return hasher(data);
+            }
+
+            // Hashing multiple elements                                
+            // Do some batch optimizations wherever possible            
+            if (T.IsPOD() and not T.HasGetHashMethod()) {
+               // Hash all PODs at once, this includes any pointers     
+               // That is unless T::GetHash() method exists             
+               return HashBytes(
+                  {static_cast<uint8_t*>(data), self.GetBytesize()},
+                  DefaultHashSeed
+               );
+            }
+            
+            if constexpr (CT::ContainsOne<C>) {
+               // Return the hash of the single element                 
+               // @note this is reached only if GetCount() > 1, so      
+               // technically shouldn't ever be reached, but iteration  
+               // won't work on single-element containers either way.   
+               return hasher(data);
+            }
+            else {
+               // Hash each element, and then combine hashes            
+               // @note this is reached only if GetCount() > 1          
+               ::std::vector<H> h;
+               h.reserve(self.GetCount());
+               for (auto element : self)
+                  h.emplace_back(hasher(element.GetRaw()));
+
+               return HashBytes(
+                  { reinterpret_cast<const uint8_t*>(h.data()), h.size() * sizeof(H) },
+                  DefaultHashSeed
+               );
+            }
+         }
+         else {
             //                                                          
             // Container is not type-erased                             
             using T = TypeOf<C>;
+            static_assert(CT::Hashable<T>, "Not hashable");
 
             if (self.GetCount() == 1) {
                // Exactly one element means exactly one hash            
@@ -72,52 +119,6 @@ namespace Langulus::Anyness::Component
                
                return HashBytes(
                   {reinterpret_cast<const uint8_t*>(h.data()), h.size() * sizeof(H)},
-                  DefaultHashSeed
-               );
-            }
-         }
-         else {
-            //                                                          
-            // Container is type-erased                                 
-            if (not self.IsTyped())
-               return {1};
-
-            const DMeta T = self.GetType();
-            const auto data = const_cast<void*>(self.GetRaw());
-
-            if (self.GetCount() == 1) {
-               // Exactly one element means exactly one hash            
-               return T.GetHasher()(data);
-            }
-
-            // Hashing multiple elements                                
-            // Do some batch optimizations wherever possible            
-            if (T.IsPOD() and not T.HasGetHashMethod()) {
-               // Hash all PODs at once, this includes any pointers     
-               // That is unless T::GetHash() method exists             
-               return HashBytes(
-                  {static_cast<uint8_t*>(data), self.GetBytesize()},
-                  DefaultHashSeed
-               );
-            }
-            
-            if constexpr (CT::ContainsOne<C>) {
-               // Return the hash of the single element                 
-               // @note this is reached only if GetCount() > 1, so      
-               // technically shouldn't ever be reached, but iteration  
-               // won't work on single-element containers either way.   
-               return T.GetHasher()(data);
-            }
-            else {
-               // Hash each element, and then combine hashes            
-               // @note this is reached only if GetCount() > 1          
-               ::std::vector<H> h;
-               h.reserve(self.GetCount());
-               for (auto element : self)
-                  h.emplace_back(T.GetHasher()(element.GetRaw()));
-
-               return HashBytes(
-                  { reinterpret_cast<const uint8_t*>(h.data()), h.size() * sizeof(H) },
                   DefaultHashSeed
                );
             }

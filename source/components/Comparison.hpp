@@ -104,7 +104,7 @@ namespace Langulus::Anyness::Component
                      return false;
                   }
 
-                  if constexpr (HASH) {
+                  if constexpr (HASH and CT::Hashable<LT, RT>) {
                      if (not lhs.CompareHashes(rhs)) {
                         // Early failure if valid hashes differ - no    
                         // point  in comparing anything at all          
@@ -173,7 +173,7 @@ namespace Langulus::Anyness::Component
                }
 
                if constexpr (HASH) {
-                  if (not lhs.CompareHashes(rhs)) {
+                  if (LT.GetHasher() and not lhs.CompareHashes(rhs)) {
                      // Early failure if valid hashes differ - no point 
                      // in comparing anything at all                    
                      VERBOSE(Logger::Red, "Different hashes (type-erased)");
@@ -481,10 +481,9 @@ namespace Langulus::Anyness::Component
       ///   @return true if hashes are the same                               
       template<CT::Container LHS, CT::Container RHS> requires HASH
       constexpr bool CompareHashes(this LHS const& lhs, RHS const& rhs) {
-         if constexpr (requires { lhs.GetHash(); rhs.GetHash(); })
-            return lhs.GetHash() == rhs.GetHash();
-         else
-            return false;
+         static_assert(requires { lhs.GetHash(); rhs.GetHash(); },
+            "Not hashable");
+         return lhs.GetHash() == rhs.GetHash();
       }
       
       template<CT::Container C1, CT::Container C2>

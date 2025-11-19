@@ -236,7 +236,7 @@ void Any_CheckState_Abandoned(const auto& any) {
 }
 
 template<CT::Container T, class E, bool MANAGED>
-void Any_CheckState_ContainsOne(T const& pack, const ScopedElement<E,MANAGED>& e, bool disowned = false) {
+void Any_CheckState_ContainsOne(T const& pack, const ScopedElement<E,MANAGED>& e, [[maybe_unused]] bool disowned = false) {
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == 1);
    REQUIRE(pack.GetReserved() >= 1);
