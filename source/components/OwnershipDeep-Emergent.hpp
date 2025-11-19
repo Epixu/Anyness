@@ -98,7 +98,7 @@ namespace Langulus::Anyness::Component
                      --remaining;
                   }
 
-                  DecvqCast(raw++)->Reference(1);
+                  (raw++)->Reference(1);
                }
             }
          }

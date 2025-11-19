@@ -771,7 +771,7 @@ namespace Langulus::Fractalloc
             continue;
 
          const auto scope = Logger::InfoScoped(Logger::Purple, 
-            "SIZE POOL CHAIN FOR ", Logger::Red, Logger::Size {1u << size},
+            "SIZE POOL CHAIN FOR ", Logger::Red, Logger::Size {1ul << size},
             Logger::Purple, ": "
          );
 
@@ -872,7 +872,7 @@ namespace Langulus::Fractalloc
             auto pool = Instance.mSizePoolChain[size];
             while (pool) {
                if (pool->mStep > with.mStep) {
-                  Logger::Info(Logger::Purple, "Size ", Logger::Size {1u << size}, " pool: ");
+                  Logger::Info(Logger::Purple, "Size ", Logger::Size {1ul << size}, " pool: ");
                   DumpPool(counter, pool);
                }
                pool = pool->mNext;

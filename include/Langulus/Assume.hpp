@@ -197,7 +197,7 @@ namespace Langulus
       /// compiler to generate more performant code                           
       #define LglsAssumeUserAndOptimize(CONDITION, ...) \
          AssumeUserInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
-         [[assume(CONDITION)]];
+         LglsCompilerSpecificAssume(CONDITION)
    #else
       #define LglsAssumeUser(CONDITION, ...) LANGULUS(NOOP)
       #define LglsAssumeUserWarn(CONDITION, ...) LANGULUS(NOOP)
@@ -283,7 +283,7 @@ namespace Langulus
       /// compiler to generate more performant code                           
       #define LglsAssumeDevAndOptimize(CONDITION, ...) \
          AssumeDevInner(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__); \
-         [[assume(CONDITION)]] 
+         LglsCompilerSpecificAssume(CONDITION)
    #else
       #define LglsAssumeDev(CONDITION, ...) LANGULUS(NOOP)
       #define LglsAssumeDevWarn(CONDITION, ...) LANGULUS(NOOP)
@@ -336,7 +336,7 @@ namespace Langulus
       AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__)
    #define LglsAssumeAndOptimize(LEVEL, CONDITION, ...) \
       AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__) \
-      [[assume(CONDITION)]] 
+      LglsCompilerSpecificAssume(CONDITION)
    
    /// Custom assumption at runtime.                                          
    /// Tested only if LANGULUS(SAFE) >= LEVEL.                                

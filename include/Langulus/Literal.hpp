@@ -63,7 +63,7 @@ namespace Langulus
    /// be consistent - left literal has a Literal array size of 3, but size() 
    /// of 0                                                                   
    ///                                                                        
-   template<class T, size_t N>
+   template<class T = Unsupported, size_t N = 0>
    struct Literal {
       static_assert(N == 0 or ::std::has_single_bit(N),
          "Modify N to minimize the number of templates");
@@ -231,7 +231,7 @@ namespace Langulus
          return count < size - pos ? count : size - pos;
       }
 
-      constexpr view_type sv() const { return *this; }
+      constexpr view_type sv() const { return static_cast<view_type>(*this); }
 
    public:
       /// Implicit cast to a first value, if N == 0                           
@@ -459,7 +459,7 @@ namespace Langulus
       }
    };
 
-   Literal() -> Literal<Unsupported, 0>;
+   Literal() -> Literal</*Unsupported, 0*/>;
 
    template<class T>
    Literal(const T&) -> Literal<T, 0>;

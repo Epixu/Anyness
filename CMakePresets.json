@@ -76,15 +76,15 @@
       }
     },
     {
-      "name": "cl-v143",
-      "description": "Target Visual C++ v143 compiler",
+      "name": "cl-v145",
+      "description": "Target Visual C++ v145 compiler",
       "inherits": "base",
       "hidden": true,
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_C_FLAGS": "/utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS_MSVC} $env{SIMD_FLAGS_MSVC}",
-        "CMAKE_CXX_FLAGS": "/utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS_MSVC} $env{SIMD_FLAGS_MSVC}"
+        "CMAKE_C_FLAGS": "/Zc:preprocessor /utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS_MSVC} $env{SIMD_FLAGS_MSVC}",
+        "CMAKE_CXX_FLAGS": "/Zc:preprocessor /utf-8 /W3 /bigobj /EHsc $env{BUILDTYPE_FLAGS_MSVC} $env{ARCHITECTURE_FLAGS_MSVC} $env{SIMD_FLAGS_MSVC}"
       }
     },
     {
@@ -430,67 +430,67 @@
     },
 
     {
-      "name": "windows-v143-x64-debug-safe-SSE2-managed",
-      "displayName": "v143 x64 Debug Safe SSE2 (unsupported)",
-      "description": "Target Windows with the 64bit v143 compiler (debug, safe, SSE2)",
-      "inherits": [ "windows", "cl-v143", "x64", "debug", "SSE2" ]
+      "name": "windows-v145-x64-debug-safe-SSE2-managed",
+      "displayName": "v145 x64 Debug Safe SSE2 (unsupported)",
+      "description": "Target Windows with the 64bit v145 compiler (debug, safe, SSE2)",
+      "inherits": [ "windows", "cl-v145", "x64", "debug", "SSE2" ]
     },
     {
-      "name": "windows-v143-x64-debug-safe-AVX-managed",
-      "displayName": "v143 x64 Debug Safe AVX (unsupported)",
-      "description": "Target Windows with the 64bit v143 compiler (debug, safe, AVX)",
-      "inherits": [ "windows", "cl-v143", "x64", "debug", "AVX" ]
+      "name": "windows-v145-x64-debug-safe-AVX-managed",
+      "displayName": "v145 x64 Debug Safe AVX (unsupported)",
+      "description": "Target Windows with the 64bit v145 compiler (debug, safe, AVX)",
+      "inherits": [ "windows", "cl-v145", "x64", "debug", "AVX" ]
     },
     {
-      "name": "windows-v143-x64-debug-safe-AVX2-managed",
-      "displayName": "v143 x64 Debug Safe AVX2 (unsupported)",
-      "description": "Target Windows with the 64bit v143 compiler (debug, safe, AVX2)",
-      "inherits": [ "windows", "cl-v143", "x64", "debug", "AVX2" ]
-    },
-
-    {
-      "name": "windows-v143-x86-debug-safe-noSIMD-managed",
-      "displayName": "v143 x86 Debug Safe NoSIMD (unsupported)",
-      "description": "Target Windows with the 32bit v143 compiler (debug, safe, no SIMD)",
-      "inherits": [ "windows", "cl-v143", "x86", "debug", "NoSIMD" ]
-    },
-    {
-      "name": "windows-v143-x86-debug-safe-SSE2-managed",
-      "displayName": "v143 x86 Debug Safe SSE2 (unsupported)",
-      "description": "Target Windows with the 32bit v143 compiler (debug, safe, SSE2)",
-      "inherits": [ "windows", "cl-v143", "x86", "debug", "SSE2" ]
+      "name": "windows-v145-x64-debug-safe-AVX2-managed",
+      "displayName": "v145 x64 Debug Safe AVX2 (unsupported)",
+      "description": "Target Windows with the 64bit v145 compiler (debug, safe, AVX2)",
+      "inherits": [ "windows", "cl-v145", "x64", "debug", "AVX2" ]
     },
 
     {
-      "name": "windows-v143-x64-release-safe-SSE2-managed",
-      "displayName": "v143 x64 Release Safe SSE2 (unsupported)",
-      "description": "Target Windows with the 64bit v143 compiler (release, safe, SSE2)",
-      "inherits": [ "windows", "cl-v143", "x64", "release", "SSE2" ]
+      "name": "windows-v145-x86-debug-safe-noSIMD-managed",
+      "displayName": "v145 x86 Debug Safe NoSIMD (unsupported)",
+      "description": "Target Windows with the 32bit v145 compiler (debug, safe, no SIMD)",
+      "inherits": [ "windows", "cl-v145", "x86", "debug", "NoSIMD" ]
     },
     {
-      "name": "windows-v143-x64-release-safe-AVX-managed",
-      "displayName": "v143 x64 Release Safe AVX (unsupported)",
-      "description": "Target Windows with the 64bit v143 compiler (release, safe, AVX)",
-      "inherits": [ "windows", "cl-v143", "x64", "release", "AVX" ]
-    },
-    {
-      "name": "windows-v143-x64-release-safe-AVX2-managed",
-      "displayName": "v143 x64 Release Safe AVX2 (unsupported)",
-      "description": "Target Windows with the 64bit v143 compiler (release, safe, AVX2)",
-      "inherits": [ "windows", "cl-v143", "x64", "release", "AVX2" ]
+      "name": "windows-v145-x86-debug-safe-SSE2-managed",
+      "displayName": "v145 x86 Debug Safe SSE2 (unsupported)",
+      "description": "Target Windows with the 32bit v145 compiler (debug, safe, SSE2)",
+      "inherits": [ "windows", "cl-v145", "x86", "debug", "SSE2" ]
     },
 
     {
-      "name": "windows-v143-x86-release-safe-noSIMD-managed",
-      "displayName": "v143 x86 Release Safe NoSIMD (unsupported)",
-      "description": "Target Windows with the 32bit v143 compiler (release, safe, no SIMD)",
-      "inherits": [ "windows", "cl-v143", "x86", "release", "NoSIMD" ]
+      "name": "windows-v145-x64-release-safe-SSE2-managed",
+      "displayName": "v145 x64 Release Safe SSE2 (unsupported)",
+      "description": "Target Windows with the 64bit v145 compiler (release, safe, SSE2)",
+      "inherits": [ "windows", "cl-v145", "x64", "release", "SSE2" ]
     },
     {
-      "name": "windows-v143-x86-release-safe-SSE2-managed",
-      "displayName": "v143 x86 Release Safe SSE2 (unsupported)",
-      "description": "Target Windows with the 32bit v143 compiler (release, safe, SSE2)",
-      "inherits": [ "windows", "cl-v143", "x86", "release", "SSE2" ]
+      "name": "windows-v145-x64-release-safe-AVX-managed",
+      "displayName": "v145 x64 Release Safe AVX (unsupported)",
+      "description": "Target Windows with the 64bit v145 compiler (release, safe, AVX)",
+      "inherits": [ "windows", "cl-v145", "x64", "release", "AVX" ]
+    },
+    {
+      "name": "windows-v145-x64-release-safe-AVX2-managed",
+      "displayName": "v145 x64 Release Safe AVX2 (unsupported)",
+      "description": "Target Windows with the 64bit v145 compiler (release, safe, AVX2)",
+      "inherits": [ "windows", "cl-v145", "x64", "release", "AVX2" ]
+    },
+
+    {
+      "name": "windows-v145-x86-release-safe-noSIMD-managed",
+      "displayName": "v145 x86 Release Safe NoSIMD (unsupported)",
+      "description": "Target Windows with the 32bit v145 compiler (release, safe, no SIMD)",
+      "inherits": [ "windows", "cl-v145", "x86", "release", "NoSIMD" ]
+    },
+    {
+      "name": "windows-v145-x86-release-safe-SSE2-managed",
+      "displayName": "v145 x86 Release Safe SSE2 (unsupported)",
+      "description": "Target Windows with the 32bit v145 compiler (release, safe, SSE2)",
+      "inherits": [ "windows", "cl-v145", "x86", "release", "SSE2" ]
     },
 
     {

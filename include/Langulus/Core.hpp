@@ -240,9 +240,9 @@
 #endif
 
 #if defined(_MSC_VER) and not defined(__clang__)
-   // We're on a microsoft visual c++ compiler. (no enthusiasm)         
-   #if _MSC_VER < 1944
-      #error "Langulus can only be built with MSVC 19.44 or above"
+   // We're on a microsoft visual c++ compiler                          
+   #if _MSC_VER < 1950
+      #error "Can only be built with MSVC v145 or above"
    #endif
    #define LANGULUS_COMPILER_MSVC() 1
    #define LANGULUS_EBCO __declspec(empty_bases)
@@ -390,10 +390,12 @@
 /// obscure errors                                                            
 #define LANGULUS_NOOP() ((void)0)
 
-#define LglsNoSideEffects __attribute__((const))
-#define LglsPure __attribute__((pure))
 
 #if LANGULUS_COMPILER(MSVC)
+   #define LglsNoSideEffects
+   #define LglsPure
+   #define LglsCompilerSpecificAssume(a) __assume(a)
+
    /// Force no inlining                                                      
    #define LANGULUS_NOINLINE() __declspec(noinline)
 
@@ -412,6 +414,10 @@
    #define LglsDisableWarning(W)   __pragma(warning( disable : W ))
    #define LglsDisableWarning_SelfAssign
 #else
+   #define LglsNoSideEffects __attribute__((const))
+   #define LglsPure __attribute__((pure))
+   #define LglsCompilerSpecificAssume(a) [[assume(a)]]
+
    /// Force no inlining                                                      
    #define LANGULUS_NOINLINE() __attribute__((noinline))
 

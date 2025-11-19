@@ -45,12 +45,12 @@ namespace Langulus
 
       template<::std::unsigned_integral T>
       constexpr bool operator == (T const& rhs) const noexcept {
-         return operator T () == rhs;
+         return this->operator T () == rhs;
       }
 
       template<::std::unsigned_integral T>
       constexpr auto operator <=> (T const& rhs) const noexcept {
-         return operator T () <=> rhs;
+         return this->operator T () <=> rhs;
       }
 
       template<::std::unsigned_integral T> requires (not ::std::same_as<T, bool>)
@@ -61,7 +61,7 @@ namespace Langulus
       }
 
       constexpr uintptr_t mask() const noexcept {
-         return operator uintptr_t () - 1;
+         return this->operator uintptr_t () - 1;
       }
 
       constexpr size_t operator + (pot_t const& rhs) const noexcept {

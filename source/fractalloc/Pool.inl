@@ -241,7 +241,7 @@ namespace Langulus::Fractalloc
             // increase mThresholdMax, so collisions are less likely    
             do { mThresholdMax <<= 1u; }
             while (not mDistribution[--it]);
-            mBiggestEntry.bit = it;
+            mBiggestEntry.bit = static_cast<uint8_t>(it);
          }
       }
 
@@ -287,13 +287,13 @@ namespace Langulus::Fractalloc
             // increase mThresholdMax, so collisions are less likely    
             do { mThresholdMax <<= 1u; }
             while (not mDistribution[--it]);
-            mBiggestEntry.bit = it;
+            mBiggestEntry.bit = static_cast<uint8_t>(it);
          }
 
          // Push the removed entry to the last freed list.              
          // The removed entry becomes the last freed entry, and its     
          // pool pointer becomes a jump to the previous last freed.     
-         entry->mNextFreeEntryFinder = mLastFreed - entry;
+         entry->mNextFreeEntryFinder = static_cast<int32_t>(mLastFreed - entry);
          mLastFreed = entry;
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
             LglsAssumeDev(mValidEntries > 1, "Incorrect mValidEntries");
@@ -395,7 +395,7 @@ namespace Langulus::Fractalloc
          if (entry->mReferences)
             continue;
 
-         prev->mNextFreeEntryFinder = entry - prev;
+         prev->mNextFreeEntryFinder = static_cast<int32_t>(entry - prev);
          prev = entry;
       }
 

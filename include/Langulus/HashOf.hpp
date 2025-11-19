@@ -123,7 +123,7 @@ namespace Langulus
          constexpr uint32_t c1 = 0xcc9e2d51;
          constexpr uint32_t c2 = 0x1b873593;
 
-         const int nblocks = key.size() / 4;
+         const int nblocks = static_cast<int>(key.size() / 4);
          for (int i = -nblocks; i; i++) {
             uint32_t k1 = key.get_block(i);
 

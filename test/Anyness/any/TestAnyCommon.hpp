@@ -255,14 +255,19 @@ void Any_CheckState_ContainsOne(T const& pack, const ScopedElement<E,MANAGED>& e
       REQUIRE(pack.GetEntries() == nullptr);
    else {
       REQUIRE(pack.GetEntries() != nullptr);
-      if (not disowned) {
-         for (size_t i = 0; i < IndirectsOf<E>; ++i)
-            REQUIRE(pack.GetEntries()[i] == e.entries[i+1]);
-      }
-      else {
+      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+         if (not disowned) {
+            for (size_t i = 0; i < IndirectsOf<E>; ++i)
+               REQUIRE(pack.GetEntries()[i] == e.entries[i+1]);
+         }
+         else {
+            for (size_t i = 0; i < IndirectsOf<E>; ++i)
+               REQUIRE(pack.GetEntries()[i] == nullptr);         
+         }
+      #else
          for (size_t i = 0; i < IndirectsOf<E>; ++i)
             REQUIRE(pack.GetEntries()[i] == nullptr);         
-      }
+      #endif
    }
 
    if constexpr (CT::TypeErased<T>) {

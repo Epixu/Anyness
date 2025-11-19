@@ -8,15 +8,21 @@
 #pragma once
 #include <Langulus/CT/Referenced.hpp>
 #include <Langulus/IntentOf.hpp>
+#include <Langulus/Anyness/Text.hpp>
 
 
 /// Simple type for testing Referenced types                                  
 struct RT : Langulus::Referenced {
+   using Text = Langulus::Anyness::Text;
+   using CTTI_MapsTo = Text;
+
    int data;
    const char* t;
    bool destroyed = false;
    bool copied_in = false;
    bool cloned_in = false;
+   bool copy_intent_in = false;
+   bool disown_intent_in = false;
    bool moved_in  = false;
    bool moved_out = false;
 
@@ -31,6 +37,10 @@ struct RT : Langulus::Referenced {
       rhs.moved_out = true;
    }
 
+   constexpr RT(Langulus::Disown<RT>&& rhs)
+      : data(rhs->data), t {rhs->t}, disown_intent_in {true} { }
+   constexpr RT(Langulus::Copy<RT>&& rhs)
+      : data(rhs->data), t {rhs->t}, copy_intent_in {true} { }
    constexpr RT(Langulus::Clone<RT>&& rhs)
       : data(rhs->data), t {rhs->t}, cloned_in {true} { }
 
@@ -61,5 +71,17 @@ struct RT : Langulus::Referenced {
       return *this;
    }
 
-   constexpr operator const int& () const noexcept { return data; }
+   constexpr operator const int& () const noexcept {
+      return data;
+   }
+
+   explicit operator Text () const noexcept {
+      if (copied_in) return "RT(copied)";
+      if (cloned_in) return "RT(cloned)";
+      if (copy_intent_in) return "RT(copied with intent)";
+      if (disown_intent_in) return "RT(disowned)";
+      if (moved_in) return "RT(moved-in)";
+      if (moved_out) return "RT(moved-out)";
+      return "RT(unknown)";
+   }
 };

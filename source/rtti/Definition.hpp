@@ -183,7 +183,7 @@ namespace Langulus::RTTI::Inner
       /// been reflected from the main one                                    
       ///   @attention must always be inline, so that boundary is relative    
       LANGULUS(ALWAYS_INLINED)
-      constexpr bool IsInRelevantBoundary() const noexcept {
+      bool IsInRelevantBoundary() const noexcept {
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             return mBoundaries.empty() or mBoundaries.contains(Boundary);
          #else
