@@ -56,9 +56,11 @@ namespace Langulus
 
       constexpr int Reference(int x) const has_assumptions {
          LglsAssumeDev(mReferences or x == 0,
-            "Dead instance resurrection/overkill");
+            "Dead instance resurrection/overkill: adding ",
+            x, " references to ", mReferences);
          LglsAssumeDev(x >= 0 or mReferences >= -x,
-            "Live instance overkill");
+            "Live instance overkill: adding ",
+            x, " references to ", mReferences);
          
          mReferences += x;
          return mReferences;

@@ -346,12 +346,32 @@ namespace Langulus::Anyness::Component
             // instead of searching for it when having DeepOwnership.   
             if (self.IsSparse()) {
                LglsAssumeDev(rhs.IsSparse(), "Sparseness mismatch");
-               const auto entries_size = sizeof(AllocationPtr) * self.GetIndirections();
-               if constexpr (I::IsKept())
+               const auto indirections = self.GetIndirections();
+               const auto entries_size = sizeof(AllocationPtr) * indirections;
+               if constexpr (I::IsKept()) {
                   memcpy(self.GetEntries(), rhs.GetEntries(), entries_size);
-               else
-                  memset(self.GetEntries(), 0, entries_size);
-               self.KeepDeep();
+                  
+                  if constexpr (not CT::Cloned<I>) {
+                     auto entries = self.GetEntries();
+                     while (entries < self.GetEntries() + indirections) {
+                        if (*entries)
+                           (*entries)->Keep(1);
+                        ++entries;
+                     }
+
+                     auto meta = self.GetType().GetDeptr();
+                     void** handle = self.template GetRawAs<void*>();
+                     while (meta and *handle) {
+                        auto referencer = meta.GetReferencer();
+                        if (meta.IsDense() and referencer)
+                           referencer(*handle, 1);
+                        
+                        handle = reinterpret_cast<void**>(*handle);
+                        meta = meta.GetDeptr();
+                     }
+                  }
+               }
+               else memset(self.GetEntries(), 0, entries_size);
             }
          }
          else {
@@ -359,6 +379,7 @@ namespace Langulus::Anyness::Component
             // Obviously, this is available only if memory is managed.  
             if (self.IsSparse()) {
                LglsAssumeDev(CT::Sparse<decltype(rhs)>, "Sparseness mismatch");
+               
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
                if constexpr (not CT::Disowned<I>) {
                   auto entries = self.GetEntries();
@@ -367,15 +388,23 @@ namespace Langulus::Anyness::Component
                   
                   while (meta and *handle) {
                      *entries = const_cast<AllocationPtr>(Allocator::Find(meta, *handle));
-                     meta = meta.GetDeptr();
+                     
+                     if constexpr (not CT::Cloned<I>) {
+                        if (*entries)
+                           (*entries)->Keep(1);
+                        auto referencer = meta.GetReferencer();
+                        if (meta.IsDense() and referencer)
+                           referencer(*handle, 1);
+                     }
+
                      handle = reinterpret_cast<void**>(*handle);
+                     meta = meta.GetDeptr();
                      ++entries;
                   }
                }
                else
                #endif
                   memset(self.GetEntries(), 0, sizeof(AllocationPtr) * self.GetIndirections());
-               self.KeepDeep();
             }
          }
       }
