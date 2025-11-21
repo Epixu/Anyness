@@ -61,6 +61,7 @@ namespace Langulus::Fractalloc
       void Free(int32_t = 1) noexcept;
 
    protected:
+   IF_LANGULUS_TESTING(public:)
       friend struct Pool;
       friend struct Allocator;
       

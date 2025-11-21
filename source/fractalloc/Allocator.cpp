@@ -697,7 +697,7 @@ namespace Langulus::Fractalloc
       }
 
       if (pool->mNextEntry) {
-         const auto escope = Logger::Section("Active entries: ",
+         const auto escope = Logger::Section("Entries: ",
             Logger::PushGreen, pool->mNextEntry, Logger::Pop
          );
 
@@ -966,7 +966,7 @@ namespace Langulus::Fractalloc
                      Logger::Warning(
                         "Fractalloc: Suspicious reference count in allocation ",
                         Logger::Hex(allocation), " of size ", allocation->GetSize(),
-                        " in pool ", Logger::Hex(pool), ", entry #", i, " of ", pool->mNextEntry
+                        " in pool ", Logger::Hex(pool), ", entry ", i, "/", pool->mNextEntry
                      );
                   }
 

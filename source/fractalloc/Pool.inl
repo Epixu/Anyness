@@ -168,24 +168,43 @@ namespace Langulus::Fractalloc
          newEntry = mLastFreed;
          mLastFreed = mLastFreed->GetNextFreeEntry();
          new (newEntry) Allocation {bytes, mPoolAlignment};
+
+         if (bytes > mBiggestEntry)
+            mBiggestEntry = bytes;
       }
       else {
+         if (mClogged)
+            return nullptr;
+
          // The entire pool is full or empty, skip search for free      
          // spot, add a new allocation directly	instead                 
          newEntry = AllocationFromIndex(mNextEntry);
          new (newEntry) Allocation {bytes, mPoolAlignment};
 
+         if (bytes > mBiggestEntry)
+            mBiggestEntry = bytes;
+
          ++mNextEntry;
 
-         if (::std::has_single_bit(mNextEntry)) {
+         if (mThresholdMax > mThresholdMin and ::std::has_single_bit(mNextEntry)) {
             // Next entry will move to the next level                   
+            // Immediately adapt threshold accordingly, by allowing     
+            // ever smaller entries, as long the size of the new        
+            // allocation doesn't prevent it                            
             mThresholdMax >>= 1u;
+
+            if (mBiggestEntry > mThresholdMax) {
+               // A bigger-than-threshold entry will disrupt the usual  
+               // entry sequence. Make sure no new entries are allowed  
+               // by marking the pool as clogged. It will be restored   
+               // eventually after trimming.                            
+               //mThresholdMax <<= 1;
+               mClogged = true;
+            }
          }
       }
 
       // Update the distribution                                        
-      if (bytes > mBiggestEntry)
-         mBiggestEntry = bytes;
       ++mDistribution[bytes.bit];
       LglsAssumeDev(
          mAllocatedByFrontend + static_cast<size_t>(bytes) > mAllocatedByFrontend,
@@ -239,9 +258,9 @@ namespace Langulus::Fractalloc
          if (mBiggestEntry == entry->GetSize() and 0 == mDistribution[it]) {
             // All biggest entries have been removed and we can safely  
             // increase mThresholdMax, so collisions are less likely    
-            do { mThresholdMax <<= 1u; }
             while (not mDistribution[--it]);
             mBiggestEntry.bit = static_cast<uint8_t>(it);
+            Trim();
          }
       }
 
@@ -254,11 +273,12 @@ namespace Langulus::Fractalloc
    ///   @param entry - entry to remove                                       
    inline void Pool::Deallocate(Allocation* entry) has_assumptions {
       LglsAssumeDev(entry >= mAllocationData
-                and entry < mAllocationData + static_cast<size_t>(mMaxEntries)
-                and entry->GetUses(),
-         "Invalid deallocation");
+                and entry < mAllocationData + static_cast<size_t>(mMaxEntries),
+         "Invalid deallocation - entry is not from the pool");
+      LglsAssumeDev(entry->GetUses(),
+         "Invalid deallocation - entry has already been deallocated");
       LglsAssumeDevAndOptimize(mNextEntry,
-         "Bad valid entry count");
+         "Pool shows no entries exists, yet a valid entry needs to be deallocated");
       LglsAssumeDev(mAllocatedByFrontend >= entry->GetSize(),
          "Bad frontend allocation size");
 
@@ -279,22 +299,24 @@ namespace Langulus::Fractalloc
          #endif
       }
       else {
+         // Push the removed entry to the last freed list.              
+         // The removed entry becomes the last freed entry, and its     
+         // pool pointer becomes a jump to the previous last freed.     
+         entry->mNextFreeEntryFinder = static_cast<int32_t>(entry - mLastFreed);
+         mLastFreed = entry;
+
          // Update the distribution                                     
          size_t it = entry->mSize;
          --mDistribution[it];
          if (mBiggestEntry == entry->GetSize() and 0 == mDistribution[it]) {
-            // All biggest entries have been removed and we can safely  
-            // increase mThresholdMax, so collisions are less likely    
-            do { mThresholdMax <<= 1u; }
+            // All biggest entries have been removed and we can try to  
+            // increase mThresholdMax, so collisions are less likely.   
+            // This however is possible only after trimming entries     
             while (not mDistribution[--it]);
             mBiggestEntry.bit = static_cast<uint8_t>(it);
+            Trim();
          }
 
-         // Push the removed entry to the last freed list.              
-         // The removed entry becomes the last freed entry, and its     
-         // pool pointer becomes a jump to the previous last freed.     
-         entry->mNextFreeEntryFinder = static_cast<int32_t>(mLastFreed - entry);
-         mLastFreed = entry;
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
             LglsAssumeDev(mValidEntries > 1, "Incorrect mValidEntries");
             --mValidEntries;
@@ -329,12 +351,12 @@ namespace Langulus::Fractalloc
    }
 
    /// Check if memory can contain a number of bytes                          
-   ///   @attention assumes that bytes include any padding and overhead       
    ///   @param bytes - number of bytes to check                              
    ///   @return true if bytes can be contained in a new/recycled element     
    LANGULUS(INLINED)
    bool Pool::CanContain(pot_t bytes) const noexcept {
-      return mThresholdMax >= mThresholdMin and bytes <= mThresholdMax;
+      return bytes <= mThresholdMax
+         and (mAllocatedByFrontend + static_cast<size_t>(bytes) <= mAllocatedByBackend);
    }
 
    /// Null the client data                                                   
@@ -356,11 +378,19 @@ namespace Langulus::Fractalloc
       }
    }
    
-   /// Remove all empty small entries at the end and increase threshold as    
-   /// much as possible                                                       
+   /// Remove all empty entries at the end, increase mThresholdMax and lower  
+   /// mNextEntry as much as possible. Will unclog the pool if able to.       
    LANGULUS(INLINED)
-   void Pool::Trim() {
-      LglsAssumeDevAndOptimize(mNextEntry, "Should have at least one entry");
+   void Pool::Trim() {         
+      LglsAssumeDev(IsInUse(), "Should have at least one valid entry");
+      auto entry = AllocationFromIndex(mNextEntry - 1);
+      while (entry > GetAllocationData()) {
+
+      }
+
+      mClogged = mBiggestEntry > mThresholdMax;
+
+
       constexpr size_t one = 1;
       Allocation* entry;
       size_t ecounter = mNextEntry;

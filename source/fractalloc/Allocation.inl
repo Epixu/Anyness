@@ -23,7 +23,7 @@ namespace Langulus::Fractalloc
 
    LANGULUS(ALWAYS_INLINED)
    auto Allocation::GetNextFreeEntry() const noexcept -> Allocation* {
-      return const_cast<Allocation*>(this + mNextFreeEntryFinder);
+      return const_cast<Allocation*>(this - mNextFreeEntryFinder);
    }
 
    /// Get the pool this allocation belongs to                                

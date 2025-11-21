@@ -143,6 +143,38 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
                REQUIRE(entry->GetBlockStart()[i2] == 66);
             }
          }
+
+         // Deallocate N random entries                                 
+         Allocation* prev_entry = nullptr;
+         for (int i = 0; i<pool->GetMaxEntries()/20u; ++i) {
+            auto entry = pool->AllocationFromIndex(i*20);
+            pool->Deallocate(entry);
+            REQUIRE(entry->GetUses() == 0);
+            if (prev_entry)
+               REQUIRE(entry->GetNextFreeEntry() == prev_entry);
+            prev_entry = entry;
+         }
+         REQUIRE(pool->CanContain(pool->GetMinAllocation()));
+         REQUIRE_FALSE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
+
+         // Deallocate half of the entries                              
+         prev_entry = nullptr;
+         for (int i = pool->GetMaxEntries()/2u; i<pool->GetMaxEntries()/1u; ++i) {
+            auto entry = pool->AllocationFromIndex(i);
+            if (not entry->GetUses())
+               continue;
+            pool->Deallocate(entry);
+            REQUIRE(entry->GetUses() == 0);
+            if (prev_entry)
+               REQUIRE(entry->GetNextFreeEntry() == prev_entry);
+            prev_entry = entry;
+         }
+         REQUIRE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
+
+         // Allocate a new one, should reuse prev_entry                 
+         auto new_entry = pool->Allocate(pot_t(pool->GetMinAllocation()*2u));
+         REQUIRE(new_entry);
+         REQUIRE(new_entry == prev_entry);
       }
 
       WHEN("An entry larger than the minimum is allocated") {

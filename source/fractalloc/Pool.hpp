@@ -47,6 +47,7 @@ namespace Langulus::Fractalloc
       size_t mAllocatedByFrontend = 0;
       // An index that guarantees a new unused entry                    
       size_t mNextEntry = 0;
+      bool mClogged = false;
 
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
          // Acts like a timestamp of when the allocation happened       
