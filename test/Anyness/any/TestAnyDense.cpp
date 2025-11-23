@@ -616,6 +616,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          #ifdef LANGULUS_STD_BENCHMARK
             BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
                some<T> storage(meter.runs(), element);
+                  
                meter.measure([&](int i) {
                   return storage[i] = value;
                });

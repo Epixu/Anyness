@@ -18,12 +18,12 @@ namespace Langulus
    ///   @param location - optional location of the error                     
    ///   @param mn - additional information to log                            
    template<class E = Exception, class...MORE>
-   constexpr void ErrorInner(
+   void ErrorInner(
       [[maybe_unused]] const char* location = nullptr,
-      const char* m1 = "<unknown assertion failure>",
+      const char* m1 = "<unknown error>",
       MORE&&...mn
    ) {
-      if not consteval {
+      //if not consteval {
          // Log location first, because message might cause             
          // additional errors                                           
          if (location) {
@@ -41,7 +41,7 @@ namespace Langulus
             throw E {m1, location};
          else
             throw E {m1};
-      }
+      //}
    }
 
    #define LglsError(...) ErrorInner(HERE() __VA_OPT__(,) __VA_ARGS__)

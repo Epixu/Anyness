@@ -47,13 +47,15 @@ namespace Langulus::Fractalloc
       size_t mAllocatedByFrontend = 0;
       // An index that guarantees a new unused entry                    
       size_t mNextEntry = 0;
+      // Keeps track of how many entries are currently in use           
+      size_t mValidEntries = 0;
+      // An entry larger than the next allowed mThresholdMax will clog  
+      // the pool, until it is freed.                                   
       bool mClogged = false;
 
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
          // Acts like a timestamp of when the allocation happened       
          size_t mStep;
-         // Keeps track of how many entries are currently in use        
-         size_t mValidEntries = 0;
       #endif
       
       // Associated meta data                                           
@@ -86,9 +88,12 @@ namespace Langulus::Fractalloc
       static size_t Cost(DMeta, pot_t) noexcept;
 
       auto GetAllocationData() const noexcept -> Allocation*;
+      auto GetLastFreedEntry() const noexcept -> Allocation*;
       auto GetClientData() const noexcept -> uint8_t*;
 
       auto GetMaxEntries() const noexcept -> pot_t;
+      auto GetCurrentEntries() const noexcept -> size_t;
+      auto GetValidEntries() const noexcept -> size_t;
       auto GetMinAllocation() const noexcept -> pot_t;
       auto GetTotalSize() const noexcept -> size_t;
       auto GetAllocatedByBackend() const noexcept -> pot_t;

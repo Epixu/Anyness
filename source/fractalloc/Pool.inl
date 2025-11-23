@@ -112,6 +112,14 @@ namespace Langulus::Fractalloc
       return mAllocatedByBackend / mThresholdMin;
    }
 
+   inline auto Pool::GetCurrentEntries() const noexcept -> size_t {
+      return mNextEntry;
+   }
+
+   inline auto Pool::GetValidEntries() const noexcept -> size_t {
+      return mValidEntries;
+   }
+
    /// Free the whole pool chain                                              
    ///   @attention make sure this is called for the first pool in the chain  
    LANGULUS(INLINED)
@@ -131,7 +139,11 @@ namespace Langulus::Fractalloc
    auto Pool::GetAllocationData() const noexcept -> Allocation* {
       return mAllocationData;
    }
-   
+
+   inline auto Pool::GetLastFreedEntry() const noexcept -> Allocation* {
+      return mLastFreed;
+   }
+
    /// Get the start of the usable memory for the pool                        
    LANGULUS(INLINED)
    auto Pool::GetClientData() const noexcept -> uint8_t* {
@@ -210,7 +222,7 @@ namespace Langulus::Fractalloc
          mAllocatedByFrontend + static_cast<size_t>(bytes) > mAllocatedByFrontend,
          "mAllocatedByFrontend overflowed");
       mAllocatedByFrontend += static_cast<size_t>(bytes);
-      IF_LANGULUS_MEMORY_STATISTICS(++mValidEntries);
+      ++mValidEntries;
       return newEntry;
    }
 
@@ -293,34 +305,37 @@ namespace Langulus::Fractalloc
          mLastFreed = nullptr;
          mNextEntry = 0;
          mDistribution[entry->mSize] = 0;
-         #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-            LglsAssumeDev(mValidEntries == 1, "Incorrect mValidEntries");
-            mValidEntries = 0;
-         #endif
+         LglsAssumeDev(mValidEntries == 1, "Incorrect mValidEntries");
+         mValidEntries = 0;
       }
       else {
          // Push the removed entry to the last freed list.              
          // The removed entry becomes the last freed entry, and its     
          // pool pointer becomes a jump to the previous last freed.     
-         entry->mNextFreeEntryFinder = static_cast<int32_t>(entry - mLastFreed);
+         if (mLastFreed)
+            entry->SetNextFreeEntry(mLastFreed);
+         else
+            entry->ResetNextFreeEntry();
+         
          mLastFreed = entry;
 
          // Update the distribution                                     
+         LglsAssumeDev(mValidEntries > 1, "Incorrect mValidEntries");
+         --mValidEntries;
+         
          size_t it = entry->mSize;
          --mDistribution[it];
          if (mBiggestEntry == entry->GetSize() and 0 == mDistribution[it]) {
             // All biggest entries have been removed and we can try to  
             // increase mThresholdMax, so collisions are less likely.   
             // This however is possible only after trimming entries     
-            while (not mDistribution[--it]);
+            while (not mDistribution[--it])
+               ;
             mBiggestEntry.bit = static_cast<uint8_t>(it);
             Trim();
          }
-
-         #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-            LglsAssumeDev(mValidEntries > 1, "Incorrect mValidEntries");
-            --mValidEntries;
-         #endif
+         else if (::std::has_single_bit(mValidEntries))
+            Trim();
       }
    }
 
@@ -383,56 +398,64 @@ namespace Langulus::Fractalloc
    LANGULUS(INLINED)
    void Pool::Trim() {         
       LglsAssumeDev(IsInUse(), "Should have at least one valid entry");
-      auto entry = AllocationFromIndex(mNextEntry - 1);
-      while (entry > GetAllocationData()) {
+      const size_t max_entries = static_cast<size_t>(mMaxEntries);
 
-      }
-
-      mClogged = mBiggestEntry > mThresholdMax;
-
-
-      constexpr size_t one = 1;
-      Allocation* entry;
-      size_t ecounter = mNextEntry;
-      do {
-         --ecounter;
-         const size_t basePower = ::std::bit_width(ecounter) - 1;
-         const size_t baselessIndex = ecounter - (one << basePower);
-         const size_t levelIndex = (baselessIndex << one) + one;
-         const size_t levelSize = (one << (mAllocatedByBackend.bit - mThresholdMin.bit - basePower - 1));
-         entry = mAllocationData + levelIndex * levelSize;
-         if (entry->mReferences)
+      //                                                                
+      // First pass checks how many entries we can trim                 
+      size_t trimmed = mNextEntry - 1;
+      size_t entry_gap = 1u << (mMaxEntries.bit - ::std::bit_width(trimmed) + 1);
+      auto entry = AllocationFromIndex(trimmed);
+      while (trimmed) {
+         if (entry->GetUses())
             break;
-      }
-      while (ecounter > 0);
-
-      mNextEntry = ecounter + 1;
-
-      // Scan all unused entries up to mNextEntry and chain them        
-      mLastFreed = nullptr;
-      ecounter = 0;
-      do {
-         entry = AllocationFromIndex(ecounter);
-         if (not entry->mReferences) {
-            mLastFreed = entry;
-            break;
+         
+         --trimmed;
+         
+         LglsAssumeDev(entry >= GetAllocationData(), "Shouldn't exceed limits");
+         if (entry - entry_gap == GetAllocationData()) {
+            // It is now safe to lower mNextEntry and increase          
+            // mThresholdMax, as well as unclog                         
+            ++mThresholdMax.bit;            
+            if (mBiggestEntry <= mThresholdMax) {
+               // We have unclogged the pool, no need to go any further 
+               mClogged = false;
+               break;
+            }
+            
+            // Level up, so wrap around back to the ending entry        
+            entry_gap <<= 1u;            
+            entry = GetAllocationData() + max_entries - entry_gap;
          }
-      } while (++ecounter < mNextEntry - 1);
+         else entry -= entry_gap;
+      }
+      
+      mNextEntry = trimmed + 1;
 
-      auto prev = mLastFreed;
-      while (++ecounter < mNextEntry - 1) {
-         entry = AllocationFromIndex(ecounter);
-         if (entry->mReferences)
-            continue;
+      //                                                                
+      // Second pass patches up the free entry chain                    
+      auto is_in_range = [this](Allocation const* a) {
+         const size_t smallest_gap = 1u << (mMaxEntries.bit - ::std::bit_width(mNextEntry) + 1);
+         const size_t idx = a - GetAllocationData();
+         return 0 == (idx % smallest_gap) and idx < mNextEntry;
+      };
 
-         prev->mNextFreeEntryFinder = static_cast<int32_t>(entry - prev);
-         prev = entry;
+      while (mLastFreed and not is_in_range(mLastFreed)) {
+         LglsAssumeDev(mLastFreed->GetUses() == 0, "mLastFreed is not freed");
+         mLastFreed = mLastFreed->GetNextFreeEntry();
       }
 
-      if (prev)
-         prev->mNextFreeEntryFinder = 0;
-
-      mThresholdMax = ThresholdFromIndex(mNextEntry - 1);
+      if (mLastFreed) {
+         auto last_valid_freed = mLastFreed;
+         auto freed = mLastFreed->GetNextFreeEntry();
+         while (freed) {
+            if (is_in_range(freed)) {
+               last_valid_freed->SetNextFreeEntry(freed);
+               last_valid_freed = freed;
+            }
+            freed = freed->GetNextFreeEntry();
+         }
+         last_valid_freed->ResetNextFreeEntry();
+      }
    }
 
    /// Get threshold associated with an index                                 

@@ -146,7 +146,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
 
          // Deallocate N random entries                                 
          Allocation* prev_entry = nullptr;
-         for (int i = 0; i<pool->GetMaxEntries()/20u; ++i) {
+         for (size_t i = 0; i < pool->GetMaxEntries()/20u; ++i) {
             auto entry = pool->AllocationFromIndex(i*20);
             pool->Deallocate(entry);
             REQUIRE(entry->GetUses() == 0);
@@ -157,21 +157,37 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          REQUIRE(pool->CanContain(pool->GetMinAllocation()));
          REQUIRE_FALSE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
 
-         // Deallocate half of the entries                              
-         prev_entry = nullptr;
-         for (int i = pool->GetMaxEntries()/2u; i<pool->GetMaxEntries()/1u; ++i) {
-            auto entry = pool->AllocationFromIndex(i);
+         // Deallocate right half of entries                            
+         for (auto entry = pool->GetAllocationData() + pool->GetMaxEntries()/1u - 1; entry >= pool->GetAllocationData() + pool->GetMaxEntries()/2u; --entry) {
             if (not entry->GetUses())
                continue;
             pool->Deallocate(entry);
             REQUIRE(entry->GetUses() == 0);
-            if (prev_entry)
-               REQUIRE(entry->GetNextFreeEntry() == prev_entry);
-            prev_entry = entry;
+         }
+         REQUIRE_FALSE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
+
+         // Test the integrity of the free entry chain                  
+         prev_entry = pool->GetLastFreedEntry();
+         size_t chain_counter = 0;
+         while (prev_entry) {
+            REQUIRE(prev_entry->GetUses() == 0);
+            ++chain_counter;
+            prev_entry = prev_entry->GetNextFreeEntry();
+         }
+         REQUIRE(chain_counter == pool->GetCurrentEntries() - pool->GetValidEntries());
+
+         // Deallocate more entries to enforce shriking                 
+         for (auto entry = pool->GetAllocationData() + pool->GetMaxEntries()/1u - 1; entry >= pool->GetAllocationData() + pool->GetMaxEntries()/2u; --entry) {
+            [[maybe_unused]] volatile int refs = entry->GetUses();
+            if (not entry->GetUses())
+               continue;
+            pool->Deallocate(entry);
+            REQUIRE(entry->GetUses() == 0);
          }
          REQUIRE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
 
          // Allocate a new one, should reuse prev_entry                 
+         prev_entry = pool->GetLastFreedEntry();
          auto new_entry = pool->Allocate(pot_t(pool->GetMinAllocation()*2u));
          REQUIRE(new_entry);
          REQUIRE(new_entry == prev_entry);

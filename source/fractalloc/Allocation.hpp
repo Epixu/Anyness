@@ -66,6 +66,8 @@ namespace Langulus::Fractalloc
       friend struct Allocator;
       
       auto GetNextFreeEntry() const noexcept -> Allocation*;
+      void SetNextFreeEntry(Allocation const*) noexcept;
+      void ResetNextFreeEntry() noexcept;
       auto GetPool() const noexcept -> Pool const*;
    };
 }
