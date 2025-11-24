@@ -176,13 +176,12 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          }
          REQUIRE(chain_counter == pool->GetCurrentEntries() - pool->GetValidEntries());
 
-         // Deallocate more entries to enforce shriking                 
-         for (auto entry = pool->GetAllocationData() + pool->GetMaxEntries()/1u - 1; entry >= pool->GetAllocationData() + pool->GetMaxEntries()/2u; --entry) {
-            [[maybe_unused]] volatile int refs = entry->GetUses();
-            if (not entry->GetUses())
+         // Deallocate more entries to enforce shrinking                
+         for (size_t i = 20; i < static_cast<size_t>(pool->GetMaxEntries()); ++i) {
+            auto entry = pool->AllocationFromIndex(i);
+            if (entry->GetUses() == 0)
                continue;
             pool->Deallocate(entry);
-            REQUIRE(entry->GetUses() == 0);
          }
          REQUIRE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
 

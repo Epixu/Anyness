@@ -434,9 +434,12 @@ namespace Langulus::Fractalloc
       //                                                                
       // Second pass patches up the free entry chain                    
       auto is_in_range = [this](Allocation const* a) {
-         const size_t smallest_gap = 1u << (mMaxEntries.bit - ::std::bit_width(mNextEntry) + 1);
-         const size_t idx = a - GetAllocationData();
-         return 0 == (idx % smallest_gap) and idx < mNextEntry;
+         const size_t i = a - mAllocationData;
+         if (i == 0)
+            return true;
+         size_t i_clear_lsb = i & ~(i - 1u);
+         size_t index = ((mMaxEntries + i) / i_clear_lsb - 1u) >> 1u;
+         return index < mNextEntry;
       };
 
       while (mLastFreed and not is_in_range(mLastFreed)) {
