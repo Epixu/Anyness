@@ -320,9 +320,6 @@ namespace Langulus::Fractalloc
          mLastFreed = entry;
 
          // Update the distribution                                     
-         LglsAssumeDev(mValidEntries > 1, "Incorrect mValidEntries");
-         --mValidEntries;
-         
          size_t it = entry->mSize;
          --mDistribution[it];
          if (mBiggestEntry == entry->GetSize() and 0 == mDistribution[it]) {
@@ -336,6 +333,9 @@ namespace Langulus::Fractalloc
          }
          else if (::std::has_single_bit(mValidEntries))
             Trim();
+
+         LglsAssumeDev(mValidEntries > 1, "Incorrect mValidEntries");
+         --mValidEntries;
       }
    }
 
@@ -410,17 +410,13 @@ namespace Langulus::Fractalloc
             break;
          
          --trimmed;
-         
-         LglsAssumeDev(entry >= GetAllocationData(), "Shouldn't exceed limits");
-         if (entry - entry_gap == GetAllocationData()) {
+
+         if (entry - entry_gap <= GetAllocationData()) {
             // It is now safe to lower mNextEntry and increase          
             // mThresholdMax, as well as unclog                         
             ++mThresholdMax.bit;            
-            if (mBiggestEntry <= mThresholdMax) {
-               // We have unclogged the pool, no need to go any further 
+            if (mBiggestEntry <= mThresholdMax)
                mClogged = false;
-               break;
-            }
             
             // Level up, so wrap around back to the ending entry        
             entry_gap <<= 1u;            
@@ -443,7 +439,7 @@ namespace Langulus::Fractalloc
       };
 
       while (mLastFreed and not is_in_range(mLastFreed)) {
-         LglsAssumeDev(mLastFreed->GetUses() == 0, "mLastFreed is not freed");
+         LglsAssumeDev(mLastFreed->GetUses() == 0, "Not freed");
          mLastFreed = mLastFreed->GetNextFreeEntry();
       }
 
@@ -451,6 +447,7 @@ namespace Langulus::Fractalloc
          auto last_valid_freed = mLastFreed;
          auto freed = mLastFreed->GetNextFreeEntry();
          while (freed) {
+            LglsAssumeDev(freed->GetUses() == 0, "Not freed");
             if (is_in_range(freed)) {
                last_valid_freed->SetNextFreeEntry(freed);
                last_valid_freed = freed;

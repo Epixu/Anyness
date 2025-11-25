@@ -177,7 +177,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          REQUIRE(chain_counter == pool->GetCurrentEntries() - pool->GetValidEntries());
 
          // Deallocate more entries to enforce shrinking                
-         for (size_t i = 20; i < static_cast<size_t>(pool->GetMaxEntries()); ++i) {
+         for (size_t i = 16; i < static_cast<size_t>(pool->GetMaxEntries()); ++i) {
             auto entry = pool->AllocationFromIndex(i);
             if (entry->GetUses() == 0)
                continue;
