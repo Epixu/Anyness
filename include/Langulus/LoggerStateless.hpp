@@ -480,23 +480,23 @@ namespace Langulus::Logger
          ::std::ostringstream oss;
          oss << ::std::setprecision(3);
          
-         if (bytes < 1'000LL)
+         if (bytes < 1'024LL)
             oss << bytes << " B";
-         else if (bytes < 1'000'000LL)
-            oss << (bytes * 1. / 1000LL) << " KB";
-         else if (bytes < 1'000'000'000LL)
-            oss << (bytes * 1. / 1000'000LL) << " MB";
+         else if (bytes < 1'048'576LL)
+            oss << (bytes * 1. / 1023LL) << " KB";
+         else if (bytes < 1'073'741'824LL)
+            oss << (bytes * 1. / 1'048'576LL) << " MB";
          else if constexpr (sizeof(size_t) > 4) {
             // ReSharper disable once CppDFAUnreachableCode             
-            if (bytes < 1'000'000'000'000LL)
-               oss << (bytes * 1. / 1000'000'000LL) << " GB";
-            else if (bytes < 1'000'000'000'000'000LL)
-               oss << (bytes * 1. / 1000'000'000'000LL) << " TB";
+            if (bytes < 1'099'511'627'776LL)
+               oss << (bytes * 1. / 1'073'741'824LL) << " GB";
+            else if (bytes < 1'125'899'906'842'624LL)
+               oss << (bytes * 1. / 1'099'511'627'776LL) << " TB";
             else
-               oss << (bytes * 1. / 1000'000'000'000'000LL) << " PB";
+               oss << (bytes * 1. / 1'125'899'906'842'624LL) << " PB";
          }
          // ReSharper disable once CppDFAUnreachableCode                
-         else oss << (bytes * 1. / 1000'000'000LL) << " GB";
+         else oss << (bytes * 1. / 1'073'741'824LL) << " GB";
 
          return oss.str();
       }
@@ -518,13 +518,13 @@ namespace Langulus::Logger
       return {static_cast<size_t>((1LL << 30) * num)};
    }
    constexpr Size operator""_KB(long double num) noexcept {
-      return {static_cast<size_t>(1'000LL * num)};
+      return {static_cast<size_t>(1'024LL * num)};
    }
    constexpr Size operator""_MB(long double num) noexcept {
-      return {static_cast<size_t>(1'000'000LL * num)};
+      return {static_cast<size_t>(1'048'576LL * num)};
    }
    constexpr Size operator""_GB(long double num) noexcept {
-      return {static_cast<size_t>(1'000'000'000LL * num)};
+      return {static_cast<size_t>(1'073'741'824LL * num)};
    }
 
 #if LANGULUS_BITNESS() > 32
@@ -535,10 +535,10 @@ namespace Langulus::Logger
       return {static_cast<size_t>((1LL << 50) * num)};
    }
    constexpr Size operator""_TB(long double num) noexcept {
-      return {static_cast<size_t>(1'000'000'000'000LL * num)};
+      return {static_cast<size_t>(1'099'511'627'776LL * num)};
    }
    constexpr Size operator""_PB(long double num) noexcept {
-      return {static_cast<size_t>(1'000'000'000'000'000LL * num)};
+      return {static_cast<size_t>(1'125'899'906'842'624LL * num)};
    }
 #endif
 
@@ -553,13 +553,13 @@ namespace Langulus::Logger
       return {static_cast<size_t>((1LL << 30) * num)};
    }
    constexpr Size operator""_KB(unsigned long long num) noexcept {
-      return {static_cast<size_t>(1'000LL * num)};
+      return {static_cast<size_t>(1'024LL * num)};
    }
    constexpr Size operator""_MB(unsigned long long num) noexcept {
-      return {static_cast<size_t>(1'000'000LL * num)};
+      return {static_cast<size_t>(1'048'576LL * num)};
    }
    constexpr Size operator""_GB(unsigned long long num) noexcept {
-      return {static_cast<size_t>(1'000'000'000LL * num)};
+      return {static_cast<size_t>(1'073'741'824LL * num)};
    }
 
 #if LANGULUS_BITNESS() > 32
@@ -570,10 +570,10 @@ namespace Langulus::Logger
       return {static_cast<size_t>((1LL << 50) * num)};
    }
    constexpr Size operator""_TB(unsigned long long num) noexcept {
-      return {static_cast<size_t>(1'000'000'000'000LL * num)};
+      return {static_cast<size_t>(1'099'511'627'776LL * num)};
    }
    constexpr Size operator""_PB(unsigned long long num) noexcept {
-      return {static_cast<size_t>(1'000'000'000'000'000LL * num)};
+      return {static_cast<size_t>(1'125'899'906'842'624LL * num)};
    }
 #endif
 }

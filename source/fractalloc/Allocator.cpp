@@ -892,7 +892,9 @@ namespace Langulus::Fractalloc
                   Logger::Info(Logger::Purple, "Type ", type.GetCppName(), " pool: ");
                   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
                      Logger::Info(Logger::Purple, "(boundaries: ");
-                     for (auto& boundary : type.GetBoundaries())
+                     if (type.GetBoundaries().empty())
+                        Logger::Append("MAIN");
+                     else for (auto& boundary : type.GetBoundaries())
                         Logger::Append(boundary, ' ');
                      Logger::Append(')');
                   #endif
