@@ -135,49 +135,45 @@ namespace Langulus::Anyness::Component
       /// Calls destructors on all elements, if any were initialized.         
       template<CT::HeapAllocated C>
       void PrepareForReconstruction(this C& self) {
-         // 1. We free if we have to                                    
          auto& a = self.GetAllocationInner();
-         if (a) {
-            LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
-
-            if (a->GetUses() == 1) {
-               // Destroy all elements (& indirections if deeply owned) 
-               if constexpr (CT::ContainsOne<C>) {
-                  if constexpr (CT::DeeplyOwned<C>)
-                     self.DestroyElementDeep();
-                  else
-                     self.DestroyElement();
-               }
-               else {
-                  auto item = IterateHandles(self).begin();
-                  while (item) {
-                     if constexpr (CT::DeeplyOwned<C>)
-                        item->DestroyElementDeep();
-                     else
-                        item->DestroyElement();
-
-                     ++item;
-                  }
-               }
-
-               if constexpr (CT::ContainsMany<C>)
-                  self.AllocateLess(1);
-            }
-            else {
-               // Notice that no element will be destroyed, because in  
-               // this case we have a guarantee, that elements are      
-               // referenced from elsewhere as well                     
-               if_available(self.FreeDeep());
-
-               // Dereference memory and reset state                    
-               a->Free();
-               a = nullptr;
-            }
+         if (not a) {
+            // Nothing was allocated                                    
+            self.AllocateFresh(self.RequestHeap(1));
+            return;
          }
 
-         // 2. We allocate if we have to                                
-         if (not a)
-            self.AllocateFresh(self.RequestHeap(1));
+         // If reached, then we have to free previous elements          
+         LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
+         if (a->GetUses() == 1) {
+            // We don't deallocate the memory - we can reuse it         
+            // But we have to destroy all elements                      
+            if constexpr (CT::ContainsMany<C>) {
+               auto item = IterateHandles(self).begin();
+               while (item) {
+                  if constexpr (CT::DeeplyOwned<C>)
+                     item->DestroyElementDeep();
+                  else
+                     item->DestroyElement();
+
+                  ++item;
+               }
+               self.AllocateLess(1);
+            }
+            else {
+               if constexpr (CT::DeeplyOwned<C>)
+                  self.DestroyElementDeep();
+               else
+                  self.DestroyElement();
+            }
+            return;
+         }
+
+         // If reached we have a guarantee, that elements are           
+         // referenced from elsewhere as well, so we can't afford to    
+         // call any destructors. All we do is reset this container and 
+         // allocate a new block, which will be exclusively ours.       
+         self.Destroy();
+         self.AllocateFresh(self.RequestHeap(1));
       }
 
       /// A helper for clearing and allocating memory before assignment.      
@@ -185,41 +181,48 @@ namespace Langulus::Anyness::Component
       ///   @return true if first element is valid and can be assigned to     
       template<CT::HeapAllocated C>
       bool PrepareForReassignment(this C& self) {
-         // 1. We free if we have to                                    
          auto& a = self.GetAllocationInner();
-         if (a) {
-            LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
+         if (not a) {
+            // Nothing was allocated                                    
+            self.AllocateFresh(self.RequestHeap(1));
+            return false;
+         }
+         
+         // If reached, then we have to free previous elements          
+         LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
+         if (a->GetUses() == 1) {
+            // We don't deallocate the memory - we can reuse it         
+            if constexpr (CT::ContainsMany<C>) {
+               // But we have to destroy all trailing elements          
+               auto item = IterateHandles(self).begin() + 1;
+               while (item) {
+                  if constexpr (CT::DeeplyOwned<C>)
+                     item->DestroyElementDeep();
+                  else
+                     item->DestroyElement();
 
-            if (a->GetUses() == 1) {
-               // We don't deallocate the memory - we can reuse it      
-               // Destroy all but the first element                     
-               if constexpr (CT::ContainsMany<C>) {
-                  auto item = IterateHandles(self).begin() + 1;
-                  while (item) {
-                     if constexpr (CT::DeeplyOwned<C>)
-                        item->DestroyElementDeep();
-                     else
-                        item->DestroyElement();
-
-                     ++item;
-                  }
+                  ++item;
                }
-               return true;
             }
 
-            // Notice that no element will be destroyed, because in     
-            // this case we have a guarantee, that elements are         
-            // referenced from elsewhere as well                        
-            if_available(self.FreeDeep());
+            if (self.IsSparse()) {
+               // Just make sure indirections are dereferenced          
+               // for the first element, in case it's sparse            
+               if constexpr (CT::DeeplyOwned<C>)
+                  self.DestroyElementDeep();
+               else
+                  self.DestroyElement();
+            }
             
-            // Dereference memory and reset state                       
-            a->Free();
-            a = nullptr;
+            return true;
          }
 
-         // 2. We allocate if we have to                                
-         if (not a)
-            self.AllocateFresh(self.RequestHeap(1));
+         // If reached we have a guarantee, that elements are           
+         // referenced from elsewhere as well, so we can't afford to    
+         // call any destructors. All we do is reset this container and 
+         // allocate a new block, which will be exclusively ours.       
+         self.Destroy();
+         self.AllocateFresh(self.RequestHeap(1));
          return false;
       }
       

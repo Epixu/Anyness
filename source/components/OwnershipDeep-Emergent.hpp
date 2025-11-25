@@ -108,7 +108,7 @@ namespace Langulus::Anyness::Component
       /// them if their individual references reach zero.                     
       ///   @attention never modifies any block state                         
       ///   @attention assumes container has a valid ownership                
-      template<CT::Container C>
+      /*template<CT::Container C>
       void FreeDeep(this C& self) {
          constexpr bool MASKED = not CT::Contiguous<C>;
          Count<C> remaining = self.GetCount();
@@ -198,7 +198,7 @@ namespace Langulus::Anyness::Component
                }
             }
          }
-      }
+      }*/
 
       /// Nests through all indirection layers and destroys elements and      
       /// entries if they're fully dereferenced                               
