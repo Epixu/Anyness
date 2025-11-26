@@ -11,14 +11,13 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
-, (Types<Any, RT*, ScopedElement<RT*, true>>)
+   , (Types<Any, Text*, ScopedElement<Text*>>)
 
    , (Types<Any, Text, ScopedElement<Text>>)
    , (Types<Any, int, ScopedElement<int>>)
    , (Types<Any, Any, ScopedElement<Any>>)
    , (Types<Any, RT, ScopedElement<RT>>)
 
-   , (Types<Any, Text*, ScopedElement<Text*>>)
    , (Types<Any, int*, ScopedElement<int*>>)
    , (Types<Any, Any*, ScopedElement<Any*>>)
    , (Types<Any, RT*, ScopedElement<RT*>>)
@@ -42,6 +41,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<Any, Text*, ScopedElement<Text*, true>>)
    , (Types<Any, int*, ScopedElement<int*, true>>)
    , (Types<Any, Any*, ScopedElement<Any*, true>>)
+   , (Types<Any, RT*, ScopedElement<RT*, true>>)
 
    , (Types<TAny<Text>, Text, ScopedElement<Text, true>>)
    , (Types<TAny<int>, int, ScopedElement<int, true>>)

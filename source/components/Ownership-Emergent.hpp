@@ -111,13 +111,22 @@ namespace Langulus::Anyness::Component
       /// Reference the allocation once.                                      
       /// If container has DeepOwnership component, all entries will be       
       /// individually referenced as well.                                    
-      void Keep(this auto const& self) noexcept {
+      template<CT::Container C>
+      void Keep(this C const& self) noexcept {
          auto a = self.GetAllocation();
          if (not a)
             return;
 
          a->Keep(1);
-         if_available(self.KeepDeep());
+
+         if constexpr (CT::DeeplyOwned<C>) {
+            if constexpr (CT::ContainsMany<C>) {
+               auto item = IterateHandles(self).begin();
+               while (item)
+                  (item++)->KeepElementDeep();
+            }
+            else self.KeepElementDeep();
+         }
       }
 
       /// Dereference memory block once and destroy all elements if data was  

@@ -36,7 +36,7 @@ namespace Langulus::Anyness::Component
       using Count = typename Deref<C>::CountType;
 
       /// Reference all referencable elements inside the container            
-      template<CT::Container C>
+      /*template<CT::Container C>
       void KeepDeep(this C const& self) { 
          constexpr bool MASKED = not CT::Contiguous<C>;
          Count<C> remaining = self.GetCount();
@@ -102,7 +102,7 @@ namespace Langulus::Anyness::Component
                }
             }
          }
-      }
+      }*/
 
       /// Dereference all referenced initialized items, eventually destroying 
       /// them if their individual references reach zero.                     
@@ -199,6 +199,72 @@ namespace Langulus::Anyness::Component
             }
          }
       }*/
+
+      /// Nests through all indirection layers and references elements and    
+      /// entries                                                             
+      ///   @attention doesn't change any container state                     
+      template<CT::Container C>
+      void KeepElementDeep(this C& self) has_assumptions {
+         static_assert(CT::ContainsOne<C>,
+            "Referencing only first element in a container with many");
+         if (self.IsEmpty())
+            return;
+
+         using H = typename C::HandleMutType;
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // Referencing a type-erased element                        
+            const auto T = self.GetType();
+            if (T.IsSparse()) {
+               EntryPtr entries = self.GetEntries();
+               if (not entries or not *entries)
+                  return;
+
+               const auto subT = T.GetDeptr();
+               const auto ptr = *static_cast<void**>(const_cast<void*>(self.GetRaw())); //TODO this won't work for packed pointers
+               LglsAssumeDev(ptr, "Null pointer");
+
+               if (subT.IsSparse()) {
+                  // Pointer to pointer                                 
+                  if (auto subEntry = entries + 1) {
+                     H temp {ptr, subEntry, subT};
+                     temp.KeepElementDeep();
+                  }
+               }
+               else if (const auto referencer = subT.GetReferencer()) {
+                  // Pointer to dense                                   
+                  referencer(ptr, 1);
+               }
+
+               (*entries)->Keep();
+            }
+         }
+         else {
+            //                                                          
+            // Referencing a statically-typed element                   
+            using T = TypeOf<C>;            
+            if constexpr (CT::Sparse<T>) {
+               using DT = Deptr<T>;
+               EntryPtr entries = self.GetEntries();
+               if (not entries or not *entries)
+                  return;
+
+               auto& ptr = *self.template GetRawAs<T>();
+               LglsAssumeDev(ptr, "Null pointer");
+
+               if constexpr (CT::Sparse<DT>) {
+                  // Pointer to pointer                                 
+                  H {ptr, entries + 1}.KeepElementDeep();
+               }
+               else if constexpr (CT::Referenced<DT>) {
+                  // Pointer to dense                                   
+                  ptr->Reference(1);
+               }
+
+               (*entries)->Keep();
+            }
+         }
+      }      
 
       /// Nests through all indirection layers and destroys elements and      
       /// entries if they're fully dereferenced                               
