@@ -442,8 +442,10 @@ namespace Langulus::Anyness::Component
                   // reference them. Notice that when NOT emplacing via 
                   // a handle, we're forced to reference on abandon,    
                   // because we can't abandon a raw pointer.            
-                  if constexpr (not CT::Handle<IT>)
-                     *entries = const_cast<AllocationPtr>(Allocator::Find(meta, *handle));
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     if constexpr (not CT::Handle<IT>)
+                        *entries = const_cast<AllocationPtr>(Allocator::Find(meta, *handle));
+                  #endif
 
                   if (not *entries)
                      break;

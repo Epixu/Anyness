@@ -115,7 +115,11 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
 
          REQUIRE(pointer == raw.element);
          REQUIRE(*pointer == *raw);
-         REQUIRE(pointer.GetAllocation() == *raw.entries);
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            REQUIRE(pointer.GetAllocation() == *raw.entries);
+         #else
+            REQUIRE(pointer.GetAllocation() == nullptr);
+         #endif
          REQUIRE(pointer.GetUses() == (pointer.GetUses() ? 2 : 0));
          if constexpr (CT::Referenced<TT>)
             REQUIRE(pointer->GetReferences() == 1);
@@ -126,7 +130,11 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
 
          REQUIRE(pointer == raw.element);
          REQUIRE(*pointer == *raw);
-         REQUIRE(pointer.GetAllocation() == *raw.entries);
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            REQUIRE(pointer.GetAllocation() == *raw.entries);
+         #else
+            REQUIRE(pointer.GetAllocation() == nullptr);
+         #endif
          REQUIRE(pointer.GetUses() == (pointer.GetUses() ? 2 : 0));
          if constexpr (CT::Referenced<TT>)
             REQUIRE(pointer->GetReferences() == 1);
