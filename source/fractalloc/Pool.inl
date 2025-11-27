@@ -438,16 +438,13 @@ namespace Langulus::Fractalloc
          return index < mNextEntry;
       };
 
-      while (mLastFreed and not is_in_range(mLastFreed)) {
-         LglsAssumeDev(mLastFreed->GetUses() == 0, "Not freed");
+      while (mLastFreed and not is_in_range(mLastFreed))
          mLastFreed = mLastFreed->GetNextFreeEntry();
-      }
 
       if (mLastFreed) {
          auto last_valid_freed = mLastFreed;
          auto freed = mLastFreed->GetNextFreeEntry();
          while (freed) {
-            LglsAssumeDev(freed->GetUses() == 0, "Not freed");
             if (is_in_range(freed)) {
                last_valid_freed->SetNextFreeEntry(freed);
                last_valid_freed = freed;
