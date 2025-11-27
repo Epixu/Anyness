@@ -253,6 +253,10 @@ namespace Langulus::Anyness::Component
                   T.GetDisownConstructor()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
+
+               if (T.IsSparse()) {
+                  if_available(self.EmplaceEntries(FWD(intent)));
+               }
             }
             else {
                //                                                       
@@ -264,9 +268,11 @@ namespace Langulus::Anyness::Component
                   IntentNew(self.GetHeapInner(), I::Nest(*rhs.GetRaw()));
                else
                   IntentNew(self.GetHeapInner(), Refer(*rhs.GetRaw()));
+
+               if constexpr (CT::Sparse<T>) {
+                  if_available(self.EmplaceEntries(FWD(intent)));
+               }
             }
-            
-            if_available(self.EmplaceEntries(FWD(intent)));
          }
          else {
             if constexpr (CT::TypeErased<C>) {
@@ -287,6 +293,10 @@ namespace Langulus::Anyness::Component
                   T.GetDisownConstructor()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
+
+               if (T.IsSparse()) {
+                  if_available(self.EmplaceEntries(FWD(intent)));
+               }
             }
             else {
                //                                                       
@@ -294,9 +304,11 @@ namespace Langulus::Anyness::Component
                using T = TypeOf<C>;
                static_assert(Same<T, IT>, "Type mismatch");
                IntentNew(self.GetHeapInner(), FWD(intent));
-            }
 
-            if_available(self.EmplaceEntries(FWD(intent)));
+               if constexpr (CT::Sparse<T>) {
+                  if_available(self.EmplaceEntries(FWD(intent)));
+               }
+            }
          }
       }
       

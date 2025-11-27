@@ -255,9 +255,9 @@ namespace Langulus::Anyness::Component
                // Either this container or the handle is type-erased    
                auto T = rhs.GetTypeInner();
                LglsAssumeDev(self.IsSame(T), "Type mismatch");
-
                const auto src = const_cast<void*>(rhs.GetRaw());
                const auto dst = self.template AccessStackById<ID>();
+
                if constexpr (CT::Moved<I>)
                   T.GetMoveAssigner()(src, dst);
                else if constexpr (CT::Abandoned<I>)
@@ -268,6 +268,10 @@ namespace Langulus::Anyness::Component
                   T.GetDisownAssigner()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
+
+               if (T.IsSparse()) {
+                  if_available(self.EmplaceEntries(FWD(intent)));
+               }
             }
             else {
                //                                                       
@@ -277,9 +281,11 @@ namespace Langulus::Anyness::Component
                static_assert(Same<T, TypeOf<IT>>, "Type mismatch");
                T* data = static_cast<T*>(self.template AccessStackById<ID>());
                IntentAssign(*data, I::Nest(*rhs.GetRaw()));
+
+               if constexpr (CT::Sparse<T>) {
+                  if_available(self.EmplaceEntries(FWD(intent)));
+               }
             }
-            
-            if_available(self.EmplaceEntries(FWD(intent)));
          }
          else {
             if constexpr (CT::TypeErased<C>) {
@@ -287,9 +293,9 @@ namespace Langulus::Anyness::Component
                // This container is type-erased                         
                LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
                auto T = self.GetTypeInner();
-
                const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
                const auto dst = self.template AccessStackById<ID>();
+
                if constexpr (CT::Moved<I>)
                   T.GetMoveAssigner()(src, dst);
                else if constexpr (CT::Abandoned<I>)
@@ -300,6 +306,10 @@ namespace Langulus::Anyness::Component
                   T.GetDisownAssigner()(src, dst);
                else
                   static_assert(false, "Unrecognized intent");
+
+               if (T.IsSparse()) {
+                  if_available(self.EmplaceEntries(FWD(intent)));
+               }
             }
             else {
                //                                                       
@@ -308,9 +318,11 @@ namespace Langulus::Anyness::Component
                static_assert(Same<T, IT>, "Type mismatch");
                T* data = static_cast<T*>(self.template AccessStackById<ID>());
                IntentAssign(*data, FWD(intent));
-            }
 
-            if_available(self.EmplaceEntries(FWD(intent)));
+               if constexpr (CT::Sparse<T>) {
+                  if_available(self.EmplaceEntries(FWD(intent)));
+               }
+            }
          }
       }
    };

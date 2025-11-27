@@ -140,8 +140,8 @@ namespace Langulus::Anyness::Component
 
          LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
          if (a->GetUses() == 1) {
-            // Dereference, and eventually destroy all elements         
-            // (and indirections if deeply owned)                       
+            // Dereference, and eventually destroy all elements - all   
+            // indirections, as well as dense elements.                 
             if constexpr (CT::ContainsOne<C>) {
                if constexpr (CT::DeeplyOwned<C>)
                   self.DestroyElementDeep();
@@ -162,7 +162,23 @@ namespace Langulus::Anyness::Component
 
             Allocator::Deallocate(a);
          }
-         else a->Free();
+         else {
+            // Dereference, and eventually destroy all elements -       
+            // affect indirections and elements behind them only!       
+            if constexpr (CT::DeeplyOwned<C>) {
+               if constexpr (CT::ContainsOne<C>)
+                  self.template DestroyElementDeep<false>();
+               else {
+                  auto item = IterateHandles(self).begin();
+                  while (item) {
+                     item->template DestroyElementDeep<false>();
+                     ++item;
+                  }
+               }
+            }
+
+            a->Free();
+         }
       }
       
       /// Dereference and eventually destroy the first element                

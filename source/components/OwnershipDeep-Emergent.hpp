@@ -269,7 +269,7 @@ namespace Langulus::Anyness::Component
       /// Nests through all indirection layers and destroys elements and      
       /// entries if they're fully dereferenced                               
       ///   @attention doesn't change any container state                     
-      template<CT::Container C>
+      template<bool DESTROY = true, CT::Container C>
       void DestroyElementDeep(this C& self) has_assumptions {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
@@ -298,7 +298,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      if (auto subEntry = entries + 1) {
                         H temp {ptr, subEntry, subT};
-                        temp.DestroyElementDeep();
+                        temp.template DestroyElementDeep<DESTROY>();
                      }
                   }
                   else if (auto destructor = subT.GetDestructor()) {
@@ -330,12 +330,12 @@ namespace Langulus::Anyness::Component
                   (*entries)->Free();
                }
             }
-            else {
+            else if constexpr (DESTROY) {
                if (const auto destructor = T.GetDestructor()) {
                   // Call destructor of dense element                   
                   const auto ptr = self.GetRaw();
-                  if (const auto referencer = T.GetReferencer())
-                     referencer(ptr, -1);
+                  IF_SAFE(if (const auto referencer = T.GetReferencer())
+                     referencer(ptr, -1));
                   destructor(ptr);
                }
             }
@@ -358,7 +358,7 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Sparse<DT>) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
-                     H {ptr, entries + 1}.DestroyElementDeep();
+                     H {ptr, entries + 1}.template DestroyElementDeep<DESTROY>();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
                      // Pointer to a complete, destroyable dense.       
@@ -388,11 +388,11 @@ namespace Langulus::Anyness::Component
                   (*entries)->Free();
                }
             }
-            else if constexpr (CT::Destroyable<T>) {
+            else if constexpr (DESTROY and CT::Destroyable<T>) {
                // Call destructor of dense element                      
                auto& element = self.Get();
-               if constexpr (CT::Referenced<T>)
-                  element.Reference(-1);
+               IF_SAFE(if constexpr (CT::Referenced<T>)
+                  element.Reference(-1));
                element.~T();
             }
          }
@@ -400,78 +400,74 @@ namespace Langulus::Anyness::Component
       
       /// Emplace on top of the first element using an intent                 
       ///   @attention this overwrites previous entries without dereferencing 
+      ///   @attention emplacing using a handle is faster due to carrying     
+      ///      allocation data with itself when sparse, rather than searching 
+      ///      for it on demand.                                              
       ///   @param intent - entries will be copied/sought if handle/sparse    
       template<CT::Container C, CT::Intent I>
       void EmplaceEntries(this C& self, I&& intent) {
+         static_assert(not CT::Cloned<I>,
+            "EmplaceEntries shouldn't be called when cloning, "
+            "because it will overwrite/reference new allocations"
+         );
+         LglsAssumeDev(self.IsSparse(),
+            "EmplaceEntries shouldn't be called on dense containers");
          using IT = Decvq<Deref<TypeOf<I>>>;
          decltype(auto) rhs = FWD(intent.what);
 
-         if constexpr (CT::Handle<IT>) {
-            // We're emplacing using a handle, which can be faster due  
-            // to carrying allocation data with itself when sparse,     
-            // instead of searching for it when having DeepOwnership.   
-            if (self.IsSparse()) {
-               LglsAssumeDev(rhs.IsSparse(), "Sparseness mismatch");
-               const auto indirections = self.GetIndirections();
-               const auto entries_size = sizeof(AllocationPtr) * indirections;
-               if constexpr (I::IsKept()) {
-                  memcpy(self.GetEntries(), rhs.GetEntries(), entries_size);
-                  
-                  if constexpr (not CT::Cloned<I>) {
-                     auto entries = self.GetEntries();
-                     while (entries < self.GetEntries() + indirections) {
-                        if (*entries)
-                           (*entries)->Keep(1);
-                        ++entries;
-                     }
+         if constexpr (CT::Handle<IT>)
+            LglsAssumeDev(rhs.IsSparse(), "Sparseness mismatch");
+         else
+            LglsAssumeDev(CT::Sparse<decltype(rhs)>, "Sparseness mismatch");
 
-                     auto meta = self.GetType().GetDeptr();
-                     void** handle = self.template GetRawAs<void*>();
-                     while (meta and *handle) {
-                        auto referencer = meta.GetReferencer();
-                        if (meta.IsDense() and referencer)
-                           referencer(*handle, 1);
-                        
-                        handle = reinterpret_cast<void**>(*handle);
-                        meta = meta.GetDeptr();
-                     }
-                  }
+         const auto indirections = self.GetIndirections();
+         const auto entries_size = sizeof(AllocationPtr) * indirections;
+         if constexpr ((CT::Handle<IT> and     I::IsKept())
+         or (       not CT::Handle<IT> and not CT::Disowned<I>)) {
+            // When it's a keeping intent, copy all entries and         
+            // reference them                                           
+            if constexpr (CT::Handle<IT>)
+               memcpy(self.GetEntries(), rhs.GetEntries(), entries_size);
+            else
+               memset(self.GetEntries(), 0, entries_size);
+
+            if constexpr (CT::Handle<IT> or LANGULUS_FEATURE(MANAGED_MEMORY)) {
+               auto entries = self.GetEntries();
+               const auto entriesEnd = entries + indirections;
+               auto meta = self.GetType().GetDeptr();
+               void** handle = self.template GetRawAs<void*>();
+
+               while (entries < entriesEnd) {
+                  // When it's a keeping intent, copy all entries and   
+                  // reference them. Notice that when NOT emplacing via 
+                  // a handle, we're forced to reference on abandon,    
+                  // because we can't abandon a raw pointer.            
+                  if constexpr (not CT::Handle<IT>)
+                     *entries = const_cast<AllocationPtr>(Allocator::Find(meta, *handle));
+
+                  if (not *entries)
+                     break;
+
+                  (*entries)->Keep(1);
+
+                  LglsAssumeDev(meta,
+                     "Valid entry, but invalid type");
+                  LglsAssumeDevAndOptimize(*handle,
+                     "Valid entry, but invalid pointer");
+
+                  auto referencer = meta.GetReferencer();
+                  if (meta.IsDense() and referencer)
+                     referencer(*handle, 1);
+
+                  handle = reinterpret_cast<void**>(*handle);
+                  meta = meta.GetDeptr();
+                  ++entries;
                }
-               else memset(self.GetEntries(), 0, entries_size);
             }
          }
          else {
-            // Transfer deep ownership by searching for it.             
-            // Obviously, this is available only if memory is managed.  
-            if (self.IsSparse()) {
-               LglsAssumeDev(CT::Sparse<decltype(rhs)>, "Sparseness mismatch");
-               
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               if constexpr (not CT::Disowned<I>) {
-                  auto entries = self.GetEntries();
-                  auto meta = self.GetType().GetDeptr();
-                  void** handle = self.template GetRawAs<void*>();
-                  
-                  while (meta and *handle) {
-                     *entries = const_cast<AllocationPtr>(Allocator::Find(meta, *handle));
-                     
-                     if constexpr (not CT::Cloned<I>) {
-                        if (*entries)
-                           (*entries)->Keep(1);
-                        auto referencer = meta.GetReferencer();
-                        if (meta.IsDense() and referencer)
-                           referencer(*handle, 1);
-                     }
-
-                     handle = reinterpret_cast<void**>(*handle);
-                     meta = meta.GetDeptr();
-                     ++entries;
-                  }
-               }
-               else
-               #endif
-                  memset(self.GetEntries(), 0, sizeof(AllocationPtr) * self.GetIndirections());
-            }
+            // Disowning just zeroes all entries                        
+            memset(self.GetEntries(), 0, entries_size);
          }
       }
    };

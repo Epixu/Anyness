@@ -16,19 +16,6 @@
 using namespace Langulus;
 using namespace Anyness;
 
-/*template<class T, class E>
-decltype(auto) FromHelper() {
-   if constexpr (not CT::Typed<T>) {
-      if constexpr (CT::Tag<T>) {
-         if constexpr (CT::DefineTag<T>)
-            return T::template OfType<E>();
-         else
-            return T::template From<Tags::Count, E>();
-      }
-      else return T::template From<E>();
-   }
-   else return T {};
-}*/
 
 namespace Catch
 {

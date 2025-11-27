@@ -11,16 +11,20 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
-   , (Types<Any, Text*, ScopedElement<Text*>>)
-
    , (Types<Any, Text, ScopedElement<Text>>)
    , (Types<Any, int, ScopedElement<int>>)
    , (Types<Any, Any, ScopedElement<Any>>)
    , (Types<Any, RT, ScopedElement<RT>>)
 
+   , (Types<Any, Text*, ScopedElement<Text*>>)
    , (Types<Any, int*, ScopedElement<int*>>)
    , (Types<Any, Any*, ScopedElement<Any*>>)
    , (Types<Any, RT*, ScopedElement<RT*>>)
+
+   /*, (Types<Any, Text**, ScopedElement<Text**>>)
+   , (Types<Any, int**, ScopedElement<int**>>)
+   , (Types<Any, Any**, ScopedElement<Any**>>)
+   , (Types<Any, RT**, ScopedElement<RT**>>)*/
 
    , (Types<TAny<Text>, Text, ScopedElement<Text>>)
    , (Types<TAny<int>, int, ScopedElement<int>>)
@@ -31,6 +35,11 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<TAny<int*>, int*, ScopedElement<int*>>)
    , (Types<TAny<Any*>, Any*, ScopedElement<Any*>>)
    , (Types<TAny<RT*>, RT*, ScopedElement<RT*>>)
+
+   /*, (Types<TAny<Text**>, Text**, ScopedElement<Text**>>)
+   , (Types<TAny<int**>, int**, ScopedElement<int**>>)
+   , (Types<TAny<Any**>, Any**, ScopedElement<Any**>>)
+   , (Types<TAny<RT**>, RT**, ScopedElement<RT**>>)*/
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    , (Types<Any, Text, ScopedElement<Text, true>>)
@@ -43,6 +52,11 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<Any, Any*, ScopedElement<Any*, true>>)
    , (Types<Any, RT*, ScopedElement<RT*, true>>)
 
+   /*, (Types<Any, Text**, ScopedElement<Text**, true>>)
+   , (Types<Any, int**, ScopedElement<int**, true>>)
+   , (Types<Any, Any**, ScopedElement<Any**, true>>)
+   , (Types<Any, RT**, ScopedElement<RT**, true>>)*/
+
    , (Types<TAny<Text>, Text, ScopedElement<Text, true>>)
    , (Types<TAny<int>, int, ScopedElement<int, true>>)
    , (Types<TAny<Any>, Any, ScopedElement<Any, true>>)
@@ -52,6 +66,11 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<TAny<int*>, int*, ScopedElement<int*, true>>)
    , (Types<TAny<Any*>, Any*, ScopedElement<Any*, true>>)
    , (Types<TAny<RT*>, RT*, ScopedElement<RT*, true>>)
+
+   /*, (Types<TAny<Text**>, Text**, ScopedElement<Text**, true>>)
+   , (Types<TAny<int**>, int**, ScopedElement<int**, true>>)
+   , (Types<TAny<Any**>, Any**, ScopedElement<Any**, true>>)
+   , (Types<TAny<RT**>, RT**, ScopedElement<RT**, true>>)*/
    #endif
 ) {
    static Allocator::State memoryState;
@@ -968,7 +987,27 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(absorbed);
          
          REQUIRE(absorbed == pack);
+         REQUIRE(absorbed.GetRaw() != pack.GetRaw());
+         REQUIRE(absorbed.template As<E>() == pack.template As<E>());
+         if constexpr (CT::Sparse<E>) {
+            auto entry = *absorbed.GetEntries();
+            if (entry) {
+               REQUIRE(entry->GetUses() == 3);
+
+               if constexpr (CT::Referenced<Decay<E>>) {
+                  auto e = absorbed.template As<E>();
+                  REQUIRE(DenseCast(e).GetReferences() == 3);
+               }
+            }
+            else {
+               if constexpr (CT::Referenced<Decay<E>>) {
+                  auto e = absorbed.template As<E>();
+                  REQUIRE(DenseCast(e).GetReferences() == 1);
+               }
+            }
+         }
          REQUIRE(absorbed.GetUses() == 1);
+         REQUIRE(pack.GetUses() == 1);
       }
       
       WHEN("Absorbed by clone") {
@@ -1275,17 +1314,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          REQUIRE(pack1 == pack2);
       }
 
-      WHEN("Copy-assign pack1 in pack2, then reset pack1") {
-         pack2 = Copy(pack1);
-         pack1.Reset();
-         
-         Any_CheckState_Default<E>(pack1);
-         Any_CheckState_OwnedFull<E>(pack2);
-
-         REQUIRE(pack2.GetUses() == 1);
-         REQUIRE(pack2 == memory1);
-      }
-      
       WHEN("Clone-assign pack1 in pack2") {
          pack2 = Clone(pack1);
 
@@ -1294,6 +1322,17 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          REQUIRE((pack1 == pack2) == CT::Dense<E>);
          REQUIRE((pack2 == memory1) == CT::Dense<E>);
          REQUIRE(pack2 != memory2);
+      }
+
+      WHEN("Copy-assign pack1 in pack2, then reset pack1") {
+         pack2 = Copy(pack1);
+         pack1.Reset();
+
+         Any_CheckState_Default<E>(pack1);
+         Any_CheckState_OwnedFull<E>(pack2);
+
+         REQUIRE(pack2.GetUses() == 1);
+         REQUIRE(pack2 == memory1);
       }
 
       WHEN("Refer-assign pack1 in pack2, then reset pack1") {

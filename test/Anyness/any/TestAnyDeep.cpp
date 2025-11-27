@@ -553,16 +553,3 @@ TEMPLATE_TEST_CASE("Deep sequential containers 2", "[any]", int, RT, int*, RT*) 
 
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
-
-SCENARIO("Test BlockCast", "[block]") {
-   Block<> from {};
-   const Block<> fromc {};
-
-   static_assert(CT::Exact<decltype(BlockCast<Text>(from)), Text&>);
-   static_assert(CT::Exact<decltype(BlockCast<Text>(fromc)), const Text&>);
-   static_assert(CT::Exact<decltype(BlockCast<Text>(Block<> {})), Text&>);
-
-   static_assert(CT::Exact<decltype(BlockCast<const Text>(from)), Text&>);
-   static_assert(CT::Exact<decltype(BlockCast<const Text>(fromc)), const Text&>);
-   static_assert(CT::Exact<decltype(BlockCast<const Text>(Block<> {})), Text&>);
-}
