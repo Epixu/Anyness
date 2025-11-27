@@ -139,9 +139,9 @@ namespace Langulus::Anyness::Component
             return;
 
          LglsAssumeDev(a->GetUses() >= 1, "Bad memory dereferencing");
-
          if (a->GetUses() == 1) {
-            // Destroy all elements (and indirections if deeply owned)  
+            // Dereference, and eventually destroy all elements         
+            // (and indirections if deeply owned)                       
             if constexpr (CT::ContainsOne<C>) {
                if constexpr (CT::DeeplyOwned<C>)
                   self.DestroyElementDeep();
@@ -160,19 +160,9 @@ namespace Langulus::Anyness::Component
                }
             }
 
-            // Free memory                                              
             Allocator::Deallocate(a);
          }
-         else {
-            // Free all entries if DeepOwnership component exists.      
-            // Notice that no element will be destroyed, because in this
-            // case we have a guarantee that elements are referenced    
-            // from elsewhere as well.                                  
-            if_available(self.FreeDeep());
-
-            // Dereference memory                                       
-            a->Free();
-         }
+         else a->Free();
       }
       
       /// Dereference and eventually destroy the first element                
@@ -192,8 +182,8 @@ namespace Langulus::Anyness::Component
             auto T = self.GetType();
             if (const auto destructor = T.GetDestructor()) {
                const auto ptr = self.GetRaw();
-               if (const auto referencer = T.GetReferencer())
-                  referencer(ptr, -1);
+               //if (const auto referencer = T.GetReferencer())
+               //   referencer(ptr, -1);
                destructor(ptr);
             }
          }
@@ -202,8 +192,8 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C>;
             if constexpr (CT::Destroyable<T>) {
                auto& element = self.Get();
-               if constexpr (CT::Referenced<T>)
-                  element.Reference(-1);
+               //if constexpr (CT::Referenced<T>)
+               //   element.Reference(-1);
                element.~T();
             }
          }

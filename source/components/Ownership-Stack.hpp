@@ -78,11 +78,14 @@ namespace Langulus::Anyness::Component
       ///   @attention this will not dereference previous allocation          
       void FindAllocationInner(this auto& self) noexcept {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            auto found = Allocator::Find(self.GetType(), self.GetHeapInner());
-            self.SetAllocationInner(found ? found : nullptr);
-         #else
-            self.SetAllocationInner(nullptr);
+            if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
+               self.SetAllocationInner(found);
+               if constexpr (AUTO)
+                  self.Keep();
+            }
+            else
          #endif
+         self.SetAllocationInner(nullptr);
       }
 
       /// Default-initialize the component                                    

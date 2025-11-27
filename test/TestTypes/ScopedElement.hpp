@@ -83,11 +83,13 @@ protected:
          if (not *entry)
             delete place;
          else if constexpr (MANAGED) {
+            LglsAssumeDev((*entry)->GetUses() >= 1);
             if ((*entry)->GetUses() == 1) {
                if constexpr (requires { place->~INNER(); })
                   place->~INNER();
                Allocator::Deallocate(*entry);
             }
+            else (*entry)->Free();
          }
       }
       else if (place) {
@@ -96,9 +98,11 @@ protected:
          if (not *entry)
             delete place;
          else if constexpr (MANAGED) {
-            if ((*entry)->GetUses() == 1) {
+            LglsAssumeDev((*entry)->GetUses() >= 1);
+            if ((*entry)->GetUses() == 1)
                Allocator::Deallocate(*entry);
-            }
+            else
+               (*entry)->Free();
          }
       }
    }

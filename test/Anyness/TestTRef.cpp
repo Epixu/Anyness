@@ -8,22 +8,29 @@
 #include "../Main.hpp"
 #include <Langulus/Anyness/TRef.hpp>
 #include "../TestTypes/ReferencedType.hpp"
+#include "../TestTypes/ScopedElement.hpp"
 
 using namespace Langulus;
 using Anyness::TRef;
 using Anyness::Allocator;
 
 
-TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
-   TRef<RT>,
-   TRef<const RT>,
-   TRef<int>,
-   TRef<const int>
+TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
+   , (Types<TRef<RT>,        ScopedElement<RT>>)
+   , (Types<TRef<const RT>,  ScopedElement<RT>>)
+   , (Types<TRef<int>,       ScopedElement<int>>)
+   , (Types<TRef<const int>, ScopedElement<int>>)
+   
+   , (Types<TRef<RT>,        ScopedElement<RT, true>>)
+   , (Types<TRef<const RT>,  ScopedElement<RT, true>>)
+   , (Types<TRef<int>,       ScopedElement<int, true>>)
+   , (Types<TRef<const int>, ScopedElement<int, true>>)
 ) {
    static Allocator::State memoryState;
-   using T  = TestType;
+   using T  = typename TestType::First;
    using TT = TypeOf<T>;
-   
+   using ScopedE = typename TestType::Second;
+
    GIVEN("Nullptr-initialized") {
       T pointer {nullptr};
       T pointer2 {nullptr};
@@ -36,6 +43,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
    GIVEN("Default-initialized") {
       T pointer;
       T pointer2;
+      const ScopedE raw {3};
 
       REQUIRE_FALSE(pointer.GetRaw());
       REQUIRE_FALSE(pointer);
@@ -63,7 +71,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
          REQUIRE(pointer.GetUses() == 2);
          REQUIRE(pointer2.GetUses() == 2);
          if constexpr (CT::Referenced<TT>)
-            REQUIRE(pointer->GetReferences() == 1); //TODO major design change - TRef is no longer deep referenced for now, let's see how that goes
+            REQUIRE(pointer->GetReferences() == 1);
       }
 
       WHEN("Create and move an instance") {
@@ -98,63 +106,30 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
          REQUIRE(pointer.GetAllocation());
          REQUIRE(pointer.GetUses() == 2);
          if constexpr (CT::Referenced<TT>)
-            REQUIRE(pointer->GetReferences() == 1); //TODO major design change - TRef is no longer deep referenced for now, let's see how that goes
+            REQUIRE(pointer->GetReferences() == 1);
       }
-
-      auto raw = new Decay<TT> {3};
-      const auto rawBackUp = raw;
 
       WHEN("Given an xvalue pointer created via `new` statement") {
-         pointer = ::std::move(raw);
+         auto movable = raw.element;
+         pointer = ::std::move(movable);
 
-         REQUIRE(pointer == rawBackUp);
-         REQUIRE(*pointer == *rawBackUp);
-         REQUIRE(raw == rawBackUp);
-         #if LANGULUS_FEATURE(NEWDELETE)
-            REQUIRE(pointer.GetAllocation());
-            REQUIRE(pointer.GetReferences() == 2);
-         #else
-            REQUIRE_FALSE(pointer.GetAllocation());
-            if constexpr (CT::Referenced<TT>)
-               REQUIRE(pointer->GetReferences() == 1);
-         #endif
+         REQUIRE(pointer == raw.element);
+         REQUIRE(*pointer == *raw);
+         REQUIRE(pointer.GetAllocation() == *raw.entries);
+         REQUIRE(pointer.GetUses() == (pointer.GetUses() ? 2 : 0));
+         if constexpr (CT::Referenced<TT>)
+            REQUIRE(pointer->GetReferences() == 1);
       }
 
-      #if LANGULUS_FEATURE(NEWDELETE)
-         WHEN("Given an immediate xvalue pointer created via `new` statement - a very bad practice, unless LANGULUS_FEATURE(NEWDELETE) is enabled!") {
-            pointer = new Decay<TT> {3};
-
-            #if LANGULUS_FEATURE(NEWDELETE)
-               REQUIRE(pointer.GetAllocation());
-               REQUIRE(pointer.GetReferences() == 2);
-            #endif
-         }
-
-         WHEN("Given an xvalue pointer and then reset") {
-            pointer = ::std::move(raw);
-            auto unused = Allocator::Free(pointer.GetType(), raw, 1);
-            pointer = nullptr;
-
-            REQUIRE_FALSE(raw->GetAllocation());
-            REQUIRE(Allocator::CheckAuthority(pointer.GetType(), raw));
-            REQUIRE_FALSE(Allocator::Find(pointer.GetType(), raw));
-            REQUIRE_FALSE(pointer.GetAllocation());
-         }
-      #endif
-
       WHEN("Given an lvalue pointer") {
-         pointer = raw;
+         pointer = raw.element;
 
-         REQUIRE(pointer == raw);
+         REQUIRE(pointer == raw.element);
          REQUIRE(*pointer == *raw);
-         #if LANGULUS_FEATURE(NEWDELETE)
-            REQUIRE(pointer.GetAllocation());
-            REQUIRE(pointer.GetReferences() == 2);
-         #else
-            REQUIRE_FALSE(pointer.GetAllocation());
-            if constexpr (CT::Referenced<TT>)
-               REQUIRE(pointer->GetReferences() == 1);
-         #endif
+         REQUIRE(pointer.GetAllocation() == *raw.entries);
+         REQUIRE(pointer.GetUses() == (pointer.GetUses() ? 2 : 0));
+         if constexpr (CT::Referenced<TT>)
+            REQUIRE(pointer->GetReferences() == 1);
       }
 
       WHEN("Compared") {
@@ -170,12 +145,6 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]",
          STATIC_REQUIRE(T{ (TT*) {} } == (TT*) {});
          STATIC_REQUIRE((TT*) {} == T{ (TT*) {} });
       }
-
-      #if not LANGULUS_FEATURE(NEWDELETE)
-         if constexpr (CT::Referenced<TT>)
-            raw->Reference(-1);
-         delete raw;
-      #endif
    }
 
    REQUIRE(memoryState.Assert());
