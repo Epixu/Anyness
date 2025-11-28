@@ -12,7 +12,7 @@
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
-#if 1
+#if 0
    #include <Langulus/Logger/EnableVerbose.hpp>
 #else
    #include <Langulus/Logger/NoVerbose.hpp>
@@ -312,7 +312,7 @@ namespace Langulus::Fractalloc
          LglsVerbose("Freed entry chain reset completely - all entries were deallocated");
          mLastFreed = nullptr;
          mNextEntry = 0;
-         mDistribution[entry->mSize] = 0;
+         mDistribution[size.bit] = 0;
          LglsAssumeDev(mValidEntries == 1, "Incorrect mValidEntries");
          mValidEntries = 0;
       }
@@ -332,7 +332,7 @@ namespace Langulus::Fractalloc
          LglsVerbose("New last freed is: ", Logger::Hex(mLastFreed));
 
          // Update the distribution                                     
-         size_t it = entry->mSize;
+         size_t it = size.bit;
          --mDistribution[it];
          if (mBiggestEntry == size and 0 == mDistribution[it]) {
             // All biggest entries have been removed and we can try to  
