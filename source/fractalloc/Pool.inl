@@ -12,7 +12,7 @@
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
-#if 0
+#if 1
    #include <Langulus/Logger/EnableVerbose.hpp>
 #else
    #include <Langulus/Logger/NoVerbose.hpp>
