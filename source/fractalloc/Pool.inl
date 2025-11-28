@@ -462,7 +462,8 @@ namespace Langulus::Fractalloc
          auto freed = mLastFreed->GetNextFreeEntry();
          while (freed) {
             if (freed->GetUses() != 0) {
-               LglsVerbose(Logger::Hex(freed), " is in use (how is this possible??), aborting...");               
+               LglsVerbose(Logger::Hex(freed), " is in use (how is this possible??), aborting...");
+               break;
             }
             else if (is_in_range(freed)) {
                LglsVerbose(Logger::Hex(last_valid_freed), " -> ", Logger::Hex(freed));
