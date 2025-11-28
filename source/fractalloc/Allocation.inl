@@ -36,15 +36,19 @@ namespace Langulus::Fractalloc
    ///   @attention assumes allocation has been freed                         
    LANGULUS(ALWAYS_INLINED)
    void Allocation::SetNextFreeEntry(Allocation const* a) has_assumptions {
-      LglsAssumeDev(mReferences == 0,
-         "Can't set next free entry of this entry is in use");
-      LglsAssumeDev(a->mReferences == 0,
-         "Can't set next free entry of next entry is in use");
+      LglsAssumeDevAndOptimize(a,
+         "If next entry is nullptr, use ResetNextFreeEntry instead");
+      LglsAssumeDevAndOptimize(mReferences == 0,
+         "Can't set next free entry if this entry is in use");
+      LglsAssumeDevAndOptimize(a->mReferences == 0,
+         "Can't set next free entry if next entry is in use");
       const intptr_t diff = this - a;
       LglsAssumeDev(diff >= ::std::numeric_limits<int32_t>::min()
                 and diff <= ::std::numeric_limits<int32_t>::max(),
          "Entry difference is too big to fit in 32bit integer");
+      
       mNextFreeEntryFinder = static_cast<int32_t>(this - a);
+      
       LglsAssumeDev(GetNextFreeEntry() == a,
          "Next free entry isn't properly calculated from relative offset");
    }
@@ -54,7 +58,7 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    void Allocation::ResetNextFreeEntry() has_assumptions {
       LglsAssumeDev(mReferences == 0,
-         "Can't reset next free entry of this entry is in use");
+         "Can't reset next free entry if this entry is in use");
       mNextFreeEntryFinder = 0;
    }
 
