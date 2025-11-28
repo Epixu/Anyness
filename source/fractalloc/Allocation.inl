@@ -38,7 +38,15 @@ namespace Langulus::Fractalloc
    void Allocation::SetNextFreeEntry(Allocation const* a) has_assumptions {
       LglsAssumeDev(mReferences == 0,
          "Can't set next free entry of entry in use");
+      LglsAssumeDev(GetPool()->Contains(a->GetBlockStart()),
+         "Allocation is not part of the same pool");
+      const intptr_t diff = this - a;
+      LglsAssumeDev(diff >= ::std::numeric_limits<int32_t>::min()
+                and diff <= ::std::numeric_limits<int32_t>::max(),
+         "Entry difference is too big to fit in 32bit integer");
       mNextFreeEntryFinder = static_cast<int32_t>(this - a);
+      LglsAssumeDev(GetNextFreeEntry() == a,
+         "Next free entry isn't properly calculated from relative offset");
    }
 
    /// Reset the next entry in the free entry chain                           
