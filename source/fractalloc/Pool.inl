@@ -450,7 +450,8 @@ namespace Langulus::Fractalloc
 
       LglsVerboseScoped("Remapping free chain, starting with: ", Logger::Hex(mLastFreed));
       while (mLastFreed and not is_in_range(mLastFreed)) {
-         LglsVerboseScoped(Logger::Hex(mLastFreed), " fell out of range and is getting replaced...");
+         LglsVerboseScoped(Logger::Hex(mLastFreed),
+            " fell out of range and is getting replaced...");
          mLastFreed = mLastFreed->GetNextFreeEntry();
          LglsVerbose("with ", Logger::Hex(mLastFreed));
       }
@@ -460,13 +461,17 @@ namespace Langulus::Fractalloc
          auto last_valid_freed = mLastFreed;
          auto freed = mLastFreed->GetNextFreeEntry();
          while (freed) {
-            if (is_in_range(freed)) {
+            if (freed->GetUses() != 0) {
+               LglsVerbose(Logger::Hex(freed), " is in use (how is this possible??), aborting...");               
+            }
+            else if (is_in_range(freed)) {
                LglsVerbose(Logger::Hex(last_valid_freed), " -> ", Logger::Hex(freed));
                last_valid_freed->SetNextFreeEntry(freed);
                last_valid_freed = freed;
             }
             else {
-               LglsVerbose(Logger::Hex(freed), " fell out of range, skipping to: ", Logger::Hex(freed->GetNextFreeEntry()));
+               LglsVerbose(Logger::Hex(freed), " fell out of range, skipping to: ",
+                  Logger::Hex(freed->GetNextFreeEntry()));
             }
             freed = freed->GetNextFreeEntry();
          }
