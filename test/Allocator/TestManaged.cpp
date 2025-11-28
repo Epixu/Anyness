@@ -153,6 +153,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          Logger::Special("Deallocating random entries in pool...");
          Allocation* prev_entry = nullptr;
          for (size_t i = 0; i < pool->GetMaxEntries()/20u; ++i) {
+            Logger::Special("> Deallocating entry ", i*20, "/", static_cast<size_t>(pool->GetMaxEntries()));
             auto entry = pool->AllocationFromIndex(i*20);
             REQUIRE(pool->ContainsAllocation(entry));
             pool->Deallocate(entry);

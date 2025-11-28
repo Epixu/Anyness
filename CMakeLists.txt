@@ -22,6 +22,15 @@ else()
     set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} ${LANGULUS_COVERAGE_LINKER_FLAGS} ${LANGULUS_SANITIZE_LINKER_FLAGS}")
 endif()
 
+if(CMAKE_CXX_FLAGS)
+    # Make sure trigraphs are disabled											
+    STRING(FIND ${CMAKE_CXX_FLAGS} "/Zc:trigraphs" TRIGRAPHS_ENABLED1)
+    STRING(FIND ${CMAKE_CXX_FLAGS} "-trigraphs"    TRIGRAPHS_ENABLED2)
+    if (${TRIGRAPHS_ENABLED1} GREATER -1 OR ${TRIGRAPHS_ENABLED2} GREATER -1)
+        message(FATAL_ERROR "Langulus can't be built with trigraphs enabled")
+    endif()
+endif()
+
 # Reflected options																
 option(LANGULUS_OPTION_SHARED_LIBRARIES 
     "Will build shared libraries (DLL/SO/WASM) if enabled, \
@@ -121,6 +130,14 @@ add_langulus_library(LangulusAnyness
 		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:source/fractalloc/Allocator.cpp>
 		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
 )
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(LangulusAnyness PUBLIC -Wno-trigraphs)
+    target_compile_options(LangulusAnyness PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
+endif()
+if(MSVC)
+    target_compile_options(LangulusAnyness PUBLIC /Zc:preprocessor)
+endif()
 
 target_compile_features(LangulusAnyness PUBLIC cxx_std_23)
 target_include_directories(LangulusAnyness PUBLIC include)
