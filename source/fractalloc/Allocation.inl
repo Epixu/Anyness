@@ -88,7 +88,7 @@ namespace Langulus::Fractalloc
    uint8_t* Allocation::GetBlockStart() const noexcept {
       const auto pool = GetPool();
       const size_t offset = this - pool->GetAllocationData();
-      return GetPool()->GetClientData() + GetPool()->GetMinAllocation() * offset;
+      return pool->GetClientData() + pool->GetMinAllocation() * offset;
    }
    
    /// Check if memory address is inside this entry                           

@@ -106,6 +106,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
 
       WHEN("Filled with all possible small entries") {
          // Fill up                                                     
+         Logger::Special("Filling up pool...");
          for (size_t i = 0; i < pool->GetMaxEntries(); ++i) {
             auto entry = pool->Allocate(pot_t(Roof2(sizeof(TestType))));
             REQUIRE(entry);
@@ -121,6 +122,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          }
 
          // Fail to add more                                            
+         Logger::Special("Overflowing pool...");
          for (int i = 0; i < 5; ++i) {
             auto entry = pool->Allocate(1_pot);
             REQUIRE(entry == nullptr);
@@ -135,6 +137,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          REQUIRE(pool->AllocationFromIndex(3)->GetBlockStart() == origin + quarter + half);
          REQUIRE(pool->AllocationFromIndex(static_cast<size_t>(pool->GetMaxEntries()) - 1)->GetBlockStart() == origin + half + half - min_alloc);
 
+         Logger::Special("Checking integrity of pool...");
          for (size_t i = 0; i < pool->GetMaxEntries(); ++i) {
             auto entry = pool->AllocationFromIndex(i);
             REQUIRE(pool->ContainsAllocation(entry));
@@ -147,6 +150,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          }
 
          // Deallocate N random entries                                 
+         Logger::Special("Deallocating random entries in pool...");
          Allocation* prev_entry = nullptr;
          for (size_t i = 0; i < pool->GetMaxEntries()/20u; ++i) {
             auto entry = pool->AllocationFromIndex(i*20);
@@ -160,6 +164,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          REQUIRE_FALSE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
 
          // Deallocate right half of entries                            
+         Logger::Special("Deallocating right half of entries in pool...");
          for (auto entry = pool->GetAllocationData() + pool->GetMaxEntries()/1u - 1; entry >= pool->GetAllocationData() + pool->GetMaxEntries()/2u; --entry) {
             if (not entry->GetUses())
                continue;
@@ -169,6 +174,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          REQUIRE_FALSE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
 
          // Test the integrity of the free entry chain                  
+         Logger::Special("Testing free chain integrity...");
          prev_entry = pool->GetLastFreedEntry();
          size_t chain_counter = 0;
          while (prev_entry) {
@@ -179,6 +185,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          REQUIRE(chain_counter == pool->GetCurrentEntries() - pool->GetValidEntries());
 
          // Deallocate more entries to enforce shrinking                
+         Logger::Special("Deallocate more entries to enforce shrinking of pool...");
          for (size_t i = 16; i < static_cast<size_t>(pool->GetMaxEntries()); ++i) {
             auto entry = pool->AllocationFromIndex(i);
             if (entry->GetUses() == 0)
@@ -188,6 +195,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          REQUIRE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
 
          // Allocate a new one, should reuse prev_entry                 
+         Logger::Special("Allocating a new entry...");
          prev_entry = pool->GetLastFreedEntry();
          auto new_entry = pool->Allocate(pot_t(pool->GetMinAllocation()*2u));
          REQUIRE(new_entry);

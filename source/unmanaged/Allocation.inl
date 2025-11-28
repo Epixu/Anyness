@@ -23,13 +23,6 @@ namespace Langulus::Unmanaged
       : mSize      {size}
       , mAlignment {alignment} {}
 
-   /// Get the cost of allocating a single allocation - this includes         
-   /// sizeof(Allocation) together with any padding for data alignment        
-   /*LANGULUS(ALWAYS_INLINED)
-   size_t Allocation::Cost(pot_t alignment) noexcept {
-      return Align(sizeof(Allocation), alignment);
-   }*/
-
    /// Get the user bytes                                                     
    ///   @return the byte size of usable memory region                        
    LANGULUS(ALWAYS_INLINED)
