@@ -72,6 +72,8 @@ namespace Langulus::Fractalloc
          "Invalid type");
       LglsAssumeDev(size >= mThresholdMin,
          "Size must be able to hold at least one allocation");
+      LglsAssumeDev(mClientData >= reinterpret_cast<uint8_t*>(mAllocationData + static_cast<size_t>(mMaxEntries)),
+         "Client data intersects allocation data");
 
       IF_LANGULUS_MEMORY_STATISTICS(mStep = Instance.GetStatistics().mStep);
 
