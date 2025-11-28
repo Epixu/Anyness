@@ -55,11 +55,12 @@ namespace Langulus::Fractalloc
       Allocation(pot_t size, pot_t pool_alignment) noexcept;
       
       auto GetUses() const noexcept -> int32_t;
-      auto GetSize() const noexcept -> pot_t;
-      auto GetBlockStart() const noexcept -> uint8_t*;
-      bool Contains(const void*) const noexcept;
       void Keep(int32_t = 1) noexcept;
       void Free(int32_t = 1) noexcept;
+      
+      auto GetSize() const has_assumptions -> pot_t;
+      auto GetBlockStart() const has_assumptions -> uint8_t*;
+      auto Contains(const void*) const has_assumptions -> bool;
 
    protected:
    IF_LANGULUS_TESTING(public:)
@@ -69,6 +70,6 @@ namespace Langulus::Fractalloc
       auto GetNextFreeEntry() const has_assumptions -> Allocation*;
       void SetNextFreeEntry(Allocation const*) has_assumptions;
       void ResetNextFreeEntry() has_assumptions;
-      auto GetPool() const noexcept -> Pool const*;
+      auto GetPool() const has_assumptions -> Pool const*;
    };
 }

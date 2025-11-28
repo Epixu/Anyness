@@ -153,12 +153,12 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          Logger::Special("Deallocating random entries in pool...");
          Allocation* prev_entry = nullptr;
          for (size_t i = 0; i < pool->GetMaxEntries(); i += 20u) {
-            Logger::Special("> Deallocating entry ", i, "/", static_cast<size_t>(pool->GetMaxEntries()));
+            //Logger::Special("> Deallocating entry ", i, "/", static_cast<size_t>(pool->GetMaxEntries()));
             auto entry = pool->AllocationFromIndex(i);
             REQUIRE(entry->GetUses() == static_cast<int32_t>(1 + i));
             REQUIRE(pool->ContainsAllocation(entry));
             REQUIRE(pool->ContainsData(entry->GetBlockStart()));
-            Logger::Special("> Entry seems valid");
+            //Logger::Special("> Entry seems valid");
             pool->Deallocate(entry);
             REQUIRE(entry->GetUses() == 0);
             REQUIRE(entry->GetNextFreeEntry() == prev_entry);
@@ -579,11 +579,12 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
       }
 
       WHEN("Dereferenced once with deletion") {
+         const auto blockStart = entry->GetBlockStart();
          Allocator::Deallocate(entry);
 
          REQUIRE_FALSE(Allocator::CheckAuthority(nullptr, entry));
-         REQUIRE(Allocator::CheckAuthority(nullptr, entry->GetBlockStart()));
-         REQUIRE_FALSE(Allocator::Find(nullptr, entry->GetBlockStart()));
+         REQUIRE(Allocator::CheckAuthority(nullptr, blockStart));
+         REQUIRE_FALSE(Allocator::Find(nullptr, blockStart));
          REQUIRE_FALSE(Allocator::Find(nullptr, entry));
       }
    }

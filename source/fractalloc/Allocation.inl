@@ -37,11 +37,9 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    void Allocation::SetNextFreeEntry(Allocation const* a) has_assumptions {
       LglsAssumeDev(mReferences == 0,
-         "Can't set next free entry of entry in use");
-      LglsAssumeDev(GetPool()->ContainsAllocation(a),
-         "Allocation is not part of the same pool (by not being in the allocation data)");
-      LglsAssumeDev(GetPool()->ContainsData(a->GetBlockStart()),
-         "Allocation is not part of the same pool (by not being in the client data)");
+         "Can't set next free entry of this entry is in use");
+      LglsAssumeDev(a->mReferences == 0,
+         "Can't set next free entry of next entry is in use");
       const intptr_t diff = this - a;
       LglsAssumeDev(diff >= ::std::numeric_limits<int32_t>::min()
                 and diff <= ::std::numeric_limits<int32_t>::max(),
@@ -56,51 +54,26 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    void Allocation::ResetNextFreeEntry() has_assumptions {
       LglsAssumeDev(mReferences == 0,
-         "Can't reset next free entry of entry in use");
+         "Can't reset next free entry of this entry is in use");
       mNextFreeEntryFinder = 0;
    }
 
    /// Get the pool this allocation belongs to                                
    /// Pools are always aligned, so all we have to do is mask out 'this'      
    LANGULUS(ALWAYS_INLINED)
-   auto Allocation::GetPool() const noexcept -> Pool const* {
+   auto Allocation::GetPool() const has_assumptions -> Pool const* {
+      LglsAssumeDev(mReferences != 0, "Can't get pool if entry isn't in use");
       return reinterpret_cast<Pool const*>(
          reinterpret_cast<uintptr_t>(this) & ~((uintptr_t{1} << mPoolAlignment) - uintptr_t{1})
       );
    }
 
+   /// Get the number of references                                           
    LANGULUS(ALWAYS_INLINED)
    auto Allocation::GetUses() const noexcept -> int32_t {
       return mReferences;
    }
-
-   /// Get the user bytes                                                     
-   ///   @return the byte size of usable memory region                        
-   LANGULUS(ALWAYS_INLINED)
-   pot_t Allocation::GetSize() const noexcept {
-      pot_t result; result.bit = mSize;
-      return result;
-   }
-
-   /// Return the aligned start of usable block memory (const)                
-   ///   @return aligned pointer to the entry's memory                        
-   LANGULUS(ALWAYS_INLINED)
-   uint8_t* Allocation::GetBlockStart() const noexcept {
-      const auto pool = GetPool();
-      const size_t offset = this - pool->GetAllocationData();
-      return pool->GetClientData() + pool->GetMinAllocation() * offset;
-   }
    
-   /// Check if memory address is inside this entry                           
-   ///   @param address - address to check if inside this entry               
-   ///   @return true if address is inside                                    
-   LANGULUS(ALWAYS_INLINED)
-   bool Allocation::Contains(const void* address) const noexcept {
-      const auto a = reinterpret_cast<uintptr_t>(address);
-      const auto blockStart = reinterpret_cast<uintptr_t>(GetBlockStart());
-      return a >= blockStart and a < blockStart + static_cast<uintptr_t>(GetSize());
-   }
-
    /// Reference the entry 'c' times                                          
    ///   @param c - the number of references to add                           
    LANGULUS(ALWAYS_INLINED)
@@ -113,5 +86,38 @@ namespace Langulus::Fractalloc
    LANGULUS(ALWAYS_INLINED)
    void Allocation::Free(int c) noexcept {
       mReferences -= c;
+   }
+
+   /// Get the user bytes                                                     
+   ///   @return the byte size of usable memory region                        
+   LANGULUS(ALWAYS_INLINED)
+   pot_t Allocation::GetSize() const has_assumptions {
+      LglsAssumeDev(mReferences != 0,
+         "Can't get size if entry isn't in use");
+      pot_t result; result.bit = mSize;
+      return result;
+   }
+
+   /// Return the aligned start of usable block memory (const)                
+   ///   @return aligned pointer to the entry's memory                        
+   LANGULUS(ALWAYS_INLINED)
+   uint8_t* Allocation::GetBlockStart() const has_assumptions {
+      LglsAssumeDev(mReferences != 0,
+         "Can't get block start if entry isn't in use");
+      const auto pool = GetPool();
+      const size_t offset = this - pool->GetAllocationData();
+      return pool->GetClientData() + pool->GetMinAllocation() * offset;
+   }
+   
+   /// Check if memory address is inside this entry                           
+   ///   @param address - address to check if inside this entry               
+   ///   @return true if address is inside                                    
+   LANGULUS(ALWAYS_INLINED)
+   bool Allocation::Contains(const void* address) const has_assumptions {
+      LglsAssumeDev(mReferences != 0,
+         "Can't check if entry contains memory if entry isn't in use");
+      const auto a = reinterpret_cast<uintptr_t>(address);
+      const auto blockStart = reinterpret_cast<uintptr_t>(GetBlockStart());
+      return a >= blockStart and a < blockStart + static_cast<uintptr_t>(GetSize());
    }
 }

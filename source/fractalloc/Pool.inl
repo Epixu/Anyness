@@ -12,7 +12,7 @@
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
-#if 1
+#if 0
    #include <Langulus/Logger/EnableVerbose.hpp>
 #else
    #include <Langulus/Logger/NoVerbose.hpp>
@@ -300,7 +300,8 @@ namespace Langulus::Fractalloc
       LglsAssumeDev(mAllocatedByFrontend >= entry->GetSize(),
          "Bad frontend allocation size");
 
-      mAllocatedByFrontend -= static_cast<size_t>(entry->GetSize());
+      const auto size = entry->GetSize();
+      mAllocatedByFrontend -= static_cast<size_t>(size);
       entry->mReferences = 0;
 
       if (0 == mAllocatedByFrontend) {
@@ -331,7 +332,7 @@ namespace Langulus::Fractalloc
          // Update the distribution                                     
          size_t it = entry->mSize;
          --mDistribution[it];
-         if (mBiggestEntry == entry->GetSize() and 0 == mDistribution[it]) {
+         if (mBiggestEntry == size and 0 == mDistribution[it]) {
             // All biggest entries have been removed and we can try to  
             // increase mThresholdMax, so collisions are less likely.   
             // This however is possible only after trimming entries     
@@ -420,7 +421,7 @@ namespace Langulus::Fractalloc
          
          --trimmed;
 
-         if (entry - entry_gap <= GetAllocationData()) {
+         if (entry - entry_gap <= mAllocationData) {
             // It is now safe to lower mNextEntry and increase          
             // mThresholdMax, as well as unclog                         
             ++mThresholdMax.bit;            
@@ -429,7 +430,7 @@ namespace Langulus::Fractalloc
             
             // Level up, so wrap around back to the ending entry        
             entry_gap <<= 1u;            
-            entry = GetAllocationData() + max_entries - entry_gap;
+            entry = mAllocationData + max_entries - entry_gap;
          }
          else entry -= entry_gap;
       }
@@ -460,14 +461,6 @@ namespace Langulus::Fractalloc
          auto last_valid_freed = mLastFreed;
          auto freed = mLastFreed->GetNextFreeEntry();
          while (freed) {
-            #if LglsVerboseEnabled
-            if (freed->GetUses() != 0) {
-               auto idx = IndexFromAddress(freed->GetBlockStart());
-               Logger::Error(Logger::Hex(freed), " (with index ", idx, ") is in use, with ", freed->GetUses(), " references (how is this possible??), aborting...");
-               LglsError("Error while patching free chain");
-            }
-            else
-            #endif
             if (is_in_range(freed)) {
                LglsVerbose(Logger::Hex(last_valid_freed), " -> ", Logger::Hex(freed));
                last_valid_freed->SetNextFreeEntry(freed);
