@@ -240,9 +240,7 @@ namespace Langulus::Fractalloc
    ///   @param bytes - new number of bytes                                   
    ///   @return true if entry was enlarged without conflict                  
    inline bool Pool::Reallocate(Allocation* entry, pot_t bytes) has_assumptions {
-      LglsAssumeDev(entry >= mAllocationData
-                and entry < mAllocationData + static_cast<size_t>(mMaxEntries)
-                and entry->GetUses(),
+      LglsAssumeDev(ContainsAllocation(entry) and entry->GetUses(),
          "Invalid deallocation");
       
       if (mThresholdMin > bytes)
@@ -293,9 +291,8 @@ namespace Langulus::Fractalloc
    ///   @attention assumes entry is valid                                    
    ///   @param entry - entry to remove                                       
    inline void Pool::Deallocate(Allocation* entry) has_assumptions {
-      LglsAssumeDev(entry >= mAllocationData
-                and entry < mAllocationData + static_cast<size_t>(mMaxEntries),
-         "Invalid deallocation - entry is not from the pool");
+      LglsAssumeDev(ContainsAllocation(entry),
+         "Invalid deallocation - entry is not from this pool");
       LglsAssumeDev(entry->GetUses(),
          "Invalid deallocation - entry has already been deallocated");
       LglsAssumeDevAndOptimize(mNextEntry,

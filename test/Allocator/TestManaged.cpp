@@ -154,10 +154,10 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          Allocation* prev_entry = nullptr;
          for (size_t i = 0; i < pool->GetMaxEntries()/20u; ++i) {
             auto entry = pool->AllocationFromIndex(i*20);
+            REQUIRE(pool->ContainsAllocation(entry));
             pool->Deallocate(entry);
             REQUIRE(entry->GetUses() == 0);
-            if (prev_entry)
-               REQUIRE(entry->GetNextFreeEntry() == prev_entry);
+            REQUIRE(entry->GetNextFreeEntry() == prev_entry);
             prev_entry = entry;
          }
          REQUIRE(pool->CanContain(pool->GetMinAllocation()));
