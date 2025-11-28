@@ -21,6 +21,8 @@ namespace Langulus::Fractalloc
       mSize = bytes.bit;
    }
 
+   /// Get the next entry in the free entry chain                             
+   ///   @attention assumes allocation has been freed                         
    LANGULUS(ALWAYS_INLINED)
    auto Allocation::GetNextFreeEntry() const has_assumptions -> Allocation* {
       LglsAssumeDev(mReferences == 0,
@@ -30,13 +32,19 @@ namespace Langulus::Fractalloc
          : nullptr;
    }
 
-   inline void Allocation::SetNextFreeEntry(Allocation const* a) has_assumptions {
+   /// Set the next entry in the free entry chain                             
+   ///   @attention assumes allocation has been freed                         
+   LANGULUS(ALWAYS_INLINED)
+   void Allocation::SetNextFreeEntry(Allocation const* a) has_assumptions {
       LglsAssumeDev(mReferences == 0,
          "Can't set next free entry of entry in use");
       mNextFreeEntryFinder = static_cast<int32_t>(this - a);
    }
 
-   inline void Allocation::ResetNextFreeEntry() has_assumptions {
+   /// Reset the next entry in the free entry chain                           
+   ///   @attention assumes allocation has been freed                         
+   LANGULUS(ALWAYS_INLINED)
+   void Allocation::ResetNextFreeEntry() has_assumptions {
       LglsAssumeDev(mReferences == 0,
          "Can't reset next free entry of entry in use");
       mNextFreeEntryFinder = 0;

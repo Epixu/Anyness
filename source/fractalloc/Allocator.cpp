@@ -10,14 +10,9 @@
 #include "Allocation.inl"
 
 #if 0
-   #include <Langulus/Logger.hpp>
-   #define VERBOSE 1
-   #define LOG_VERBOSE(...) Logger::Verbose(__VA_ARGS__)
-   #define LOG_VERBOSE_SCOPED(...) const auto scope = Logger::VerboseScoped(__VA_ARGS__)
+   #include <Langulus/Logger/EnableVerbose.hpp>
 #else
-   #define VERBOSE 0
-   #define LOG_VERBOSE(...)
-   #define LOG_VERBOSE_SCOPED(...)
+   #include <Langulus/Logger/NoVerbose.hpp>
 #endif
 
 
@@ -111,7 +106,7 @@ namespace Langulus::Fractalloc
       if (not pool)
          return nullptr;
 
-      LOG_VERBOSE(
+      LglsVerbose(
          "Fractalloc: ", Logger::Cyan, "New pool ", Logger::Hex(pool),
          " of size ", Logger::Size {static_cast<size_t>(pool->GetAllocatedByBackend())}
       );
@@ -181,7 +176,7 @@ namespace Langulus::Fractalloc
             );
          #endif
 
-         LOG_VERBOSE(
+         LglsVerbose(
             "Fractalloc: ", Logger::Yellow, "Allocation ", Logger::Hex(previous),
             " was reallocated from ", Logger::Size {oldSize}, " to ",
             Logger::Size {static_cast<size_t>(previous->GetSize())}
@@ -206,7 +201,7 @@ namespace Langulus::Fractalloc
          "Deallocating an allocation used from multiple places");
 
       [[maybe_unused]] const auto backupSize = static_cast<size_t>(entry->GetSize());
-      LOG_VERBOSE(
+      LglsVerbose(
          "Fractalloc: ", Logger::Red, "Allocation ", Logger::Hex(entry),
          " of size ", Logger::Size {backupSize}, " was deallocated (had ",
          entry->mReferences, " references)"
@@ -257,7 +252,7 @@ namespace Langulus::Fractalloc
 
          IF_LANGULUS_MEMORY_STATISTICS(mStatistics.DelPool(chainStart));
          auto next = chainStart->mNext;
-         LOG_VERBOSE(
+         LglsVerbose(
             "Fractalloc: ", Logger::DarkCyan, "Pool ", Logger::Hex(chainStart),
             " of size ", Logger::Size {static_cast<size_t>(chainStart->GetAllocatedByBackend())},
             " was deallocated"
@@ -282,7 +277,7 @@ namespace Langulus::Fractalloc
 
          IF_LANGULUS_MEMORY_STATISTICS(mStatistics.DelPool(pool));
          const auto next = pool->mNext;
-         LOG_VERBOSE(
+         LglsVerbose(
             "Fractalloc: ", Logger::DarkCyan, "Pool ", Logger::Hex(pool),
             " of size ", Logger::Size {static_cast<size_t>(pool->GetAllocatedByBackend())},
             " was deallocated"
@@ -1014,7 +1009,7 @@ namespace Langulus::Fractalloc
    bool Allocator::IntegrityCheck() {
       // Integrity check the default chain                              
       if (Instance.mMainPoolChain) {
-         LOG_VERBOSE("Integrity check: mMainPoolChain...");
+         LglsVerbose("Integrity check: mMainPoolChain...");
          if (not Instance.IntegrityCheckChain(Instance.mMainPoolChain))
             return false;
       }
@@ -1023,7 +1018,7 @@ namespace Langulus::Fractalloc
       [[maybe_unused]] int size = 1;
       for (auto& sizeChain : Instance.mSizePoolChain) {
          if (sizeChain) {
-            LOG_VERBOSE("Integrity check: mSizePoolChain #", size++, "...");
+            LglsVerbose("Integrity check: mSizePoolChain #", size++, "...");
             if (not Instance.IntegrityCheckChain(sizeChain))
                return false;
          }
@@ -1032,7 +1027,7 @@ namespace Langulus::Fractalloc
       // Integrity check all type chains                                
       for (auto& typeChain : Instance.mInstantiatedTypes) {
          if (auto relevantPool = typeChain.GetPoolchain()) {
-            LOG_VERBOSE("Integrity check for type ", typeChain.GetName(), "...");
+            LglsVerbose("Integrity check for type ", typeChain.GetName(), "...");
             if (not Instance.IntegrityCheckChain(relevantPool))
                return false;
          }

@@ -28,14 +28,15 @@ namespace Langulus::Fractalloc
       int32_t mReferences = 1;
 
       // This has two states depending on mReferences:                  
-      // If mReferences > 0, the first struct is used                   
-      // If mReferences == 0, the second struct is used                 
+      // If mReferences > 0, the struct is used                         
+      // If mReferences == 0, mNextFreeEntryFinder is used              
       union {
          struct {
             #if LANGULUS_FEATURE(MEMORY_STATISTICS)
                // Acts like a timestamp of when the allocation happened 
                uint64_t mStep;
             #endif
+            
             // Used to find the pool pointer by rounding 'this'         
             // Represented as a bit number                              
             uint8_t mPoolAlignment;
@@ -65,7 +66,7 @@ namespace Langulus::Fractalloc
       friend struct Pool;
       friend struct Allocator;
       
-      auto GetNextFreeEntry() const has_assumptions-> Allocation*;
+      auto GetNextFreeEntry() const has_assumptions -> Allocation*;
       void SetNextFreeEntry(Allocation const*) has_assumptions;
       void ResetNextFreeEntry() has_assumptions;
       auto GetPool() const noexcept -> Pool const*;

@@ -12,6 +12,11 @@
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
+#if 1
+   #include <Langulus/Logger/EnableVerbose.hpp>
+#else
+   #include <Langulus/Logger/NoVerbose.hpp>
+#endif
 
 namespace Langulus::Fractalloc
 {
@@ -178,7 +183,9 @@ namespace Langulus::Fractalloc
       if (mLastFreed) {
          // Recycle entries                                             
          newEntry = mLastFreed;
+         LglsVerbose("Used last freed entry: ", Logger::Hex(mLastFreed));
          mLastFreed = mLastFreed->GetNextFreeEntry();
+         LglsVerbose("Next freed entry is: ", Logger::Hex(mLastFreed));
          new (newEntry) Allocation {bytes, mPoolAlignment};
 
          if (bytes > mBiggestEntry)
@@ -302,6 +309,7 @@ namespace Langulus::Fractalloc
          // Reset the entire pool.                                      
          mThresholdMax = mAllocatedByBackend;
          mBiggestEntry = mThresholdMin;
+         LglsVerbose("Freed entry chain reset completely - all entries were deallocated");
          mLastFreed = nullptr;
          mNextEntry = 0;
          mDistribution[entry->mSize] = 0;
@@ -317,7 +325,9 @@ namespace Langulus::Fractalloc
          else
             entry->ResetNextFreeEntry();
          
+         LglsVerbose("New entry was freed, previous last freed was: ", Logger::Hex(mLastFreed));
          mLastFreed = entry;
+         LglsVerbose("New last freed is: ", Logger::Hex(mLastFreed));
 
          // Update the distribution                                     
          size_t it = entry->mSize;
@@ -438,20 +448,31 @@ namespace Langulus::Fractalloc
          return index < mNextEntry;
       };
 
-      while (mLastFreed and not is_in_range(mLastFreed))
+      LglsVerboseScoped("Remapping free chain, starting with: ", Logger::Hex(mLastFreed));
+      while (mLastFreed and not is_in_range(mLastFreed)) {
+         LglsVerboseScoped(Logger::Hex(mLastFreed), " fell out of range and is getting replaced...");
          mLastFreed = mLastFreed->GetNextFreeEntry();
+         LglsVerbose("with ", Logger::Hex(mLastFreed));
+      }
 
       if (mLastFreed) {
+         LglsVerboseScoped("Patching up the free chain, starting with: ", Logger::Hex(mLastFreed));
          auto last_valid_freed = mLastFreed;
          auto freed = mLastFreed->GetNextFreeEntry();
          while (freed) {
             if (is_in_range(freed)) {
+               LglsVerbose(Logger::Hex(last_valid_freed), " -> ", Logger::Hex(freed));
                last_valid_freed->SetNextFreeEntry(freed);
                last_valid_freed = freed;
             }
+            else {
+               LglsVerbose(Logger::Hex(freed), " fell out of range, skipping to: ", Logger::Hex(freed->GetNextFreeEntry()));
+            }
             freed = freed->GetNextFreeEntry();
          }
+         
          last_valid_freed->ResetNextFreeEntry();
+         LglsVerbose("Free chain finalized with: ", Logger::Hex(last_valid_freed));
       }
    }
 
@@ -536,3 +557,5 @@ namespace Langulus::Fractalloc
       return entry and entry->Contains(memory) ? entry : nullptr;
    }
 }
+
+#include <Langulus/Logger/DisableVerbose.hpp>
