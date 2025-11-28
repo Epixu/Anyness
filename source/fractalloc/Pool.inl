@@ -520,7 +520,7 @@ namespace Langulus::Fractalloc
    ///   @return the index                                                    
    LANGULUS(INLINED)
    size_t Pool::IndexFromAddress(const void* ptr) const has_assumptions {
-      LglsAssumeDev(Contains(ptr), "Pointer is outside pool");
+      LglsAssumeDev(ContainsData(ptr), "Pointer is outside pool");
 
       // Credit goes to Yasen Vidolov                                   
       const size_t i = static_cast<const uint8_t*>(ptr) - mClientData;
@@ -549,9 +549,18 @@ namespace Langulus::Fractalloc
    ///   @param address - address to check                                    
    ///   @return true if address belongs to this pool                         
    LANGULUS(INLINED)
-   bool Pool::Contains(const void* address) const noexcept {
+   bool Pool::ContainsData(const void* address) const noexcept {
       return address >= mClientData
          and address < mClientData + static_cast<size_t>(mAllocatedByBackend);
+   }
+
+   /// Check if an allocation resigns inside pool's range                     
+   ///   @param address - allocation to check                                 
+   ///   @return true if allocation belongs to this pool                      
+   LANGULUS(INLINED)
+   bool Pool::ContainsAllocation(const Allocation* address) const noexcept {
+      return address >= mAllocationData
+         and address < mAllocationData + static_cast<size_t>(mMaxEntries);
    }
 
    /// Find a memory entry from pointer                                       
@@ -560,7 +569,7 @@ namespace Langulus::Fractalloc
    ///      nullptr if memory is not ours, or is no longer used               
    LANGULUS(INLINED)
    auto Pool::Find(const void* memory) const has_assumptions -> const Allocation* {
-      if (not Contains(memory))
+      if (not ContainsData(memory))
          return nullptr;
 
       const auto entry = AllocationFromAddress(memory);

@@ -87,11 +87,11 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
       REQUIRE(pool->CanContain(pot_t(full)));
       REQUIRE(pool->GetAllocatedByFrontend() == 0);
       REQUIRE(pool->GetMaxEntries() == full / smallest);
-      REQUIRE(pool->Contains(origin));
-      REQUIRE(pool->Contains(origin + half));
-      REQUIRE(pool->Contains(origin + half * 2 - 1));
-      REQUIRE_FALSE(pool->Contains(origin + half * 2));
-      REQUIRE_FALSE(pool->Contains(nullptr));
+      REQUIRE(pool->ContainsData(origin));
+      REQUIRE(pool->ContainsData(origin + half));
+      REQUIRE(pool->ContainsData(origin + half * 2 - 1));
+      REQUIRE_FALSE(pool->ContainsData(origin + half * 2));
+      REQUIRE_FALSE(pool->ContainsData(nullptr));
       REQUIRE_FALSE(pool->IsInUse());
 
       WHEN("Small entry is allocated") {
@@ -99,7 +99,8 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
 
          REQUIRE(pool->GetAllocatedByFrontend() == entry->GetSize());
          REQUIRE(pool->GetMaxEntries() == full / smallest);
-         REQUIRE(pool->Contains(entry->GetBlockStart()));
+         REQUIRE(pool->ContainsAllocation(entry));
+         REQUIRE(pool->ContainsData(entry->GetBlockStart()));
          REQUIRE(pool->IsInUse());
       }
 
@@ -136,7 +137,8 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
 
          for (size_t i = 0; i < pool->GetMaxEntries(); ++i) {
             auto entry = pool->AllocationFromIndex(i);
-            REQUIRE(pool->Contains(entry->GetBlockStart()));
+            REQUIRE(pool->ContainsAllocation(entry));
+            REQUIRE(pool->ContainsData(entry->GetBlockStart()));
             REQUIRE(entry->GetUses() == static_cast<int32_t>(1 + i));
 
             for (size_t i2 = 0; i2 < entry->GetSize(); ++i2) {
@@ -198,7 +200,8 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
 
          REQUIRE(pool->GetAllocatedByFrontend() == entry->GetSize());
          REQUIRE(pool->GetMaxEntries() == pool->GetAllocatedByBackend() / smallest);
-         REQUIRE(pool->Contains(entry->GetBlockStart()));
+         REQUIRE(pool->ContainsAllocation(entry));
+         REQUIRE(pool->ContainsData(entry->GetBlockStart()));
          REQUIRE(pool->IsInUse());
       }
 
@@ -223,7 +226,8 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
 
       REQUIRE(pool->GetAllocatedByFrontend() == entry->GetSize());
       REQUIRE(pool->GetMaxEntries() == full / smallest);
-      REQUIRE(pool->Contains(entry->GetBlockStart()));
+      REQUIRE(pool->ContainsAllocation(entry));
+      REQUIRE(pool->ContainsData(entry->GetBlockStart()));
       REQUIRE(pool->IsInUse());
 
       #ifdef LANGULUS_STD_BENCHMARK 

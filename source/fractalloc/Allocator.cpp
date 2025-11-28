@@ -375,7 +375,7 @@ namespace Langulus::Fractalloc
    ///   @return true if we have authority over the memory                    
    bool Allocator::ContainedInChain(const void* memory, const Pool* pool) const has_assumptions {
       while (pool) {
-         if (pool->Contains(memory))
+         if (pool->ContainsData(memory))
             return true;
 
          // Continue inside the poolchain                               

@@ -100,7 +100,8 @@ namespace Langulus::Fractalloc
       auto GetAllocatedByFrontend() const noexcept -> size_t;
       bool IsInUse() const noexcept;
       bool CanContain(pot_t) const noexcept;
-      bool Contains(const void*) const noexcept;
+      bool ContainsData(const void*) const noexcept;
+      bool ContainsAllocation(const Allocation*) const noexcept;
       auto Find(const void*) const has_assumptions -> const Allocation*;
 
       auto Allocate(pot_t) has_assumptions -> Allocation*;
