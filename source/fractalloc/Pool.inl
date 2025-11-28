@@ -461,11 +461,15 @@ namespace Langulus::Fractalloc
          auto last_valid_freed = mLastFreed;
          auto freed = mLastFreed->GetNextFreeEntry();
          while (freed) {
+            #if LglsVerboseEnabled
             if (freed->GetUses() != 0) {
-               LglsVerbose(Logger::Hex(freed), " is in use (how is this possible??), aborting...");
-               break;
+               auto idx = IndexFromAddress(freed->GetBlockStart());
+               Logger::Error(Logger::Hex(freed), " (with index ", idx, ") is in use, with ", freed->GetUses(), " references (how is this possible??), aborting...");
+               LglsError("Error while patching free chain");
             }
-            else if (is_in_range(freed)) {
+            else
+            #endif
+            if (is_in_range(freed)) {
                LglsVerbose(Logger::Hex(last_valid_freed), " -> ", Logger::Hex(freed));
                last_valid_freed->SetNextFreeEntry(freed);
                last_valid_freed = freed;
