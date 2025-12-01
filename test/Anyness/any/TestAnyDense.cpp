@@ -21,10 +21,10 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<Any, Any*, ScopedElement<Any*>>)
    , (Types<Any, RT*, ScopedElement<RT*>>)
 
-   /*, (Types<Any, Text**, ScopedElement<Text**>>)
+   , (Types<Any, Text**, ScopedElement<Text**>>)
    , (Types<Any, int**, ScopedElement<int**>>)
    , (Types<Any, Any**, ScopedElement<Any**>>)
-   , (Types<Any, RT**, ScopedElement<RT**>>)*/
+   , (Types<Any, RT**, ScopedElement<RT**>>)
 
    , (Types<TAny<Text>, Text, ScopedElement<Text>>)
    , (Types<TAny<int>, int, ScopedElement<int>>)
@@ -36,10 +36,10 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<TAny<Any*>, Any*, ScopedElement<Any*>>)
    , (Types<TAny<RT*>, RT*, ScopedElement<RT*>>)
 
-   /*, (Types<TAny<Text**>, Text**, ScopedElement<Text**>>)
+   , (Types<TAny<Text**>, Text**, ScopedElement<Text**>>)
    , (Types<TAny<int**>, int**, ScopedElement<int**>>)
    , (Types<TAny<Any**>, Any**, ScopedElement<Any**>>)
-   , (Types<TAny<RT**>, RT**, ScopedElement<RT**>>)*/
+   , (Types<TAny<RT**>, RT**, ScopedElement<RT**>>)
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    , (Types<Any, Text, ScopedElement<Text, true>>)
@@ -52,10 +52,10 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<Any, Any*, ScopedElement<Any*, true>>)
    , (Types<Any, RT*, ScopedElement<RT*, true>>)
 
-   /*, (Types<Any, Text**, ScopedElement<Text**, true>>)
+   , (Types<Any, Text**, ScopedElement<Text**, true>>)
    , (Types<Any, int**, ScopedElement<int**, true>>)
    , (Types<Any, Any**, ScopedElement<Any**, true>>)
-   , (Types<Any, RT**, ScopedElement<RT**, true>>)*/
+   , (Types<Any, RT**, ScopedElement<RT**, true>>)
 
    , (Types<TAny<Text>, Text, ScopedElement<Text, true>>)
    , (Types<TAny<int>, int, ScopedElement<int, true>>)
@@ -67,10 +67,10 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<TAny<Any*>, Any*, ScopedElement<Any*, true>>)
    , (Types<TAny<RT*>, RT*, ScopedElement<RT*, true>>)
 
-   /*, (Types<TAny<Text**>, Text**, ScopedElement<Text**, true>>)
+   , (Types<TAny<Text**>, Text**, ScopedElement<Text**, true>>)
    , (Types<TAny<int**>, int**, ScopedElement<int**, true>>)
    , (Types<TAny<Any**>, Any**, ScopedElement<Any**, true>>)
-   , (Types<TAny<RT**>, RT**, ScopedElement<RT**, true>>)*/
+   , (Types<TAny<RT**>, RT**, ScopedElement<RT**, true>>)
    #endif
 ) {
    static Allocator::State memoryState;
