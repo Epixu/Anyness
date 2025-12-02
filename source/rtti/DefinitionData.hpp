@@ -191,6 +191,10 @@ namespace Langulus::RTTI
       struct BoundaryDependent {
          using CTTI_ReflectAs = void;
 
+         // Dereference a pointer once. The resulting type will be      
+         // an instance of mDeptr. Supports custom pointer types.       
+         FBinary mDereference = nullptr;
+
          // The default constructor, wrapped in a lambda expression if  
          // available. Takes a pointer for a placement-new expression   
          FUnary mDefaultConstructor = nullptr;
@@ -284,11 +288,11 @@ namespace Langulus::RTTI
    public:
       using CTTI_ReflectAs = void;
 
-      template<class T> requires (not ::std::is_pointer_v<T> and not ::std::is_const_v<T>)
+      template<class T> requires (CT::Dense<T> and not ::std::is_const_v<T>)
       static auto Reflect() -> DefinitionData const*;
-      template<class T> requires (not ::std::is_pointer_v<T> and ::std::is_const_v<T>)
+      template<class T> requires (CT::Dense<T> and ::std::is_const_v<T>)
       static auto Reflect() -> DefinitionData const*;
-      template<class T> requires (::std::is_pointer_v<T>)
+      template<class T> requires CT::Sparse<T>
       static auto Reflect() -> DefinitionData const*;
       
       DefinitionData(const Token& cppname) noexcept

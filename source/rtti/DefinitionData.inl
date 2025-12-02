@@ -54,6 +54,13 @@ namespace Langulus::RTTI
       /// These functions are used to reduce the number of generated lambdas  
       /// at reflection time                                                  
       LANGULUS(NOINLINE)
+      inline void SparseDefaultDeref(void* from, void* to) noexcept {
+         auto typed_from = static_cast<void**>(from);
+         auto typed_to   = static_cast<void**>(to);
+         *typed_to = *typed_from;
+      };
+
+      LANGULUS(NOINLINE)
       inline void SparseDefaultConstructor(void* at) noexcept {
          auto atT = static_cast<void**>(at);
          *atT = nullptr;
@@ -96,7 +103,7 @@ namespace Langulus::RTTI
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the type to reflect                                      
-   template<class T> requires (not ::std::is_pointer_v<T> and not ::std::is_const_v<T>)
+   template<class T> requires (CT::Dense<T> and not ::std::is_const_v<T>)
    auto DefinitionData::Reflect() -> DefinitionData const* {
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete type - "
@@ -544,7 +551,7 @@ namespace Langulus::RTTI
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the type to reflect                                      
-   template<class T> requires (not ::std::is_pointer_v<T> and ::std::is_const_v<T>)
+   template<class T> requires (CT::Dense<T> and ::std::is_const_v<T>)
    auto DefinitionData::Reflect() -> DefinitionData const* {
       static_assert(CT::Complete<T>,
          "Can't reflect incomplete type - "
@@ -744,7 +751,7 @@ namespace Langulus::RTTI
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
    ///   @tparam T - the type to reflect                                      
-   template<class T> requires (::std::is_pointer_v<T>)
+   template<class T> requires CT::Sparse<T>
    auto DefinitionData::Reflect() -> DefinitionData const* {
       static_assert(not CT::Array<T>,
          "Reflecting a bounded array is forbidden to avoid bloat");
@@ -757,9 +764,6 @@ namespace Langulus::RTTI
       static_assert(Exact<CT::ReflectedAs<T>, T>,
          "Data is marked to be reflected as something else, "
          "make sure this is respected before reaching this function");
-      static_assert(not ::std::is_function_v<T>,
-         "Can't reflect this function signature - "
-         "make sure you're using a pointer to it instead");
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
@@ -860,6 +864,14 @@ namespace Langulus::RTTI
             if constexpr (CT::Dense<DenserT> and not CT::Constant<DenserT>)
                definition.mID = deptr->mID;
          #endif
+
+         if constexpr (::std::is_pointer_v<T>)
+            definition.mCurrentBoundary.mDereference = Inner::SparseDefaultDeref;
+         else definition.mCurrentBoundary.mDereference = [](void* from, void* to) {
+            auto typed_from = static_cast<T*>(from);
+            auto typed_to   = static_cast<decltype(**typed_from)*>(to);
+            *typed_to = **typed_from;
+         };
       }
       else {
          // An incomplete sparse type always has mDeptr of 1            

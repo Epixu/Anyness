@@ -510,8 +510,8 @@ static_assert(not CT::NotReference<SheddableType<int>&, int*, IncompleteType&>);
 ///                                                                           
 TEMPLATE_TEST_CASE("Testing decayed types", "[ct]",
    SheddableType<int&>,
-   int,
-   IncompleteType
+   int, void//,
+   //IncompleteType // shouldn't compile at all
 ) {
    static_assert(    CT::Decayed<TestType>);
    static_assert(not CT::NotDecayed<TestType>);
@@ -532,12 +532,12 @@ TEMPLATE_TEST_CASE("Testing non-decayed types", "[ct]",
 }
 
 //static_assert(CT::Decayed<>); // shouldn't compile at all
-static_assert(    CT::Decayed<SheddableType<int&>, int, IncompleteType>);
-static_assert(not CT::Decayed<SheddableType<int&>, int, IncompleteType&>);
+static_assert(    CT::Decayed<SheddableType<int&>, int, void /*IncompleteType*/>);
+static_assert(not CT::Decayed<SheddableType<int&>, int, void*/*IncompleteType&*/>);
 
 //static_assert(CT::NotDecayed<>); // shouldn't compile at all
-static_assert(    CT::NotDecayed<SheddableType<int>&, int*, IncompleteType&>);
-static_assert(not CT::NotDecayed<SheddableType<int>&, int*, IncompleteType>);
+static_assert(    CT::NotDecayed<SheddableType<int>&, int*, void*/*IncompleteType&*/>);
+static_assert(not CT::NotDecayed<SheddableType<int>&, int*, void /*IncompleteType*/>);
 
 
 ///                                                                           
@@ -599,32 +599,32 @@ static_assert(::std::same_as<Deref<int(&)[15]>, int[15]>);
 ///                                                                           
 /// Deptr                                                                     
 ///                                                                           
-static_assert(::std::same_as<Deptr<SheddableType<int*>>, SheddableType<int*>>);
-static_assert(::std::same_as<Deptr<SheddableType<int>*>, SheddableType<int>>);
+static_assert(::std::same_as<Deptr<SheddableType<int*>>, int&>);
+static_assert(::std::same_as<Deptr<SheddableType<int>*>, SheddableType<int>&>);
 
 static_assert(::std::same_as<Deptr<int>,   int>);
 static_assert(::std::same_as<Deptr<int&>,  int>);
 static_assert(::std::same_as<Deptr<int&&>, int>);
 static_assert(::std::same_as<Deptr<int const&>,  int const>);
 static_assert(::std::same_as<Deptr<int const&&>, int const>);
-static_assert(::std::same_as<Deptr<int(&)[15]>, int[15]>);
+static_assert(::std::same_as<Deptr<int(&)[15]>, int&>);
 
-static_assert(::std::same_as<Deptr<int*>,   int>);
-static_assert(::std::same_as<Deptr<int*&>,  int>);
-static_assert(::std::same_as<Deptr<int*&&>, int>);
-static_assert(::std::same_as<Deptr<int const*&>,  int const>);
-static_assert(::std::same_as<Deptr<int const*&&>, int const>);
-static_assert(::std::same_as<Deptr<int(*)[15]>, int[15]>);
-static_assert(::std::same_as<Deptr<int*(*)[15]>, int*[15]>);
-static_assert(::std::same_as<Deptr<int*[15]>, int*[15]>);
+static_assert(::std::same_as<Deptr<int*>,   int&>);
+static_assert(::std::same_as<Deptr<int*&>,  int&>);
+static_assert(::std::same_as<Deptr<int*&&>, int&>);
+static_assert(::std::same_as<Deptr<int const*&>,  int const&>);
+static_assert(::std::same_as<Deptr<int const*&&>, int const&>);
+static_assert(::std::same_as<Deptr<int(*)[15]>, int(&)[15]>);
+static_assert(::std::same_as<Deptr<int*(*)[15]>, int*(&)[15]>);
+static_assert(::std::same_as<Deptr<int*[15]>, int*&>);
 
-static_assert(::std::same_as<Deptr<int**>,   int*>);
-static_assert(::std::same_as<Deptr<int**&>,  int*>);
-static_assert(::std::same_as<Deptr<int**&&>, int*>);
-static_assert(::std::same_as<Deptr<int const**&>,  int const*>);
-static_assert(::std::same_as<Deptr<int const**&&>, int const*>);
-static_assert(::std::same_as<Deptr<int const* const*&>,  int const* const>);
-static_assert(::std::same_as<Deptr<int const* const*&&>, int const* const>);
+static_assert(::std::same_as<Deptr<int**>,   int*&>);
+static_assert(::std::same_as<Deptr<int**&>,  int*&>);
+static_assert(::std::same_as<Deptr<int**&&>, int*&>);
+static_assert(::std::same_as<Deptr<int const**&>,  int const*&>);
+static_assert(::std::same_as<Deptr<int const**&&>, int const*&>);
+static_assert(::std::same_as<Deptr<int const* const*&>,  int const* const&>);
+static_assert(::std::same_as<Deptr<int const* const*&&>, int const* const&>);
 
 
 ///                                                                           
@@ -784,8 +784,8 @@ static_assert(::std::same_as<Deext<int const* const volatile>, int const* const 
 ///                                                                           
 /// Decay                                                                     
 ///                                                                           
-static_assert(::std::same_as<Decay<SheddableType<int* const>>, SheddableType<int* const>>);
-static_assert(::std::same_as<Decay<SheddableType<int>* const volatile>, SheddableType<int>>);
+static_assert(::std::same_as<Decay<SheddableType<int* const>>, int>);
+static_assert(::std::same_as<Decay<SheddableType<int>* const volatile>, int>);
 
 static_assert(::std::same_as<Decay<int>, int>);
 static_assert(::std::same_as<Decay<int&>, int>);

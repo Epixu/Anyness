@@ -131,12 +131,11 @@ add_langulus_library(LangulusAnyness
 		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
 )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+if(MSVC AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(LangulusAnyness PUBLIC /Zc:preprocessor)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
     target_compile_options(LangulusAnyness PUBLIC -Wno-trigraphs)
     target_compile_options(LangulusAnyness PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
-endif()
-if(MSVC)
-    target_compile_options(LangulusAnyness PUBLIC /Zc:preprocessor)
 endif()
 
 target_compile_features(LangulusAnyness PUBLIC cxx_std_23)

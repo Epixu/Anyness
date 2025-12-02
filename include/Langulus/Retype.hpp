@@ -17,12 +17,12 @@ namespace Langulus
       template<class T, class...AN>
       consteval auto RetypeInner() {
          if constexpr (requires { typename T::template Retype<AN...>; })
-            return static_cast<typename T::template Retype<AN...>*>(nullptr);
+            return Types<typename T::template Retype<AN...>> {};
          else if constexpr (CT::Template<T>) {
             using RETYPER = CT::Inner::IsTemplate<T>;
-            return static_cast<typename RETYPER::template Retype<AN...>*>(nullptr);            
+            return Types<typename RETYPER::template Retype<AN...>> {};
          }            
-         else return static_cast<T*>(nullptr);
+         else return Types<T> {};
       }
    }
 
@@ -31,5 +31,5 @@ namespace Langulus
    /// used instead. If T is neither templated, nor has a Retype member, then 
    /// T remains unchanged                                                    
    template<class T, class...AN>
-   using Retype = Deptr<decltype(Inner::RetypeInner<T, AN...>())>;
+   using Retype = typename decltype(Inner::RetypeInner<T, AN...>())::First;
 }

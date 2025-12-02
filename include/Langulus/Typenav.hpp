@@ -178,10 +178,7 @@ namespace Langulus
 
       namespace Inner
       {
-         /// Extracts the bounded array size                                  
-         /// Otherwise results in 1                                           
-         ///   @attention assumes `CTTI::Array<T>::Default` exists for the    
-         ///      unspecialized template CTTI::Array                          
+         /// Extracts the bounded array size. Otherwise results in 1.         
          template<class T>
          consteval size_t GetBoundedArrayExtent() {
             static_assert(not ::std::is_reference_v<T>,
@@ -205,32 +202,51 @@ namespace Langulus
             }
             else return CTTI::Array<T>::Count;
          };
+
+         /// Gets the type after unary operator*                              
+         template<class T, unsigned TIMES>
+         consteval auto GetDeptr() {
+            static_assert(not ::std::is_reference_v<T>,
+               "Shed all references prior to this call");
+            static_assert(not CT::Sheddable<T>,
+               "Shed all sheddables prior to this call");
+            static_assert(TIMES >= 1,
+               "Can't deptr zero times");
+
+            if constexpr (requires(T t) { *t; }) {
+               using deptr_once = decltype(*Fake<T>());
+               if constexpr (TIMES == 1)
+                  return Types<deptr_once> {};
+               else
+                  return GetDeptr<deptr_once, TIMES - 1>();
+            }
+            else return Types<T> {};
+         }
       }
    }
-
-   /// Sheds any sheddable types                                              
-   template<class T>
-   using Shed = typename decltype(CT::Inner::ShedInner<T>())::First;
-
-   /// Get the extent of a bounded array type, or 1 if T is not an array      
-   template<class T>
-   constexpr size_t ExtentOf = CT::Inner::GetBoundedArrayExtent<::std::remove_reference_t<Shed<T>>>();
-
-   /// Get the extent of an array argument, or 1 if T is not an array         
-   template<class T>
-   consteval size_t GetExtentOf(T&&) { return ExtentOf<::std::remove_reference_t<Shed<T>>>; }
 
    /// Remove a reference from type                                           
    template<class T>
    using Deref = ::std::remove_reference_t<T>;
 
-   /// Remove a pointer from type                                             
-   ///   @attention will remove references as well                            
-   ///   @attention a type can still be CT::Sparse after being Deptr'ed,      
-   ///      when using custom packed pointer types for example. Deptr         
-   ///      removes only indirections that are part of the C++ syntax.        
+   /// Sheds any sheddable types                                              
    template<class T>
-   using Deptr = ::std::remove_pointer_t<::std::remove_reference_t<T>>;
+   using Shed = typename decltype(CT::Inner::ShedInner<T>())::First;
+   template<class T>
+   using ShedDeref = Deref<Shed<T>>;
+
+   /// Get the extent of a bounded array type, or 1 if T is not an array      
+   template<class T>
+   constexpr size_t ExtentOf = CT::Inner::GetBoundedArrayExtent<ShedDeref<T>>();
+
+   /// Get the extent of an array argument, or 1 if T is not an array         
+   template<class T>
+   consteval size_t GetExtentOf(T&&) { return ExtentOf<ShedDeref<T>>; }
+
+   /// Remove a pointer from type. Supports custom pointer types.             
+   ///   @attention may result in a reference                                 
+   template<class T, unsigned TIMES = 1>
+   using Deptr = typename decltype(CT::Inner::GetDeptr<ShedDeref<T>, TIMES>())::First;
 
    /// Remove a const/volatile from a type                                    
    template<class T>
@@ -247,7 +263,7 @@ namespace Langulus
    /// Remove an array extent from a type                                     
    ///   @attention will remove references as well                            
    template<class T>
-   using Deext = ::std::remove_extent_t<::std::remove_reference_t<T>>;
+   using Deext = ::std::remove_extent_t<Deref<T>>;
    
    namespace Inner
    {
@@ -263,59 +279,57 @@ namespace Langulus
       }
    }
 
-   /// Strip a typename to its identity, removing qualifiers/pointers/etc.    
-   /// This strongly guarantees, that it strips EVERYTHING, including nested  
-   /// pointers and extents                                                   
+   /// Strip a typename to its identity, removing qualifiers, indirections    
+   /// (even custom ones), and sheddables. This strongly guarantees, that it  
+   /// strips EVERYTHING, including nested pointers/sheddables/extents.       
    template<class T>
-   using Decay = Deptr<decltype(Inner::NestedDecay<T>())>;
+   using Decay = ::std::remove_pointer_t<decltype(Inner::NestedDecay<T>())>;
    
    namespace CT
    {
       /// Check if all T are bounded arrays                                   
       template<class...T>
       concept Array = PartialValidate<T...>
-          and ((::std::is_bounded_array_v<Deref<Shed<T>>>
-             or (ExtentOf<Deref<Shed<T>>>) > 1
+          and ((::std::is_bounded_array_v<ShedDeref<T>>
+             or (ExtentOf<ShedDeref<T>>) > 1
           ) and ...);
 
       /// Check if all T are volatile-qualified                               
       template<class...T>
       concept Volatile = PartialValidate<T...>
-          and (::std::is_volatile_v<Deref<Shed<T>>> and ...);
+          and (::std::is_volatile_v<ShedDeref<T>> and ...);
 
-      /// Check if all T are sparse                                           
-      ///   @attention this also includes non-pointer types that are tagged   
-      ///      as custom packed pointers                                      
+      /// Check if all T are sparse. Supports custom pointer types.           
       template<class...T>
       concept Sparse = PartialValidate<T...>
-          and (LANGULUS_CTTI_CHECK(Decvq<Deref<Shed<T>>>, Sparse) and ...);
+          and (LANGULUS_CTTI_CHECK(Decvq<ShedDeref<T>>, Sparse) and ...);
 
-      /// Check if all T are dense                                            
+      /// Check if all T are dense. Detects custom pointer types.             
       template<class...T>
       concept Dense = PartialValidate<T...> and ((not Sparse<T>) and ...);
 
       /// Check if all T are constant-qualified                               
       template<class...T>
       concept Constant = PartialValidate<T...>
-          and (::std::is_const_v<Deref<Shed<T>>> and ...);
+          and (::std::is_const_v<ShedDeref<T>> and ...);
 
       /// Check if all T are not constant-qualified                           
       template<class...T>
       concept Mutable = PartialValidate<T...>
-         and ((not ::std::is_const_v<Deref<Shed<T>>>) and ...);
+         and ((not ::std::is_const_v<ShedDeref<T>>) and ...);
 
       /// Check if all T are either const- and/or volatile-qualified          
       template<class...T>
       concept Convoluted = PartialValidate<T...>
-          and ((::std::is_const_v<Deref<Shed<T>>>
-             or ::std::is_volatile_v<Deref<Shed<T>>>
+          and ((::std::is_const_v<ShedDeref<T>>
+             or ::std::is_volatile_v<ShedDeref<T>>
           ) and ...);
 
       /// Check if none of T are const- and/or volatile-qualified             
       template<class...T>
       concept NotConvoluted = PartialValidate<T...>
-          and (( not ::std::is_const_v<Deref<Shed<T>>>
-             and not ::std::is_volatile_v<Deref<Shed<T>>>
+          and (( not ::std::is_const_v<ShedDeref<T>>
+             and not ::std::is_volatile_v<ShedDeref<T>>
           ) and ...);
 
       /// Check if all T are reference types                                  
@@ -328,32 +342,30 @@ namespace Langulus
       concept NotReference = PartialValidate<T...>
           and ((not ::std::is_reference_v<Shed<T>>) and ...);
 
-      /// Check if types have no reference/pointer/extent/qualifiers          
+      /// Check if types have no reference/pointer/extent/qualifiers.         
+      /// Includes support for custom pointers.                               
       ///   @attention this doesn't shed or remove references before check    
-      ///   @attention a type can still be CT::Sparse while being CT::Decayed,
-      ///      when using custom packed pointer types for example. Decaying   
-      ///      removes only indirections that are part of the C++ syntax      
       template<class...T>
       concept Decayed = PartialValidate<T...> and ((
               not ::std::is_bounded_array_v<T>
-          and not ::std::is_pointer_v<T>
           and not ::std::is_reference_v<T>
           and not ::std::is_const_v<T>
           and not ::std::is_volatile_v<T>
+          and not [] { return CT::Sparse<T>; } ()
         ) and ...);
    
       /// Check if types have reference/pointer/extent/const/volatile         
       template<class...T>
       concept NotDecayed = PartialValidate<T...> and ((not Decayed<T>) and ...);
 
-      /// True if T is not a pointer, has no extent with [] and isn't a       
-      /// reference                                                           
+      /// True if T is not a pointer (even a custom one), has no extent       
+      /// with [] and isn't a reference                                       
       ///   @attention still allowed to be cv-qualified                       
       template<class...T>
       concept Slab = PartialValidate<T...>
-          and ((not ::std::is_pointer_v<T>
-            and not ::std::is_reference_v<T>
+          and ((not ::std::is_reference_v<T>
             and not ::std::is_array_v<T>
+            and not [] { return CT::Sparse<T>; } ()
           ) and ...);
    }
 
@@ -364,9 +376,9 @@ namespace Langulus
       template<class T>
       consteval CT::Typelist auto NestedDecvq() {
          if constexpr (::std::is_rvalue_reference_v<T>)
-            return Types<typename decltype(NestedDecvq<::std::remove_reference_t<T>>())::First&&> {};
+            return Types<typename decltype(NestedDecvq<Deref<T>>())::First&&> {};
          else if constexpr (::std::is_lvalue_reference_v<T>)
-            return Types<typename decltype(NestedDecvq<::std::remove_reference_t<T>>())::First&> {};
+            return Types<typename decltype(NestedDecvq<Deref<T>>())::First&> {};
          else if constexpr (::std::is_pointer_v<T>)
             return Types<typename decltype(NestedDecvq<::std::remove_pointer_t<T>>())::First*> {};
          else if constexpr (::std::is_bounded_array_v<T>)
@@ -380,9 +392,9 @@ namespace Langulus
       template<class T>
       consteval CT::Typelist auto NestedConst() {
          if constexpr (::std::is_rvalue_reference_v<T>)
-            return Types<typename decltype(NestedConst<::std::remove_reference_t<T>>())::First const&&> {};
+            return Types<typename decltype(NestedConst<Deref<T>>())::First const&&> {};
          else if constexpr (::std::is_lvalue_reference_v<T>)
-            return Types<typename decltype(NestedConst<::std::remove_reference_t<T>>())::First const&> {};
+            return Types<typename decltype(NestedConst<Deref<T>>())::First const&> {};
          else if constexpr (::std::is_pointer_v<T>)
             return Types<typename decltype(NestedConst<::std::remove_pointer_t<T>>())::First const*> {};
          else if constexpr (::std::is_bounded_array_v<T>)
@@ -391,12 +403,12 @@ namespace Langulus
             return Types<const T> {};
       }
 
-      /// Count the number of indirections                                    
+      /// Count the number of indirections, including custom pointers.        
       ///   @return the number of pointers in a type                          
       template<class T>
       consteval size_t CountIndirections() {
-         if constexpr (::std::is_pointer_v<T>)
-            return 1 + CountIndirections<Deref<Shed<Deptr<T>>>>();
+         if constexpr (CT::Sparse<T>)
+            return 1 + CountIndirections<Deptr<T>>();
          else
             return 0;
       }
@@ -430,12 +442,10 @@ namespace Langulus
       return const_cast<DecvqAll<Deext<T>>*>(what);
    }
    
-   /// Count the number of indirections                                       
-   ///   @attention this considers only C+++ syntax pointers, not custom      
-   ///      pointer types                                                     
-   ///   @attention sparse sheddables will contribute to the count            
+   /// Count the number of indirections, including custom pointers.           
+   ///   @attention ignores sheddable layers                                  
    template<class T>
-   constexpr size_t IndirectsOf = Inner::CountIndirections<Deref<Shed<T>>>();
+   constexpr size_t IndirectsOf = Inner::CountIndirections<T>();
 
    template<class T, class YES, class NO>
    using Tmut = typename ::std::conditional_t<CT::Mutable<T>,
