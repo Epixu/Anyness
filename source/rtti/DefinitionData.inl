@@ -810,7 +810,7 @@ namespace Langulus::RTTI
       
       //                                                                
       // If this is reached, then data is not defined yet from the      
-      // viewpoint of the current boundary                              
+      // viewpoint of the current boundary/library                      
       definition.ReflectCommon<T>();
       definition.mSize      = sizeof(T);
       definition.mAlign     = alignof(T);
@@ -824,9 +824,7 @@ namespace Langulus::RTTI
       definition.mAbstract  = false;
 
       // Reflect the origin type                                        
-      if constexpr (CT::Decayed<T>)
-         definition.mOrigin = &definition;
-      else if constexpr (CT::Complete<Decay<T>>)
+      if constexpr (CT::Complete<Decay<T>>)
          definition.mOrigin = Reflect<CT::ReflectedAs<Decay<T>>>();
 
       // Reflect the dequalified types and generate/propagate IDs       
@@ -849,7 +847,7 @@ namespace Langulus::RTTI
          definition.mDecvqAll  = &definition;
       }
 
-      using DenserT = Deptr<T>;
+      using DenserT = Deref<Deptr<T>>;
       if constexpr (CT::Complete<DenserT>) {
          // Reflect the denser type                                     
          definition.mDeptr = Reflect<CT::ReflectedAs<DenserT>>();
@@ -869,7 +867,7 @@ namespace Langulus::RTTI
             definition.mCurrentBoundary.mDereference = Inner::SparseDefaultDeref;
          else definition.mCurrentBoundary.mDereference = [](void* from, void* to) {
             auto typed_from = static_cast<T*>(from);
-            auto typed_to   = static_cast<decltype(**typed_from)*>(to);
+            auto typed_to   = static_cast<DenserT*>(to);
             *typed_to = **typed_from;
          };
       }

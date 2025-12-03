@@ -303,7 +303,7 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
       REQUIRE(meta.GetBoundaries().empty());
    #endif
 
-   if constexpr (CT::Complete<Decay<T>>)
+   if constexpr (CT::Complete<DecayStd<T>>)
       REQUIRE(meta.GetOrigin() == MetaDataOf<Decay<T>>());
    else
       REQUIRE(meta.GetOrigin() == nullptr);
@@ -321,7 +321,7 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
    REQUIRE(meta.GetSize() == sizeof(Deref<T>));
    REQUIRE(meta.GetAlignment() == alignof(Deref<T>));
    REQUIRE(meta.IsConstant() == CT::Constant<T>);
-   if constexpr (CT::Complete<Decay<T>>)
+   if constexpr (CT::Complete<DecayStd<T>>)
       REQUIRE(meta.IsDeep() == CT::Deep<T>);
    else
       REQUIRE(meta.IsDeep() == false);

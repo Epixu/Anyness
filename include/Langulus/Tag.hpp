@@ -24,11 +24,10 @@ namespace Langulus
    /// tagging all these variables in two ways:                               
    ///   1) Tags::Count<int> mSomeVariable;                                   
    ///   2) Tag<int, Tags::Count, Tags::Other> mSomeVariable;                 
-   /// This can be leveraged when reflecting members, later                   
-   /// used in descriptor-construction, when seeking data, and more.          
+   /// This can be leveraged when reflecting members, later used in           
+   /// descriptor-construction, when seeking data, and more.                  
    ///   @tparam T - the data behind the tag                                  
    ///   @tparam TAGS - the tags                                              
-   ///                                                                        
    template<class T, class...TAGS>
    struct Tag;
 

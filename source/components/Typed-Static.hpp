@@ -29,9 +29,8 @@ namespace Langulus::Anyness::Component
    struct TypedStatic {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
-      using CTTI_Sparse    = Maybe<CT::Sparse<TYPE>>;
-      static constexpr int ComponentPrecedence = -3000;
 
+      static constexpr int  ComponentPrecedence = -3000;
       static constexpr bool TypeErased = false;
       static constexpr bool Sparse     = CT::Sparse<TYPE>;
       static constexpr bool Dense      = CT::Dense<TYPE>;

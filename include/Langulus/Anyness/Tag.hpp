@@ -8,14 +8,12 @@ namespace Langulus::Anyness
 {
    ///                                                                        
    /// A type-erased dynamic tag, that depends on Anyness::Many               
-   ///                                                                        
    struct Tag : ::Langulus::Inner::Tag<Many> {
       using ::Langulus::Inner::Tag<Many>::Tag;
    };
 
    ///                                                                        
    /// A statically typed tag                                                 
-   ///                                                                        
    template<CT::NotVoid T>
    struct TTag : ::Langulus::Inner::Tag<T> {
       using ::Langulus::Inner::Tag<T>::Tag;

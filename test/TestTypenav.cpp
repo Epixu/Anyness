@@ -546,8 +546,8 @@ static_assert(not CT::NotDecayed<SheddableType<int>&, int*, void /*IncompleteTyp
 TEMPLATE_TEST_CASE("Testing slab types", "[ct]",
    SheddableType<int>,
    SheddableType<int&>,
-   int,
-   IncompleteType
+   int//,
+   //IncompleteType // shouldn't compile at all
 ) {
    static_assert(CT::Slab<TestType>);
 }

@@ -342,7 +342,7 @@ namespace Langulus::Anyness
             // Create from a null-terminated char pointer               
             if (not source)
                return *this;
-            using CHAR = Deptr<DT>;
+            using CHAR = Deref<Deptr<DT>>;
             static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
             const auto count = strlen(source);
             if (not count)
@@ -355,7 +355,7 @@ namespace Langulus::Anyness
             // Create from an std container                             
             if (source.empty())
                return *this;
-            using CHAR = Deptr<decltype(source.data())>;
+            using CHAR = Deref<Deptr<decltype(source.data())>>;
             static_assert(::std::same_as<Decvq<CHAR>, char>, "Type mismatch");
             const auto count = source.size();
             this->AllocateMore(currentCount + count);

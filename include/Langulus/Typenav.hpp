@@ -117,6 +117,27 @@ namespace Langulus::CTTI
 
 namespace Langulus
 {
+   /// Remove a reference from type                                           
+   template<class T>
+   using Deref = ::std::remove_reference_t<T>;
+
+   /// Remove a const/volatile from a type                                    
+   template<class T>
+   using Decvq = ::std::remove_cv_t<T>;
+
+   /// Remove a const from a type                                             
+   template<class T>
+   using Decq = ::std::remove_const_t<T>;
+
+   /// Remove a volatile from a type                                          
+   template<class T>
+   using Devq = ::std::remove_volatile_t<T>;
+
+   /// Remove an array extent from a type                                     
+   ///   @attention will remove references as well                            
+   template<class T>
+   using Deext = ::std::remove_extent_t<Deref<T>>;
+
    namespace CT
    {
       namespace Inner
@@ -174,8 +195,8 @@ namespace Langulus
 
       template<class...T>
       concept NotSheddable = PartialValidate<T...>
-          and ((    decltype(Inner::GetSheddedType<T>())::Empty) and ...);
-
+          and ((not Sheddable<T>) and ...);
+      
       namespace Inner
       {
          /// Extracts the bounded array size. Otherwise results in 1.         
@@ -203,7 +224,8 @@ namespace Langulus
             else return CTTI::Array<T>::Count;
          };
 
-         /// Gets the type after unary operator*                              
+         /// Removes a pointer from the type. Supports custom pointers.       
+         ///   @attention may result in reference, always uses operator*      
          template<class T, unsigned TIMES>
          consteval auto GetDeptr() {
             static_assert(not ::std::is_reference_v<T>,
@@ -213,7 +235,22 @@ namespace Langulus
             static_assert(TIMES >= 1,
                "Can't deptr zero times");
 
-            if constexpr (requires(T t) { *t; }) {
+            if constexpr (::std::is_pointer_v<T> or ::std::is_bounded_array_v<T>) {
+               if constexpr (::std::is_void_v<::std::remove_pointer_t<T>>)
+                  return NoTypes {};
+               else {
+                  // Conventional pointer dereferencing                 
+                  using deptr_once = decltype(*Fake<T>());
+                  if constexpr (TIMES == 1)
+                     return Types<deptr_once> {};
+                  else
+                     return GetDeptr<deptr_once, TIMES - 1>();
+               }
+            }
+            else if constexpr (LANGULUS_CTTI_CHECK(T, Sparse)) {
+               // Custom pointer dereferencing                          
+               static_assert(requires(T t) { *t; },
+                  "Custom pointer doesn't have unary operator*");
                using deptr_once = decltype(*Fake<T>());
                if constexpr (TIMES == 1)
                   return Types<deptr_once> {};
@@ -224,10 +261,6 @@ namespace Langulus
          }
       }
    }
-
-   /// Remove a reference from type                                           
-   template<class T>
-   using Deref = ::std::remove_reference_t<T>;
 
    /// Sheds any sheddable types                                              
    template<class T>
@@ -243,47 +276,49 @@ namespace Langulus
    template<class T>
    consteval size_t GetExtentOf(T&&) { return ExtentOf<ShedDeref<T>>; }
 
-   /// Remove a pointer from type. Supports custom pointer types.             
+   /// Remove a number of pointers from type. Supports custom pointer types.  
    ///   @attention may result in a reference                                 
    template<class T, unsigned TIMES = 1>
    using Deptr = typename decltype(CT::Inner::GetDeptr<ShedDeref<T>, TIMES>())::First;
 
-   /// Remove a const/volatile from a type                                    
-   template<class T>
-   using Decvq = ::std::remove_cv_t<T>;
-
-   /// Remove a const from a type                                             
-   template<class T>
-   using Decq = ::std::remove_const_t<T>;
-
-   /// Remove a volatile from a type                                          
-   template<class T>
-   using Devq = ::std::remove_volatile_t<T>;
-
-   /// Remove an array extent from a type                                     
-   ///   @attention will remove references as well                            
-   template<class T>
-   using Deext = ::std::remove_extent_t<Deref<T>>;
-   
    namespace Inner
    {
-      /// Nest-strip any qualifiers, extents and indirections                 
+      /// Nest-strip any qualifiers, extents, references, sheddables, and     
+      /// indirections (including custom pointers)                            
       ///   @return a pointer to the stripped T                               
       template<class T>
       consteval auto NestedDecay() {
-         using Stripped = Decvq<Deptr<Deext<T>>>;
+         using Stripped = Decvq<Deref<Deptr<T>>>;
          if constexpr (::std::same_as<T, Stripped>)
             return static_cast<Stripped*>(nullptr);
          else
             return NestedDecay<Stripped>();
       }
+
+      /// Nest-strip any qualifiers, extents, references, and pointers.       
+      /// Stops on sheddables or custom pointers.                             
+      ///   @return a pointer to the stripped T                               
+      template<class T>
+      consteval auto NestedDecayConventional() {
+         using Stripped = Decvq<Deref<::std::remove_pointer_t<T>>>;
+         if constexpr (::std::same_as<T, Stripped>)
+            return static_cast<Stripped*>(nullptr);
+         else
+            return NestedDecayConventional<Stripped>();
+      }
    }
 
    /// Strip a typename to its identity, removing qualifiers, indirections    
-   /// (even custom ones), and sheddables. This strongly guarantees, that it  
-   /// strips EVERYTHING, including nested pointers/sheddables/extents.       
+   /// (even custom ones), references, and sheddables. This strongly          
+   /// guarantees, that it strips EVERYTHING, including nested pointers,      
+   /// sheddables, and extents.                                               
    template<class T>
    using Decay = ::std::remove_pointer_t<decltype(Inner::NestedDecay<T>())>;
+   
+   /// Recursively strip a typename to its identity, removing all qualifiers, 
+   /// pointers, and references.                                              
+   template<class T>
+   using DecayStd = ::std::remove_pointer_t<decltype(Inner::NestedDecayConventional<T>())>;
    
    namespace CT
    {
@@ -342,19 +377,21 @@ namespace Langulus
       concept NotReference = PartialValidate<T...>
           and ((not ::std::is_reference_v<Shed<T>>) and ...);
 
-      /// Check if types have no reference/pointer/extent/qualifiers.         
+      /// Check if all types have no reference/pointer/extent/qualifiers.     
       /// Includes support for custom pointers.                               
       ///   @attention this doesn't shed or remove references before check    
       template<class...T>
-      concept Decayed = PartialValidate<T...> and ((
-              not ::std::is_bounded_array_v<T>
-          and not ::std::is_reference_v<T>
-          and not ::std::is_const_v<T>
-          and not ::std::is_volatile_v<T>
-          and not [] { return CT::Sparse<T>; } ()
-        ) and ...);
+      concept Decayed = PartialValidate<T...> and [] {
+          if constexpr (((::std::is_bounded_array_v<T>
+                       or ::std::is_reference_v<T>
+                       or ::std::is_const_v<T>
+                       or ::std::is_volatile_v<T>) or ...))
+             return false;
+          else return CT::Dense<T...>; 
+        } ();
    
       /// Check if types have reference/pointer/extent/const/volatile         
+      ///   @attention this doesn't shed or remove references before check    
       template<class...T>
       concept NotDecayed = PartialValidate<T...> and ((not Decayed<T>) and ...);
 
@@ -362,11 +399,12 @@ namespace Langulus
       /// with [] and isn't a reference                                       
       ///   @attention still allowed to be cv-qualified                       
       template<class...T>
-      concept Slab = PartialValidate<T...>
-          and ((not ::std::is_reference_v<T>
-            and not ::std::is_array_v<T>
-            and not [] { return CT::Sparse<T>; } ()
-          ) and ...);
+      concept Slab = PartialValidate<T...>and [] {
+          if constexpr (((::std::is_reference_v<T>
+                       or ::std::is_array_v<T>) or ...))
+             return false;
+          else return CT::Dense<T...>; 
+        } ();
    }
 
    namespace Inner
@@ -497,10 +535,10 @@ namespace Langulus
    namespace Langulus::CT { \
       template<class...T> \
       concept NAME = PartialValidate<T...> \
-          and (LANGULUS_CTTI_CHECK(Deref<Shed<T>>, NAME) and ...); \
+          and (LANGULUS_CTTI_CHECK(ShedDeref<T>, NAME) and ...); \
       template<class...T> \
       concept Not##NAME = PartialValidate<T...> \
-          and ((not LANGULUS_CTTI_CHECK(Deref<Shed<T>>, NAME)) and ...); \
+          and ((not LANGULUS_CTTI_CHECK(ShedDeref<T>, NAME)) and ...); \
    }
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
@@ -514,10 +552,10 @@ namespace Langulus
    namespace Langulus::CT { \
       template<class...T> \
       concept NAME = PartialValidate<T...> \
-          and (LANGULUS_CTTI_CHECK(Decvq<Deref<Shed<T>>>, NAME) and ...); \
+          and (LANGULUS_CTTI_CHECK(Decvq<ShedDeref<T>>, NAME) and ...); \
       template<class...T> \
       concept Not##NAME = PartialValidate<T...> \
-          and ((not LANGULUS_CTTI_CHECK(Decvq<Deref<Shed<T>>>, NAME)) and ...); \
+          and ((not LANGULUS_CTTI_CHECK(Decvq<ShedDeref<T>>, NAME)) and ...); \
    }
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
@@ -531,10 +569,10 @@ namespace Langulus
    namespace Langulus::CT { \
       template<class...T> \
       concept NAME = PartialValidate<T...> \
-          and (LANGULUS_CTTI_CHECK(Decay<Deref<Shed<T>>>, NAME) and ...); \
+          and (LANGULUS_CTTI_CHECK(Decay<T>, NAME) and ...); \
       template<class...T> \
       concept Not##NAME = PartialValidate<T...> \
-          and ((not LANGULUS_CTTI_CHECK(Decay<Deref<Shed<T>>>, NAME)) and ...); \
+          and ((not LANGULUS_CTTI_CHECK(Decay<T>, NAME)) and ...); \
    }
 
 LANGULUS_CTTI_CONCEPT(Null);

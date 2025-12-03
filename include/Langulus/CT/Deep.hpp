@@ -20,13 +20,13 @@ namespace Langulus::CT
 {
    /// Checks whether all decayed T are marked as deep                        
    template<class...T>
-   concept Deep = Validate<Decay<Shed<T>>...>
-       and (LANGULUS_CTTI_CHECK(Decay<Deref<Shed<T>>>, Deep) and ...);
+   concept Deep = Validate<Decay<T>...>
+       and (LANGULUS_CTTI_CHECK(Decay<T>, Deep) and ...);
    
    /// Checks whether all decayed T are not marked as deep                    
    template<class...T>
-   concept NotDeep = Validate<Decay<Shed<T>>...>
-       and ((not LANGULUS_CTTI_CHECK(Decay<Deref<Shed<T>>>, Deep)) and ...);
+   concept NotDeep = Validate<Decay<T>...>
+       and ((not LANGULUS_CTTI_CHECK(Decay<T>, Deep)) and ...);
 
    /// Same as CT::NotDeep                                                    
    template<class...T>

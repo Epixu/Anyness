@@ -39,52 +39,60 @@ namespace Langulus::CT
    /// Checks if all T are shallow intents                                    
    /// Shallow intents are propagated through mostly a single indirection     
    template<class...T>
-   concept ShallowIntent = Validate<T...>
-       and ((Intent<Deref<T>> and Decay<T>::IsShallow()) and ...);
+   concept ShallowIntent = Validate<T...> and ((
+         Intent<Decvq<Deref<T>>> and Decvq<Deref<T>>::IsShallow()
+      ) and ...);
 
    /// Checks if all T are deep intents                                       
    /// Deep intents propagate through all levels of indirection               
    template<class...T>
-   concept DeepIntent = Validate<T...>
-       and ((Intent<Deref<T>> and not Decay<T>::IsShallow()) and ...);
+   concept DeepIntent = Validate<T...> and ((
+         Intent<Decvq<Deref<T>>> and not Decvq<Deref<T>>::IsShallow()
+      ) and ...);
 
    /// Check if all T are refer intents                                       
    /// Does a shallow-copy without delving into any indirections, while       
    /// exercising ownership of managed data                                   
    template<class...T>
-   concept Referred = Validate<T...>
-       and ((Intent<Deref<T>> and Decay<T>::Is(0, true, false)) and ...);
+   concept Referred = Validate<T...> and ((
+         Intent<Decvq<Deref<T>>> and Decvq<Deref<T>>::Is(0, true, false)
+      ) and ...);
       
    /// Check if all T are copy intents                                        
    /// Does a shallow-copy, while cloning only the first indirection level    
    template<class...T>
-   concept Copied = Validate<T...>
-       and ((Intent<Deref<T>> and Decay<T>::Is(1, true, false)) and ...);
+   concept Copied = Validate<T...> and ((
+         Intent<Decvq<Deref<T>>> and Decvq<Deref<T>>::Is(1, true, false)
+      ) and ...);
 
    /// Check if all T are move intents                                        
    /// Moves by leaving the moved instances reusable                          
    template<class...T>
-   concept Moved = Validate<T...>
-       and ((Intent<Deref<T>> and Decay<T>::Is(0, true, true)) and ...);
+   concept Moved = Validate<T...> and ((
+         Intent<Decvq<Deref<T>>> and Decvq<Deref<T>>::Is(0, true, true)
+      ) and ...);
 
    /// Check if all T are abandon intents                                     
    /// Moves by leaving the moved instances no longer usable                  
    template<class...T>
-   concept Abandoned = Validate<T...>
-       and ((Intent<Deref<T>> and Decay<T>::Is(0, false, true)) and ...);
+   concept Abandoned = Validate<T...> and ((
+         Intent<Decvq<Deref<T>>> and Decvq<Deref<T>>::Is(0, false, true)
+      ) and ...);
 
    /// Check if all T are disown intents                                      
    /// Does a shallow-copy without delving into any indirections, without     
    /// exercising any ownership                                               
    template<class...T>
-   concept Disowned = Validate<T...>
-       and ((Intent<Deref<T>> and Decay<T>::Is(0, false, false)) and ...);
+   concept Disowned = Validate<T...> and ((
+         Intent<Decvq<Deref<T>>> and Decvq<Deref<T>>::Is(0, false, false)
+      ) and ...);
 
    /// Check if all T are clone intents                                       
    /// Does a deep-copy throughout all levels of indirection                  
    template<class...T>
-   concept Cloned = Validate<T...>
-       and ((DeepIntent<Deref<T>> and Decay<T>::Is(true, false)) and ...);
+   concept Cloned = Validate<T...> and ((
+         DeepIntent<Decvq<Deref<T>>> and Decvq<Deref<T>>::Is(true, false)
+      ) and ...);
 }
 
 namespace Langulus
@@ -988,7 +996,7 @@ namespace Langulus
       /// they are required. A type may not explicitly HasAbandonConstructor, 
       /// and yet be AbandonConstructible, because it is movable by the usual 
       /// C++20 semantics. Constructors are remarkably consistent across      
-      /// compilers. Unlike assignments (see below)...                        
+      /// compilers, unlike assignments (see below)...                        
       ///                                                                     
 
       /// Check if all T are intent-constructible by intent S.                
@@ -1083,13 +1091,14 @@ namespace Langulus
       ///   const&. I've added explicit intent assigners to compensate for    
       ///   that.                                                             
       /// - there is also this nasty compiler bug on MSVC v143 that affects   
-      ///   types is deleted destructors, and implicit copy/move semantics    
+      ///   types with deleted destructors, and implicit copy/move semantics  
       ///   https://stackoverflow.com/questions/79665049                      
       ///                                                                     
-      /// In that sense, none of these concepts here guarantees, that an      
+      /// Keep in mind, that none of these concepts here guarantee, that an   
       /// adequate intent-assignment exists for a type, unless you use        
-      /// IntentAssign itself. Implicit mapping onto built-in copy/move       
-      /// semantics has been disabled to avoid all these inconsistencies.     
+      /// IntentAssign itself, instead of operator=. Implicit mapping onto    
+      /// built-in copy/move semantics has been disabled to avoid all the     
+      /// aforementioned inconsistencies across compilers.                    
       ///                                                                     
 
       /// Check if all T are intent-assignable by intent S.                   

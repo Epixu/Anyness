@@ -37,11 +37,10 @@ namespace Langulus::CT
       consteval auto IsReflectable() {
          static_assert(NotReference<T>, "Strip references first");
          static_assert(NotSheddable<T>, "Strip sheddable types first");
-         using DT = Decay<T>;
 
          if constexpr (Void<T>) {
             // Void types are never reflectable                         
-            return static_cast<void*>(nullptr);
+            return NoTypes {};
          }
          else if constexpr (Complete<CTTI::ReflectAs<T>>) {
             // Substitution through external template                   
@@ -49,36 +48,39 @@ namespace Langulus::CT
             // because their `sizeof` and `alignof` are checked.        
             using AS = typename CTTI::ReflectAs<T>::Type;
             if constexpr (Void<AS>)
-               return static_cast<void*>(nullptr);
+               return NoTypes {};
             else {
                static_assert(sizeof(T) == sizeof(AS),
                   "Provided ReflectAs type must be of the same size");
                static_assert(alignof(T) == alignof(AS),
                   "Provided ReflectAs type must be of the same alignment");
-               return static_cast<AS*>(nullptr);
+               return Types<AS> {};
             }
          }
-         else if constexpr (Dense<T> and requires { typename DT::CTTI_ReflectAs; }) {
-            // Substitution through internal type                       
-            using AS = typename DT::CTTI_ReflectAs;
-            if constexpr (Void<AS>)
-               return static_cast<void*>(nullptr);
-            else {
-               static_assert(sizeof(T) == sizeof(AS),
-                  "Provided ReflectAs type must be of the same size");
-               static_assert(alignof(T) == alignof(AS),
-                  "Provided ReflectAs type must be of the same alignment");
-               return static_cast<AS*>(nullptr);
+         else if constexpr (Dense<T>) {
+            if constexpr (requires { typename Decay<T>::CTTI_ReflectAs; }) {
+               // Substitution through internal type                    
+               using AS = typename Decay<T>::CTTI_ReflectAs;
+               if constexpr (Void<AS>)
+                  return NoTypes {};
+               else {
+                  static_assert(sizeof(T) == sizeof(AS),
+                     "Provided ReflectAs type must be of the same size");
+                  static_assert(alignof(T) == alignof(AS),
+                     "Provided ReflectAs type must be of the same alignment");
+                  return Types<AS> {};
+               }
             }
+            else return Types<T> {};
          }
-         else return static_cast<T*>(nullptr);
+         else return Types<T> {};
       }
    }
 
    /// Check if all T are reflectable                                         
    template<class...T>
    concept Reflectable = Validate<T...>
-       and (CT::NotVoid<Deptr<decltype(Inner::IsReflectable<T>())>> and ...);
+       and (CT::NotVoid<typename decltype(Inner::IsReflectable<T>())::First> and ...);
 
    /// Get the type a given T is reflected as. This is very useful as a       
    /// a build-time optimization, because many type-erased containers are     
@@ -88,5 +90,5 @@ namespace Langulus::CT
    ///   @attention this is designed only for affecting the reflection of     
    ///      data types, not tag, verb, or constant definitions                
    template<class T>
-   using ReflectedAs = Deptr<decltype(Inner::IsReflectable<T>())>;
+   using ReflectedAs = typename decltype(Inner::IsReflectable<T>())::First;
 }
