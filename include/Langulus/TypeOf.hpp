@@ -134,6 +134,8 @@ namespace Langulus
    };
    
    /// Always returns a pointer to the argument                               
+   ///   @param a - the argument to point to                                  
+   ///   @attention will shed sheddables                                      
    template<class T>
    constexpr decltype(auto) SparseCast(T&& a) noexcept {
       if constexpr (::std::is_pointer_v<Shed<T>>)
@@ -142,15 +144,17 @@ namespace Langulus
          return &ShedCast(FWD(a));
    }
 
-   /// Always returns a value reference to the argument                       
-   /// If argument is an array, return a value reference to the first element 
-   template<class T>
+   /// Dereference the argument as many times as you need                     
+   ///   @tparam TIMES - number of times to dereference - will dereference    
+   ///      all indirections by default                                       
+   ///   @param a - the argument to dereference                               
+   ///   @attention will shed all sheddables                                  
+   template<unsigned TIMES = 1000000, class T>
    constexpr decltype(auto) DenseCast(T&& a) {
-      if constexpr (CT::Array<Shed<T>>)
-         return DenseCast(ShedCast(FWD(a))[0]);
-      else if constexpr (CT::Sparse<Shed<T>>)
-         // Security is on you - call can throw                         
-         return DenseCast(*ShedCast(FWD(a)));
+      using ST = Shed<T>;
+      if constexpr (TIMES > 0 and (CT::Array<ST> or CT::Sparse<ST>))
+         // Security depends on your unary oeprator* - call can throw   
+         return DenseCast<TIMES - 1>(*ShedCast(FWD(a)));
       else
          return ShedCast(FWD(a));
    }

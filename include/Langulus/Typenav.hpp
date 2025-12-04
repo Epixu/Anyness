@@ -225,39 +225,50 @@ namespace Langulus
          };
 
          /// Removes a pointer from the type. Supports custom pointers.       
-         ///   @attention may result in reference, always uses operator*      
+         ///   @attention if an incomplete type is reached the nesting ceases 
          template<class T, unsigned TIMES>
-         consteval auto GetDeptr() {
+         consteval auto NestedDeptr() {
             static_assert(not ::std::is_reference_v<T>,
                "Shed all references prior to this call");
-            static_assert(not CT::Sheddable<T>,
-               "Shed all sheddables prior to this call");
             static_assert(TIMES >= 1,
                "Can't deptr zero times");
 
-            if constexpr (::std::is_pointer_v<T> or ::std::is_bounded_array_v<T>) {
-               if constexpr (::std::is_void_v<::std::remove_pointer_t<T>>)
-                  return NoTypes {};
-               else {
-                  // Conventional pointer dereferencing                 
-                  using deptr_once = decltype(*Fake<T>());
+            if constexpr (not Complete<T>)
+               return Types<T> {};
+            else {
+               if constexpr (::std::is_pointer_v<T>) {
+                  if constexpr (::std::is_void_v<::std::remove_pointer_t<T>>)
+                     return NoTypes {};
+                  else {
+                     // Conventional pointer dereferencing              
+                     using deptr_once = ::std::remove_pointer_t<T>;
+                     if constexpr (TIMES == 1)
+                        return Types<deptr_once> {};
+                     else
+                        return NestedDeptr<deptr_once, TIMES - 1>();
+                  }
+               }
+               else if constexpr (::std::is_bounded_array_v<T>) {
+                  // Conventional bounded array dereferencing           
+                  using deptr_once = ::std::remove_extent_t<T>;
                   if constexpr (TIMES == 1)
                      return Types<deptr_once> {};
                   else
-                     return GetDeptr<deptr_once, TIMES - 1>();
+                     return NestedDeptr<deptr_once, TIMES - 1>();
                }
+               else if constexpr (LANGULUS_CTTI_CHECK(T, Sparse)) {
+                  // Custom pointer dereferencing                       
+                  static_assert(requires(T t) { *t; },
+                     "Custom pointer doesn't have unary operator*");
+                  
+                  using deptr_once = Deref<decltype(*Fake<T>())>;
+                  if constexpr (TIMES == 1)
+                     return Types<deptr_once> {};
+                  else
+                     return NestedDeptr<deptr_once, TIMES - 1>();
+               }
+               else return Types<T> {};
             }
-            else if constexpr (LANGULUS_CTTI_CHECK(T, Sparse)) {
-               // Custom pointer dereferencing                          
-               static_assert(requires(T t) { *t; },
-                  "Custom pointer doesn't have unary operator*");
-               using deptr_once = decltype(*Fake<T>());
-               if constexpr (TIMES == 1)
-                  return Types<deptr_once> {};
-               else
-                  return GetDeptr<deptr_once, TIMES - 1>();
-            }
-            else return Types<T> {};
          }
       }
    }
@@ -278,14 +289,16 @@ namespace Langulus
 
    /// Remove a number of pointers from type. Supports custom pointer types.  
    ///   @attention may result in a reference                                 
+   ///   @attention if an incomplete type is reached the nesting ceases       
    template<class T, unsigned TIMES = 1>
-   using Deptr = typename decltype(CT::Inner::GetDeptr<ShedDeref<T>, TIMES>())::First;
+   using Deptr = typename decltype(CT::Inner::NestedDeptr<ShedDeref<T>, TIMES>())::First;
 
    namespace Inner
    {
       /// Nest-strip any qualifiers, extents, references, sheddables, and     
-      /// indirections (including custom pointers)                            
+      /// indirections (including custom pointers).                           
       ///   @return a pointer to the stripped T                               
+      ///   @attention if an incomplete type is reached, the nesting ceases   
       template<class T>
       consteval auto NestedDecay() {
          using Stripped = Decvq<Deref<Deptr<T>>>;
@@ -293,18 +306,6 @@ namespace Langulus
             return static_cast<Stripped*>(nullptr);
          else
             return NestedDecay<Stripped>();
-      }
-
-      /// Nest-strip any qualifiers, extents, references, and pointers.       
-      /// Stops on sheddables or custom pointers.                             
-      ///   @return a pointer to the stripped T                               
-      template<class T>
-      consteval auto NestedDecayConventional() {
-         using Stripped = Decvq<Deref<::std::remove_pointer_t<T>>>;
-         if constexpr (::std::same_as<T, Stripped>)
-            return static_cast<Stripped*>(nullptr);
-         else
-            return NestedDecayConventional<Stripped>();
       }
    }
 
@@ -314,11 +315,6 @@ namespace Langulus
    /// sheddables, and extents.                                               
    template<class T>
    using Decay = ::std::remove_pointer_t<decltype(Inner::NestedDecay<T>())>;
-   
-   /// Recursively strip a typename to its identity, removing all qualifiers, 
-   /// pointers, and references.                                              
-   template<class T>
-   using DecayStd = ::std::remove_pointer_t<decltype(Inner::NestedDecayConventional<T>())>;
    
    namespace CT
    {

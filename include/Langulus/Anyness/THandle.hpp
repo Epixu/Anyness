@@ -93,6 +93,7 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using HandleMutType  = THandle<DecvqAll<T>>;
+      using Denser         = THandle;
 
       THandle() = delete;
       
@@ -122,6 +123,7 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using HandleMutType  = THandle<DecvqAll<T>>;
+      using Denser         = THandle<Deptr<T>&>;
 
       THandle() = delete;
       
@@ -152,6 +154,7 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using HandleMutType  = THandleDisowned<DecvqAll<T>>;
+      using Denser         = THandle<Deptr<T>&>;
 
       THandleDisowned() = delete;
       
@@ -176,6 +179,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using HandleMutType  = THandle<DecvqAll<T>>;
+      using Denser         = THandle;
 
       THandle() = delete;
       
@@ -200,6 +204,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using HandleMutType  = THandle<DecvqAll<T>>;
+      using Denser         = THandle<Deptr<T>>;
 
       THandle() = delete;
       

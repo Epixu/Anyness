@@ -453,7 +453,7 @@ namespace Langulus::Anyness
       }
 
       explicit operator ::std::string() const {
-         return {GetRaw(), GetCount()};
+         return {this->GetRaw(), this->GetCount()};
       }
 
       /// The presence of this structure makes Text a CT::Serializer          

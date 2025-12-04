@@ -66,20 +66,15 @@ namespace Langulus::Anyness::Component
       /// Get a direct access to the heap memory                              
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
-         using T = TypeOf<C>;
-         if constexpr (CT::Mutable<C>)
-            return static_cast<T*      >(self.GetHeapInner());
-         else
-            return static_cast<T const*>(self.GetHeapInner());
+         using Tcvq = Tmut<C, TypeOf<C>*, TypeOf<C> const*>;
+         return static_cast<Tcvq>(self.GetHeapInner());
       }
       
       /// Get a direct access to the heap memory as a different type          
       template<class T, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
-         if constexpr (CT::Mutable<C>)
-            return static_cast<T*      >(self.GetHeapInner());
-         else
-            return static_cast<T const*>(self.GetHeapInner());
+         using Tcvq = Tmut<C, T*, T const*>;
+         return static_cast<Tcvq>(self.GetHeapInner());
       }
 
       /// Get a direct access to the heap memory's end.                       
@@ -104,8 +99,8 @@ namespace Langulus::Anyness::Component
       constexpr decltype(auto) Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>,    "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
-         using TC = TypeOf<C>;
-         using TH = Tif<CT::Void<T>, TC, T>;
+         using TC   = TypeOf<C>;
+         using TH   = Tif<CT::Void<T>, TC, T>;
          using THQ0 = Tmut<C, TH,   ConstAll<TH  >>;
          using THQ1 = Tmut<C, TH*,  ConstAll<TH* >>;
          using THQ2 = Tmut<C, TH**, ConstAll<TH**>>;
@@ -140,10 +135,22 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Casting to a desired static type                         
-            static_assert(IndirectsOf<TC>+1 >= IndirectsOf<TH>,
-               "Indirection mismatch");
-            
-            if constexpr (CT::Sparse<TC>) {
+            if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
+               // No difference in indirections                         
+               return *static_cast<THQ1>(static_cast<TC*>(mHeap));
+            }
+            else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
+               // No additional pointers. Can be done without a         
+               // reinterpret_cast, and thus be constexpr-friendly      
+               return *static_cast<THQ1>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TC*>(mHeap)));
+            }
+            else {
+               static_assert(IndirectsOf<TC>+1 == IndirectsOf<TH>,
+                  "Too many indirections");
+               return const_cast<THQ0>(reinterpret_cast<ConstAll<THQ0>>(&mHeap)); // & -> **
+            }
+               
+            /*if constexpr (CT::Sparse<TC>) {
                if constexpr (CT::Dense<TH>)
                   return (**static_cast<THQ2>(mHeap));   // * -> & 
                else if constexpr (IndirectsOf<TH> == 1)
@@ -158,7 +165,7 @@ namespace Langulus::Anyness::Component
                   return (*const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap))); // & -> *&
                else
                   return  const_cast<THQ0>(reinterpret_cast<ConstAll<THQ0>>(&mHeap)); // & -> **
-            }
+            }*/
          }
       }
 
@@ -256,6 +263,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the first contained element, removing 'count' indirections      
       ///   @attention throws if type is incomplete and origin was reached    
+      ///   @param self - deduced this                                        
       ///   @param count - how many levels of indirection to remove?          
       ///   @return the dense first element                                   
       template<class AS = void, CT::Container C>
@@ -314,7 +322,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       /// Default-initialization of this component is impossible              
-      constexpr void ConstructDefault() {
+      constexpr void ConstructDefault() const {
          static_assert(false, "Can't default-construct this component");
       }
       
@@ -322,6 +330,7 @@ namespace Langulus::Anyness::Component
       /// This is only a reference to a heap allocation and is not allowed    
       /// to allocate any new memory, so all this does is copy the heap       
       /// pointer, ignoring any intents.                                      
+      ///   @param self - deduced this                                        
       ///   @param intent - the intent and container to transfer from         
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
@@ -337,6 +346,7 @@ namespace Langulus::Anyness::Component
       };
       
       /// Get a size based on reflected allocation page and count             
+      ///   @param self - deduced this                                        
       ///   @param count - the number of elements to request                  
       template<CT::Container C>
       Request RequestHeap(this C const& self, const size_t count) has_assumptions {

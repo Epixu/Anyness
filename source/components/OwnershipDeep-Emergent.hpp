@@ -254,7 +254,9 @@ namespace Langulus::Anyness::Component
 
                if constexpr (CT::Sparse<DT>) {
                   // Pointer to pointer                                 
-                  H {ptr, entries + 1}.KeepElementDeep();
+                  using DenserH = typename H::Denser;
+                  DenserH temp {ptr, entries + 1};
+                  temp.KeepElementDeep();
                }
                else if constexpr (CT::Referenced<DT>) {
                   // Pointer to dense                                   
@@ -358,7 +360,9 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Sparse<DT>) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
-                     H {ptr, entries + 1}.template DestroyElementDeep<DESTROY>();
+                     using DenserH = typename H::Denser;
+                     DenserH temp{ptr, entries + 1};
+                     temp.template DestroyElementDeep<DESTROY>();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
                      // Pointer to a complete, destroyable dense.       

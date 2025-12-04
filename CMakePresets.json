@@ -72,7 +72,7 @@
         "CMAKE_C_COMPILER": "clang-19",
         "CMAKE_CXX_COMPILER": "clang++-19",
         "CMAKE_C_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\"",
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\""
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra $env{BUILDTYPE_FLAGS} $env{ARCHITECTURE_FLAGS} $env{SIMD_FLAGS} -ftime-trace=\"compilation_time.json\" -ftemplate-backtrace-limit=0"
       }
     },
     {

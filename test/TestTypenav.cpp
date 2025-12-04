@@ -599,32 +599,61 @@ static_assert(::std::same_as<Deref<int(&)[15]>, int[15]>);
 ///                                                                           
 /// Deptr                                                                     
 ///                                                                           
-static_assert(::std::same_as<Deptr<SheddableType<int*>>, int&>);
-static_assert(::std::same_as<Deptr<SheddableType<int>*>, SheddableType<int>&>);
+static_assert(::std::same_as<Deptr<SheddableType<int**>>, int*>);
+static_assert(::std::same_as<Deptr<SheddableType<int*>>, int>);
+static_assert(::std::same_as<Deptr<SheddableType<int>*>, SheddableType<int>>);
 
 static_assert(::std::same_as<Deptr<int>,   int>);
 static_assert(::std::same_as<Deptr<int&>,  int>);
 static_assert(::std::same_as<Deptr<int&&>, int>);
 static_assert(::std::same_as<Deptr<int const&>,  int const>);
 static_assert(::std::same_as<Deptr<int const&&>, int const>);
-static_assert(::std::same_as<Deptr<int(&)[15]>, int&>);
+static_assert(::std::same_as<Deptr<int(&)[15]>, int>);
 
-static_assert(::std::same_as<Deptr<int*>,   int&>);
-static_assert(::std::same_as<Deptr<int*&>,  int&>);
-static_assert(::std::same_as<Deptr<int*&&>, int&>);
-static_assert(::std::same_as<Deptr<int const*&>,  int const&>);
-static_assert(::std::same_as<Deptr<int const*&&>, int const&>);
-static_assert(::std::same_as<Deptr<int(*)[15]>, int(&)[15]>);
-static_assert(::std::same_as<Deptr<int*(*)[15]>, int*(&)[15]>);
-static_assert(::std::same_as<Deptr<int*[15]>, int*&>);
+static_assert(::std::same_as<Deptr<int*>,   int>);
+static_assert(::std::same_as<Deptr<int*&>,  int>);
+static_assert(::std::same_as<Deptr<int*&&>, int>);
+static_assert(::std::same_as<Deptr<int const*&>,  int const>);
+static_assert(::std::same_as<Deptr<int const*&&>, int const>);
+static_assert(::std::same_as<Deptr<int(*)[15]>, int[15]>);
+static_assert(::std::same_as<Deptr<int*(*)[15]>, int*[15]>);
+static_assert(::std::same_as<Deptr<int*[15]>, int*>);
 
-static_assert(::std::same_as<Deptr<int**>,   int*&>);
-static_assert(::std::same_as<Deptr<int**&>,  int*&>);
-static_assert(::std::same_as<Deptr<int**&&>, int*&>);
-static_assert(::std::same_as<Deptr<int const**&>,  int const*&>);
-static_assert(::std::same_as<Deptr<int const**&&>, int const*&>);
-static_assert(::std::same_as<Deptr<int const* const*&>,  int const* const&>);
-static_assert(::std::same_as<Deptr<int const* const*&&>, int const* const&>);
+static_assert(::std::same_as<Deptr<int**>,   int*>);
+static_assert(::std::same_as<Deptr<int**&>,  int*>);
+static_assert(::std::same_as<Deptr<int**&&>, int*>);
+static_assert(::std::same_as<Deptr<int const**&>,  int const*>);
+static_assert(::std::same_as<Deptr<int const**&&>, int const*>);
+static_assert(::std::same_as<Deptr<int const* const*&>,  int const* const>);
+static_assert(::std::same_as<Deptr<int const* const*&&>, int const* const>);
+
+static_assert(::std::same_as<Deptr<SheddableType<int**>, 2>, int>);
+static_assert(::std::same_as<Deptr<SheddableType<int*>, 2>, int>);
+static_assert(::std::same_as<Deptr<SheddableType<int>*, 2>, SheddableType<int>>);
+
+static_assert(::std::same_as<Deptr<int, 2>,   int>);
+static_assert(::std::same_as<Deptr<int&, 2>,  int>);
+static_assert(::std::same_as<Deptr<int&&, 2>, int>);
+static_assert(::std::same_as<Deptr<int const&, 2>,  int const>);
+static_assert(::std::same_as<Deptr<int const&&, 2>, int const>);
+static_assert(::std::same_as<Deptr<int(&)[15], 2>, int>);
+
+static_assert(::std::same_as<Deptr<int*, 2>,   int>);
+static_assert(::std::same_as<Deptr<int*&, 2>,  int>);
+static_assert(::std::same_as<Deptr<int*&&, 2>, int>);
+static_assert(::std::same_as<Deptr<int const*&, 2>,  int const>);
+static_assert(::std::same_as<Deptr<int const*&&, 2>, int const>);
+static_assert(::std::same_as<Deptr<int(*)[15], 2>, int>);
+static_assert(::std::same_as<Deptr<int*(*)[15], 2>, int*>);
+static_assert(::std::same_as<Deptr<int*[15], 2>, int>);
+
+static_assert(::std::same_as<Deptr<int**, 2>,   int>);
+static_assert(::std::same_as<Deptr<int**&, 2>,  int>);
+static_assert(::std::same_as<Deptr<int**&&, 2>, int>);
+static_assert(::std::same_as<Deptr<int const**&, 2>,  int const>);
+static_assert(::std::same_as<Deptr<int const**&&, 2>, int const>);
+static_assert(::std::same_as<Deptr<int const* const*&, 2>,  int const>);
+static_assert(::std::same_as<Deptr<int const* const*&&, 2>, int const>);
 
 
 ///                                                                           
