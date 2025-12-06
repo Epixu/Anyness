@@ -391,7 +391,10 @@ namespace Langulus::Anyness
       
       /// Call ConstructFrom whenever possible, fallback to                   
       /// ConstructDefault otherwise                                          
-      constexpr void ConstructFrom(this auto& self, CT::Container auto&& from) {
+      template<CT::Container SELF, CT::Container FROM>
+      constexpr void ConstructFrom(this SELF& self, FROM&& from) {
+         static_assert(CT::Handle<FROM> == CT::Handle<SELF>,
+            "Handles can't be absorbed into non-handles, use insertion instead");
          ComponentList::ForEach([&]<class C>{
                  if_available(self.C::ConstructFrom(FWDIntent(from)))
             else if_available(self.C::ConstructDefault())
@@ -418,7 +421,10 @@ namespace Langulus::Anyness
    public:
       /// Call AssignFrom whenever possible, fallback to AssignDefault        
       /// otherwise                                                           
-      constexpr auto& AssignFrom(this auto& self, CT::Container auto&& rhs) {
+      template<CT::Container SELF, CT::Container FROM>
+      constexpr SELF& AssignFrom(this SELF& self, FROM&& rhs) {
+         static_assert(CT::Handle<FROM> == CT::Handle<SELF>,
+            "Handles can't be absorbed into non-handles, use insertion instead");
          ComponentList::ForEach([&]<class C>{
                  if_available(self.C::AssignFrom(FWDIntent(rhs)))
             else if_available(self.C::AssignDefault())

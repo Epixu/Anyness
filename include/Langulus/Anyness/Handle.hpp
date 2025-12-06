@@ -22,6 +22,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased mutable handle with ownership.                           
    /// It refers to a picked element inside a type-erased container.          
+   /// Handles can never be empty.                                            
    ///   @attention handles are never (de)referenced upon construction and    
    ///      destruction - only on reassignment                                
    struct HandleMut : Container<
@@ -59,6 +60,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased mutable handle without ownership.                        
    /// It refers to a picked element inside a type-erased container.          
+   /// Handles can never be empty.                                            
    struct HandleDisownedMut : Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
@@ -91,11 +93,12 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased immutable handle with ownership.                         
    /// It refers to a picked element inside a type-erased container.          
+   /// Handles can never be empty.                                            
    ///   @attention handles are never (de)referenced upon construction and    
    ///      destruction - only on reassignment. Since this handle is not      
    ///      mutable, this isn't possible either, however the handle still     
    ///      carries ownership information, so that it can be used on demand   
-   ///      instead of sought from the memory manager every time              
+   ///      instead of sought from the memory manager every time.             
    struct Handle : Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
@@ -128,6 +131,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased immutable handle without ownership.                      
    /// It refers to a picked element inside a type-erased container.          
+   /// Handles can never be empty.                                            
    struct HandleDisowned : Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,

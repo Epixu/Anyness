@@ -149,12 +149,15 @@ namespace Langulus::Anyness::Component
       
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent - the intent and container to transfer from         
-      template<CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this auto& self, I&& intent) {
+      template<CT::Intent I, CT::Container C> requires CT::Container<I>
+      void ConstructFrom(this C& self, I&& intent) {
          decltype(auto) from = FWD(intent.what);
-         self.SetStateInner(from.GetStateInner().mState);
-         if constexpr (I::ResetsOnMove())
-            from.ResetState();
+         if constexpr (requires { from.GetStateInner(); }) {
+            self.SetStateInner(from.GetStateInner().mState);
+            if constexpr (I::ResetsOnMove())
+               from.ResetState();
+         }
+         else self.SetStateInner(C::GetDefaultState());
       }
       
    public:

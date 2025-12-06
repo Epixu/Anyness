@@ -43,7 +43,7 @@ namespace Langulus::Anyness::Component
             return; // We already own this allocation                   
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         // The heap might already be ours and we just don't know it 
+         // The heap might already be ours and we just don't know it    
          if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
             a = const_cast<AllocationPtr>(found);
             a->Keep();
@@ -96,6 +96,7 @@ namespace Langulus::Anyness::Component
       
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this will not dereference previous allocation          
+      ///   @param self - deduced this                                        
       ///   @param intent - the intent and container to transfer from         
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {

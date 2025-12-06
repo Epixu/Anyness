@@ -84,6 +84,7 @@ namespace Langulus::Anyness
 
    ///                                                                        
    /// When T is a dense reference, then element is embedded inside container 
+   /// Handles can never be empty.                                            
    ///   @attention memory is never (de)referenced upon construction and      
    ///      destruction - only on reassignment                                
    ///   @tparam T - the contained type                                       
@@ -147,6 +148,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// When T is a dense reference, then element is embedded inside container.
    /// This handle never propagates or modifies ownership.                    
+   /// Handles can never be empty.                                            
    ///   @tparam T - the contained type                                       
    template<CT::Reference T>
    struct THandleDisowned<T> : Inner::THandleDisownedEmbedded<T> {
@@ -173,6 +175,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// When T is not a reference, then it is not embedded.                    
    /// Such dense handles are isomorphic to TOwn<T> - data is on the stack.   
+   /// Handles can never be empty.                                            
    ///   @tparam T - the contained type                                       
    template<CT::NotReference T> requires CT::Dense<T>
    struct THandle<T> : Inner::THandleLocalDense<T> {
@@ -198,6 +201,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// When T is not a reference, then it is not embedded.                    
    /// Such sparse handles are isomorphic to TRef<T>.                         
+   /// Handles can never be empty.                                            
    ///   @tparam T - the contained type                                       
    template<CT::NotReference T> requires CT::Sparse<T>
    struct THandle<T> : Inner::THandleLocalSparse<T> {

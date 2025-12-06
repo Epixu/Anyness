@@ -140,6 +140,12 @@ namespace Langulus::RTTI::Inner
       return mDefinition ? mDefinition->mHasGetHashMethod : false;
    }
    
+   /// Get the reflected dereffer                                             
+   inline auto MetaDataNaked::GetDereffer()
+   const noexcept -> DefinitionData::FBinary {
+      return mDefinition ? mDefinition->mCurrentBoundary.mDereference : nullptr;
+   }
+   
    /// Get the reflected destructor                                           
    inline auto MetaDataNaked::GetDestructor()
    const noexcept -> DefinitionData::FUnary {

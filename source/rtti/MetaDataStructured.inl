@@ -372,6 +372,16 @@ namespace Langulus::RTTI::Inner
          return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDestructor;
       return {};
    }
+   
+   /// Get the reflected dereffer                                             
+   TEMPLATE()
+   auto ME()::GetDereffer()
+   const noexcept -> DefinitionData::FBinary {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDereference;
+      return {};
+   }
 
    /// Get the reflected referencer                                           
    TEMPLATE()

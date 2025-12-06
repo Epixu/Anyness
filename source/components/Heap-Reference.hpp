@@ -51,6 +51,7 @@ namespace Langulus::Anyness::Component
          return self.template AccessStack<HeapReference>();
       }
 
+      /// Set the heap pointer, any data pointer will do                      
       constexpr void SetHeapInner(this auto& self, auto heap) noexcept {
          self.GetHeapInner() = const_cast<void*>(
             static_cast<const void*>(heap)
@@ -103,7 +104,7 @@ namespace Langulus::Anyness::Component
          using TH   = Tif<CT::Void<T>, TC, T>;
          using THQ0 = Tmut<C, TH,   ConstAll<TH  >>;
          using THQ1 = Tmut<C, TH*,  ConstAll<TH* >>;
-         using THQ2 = Tmut<C, TH**, ConstAll<TH**>>;
+         //using THQ2 = Tmut<C, TH**, ConstAll<TH**>>;
          auto& mHeap = self.GetHeapInner();
 
          if constexpr (CT::Void<TH>) {
@@ -113,7 +114,29 @@ namespace Langulus::Anyness::Component
          else if constexpr (CT::TypeErased<C>) {
             // Casting to a desired runtime type                        
             LglsAssumeDev(self.IsTyped(), "Block is not typed");
-            LglsAssert(self.GetIndirections()+1 >= IndirectsOf<TH>,
+            const auto indirections = self.GetIndirections();
+
+            if constexpr (IndirectsOf<TH> == 0) {
+               Deep<C> denser = Disown(self.GetDense());
+               return *static_cast<THQ1>(denser.GetHeapInner());               
+            }
+            else if (indirections == IndirectsOf<TH>) {
+               // No difference in indirections                         
+               return *static_cast<THQ1>(mHeap);
+            }
+            else if (indirections > IndirectsOf<TH>) {
+               // We need to dereference                                
+               auto diff = indirections - IndirectsOf<TH>;
+               Deep<C> denser = Disown(self.GetDense(diff));
+               return *static_cast<THQ1>(denser.GetHeapInner());
+            }
+            else {
+               LglsAssumeDev(indirections+1 == IndirectsOf<TH>,
+                  "Too many indirections");
+               return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap)); // & -> **
+            }
+            
+            /*LglsAssert(self.GetIndirections()+1 >= IndirectsOf<TH>,
                "Indirection mismatch");
 
             if (self.IsSparse()) {
@@ -131,7 +154,7 @@ namespace Langulus::Anyness::Component
                   return (*const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap))); // & -> *&
                else
                   return  const_cast<THQ0>(reinterpret_cast<ConstAll<THQ0>>(&mHeap)); // & -> **
-            }
+            }*/
          }
          else {
             // Casting to a desired static type                         
@@ -140,7 +163,7 @@ namespace Langulus::Anyness::Component
                return *static_cast<THQ1>(static_cast<TC*>(mHeap));
             }
             else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
-               // No additional pointers. Can be done without a         
+               // We need to dereference. Can be done without a         
                // reinterpret_cast, and thus be constexpr-friendly      
                return *static_cast<THQ1>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TC*>(mHeap)));
             }
@@ -267,57 +290,49 @@ namespace Langulus::Anyness::Component
       ///   @param count - how many levels of indirection to remove?          
       ///   @return the dense first element                                   
       template<class AS = void, CT::Container C>
-      auto GetDense(this C&& self, Count<C> const count = CountMax<C>) {
+      auto GetDense(this C&& self, Count<C> count = CountMax<C>) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
-         static_assert(CT::Container<D>, "D must result in a container type");
-         static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
+         using H = typename Decay<C>::HandleType;
+         static_assert(CT::Container<D>,
+            "D must result in a container type");
+         static_assert(CT::HasVariableCount<D>,
+            "D must allow for being empty");
 
          if (self.IsEmpty())
             return D {};
-         if (self.IsDense() or count <= 0)
-            return self.template GetItem<D>();
+         if (not self.IsSparse() or count <= 0)
+            return D {Piecewise, self.template As<H>()};
 
          // Check if origin type is complete before attempting anything 
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.GetType();
             if (count >= T.GetIndirections()) {
                LglsAssert(T.GetOrigin(),
-                  "Trying to interface incomplete data `", self.GetType(), "` as dense");
+                  "Trying to interface incomplete data `", self.GetType(),
+                  "` as dense"
+               );
             }
          }
          else {
             using T = TypeOf<C>;
             if (count >= IndirectsOf<T>) {
                LglsAssert(CT::Complete<Decay<T>>,
-                  "Trying to interface incomplete data `", self.GetType(), "` as dense");
+                  "Trying to interface incomplete data `", self.GetType(),
+                  "` as dense"
+               );
             }
          }
 
-         // Start iterating until dense                                 
-         auto counter = count;
-         auto first = self.GetItem();
-         constexpr bool first_was_referenced = CT::AutoOwned<decltype(first)>;
-
-         while (counter and first.IsSparse()) {
-            auto& a = first.GetAllocationInner();
-            if constexpr (first_was_referenced)
-               if (a) a->Free();
-
-            first.SetHeapInner(*static_cast<void const* const*>(first.GetHeapInner()));
-            first.SetTypeInner(first.GetType().GetDeptr());
-
-            const auto entries = first.GetEntries();
-            if (entries) {
-               a = *entries;
-               if constexpr (first_was_referenced)
-                  if (a) a->Keep();
-            }
-            else first.SetAllocationInner(nullptr);
-
-            --counter;
+         // Start iterating until dereferenced enough                   
+         auto iterator = self.template As<H>();
+         while (count and iterator.IsSparse()) {
+            iterator.SetHeapInner(*static_cast<void const* const*>(iterator.GetHeapInner()));
+            iterator.SetEntriesInner(iterator.GetEntriesInner() + 1);
+            iterator.SetTypeInner(iterator.GetType().GetDeptr());
+            --count;
          }
 
-         return D {Abandon {first}};
+         return D {Piecewise, iterator};
       }
 
    protected:
