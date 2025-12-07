@@ -342,7 +342,7 @@ namespace Langulus::Anyness::Component
          static_assert(CT::NotReference<T>, "Strip all references first");
          
          const auto type = MetaDataOf<T>();
-         if constexpr (C::TypeErased)
+         if constexpr (CT::TypeErased<C>)
             self.SetType(type);
          else {
             static_assert(Exact<T, TYPE>, "Type mismatch");         

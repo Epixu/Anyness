@@ -344,7 +344,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
          const auto reserved = self.GetReserved();
-         if (self.GetHeapHeaderSize(reserved) == 0)
+         const auto indirect = self.GetIndirections();
+         if (self.GetHeapHeaderSize(reserved, indirect) == 0)
             return;
 
          //TODO when newReserved is larger than reserved stuff has to move to the right,
@@ -358,14 +359,57 @@ namespace Langulus::Anyness::Component
          C::ComponentList::ForEach([&]<class COM>{
             if constexpr (requires { typename COM::HeapRequest; }) {
                using R = typename COM::HeapRequest;
-               if constexpr (requires { R::AllocatedPerElement; }) {
-                  if (continuous) {
-                     from[idx] += sizeof(typename R::Type) * reserved;
-                     to  [idx] += sizeof(typename R::Type) * newReserved;
+               if constexpr (requires { R::AllocatedPerIndirection; }) {
+                  if constexpr (requires { R::Type::AllocatedPerElement; }) {
+                     const size_t shift = sizeof(typename R::Type::Type) * indirect;
+                     if (continuous) {
+                        from[idx] += shift * reserved;
+                        to  [idx] += shift * newReserved;
+                     }
+                     else {
+                        from[idx] = from[idx-1] + shift * reserved;
+                        to  [idx] = to  [idx-1] + shift * newReserved;
+                     }
                   }
                   else {
-                     from[idx] = from[idx-1] + sizeof(typename R::Type) * reserved;
-                     to  [idx] = to  [idx-1] + sizeof(typename R::Type) * newReserved;
+                     const size_t shift = sizeof(typename R::Type) * indirect;
+                     if (continuous) {
+                        from[idx] += shift;
+                        to  [idx] += shift;
+                     }
+                     else {
+                        from[idx] = from[idx-1] + shift;
+                        to  [idx] = to  [idx-1] + shift;
+                     }
+                  }
+                  
+                  // Move index only when a gap forms, so that we       
+                  // minimize the 'memmove' calls                       
+                  ++idx;
+                  continuous = false;
+               }
+               else if constexpr (requires { R::AllocatedPerElement; }) {
+                  if constexpr (requires { R::Type::AllocatedPerIndirection; }) {
+                     const size_t shift = sizeof(typename R::Type::Type) * indirect;
+                     if (continuous) {
+                        from[idx] += shift * reserved;
+                        to  [idx] += shift * newReserved;
+                     }
+                     else {
+                        from[idx] = from[idx-1] + shift * reserved;
+                        to  [idx] = to  [idx-1] + shift * newReserved;
+                     }
+                  }
+                  else {
+                     const size_t shift = sizeof(typename R::Type);
+                     if (continuous) {
+                        from[idx] += shift * reserved;
+                        to  [idx] += shift * newReserved;
+                     }
+                     else {
+                        from[idx] = from[idx-1] + shift * reserved;
+                        to  [idx] = to  [idx-1] + shift * newReserved;
+                     }
                   }
                   
                   // Move index only when a gap forms, so that we       

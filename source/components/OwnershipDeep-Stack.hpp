@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID>
    struct OwnershipDeepStack : OwnershipDeepEmergent<ID> {
       using StackRequest = EntryPtr;
-      using HeapRequest = PerElement<AllocationPtr>;
+      using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
 
    protected:
       template<unsigned> friend struct Emplacement;

@@ -366,7 +366,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       Request RequestHeap(this C const& self, const size_t count) has_assumptions {
          Request result;
-         const size_t header = self.GetHeapHeaderSize(count);
+         const size_t header = self.GetHeapHeaderSize(count, self.GetIndirections());
          
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.GetType();

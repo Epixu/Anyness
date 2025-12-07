@@ -120,7 +120,11 @@ namespace Langulus::Anyness
       /// Construction that emplaces A inside                                 
       template<class A>
       constexpr Any(Inner::Piecewise, A&& argument) {
-         this->SetType<Decvq<Deref<Deint<A>>>>();
+         if constexpr (CT::Handle<A>)
+            this->SetType(DeintCast(argument).GetType());
+         else
+            this->SetType(MetaDataOf<Decvq<Deref<Deint<A>>>>());
+            
          this->AllocateFresh(this->RequestHeap(1));
          this->ResetState();
          this->EmplaceWithIntent(FWDIntent(argument));

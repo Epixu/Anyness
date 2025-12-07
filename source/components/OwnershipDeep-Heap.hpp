@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID - which heap/stack are we keeping track of?               
    template<unsigned ID>
    struct OwnershipDeepHeap : OwnershipDeepEmergent<ID> {
-      using HeapRequest = PerElement<AllocationPtr>;
+      using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
 
    protected:
       template<unsigned> friend struct HeapMovable;

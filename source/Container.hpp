@@ -70,6 +70,13 @@ namespace Langulus::Anyness
       using Type = T;
    };
 
+   /// Used for requesting dynamic data from the heap in container components 
+   template<class T>
+   struct PerIndirection {
+      static constexpr bool AllocatedPerIndirection = true;
+      using Type = T;
+   };
+
    namespace Component
    {
       /// Components predeclared                                              
@@ -197,24 +204,39 @@ namespace Langulus::Anyness
       
       /// Go through all components and accumulate their heap requests into   
       /// a byte amount, used for header size when allocating                 
+      ///   @param count - heap requests can depend on the amount of elements 
+      ///   @param indirects - heap requests can depend on the indirections   
+      ///   @return the size of the heap header in bytes                      
       template<class C1, class...CN>
-      constexpr size_t DefineHeap([[maybe_unused]] const size_t count) noexcept {
+      constexpr size_t DefineHeap(
+         [[maybe_unused]] const size_t count,
+         [[maybe_unused]] const size_t indirects
+      ) noexcept {
          if constexpr (requires { typename C1::HeapRequest; }) {
             size_t offset = 0;
             using R = typename C1::HeapRequest;
-            if constexpr (requires { R::AllocatedPerElement; })
-               offset += sizeof(typename R::Type) * count;
-            else
-               offset += sizeof(R);
+            if constexpr (requires { R::AllocatedPerIndirection; }) {
+               if constexpr (requires { R::Type::AllocatedPerElement; })
+                  offset += sizeof(typename R::Type::Type) * count * indirects;
+               else
+                  offset += sizeof(typename R::Type) * indirects;
+            }
+            else if constexpr (requires { R::AllocatedPerElement; }) {
+               if constexpr (requires { R::Type::AllocatedPerIndirection; })
+                  offset += sizeof(typename R::Type::Type) * count * indirects;
+               else
+                  offset += sizeof(typename R::Type) * count;
+            }
+            else offset += sizeof(R);
             
             if constexpr (sizeof...(CN))
-               return offset + DefineHeap<CN...>(count);
+               return offset + DefineHeap<CN...>(count, indirects);
             else
                return offset;
          }
          else {
             if constexpr (sizeof...(CN))
-               return DefineHeap<CN...>(count);
+               return DefineHeap<CN...>(count, indirects);
             else
                return 0;
          }
@@ -222,8 +244,14 @@ namespace Langulus::Anyness
       
       /// Go through all components until PICK is reached, and accumulate     
       /// the offset up to that point, to get the byte offset in the heap     
+      ///   @param count - heap requests can depend on the amount of elements 
+      ///   @param indirects - heap requests can depend on the indirections   
+      ///   @return the heap byte offset, where PICK's data resides           
       template<class PICK, class C1, class...CN>
-      constexpr size_t GetHeapOffset([[maybe_unused]] const size_t count) noexcept {
+      constexpr size_t GetHeapOffset(
+         [[maybe_unused]] const size_t count,
+         [[maybe_unused]] const size_t indirects
+      ) noexcept {
          static_assert(requires { typename PICK::HeapRequest; },
             "Component data is not on the heap");
           
@@ -233,14 +261,23 @@ namespace Langulus::Anyness
             size_t offset = 0;
             if constexpr (requires { typename C1::HeapRequest; }) {
                using R = typename C1::HeapRequest;
-               if constexpr (requires { R::AllocatedPerElement; })
-                  offset += sizeof(typename R::Type) * count;
-               else
-                  offset += sizeof(R);
+               if constexpr (requires { R::AllocatedPerIndirection; }) {
+                  if constexpr (requires { R::Type::AllocatedPerElement; })
+                     offset += sizeof(typename R::Type::Type) * count * indirects;
+                  else
+                     offset += sizeof(typename R::Type) * indirects;
+               }
+               else if constexpr (requires { R::AllocatedPerElement; }) {
+                  if constexpr (requires { R::Type::AllocatedPerIndirection; })
+                     offset += sizeof(typename R::Type::Type) * count * indirects;
+                  else
+                     offset += sizeof(typename R::Type) * count;
+               }
+               else offset += sizeof(R);
             }
          
             if constexpr (sizeof...(CN))
-               return offset + GetHeapOffset<PICK, CN...>(count);
+               return offset + GetHeapOffset<PICK, CN...>(count, indirects);
             else
                return offset;
          }
@@ -341,12 +378,30 @@ namespace Langulus::Anyness
       template<CT::Component COM, CT::Container CON>
       constexpr auto AccessHeap(this CON&& self) noexcept {
          size_t offset = Inner::GetHeapOffset<COM, COMPONENTS...>(
-            static_cast<size_t>(self.GetReserved()));
+            static_cast<size_t>(self.GetReserved()),
+            static_cast<size_t>(self.GetIndirections())
+         );
 
          using R = typename COM::HeapRequest;
-         if constexpr (requires { R::AllocatedPerElement; }) {
-            using RC = Tmut<CON, typename R::Type*, typename R::Type const*>;
-            return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+         if constexpr (requires { R::AllocatedPerIndirection; }) {
+            if constexpr (requires { R::Type::AllocatedPerElement; }) {
+               using RC = Tmut<CON, typename R::Type::Type*, typename R::Type::Type const*>;
+               return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+            }
+            else {
+               using RC = Tmut<CON, typename R::Type*, typename R::Type const*>;
+               return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+            }
+         }
+         else if constexpr (requires { R::AllocatedPerElement; }) {
+            if constexpr (requires { R::Type::AllocatedPerIndirection; }) {
+               using RC = Tmut<CON, typename R::Type::Type*, typename R::Type::Type const*>;
+               return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+            }
+            else {
+               using RC = Tmut<CON, typename R::Type*, typename R::Type const*>;
+               return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+            }
          }
          else {
             using RC = Tmut<CON, R*, R const*>;
@@ -355,8 +410,8 @@ namespace Langulus::Anyness
       }
       
       /// Calculate the heap header size                                      
-      static constexpr size_t GetHeapHeaderSize(size_t count) noexcept {
-         return Inner::DefineHeap<COMPONENTS...>(count);
+      static constexpr size_t GetHeapHeaderSize(size_t count, size_t indirects) noexcept {
+         return Inner::DefineHeap<COMPONENTS...>(count, indirects);
       }
 
       /// Access a variable on the stack associated with an ID                
