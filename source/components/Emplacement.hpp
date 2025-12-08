@@ -57,8 +57,8 @@ namespace Langulus::Anyness::Component
       void EmplaceByCloning(this C& self, IT const& rhs) {
          [[maybe_unused]] DMeta T;
          // If T is Text**, then dst/src are Text***                    
-         void* dst = self.GetHeapInner();         
-         void* src;
+         void** dst = static_cast<void**>(self.GetHeapInner());
+         void** src;
          
          if constexpr (CT::Handle<IT>) {
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
@@ -66,7 +66,7 @@ namespace Langulus::Anyness::Component
                LglsAssumeDev(self.IsSame(T), "Type mismatch");               
             }
             else static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
-            src = const_cast<void*>(rhs.GetHeapInner());
+            src = static_cast<void**>(const_cast<void*>(rhs.GetHeapInner()));
          }
          else {
             if constexpr (CT::TypeErased<C>) {
@@ -74,7 +74,7 @@ namespace Langulus::Anyness::Component
                T = self.GetTypeInner();
             }
             else static_assert(Same<TypeOf<C>, IT>, "Type mismatch");   
-            src = const_cast<void*>(static_cast<const void*>(&rhs));
+            src = static_cast<void**>(const_cast<void*>(static_cast<const void*>(&rhs)));
          }
 
          if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
@@ -122,30 +122,36 @@ namespace Langulus::Anyness::Component
                   //    *dst = cloned_ptrs                              
                   //   **dst = cloned_origin                            
                   //  ***dst = ***src                                   
-                  *static_cast<void**>(dst) = cloned_ptrs->GetBlockStart();
+                  void** ptr = static_cast<void**>(static_cast<void*>(cloned_ptrs->GetBlockStart()));
+                  *dst = ptr;
                   *ent = cloned_ptrs;
+                  T = T.GetDeptr();
 
                   do {
                      // Chain all intermediate pointers                 
-                     src = *static_cast<void**>(src); //TODO won't work for packed pointers
-                     dst = *static_cast<void**>(dst);
+                     src = static_cast<void**>(*src); //TODO won't work for packed pointers
+                     dst = static_cast<void**>(*dst);
                      ++ent;
                      T = T.GetDeptr();
 
-                     *static_cast<void**>(dst) = static_cast<void**>(dst) + 1;
+                     *dst = dst + 1;
                      *ent = cloned_ptrs;
                   }
                   while (T.IsSparse());
                }
                else {
-                  src = *static_cast<void**>(src);//TODO won't work for packed pointers
-                  dst = *static_cast<void**>(dst);
+                  src = static_cast<void**>(*src);//TODO won't work for packed pointers
+                  dst = static_cast<void**>(*dst);
+                  ++ent;
                   T = T.GetDeptr();
                }
 
                // The last indirection points to the cloned origin      
-               *static_cast<void**>(dst) = cloned_origin->GetBlockStart();
+               *dst = cloned_origin->GetBlockStart();
                *ent = cloned_origin;
+               
+               src = static_cast<void**>(*src);
+               dst = static_cast<void**>(*dst);
             }
 
             // Finally, clone inside the allocated origin               
@@ -192,27 +198,41 @@ namespace Langulus::Anyness::Component
                      Allocator::Deallocate(cloned_origin);
                      LglsError("Out of memory");
                   }
-                  void** ptrs = reinterpret_cast<void**>(cloned_ptrs->GetBlockStart());
                   cloned_ptrs->Keep(indirects - 2);
-                  *static_cast<void**>(dst) = *ptrs;
 
-                  ForEachIndirection<T>([&ptrs, &src, &dst, &ent, &cloned_ptrs] {
-                     *ptrs = ptrs + 1;                     
-                     src = *static_cast<void**>(src);//TODO won't work for packed pointers
-                     dst = *static_cast<void**>(dst);
-                     *(ent++) = cloned_ptrs;                     
+                  // Given dst being Text***, we have:                  
+                  //    *dst = cloned_ptrs                              
+                  //   **dst = cloned_origin                            
+                  //  ***dst = ***src                                   
+                  void** ptr = static_cast<void**>(static_cast<void*>(cloned_ptrs->GetBlockStart()));
+                  *dst = ptr;
+                  *ent = cloned_ptrs;
+
+                  ForEachIndirection<T>([&src, &dst, &ent, &cloned_ptrs] {
+                     // Chain all intermediate pointers                 
+                     src = static_cast<void**>(*src); //TODO won't work for packed pointers
+                     dst = static_cast<void**>(*dst);
+                     ++ent;
+
+                     *dst = dst + 1;
+                     *ent = cloned_ptrs;
                   });
                }
                else {
-                  src = *static_cast<void**>(src);//TODO won't work for packed pointers
-                  dst = *static_cast<void**>(dst);
+                  src = static_cast<void**>(*src);//TODO won't work for packed pointers
+                  dst = static_cast<void**>(*dst);
+                  ++ent;
                }
                
-               *static_cast<void**>(dst) = cloned_origin->GetBlockStart();
+               // The last indirection points to the cloned origin      
+               *dst = cloned_origin->GetBlockStart();
                *ent = cloned_origin;
+
+               src = static_cast<void**>(*src);
+               dst = static_cast<void**>(*dst);
             }
 
-            IntentNew(dst, Clone(*static_cast<Decay<T>*>(src)));
+            IntentNew(dst, Clone(*static_cast<Decay<T>*>(static_cast<void*>(src))));
          }
       }
 

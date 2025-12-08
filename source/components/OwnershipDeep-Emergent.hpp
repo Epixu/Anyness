@@ -289,9 +289,11 @@ namespace Langulus::Anyness::Component
                if (not entries or not *entries)
                   return;
 
+               // If T is Text**, subT is Text*                         
                const auto subT = T.GetDeptr();
                
                if (1 == (*entries)->GetUses()) {
+                  // If T is Text**, ptr becomes Text**                 
                   const auto ptr = *static_cast<void**>(self.GetRaw()); //TODO this won't work for packed pointers
                   LglsAssumeDev(ptr, "Null pointer");
 
