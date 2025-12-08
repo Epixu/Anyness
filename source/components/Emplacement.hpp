@@ -56,8 +56,9 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, CT::NoIntent IT>
       void EmplaceByCloning(this C& self, IT const& rhs) {
          [[maybe_unused]] DMeta T;
+         // If T is Text**, then dst/src are Text***                    
+         void* dst = self.GetHeapInner();         
          void* src;
-         void* dst;
          
          if constexpr (CT::Handle<IT>) {
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
@@ -66,7 +67,6 @@ namespace Langulus::Anyness::Component
             }
             else static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
             src = const_cast<void*>(rhs.GetHeapInner());
-            dst = self.GetHeapInner();
          }
          else {
             if constexpr (CT::TypeErased<C>) {
@@ -75,13 +75,12 @@ namespace Langulus::Anyness::Component
             }
             else static_assert(Same<TypeOf<C>, IT>, "Type mismatch");   
             src = const_cast<void*>(static_cast<const void*>(&rhs));
-            dst = self.GetHeapInner();
          }
-      
+
          if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
             const size_t indirects = T.GetIndirections();
             if (indirects > 0) {
-               // Clone the origin first                                
+               // Allocate the origin first                             
                const auto originT = T.GetOrigin();
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
                   const auto cloned_origin = Allocator::Allocate(
@@ -95,10 +94,12 @@ namespace Langulus::Anyness::Component
                   );
                #endif
                LglsAssert(cloned_origin, "Out of memory");
+               // If T is Text**, ent is Allocation*[2]                 
                auto ent = self.GetEntries();
                
                if (indirects > 1) {
-                  // Multiple indirections                              
+                  // Allocate multiple indirections                     
+                  // If T is Text**, we allocate one intermediate ptr   
                   #if LANGULUS_FEATURE(MANAGED_MEMORY)
                      const auto cloned_ptrs = Allocator::Allocate(
                         T,
@@ -115,27 +116,39 @@ namespace Langulus::Anyness::Component
                      Allocator::Deallocate(cloned_origin);
                      LglsError("Out of memory");
                   }
-                  void** ptrs = reinterpret_cast<void**>(cloned_ptrs->GetBlockStart());
                   cloned_ptrs->Keep(indirects - 2);
 
-                  while (T.IsSparse()) {
-                     *ptrs = ptrs + 1;
-                     *static_cast<void**>(dst) = *(ptrs++);
-                     src = *static_cast<void**>(src);//TODO won't work for packed pointers
+                  // Given dst being Text***, we have:                  
+                  //    *dst = cloned_ptrs                              
+                  //   **dst = cloned_origin                            
+                  //  ***dst = ***src                                   
+                  *static_cast<void**>(dst) = cloned_ptrs->GetBlockStart();
+                  *ent = cloned_ptrs;
+
+                  do {
+                     // Chain all intermediate pointers                 
+                     src = *static_cast<void**>(src); //TODO won't work for packed pointers
                      dst = *static_cast<void**>(dst);
+                     ++ent;
                      T = T.GetDeptr();
-                     *(ent++) = cloned_ptrs;
+
+                     *static_cast<void**>(dst) = static_cast<void**>(dst) + 1;
+                     *ent = cloned_ptrs;
                   }
+                  while (T.IsSparse());
                }
-               
+               else {
+                  src = *static_cast<void**>(src);//TODO won't work for packed pointers
+                  dst = *static_cast<void**>(dst);
+                  T = T.GetDeptr();
+               }
+
+               // The last indirection points to the cloned origin      
                *static_cast<void**>(dst) = cloned_origin->GetBlockStart();
                *ent = cloned_origin;
-
-               src = *static_cast<void**>(src);//TODO won't work for packed pointers
-               dst = *static_cast<void**>(dst);
-               T = T.GetDeptr();
             }
-            
+
+            // Finally, clone inside the allocated origin               
             T.GetCloneConstructor()(src, dst);
          }
          else {
@@ -181,21 +194,22 @@ namespace Langulus::Anyness::Component
                   }
                   void** ptrs = reinterpret_cast<void**>(cloned_ptrs->GetBlockStart());
                   cloned_ptrs->Keep(indirects - 2);
+                  *static_cast<void**>(dst) = *ptrs;
 
                   ForEachIndirection<T>([&ptrs, &src, &dst, &ent, &cloned_ptrs] {
-                     *ptrs = ptrs + 1;
-                     *static_cast<void**>(dst) = *(ptrs++);
+                     *ptrs = ptrs + 1;                     
                      src = *static_cast<void**>(src);//TODO won't work for packed pointers
                      dst = *static_cast<void**>(dst);
                      *(ent++) = cloned_ptrs;                     
                   });
                }
+               else {
+                  src = *static_cast<void**>(src);//TODO won't work for packed pointers
+                  dst = *static_cast<void**>(dst);
+               }
                
                *static_cast<void**>(dst) = cloned_origin->GetBlockStart();
                *ent = cloned_origin;
-
-               src = *static_cast<void**>(src);//TODO won't work for packed pointers
-               dst = *static_cast<void**>(dst);
             }
 
             IntentNew(dst, Clone(*static_cast<Decay<T>*>(src)));
