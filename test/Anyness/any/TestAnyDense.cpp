@@ -1336,6 +1336,16 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          REQUIRE(pack2 == memory1);
       }
 
+      WHEN("Clone-assign pack1 in pack2, then reset pack1") {
+         pack2 = Clone(pack1);
+         const T memory3 = pack2;
+         pack1.Reset();
+
+         REQUIRE_FALSE(pack1.GetAllocation());
+         REQUIRE(pack2.GetUses() == 2);
+         REQUIRE(memory3.GetUses() == 2);
+      }
+
       WHEN("Refer-assign pack1 in pack2, then reset pack1") {
          pack2 = pack1;
          pack1.Reset();
@@ -1345,16 +1355,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          REQUIRE(pack2.GetUses() == 2);
          REQUIRE(pack2 == memory1);
-      }
-
-      WHEN("Clone-assign pack1 in pack2, then reset pack1") {
-         pack2 = Clone(pack1);
-         const T memory3 = pack2;
-         pack1.Reset();
-
-         REQUIRE_FALSE(pack1.GetAllocation());
-         REQUIRE(pack2.GetUses() == 2);
-         REQUIRE(memory3.GetUses() == 2);
       }
    }
 
