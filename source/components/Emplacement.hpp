@@ -139,12 +139,7 @@ namespace Langulus::Anyness::Component
                   }
                   while (T.IsSparse());
                }
-               else {
-                  src = static_cast<void**>(*src);//TODO won't work for packed pointers
-                  dst = static_cast<void**>(*dst);
-                  ++ent;
-                  T = T.GetDeptr();
-               }
+               else T = T.GetDeptr();
 
                // The last indirection points to the cloned origin      
                *dst = cloned_origin->GetBlockStart();
@@ -217,11 +212,6 @@ namespace Langulus::Anyness::Component
                      *dst = dst + 1;
                      *ent = cloned_ptrs;
                   });
-               }
-               else {
-                  src = static_cast<void**>(*src);//TODO won't work for packed pointers
-                  dst = static_cast<void**>(*dst);
-                  ++ent;
                }
                
                // The last indirection points to the cloned origin      
