@@ -203,7 +203,7 @@ namespace Langulus::Anyness::Component
                   *dst = ptr;
                   *ent = cloned_ptrs;
 
-                  ForEachIndirection<T>([&src, &dst, &ent, &cloned_ptrs] {
+                  ForEachIndirection<Deptr<T>>([&src, &dst, &ent, &cloned_ptrs] {
                      // Chain all intermediate pointers                 
                      src = static_cast<void**>(*src); //TODO won't work for packed pointers
                      dst = static_cast<void**>(*dst);

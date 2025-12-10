@@ -10,9 +10,7 @@
 #include <any>
 
 
-TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
-   , (Types<TAny<Text**>, Text**, ScopedElement<Text**>>)
-
+TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"   
    , (Types<Any, Text, ScopedElement<Text>>)
    , (Types<Any, int, ScopedElement<int>>)
    , (Types<Any, Any, ScopedElement<Any>>)
@@ -38,6 +36,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<TAny<Any*>, Any*, ScopedElement<Any*>>)
    , (Types<TAny<RT*>, RT*, ScopedElement<RT*>>)
 
+   , (Types<TAny<Text**>, Text**, ScopedElement<Text**>>)
    , (Types<TAny<int**>, int**, ScopedElement<int**>>)
    , (Types<TAny<Any**>, Any**, ScopedElement<Any**>>)
    , (Types<TAny<RT**>, RT**, ScopedElement<RT**>>)
