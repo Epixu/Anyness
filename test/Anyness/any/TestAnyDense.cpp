@@ -1338,7 +1338,20 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
       WHEN("Clone-assign pack1 in pack2, then reset pack1") {
          pack2 = Clone(pack1);
+         REQUIRE(pack1.GetUses() == 2);
+         REQUIRE(pack2.GetUses() == 1);
+         if constexpr (CT::Sparse<E>)
+            REQUIRE((*pack2.GetEntries())->GetUses() == 1);
+         if constexpr (CT::Sparse<Deptr<E>>)
+            REQUIRE((*(pack2.GetEntries()+1))->GetUses() == 1);
+
          const T memory3 = pack2;
+         REQUIRE(pack2.GetUses() == 2);
+         if constexpr (CT::Sparse<E>)
+            REQUIRE((*pack2.GetEntries())->GetUses() == 2);
+         if constexpr (CT::Sparse<Deptr<E>>)
+            REQUIRE((*(pack2.GetEntries() + 1))->GetUses() == 2);
+
          pack1.Reset();
 
          REQUIRE_FALSE(pack1.GetAllocation());

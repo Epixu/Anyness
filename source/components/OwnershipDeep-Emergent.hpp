@@ -291,12 +291,11 @@ namespace Langulus::Anyness::Component
 
                // If T is Text**, subT is Text*                         
                const auto subT = T.GetDeptr();
-               
-               if (1 == (*entries)->GetUses()) {
-                  // If T is Text**, ptr becomes Text**                 
-                  const auto ptr = *static_cast<void**>(self.GetRaw()); //TODO this won't work for packed pointers
-                  LglsAssumeDev(ptr, "Null pointer");
+               // If T is Text**, ptr becomes Text**                    
+               const auto ptr = *static_cast<void**>(self.GetRaw()); //TODO this won't work for packed pointers
+               LglsAssumeDev(ptr, "Null pointer");
 
+               if (1 == (*entries)->GetUses()) {
                   if (subT.IsSparse()) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
@@ -318,15 +317,21 @@ namespace Langulus::Anyness::Component
                   Allocator::Deallocate(*entries);
                }
                else {
-                  // This element occurs in more than one place.        
-                  // We're not allowed to deallocate the memory behind  
-                  // it, but we must call destructors if T is           
-                  // referencable and its individual references have    
-                  // reached 0. This can happen when hive elements are  
-                  // dereferenced.                                      
-                  const auto referencer = subT.GetReferencer();
-                  if (not subT.IsSparse() and referencer) {
-                     const auto ptr = *static_cast<void**>(self.GetRaw()); //TODO this won't work for packed pointers
+                  if (subT.IsSparse()) {
+                     // Pointer to pointer.                             
+                     // Dereference all indirection layers.             
+                     if (auto subEntry = entries + 1) {
+                        H temp {ptr, subEntry, subT};
+                        temp.template DestroyElementDeep<DESTROY>();
+                     }
+                  }
+                  else if (const auto referencer = subT.GetReferencer()) {
+                     // This element occurs in more than one place.     
+                     // We're not allowed to deallocate the memory      
+                     // behind it, but we must call destructors if T is 
+                     // referencable and its individual references have 
+                     // reached 0. This can happen when hive elements   
+                     // are dereferenced.                               
                      if (referencer(ptr, -1) == 0)
                         subT.GetDestructor()(ptr);
                   }
@@ -355,10 +360,10 @@ namespace Langulus::Anyness::Component
                if (not entries or not *entries)
                   return;
 
-               if (1 == (*entries)->GetUses()) {
-                  auto& ptr = *self.template GetRawAs<T>();
-                  LglsAssumeDev(ptr, "Null pointer");
+               auto& ptr = *self.template GetRawAs<T>();
+               LglsAssumeDev(ptr, "Null pointer");
 
+               if (1 == (*entries)->GetUses()) {
                   if constexpr (CT::Sparse<DT>) {
                      // Pointer to pointer.                             
                      // Destroy all nested indirection layers.          
@@ -379,14 +384,20 @@ namespace Langulus::Anyness::Component
                   Allocator::Deallocate(*entries);
                }
                else {
-                  // This element occurs in more than one place.        
-                  // We're not allowed to deallocate the memory behind  
-                  // it, but we must call destructors if T is           
-                  // referencable and its individual references have    
-                  // reached 0. This can happen when hive elements are  
-                  // dereferenced.                                      
-                  if constexpr (CT::Dense<DT> and CT::Referenced<DT>) {
-                     auto& ptr = *self.template GetRawAs<T>();
+                  if constexpr (CT::Sparse<DT>) {
+                     // Pointer to pointer.                             
+                     // Destroy all nested indirection layers.          
+                     using DenserH = typename H::Denser;
+                     DenserH temp {ptr, entries + 1};
+                     temp.template DestroyElementDeep<DESTROY>();
+                  }
+                  else if constexpr (CT::Referenced<DT>) {
+                     // This element occurs in more than one place.     
+                     // We're not allowed to deallocate the memory      
+                     // behind it, but we must call destructors if T is 
+                     // referencable and its individual references have 
+                     // reached 0. This can happen when hive elements   
+                     // are dereferenced.                               
                      if (ptr->Reference(-1) == 0)
                         ptr->~DT();
                   }
