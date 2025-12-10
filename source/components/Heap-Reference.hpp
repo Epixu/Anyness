@@ -102,7 +102,6 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Reference<T>, "Strip references first");
          using TC   = TypeOf<C>;
          using TH   = Tif<CT::Void<T>, TC, T>;
-         using THQ0 = Tmut<C, TH,   ConstAll<TH  >>;
          using THQ1 = Tmut<C, TH*,  ConstAll<TH* >>;
          auto& mHeap = self.GetHeapInner();
 
@@ -115,35 +114,22 @@ namespace Langulus::Anyness::Component
             LglsAssumeDev(self.IsTyped(), "Block is not typed");
             const auto indirections = self.GetIndirections();
 
-            /*if constexpr (IndirectsOf<TH> == 0) {
-               if (indirections == IndirectsOf<TH>) {
-                  // No difference in indirections                      
-                  return *static_cast<THQ1>(mHeap);
-               }
-               else {
-                  // Get the densest                                    
-                  Deep<C> denser = Disown(self.GetDense());
-                  return *static_cast<THQ1>(denser.GetHeapInner());
-               }
+            if (indirections == IndirectsOf<TH>) {
+               // No difference in indirections                      
+               return *static_cast<THQ1>(mHeap);
             }
-            else {*/
-               if (indirections == IndirectsOf<TH>) {
-                  // No difference in indirections                      
-                  return *static_cast<THQ1>(mHeap);
-               }
-               else if (indirections > IndirectsOf<TH>) {
-                  // We need to dereference                             
-                  auto diff = indirections - IndirectsOf<TH>;
-                  Deep<C> denser = Disown(self.GetDense(diff));
-                  return *static_cast<THQ1>(denser.GetHeapInner());
-               }
-               else {
-                  // We are allowed to add one additional indirection   
-                  LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
-                     "Too many indirections");
-                  return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
-               }
-            //}
+            else if (indirections > IndirectsOf<TH>) {
+               // We need to dereference                             
+               auto diff = indirections - IndirectsOf<TH>;
+               Deep<C> denser = Disown(self.GetDense(diff));
+               return *static_cast<THQ1>(denser.GetHeapInner());
+            }
+            else {
+               // We are allowed to add one additional indirection   
+               LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
+                  "Too many indirections");
+               return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
+            }
          }
          else {
             // Casting to a desired static type                         
@@ -160,7 +146,7 @@ namespace Langulus::Anyness::Component
                // We are allowed to add one additional indirection      
                static_assert(IndirectsOf<TC>+1 == IndirectsOf<TH>,
                   "Too many indirections");
-               return const_cast<THQ0>(reinterpret_cast<ConstAll<THQ0>>(&mHeap));
+               return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
             }
          }
       }
