@@ -103,9 +103,9 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    else {
       // Statically-typed containers behave the same as their inner     
       // type                                                           
-      static_assert(Exact<TypeOf<T>, E>);
+      static_assert(    Exact<TypeOf<T>, E>);
       static_assert(not CT::TypeErased<T>);
-      static_assert(CT::Comparable<TypeOf<T>, E>);
+      static_assert(    CT::Comparable<TypeOf<T>, E>);
 
       static_assert(CT::CopyConstructible<T>    == CT::CopyConstructible<E>);
       static_assert(CT::ReferConstructible<T>   == CT::ReferConstructible<E>);
@@ -122,16 +122,16 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       static_assert(CT::DisownAssignable<T>     == CT::DisownAssignable<E>);      
    }
    
-   static_assert(CT::Deep<T>);
-   static_assert(CT::ContainsOne<T>);
+   static_assert(    CT::Deep<T>);
+   static_assert(    CT::ContainsOne<T>);
    static_assert(not CT::ContainsMany<T>);
-   static_assert(CT::HasVariableCount<T>);
-   static_assert(CT::HeapAllocated<T>);
-   static_assert(CT::DeeplyOwned<T>);
-   static_assert(CT::Owned<T>);
-   static_assert(CT::AutoOwned<T>);
-   static_assert(CT::Comparable<T, T>);
-   static_assert(CT::Comparable<T, E>);
+   static_assert(    CT::HasVariableCount<T>);
+   static_assert(    CT::HeapAllocated<T>);
+   static_assert(    CT::DeeplyOwned<T>);
+   static_assert(    CT::Owned<T>);
+   static_assert(    CT::AutoOwned<T>);
+   static_assert(    CT::Comparable<T, T>);
+   static_assert(    CT::Comparable<T, E>);
    static_assert(not ::std::ranges::range<T>);
 
    static_assert(not requires (T pack, E item) { pack.operator +   (item); });

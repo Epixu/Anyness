@@ -353,6 +353,25 @@
     },
 
     {
+      "name": "linux-g++-x64-release-safe-SSE2-managed",
+      "displayName": "Linux x64 G++ Release Safe SSE2",
+      "description": "Target Linux with the 64bit GNU compiler (release, safe, SSE2)",
+      "inherits": [ "linux", "g++-14", "x64", "release", "SSE2" ]
+    },
+    {
+      "name": "linux-g++-x64-release-safe-AVX-managed",
+      "displayName": "Linux x64 G++ Release Safe AVX",
+      "description": "Target Linux with the 64bit GNU compiler (release, safe, AVX)",
+      "inherits": [ "linux", "g++-14", "x64", "release", "AVX" ]
+    },
+    {
+      "name": "linux-g++-x64-release-safe-AVX2-managed",
+      "displayName": "Linux x64 G++ Release Safe AVX2",
+      "description": "Target Linux with the 64bit GNU compiler (release, safe, AVX2)",
+      "inherits": [ "linux", "g++-14", "x64", "release", "AVX2" ]
+    },
+
+    {
       "name": "linux-clang-x64-debug-safe-SSE2-managed",
       "displayName": "clang x64 Debug Safe SSE2",
       "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, SSE2)",
@@ -369,6 +388,25 @@
       "displayName": "clang x64 Debug Safe AVX2",
       "description": "Target Ubuntu with the 64bit Clang compiler (debug, safe, AVX2)",
       "inherits": [ "linux", "clang++-19", "x64", "debug", "AVX2", "vendor-clang-x64" ]
+    },
+    
+    {
+      "name": "linux-clang-x64-release-safe-SSE2-managed",
+      "displayName": "clang x64 Release Safe SSE2",
+      "description": "Target Ubuntu with the 64bit Clang compiler (release, safe, SSE2)",
+      "inherits": [ "linux", "clang++-19", "x64", "release", "SSE2", "vendor-clang-x64" ]
+    },
+    {
+      "name": "linux-clang-x64-release-safe-AVX-managed",
+      "displayName": "clang x64 Release Safe AVX",
+      "description": "Target Ubuntu with the 64bit Clang compiler (release, safe, AVX)",
+      "inherits": [ "linux", "clang++-19", "x64", "release", "AVX", "vendor-clang-x64" ]
+    },
+    {
+      "name": "linux-clang-x64-release-safe-AVX2-managed",
+      "displayName": "clang x64 Release Safe AVX2",
+      "description": "Target Ubuntu with the 64bit Clang compiler (release, safe, AVX2)",
+      "inherits": [ "linux", "clang++-19", "x64", "release", "AVX2", "vendor-clang-x64" ]
     },
     
     {

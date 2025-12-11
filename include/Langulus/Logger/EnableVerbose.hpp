@@ -13,5 +13,5 @@
 #endif
 
 #define LglsVerboseEnabled 1
-#define LglsVerbose(...) ::Langulus::Logger::Verbose(__VA_ARGS__)
-#define LglsVerboseScoped(...) const auto scope = ::Langulus::Logger::VerboseScoped(__VA_ARGS__)
+#define LglsVerbose(...) ::Langulus::Logger::Info(__VA_ARGS__)
+#define LglsVerboseScoped(...) const auto scope = ::Langulus::Logger::InfoScoped(__VA_ARGS__)

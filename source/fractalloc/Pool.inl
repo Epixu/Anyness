@@ -408,36 +408,44 @@ namespace Langulus::Fractalloc
    /// Remove all empty entries at the end, increase mThresholdMax and lower  
    /// mNextEntry as much as possible. Will unclog the pool if able to.       
    LANGULUS(INLINED)
-   void Pool::Trim() {         
-      LglsAssumeDev(IsInUse(), "Should have at least one valid entry");
-      const size_t max_entries = static_cast<size_t>(mMaxEntries);
+   void Pool::Trim() {
+      {
+         LglsAssumeDev(IsInUse(), "Should have at least one valid entry");
+         const size_t max_entries = static_cast<size_t>(mMaxEntries);
 
-      //                                                                
-      // First pass checks how many entries we can trim                 
-      size_t trimmed = mNextEntry - 1;
-      size_t entry_gap = 1u << (mMaxEntries.bit - ::std::bit_width(trimmed) + 1);
-      auto entry = AllocationFromIndex(trimmed);
-      while (trimmed) {
-         if (entry->GetUses())
-            break;
+         //                                                             
+         // First pass checks how many entries we can trim              
+         size_t trimmed = mNextEntry - 1;
+         size_t entry_gap = 1u << (mMaxEntries.bit - ::std::bit_width(trimmed) + 1);
+         auto entry = AllocationFromIndex(trimmed);
+         while (trimmed) {
+            LglsVerboseScoped("Trimming: ", Logger::Hex(entry));
+            if (entry->GetUses()) {
+               LglsVerbose("Trimming ceased - valid entry encountered");
+               break;
+            }
          
-         --trimmed;
-
-         if (entry - entry_gap <= mAllocationData) {
-            // It is now safe to lower mNextEntry and increase          
-            // mThresholdMax, as well as unclog                         
-            ++mThresholdMax.bit;            
-            if (mBiggestEntry <= mThresholdMax)
-               mClogged = false;
+            --trimmed;
             
-            // Level up, so wrap around back to the ending entry        
-            entry_gap <<= 1u;            
-            entry = mAllocationData + max_entries - entry_gap;
+            if (entry - entry_gap < mAllocationData) {
+               // It is now safe to lower mNextEntry and increase       
+               // mThresholdMax, as well as unclog                      
+               ++mThresholdMax.bit;
+               mClogged = mBiggestEntry > mThresholdMax;
+            
+               // Level up, so wrap around back to the ending entry     
+               entry_gap <<= 1u;
+               entry = mAllocationData + max_entries - entry_gap;
+               LglsVerbose("Trimmed and wrapped around");
+            }
+            else {
+               entry -= entry_gap;
+               LglsVerbose("Trimmed");
+            }
          }
-         else entry -= entry_gap;
-      }
       
-      mNextEntry = trimmed + 1;
+         mNextEntry = trimmed + 1;
+      }
 
       //                                                                
       // Second pass patches up the free entry chain                    
