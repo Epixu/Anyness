@@ -11,6 +11,7 @@
 #include <Langulus/CT/MinAlloc.hpp>
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/Utils/Pot.hpp>
+#include <Langulus/Allocator.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -251,7 +252,7 @@ namespace Langulus::Anyness::Component
       template<class AS = void, CT::Container C>
       auto GetDense(this C&& self, Count<C> count = CountMax<C>) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
-         using H = typename Decay<C>::HandleType;
+         //using H = typename Decay<C>::HandleType;
          static_assert(CT::Container<D>,
             "D must result in a container type");
          static_assert(CT::HasVariableCount<D>,
@@ -260,7 +261,7 @@ namespace Langulus::Anyness::Component
          if (self.IsEmpty())
             return D {};
          if (not self.IsSparse() or count <= 0)
-            return D {Piecewise, self.template As<H>()};
+            return D {Disown(self)};
 
          // Check if origin type is complete before attempting anything 
          if constexpr (CT::TypeErased<C>) {
@@ -283,15 +284,14 @@ namespace Langulus::Anyness::Component
          }
 
          // Start iterating until dereferenced enough                   
-         auto iterator = self.template As<H>();
+         D iterator = Disown(self); //self.template As<H>();
          while (count and iterator.IsSparse()) {
             iterator.SetHeapInner(*static_cast<void const* const*>(iterator.GetHeapInner()));
-            iterator.SetEntriesInner(iterator.GetEntriesInner() + 1);
             iterator.SetTypeInner(iterator.GetType().GetDeptr());
             --count;
          }
 
-         return D {Piecewise, iterator};
+         return iterator;
       }
 
    protected:
