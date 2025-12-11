@@ -273,17 +273,17 @@ namespace Langulus::CTTI
 ///                                                                           
 /// Reflecting incomplete types                                               
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]",
+TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]"
    //void,           // shouldn't compile
    //nullptr_t,      // shouldn't compile
    //IncompleteType, // shouldn't compile
    //NotReflectable, // shouldn't compile
-   IncompleteType*,
-   IncompleteType**,
-   const IncompleteType**,
-   const IncompleteType* const*&,
-   const IncompleteType* const* const&,
-   const IncompleteType* const* const&&
+   , IncompleteType*
+   , IncompleteType**
+   , const IncompleteType**
+   , const IncompleteType* const*&
+   , const IncompleteType* const* const&
+   , const IncompleteType* const* const&&
 ) {
    using T = TestType;
    const DMeta meta = MetaDataOf<T>();
@@ -592,13 +592,13 @@ namespace Langulus::CTTI
    };
 }
 
-TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]",
-   PureAbstract,
-   ForcedAbstractExternally,
-   ForcedAbstractInternally,
-   InheritedAbstract1,
-   InheritedAbstract2,
-   InheritedAbstract2ButPrivate
+TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]"
+   , PureAbstract
+   , ForcedAbstractExternally
+   , ForcedAbstractInternally
+   , InheritedAbstract1
+   , InheritedAbstract2
+   , InheritedAbstract2ButPrivate
 ) {
    using T = TestType;
    const DMeta meta = MetaDataOf<T>();
@@ -612,11 +612,11 @@ TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]",
    REQUIRE(meta.GetAlignment() == alignof(T));
 }
 
-TEMPLATE_TEST_CASE("Reflecting non-abstract types", "[rtti]",
-   int,
-   ImpureVirtual,
-   InheritedAbstract1ButPrivate,
-   InheritedAbstractExternally
+TEMPLATE_TEST_CASE("Reflecting non-abstract types", "[rtti]"
+   , int
+   , ImpureVirtual
+   , InheritedAbstract1ButPrivate
+   , InheritedAbstractExternally
 ) {
    using T = TestType;
    const DMeta meta = MetaDataOf<T>();

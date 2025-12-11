@@ -38,7 +38,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
    TypeBig,
    TypeVeryBig
 ) {
-   static Allocator::State memoryState;
+   static MemoryState memoryState;
    
    using Fractalloc::Pool;
    const auto meta = MetaDataOf<TestType>();
@@ -410,7 +410,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
    TypeVeryBigAligned,
    TypeVeryBigPacked
 ) {
-   static Allocator::State memoryState;
+   static MemoryState memoryState;
 
    const auto meta = MetaDataOf<TestType>();
    IF_SAFE(REQUIRE_THROWS(Allocator::Allocate(meta, 511_pot)));

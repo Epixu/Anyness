@@ -26,7 +26,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
    , (Types<TRef<int>,       ScopedElement<int, true>>)
    , (Types<TRef<const int>, ScopedElement<int, true>>)
 ) {
-   static Allocator::State memoryState;
+   static Anyness::MemoryState memoryState;
    using T  = typename TestType::First;
    using TT = TypeOf<T>;
    using ScopedE = typename TestType::Second;

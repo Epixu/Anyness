@@ -62,8 +62,7 @@ namespace Langulus::Fractalloc
       auto GetBlockStart() const has_assumptions -> uint8_t*;
       auto Contains(const void*) const has_assumptions -> bool;
 
-   protected:
-   IF_LANGULUS_TESTING(public:)
+   protected: IF_LANGULUS_TESTING(public:)
       friend struct Pool;
       friend struct Allocator;
       

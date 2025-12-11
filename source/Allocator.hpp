@@ -18,9 +18,14 @@ namespace Langulus::Anyness
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       using Fractalloc::Allocation;
       using Fractalloc::Allocator;
+      using MemoryState = Fractalloc::State;
    #else
       using Unmanaged::Allocation;
       using Unmanaged::Allocator;
+   
+      struct MemoryState {
+         consteval bool Assert() const noexcept { return true; }
+      };
    #endif
    
    /// Can be a packed pointer                                                

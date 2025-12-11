@@ -128,6 +128,7 @@ add_langulus_library(LangulusAnyness
 		     $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/HTML.cpp>
 		     $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:source/logger/TXT.cpp>
 		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:source/fractalloc/Allocator.cpp>
+		     $<$<BOOL:${LANGULUS_OPTION_MEMORY_STATISTICS}>:source/fractalloc/Statistics.cpp>
 		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
 )
 

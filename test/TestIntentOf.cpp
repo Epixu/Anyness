@@ -315,29 +315,29 @@ namespace
 ///                                                                           
 /// CT::Intent / CT::NoIntent                                                 
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing intent type", "[ct]",
-   Refer<int>,
-   Copy<int>,
-   Clone<int>,
-   Abandon<int>,
-   Move<int>,
-   Disown<int>,
-   Disown<int>&,
-   Disown<int> const&,
-   Disown<int>&&,
-   Disown<int> const&&
+TEMPLATE_TEST_CASE("Testing intent type", "[ct]"
+   , Refer<int>
+   , Copy<int>
+   , Clone<int>
+   , Abandon<int>
+   , Move<int>
+   , Disown<int>
+   , Disown<int>&
+   , Disown<int> const&
+   , Disown<int>&&
+   , Disown<int> const&&
 ) {
    static_assert(    CT::Intent<TestType>);
    static_assert(not CT::NoIntent<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing non-intent type", "[ct]",
-   Refer<int>*,
-   SheddableType<int>,
-   SheddableType<Refer<int>>,
-   //IncompleteType, // shouldn't compile
-   TypedEnum,
-   void, int, int&&, int*, nullptr_t
+TEMPLATE_TEST_CASE("Testing non-intent type", "[ct]"
+   , Refer<int>*
+   , SheddableType<int>
+   , SheddableType<Refer<int>>
+   //, IncompleteType, // shouldn't compile
+   , TypedEnum
+   , void, int, int&&, int*, nullptr_t
 ) {
    static_assert(not CT::Intent<TestType>);
    static_assert(    CT::NoIntent<TestType>);
@@ -437,13 +437,13 @@ TEST_CASE("Testing Deint", "[ct]") {
 ///                                                                           
 /// CT::HasReferConstructor                                                   
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasReferConstructor", "[ct]",
-   AllIntentConstructible,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   ReferConstructibleButNotAssignable
+TEMPLATE_TEST_CASE("Testing CT::HasReferConstructor", "[ct]"
+   , AllIntentConstructible
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , ReferConstructibleButNotAssignable
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -456,29 +456,29 @@ TEMPLATE_TEST_CASE("Testing CT::HasReferConstructor", "[ct]",
    static_assert(CT::HasReferConstructor<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasReferConstructor", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasReferConstructor", "[ct]"
    //IncompleteType,             // should not compile at all
-   NonIntentConstructible,
-   DestructibleType,
-   EmptyType, AggregateType,
-   NonDestructible,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   Complex, ContainsComplex,
-   int,
-
-   CopyConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-
-   ReferAssignableButNotConstructible,
-   CopyAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , NonIntentConstructible
+   , DestructibleType
+   , EmptyType, AggregateType
+   , NonDestructible
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , Complex, ContainsComplex
+   , int
+   
+   , CopyConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   
+   , ReferAssignableButNotConstructible
+   , CopyAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentConstructor<Refer, TestType>);
    static_assert(not CT::HasIntentConstructorAlt<Refer<TestType>>);
@@ -492,13 +492,13 @@ static_assert(not CT::HasReferConstructor<AllIntentConstructible, AllIntentConst
 ///                                                                           
 /// CT::HasCopyConstructor                                                    
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasCopyConstructor", "[ct]",
-   AllIntentConstructible,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   CopyConstructibleButNotAssignable,
-   PartiallyIntentConstructibleButImplicitly,
-   PartiallyIntentConstructible
+TEMPLATE_TEST_CASE("Testing CT::HasCopyConstructor", "[ct]"
+   , AllIntentConstructible
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , CopyConstructibleButNotAssignable
+   , PartiallyIntentConstructibleButImplicitly
+   , PartiallyIntentConstructible
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -511,30 +511,30 @@ TEMPLATE_TEST_CASE("Testing CT::HasCopyConstructor", "[ct]",
    static_assert(CT::HasCopyConstructor<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasCopyConstructor", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasCopyConstructor", "[ct]"
    //IncompleteType, // should not compile at all
-   AggregateType,
-   EmptyType,
-   DestructibleType,
-   NonIntentConstructible,
-   NonDestructible,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   Complex, ContainsComplex,
-   int,
+   , AggregateType
+   , EmptyType
+   , DestructibleType
+   , NonIntentConstructible
+   , NonDestructible
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , Complex, ContainsComplex
+   , int
 
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-
-   ReferAssignableButNotConstructible,
-   CopyAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   
+   , ReferAssignableButNotConstructible
+   , CopyAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not requires (Copy<TestType>&& a) { TestType {FWD(a)}; });
    static_assert(not CT::HasIntentConstructor<Copy, TestType>);
@@ -549,13 +549,13 @@ static_assert(not CT::HasCopyConstructor<AllIntentConstructible, AllIntentConstr
 ///                                                                           
 /// CT::HasCloneConstructor                                                   
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasCloneConstructor", "[ct]",
-   AllIntentConstructible,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   CloneConstructibleButNotAssignable,
-   PartiallyIntentConstructibleButImplicitly,
-   PartiallyIntentConstructible
+TEMPLATE_TEST_CASE("Testing CT::HasCloneConstructor", "[ct]"
+   , AllIntentConstructible
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , CloneConstructibleButNotAssignable
+   , PartiallyIntentConstructibleButImplicitly
+   , PartiallyIntentConstructible
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -568,30 +568,30 @@ TEMPLATE_TEST_CASE("Testing CT::HasCloneConstructor", "[ct]",
    static_assert(CT::HasCloneConstructor<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasCloneConstructor", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasCloneConstructor", "[ct]"
    //IncompleteType, // should not compile at all
-   AggregateType,
-   EmptyType,
-   DestructibleType,
-   NonIntentConstructible,
-   NonDestructible,
-   PrivatelyConstructible,
-   Complex, ContainsComplex,
-   ForcefullyPod,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-
-   ReferAssignableButNotConstructible,
-   CopyAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , AggregateType
+   , EmptyType
+   , DestructibleType
+   , NonIntentConstructible
+   , NonDestructible
+   , PrivatelyConstructible
+   , Complex, ContainsComplex
+   , ForcefullyPod
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   
+   , ReferAssignableButNotConstructible
+   , CopyAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not requires (Clone<TestType>&& a) { TestType {FWD(a)}; });
    static_assert(not CT::HasIntentConstructor<Clone, TestType>);
@@ -606,13 +606,13 @@ static_assert(not CT::HasCloneConstructor<AllIntentConstructible, AllIntentConst
 ///                                                                           
 /// CT::HasDisownConstructor                                                  
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasDisownConstructor", "[ct]",
-   AllIntentConstructible,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   DisownConstructibleButNotAssignable,
-   PartiallyIntentConstructibleButImplicitly,
-   PartiallyIntentConstructible
+TEMPLATE_TEST_CASE("Testing CT::HasDisownConstructor", "[ct]"
+   , AllIntentConstructible
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , DisownConstructibleButNotAssignable
+   , PartiallyIntentConstructibleButImplicitly
+   , PartiallyIntentConstructible
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -625,30 +625,30 @@ TEMPLATE_TEST_CASE("Testing CT::HasDisownConstructor", "[ct]",
    static_assert(CT::HasDisownConstructor<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasDisownConstructor", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasDisownConstructor", "[ct]"
    //IncompleteType, // should not compile at all
-   AggregateType,
-   EmptyType,
-   DestructibleType,
-   NonIntentConstructible,
-   NonDestructible,
-   PrivatelyConstructible,
-   Complex, ContainsComplex,
-   ForcefullyPod,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-
-   ReferAssignableButNotConstructible,
-   CopyAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , AggregateType
+   , EmptyType
+   , DestructibleType
+   , NonIntentConstructible
+   , NonDestructible
+   , PrivatelyConstructible
+   , Complex, ContainsComplex
+   , ForcefullyPod
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   
+   , ReferAssignableButNotConstructible
+   , CopyAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentConstructor<Disown, TestType>);
    static_assert(not CT::HasIntentConstructorAlt<Disown<TestType>>);
@@ -662,13 +662,13 @@ static_assert(not CT::HasDisownConstructor<AllIntentConstructible, AllIntentCons
 ///                                                                           
 /// CT::HasAbandonConstructor                                                 
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasAbandonConstructor", "[ct]",
-   AllIntentConstructible,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   AbandonConstructibleButNotAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly
+TEMPLATE_TEST_CASE("Testing CT::HasAbandonConstructor", "[ct]"
+   , AllIntentConstructible
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , AbandonConstructibleButNotAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -681,30 +681,30 @@ TEMPLATE_TEST_CASE("Testing CT::HasAbandonConstructor", "[ct]",
    static_assert(CT::HasAbandonConstructor<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasAbandonConstructor", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasAbandonConstructor", "[ct]"
    //IncompleteType, // should not compile at all
-   AggregateType,
-   EmptyType,
-   DestructibleType,
-   NonDestructible,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   NonIntentConstructible,
-   Complex, ContainsComplex,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-
-   ReferAssignableButNotConstructible,
-   CopyAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , AggregateType
+   , EmptyType
+   , DestructibleType
+   , NonDestructible
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , NonIntentConstructible
+   , Complex, ContainsComplex
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   
+   , ReferAssignableButNotConstructible
+   , CopyAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentConstructor<Abandon, TestType>);
    static_assert(not CT::HasIntentConstructorAlt<Abandon<TestType>>);
@@ -718,13 +718,13 @@ static_assert(not CT::HasAbandonConstructor<AllIntentConstructible, AllIntentCon
 ///                                                                           
 /// CT::HasMoveConstructor                                                    
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasMoveConstructor", "[ct]",
-   AllIntentConstructible,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   MoveConstructibleButNotAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly
+TEMPLATE_TEST_CASE("Testing CT::HasMoveConstructor", "[ct]"
+   , AllIntentConstructible
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , MoveConstructibleButNotAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -737,30 +737,30 @@ TEMPLATE_TEST_CASE("Testing CT::HasMoveConstructor", "[ct]",
    static_assert(CT::HasMoveConstructor<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasMoveConstructor", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasMoveConstructor", "[ct]"
    //IncompleteType, // should not compile at all
-   AggregateType,
-   EmptyType,
-   DestructibleType,
-   NonDestructible,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   NonIntentConstructible,
-   Complex, ContainsComplex,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-
-   ReferAssignableButNotConstructible,
-   CopyAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , AggregateType
+   , EmptyType
+   , DestructibleType
+   , NonDestructible
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , NonIntentConstructible
+   , Complex, ContainsComplex
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   
+   , ReferAssignableButNotConstructible
+   , CopyAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentConstructor<Move, TestType>);
    static_assert(not CT::HasIntentConstructorAlt<Move<TestType>>);
@@ -774,11 +774,11 @@ static_assert(not CT::HasMoveConstructor<AllIntentConstructible, AllIntentConstr
 ///                                                                           
 /// CT::HasReferAssign                                                        
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasReferAssign", "[ct]",
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   ReferAssignableButNotConstructible,
-   PartiallyIntentConstructibleButImplicitly
+TEMPLATE_TEST_CASE("Testing CT::HasReferAssign", "[ct]"
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , ReferAssignableButNotConstructible
+   , PartiallyIntentConstructibleButImplicitly
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -791,31 +791,31 @@ TEMPLATE_TEST_CASE("Testing CT::HasReferAssign", "[ct]",
    static_assert(CT::HasReferAssign<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasReferAssign", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasReferAssign", "[ct]"
    //IncompleteType,             // should not compile at all
-   DestructibleType,
-   EmptyType, AggregateType,
-   NonDestructible,
-   AllIntentConstructible,
-   NonIntentConstructible,
-   PartiallyIntentConstructible,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   Complex, ContainsComplex,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-
-   CopyAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , DestructibleType
+   , EmptyType, AggregateType
+   , NonDestructible
+   , AllIntentConstructible
+   , NonIntentConstructible
+   , PartiallyIntentConstructible
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , Complex, ContainsComplex
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   
+   , CopyAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentAssign<Refer, TestType>);
    static_assert(not CT::HasIntentAssignAlt<Refer<TestType>>);
@@ -829,11 +829,11 @@ static_assert(not CT::HasReferAssign<AllIntentConstructibleAndAssignable, Privat
 ///                                                                           
 /// CT::HasCopyAssign                                                         
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasCopyAssign", "[ct]",
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructibleButImplicitly,
-   CopyAssignableButNotConstructible
+TEMPLATE_TEST_CASE("Testing CT::HasCopyAssign", "[ct]"
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructibleButImplicitly
+   , CopyAssignableButNotConstructible
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -846,31 +846,31 @@ TEMPLATE_TEST_CASE("Testing CT::HasCopyAssign", "[ct]",
    static_assert(CT::HasCopyAssign<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasCopyAssign", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasCopyAssign", "[ct]"
    //IncompleteType,             // should not compile at all
-   PartiallyIntentConstructible,
-   Complex, ContainsComplex,
-   AllIntentConstructible,
-   NonIntentConstructible,
-   DestructibleType,
-   EmptyType, AggregateType,
-   NonDestructible,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-
-   ReferAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , PartiallyIntentConstructible
+   , Complex, ContainsComplex
+   , AllIntentConstructible
+   , NonIntentConstructible
+   , DestructibleType
+   , EmptyType, AggregateType
+   , NonDestructible
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   
+   , ReferAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentAssign<Copy, TestType>);
    static_assert(not CT::HasIntentAssignAlt<Copy<TestType>>);
@@ -884,11 +884,11 @@ static_assert(not CT::HasCopyAssign<AllIntentConstructibleAndAssignable, Private
 ///                                                                           
 /// CT::HasCloneAssign                                                        
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasCloneAssign", "[ct]",
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructibleButImplicitly,
-   CloneAssignableButNotConstructible
+TEMPLATE_TEST_CASE("Testing CT::HasCloneAssign", "[ct]"
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructibleButImplicitly
+   , CloneAssignableButNotConstructible
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -901,31 +901,31 @@ TEMPLATE_TEST_CASE("Testing CT::HasCloneAssign", "[ct]",
    static_assert(CT::HasCloneAssign<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasCloneAssign", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasCloneAssign", "[ct]"
    //IncompleteType,             // should not compile at all
-   PartiallyIntentConstructible,
-   Complex, ContainsComplex,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   DestructibleType,
-   EmptyType, AggregateType,
-   NonDestructible,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-
-   CopyAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   ReferAssignableButNotConstructible
+   , PartiallyIntentConstructible
+   , Complex, ContainsComplex
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , DestructibleType
+   , EmptyType, AggregateType
+   , NonDestructible
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   
+   , CopyAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , ReferAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentAssign<Clone, TestType>);
    static_assert(not CT::HasIntentAssignAlt<Clone<TestType>>);
@@ -939,11 +939,11 @@ static_assert(not CT::HasCloneAssign<AllIntentConstructibleAndAssignable, Privat
 ///                                                                           
 /// CT::HasDisownAssign                                                       
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasDisownAssign", "[ct]",
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructibleButImplicitly,
-   DisownAssignableButNotConstructible
+TEMPLATE_TEST_CASE("Testing CT::HasDisownAssign", "[ct]"
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructibleButImplicitly
+   , DisownAssignableButNotConstructible
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -956,31 +956,31 @@ TEMPLATE_TEST_CASE("Testing CT::HasDisownAssign", "[ct]",
    static_assert(CT::HasDisownAssign<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasDisownAssign", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasDisownAssign", "[ct]"
    //IncompleteType,             // should not compile at all
-   PartiallyIntentConstructible,
-   Complex, ContainsComplex,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   DestructibleType,
-   EmptyType, AggregateType,
-   NonDestructible,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-
-   CopyAssignableButNotConstructible,
-   MoveAssignableButNotConstructible,
-   AbandonAssignableButNotConstructible,
-   ReferAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , PartiallyIntentConstructible
+   , Complex, ContainsComplex
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , DestructibleType
+   , EmptyType, AggregateType
+   , NonDestructible
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   
+   , CopyAssignableButNotConstructible
+   , MoveAssignableButNotConstructible
+   , AbandonAssignableButNotConstructible
+   , ReferAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentAssign<Disown, TestType>);
    static_assert(not CT::HasIntentAssignAlt<Disown<TestType>>);
@@ -994,11 +994,11 @@ static_assert(not CT::HasDisownAssign<AllIntentConstructibleAndAssignable, Priva
 ///                                                                           
 /// CT::HasAbandonAssign                                                      
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasAbandonAssign", "[ct]",
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructibleButImplicitly,
-   AbandonAssignableButNotConstructible
+TEMPLATE_TEST_CASE("Testing CT::HasAbandonAssign", "[ct]"
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructibleButImplicitly
+   , AbandonAssignableButNotConstructible
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -1011,31 +1011,31 @@ TEMPLATE_TEST_CASE("Testing CT::HasAbandonAssign", "[ct]",
    static_assert(CT::HasAbandonAssign<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasAbandonAssign", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasAbandonAssign", "[ct]"
    //IncompleteType,             // should not compile at all
-   AllIntentConstructible,
-   PartiallyIntentConstructible,
-   NonDestructible,
-   NonIntentConstructible,
-   Complex, ContainsComplex,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   DestructibleType,
-   EmptyType, AggregateType,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-
-   MoveAssignableButNotConstructible,
-   CopyAssignableButNotConstructible,
-   ReferAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , AllIntentConstructible
+   , PartiallyIntentConstructible
+   , NonDestructible
+   , NonIntentConstructible
+   , Complex, ContainsComplex
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , DestructibleType
+   , EmptyType, AggregateType
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   
+   , MoveAssignableButNotConstructible
+   , CopyAssignableButNotConstructible
+   , ReferAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentAssign<Abandon, TestType>);
    static_assert(not CT::HasIntentAssignAlt<Abandon<TestType>>);
@@ -1049,11 +1049,11 @@ static_assert(not CT::HasAbandonAssign<AllIntentConstructibleAndAssignable, Priv
 ///                                                                           
 /// CT::HasMoveAssign                                                         
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::HasMoveAssign", "[ct]",
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   MoveAssignableButNotConstructible,
-   PartiallyIntentConstructibleButImplicitly
+TEMPLATE_TEST_CASE("Testing CT::HasMoveAssign", "[ct]"
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , MoveAssignableButNotConstructible
+   , PartiallyIntentConstructibleButImplicitly
 ) {
    alignas(TestType) char storage1[sizeof(TestType)] {};
    alignas(TestType) char storage2[sizeof(TestType)] {};
@@ -1066,31 +1066,31 @@ TEMPLATE_TEST_CASE("Testing CT::HasMoveAssign", "[ct]",
    static_assert(CT::HasMoveAssign<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing not CT::HasMoveAssign", "[ct]",
+TEMPLATE_TEST_CASE("Testing not CT::HasMoveAssign", "[ct]"
    //IncompleteType,             // should not compile at all
-   NonDestructible,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   PartiallyIntentConstructible,
-   Complex, ContainsComplex,
-   PrivatelyConstructible,
-   ForcefullyPod,
-   DestructibleType,
-   EmptyType, AggregateType,
-   int,
-
-   ReferConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-
-   AbandonAssignableButNotConstructible,
-   CopyAssignableButNotConstructible,
-   ReferAssignableButNotConstructible,
-   DisownAssignableButNotConstructible,
-   CloneAssignableButNotConstructible
+   , NonDestructible
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , PartiallyIntentConstructible
+   , Complex, ContainsComplex
+   , PrivatelyConstructible
+   , ForcefullyPod
+   , DestructibleType
+   , EmptyType, AggregateType
+   , int
+   
+   , ReferConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   
+   , AbandonAssignableButNotConstructible
+   , CopyAssignableButNotConstructible
+   , ReferAssignableButNotConstructible
+   , DisownAssignableButNotConstructible
+   , CloneAssignableButNotConstructible
 ) {
    static_assert(not CT::HasIntentAssign<Move, TestType>);
    static_assert(not CT::HasIntentAssignAlt<Move<TestType>>);
@@ -1104,19 +1104,19 @@ static_assert(not CT::HasMoveAssign<AllIntentConstructibleAndAssignable, Private
 ///                                                                           
 ///   Refer intent                                                            
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing refer-constructible types", "[ct]",
-   AggregateType,
-   EmptyType,
-   DestructibleType,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   Complex, ContainsComplex,
-   ReferConstructibleButNotAssignable,
-   ForcefullyPod,
-   int
+TEMPLATE_TEST_CASE("Testing refer-constructible types", "[ct]"
+   , AggregateType
+   , EmptyType
+   , DestructibleType
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , Complex, ContainsComplex
+   , ReferConstructibleButNotAssignable
+   , ForcefullyPod
+   , int
 ) {
    using T = TestType;
 
@@ -1153,15 +1153,15 @@ TEMPLATE_TEST_CASE("Testing refer-constructible types", "[ct]",
    new (test1) T {*test2};
 }
 
-TEMPLATE_TEST_CASE("Testing non-refer-constructible types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-refer-constructible types", "[ct]"
    //IncompleteType, // should not compile at all
-   NonDestructible,
-   PrivatelyConstructible,
-   CopyConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable
+   , NonDestructible
+   , PrivatelyConstructible
+   , CopyConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::ReferConstructible<T>);
@@ -1180,17 +1180,17 @@ TEMPLATE_TEST_CASE("Testing non-refer-constructible types", "[ct]",
    REQUIRE_FALSE(meta2.GetReferConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing refer-assignable types", "[ct]",
-   AggregateType,
-   EmptyType,
-   NonDestructible,
-   DestructibleType,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   int
+TEMPLATE_TEST_CASE("Testing refer-assignable types", "[ct]"
+   , AggregateType
+   , EmptyType
+   , NonDestructible
+   , DestructibleType
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , int
 ) {
    using T = TestType;
    static_assert(    CT::ReferAssignable<T>);
@@ -1225,18 +1225,18 @@ TEMPLATE_TEST_CASE("Testing refer-assignable types", "[ct]",
    *test1 = *test2;
 }
 
-TEMPLATE_TEST_CASE("Testing non-refer-assignable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-refer-assignable types", "[ct]"
    //IncompleteType, // should not compile at all
-   Complex,
-   ContainsComplex,
-   PrivatelyConstructible,
-   ReferConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-   ForcefullyPod
+   , Complex
+   , ContainsComplex
+   , PrivatelyConstructible
+   , ReferConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   , ForcefullyPod
 ) {
    using T = TestType;
    static_assert(not CT::ReferAssignable<T>);
@@ -1265,20 +1265,20 @@ TEMPLATE_TEST_CASE("Testing non-refer-assignable types", "[ct]",
 ///                                                                           
 ///   Move intents                                                            
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing move-constructible types", "[ct]",
-   AggregateType,
-   EmptyType,
-   DestructibleType,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   Complex,
-   ContainsComplex,
-   MoveConstructibleButNotAssignable,
-   ForcefullyPod,
-   int
+TEMPLATE_TEST_CASE("Testing move-constructible types", "[ct]"
+   , AggregateType
+   , EmptyType
+   , DestructibleType
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , Complex
+   , ContainsComplex
+   , MoveConstructibleButNotAssignable
+   , ForcefullyPod
+   , int
 ) {
    using T = TestType;
 
@@ -1315,15 +1315,15 @@ TEMPLATE_TEST_CASE("Testing move-constructible types", "[ct]",
    new (test1) T {MOV(*test2)};
 }
 
-TEMPLATE_TEST_CASE("Testing non-move-constructible types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-move-constructible types", "[ct]"
    //IncompleteType, // should not compile at all
-   NonDestructible,
-   PrivatelyConstructible,
-   ReferConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable
+   , NonDestructible
+   , PrivatelyConstructible
+   , ReferConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::MoveConstructible<T>);
@@ -1342,17 +1342,17 @@ TEMPLATE_TEST_CASE("Testing non-move-constructible types", "[ct]",
    REQUIRE_FALSE(meta2.GetMoveConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing move-assignable types", "[ct]",
-   NonDestructible,
-   AggregateType,
-   EmptyType,
-   DestructibleType,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   int
+TEMPLATE_TEST_CASE("Testing move-assignable types", "[ct]"
+   , NonDestructible
+   , AggregateType
+   , EmptyType
+   , DestructibleType
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , int
 ) {
    using T = TestType;
    static_assert(    CT::MoveAssignable<T>);
@@ -1387,18 +1387,18 @@ TEMPLATE_TEST_CASE("Testing move-assignable types", "[ct]",
    *test1 = MOV(*test2);
 }
 
-TEMPLATE_TEST_CASE("Testing non-move-assignable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-move-assignable types", "[ct]"
    //IncompleteType, // should not compile at all
-   Complex,
-   ContainsComplex,
-   PrivatelyConstructible,
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable,
-   ForcefullyPod
+   , Complex
+   , ContainsComplex
+   , PrivatelyConstructible
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
+   , ForcefullyPod
 ) {
    using T = TestType;
    static_assert(not CT::MoveAssignable<T>);
@@ -1427,17 +1427,17 @@ TEMPLATE_TEST_CASE("Testing non-move-assignable types", "[ct]",
 ///                                                                           
 ///   Copy intents                                                            
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing copy-constructible types", "[ct]",
-   EmptyType,
-   AggregateType,
-   AllIntentConstructible,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   CopyConstructibleButNotAssignable,
-   ForcefullyPod,
-   int
+TEMPLATE_TEST_CASE("Testing copy-constructible types", "[ct]"
+   , EmptyType
+   , AggregateType
+   , AllIntentConstructible
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , CopyConstructibleButNotAssignable
+   , ForcefullyPod
+   , int
 ) {
    using T = TestType;
 
@@ -1468,20 +1468,20 @@ TEMPLATE_TEST_CASE("Testing copy-constructible types", "[ct]",
    REQUIRE(meta3.GetCopyConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing non-copy-constructible types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-copy-constructible types", "[ct]"
    //IncompleteType, // should not compile at all
-   NonDestructible,
-   DestructibleType,
-   Complex,
-   ContainsComplex,
-   PrivatelyConstructible,
-   NonIntentConstructible,
-   AggregateTypeComplex,
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable
+   , NonDestructible
+   , DestructibleType
+   , Complex
+   , ContainsComplex
+   , PrivatelyConstructible
+   , NonIntentConstructible
+   , AggregateTypeComplex
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::CopyConstructible<T>);
@@ -1500,13 +1500,13 @@ TEMPLATE_TEST_CASE("Testing non-copy-constructible types", "[ct]",
    REQUIRE_FALSE(meta2.GetCopyConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing copy-assignable types", "[ct]",
-   EmptyType,
-   AggregateType,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructibleButImplicitly,
-   int
+TEMPLATE_TEST_CASE("Testing copy-assignable types", "[ct]"
+   , EmptyType
+   , AggregateType
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructibleButImplicitly
+   , int
 ) {
    using T = TestType;
    static_assert(    CT::CopyAssignable<T>);
@@ -1535,24 +1535,24 @@ TEMPLATE_TEST_CASE("Testing copy-assignable types", "[ct]",
    REQUIRE_FALSE(meta3.GetCopyAssigner());
 }
 
-TEMPLATE_TEST_CASE("Testing non-copy-assignable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-copy-assignable types", "[ct]"
    //IncompleteType, // should not compile at all
-   NonDestructible,
-   DestructibleType,
-   Complex,
-   ContainsComplex,
-   ForcefullyPod,
-   PrivatelyConstructible,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   PartiallyIntentConstructible,
-   AggregateTypeComplex,
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable
+   , NonDestructible
+   , DestructibleType
+   , Complex
+   , ContainsComplex
+   , ForcefullyPod
+   , PrivatelyConstructible
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , PartiallyIntentConstructible
+   , AggregateTypeComplex
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::CopyAssignable<T>);
@@ -1581,16 +1581,16 @@ TEMPLATE_TEST_CASE("Testing non-copy-assignable types", "[ct]",
 ///                                                                           
 ///   Clone intents                                                           
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing clone-constructible types", "[ct]",
-   EmptyType,
-   AllIntentConstructible,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   CloneConstructibleButNotAssignable,
-   ForcefullyPod,
-   AggregateType,
-   int
+TEMPLATE_TEST_CASE("Testing clone-constructible types", "[ct]"
+   , EmptyType
+   , AllIntentConstructible
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , CloneConstructibleButNotAssignable
+   , ForcefullyPod
+   , AggregateType
+   , int
 ) {
    using T = TestType;
    
@@ -1621,20 +1621,20 @@ TEMPLATE_TEST_CASE("Testing clone-constructible types", "[ct]",
    REQUIRE(meta3.GetCloneConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing non-clone-constructible types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-clone-constructible types", "[ct]"
    //IncompleteType, // should not compile at all
-   NonDestructible,
-   DestructibleType,
-   PrivatelyConstructible,
-   Complex,
-   ContainsComplex,
-   AggregateTypeComplex,
-   NonIntentConstructible,
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable
+   , NonDestructible
+   , DestructibleType
+   , PrivatelyConstructible
+   , Complex
+   , ContainsComplex
+   , AggregateTypeComplex
+   , NonIntentConstructible
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::CloneConstructible<T>);
@@ -1653,13 +1653,13 @@ TEMPLATE_TEST_CASE("Testing non-clone-constructible types", "[ct]",
    REQUIRE_FALSE(meta2.GetCloneConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing clone-assignable types", "[ct]",
-   EmptyType,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   AggregateType,
-   PartiallyIntentConstructibleButImplicitly,
-   int
+TEMPLATE_TEST_CASE("Testing clone-assignable types", "[ct]"
+   , EmptyType
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , AggregateType
+   , PartiallyIntentConstructibleButImplicitly
+   , int
 ) {
    using T = TestType;
    static_assert(    CT::CloneAssignable<T>);
@@ -1688,24 +1688,24 @@ TEMPLATE_TEST_CASE("Testing clone-assignable types", "[ct]",
    REQUIRE_FALSE(meta3.GetCloneAssigner());
 }
 
-TEMPLATE_TEST_CASE("Testing non-clone-assignable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-clone-assignable types", "[ct]"
    //IncompleteType, // should not compile at all
-   NonDestructible,
-   DestructibleType,
-   PrivatelyConstructible,
-   NonIntentConstructible,
-   Complex,
-   ContainsComplex,
-   AllIntentConstructible,
-   PartiallyIntentConstructible,
-   AggregateTypeComplex,
-   ForcefullyPod,
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable
+   , NonDestructible
+   , DestructibleType
+   , PrivatelyConstructible
+   , NonIntentConstructible
+   , Complex
+   , ContainsComplex
+   , AllIntentConstructible
+   , PartiallyIntentConstructible
+   , AggregateTypeComplex
+   , ForcefullyPod
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::CloneAssignable<T>);
@@ -1734,16 +1734,16 @@ TEMPLATE_TEST_CASE("Testing non-clone-assignable types", "[ct]",
 ///                                                                           
 ///   Disown intents                                                          
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing disown-constructible types", "[ct]",
-   EmptyType,
-   AllIntentConstructible,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   DisownConstructibleButNotAssignable,
-   ForcefullyPod,
-   AggregateType,
-   int
+TEMPLATE_TEST_CASE("Testing disown-constructible types", "[ct]"
+   , EmptyType
+   , AllIntentConstructible
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , DisownConstructibleButNotAssignable
+   , ForcefullyPod
+   , AggregateType
+   , int
 ) {
    using T = TestType;
    
@@ -1774,20 +1774,20 @@ TEMPLATE_TEST_CASE("Testing disown-constructible types", "[ct]",
    REQUIRE(meta3.GetDisownConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing non-disown-constructible types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-disown-constructible types", "[ct]"
    //IncompleteType, // should not compile at all
-   NonDestructible,
-   DestructibleType,
-   PrivatelyConstructible,
-   Complex,
-   ContainsComplex,
-   AggregateTypeComplex,
-   NonIntentConstructible,
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable
+   , NonDestructible
+   , DestructibleType
+   , PrivatelyConstructible
+   , Complex
+   , ContainsComplex
+   , AggregateTypeComplex
+   , NonIntentConstructible
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::DisownConstructible<T>);
@@ -1806,13 +1806,13 @@ TEMPLATE_TEST_CASE("Testing non-disown-constructible types", "[ct]",
    REQUIRE_FALSE(meta2.GetDisownConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing disown-assignable types", "[ct]",
-   EmptyType,
-   AllIntentConstructibleImplicit,
-   AllIntentConstructibleAndAssignable,
-   AggregateType,
-   PartiallyIntentConstructibleButImplicitly,
-   int
+TEMPLATE_TEST_CASE("Testing disown-assignable types", "[ct]"
+   , EmptyType
+   , AllIntentConstructibleImplicit
+   , AllIntentConstructibleAndAssignable
+   , AggregateType
+   , PartiallyIntentConstructibleButImplicitly
+   , int
 ) {
    using T = TestType;
    static_assert(    CT::DisownAssignable<T>);
@@ -1841,23 +1841,23 @@ TEMPLATE_TEST_CASE("Testing disown-assignable types", "[ct]",
    REQUIRE_FALSE(meta3.GetDisownAssigner());
 }
 
-TEMPLATE_TEST_CASE("Testing non-disown-assignable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-disown-assignable types", "[ct]"
    //IncompleteType, // should not compile at all
-   NonDestructible,
-   DestructibleType,
-   PrivatelyConstructible,
-   NonIntentConstructible,
-   Complex,
-   ContainsComplex,
-   ForcefullyPod,
-   AllIntentConstructible,
-   PartiallyIntentConstructible,
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable
+   , NonDestructible
+   , DestructibleType
+   , PrivatelyConstructible
+   , NonIntentConstructible
+   , Complex
+   , ContainsComplex
+   , ForcefullyPod
+   , AllIntentConstructible
+   , PartiallyIntentConstructible
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::DisownAssignable<T>);
@@ -1886,21 +1886,21 @@ TEMPLATE_TEST_CASE("Testing non-disown-assignable types", "[ct]",
 ///                                                                           
 ///   Abandon semantics                                                       
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing abandon-constructible types", "[ct]",
-   EmptyType,
-   DestructibleType,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   Complex,
-   ContainsComplex,
-   AbandonConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   ForcefullyPod,
-   AggregateType,
-   int
+TEMPLATE_TEST_CASE("Testing abandon-constructible types", "[ct]"
+   , EmptyType
+   , DestructibleType
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , Complex
+   , ContainsComplex
+   , AbandonConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , ForcefullyPod
+   , AggregateType
+   , int
 ) {
    using T = TestType;
    
@@ -1931,14 +1931,14 @@ TEMPLATE_TEST_CASE("Testing abandon-constructible types", "[ct]",
    REQUIRE(meta3.GetAbandonConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing non-abandon-constructible types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-abandon-constructible types", "[ct]"
    //IncompleteType, // should not compile at all
-   NonDestructible,
-   PrivatelyConstructible,
-   ReferConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable
+   , NonDestructible
+   , PrivatelyConstructible
+   , ReferConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::AbandonConstructible<T>);
@@ -1957,17 +1957,17 @@ TEMPLATE_TEST_CASE("Testing non-abandon-constructible types", "[ct]",
    REQUIRE_FALSE(meta2.GetAbandonConstructor());
 }
 
-TEMPLATE_TEST_CASE("Testing abandon-assignable types", "[ct]",
-   EmptyType,
-   NonDestructible,
-   DestructibleType,
-   NonIntentConstructible,
-   AllIntentConstructible,
-   AllIntentConstructibleAndAssignable,
-   PartiallyIntentConstructible,
-   PartiallyIntentConstructibleButImplicitly,
-   AggregateType,
-   int
+TEMPLATE_TEST_CASE("Testing abandon-assignable types", "[ct]"
+   , EmptyType
+   , NonDestructible
+   , DestructibleType
+   , NonIntentConstructible
+   , AllIntentConstructible
+   , AllIntentConstructibleAndAssignable
+   , PartiallyIntentConstructible
+   , PartiallyIntentConstructibleButImplicitly
+   , AggregateType
+   , int
 ) {
    using T = TestType;
    static_assert(    CT::AbandonAssignable<T>);
@@ -1996,18 +1996,18 @@ TEMPLATE_TEST_CASE("Testing abandon-assignable types", "[ct]",
    REQUIRE_FALSE(meta3.GetAbandonAssigner());
 }
 
-TEMPLATE_TEST_CASE("Testing non-abandon-assignable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing non-abandon-assignable types", "[ct]"
    //IncompleteType, // should not compile at all
-   Complex,
-   ContainsComplex,
-   ForcefullyPod,
-   PrivatelyConstructible,
-   ReferConstructibleButNotAssignable,
-   MoveConstructibleButNotAssignable,
-   CopyConstructibleButNotAssignable,
-   AbandonConstructibleButNotAssignable,
-   DisownConstructibleButNotAssignable,
-   CloneConstructibleButNotAssignable
+   , Complex
+   , ContainsComplex
+   , ForcefullyPod
+   , PrivatelyConstructible
+   , ReferConstructibleButNotAssignable
+   , MoveConstructibleButNotAssignable
+   , CopyConstructibleButNotAssignable
+   , AbandonConstructibleButNotAssignable
+   , DisownConstructibleButNotAssignable
+   , CloneConstructibleButNotAssignable
 ) {
    using T = TestType;
    static_assert(not CT::AbandonAssignable<T>);
@@ -2078,12 +2078,12 @@ TEMPLATE_TEST_CASE("Testing non-descriptor-makable types", "[ct]",
    REQUIRE_FALSE(meta->mDescriptorConstructor);
 }*/
 
-TEMPLATE_TEST_CASE("Testing DeintCast (non-moving)", "[ct]",
-   const int&,
-   Copy<int>,
-   Refer<int>,
-   Disown<int>,
-   Clone<int>
+TEMPLATE_TEST_CASE("Testing DeintCast (non-moving)", "[ct]"
+   , const int&
+   , Copy<int>
+   , Refer<int>
+   , Disown<int>
+   , Clone<int>
 ) {
    const int* value = new int {656};
    const TestType i {*value};
@@ -2092,10 +2092,10 @@ TEMPLATE_TEST_CASE("Testing DeintCast (non-moving)", "[ct]",
    delete value;
 }
 
-TEMPLATE_TEST_CASE("Testing DeintCast (moving)", "[ct]",
-   int&&,
-   Move<int>,
-   Abandon<int>
+TEMPLATE_TEST_CASE("Testing DeintCast (moving)", "[ct]"
+   , int&&
+   , Move<int>
+   , Abandon<int>
 ) {
    int* value = new int {656};
    TestType i {static_cast<int&&>(*value)};

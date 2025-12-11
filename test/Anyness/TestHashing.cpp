@@ -46,17 +46,16 @@ SCENARIO("Hashing different kinds of containers", "[hash]") {
 
 
 /// Cross-container consistency tests                                         
-TEMPLATE_TEST_CASE(
-   "Cross-container consistency tests for TMapUnsorted/TMapSorted/MapUnsorted/MapSorted", "[map]",
-   (HashTest<Text, int>),
-   (HashTest<Text, Tag>),
-   (HashTest<Text, Tags::Count>),
-   (HashTest<Text, Many>),
-
-   (HashTest<Text, int*>),
-   (HashTest<Text, Tag*>),
-   (HashTest<Text, Tags::Count*>),
-   (HashTest<Text, Many*>)
+TEMPLATE_TEST_CASE("Cross-container consistency tests for TMapUnsorted/TMapSorted/MapUnsorted/MapSorted", "[map]"
+   , (HashTest<Text, int>)
+   , (HashTest<Text, Tag>)
+   , (HashTest<Text, Tags::Count>)
+   , (HashTest<Text, Many>)
+   
+   , (HashTest<Text, int*>)
+   , (HashTest<Text, Tag*>)
+   , (HashTest<Text, Tags::Count*>)
+   , (HashTest<Text, Many*>)
 ) {
    using K = typename TestType::Key;
    using V = typename TestType::Value;
@@ -99,10 +98,9 @@ TEMPLATE_TEST_CASE(
 }
 
 /// Cross-container consistency tests                                         
-TEMPLATE_TEST_CASE(
-   "Cross-container consistency tests for TSetUnsorted/TSetSorted/SetUnsorted/SetSorted", "[set]",
-   int,  Tag,  Tags::Count,  Many,
-   int*, Tag*, Tags::Count*, Many*
+TEMPLATE_TEST_CASE("Cross-container consistency tests for TSetUnsorted/TSetSorted/SetUnsorted/SetSorted", "[set]"
+   , int,  Tag,  Tags::Count,  Many
+   , int*, Tag*, Tags::Count*, Many*
 ) {
    Allocator::State memoryState;
 

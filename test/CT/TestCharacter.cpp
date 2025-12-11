@@ -39,49 +39,49 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Character                                                             
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Character types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::Character types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile
    //SheddableType<IncompleteType>, // shouldn't compile
    //SheddableType<IncompleteType>&,// shouldn't compile
-   CharacterExternally,
-   CharacterExternally const,
-   CharacterExternally&,
-   CharacterInternally,
-   CharacterInternally const,
-   CharacterInternally&,
-   InheritedCharacter,
-   InheritedCharacter const,
-   InheritedCharacter&,
-   char, wchar_t, char8_t, char16_t, char32_t
+   , CharacterExternally
+   , CharacterExternally const
+   , CharacterExternally&
+   , CharacterInternally
+   , CharacterInternally const
+   , CharacterInternally&
+   , InheritedCharacter
+   , InheritedCharacter const
+   , InheritedCharacter&
+   , char, wchar_t, char8_t, char16_t, char32_t
 ) {
    static_assert(    CT::Character<TestType>);
    static_assert(not CT::NotCharacter<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotCharacter types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::NotCharacter types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile
    //SheddableType<IncompleteType>, // shouldn't compile
    //SheddableType<IncompleteType>&,// shouldn't compile
-   IncompleteType*,
-   bool,
-   void, void*,
-   int, int const, int const&, int&,
-   char*, wchar_t*, char8_t*, char16_t*, char32_t*,
-   Types<void*>,
-   SheddableType<CharacterInternally*>,
-   SheddableType<CharacterInternally* const>,
-   SheddableType<CharacterInternally* const&>,
-   SheddableType<InheritedCharacterDisabled>,
-   SheddableType<InheritedCharacterDisabled const>,
-   SheddableType<InheritedCharacterDisabled const&>,
-   InheritedCharacterDisabled,
-   InheritedCharacterExternally,
-   InheritedCharacterButPrivate,
-   NotCharacterExternally
+   , IncompleteType*
+   , bool
+   , void, void*
+   , int, int const, int const&, int&
+   , char*, wchar_t*, char8_t*, char16_t*, char32_t*
+   , Types<void*>
+   , SheddableType<CharacterInternally*>
+   , SheddableType<CharacterInternally* const>
+   , SheddableType<CharacterInternally* const&>
+   , SheddableType<InheritedCharacterDisabled>
+   , SheddableType<InheritedCharacterDisabled const>
+   , SheddableType<InheritedCharacterDisabled const&>
+   , InheritedCharacterDisabled
+   , InheritedCharacterExternally
+   , InheritedCharacterButPrivate
+   , NotCharacterExternally
 ) {
    static_assert(not CT::Character<TestType>);
    static_assert(    CT::NotCharacter<TestType>);

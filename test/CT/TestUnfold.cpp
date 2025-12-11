@@ -41,45 +41,45 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Unfoldable                                                            
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Unfoldable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::Unfoldable types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile
-   SheddableType<IncompleteType>, // shouldn't compile
-   SheddableType<IncompleteType>&,// shouldn't compile
-   SheddableType<UnfoldableInternally*>,
-   SheddableType<UnfoldableInternally* const>,
-   SheddableType<UnfoldableInternally* const&>,
-   SheddableType<InheritedUnfoldableDisabled>,
-   SheddableType<InheritedUnfoldableDisabled const>,
-   SheddableType<InheritedUnfoldableDisabled const&>,
-   UnfoldableExternally,
-   UnfoldableExternally const,
-   UnfoldableExternally&,
-   UnfoldableInternally,
-   UnfoldableInternally const,
-   UnfoldableInternally&,
-   InheritedUnfoldable,
-   InheritedUnfoldable const,
-   InheritedUnfoldable&
+   , SheddableType<IncompleteType>  // shouldn't compile
+   , SheddableType<IncompleteType>& // shouldn't compile
+   , SheddableType<UnfoldableInternally*>
+   , SheddableType<UnfoldableInternally* const>
+   , SheddableType<UnfoldableInternally* const&>
+   , SheddableType<InheritedUnfoldableDisabled>
+   , SheddableType<InheritedUnfoldableDisabled const>
+   , SheddableType<InheritedUnfoldableDisabled const&>
+   , UnfoldableExternally
+   , UnfoldableExternally const
+   , UnfoldableExternally&
+   , UnfoldableInternally
+   , UnfoldableInternally const
+   , UnfoldableInternally&
+   , InheritedUnfoldable
+   , InheritedUnfoldable const
+   , InheritedUnfoldable&
 ) {
    static_assert(    CT::Unfoldable<TestType>);
    static_assert(not CT::NotUnfoldable<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotUnfoldable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::NotUnfoldable types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile
-   IncompleteType*,
-   bool, bool*,
-   void, void*,
-   int, int const, int const&, int&,
-   Types<void*>,
-   InheritedUnfoldableDisabled,
-   InheritedUnfoldableExternally,
-   InheritedUnfoldableButPrivate,
-   NotUnfoldableExternally
+   , IncompleteType*
+   , bool, bool*
+   , void, void*
+   , int, int const, int const&, int&
+   , Types<void*>
+   , InheritedUnfoldableDisabled
+   , InheritedUnfoldableExternally
+   , InheritedUnfoldableButPrivate
+   , NotUnfoldableExternally
 ) {
    static_assert(not CT::Unfoldable<TestType>);
    static_assert(    CT::NotUnfoldable<TestType>);

@@ -11,13 +11,12 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"   
-   , (Types<Any, Text*, ScopedElement<Text*>>)
-   
    , (Types<Any, Text, ScopedElement<Text>>)
    , (Types<Any, int, ScopedElement<int>>)
    , (Types<Any, Any, ScopedElement<Any>>)
    , (Types<Any, RT, ScopedElement<RT>>)
 
+   , (Types<Any, Text*, ScopedElement<Text*>>)
    , (Types<Any, int*, ScopedElement<int*>>)
    , (Types<Any, Any*, ScopedElement<Any*>>)
    , (Types<Any, RT*, ScopedElement<RT*>>)
@@ -74,7 +73,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<TAny<RT**>, RT**, ScopedElement<RT**, true>>)
    #endif
 ) {
-   static Allocator::State memoryState;
+   static MemoryState memoryState;
    using T = typename TestType::First;
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;

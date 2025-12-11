@@ -39,47 +39,47 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Bool                                                                  
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Bool types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::Bool types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile
    //SheddableType<IncompleteType>, // shouldn't compile
    //SheddableType<IncompleteType>&,// shouldn't compile
-   BoolExternally,
-   BoolExternally const,
-   BoolExternally&,
-   BoolInternally,
-   BoolInternally const,
-   BoolInternally&,
-   InheritedBool,
-   InheritedBool const,
-   InheritedBool&,
-   bool
+   , BoolExternally
+   , BoolExternally const
+   , BoolExternally&
+   , BoolInternally
+   , BoolInternally const
+   , BoolInternally&
+   , InheritedBool
+   , InheritedBool const
+   , InheritedBool&
+   , bool
 ) {
    static_assert(    CT::Bool<TestType>);
    static_assert(not CT::NotBool<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotBool types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::NotBool types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile
    //SheddableType<IncompleteType>, // shouldn't compile
    //SheddableType<IncompleteType>&,// shouldn't compile
-   IncompleteType*,
-   void, void*,
-   int, int const, int const&, int&,
-   Types<void*>,
-   SheddableType<BoolInternally*>,
-   SheddableType<BoolInternally* const>,
-   SheddableType<BoolInternally* const&>,
-   SheddableType<InheritedBoolDisabled>,
-   SheddableType<InheritedBoolDisabled const>,
-   SheddableType<InheritedBoolDisabled const&>,
-   InheritedBoolDisabled,
-   InheritedBoolExternally,
-   InheritedBoolButPrivate,
-   NotBoolExternally
+   , IncompleteType*
+   , void, void*
+   , int, int const, int const&, int&
+   , Types<void*>
+   , SheddableType<BoolInternally*>
+   , SheddableType<BoolInternally* const>
+   , SheddableType<BoolInternally* const&>
+   , SheddableType<InheritedBoolDisabled>
+   , SheddableType<InheritedBoolDisabled const>
+   , SheddableType<InheritedBoolDisabled const&>
+   , InheritedBoolDisabled
+   , InheritedBoolExternally
+   , InheritedBoolButPrivate
+   , NotBoolExternally
 ) {
    static_assert(not CT::Bool<TestType>);
    static_assert(    CT::NotBool<TestType>);

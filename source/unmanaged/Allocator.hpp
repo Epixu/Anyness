@@ -48,24 +48,18 @@ namespace Langulus::Unmanaged
    }
    
    ///                                                                        
-   /// A mockup of a memory manager.                                          
-   /// Just uses malloc.                                                      
+   /// A mockup of a memory manager. Just uses malloc.                        
    ///                                                                        
    struct Allocator {
-      /// No state when MANAGED_MEMORY feature is disabled                    
-      struct State {
-         consteval bool Assert() const noexcept { return true; }
-      };
-
+      Allocator() = delete;
+      
       LANGULUS(INLINED)
-      static auto Allocate(pot_t alignment, pot_t size) has_assumptions
-      -> Allocation* {
+      static auto Allocate(pot_t alignment, pot_t size) has_assumptions -> Allocation* {
          return AlignedAllocate(size, alignment);
       }
 
       LANGULUS(INLINED)
-      static auto Reallocate(pot_t size, Allocation* previous) has_assumptions
-      -> Allocation* {
+      static auto Reallocate(pot_t size, Allocation* previous) has_assumptions -> Allocation* {
          LglsAssumeDev(previous,
             "Reallocating nullptr");
          LglsAssumeDev(size != previous->mSize,

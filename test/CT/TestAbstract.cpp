@@ -57,54 +57,54 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Abstract                                                              
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Abstract types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::Abstract types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //SheddableType<IncompleteType>, // shouldn't compile
-   SheddableType<PureAbstract>,
-   SheddableType<PureAbstract const>,
-   SheddableType<PureAbstract const&>,
-   PureAbstract,
-   PureAbstract const,
-   PureAbstract&,
-   ForcedAbstractExternally,
-   ForcedAbstractExternally const,
-   ForcedAbstractExternally&,
-   ForcedAbstractInternally,
-   ForcedAbstractInternally const,
-   ForcedAbstractInternally&,
-   InheritedAbstract1,
-   InheritedAbstract1 const,
-   InheritedAbstract1&,
-   InheritedAbstract2ButPrivate,
-   InheritedAbstract2,
-   InheritedAbstract2 const,
-   InheritedAbstract2&
+   , SheddableType<PureAbstract>
+   , SheddableType<PureAbstract const>
+   , SheddableType<PureAbstract const&>
+   , PureAbstract
+   , PureAbstract const
+   , PureAbstract&
+   , ForcedAbstractExternally
+   , ForcedAbstractExternally const
+   , ForcedAbstractExternally&
+   , ForcedAbstractInternally
+   , ForcedAbstractInternally const
+   , ForcedAbstractInternally&
+   , InheritedAbstract1
+   , InheritedAbstract1 const
+   , InheritedAbstract1&
+   , InheritedAbstract2ButPrivate
+   , InheritedAbstract2
+   , InheritedAbstract2 const
+   , InheritedAbstract2&
 ) {
    static_assert(    CT::Abstract<TestType>);
    static_assert(not CT::NotAbstract<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotAbstract types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::NotAbstract types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //SheddableType<IncompleteType>, // shouldn't compile
-   void,
-   void*,
-   SheddableType<PureAbstract*>,
-   SheddableType<PureAbstract* const>,
-   SheddableType<PureAbstract* const&>,
-   PureAbstract*,
-   ImpureVirtual,
-   InheritedAbstract1ButPrivate,
-   InheritedAbstractExternally,
-   IncompleteType*,
-   int,
-   int const,
-   int const&,
-   int&,
-   Types<void*>,
-   InheritedAbstract1Disabled
+   , void
+   , void*
+   , SheddableType<PureAbstract*>
+   , SheddableType<PureAbstract* const>
+   , SheddableType<PureAbstract* const&>
+   , PureAbstract*
+   , ImpureVirtual
+   , InheritedAbstract1ButPrivate
+   , InheritedAbstractExternally
+   , IncompleteType*
+   , int
+   , int const
+   , int const&
+   , int&
+   , Types<void*>
+   , InheritedAbstract1Disabled
 ) {
    static_assert(not CT::Abstract<TestType>);
    static_assert(    CT::NotAbstract<TestType>);

@@ -48,31 +48,31 @@ namespace
    struct HashableViaBoth : HashableViaConstMethod, HashableViaBeingPOD {};
 }
 
-TEMPLATE_TEST_CASE("Testing hashable types", "[ct]",
-   SheddableType<HashableViaConstMethod>,
-   SheddableType<HashableViaBeingPOD>,
-   SheddableType<HashableViaBoth>,
-   SheddableType<NonHashable*>,
-   HashableViaConstMethod,
-   HashableViaMutMethod,
-   HashableViaBeingPOD,
-   HashableViaBoth,
-   HashableViaBoth&,
-   NonHashable*,
-   int, float, bool, nullptr_t, void*,
-   int&,
-   int*
+TEMPLATE_TEST_CASE("Testing hashable types", "[ct]"
+   , SheddableType<HashableViaConstMethod>
+   , SheddableType<HashableViaBeingPOD>
+   , SheddableType<HashableViaBoth>
+   , SheddableType<NonHashable*>
+   , HashableViaConstMethod
+   , HashableViaMutMethod
+   , HashableViaBeingPOD
+   , HashableViaBoth
+   , HashableViaBoth&
+   , NonHashable*
+   , int, float, bool, nullptr_t, void*
+   , int&
+   , int*
 ) {
    static_assert(    CT::Hashable<TestType>);
    static_assert(not CT::NotHashable<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing non-hashable types", "[ct]",
-   SheddableType<NonHashable>,
-   SheddableType<NonHashable&>,
-   NonHashable,
-   NonHashable&,
-   void
+TEMPLATE_TEST_CASE("Testing non-hashable types", "[ct]"
+   , SheddableType<NonHashable>
+   , SheddableType<NonHashable&>
+   , NonHashable
+   , NonHashable&
+   , void
 ) {
    static_assert(not CT::Hashable<TestType>);
    static_assert(    CT::NotHashable<TestType>);
@@ -90,12 +90,12 @@ static_assert(not CT::NotHashable<SheddableType<NonHashable>, NonHashable, Hasha
 ///                                                                           
 /// CT::HasGetHashMethod                                                      
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing types with GetHash() method", "[ct]",
-   SheddableType<HashableViaConstMethod>,
-   SheddableType<HashableViaBoth>,
-   HashableViaConstMethod,
-   HashableViaMutMethod,
-   HashableViaBoth
+TEMPLATE_TEST_CASE("Testing types with GetHash() method", "[ct]"
+   , SheddableType<HashableViaConstMethod>
+   , SheddableType<HashableViaBoth>
+   , HashableViaConstMethod
+   , HashableViaMutMethod
+   , HashableViaBoth
 ) {
    static_assert(CT::HasGetHashMethod<TestType>);
 }
@@ -117,28 +117,28 @@ static_assert(not CT::HasGetHashMethod<SheddableType<HashableViaConstMethod>, Ha
 ///                                                                           
 /// CT::HasStdHasher                                                          
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing for if types are hashable by std", "[ct]",
-   std::string,
-   std::string_view, int,
-   SheddableType<HashableViaConstMethod>,
-   SheddableType<HashableViaBoth>,
-   HashableViaConstMethod,
-   HashableViaMutMethod,
-   HashableViaBoth
+TEMPLATE_TEST_CASE("Testing for if types are hashable by std", "[ct]"
+   , std::string
+   , std::string_view, int
+   , SheddableType<HashableViaConstMethod>
+   , SheddableType<HashableViaBoth>
+   , HashableViaConstMethod
+   , HashableViaMutMethod
+   , HashableViaBoth
 ) {
    static_assert(CT::HasStdHasher<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing for if types are not hashable by std", "[ct]",
-   (std::unordered_map<int, bool>),
-   std::unordered_set<int>,
-   std::set<int>,
-   (std::array<int, 5>),
-   (std::map<int, bool>),
-   (SheddableType<std::map<int, bool>>),
-   void,
-   NonHashable,
-   HashableViaBeingPOD
+TEMPLATE_TEST_CASE("Testing for if types are not hashable by std", "[ct]"
+   , (std::unordered_map<int, bool>)
+   , std::unordered_set<int>
+   , std::set<int>
+   , (std::array<int, 5>)
+   , (std::map<int, bool>)
+   , (SheddableType<std::map<int, bool>>)
+   , void
+   , NonHashable
+   , HashableViaBeingPOD
 ) {
    static_assert(not CT::HasStdHasher<TestType>);
 }
@@ -232,10 +232,10 @@ struct TestValue {
 ///                                                                           
 /// Hash similarities with fundamental types (and constexpr hashing)          
 ///                                                                           
-TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result in different hashes", "[hash]",
-   TestValue<0>,
-   TestValue<1>,
-   TestValue<2>
+TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result in different hashes", "[hash]"
+   , TestValue<0>
+   , TestValue<1>
+   , TestValue<2>
 ) {
    constexpr int init = TestType::Value;
    bool b       = static_cast<bool>(init);

@@ -39,50 +39,50 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Allocatable                                                           
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Allocatable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::Allocatable types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile
    //SheddableType<IncompleteType>, // shouldn't compile
    //SheddableType<IncompleteType>&,// shouldn't compile
-   AllocatableExternally,
-   AllocatableExternally const,
-   AllocatableExternally&,
-   AllocatableInternally,
-   AllocatableInternally const,
-   AllocatableInternally&,
-   SheddableType<AllocatableInternally*>,
-   SheddableType<AllocatableInternally* const>,
-   SheddableType<AllocatableInternally* const&>,
-   InheritedAllocatable,
-   InheritedAllocatable const,
-   InheritedAllocatable&,
-   InheritedAllocatableButPrivate,
-   InheritedAllocatableExternally,
-   void*,
-   int, int const, int const&, int&,
-   Types<void*>,
-   SheddableType<InheritedAllocatableDisabled*>,
-   SheddableType<InheritedAllocatableDisabled* const>,
-   SheddableType<InheritedAllocatableDisabled* const&>,
-   IncompleteType*
+   , AllocatableExternally
+   , AllocatableExternally const
+   , AllocatableExternally&
+   , AllocatableInternally
+   , AllocatableInternally const
+   , AllocatableInternally&
+   , SheddableType<AllocatableInternally*>
+   , SheddableType<AllocatableInternally* const>
+   , SheddableType<AllocatableInternally* const&>
+   , InheritedAllocatable
+   , InheritedAllocatable const
+   , InheritedAllocatable&
+   , InheritedAllocatableButPrivate
+   , InheritedAllocatableExternally
+   , void*
+   , int, int const, int const&, int&
+   , Types<void*>
+   , SheddableType<InheritedAllocatableDisabled*>
+   , SheddableType<InheritedAllocatableDisabled* const>
+   , SheddableType<InheritedAllocatableDisabled* const&>
+   , IncompleteType*
 ) {
    static_assert(    CT::Allocatable<TestType>);
    static_assert(not CT::NotAllocatable<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotAllocatable types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::NotAllocatable types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile
    //SheddableType<IncompleteType>, // shouldn't compile
    //SheddableType<IncompleteType>&,// shouldn't compile
-   void,
-   SheddableType<InheritedAllocatableDisabled>,
-   SheddableType<InheritedAllocatableDisabled const>,
-   SheddableType<InheritedAllocatableDisabled const&>,
-   InheritedAllocatableDisabled,
-   AllocatableExternallyDisabled
+   , void
+   , SheddableType<InheritedAllocatableDisabled>
+   , SheddableType<InheritedAllocatableDisabled const>
+   , SheddableType<InheritedAllocatableDisabled const&>
+   , InheritedAllocatableDisabled
+   , AllocatableExternallyDisabled
 ) {
    static_assert(not CT::Allocatable<TestType>);
    static_assert(    CT::NotAllocatable<TestType>);

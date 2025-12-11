@@ -31,39 +31,39 @@ namespace Langulus::CTTI
    struct Void<VoidTypeExternal> {};
 }
 
-TEMPLATE_TEST_CASE("Testing void types", "[ct]",
-   void,
-   VoidType,
-   VoidType const,
-   VoidType&,
-   VoidTypeDerived,
-   VoidTypeDerived const,
-   VoidTypeDerived&,
-   VoidTypeExternal,
-   VoidTypeExternal const,
-   VoidTypeExternal&,
-   Types<>
+TEMPLATE_TEST_CASE("Testing void types", "[ct]"
+   , void
+   , VoidType
+   , VoidType const
+   , VoidType&
+   , VoidTypeDerived
+   , VoidTypeDerived const
+   , VoidTypeDerived&
+   , VoidTypeExternal
+   , VoidTypeExternal const
+   , VoidTypeExternal&
+   , Types<>
 ) {
    static_assert(    CT::Void<TestType>);
    static_assert(not CT::NotVoid<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing non-void types", "[ct]",
-   void*,
-   VoidType*,
-   NonVoidTypeDerived,
-   NonVoidTypeDerived const,
-   NonVoidTypeDerived*,
-   //IncompleteType,         // shouldn't compile
-   //IncompleteType const,   // shouldn't compile
-   IncompleteType*,
-   int,
-   int const,
-   int const&,
-   int&,
-   Types<void>,
-   Types<void*>,
-   (Types<void, void>)
+TEMPLATE_TEST_CASE("Testing non-void types", "[ct]"
+   , void*
+   , VoidType*
+   , NonVoidTypeDerived
+   , NonVoidTypeDerived const
+   , NonVoidTypeDerived*
+   //IncompleteType         // shouldn't compile
+   //IncompleteType const   // shouldn't compile
+   , IncompleteType*
+   , int
+   , int const
+   , int const&
+   , int&
+   , Types<void>
+   , Types<void*>
+   , (Types<void, void>)
 ) {
    static_assert(not CT::Void<TestType>);
    static_assert(    CT::NotVoid<TestType>);
@@ -97,40 +97,40 @@ namespace Langulus::CTTI
    struct Typelist<CustomTypelistExternal> {};
 }
 
-TEMPLATE_TEST_CASE("Testing typelists", "[ct]",
-   Types<>,
-   Types<void>,
-   (Types<void, void>),
-   Types<int>,
-   (Types<int, float>),
-   CustomTypelist,
-   CustomTypelist const,
-   CustomTypelist&,
-   CustomTypelistDerived,
-   CustomTypelistDerived const,
-   CustomTypelistDerived&,
-   CustomTypelistExternal,
-   CustomTypelistExternal const,
-   CustomTypelistExternal&
+TEMPLATE_TEST_CASE("Testing typelists", "[ct]"
+   , Types<>
+   , Types<void>
+   , (Types<void, void>)
+   , Types<int>
+   , (Types<int, float>)
+   , CustomTypelist
+   , CustomTypelist const
+   , CustomTypelist&
+   , CustomTypelistDerived
+   , CustomTypelistDerived const
+   , CustomTypelistDerived&
+   , CustomTypelistExternal
+   , CustomTypelistExternal const
+   , CustomTypelistExternal&
 ) {
    static_assert(    CT::Typelist<TestType>);
    static_assert(not CT::NotTypelist<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing non-typelists", "[ct]",
-   void,
-   void*,
-   CustomTypelist*,
-   CustomNonTypelistDerived,
-   CustomNonTypelistDerived const,
-   CustomNonTypelistDerived*,
-   //IncompleteType,         // shouldn't compile
-   //IncompleteType const,   // shouldn't compile
-   IncompleteType*,
-   int,
-   int const,
-   int const&,
-   int&
+TEMPLATE_TEST_CASE("Testing non-typelists", "[ct]"
+   , void
+   , void*
+   , CustomTypelist*
+   , CustomNonTypelistDerived
+   , CustomNonTypelistDerived const
+   , CustomNonTypelistDerived*
+   //IncompleteType         // shouldn't compile
+   //IncompleteType const   // shouldn't compile
+   , IncompleteType*
+   , int
+   , int const
+   , int const&
+   , int&
 ) {
    static_assert(not CT::Typelist<TestType>);
    static_assert(    CT::NotTypelist<TestType>);

@@ -18,6 +18,7 @@
    #include <Langulus/Logger/NoVerbose.hpp>
 #endif
 
+
 namespace Langulus::Fractalloc
 {
    /// Fast log2                                                              
@@ -75,7 +76,7 @@ namespace Langulus::Fractalloc
       LglsAssumeDev(mClientData >= reinterpret_cast<uint8_t*>(mAllocationData + static_cast<size_t>(mMaxEntries)),
          "Client data intersects allocation data");
 
-      IF_LANGULUS_MEMORY_STATISTICS(mStep = Instance.GetStatistics().mStep);
+      IF_LANGULUS_MEMORY_STATISTICS(mStep = Allocator::GetStatistics().mStep);
 
       // Touching is mandatory for pools - without touching the         
       // memory, it might remain just a promise by the OS, making       

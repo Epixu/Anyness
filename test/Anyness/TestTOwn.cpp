@@ -16,17 +16,17 @@ using Anyness::TOwn;
 using Anyness::Allocator;
 
 
-TEMPLATE_TEST_CASE("Owned value", "[TOwn]",
-   TOwn<RT>,
-   //TOwn<const RT>,
-   TOwn<int>,
-   //TOwn<const int>,
-   TOwn<RT*>,
-   TOwn<const RT*>,
-   TOwn<int*>,
-   TOwn<const int*>
+TEMPLATE_TEST_CASE("Owned value", "[TOwn]"
+   , TOwn<RT>
+   //TOwn<const RT>
+   , TOwn<int>
+   //TOwn<const int>
+   , TOwn<RT*>
+   , TOwn<const RT*>
+   , TOwn<int*>
+   , TOwn<const int*>
 ) {
-   static Allocator::State memoryState;
+   static Anyness::MemoryState memoryState;
    using T  = TestType;
    using TT = TypeOf<T>;
    

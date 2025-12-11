@@ -41,7 +41,7 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Deep                                                                  
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Deep types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::Deep types", "[ct]"
    //IncompleteType,                 // shouldn't compile
    //IncompleteType const,           // shouldn't compile
    //SheddableType<IncompleteType>,  // shouldn't compile
@@ -49,45 +49,45 @@ TEMPLATE_TEST_CASE("Testing CT::Deep types", "[ct]",
    //IncompleteType const*,          // shouldn't compile
    //SheddableType<IncompleteType*>, // shouldn't compile
    
-   ForcedDeepExternally,
-   ForcedDeepExternally const,
-   ForcedDeepExternally&,
-   ForcedDeepInternally,
-   ForcedDeepInternally const,
-   ForcedDeepInternally&,
-   InheritedDeep1,
-   InheritedDeep1 const,
-   InheritedDeep1&,
-   
-   ForcedDeepExternally*,
-   ForcedDeepExternally const*,
-   ForcedDeepExternally*&,
-   ForcedDeepInternally*,
-   ForcedDeepInternally const*,
-   ForcedDeepInternally*&,
-   InheritedDeep1*,
-   InheritedDeep1 const*,
-   InheritedDeep1*&
+   , ForcedDeepExternally
+   , ForcedDeepExternally const
+   , ForcedDeepExternally&
+   , ForcedDeepInternally
+   , ForcedDeepInternally const
+   , ForcedDeepInternally&
+   , InheritedDeep1
+   , InheritedDeep1 const
+   , InheritedDeep1&
+
+   , ForcedDeepExternally*
+   , ForcedDeepExternally const*
+   , ForcedDeepExternally*&
+   , ForcedDeepInternally*
+   , ForcedDeepInternally const*
+   , ForcedDeepInternally*&
+   , InheritedDeep1*
+   , InheritedDeep1 const*
+   , InheritedDeep1*&
 ) {
    static_assert(    CT::Deep<TestType>);
    static_assert(not CT::NotDeep<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotDeep types", "[ct]",
+TEMPLATE_TEST_CASE("Testing CT::NotDeep types", "[ct]"
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //SheddableType<IncompleteType>, // shouldn't compile
    //IncompleteType*,
-   void,
-   void*,
-   InheritedDeep1ButPrivate,
-   InheritedDeepExternally,
-   int,
-   int const,
-   int const&,
-   int&,
-   Types<void*>,
-   InheritedDeep1Disabled
+   , void
+   , void*
+   , InheritedDeep1ButPrivate
+   , InheritedDeepExternally
+   , int
+   , int const
+   , int const&
+   , int&
+   , Types<void*>
+   , InheritedDeep1Disabled
 ) {
    static_assert(not CT::Deep<TestType>);
    static_assert(    CT::NotDeep<TestType>);
