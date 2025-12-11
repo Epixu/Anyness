@@ -107,8 +107,6 @@ namespace Langulus::RTTI
          pot_t mMinimalPoolSize IF_SAFE(= pot_t(MinimalPoolSize));
          // The reflected pool tactic                                   
          PoolTactic mPoolTactic = PoolTactic::Default;
-         // The start of the pool chain for the type                    
-         mutable Fractalloc::Pool* mPoolChain = nullptr;
       #endif
 
       //                                                                

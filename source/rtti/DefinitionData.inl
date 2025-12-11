@@ -402,11 +402,11 @@ namespace Langulus::RTTI
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          // Reflect pooling properties                                  
-         definition.mPoolTactic = CT::GetPoolTactic<T>();
          definition.mMinimalPoolSize = CT::GetMinPool<T>();
-
+         definition.mPoolTactic = CT::GetPoolTactic<T>();
+      
          // Make sure that types registered from an external shared     
-         // library are always pooled by type, so that we're able to    
+         // library are _always_ pooled by type, so that we're able to  
          // unregister them and free their dedicated pools when the     
          // shared library is unloaded                                  
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)

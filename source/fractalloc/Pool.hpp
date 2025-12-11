@@ -12,15 +12,12 @@
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
-#include "Allocation.hpp"
-#include "../rtti/MetaData.hpp"
-
 
 namespace Langulus::Fractalloc
 {
-   using RTTI::DMeta;
-
-
+   struct Allocation;
+   struct PoolBank;
+   
    ///                                                                        
    ///   Memory pool                                                          
    ///                                                                        
@@ -30,6 +27,7 @@ namespace Langulus::Fractalloc
    struct Pool {
    protected:
       friend struct Allocator;
+      friend struct PoolBank;
       
       // A chain of freed entries in the range [0; mEntries)            
       Allocation* mLastFreed = nullptr;
@@ -40,6 +38,12 @@ namespace Langulus::Fractalloc
       size_t mDistribution[sizeof(size_t) * 8] = {};
       // Pointer to start of client data                                
       uint8_t* const mClientData;
+      // Set by meta.GetAlignment()                                     
+      pot_t mDataAlignment;
+      // Set by meta.GetMinAlloc()                                      
+      pot_t mDataMinAlloc;
+      // Id of pool inside a type chain (used for packing pointers)     
+      unsigned mID = 0;
       // Next pool in the pool chain                                    
       Pool* mNext = nullptr;
 
@@ -57,9 +61,6 @@ namespace Langulus::Fractalloc
          // Acts like a timestamp of when the allocation happened       
          size_t mStep;
       #endif
-      
-      // Associated meta data                                           
-      DMeta mMeta;
 
       // Bytes allocated by the backend (aka the reserved client bytes) 
       const pot_t mAllocatedByBackend;
@@ -83,9 +84,14 @@ namespace Langulus::Fractalloc
       Pool(const Pool&) = delete;
       Pool(Pool&&) = delete;
 
-      Pool(DMeta, pot_t pool_alignment, pot_t client_size) has_assumptions;
+      Pool(
+         pot_t data_alignment,
+         pot_t data_min_alloc,
+         pot_t pool_alignment,
+         pot_t client_size
+      ) has_assumptions;
 
-      static size_t Cost(DMeta, pot_t) noexcept;
+      static size_t Cost(pot_t dataAlignment, pot_t dataMinAlloc, pot_t) noexcept;
 
       auto GetAllocationData() const noexcept -> Allocation*;
       auto GetLastFreedEntry() const noexcept -> Allocation*;

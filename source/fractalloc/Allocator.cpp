@@ -8,7 +8,9 @@
 #include "Allocator.hpp"
 #include "Pool.inl"
 #include "Allocation.inl"
-#include <unordered_set>
+#include <unordered_map>
+#include <map>
+#include <ranges>
 
 #if 0
    #include <Langulus/Logger/EnableVerbose.hpp>
@@ -21,26 +23,80 @@ namespace
 {
    #if LANGULUS_FEATURE(MEMORY_STATISTICS)
       /// The memory manager statistics                                       
-      Langulus::Fractalloc::Statistics mStatistics {};
+      Langulus::Fractalloc::Statistics gStatistics {};
    #endif
 
-   /// Default pool chain                                                     
-   Langulus::Fractalloc::Pool* mMainPoolChain {};
+   /// Default pool chain.                                                    
+   /// Won't accept types that have size or alignment larger than Alignment.  
+   Langulus::Fractalloc::Pool* gMainPoolChain {};
    
    /// The last succesfull Find() result in default pool chain                
-   Langulus::Fractalloc::Pool const* mLastFoundPool {};
+   Langulus::Fractalloc::Pool const* gLastFoundPool {};
 
-   /// Pool chains for types that use PoolTactic::Size                        
+   /// Pool chains for types that use PoolTactic::Size and have alignment     
+   /// smaller or equal to Langulus::Alignment.                               
    constexpr size_t SizeBuckets = sizeof(size_t) * 8;
-   Langulus::Fractalloc::Pool* mSizePoolChain[SizeBuckets] {};
-
-   /// The set of types that are currently in use.                            
-   /// Used to detect if a shared object is safe to be unloaded.              
-   ::std::unordered_set<Langulus::RTTI::DMeta> mInstantiatedTypes;
+   Langulus::Fractalloc::Pool* gSizePoolChain[SizeBuckets] {};
+   
+   /// The set of types that are currently in use and their corresponding     
+   /// pool chains. Used to detect if a shared object is safe to be unloaded. 
+   /// Also used to pack/unpack pointers.                                     
+   ::std::unordered_map<Langulus::RTTI::DMeta, Langulus::Fractalloc::PoolBank> gTypePoolChain;
 }
 
 namespace Langulus::Fractalloc
-{
+{   
+   /// Helper structure for keeping track of free pool IDs                    
+   struct PoolBank {
+      using Pool = Langulus::Fractalloc::Pool;
+      Pool* unindexed = nullptr;
+      ::std::map<unsigned, Pool*> indexed;
+      unsigned lastId = 0;
+      unsigned freeIds = 0;
+
+      /// Link a new pool, adding it to the unindexed chain, as well as       
+      /// giving it a unique ID                                               
+      void LinkPool(Pool* pool) {
+         // Bring the new pool in front, so that next allocation is     
+         // placed in it, as it is most likely still empty.             
+         pool->mNext = unindexed;
+         unindexed = pool;
+         
+         // Give the new pool a unique ID as well, so that packed       
+         // pointers can utilize it.                                    
+         for (unsigned reused = 1; reused < lastId and freeIds; ++reused) {
+            // Always try reusing IDs                                   
+            if (not indexed.contains(reused)) {
+               pool->mID = reused;
+               indexed[reused] = pool;
+               --freeIds;
+               return;
+            }
+         }
+
+         pool->mID = ++lastId;
+         indexed[lastId] = pool;
+      }
+
+      /// Unlink a pool (usually before destroying it), from the unindexed    
+      /// chain, as well as the ID map                                        
+      void UnlinkPool(Pool* pool) {
+         if (unindexed == pool)
+            unindexed = pool->mNext;
+
+         if (lastId == pool->mID) {
+            indexed.erase(pool->mID);
+            const auto prevLastId = lastId;
+            lastId = indexed.rbegin()->first;
+            freeIds -= prevLastId - lastId;
+            return;
+         }
+
+         indexed.erase(pool->mID);
+         ++freeIds;
+      }
+   };
+   
    /// Each allocation has the following order:                               
    /// [sizeof(Pool)][padding for client data][client bytes...]               
    ///   @param type - the pooled type                                        
@@ -52,8 +108,10 @@ namespace Langulus::Fractalloc
       LglsAssumeDev(size >= type.GetSize(),
          "Pool can't contain a single instance of provided type");
       
+      const pot_t  data_align = type.GetAlignment();
+      const pot_t  data_minal = type.GetMinAllocation();
       const size_t size_int = static_cast<size_t>(size);
-      const size_t pool_cost = Pool::Cost(type, size);
+      const size_t pool_cost = Pool::Cost(data_align, data_minal, size);
       const size_t pool_alignment = ::std::bit_ceil(pool_cost);
       const size_t backendSize = pool_cost + size_int;
       #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
@@ -65,64 +123,71 @@ namespace Langulus::Fractalloc
       if (not pool)
          return nullptr;
 
-      new (pool) Pool {type, pot_t(pool_alignment), size};
+      new (pool) Pool {data_align, data_minal, pot_t(pool_alignment), size};
       return static_cast<Pool*>(pool);
    }
 
    /// Allocate a memory entry                                                
    ///   @attention doesn't call any constructors                             
    ///   @attention doesn't throw - check if return is nullptr                
-   ///   @attention assumes hint is valid                                     
-   ///   @attention assumes size is not zero                                  
-   ///   @param hint - meta data to associate pool with                       
+   ///   @attention assumes meta data is valid                                
+   ///   @param meta - meta data for finding the proper pool                  
    ///   @param size - the number of bytes to allocate                        
    ///   @return the allocation, or nullptr if out of memory                  
-   auto Allocator::Allocate(DMeta hint, pot_t size) has_assumptions -> Allocation* {
-      LglsAssumeDev(hint, "Invalid hint");
-
-      // Decide pool chain based on hint                                
+   auto Allocator::Allocate(DMeta meta, pot_t size) has_assumptions -> Allocation* {
+      // Decide pool chain based on meta data                           
+      LglsAssumeDev(meta, "Invalid meta data");
       Pool* pool = nullptr;
-      if (hint) {
-         switch (hint.GetPoolTactic()) {
+      const auto poolTactic = meta.GetPoolTactic();
+      if (meta) {
+         switch (poolTactic) {
          case PoolTactic::Size:
-            pool = mSizePoolChain[FastLog2(hint.GetSize())];
+            pool = gSizePoolChain[FastLog2(meta.GetSize())];
             break;
-         case PoolTactic::Type:
-            pool = hint.GetPoolchain();
+         case PoolTactic::Type: {
+            auto found = gTypePoolChain.find(meta);
+            if (found != gTypePoolChain.end())
+               pool = found->second.unindexed;
             break;
+         }
          case PoolTactic::Main:
-            pool = mMainPoolChain;
+            pool = gMainPoolChain;
             break;
          }
       }
-      else pool = mMainPoolChain;
+      else pool = gMainPoolChain;
 
-      //	Attempt to place allocation in the default chain               
+      //	Attempt to place allocation in the chosen chain                
+      unsigned pool_misses = 0;
       Allocation* entry = nullptr;
       while (pool) {
          entry = pool->Allocate(size);
          if (entry)
             break;
          pool = pool->mNext;
+         ++pool_misses;
       }
 
       if (entry) {
+         // We're done                                                  
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-            auto& stats = mStatistics;
-            stats.mEntries += 1;
-            stats.mBytesAllocatedByFrontend += static_cast<size_t>(entry->GetSize());
+            gStatistics.mEntries += 1;
+            gStatistics.mBytesAllocatedByFrontend += static_cast<size_t>(entry->GetSize());
             LglsAssumeDev(
-               stats.mBytesAllocatedByFrontend <= stats.mBytesAllocatedByBackend,
+               gStatistics.mBytesAllocatedByFrontend <= gStatistics.mBytesAllocatedByBackend,
                "Impossible amount of frontend allocation"
             );
          #endif
-
          return entry;
       }
 
-      // If reached, pool chain can't contain the memory.               
-      // Allocate a new pool and add it at the front of hinted chain.   
-      pool = AllocatePool(hint, size < hint.GetMinPoolsize() ? hint.GetMinPoolsize() : size);
+      //                                                                
+      // If reached, chosen pool chain can't contain the memory.        
+      // Allocate a new pool and add it at the front of the chain.      
+      // Make new pool bigger, depending on how many pool misses we had.
+      // Many pool misses indicate that type is hot and used often.     
+      const pot_t new_pool_size = meta.GetMinPoolsize() << (pool_misses / 2);
+      pool = AllocatePool(meta, size < new_pool_size ? new_pool_size : size);
       if (not pool)
          return nullptr;
 
@@ -131,35 +196,34 @@ namespace Langulus::Fractalloc
          " of size ", Logger::Size {static_cast<size_t>(pool->GetAllocatedByBackend())}
       );
 
+      // Place allocation in the new pool. This is guaranteed to work.  
       entry = pool->Allocate(size);
 
-      if (hint) {
-         switch (hint.GetPoolTactic()) {
-         case PoolTactic::Size: {
-            auto& sizeChain = mSizePoolChain[FastLog2(hint.GetSize())];
-            pool->mNext = sizeChain;
-            sizeChain = pool;
-            break;
-         }
-         case PoolTactic::Type: {
-            auto relevantPool = hint.GetPoolchain();
-            pool->mNext = relevantPool;
-            hint.SetPoolchain(pool);
-            mInstantiatedTypes.insert(hint);
-            break;
-         }
-         case PoolTactic::Main:
-            pool->mNext = mMainPoolChain;
-            mMainPoolChain = pool;
-            break;
-         }
+      // Time to update the pool chain with the new pool.               
+      switch (poolTactic) {
+      case PoolTactic::Size: {
+         // If we're using the size pool chain, bring the new pool in   
+         // front, so that next allocation is placed in it, as it is    
+         // most likely still empty.                                    
+         auto& sizeChain = gSizePoolChain[FastLog2(meta.GetSize())];
+         pool->mNext = sizeChain;
+         sizeChain = pool;
+         break;
       }
-      else {
-         pool->mNext = mMainPoolChain;
-         mMainPoolChain = pool;
+      case PoolTactic::Type: {
+         // Get the pool bank corresponding to the meta data. If such   
+         // doesn't exist, it will be implicitly created.               
+         auto& poolBank = gTypePoolChain[meta];
+         poolBank.LinkPool(pool);
+         break;
+      }
+      case PoolTactic::Main:
+         pool->mNext = gMainPoolChain;
+         gMainPoolChain = pool;
+         break;
       }
 
-      IF_LANGULUS_MEMORY_STATISTICS(mStatistics.AddPool(pool));
+      IF_LANGULUS_MEMORY_STATISTICS(gStatistics.AddPool(pool));
       return entry;
    }
    
@@ -167,13 +231,14 @@ namespace Langulus::Fractalloc
    /// Get allocator statistics                                               
    ///   @return a reference to the statistics structure                      
    auto Allocator::GetStatistics() noexcept -> const Statistics& {
-      return mStatistics;
+      return gStatistics;
    }
    
    /// Dump a single pool                                                     
+   ///   @param type - pool type                                              
    ///   @param id - pool id                                                  
    ///   @param pool - the pool to dump                                       
-   void Allocator::DumpPool(size_t id, const Pool* pool) noexcept {
+   void Allocator::DumpPool(DMeta type, size_t id, const Pool* pool) noexcept {
       const auto scope = Logger::InfoScoped(
          Logger::PushCyan, Logger::Underline, "Pool #", id, " at ",
          Logger::Hex(pool), Logger::Pop
@@ -193,9 +258,9 @@ namespace Langulus::Fractalloc
          Logger::PushRed, Logger::Size {static_cast<size_t>(pool->mAllocatedByBackend)}, Logger::Pop
       );
 
-      if (pool->mMeta) {
+      if (type) {
          Logger::Line("Associated type: `",
-            pool->mMeta.GetCppName(), "`, of size ", pool->mMeta.GetSize());
+            type.GetCppName(), "`, of size ", type.GetSize());
       }
 
       if (pool->mNextEntry) {
@@ -256,12 +321,12 @@ namespace Langulus::Fractalloc
       auto section = Logger::InfoScoped("MANAGED MEMORY POOL DUMP");
 
       // Dump default pool chain                                        
-      if (mMainPoolChain) {
+      if (gMainPoolChain) {
          const auto scope = Logger::InfoScoped(Logger::Purple, "MAIN POOL CHAIN: ");
          size_t counter = 0;
-         auto pool = mMainPoolChain;
+         auto pool = gMainPoolChain;
          while (pool) {
-            DumpPool(counter, pool);
+            DumpPool({}, counter, pool);
             pool = pool->mNext;
             ++counter;
          }
@@ -269,7 +334,7 @@ namespace Langulus::Fractalloc
 
       // Dump every size pool chain                                     
       for (size_t size = 0; size < sizeof(size_t) * 8; ++size) {
-         if (not mSizePoolChain[size])
+         if (not gSizePoolChain[size])
             continue;
 
          const auto scope = Logger::InfoScoped(Logger::Purple, 
@@ -278,45 +343,37 @@ namespace Langulus::Fractalloc
          );
 
          size_t counter = 0;
-         auto pool = mSizePoolChain[size];
+         auto pool = gSizePoolChain[size];
          while (pool) {
-            DumpPool(counter, pool);
+            DumpPool({}, counter, pool);
             pool = pool->mNext;
             ++counter;
          }
       }
       
       // Dump every type pool chain                                     
-      for (auto& type : mInstantiatedTypes) {
-         auto pool = type.GetPoolchain();
-         if (not pool)
-            continue;
-
+      for (auto& type : gTypePoolChain) {
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             const auto scope = Logger::InfoScoped(Logger::Purple, 
-               "TYPE POOL CHAIN FOR `", Logger::Red, type.GetCppName(), 
+               "TYPE POOL CHAIN FOR `", Logger::Red, type.first.GetCppName(), 
                Logger::Purple, "` (boundaries: "
             );
-         
-            if (type.GetBoundaries().empty())
+            
+            if (type.first.GetBoundaries().empty())
                Logger::Append("MAIN");
-            else for (auto& boundary : type.GetBoundaries())
+            else for (auto& boundary : type.first.GetBoundaries())
                Logger::Append(boundary, ' ');
-         
+            
             Logger::Append(Logger::Purple, "): ");
          #else
             const auto scope = Logger::InfoScoped(Logger::Purple, 
-               "TYPE POOL CHAIN FOR `", Logger::Red, type.GetCppName(), 
+               "TYPE POOL CHAIN FOR `", Logger::Red, type.first.GetCppName(), 
                Logger::Purple, '`'
             );
          #endif
 
-         size_t counter = 0;
-         while (pool) {
-            DumpPool(counter, pool);
-            pool = pool->mNext;
-            ++counter;
-         }
+         for (auto& val : type.second.indexed | std::views::values)
+            DumpPool(type.first, val->mID, val);
       }
    }
 
@@ -328,37 +385,37 @@ namespace Langulus::Fractalloc
       if (stats.mBytesAllocatedByBackend != with.mBytesAllocatedByBackend) {
          Logger::Info(Logger::Purple,
             "Allocated byte difference: ",
-            int(stats.mBytesAllocatedByBackend) - int(with.mBytesAllocatedByBackend));
+            static_cast<int>(stats.mBytesAllocatedByBackend) - static_cast<int>(with.mBytesAllocatedByBackend));
       }
 
       if (stats.mBytesAllocatedByFrontend != with.mBytesAllocatedByFrontend) {
          Logger::Info(Logger::Purple,
             "Used byte difference: ",
-            int(stats.mBytesAllocatedByFrontend) - int(with.mBytesAllocatedByFrontend));
+            static_cast<int>(stats.mBytesAllocatedByFrontend) - static_cast<int>(with.mBytesAllocatedByFrontend));
       }
 
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       if (stats.mDataDefinitions != with.mDataDefinitions) {
          const auto scope = Logger::InfoScoped(Logger::Purple,
             "Data definitions difference: ",
-            int(stats.mDataDefinitions) - int(with.mDataDefinitions)
+            static_cast<int>(stats.mDataDefinitions) - static_cast<int>(with.mDataDefinitions)
          );
       }
    #endif
 
       if (stats.mPools != with.mPools) {
          const auto scope = Logger::InfoScoped(Logger::Purple,
-            "Pool difference: ", int(stats.mPools) - int(with.mPools)
+            "Pool difference: ", static_cast<int>(stats.mPools) - static_cast<int>(with.mPools)
          );
 
          // Diff default pool chain                                     
-         if (mMainPoolChain) {
+         if (gMainPoolChain) {
             size_t counter = 0;
-            auto pool = mMainPoolChain;
+            auto pool = gMainPoolChain;
             while (pool) {
                if (pool->mStep > with.mStep) {
                   Logger::Info(Logger::Purple, "Default pool: ");
-                  DumpPool(counter, pool);
+                  DumpPool({}, counter, pool);
                }
                pool = pool->mNext;
                ++counter;
@@ -367,15 +424,15 @@ namespace Langulus::Fractalloc
 
          // Dump every size pool chain                                  
          for (size_t size = 0; size < sizeof(size_t) * 8; ++size) {
-            if (not mSizePoolChain[size])
+            if (not gSizePoolChain[size])
                continue;
 
             size_t counter = 0;
-            auto pool = mSizePoolChain[size];
+            auto pool = gSizePoolChain[size];
             while (pool) {
                if (pool->mStep > with.mStep) {
                   Logger::Info(Logger::Purple, "Size ", Logger::Size {1ul << size}, " pool: ");
-                  DumpPool(counter, pool);
+                  DumpPool({}, counter, pool);
                }
                pool = pool->mNext;
                ++counter;
@@ -383,27 +440,21 @@ namespace Langulus::Fractalloc
          }
 
          // Dump every type pool chain                                  
-         for (auto& type : mInstantiatedTypes) {
-            auto pool = type.GetPoolchain();
-            if (not pool)
-               continue;
+         for (auto& type : gTypePoolChain) {
+            for (auto& val : type.second.indexed | std::views::values) {
+               if (val->mStep <= with.mStep)
+                  continue;
 
-            size_t counter = 0;
-            while (pool) {
-               if (pool->mStep > with.mStep) {
-                  Logger::Info(Logger::Purple, "Type ", type.GetCppName(), " pool: ");
-                  #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-                     Logger::Info(Logger::Purple, "(boundaries: ");
-                     if (type.GetBoundaries().empty())
-                        Logger::Append("MAIN");
-                     else for (auto& boundary : type.GetBoundaries())
-                        Logger::Append(boundary, ' ');
-                     Logger::Append(')');
-                  #endif
-                  DumpPool(counter, pool);
-               }
-               pool = pool->mNext;
-               ++counter;
+               Logger::Info(Logger::Purple, "Type ", type.first.GetCppName(), " pool: ");
+               #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+                  Logger::Info(Logger::Purple, "(boundaries: ");
+                  if (type.first.GetBoundaries().empty())
+                     Logger::Append("MAIN");
+                  else for (auto& boundary : type.first.GetBoundaries())
+                     Logger::Append(boundary, ' ');
+                  Logger::Append(')');
+               #endif
+               DumpPool(type.first, val->mID, val);
             }
          }
       }
@@ -491,27 +542,27 @@ namespace Langulus::Fractalloc
    ///   @return true if no memory errors occured                             
    bool Allocator::IntegrityCheck() {
       // Integrity check the default chain                              
-      if (mMainPoolChain) {
-         LglsVerbose("Integrity check: mMainPoolChain...");
-         if (not IntegrityCheckChain(mMainPoolChain))
+      if (gMainPoolChain) {
+         LglsVerbose("Integrity check: gMainPoolChain...");
+         if (not IntegrityCheckChain(gMainPoolChain))
             return false;
       }
 
       // Integrity check all size chains                                
       [[maybe_unused]] int size = 1;
-      for (auto& sizeChain : mSizePoolChain) {
+      for (auto& sizeChain : gSizePoolChain) {
          if (sizeChain) {
-            LglsVerbose("Integrity check: mSizePoolChain #", size++, "...");
+            LglsVerbose("Integrity check: gSizePoolChain #", size++, "...");
             if (not IntegrityCheckChain(sizeChain))
                return false;
          }
       }
       
       // Integrity check all type chains                                
-      for (auto& typeChain : mInstantiatedTypes) {
-         if (auto relevantPool = typeChain.GetPoolchain()) {
-            LglsVerbose("Integrity check for type ", typeChain.GetName(), "...");
-            if (not IntegrityCheckChain(relevantPool))
+      for (auto& type : gTypePoolChain) {
+         for (auto& val : type.second.indexed | std::views::values) {
+            LglsVerbose("Integrity check for type ", type.first.GetName(), "...");
+            if (not IntegrityCheckChain(val))
                return false;
          }
       }
@@ -526,10 +577,12 @@ namespace Langulus::Fractalloc
    ///   @attention never deallocates previous entry                          
    ///   @attention returned entry might be different from the previous       
    ///   @attention doesn't throw - check if return is nullptr                
+   ///   @param type - the type of the allocation                             
    ///   @param size - the number of bytes to allocate                        
    ///   @param previous - the previous memory entry                          
    ///   @return the reallocated memory entry, or nullptr if out of memory    
-   auto Allocator::Reallocate(pot_t size, Allocation* previous) has_assumptions -> Allocation* {
+   auto Allocator::Reallocate(DMeta type, pot_t size, Allocation* previous)
+   has_assumptions -> Allocation* {
       LglsAssumeDevAndOptimize(previous,
          "Reallocating nullptr");
       LglsAssumeDev(size != previous->GetSize(),
@@ -544,7 +597,7 @@ namespace Langulus::Fractalloc
       auto pool = const_cast<Pool*>(previous->GetPool());
       if (pool->Reallocate(previous, size)) {
          #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-            auto& stats = mStatistics;
+            auto& stats = gStatistics;
             stats.mBytesAllocatedByFrontend -= oldSize;
             stats.mBytesAllocatedByFrontend += static_cast<size_t>(previous->GetSize());
             LglsAssumeDev(
@@ -561,8 +614,8 @@ namespace Langulus::Fractalloc
          return previous;
       }
 
-      // If this is reached, we have a collision, so new entry is made  
-      return Allocate(pool->mMeta, size);
+      // If this is reached we have a collision, so new entry is made   
+      return Allocate(type, size);
    }
    
    /// Deallocate a memory allocation                                         
@@ -588,7 +641,7 @@ namespace Langulus::Fractalloc
       pool->Deallocate(entry);
 
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-         auto& stats = mStatistics;
+         auto& stats = gStatistics;
          stats.mBytesAllocatedByFrontend -= backupSize;
          stats.mEntries -= 1;
       #endif
@@ -617,51 +670,37 @@ namespace Langulus::Fractalloc
       #endif
    }
 
-   /// Deallocates all unused pools in a chain                                
-   ///   @param chainStart - [in/out] the start of the chain                  
+   /// Trims and eventually deallocates all unused pools in a chain           
+   ///   @param chainStart - the start of the chain                           
+   ///   @return the new start of the chain                                   
    Pool* Allocator::CollectGarbageChain(Pool* chainStart) {
-      // Delete all unused pools in the beginning                       
-      while (chainStart) {
-         if (chainStart->IsInUse()) {
-            chainStart->Trim();
-            break;
-         }
-
-         IF_LANGULUS_MEMORY_STATISTICS(mStatistics.DelPool(chainStart));
-         auto next = chainStart->mNext;
-         LglsVerbose(
-            "Fractalloc: ", Logger::DarkCyan, "Pool ", Logger::Hex(chainStart),
-            " of size ", Logger::Size {static_cast<size_t>(chainStart->GetAllocatedByBackend())},
-            " was deallocated"
-         );
-         DeallocatePool(chainStart);
-         chainStart = next;
-      }
-
-      if (not chainStart)
-         return nullptr; // All pools in the chain are deleted          
-
-      // Delete all remaining unused pools, chaining the rest together  
-      auto prev = chainStart;
-      auto pool = chainStart->mNext;
+      Pool* prev = nullptr;
+      Pool* pool = chainStart;
       while (pool) {
          if (pool->IsInUse()) {
+            // Pool is in use, just trim it and move on                 
             pool->Trim();
             prev = pool;
             pool = pool->mNext;
             continue;
          }
 
-         IF_LANGULUS_MEMORY_STATISTICS(mStatistics.DelPool(pool));
+         // If reached, the pool is not in use and is deleted           
+         IF_LANGULUS_MEMORY_STATISTICS(gStatistics.DelPool(pool));
          const auto next = pool->mNext;
          LglsVerbose(
             "Fractalloc: ", Logger::DarkCyan, "Pool ", Logger::Hex(pool),
             " of size ", Logger::Size {static_cast<size_t>(pool->GetAllocatedByBackend())},
             " was deallocated"
          );
+         
+         if (chainStart == pool)
+            chainStart = next;
+         
          DeallocatePool(pool);
-         prev->mNext = next;
-         pool = next;
+         pool = next;         
+         if (prev)
+            prev->mNext = pool;
       }
       
       return chainStart;
@@ -671,33 +710,32 @@ namespace Langulus::Fractalloc
    ///   @return true if there's at least one pool remaining allocated        
    bool Allocator::CollectGarbage() {
       bool result = false;
-      mLastFoundPool = nullptr;
+      gLastFoundPool = nullptr;
 
       // Cleanup the main chain                                         
-      mMainPoolChain = CollectGarbageChain(mMainPoolChain);
-      if (mMainPoolChain)
+      gMainPoolChain = CollectGarbageChain(gMainPoolChain);
+      if (gMainPoolChain)
          result = true;
 
       // Cleanup all size chains                                        
-      for (auto& sizeChain : mSizePoolChain) {
+      for (auto& sizeChain : gSizePoolChain) {
          sizeChain = CollectGarbageChain(sizeChain);
          if (sizeChain)
             result = true;
       }
 
       // Cleanup all type chains                                        
-      auto& types = mInstantiatedTypes;
-      for (auto typeChain =  types.begin(); typeChain != types.end();) {
-         auto newPoolchain = CollectGarbageChain(typeChain->GetPoolchain());
+      for (auto t = gTypePoolChain.begin(); t != gTypePoolChain.end();) {
+         auto newPoolchain = CollectGarbageChain(t->second.unindexed);
 
          // Also discard the type if no pools remain                    
          if (not newPoolchain) {
-            typeChain->SetPoolchain(nullptr);
-            typeChain = types.erase(typeChain);
+            t->SetPoolchain(nullptr);
+            t = gTypePoolChain.erase(t);
          }
          else {
-            typeChain->SetPoolchain(newPoolchain);
-            ++typeChain;
+            t->SetPoolchain(newPoolchain);
+            ++t;
             result = true;
          }
       }
@@ -706,22 +744,17 @@ namespace Langulus::Fractalloc
    }
    
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-   /// Check RTTI boundary for allocated pools                                
+   /// Check RTTI boundary for allocated pools.                               
    /// Useful to decide when shared library is no longer used and is ready    
-   /// to be unloaded. Use it after a call to CollectGarbage                  
+   /// to be unloaded. Best used after a call to CollectGarbage.              
    ///   @param boundary - the boundary name                                  
    ///   @return the number of pools                                          
    size_t Allocator::CheckBoundary(const Token& boundary) noexcept {
+      const ::std::string b {boundary};
       size_t count = 0;
-      for (const auto& type : mInstantiatedTypes) {
-         if (not type.GetBoundaries().contains(::std::string{boundary}))
-            continue;
-         
-         auto pool = type.GetPoolchain();
-         while (pool) {
-            ++count;
-            pool = pool->mNext;
-         }
+      for (const auto& type : gTypePoolChain) {
+         if (type.first.GetBoundaries().contains(b))
+            count += type.second.indexed.size();
       }
       return count;
    }
@@ -735,7 +768,7 @@ namespace Langulus::Fractalloc
    auto Allocator::FindInChain(const void* memory, const Pool* pool) has_assumptions -> Allocation const* {
       while (pool) {
          if (auto found = pool->Find(memory)) {
-            mLastFoundPool = pool;
+            gLastFoundPool = pool;
             return found;
          }
 
@@ -773,8 +806,8 @@ namespace Langulus::Fractalloc
    auto Allocator::Find(DMeta hint, const void* memory) has_assumptions -> const Allocation* {
       // Scan the last pool that found something (hot region)           
       //TODO consider a whole stack of those?
-      if (mLastFoundPool) {
-         if (auto found = mLastFoundPool->Find(memory))
+      if (gLastFoundPool) {
+         if (auto found = gLastFoundPool->Find(memory))
             return found;
       }
 
@@ -785,19 +818,19 @@ namespace Langulus::Fractalloc
          case PoolTactic::Size: {
             // Hint is sized, so check in size pool chain first         
             const auto sizebucket = FastLog2(hint.GetSize());
-            result = FindInChain(memory, mSizePoolChain[sizebucket]);
+            result = FindInChain(memory, gSizePoolChain[sizebucket]);
             if (result)
                return result;
 
             // Then check default pool chain                            
             // (pointer could be a member of default-pooled type)       
-            result = FindInChain(memory, mMainPoolChain);
+            result = FindInChain(memory, gMainPoolChain);
             if (result)
                return result;
 
             // Check all typed pool chains                              
             // (pointer could be a member of type-pooled type)          
-            for (auto& type : mInstantiatedTypes) {
+            for (auto& type : gInstantiatedTypes) {
                result = FindInChain(memory, type.GetPoolchain());
                if (result)
                   return result;
@@ -806,12 +839,12 @@ namespace Langulus::Fractalloc
             // Finally, check all other size pool chains                
             // (pointer could be a member of differently sized type)    
             for (size_t i = 0; i < sizebucket; ++i) {
-               result = FindInChain(memory, mSizePoolChain[i]);
+               result = FindInChain(memory, gSizePoolChain[i]);
                if (result)
                   return result;
             }
             for (size_t i = sizebucket + 1; i < SizeBuckets; ++i) {
-               result = FindInChain(memory, mSizePoolChain[i]);
+               result = FindInChain(memory, gSizePoolChain[i]);
                if (result)
                   return result;
             }
@@ -825,13 +858,13 @@ namespace Langulus::Fractalloc
 
             // Then check default pool chain                            
             // (pointer could be a member of default-pooled type)       
-            result = FindInChain(memory, mMainPoolChain);
+            result = FindInChain(memory, gMainPoolChain);
             if (result)
                return result;
 
             // Check all size pool chains                               
             // (pointer could be a member of a size-pooled type)        
-            for (auto& sizepool : mSizePoolChain) {
+            for (auto& sizepool : gSizePoolChain) {
                result = FindInChain(memory, sizepool);
                if (result)
                   return result;
@@ -839,7 +872,7 @@ namespace Langulus::Fractalloc
 
             // Finally, check all type pool chains                      
             // (pointer could be a member of a type-pooled type)        
-            for (auto& typepool : mInstantiatedTypes) {
+            for (auto& typepool : gInstantiatedTypes) {
                if (typepool == hint)
                   continue;
 
@@ -857,13 +890,13 @@ namespace Langulus::Fractalloc
 
       // If reached, either no hint is provided, or PoolTactic::Main    
       // Check main pool chain                                          
-      result = FindInChain(memory, mMainPoolChain);
+      result = FindInChain(memory, gMainPoolChain);
       if (result)
          return result;
 
       // Check all size pool chains                                     
       // (pointer could be a member of a size-pooled type)              
-      for (auto& sizepool : mSizePoolChain) {
+      for (auto& sizepool : gSizePoolChain) {
          result = FindInChain(memory, sizepool);
          if (result)
             return result;
@@ -871,7 +904,7 @@ namespace Langulus::Fractalloc
 
       // Finally, check all type pool chains                            
       // (pointer could be a member of a type-pooled type)              
-      for (auto& typepool : mInstantiatedTypes) {
+      for (auto& typepool : gInstantiatedTypes) {
          result = FindInChain(memory, typepool.GetPoolchain());
          if (result)
             return result;
@@ -893,8 +926,8 @@ namespace Langulus::Fractalloc
 
       // Scan the last pool that found something (hot region)           
       //TODO consider a whole stack of those?
-      if (mLastFoundPool) {
-         if (auto found = mLastFoundPool->Find(memory))
+      if (gLastFoundPool) {
+         if (auto found = gLastFoundPool->Find(memory))
             return found;
       }
 
@@ -904,17 +937,17 @@ namespace Langulus::Fractalloc
          case PoolTactic::Size: {
             // Hint is sized, so check in size pool chain first         
             const auto sizebucket = FastLog2(hint.GetSize());
-            if (ContainedInChain(memory, mSizePoolChain[sizebucket]))
+            if (ContainedInChain(memory, gSizePoolChain[sizebucket]))
                return true;
 
             // Then check default pool chain                            
             // (pointer could be a member of default-pooled type)       
-            if (ContainedInChain(memory, mMainPoolChain))
+            if (ContainedInChain(memory, gMainPoolChain))
                return true;
 
             // Check all typed pool chains                              
             // (pointer could be a member of type-pooled type)          
-            for (auto& type : mInstantiatedTypes) {
+            for (auto& type : gInstantiatedTypes) {
                if (ContainedInChain(memory, type.GetPoolchain()))
                   return true;
             }
@@ -922,11 +955,11 @@ namespace Langulus::Fractalloc
             // Finally, check all other size pool chains                
             // (pointer could be a member of differently sized type)    
             for (size_t i = 0; i < sizebucket; ++i) {
-               if (ContainedInChain(memory, mSizePoolChain[i]))
+               if (ContainedInChain(memory, gSizePoolChain[i]))
                   return true;
             }
             for (size_t i = sizebucket + 1; i < SizeBuckets; ++i) {
-               if (ContainedInChain(memory, mSizePoolChain[i]))
+               if (ContainedInChain(memory, gSizePoolChain[i]))
                   return true;
             }
          } return false;
@@ -938,19 +971,19 @@ namespace Langulus::Fractalloc
 
             // Then check default pool chain                            
             // (pointer could be a member of default-pooled type)       
-            if (ContainedInChain(memory, mMainPoolChain))
+            if (ContainedInChain(memory, gMainPoolChain))
                return true;
 
             // Check all size pool chains                               
             // (pointer could be a member of a size-pooled type)        
-            for (auto& sizepool : mSizePoolChain) {
+            for (auto& sizepool : gSizePoolChain) {
                if (ContainedInChain(memory, sizepool))
                   return true;
             }
 
             // Finally, check all type pool chains                      
             // (pointer could be a member of a type-pooled type)        
-            for (auto& typepool : mInstantiatedTypes) {
+            for (auto& typepool : gInstantiatedTypes) {
                if (typepool == hint)
                   continue;
 
@@ -966,19 +999,19 @@ namespace Langulus::Fractalloc
 
       // If reached, either no hint is provided, or PoolTactic::Main    
       // Check main pool chain                                          
-      if (ContainedInChain(memory, mMainPoolChain))
+      if (ContainedInChain(memory, gMainPoolChain))
          return true;
 
       // Check all size pool chains                                     
       // (pointer could be a member of a size-pooled type)              
-      for (auto& sizepool : mSizePoolChain) {
+      for (auto& sizepool : gSizePoolChain) {
          if (ContainedInChain(memory, sizepool))
             return true;
       }
 
       // Finally, check all type pool chains                            
       // (pointer could be a member of a type-pooled type)              
-      for (auto& typepool : mInstantiatedTypes) {
+      for (auto& typepool : gInstantiatedTypes) {
          if (ContainedInChain(memory, typepool.GetPoolchain()))
             return true;
       }

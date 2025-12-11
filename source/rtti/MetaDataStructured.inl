@@ -267,23 +267,6 @@ namespace Langulus::RTTI::Inner
             return Instance.GetMetaDataByID(id, sparse, constant)->mPoolTactic;
          return {};
       }
-
-      /// Get the poolchain                                                   
-      TEMPLATE()
-      auto ME()::GetPoolchain() const noexcept -> Fractalloc::Pool* {
-         const auto id = Base::GetID();
-         if (id)
-            return Instance.GetMetaDataByID(id, sparse, constant)->mPoolChain;
-         return {};
-      }
-      
-      /// Allows the memory manager to set a new pool chain                   
-      TEMPLATE()
-      void ME()::SetPoolchain(Fractalloc::Pool* pool) const noexcept {
-         const auto id = Base::GetID();
-         if (id)
-            Instance.GetMetaDataByID(id, sparse, constant)->mPoolChain = pool;
-      }
    #endif
 
    /// Count the number of indirections.                                      

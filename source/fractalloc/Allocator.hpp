@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Langulus/Core.hpp>
+#include "../rtti/MetaData.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
@@ -18,8 +19,6 @@
    #define LANGULUS_API_FRACTALLOC() LANGULUS_IMPORT()
 #endif
 
-#include "Pool.hpp"
-
 #if LANGULUS_FEATURE(MEMORY_STATISTICS)
    #include "Statistics.hpp"
 #endif
@@ -27,6 +26,10 @@
 
 namespace Langulus::Fractalloc
 {
+   struct Allocation;
+   struct Pool;
+   using RTTI::DMeta;
+
    #if not LANGULUS_FEATURE(MEMORY_STATISTICS)
       struct State {
          consteval bool Assert() const noexcept { return true; }
@@ -43,7 +46,7 @@ namespace Langulus::Fractalloc
    private:
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
          LANGULUS_API(FRACTALLOC)
-         static void DumpPool(size_t, const Pool*) noexcept;
+         static void DumpPool(DMeta type, size_t id, const Pool*) noexcept;
          
          LANGULUS_API(FRACTALLOC)
          static bool IntegrityCheckChain(const Pool*);
@@ -62,13 +65,13 @@ namespace Langulus::Fractalloc
       static auto Allocate(DMeta, pot_t) has_assumptions -> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
-      static auto Reallocate(pot_t, Allocation*) has_assumptions -> Allocation*;
+      static auto Reallocate(DMeta, pot_t, Allocation*) has_assumptions -> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
       static void Deallocate(Allocation*) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
-      static const Allocation* Find(DMeta, const void*) has_assumptions;
+      static auto Find(DMeta, const void*) has_assumptions -> Allocation const*;
 
       LANGULUS_API(FRACTALLOC)
       static bool CheckAuthority(DMeta, const void*) has_assumptions;
@@ -104,4 +107,3 @@ namespace Langulus::Fractalloc
 }
 
 #include "Allocation.inl"
-#include "Pool.inl"

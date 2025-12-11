@@ -16,6 +16,8 @@
 
 namespace Langulus::Fractalloc
 {
+   struct Pool;
+      
    ///                                                                        
    /// Structure for keeping track of allocations                             
    ///                                                                        

@@ -73,11 +73,6 @@ namespace Langulus::RTTI::Inner
    inline auto MetaDataNaked::GetPoolTactic() const noexcept -> PoolTactic {
       return mDefinition ? mDefinition->mPoolTactic : PoolTactic::Type;
    }
-
-   /// Get the active pool chain                                              
-   inline auto MetaDataNaked::GetPoolchain() const noexcept -> Fractalloc::Pool* {
-      return mDefinition ? mDefinition->mPoolChain : nullptr;
-   }
 #endif
 
    /// Count the number of indirections.                                      

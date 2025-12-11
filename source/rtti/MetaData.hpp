@@ -140,7 +140,6 @@ namespace Langulus::RTTI
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetMinPoolsize()     const noexcept -> pot_t;
             auto GetPoolTactic()      const noexcept -> PoolTactic;
-            auto GetPoolchain()       const noexcept -> Fractalloc::Pool*;
          #endif
 
          constexpr size_t GetIndirections() const noexcept;
@@ -195,12 +194,6 @@ namespace Langulus::RTTI
          auto GetMorphism(MetaDataStructured_XY) const noexcept -> DefinitionData::Morphism;
 
          IF_SAFE(LglsNoSideEffects explicit operator bool() const noexcept);
-
-      protected:
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            friend struct Fractalloc::Allocator;
-            void SetPoolchain(Fractalloc::Pool*) const noexcept;
-         #endif
       };
       #pragma pack(pop)
       
@@ -235,7 +228,6 @@ namespace Langulus::RTTI
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             auto GetMinPoolsize()     const noexcept -> pot_t;
             auto GetPoolTactic()      const noexcept -> PoolTactic;
-            auto GetPoolchain()       const noexcept -> Fractalloc::Pool*;
          #endif
                                       
          size_t GetIndirections()     const noexcept;
@@ -288,12 +280,6 @@ namespace Langulus::RTTI
          auto GetMorphismsTo()        const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphismsFrom()      const noexcept -> DefinitionData::MorphismList const&;
          auto GetMorphism(MetaDataNaked) const noexcept -> DefinitionData::Morphism;
-         
-      protected:
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            friend struct Fractalloc::Allocator;
-            void SetPoolchain(Fractalloc::Pool*) const noexcept;
-         #endif
       };
    }
    

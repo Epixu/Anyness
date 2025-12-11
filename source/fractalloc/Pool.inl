@@ -53,24 +53,29 @@ namespace Langulus::Fractalloc
    }
 
    /// Initialize a pool                                                      
-   ///   @param meta - meta data associated with pool                         
+   ///   @param dataAlignment - taken from meta.GetAlignment()                
+   ///   @param dataMinAlloc - taken from meta.GetMinAlloc()                  
    ///   @param poolAlignment - the alignment of the pool itself              
    ///   @param size - bytes of the usable block to initialize with           
    LANGULUS(INLINED)
-   Pool::Pool(DMeta meta, pot_t poolAlignment, pot_t size) has_assumptions
+   Pool::Pool(
+      pot_t dataAlignment,
+      pot_t dataMinAlloc,
+      pot_t poolAlignment,
+      pot_t size
+   ) has_assumptions
       : mAllocationData {reinterpret_cast<Allocation*>(Align(reinterpret_cast<uintptr_t>(this + 1), alignof(Allocation)))}
-      , mClientData     {reinterpret_cast<uint8_t*>(this) + Cost(meta, size)}
-      , mMeta           {meta}
+      , mClientData     {reinterpret_cast<uint8_t*>(this) + Cost(dataAlignment, dataMinAlloc, size)}
+      , mDataAlignment  {dataAlignment}
+      , mDataMinAlloc   {dataMinAlloc}
       , mAllocatedByBackend {size}
-      , mAlign          {::std::max(meta.GetAlignment(), pot_t(Alignment))}
+      , mAlign          {::std::max(dataAlignment, pot_t(Alignment))}
       , mPoolAlignment  {poolAlignment}
-      , mThresholdMin   {::std::max(meta.GetMinAllocation(), mAlign)}
+      , mThresholdMin   {::std::max(dataMinAlloc, mAlign)}
       , mThresholdMax   {size}
       , mBiggestEntry   {mThresholdMin}
       , mMaxEntries     {size / mThresholdMin}
    {
-      LglsAssumeDevAndOptimize(meta,
-         "Invalid type");
       LglsAssumeDev(size >= mThresholdMin,
          "Size must be able to hold at least one allocation");
       LglsAssumeDev(mClientData >= reinterpret_cast<uint8_t*>(mAllocationData + static_cast<size_t>(mMaxEntries)),
@@ -88,9 +93,9 @@ namespace Langulus::Fractalloc
    /// Get the cost of allocating a pool - this includes sizeof(Pool), all    
    /// possible entry overhead, including padding for alignment               
    LANGULUS(INLINED)
-   size_t Pool::Cost(DMeta type, pot_t size) noexcept {
-      const pot_t align = ::std::max(type.GetAlignment(), pot_t(Alignment));
-      const pot_t minAlloc = ::std::max(type.GetMinAllocation(), align);
+   size_t Pool::Cost(pot_t dataAlignment, pot_t dataMinAlloc, pot_t size) noexcept {
+      const pot_t align = ::std::max(dataAlignment, pot_t(Alignment));
+      const pot_t minAlloc = ::std::max(dataMinAlloc, align);
       const pot_t maxEntries = size / minAlloc;
       return Align(
          Align(sizeof(Pool), alignof(Allocation)) + maxEntries * sizeof(Allocation),
@@ -109,7 +114,7 @@ namespace Langulus::Fractalloc
    ///   @return the size in bytes                                            
    LANGULUS(INLINED)
    size_t Pool::GetTotalSize() const noexcept {
-      return mAllocatedByBackend + Cost(mMeta, mAllocatedByBackend);
+      return mAllocatedByBackend + Cost(mDataAlignment, mDataMinAlloc, mAllocatedByBackend);
    }
 
    /// Get the max number of possible entries                                 

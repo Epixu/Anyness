@@ -17,29 +17,29 @@
 namespace Langulus
 {
    ///                                                                        
-   /// Different pool tactics you can assign to your data types               
-   /// Used primarily for advanced tweaking of a final product                
-   /// Pooling works only if LANGULUS_FEATURE(MANAGED_MEMORY) is enabled      
+   /// Different pool tactics you can assign to your data types.              
+   /// Used primarily for advanced tweaking of a final product.               
+   /// Pooling works only if LANGULUS_FEATURE(MANAGED_MEMORY) is enabled.     
    ///                                                                        
    enum class PoolTactic {
       // Data instances will be pooled in the main pool chain,          
       // unless data was reflected from a boundary that is not MAIN     
       Main = 0,
 
-      // Data instances will be pooled based on their size              
-      // There will be pools dedicated for each allocation page size    
-      // This effectively narrows the search for entries a bit          
+      // Data instances will be pooled based on their size.             
+      // Works only for types that are smaller than Langulus::Alignment 
+      // and have compatible alignment.                                 
       Size,
 
-      // Data instances will be pooled based on their type              
-      // Each data definition will have its own pool chain              
+      // Data instances will be pooled based on their type.             
+      // Each data definition will have its own pool chain.             
       // This is the default pooling tactic for any data type that      
-      // is not reflected inside the RTTI::MainBoundary boundary.       
-      // See LANGULUS_RTTI_BOUNDARY for more information on that.       
+      // is reflected from a shared library.                            
+      // See Langulus::Boundary for more information on that.           
       Type,
 
       // While debugging, make sure everything defaults to a type-based 
-      // pooling, so that we have more meaningul debug information      
+      // pooling, so that we have more meaningful debug information     
       #if LANGULUS(DEBUG)
          Default = Type   
       #else
@@ -113,11 +113,25 @@ namespace Langulus::CT
    template<class T>
    consteval PoolTactic GetPoolTactic() {
       using ST = Shed<T>;
+      PoolTactic result = PoolTactic::Default;
       if constexpr (Complete<CTTI::Pooled<ST>>)
-         return CTTI::Pooled<ST>::Tactic;
+         result = CTTI::Pooled<ST>::Tactic;
       else if constexpr (LANGULUS_CTTI_DELVE_IN(ST, Pooled))
-         return Decay<ST>::CTTI_Pooled::Tactic;
-      else
-         return PoolTactic::Default;
+         result = Decay<ST>::CTTI_Pooled::Tactic;
+
+      if (result == PoolTactic::Main
+      and (alignof(ST) > Alignment or sizeof(ST) > Alignment)) {
+         // The main pool doesn't accept types with size and alignment  
+         // that aren't within Langulus::Alignment limits.              
+         result = PoolTactic::Type;
+      }
+      else if (result == PoolTactic::Size
+      and alignof(T) > Alignment) {
+         // The size pools don't accept types with alignment            
+         // that isn't within Langulus::Alignment limits.               
+         result = PoolTactic::Type;
+      }
+      
+      return result;
    }
 }
