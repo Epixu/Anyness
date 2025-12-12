@@ -16,12 +16,13 @@ using Anyness::Allocator;
 
 
 TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
+   , (Types<TRef<RT>,        ScopedElement<RT, true>>)
+   
    , (Types<TRef<RT>,        ScopedElement<RT>>)
    , (Types<TRef<const RT>,  ScopedElement<RT>>)
    , (Types<TRef<int>,       ScopedElement<int>>)
    , (Types<TRef<const int>, ScopedElement<int>>)
    
-   , (Types<TRef<RT>,        ScopedElement<RT, true>>)
    , (Types<TRef<const RT>,  ScopedElement<RT, true>>)
    , (Types<TRef<int>,       ScopedElement<int, true>>)
    , (Types<TRef<const int>, ScopedElement<int, true>>)
@@ -91,7 +92,11 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
 
       WHEN("Overwrite an instance") {
          pointer.Emplace(5);
-         IF_LANGULUS_MANAGED_MEMORY(auto backup = pointer.GetRaw());
+
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            auto backup = pointer.GetRaw();
+         #endif
+
          pointer2.Emplace(6);
          pointer = pointer2;
 

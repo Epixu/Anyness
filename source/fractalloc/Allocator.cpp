@@ -7,7 +7,6 @@
 ///                                                                           
 #include "Allocator.hpp"
 #include "Pool.inl"
-#include <unordered_set>
 #include <unordered_map>
 #include <map>
 #include <ranges>
@@ -43,9 +42,9 @@ namespace
    /// Also used to pack/unpack pointers.                                     
    ::std::unordered_map<Langulus::RTTI::DMeta, Langulus::Fractalloc::PoolBank> gTypePoolChain;
 
-   /// The set of all pools. Used to quickly determine if a pointer resied    
+   /// The set of all pools. Used to quickly determine if a pointer resides   
    /// inside the memory manager.                                             
-   ::std::unordered_set<Langulus::Fractalloc::Pool*> gPools;
+   ::std::unordered_map<uintptr_t, Langulus::Fractalloc::Pool*> gPools;
 
    /// Used to mask pointers in order to determine whether memory belongs to  
    /// us or not. Updated on each new allocated pool.                         
@@ -135,9 +134,27 @@ namespace Langulus::Fractalloc
          return nullptr;
 
       new (pool) Pool {data_align, data_minal, pot_t(pool_alignment), size};
-      gPools.insert(static_cast<Pool*>(pool));
-      gPossiblePoolMemorySpace |= reinterpret_cast<uintptr_t>(pool);
-      return static_cast<Pool*>(pool);
+      auto typed_pool = static_cast<Pool*>(pool);
+
+      // Add all pointer masks that point to the pool                   
+      auto ptr = reinterpret_cast<uintptr_t>(pool);
+      const auto ptrEnd = reinterpret_cast<uintptr_t>(typed_pool->GetClientData())
+                        + static_cast<uintptr_t>(typed_pool->GetAllocatedByBackend());
+      const auto ptrStep = ptr & -ptr;
+      LglsAssumeDev(not gPools.contains(ptr),
+         "This mask shouldn't be occupied yet #1");
+      gPools[ptr] = typed_pool;
+      gPossiblePoolMemorySpace |= ptr;
+      
+      while (ptr < ptrEnd) {
+         ptr += ptrStep;
+         LglsAssumeDev(not gPools.contains(ptr),
+            "This mask shouldn't be occupied yet #2");
+         gPools[ptr] = typed_pool;
+         gPossiblePoolMemorySpace |= ptr;
+      }      
+      
+      return typed_pool;
    }
 
    /// Allocate a memory entry                                                
@@ -676,7 +693,20 @@ namespace Langulus::Fractalloc
    ///   @param pool - the pool to deallocate                                 
    void Allocator::DeallocatePool(Pool* pool) has_assumptions {
       LglsAssumeDevAndOptimize(pool, "Nullptr provided");
-      gPools.erase(pool);
+      if (gLastFoundPool == pool)
+         gLastFoundPool = nullptr;
+
+      // Remove all pointer masks that map to the pool                  
+      auto ptr = reinterpret_cast<uintptr_t>(pool);
+      const auto ptrEnd = reinterpret_cast<uintptr_t>(pool->GetClientData())
+                        + static_cast<uintptr_t>(pool->GetAllocatedByBackend());
+      const auto ptrStep = ptr & -ptr;
+      gPools.erase(ptr);
+      while (ptr < ptrEnd) {
+         ptr += ptrStep;
+         gPools.erase(ptr);
+      }
+
       #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
          _aligned_free(pool);
       #else
@@ -794,41 +824,6 @@ namespace Langulus::Fractalloc
    }
 #endif
 
-   /// Search in a pool chain                                                 
-   ///   @param memory - memory pointer                                       
-   ///   @param pool - start of the pool chain                                
-   ///   @return the memory entry that contains the memory pointer, or        
-   ///           nullptr if memory is not ours, its entry is no longer used   
-   /*auto Allocator::FindInChain(const void* memory, const Pool* pool) has_assumptions -> Allocation const* {
-      while (pool) {
-         if (auto found = pool->Find(memory)) {
-            gLastFoundPool = pool;
-            return found;
-         }
-
-         // Continue inside the poolchain                               
-         pool = pool->mNext;
-      }
-
-      return nullptr;
-   }*/
-   
-   /// Search if memory is contained inside a pool chain                      
-   ///   @param memory - memory pointer                                       
-   ///   @param pool - start of the pool chain                                
-   ///   @return true if we have authority over the memory                    
-   /*bool Allocator::ContainedInChain(const void* memory, const Pool* pool) has_assumptions {
-      while (pool) {
-         if (pool->ContainsData(memory))
-            return true;
-
-         // Continue inside the poolchain                               
-         pool = pool->mNext;
-      }
-
-      return false;
-   }*/
-
    /// Find a memory entry from pointer.                                      
    /// Allows us to safely interface unknown memory, possibly reusing it.     
    ///   @param memory memory pointer                                         
@@ -845,22 +840,16 @@ namespace Langulus::Fractalloc
       }
 
       // Mask out the pointer in order to locate the owning pool        
-      uintptr_t mask = gPossiblePoolMemorySpace;
-      uintptr_t test = reinterpret_cast<uintptr_t>(memory) & mask;
+      uintptr_t test = reinterpret_cast<uintptr_t>(memory) & gPossiblePoolMemorySpace;
       while (test) {
-         auto found = gPools.find(reinterpret_cast<Pool*>(test));
+         auto found = gPools.find(test);
          if (found != gPools.end()) {
-            gLastFoundPool = *found;
-            return (*found)->Find(memory);
+            gLastFoundPool = found->second;
+            return found->second->Find(memory);
          }
 
          // Continue shrinking the mask until pointer becomes zero      
-         uintptr_t prev_test;
-         do {
-            prev_test = test;
-            mask <<= 1u;
-            test &= mask;
-         } while (test and prev_test == test);
+         test &= ~(-test);                // Flips only the lowest bit  
       }
 
       // If reached, then memory is out of jurisdiction                 
@@ -880,13 +869,16 @@ namespace Langulus::Fractalloc
       if (gLastFoundPool and gLastFoundPool->ContainsData(memory))
          return true;
 
+      for (auto& e : gPools)
+         Logger::Special(Logger::Hex(e.first), " -> ", Logger::Hex(e.second));
+      
       // Mask out the pointer in order to locate the owning pool        
       uintptr_t test = reinterpret_cast<uintptr_t>(memory) & gPossiblePoolMemorySpace;
       while (test) {
-         auto found = gPools.find(reinterpret_cast<Pool*>(test));
+         auto found = gPools.find(test);
          if (found != gPools.end()) {
-            gLastFoundPool = *found;
-            return (*found)->ContainsData(memory);
+            gLastFoundPool = found->second;
+            return found->second->ContainsData(memory);
          }
 
          // Continue shrinking the mask until pointer becomes zero      
