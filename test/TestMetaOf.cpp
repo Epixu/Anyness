@@ -333,7 +333,6 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]"
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       REQUIRE(meta.GetMinPoolsize() == CT::GetMinPool<Deref<T>>());
       REQUIRE(meta.GetPoolTactic() == CT::GetPoolTactic<Deref<T>>());
-      REQUIRE(meta.GetPoolchain() == nullptr);
    #endif
    
    REQUIRE(meta.GetDefaultConstructor() != nullptr);
@@ -708,7 +707,7 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
    }
 
    REQUIRE(meta.GetConcrete().Is(MetaDataOf<ImplicitlyReflectedData>()));
-   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Size));
+   IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetPoolTactic() == PoolTactic::Type)); // Not by size despite reflected pool tactic, because alignment requirements aren't met
    IF_LANGULUS_MANAGED_MEMORY(REQUIRE(meta.GetMinPoolsize() == MinimalPoolSize));
    REQUIRE(meta.GetSize() == sizeof(ImplicitlyReflectedDataWithTraits));
    REQUIRE(meta.GetAlignment() == alignof(ImplicitlyReflectedDataWithTraits));

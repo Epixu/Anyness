@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "TestAllocatorCommon.hpp"
+#include "../../source/fractalloc/Pool.inl"
 #include <Langulus/MetaOf.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -113,7 +114,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
             REQUIRE(entry->GetSize() == min_alloc);
             REQUIRE(IsAligned(entry->GetBlockStart(), testAlignment));
 
-            entry->Keep(i);
+            entry->AddRef(i);
 
             // Fill the entire entry to check for heap corruptions      
             for (size_t i2 = 0; i2 < entry->GetSize(); ++i2) {
@@ -534,47 +535,43 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
       }
 
       WHEN("Referenced once") {
-         entry->Keep();
+         entry->AddRef(1);
 
          REQUIRE(entry->GetUses() == 2);
-         REQUIRE(Allocator::CheckAuthority(nullptr, entry->GetBlockStart()));
-         REQUIRE_FALSE(Allocator::CheckAuthority(nullptr, entry));
-         REQUIRE(Allocator::CheckAuthority(meta, entry->GetBlockStart()));
-         REQUIRE_FALSE(Allocator::CheckAuthority(meta, entry));
-         REQUIRE(Allocator::Find(nullptr, entry->GetBlockStart()));
-         REQUIRE(Allocator::Find(meta, entry->GetBlockStart()));
-         REQUIRE_FALSE(Allocator::Find(nullptr, entry));
-         REQUIRE_FALSE(Allocator::Find(meta, entry));
+         REQUIRE(Allocator::CheckAuthority(entry->GetBlockStart()));
+         REQUIRE_FALSE(Allocator::CheckAuthority(entry));
+         REQUIRE(Allocator::Find(entry->GetBlockStart()));
+         REQUIRE_FALSE(Allocator::Find(entry));
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
-         entry->Free();
+         entry->AddRef(-1);
          Allocator::Deallocate(entry);
       }
 
       WHEN("Referenced multiple times") {
-         entry->Keep(5);
+         entry->AddRef(5);
 
          REQUIRE(entry->GetUses() == 6);
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
-         entry->Free(5);
+         entry->AddRef(-5);
          Allocator::Deallocate(entry);
       }
 
       WHEN("Dereferenced once without deletion") {
-         entry->Keep();
-         entry->Free();
+         entry->AddRef(1);
+         entry->AddRef(-1);
 
          REQUIRE(entry->GetUses() == 1);
          Allocator::Deallocate(entry);
       }
 
       WHEN("Dereferenced multiple times without deletion") {
-         entry->Keep(5);
-         entry->Free(4);
+         entry->AddRef(5);
+         entry->AddRef(-4);
 
          REQUIRE(entry->GetUses() == 2);
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
-         entry->Free(1);
+         entry->AddRef(-1);
          Allocator::Deallocate(entry);
       }
 
@@ -582,10 +579,10 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          const auto blockStart = entry->GetBlockStart();
          Allocator::Deallocate(entry);
 
-         REQUIRE_FALSE(Allocator::CheckAuthority(nullptr, entry));
-         REQUIRE(Allocator::CheckAuthority(nullptr, blockStart));
-         REQUIRE_FALSE(Allocator::Find(nullptr, blockStart));
-         REQUIRE_FALSE(Allocator::Find(nullptr, entry));
+         REQUIRE_FALSE(Allocator::CheckAuthority(entry));
+         REQUIRE(Allocator::CheckAuthority(blockStart));
+         REQUIRE_FALSE(Allocator::Find(blockStart));
+         REQUIRE_FALSE(Allocator::Find(entry));
       }
    }
    

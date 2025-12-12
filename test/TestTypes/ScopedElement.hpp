@@ -89,7 +89,7 @@ protected:
                   place->~INNER();
                Allocator::Deallocate(*entry);
             }
-            else (*entry)->Free();
+            else (*entry)->AddRef(-1);
          }
       }
       else if (place) {
@@ -102,7 +102,7 @@ protected:
             if ((*entry)->GetUses() == 1)
                Allocator::Deallocate(*entry);
             else
-               (*entry)->Free();
+               (*entry)->AddRef(-1);
          }
       }
    }

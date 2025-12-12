@@ -117,7 +117,7 @@ namespace Langulus::Anyness::Component
          if (not a)
             return;
 
-         a->Keep(1);
+         a->AddRef(1);
 
          if constexpr (CT::DeeplyOwned<C>) {
             if constexpr (CT::ContainsMany<C>) {
@@ -177,7 +177,7 @@ namespace Langulus::Anyness::Component
                }
             }
 
-            a->Free();
+            a->AddRef(-1);
          }
       }
       

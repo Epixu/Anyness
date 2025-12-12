@@ -8,6 +8,8 @@
 #pragma once
 #include <Langulus/Core.hpp>
 #include "../rtti/MetaData.hpp"
+#include "Allocation.hpp"
+#include "Pool.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
@@ -26,7 +28,6 @@
 
 namespace Langulus::Fractalloc
 {
-   struct Allocation;
    struct Pool;
    using RTTI::DMeta;
 
@@ -43,22 +44,6 @@ namespace Langulus::Fractalloc
    /// Basically an overcomplicated wrapper for malloc/free.                  
    ///                                                                        
    struct Allocator {
-   private:
-      #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-         LANGULUS_API(FRACTALLOC)
-         static void DumpPool(DMeta type, size_t id, const Pool*) noexcept;
-         
-         LANGULUS_API(FRACTALLOC)
-         static bool IntegrityCheckChain(const Pool*);
-      #endif
-
-      LANGULUS_API(FRACTALLOC)
-      static auto CollectGarbageChain(Pool*) -> Pool*;
-      
-      static auto FindInChain(const void*, const Pool*) has_assumptions -> const Allocation*;
-      static bool ContainedInChain(const void*, const Pool*) has_assumptions;
-
-   public:
       Allocator() = delete;
       
       LANGULUS_API(FRACTALLOC)
@@ -71,10 +56,10 @@ namespace Langulus::Fractalloc
       static void Deallocate(Allocation*) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
-      static auto Find(DMeta, const void*) has_assumptions -> Allocation const*;
+      static auto Find(const void*) has_assumptions -> Allocation const*;
 
       LANGULUS_API(FRACTALLOC)
-      static bool CheckAuthority(DMeta, const void*) has_assumptions;
+      static bool CheckAuthority(const void*) has_assumptions;
 
       LANGULUS_API(FRACTALLOC)
       static auto AllocatePool(DMeta, pot_t) has_assumptions -> Pool*;
@@ -103,7 +88,19 @@ namespace Langulus::Fractalloc
          LANGULUS_API(FRACTALLOC)
          static bool IntegrityCheck();
       #endif
+      
+   private:
+      #if LANGULUS_FEATURE(MEMORY_STATISTICS)
+      LANGULUS_API(FRACTALLOC)
+      static void DumpPool(DMeta type, size_t id, const Pool*) noexcept;
+         
+      LANGULUS_API(FRACTALLOC)
+      static bool IntegrityCheckChain(const Pool*);
+      #endif
+
+      LANGULUS_API(FRACTALLOC)
+      static auto CollectGarbageChain(Pool*) -> Pool*;
    };   
 }
 
-#include "Allocation.inl"
+//#include "Allocation.inl"

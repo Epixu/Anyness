@@ -129,6 +129,24 @@ namespace Langulus
          bit += rhs;
          return *this;
       }
+
+      template<::std::unsigned_integral T>
+      constexpr pot_t operator << (T const& rhs) const noexcept {
+         LglsAssumeDev(rhs + bit <= 255u,
+            "pot_t left shift overflowed");
+         pot_t result;
+         result.bit = bit + rhs;
+         return result;
+      }
+
+      template<::std::unsigned_integral T>
+      constexpr pot_t operator >> (T const& rhs) const noexcept {
+         LglsAssumeDev(rhs <= bit,
+            "pot_t right shift underflowed");
+         pot_t result;
+         result.bit = bit - rhs;
+         return result;
+      }
    };
 
    constexpr pot_t operator""_pot(unsigned long long int num) has_assumptions {

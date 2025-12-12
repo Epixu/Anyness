@@ -7,7 +7,7 @@
 ///                                                                           
 #include "Allocator.hpp"
 #include "Pool.inl"
-#include "Allocation.inl"
+#include <unordered_set>
 #include <unordered_map>
 #include <map>
 #include <ranges>
@@ -22,7 +22,7 @@
 namespace
 {
    #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-      /// The memory manager statistics                                       
+      /// Memory statistics                                                   
       Langulus::Fractalloc::Statistics gStatistics {};
    #endif
 
@@ -42,6 +42,14 @@ namespace
    /// pool chains. Used to detect if a shared object is safe to be unloaded. 
    /// Also used to pack/unpack pointers.                                     
    ::std::unordered_map<Langulus::RTTI::DMeta, Langulus::Fractalloc::PoolBank> gTypePoolChain;
+
+   /// The set of all pools. Used to quickly determine if a pointer resied    
+   /// inside the memory manager.                                             
+   ::std::unordered_set<Langulus::Fractalloc::Pool*> gPools;
+
+   /// Used to mask pointers in order to determine whether memory belongs to  
+   /// us or not. Updated on each new allocated pool.                         
+   uintptr_t gPossiblePoolMemorySpace = 0;
 }
 
 namespace Langulus::Fractalloc
@@ -86,9 +94,12 @@ namespace Langulus::Fractalloc
 
          if (lastId == pool->mID) {
             indexed.erase(pool->mID);
-            const auto prevLastId = lastId;
-            lastId = indexed.rbegin()->first;
-            freeIds -= prevLastId - lastId;
+            if (not indexed.empty()) {
+               const auto prevLastId = lastId;
+               lastId = indexed.rbegin()->first;
+               freeIds -= prevLastId - lastId;
+            }
+            else lastId = freeIds = 0;
             return;
          }
 
@@ -124,6 +135,8 @@ namespace Langulus::Fractalloc
          return nullptr;
 
       new (pool) Pool {data_align, data_minal, pot_t(pool_alignment), size};
+      gPools.insert(static_cast<Pool*>(pool));
+      gPossiblePoolMemorySpace |= reinterpret_cast<uintptr_t>(pool);
       return static_cast<Pool*>(pool);
    }
 
@@ -663,6 +676,7 @@ namespace Langulus::Fractalloc
    ///   @param pool - the pool to deallocate                                 
    void Allocator::DeallocatePool(Pool* pool) has_assumptions {
       LglsAssumeDevAndOptimize(pool, "Nullptr provided");
+      gPools.erase(pool);
       #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
          _aligned_free(pool);
       #else
@@ -726,21 +740,41 @@ namespace Langulus::Fractalloc
 
       // Cleanup all type chains                                        
       for (auto t = gTypePoolChain.begin(); t != gTypePoolChain.end();) {
-         auto newPoolchain = CollectGarbageChain(t->second.unindexed);
+         Pool* prev = nullptr;
+         Pool* pool = t->second.unindexed;
+         while (pool) {
+            if (pool->IsInUse()) {
+               // Pool is in use, just trim it and move on              
+               pool->Trim();
+               prev = pool;
+               pool = pool->mNext;
+               continue;
+            }
 
-         // Also discard the type if no pools remain                    
-         if (not newPoolchain) {
-            t->SetPoolchain(nullptr);
+            // If reached, the pool is not in use and is deleted        
+            IF_LANGULUS_MEMORY_STATISTICS(gStatistics.DelPool(pool));
+            const auto next = pool->mNext;
+            LglsVerbose(
+               "Fractalloc: ", Logger::DarkCyan, "Typed pool ", Logger::Hex(pool),
+               " of size ", Logger::Size {static_cast<size_t>(pool->GetAllocatedByBackend())},
+               " was deallocated"
+            );
+            
+            t->second.UnlinkPool(pool);
+            DeallocatePool(pool);
+            pool = next;         
+            if (prev)
+               prev->mNext = pool;
+         }
+
+         // Also discard the type chain if no pools remain in it        
+         if (not t->second.unindexed)
             t = gTypePoolChain.erase(t);
-         }
-         else {
-            t->SetPoolchain(newPoolchain);
+         else
             ++t;
-            result = true;
-         }
       }
 
-      return result;
+      return result or not gTypePoolChain.empty();
    }
    
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -765,7 +799,7 @@ namespace Langulus::Fractalloc
    ///   @param pool - start of the pool chain                                
    ///   @return the memory entry that contains the memory pointer, or        
    ///           nullptr if memory is not ours, its entry is no longer used   
-   auto Allocator::FindInChain(const void* memory, const Pool* pool) has_assumptions -> Allocation const* {
+   /*auto Allocator::FindInChain(const void* memory, const Pool* pool) has_assumptions -> Allocation const* {
       while (pool) {
          if (auto found = pool->Find(memory)) {
             gLastFoundPool = pool;
@@ -777,13 +811,13 @@ namespace Langulus::Fractalloc
       }
 
       return nullptr;
-   }
+   }*/
    
    /// Search if memory is contained inside a pool chain                      
    ///   @param memory - memory pointer                                       
    ///   @param pool - start of the pool chain                                
    ///   @return true if we have authority over the memory                    
-   bool Allocator::ContainedInChain(const void* memory, const Pool* pool) has_assumptions {
+   /*bool Allocator::ContainedInChain(const void* memory, const Pool* pool) has_assumptions {
       while (pool) {
          if (pool->ContainsData(memory))
             return true;
@@ -793,229 +827,73 @@ namespace Langulus::Fractalloc
       }
 
       return false;
-   }
+   }*/
 
-   /// Find a memory entry from pointer                                       
-   /// Allows us to safely interface unknown memory, possibly reusing it      
-   /// Optimized for consecutive searches in near memory                      
-   ///   @param hint - the type of data to search for (optional)              
-   ///                 always provide hint for optimal performance            
-   ///   @param memory - memory pointer                                       
+   /// Find a memory entry from pointer.                                      
+   /// Allows us to safely interface unknown memory, possibly reusing it.     
+   ///   @param memory memory pointer                                         
+   ///   @attention assumes memory is a valid pointer                         
    ///   @return the memory entry that contains the memory pointer, or        
-   ///           nullptr if memory is not ours, its entry is no longer used   
-   auto Allocator::Find(DMeta hint, const void* memory) has_assumptions -> const Allocation* {
-      // Scan the last pool that found something (hot region)           
-      //TODO consider a whole stack of those?
+   ///      nullptr if memory is not ours, or entry is not in use             
+   auto Allocator::Find(const void* memory) has_assumptions -> const Allocation* {
+      LglsAssumeDevAndOptimize(memory, "Nullptr provided");
+      
+      // Check the last pool that found something (hot region)          
       if (gLastFoundPool) {
          if (auto found = gLastFoundPool->Find(memory))
             return found;
       }
 
-      // Decide pool chains, based on hint                              
-      const Allocation* result;
-      if (hint) {
-         switch (hint.GetPoolTactic()) {
-         case PoolTactic::Size: {
-            // Hint is sized, so check in size pool chain first         
-            const auto sizebucket = FastLog2(hint.GetSize());
-            result = FindInChain(memory, gSizePoolChain[sizebucket]);
-            if (result)
-               return result;
-
-            // Then check default pool chain                            
-            // (pointer could be a member of default-pooled type)       
-            result = FindInChain(memory, gMainPoolChain);
-            if (result)
-               return result;
-
-            // Check all typed pool chains                              
-            // (pointer could be a member of type-pooled type)          
-            for (auto& type : gInstantiatedTypes) {
-               result = FindInChain(memory, type.GetPoolchain());
-               if (result)
-                  return result;
-            }
-
-            // Finally, check all other size pool chains                
-            // (pointer could be a member of differently sized type)    
-            for (size_t i = 0; i < sizebucket; ++i) {
-               result = FindInChain(memory, gSizePoolChain[i]);
-               if (result)
-                  return result;
-            }
-            for (size_t i = sizebucket + 1; i < SizeBuckets; ++i) {
-               result = FindInChain(memory, gSizePoolChain[i]);
-               if (result)
-                  return result;
-            }
-         } return nullptr;
-
-         case PoolTactic::Type: {
-            // Hint is typed, so check in its typed pool chain first    
-            result = FindInChain(memory, hint.GetPoolchain());
-            if (result)
-               return result;
-
-            // Then check default pool chain                            
-            // (pointer could be a member of default-pooled type)       
-            result = FindInChain(memory, gMainPoolChain);
-            if (result)
-               return result;
-
-            // Check all size pool chains                               
-            // (pointer could be a member of a size-pooled type)        
-            for (auto& sizepool : gSizePoolChain) {
-               result = FindInChain(memory, sizepool);
-               if (result)
-                  return result;
-            }
-
-            // Finally, check all type pool chains                      
-            // (pointer could be a member of a type-pooled type)        
-            for (auto& typepool : gInstantiatedTypes) {
-               if (typepool == hint)
-                  continue;
-
-               result = FindInChain(memory, typepool.GetPoolchain());
-               if (result)
-                  return result;
-            }
-
-         } return nullptr;
-
-         case PoolTactic::Main:
-            break;
+      // Mask out the pointer in order to locate the owning pool        
+      uintptr_t mask = gPossiblePoolMemorySpace;
+      uintptr_t test = reinterpret_cast<uintptr_t>(memory) & mask;
+      while (test) {
+         auto found = gPools.find(reinterpret_cast<Pool*>(test));
+         if (found != gPools.end()) {
+            gLastFoundPool = *found;
+            return (*found)->Find(memory);
          }
+
+         // Continue shrinking the mask until pointer becomes zero      
+         uintptr_t prev_test;
+         do {
+            prev_test = test;
+            mask <<= 1u;
+            test &= mask;
+         } while (test and prev_test == test);
       }
 
-      // If reached, either no hint is provided, or PoolTactic::Main    
-      // Check main pool chain                                          
-      result = FindInChain(memory, gMainPoolChain);
-      if (result)
-         return result;
-
-      // Check all size pool chains                                     
-      // (pointer could be a member of a size-pooled type)              
-      for (auto& sizepool : gSizePoolChain) {
-         result = FindInChain(memory, sizepool);
-         if (result)
-            return result;
-      }
-
-      // Finally, check all type pool chains                            
-      // (pointer could be a member of a type-pooled type)              
-      for (auto& typepool : gInstantiatedTypes) {
-         result = FindInChain(memory, typepool.GetPoolchain());
-         if (result)
-            return result;
-      }
-
-      // If reahced, then memory is guaranteed to not be ours           
+      // If reached, then memory is out of jurisdiction                 
       return nullptr;
    }
 
-   /// Check if memory is owned by the memory manager                         
+   /// Check if memory is owned by the memory manager.                        
    /// Unlike Allocator::Find, this doesn't check if memory is currently used 
-   /// but returns true, as long as the required pool is still available      
+   /// but returns true, as long as the required pool is still available.     
    ///   @attention assumes memory is a valid pointer                         
-   ///   @param hint - the type of data to search for (optional)              
    ///   @param memory - memory pointer                                       
    ///   @return true if we own the memory                                    
-   bool Allocator::CheckAuthority(DMeta hint, const void* memory) has_assumptions {
+   bool Allocator::CheckAuthority(const void* memory) has_assumptions {
       LglsAssumeDevAndOptimize(memory, "Nullptr provided");
 
-      // Scan the last pool that found something (hot region)           
-      //TODO consider a whole stack of those?
-      if (gLastFoundPool) {
-         if (auto found = gLastFoundPool->Find(memory))
-            return found;
-      }
-
-      // Decide pool chains, based on hint                              
-      if (hint) {
-         switch (hint.GetPoolTactic()) {
-         case PoolTactic::Size: {
-            // Hint is sized, so check in size pool chain first         
-            const auto sizebucket = FastLog2(hint.GetSize());
-            if (ContainedInChain(memory, gSizePoolChain[sizebucket]))
-               return true;
-
-            // Then check default pool chain                            
-            // (pointer could be a member of default-pooled type)       
-            if (ContainedInChain(memory, gMainPoolChain))
-               return true;
-
-            // Check all typed pool chains                              
-            // (pointer could be a member of type-pooled type)          
-            for (auto& type : gInstantiatedTypes) {
-               if (ContainedInChain(memory, type.GetPoolchain()))
-                  return true;
-            }
-
-            // Finally, check all other size pool chains                
-            // (pointer could be a member of differently sized type)    
-            for (size_t i = 0; i < sizebucket; ++i) {
-               if (ContainedInChain(memory, gSizePoolChain[i]))
-                  return true;
-            }
-            for (size_t i = sizebucket + 1; i < SizeBuckets; ++i) {
-               if (ContainedInChain(memory, gSizePoolChain[i]))
-                  return true;
-            }
-         } return false;
-
-         case PoolTactic::Type:
-            // Hint is typed, so check in its typed pool chain first    
-            if (ContainedInChain(memory, hint.GetPoolchain()))
-               return true;
-
-            // Then check default pool chain                            
-            // (pointer could be a member of default-pooled type)       
-            if (ContainedInChain(memory, gMainPoolChain))
-               return true;
-
-            // Check all size pool chains                               
-            // (pointer could be a member of a size-pooled type)        
-            for (auto& sizepool : gSizePoolChain) {
-               if (ContainedInChain(memory, sizepool))
-                  return true;
-            }
-
-            // Finally, check all type pool chains                      
-            // (pointer could be a member of a type-pooled type)        
-            for (auto& typepool : gInstantiatedTypes) {
-               if (typepool == hint)
-                  continue;
-
-               if (ContainedInChain(memory, typepool.GetPoolchain()))
-                  return true;
-            }
-            return false;
-
-         case PoolTactic::Main:
-            break;
-         }
-      }
-
-      // If reached, either no hint is provided, or PoolTactic::Main    
-      // Check main pool chain                                          
-      if (ContainedInChain(memory, gMainPoolChain))
+      // Check the last pool that found something (hot region)          
+      if (gLastFoundPool and gLastFoundPool->ContainsData(memory))
          return true;
 
-      // Check all size pool chains                                     
-      // (pointer could be a member of a size-pooled type)              
-      for (auto& sizepool : gSizePoolChain) {
-         if (ContainedInChain(memory, sizepool))
-            return true;
+      // Mask out the pointer in order to locate the owning pool        
+      uintptr_t test = reinterpret_cast<uintptr_t>(memory) & gPossiblePoolMemorySpace;
+      while (test) {
+         auto found = gPools.find(reinterpret_cast<Pool*>(test));
+         if (found != gPools.end()) {
+            gLastFoundPool = *found;
+            return (*found)->ContainsData(memory);
+         }
+
+         // Continue shrinking the mask until pointer becomes zero      
+         test &= ~(-test);                // Flips only the lowest bit  
       }
 
-      // Finally, check all type pool chains                            
-      // (pointer could be a member of a type-pooled type)              
-      for (auto& typepool : gInstantiatedTypes) {
-         if (ContainedInChain(memory, typepool.GetPoolchain()))
-            return true;
-      }
-
+      // If reached, then memory is out of jurisdiction                 
       return false;
    }
 }

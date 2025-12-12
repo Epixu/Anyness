@@ -116,7 +116,7 @@ namespace Langulus::Anyness::Component
                      Allocator::Deallocate(cloned_origin);
                      LglsError("Out of memory");
                   }
-                  cloned_ptrs->Keep(indirects - 2);
+                  cloned_ptrs->AddRef(indirects - 2);
 
                   // Given dst being Text***, we have:                  
                   //    *dst = cloned_ptrs                              
@@ -193,7 +193,7 @@ namespace Langulus::Anyness::Component
                      Allocator::Deallocate(cloned_origin);
                      LglsError("Out of memory");
                   }
-                  cloned_ptrs->Keep(indirects - 2);
+                  cloned_ptrs->AddRef(indirects - 2);
 
                   // Given dst being Text***, we have:                  
                   //    *dst = cloned_ptrs                              

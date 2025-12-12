@@ -125,7 +125,7 @@ namespace Langulus::Anyness::Component
             if_available(self.FreeDeep());
 
             // Dereference memory                                       
-            al->Free();
+            al->AddRef(-1);
             self.SetHeapInner(nullptr);
             if_available(self.SetAllocationInner(nullptr));
             if_available(self.SetCountInner(0));

@@ -242,7 +242,7 @@ namespace Langulus::Anyness::Component
          );
 
          C previous {Abandon {self}};
-         auto reallocated = Allocator::Reallocate(request.mTotalBytes, al);         
+         auto reallocated = Allocator::Reallocate(self.GetType(), request.mTotalBytes, al);         
          LglsAssert(reallocated, "Out of memory");
          self.SetAllocationInner(reallocated);
 
@@ -314,7 +314,7 @@ namespace Langulus::Anyness::Component
                return;
 
             self.RemapHeapRequests(request.mReserved);
-            self.SetAllocation(Allocator::Reallocate(request.mByteSize, al));
+            self.SetAllocation(Allocator::Reallocate(T, request.mByteSize, al));
          }
          else {
             //                                                          
@@ -334,7 +334,7 @@ namespace Langulus::Anyness::Component
                return;
 
             self.RemapHeapRequests(request.mReserved);
-            self.SetAllocationInner(Allocator::Reallocate(request.mTotalBytes, al));
+            self.SetAllocationInner(Allocator::Reallocate(self.GetType(), request.mTotalBytes, al));
          }
 
          if_available(self.SetReserveInner(request.mReserved));

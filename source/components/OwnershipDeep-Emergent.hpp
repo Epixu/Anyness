@@ -11,7 +11,6 @@
 #include <Langulus/Assume.hpp>
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
-#include <Langulus/CT/Contiguous.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -236,7 +235,7 @@ namespace Langulus::Anyness::Component
                   referencer(ptr, 1);
                }
 
-               (*entries)->Keep();
+               (*entries)->AddRef(1);
             }
          }
          else {
@@ -263,7 +262,7 @@ namespace Langulus::Anyness::Component
                   ptr->Reference(1);
                }
 
-               (*entries)->Keep();
+               (*entries)->AddRef(1);
             }
          }
       }      
@@ -336,7 +335,7 @@ namespace Langulus::Anyness::Component
                         subT.GetDestructor()(ptr);
                   }
 
-                  (*entries)->Free();
+                  (*entries)->AddRef(-1);
                }
             }
             else if constexpr (DESTROY) {
@@ -402,7 +401,7 @@ namespace Langulus::Anyness::Component
                         ptr->~DT();
                   }
 
-                  (*entries)->Free();
+                  (*entries)->AddRef(-1);
                }
             }
             else if constexpr (DESTROY and CT::Destroyable<T>) {
@@ -461,13 +460,13 @@ namespace Langulus::Anyness::Component
                   // because we can't abandon a raw pointer.            
                   #if LANGULUS_FEATURE(MANAGED_MEMORY)
                      if constexpr (not CT::Handle<IT>)
-                        *entries = const_cast<AllocationPtr>(Allocator::Find(meta, *handle));
+                        *entries = const_cast<AllocationPtr>(Allocator::Find(*handle));
                   #endif
 
                   if (not *entries)
                      break;
 
-                  (*entries)->Keep(1);
+                  (*entries)->AddRef(1);
 
                   LglsAssumeDev(meta,
                      "Valid entry, but invalid type");

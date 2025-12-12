@@ -8,6 +8,7 @@
 #pragma once
 #include <Langulus/Core.hpp>
 #include <Langulus/Utils/Pot.hpp>
+#include "Pool.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
@@ -16,8 +17,6 @@
 
 namespace Langulus::Fractalloc
 {
-   struct Pool;
-
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
@@ -52,23 +51,104 @@ namespace Langulus::Fractalloc
       Allocation(const Allocation&) = delete;
       Allocation(Allocation&&) = delete;
 
-      Allocation(pot_t size, pot_t pool_alignment) noexcept;
+      /// Initialize an allocation                                            
+      ///   @param size - the number of allocated bytes                       
+      ///   @param pool_alignment - the pool alignment                        
+      Allocation(pot_t size, pot_t pool_alignment) noexcept{
+         mPoolAlignment = pool_alignment.bit;
+         mSize = size.bit;
+      }
       
-      auto GetUses() const noexcept -> int32_t;
-      void Keep(int32_t = 1) noexcept;
-      void Free(int32_t = 1) noexcept;
+      /// Get the number of references                                        
+      auto GetUses() const noexcept -> int32_t {
+         return mReferences;
+      }
       
-      auto GetSize() const has_assumptions -> pot_t;
-      auto GetBlockStart() const has_assumptions -> uint8_t*;
-      auto Contains(const void*) const has_assumptions -> bool;
+      /// Reference the entry 'c' times                                       
+      ///   @param c - the number of references to add                        
+      void AddRef(int32_t c) noexcept {
+         mReferences += c;
+      }
+      
+      /// Get the user bytes                                                  
+      ///   @return the byte size of usable memory region                     
+      auto GetSize() const has_assumptions -> pot_t {
+         LglsAssumeDev(mReferences != 0,
+            "Can't get size if entry isn't in use");
+         pot_t result; result.bit = mSize;
+         return result;
+      }
+      
+      /// Return the aligned start of usable block memory                     
+      ///   @return aligned pointer to the entry's memory                     
+      auto GetBlockStart() const has_assumptions -> uint8_t* {
+         LglsAssumeDev(mReferences != 0,
+            "Can't get block start if entry isn't in use");
+         const auto pool = GetPool();
+         const size_t offset = this - pool->GetAllocationData();
+         return pool->GetClientData() + pool->GetMinAllocation() * offset;         
+      }
+
+      /// Check if memory address is inside this entry                        
+      ///   @param address - address to check if inside this entry            
+      ///   @return true if address is inside                                 
+      auto Contains(const void* address) const has_assumptions -> bool {
+         LglsAssumeDev(mReferences != 0,
+            "Can't check if entry contains memory if entry isn't in use");
+         const auto a = reinterpret_cast<uintptr_t>(address);
+         const auto blockStart = reinterpret_cast<uintptr_t>(GetBlockStart());
+         return a >= blockStart and a < blockStart + static_cast<uintptr_t>(GetSize());
+      }
 
    protected: IF_LANGULUS_TESTING(public:)
       friend struct Pool;
       friend struct Allocator;
       
-      auto GetNextFreeEntry() const has_assumptions -> Allocation*;
-      void SetNextFreeEntry(Allocation const*) has_assumptions;
-      void ResetNextFreeEntry() has_assumptions;
-      auto GetPool() const has_assumptions -> Pool const*;
+      /// Get the next entry in the free entry chain                          
+      ///   @attention assumes allocation has been freed                      
+      auto GetNextFreeEntry() const has_assumptions -> Allocation* {
+         LglsAssumeDev(mReferences == 0,
+            "Can't get next free entry from entry in use");
+         return mNextFreeEntryFinder
+            ? const_cast<Allocation*>(this - mNextFreeEntryFinder)
+            : nullptr;
+      }
+      
+      /// Set the next entry in the free entry chain                          
+      ///   @attention assumes allocation has been freed                      
+      void SetNextFreeEntry(Allocation const* a) has_assumptions {
+         LglsAssumeDevAndOptimize(a,
+            "If next entry is nullptr, use ResetNextFreeEntry instead");
+         LglsAssumeDevAndOptimize(mReferences == 0,
+            "Can't set next free entry if this entry is in use");
+         LglsAssumeDevAndOptimize(a->mReferences == 0,
+            "Can't set next free entry if next entry is in use");
+         const intptr_t diff = this - a;
+         LglsAssumeDev(diff >= ::std::numeric_limits<int32_t>::min()
+                   and diff <= ::std::numeric_limits<int32_t>::max(),
+            "Entry difference is too big to fit in 32bit integer");
+      
+         mNextFreeEntryFinder = static_cast<int32_t>(this - a);
+      
+         LglsAssumeDev(GetNextFreeEntry() == a,
+            "Next free entry isn't properly calculated from relative offset");
+      }
+      
+      /// Reset the next entry in the free entry chain                        
+      ///   @attention assumes allocation has been freed                      
+      void ResetNextFreeEntry() has_assumptions {
+         LglsAssumeDev(mReferences == 0,
+            "Can't reset next free entry if this entry is in use");
+         mNextFreeEntryFinder = 0;
+      }
+      
+      /// Get the pool this allocation belongs to.                            
+      /// Pools are always aligned, so all we have to do is mask out 'this'.  
+      auto GetPool() const has_assumptions -> Pool const* {
+         LglsAssumeDev(mReferences != 0, "Can't get pool if entry isn't in use");
+         return reinterpret_cast<Pool const*>(
+            reinterpret_cast<uintptr_t>(this) & ~((uintptr_t{1} << mPoolAlignment) - uintptr_t{1})
+         );
+      }
    };
 }

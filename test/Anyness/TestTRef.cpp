@@ -99,8 +99,8 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
          REQUIRE(*pointer == 6);
          REQUIRE(*pointer2 == 6);
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            REQUIRE(Allocator::CheckAuthority(pointer.GetType(), backup));
-            REQUIRE_FALSE(Allocator::Find(pointer.GetType(), backup));
+            REQUIRE(Allocator::CheckAuthority(backup));
+            REQUIRE_FALSE(Allocator::Find(backup));
          #endif
          REQUIRE(pointer2.GetAllocation());
          REQUIRE(pointer.GetAllocation());

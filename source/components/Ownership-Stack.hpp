@@ -44,9 +44,9 @@ namespace Langulus::Anyness::Component
 
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          // The heap might already be ours and we just don't know it    
-         if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
+         if (auto found = Allocator::Find(self.GetHeapInner())) {
             a = const_cast<AllocationPtr>(found);
-            a->Keep();
+            a->AddRef(1);
             return;
          }
       #endif
@@ -78,7 +78,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this will not dereference previous allocation          
       void FindAllocationInner(this auto& self) noexcept {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            if (auto found = Allocator::Find(self.GetType(), self.GetHeapInner())) {
+            if (auto found = Allocator::Find(self.GetHeapInner())) {
                self.SetAllocationInner(found);
                if constexpr (AUTO)
                   self.Keep();
