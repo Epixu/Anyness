@@ -43,13 +43,45 @@ namespace Langulus::Unmanaged
       Allocation() = delete;
       Allocation(const Allocation&) = delete;
       Allocation(Allocation&&) = delete;
-      Allocation(pot_t alignment, pot_t size) noexcept;
+
+      /// Initialize an allocation                                            
+      ///   @param alignment - data alignment                                 
+      ///   @param size - the number of allocated bytes                       
+      Allocation(pot_t alignment, pot_t size) noexcept
+         : mSize      {size}
+         , mAlignment {alignment} {}
+
+      /// Get the number of references                                        
+      auto GetUses() const noexcept {
+         return mReferences;
+      }
       
-      auto GetUses() const noexcept { return mReferences; }
-      auto GetSize() const noexcept -> pot_t;
-      auto GetBlockStart() const noexcept -> uint8_t*;
-      bool Contains(const void*) const noexcept;
-      void Keep(int32_t = 1) noexcept;
-      void Free(int32_t = 1) noexcept;
+      /// Get the user bytes                                                  
+      ///   @return the byte size of usable memory region                     
+      auto GetSize() const noexcept -> pot_t {
+         return mSize;
+      }
+      
+      /// Return the aligned start of usable block memory                     
+      ///   @return aligned pointer to the entry's memory                     
+      auto GetBlockStart() const noexcept -> uint8_t* {
+         const auto entryStart = reinterpret_cast<const uint8_t*>(this);
+         return const_cast<uint8_t*>(Align(entryStart + sizeof(Allocation), mAlignment));
+      }
+      
+      /// Check if memory address is inside this entry                        
+      ///   @param address - address to check if inside this entry            
+      ///   @return true if address is inside                                 
+      bool Contains(const void* address) const noexcept {
+         const auto a = static_cast<const uint8_t*>(address);
+         const auto blockStart = GetBlockStart();
+         return a >= blockStart and a < blockStart + static_cast<size_t>(mSize);
+      }
+      
+      /// Reference the entry 'c' times                                       
+      ///   @param c - the number of references to add                        
+      void AddRef(int32_t c) noexcept {
+         mReferences += c;
+      }
    };
 }

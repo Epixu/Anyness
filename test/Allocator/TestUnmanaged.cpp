@@ -141,31 +141,31 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
       }
 
       WHEN("Referenced once") {
-         entry->Keep();
+         entry->AddRef(1);
 
          REQUIRE(entry->GetUses() == 2);
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          IF_SAFE(REQUIRE(entry->GetUses() == 2));
          
-         entry->Free();
+         entry->AddRef(-1);
          Allocator::Deallocate(entry);
       }
 
       WHEN("Referenced multiple times") {
-         entry->Keep(5);
+         entry->AddRef(5);
 
          REQUIRE(entry->GetUses() == 6);
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          IF_SAFE(REQUIRE(entry->GetUses() == 6));
 
-         entry->Free(5);
+         entry->AddRef(-5);
          Allocator::Deallocate(entry);
       }
 
       WHEN("Dereferenced once without deletion") {
-         entry->Keep();
-         entry->Free();
+         entry->AddRef(1);
+         entry->AddRef(-1);
 
          REQUIRE(entry->GetUses() == 1);
 
@@ -173,15 +173,15 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
       }
 
       WHEN("Dereferenced multiple times without deletion") {
-         entry->Keep(5);
-         entry->Free(4);
+         entry->AddRef(5);
+         entry->AddRef(-4);
 
          REQUIRE(entry->GetUses() == 2);
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          IF_SAFE(REQUIRE(entry->GetUses() == 2));
 
-         entry->Free(1);
+         entry->AddRef(-1);
          Allocator::Deallocate(entry);
       }
 
@@ -190,12 +190,12 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
       }
 
       WHEN("Dereferenced multiple times with deletion") {
-         entry->Keep(5);
+         entry->AddRef(5);
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          IF_SAFE(REQUIRE(entry->GetUses() == 6));
 
-         entry->Free(5);
+         entry->AddRef(-5);
          Allocator::Deallocate(entry);
       }
    }

@@ -15,7 +15,6 @@
 #include "Allocation.hpp"
 #include "../rtti/MetaData.hpp"
 #include <Langulus/Assume.hpp>
-#include "Allocation.inl"
 
 
 namespace Langulus::Unmanaged
