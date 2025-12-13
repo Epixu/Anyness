@@ -15,14 +15,16 @@
 
 namespace Langulus::Fractalloc
 {
-   struct Allocation;
+   template<class>
+   struct TAllocation;
+   using Allocation = TAllocation<uint8_t*>;
    struct PoolBank;
    
    ///                                                                        
    ///   Memory pool                                                          
    ///                                                                        
-   /// Aligned to a dynamically determined cache size, with the following     
-   /// data structure:                                                        
+   /// Manages allocations. Aligned to a dynamically determined cache size,   
+   /// with the following structure:                                          
    /// [pool data][padding][allocation data...][padding][client data...]      
    struct Pool {
    protected:

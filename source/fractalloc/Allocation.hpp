@@ -20,8 +20,11 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
-   struct Allocation {
+   template<class T>
+   struct TAllocation {
    private:
+      static_assert(CT::Sparse<T>, "T has to be sparse");
+      
       // The number of references to this memory.                       
       // Most often used, so first for immediate access.                
       int32_t mReferences = 1;
@@ -47,14 +50,14 @@ namespace Langulus::Fractalloc
       };
 
    public:
-      Allocation() = delete;
-      Allocation(const Allocation&) = delete;
-      Allocation(Allocation&&) = delete;
+      TAllocation() = delete;
+      TAllocation(const TAllocation&) = delete;
+      TAllocation(TAllocation&&) = delete;
 
       /// Initialize an allocation                                            
       ///   @param size - the number of allocated bytes                       
       ///   @param pool_alignment - the pool alignment                        
-      Allocation(pot_t size, pot_t pool_alignment) noexcept{
+      TAllocation(pot_t size, pot_t pool_alignment) noexcept{
          mPoolAlignment = pool_alignment.bit;
          mSize = size.bit;
       }
@@ -81,7 +84,7 @@ namespace Langulus::Fractalloc
       
       /// Return the aligned start of usable block memory                     
       ///   @return aligned pointer to the entry's memory                     
-      auto GetBlockStart() const has_assumptions -> uint8_t* {
+      auto GetBlockStart() const has_assumptions -> T {
          LglsAssumeDev(mReferences != 0,
             "Can't get block start if entry isn't in use");
          const auto pool = GetPool();

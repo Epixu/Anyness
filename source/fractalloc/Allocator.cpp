@@ -108,7 +108,7 @@ namespace Langulus::Fractalloc
    };
    
    /// Each pool allocation has the following structure:                      
-   /// [sizeof(Pool)][alignment][allocation data][alignment][client bytes...] 
+   /// [pool data][alignment][allocation data][alignment][client bytes...]    
    ///   @param type - the pooled type                                        
    ///   @param size - the number of client bytes to allocate                 
    ///   @return a newly allocated memory that is correctly aligned           
@@ -864,9 +864,6 @@ namespace Langulus::Fractalloc
       // Check the last pool that found something (hot region)          
       if (gLastFoundPool and gLastFoundPool->ContainsData(memory))
          return true;
-
-      for (auto& e : gPools)
-         Logger::Special(Logger::Hex(e.first), " -> ", Logger::Hex(e.second));
       
       // Mask out the pointer in order to locate the owning pool        
       uintptr_t test = reinterpret_cast<uintptr_t>(memory) & gPossiblePoolMemorySpace;

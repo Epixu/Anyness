@@ -43,6 +43,7 @@ namespace Langulus::Fractalloc
    template<class T, unsigned POOL_BITS = 8, unsigned ENTRY_BITS = 16, unsigned OFFSET_BITS = 8>
    struct PackedPointer {
       using CTTI_Sparse = Yes<>;
+      
       static constexpr unsigned PoolBits   = POOL_BITS;
       static constexpr unsigned EntryBits  = ENTRY_BITS;
       static constexpr unsigned OffsetBits = OFFSET_BITS;

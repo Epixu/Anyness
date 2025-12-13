@@ -40,20 +40,38 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   Memory allocator                                                     
    ///                                                                        
-   /// The lowest-level memory management interface.                          
-   /// Basically an overcomplicated wrapper for malloc/free.                  
-   ///                                                                        
+   /// Basically an overcomplicated wrapper for malloc/free. Manages pools.   
    struct Allocator {
       Allocator() = delete;
       
       LANGULUS_API(FRACTALLOC)
       static auto Allocate(DMeta, pot_t) has_assumptions -> Allocation*;
+      
+      template<class T>
+      static auto AllocatePacked(DMeta type, pot_t size) has_assumptions -> T* {
+         static_assert(sizeof(T) == sizeof(Allocation));
+         auto a = AllocatePackedInner(T::PoolBits, T::EntryBits, T::OffsetBits, type, size);
+         return reinterpret_cast<T*>(a);
+      }
 
       LANGULUS_API(FRACTALLOC)
       static auto Reallocate(DMeta, pot_t, Allocation*) has_assumptions -> Allocation*;
 
+      template<class T>
+      static auto ReallocatePacked(DMeta type, pot_t size, T* prev) has_assumptions -> T* {
+         static_assert(sizeof(T) == sizeof(Allocation));
+         auto a = ReallocatePackedInner(T::PoolBits, T::EntryBits, T::OffsetBits, type, size, reinterpret_cast<Allocation*>(prev));
+         return reinterpret_cast<T*>(a);
+      }
+
       LANGULUS_API(FRACTALLOC)
       static void Deallocate(Allocation*) has_assumptions;
+      
+      template<class T>
+      static void DeallocatePacked(T* prev) has_assumptions {
+         static_assert(sizeof(T) == sizeof(Allocation));
+         Deallocate(reinterpret_cast<Allocation*>(prev));
+      }
 
       LANGULUS_API(FRACTALLOC)
       static auto Find(const void*) has_assumptions -> Allocation const*;
@@ -87,16 +105,31 @@ namespace Langulus::Fractalloc
          
          LANGULUS_API(FRACTALLOC)
          static bool IntegrityCheck();
+      
+      private:
+         LANGULUS_API(FRACTALLOC)
+         static void DumpPool(DMeta type, size_t id, const Pool*) noexcept;
+            
+         LANGULUS_API(FRACTALLOC)
+         static bool IntegrityCheckChain(const Pool*);
       #endif
       
    private:
-      #if LANGULUS_FEATURE(MEMORY_STATISTICS)
       LANGULUS_API(FRACTALLOC)
-      static void DumpPool(DMeta type, size_t id, const Pool*) noexcept;
-         
+      static auto AllocatePackedInner(
+         size_t pool_budget,
+         size_t entry_budget,
+         size_t element_budget,
+         DMeta, pot_t
+      ) has_assumptions -> Allocation*;
+      
       LANGULUS_API(FRACTALLOC)
-      static bool IntegrityCheckChain(const Pool*);
-      #endif
+      static auto ReallocatePackedInner(
+         size_t pool_budget,
+         size_t entry_budget,
+         size_t element_budget,
+         DMeta, pot_t, Allocation*
+      ) has_assumptions -> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
       static auto CollectGarbageChain(Pool*) -> Pool*;
