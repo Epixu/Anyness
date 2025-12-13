@@ -107,8 +107,8 @@ namespace Langulus::Fractalloc
       }
    };
    
-   /// Each allocation has the following order:                               
-   /// [sizeof(Pool)][padding for client data][client bytes...]               
+   /// Each pool allocation has the following structure:                      
+   /// [sizeof(Pool)][alignment][allocation data][alignment][client bytes...] 
    ///   @param type - the pooled type                                        
    ///   @param size - the number of client bytes to allocate                 
    ///   @return a newly allocated memory that is correctly aligned           
@@ -141,15 +141,11 @@ namespace Langulus::Fractalloc
       const auto ptrEnd = reinterpret_cast<uintptr_t>(typed_pool->GetClientData())
                         + static_cast<uintptr_t>(typed_pool->GetAllocatedByBackend());
       const auto ptrStep = ptr & -ptr;
-      LglsAssumeDev(not gPools.contains(ptr),
-         "This mask shouldn't be occupied yet #1");
       gPools[ptr] = typed_pool;
       gPossiblePoolMemorySpace |= ptr;
       
-      while (ptr < ptrEnd) {
+      while (ptr + ptrStep < ptrEnd) {
          ptr += ptrStep;
-         LglsAssumeDev(not gPools.contains(ptr),
-            "This mask shouldn't be occupied yet #2");
          gPools[ptr] = typed_pool;
          gPossiblePoolMemorySpace |= ptr;
       }      
@@ -702,7 +698,7 @@ namespace Langulus::Fractalloc
                         + static_cast<uintptr_t>(pool->GetAllocatedByBackend());
       const auto ptrStep = ptr & -ptr;
       gPools.erase(ptr);
-      while (ptr < ptrEnd) {
+      while (ptr + ptrStep < ptrEnd) {
          ptr += ptrStep;
          gPools.erase(ptr);
       }
