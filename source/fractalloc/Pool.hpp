@@ -93,14 +93,26 @@ namespace Langulus::Fractalloc
 
       static size_t Cost(pot_t dataAlignment, pot_t dataMinAlloc, pot_t) noexcept;
 
-      auto GetAllocationData() const noexcept -> Allocation*;
-      auto GetLastFreedEntry() const noexcept -> Allocation*;
-      auto GetClientData() const noexcept -> uint8_t*;
+      /// Get the start of the allocation data                                
+      auto GetAllocationData() const noexcept -> Allocation* {
+         return mAllocationData;
+      }
 
+      /// Get the minimum allocation for an entry inside this pool            
+      ///   @return the size in bytes, always a power-of-two                  
+      auto GetMinAllocation() const noexcept -> pot_t {
+         return mThresholdMin;
+      }
+      
+      /// Get the start of the usable memory for the pool                     
+      auto GetClientData() const noexcept -> uint8_t* {
+         return mClientData;
+      }
+
+      auto GetLastFreedEntry() const noexcept -> Allocation*;
       auto GetMaxEntries() const noexcept -> pot_t;
       auto GetCurrentEntries() const noexcept -> size_t;
       auto GetValidEntries() const noexcept -> size_t;
-      auto GetMinAllocation() const noexcept -> pot_t;
       auto GetTotalSize() const noexcept -> size_t;
       auto GetAllocatedByBackend() const noexcept -> pot_t;
       auto GetAllocatedByFrontend() const noexcept -> size_t;

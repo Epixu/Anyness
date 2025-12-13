@@ -123,9 +123,8 @@ namespace Langulus::Fractalloc
             "Can't set next free entry if this entry is in use");
          LglsAssumeDevAndOptimize(a->mReferences == 0,
             "Can't set next free entry if next entry is in use");
-         const intptr_t diff = this - a;
-         LglsAssumeDev(diff >= ::std::numeric_limits<int32_t>::min()
-                   and diff <= ::std::numeric_limits<int32_t>::max(),
+         LglsAssumeDev(this - a >= ::std::numeric_limits<int32_t>::min()
+                   and this - a <= ::std::numeric_limits<int32_t>::max(),
             "Entry difference is too big to fit in 32bit integer");
       
          mNextFreeEntryFinder = static_cast<int32_t>(this - a);

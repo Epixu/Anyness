@@ -96,13 +96,6 @@ namespace Langulus::Fractalloc
       );
    }
 
-   /// Get the minimum allocation for an entry inside this pool               
-   ///   @return the size in bytes, always a power-of-two                     
-   LANGULUS(INLINED)
-   pot_t Pool::GetMinAllocation() const noexcept {
-      return mThresholdMin;
-   }
-
    /// Get the total size of the pool, including this instance and padding    
    ///   @return the size in bytes                                            
    LANGULUS(INLINED)
@@ -140,20 +133,8 @@ namespace Langulus::Fractalloc
       #endif
    }
 
-   /// Get the start of the allocation data                                   
-   LANGULUS(INLINED)
-   auto Pool::GetAllocationData() const noexcept -> Allocation* {
-      return mAllocationData;
-   }
-
    inline auto Pool::GetLastFreedEntry() const noexcept -> Allocation* {
       return mLastFreed;
-   }
-
-   /// Get the start of the usable memory for the pool                        
-   LANGULUS(INLINED)
-   auto Pool::GetClientData() const noexcept -> uint8_t* {
-      return mClientData;
    }
 
    /// Get the bytes reserved for the bool                                    
