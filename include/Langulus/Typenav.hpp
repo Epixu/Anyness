@@ -185,7 +185,7 @@ namespace Langulus
       /// They should be aggressively optimized out from the final binary.    
       /// Marking types as sheddable means that they don't interfere with most
       /// other CT concepts - these will act as if the sheddable type doesn't 
-      /// exist at all                                                        
+      /// exist at all.                                                       
       ///   @attention sheddable types can only be defined through a member   
       ///      called CTTI_Sheddable, and are always assumed complete,        
       ///      otherwise this check will return false                         

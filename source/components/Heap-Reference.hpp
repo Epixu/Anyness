@@ -20,11 +20,12 @@ namespace Langulus::Anyness::Component
    /// Adds a variable to a container that only references a remote heap.     
    /// No allocation interface is provided.                                   
    /// Increases the container's bytesize.                                    
-   ///   @tparam ID - multiple references are supported                       
-   template<unsigned ID>
+   ///   @tparam ID heap's unique identifier                                  
+   ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
+   template<unsigned ID, CT::Sparse POINTER_TYPE>
    struct HeapReference {
       using CTTI_Component = Yes<>;
-      using StackRequest = void*;
+      using StackRequest = POINTER_TYPE;
 
       static constexpr unsigned Id = ID;
       static constexpr int  ComponentPrecedence = -2000;
@@ -53,10 +54,16 @@ namespace Langulus::Anyness::Component
       }
 
       /// Set the heap pointer, any data pointer will do                      
-      constexpr void SetHeapInner(this auto& self, auto heap) noexcept {
-         self.GetHeapInner() = const_cast<void*>(
-            static_cast<const void*>(heap)
-         );
+      constexpr void SetHeapInner(this auto& self, auto heap) has_assumptions {
+         if constexpr (CT::PackedPointer<POINTER_TYPE>)
+            self.GetHeapInner() = heap;
+         else if constexpr (CT::PackedPointer<decltype(heap)>)
+            self.GetHeapInner() = heap.Unpack();
+         else {
+            self.GetHeapInner() = const_cast<void*>(
+               static_cast<const void*>(heap)
+            );
+         }
       }
 
    public:
@@ -95,8 +102,8 @@ namespace Langulus::Anyness::Component
       ///   @attention no type-safety                                         
       ///   @attention assumes the container is typed                         
       ///   @attention assumes the container is allocated                     
-      ///   @tparam T - the type of data we're accessing -                    
-      ///      use void to use the type of the container, if statically typed 
+      ///   @tparam T the type of data we're accessing - use void to use the
+      ///      type of the container, if statically typed                     
       template<class T = void, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<T>,    "T can't be a handle");
@@ -116,17 +123,17 @@ namespace Langulus::Anyness::Component
             const auto indirections = self.GetIndirections();
 
             if (indirections == IndirectsOf<TH>) {
-               // No difference in indirections                      
+               // No difference in indirections                         
                return *static_cast<THQ1>(mHeap);
             }
             else if (indirections > IndirectsOf<TH>) {
-               // We need to dereference                             
+               // We need to dereference                                
                auto diff = indirections - IndirectsOf<TH>;
                Deep<C> denser = Disown(self.GetDense(diff));
                return *static_cast<THQ1>(denser.GetHeapInner());
             }
             else {
-               // We are allowed to add one additional indirection   
+               // We are allowed to add one additional indirection      
                LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
                   "Too many indirections");
                return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
@@ -153,7 +160,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get first element as a handle, or any desired wrapping type         
-      ///   @tparam T - the type we're wrapping in                            
+      ///   @tparam T the type we're wrapping in                              
       ///   @return the element, as a reference if possible                   
       template<class T, CT::Container C>
       decltype(auto) As(this C&& self) {
@@ -246,13 +253,12 @@ namespace Langulus::Anyness::Component
 
       /// Get the first contained element, removing 'count' indirections      
       ///   @attention throws if type is incomplete and origin was reached    
-      ///   @param self - deduced this                                        
-      ///   @param count - how many levels of indirection to remove?          
+      ///   @param self deduced this                                          
+      ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
       template<class AS = void, CT::Container C>
       auto GetDense(this C&& self, Count<C> count = CountMax<C>) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
-         //using H = typename Decay<C>::HandleType;
          static_assert(CT::Container<D>,
             "D must result in a container type");
          static_assert(CT::HasVariableCount<D>,
@@ -284,7 +290,7 @@ namespace Langulus::Anyness::Component
          }
 
          // Start iterating until dereferenced enough                   
-         D iterator = Disown(self); //self.template As<H>();
+         D iterator = Disown(self);
          while (count and iterator.IsSparse()) {
             iterator.SetHeapInner(*static_cast<void const* const*>(iterator.GetHeapInner()));
             iterator.SetTypeInner(iterator.GetType().GetDeptr());
@@ -304,8 +310,8 @@ namespace Langulus::Anyness::Component
       /// This is only a reference to a heap allocation and is not allowed    
       /// to allocate any new memory, so all this does is copy the heap       
       /// pointer, ignoring any intents.                                      
-      ///   @param self - deduced this                                        
-      ///   @param intent - the intent and container to transfer from         
+      ///   @param self deduced this                                          
+      ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
          self.SetHeapInner(intent.what.GetRaw());
@@ -320,8 +326,8 @@ namespace Langulus::Anyness::Component
       };
       
       /// Get a size based on reflected allocation page and count             
-      ///   @param self - deduced this                                        
-      ///   @param count - the number of elements to request                  
+      ///   @param self deduced this                                          
+      ///   @param count the number of elements to request                    
       template<CT::Container C>
       Request RequestHeap(this C const& self, const size_t count) has_assumptions {
          Request result;

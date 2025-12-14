@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Langulus/Core.hpp>
+#include "Allocation.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY) or not LANGULUS_FEATURE(MANAGED_REFLECTION)
    #error "This file shouldn't be included if MANAGED_MEMORY or MANAGED_REFLECTION are disabled"
@@ -40,38 +41,75 @@ namespace Langulus::Fractalloc
    ///   @tparam OFFSET_BITS the offset bits show how many elements you can   
    ///      move from the start of the entry to the right. The byte offset is 
    ///      calculated as `sizeof(T) * offset`.                               
-   template<class T, unsigned POOL_BITS = 8, unsigned ENTRY_BITS = 16, unsigned OFFSET_BITS = 8>
+   #pragma pack(push, 1)
+   template<class T, unsigned POOL_BITS = 4, unsigned ENTRY_BITS = 16, unsigned OFFSET_BITS = 12>
    struct PackedPointer {
       using CTTI_Sparse = Yes<>;
+      using CTTI_PackedPointer = Yes<>;
       
       static constexpr unsigned PoolBits   = POOL_BITS;
       static constexpr unsigned EntryBits  = ENTRY_BITS;
       static constexpr unsigned OffsetBits = OFFSET_BITS;
-      static constexpr unsigned TotalBits  = PoolBits + EntryBits + OffsetBits;
+      static constexpr unsigned TotalBits  = POOL_BITS + ENTRY_BITS + OFFSET_BITS;
+      static_assert(TotalBits == 8 or TotalBits == 16 or TotalBits == 32);
 
-   private:
+   protected:
+      friend struct Allocator;
+
+      using Type  = T;
+      using Inner = Tif<TotalBits == 8,  uint8_t,
+                    Tif<TotalBits == 16, uint16_t, uint32_t>>; 
       union {
          struct {
-            unsigned mPool : PoolBits;
-            unsigned mEntry : EntryBits;
-            unsigned mOffset : OffsetBits;
+            Inner mPool : PoolBits;
+            Inner mEntry : EntryBits;
+            Inner mOffset : OffsetBits;
          };
-         unsigned mAll : TotalBits;
+         Inner mAll : TotalBits;
       };
 
    public:
       constexpr PackedPointer() noexcept
          : mAll(0) {}
       
-      constexpr PackedPointer(Allocation* entry) noexcept {
-         if (not entry) {
-            mAll = 0;
+      constexpr PackedPointer(nullptr_t) noexcept
+         : mAll(0) {}
+      
+      constexpr PackedPointer(TAllocation<PackedPointer> const* a) noexcept
+         : mAll(0) {
+         if (not a)
             return;
-         }
 
-         mPool = entry->GetPool()->GetIndex();
-         mEntry = entry->GetIndex();
-         mOffset = 0;
+         auto pool = a->GetPool();
+         mPool   = static_cast<Inner>(pool->GetID());
+         mEntry  = static_cast<Inner>(pool->IndexFromAllocation(reinterpret_cast<Allocation const*>(a)));
+      }
+
+      explicit constexpr operator bool () const noexcept {
+         return mAll != 0;
+      }
+
+      constexpr bool operator == (const PackedPointer& a) const noexcept {
+         return mAll == a.mAll;
+      }
+      
+      T& operator * () const has_assumptions {
+         LglsAssumeDev(mAll, "Trying to dereference a null pointer");
+         return *Unpack();
+      }
+
+      T* Unpack() const noexcept {
+         return Allocator::UnpackPointer(*this);
       }
    };
+   #pragma pack(pop)
 }
+
+namespace Langulus::CTTI
+{
+   /// Affects CT::PackedPointer<T>                                           
+   template<class T>
+   struct PackedPointer;
+}
+
+LANGULUS_CTTI_CONCEPT_DECVQ(PackedPointer);

@@ -6,14 +6,13 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "../Main.hpp"
+//#include <Langulus/Allocator.hpp>
 #include <Langulus/Anyness/TOwn.hpp>
-#include "../source/Allocator.hpp"
 #include "../TestTypes/ReferencedType.hpp"
 #include "../TestTypes/ScopedElement.hpp"
 
 using namespace Langulus;
 using Anyness::TOwn;
-using Anyness::Allocator;
 
 
 TEMPLATE_TEST_CASE("Owned value", "[TOwn]"
@@ -26,7 +25,7 @@ TEMPLATE_TEST_CASE("Owned value", "[TOwn]"
    , TOwn<int*>
    , TOwn<const int*>
 ) {
-   static Anyness::MemoryState memoryState;
+   static MemoryState memoryState;
    using T  = TestType;
    using TT = TypeOf<T>;
    

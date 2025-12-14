@@ -87,7 +87,6 @@ namespace Langulus::Anyness
 
          if constexpr (CT::TextLiteral<ST>) {
             // Create from a text literal/bounded array                 
-            // Type can be either char, or const char                   
             using CHAR = TypeOf<ST>;
             static_assert(Same<CHAR, char>, "Type mismatch");
             const auto count = ::std::char_traits<char>::length(source);
@@ -100,14 +99,19 @@ namespace Langulus::Anyness
          }
          else if constexpr (CT::TextPointer<ST>) {
             // Create from a null-terminated char pointer               
-            // Type can be either char, or const char                   
             if (not source) {
                this->ConstructDefault();
                return;
             }
             using CHAR = Deptr<ST>;
             static_assert(Same<CHAR, char>, "Type mismatch");
-            const auto count = ::std::char_traits<char>::length(source);
+            
+            size_t count;
+            if constexpr (CT::PackedPointer<decltype(source)>)
+               count = ::std::char_traits<char>::length(source.Unpack());
+            else
+               count = ::std::char_traits<char>::length(source);
+            
             if (not count) {
                this->ConstructDefault();
                return;
@@ -117,7 +121,6 @@ namespace Langulus::Anyness
          }
          else if constexpr (::std::ranges::contiguous_range<ST>) {
             // Create from an std container                             
-            // Type can be either char, or const char                   
             if (source.empty()) {
                this->ConstructDefault();
                return;

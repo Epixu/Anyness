@@ -11,7 +11,6 @@
 using namespace Langulus;
 using Anyness::Text;
 using Anyness::operator""_text;
-using Anyness::Allocator;
 
 namespace Catch
 {
@@ -63,7 +62,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
    //TODO Path
 ) {
    using T = TestType;
-   static Anyness::MemoryState memoryState;
+   static MemoryState memoryState;
    static_assert(    CT::Typed<T>, "Container not typed");
    static_assert(not CT::Array<T>, "Wrongly typed container");
    static_assert(    Exact<TypeOf<T>, char>, "Wrongly typed container");
@@ -381,7 +380,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
 TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
    uint8_t, uint16_t, uint32_t, uint64_t
 ) {
-   static Anyness::MemoryState memoryState;
+   static MemoryState memoryState;
 
    WHEN("Constructed Text with a number") {
       Text* text = new Text {Text::FromNumber(TestType{66})};
@@ -414,7 +413,7 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
 TEMPLATE_TEST_CASE("Signed number stringification", "[text]",
    int8_t, int16_t, int32_t, int64_t
 ) {
-   static Anyness::MemoryState memoryState;
+   static MemoryState memoryState;
 
    WHEN("Constructed Text with a number") {
       Text* text = new Text {Text::FromNumber(TestType{-66})};
@@ -447,7 +446,7 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]",
 TEMPLATE_TEST_CASE("Real number stringification", "[text]",
    float, double
 ) {
-   static Anyness::MemoryState memoryState;
+   static MemoryState memoryState;
 
    WHEN("Constructed Text with a number") {
       Text* text = new Text {Text::FromNumber(TestType{-66.666}, 2)};
@@ -478,7 +477,7 @@ TEMPLATE_TEST_CASE("Real number stringification", "[text]",
 }
 
 TEMPLATE_TEST_CASE("Logging text containers", "[text]", Text/*TODO , Path*/) {
-   static Anyness::MemoryState memoryState;
+   static MemoryState memoryState;
 
    WHEN("Logging") {
       TestType text {"some text"};
@@ -494,7 +493,7 @@ TEMPLATE_TEST_CASE("Logging text containers", "[text]", Text/*TODO , Path*/) {
 }
 
 TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", Stringifiable, StringifiableConst) {
-   static Anyness::MemoryState memoryState;
+   static MemoryState memoryState;
 
    GIVEN("A stringifiable type") {
       const auto debugMeta = MetaOf<Text>();

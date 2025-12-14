@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Allocator.hpp"
+#include <Langulus/Allocator.hpp>
 
 
 namespace Langulus::Anyness::Component

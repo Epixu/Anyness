@@ -87,9 +87,16 @@ namespace Langulus::Fractalloc
       auto GetBlockStart() const has_assumptions -> T {
          LglsAssumeDev(mReferences != 0,
             "Can't get block start if entry isn't in use");
-         const auto pool = GetPool();
-         const size_t offset = this - pool->GetAllocationData();
-         return pool->GetClientData() + pool->GetMinAllocation() * offset;         
+         if constexpr (::std::is_pointer_v<T>) {
+            // Return a conventional pointer                            
+            const auto pool = GetPool();
+            const size_t offset = reinterpret_cast<Allocation const*>(this) - pool->GetAllocationData();
+            return pool->GetClientData() + pool->GetMinAllocation() * offset;
+         }
+         else {
+            // Return a packed pointer                                  
+            return T {this};
+         }
       }
 
       /// Check if memory address is inside this entry                        

@@ -7,8 +7,8 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../Allocator.hpp"
 #include <Langulus/Assume.hpp>
+#include <Langulus/Allocator.hpp>
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
 

@@ -48,29 +48,35 @@ namespace Langulus::Fractalloc
       static auto Allocate(DMeta, pot_t) has_assumptions -> Allocation*;
       
       template<class T>
-      static auto AllocatePacked(DMeta type, pot_t size) has_assumptions -> T* {
-         static_assert(sizeof(T) == sizeof(Allocation));
+      static auto AllocatePacked(DMeta type, pot_t size) has_assumptions -> TAllocation<T>* {
+         static_assert(sizeof(TAllocation<T>) == sizeof(Allocation));
          auto a = AllocatePackedInner(T::PoolBits, T::EntryBits, T::OffsetBits, type, size);
-         return reinterpret_cast<T*>(a);
+         return reinterpret_cast<TAllocation<T>*>(a);
       }
 
       LANGULUS_API(FRACTALLOC)
       static auto Reallocate(DMeta, pot_t, Allocation*) has_assumptions -> Allocation*;
 
       template<class T>
-      static auto ReallocatePacked(DMeta type, pot_t size, T* prev) has_assumptions -> T* {
-         static_assert(sizeof(T) == sizeof(Allocation));
+      static auto ReallocatePacked(DMeta type, pot_t size, T* prev) has_assumptions -> TAllocation<T>* {
+         static_assert(sizeof(TAllocation<T>) == sizeof(Allocation));
          auto a = ReallocatePackedInner(T::PoolBits, T::EntryBits, T::OffsetBits, type, size, reinterpret_cast<Allocation*>(prev));
-         return reinterpret_cast<T*>(a);
+         return reinterpret_cast<TAllocation<T>*>(a);
       }
 
       LANGULUS_API(FRACTALLOC)
       static void Deallocate(Allocation*) has_assumptions;
       
       template<class T>
-      static void DeallocatePacked(T* prev) has_assumptions {
-         static_assert(sizeof(T) == sizeof(Allocation));
+      static void DeallocatePacked(TAllocation<T>* prev) has_assumptions {
+         static_assert(sizeof(TAllocation<T>) == sizeof(Allocation));
          Deallocate(reinterpret_cast<Allocation*>(prev));
+      }
+
+      template<class T>
+      static auto UnpackPointer(T const& ptr) has_assumptions -> typename T::Type* {
+         void* a = UnpackPointerInner(ptr.mPool, ptr.mEntry, ptr.mOffset);
+         return static_cast<typename T::Type*>(a);
       }
 
       LANGULUS_API(FRACTALLOC)
@@ -132,8 +138,13 @@ namespace Langulus::Fractalloc
       ) has_assumptions -> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
+      static void* UnpackPointerInner(
+         size_t poolId,
+         size_t entryId,
+         size_t elementId
+      ) has_assumptions;
+
+      LANGULUS_API(FRACTALLOC)
       static auto CollectGarbageChain(Pool*) -> Pool*;
    };   
 }
-
-//#include "Allocation.inl"

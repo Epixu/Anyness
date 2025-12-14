@@ -499,9 +499,9 @@ namespace Langulus::Fractalloc
       return mAllocationData + levelIndex * levelSize;
    }
 
-   /// Get index from address                                                 
+   /// Get index from data pointer                                            
    ///   @attention assumes pointer is inside the pool                        
-   ///   @param ptr - the address                                             
+   ///   @param ptr the address                                               
    ///   @return the index                                                    
    LANGULUS(INLINED)
    size_t Pool::IndexFromAddress(const void* ptr) const has_assumptions {
@@ -516,6 +516,24 @@ namespace Langulus::Fractalloc
       constexpr size_t one = 1;
       size_t i_clear_lsb = i & ~(i - one);
       size_t index = ((mAllocatedByBackend + i) / i_clear_lsb - one) >> one;
+      while (index >= mNextEntry)
+         index = UpIndex(index);
+      return index;
+   }
+
+   /// Get index from allocation pointer                                      
+   ///   @attention assumes pointer is inside the pool's allocation data      
+   ///   @param ptr the address                                               
+   ///   @return the index                                                    
+   LANGULUS(INLINED)
+   size_t Pool::IndexFromAllocation(const Allocation* ptr) const has_assumptions {
+      LglsAssumeDev(ContainsAllocation(ptr), "Allocation is outside pool");
+      if (0 == mNextEntry)
+         return 0;
+
+      const size_t i = ptr - mAllocationData;
+      size_t i_clear_lsb = i & ~(i - 1u);
+      size_t index = ((mMaxEntries + i) / i_clear_lsb - 1u) >> 1u;
       while (index >= mNextEntry)
          index = UpIndex(index);
       return index;

@@ -95,6 +95,11 @@ namespace Langulus::Fractalloc
 
       static size_t Cost(pot_t dataAlignment, pot_t dataMinAlloc, pot_t) noexcept;
 
+      /// Get the pool ID                                                     
+      auto GetID() const noexcept {
+         return mID;
+      }
+
       /// Get the start of the allocation data                                
       auto GetAllocationData() const noexcept -> Allocation* {
          return mAllocationData;
@@ -130,6 +135,7 @@ namespace Langulus::Fractalloc
       
       auto ThresholdFromIndex(size_t) const noexcept -> pot_t;
       auto IndexFromAddress(const void*) const has_assumptions -> size_t;
+      auto IndexFromAllocation(const Allocation*) const has_assumptions -> size_t;
       auto UpIndex(size_t) const noexcept -> size_t;
       auto AllocationFromIndex(size_t) const noexcept -> Allocation*;
       auto AllocationFromAddress(const void*) const has_assumptions -> Allocation*;

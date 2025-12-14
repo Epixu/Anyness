@@ -17,8 +17,9 @@
 template<class T, bool MANAGED = false>
 struct ScopedElement {
    using CTTI_ReflectAs = void;
-   using Allocation = Langulus::Anyness::Allocation;
-   using Allocator = Langulus::Anyness::Allocator;
+   using Type = T;
+   using Allocation = Langulus::Allocation;
+   using Allocator = Langulus::Allocator;
    
    T* element = nullptr;
    Allocation* entries[Langulus::IndirectsOf<T> + 1] = {};

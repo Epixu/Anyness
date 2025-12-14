@@ -12,7 +12,6 @@
 
 using namespace Langulus;
 using Anyness::TRef;
-using Anyness::Allocator;
 
 
 TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
@@ -27,7 +26,7 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
    , (Types<TRef<int>,       ScopedElement<int, true>>)
    , (Types<TRef<const int>, ScopedElement<int, true>>)
 ) {
-   static Anyness::MemoryState memoryState;
+   static MemoryState memoryState;
    using T  = typename TestType::First;
    using TT = TypeOf<T>;
    using ScopedE = typename TestType::Second;

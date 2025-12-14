@@ -222,8 +222,9 @@ void Any_CheckState_Abandoned(const auto& any) {
    REQUIRE_FALSE(any.GetAllocation());
 }
 
-template<CT::Container T, class E, bool MANAGED>
-void Any_CheckState_ContainsOne(T const& pack, const ScopedElement<E,MANAGED>& e, [[maybe_unused]] bool disowned = false) {
+template<CT::Container T>
+void Any_CheckState_ContainsOne(T const& pack, const auto& e, [[maybe_unused]] bool disowned = false) {
+   using E = typename Decay<decltype(e)>::Type;
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == 1);
    REQUIRE(pack.GetReserved() >= 1);
