@@ -40,6 +40,7 @@ template<CT::PackedPointer T>
 struct ScopedElementPacked {
    using CTTI_ReflectAs = void;
    using Type = T;
+   using Inner = typename T::Type;
    using Allocation = Langulus::Allocation;
    using Allocator = Langulus::Allocator;
    
@@ -52,10 +53,10 @@ protected:
       using namespace Langulus;
 
       if constexpr (CT::Dense<INNER>) {
-         if constexpr (requires { new INNER{ FWD(arguments)... }; })
-            new (&place) INNER{ FWD(arguments)... };
-         else if constexpr (requires { new INNER{ INNER::FromNumber(FWD(arguments)...) }; })
-            new (&place) INNER{ INNER::FromNumber(FWD(arguments)...) };
+         if constexpr (requires { new INNER (FWD(arguments)...); })
+            new (&place) INNER (FWD(arguments)...);
+         else if constexpr (requires { new INNER (INNER::FromNumber(FWD(arguments)...)); })
+            new (&place) INNER (INNER::FromNumber(FWD(arguments)...));
          else
             static_assert(false, "Unable to construct");
       }
@@ -74,18 +75,14 @@ protected:
    static void NestedDestructor(INNER place, Allocation** entry) {
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
-         #if not LANGULUS_FEATURE(NEWDELETE)
-            if constexpr (CT::Referenced<INNER>)
-               place->Reference(-1);
-         #endif
+         if constexpr (CT::Referenced<INNER>)
+            place.Reference(-1);
 
-         if (not *entry)
-            delete place;
-         else {
+         if (*entry) {
             LglsAssumeDev((*entry)->GetUses() >= 1);
             if ((*entry)->GetUses() == 1) {
-               if constexpr (requires { place->~INNER(); })
-                  place->~INNER();
+               if constexpr (requires { place.~INNER(); })
+                  place.~INNER();
                Allocator::Deallocate(*entry);
             }
             else (*entry)->AddRef(-1);
@@ -94,9 +91,7 @@ protected:
       else if (place) {
          NestedDestructor(*place, entry + 1);
 
-         if (not *entry)
-            delete place;
-         else {
+         if (*entry) {
             LglsAssumeDev((*entry)->GetUses() >= 1);
             if ((*entry)->GetUses() == 1)
                Allocator::Deallocate(*entry);
@@ -116,8 +111,8 @@ public:
       NestedDestructor(element, entries);
    }
 
-   auto operator *  ()       -> T&       {return *element;}
-   auto operator *  () const -> T const& {return *element;}
-   auto operator -> ()       -> T*       {return  element;}
-   auto operator -> () const -> T const* {return  element;}
+   auto operator *  ()       -> Type&        {return element;}
+   auto operator *  () const -> Type const&  {return element;}
+   auto operator -> ()       -> Inner*       {return element.Unpack();}
+   auto operator -> () const -> Inner const* {return element.Unpack();}
 };

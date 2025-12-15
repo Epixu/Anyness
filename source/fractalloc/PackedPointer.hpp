@@ -46,19 +46,20 @@ namespace Langulus::Fractalloc
    struct PackedPointer {
       using CTTI_Sparse = Yes<>;
       using CTTI_PackedPointer = Yes<>;
-      
+      using Type  = T;
+
       static constexpr unsigned PoolBits   = POOL_BITS;
       static constexpr unsigned EntryBits  = ENTRY_BITS;
       static constexpr unsigned OffsetBits = OFFSET_BITS;
       static constexpr unsigned TotalBits  = POOL_BITS + ENTRY_BITS + OFFSET_BITS;
       static_assert(TotalBits == 8 or TotalBits == 16 or TotalBits == 32);
 
+      using Inner = Tif<TotalBits == 8,  uint8_t,
+                    Tif<TotalBits == 16, uint16_t, uint32_t>>; 
+
    protected:
       friend struct Allocator;
 
-      using Type  = T;
-      using Inner = Tif<TotalBits == 8,  uint8_t,
-                    Tif<TotalBits == 16, uint16_t, uint32_t>>; 
       union {
          struct {
             Inner mPool : PoolBits;
@@ -87,6 +88,18 @@ namespace Langulus::Fractalloc
 
       explicit constexpr operator bool () const noexcept {
          return mAll != 0;
+      }
+
+      explicit constexpr operator T* () const noexcept {
+         return Unpack();
+      }
+
+      explicit constexpr operator T const* () const noexcept {
+         return Unpack();
+      }
+
+      constexpr auto operator <=> (const PackedPointer& a) const noexcept {
+         return mAll <=> a.mAll;
       }
 
       constexpr bool operator == (const PackedPointer& a) const noexcept {

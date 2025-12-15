@@ -18,39 +18,6 @@
 #endif
 
 
-namespace
-{
-   #if LANGULUS_FEATURE(MEMORY_STATISTICS)
-      /// Memory statistics                                                   
-      Langulus::Fractalloc::Statistics gStatistics {};
-   #endif
-
-   /// Default pool chain.                                                    
-   /// Won't accept types that have size or alignment larger than Alignment.  
-   Langulus::Fractalloc::Pool* gMainPoolChain {};
-   
-   /// The last succesfull Find() result in default pool chain                
-   Langulus::Fractalloc::Pool const* gLastFoundPool {};
-
-   /// Pool chains for types that use PoolTactic::Size and have alignment     
-   /// smaller or equal to Langulus::Alignment.                               
-   constexpr size_t SizeBuckets = sizeof(size_t) * 8;
-   Langulus::Fractalloc::Pool* gSizePoolChain[SizeBuckets] {};
-   
-   /// The set of types that are currently in use and their corresponding     
-   /// pool chains. Used to detect if a shared object is safe to be unloaded. 
-   /// Also used to pack/unpack pointers.                                     
-   ::std::unordered_map<Langulus::RTTI::DMeta, Langulus::Fractalloc::PoolBank> gTypePoolChain;
-
-   /// The set of all pools. Used to quickly determine if a pointer resides   
-   /// inside the memory manager.                                             
-   ::std::unordered_map<uintptr_t, Langulus::Fractalloc::Pool*> gPools;
-
-   /// Used to mask pointers in order to determine whether memory belongs to  
-   /// us or not. Updated on each new allocated pool.                         
-   uintptr_t gPossiblePoolMemorySpace = 0;
-}
-
 namespace Langulus::Fractalloc
 {   
    /// Helper structure for keeping track of free pool IDs                    
@@ -105,8 +72,147 @@ namespace Langulus::Fractalloc
          indexed.erase(pool->mID);
          ++freeIds;
       }
+
+   #if LANGULUS_FEATURE(MEMORY_STATISTICS)      
+      /// Dump a single pool                                                  
+      ///   @param type - pool type                                           
+      ///   @param id - pool id                                               
+      ///   @param pool - the pool to dump                                    
+      static void DumpPool(DMeta type, size_t id, const Pool* pool) noexcept {
+         const auto scope = Logger::InfoScoped(
+            Logger::PushCyan, Logger::Underline, "Pool #", id, " at ",
+            Logger::Hex(pool), Logger::Pop
+         );
+
+         Logger::Line("In use/reserved: ", 
+            Logger::PushGreen, Logger::Size {pool->mAllocatedByFrontend}, Logger::Pop,
+            '/',
+            Logger::PushRed, Logger::Size {static_cast<size_t>(pool->mAllocatedByBackend)}, Logger::Pop
+         );
+
+         Logger::Line("Min/Current/Max threshold: ",
+            Logger::PushGreen, Logger::Size {static_cast<size_t>(pool->mThresholdMin)}, Logger::Pop,
+            '/',
+            Logger::PushYellow, Logger::Size {static_cast<size_t>(pool->mThresholdMax)}, Logger::Pop,
+            '/',
+            Logger::PushRed, Logger::Size {static_cast<size_t>(pool->mAllocatedByBackend)}, Logger::Pop
+         );
+
+         if (type) {
+            Logger::Line("Associated type: `",
+               type.GetCppName(), "`, of size ", type.GetSize());
+         }
+
+         if (pool->mNextEntry) {
+            const auto escope = Logger::Section("Entries: ",
+               Logger::PushGreen, pool->mNextEntry, Logger::Pop
+            );
+
+            size_t consecutiveEmpties = 0;
+            size_t ecounter = 0;
+            do {
+               const auto entry = pool->AllocationFromIndex(ecounter);
+               if (entry->GetUses()) {
+                  if (consecutiveEmpties) {
+                     if (consecutiveEmpties == 1)
+                        Logger::Line(Logger::Red, ecounter-1, "] ", "unused entry");
+                     else
+                        Logger::Line(Logger::Red, ecounter - consecutiveEmpties, '-', ecounter-1, "] ",
+                           consecutiveEmpties, " unused entries");
+                     consecutiveEmpties = 0;
+                  }
+
+                  Logger::Line(
+                     Logger::Green, ecounter, "] ", Logger::Hex(entry), " ",
+                     Logger::Size {static_cast<size_t>(entry->GetSize())}, ", ",
+                     entry->GetUses(), " references: `"
+                  );
+
+                  auto raw = entry->GetBlockStart();
+                  for (size_t i = 0; i < ::std::min(size_t {16}, static_cast<size_t>(entry->GetSize())); ++i) {
+                     if (::isprint(raw[i]))
+                        Logger::Append(static_cast<char>(raw[i]));
+                     else
+                        Logger::Append('?');
+                  }
+
+                  if (entry->GetSize() > 16u)
+                     Logger::Append("...`");
+                  else
+                     Logger::Append('`');
+               }
+               else ++consecutiveEmpties;
+            }
+            while (++ecounter < pool->mNextEntry);
+
+            if (consecutiveEmpties) {
+               if (consecutiveEmpties == 1)
+                  Logger::Line(Logger::Red, ecounter-1, "] ", "unused entry");
+               else
+                  Logger::Line(Logger::Red, ecounter - consecutiveEmpties, '-', ecounter-1, "] ",
+                     consecutiveEmpties, " unused entries");
+               consecutiveEmpties = 0;
+            }
+         }
+      }
+
+      void DumpPools(DMeta type) const {
+         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+            if (type) {
+               Logger::Append("(boundaries: ");
+               if (type.GetBoundaries().empty())
+                  Logger::Append("MAIN");
+               else for (auto& boundary : type.GetBoundaries())
+                  Logger::Append(boundary, ' ');
+               Logger::Append(Logger::Purple, "): ");
+            }
+         #endif
+
+         for (auto& val : indexed | std::views::values)
+            DumpPool(type, val->mID, val);
+      }
+   #endif
    };
+}
+
+namespace
+{
+   #if LANGULUS_FEATURE(MEMORY_STATISTICS)
+      /// Memory statistics                                                   
+      Langulus::Fractalloc::Statistics gStatistics {};
+   #endif
+
+   using Langulus::Fractalloc::Pool;
+   using Langulus::Fractalloc::PoolBank;
+
+   /// Default pool chain.                                                    
+   /// Won't accept types that have size or alignment larger than Alignment.  
+   PoolBank gMainPoolChain {};
    
+   /// The last succesfull Find() result in default pool chain                
+   Pool const* gLastFoundPool {};
+
+   /// Pool chains for types that use PoolTactic::Size and have alignment     
+   /// smaller or equal to Langulus::Alignment.                               
+   constexpr size_t SizeBuckets = sizeof(size_t) * 8;
+   PoolBank gSizePoolChain[SizeBuckets] {};
+   
+   /// The set of types that are currently in use and their corresponding     
+   /// pool chains. Used to detect if a shared object is safe to be unloaded. 
+   /// Also used to pack/unpack pointers.                                     
+   ::std::unordered_map<Langulus::RTTI::DMeta, PoolBank> gTypePoolChain;
+
+   /// The set of all pools. Used to quickly determine if a pointer resides   
+   /// inside the memory manager.                                             
+   ::std::unordered_map<uintptr_t, Pool*> gPools;
+
+   /// Used to mask pointers in order to determine whether memory belongs to  
+   /// us or not. Updated on each new allocated pool.                         
+   uintptr_t gPossiblePoolMemorySpace = 0;
+}
+
+namespace Langulus::Fractalloc
+{   
    /// Each pool allocation has the following structure:                      
    /// [pool data][alignment][allocation data][alignment][client bytes...]    
    ///   @param type - the pooled type                                        
@@ -165,23 +271,20 @@ namespace Langulus::Fractalloc
       LglsAssumeDev(meta, "Invalid meta data");
       Pool* pool = nullptr;
       const auto poolTactic = meta.GetPoolTactic();
-      if (meta) {
-         switch (poolTactic) {
-         case PoolTactic::Size:
-            pool = gSizePoolChain[FastLog2(meta.GetSize())];
-            break;
-         case PoolTactic::Type: {
-            auto found = gTypePoolChain.find(meta);
-            if (found != gTypePoolChain.end())
-               pool = found->second.unindexed;
-            break;
-         }
-         case PoolTactic::Main:
-            pool = gMainPoolChain;
-            break;
-         }
+      switch (poolTactic) {
+      case PoolTactic::Size:
+         pool = gSizePoolChain[FastLog2(meta.GetSize())].unindexed;
+         break;
+      case PoolTactic::Type: {
+         auto found = gTypePoolChain.find(meta);
+         if (found != gTypePoolChain.end())
+            pool = found->second.unindexed;
+         break;
       }
-      else pool = gMainPoolChain;
+      case PoolTactic::Main:
+         pool = gMainPoolChain.unindexed;
+         break;
+      }
 
       //	Attempt to place allocation in the chosen chain                
       unsigned pool_misses = 0;
@@ -231,9 +334,8 @@ namespace Langulus::Fractalloc
          // If we're using the size pool chain, bring the new pool in   
          // front, so that next allocation is placed in it, as it is    
          // most likely still empty.                                    
-         auto& sizeChain = gSizePoolChain[FastLog2(meta.GetSize())];
-         pool->mNext = sizeChain;
-         sizeChain = pool;
+         auto& poolBank = gSizePoolChain[FastLog2(meta.GetSize())];
+         poolBank.LinkPool(pool);
          break;
       }
       case PoolTactic::Type: {
@@ -244,8 +346,7 @@ namespace Langulus::Fractalloc
          break;
       }
       case PoolTactic::Main:
-         pool->mNext = gMainPoolChain;
-         gMainPoolChain = pool;
+         gMainPoolChain.LinkPool(pool);
          break;
       }
 
@@ -259,147 +360,38 @@ namespace Langulus::Fractalloc
    auto Allocator::GetStatistics() noexcept -> const Statistics& {
       return gStatistics;
    }
-   
-   /// Dump a single pool                                                     
-   ///   @param type - pool type                                              
-   ///   @param id - pool id                                                  
-   ///   @param pool - the pool to dump                                       
-   void Allocator::DumpPool(DMeta type, size_t id, const Pool* pool) noexcept {
-      const auto scope = Logger::InfoScoped(
-         Logger::PushCyan, Logger::Underline, "Pool #", id, " at ",
-         Logger::Hex(pool), Logger::Pop
-      );
-
-      Logger::Line("In use/reserved: ", 
-         Logger::PushGreen, Logger::Size {pool->mAllocatedByFrontend}, Logger::Pop,
-         '/',
-         Logger::PushRed, Logger::Size {static_cast<size_t>(pool->mAllocatedByBackend)}, Logger::Pop
-      );
-
-      Logger::Line("Min/Current/Max threshold: ",
-         Logger::PushGreen, Logger::Size {static_cast<size_t>(pool->mThresholdMin)}, Logger::Pop,
-         '/',
-         Logger::PushYellow, Logger::Size {static_cast<size_t>(pool->mThresholdMax)}, Logger::Pop,
-         '/',
-         Logger::PushRed, Logger::Size {static_cast<size_t>(pool->mAllocatedByBackend)}, Logger::Pop
-      );
-
-      if (type) {
-         Logger::Line("Associated type: `",
-            type.GetCppName(), "`, of size ", type.GetSize());
-      }
-
-      if (pool->mNextEntry) {
-         const auto escope = Logger::Section("Entries: ",
-            Logger::PushGreen, pool->mNextEntry, Logger::Pop
-         );
-
-         size_t consecutiveEmpties = 0;
-         size_t ecounter = 0;
-         do {
-            const auto entry = pool->AllocationFromIndex(ecounter);
-            if (entry->mReferences) {
-               if (consecutiveEmpties) {
-                  if (consecutiveEmpties == 1)
-                     Logger::Line(Logger::Red, ecounter-1, "] ", "unused entry");
-                  else
-                     Logger::Line(Logger::Red, ecounter - consecutiveEmpties, '-', ecounter-1, "] ",
-                        consecutiveEmpties, " unused entries");
-                  consecutiveEmpties = 0;
-               }
-
-               Logger::Line(
-                  Logger::Green, ecounter, "] ", Logger::Hex(entry), " ",
-                  Logger::Size {static_cast<size_t>(entry->GetSize())}, ", ",
-                  entry->mReferences, " references: `"
-               );
-
-               auto raw = entry->GetBlockStart();
-               for (size_t i = 0; i < ::std::min(size_t {16}, static_cast<size_t>(entry->GetSize())); ++i) {
-                  if (::isprint(raw[i]))
-                     Logger::Append(static_cast<char>(raw[i]));
-                  else
-                     Logger::Append('?');
-               }
-
-               if (entry->GetSize() > 16u)
-                  Logger::Append("...`");
-               else
-                  Logger::Append('`');
-            }
-            else ++consecutiveEmpties;
-         }
-         while (++ecounter < pool->mNextEntry);
-
-         if (consecutiveEmpties) {
-            if (consecutiveEmpties == 1)
-               Logger::Line(Logger::Red, ecounter-1, "] ", "unused entry");
-            else
-               Logger::Line(Logger::Red, ecounter - consecutiveEmpties, '-', ecounter-1, "] ",
-                  consecutiveEmpties, " unused entries");
-            consecutiveEmpties = 0;
-         }
-      }
-   }
 
    /// Dump all currently allocated pools and entries, useful to locate leaks 
    void Allocator::DumpPools() noexcept {
       auto section = Logger::InfoScoped("MANAGED MEMORY POOL DUMP");
 
-      // Dump default pool chain                                        
-      if (gMainPoolChain) {
+      // Dump main pool chain                                           
+      if (gMainPoolChain.unindexed) {
          const auto scope = Logger::InfoScoped(Logger::Purple, "MAIN POOL CHAIN: ");
-         size_t counter = 0;
-         auto pool = gMainPoolChain;
-         while (pool) {
-            DumpPool({}, counter, pool);
-            pool = pool->mNext;
-            ++counter;
-         }
+         gMainPoolChain.DumpPools({});
       }
 
-      // Dump every size pool chain                                     
-      for (size_t size = 0; size < sizeof(size_t) * 8; ++size) {
-         if (not gSizePoolChain[size])
+      // Dump every valid size pool chain                               
+      for (auto& sized : gSizePoolChain) {
+         if (not sized.unindexed)
             continue;
 
          const auto scope = Logger::InfoScoped(Logger::Purple, 
-            "SIZE POOL CHAIN FOR ", Logger::Red, Logger::Size {1ul << size},
+            "SIZE POOL CHAIN FOR ", Logger::Red, Logger::Size {1ul << (&sized - gSizePoolChain)},
             Logger::Purple, ": "
          );
 
-         size_t counter = 0;
-         auto pool = gSizePoolChain[size];
-         while (pool) {
-            DumpPool({}, counter, pool);
-            pool = pool->mNext;
-            ++counter;
-         }
+         sized.DumpPools({});
       }
       
       // Dump every type pool chain                                     
       for (auto& type : gTypePoolChain) {
-         #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            const auto scope = Logger::InfoScoped(Logger::Purple, 
-               "TYPE POOL CHAIN FOR `", Logger::Red, type.first.GetCppName(), 
-               Logger::Purple, "` (boundaries: "
-            );
-            
-            if (type.first.GetBoundaries().empty())
-               Logger::Append("MAIN");
-            else for (auto& boundary : type.first.GetBoundaries())
-               Logger::Append(boundary, ' ');
-            
-            Logger::Append(Logger::Purple, "): ");
-         #else
-            const auto scope = Logger::InfoScoped(Logger::Purple, 
-               "TYPE POOL CHAIN FOR `", Logger::Red, type.first.GetCppName(), 
-               Logger::Purple, '`'
-            );
-         #endif
+         const auto scope = Logger::InfoScoped(Logger::Purple,
+            "TYPE POOL CHAIN FOR `", Logger::Red, type.first.GetCppName(),
+            Logger::Purple, "` "
+         );
 
-         for (auto& val : type.second.indexed | std::views::values)
-            DumpPool(type.first, val->mID, val);
+         type.second.DumpPools(type.first);
       }
    }
 
@@ -880,5 +872,123 @@ namespace Langulus::Fractalloc
 
       // If reached, then memory is out of jurisdiction                 
       return false;
+   }
+
+   /// Allocate while conforming to packed pointer limits                     
+   ///   @param pool_budget number of bits for pool IDs                       
+   ///   @param entry_budget number of bits for entry IDs                     
+   ///   @param element_budget number of bits for element IDs                 
+   ///   @param meta data type of the allocation                              
+   ///   @param size size of the allocation in bytes                          
+   auto Allocator::AllocatePackedInner(
+      size_t pool_budget,
+      size_t entry_budget,
+      size_t element_budget,
+      DMeta meta, pot_t size
+   ) has_assumptions -> Allocation* {
+      // Decide pool chain based on meta data                           
+      LglsAssumeDev(meta, "Invalid meta data");
+      Pool* pool = nullptr;
+      const auto poolTactic = meta.GetPoolTactic();
+      switch (poolTactic) {
+      case PoolTactic::Size:
+         pool = gSizePoolChain[FastLog2(meta.GetSize())];
+         break;
+      case PoolTactic::Type: {
+         auto found = gTypePoolChain.find(meta);
+         if (found != gTypePoolChain.end())
+            pool = found->second.unindexed;
+         break;
+      }
+      case PoolTactic::Main:
+         pool = gMainPoolChain;
+         break;
+      }
+
+      //	Attempt to place allocation in the chosen chain                
+      unsigned pool_misses = 0;
+      Allocation* entry = nullptr;
+      while (pool) {
+         entry = pool->Allocate(size);
+         if (entry)
+            break;
+         pool = pool->mNext;
+         ++pool_misses;
+      }
+
+      if (entry) {
+         // We're done                                                  
+         #if LANGULUS_FEATURE(MEMORY_STATISTICS)
+            gStatistics.mEntries += 1;
+            gStatistics.mBytesAllocatedByFrontend += static_cast<size_t>(entry->GetSize());
+            LglsAssumeDev(
+               gStatistics.mBytesAllocatedByFrontend <= gStatistics.mBytesAllocatedByBackend,
+               "Impossible amount of frontend allocation"
+            );
+         #endif
+         return entry;
+      }
+
+      //                                                                
+      // If reached, chosen pool chain can't contain the memory.        
+      // Allocate a new pool and add it at the front of the chain.      
+      // Make new pool bigger, depending on how many pool misses we had.
+      // Many pool misses indicate that type is hot and used often.     
+      const pot_t new_pool_size = meta.GetMinPoolsize() << (pool_misses / 2);
+      pool = AllocatePool(meta, size < new_pool_size ? new_pool_size : size);
+      if (not pool)
+         return nullptr;
+
+      LglsVerbose(
+         "Fractalloc: ", Logger::Cyan, "New pool ", Logger::Hex(pool),
+         " of size ", Logger::Size {static_cast<size_t>(pool->GetAllocatedByBackend())}
+      );
+
+      // Place allocation in the new pool. This is guaranteed to work.  
+      entry = pool->Allocate(size);
+
+      // Time to update the pool chain with the new pool.               
+      switch (poolTactic) {
+      case PoolTactic::Size: {
+         // If we're using the size pool chain, bring the new pool in   
+         // front, so that next allocation is placed in it, as it is    
+         // most likely still empty.                                    
+         auto& sizeChain = gSizePoolChain[FastLog2(meta.GetSize())];
+         pool->mNext = sizeChain;
+         sizeChain = pool;
+         break;
+      }
+      case PoolTactic::Type: {
+         // Get the pool bank corresponding to the meta data. If such   
+         // doesn't exist, it will be implicitly created.               
+         auto& poolBank = gTypePoolChain[meta];
+         poolBank.LinkPool(pool);
+         break;
+      }
+      case PoolTactic::Main:
+         pool->mNext = gMainPoolChain;
+         gMainPoolChain = pool;
+         break;
+      }
+
+      IF_LANGULUS_MEMORY_STATISTICS(gStatistics.AddPool(pool));
+      return entry;
+   }
+      
+   auto Allocator::ReallocatePackedInner(
+      size_t pool_budget,
+      size_t entry_budget,
+      size_t element_budget,
+      DMeta, pot_t, Allocation*
+   ) has_assumptions -> Allocation* {
+
+   }
+
+   void* Allocator::UnpackPointerInner(
+      size_t poolId,
+      size_t entryId,
+      size_t elementId
+   ) has_assumptions {
+
    }
 }

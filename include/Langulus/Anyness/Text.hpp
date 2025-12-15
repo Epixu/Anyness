@@ -317,6 +317,25 @@ namespace Langulus::Anyness
          return operator += (rhs.mToken);
       }
       
+      /// Custom concatenation operator that includes characters              
+      template<CT::Character T>
+      Text& operator += (T&& rhs) {
+         if (not this->IsAllocated()) {
+            *this = Text {FWD(rhs)};
+            return *this;
+         }
+
+         using CHAR = Decvq<Deref<Deint<T>>>;
+         static_assert(::std::same_as<CHAR, char>, "Type mismatch");
+         decltype(auto) source = DeintCast(FWD(rhs));
+         const auto newCount = this->GetCount() + 1;
+         this->AllocateMore(newCount);
+         *this->GetRawAs<char>() = source;
+         this->SetCountInner(newCount);
+         this->ResetHash();
+         return *this;
+      }
+      
       /// Custom concatenation operator that includes string literals,        
       /// null-terminated string pointers, and std::continuous_ranges         
       template<CT::Text T> requires CT::NotContainer<T>

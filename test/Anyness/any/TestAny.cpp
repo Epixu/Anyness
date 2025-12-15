@@ -20,31 +20,33 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<Any, int, ScopedElement<int>>)
    , (Types<Any, Any, ScopedElement<Any>>)
    , (Types<Any, RT, ScopedElement<RT>>)
+   , (Types<Any, char, ScopedElement<char>>)
 
    , (Types<Any, Text*, ScopedElement<Text*>>)
    , (Types<Any, int*, ScopedElement<int*>>)
    , (Types<Any, Any*, ScopedElement<Any*>>)
    , (Types<Any, RT*, ScopedElement<RT*>>)
+   , (Types<Any, char*, ScopedElement<char*>>)
 
    , (Types<Any, Text**, ScopedElement<Text**>>)
    , (Types<Any, int**, ScopedElement<int**>>)
    , (Types<Any, Any**, ScopedElement<Any**>>)
-   , (Types<Any, RT**, ScopedElement<RT**>>)
+   , (Types<Any, char**, ScopedElement<char**>>)
 
    , (Types<TAny<Text>, Text, ScopedElement<Text>>)
    , (Types<TAny<int>, int, ScopedElement<int>>)
    , (Types<TAny<Any>, Any, ScopedElement<Any>>)
-   , (Types<TAny<RT>, RT, ScopedElement<RT>>)
+   , (Types<TAny<char>, char, ScopedElement<char>>)
 
    , (Types<TAny<Text*>, Text*, ScopedElement<Text*>>)
    , (Types<TAny<int*>, int*, ScopedElement<int*>>)
    , (Types<TAny<Any*>, Any*, ScopedElement<Any*>>)
-   , (Types<TAny<RT*>, RT*, ScopedElement<RT*>>)
+   , (Types<TAny<char*>, char*, ScopedElement<char*>>)
 
    , (Types<TAny<Text**>, Text**, ScopedElement<Text**>>)
    , (Types<TAny<int**>, int**, ScopedElement<int**>>)
    , (Types<TAny<Any**>, Any**, ScopedElement<Any**>>)
-   , (Types<TAny<RT**>, RT**, ScopedElement<RT**>>)
+   , (Types<TAny<char**>, char**, ScopedElement<char**>>)
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
@@ -83,7 +85,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<Any, pptr16, ScopedElementPacked<pptr16>>)
    , (Types<Any, pptr32, ScopedElementPacked<pptr32>>)
    
-   , (Types<TAny<pptr8>,  pptr8, ScopedElementPacked<pptr8>>)
+   , (Types<TAny<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>)
    , (Types<TAny<pptr16>, pptr16, ScopedElementPacked<pptr16>>)
    , (Types<TAny<pptr32>, pptr32, ScopedElementPacked<pptr32>>)
    #endif

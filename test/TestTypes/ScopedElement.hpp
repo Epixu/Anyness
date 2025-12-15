@@ -38,18 +38,18 @@ protected:
 
             place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
 
-            if constexpr (requires { new INNER{ FWD(arguments)... }; })
-               new (place) INNER{ FWD(arguments)... };
-            else if constexpr (requires { new INNER{ INNER::FromNumber(FWD(arguments)...) }; })
-               new (place) INNER{ INNER::FromNumber(FWD(arguments)...) };
+            if constexpr (requires { new INNER (FWD(arguments)...); })
+               new (place) INNER (FWD(arguments)...);
+            else if constexpr (requires { new INNER (INNER::FromNumber(FWD(arguments)...)); })
+               new (place) INNER (INNER::FromNumber(FWD(arguments)...));
             else
                static_assert(false, "Unable to construct");
          }
          else {
-            if constexpr (requires { new INNER{ FWD(arguments)... }; })
-               place = new INNER{ FWD(arguments)... };
-            else if constexpr (requires { new INNER{ INNER::FromNumber(FWD(arguments)...) }; })
-               place = new INNER{ INNER::FromNumber(FWD(arguments)...) };
+            if constexpr (requires { new INNER (FWD(arguments)...); })
+               place = new INNER (FWD(arguments)...);
+            else if constexpr (requires { new INNER (INNER::FromNumber(FWD(arguments)...)); })
+               place = new INNER (INNER::FromNumber(FWD(arguments)...));
             else
                static_assert(false, "Unable to construct");
          }

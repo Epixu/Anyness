@@ -18,13 +18,14 @@ namespace Langulus::CTTI
    /// 2. Add a public `using CTTI_Character = Yes<>;` in T                   
    template<class T>
    struct Character {
+      using DT = Decvq<Deref<T>>;
       static constexpr bool Default = true;
       static constexpr bool Enabled =
-            ::std::same_as<Decvq<Deref<T>>, char>
-         or ::std::same_as<Decvq<Deref<T>>, wchar_t>
-         or ::std::same_as<Decvq<Deref<T>>, char8_t>
-         or ::std::same_as<Decvq<Deref<T>>, char16_t>
-         or ::std::same_as<Decvq<Deref<T>>, char32_t>;
+            ::std::same_as<DT, char>
+         or ::std::same_as<DT, wchar_t>
+         or ::std::same_as<DT, char8_t>
+         or ::std::same_as<DT, char16_t>
+         or ::std::same_as<DT, char32_t>;
    };
 }
 

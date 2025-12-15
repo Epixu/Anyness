@@ -113,8 +113,8 @@ namespace Langulus::Fractalloc
          static bool IntegrityCheck();
       
       private:
-         LANGULUS_API(FRACTALLOC)
-         static void DumpPool(DMeta type, size_t id, const Pool*) noexcept;
+         //LANGULUS_API(FRACTALLOC)
+         //static void DumpPool(DMeta type, size_t id, const Pool*) noexcept;
             
          LANGULUS_API(FRACTALLOC)
          static bool IntegrityCheckChain(const Pool*);
