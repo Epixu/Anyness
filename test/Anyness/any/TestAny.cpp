@@ -15,6 +15,8 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
+, (Types<Any, pptr8,  ScopedElementPacked<pptr8>>)
+
    // Elements are not allocated by the memory manager                  
    , (Types<Any, Text, ScopedElement<Text>>)
    , (Types<Any, int, ScopedElement<int>>)
@@ -81,7 +83,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    , (Types<TAny<RT**>, RT**, ScopedElement<RT**, true>>)
 
    // Packed pointers                                                   
-   , (Types<Any, pptr8,  ScopedElementPacked<pptr8>>)
    , (Types<Any, pptr16, ScopedElementPacked<pptr16>>)
    , (Types<Any, pptr32, ScopedElementPacked<pptr32>>)
    

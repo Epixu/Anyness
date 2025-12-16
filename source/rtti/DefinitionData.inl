@@ -40,10 +40,9 @@
 #include "DefinitionTag.hpp"
 
 #if 0 or LANGULUS_META_VERBOSITY_MASTER_SWITCH()
-   #include <Langulus/Logger.hpp>
-   #define VERBOSE(...) Logger::Verbose(__VA_ARGS__)
+   #include <Langulus/Logger/EnableVerbose.hpp>
 #else
-   #define VERBOSE(...)
+   #include <Langulus/Logger/NoVerbose.hpp>
 #endif
 
 
@@ -51,47 +50,84 @@ namespace Langulus::RTTI
 {
    namespace Inner
    {
-      /// These functions are used to reduce the number of generated lambdas  
-      /// at reflection time                                                  
-      LANGULUS(NOINLINE)
-      inline void SparseDefaultDeref(void* from, void* to) noexcept {
-         auto typed_from = static_cast<void**>(from);
-         auto typed_to   = static_cast<void**>(to);
-         *typed_to = *typed_from;
+      /// These functions are used to reduce the number of generated unique   
+      /// lambdas at reflection time                                          
+      template<class T> LANGULUS(NOINLINE)
+      void SparseDefaultDeref(void* from, void* to) {
+         static_assert(CT::NotConvoluted<T>,
+            "Strip qualifiers to avoid unnecessary instantiations");
+         if constexpr (::std::is_same_v<T, void*>) {
+            auto typed_from = static_cast<void**>(from);
+            auto typed_to   = static_cast<void**>(to);
+            *typed_to = *typed_from;            
+         }
+         else {
+            using DenserT = Deref<Deptr<T>>;
+            auto typed_from = static_cast<T*>(from);
+            auto typed_to   = static_cast<DenserT*>(to);
+            *typed_to = **typed_from;
+         }
       };
 
-      LANGULUS(NOINLINE)
-      inline void SparseDefaultConstructor(void* at) noexcept {
-         auto atT = static_cast<void**>(at);
-         *atT = nullptr;
+      template<class T> LANGULUS(NOINLINE)
+      void SparseDefaultConstructor(void* at) noexcept {
+         static_assert(CT::NotConvoluted<T>,
+            "Strip qualifiers to avoid unnecessary instantiations");
+         auto atT = static_cast<T*>(at);
+         new (atT) T{};
       };
 
-      LANGULUS(NOINLINE)
-      inline void SparseCopyConstructor(void* from, void* to) noexcept {
-         auto fromT = static_cast<void**>(from);
-         auto toT = static_cast<void**>(to);
+      template<class T> LANGULUS(NOINLINE)
+      void SparseCopyConstructor(void* from, void* to) noexcept {
+         static_assert(CT::NotConvoluted<T>,
+            "Strip qualifiers to avoid unnecessary instantiations");
+         auto fromT = static_cast<T*>(from);
+         auto toT = static_cast<T*>(to);
          *toT = *fromT;
       };
 
-      LANGULUS(NOINLINE)
-      inline auto SparseCompare(const void* lhs, const void* rhs) noexcept -> Compared {
+      template<class T> LANGULUS(NOINLINE)
+      auto SparseCompare(const void* lhs, const void* rhs) noexcept -> Compared {
+         static_assert(CT::NotConvoluted<T>,
+            "Strip qualifiers to avoid unnecessary instantiations");
+         
          // Pointers are either the same or not - not                   
          // ordered for security reasons                                
-         auto lhsT = static_cast<void const* const*>(lhs);
-         auto rhsT = static_cast<void const* const*>(rhs);
-         return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;
+         static_assert(CT::NotConvoluted<T>,
+            "Strip qualifiers to avoid unnecessary instantiations");
+         if constexpr (::std::is_same_v<T, void*>) {
+            auto lhsT = static_cast<void const* const*>(lhs);
+            auto rhsT = static_cast<void const* const*>(rhs);
+            return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;
+         }
+         else {
+            auto lhsT = static_cast<T const*>(lhs);
+            auto rhsT = static_cast<T const*>(rhs);
+            return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;            
+         }
       };
 
-      LANGULUS(NOINLINE)
-      inline bool SparseCompareEqual(const void* lhs, const void* rhs) noexcept {
-         auto lhsT = static_cast<void const* const*>(lhs);
-         auto rhsT = static_cast<void const* const*>(rhs);
-         return *lhsT == *rhsT;
+      template<class T> LANGULUS(NOINLINE)
+      bool SparseCompareEqual(const void* lhs, const void* rhs) noexcept {
+         static_assert(CT::NotConvoluted<T>,
+            "Strip qualifiers to avoid unnecessary instantiations");
+         if constexpr (::std::is_same_v<T, void*>) {
+            auto lhsT = static_cast<void const* const*>(lhs);
+            auto rhsT = static_cast<void const* const*>(rhs);
+            return *lhsT == *rhsT;
+         }
+         else {
+            auto lhsT = static_cast<T const*>(lhs);
+            auto rhsT = static_cast<T const*>(rhs);
+            return *lhsT == *rhsT;            
+         }
       };
 
-      LANGULUS(NOINLINE)
-      inline auto SparseHash(void* lhs) noexcept -> Hash {
-         auto lhsT = static_cast<void**>(lhs);
+      template<class T> LANGULUS(NOINLINE)
+      auto SparseHash(void* lhs) noexcept -> Hash {
+         static_assert(CT::NotConvoluted<T>,
+            "Strip qualifiers to avoid unnecessary instantiations");
+         auto lhsT = static_cast<T*>(lhs);
          return HashOf<true>(*lhsT);
       };
    }
@@ -529,7 +565,7 @@ namespace Langulus::RTTI
       }
       
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         VERBOSE(
+         LglsVerbose(
             Logger::Cyan, "Data ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             "registered from ", (Boundary?Boundary:"MAIN")
@@ -729,7 +765,7 @@ namespace Langulus::RTTI
       }
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         VERBOSE(
+         LglsVerbose(
             Logger::Cyan, "Data ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             "registered from ", (Boundary?Boundary:"MAIN")
@@ -847,6 +883,7 @@ namespace Langulus::RTTI
          definition.mDecvqAll  = &definition;
       }
 
+      using LambdaT = Tif<::std::is_pointer_v<T>, void*, DecvqAll<T>>;
       using DenserT = Deref<Deptr<T>>;
       if constexpr (CT::Complete<DenserT>) {
          // Reflect the denser type                                     
@@ -863,13 +900,7 @@ namespace Langulus::RTTI
                definition.mID = deptr->mID;
          #endif
 
-         if constexpr (::std::is_pointer_v<T>)
-            definition.mCurrentBoundary.mDereference = Inner::SparseDefaultDeref;
-         else definition.mCurrentBoundary.mDereference = [](void* from, void* to) {
-            auto typed_from = static_cast<T*>(from);
-            auto typed_to   = static_cast<DenserT*>(to);
-            *typed_to = **typed_from;
-         };
+         definition.mCurrentBoundary.mDereference = Inner::SparseDefaultDeref<LambdaT>;
       }
       else {
          // An incomplete sparse type always has mDeptr of 1            
@@ -902,17 +933,17 @@ namespace Langulus::RTTI
       // Constructor reflections                                        
       // @note these are allowed even if T is constant                  
       definition.mCurrentBoundary.mDefaultConstructor
-         = Inner::SparseDefaultConstructor;
+         = Inner::SparseDefaultConstructor<LambdaT>;
       definition.mCurrentBoundary.mCopyConstructor
-         = Inner::SparseCopyConstructor;
+         = Inner::SparseCopyConstructor<LambdaT>;
       definition.mCurrentBoundary.mReferConstructor
-         = Inner::SparseCopyConstructor;
+         = Inner::SparseCopyConstructor<LambdaT>;
       definition.mCurrentBoundary.mDisownConstructor
-         = Inner::SparseCopyConstructor;
+         = Inner::SparseCopyConstructor<LambdaT>;
       definition.mCurrentBoundary.mMoveConstructor
-         = Inner::SparseCopyConstructor;
+         = Inner::SparseCopyConstructor<LambdaT>;
       definition.mCurrentBoundary.mAbandonConstructor
-         = Inner::SparseCopyConstructor;
+         = Inner::SparseCopyConstructor<LambdaT>;
 
       if constexpr (CT::Complete<Decay<T>>) {
          // Always use the origin cloning routine                       
@@ -925,15 +956,15 @@ namespace Langulus::RTTI
       // @note allowed only if T is mutable                             
       if constexpr (CT::Mutable<T>) {
          definition.mCurrentBoundary.mCopyAssigner
-            = Inner::SparseCopyConstructor;
+            = Inner::SparseCopyConstructor<LambdaT>;
          definition.mCurrentBoundary.mReferAssigner
-            = Inner::SparseCopyConstructor;
+            = Inner::SparseCopyConstructor<LambdaT>;
          definition.mCurrentBoundary.mDisownAssigner
-            = Inner::SparseCopyConstructor;
+            = Inner::SparseCopyConstructor<LambdaT>;
          definition.mCurrentBoundary.mMoveAssigner
-            = Inner::SparseCopyConstructor;
+            = Inner::SparseCopyConstructor<LambdaT>;
          definition.mCurrentBoundary.mAbandonAssigner
-            = Inner::SparseCopyConstructor;
+            = Inner::SparseCopyConstructor<LambdaT>;
       
          if constexpr (CT::Complete<Decay<T>>) {
             // Always use the origin cloning routine                    
@@ -945,11 +976,11 @@ namespace Langulus::RTTI
       //                                                                
       // Other utilities                                                
       definition.mCurrentBoundary.mHasher
-         = Inner::SparseHash;   
+         = Inner::SparseHash<LambdaT>;   
       definition.mCurrentBoundary.mComparer
-         = Inner::SparseCompare;         
+         = Inner::SparseCompare<LambdaT>;         
       definition.mCurrentBoundary.mComparerEqual
-         = Inner::SparseCompareEqual;         
+         = Inner::SparseCompareEqual<LambdaT>;         
 
       // Reflect the minimal allocation in bytes                        
       definition.mMinimalAllocation = CT::GetMinAlloc<T>();
@@ -993,7 +1024,7 @@ namespace Langulus::RTTI
       }
       
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         VERBOSE(
+         LglsVerbose(
             Logger::Cyan, "Data ", definition.mNameOf,
             " (ID: ", definition.mID, ") ", Logger::Green,
             "registered from ", (Boundary?Boundary:"MAIN")
@@ -1009,7 +1040,7 @@ namespace Langulus::RTTI
    }
    
    inline DefinitionData::~DefinitionData() {
-      VERBOSE(Logger::Red, "Destroying data definition: ", Logger::Cyan, mNameOf);
+      LglsVerbose(Logger::Red, "Destroying data definition: ", Logger::Cyan, mNameOf);
    }
    
 
@@ -1085,4 +1116,4 @@ namespace Langulus::RTTI
    }
 }
 
-#undef VERBOSE
+#include <Langulus/Logger/DisableVerbose.hpp>

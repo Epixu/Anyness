@@ -272,7 +272,7 @@ namespace Langulus
             }
          }
       }
-      else if constexpr (::std::is_pointer_v<T>) {
+      else if constexpr (CT::Sparse<T> /*::std::is_pointer_v<T>*/) {
          // Hash pointer, never dereference it                          
          if consteval {
             if constexpr (FORCE_RUNTIME)
