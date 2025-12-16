@@ -646,8 +646,7 @@ namespace Langulus::Fractalloc
          );
       }
    #endif
-   }
-   
+   }   
    
    /// Integrity checks                                                       
    ///   @return true if no memory errors occured                             
@@ -668,5 +667,4 @@ namespace Langulus::Fractalloc
       return true;
    }
 #endif
-
 }

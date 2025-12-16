@@ -74,11 +74,6 @@ namespace Langulus::CTTI
    };
 }
 
-/// @note short-circuiting inside concepts doesn't properly work in Clang,    
-///    but no one seems to care:                                              
-///    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54310                     
-///    This is why I've wrapped it in a lambda with 'if constexpr'            
-
 /// Checks for reflection traits inside types themselves.                     
 /// Requires the TYPE to be complete in order to do that.                     
 #define LANGULUS_CTTI_DELVE_IN(TYPE,NAME) ([] -> bool { \
@@ -334,6 +329,11 @@ namespace Langulus
       concept Sparse = PartialValidate<T...>
           and (LANGULUS_CTTI_CHECK(Decvq<ShedDeref<T>>, Sparse) and ...);
 
+      /// Check if all T are custom pointer types.                            
+      template<class...T>
+      concept CustomPointer = PartialValidate<T...> and Sparse<T...>
+          and ((not ::std::is_pointer_v<ShedDeref<T>>) and ...);
+
       /// Check if all T are dense. Detects custom pointer types.             
       template<class...T>
       concept Dense = PartialValidate<T...> and ((not Sparse<T>) and ...);
@@ -376,14 +376,14 @@ namespace Langulus
       /// Includes support for custom pointers.                               
       ///   @attention this doesn't shed or remove references before check    
       template<class...T>
-      concept Decayed = PartialValidate<T...> and [] {
-          if constexpr (((::std::is_bounded_array_v<T>
-                       or ::std::is_reference_v<T>
-                       or ::std::is_const_v<T>
-                       or ::std::is_volatile_v<T>) or ...))
-             return false;
-          else return CT::Dense<T...>; 
-        } ();
+      concept Decayed = PartialValidate<T...> and LglsSif(((
+            ::std::is_bounded_array_v<T>
+         or ::std::is_reference_v<T>
+         or ::std::is_const_v<T>
+         or ::std::is_volatile_v<T>) or ...),
+            return false,
+            return CT::Dense<T...>
+         );
    
       /// Check if types have reference/pointer/extent/const/volatile         
       ///   @attention this doesn't shed or remove references before check    
@@ -394,12 +394,12 @@ namespace Langulus
       /// with [] and isn't a reference.                                      
       ///   @attention still allowed to be cv-qualified                       
       template<class...T>
-      concept Slab = PartialValidate<T...>and [] {
-          if constexpr (((::std::is_reference_v<T>
-                       or ::std::is_array_v<T>) or ...))
-             return false;
-          else return CT::Dense<T...>; 
-        } ();
+      concept Slab = PartialValidate<T...> and LglsSif(((
+            ::std::is_reference_v<T>
+         or ::std::is_array_v<T>) or ...),
+            return false,
+            return CT::Dense<T...>
+         );
    }
 
    namespace Inner

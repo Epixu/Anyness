@@ -637,3 +637,11 @@ namespace Langulus
       }
    }
 }
+
+/// Short-circuiting inside concepts doesn't properly work in Clang,          
+///    but no one seems to care. This is why I've wrapped it in a lambda with 
+///   'if constexpr':                                                         
+#define LglsSif(CONDITION, IF_YES, IF_NO) ([] -> bool { \
+      if constexpr (CONDITION) { IF_YES; } \
+      else                     { IF_NO;  } \
+   }())

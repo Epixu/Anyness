@@ -883,7 +883,7 @@ namespace Langulus::RTTI
          definition.mDecvqAll  = &definition;
       }
 
-      using LambdaT = Tif<::std::is_pointer_v<T>, void*, DecvqAll<T>>;
+      using LambdaT = Tif<CT::CustomPointer<T>, DecvqAll<T>, void*>;
       using DenserT = Deref<Deptr<T>>;
       if constexpr (CT::Complete<DenserT>) {
          // Reflect the denser type                                     
@@ -907,10 +907,16 @@ namespace Langulus::RTTI
          definition.mDeptr = reinterpret_cast<DefinitionData*>(intptr_t {1});
       }
 
+      if constexpr (CT::CustomPointer<T>) {
+         definition.mCurrentBoundary.mUnpacker = [](void* ptr) {
+            return static_cast<void*>(*static_cast<T*>(ptr));
+         };
+      }
+
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         if constexpr (not CT::Complete<DenserT>
-         or ::std::is_const_v<DenserT>
-         or ::std::is_pointer_v<DenserT>) {
+         if constexpr (not CT::Complete<DenserT> or ::std::is_const_v<DenserT>
+         or LglsSif(CT::Complete<DenserT>, return CT::Sparse<DenserT>, return false)) {
+            // Custom pointers always result in a unique ID             
             // Multiple indirections always result in a unique ID       
             // Incomplete types are always considered an indirection    
             // A constant denser type (at any level of indirection)     

@@ -128,6 +128,7 @@ namespace Langulus::RTTI
       using FReference     = int (*)(void* self, int modifier);
       using FDispatch      = bool (*)(void* self, Flow::Verb& verb);
       using FAccessMember  = void* (*)(void* owner);
+      using FUnpack        = FAccessMember;
       using FTypeRetriever = DefinitionData const* (*)();
       
       /// Type-erased member variable reflection                              
@@ -192,6 +193,10 @@ namespace Langulus::RTTI
          // Dereference a pointer once. The resulting type will be      
          // an instance of mDeptr. Supports custom pointer types.       
          FBinary mDereference = nullptr;
+
+         // If available, indicates a custom pointer is reflected.      
+         // This function can be used to turn it back into a normal one.
+         FUnpack mUnpacker = nullptr;
 
          // The default constructor, wrapped in a lambda expression if  
          // available. Takes a pointer for a placement-new expression   

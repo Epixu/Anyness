@@ -95,9 +95,11 @@ namespace Langulus::RTTI::Inner
       const auto rid = other.Base::GetID();
       if (lid == rid)
          return true;
-      if (lid and rid)
-         return Instance.GetMetaDataByID(lid,       sparse,       constant)->mOrigin
-             == Instance.GetMetaDataByID(rid, other.sparse, other.constant)->mOrigin;
+      if (lid and rid) {
+         auto o1 = Instance.GetMetaDataByID(lid,       sparse,       constant)->mOrigin;
+         auto o2 = Instance.GetMetaDataByID(rid, other.sparse, other.constant)->mOrigin;
+         return o1 == o2;
+      }
       return false;
    }
 
@@ -363,6 +365,16 @@ namespace Langulus::RTTI::Inner
       const auto id = Base::GetID();
       if (id)
          return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mDereference;
+      return {};
+   }
+
+   /// Get the reflected unpacker                                             
+   TEMPLATE()
+   auto ME()::GetUnpacker()
+   const noexcept -> DefinitionData::FUnpack {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mUnpacker;
       return {};
    }
 

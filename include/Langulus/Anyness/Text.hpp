@@ -107,7 +107,7 @@ namespace Langulus::Anyness
             static_assert(Same<CHAR, char>, "Type mismatch");
             
             size_t count;
-            if constexpr (CT::PackedPointer<decltype(source)>)
+            if constexpr (CT::CustomPointer<decltype(source)>)
                count = ::std::char_traits<char>::length(source.Unpack());
             else
                count = ::std::char_traits<char>::length(source);

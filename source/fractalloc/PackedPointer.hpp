@@ -45,8 +45,7 @@ namespace Langulus::Fractalloc
    template<class T, unsigned POOL_BITS = 4, unsigned ENTRY_BITS = 16, unsigned OFFSET_BITS = 12>
    struct PackedPointer {
       using CTTI_Sparse = Yes<>;
-      using CTTI_PackedPointer = Yes<>;
-      using Type  = T;
+      using Type = T;
 
       static constexpr unsigned PoolBits   = POOL_BITS;
       static constexpr unsigned EntryBits  = ENTRY_BITS;
@@ -95,6 +94,14 @@ namespace Langulus::Fractalloc
          return mAll != 0;
       }
 
+      explicit constexpr operator void* () const noexcept {
+         return Unpack();
+      }
+
+      explicit constexpr operator void const* () const noexcept {
+         return Unpack();
+      }
+
       explicit constexpr operator T* () const noexcept {
          return Unpack();
       }
@@ -122,12 +129,3 @@ namespace Langulus::Fractalloc
    };
    #pragma pack(pop)
 }
-
-namespace Langulus::CTTI
-{
-   /// Affects CT::PackedPointer<T>                                           
-   template<class T>
-   struct PackedPointer;
-}
-
-LANGULUS_CTTI_CONCEPT_DECVQ(PackedPointer);

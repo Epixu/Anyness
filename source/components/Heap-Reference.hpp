@@ -55,9 +55,9 @@ namespace Langulus::Anyness::Component
 
       /// Set the heap pointer, any data pointer will do                      
       constexpr void SetHeapInner(this auto& self, auto heap) has_assumptions {
-         if constexpr (CT::PackedPointer<POINTER_TYPE>)
+         if constexpr (CT::CustomPointer<POINTER_TYPE>)
             self.GetHeapInner() = heap;
-         else if constexpr (CT::PackedPointer<decltype(heap)>)
+         else if constexpr (CT::CustomPointer<decltype(heap)>)
             self.GetHeapInner() = heap.Unpack();
          else {
             self.GetHeapInner() = const_cast<void*>(
@@ -102,7 +102,7 @@ namespace Langulus::Anyness::Component
       ///   @attention no type-safety                                         
       ///   @attention assumes the container is typed                         
       ///   @attention assumes the container is allocated                     
-      ///   @tparam T the type of data we're accessing - use void to use the
+      ///   @tparam T the type of data we're accessing - use void to use the  
       ///      type of the container, if statically typed                     
       template<class T = void, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) has_assumptions {
@@ -292,10 +292,16 @@ namespace Langulus::Anyness::Component
          // Start iterating until dereferenced enough                   
          D iterator = Disown(self);
          while (count and iterator.IsSparse()) {
-            iterator.SetHeapInner(*static_cast<void const* const*>(iterator.GetHeapInner()));
-            iterator.SetTypeInner(iterator.GetType().GetDeptr());
+            auto dereffer = iterator.GetType().GetDereffer();
+            auto newtype = iterator.GetType().GetDeptr();
+            auto src = iterator.GetHeapInner();
+            iterator.Reset();
+            iterator.SetTypeInner(newtype);
+            iterator.AllocateFresh(iterator.RequestHeap(1));
+            dereffer(src, iterator.GetHeapInner());
+            if_available(iterator.SetCountInner(1));
             --count;
-         }
+         };
 
          return iterator;
       }
