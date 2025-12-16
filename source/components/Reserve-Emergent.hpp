@@ -15,8 +15,8 @@ namespace Langulus::Anyness::Component
    /// A dynamic reserve derived from the allocation size directly.           
    /// As such, it will not increase container's stack size, but will require 
    /// an indirection (and a division) in order to read/write it.             
-   ///   @tparam ID - ID of the heap to track capacity for                    
-   ///   @tparam T - type of the counter                                      
+   ///   @tparam ID ID of the heap to track capacity for                      
+   ///   @tparam T type of the counter                                        
    template<unsigned ID, class T>
    struct ReserveEmergent {
       using CTTI_Component = Yes<>;
@@ -51,7 +51,7 @@ namespace Langulus::Anyness::Component
       /// Reserve a number of elements without initializing them.             
       /// If reserved data is smaller than currently initialized count, the   
       /// excess elements will be dereferenced/destroyed.                     
-      ///   @param count - number of elements to reserve                      
+      ///   @param count number of elements to reserve                        
       template<CT::ContainsMany C>
       C& Reserve(this C& self, const T count) {
          if (count < self.GetCount())

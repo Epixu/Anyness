@@ -51,7 +51,6 @@ namespace Langulus::Anyness
    
    ///                                                                        
    /// A continuous byte container of variable size                           
-   ///                                                                        
    struct Bytes : Inner::BytesBase {
       using CountType = Base::CountType;
 

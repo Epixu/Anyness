@@ -87,7 +87,7 @@ namespace Langulus::CTTI
 namespace Langulus
 {
    /// Get the suffix of a type at compile-time                               
-   ///   @tparam T - the type to get the name of                              
+   ///   @tparam T the type to get the name of                                
    ///   @return a compile-time string                                        
    template<class T>
    consteval auto SuffixOf() {

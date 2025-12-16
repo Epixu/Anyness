@@ -35,7 +35,7 @@ namespace Langulus::CT
 namespace Langulus
 {
    /// Get the info for a type at compile-time                                
-   ///   @tparam T - the type to get the info of                              
+   ///   @tparam T the type to get the info of                                
    ///   @return a compile-time string                                        
    template<class T>
    consteval auto InfoOf() {
@@ -50,7 +50,7 @@ namespace Langulus
    }
    
    /// Get the info for a constant at compile-time                            
-   ///   @tparam E - the constant to get the info of                          
+   ///   @tparam E the constant to get the info of                            
    ///   @return a compile-time string                                        
    template<auto E>
    consteval auto InfoOf() {

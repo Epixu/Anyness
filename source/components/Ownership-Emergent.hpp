@@ -17,12 +17,12 @@ namespace Langulus::Anyness::Component
    /// Heap allocation will be searched on demand every time.                 
    /// Manage its ownership by referencing and dereferencing it.              
    /// Can also reference on per-element basis if enabled via DEEPREF.        
-   ///   @tparam ID - which heap are we keeping track of?                     
-   ///   @tparam AUTO - whether ownership will be automatically applied on    
+   ///   @tparam ID which heap are we keeping track of?                       
+   ///   @tparam AUTO whether ownership will be automatically applied on      
    ///      construction, reassignment and destruction. False if container is 
    ///      just a view, or in other cases where you want to carry an         
    ///      allocation pointer, but not necessarily reference it.             
-   ///   @tparam DEEPREF - whether to reference individual elements.          
+   ///   @tparam DEEPREF whether to reference individual elements.            
    template<unsigned ID, bool AUTO, bool DEEPREF>
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
@@ -69,7 +69,7 @@ namespace Langulus::Anyness::Component
 
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this will not dereference previous allocation          
-      ///   @param intent - the intent and container to transfer from         
+      ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
          decltype(auto) from = FWD(intent.what);

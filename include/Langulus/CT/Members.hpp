@@ -24,7 +24,7 @@ namespace Langulus::CT::Inner
    struct Emballage {};
 
    /// Used for member reflections inside data types                          
-   ///   @tparam HANDLE - a pointer to a member variable                      
+   ///   @tparam HANDLE a pointer to a member variable                        
    ///   @attention having just `auto HANDLE` as a template argument          
    ///      should generally be enough and works as it should on MSVC,        
    ///      however it doesn't make unique template instantiations on         

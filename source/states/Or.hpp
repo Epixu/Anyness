@@ -14,7 +14,7 @@ namespace Langulus::Anyness::DefineState
    ///                                                                        
    /// If enabled, data is considered disjunct instead of conjunct            
    /// Useful to encode alternative arguments or branched execution           
-   ///   @tparam V - decides whether state is dynamic or static               
+   ///   @tparam V decides whether state is dynamic or static                 
    template<State::StateValue V>
    struct Or {
       using CTTI_State = Yes<>;

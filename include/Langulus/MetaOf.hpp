@@ -19,7 +19,7 @@ namespace Langulus
    /// or tag. Note: anything can be data, so meta-data is given only if      
    /// not evaluated to be a tag or verb, which might not be desired. Use one 
    /// of the alternatives below to explicitly state your intent.             
-   ///   @tparam T - type to get meta definition of                           
+   ///   @tparam T type to get meta definition of                             
    ///   @return the meta definition of the provided type                     
    template<class T>
    auto MetaOf() {
@@ -32,7 +32,7 @@ namespace Langulus
    }
 
    /// Get the meta definition of a constant, like an enum                    
-   ///   @tparam E - constant to get meta definition of                       
+   ///   @tparam E constant to get meta definition of                         
    ///   @return the meta definition of the provided constant                 
    template<auto E>
    RTTI::CMeta MetaOf() {
@@ -42,7 +42,7 @@ namespace Langulus
    /// Data definition retrieval.                                             
    /// Some types, like tags/verbs for example, can be represented both as    
    /// DMeta and TMeta/VMeta, and this is useful to state a clear intent.     
-   ///   @tparam T - type to get data definition from                         
+   ///   @tparam T type to get data definition from                           
    ///   @return the definition                                               
    template<class T>
    RTTI::DMeta MetaDataOf() {
@@ -52,7 +52,7 @@ namespace Langulus
    /// Tag definition retrieval.                                              
    /// Some types, like tags for example, can be represented both as DMeta    
    /// and TMeta, and this is useful to state a clear intent.                 
-   ///   @tparam T - type to get tag definition from                          
+   ///   @tparam T type to get tag definition from                            
    ///   @return the definition                                               
    template<class T>
    RTTI::TMeta MetaTagOf() {
@@ -62,7 +62,7 @@ namespace Langulus
    /// Verb definition retrieval.                                             
    /// Some types, like verbs for example, can be represented both as DMeta   
    /// and VMeta, and this is useful to state a clear intent.                 
-   ///   @tparam T - type to get verb definition from                         
+   ///   @tparam T type to get verb definition from                           
    ///   @return the definition                                               
    template<class T>
    RTTI::VMeta MetaVerbOf() {
@@ -70,7 +70,7 @@ namespace Langulus
    }
 
    /// Constant definition retrieval                                          
-   ///   @tparam E - constant to get definition from                          
+   ///   @tparam E constant to get definition from                            
    ///   @return the definition                                               
    template<auto E>
    RTTI::CMeta MetaConstOf() {

@@ -15,7 +15,7 @@ namespace Langulus::Anyness::Component
    /// Adds prefix and suffix operators for increment and decrement.          
    /// These operators are fundamentally unsafe so the API is protected,      
    /// used mainly internally in other components and/or iterators.           
-   ///   @tparam ID - heap/stack we're iterating                              
+   ///   @tparam ID heap/stack we're iterating                                
    template<unsigned ID>
    struct IterationOperators {
       using CTTI_Component = Yes<>;
@@ -23,7 +23,7 @@ namespace Langulus::Anyness::Component
 
       /// Offset first element to the right by the desired amount             
       ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @param offset - the number of elements to offset                  
+      ///   @param offset the number of elements to offset                    
       ///   @return a shallow modified copy of this container                 
       template<CT::Container C>
       constexpr C operator + (this C const& self, size_t offset) noexcept {
@@ -39,7 +39,7 @@ namespace Langulus::Anyness::Component
 
       /// Offset first element to the right by the desired amount             
       ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @param offset - the number of elements to offset                  
+      ///   @param offset the number of elements to offset                    
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
       constexpr C& operator += (this C& self, size_t offset) noexcept {
@@ -78,7 +78,7 @@ namespace Langulus::Anyness::Component
       
       /// Offset first element to the left by the desired amount              
       ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @param offset - the number of elements to offset                  
+      ///   @param offset the number of elements to offset                    
       ///   @return a shallow modified copy of this container                 
       template<CT::Container C>
       constexpr C operator - (this C const& self, size_t offset) noexcept {
@@ -94,7 +94,7 @@ namespace Langulus::Anyness::Component
 
       /// Offset first element to the left by the desired amount              
       ///   @attention this doesn't check any boundaries, use carefully       
-      ///   @param offset - the number of elements to offset                  
+      ///   @param offset the number of elements to offset                    
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
       constexpr C& operator -= (this C& self, size_t offset) noexcept {

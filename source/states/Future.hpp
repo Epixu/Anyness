@@ -13,7 +13,7 @@ namespace Langulus::Anyness::DefineState
 {
    ///                                                                        
    /// If enabled, data is marked as a missing future                         
-   ///   @tparam V - decides whether state is dynamic or static               
+   ///   @tparam V decides whether state is dynamic or static                 
    template<State::StateValue V>
    struct Future {
       using CTTI_State = Yes<>;

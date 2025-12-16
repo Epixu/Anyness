@@ -13,8 +13,8 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Adds operators for front (>>) and back (<<) insertion                  
-   ///   @tparam ID - heap we're inserting to                                 
-   ///   @tparam AS - type to serialize as before inserting. Useful for byte  
+   ///   @tparam ID heap we're inserting to                                   
+   ///   @tparam AS type to serialize as before inserting. Useful for byte    
    ///      and text containers. Use void to insert without serialization     
    template<unsigned ID, class AS>
    struct InsertionOperators {

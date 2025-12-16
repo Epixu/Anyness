@@ -15,7 +15,7 @@ namespace Langulus::Anyness::DefineState
    /// If enabled, data won't ever change type. Very useful when a type-      
    /// erased container has to represent a templated counterpart.             
    /// Needed to constrain the memory manipulations for safety.               
-   ///   @tparam V - decides whether state is dynamic or static               
+   ///   @tparam V decides whether state is dynamic or static                 
    template<State::StateValue V>
    struct Typed {
       using CTTI_State = Yes<>;

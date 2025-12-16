@@ -17,7 +17,6 @@ namespace Langulus
    ///   std::byte is shitty, this one's better. It preserves arithmetic      
    /// operations on the byte. These operations counteract integer promotion, 
    /// the result is always truncated back down to a byte.                    
-   ///                                                                        
    #pragma pack(push, 1)
    struct Byte {
       using Type          = uint8_t;

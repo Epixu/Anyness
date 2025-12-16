@@ -15,7 +15,7 @@ namespace Langulus::Anyness::Component
    /// Reserves a part of the heap to keep track of sparse element's          
    /// allocations. The pointer to the array of allocations is recomputed     
    /// every time, based on the heap.                                         
-   ///   @tparam ID - which heap/stack are we keeping track of?               
+   ///   @tparam ID which heap/stack are we keeping track of?                 
    template<unsigned ID>
    struct OwnershipDeepHeap : OwnershipDeepEmergent<ID> {
       using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;

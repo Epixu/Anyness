@@ -60,7 +60,7 @@ namespace Langulus
 
    /// Useful for setting CTTI_Pooled                                         
    /// Instructs Fractalloc to pool to dedicated type-indexed pools           
-   ///   @tparam MIN_POOL - what's the minimal pool size in bytes             
+   ///   @tparam MIN_POOL what's the minimal pool size in bytes               
    template<unsigned MIN_POOL>
    struct PooledByType {
       static_assert(::std::has_single_bit(MIN_POOL),

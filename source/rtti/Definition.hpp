@@ -47,7 +47,7 @@ namespace Langulus::RTTI::Inner
 {
    /// Convert a token to a lowercase string in the most portable way possible
    ///   @attention assumes token is ASCII                                    
-   ///   @param token - the token to lowercase                                
+   ///   @param token the token to lowercase                                  
    ///   @return the lowercase string                                         
    // ReSharper disable once CppDFAUnreachableFunctionCall              
    constexpr Lowercase ToLowercase(const Token& token) has_assumptions {
@@ -61,7 +61,7 @@ namespace Langulus::RTTI::Inner
    /// Operators are often defined with proper spaces around them for prettier
    /// logging. This makes sure they are stripped before searching in registry
    ///   @attention assumes token is ASCII                                    
-   ///   @param token - the operator                                          
+   ///   @param token the operator                                            
    ///   @return the isolated operator token                                  
    constexpr Token StripSpaces(const Token& token) has_assumptions {
       auto l = token.data();
@@ -74,7 +74,7 @@ namespace Langulus::RTTI::Inner
    /// Get the last, most relevant part of a token that may or may not have   
    /// namespaces in it. Essentially finds last "::" that isn't enclosed in   
    /// a template <>, and skip forward to that                                
-   ///   @param token - the token to scan                                     
+   ///   @param token the token to scan                                       
    ///   @return the last token                                               
    constexpr Token ToLastToken(const Token& token) noexcept {
       size_t depth = 0;
@@ -147,7 +147,7 @@ namespace Langulus::RTTI::Inner
       #endif
 
       /// Construct an abstract definition                                    
-      ///   @param cppname - the C++ name of the definition                   
+      ///   @param cppname the C++ name of the definition                     
       Definition(const Token& cppname)
          : mHash      {HashOf(cppname)}
          , mCppNameOf {cppname} {}
@@ -156,7 +156,7 @@ namespace Langulus::RTTI::Inner
       ///   @attention must always be inline, so that boundary is relative    
       ///   @attention call this first, so that version is checked before any 
       ///      other changes are made to the type                             
-      ///   @tparam T - the type to reflect                                   
+      ///   @tparam T the type to reflect                                     
       template<class T> LANGULUS(ALWAYS_INLINED)
       void ReflectCommon() {
          // Reflected version                                           

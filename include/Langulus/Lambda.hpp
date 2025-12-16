@@ -71,18 +71,18 @@ namespace Langulus
 
    /// Get the type of the first argument of a function                       
    ///   @attention will give void if no arguments                            
-   ///   @tparam F - anything invokable, like functor/member function/lambda  
+   ///   @tparam F anything invokable, like functor/member function/lambda    
    template<class F>
    using ArgumentOf = typename decltype(Inner::GetFunctionArguments(Fake<F>()))::First;
 
    /// Get a type list corresponding to the function arguments                
    ///   @attention will give an empty type list if no arguments              
-   ///   @tparam F - anything invokable, like functor/member function/lambda  
+   ///   @tparam F anything invokable, like functor/member function/lambda    
    template<class F>
    using ArgumentsOf = decltype(Inner::GetFunctionArguments(Fake<F>()));
 
    /// Get the return type of a function                                      
-   ///   @tparam F - anything invokable, like functor/member function/lambda  
+   ///   @tparam F anything invokable, like functor/member function/lambda    
    template<class F>
    using ReturnOf = decltype(Inner::GetFunctionReturn(Fake<F>()));
 }

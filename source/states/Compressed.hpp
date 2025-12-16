@@ -13,7 +13,7 @@ namespace Langulus::Anyness::DefineState
 {
    ///                                                                        
    /// If enabled, data is marked as compressed                               
-   ///   @tparam V - decides whether state is dynamic or static               
+   ///   @tparam V decides whether state is dynamic or static                 
    template<State::StateValue V>
    struct Compressed {
       using CTTI_State = Yes<>;

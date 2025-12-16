@@ -10,6 +10,7 @@
 #include "../rtti/MetaData.hpp"
 #include "Allocation.hpp"
 #include "Pool.hpp"
+#include "Langulus/MetaOf.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
@@ -48,9 +49,10 @@ namespace Langulus::Fractalloc
       static auto Allocate(DMeta, pot_t) has_assumptions -> Allocation*;
       
       template<class T>
-      static auto AllocatePacked(DMeta type, pot_t size) has_assumptions -> TAllocation<T>* {
+      static auto AllocatePacked(DMeta type, pot_t size)
+      has_assumptions -> TAllocation<T>* {
          static_assert(sizeof(TAllocation<T>) == sizeof(Allocation));
-         auto a = AllocatePackedInner(T::PoolBits, T::EntryBits, T::OffsetBits, type, size);
+         auto a = AllocatePackedInner(T::PoolBits, T::EntryBits, type, size);
          return reinterpret_cast<TAllocation<T>*>(a);
       }
 
@@ -58,9 +60,12 @@ namespace Langulus::Fractalloc
       static auto Reallocate(DMeta, pot_t, Allocation*) has_assumptions -> Allocation*;
 
       template<class T>
-      static auto ReallocatePacked(DMeta type, pot_t size, T* prev) has_assumptions -> TAllocation<T>* {
+      static auto ReallocatePacked(DMeta type, pot_t size, T* prev)
+      has_assumptions -> TAllocation<T>* {
          static_assert(sizeof(TAllocation<T>) == sizeof(Allocation));
-         auto a = ReallocatePackedInner(T::PoolBits, T::EntryBits, T::OffsetBits, type, size, reinterpret_cast<Allocation*>(prev));
+         auto a = ReallocatePackedInner(T::PoolBits, T::EntryBits,
+            type, size, reinterpret_cast<Allocation*>(prev)
+         );
          return reinterpret_cast<TAllocation<T>*>(a);
       }
 
@@ -74,8 +79,11 @@ namespace Langulus::Fractalloc
       }
 
       template<class T>
-      static auto UnpackPointer(T const& ptr) has_assumptions -> typename T::Type* {
-         void* a = UnpackPointerInner(ptr.mPool, ptr.mEntry, ptr.mOffset);
+      static auto UnpackPointer(T const& ptr)
+      has_assumptions -> typename T::Type* {
+         void* a = UnpackPointerInner(
+            MetaDataOf<typename T::Type>(), ptr.mPool, ptr.mEntry, ptr.mOffset
+         );
          return static_cast<typename T::Type*>(a);
       }
 
@@ -111,13 +119,6 @@ namespace Langulus::Fractalloc
          
          LANGULUS_API(FRACTALLOC)
          static bool IntegrityCheck();
-      
-      private:
-         //LANGULUS_API(FRACTALLOC)
-         //static void DumpPool(DMeta type, size_t id, const Pool*) noexcept;
-            
-         LANGULUS_API(FRACTALLOC)
-         static bool IntegrityCheckChain(const Pool*);
       #endif
       
    private:
@@ -125,7 +126,6 @@ namespace Langulus::Fractalloc
       static auto AllocatePackedInner(
          size_t pool_budget,
          size_t entry_budget,
-         size_t element_budget,
          DMeta, pot_t
       ) has_assumptions -> Allocation*;
       
@@ -133,18 +133,15 @@ namespace Langulus::Fractalloc
       static auto ReallocatePackedInner(
          size_t pool_budget,
          size_t entry_budget,
-         size_t element_budget,
          DMeta, pot_t, Allocation*
       ) has_assumptions -> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
       static void* UnpackPointerInner(
+         DMeta type,
          size_t poolId,
          size_t entryId,
          size_t elementId
       ) has_assumptions;
-
-      LANGULUS_API(FRACTALLOC)
-      static auto CollectGarbageChain(Pool*) -> Pool*;
    };   
 }

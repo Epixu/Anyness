@@ -17,8 +17,8 @@ namespace Langulus::Anyness::Component
    /// Uses a modified Robin Hood algorithm to reuse table space and minimize 
    /// movement on rehash. Doesn't keep a local pointer to the hash table,    
    /// and istead recalculates it on demand from the heap.                    
-   ///   @tparam ID - the stack/heap we're indexing                           
-   ///   @tparam HASH - type of the hash                                      
+   ///   @tparam ID the stack/heap we're indexing                             
+   ///   @tparam HASH type of the hash                                        
    template<unsigned ID, class HASH>
    struct IndexedHashHeap {
       using CTTI_Component  = Yes<>;

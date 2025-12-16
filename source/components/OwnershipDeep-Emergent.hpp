@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Manages deep ownership by searching for an allocation every time       
-   ///   @tparam ID - which heap/stack are we keeping track of?               
+   ///   @tparam ID which heap/stack are we keeping track of?                 
    template<unsigned ID>
    struct OwnershipDeepEmergent {
       using CTTI_Component = Yes<>;
@@ -419,7 +419,7 @@ namespace Langulus::Anyness::Component
       ///   @attention emplacing using a handle is faster due to carrying     
       ///      allocation data with itself when sparse, rather than searching 
       ///      for it on demand.                                              
-      ///   @param intent - entries will be copied/sought if handle/sparse    
+      ///   @param intent entries will be copied/sought if handle/sparse      
       template<CT::Container C, CT::Intent I>
       void EmplaceEntries(this C& self, I&& intent) {
          static_assert(not CT::Cloned<I>,

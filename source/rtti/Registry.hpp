@@ -35,7 +35,6 @@ namespace Langulus::RTTI
    ///   The RTTI registry                                                    
    ///                                                                        
    /// Available only if managed reflection feature is enabled                
-   ///                                                                        
    class Registry {
    public:
       // Definitions indexed by lowercase reflected name                
@@ -153,7 +152,6 @@ namespace Langulus::RTTI
 
    ///                                                                        
    ///   The global RTTI registry                                             
-   ///                                                                        
    LANGULUS_API(RTTI) extern Registry Instance;
 
       

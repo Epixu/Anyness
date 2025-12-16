@@ -28,8 +28,8 @@ namespace Langulus::CT
    namespace Inner
    {
       /// Test whether a container is assignable with the given argument      
-      ///   @tparam C - the container                                         
-      ///   @tparam A - the argument to test                                  
+      ///   @tparam C the container                                           
+      ///   @tparam A the argument to test                                    
       ///   @return true if you can assign A to the container                 
       template<Container C, class A>
       consteval bool DeepAssignable() noexcept {
@@ -71,7 +71,7 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Implements assignment for containers                                   
-   ///   @tparam ID - heap we're removing from                                
+   ///   @tparam ID heap we're removing from                                  
    template<unsigned ID>
    struct Assignment {
       using CTTI_Component = Yes<>;
@@ -82,7 +82,7 @@ namespace Langulus::Anyness::Component
       
       /// Assign a value to the first element, if that element is initialized.
       /// If the element isn't initialized yet it will be constructed.        
-      ///   @param argument - the argument to assign                          
+      ///   @param argument the argument to assign                            
       ///   @return reference to self                                         
       template<CT::Container C, class A>
       C& Assign(this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
@@ -232,7 +232,7 @@ namespace Langulus::Anyness::Component
       ///   @attention does not modify any container state                    
       ///   @attention this overwrites previous entry without dereferencing   
       ///      it, and without destroying anything                            
-      ///   @param intent - assignment argument. If this container            
+      ///   @param intent assignment argument. If this container              
       ///      is statically typed, this can be any assignment argument,      
       ///      otherwise it has to be an instance of the contained type.      
       template<CT::Container C, CT::Intent I>

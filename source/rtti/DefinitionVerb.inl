@@ -31,7 +31,7 @@ namespace Langulus::RTTI
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
-   ///   @tparam T - the decayed verb to reflect                              
+   ///   @tparam T the decayed verb to reflect                                
    template<CT::Decayed T>
    auto DefinitionVerb::Reflect() -> DefinitionVerb const* {
       static_assert(CT::Complete<T>,

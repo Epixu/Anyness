@@ -25,7 +25,7 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Files);
 namespace Langulus
 {
    /// Get the file extensions of a type at compile-time                      
-   ///   @tparam T - the type to get the file extensions of                   
+   ///   @tparam T the type to get the file extensions of                     
    ///   @return a compile-time string                                        
    template<class T>
    consteval auto FilesOf() {

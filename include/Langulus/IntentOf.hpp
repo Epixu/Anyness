@@ -102,7 +102,7 @@ namespace Langulus
    using Deint = Tif<CT::Intent<Deref<T>>, TypeOf<T>, T>;
 
    /// Decay an intent to the contained data                                  
-   ///   @param intent - the intent to decay                                  
+   ///   @param intent the intent to decay                                    
    ///   @return the forwarded inner data                                     
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr decltype(auto) DeintCast(T&& intent) noexcept {
@@ -113,9 +113,9 @@ namespace Langulus
    namespace Inner
    {
       /// Helper base that defines intent properties                          
-      ///   @tparam DEPTH - the depth of the intent, use -1 for infinite      
-      ///   @tparam KEEP - does the intent practice ownership                 
-      ///   @tparam MOVE - does the intent involve transfer of ownership      
+      ///   @tparam DEPTH the depth of the intent, use -1 for infinite        
+      ///   @tparam KEEP does the intent practice ownership                   
+      ///   @tparam MOVE does the intent involve transfer of ownership        
       template<unsigned DEPTH, bool KEEP, bool MOVE>
       struct CommonIntent {
          using CTTI_ReflectAs     = void;
@@ -142,7 +142,7 @@ namespace Langulus
    ///                                                                        
    /// Referred value intermediate type, used in constructors and assignments 
    /// to refer to data explicitly                                            
-   ///   @tparam T - the type to refer                                        
+   ///   @tparam T the type to refer                                          
    template<class T> requires (not ::std::is_reference_v<T>)
    struct Refer final : Inner::CommonIntent<0, true, false> {
       const T& what;
@@ -171,7 +171,7 @@ namespace Langulus
       }
       
       /// Forward as referred                                                 
-      ///   @tparam ALT_T - optional type to forward as                       
+      ///   @tparam ALT_T optional type to forward as                         
       ///   @return the desired new type with the same refer intent applied   
       template<class ALT_T = T> LANGULUS(ALWAYS_INLINED)
       constexpr decltype(auto) Forward() const noexcept {
@@ -189,7 +189,7 @@ namespace Langulus
       }
 
       /// Refer something else                                                
-      ///   @param value - the value to refer (can be an intent)              
+      ///   @param value the value to refer (can be an intent)                
       ///   @return the referred value, disregarding previous intent          
       template<class ALT_T> LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
@@ -221,7 +221,7 @@ namespace Langulus
    ///                                                                        
    /// Copied value intermediate type, used in constructors and assignments   
    /// to shallow-copy container explicitly                                   
-   ///   @tparam T - the type to copy                                         
+   ///   @tparam T the type to copy                                           
    template<class T> requires (not ::std::is_reference_v<T>)
    struct Copy final : Inner::CommonIntent<1, true, false> {
       const T& what;
@@ -245,7 +245,7 @@ namespace Langulus
       }
 
       /// Forward as copied                                                   
-      ///   @tparam ALT_T - optional type to forward as                       
+      ///   @tparam ALT_T optional type to forward as                         
       ///   @return the desired new type with the same copy intent applied    
       template<class ALT_T = T> LANGULUS(ALWAYS_INLINED)
       constexpr decltype(auto) Forward() const noexcept {
@@ -263,7 +263,7 @@ namespace Langulus
       }
 
       /// Copy something else                                                 
-      ///   @param value - the value to copy (can be an intent)               
+      ///   @param value the value to copy (can be an intent)                 
       ///   @return the copied value, disregarding previous intent            
       template<class ALT_T> LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
@@ -295,7 +295,7 @@ namespace Langulus
    ///                                                                        
    /// Moved value intermediate type, used in constructors and assignments    
    /// to move data explicitly                                                
-   ///   @tparam T - the type to move                                         
+   ///   @tparam T the type to move                                           
    template<class T> requires (not ::std::is_reference_v<T>)
    struct Move final : Inner::CommonIntent<0, true, true> {
       static_assert(CT::Mutable<T>, "Constant T isn't movable");
@@ -325,7 +325,7 @@ namespace Langulus
       }
 
       /// Forward as moved                                                    
-      ///   @tparam ALT_T - optional type to forward as                       
+      ///   @tparam ALT_T optional type to forward as                         
       ///   @return the desired new type with the same move intent applied    
       template<class ALT_T = T> LANGULUS(ALWAYS_INLINED)
       constexpr decltype(auto) Forward() const noexcept {
@@ -343,7 +343,7 @@ namespace Langulus
       }
 
       /// Move something else                                                 
-      ///   @param value - the value to move (can be an intent)               
+      ///   @param value the value to move (can be an intent)                 
       ///   @return the moved value, disregarding previous intent             
       template<class ALT_T> LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
@@ -380,7 +380,7 @@ namespace Langulus
    /// same as move-construction, but the abandoned Many shall have only its  
    /// allocation reset, instead of the entire container, leaving it in a     
    /// state that is unfit for reuse, saving a lot of instructions.           
-   ///   @tparam T - the type to abandon                                      
+   ///   @tparam T the type to abandon                                        
    template<class T> requires (not ::std::is_reference_v<T>)
    struct Abandon final : Inner::CommonIntent<0, false, true> {
       static_assert(CT::Mutable<T>, "Constant T isn't abandonable");
@@ -410,7 +410,7 @@ namespace Langulus
       }
       
       /// Forward as abandoned                                                
-      ///   @tparam ALT_T - optional type to forward as                       
+      ///   @tparam ALT_T optional type to forward as                         
       ///   @return the desired new type with the same move intent applied    
       template<class ALT_T = T> LANGULUS(ALWAYS_INLINED)
       constexpr decltype(auto) Forward() const noexcept {
@@ -428,7 +428,7 @@ namespace Langulus
       }
 
       /// Abandon something else                                              
-      ///   @param value - the value to abandon (can be an intent)            
+      ///   @param value the value to abandon (can be an intent)              
       ///   @return the abandoned value, disregarding previous intent         
       template<class ALT_T> LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
@@ -460,7 +460,7 @@ namespace Langulus
    ///                                                                        
    /// Disowned value intermediate type, used in constructors and assignments 
    /// to copy container without gaining ownership                            
-   ///   @tparam T - the type to disown                                       
+   ///   @tparam T the type to disown                                         
    template<class T> requires (not ::std::is_reference_v<T>)
    struct Disown final : Inner::CommonIntent<0, false, false> {
       const T& what;
@@ -484,7 +484,7 @@ namespace Langulus
       }
 
       /// Forward as disowned                                                 
-      ///   @tparam ALT_T - optional type to forward as                       
+      ///   @tparam ALT_T optional type to forward as                         
       ///   @return the desired new type with the same disown intent applied  
       template<class ALT_T = T> LANGULUS(ALWAYS_INLINED)
       constexpr decltype(auto) Forward() const noexcept {
@@ -502,7 +502,7 @@ namespace Langulus
       }
 
       /// Disown something else                                               
-      ///   @param value - the value to disown (can be an intent)             
+      ///   @param value the value to disown (can be an intent)               
       ///   @return the disowned value, disregarding previous intent          
       template<class ALT_T> LANGULUS(ALWAYS_INLINED)
       static constexpr decltype(auto) Nest(ALT_T&& value) noexcept {
@@ -534,7 +534,7 @@ namespace Langulus
    ///                                                                        
    /// Cloned value intermediate type, used in constructors and assignments   
    /// to clone container, doing a deep copy instead of default shallow one   
-   ///   @tparam T - the type to clone                                        
+   ///   @tparam T the type to clone                                          
    template<class T> requires (not ::std::is_reference_v<T>)
    struct Clone final : Inner::CommonIntent<static_cast<unsigned>(-1), true, false> {
       const T& what;
@@ -600,14 +600,14 @@ namespace Langulus
       ///                                                                     
 
       /// Check if all T have dedicated intent constructors for S             
-      ///   @tparam S - the intent                                            
-      ///   @tparam T - the types                                             
+      ///   @tparam S the intent                                              
+      ///   @tparam T the types                                               
       template<template<class> class S, class...T>
       concept HasIntentConstructor = Intent<S<T>...> and not Aggregate<T...>
           and requires (S<T>&&...arg) { (T {FWD(arg)}, ...); };
 
       /// Check if all TypeOf<S> have a dedicated intent constructor for S    
-      ///   @tparam S - the intents and types                                 
+      ///   @tparam S the intents and types                                   
       template<class...S>
       concept HasIntentConstructorAlt = Intent<S...> and not Aggregate<TypeOf<S>...>
           and requires (S&&...arg) { (Decvq<Deref<TypeOf<S>>> {FWD(arg)}, ...); };
@@ -651,8 +651,8 @@ namespace Langulus
           and (HasIntentConstructor<::Langulus::Move, T> and ...);
 
       /// Check if all T have a dedicated intent-assigner for S               
-      ///   @tparam S - the intent                                            
-      ///   @tparam T - the types                                             
+      ///   @tparam S the intent                                              
+      ///   @tparam T the types                                               
       template<template<class> class S, class...T>
       concept HasIntentAssign = Validate<T...> and ((Intent<S<T>>
           and requires (T& lhs, S<T>&& rhs) { lhs = FWD(rhs); }
@@ -748,8 +748,8 @@ namespace Langulus
    ///   @attention when S is a deep intent (like Clone) this function        
    ///      assumes that the 'placement' pointer always points to an          
    ///      instance of type Decay<T>                                         
-   ///   @param placement - where to place the new instance                   
-   ///   @param intent - the constructor argument and intent                  
+   ///   @param placement where to place the new instance                     
+   ///   @param intent the constructor argument and intent                    
    ///   @return the instance on the heap                                     
    template<bool FAKE = false, template<class> class S, CT::NoIntent T>
    requires CT::Intent<S<T>> LANGULUS(INLINED)
@@ -859,8 +859,8 @@ namespace Langulus
    /// Assign new value to an instance of T, using the provided intent        
    ///   @attention when S is a deep intent (like Clone) this function        
    ///      will DenseCast 'lhs' and 'rhs', and copy only dense data          
-   ///   @param lhs - left hand side (what are we assigning to)               
-   ///   @param rhs - right hand side (what are we assigning)                 
+   ///   @param lhs left hand side (what are we assigning to)                 
+   ///   @param rhs right hand side (what are we assigning)                   
    ///   @return whatever the assignment operator returns                     
    template<bool FAKE = false, template<class> class S, CT::NoIntent T>
    requires CT::Intent<S<T>> LANGULUS(INLINED)
@@ -1003,8 +1003,8 @@ namespace Langulus
       /// T can be intent-constructible even if not having the specific       
       /// constructor, as long as T and S are compatible with standard C++20  
       /// semantics.                                                          
-      ///   @tparam S - the intent                                            
-      ///   @tparam T - the types                                             
+      ///   @tparam S the intent                                              
+      ///   @tparam T the types                                               
       template<template<class> class S, class...T>
       concept IntentConstructible = NotVoid<T...> and Intent<S<T>...>
           and requires (S<T>&&...a) {
@@ -1015,7 +1015,7 @@ namespace Langulus
       /// T can be intent-constructible even if not having the specific       
       /// constructor, as long as T and S are compatible with standard C++20  
       /// semantics.                                                          
-      ///   @tparam S - the intents and types                                 
+      ///   @tparam S the intents and types                                   
       template<class...S>
       concept IntentConstructibleAlt = Intent<S...>
           and requires (S&&...a) {
@@ -1104,8 +1104,8 @@ namespace Langulus
       /// Check if all T are intent-assignable by intent S.                   
       /// T can be intent-assignable even if not having an explicit assigner, 
       /// as long as T and S are compatible with the usual C++20 semantics.   
-      ///   @tparam S - the intent                                            
-      ///   @tparam T - the types                                             
+      ///   @tparam S the intent                                              
+      ///   @tparam T the types                                               
       template<template<class> class S, class...T>
       concept IntentAssignable = NotVoid<T...> and Mutable<T...>
           and Intent<S<Decvq<T>>...> and requires (S<Decvq<T>>&&...a) {

@@ -56,7 +56,7 @@ LANGULUS_CTTI_CONCEPT(DefineVerbOperator);
 namespace Langulus::RTTI
 {
    /// Get the name of CTTI_DefineVerb::Positive at compile-time              
-   ///   @tparam T - the verb to get the name of                              
+   ///   @tparam T the verb to get the name of                                
    ///   @return the name                                                     
    template<CT::DefineVerb T>
    consteval auto NameOfVerb() {
@@ -67,7 +67,7 @@ namespace Langulus::RTTI
    }
    
    /// Get the name of CTTI_DefineVerb::Negative at compile-time              
-   ///   @tparam T - the verb to get the name of                              
+   ///   @tparam T the verb to get the name of                                
    ///   @return the name                                                     
    template<CT::DefineVerb T>
    consteval auto NameOfVerbReverse() {
@@ -78,7 +78,7 @@ namespace Langulus::RTTI
    }
    
    /// Get the name of DefineVerbOperator::Positive at compile-time           
-   ///   @tparam T - the verb to get the name of                              
+   ///   @tparam T the verb to get the name of                                
    ///   @return the name                                                     
    template<CT::DefineVerb T>
    consteval auto OperatorOfVerb() {
@@ -89,7 +89,7 @@ namespace Langulus::RTTI
    }
    
    /// Get the name of DefineVerbOperator::Negative at compile-time           
-   ///   @tparam T - the verb to get the name of                              
+   ///   @tparam T the verb to get the name of                                
    ///   @return the name                                                     
    template<CT::DefineVerb T>
    consteval auto OperatorOfVerbReverse() {

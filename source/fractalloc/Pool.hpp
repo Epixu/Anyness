@@ -130,6 +130,7 @@ namespace Langulus::Fractalloc
       auto Find(const void*) const has_assumptions -> const Allocation*;
 
       auto Allocate(pot_t) has_assumptions -> Allocation*;
+      auto AllocatePacked(size_t entry_budget, pot_t) has_assumptions -> Allocation*;
       bool Reallocate(Allocation*, pot_t) has_assumptions;
       void Deallocate(Allocation*) has_assumptions;
       

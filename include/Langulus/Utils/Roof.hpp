@@ -18,7 +18,7 @@
 namespace Langulus
 {
    /// Round to the upper power-of-two                                        
-   ///   @param x - the unsigned integer to round up                          
+   ///   @param x the unsigned integer to round up                            
    ///   @return the closest upper power-of-two to x                          
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr T Roof2(const T x) has_assumptions {

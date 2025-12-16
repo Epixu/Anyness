@@ -15,8 +15,8 @@ namespace Langulus::Anyness::Component
    /// Stores a precomputed hash inside the heap with the given ID            
    /// The hash is calculated using the data inside the given heap ID         
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0   
-   ///   @tparam ID - the heap ID                                             
-   ///   @tparam H  - the hash type used                                      
+   ///   @tparam ID the heap ID                                               
+   ///   @tparam H the hash type used                                         
    template<unsigned ID = 0, class H = Hash>
    struct HashHeap : HashEmergent<ID, H> {
       using HeapRequest = H;

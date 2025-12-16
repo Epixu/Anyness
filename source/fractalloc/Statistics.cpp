@@ -37,7 +37,7 @@ namespace Langulus::Fractalloc
    }
 
    /// Account for a newly allocated pool                                     
-   ///   @param pool - the pool to account for                                
+   ///   @param pool the pool to account for                                  
    void Statistics::AddPool(const Pool* pool) IF_UNSAFE(noexcept) {
       mBytesAllocatedByBackend  += pool->GetTotalSize();
       mBytesAllocatedByFrontend += pool->GetAllocatedByFrontend();
@@ -50,7 +50,7 @@ namespace Langulus::Fractalloc
    }
    
    /// Account for a removed pool                                             
-   ///   @param pool - the pool to account for                                
+   ///   @param pool the pool to account for                                  
    void Statistics::DelPool(const Pool* pool) IF_UNSAFE(noexcept) {
       LglsAssumeDev(
          mBytesAllocatedByBackend >= pool->GetTotalSize(),

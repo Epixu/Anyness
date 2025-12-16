@@ -30,7 +30,6 @@ namespace Langulus
    ///      a very very very small chance, that a hash will end up being      
    ///      constantly regenerated, if it ends up as 0 after hashing.         
    ///   @attention hashing a single hash always returns the hash itself      
-   ///                                                                        
    struct Hash {
       using CTTI_POD      = Yes<>;
       using CTTI_Nullable = Yes<>;
@@ -116,7 +115,6 @@ namespace Langulus
 
       ///                                                                     
       /// 32-bit hasher                                                       
-      ///                                                                     
       constexpr uint32_t mm3_x86_32(data_view key, uint32_t seed) {
          uint32_t h1 = seed;
 
@@ -166,8 +164,8 @@ namespace Langulus
 
 
    /// Hash a sequence of bytes                                               
-   ///   @param data - the data to hash                                       
-   ///   @param seed - the seed                                               
+   ///   @param data the data to hash                                         
+   ///   @param seed the seed                                                 
    ///   @return the hash                                                     
    constexpr Hash HashBytes(Inner::data_view data, Hash seed) noexcept {
       static_assert(sizeof(Hash) == 4, "Not implemented");
@@ -205,13 +203,13 @@ namespace Langulus
 
 
    /// Hash any hashable data, including fundamental/POD/range types          
-   ///   @tparam FORCE_RUNTIME - for internal use - if FORCE_RUNTIME and      
+   ///   @tparam FORCE_RUNTIME for internal use - if FORCE_RUNTIME and        
    ///      evaluated to fail, it will return CT::Unsupported; otherwise it   
    ///      will scream a compiler error at you. Being true also forces the   
    ///      hash to be performed at runtime, so that it doesn't fail on       
    ///      CT::Hashable checks at reflection time                            
-   ///   @tparam SEED - the seed for the hash algorithm                       
-   ///   @param head, rest - the data to hash                                 
+   ///   @tparam SEED the seed for the hash algorithm                         
+   ///   @param head, rest the data to hash                                   
    ///   @return the hash                                                     
    template<bool FORCE_RUNTIME, Hash SEED, class T, class...MORE>
    constexpr auto HashOf(T&& head, MORE&&...rest) {

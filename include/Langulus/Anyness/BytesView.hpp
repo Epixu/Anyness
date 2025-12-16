@@ -30,7 +30,6 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A continuous byte container view (without ownership) of variable size, 
    /// that is binary compatible with the container above                     
-   ///                                                                        
    struct BytesView : Container<
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<0, false>,   // Allocation is referenced      

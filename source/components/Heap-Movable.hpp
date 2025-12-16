@@ -15,7 +15,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Interfaces a heap. Adds a member that points to the heap memory.       
    /// The heap is allowed to move on reallocation.                           
-   ///   @tparam ID - multiple heaps are supported                            
+   ///   @tparam ID multiple heaps are supported                              
    template<unsigned ID>
    struct HeapMovable : HeapReference<ID> {
       static constexpr bool HeapCanBeNull = true;
@@ -43,7 +43,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Transfer from any kind of container, respecting intents             
-      ///   @param intent - the intent and container to transfer from         
+      ///   @param intent the intent and container to transfer from           
       template<CT::Container C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent) {
          using IT = Decay<I>;
@@ -157,7 +157,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Reassign from any kind of container, respecting intents             
-      ///   @param intent - the intent and container to assign from           
+      ///   @param intent the intent and container to assign from             
       template<class C, CT::Intent I> requires CT::Container<I>
       auto AssignFrom(this C& self, I&& intent) -> C& {
          if constexpr (requires { &self == &intent.what; }) {
@@ -175,7 +175,7 @@ namespace Langulus::Anyness::Component
       
       /// Allocate a fresh allocation                                         
       ///   @attention changes allocation, heap pointer and reserve count only
-      ///   @param request - request to fulfill                               
+      ///   @param request request to fulfill                                 
       template<CT::Container C>
       auto AllocateFresh(this C& self, const Request& request) -> Allocation* {
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -193,9 +193,9 @@ namespace Langulus::Anyness::Component
 
       /// Allocate a number of elements, relying on the type of the container 
       ///   @attention assumes container is typed                             
-      ///   @tparam CREATE - true to call constructors and set count          
-      ///   @tparam SETSIZE - true to set count, despite not constructing     
-      ///   @param elements - number of elements to allocate                  
+      ///   @tparam CREATE true to call constructors and set count            
+      ///   @tparam SETSIZE true to set count, despite not constructing       
+      ///   @param elements number of elements to allocate                    
       template<bool CREATE = false, bool SETSIZE = false, CT::Container C>
       void AllocateMore(this C& self, const Count<C> elements) {
          LglsAssumeDev(elements > self.GetCount(), "Bad element count");
@@ -286,7 +286,7 @@ namespace Langulus::Anyness::Component
       /// Initialized elements on the back will be destroyed.                 
       /// When MANAGED_MEMORY is enabled we have a strong guarantee that      
       /// allocations never move when shrinking.                              
-      ///   @param desiredReserve - number of elements to reserve             
+      ///   @param desiredReserve number of elements to reserve               
       template<CT::Container C>
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
          LglsAssumeDev(desiredReserve < self.GetReserved(),

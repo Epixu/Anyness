@@ -214,7 +214,6 @@ namespace Langulus::Logger
    ///   The global logger state                                              
    ///                                                                        
    /// Supports a style stack, can relay messages to a list of attachments    
-   ///                                                                        
    struct State final : Interface {
    private:
       // Style stack                                                    
@@ -246,7 +245,6 @@ namespace Langulus::Logger
 
       ///                                                                     
       /// Interface override                                                  
-      ///                                                                     
       LANGULUS_API(LOGGER) void Write(::std::string_view const&) const noexcept;
       LANGULUS_API(LOGGER) void Write(Style) const noexcept;
       LANGULUS_API(LOGGER) void NewLine() const noexcept;
@@ -271,7 +269,6 @@ namespace Langulus::Logger
 
       ///                                                                     
       /// Attachments                                                         
-      ///                                                                     
       LANGULUS_API(LOGGER) void AttachDuplicator (Interface*) noexcept;
       LANGULUS_API(LOGGER) void DettachDuplicator(Interface*) noexcept;
 
@@ -282,7 +279,6 @@ namespace Langulus::Logger
 
    ///                                                                        
    /// The global logger state                                                
-   ///                                                                        
    LANGULUS_API(LOGGER) extern State GlobalState;
 
    constexpr Scope::~Scope() noexcept {

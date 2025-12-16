@@ -17,8 +17,8 @@ namespace Langulus::Anyness::Component
    /// Count shows how many elements inside a container are initialized       
    /// Stack-based counting increases the container size, but doesn't require 
    /// indirections, making count lookup faster and more cache-friendly       
-   ///   @tparam ID - the heap/stack ID to keep count of                      
-   ///   @tparam T - the count type                                           
+   ///   @tparam ID the heap/stack ID to keep count of                        
+   ///   @tparam T the count type                                             
    template<unsigned ID, class T>
    struct CountStack {
       using CTTI_Component = Yes<>;
@@ -72,7 +72,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this is noop when constructing from deep intents,      
       ///      since element constructors might throw and stuff be partially  
       ///      inserted. In those cases, count is set by the heap components. 
-      ///   @param intent - the intent and container to transfer from         
+      ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (I::IsShallow() and not CT::Copied<I>) {

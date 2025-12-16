@@ -28,8 +28,7 @@ namespace Langulus::RTTI::Inner
    /// in a program either way. If somehow you do, then you're probably doing 
    /// something wrong. The handle has to be transformed into a pointer, so   
    /// this requires an additional level of indirection                       
-   ///   @tparam BYTESIZE - the size of the handle in bytes                   
-   ///                                                                        
+   ///   @tparam BYTESIZE the size of the handle in bytes                     
    #pragma pack(push, 1)
    template<unsigned BYTESIZE>
    struct MetaPacked {
@@ -97,8 +96,7 @@ namespace Langulus::RTTI::Inner
    ///                                                                        
    /// A naked pointer to a definition. Probably the fastest, but most        
    /// memory-inefficient on 64bit systems                                    
-   ///   @tparam T - the type of the meta (data/tag/verb/const)               
-   ///                                                                        
+   ///   @tparam T the type of the meta (data/tag/verb/const)                 
    template<class T>
    struct MetaNaked {
       using CTTI_POD      = Yes<>;

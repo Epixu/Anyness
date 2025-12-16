@@ -172,7 +172,6 @@ namespace fmt
 {
    ///                                                                        
    /// Extend FMT to be capable of logging pot_t                              
-   ///                                                                        
    template<>
    struct formatter<::Langulus::pot_t> {
       template<class CONTEXT>

@@ -48,7 +48,6 @@ namespace Langulus::Anyness
    /// type-erased Many, but also carries a charge and a type. It is often    
    /// used in Verbs::Create to provide instructions on how to instantiate a  
    /// data type.                                                             
-   ///                                                                        
    struct Construct : Container<
       // Some additional data                                           
       Com::TypedStack<DMeta, void, 1>, // What are we constructing?     

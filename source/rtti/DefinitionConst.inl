@@ -31,7 +31,7 @@ namespace Langulus::RTTI
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
-   ///   @tparam E - the constant to reflect                                  
+   ///   @tparam E the constant to reflect                                    
    template<auto E>
    auto DefinitionConst::Reflect() -> DefinitionConst const* {
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)

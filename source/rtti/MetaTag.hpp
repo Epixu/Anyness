@@ -17,7 +17,6 @@ namespace Langulus::RTTI
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       ///                                                                     
       /// Supports up to 65,535 tags                                          
-      ///                                                                     
       #pragma pack(push, 1)
       struct MetaTagPacked_16 : MetaPacked<2> {
          using Base = MetaPacked;
@@ -54,8 +53,7 @@ namespace Langulus::RTTI
       
       ///                                                                     
       /// A naked pointer to a definition. Probably the fastest, but most     
-      /// memory-inefficient on 64bit systems                                 
-      ///                                                                     
+      /// memory-inefficient on 64bit systems.                                
       struct MetaTagNaked : MetaNaked<DefinitionTag> {
          using Base = MetaNaked;
 
@@ -83,7 +81,6 @@ namespace fmt
 {
    ///                                                                        
    /// Extend FMT to be capable of logging tag types                          
-   ///                                                                        
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    template<>
    struct formatter<::Langulus::RTTI::Inner::MetaTagPacked_16> {

@@ -14,8 +14,8 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// A dynamic reserve, stored as a member variable                         
    /// Will increase container's stack size                                   
-   ///   @tparam T - type of the counter                                      
-   ///   @tparam ID - ID of the heap/stack to track capacity for              
+   ///   @tparam T type of the counter                                        
+   ///   @tparam ID ID of the heap/stack to track capacity for                
    template<unsigned ID, class T>
    struct ReserveStack {
    private:

@@ -162,10 +162,10 @@ namespace Langulus::RTTI
       constexpr auto Normalize();
 
       /// Skip all decorations in front and the back of a WrappedTypeName     
-      ///   @tparam T - the typename to isolate                               
-      ///   @tparam NORMALIZE - whether or not to normalize the typename to   
+      ///   @tparam T the typename to isolate                                 
+      ///   @tparam NORMALIZE whether or not to normalize the typename to     
       ///      Langulus specification                                         
-      ///   @tparam NAMED - whether or not to apply any CTTI named traits     
+      ///   @tparam NAMED whether or not to apply any CTTI named traits       
       ///   @return a compile-time string                                     
       template<class T, bool NORMALIZE = true, bool NAMED = true>
       consteval auto IsolateTypename() {
@@ -279,10 +279,10 @@ namespace Langulus::RTTI
       }
 
       /// Skip all decorations in front and back of a WrappedEnumName         
-      ///   @tparam T - the constant to isolate                               
-      ///   @tparam NORMALIZE - whether or not to normalize the constant to   
+      ///   @tparam T the constant to isolate                                 
+      ///   @tparam NORMALIZE whether or not to normalize the constant to     
       ///      Langulus specification                                         
-      ///   @tparam NAMED - whether or not to apply any CTTI named traits     
+      ///   @tparam NAMED whether or not to apply any CTTI named traits       
       ///   @return a compile-time string                                     
       template<auto T, bool NORMALIZE = true, bool NAMED = true>
       consteval auto IsolateConstant() {
@@ -363,7 +363,7 @@ namespace Langulus::RTTI
       };
       
       /// Decide buffer size by checking all replacement patterns             
-      ///   @tparam SRC - search where?                                       
+      ///   @tparam SRC search where?                                         
       constexpr size_t DecideBufferSize(const CT::Literal auto& SRC) {
          const size_t src_size = SRC.size();
          size_t result = 0;
@@ -399,7 +399,7 @@ namespace Langulus::RTTI
       }
       
       /// Normalize a type/enum/function name at runtime                      
-      ///   @tparam SRC - the token to normalize                              
+      ///   @tparam SRC the token to normalize                                
       ///   @return new literal                                               
       inline ::std::string NormalizeAtRuntime(const Token& SRC) {
          if (not IsASCII(SRC))
@@ -451,7 +451,7 @@ namespace Langulus::RTTI
       }
       
       /// Normalize a type/enum/function name                                 
-      ///   @tparam SRC - the literal to normalize                            
+      ///   @tparam SRC the literal to normalize                              
       ///   @return new literal                                               
       template<Literal SRC>
       constexpr auto Normalize() {
@@ -503,7 +503,7 @@ namespace Langulus::RTTI
       /// Get the last, most relevant part of a token that may or may not     
       /// have namespaces in it. Essentially finds last "::" that isn't       
       /// enclosed in a <template>, and skip forward to that                  
-      ///   @param token - the token to scan                                  
+      ///   @param token the token to scan                                    
       ///   @return the last token                                            
       // ReSharper disable once CppDFAUnreachableFunctionCall           
       constexpr size_t FindLastToken(const Token& token) noexcept {
@@ -537,8 +537,8 @@ namespace Langulus
 {
    /// Get the name of a type, templated or not, with consistently named      
    /// template arguments, even if nested, at compile-time                    
-   ///   @tparam T - the type to get the name of                              
-   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///   @tparam T the type to get the name of                                
+   ///   @tparam NORMALIZE whether to normalize name so that it is the same   
    ///      across compilers. This costs a lot of build time and is rarely    
    ///      used for C++ names                                                
    ///   @return a compile-time string                                        
@@ -548,8 +548,8 @@ namespace Langulus
    }
    
    /// Get the name of an enum value at compile-time                          
-   ///   @tparam E - the constant to get the name of                          
-   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///   @tparam E the constant to get the name of                            
+   ///   @tparam NORMALIZE whether to normalize name so that it is the same   
    ///      across compilers. This costs a lot of build time and is rarely    
    ///      used for C++ names                                                
    ///   @return a compile-time string                                        
@@ -559,8 +559,8 @@ namespace Langulus
    }
 
    /// Same as CppNameOf, but removes all namespaces at compile-time          
-   ///   @tparam T - the type to get the name of                              
-   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///   @tparam T the type to get the name of                                
+   ///   @tparam NORMALIZE whether to normalize name so that it is the same   
    ///      across compilers. This costs a lot of build time and is rarely    
    ///      used for C++ names                                                
    ///   @return a compile-time string                                        
@@ -573,8 +573,8 @@ namespace Langulus
    }
 
    /// Same as CppNameOf, but removes all namespaces at compile-time          
-   ///   @tparam E - the enum to get the name of                              
-   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///   @tparam E the enum to get the name of                                
+   ///   @tparam NORMALIZE whether to normalize name so that it is the same   
    ///      across compilers. This costs a lot of build time and is rarely    
    ///      used for C++ names                                                
    ///   @return a compile-time string                                        
@@ -593,8 +593,8 @@ namespace Langulus
    ///      in the same name. If this is not desired disable NORMALIZE, or    
    ///      specialize CTTI::Named for each translation unit the type         
    ///      appears in                                                        
-   ///   @tparam T - the type to get the name of                              
-   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///   @tparam T the type to get the name of                                
+   ///   @tparam NORMALIZE whether to normalize name so that it is the same   
    ///      across compilers. This costs a lot of build time, so you might    
    ///      want to do it at runtime instead if build time becomes an issue   
    ///      See Langulus::RTTI::Inner::NormalizeAtRuntime                     
@@ -611,8 +611,8 @@ namespace Langulus
    ///      in the same name. If this is not desired disable NORMALIZE, or    
    ///      specialize CTTI::NamedValue for each translation unit the value   
    ///      appears in                                                        
-   ///   @tparam E - the value to get the name of                             
-   ///   @tparam NORMALIZE - whether to normalize name so that it is the same 
+   ///   @tparam E the value to get the name of                               
+   ///   @tparam NORMALIZE whether to normalize name so that it is the same   
    ///      across compilers. This costs a lot of build time, so you might    
    ///      want to do it at runtime instead if build time becomes an issue   
    ///      See Langulus::RTTI::Inner::NormalizeAtRuntime                     

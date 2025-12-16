@@ -14,8 +14,8 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Adds a variable to a container                                         
    /// Increases the container's bytesize                                     
-   ///   @tparam T - type of the variable                                     
-   ///   @tparam ID - multiple variables are supported                        
+   ///   @tparam T type of the variable                                       
+   ///   @tparam ID multiple variables are supported                          
    template<CT::NotVoid T, unsigned ID>
    struct Stack {
       using CTTI_Component = Yes<>;
@@ -72,7 +72,7 @@ namespace Langulus::Anyness::Component
       /// No conversion or copying occurs, only pointer arithmetic.           
       ///   @attention assumes the container is typed                         
       ///   @attention assumes the container is allocated                     
-      ///   @tparam ALT - optional type override, use T if void               
+      ///   @tparam ALT optional type override, use T if void                 
       template<class ALT = void, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) has_assumptions {
          static_assert(not CT::Handle<ALT>,    "ALT can't be a handle");
@@ -103,7 +103,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get first element as a handle, or any desired wrapping type         
-      ///   @tparam ALT - the type we're wrapping in                          
+      ///   @tparam ALT the type we're wrapping in                            
       ///   @return ALT, either as a reference if possible, or as a value if  
       ///      an incompatible pointer arithmetic happened                    
       template<class ALT, CT::Container C>

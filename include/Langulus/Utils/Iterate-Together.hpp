@@ -17,7 +17,6 @@ namespace Langulus::Anyness
    /// Use like this: for(auto i : IterateTogether(pack1, pack2)), where      
    /// 'packN' can be any range, including std one. You can retrieve the      
    /// current element by using i[N], or i.one() i.two() for the first two.   
-   ///                                                                        
    template<::std::ranges::range...C>
    struct IterateTogether {
       using CTTI_ReflectAs = void;

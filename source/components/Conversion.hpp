@@ -25,7 +25,7 @@ namespace Langulus::Anyness::Component
    public:
       /// Convert block's contents to another kind of contents, by iterating  
       /// all elements, and casting them one by one                           
-      ///   @param out - what are we converting to?                           
+      ///   @param out what are we converting to?                             
       ///   @return the number of converted elements inserted in 'out'.       
       ///      this will be smaller than self.GetCount() on partial success   
       template<CT::Container C, CT::Deep OUT>

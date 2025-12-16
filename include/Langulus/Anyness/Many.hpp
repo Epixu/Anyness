@@ -50,7 +50,6 @@ namespace Langulus::Anyness
    /// supports all kinds of data states: compression, encryption, linking,   
    /// and so on. If you want to contain a single element, consider using     
    /// Any instead, for a bit shorter and faster representation.              
-   ///                                                                        
    struct Many : Container<
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<>,           // Allocation is referenced      

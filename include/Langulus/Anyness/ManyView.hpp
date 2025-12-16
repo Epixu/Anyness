@@ -36,8 +36,8 @@ namespace Langulus::Anyness
    struct Many;
 
    ///                                                                        
-   /// A universal type-erased continuous container view of variable size     
-   /// Doesn't have ownership, and binary-compatible with the container above 
+   /// A universal type-erased continuous container view of variable size.    
+   /// Doesn't have ownership, and binary-compatible with the container above.
    ///                                                                        
    struct ManyView : Container<
       Com::HeapReference<>,            // Pointer to heap memory        

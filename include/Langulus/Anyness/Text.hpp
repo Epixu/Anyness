@@ -163,8 +163,8 @@ namespace Langulus::Anyness
       ///      interfaces the data - you can TakeOwnership() after this call  
       ///   @attention count will shrink if a terminating character was found,
       ///      or if 'text' is a bounded array of smaller size                
-      ///   @param text - text to wrap, assumed valid                         
-      ///   @param count - number of characters inside 'text' to use          
+      ///   @param text text to wrap, assumed valid                           
+      ///   @param count number of characters inside 'text' to use            
       ///   @return the text wrapped inside a Text container                  
       template<CT::Text T>
       static Text FromText(T&& text, CountType count) {
@@ -178,8 +178,8 @@ namespace Langulus::Anyness
       }
       
       /// Create text from a number                                           
-      ///   @param number - the number to stringify                           
-      ///   @param precision - number of digits after the floating point, use 
+      ///   @param number the number to stringify                             
+      ///   @param precision number of digits after the floating point, use   
       ///      0 for no truncation. Will produce scientific notation for too  
       ///      big or too small numbers                                       
       ///   @return the text                                                  

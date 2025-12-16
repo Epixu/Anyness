@@ -17,8 +17,8 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Provides random element access based on a linear index, that is        
    /// mapped directly onto contiguous memory                                 
-   ///   @tparam ID - the stack/heap we're indexing                           
-   ///   @tparam T - constrain the type of allowed indices. Leave as 'void'   
+   ///   @tparam ID the stack/heap we're indexing                             
+   ///   @tparam T constrain the type of allowed indices. Leave as 'void'     
    ///      to allow for all the usual integer types                          
    template<unsigned ID, class T>
    struct IndexedLinear {
@@ -47,7 +47,7 @@ namespace Langulus::Anyness::Component
       /// Convert an index to an offset                                       
       /// Special indices will be contextualized                              
       /// Unsigned/signed indices are directly forwarded without any overhead 
-      ///   @param index - the index to simplify                              
+      ///   @param index the index to simplify                                
       ///   @return a simple element offset into contiguous memory            
       template<CT::Container C, CT::Index INDEX>
       constexpr auto SimplifyIndex(this C const& self, INDEX index)
@@ -109,8 +109,8 @@ namespace Langulus::Anyness::Component
       /// Select a contiguous region from the memory block - unsafe and may   
       /// return memory that has not been initialized yet                     
       ///   @attention assumes container is typed and allocated               
-      ///   @param start - starting element index (included)                  
-      ///   @param count - number of sequential elements                      
+      ///   @param start starting element index (included)                    
+      ///   @param count number of sequential elements                        
       ///   @return the selected contiguous range                             
       template<CT::Container C>
       auto SelectInner(this C&& self, Count<C> start, Count<C> count)
@@ -126,7 +126,7 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Subscript operator for accessing element at a specific index        
-      ///   @param idx - the index                                            
+      ///   @param idx the index                                              
       ///   @return the picked element                                        
       template<CT::Container C>
       auto operator[] (this C&& self, CT::Index auto idx)
@@ -135,7 +135,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Access element at a specific index                                  
-      ///   @param idx - the index                                            
+      ///   @param idx the index                                              
       ///   @return the picked element                                        
       template<CT::Container C>
       auto GetAt(this C&& self, CT::Index auto idx)

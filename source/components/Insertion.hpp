@@ -26,8 +26,8 @@ namespace Langulus::CT
    namespace Inner
    {
       /// Test whether a container is constructible with the given arguments  
-      ///   @tparam C - the contained type                                    
-      ///   @tparam ...A - the arguments to test                              
+      ///   @tparam C the contained type                                      
+      ///   @tparam ...A the arguments to test                                
       ///   @return true if container is constructible using {A...}           
       template<Container C, class...A>
       consteval bool DeepConstructible() noexcept {
@@ -73,8 +73,8 @@ namespace Langulus::Anyness::Component
    /// Implements insertion for containers.                                   
    /// Insertion (unlike emplacement) extents the memory space and may move   
    /// things around. It guarantees that nothing gets overwritten.            
-   ///   @tparam ID - heap we're inserting to                                 
-   ///   @tparam AS - type to serialize as before inserting. Useful for byte  
+   ///   @tparam ID heap we're inserting to                                   
+   ///   @tparam AS type to serialize as before inserting. Useful for byte    
    ///      and text containers. Use void to insert without serialization.    
    template<unsigned ID, class AS>
    struct Insertion {
@@ -119,12 +119,12 @@ namespace Langulus::Anyness::Component
          -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
 
       /// Insert a number of elements at the back, nullifying them if able to 
-      ///   @param count - the number of elements to insert                   
+      ///   @param count the number of elements to insert                     
       template<CT::Container C>
       auto InsertNulled(this C&, Count<C> count) -> Count<C>;
 
       /// Insert a number of elements at the back, default-constructing them  
-      ///   @param count - the number of elements to insert                   
+      ///   @param count the number of elements to insert                     
       template<CT::Container C>
       auto InsertDefault(this C& self, Count<C> count) -> Count<C> {
          const auto previousCount = self.GetCount();
@@ -208,8 +208,8 @@ namespace Langulus::Anyness::Component
       /// Extend the container's memory and return the newly allocated range  
       ///   @attention if extending memory without ownership, the container   
       ///      will diverge into a new allocation and copy the data           
-      ///   @param count - the number of elements to extend by                
-      ///   @param arguments - the arguments to use for each constructor call 
+      ///   @param count the number of elements to extend by                  
+      ///   @param arguments the arguments to use for each constructor call   
       ///      - no arguments will result in default construction             
       ///   @return the newly allocated mutable range                         
       template<CT::Container C, class...A>

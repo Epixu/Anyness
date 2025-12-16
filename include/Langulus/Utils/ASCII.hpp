@@ -156,9 +156,9 @@ namespace Langulus
    /// Check if a token transition happens at the beginning and the end of    
    /// a region inside a source. A token transition means, that the token     
    /// is surrounded by non-alphabetical symbols                              
-   ///   @param source - data source                                          
-   ///   @param lhs - start of the region                                     
-   ///   @param rhs - end of the region                                       
+   ///   @param source data source                                            
+   ///   @param lhs start of the region                                       
+   ///   @param rhs end of the region                                         
    ///   @return true if a transition occurs at both points                   
    // ReSharper disable once CppDFAUnreachableFunctionCall              
    constexpr bool IsTransition(const Token& source, size_t lhs, size_t rhs) noexcept {
@@ -179,7 +179,7 @@ namespace Langulus
    /// 1. Must be a continuous string of ASCII characters, no spaces          
    /// 2. Must start with an alphabetical symbol                              
    /// 3. Must not contain any operators, except <>:,                         
-   ///   @param token - the token to check                                    
+   ///   @param token the token to check                                      
    ///   @return true if token is a valid keyword                             
    constexpr bool IsKeyword(const Token& token) noexcept {
       if (token.empty() or not IsAlphabetical(token[0]))

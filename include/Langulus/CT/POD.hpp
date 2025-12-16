@@ -12,9 +12,9 @@
 namespace Langulus::CTTI
 {
    /// Affects CT::POD<T>                                                     
-   ///   @note: is_trivially_destructible_v is required to strenghten the     
+   ///   @note is_trivially_destructible_v is required to strenghten the      
    ///      is_trivial_v check on GCC/Clang due to compiler bugs; MSVC is fine
-   ///   @note: std::array will be considered POD if containing POD elements  
+   ///   @note std::array will be considered POD if containing POD elements   
    ///      so we make sure that ranges are never considered POD by default,  
    ///      otherwise an array containing one hash will result in a rehash    
    ///      instead of a reuse                                                

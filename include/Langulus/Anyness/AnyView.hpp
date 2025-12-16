@@ -26,7 +26,6 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A universal type-erased container view (without ownership) of size 1,  
    /// that is binary compatible with Any                                     
-   ///                                                                        
    struct AnyView : Container<
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<0, false>,   // Pointer to an allocation      

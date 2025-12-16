@@ -55,8 +55,8 @@ namespace Langulus::Fractalloc
       TAllocation(TAllocation&&) = delete;
 
       /// Initialize an allocation                                            
-      ///   @param size - the number of allocated bytes                       
-      ///   @param pool_alignment - the pool alignment                        
+      ///   @param size the number of allocated bytes                         
+      ///   @param pool_alignment the pool alignment                          
       TAllocation(pot_t size, pot_t pool_alignment) noexcept{
          mPoolAlignment = pool_alignment.bit;
          mSize = size.bit;
@@ -68,7 +68,7 @@ namespace Langulus::Fractalloc
       }
       
       /// Reference the entry 'c' times                                       
-      ///   @param c - the number of references to add                        
+      ///   @param c the number of references to add                          
       void AddRef(int32_t c) noexcept {
          mReferences += c;
       }
@@ -100,7 +100,7 @@ namespace Langulus::Fractalloc
       }
 
       /// Check if memory address is inside this entry                        
-      ///   @param address - address to check if inside this entry            
+      ///   @param address address to check if inside this entry              
       ///   @return true if address is inside                                 
       auto Contains(const void* address) const has_assumptions -> bool {
          LglsAssumeDev(mReferences != 0,

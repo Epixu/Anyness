@@ -15,8 +15,8 @@ namespace Langulus::Anyness::Component
    /// Stores a precomputed hash on the stack.                                
    /// The hash is calculated using the data from the given heap/stack ID.    
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0.  
-   ///   @tparam ID - the stack/heap source for data                          
-   ///   @tparam H - the hash type used                                       
+   ///   @tparam ID the stack/heap source for data                            
+   ///   @tparam H the hash type used                                         
    template<unsigned ID = 0, class H = Hash>
    struct HashStack : HashEmergent<ID, H> {
       using StackRequest = H;
@@ -58,7 +58,7 @@ namespace Langulus::Anyness::Component
       ///   @attention this is noop when constructing from deep intents,      
       ///      since element constructors might throw and stuff be partially  
       ///      inserted. In those cases, hash is set by the heap components.  
-      ///   @param intent - the intent and container to transfer from         
+      ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (I::IsShallow() and not CT::Copied<I>) {

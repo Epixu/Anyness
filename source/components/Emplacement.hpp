@@ -39,7 +39,7 @@ namespace Langulus::Anyness::Component
    /// Implements emplacement for containers.                                 
    /// Unlike insertion, emplacement reuses the same memory space and         
    /// guarantees that nothing moves around.                                  
-   ///   @tparam ID - heap we're emplacing to                                 
+   ///   @tparam ID heap we're emplacing to                                   
    template<unsigned ID>
    struct Emplacement {
       using CTTI_Component = Yes<>;
@@ -232,7 +232,7 @@ namespace Langulus::Anyness::Component
       ///   @attention does not modify any container state                    
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
-      ///   @param intent - constructor argument. If this container           
+      ///   @param intent constructor argument. If this container             
       ///      is statically typed, this can be any constructor argument,     
       ///      otherwise it has to be an instance of the contained type.      
       template<CT::Container C, CT::Intent I>

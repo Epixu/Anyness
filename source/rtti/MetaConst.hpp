@@ -23,7 +23,6 @@ namespace Langulus::RTTI
       /// general it is likely to avoid an indirection altogether at the      
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
-      ///                                                                     
       #pragma pack(push, 1)
       struct MetaConstPacked_16 : MetaPacked<2> {
          using Base = MetaPacked;
@@ -83,7 +82,6 @@ namespace fmt
 {
    ///                                                                        
    /// Extend FMT to be capable of logging constant types                     
-   ///                                                                        
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    template<>
    struct formatter<::Langulus::RTTI::Inner::MetaConstPacked_16> {

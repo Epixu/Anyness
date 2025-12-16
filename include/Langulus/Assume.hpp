@@ -14,9 +14,9 @@
 namespace Langulus
 {
    /// Will throw an exception                                                
-   ///   @param m1 - optional main error message                              
-   ///   @param location - optional location of the error                     
-   ///   @param mn - additional information to log                            
+   ///   @param m1 optional main error message                                
+   ///   @param location optional location of the error                       
+   ///   @param mn additional information to log                              
    template<class E = Exception, class...MORE>
    void ErrorInner(
       [[maybe_unused]] const char* location = nullptr,
@@ -48,10 +48,10 @@ namespace Langulus
    
    /// Assertion that works both at runtime and at compile-time.              
    /// Will throw an exception if condition isn't met at runtime.             
-   ///   @param condition - the condition that must hold true                 
-   ///   @param m1 - optional main error message if condition doesn't hold    
-   ///   @param location - optional location of the error                     
-   ///   @param mn - additional information to log                            
+   ///   @param condition the condition that must hold true                   
+   ///   @param m1 optional main error message if condition doesn't hold      
+   ///   @param location optional location of the error                       
+   ///   @param mn additional information to log                              
    template<class E = Exception, class...MORE>
    constexpr void AssertInner(
       bool condition,
@@ -87,10 +87,10 @@ namespace Langulus
 
    /// Assertion that works at runtime.                                       
    /// Doesn't throw or ruin compilation.                                     
-   ///   @param condition - the condition that must hold true                 
-   ///   @param m1 - optional main warning message if condition doesn't hold  
-   ///   @param location - optional location of the error                     
-   ///   @param mn - additional information to log                            
+   ///   @param condition the condition that must hold true                   
+   ///   @param m1 optional main warning message if condition doesn't hold    
+   ///   @param location optional location of the error                       
+   ///   @param mn additional information to log                              
    template<class...MORE>
    constexpr void AssertWarnInner(
       bool condition,
@@ -122,10 +122,10 @@ namespace Langulus
    /// User assumption that works both at runtime and at compile-time.        
    /// Tested only if LANGULUS(SAFE) >= 1.                                    
    /// Will throw an exception if condition isn't met at runtime.             
-   ///   @param condition - the condition that must hold true                 
-   ///   @param m1 - optional main error message if condition doesn't hold    
-   ///   @param location - optional location of the error                     
-   ///   @param mn - additional information to log                            
+   ///   @param condition the condition that must hold true                   
+   ///   @param m1 optional main error message if condition doesn't hold      
+   ///   @param location optional location of the error                       
+   ///   @param mn additional information to log                              
    template<class E = Exception, class...MORE>
    constexpr void AssumeUserInner(
       bool condition,
@@ -159,10 +159,10 @@ namespace Langulus
    /// User assumption at runtime.                                            
    /// Tested only if LANGULUS(SAFE) >= 1.                                    
    /// Doesn't throw or ruin compilation.                                     
-   ///   @param condition - the condition that must hold true                 
-   ///   @param m1 - optional main warning message if condition doesn't hold  
-   ///   @param location - optional location of the error                     
-   ///   @param mn - additional information to log                            
+   ///   @param condition the condition that must hold true                   
+   ///   @param m1 optional main warning message if condition doesn't hold    
+   ///   @param location optional location of the error                       
+   ///   @param mn additional information to log                              
    template<class...MORE>
    constexpr void AssumeUserWarnInner(
       bool condition,
@@ -208,10 +208,10 @@ namespace Langulus
    /// Developer assumption that works both at runtime and at compile-time.   
    /// Tested only if LANGULUS(SAFE) >= 2.                                    
    /// Will throw an exception if condition isn't met at runtime.             
-   ///   @param condition - the condition that must hold true                 
-   ///   @param m1 - optional main error message if condition doesn't hold    
-   ///   @param location - optional location of the error                     
-   ///   @param mn - additional information to log                            
+   ///   @param condition the condition that must hold true                   
+   ///   @param m1 optional main error message if condition doesn't hold      
+   ///   @param location optional location of the error                       
+   ///   @param mn additional information to log                              
    template<class E = Exception, class...MORE>
    constexpr void AssumeDevInner(
       bool condition,
@@ -242,13 +242,12 @@ namespace Langulus
       }
    }
    
-   /// Developer assumption at runtime.                                       
-   /// Tested only if LANGULUS(SAFE) >= 2.                                    
+   /// Developer assumption at runtime.  Tested only if LANGULUS(SAFE) >= 2.  
    /// Doesn't throw or ruin compilation.                                     
-   ///   @param condition - the condition that must hold true                 
-   ///   @param m1 - optional main warning message if condition doesn't hold  
-   ///   @param location - optional location of the error                     
-   ///   @param mn - additional information to log                            
+   ///   @param condition the condition that must hold true                   
+   ///   @param m1 optional main warning message if condition doesn't hold    
+   ///   @param location optional location of the error                       
+   ///   @param mn additional information to log                              
    template<class...MORE>
    constexpr void AssumeDevWarnInner(
       bool condition,
@@ -293,10 +292,10 @@ namespace Langulus
    /// Custom assumption that works both at runtime and at compile-time.      
    /// Tested only if LANGULUS(SAFE) >= LEVEL.                                
    /// Will throw an exception if condition isn't met at runtime.             
-   ///   @param condition - the condition that must hold true                 
-   ///   @param m1 - optional main error message if condition doesn't hold    
-   ///   @param location - optional location of the error                     
-   ///   @param mn - additional information to log                            
+   ///   @param condition the condition that must hold true                   
+   ///   @param m1 optional main error message if condition doesn't hold      
+   ///   @param location optional location of the error                       
+   ///   @param mn additional information to log                              
    template<unsigned LEVEL, class E = Exception, class...MORE>
    constexpr void AssumeInner(
       bool condition,
@@ -338,13 +337,12 @@ namespace Langulus
       AssumeInner<LEVEL>(static_cast<bool>(CONDITION), HERE() __VA_OPT__(,) __VA_ARGS__) \
       LglsCompilerSpecificAssume(CONDITION)
    
-   /// Custom assumption at runtime.                                          
-   /// Tested only if LANGULUS(SAFE) >= LEVEL.                                
+   /// Custom assumption at runtime. Tested only if LANGULUS(SAFE) >= LEVEL.  
    /// Doesn't throw or ruin compilation.                                     
-   ///   @param condition - the condition that must hold true                 
-   ///   @param m1 - optional main warning message if condition doesn't hold  
-   ///   @param location - optional location of the error                     
-   ///   @param mn - additional information to log                            
+   ///   @param condition the condition that must hold true                   
+   ///   @param m1 optional main warning message if condition doesn't hold    
+   ///   @param location optional location of the error                       
+   ///   @param mn additional information to log                              
    template<unsigned LEVEL, class...MORE>
    constexpr void AssumeWarnInner(
       bool condition,
@@ -386,7 +384,6 @@ namespace fmt
 
    ///                                                                        
    /// Extend FMT to be capable of logging any exception                      
-   ///                                                                        
    template<::Langulus::CT::Exception T>
    struct formatter<T> {
       template<class CONTEXT>

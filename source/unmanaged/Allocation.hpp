@@ -20,7 +20,6 @@ namespace Langulus::Unmanaged
 
    ///                                                                        
    ///   Memory allocation                                                    
-   ///                                                                        
    struct Allocation {
    protected:
       friend struct Allocator;
@@ -45,8 +44,8 @@ namespace Langulus::Unmanaged
       Allocation(Allocation&&) = delete;
 
       /// Initialize an allocation                                            
-      ///   @param alignment - data alignment                                 
-      ///   @param size - the number of allocated bytes                       
+      ///   @param alignment data alignment                                   
+      ///   @param size the number of allocated bytes                         
       Allocation(pot_t alignment, pot_t size) noexcept
          : mSize      {size}
          , mAlignment {alignment} {}
@@ -70,7 +69,7 @@ namespace Langulus::Unmanaged
       }
       
       /// Check if memory address is inside this entry                        
-      ///   @param address - address to check if inside this entry            
+      ///   @param address address to check if inside this entry              
       ///   @return true if address is inside                                 
       bool Contains(const void* address) const noexcept {
          const auto a = static_cast<const uint8_t*>(address);
@@ -79,7 +78,7 @@ namespace Langulus::Unmanaged
       }
       
       /// Reference the entry 'c' times                                       
-      ///   @param c - the number of references to add                        
+      ///   @param c the number of references to add                          
       void AddRef(int32_t c) noexcept {
          mReferences += c;
       }

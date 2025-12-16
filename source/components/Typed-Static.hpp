@@ -22,9 +22,9 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Defines the contained type at compile-time.                            
    /// Doesn't allow for type-erasure and doesn't take up space.              
-   ///   @tparam META - the type of the definition                            
-   ///   @tparam TYPE - static type, can't be void                            
-   ///   @tparam ID   - which heap/stack is typed?                            
+   ///   @tparam META the type of the definition                              
+   ///   @tparam TYPE static type, can't be void                              
+   ///   @tparam ID which heap/stack is typed?                                
    template<class META, CT::NotVoid TYPE, unsigned ID>
    struct TypedStatic {
       using CTTI_Component = Yes<>;
@@ -53,7 +53,7 @@ namespace Langulus::Anyness::Component
       /// Check if type origin is akin to one of the provided types.          
       /// Always happens at compile-time.                                     
       ///   @attention ignores sparsity and cv-qualifiers                     
-      ///   @tparam A1, AN... - the types to compare against                  
+      ///   @tparam A1, AN... the types to compare against                    
       ///   @return true if origin type is same to at least one of the types  
       template<CT::NotVoid A1, CT::NotVoid...AN>
       constexpr bool Is() const noexcept {
@@ -62,7 +62,7 @@ namespace Langulus::Anyness::Component
 
       /// Check if type origin is the same as another                         
       ///   @attention ignores sparsity and cv-qualifiers                     
-      ///   @param type - the type to check for                               
+      ///   @param type the type to check for                                 
       ///   @return true if this container has similar data                   
       bool Is(META type) const noexcept {
          return GetType().Is(type);
@@ -71,7 +71,7 @@ namespace Langulus::Anyness::Component
       /// Check if type origin is the same as another container's type.       
       /// This can potentially happen at compile-time.                        
       ///   @attention ignores sparsity and cv-qualifiers                     
-      ///   @param other - the type to check for                              
+      ///   @param other the type to check for                                
       ///   @return true if this container has similar data                   
       template<CT::Container C>
       constexpr bool Is(C const& other) const noexcept {
@@ -84,7 +84,7 @@ namespace Langulus::Anyness::Component
       /// Check if unqualified type is the same as one of the provided types. 
       /// Always happens at compile-time.                                     
       ///   @attention ignores only cv-qualifiers                             
-      ///   @tparam A1, AN... - the types to compare against                  
+      ///   @tparam A1, AN... the types to compare against                    
       ///   @return true if data type is similar to at least one of the types 
       template<CT::NotVoid A1, CT::NotVoid...AN>
       constexpr bool IsSame() const noexcept {
@@ -93,7 +93,7 @@ namespace Langulus::Anyness::Component
 
       /// Check if unqualified type is the same as another                    
       ///   @attention ignores only cv-qualifiers                             
-      ///   @param type - the type to check for                               
+      ///   @param type the type to check for                                 
       ///   @return true if this block contains similar data                  
       bool IsSame(META type) const noexcept {
          return GetType().IsSame(type);
@@ -102,7 +102,7 @@ namespace Langulus::Anyness::Component
       /// Check if unqualified type is the same as another container's type.  
       /// This can potentially happen at compile-time.                        
       ///   @attention ignores only cv-qualifiers                             
-      ///   @param other - the container to check for                         
+      ///   @param other the container to check for                           
       ///   @return true if this container has similar data                   
       template<CT::Container C>
       constexpr bool IsSame(C const& other) const noexcept {
@@ -114,7 +114,7 @@ namespace Langulus::Anyness::Component
 
       /// Check if this type is exactly one of the provided types             
       /// Always happens at compile-time                                      
-      ///   @tparam T1, TN... - the types to compare against                  
+      ///   @tparam T1, TN... the types to compare against                    
       ///   @return true if data type matches at least one type               
       template<CT::NotVoid A1, CT::NotVoid...AN>
       constexpr bool IsExact() const noexcept {
@@ -122,7 +122,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if this type is exactly another                               
-      ///   @param type - the type to match                                   
+      ///   @param type the type to match                                     
       ///   @return true if data type matches type exactly                    
       bool IsExact(META type) const noexcept {
          return GetType().IsExact(type);
@@ -130,7 +130,7 @@ namespace Langulus::Anyness::Component
 
       /// Check if this type is exactly another container's type              
       /// This can potentially happen at compile-time                         
-      ///   @param other - the block to match                                 
+      ///   @param other the block to match                                   
       ///   @return true if data type matches type exactly                    
       template<CT::Container C>
       constexpr bool IsExact(C const& other) const noexcept {
@@ -200,7 +200,7 @@ namespace Langulus::Anyness::Component
       
       /// This is still used if statically-typed - checks if types are        
       /// compatible in constructors and assigners                            
-      ///   @tparam T - the new type                                          
+      ///   @tparam T the new type                                            
       template<CT::NotVoid T>
       constexpr void SetType() {
          static_assert(CT::NotSheddable<T>, "Strip all sheddables first");
@@ -211,7 +211,7 @@ namespace Langulus::Anyness::Component
       /// This is still used if statically-typed - checks if types are        
       /// compatible in constructors and assigners.                           
       /// This particular override doesn't benefit from compile-time checks.  
-      ///   @param type - the new type                                        
+      ///   @param type the new type                                          
       void SetType(META type) {
          LglsAssert(type.IsExact(MetaDataOf<TYPE>()), "Type mismatch");
       }

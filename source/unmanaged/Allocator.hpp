@@ -23,8 +23,8 @@ namespace Langulus::Unmanaged
 
    /// Each allocation has the following order:                               
    /// [sizeof(Allocation)][padding for client data][client bytes...]         
-   ///   @param size - the number of client bytes to allocate                 
-   ///   @param align - the alignment of the data                             
+   ///   @param size the number of client bytes to allocate                   
+   ///   @param align the alignment of the data                               
    ///   @return a newly allocated memory that is correctly aligned           
    inline Allocation* AlignedAllocate(pot_t size, pot_t align) has_assumptions {
       if (align < Alignment)
@@ -48,7 +48,6 @@ namespace Langulus::Unmanaged
    
    ///                                                                        
    /// A mockup of a memory manager. Just uses malloc.                        
-   ///                                                                        
    struct Allocator {
       Allocator() = delete;
       

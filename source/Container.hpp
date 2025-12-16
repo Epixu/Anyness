@@ -204,8 +204,8 @@ namespace Langulus::Anyness
       
       /// Go through all components and accumulate their heap requests into   
       /// a byte amount, used for header size when allocating                 
-      ///   @param count - heap requests can depend on the amount of elements 
-      ///   @param indirects - heap requests can depend on the indirections   
+      ///   @param count heap requests can depend on the amount of elements   
+      ///   @param indirects heap requests can depend on the indirections     
       ///   @return the size of the heap header in bytes                      
       template<class C1, class...CN>
       constexpr size_t DefineHeap(
@@ -244,8 +244,8 @@ namespace Langulus::Anyness
       
       /// Go through all components until PICK is reached, and accumulate     
       /// the offset up to that point, to get the byte offset in the heap     
-      ///   @param count - heap requests can depend on the amount of elements 
-      ///   @param indirects - heap requests can depend on the indirections   
+      ///   @param count heap requests can depend on the amount of elements   
+      ///   @param indirects heap requests can depend on the indirections     
       ///   @return the heap byte offset, where PICK's data resides           
       template<class PICK, class C1, class...CN>
       constexpr size_t GetHeapOffset(
@@ -300,7 +300,7 @@ namespace Langulus::Anyness
    
    ///                                                                        
    /// A container definition using composition                               
-   ///   @tparam COMPONENTS - list of components that define the container    
+   ///   @tparam COMPONENTS list of components that define the container      
    ///      behavior. Order is verified based on ComponentPrecedence members  
    ///      for various reasons, the main ones being initialization order and 
    ///      build-time optimization: too many superficially different template

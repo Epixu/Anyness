@@ -95,7 +95,7 @@ namespace Langulus
    ///      - else if T::operator TypeOf<T>& exists use that                  
    ///      - else if T::operator const TypeOf<T>& exists use that            
    ///      - else if T::operator TypeOf<T> exists use that                   
-   ///   @param what - the instance to decay                                  
+   ///   @param what the instance to decay                                    
    ///   @return the inner data                                               
    template<class T> LANGULUS(ALWAYS_INLINED)
    constexpr decltype(auto) TypedCast(T&& what) {
@@ -134,7 +134,7 @@ namespace Langulus
    };
    
    /// Always returns a pointer to the argument                               
-   ///   @param a - the argument to point to                                  
+   ///   @param a the argument to point to                                    
    ///   @attention will shed sheddables                                      
    template<class T>
    constexpr decltype(auto) SparseCast(T&& a) noexcept {
@@ -145,9 +145,9 @@ namespace Langulus
    }
 
    /// Dereference the argument as many times as you need                     
-   ///   @tparam TIMES - number of times to dereference - will dereference    
+   ///   @tparam TIMES number of times to dereference - will dereference      
    ///      all indirections by default                                       
-   ///   @param a - the argument to dereference                               
+   ///   @param a the argument to dereference                                 
    ///   @attention will shed all sheddables                                  
    template<unsigned TIMES = 1000000, class T>
    constexpr decltype(auto) DenseCast(T&& a) {

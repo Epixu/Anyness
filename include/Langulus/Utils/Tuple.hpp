@@ -249,7 +249,6 @@ namespace Langulus
    ///                                                                        
    /// A tuple with optimized layout                                          
    /// Please, add it to 'std', please!                                       
-   ///                                                                        
    template<class...T>
    struct compact_tuple : private Inner::OptimalStorage<T...> {
       using CTTI_Tuple   = Yes<>;

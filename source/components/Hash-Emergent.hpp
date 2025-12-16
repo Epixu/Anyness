@@ -16,8 +16,8 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Doesn't cache hash - recalculates it every time.                       
    /// The hash is calculated using the data inside the given heap/stack ID.  
-   ///   @tparam ID - the heap/stack ID                                       
-   ///   @tparam H  - the hash type used                                      
+   ///   @tparam ID the heap/stack ID                                         
+   ///   @tparam H  the hash type used                                        
    template<unsigned ID = 0, class H = Hash>
    struct HashEmergent {
       using CTTI_Component = Yes<>;

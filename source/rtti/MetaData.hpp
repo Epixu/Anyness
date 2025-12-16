@@ -28,7 +28,6 @@ namespace Langulus::RTTI
       /// general it is likely to avoid an indirection altogether at the      
       /// cost of a bitwise operation, making it a bit more cache-friendly,   
       /// and worth experimenting with                                        
-      ///                                                                     
       template<unsigned S>
       struct Structured;
 
@@ -86,8 +85,8 @@ namespace Langulus::RTTI
       /// sufficient. It contains the most packed properties and should be    
       /// the fastest, due to the smallest chance of an indirection           
       /// Packing strategy that can't exceed 2^(8*ID_SIZE)-2 possible types   
-      ///   @tparam ID_SIZE - the size reserved for unique ID                 
-      ///   @tparam PT_SIZE - the size reserved for properties                
+      ///   @tparam ID_SIZE the size reserved for unique ID                   
+      ///   @tparam PT_SIZE the size reserved for properties                  
       #pragma pack(push, 1)
       template<unsigned ID_SIZE, unsigned PT_SIZE>
       struct MetaDataStructured_XY : MetaPacked<ID_SIZE>, Structured<PT_SIZE> {
@@ -208,7 +207,6 @@ namespace Langulus::RTTI
       ///                                                                     
       /// A naked pointer to a definition. Probably (not likely) the fastest, 
       /// but most memory-inefficient on 64bit systems                        
-      ///                                                                     
       struct MetaDataNaked : MetaNaked<DefinitionData> {
          using Base = MetaNaked;
          using Base::Base;
@@ -303,7 +301,6 @@ namespace fmt
 {
    ///                                                                        
    /// Extend FMT to be capable of logging data types                         
-   ///                                                                        
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
    template<unsigned ID_SIZE, unsigned PT_SIZE>
    struct formatter<::Langulus::RTTI::Inner::MetaDataStructured_XY<ID_SIZE, PT_SIZE>> {

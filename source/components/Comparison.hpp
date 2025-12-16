@@ -44,8 +44,8 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Implements comparison for containers. This includes functions for      
    /// searching and pattern-matching.                                        
-   ///   @tparam ID - heap/stack we're comparing                              
-   ///   @tparam HASH - whether to compare hashes before elements. This is    
+   ///   @tparam ID heap/stack we're comparing                                
+   ///   @tparam HASH whether to compare hashes before elements. This is      
    ///      mostly useful when hash is cachable, otherwise kind of pointless. 
    template<unsigned ID, bool HASH>
    struct Comparison {
@@ -368,7 +368,7 @@ namespace Langulus::Anyness::Component
 
       /// Equality-compare with one single value, if exactly one element is   
       /// contained                                                           
-      ///   @param rhs - the value to compare against                         
+      ///   @param rhs the value to compare against                           
       ///   @return true if elements are the same                             
       template<CT::Container C, CT::NoIntent RT>
       constexpr bool CompareOneEqual(this C const& self, const RT& rhs) {
@@ -424,7 +424,7 @@ namespace Langulus::Anyness::Component
       /// Three-way compare with one single value, if exactly one element is  
       /// contained                                                           
       ///   @attention this doesn't benefit from hashing                      
-      ///   @param rhs - the value to compare against                         
+      ///   @param rhs the value to compare against                           
       ///   @return true if elements are the same                             
       template<CT::Container C, CT::NoIntent RT>
       constexpr auto CompareOne(this C const& self, const RT& rhs)
@@ -495,9 +495,9 @@ namespace Langulus::Anyness::Component
       auto MatchesLoose(this const C1&, const C2&) noexcept -> Count<C1>;
       
       /// Find a single element's index inside container                      
-      ///   @tparam REVERSE - true to perform search in reverse               
-      ///   @param item - the item to search for                              
-      ///   @param cookie - resume search from a given index                  
+      ///   @tparam REVERSE true to perform search in reverse                 
+      ///   @param item the item to search for                                
+      ///   @param cookie resume search from a given index                    
       ///   @return the index of the found item, or 'npos' if none found      
       template<bool REVERSE = false, CT::ContainsMany C, CT::NoIntent T>
       auto Find(this const C& self, const T& item, Count<C> cookie = 0) noexcept
@@ -536,9 +536,9 @@ namespace Langulus::Anyness::Component
       }
    
       /// Find a matching sequence of one or more matching elements           
-      ///   @tparam REVERSE - true to perform search in reverse               
-      ///   @param range - sequence of items to search for                    
-      ///   @param cookie - resume search from a given index                  
+      ///   @tparam REVERSE true to perform search in reverse                 
+      ///   @param range sequence of items to search for                      
+      ///   @param cookie resume search from a given index                    
       ///   @return the index of the found item, or 'npos' if not found       
       template<bool REVERSE = false, CT::ContainsMany C1, CT::Container C2>
       auto FindRange(this const C1& self, const C2& range, Count<C1> cookie = 0) noexcept -> At<C1> {

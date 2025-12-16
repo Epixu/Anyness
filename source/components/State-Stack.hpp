@@ -23,7 +23,7 @@ namespace Langulus::Anyness::Component
    /// Adds a variable state to a container.                                  
    /// Increases the container's bytesize to the smallest possible integer    
    /// capable of containing all state bits.                                  
-   ///   @tparam STATES... - the possible states                              
+   ///   @tparam STATES... the possible states                                
    template<CT::State...STATES>
    struct LANGULUS_EBCO StateStack : STATES... {
       using CTTI_Component = Yes<>;
@@ -148,7 +148,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Transfer from any kind of container, respecting intents             
-      ///   @param intent - the intent and container to transfer from         
+      ///   @param intent the intent and container to transfer from           
       template<CT::Intent I, CT::Container C> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent) {
          decltype(auto) from = FWD(intent.what);

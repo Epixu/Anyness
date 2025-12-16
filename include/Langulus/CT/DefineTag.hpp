@@ -29,7 +29,7 @@ LANGULUS_CTTI_CONCEPT(DefineTag);
 namespace Langulus::RTTI
 {
    /// Get the name of a tag definition at compile-time                       
-   ///   @tparam T - the tag to get the name of                               
+   ///   @tparam T the tag to get the name of                                 
    ///   @return a compile-time string                                        
    template<CT::DefineTag T>
    consteval auto NameOfTag() {

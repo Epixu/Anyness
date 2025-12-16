@@ -13,7 +13,7 @@ namespace Langulus::Anyness::DefineState
 {
    ///                                                                        
    /// If enabled, data is marked as a missing past                           
-   ///   @tparam V - decides whether state is dynamic or static               
+   ///   @tparam V decides whether state is dynamic or static                 
    template<State::StateValue V>
    struct Past {
       using CTTI_State = Yes<>;

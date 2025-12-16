@@ -58,7 +58,7 @@ namespace Langulus::CT
    /// Unfolds T, if it is a bounded array or std::range, and returns the     
    /// contained type. Nested for ranges containing other ranges, or arrays   
    /// containing other arrays/ranges, etc. Sheds sheddables like intents     
-   ///   @tparam T - type to unfold                                           
+   ///   @tparam T type to unfold                                             
    ///   @tparam UNLESS - stop unfolding if the type is similar, useful in    
    ///      contexts where you actually want to insert a std::map for         
    ///      example, and not unfold it down to pairs                          

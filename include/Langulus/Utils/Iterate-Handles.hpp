@@ -21,7 +21,6 @@ namespace Langulus::Anyness
    /// values in-place while iterating.                                       
    /// Use like this: for(auto i : IterateHandles(container)), where          
    /// 'container' can be any CT::container.                                  
-   ///                                                                        
    template<CT::Container C>
    struct IterateHandles {
       using CTTI_ReflectAs = void;

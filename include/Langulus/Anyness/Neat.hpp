@@ -25,7 +25,6 @@ namespace Langulus::Anyness
    /// whether an element with the same signature already exists.             
    ///   Elements that are marked missing are never considered part of the    
    /// descriptor and are filled by the context (i.e. Tags::Parent(?))        
-   ///                                                                        
    class Neat {
       using ConstructList = TMany<Construct>;
       using TailList      = TMany<Messy>;

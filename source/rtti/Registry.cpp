@@ -34,8 +34,8 @@ namespace Langulus::RTTI
    Registry::~Registry() {}
    
    /// Common way to extract something from the registry by ID                
-   ///   @param where - where to search in                                    
-   ///   @param id - the id to search for                                     
+   ///   @param where where to search in                                      
+   ///   @param id the id to search for                                       
    ///   @return the found element, or nullptr if not found                   
    auto Registry::GetMetaByID(const auto& where, size_t id) const has_assumptions {
       LglsAssumeDevAndOptimize(id != 0, "Invalid ID");
@@ -43,7 +43,7 @@ namespace Langulus::RTTI
    }
 
    /// Get an existing data definition by its CppNameOf                       
-   ///   @param token - the C++ name of the data definition                   
+   ///   @param token the C++ name of the data definition                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByCppName(const Token& token)
    const noexcept -> DefinitionData const* {
@@ -55,7 +55,7 @@ namespace Langulus::RTTI
 
    /// Get an existing data definition by its NameOf                          
    ///   @attention assumes token doesn't contain spaces                      
-   ///   @param token - the reflected token of the data definition            
+   ///   @param token the reflected token of the data definition              
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByToken(const Token& token)
    const has_assumptions -> DefinitionData const* {
@@ -67,7 +67,7 @@ namespace Langulus::RTTI
    }
 
    /// Get an existing constant definition by its CppNameOf                   
-   ///   @param token - the C++ name of the constant definition               
+   ///   @param token the C++ name of the constant definition                 
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByCppName(const Token& token)
    const noexcept -> DefinitionConst const* {
@@ -79,7 +79,7 @@ namespace Langulus::RTTI
 
    /// Get an existing constant definition by its NameOf                      
    ///   @attention assumes token doesn't contain spaces                      
-   ///   @param token - the reflected token of the constant definition        
+   ///   @param token the reflected token of the constant definition          
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByToken(const Token& token)
    const has_assumptions -> DefinitionConst const* {
@@ -91,7 +91,7 @@ namespace Langulus::RTTI
    }
 
    /// Get an existing tag definition by its CppNameOf                        
-   ///   @param token - the C++ name of the tag definition                    
+   ///   @param token the C++ name of the tag definition                      
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByCppName(const Token& token)
    const noexcept -> DefinitionTag const* {
@@ -103,7 +103,7 @@ namespace Langulus::RTTI
 
    /// Get an existing tag definition by its NameOfTag                        
    ///   @attention assumes token doesn't contain spaces                      
-   ///   @param token - the reflected token of the tag definition             
+   ///   @param token the reflected token of the tag definition               
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByToken(const Token& token)
    const has_assumptions -> DefinitionTag const* {
@@ -115,7 +115,7 @@ namespace Langulus::RTTI
    }
    
    /// Get an existing verb definition by its CppNameOf                       
-   ///   @param token - the C++ name of the verb definition                   
+   ///   @param token the C++ name of the verb definition                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByCppName(const Token& token)
    const noexcept -> DefinitionVerb const* {
@@ -128,8 +128,8 @@ namespace Langulus::RTTI
    /// Get an existing verb definition by NameOfVerb/NameOfVerbReverse        
    /// or OperatorOfVerb/OperatorOfVerbReverse                                
    ///   @attention assumes token doesn't contain spaces                      
-   ///   @param token - the reflected token of the verb definition            
-   ///                  you can search by positive, as well as negative token 
+   ///   @param token the reflected token of the verb definition              
+   ///      you can search by positive, as well as negative token             
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByToken(const Token& token)
    const has_assumptions -> DefinitionVerb const* {
@@ -141,9 +141,9 @@ namespace Langulus::RTTI
    }
    
    /// Get an existing data definition by unpacking an ID                     
-   ///   @param id - the ID                                                   
-   ///   @param sparse - is the data type sparse?                             
-   ///   @param constant - is the data type constant?                         
+   ///   @param id the ID                                                     
+   ///   @param sparse is the data type sparse?                               
+   ///   @param constant is the data type constant?                           
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByID(size_t id, bool sparse, bool constant)
    const has_assumptions -> DefinitionData const* {
@@ -171,7 +171,7 @@ namespace Langulus::RTTI
    }
 
    /// Get an existing tag definition by unpacking an ID                      
-   ///   @param id - the ID                                                   
+   ///   @param id the ID                                                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByID(size_t id)
    const has_assumptions -> DefinitionTag const* {
@@ -180,7 +180,7 @@ namespace Langulus::RTTI
    }
 
    /// Get an existing verb definition by unpacking an ID                     
-   ///   @param id - the ID                                                   
+   ///   @param id the ID                                                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByID(size_t id)
    const has_assumptions -> DefinitionVerb const* {
@@ -189,7 +189,7 @@ namespace Langulus::RTTI
    }
 
    /// Get an existing constant definition by unpacking an ID                 
-   ///   @param id - the ID                                                   
+   ///   @param id the ID                                                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByID(size_t id)
    const has_assumptions -> DefinitionConst const* {
@@ -199,7 +199,7 @@ namespace Langulus::RTTI
 
    /// Get a list of all the interpretations for an ambiguous token           
    ///   @attention assumes token doesn't contain spaces                      
-   ///   @param token - the token to search for                               
+   ///   @param token the token to search for                                 
    ///   @return the set of associated meta definitions                       
    auto Registry::GetAmbiguousMeta(const Token& token)
    const has_assumptions -> const MetaSet& {
@@ -221,7 +221,7 @@ namespace Langulus::RTTI
    ///         meta-data, instead of meta-tag.                                
    ///   3. If after all these disambiguation attempts there's still ambiguity
    ///      throw an exception - the ambiguity has to be manually fixed       
-   ///   @param keyword - the token to search for                             
+   ///   @param keyword the token to search for                               
    ///   @return the disambiguated token; throws if not found/ambiguous       
    auto Registry::DisambiguateMeta(const Token& keyword)
    const -> Inner::Definition const* {
@@ -339,7 +339,7 @@ namespace Langulus::RTTI
 
    /// Resolve a file extension                                               
    ///   @attention assumes token doesn't contain spaces                      
-   ///   @param token - the file extension to search for                      
+   ///   @param token the file extension to search for                        
    ///   @return all meta definitions associated with the file extension      
    auto Registry::ResolveFileExtension(const Token& token)
    const has_assumptions -> const MetaSet& {
@@ -353,8 +353,8 @@ namespace Langulus::RTTI
 
    /// Register a data definition                                             
    ///   @attention assumes token is not yet registered                       
-   ///   @param cppname - the C++ type name to register                       
-   ///   @param token_messy - the custom token used in scripting              
+   ///   @param cppname the C++ type name to register                         
+   ///   @param token_messy the custom token used in scripting                
    ///   @return the newly defined meta data for that name                    
    auto Registry::RegisterData(const Token& cppname, const Token& token_messy) -> DefinitionData& {
       const ::std::string cppname_s {cppname};
@@ -410,7 +410,7 @@ namespace Langulus::RTTI
 
    /// Reserves a data ID for more compact representation of metadata.        
    /// Used in packed pointers to definitions.                                
-   ///   @param meta - the definition to reserve ID for                       
+   ///   @param meta the definition to reserve ID for                         
    ///   @attention assumes meta definition is stripped from a single level   
    ///      of indirection, constness and volatileness                        
    ///   @return the new ID                                                   
@@ -421,8 +421,8 @@ namespace Langulus::RTTI
 
    /// Register a constant definition                                         
    ///   @attention assumes token is not yet registered                       
-   ///   @param cppname - the C++ type name to register                       
-   ///   @param token_messy - the custom token used in scripting              
+   ///   @param cppname the C++ type name to register                         
+   ///   @param token_messy the custom token used in scripting                
    ///   @return the newly defined meta constant for that token               
    auto Registry::RegisterConst(const Token& cppname, const Token& token_messy) -> DefinitionConst& {
       const ::std::string cppname_s {cppname};
@@ -482,8 +482,8 @@ namespace Langulus::RTTI
 
    /// Register a tag definition                                              
    ///   @attention assumes token is not yet registered                       
-   ///   @param cppname - the C++ type name to register                       
-   ///   @param token_messy - the custom token used in scripting              
+   ///   @param cppname the C++ type name to register                         
+   ///   @param token_messy the custom token used in scripting                
    ///   @return the newly defined meta trait for that token                  
    auto Registry::RegisterTag(const Token& cppname, const Token& token_messy) -> DefinitionTag& {
       const ::std::string cppname_s {cppname};
@@ -542,11 +542,11 @@ namespace Langulus::RTTI
 
    /// Register a verb definition                                             
    ///   @attention assumes tokens are not yet registered                     
-   ///   @param cppname - the C++ type name to register                       
-   ///   @param token_messy - positive verb token                             
-   ///   @param tokenRev_messy - negative verb token (optional)               
-   ///   @param op - positive verb operator (optional)                        
-   ///   @param opRev - negative verb operator (optional)                     
+   ///   @param cppname the C++ type name to register                         
+   ///   @param token_messy positive verb token                               
+   ///   @param tokenRev_messy negative verb token (optional)                 
+   ///   @param op positive verb operator (optional)                          
+   ///   @param opRev negative verb operator (optional)                       
    ///   @return the newly defined meta verb for that token configuration     
    auto Registry::RegisterVerb(
       Token const& cppname,
@@ -675,8 +675,8 @@ namespace Langulus::RTTI
    }
 
    /// Register file extension                                                
-   ///   @param token - the file extension token to reserve                   
-   ///   @param type - the data to associate file with                        
+   ///   @param token the file extension token to reserve                     
+   ///   @param type the data to associate file with                          
    void Registry::RegisterFileExtension(const Token& token, DefinitionData* type)
    has_assumptions {
       LglsAssumeDev(not token.empty(), "Bad file extension");
@@ -692,7 +692,7 @@ namespace Langulus::RTTI
 
    /// Runs through all definitions and destroys all of those, that were      
    /// defined only within the given boundary token                           
-   ///   @param boundary - the boundary token to search for                   
+   ///   @param boundary the boundary token to search for                     
    void Registry::UnloadBoundary(const Token& boundary) {
       LglsAssumeDev(not boundary.empty(), "Can't unload main boundary");
       VERBOSE_SCOPED(Logger::Red, Logger::Underline, 

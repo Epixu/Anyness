@@ -12,7 +12,7 @@ namespace Langulus::RTTI::Inner
 {
    /// Check if type origins match.                                           
    /// Disregards all cv-qualifiers, pointers, array extents, etc.            
-   ///   @param other - the type to compare against                           
+   ///   @param other the type to compare against                             
    ///   @return true if types match                                          
    inline bool MetaDataNaked::Is(const MetaDataNaked& other) const noexcept {
       return mDefinition == other.mDefinition or (
@@ -24,7 +24,7 @@ namespace Langulus::RTTI::Inner
    /// Check if two meta definitions match origin and sparseness, but ignores 
    /// `const` and `volatile` qualifiers. The qualifiers aren't ignored only  
    /// on the current level of indirection, but on the entire way to origin.  
-   ///   @param other - the type to compare against                           
+   ///   @param other the type to compare against                             
    ///   @return true if types match                                          
    inline bool MetaDataNaked::IsSame(const MetaDataNaked& other) const noexcept {
       return mDefinition == other.mDefinition or (

@@ -11,9 +11,7 @@
 
 namespace Langulus::CTTI
 {
-   /// Can be used in two ways to satisfy CT::Exception<T>:                   
-   /// 1. Specialize for T/concept                                            
-   /// 2. Add a public `using CTTI_Exception = Yes<>;` in T                   
+   /// Affects CT::Exception<T>                                               
    template<class T>
    struct Exception;
 }
@@ -27,7 +25,6 @@ namespace Langulus
    ///                                                                        
    /// It is an equivalent to std::runtime_error, but with additional info    
    /// for debug builds, like message and location strings                    
-   ///                                                                        
    struct Exception {
       using CTTI_Exception = Yes<>;
 

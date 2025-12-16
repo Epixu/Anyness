@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Reserves a part of the heap to keep track of sparse element's          
    /// allocations. The pointer to the array of allocations is kept locally.  
-   ///   @tparam ID - which heap/stack are we keeping track of                
+   ///   @tparam ID which heap/stack are we keeping track of                  
    template<unsigned ID>
    struct OwnershipDeepStack : OwnershipDeepEmergent<ID> {
       using StackRequest = EntryPtr;
@@ -37,7 +37,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Transfer from any kind of container, respecting intents             
-      ///   @param intent - the intent and container to transfer from         
+      ///   @param intent the intent and container to transfer from           
       template<CT::Container C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent) {
          decltype(auto) from = FWD(intent.what);

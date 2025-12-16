@@ -65,7 +65,7 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Implements ForEach iteration interface for containers                  
-   ///   @tparam ID - heap/stack we're iterating                              
+   ///   @tparam ID heap/stack we're iterating                                
    template<unsigned ID>
    struct IterationForEach {
       using CTTI_Component = Yes<>;
@@ -104,7 +104,7 @@ namespace Langulus::Anyness::Component
       /// container is iterated and the function - executed for all elements. 
       /// The rest of the provided functions are ignored after the first      
       /// function with viable argument                                       
-      ///   @param lambdas - all potential functions to iterate with          
+      ///   @param lambdas all potential functions to iterate with            
       ///   @return the number of executions and the control end code         
       template<CT::Container C, class...F>
       auto ForEach(this C&& self, F&&...lambdas) -> ForEachResult<C> {
@@ -148,7 +148,7 @@ namespace Langulus::Anyness::Component
       /// block is iterated, and F is executed for all elements. None of the  
       /// provided functions are ignored, unless Loop::Break is returned at   
       /// some point                                                          
-      ///   @param lambdas - all potential functions to iterate with          
+      ///   @param lambdas all potential functions to iterate with            
       ///   @return the number of executions                                  
       template<CT::Container C, class...F>
       auto ForEachDeep(this C&& self, F&&...lambdas) -> ForEachResult<C> {
@@ -219,9 +219,9 @@ namespace Langulus::Anyness::Component
       /// Iterate and execute call for each flat element, counting each       
       /// successfull execution                                               
       ///   @attention assumes block is typed and non empty                   
-      ///   @tparam REVERSE - whether to iterate in reverse                   
-      ///   @param f - the function to execute for each element of type A     
-      ///   @param index - [out] counts the successful executions             
+      ///   @tparam REVERSE whether to iterate in reverse                     
+      ///   @param f the function to execute for each element of type A       
+      ///   @param index [out] counts the successful executions               
       ///   @return the last 'f' result                                       
       template<bool REVERSE, CT::Container C, class F>
       LoopControl ForEachInner(this C&& self, F&& f, Count<C>& index) noexcept(IsNoexcept<F>) {
@@ -358,10 +358,10 @@ namespace Langulus::Anyness::Component
       
       /// Iterate and execute call for each deep element, counting each       
       /// successfull execution                                               
-      ///   @tparam REVERSE - whether to iterate in reverse                   
-      ///   @tparam SKIP - whether to execute call for intermediate blocks    
-      ///   @param f - the function to execute for each element of type A     
-      ///   @param counter - [out] counts the successful executions           
+      ///   @tparam REVERSE whether to iterate in reverse                     
+      ///   @tparam SKIP whether to execute call for intermediate blocks      
+      ///   @param f the function to execute for each element of type A       
+      ///   @param counter [out] counts the successful executions             
       ///   @return the last 'f' result                                       
       template<bool REVERSE, bool SKIP, CT::Container C, class F>
       LoopControl ForEachDeepInner(this C&& self, F&& f, Count<C>& counter) noexcept(IsNoexcept<F>) {
@@ -549,8 +549,8 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes A is binary compatible with the contained type 
       ///   @attention assumes container is not empty                         
       ///   @attention assumes sparseness matches                             
-      ///   @tparam REVERSE - direction we're iterating in                    
-      ///   @param call - the constexpr noexcept function to call on each item
+      ///   @tparam REVERSE direction we're iterating in                      
+      ///   @param f the constexpr noexcept function to call on each item     
       template<bool REVERSE, CT::Container C, class F>
       LoopControl IterateInner(this C&& self, Count<C> count, F&& f) noexcept(IsNoexcept<F>) {
          using A = ArgumentOf<F>;

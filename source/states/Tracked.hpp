@@ -13,7 +13,7 @@ namespace Langulus::Anyness::DefineState
 {
    ///                                                                        
    /// If enabled, data is tracked while changing - useful for debugging      
-   ///   @tparam V - decides whether state is dynamic or static               
+   ///   @tparam V decides whether state is dynamic or static                 
    template<State::StateValue V>
    struct Tracked {
       using CTTI_State = Yes<>;

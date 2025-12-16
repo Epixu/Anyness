@@ -102,7 +102,7 @@ namespace Langulus::RTTI
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
-   ///   @tparam T - the type to reflect                                      
+   ///   @tparam T the type to reflect                                        
    template<class T> requires (CT::Dense<T> and not ::std::is_const_v<T>)
    auto DefinitionData::Reflect() -> DefinitionData const* {
       static_assert(CT::Complete<T>,
@@ -550,7 +550,7 @@ namespace Langulus::RTTI
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
-   ///   @tparam T - the type to reflect                                      
+   ///   @tparam T the type to reflect                                        
    template<class T> requires (CT::Dense<T> and ::std::is_const_v<T>)
    auto DefinitionData::Reflect() -> DefinitionData const* {
       static_assert(CT::Complete<T>,
@@ -750,7 +750,7 @@ namespace Langulus::RTTI
    ///      relevant instantiations of this function as extern template, to   
    ///      save on a lot of compiler resources:                              
    ///      https://stackoverflow.com/questions/8130602                       
-   ///   @tparam T - the type to reflect                                      
+   ///   @tparam T the type to reflect                                        
    template<class T> requires CT::Sparse<T>
    auto DefinitionData::Reflect() -> DefinitionData const* {
       static_assert(not CT::Array<T>,

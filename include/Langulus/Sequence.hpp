@@ -28,7 +28,7 @@ namespace Langulus
       static constexpr auto Expand = ::std::make_integer_sequence<Type, END> {};
 
       /// Iterate through each index in the sequence using generator pattern  
-      ///   @param lambda - a templated lambda function                       
+      ///   @param lambda a templated lambda function                         
       /// Example use:                                                        
       ///   Sequence<Ret::Columns>::ForEach([&]<Offset COL>() noexcept {      
       ///      auto& lc = lhs.template GetColumn<COL>();                      
