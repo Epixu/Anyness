@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "Allocator.hpp"
-#include "Pool.inl"
 #include <unordered_map>
 #include <map>
 #include <ranges>
@@ -29,6 +28,7 @@ namespace
 
    using Langulus::Fractalloc::Pool;
    using Langulus::Fractalloc::PoolBank;
+   using Langulus::RTTI::DMeta;
 
    /// Default pool chain.                                                    
    /// Won't accept types that have size or alignment larger than Alignment.  
@@ -45,7 +45,7 @@ namespace
    /// The set of types that are currently in use and their corresponding     
    /// pool chains. Used to detect if a shared object is safe to be unloaded. 
    /// Also used to pack/unpack pointers.                                     
-   ::std::unordered_map<Langulus::RTTI::DMeta, PoolBank> gTypePoolChain;
+   ::std::unordered_map<DMeta, PoolBank> gTypePoolChain;
 
    /// The set of all pools. Used to quickly determine if a pointer resides   
    /// inside the memory manager.                                             
@@ -54,6 +54,19 @@ namespace
    /// Used to mask pointers in order to determine whether memory belongs to  
    /// us or not. Updated on each new allocated pool.                         
    uintptr_t gPossiblePoolMemorySpace = 0;
+
+   PoolBank* SelectPoolBank(DMeta meta) has_assumptions {
+      LglsAssumeDev(meta, "Invalid meta data");
+      switch (meta.GetPoolTactic()) {
+      case Langulus::PoolTactic::Size:
+         return &gSizePoolChain[Langulus::Fractalloc::FastLog2(meta.GetSize())];
+      case Langulus::PoolTactic::Type:
+         return &gTypePoolChain[meta];
+      case Langulus::PoolTactic::Main:
+         return &gMainPoolChain;
+      }
+      return nullptr;
+   }
 }
 
 namespace Langulus::Fractalloc
@@ -113,23 +126,9 @@ namespace Langulus::Fractalloc
    ///   @return the allocation, or nullptr if out of memory                  
    auto Allocator::Allocate(DMeta meta, pot_t size) has_assumptions -> Allocation* {
       // Decide pool chain based on meta data                           
-      LglsAssumeDev(meta, "Invalid meta data");
-      PoolBank* pool_bank = nullptr;
-      switch (meta.GetPoolTactic()) {
-      case PoolTactic::Size:
-         pool_bank = &gSizePoolChain[FastLog2(meta.GetSize())];
-         break;
-      case PoolTactic::Type: {
-         auto found = gTypePoolChain.find(meta);
-         if (found != gTypePoolChain.end())
-            pool_bank = &found->second;
-         break;
-      }
-      case PoolTactic::Main:
-         pool_bank = &gMainPoolChain;
-         break;
-      }
-
+      auto pool_bank = SelectPoolBank(meta);
+      LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
+      
       //	Attempt to place allocation in the chosen chain                
       unsigned pool_misses = 0;
       Allocation* entry = nullptr;
@@ -414,24 +413,11 @@ namespace Langulus::Fractalloc
       DMeta meta, pot_t size
    ) has_assumptions -> Allocation* {
       // Decide pool chain based on meta data                           
-      LglsAssumeDev(meta, "Invalid meta data");
-      PoolBank* pool_bank = nullptr;
-      switch (meta.GetPoolTactic()) {
-      case PoolTactic::Size:
-         pool_bank = &gSizePoolChain[FastLog2(meta.GetSize())];
-         break;
-      case PoolTactic::Type: {
-         auto found = gTypePoolChain.find(meta);
-         if (found != gTypePoolChain.end())
-            pool_bank = &found->second;
-         break;
-      }
-      case PoolTactic::Main:
-         pool_bank = &gMainPoolChain;
-         break;
-      }
+      auto pool_bank = SelectPoolBank(meta);
+      LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
 
       //	Attempt to place allocation in the chosen chain                
+      LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
       const size_t max_pool_id = (1u << pool_budget) - 1u;
       size_t pool_misses = 1;
       Allocation* entry = nullptr;
@@ -543,17 +529,15 @@ namespace Langulus::Fractalloc
       case PoolTactic::Size:
          p = &gSizePoolChain[FastLog2(meta.GetSize())];
          break;
-      case PoolTactic::Type: {
-         auto found = gTypePoolChain.find(meta);
-         if (found != gTypePoolChain.end())
-            p = &found->second;
+      case PoolTactic::Type:
+         p = &gTypePoolChain.at(meta);            
          break;
-      }
       case PoolTactic::Main:
          p = &gMainPoolChain;
          break;
       }
 
+      LglsAssumeDevAndOptimize(p, "Pool bank should always be valid");
       LglsAssumeDev(p->indexed.contains(poolId), "Invalid pool id");
       auto e = p->indexed.at(poolId)->AllocationFromIndex(entryId);
       return e->GetBlockStart() + meta.GetSize() * elementId;

@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include <Langulus/Core.hpp>
+#include <Langulus/Utils/Pot.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
@@ -116,15 +117,57 @@ namespace Langulus::Fractalloc
          return mClientData;
       }
 
-      auto GetLastFreedEntry() const noexcept -> Allocation*;
-      auto GetMaxEntries() const noexcept -> pot_t;
-      auto GetCurrentEntries() const noexcept -> size_t;
-      auto GetValidEntries() const noexcept -> size_t;
-      auto GetTotalSize() const noexcept -> size_t;
-      auto GetAllocatedByBackend() const noexcept -> pot_t;
-      auto GetAllocatedByFrontend() const noexcept -> size_t;
-      bool IsInUse() const noexcept;
-      bool CanContain(pot_t) const noexcept;
+      /// Get the total size of the pool, including this instance and padding 
+      ///   @return the size in bytes                                         
+      auto GetTotalSize() const noexcept -> size_t {
+         return mAllocatedByBackend + Cost(mDataAlignment, mDataMinAlloc, mAllocatedByBackend);
+      }
+
+      /// Get the max number of possible entries                              
+      /// (if all of them are as small as possible)                           
+      ///   @return the size in bytes, always a power-of-two                  
+      auto GetMaxEntries() const noexcept -> pot_t {
+         return mAllocatedByBackend / mThresholdMin;
+      }
+
+      auto GetCurrentEntries() const noexcept -> size_t {
+         return mNextEntry;
+      }
+
+      auto GetValidEntries() const noexcept -> size_t {
+         return mValidEntries;
+      }
+      
+      auto GetLastFreedEntry() const noexcept -> Allocation* {
+         return mLastFreed;
+      }
+
+      /// Get the bytes reserved for the bool                                 
+      ///   @return bytes allocated for the pool                              
+      auto GetAllocatedByBackend() const noexcept -> pot_t {
+         return mAllocatedByBackend;
+      }
+
+      /// Get the used number of bytes - the sum of all allocations           
+      ///   @return bytes allocated by the client                             
+      auto GetAllocatedByFrontend() const noexcept -> size_t {
+         return mAllocatedByFrontend;
+      }
+      
+      /// Check if there is any used memory                                   
+      ///   @return true on at least one valid entry                          
+      bool IsInUse() const noexcept {
+         return mAllocatedByFrontend > 0;
+      }
+
+      /// Check if memory can contain a number of bytes                       
+      ///   @param bytes number of bytes to check                             
+      ///   @return true if bytes can be contained in a new/recycled element  
+      bool CanContain(pot_t bytes) const noexcept {
+         return bytes <= mThresholdMax
+            and (mAllocatedByFrontend + static_cast<size_t>(bytes) <= mAllocatedByBackend);
+      }
+
       bool ContainsData(const void*) const noexcept;
       bool ContainsAllocation(const Allocation*) const noexcept;
       auto Find(const void*) const has_assumptions -> const Allocation*;

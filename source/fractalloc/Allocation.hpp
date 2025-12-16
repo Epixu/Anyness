@@ -95,7 +95,11 @@ namespace Langulus::Fractalloc
          }
          else {
             // Return a packed pointer                                  
-            return T {this};
+            auto pool = GetPool();
+            return T {
+               pool->GetID(),
+               pool->IndexFromAllocation(reinterpret_cast<Allocation const*>(this))
+            };
          }
       }
 

@@ -126,11 +126,13 @@ endif()
 set(logger_related_cpp_files source/logger/Logger.cpp
                              source/logger/HTML.cpp
                              source/logger/TXT.cpp)
+set(fractalloc_related_cpp_files source/fractalloc/Allocator.cpp
+                                 source/fractalloc/Pool.cpp)
 set(statistic_enabled "$<AND:$<BOOL:${LANGULUS_OPTION_MEMORY_STATISTICS}>,$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>>")
 
 add_langulus_library(LangulusAnyness
 	SOURCES  $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:${logger_related_cpp_files}>
-		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:source/fractalloc/Allocator.cpp>
+		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:${fractalloc_related_cpp_files}>
 		     $<$<BOOL:${statistic_enabled}>:source/fractalloc/Statistics.cpp>
 		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
 )

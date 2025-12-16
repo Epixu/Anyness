@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "Allocator.hpp"
-#include "Pool.inl"
 
 #if 0
    #include <Langulus/Logger/EnableVerbose.hpp>

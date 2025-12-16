@@ -59,6 +59,7 @@ namespace Langulus::Fractalloc
 
    protected:
       friend struct Allocator;
+      friend struct TAllocation<PackedPointer>;
 
       union {
          struct {
@@ -69,22 +70,26 @@ namespace Langulus::Fractalloc
          Inner mAll : TotalBits;
       };
 
+      /// Manually construct the packed pointer                               
+      constexpr PackedPointer(size_t poolId, size_t entryId, size_t elementId = 0)
+      has_assumptions {
+         LglsAssumeDevAndOptimize(poolId < (1u << PoolBits),
+            "Pool ID beyond limits");
+         LglsAssumeDevAndOptimize(entryId < (1u << EntryBits),
+            "Entry ID beyond limits");
+         LglsAssumeDevAndOptimize(elementId < (1u << OffsetBits),
+            "Element ID beyond limits");
+         mPool = static_cast<Inner>(poolId);
+         mEntry = static_cast<Inner>(entryId);
+         mOffset = static_cast<Inner>(elementId);
+      }
+
    public:
       constexpr PackedPointer() noexcept
          : mAll(0) {}
       
       constexpr PackedPointer(nullptr_t) noexcept
-         : mAll(0) {}
-      
-      constexpr PackedPointer(TAllocation<PackedPointer> const* a) noexcept
-         : mAll(0) {
-         if (not a)
-            return;
-
-         auto pool = a->GetPool();
-         mPool   = static_cast<Inner>(pool->GetID());
-         mEntry  = static_cast<Inner>(pool->IndexFromAllocation(reinterpret_cast<Allocation const*>(a)));
-      }
+         : mAll(0) {}      
 
       explicit constexpr operator bool () const noexcept {
          return mAll != 0;

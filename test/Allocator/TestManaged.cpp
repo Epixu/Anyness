@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "TestAllocatorCommon.hpp"
-#include "../../source/fractalloc/Pool.inl"
+#include "../../source/fractalloc/Pool.cpp"
 #include <Langulus/MetaOf.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
