@@ -24,7 +24,6 @@
 ///   2. Add a public `using CTTI_<Name> = Yes/No;` in the desired type       
 ///   3. Some CTTI_<Name> tags might require types or values instead -        
 ///      they should have additional documentation alongside them             
-///                                                                           
 namespace Langulus::CTTI
 {
    /// Can be used in two ways to satisfy CT::Array<T>:                       
@@ -80,8 +79,8 @@ namespace Langulus::CTTI
 ///    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54310                     
 ///    This is why I've wrapped it in a lambda with 'if constexpr'            
 
-/// Checks for reflection traits inside types themselves                      
-/// Requires the TYPE to be complete in order to do that                      
+/// Checks for reflection traits inside types themselves.                     
+/// Requires the TYPE to be complete in order to do that.                     
 #define LANGULUS_CTTI_DELVE_IN(TYPE,NAME) ([] -> bool { \
       if constexpr (::std::is_class_v<TYPE>) { \
          static_assert(::Langulus::CT::Complete<TYPE>, \
@@ -93,11 +92,11 @@ namespace Langulus::CTTI
    }())
 
 /// Checks for reflection traits outside types by CTTI struct specializations 
-/// If CTTI struct is incomplete, it has no effect                            
+/// If CTTI struct is incomplete, it has no effect.                           
 /// If CTTI struct has a Default member, LANGULUS_CTTI_DELVE_IN is checked    
-///   before utilizing the Enabled member                                     
+///   before utilizing the Enabled member.                                    
 /// If CTTI struct has no Default member, it is assumed specialized, and no   
-///   LANGULUS_CTTI_DELVE_IN is required, the Enabled member is used          
+///   LANGULUS_CTTI_DELVE_IN is required, the Enabled member is used.         
 #define LANGULUS_CTTI_CHECK(TYPE,NAME) ([] -> bool { \
       using ctti = ::Langulus::CTTI::NAME<TYPE>; \
       if constexpr (::Langulus::CT::Complete<ctti>) { \
@@ -142,8 +141,8 @@ namespace Langulus
    {
       namespace Inner
       {
-         /// Extracts the inner type if T is marked as sheddable              
-         /// Otherwise results in an empty type list                          
+         /// Extracts the inner type if T is marked as sheddable.             
+         /// Otherwise results in an empty type list.                         
          template<class T>
          consteval auto GetSheddedType() {
             using DT = ::std::remove_cvref_t<T>;
@@ -166,8 +165,8 @@ namespace Langulus
             else return NoTypes {};
          };
 
-         /// Extracts the inner type if T is marked as sheddable              
-         /// If T is not sheddable, just returns T as the type                
+         /// Extracts the inner type if T is marked as sheddable.             
+         /// If T is not sheddable, just returns T as the type.               
          template<class T>
          consteval auto ShedInner() {
             using ST = decltype(GetSheddedType<T>());
@@ -392,7 +391,7 @@ namespace Langulus
       concept NotDecayed = PartialValidate<T...> and ((not Decayed<T>) and ...);
 
       /// True if T is not a pointer (even a custom one), has no extent       
-      /// with [] and isn't a reference                                       
+      /// with [] and isn't a reference.                                      
       ///   @attention still allowed to be cv-qualified                       
       template<class...T>
       concept Slab = PartialValidate<T...>and [] {
@@ -490,7 +489,7 @@ namespace Langulus
 
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
-/// concepts, based on the provided Langulus::CTTI::<structure name>          
+/// concepts, based on the provided Langulus::CTTI::<structure name>.         
 /// Used to reduce boilerplate. Removes only references.                      
 ///   @attention types need to be complete only if we end up 'delving in'     
 ///   @attention will only shed references                                    
@@ -506,8 +505,8 @@ namespace Langulus
    }
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
-/// concepts, based on the provided Langulus::CTTI::<structure name>          
-/// Used to reduce boilerplate                                                
+/// concepts, based on the provided Langulus::CTTI::<structure name>.         
+/// Used to reduce boilerplate.                                               
 ///   @attention types need to be complete only if we end up 'delving in'     
 ///   @attention will shed only references and cv qualifiers                  
 ///   @attention use this macro in the global namespace                       
@@ -522,7 +521,7 @@ namespace Langulus
    }
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
-/// concepts, based on the provided Langulus::CTTI::<structure name>          
+/// concepts, based on the provided Langulus::CTTI::<structure name>.         
 /// Used to reduce boilerplate. Removes sheddables and references.            
 ///   @attention types need to be complete only if we end up 'delving in'     
 ///   @attention will shed all sheddables, as well as references after that   
@@ -538,7 +537,7 @@ namespace Langulus
    }
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
-/// concepts, based on the provided Langulus::CTTI::<structure name>          
+/// concepts, based on the provided Langulus::CTTI::<structure name>.         
 /// Used to reduce boilerplate. Removes qualifiers from argument.             
 ///   @attention types need to be complete only if we end up 'delving in'     
 ///   @attention will shed all sheddables, as well as references and cv       
@@ -555,7 +554,7 @@ namespace Langulus
    }
 
 /// Automatically populates the Langulus::CT namespace with the appropriate   
-/// concepts, based on the provided Langulus::CTTI::<structure name>          
+/// concepts, based on the provided Langulus::CTTI::<structure name>.         
 /// Used to reduce boilerplate. Decays the argument.                          
 ///   @attention types need to be complete only if we end up 'delving in'     
 ///   @attention will shed all sheddables, as well as references, pointers,   
