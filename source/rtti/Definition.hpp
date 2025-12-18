@@ -40,7 +40,24 @@ namespace Langulus::RTTI
       struct MetaVerbNaked;
       template<unsigned>
       struct MetaVerbStructured_X8;
-   }
+   }   
+
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      using MetaConst = Inner::MetaConstPacked_16;
+      using MetaData = Inner::MetaDataStructured_XY<2, 2>;
+      using MetaTag = Inner::MetaTagPacked_16;
+      using MetaVerb = Inner::MetaVerbStructured_X8<1>;
+   #else
+      using MetaConst = Inner::MetaConstNaked;
+      using MetaData = Inner::MetaDataNaked;
+      using MetaTag = Inner::MetaTagNaked;
+      using MetaVerb = Inner::MetaVerbNaked;
+   #endif
+
+   using CMeta = MetaConst;
+   using DMeta = MetaData;
+   using TMeta = MetaTag;
+   using VMeta = MetaVerb;
 }
 
 namespace Langulus::RTTI::Inner

@@ -346,7 +346,7 @@ namespace Langulus
       /// Check if all T are not constant-qualified                           
       template<class...T>
       concept Mutable = PartialValidate<T...>
-         and ((not ::std::is_const_v<ShedDeref<T>>) and ...);
+         and ((not Constant<T>) and ...);
 
       /// Check if all T are either const- and/or volatile-qualified          
       template<class...T>
@@ -358,9 +358,7 @@ namespace Langulus
       /// Check if none of T are const- and/or volatile-qualified             
       template<class...T>
       concept NotConvoluted = PartialValidate<T...>
-          and (( not ::std::is_const_v<ShedDeref<T>>
-             and not ::std::is_volatile_v<ShedDeref<T>>
-          ) and ...);
+          and ((not Convoluted<T>) and ...);
 
       /// Check if all T are reference types                                  
       template<class...T>
@@ -400,6 +398,37 @@ namespace Langulus
             return false,
             return CT::Dense<T...>
          );
+         
+      namespace Inner
+      {
+         /// Checks for const/volatile qualifiers in all indirections.        
+         /// Preserves references.                                            
+         template<class T>
+         consteval bool NestedCheckCVQ() {
+            if constexpr (CT::Convoluted<T>)
+               return true;
+            else if constexpr (::std::is_reference_v<T>)
+               return NestedCheckCVQ<Deref<T>>();
+            else if constexpr (CT::Sparse<T>)
+               return NestedCheckCVQ<Deptr<T>>();
+            else if constexpr (::std::is_bounded_array_v<T>)
+               return NestedCheckCVQ<::std::remove_extent_t<T>>();
+            else
+               return false;
+         }
+      }
+      
+      /// Check if all T are either const- and/or volatile-qualified on any   
+      /// level of indirection.                                               
+      template<class...T>
+      concept ConvolutedAnywhere = PartialValidate<T...>
+          and (Inner::NestedCheckCVQ<T>() and ...);
+
+      /// Check if none of T are const- and/or volatile-qualified on any      
+      /// level of indirection.                                               
+      template<class...T>
+      concept NotConvolutedAnywhere = PartialValidate<T...>
+          and ((not ConvolutedAnywhere<T>) and ...);
    }
 
    namespace Inner

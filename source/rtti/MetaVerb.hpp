@@ -101,14 +101,6 @@ namespace Langulus::RTTI
          constexpr bool IsContextless() const noexcept;
       };
    }
-
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaVerb = Inner::MetaVerbStructured_X8<1>;
-   #else
-      using MetaVerb = Inner::MetaVerbNaked;
-   #endif
-
-   using VMeta = MetaVerb;
 }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

@@ -62,14 +62,6 @@ namespace Langulus::RTTI
          using Base::operator bool;
       };
    }
-
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaTag = Inner::MetaTagPacked_16;
-   #else
-      using MetaTag = Inner::MetaTagNaked;
-   #endif
-
-   using TMeta = MetaTag;
 }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

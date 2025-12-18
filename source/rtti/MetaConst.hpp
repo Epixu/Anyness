@@ -63,14 +63,6 @@ namespace Langulus::RTTI
          using MetaNaked::operator bool;
       };
    }
-
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaConst = Inner::MetaConstPacked_16;
-   #else
-      using MetaConst = Inner::MetaConstNaked;
-   #endif
-
-   using CMeta = MetaConst;
 }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

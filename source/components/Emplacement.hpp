@@ -26,7 +26,6 @@ namespace Langulus::CT
 
 namespace Langulus::Anyness::Component
 {
-
    template<class T>
    void ForEachIndirection(auto&& lambda) {
       if constexpr (CT::Sparse<T>) {
@@ -52,9 +51,10 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using PickMut = typename Deref<C>::PickMut;
 
-      /// Clone the 'rhs'                                                     
+      /// Clone the 'rhs'.                                                    
+      /// Assumes all indirections are ordinary pointers, and is thus faster. 
       template<CT::Container C, CT::NoIntent IT>
-      void EmplaceByCloning(this C& self, IT const& rhs) {
+      void EmplaceByCloningStandardPointers(this C& self, IT const& rhs) {
          [[maybe_unused]] DMeta T;
          // If T is Text**, then dst/src are Text***                    
          void** dst = static_cast<void**>(self.GetHeapInner());
@@ -131,7 +131,7 @@ namespace Langulus::Anyness::Component
 
                   do {
                      // Chain all intermediate pointers                 
-                     src = static_cast<void**>(*src); //TODO won't work for packed pointers
+                     src = static_cast<void**>(*src);
                      dst = static_cast<void**>(*dst);
                      ++ent;
                      T = T.GetDeptr();
@@ -207,7 +207,7 @@ namespace Langulus::Anyness::Component
 
                   ForEachIndirection<Deptr<T>>([&src, &dst, &ent, &cloned_ptrs] {
                      // Chain all intermediate pointers                 
-                     src = static_cast<void**>(*src); //TODO won't work for packed pointers
+                     src = static_cast<void**>(*src);
                      dst = static_cast<void**>(*dst);
                      ++ent;
 
@@ -226,6 +226,82 @@ namespace Langulus::Anyness::Component
 
             IntentNew(dst, Clone(*static_cast<Decay<T>*>(static_cast<void*>(src))));
          }
+      }
+
+      /// Clone the 'rhs'.                                                    
+      /// This is a more generic approach that is considerably slower.        
+      ///TODO could benefit from static optimization                          
+      template<CT::Container C, CT::NoIntent IT>
+      void EmplaceByCloningCustomPointers(this C& self, IT const& rhs) {
+         void const* src_origin;         
+         if constexpr (CT::Handle<IT>) {
+            if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>)
+               LglsAssumeDev(self.IsSame(rhs.GetTypeInner()), "Type mismatch");
+            else
+               static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
+            
+            src_origin = rhs.GetDense().GetRaw();
+         }
+         else {
+            if constexpr (CT::TypeErased<C>)
+               LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
+            else
+               static_assert(Same<TypeOf<C>, IT>, "Type mismatch");
+            
+            src_origin = static_cast<const void*>(&DenseCast(rhs));
+         }
+
+         // Clone the origin first                                      
+         const DMeta T = self.GetTypeInner();
+         DMeta type = T.GetOrigin();
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            auto cloned = Allocator::Allocate(
+               type, pot_t(Roof2(type.GetSize()))
+            );
+         #else
+            auto cloned = Allocator::Allocate(
+               origin.GetAlignment(), pot_t(Roof2(origin.GetSize()))
+            );
+         #endif
+         LglsAssert(cloned, "Out of memory");
+
+         type.GetCloneConstructor()(
+            const_cast<void*>(src_origin),
+            cloned->GetBlockStart()
+         );
+
+         // Then clone all indirection layers in reverse order          
+         auto entries = self.GetEntries();         
+         void* next_pointer = cloned->GetBlockStart();
+         auto indirections = T.GetIndirections();
+         
+         while (indirections) {
+            entries[indirections - 1] = cloned;
+            type = T.GetDeptr(indirections - 1);
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               cloned = Allocator::Allocate(
+                  type, pot_t(Roof2(type.GetSize()))
+               );
+            #else
+               cloned = Allocator::Allocate(
+                  sparse1.GetAlignment(), pot_t(Roof2(sparse1.GetSize()))
+               );
+            #endif
+            
+            type.GetPacker()(
+               &next_pointer,
+               cloned->GetBlockStart()
+            );
+
+            next_pointer = cloned->GetBlockStart();
+            --indirections;
+         }
+
+         // The final indirection is stored in mHeap                    
+         T.GetPacker()(
+            &next_pointer,
+            self.GetHeapInner()
+         );
       }
 
       /// Emplace on top of the first element using an intent                 
@@ -247,7 +323,7 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::Copied<I>)
             self.EmplaceByCopying(rhs);
          else if constexpr (CT::Cloned<I>)
-            self.EmplaceByCloning(rhs);
+            self.EmplaceByCloningCustomPointers(rhs);
          else if constexpr (CT::Handle<IT>) {
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     

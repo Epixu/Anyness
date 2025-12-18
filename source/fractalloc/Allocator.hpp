@@ -7,10 +7,8 @@
 ///                                                                           
 #pragma once
 #include <Langulus/Core.hpp>
-#include "../rtti/MetaData.hpp"
+#include <Langulus/MetaOf.hpp>
 #include "Allocation.hpp"
-#include "Pool.hpp"
-#include "Langulus/MetaOf.hpp"
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
@@ -29,7 +27,6 @@
 
 namespace Langulus::Fractalloc
 {
-   struct Pool;
    using RTTI::DMeta;
 
    #if not LANGULUS_FEATURE(MEMORY_STATISTICS)

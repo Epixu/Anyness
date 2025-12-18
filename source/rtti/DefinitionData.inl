@@ -52,9 +52,9 @@ namespace Langulus::RTTI
    {
       /// These functions are used to reduce the number of generated unique   
       /// lambdas at reflection time                                          
-      template<class T> LANGULUS(NOINLINE)
+      template<CT::Sparse T> LANGULUS(NOINLINE)
       void SparseDefaultDeref(void* from, void* to) {
-         static_assert(CT::NotConvoluted<T>,
+         static_assert(CT::NotConvolutedAnywhere<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          if constexpr (::std::is_same_v<T, void*>) {
             auto typed_from = static_cast<void**>(from);
@@ -62,6 +62,8 @@ namespace Langulus::RTTI
             *typed_to = *typed_from;            
          }
          else {
+            static_assert(CT::CustomPointer<T>,
+               "T should be a custom pointer, use void* if not");
             using DenserT = Deref<Deptr<T>>;
             auto typed_from = static_cast<T*>(from);
             auto typed_to   = static_cast<DenserT*>(to);
@@ -69,32 +71,30 @@ namespace Langulus::RTTI
          }
       };
 
-      template<class T> LANGULUS(NOINLINE)
+      template<CT::Sparse T> LANGULUS(NOINLINE)
       void SparseDefaultConstructor(void* at) noexcept {
-         static_assert(CT::NotConvoluted<T>,
+         static_assert(CT::NotConvolutedAnywhere<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          auto atT = static_cast<T*>(at);
          new (atT) T{};
       };
 
-      template<class T> LANGULUS(NOINLINE)
+      template<CT::Sparse T> LANGULUS(NOINLINE)
       void SparseCopyConstructor(void* from, void* to) noexcept {
-         static_assert(CT::NotConvoluted<T>,
+         static_assert(CT::NotConvolutedAnywhere<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          auto fromT = static_cast<T*>(from);
          auto toT = static_cast<T*>(to);
          *toT = *fromT;
       };
-
-      template<class T> LANGULUS(NOINLINE)
+      
+      template<CT::Sparse T> LANGULUS(NOINLINE)
       auto SparseCompare(const void* lhs, const void* rhs) noexcept -> Compared {
-         static_assert(CT::NotConvoluted<T>,
+         static_assert(CT::NotConvolutedAnywhere<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          
-         // Pointers are either the same or not - not                   
-         // ordered for security reasons                                
-         static_assert(CT::NotConvoluted<T>,
-            "Strip qualifiers to avoid unnecessary instantiations");
+         // Pointers are either the same or not - not ordered for       
+         // security reasons                                            
          if constexpr (::std::is_same_v<T, void*>) {
             auto lhsT = static_cast<void const* const*>(lhs);
             auto rhsT = static_cast<void const* const*>(rhs);
@@ -107,10 +107,11 @@ namespace Langulus::RTTI
          }
       };
 
-      template<class T> LANGULUS(NOINLINE)
+      template<CT::Sparse T> LANGULUS(NOINLINE)
       bool SparseCompareEqual(const void* lhs, const void* rhs) noexcept {
-         static_assert(CT::NotConvoluted<T>,
+         static_assert(CT::NotConvolutedAnywhere<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
+         
          if constexpr (::std::is_same_v<T, void*>) {
             auto lhsT = static_cast<void const* const*>(lhs);
             auto rhsT = static_cast<void const* const*>(rhs);
@@ -123,9 +124,9 @@ namespace Langulus::RTTI
          }
       };
 
-      template<class T> LANGULUS(NOINLINE)
+      template<CT::Sparse T> LANGULUS(NOINLINE)
       auto SparseHash(void* lhs) noexcept -> Hash {
-         static_assert(CT::NotConvoluted<T>,
+         static_assert(CT::NotConvolutedAnywhere<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          auto lhsT = static_cast<T*>(lhs);
          return HashOf<true>(*lhsT);

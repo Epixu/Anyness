@@ -563,13 +563,16 @@ namespace Langulus::RTTI::Inner
    /// Remove a layer of indirection                                          
    ///   @attention will return invalid meta if type is incomplete            
    TEMPLATE()
-   auto ME()::GetDeptr() const -> MetaDataStructured_XY {
+   auto ME()::GetDeptr(size_t count) const -> MetaDataStructured_XY {
       const auto id = Base::GetID();
       if (id) {
          auto d = Instance.GetMetaDataByID(id, sparse, constant);
-         return d->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t {1})
-            ? nullptr
-            : d->mDeptr;
+         MetaDataStructured_XY result =
+            d->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t {1})
+            ? nullptr : d->mDeptr;
+         if (count - 1)
+            return result.GetDeptr(count - 1);
+         return result;
       }
       return {};
    }

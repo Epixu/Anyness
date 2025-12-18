@@ -176,7 +176,7 @@ namespace Langulus::RTTI
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          auto GetDispatcher()         const noexcept -> DefinitionData::FDispatch;
          
-         auto GetDeptr()              const -> MetaDataStructured_XY;
+         auto GetDeptr(size_t = 1)    const -> MetaDataStructured_XY;
          auto GetOrigin()             const -> MetaDataStructured_XY;
          auto GetDecvqAll()           const -> MetaDataStructured_XY;
          auto GetDecvq()              const -> MetaDataStructured_XY;
@@ -264,7 +264,7 @@ namespace Langulus::RTTI
          auto GetHasher()             const noexcept -> DefinitionData::FHash;
          auto GetDispatcher()         const noexcept -> DefinitionData::FDispatch;
 
-         auto GetDeptr()              const -> MetaDataNaked;
+         auto GetDeptr(size_t = 1)    const -> MetaDataNaked;
          auto GetOrigin()             const -> MetaDataNaked;
          auto GetDecvqAll()           const -> MetaDataNaked;
          auto GetDecvq()              const -> MetaDataNaked;
@@ -282,14 +282,6 @@ namespace Langulus::RTTI
          auto GetMorphism(MetaDataNaked) const noexcept -> DefinitionData::Morphism;
       };
    }
-   
-   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-      using MetaData = Inner::MetaDataStructured_XY<2, 2>;
-   #else
-      using MetaData = Inner::MetaDataNaked;
-   #endif
-
-   using DMeta = MetaData;
 }
 
 #if LANGULUS_FEATURE(MANAGED_REFLECTION)

@@ -29,13 +29,6 @@ namespace Langulus::Flow
    struct Verb;
 }
 
-#if LANGULUS_FEATURE(MANAGED_MEMORY)
-   namespace Langulus::Fractalloc
-   {
-      struct Pool;
-   }
-#endif
-
 namespace Langulus::RTTI
 {
    ///                                                                        
