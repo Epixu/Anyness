@@ -403,14 +403,11 @@ namespace Langulus::Fractalloc
    }
 
    /// Allocate while conforming to packed pointer limits                     
-   ///   @param pool_budget number of bits for pool IDs                       
-   ///   @param entry_budget number of bits for entry IDs                     
+   ///   @param spec pointer specification                                    
    ///   @param meta data type of the allocation                              
    ///   @param size size of the allocation in bytes                          
    auto Allocator::AllocatePackedInner(
-      size_t pool_budget,
-      size_t entry_budget,
-      DMeta meta, pot_t size
+      PointerSpecification const& spec, DMeta meta, pot_t size
    ) has_assumptions -> Allocation* {
       // Decide pool chain based on meta data                           
       auto pool_bank = SelectPoolBank(meta);
@@ -418,11 +415,11 @@ namespace Langulus::Fractalloc
 
       //	Attempt to place allocation in the chosen chain                
       LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
-      const size_t max_pool_id = (1u << pool_budget) - 1u;
+      const size_t max_pool_id = (1u << spec.PoolBits) - 1u;
       size_t pool_misses = 1;
       Allocation* entry = nullptr;
       for (auto& p : pool_bank->indexed) {
-         entry = p.second->AllocatePacked(entry_budget, size);
+         entry = p.second->AllocatePacked(spec.EntryBits, size);
          if (entry or p.first > max_pool_id)
             break;
          ++pool_misses;
@@ -450,7 +447,7 @@ namespace Langulus::Fractalloc
       }
 
       // Maximize pool size to utilize full entry budget                
-      const pot_t max_entry_id = pot_t(1u << entry_budget);
+      const pot_t max_entry_id = pot_t(1u << spec.EntryBits);
       const pot_t pool_align = ::std::max(meta.GetAlignment(), pot_t(Alignment));
       const pot_t pool_threshold_min = ::std::max(meta.GetMinAllocation(), pool_align);      
       const pot_t new_pool_size = max_entry_id * pool_threshold_min;
@@ -464,7 +461,7 @@ namespace Langulus::Fractalloc
       );
 
       // Place allocation in the new pool. This is guaranteed to work.  
-      entry = new_pool->AllocatePacked(entry_budget, size);
+      entry = new_pool->AllocatePacked(spec.EntryBits, size);
 
       // Time to update the pool chain with the new pool.               
       pool_bank->LinkPool(new_pool);
@@ -472,9 +469,13 @@ namespace Langulus::Fractalloc
       return entry;
    }
       
+   /// Reallocate while conforming to packed pointer limits                   
+   ///   @param spec pointer specification                                    
+   ///   @param type data type of the allocation                              
+   ///   @param size size of the allocation in bytes                          
+   ///   @param previous the previous allocation                              
    auto Allocator::ReallocatePackedInner(
-      size_t pool_budget,
-      size_t entry_budget,
+      PointerSpecification const& spec, 
       DMeta type, pot_t size, Allocation* previous
    ) has_assumptions -> Allocation* {
       LglsAssumeDevAndOptimize(previous,
@@ -509,7 +510,7 @@ namespace Langulus::Fractalloc
       }
 
       // If this is reached we have a collision, so new entry is made   
-      return AllocatePackedInner(pool_budget, entry_budget, type, size);
+      return AllocatePackedInner(spec, type, size);
    }
 
    /// Unpack a packed pointer                                                

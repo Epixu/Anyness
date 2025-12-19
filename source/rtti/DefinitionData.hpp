@@ -179,7 +179,7 @@ namespace Langulus::RTTI
       
       /// Pointers in this structure depend on the library in which the type  
       /// was reflected from. These pointers become invalid when a DLL is     
-      /// unloaded, for example, and should be managed separately.            
+      /// unloaded, and should be managed separately.                         
       struct BoundaryDependent {
          using CTTI_ReflectAs = void;
 
@@ -187,21 +187,24 @@ namespace Langulus::RTTI
          // an instance of mDeptr. Supports custom pointer types.       
          FBinary mDereference = nullptr;
 
+         // Turns a normal pointer into a packed one.                   
+         FBinary mPacker = nullptr;
+
          // If available, indicates a custom pointer is reflected.      
          // This function can be used to turn it back into a normal one.
          FUnpack mUnpacker = nullptr;
 
          // The default constructor, wrapped in a lambda expression if  
-         // available. Takes a pointer for a placement-new expression   
+         // available. Takes a pointer for a placement-new expression.  
          FUnary mDefaultConstructor = nullptr;
 
-         // Constructor by descriptor                                   
-         // Takes a pointer for a placement-new expression, and a Many  
+         // Constructor by descriptor.                                  
+         // Takes a pointer for a placement-new expression, and a Many. 
          FDescribe mDescribeConstructor = nullptr;
 
          // The refer/copy/disown/clone/move/abandon constructors,      
          // wrapped in lambdas. They take a pointer for a placement-new 
-         // expression and a source                                     
+         // expression and a source.                                    
          FBinary mReferConstructor = nullptr;
          FBinary mCopyConstructor = nullptr;
          FBinary mDisownConstructor = nullptr;
@@ -209,17 +212,17 @@ namespace Langulus::RTTI
          FBinary mMoveConstructor = nullptr;
          FBinary mAbandonConstructor = nullptr;
 
-         // The destructor, wrapped in a lambda expression              
-         // Takes the pointer to the instance for destruction           
+         // The destructor, wrapped in a lambda expression.             
+         // Takes the pointer to the instance for destruction.          
          FUnary mDestructor = nullptr;
 
-         // The <=> operator, wrapped in lambda expression if available 
+         // The <=> operator, wrapped in lambda expression if available.
          FCompare mComparer = nullptr;
-         // The == operator, wrapped in lambda expression if available  
+         // The == operator, wrapped in lambda expression if available. 
          FCompareEqual mComparerEqual = nullptr;
 
          // The refer/copy/disown/clone/move/abandon assignments, all   
-         // wrapped in lambdas                                          
+         // wrapped in lambdas.                                         
          FBinary mReferAssigner = nullptr;
          FBinary mCopyAssigner = nullptr;
          FBinary mDisownAssigner = nullptr;
@@ -227,31 +230,31 @@ namespace Langulus::RTTI
          FBinary mMoveAssigner = nullptr;
          FBinary mAbandonAssigner = nullptr;
 
-         // The class type function, wrapped in a lambda expression     
-         // Returns typed container with most concrete class instance   
+         // The class type function, wrapped in a lambda expression.    
+         // Returns typed container with most concrete class instance.  
          FResolve mResolver = nullptr;
 
-         // The hash getter, wrapped in a lambda expression             
-         // Takes pointer to the instance for hashing, returns the hash 
+         // The hash getter, wrapped in a lambda expression.            
+         // Takes pointer to the instance for hashing, returns the hash.
          FHash mHasher = nullptr;
 
-         // The reference function wrapped in a lambda                  
-         // Takes the pointer to the instance for referencing           
-         // Returns the number of references after being referenced     
+         // The reference function wrapped in a lambda.                 
+         // Takes the pointer to the instance for referencing.          
+         // Returns the number of references after being referenced.    
          // (use 0 modifier to just get references)                     
          FReference mReferencer = nullptr;
 
-         // A custom verb dispatcher, wrapped in a lambda expression    
+         // A custom verb dispatcher, wrapped in a lambda expression.   
          // Takes pointer to the instance that will dispatch, and a verb
-         // There is a mutable and immutable version of this            
+         // There is a mutable and immutable version of this.           
          FDispatch mDispatcher = nullptr;
 
-         // Default concretization                                      
+         // Default concretization.                                     
          // Used as redirection when requesting the creation of abstract
          FTypeRetriever mConcrete = nullptr;
          
          // Types with producers can be instantiated only by the        
-         // invocation of Verbs::Create in the context of the producer  
+         // invocation of Verbs::Create in the context of the producer. 
          FTypeRetriever mProducer = nullptr;
 
          // List of reflected members                                   

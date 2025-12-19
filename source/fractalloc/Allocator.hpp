@@ -45,44 +45,11 @@ namespace Langulus::Fractalloc
       LANGULUS_API(FRACTALLOC)
       static auto Allocate(DMeta, pot_t) has_assumptions -> Allocation*;
       
-      template<class T>
-      static auto AllocatePacked(DMeta type, pot_t size)
-      has_assumptions -> TAllocation<T>* {
-         static_assert(sizeof(TAllocation<T>) == sizeof(Allocation));
-         auto a = AllocatePackedInner(T::PoolBits, T::EntryBits, type, size);
-         return reinterpret_cast<TAllocation<T>*>(a);
-      }
-
       LANGULUS_API(FRACTALLOC)
       static auto Reallocate(DMeta, pot_t, Allocation*) has_assumptions -> Allocation*;
 
-      template<class T>
-      static auto ReallocatePacked(DMeta type, pot_t size, T* prev)
-      has_assumptions -> TAllocation<T>* {
-         static_assert(sizeof(TAllocation<T>) == sizeof(Allocation));
-         auto a = ReallocatePackedInner(T::PoolBits, T::EntryBits,
-            type, size, reinterpret_cast<Allocation*>(prev)
-         );
-         return reinterpret_cast<TAllocation<T>*>(a);
-      }
-
       LANGULUS_API(FRACTALLOC)
       static void Deallocate(Allocation*) has_assumptions;
-      
-      template<class T>
-      static void DeallocatePacked(TAllocation<T>* prev) has_assumptions {
-         static_assert(sizeof(TAllocation<T>) == sizeof(Allocation));
-         Deallocate(reinterpret_cast<Allocation*>(prev));
-      }
-
-      template<class T>
-      static auto UnpackPointer(T const& ptr)
-      has_assumptions -> typename T::Type* {
-         void* a = UnpackPointerInner(
-            MetaDataOf<typename T::Type>(), ptr.mPool, ptr.mEntry, ptr.mOffset
-         );
-         return static_cast<typename T::Type*>(a);
-      }
 
       LANGULUS_API(FRACTALLOC)
       static auto Find(const void*) has_assumptions -> Allocation const*;
@@ -117,19 +84,41 @@ namespace Langulus::Fractalloc
          LANGULUS_API(FRACTALLOC)
          static bool IntegrityCheck();
       #endif
+
       
-   private:
+      ///                                                                     
+      /// Packed pointer support                                              
+      template<CT::CustomPointer T>
+      static auto AllocatePacked(DMeta type, pot_t size)
+      has_assumptions -> Allocation* {
+         return AllocatePackedInner(T::Specification, type, size);
+      }
+
+      template<CT::CustomPointer T>
+      static auto ReallocatePacked(DMeta type, pot_t size, T* prev)
+      has_assumptions -> Allocation* {
+         return ReallocatePackedInner(T::Specification,
+            type, size, reinterpret_cast<Allocation*>(prev)
+         );
+      }
+
+      template<CT::CustomPointer T>
+      static auto UnpackPointer(T const& ptr) has_assumptions {
+         using InnerT = typename T::Type;
+         return static_cast<InnerT*>(UnpackPointerInner(
+            MetaDataOf<InnerT>(), ptr.mPool, ptr.mEntry, ptr.mOffset
+         ));
+      }
+      
       LANGULUS_API(FRACTALLOC)
       static auto AllocatePackedInner(
-         size_t pool_budget,
-         size_t entry_budget,
+         PointerSpecification const&,
          DMeta, pot_t
       ) has_assumptions -> Allocation*;
       
       LANGULUS_API(FRACTALLOC)
       static auto ReallocatePackedInner(
-         size_t pool_budget,
-         size_t entry_budget,
+         PointerSpecification const&,
          DMeta, pot_t, Allocation*
       ) has_assumptions -> Allocation*;
 

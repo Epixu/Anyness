@@ -47,10 +47,8 @@ namespace Langulus::Fractalloc
       using CTTI_Sparse = Yes<>;
       using Type = T;
 
-      static constexpr unsigned PoolBits   = POOL_BITS;
-      static constexpr unsigned EntryBits  = ENTRY_BITS;
-      static constexpr unsigned OffsetBits = OFFSET_BITS;
-      static constexpr unsigned TotalBits  = POOL_BITS + ENTRY_BITS + OFFSET_BITS;
+      static constexpr PointerSpecification Specification {POOL_BITS, ENTRY_BITS, OFFSET_BITS};
+      static constexpr unsigned TotalBits = POOL_BITS + ENTRY_BITS + OFFSET_BITS;
       static_assert(TotalBits == 8 or TotalBits == 16 or TotalBits == 32);
 
       using Inner = Tif<TotalBits == 8,  uint8_t,
@@ -58,13 +56,13 @@ namespace Langulus::Fractalloc
 
    protected:
       friend struct Allocator;
-      friend struct TAllocation<PackedPointer>;
+      friend struct Allocation;
 
       union {
          struct {
-            Inner mPool : PoolBits;
-            Inner mEntry : EntryBits;
-            Inner mOffset : OffsetBits;
+            Inner mPool   : Specification.PoolBits;
+            Inner mEntry  : Specification.EntryBits;
+            Inner mOffset : Specification.OffsetBits;
          };
          Inner mAll : TotalBits;
       };
@@ -72,11 +70,11 @@ namespace Langulus::Fractalloc
       /// Manually construct the packed pointer                               
       constexpr PackedPointer(size_t poolId, size_t entryId, size_t elementId = 0)
       has_assumptions {
-         LglsAssumeDevAndOptimize(poolId < (1u << PoolBits),
+         LglsAssumeDevAndOptimize(poolId < (1u << Specification.PoolBits),
             "Pool ID beyond limits");
-         LglsAssumeDevAndOptimize(entryId < (1u << EntryBits),
+         LglsAssumeDevAndOptimize(entryId < (1u << Specification.EntryBits),
             "Entry ID beyond limits");
-         LglsAssumeDevAndOptimize(elementId < (1u << OffsetBits),
+         LglsAssumeDevAndOptimize(elementId < (1u << Specification.OffsetBits),
             "Element ID beyond limits");
          mPool = static_cast<Inner>(poolId);
          mEntry = static_cast<Inner>(entryId);
@@ -122,8 +120,8 @@ namespace Langulus::Fractalloc
          LglsAssumeDev(mAll, "Trying to dereference a null pointer");
          return *Unpack();
       }
-
-      T* Unpack() const noexcept {
+      
+      auto Unpack() const noexcept -> T* {
          return Allocator::UnpackPointer(*this);
       }
    };

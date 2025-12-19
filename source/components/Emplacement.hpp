@@ -233,6 +233,11 @@ namespace Langulus::Anyness::Component
       ///TODO could benefit from static optimization                          
       template<CT::Container C, CT::NoIntent IT>
       void EmplaceByCloningCustomPointers(this C& self, IT const& rhs) {
+         static_assert(LANGULUS_FEATURE(MANAGED_MEMORY),
+            "Custom pointers are available only when MANAGED_MEMORY is enabled. "
+            "This function shouldn't be instantiated otherwise."
+         );
+         
          void const* src_origin;         
          if constexpr (CT::Handle<IT>) {
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>)
@@ -253,16 +258,13 @@ namespace Langulus::Anyness::Component
 
          // Clone the origin first                                      
          const DMeta T = self.GetTypeInner();
-         DMeta type = T.GetOrigin();
-         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            auto cloned = Allocator::Allocate(
-               type, pot_t(Roof2(type.GetSize()))
-            );
-         #else
-            auto cloned = Allocator::Allocate(
-               origin.GetAlignment(), pot_t(Roof2(origin.GetSize()))
-            );
-         #endif
+         auto indirections = T.GetIndirections();
+         DMeta prev_type = T.GetDeptr(indirections - 1);
+         DMeta type = T.GetOrigin();      
+         auto cloned = Allocator::AllocatePackedInner(
+            prev_type.GetPointerSpecification(),
+            type, pot_t(Roof2(type.GetSize()))
+         );         
          LglsAssert(cloned, "Out of memory");
 
          type.GetCloneConstructor()(
@@ -272,36 +274,26 @@ namespace Langulus::Anyness::Component
 
          // Then clone all indirection layers in reverse order          
          auto entries = self.GetEntries();         
-         void* next_pointer = cloned->GetBlockStart();
-         auto indirections = T.GetIndirections();
+         auto next_pointer = cloned->GetBlockStartPacked();
          
-         while (indirections) {
+         while (indirections > 1) {
             entries[indirections - 1] = cloned;
-            type = T.GetDeptr(indirections - 1);
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               cloned = Allocator::Allocate(
-                  type, pot_t(Roof2(type.GetSize()))
-               );
-            #else
-               cloned = Allocator::Allocate(
-                  sparse1.GetAlignment(), pot_t(Roof2(sparse1.GetSize()))
-               );
-            #endif
             
-            type.GetPacker()(
-               &next_pointer,
-               cloned->GetBlockStart()
+            type = prev_type;
+            prev_type = T.GetDeptr(indirections - 2);            
+            cloned = Allocator::AllocatePackedInner(
+               prev_type.GetPointerSpecification(),
+               type, pot_t(Roof2(type.GetSize()))
             );
 
-            next_pointer = cloned->GetBlockStart();
+            // Chain the pointers                                       
+            memcpy(cloned->GetBlockStart(), &next_pointer, type.GetSize());
+            next_pointer = cloned->GetBlockStartPacked();
             --indirections;
          }
 
          // The final indirection is stored in mHeap                    
-         T.GetPacker()(
-            &next_pointer,
-            self.GetHeapInner()
-         );
+         memcpy(self.GetHeapInner(), &next_pointer, T.GetSize());
       }
 
       /// Emplace on top of the first element using an intent                 

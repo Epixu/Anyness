@@ -20,11 +20,8 @@ namespace Langulus::Fractalloc
    ///                                                                        
    ///   Memory allocation                                                    
    ///                                                                        
-   template<class T>
-   struct TAllocation {
-   private:
-      static_assert(CT::Sparse<T>, "T has to be sparse");
-      
+   struct Allocation {
+   private:      
       // The number of references to this memory.                       
       // Most often used, so first for immediate access.                
       int32_t mReferences = 1;
@@ -50,14 +47,14 @@ namespace Langulus::Fractalloc
       };
 
    public:
-      TAllocation() = delete;
-      TAllocation(const TAllocation&) = delete;
-      TAllocation(TAllocation&&) = delete;
+      Allocation() = delete;
+      Allocation(const Allocation&) = delete;
+      Allocation(Allocation&&) = delete;
 
       /// Initialize an allocation                                            
       ///   @param size the number of allocated bytes                         
       ///   @param pool_alignment the pool alignment                          
-      TAllocation(pot_t size, pot_t pool_alignment) noexcept{
+      Allocation(pot_t size, pot_t pool_alignment) noexcept{
          mPoolAlignment = pool_alignment.bit;
          mSize = size.bit;
       }
@@ -83,24 +80,31 @@ namespace Langulus::Fractalloc
       }
       
       /// Return the aligned start of usable block memory                     
-      ///   @return aligned pointer to the entry's memory                     
-      auto GetBlockStart() const has_assumptions -> T {
+      auto GetBlockStart() const has_assumptions -> uint8_t* {
          LglsAssumeDev(mReferences != 0,
             "Can't get block start if entry isn't in use");
-         if constexpr (::std::is_pointer_v<T>) {
-            // Return a conventional pointer                            
-            const auto pool = GetPool();
-            const size_t offset = reinterpret_cast<Allocation const*>(this) - pool->GetAllocationData();
-            return pool->GetClientData() + pool->GetMinAllocation() * offset;
-         }
-         else {
-            // Return a packed pointer                                  
-            auto pool = GetPool();
-            return T {
-               pool->GetID(),
-               pool->IndexFromAllocation(reinterpret_cast<Allocation const*>(this))
-            };
-         }
+
+         // Return a conventional pointer                               
+         const auto pool = GetPool();
+         const size_t offset = this - pool->GetAllocationData();
+         return pool->GetClientData() + pool->GetMinAllocation() * offset;
+      }
+
+      /// Return the aligned start of usable block memory, packed to some     
+      /// specification.                                                      
+      ///   @attention use this only if the allocation was produced using     
+      ///      Allocator::AllocatePacked or Allocator::ReallocatePacked!      
+      template<CT::CustomPointer T>
+      auto GetBlockStartPacked() const has_assumptions -> T {
+         LglsAssumeDev(mReferences != 0,
+            "Can't get block start if entry isn't in use");
+
+         // Return a packed pointer                                     
+         auto pool = GetPool();
+         return T {
+            pool->GetID(),
+            pool->IndexFromAllocation(this)
+         };
       }
 
       /// Check if memory address is inside this entry                        
@@ -163,5 +167,12 @@ namespace Langulus::Fractalloc
             reinterpret_cast<uintptr_t>(this) & ~((uintptr_t{1} << mPoolAlignment) - uintptr_t{1})
          );
       }
+   };
+
+   /// Structure for describing custom packed pointers                        
+   struct PointerSpecification {
+      unsigned PoolBits;
+      unsigned EntryBits;
+      unsigned OffsetBits;
    };
 }

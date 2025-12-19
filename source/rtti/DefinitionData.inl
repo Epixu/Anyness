@@ -909,8 +909,12 @@ namespace Langulus::RTTI
       }
 
       if constexpr (CT::CustomPointer<T>) {
-         definition.mCurrentBoundary.mUnpacker = [](void* ptr) {
-            return static_cast<void*>(*static_cast<T*>(ptr));
+         definition.mCurrentBoundary.mPacker = [](void* from, void* to) {
+            //new (to) T {from->GetBlockStartPacked<T>()};
+            T::Pack(from, to);
+         };
+         definition.mCurrentBoundary.mUnpacker = [](void* ptr) -> void* {
+            return (*static_cast<T*>(ptr)).Unpack();
          };
       }
 

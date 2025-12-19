@@ -16,9 +16,7 @@
 
 namespace Langulus::Fractalloc
 {
-   template<class>
-   struct TAllocation;
-   using Allocation = TAllocation<uint8_t*>;
+   struct Allocation;
    struct PoolBank;
    
    ///                                                                        
