@@ -286,21 +286,6 @@ namespace Langulus::Anyness::Component
             }
          }
 
-         // Start iterating until dereferenced enough                   
-         /*D iterator {Disown(self)};
-         while (count and iterator.IsSparse()) {
-            auto dereffer = iterator.GetType().GetDereffer();
-            auto newtype = iterator.GetType().GetDeptr();
-            auto src = iterator.GetHeapInner();
-            //iterator.Reset();
-            iterator.SetTypeInner(newtype);
-            //iterator.AllocateFresh(iterator.RequestHeap(1));
-            dereffer(src, &iterator.GetHeapInner());
-            //if_available(iterator.SetCountInner(1));
-            --count;
-         };
-         return iterator;*/
-
          auto src = reinterpret_cast<uintptr_t>(self.GetHeapInner());
          auto T = self.GetType();
          while (count and T.IsSparse()) {
@@ -317,12 +302,12 @@ namespace Langulus::Anyness::Component
                const auto ptrSpec = T.GetPointerSpecification();
                if (ptrSpec.IsPacked()) {
                   // T might be packed, we need to unpack it            
-                  auto unpack = Allocator::UnpackPointer(ptrSpec, nextT, src);
+                  uintptr_t derefSrc = 0;
+                  memcpy(&derefSrc, reinterpret_cast<void*>(src), ptrSpec.GetTotalBytes());
+                  auto unpack = Allocator::UnpackPointer(ptrSpec, nextT, derefSrc);
                   temp.SetHeapInner(unpack);
                }
-               else {
-                  temp.SetHeapInner(reinterpret_cast<void*>(src));
-               }
+               else temp.SetHeapInner(*reinterpret_cast<void**>(src));
                
                if_available(temp.SetCountInner(1));
                return temp;

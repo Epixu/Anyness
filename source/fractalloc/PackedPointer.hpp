@@ -111,19 +111,6 @@ namespace Langulus::Fractalloc
          return mAll == a.mAll;
       }
 
-      /*constexpr auto GetPoolId() const noexcept -> Inner {
-         return mAll >> (Specification.EntryBits + Specification.OffsetBits);
-      }
-      
-      constexpr auto GetEntryId() const noexcept -> Inner {
-         auto no_pool_id = mAll << Specification.PoolBits;
-         return no_pool_id >> (Specification.PoolBits + Specification.OffsetBits);
-      }
-
-      constexpr auto GetElementId() const noexcept -> Inner {
-         return mAll & ((1u << Specification.OffsetBits) - 1u);
-      }*/
-
       /// Unpack and dereference the pointer                                  
       T& operator * () const has_assumptions {
          LglsAssumeDev(mAll, "Trying to dereference a null pointer");

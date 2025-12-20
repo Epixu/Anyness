@@ -101,15 +101,6 @@ namespace Langulus::Fractalloc
             type, size, reinterpret_cast<Allocation*>(prev)
          );
       }
-
-      /*template<CT::CustomPointer T>
-      static auto UnpackPointer(T const& ptr) has_assumptions {
-         using InnerT = typename T::Type;
-         return static_cast<InnerT*>(UnpackPointerInner(
-            MetaDataOf<InnerT>(),
-            ptr.GetPoolId(), ptr.GetEntryId(), ptr.GetElementId()
-         ));
-      }*/
       
       LANGULUS_API(FRACTALLOC)
       static auto AllocatePackedInner(

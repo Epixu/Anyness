@@ -377,16 +377,6 @@ namespace Langulus::RTTI::Inner
       return {};
    }
 
-   /// Get the reflected unpacker                                             
-   /*TEMPLATE()
-   auto ME()::GetUnpacker()
-   const noexcept -> DefinitionData::FUnpack {
-      const auto id = Base::GetID();
-      if (id)
-         return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mUnpacker;
-      return {};
-   }*/
-
    /// Get the reflected referencer                                           
    TEMPLATE()
    auto ME()::GetReferencer()

@@ -146,12 +146,6 @@ namespace Langulus::RTTI::Inner
       return mDefinition ? mDefinition->mCurrentBoundary.mDereference : nullptr;
    }
    
-   /// Get the reflected unpacker                                             
-   /*inline auto MetaDataNaked::GetUnpacker()
-   const noexcept -> DefinitionData::FUnpack {
-      return mDefinition ? mDefinition->mCurrentBoundary.mUnpacker : nullptr;
-   }*/
-   
    /// Get the reflected destructor                                           
    inline auto MetaDataNaked::GetDestructor()
    const noexcept -> DefinitionData::FUnary {

@@ -154,7 +154,6 @@ namespace Langulus::RTTI
          constexpr bool HasGetHashMethod() const noexcept;
 
          auto GetDereffer()           const noexcept -> DefinitionData::FBinary;
-         //auto GetUnpacker()           const noexcept -> DefinitionData::FUnpack;
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
          auto GetResolver()           const noexcept -> DefinitionData::FResolve;
@@ -243,7 +242,6 @@ namespace Langulus::RTTI
          bool HasGetHashMethod()      const noexcept;
 
          auto GetDereffer()           const noexcept -> DefinitionData::FBinary;
-         //auto GetUnpacker()           const noexcept -> DefinitionData::FUnpack;
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
          auto GetResolver()           const noexcept -> DefinitionData::FResolve;

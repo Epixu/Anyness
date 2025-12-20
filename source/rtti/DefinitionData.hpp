@@ -192,13 +192,6 @@ namespace Langulus::RTTI
          // an instance of mDeptr. Supports custom pointer types.       
          FBinary mDereference = nullptr;
 
-         // Turns a normal pointer into a packed one.                   
-         //FBinary mPacker = nullptr;
-
-         // If available, indicates a custom pointer is reflected.      
-         // This function can be used to turn it back into a normal one.
-         //FUnpack mUnpacker = nullptr;
-
          // The default constructor, wrapped in a lambda expression if  
          // available. Takes a pointer for a placement-new expression.  
          FUnary mDefaultConstructor = nullptr;

@@ -911,16 +911,6 @@ namespace Langulus::RTTI
          definition.mDeptr = reinterpret_cast<DefinitionData*>(intptr_t {1});
       }
 
-      /*if constexpr (CT::CustomPointer<T>) {
-         definition.mCurrentBoundary.mPacker = [](void* from, void* to) {
-            //new (to) T {from->GetBlockStartPacked<T>()};
-            T::Pack(from, to);
-         };
-         definition.mCurrentBoundary.mUnpacker = [](void* ptr) -> void* {
-            return (*static_cast<T*>(ptr)).Unpack();
-         };
-      }*/
-
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          if constexpr (not CT::Complete<DenserT> or ::std::is_const_v<DenserT>
          or LglsSif(CT::Complete<DenserT>, return CT::Sparse<DenserT>, return false)) {
