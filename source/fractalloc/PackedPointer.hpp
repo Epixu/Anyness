@@ -62,7 +62,7 @@ namespace Langulus::Fractalloc
 
       /// Manually construct the packed pointer                               
       constexpr PackedPointer(size_t poolId, size_t entryId, size_t elementId = 0)
-      has_assumptions {
+      assumptious {
          LglsAssumeDevAndOptimize(poolId < (1u << Specification.PoolBits),
             "Pool ID beyond limits");
          LglsAssumeDevAndOptimize(entryId < (1u << Specification.EntryBits),
@@ -112,7 +112,7 @@ namespace Langulus::Fractalloc
       }
 
       /// Unpack and dereference the pointer                                  
-      T& operator * () const has_assumptions {
+      T& operator * () const assumptious {
          LglsAssumeDev(mAll, "Trying to dereference a null pointer");
          return *Unpack();
       }

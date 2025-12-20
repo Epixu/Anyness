@@ -54,7 +54,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Set the heap pointer, any data pointer will do                      
-      constexpr void SetHeapInner(this auto& self, auto heap) has_assumptions {
+      constexpr void SetHeapInner(this auto& self, auto heap) assumptious {
          if constexpr (CT::CustomPointer<POINTER_TYPE>)
             self.GetHeapInner() = heap;
          else if constexpr (CT::CustomPointer<decltype(heap)>)
@@ -105,7 +105,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam T the type of data we're accessing - use void to use the  
       ///      type of the container, if statically typed                     
       template<class T = void, CT::Container C>
-      constexpr decltype(auto) Get(this C&& self) has_assumptions {
+      constexpr decltype(auto) Get(this C&& self) assumptious {
          static_assert(not CT::Handle<T>,    "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
          using TC   = TypeOf<C>;
@@ -286,33 +286,25 @@ namespace Langulus::Anyness::Component
             }
          }
 
-         auto src = reinterpret_cast<uintptr_t>(self.GetHeapInner());
+         void* src = self.GetHeapInner();
          auto T = self.GetType();
-         while (count and T.IsSparse()) {
-            auto dereffer  = T.GetDereffer();
+         while (count and T.IsSparse()) {            
             auto nextT = T.GetDeptr();
+            
             if (nextT.IsSparse()) {
                // Pointer T -> Pointer nextT                            
-               dereffer(reinterpret_cast<void*>(src), &src);
+               T.GetDereffer()(src, &src);
             }
             else {
                // Pointer T -> Dense nextT                              
                D temp {Disown(self)};
                temp.SetTypeInner(nextT);
-               const auto ptrSpec = T.GetPointerSpecification();
-               if (ptrSpec.IsPacked()) {
-                  // T might be packed, we need to unpack it            
-                  uintptr_t derefSrc = 0;
-                  memcpy(&derefSrc, reinterpret_cast<void*>(src), ptrSpec.GetTotalBytes());
-                  auto unpack = Allocator::UnpackPointer(ptrSpec, nextT, derefSrc);
-                  temp.SetHeapInner(unpack);
-               }
-               else temp.SetHeapInner(*reinterpret_cast<void**>(src));
-               
+               temp.SetHeapInner(UnpackPointer(T, nextT, src));               
                if_available(temp.SetCountInner(1));
                return temp;
             }
 
+            T = nextT;
             --count;
          }
          
@@ -349,7 +341,7 @@ namespace Langulus::Anyness::Component
       ///   @param self deduced this                                          
       ///   @param count the number of elements to request                    
       template<CT::Container C>
-      Request RequestHeap(this C const& self, const size_t count) has_assumptions {
+      Request RequestHeap(this C const& self, const size_t count) assumptious {
          Request result;
          const size_t header = self.GetHeapHeaderSize(count, self.GetIndirections());
          

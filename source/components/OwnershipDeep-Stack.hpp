@@ -60,7 +60,7 @@ namespace Langulus::Anyness::Component
       
    IF_LANGULUS_TESTING(public:)
       /// Get entry array if containing pointers                              
-      auto GetEntries(this auto&& self) has_assumptions -> EntryPtr {
+      auto GetEntries(this auto&& self) assumptious -> EntryPtr {
          if (self.IsSparse()) {
             LglsAssumeDev(self.GetRaw(), "No memory available");
             return self.GetEntriesInner();

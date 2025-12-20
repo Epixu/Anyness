@@ -54,7 +54,7 @@ namespace Langulus::Fractalloc
       pot_t dataMinAlloc,
       pot_t poolAlignment,
       pot_t size
-   ) has_assumptions
+   ) assumptious
       : mAllocationData {reinterpret_cast<Allocation*>(Align(reinterpret_cast<uintptr_t>(this + 1), alignof(Allocation)))}
       , mClientData     {reinterpret_cast<uint8_t*>(this) + Cost(dataAlignment, dataMinAlloc, size)}
       , mDataAlignment  {dataAlignment}
@@ -109,7 +109,7 @@ namespace Langulus::Fractalloc
    /// Allocate an entry inside the pool                                      
    ///   @param bytes number of bytes to allocate                             
    ///   @return the new allocation, or nullptr if pool is full               
-   auto Pool::Allocate(pot_t bytes) has_assumptions -> Allocation* {
+   auto Pool::Allocate(pot_t bytes) assumptious -> Allocation* {
       // Check if we can add a new entry                                
       if (mThresholdMin > bytes)
          bytes = mThresholdMin;
@@ -175,7 +175,7 @@ namespace Langulus::Fractalloc
    ///   @param bytes number of bytes to allocate                             
    ///   @return the new allocation, or nullptr if pool is full               
    auto Pool::AllocatePacked(size_t entry_budget, pot_t bytes)
-   has_assumptions -> Allocation* {
+   assumptious -> Allocation* {
       // Check if we can add a new entry                                
       if (mThresholdMin > bytes)
          bytes = mThresholdMin;
@@ -239,7 +239,7 @@ namespace Langulus::Fractalloc
    ///   @param entry entry to resize                                         
    ///   @param bytes new number of bytes                                     
    ///   @return true if entry was enlarged without conflict                  
-   bool Pool::Reallocate(Allocation* entry, pot_t bytes) has_assumptions {
+   bool Pool::Reallocate(Allocation* entry, pot_t bytes) assumptious {
       LglsAssumeDev(ContainsAllocation(entry) and entry->GetUses(),
          "Invalid deallocation");
       
@@ -290,7 +290,7 @@ namespace Langulus::Fractalloc
    /// Remove an entry                                                        
    ///   @attention assumes entry is valid                                    
    ///   @param entry entry to remove                                         
-   void Pool::Deallocate(Allocation* entry) has_assumptions {
+   void Pool::Deallocate(Allocation* entry) assumptious {
       LglsAssumeDev(ContainsAllocation(entry),
          "Invalid deallocation - entry is not from this pool");
       LglsAssumeDev(entry->GetUses(),
@@ -355,7 +355,7 @@ namespace Langulus::Fractalloc
    ///   @attention assumes ptr is inside pool                                
    ///   @param ptr the pointer to get the element index of                   
    ///   @return pointer to the valid allocation, or nullptr if unused        
-   auto Pool::AllocationFromAddress(const void* ptr) const has_assumptions -> Allocation* {
+   auto Pool::AllocationFromAddress(const void* ptr) const assumptious -> Allocation* {
       // Step up until a valid entry inside bounds is hit               
       auto index = IndexFromAddress(ptr);
       while (index != 0
@@ -501,7 +501,7 @@ namespace Langulus::Fractalloc
    ///   @attention assumes pointer is inside the pool                        
    ///   @param ptr the address                                               
    ///   @return the index                                                    
-   size_t Pool::IndexFromAddress(const void* ptr) const has_assumptions {
+   size_t Pool::IndexFromAddress(const void* ptr) const assumptious {
       LglsAssumeDev(ContainsData(ptr), "Pointer is outside pool");
 
       // Credit goes to Yasen Vidolov                                   
@@ -522,7 +522,7 @@ namespace Langulus::Fractalloc
    ///   @attention assumes pointer is inside the pool's allocation data      
    ///   @param ptr the address                                               
    ///   @return the index                                                    
-   size_t Pool::IndexFromAllocation(const Allocation* ptr) const has_assumptions {
+   size_t Pool::IndexFromAllocation(const Allocation* ptr) const assumptious {
       LglsAssumeDev(ContainsAllocation(ptr), "Allocation is outside pool");
       if (0 == mNextEntry or ptr == mAllocationData)
          return 0;
@@ -563,7 +563,7 @@ namespace Langulus::Fractalloc
    ///   @param memory memory pointer                                         
    ///   @return the memory entry that manages the memory pointer, or         
    ///      nullptr if memory is not ours, or is no longer used               
-   auto Pool::Find(const void* memory) const has_assumptions -> const Allocation* {
+   auto Pool::Find(const void* memory) const assumptious -> const Allocation* {
       if (not ContainsData(memory))
          return nullptr;
 

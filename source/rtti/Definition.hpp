@@ -67,7 +67,7 @@ namespace Langulus::RTTI::Inner
    ///   @param token the token to lowercase                                  
    ///   @return the lowercase string                                         
    // ReSharper disable once CppDFAUnreachableFunctionCall              
-   constexpr Lowercase ToLowercase(const Token& token) has_assumptions {
+   constexpr Lowercase ToLowercase(const Token& token) assumptious {
       LglsAssumeDev(IsASCII(token), "Token must be ASCII");
       Lowercase lc {token};
       for (char& c : lc)
@@ -80,7 +80,7 @@ namespace Langulus::RTTI::Inner
    ///   @attention assumes token is ASCII                                    
    ///   @param token the operator                                            
    ///   @return the isolated operator token                                  
-   constexpr Token StripSpaces(const Token& token) has_assumptions {
+   constexpr Token StripSpaces(const Token& token) assumptious {
       auto l = token.data();
       auto r = token.data() + token.size();
       while (l < r and     *l <= 32)   ++l;

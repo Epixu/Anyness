@@ -43,25 +43,25 @@ namespace Langulus::Fractalloc
       Allocator() = delete;
       
       LANGULUS_API(FRACTALLOC)
-      static auto Allocate(DMeta, pot_t) has_assumptions -> Allocation*;
+      static auto Allocate(DMeta, pot_t) assumptious -> Allocation*;
       
       LANGULUS_API(FRACTALLOC)
-      static auto Reallocate(DMeta, pot_t, Allocation*) has_assumptions -> Allocation*;
+      static auto Reallocate(DMeta, pot_t, Allocation*) assumptious -> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
-      static void Deallocate(Allocation*) has_assumptions;
+      static void Deallocate(Allocation*) assumptious;
 
       LANGULUS_API(FRACTALLOC)
-      static auto Find(const void*) has_assumptions -> Allocation const*;
+      static auto Find(const void*) assumptious -> Allocation const*;
 
       LANGULUS_API(FRACTALLOC)
-      static bool CheckAuthority(const void*) has_assumptions;
+      static bool CheckAuthority(const void*) assumptious;
 
       LANGULUS_API(FRACTALLOC)
-      static auto AllocatePool(DMeta, pot_t) has_assumptions -> Pool*;
+      static auto AllocatePool(DMeta, pot_t) assumptious -> Pool*;
 
       LANGULUS_API(FRACTALLOC)
-      static void DeallocatePool(Pool*) has_assumptions;
+      static void DeallocatePool(Pool*) assumptious;
 
       LANGULUS_API(FRACTALLOC)
       static bool CollectGarbage();
@@ -90,13 +90,13 @@ namespace Langulus::Fractalloc
       /// Packed pointer support                                              
       template<CT::CustomPointer T>
       static auto AllocatePacked(DMeta type, pot_t size)
-      has_assumptions -> Allocation* {
+      assumptious -> Allocation* {
          return AllocatePackedInner(T::Specification, type, size);
       }
 
       template<CT::CustomPointer T>
       static auto ReallocatePacked(DMeta type, pot_t size, T* prev)
-      has_assumptions -> Allocation* {
+      assumptious -> Allocation* {
          return ReallocatePackedInner(T::Specification,
             type, size, reinterpret_cast<Allocation*>(prev)
          );
@@ -106,18 +106,18 @@ namespace Langulus::Fractalloc
       static auto AllocatePackedInner(
          PointerSpecification const&,
          DMeta, pot_t
-      ) has_assumptions -> Allocation*;
+      ) assumptious -> Allocation*;
       
       LANGULUS_API(FRACTALLOC)
       static auto ReallocatePackedInner(
          PointerSpecification const&,
          DMeta, pot_t, Allocation*
-      ) has_assumptions -> Allocation*;
+      ) assumptious -> Allocation*;
 
       LANGULUS_API(FRACTALLOC)
       static void* UnpackPointer(
          PointerSpecification const&,
          DMeta deptr_type, uintptr_t packed
-      ) has_assumptions;
+      ) assumptious;
    };   
 }

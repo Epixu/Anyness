@@ -138,7 +138,7 @@ namespace Langulus::Anyness
       }
 
       template<class A>
-      constexpr auto operator <=> (const A& argument) const has_assumptions
+      constexpr auto operator <=> (const A& argument) const assumptious
       -> decltype(Fake<T>() <=> argument) {
          if constexpr (CT::ContainsOne<A>) {
             LglsAssumeUser(
@@ -160,7 +160,7 @@ namespace Langulus::Anyness
       }
 
       template<class A>
-      constexpr bool operator == (const A& argument) const has_assumptions {
+      constexpr bool operator == (const A& argument) const assumptious {
          if constexpr (CT::ContainsOne<A>) {
             LglsAssumeUser(
                (Same<Deint<A>, TAny> or Same<TypeOf<Deint<A>>, T>),

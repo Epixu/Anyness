@@ -26,14 +26,14 @@ namespace Langulus
       constexpr pot_t(pot_t const&) noexcept = default;
 
       template<::std::unsigned_integral T>
-      explicit constexpr pot_t(T const& other) has_assumptions {
+      explicit constexpr pot_t(T const& other) assumptious {
          LglsAssumeDev(::std::has_single_bit(other),
             "bad construction of pot_t");
          bit = ::std::bit_width(other) - 1;
       }
       
       constexpr pot_t& operator = (pot_t const& rhs) noexcept = default;
-      constexpr pot_t& operator = (::std::unsigned_integral auto const& rhs) has_assumptions {
+      constexpr pot_t& operator = (::std::unsigned_integral auto const& rhs) assumptious {
          LglsAssumeDev(::std::has_single_bit(rhs),
             "bad assignment to pot_t");
          bit = ::std::bit_width(rhs) - 1;
@@ -54,7 +54,7 @@ namespace Langulus
       }
 
       template<::std::unsigned_integral T> requires (not ::std::same_as<T, bool>)
-      constexpr explicit operator T () const has_assumptions {
+      constexpr explicit operator T () const assumptious {
          LglsAssumeDev(bit < sizeof(T) * 8,
             "pot_t is too big to fit into T");
          return T {1} << bit;
@@ -82,7 +82,7 @@ namespace Langulus
          return (T {1} << bit) - rhs;
       }
 
-      constexpr pot_t operator / (pot_t const& rhs) const has_assumptions {
+      constexpr pot_t operator / (pot_t const& rhs) const assumptious {
          LglsAssumeDev(rhs.bit <= bit,
             "pot_t division resulted in zero");
          pot_t result;
@@ -95,7 +95,7 @@ namespace Langulus
          return (T {1} << bit) / rhs;
       }
 
-      constexpr pot_t operator * (pot_t const& rhs) const has_assumptions {
+      constexpr pot_t operator * (pot_t const& rhs) const assumptious {
          LglsAssumeDev(rhs.bit + bit <= 255u,
             "pot_t multiplication overflowed");
          pot_t result;
@@ -108,14 +108,14 @@ namespace Langulus
          return (T {1} << bit) * rhs;
       }
 
-      constexpr pot_t operator % (pot_t const& rhs) const has_assumptions {
+      constexpr pot_t operator % (pot_t const& rhs) const assumptious {
          LglsAssumeDev(rhs.bit > bit,
             "pot_t modulo resulted in zero");
          return *this;
       }
 
       template<::std::unsigned_integral T>
-      constexpr pot_t& operator >>= (T const& rhs) has_assumptions {
+      constexpr pot_t& operator >>= (T const& rhs) assumptious {
          LglsAssumeDev(rhs <= bit,
             "pot_t right shift underflowed");
          bit -= rhs;
@@ -123,7 +123,7 @@ namespace Langulus
       }
 
       template<::std::unsigned_integral T>
-      constexpr pot_t& operator <<= (T const& rhs) has_assumptions {
+      constexpr pot_t& operator <<= (T const& rhs) assumptious {
          LglsAssumeDev(rhs + bit <= 255u,
             "pot_t left shift overflowed");
          bit += rhs;
@@ -149,7 +149,7 @@ namespace Langulus
       }
    };
 
-   constexpr pot_t operator""_pot(unsigned long long int num) has_assumptions {
+   constexpr pot_t operator""_pot(unsigned long long int num) assumptious {
       return pot_t(num);
    }
 }

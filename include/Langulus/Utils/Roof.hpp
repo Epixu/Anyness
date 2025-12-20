@@ -21,7 +21,7 @@ namespace Langulus
    ///   @param x the unsigned integer to round up                            
    ///   @return the closest upper power-of-two to x                          
    template<class T> LANGULUS(ALWAYS_INLINED)
-   constexpr T Roof2(const T x) has_assumptions {
+   constexpr T Roof2(const T x) assumptious {
       #if LANGULUS(SAFE)
          static_assert(CT::Unsigned<T>, "T should be unsigned");
          constexpr T lastPowerOfTwo = (T {1}) << (T {sizeof(T) * 8 - 1});

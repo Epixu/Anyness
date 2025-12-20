@@ -115,8 +115,8 @@ namespace Langulus::Anyness::Component
                   // deallocate and make sure CountStatic reports as    
                   // empty.                                             
                   while (n) {
-                     if constexpr (requires { dst->DestroyElementDeep(); })
-                        dst->DestroyElementDeep();
+                     if constexpr (requires { dst->DestroyElementDeepCustomPointers(); })
+                        dst->DestroyElementDeepCustomPointers();
                      else
                         dst->DestroyElement();
                      --dst; --n;

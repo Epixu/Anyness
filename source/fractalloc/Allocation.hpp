@@ -73,7 +73,7 @@ namespace Langulus::Fractalloc
       
       /// Get the user bytes                                                  
       ///   @return the byte size of usable memory region                     
-      auto GetSize() const has_assumptions -> pot_t {
+      auto GetSize() const assumptious -> pot_t {
          LglsAssumeDev(mReferences != 0,
             "Can't get size if entry isn't in use");
          pot_t result; result.bit = mSize;
@@ -81,7 +81,7 @@ namespace Langulus::Fractalloc
       }
       
       /// Return the aligned start of usable block memory                     
-      auto GetBlockStart() const has_assumptions -> uint8_t* {
+      auto GetBlockStart() const assumptious -> uint8_t* {
          LglsAssumeDev(mReferences != 0,
             "Can't get block start if entry isn't in use");
 
@@ -97,7 +97,7 @@ namespace Langulus::Fractalloc
       ///      Allocator::AllocatePacked or Allocator::ReallocatePacked!      
       ///      Otherwise IDs might go beyond the limits.                      
       auto GetBlockStartPacked(PointerSpecification const& spec) const
-      has_assumptions -> uintptr_t {
+      assumptious -> uintptr_t {
          if (not spec.IsPacked())
             return reinterpret_cast<uintptr_t>(GetBlockStart());
          
@@ -119,7 +119,7 @@ namespace Langulus::Fractalloc
       ///      Allocator::AllocatePacked or Allocator::ReallocatePacked!      
       ///      Otherwise IDs might go beyond the limits.                      
       template<CT::CustomPointer T>
-      auto GetBlockStartPackedAs() const has_assumptions -> T {
+      auto GetBlockStartPackedAs() const assumptious -> T {
          LglsAssumeDev(mReferences != 0,
             "Can't get block start if entry isn't in use");
 
@@ -134,7 +134,7 @@ namespace Langulus::Fractalloc
       /// Check if memory address is inside this entry                        
       ///   @param address address to check if inside this entry              
       ///   @return true if address is inside                                 
-      auto Contains(const void* address) const has_assumptions -> bool {
+      auto Contains(const void* address) const assumptious -> bool {
          LglsAssumeDev(mReferences != 0,
             "Can't check if entry contains memory if entry isn't in use");
          const auto a = reinterpret_cast<uintptr_t>(address);
@@ -148,7 +148,7 @@ namespace Langulus::Fractalloc
       
       /// Get the next entry in the free entry chain                          
       ///   @attention assumes allocation has been freed                      
-      auto GetNextFreeEntry() const has_assumptions -> Allocation* {
+      auto GetNextFreeEntry() const assumptious -> Allocation* {
          LglsAssumeDev(mReferences == 0,
             "Can't get next free entry from entry in use");
          return mNextFreeEntryFinder
@@ -158,7 +158,7 @@ namespace Langulus::Fractalloc
       
       /// Set the next entry in the free entry chain                          
       ///   @attention assumes allocation has been freed                      
-      void SetNextFreeEntry(Allocation const* a) has_assumptions {
+      void SetNextFreeEntry(Allocation const* a) assumptious {
          LglsAssumeDevAndOptimize(a,
             "If next entry is nullptr, use ResetNextFreeEntry instead");
          LglsAssumeDevAndOptimize(mReferences == 0,
@@ -177,7 +177,7 @@ namespace Langulus::Fractalloc
       
       /// Reset the next entry in the free entry chain                        
       ///   @attention assumes allocation has been freed                      
-      void ResetNextFreeEntry() has_assumptions {
+      void ResetNextFreeEntry() assumptious {
          LglsAssumeDev(mReferences == 0,
             "Can't reset next free entry if this entry is in use");
          mNextFreeEntryFinder = 0;
@@ -185,7 +185,7 @@ namespace Langulus::Fractalloc
       
       /// Get the pool this allocation belongs to.                            
       /// Pools are always aligned, so all we have to do is mask out 'this'.  
-      auto GetPool() const has_assumptions -> Pool const* {
+      auto GetPool() const assumptious -> Pool const* {
          LglsAssumeDev(mReferences != 0, "Can't get pool if entry isn't in use");
          return reinterpret_cast<Pool const*>(
             reinterpret_cast<uintptr_t>(this) & ~((uintptr_t{1} << mPoolAlignment) - uintptr_t{1})

@@ -89,7 +89,7 @@ namespace Langulus
          constexpr data_view(const ::std::array<uint8_t, N>& a) noexcept
             : p(a.data()), sz(N) {}
 
-         constexpr char operator[](std::size_t n) const has_assumptions {
+         constexpr char operator[](std::size_t n) const assumptious {
             LglsAssumeDevAndOptimize(n < sz, "Out of range");
             return p[n];
          }

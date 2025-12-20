@@ -180,7 +180,7 @@ namespace Langulus
       /// Access                                                              
       /// @attention 'n' is always 0 when N == 0                              
       constexpr decltype(auto) operator [] (this auto&& self, [[maybe_unused]] size_t n)
-      has_assumptions {
+      assumptious {
          if constexpr (N > 0) {
             #if LANGULUS_SAFE()
                if not consteval {

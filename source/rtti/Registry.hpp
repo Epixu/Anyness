@@ -74,7 +74,7 @@ namespace Langulus::RTTI
       // Meta data definitions, indexed by file extensions              
       MetaMap<MetaSet> mFileDatabase;
       
-      auto GetMetaByID(const auto& where, size_t id) const has_assumptions;
+      auto GetMetaByID(const auto& where, size_t id) const assumptious;
 
    protected:
       friend class DefinitionVerb;
@@ -106,7 +106,7 @@ namespace Langulus::RTTI
       ) -> DefinitionVerb&;
       
       LANGULUS_API(RTTI)
-      void RegisterFileExtension(Token const&, DefinitionData*) has_assumptions;
+      void RegisterFileExtension(Token const&, DefinitionData*) assumptious;
 
       LANGULUS_API(RTTI)
       auto GetMetaDataByCppName(Token const&) const noexcept -> DefinitionData const*;
@@ -118,33 +118,33 @@ namespace Langulus::RTTI
       auto GetMetaConstByCppName(Token const&) const noexcept -> DefinitionConst const*;
 
       LANGULUS_API(RTTI)
-      auto GetMetaDataByID(size_t, bool sparse, bool constant) const has_assumptions-> DefinitionData const*;
+      auto GetMetaDataByID(size_t, bool sparse, bool constant) const assumptious-> DefinitionData const*;
       LANGULUS_API(RTTI)
-      auto GetMetaTagByID(size_t) const has_assumptions-> DefinitionTag const*;
+      auto GetMetaTagByID(size_t) const assumptious-> DefinitionTag const*;
       LANGULUS_API(RTTI)
-      auto GetMetaVerbByID(size_t) const has_assumptions-> DefinitionVerb const*;
+      auto GetMetaVerbByID(size_t) const assumptious-> DefinitionVerb const*;
       LANGULUS_API(RTTI)
-      auto GetMetaConstByID(size_t) const has_assumptions-> DefinitionConst const*;
+      auto GetMetaConstByID(size_t) const assumptious-> DefinitionConst const*;
 
    public:
       LANGULUS_API(RTTI)
       ~Registry();
 
       LANGULUS_API(RTTI)
-      auto GetMetaDataByToken (Token const&) const has_assumptions -> DefinitionData const*;
+      auto GetMetaDataByToken (Token const&) const assumptious -> DefinitionData const*;
       LANGULUS_API(RTTI)
-      auto GetMetaTagByToken  (Token const&) const has_assumptions -> DefinitionTag const*;
+      auto GetMetaTagByToken  (Token const&) const assumptious -> DefinitionTag const*;
       LANGULUS_API(RTTI)
-      auto GetMetaVerbByToken (Token const&) const has_assumptions -> DefinitionVerb const*;
+      auto GetMetaVerbByToken (Token const&) const assumptious -> DefinitionVerb const*;
       LANGULUS_API(RTTI)
-      auto GetMetaConstByToken(Token const&) const has_assumptions -> DefinitionConst const*;
+      auto GetMetaConstByToken(Token const&) const assumptious -> DefinitionConst const*;
 
       LANGULUS_API(RTTI)
-      auto GetAmbiguousMeta(Token const&) const has_assumptions -> const MetaSet&;
+      auto GetAmbiguousMeta(Token const&) const assumptious -> const MetaSet&;
       LANGULUS_API(RTTI)
       auto DisambiguateMeta(Token const&) const -> Inner::Definition const*;
       LANGULUS_API(RTTI)
-      auto ResolveFileExtension(Token const&) const has_assumptions -> const MetaSet&;
+      auto ResolveFileExtension(Token const&) const assumptious -> const MetaSet&;
       LANGULUS_API(RTTI)
       void UnloadBoundary(Token const&);
    };

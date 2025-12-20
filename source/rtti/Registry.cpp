@@ -37,7 +37,7 @@ namespace Langulus::RTTI
    ///   @param where where to search in                                      
    ///   @param id the id to search for                                       
    ///   @return the found element, or nullptr if not found                   
-   auto Registry::GetMetaByID(const auto& where, size_t id) const has_assumptions {
+   auto Registry::GetMetaByID(const auto& where, size_t id) const assumptious {
       LglsAssumeDevAndOptimize(id != 0, "Invalid ID");
       return where[id-1];
    }
@@ -58,7 +58,7 @@ namespace Langulus::RTTI
    ///   @param token the reflected token of the data definition              
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByToken(const Token& token)
-   const has_assumptions -> DefinitionData const* {
+   const assumptious -> DefinitionData const* {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       const auto foundToken = mMetaDataByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaDataByToken.end())
@@ -82,7 +82,7 @@ namespace Langulus::RTTI
    ///   @param token the reflected token of the constant definition          
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByToken(const Token& token)
-   const has_assumptions -> DefinitionConst const* {
+   const assumptious -> DefinitionConst const* {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       const auto foundToken = mMetaConstantsByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaConstantsByToken.end())
@@ -106,7 +106,7 @@ namespace Langulus::RTTI
    ///   @param token the reflected token of the tag definition               
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByToken(const Token& token)
-   const has_assumptions -> DefinitionTag const* {
+   const assumptious -> DefinitionTag const* {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       const auto foundToken = mMetaTagsByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaTagsByToken.end())
@@ -132,7 +132,7 @@ namespace Langulus::RTTI
    ///      you can search by positive, as well as negative token             
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByToken(const Token& token)
-   const has_assumptions -> DefinitionVerb const* {
+   const assumptious -> DefinitionVerb const* {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       const auto foundToken = mMetaVerbsByToken.find(Inner::ToLowercase(token));
       if (foundToken == mMetaVerbsByToken.end())
@@ -146,7 +146,7 @@ namespace Langulus::RTTI
    ///   @param constant is the data type constant?                           
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaDataByID(size_t id, bool sparse, bool constant)
-   const has_assumptions -> DefinitionData const* {
+   const assumptious -> DefinitionData const* {
       LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       DefinitionData const* found = GetMetaByID(mMetaDataByID, id);
       LglsAssumeDevAndOptimize(found, "ID wasn't found");
@@ -174,7 +174,7 @@ namespace Langulus::RTTI
    ///   @param id the ID                                                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaTagByID(size_t id)
-   const has_assumptions -> DefinitionTag const* {
+   const assumptious -> DefinitionTag const* {
       LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       return GetMetaByID(mMetaTagsByID, id);
    }
@@ -183,7 +183,7 @@ namespace Langulus::RTTI
    ///   @param id the ID                                                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaVerbByID(size_t id)
-   const has_assumptions -> DefinitionVerb const* {
+   const assumptious -> DefinitionVerb const* {
       LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       return GetMetaByID(mMetaVerbsByID, id);
    }
@@ -192,7 +192,7 @@ namespace Langulus::RTTI
    ///   @param id the ID                                                     
    ///   @return the definition, or nullptr if not found                      
    auto Registry::GetMetaConstByID(size_t id)
-   const has_assumptions -> DefinitionConst const* {
+   const assumptious -> DefinitionConst const* {
       LglsAssumeUserAndOptimize(id != 0, "Invalid ID");
       return GetMetaByID(mMetaConstantsByID, id);
    }
@@ -202,7 +202,7 @@ namespace Langulus::RTTI
    ///   @param token the token to search for                                 
    ///   @return the set of associated meta definitions                       
    auto Registry::GetAmbiguousMeta(const Token& token)
-   const has_assumptions -> const MetaSet& {
+   const assumptious -> const MetaSet& {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       static const MetaSet fallback {};
       const auto foundToken = mMetaAmbiguous.find(Inner::ToLowercase(token));
@@ -342,7 +342,7 @@ namespace Langulus::RTTI
    ///   @param token the file extension to search for                        
    ///   @return all meta definitions associated with the file extension      
    auto Registry::ResolveFileExtension(const Token& token)
-   const has_assumptions -> const MetaSet& {
+   const assumptious -> const MetaSet& {
       LglsAssumeUser(not token.contains(' '), "Token shouldn't contain spaces");
       static const MetaSet fallback {};
       const auto foundToken = mFileDatabase.find(Inner::ToLowercase(token));
@@ -678,7 +678,7 @@ namespace Langulus::RTTI
    ///   @param token the file extension token to reserve                     
    ///   @param type the data to associate file with                          
    void Registry::RegisterFileExtension(const Token& token, DefinitionData* type)
-   has_assumptions {
+   assumptious {
       LglsAssumeDev(not token.empty(), "Bad file extension");
       LglsAssumeDevAndOptimize(type, "Bad meta data for file extension: ", token);
 

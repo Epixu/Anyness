@@ -96,7 +96,7 @@ namespace Langulus::Anyness::Component
             // only if the container keeps track of the count separately
             if constexpr (CT::ContainsOne<C>) {
                if constexpr (CT::DeeplyOwned<C>)
-                  self.DestroyElementDeep();
+                  self.DestroyElementDeepStandardPointers();
                else
                   self.DestroyElement();
             }
@@ -104,7 +104,7 @@ namespace Langulus::Anyness::Component
                auto item = IterateHandles(self).begin();
                while (item) {
                   if constexpr (CT::DeeplyOwned<C>)
-                     item->DestroyElementDeep();
+                     item->DestroyElementDeepStandardPointers();
                   else
                      item->DestroyElement();
 

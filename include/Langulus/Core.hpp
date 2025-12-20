@@ -48,7 +48,7 @@
 
 /// Adds the appropriate noexcept specifiers for functions that throw only    
 /// in safe builds                                                            
-#define has_assumptions IF_UNSAFE(noexcept)
+#define assumptious IF_UNSAFE(noexcept)
 
 /// Testing mode exposes some otherwise private functions                     
 /// Overhead is unlikely                                                      

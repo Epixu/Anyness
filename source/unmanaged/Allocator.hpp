@@ -26,7 +26,7 @@ namespace Langulus::Unmanaged
    ///   @param size the number of client bytes to allocate                   
    ///   @param align the alignment of the data                               
    ///   @return a newly allocated memory that is correctly aligned           
-   inline Allocation* AlignedAllocate(pot_t size, pot_t align) has_assumptions {
+   inline Allocation* AlignedAllocate(pot_t size, pot_t align) assumptious {
       if (align < Alignment)
          align = Alignment;
       const size_t alignment = ::std::max(alignof(Allocation), static_cast<size_t>(align));
@@ -52,12 +52,12 @@ namespace Langulus::Unmanaged
       Allocator() = delete;
       
       LANGULUS(INLINED)
-      static auto Allocate(pot_t alignment, pot_t size) has_assumptions -> Allocation* {
+      static auto Allocate(pot_t alignment, pot_t size) assumptious -> Allocation* {
          return AlignedAllocate(size, alignment);
       }
 
       LANGULUS(INLINED)
-      static auto Reallocate(pot_t size, Allocation* previous) has_assumptions -> Allocation* {
+      static auto Reallocate(pot_t size, Allocation* previous) assumptious -> Allocation* {
          LglsAssumeDev(previous,
             "Reallocating nullptr");
          LglsAssumeDev(size != previous->mSize,
@@ -70,7 +70,7 @@ namespace Langulus::Unmanaged
       }
 
       LANGULUS(INLINED)
-      static void Deallocate(Allocation* entry) has_assumptions {
+      static void Deallocate(Allocation* entry) assumptious {
          LglsAssumeDev(entry,
             "Deallocating nullptr");
          LglsAssumeDev(entry->mReferences,

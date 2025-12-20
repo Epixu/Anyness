@@ -151,7 +151,7 @@ namespace Langulus::Anyness::Component
                auto item = IterateHandles(self).begin();
                while (item) {
                   if constexpr (CT::DeeplyOwned<C>)
-                     item->DestroyElementDeep();
+                     item->DestroyElementDeepCustomPointers();
                   else
                      item->DestroyElement();
 
@@ -161,7 +161,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                if constexpr (CT::DeeplyOwned<C>)
-                  self.DestroyElementDeep();
+                  self.DestroyElementDeepCustomPointers();
                else
                   self.DestroyElement();
             }
@@ -197,7 +197,7 @@ namespace Langulus::Anyness::Component
                auto item = IterateHandles(self).begin() + 1;
                while (item) {
                   if constexpr (CT::DeeplyOwned<C>)
-                     item->DestroyElementDeep();
+                     item->DestroyElementDeepCustomPointers();
                   else
                      item->DestroyElement();
 
@@ -209,7 +209,7 @@ namespace Langulus::Anyness::Component
                // Just make sure indirections are dereferenced          
                // for the first element, in case it's sparse            
                if constexpr (CT::DeeplyOwned<C>)
-                  self.DestroyElementDeep();
+                  self.DestroyElementDeepCustomPointers();
                else
                   self.DestroyElement();
             }

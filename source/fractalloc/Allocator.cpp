@@ -55,7 +55,7 @@ namespace
    /// us or not. Updated on each new allocated pool.                         
    uintptr_t gPossiblePoolMemorySpace = 0;
 
-   PoolBank* SelectPoolBank(DMeta meta) has_assumptions {
+   PoolBank* SelectPoolBank(DMeta meta) assumptious {
       LglsAssumeDev(meta, "Invalid meta data");
       switch (meta.GetPoolTactic()) {
       case Langulus::PoolTactic::Size:
@@ -76,7 +76,7 @@ namespace Langulus::Fractalloc
    ///   @param type the pooled type                                          
    ///   @param size the number of client bytes to allocate                   
    ///   @return a newly allocated memory that is correctly aligned           
-   Pool* AlignedAllocate(const DMeta& type, pot_t size) has_assumptions {
+   Pool* AlignedAllocate(const DMeta& type, pot_t size) assumptious {
       LglsAssumeDev(type,
          "Invalid type");
       LglsAssumeDev(size >= type.GetSize(),
@@ -124,7 +124,7 @@ namespace Langulus::Fractalloc
    ///   @param meta meta data for finding the proper pool                    
    ///   @param size the number of bytes to allocate                          
    ///   @return the allocation, or nullptr if out of memory                  
-   auto Allocator::Allocate(DMeta meta, pot_t size) has_assumptions -> Allocation* {
+   auto Allocator::Allocate(DMeta meta, pot_t size) assumptious -> Allocation* {
       // Decide pool chain based on meta data                           
       auto pool_bank = SelectPoolBank(meta);
       LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
@@ -189,7 +189,7 @@ namespace Langulus::Fractalloc
    ///   @param previous the previous memory entry                            
    ///   @return the reallocated memory entry, or nullptr if out of memory    
    auto Allocator::Reallocate(DMeta type, pot_t size, Allocation* previous)
-   has_assumptions -> Allocation* {
+   assumptious -> Allocation* {
       LglsAssumeDevAndOptimize(previous,
          "Reallocating nullptr");
       LglsAssumeDev(size != previous->GetSize(),
@@ -229,7 +229,7 @@ namespace Langulus::Fractalloc
    ///   @attention assumes entry is a valid entry under jurisdiction         
    ///   @attention doesn't call any destructors                              
    ///   @param entry the memory entry to deallocate                          
-   void Allocator::Deallocate(Allocation* entry) has_assumptions {
+   void Allocator::Deallocate(Allocation* entry) assumptious {
       LglsAssumeDevAndOptimize(entry,
          "Deallocating nullptr");
       LglsAssumeDevAndOptimize(entry->mReferences,
@@ -259,7 +259,7 @@ namespace Langulus::Fractalloc
    ///   @param type meta data to associate pool with                         
    ///   @param size the client requested size of the pool (in bytes)         
    ///   @return a pointer to the new pool                                    
-   Pool* Allocator::AllocatePool(DMeta type, pot_t size) has_assumptions {
+   Pool* Allocator::AllocatePool(DMeta type, pot_t size) assumptious {
       return AlignedAllocate(type, size);
    }
 
@@ -268,7 +268,7 @@ namespace Langulus::Fractalloc
    ///   @attention entries inside are no longer valid after this             
    ///   @attention assumes pool is a valid pointer                           
    ///   @param pool the pool to deallocate                                   
-   void Allocator::DeallocatePool(Pool* pool) has_assumptions {
+   void Allocator::DeallocatePool(Pool* pool) assumptious {
       LglsAssumeDevAndOptimize(pool, "Nullptr provided");
       if (gLastFoundPool == pool)
          gLastFoundPool = nullptr;
@@ -346,7 +346,7 @@ namespace Langulus::Fractalloc
    ///   @attention assumes memory is a valid pointer                         
    ///   @return the memory entry that contains the memory pointer, or        
    ///      nullptr if memory is not ours, or entry is not in use             
-   auto Allocator::Find(const void* memory) has_assumptions -> const Allocation* {
+   auto Allocator::Find(const void* memory) assumptious -> const Allocation* {
       LglsAssumeDevAndOptimize(memory, "Nullptr provided");
       
       // Check the last pool that found something (hot region)          
@@ -378,7 +378,7 @@ namespace Langulus::Fractalloc
    ///   @attention assumes memory is a valid pointer                         
    ///   @param memory memory pointer                                         
    ///   @return true if we own the memory                                    
-   bool Allocator::CheckAuthority(const void* memory) has_assumptions {
+   bool Allocator::CheckAuthority(const void* memory) assumptious {
       LglsAssumeDevAndOptimize(memory, "Nullptr provided");
 
       // Check the last pool that found something (hot region)          
@@ -408,7 +408,7 @@ namespace Langulus::Fractalloc
    ///   @param size size of the allocation in bytes                          
    auto Allocator::AllocatePackedInner(
       PointerSpecification const& spec, DMeta meta, pot_t size
-   ) has_assumptions -> Allocation* {
+   ) assumptious -> Allocation* {
       // Decide pool chain based on meta data                           
       auto pool_bank = SelectPoolBank(meta);
       LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
@@ -477,7 +477,7 @@ namespace Langulus::Fractalloc
    auto Allocator::ReallocatePackedInner(
       PointerSpecification const& spec, 
       DMeta type, pot_t size, Allocation* previous
-   ) has_assumptions -> Allocation* {
+   ) assumptious -> Allocation* {
       LglsAssumeDevAndOptimize(previous,
          "Reallocating nullptr");
       LglsAssumeDev(size != previous->GetSize(),
@@ -522,7 +522,7 @@ namespace Langulus::Fractalloc
    void* Allocator::UnpackPointer(
       PointerSpecification const& spec,
       DMeta deptr_type, uintptr_t packed
-   ) has_assumptions {
+   ) assumptious {
       // Decide pool chain based on meta data                           
       if (not packed)
          return nullptr;

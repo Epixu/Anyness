@@ -200,10 +200,11 @@ namespace Langulus::Anyness::Component
       }*/
 
       /// Nests through all indirection layers and references elements and    
-      /// entries                                                             
+      /// their entries.                                                      
+      ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
       template<CT::Container C>
-      void KeepElementDeep(this C& self) has_assumptions {
+      void KeepElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many");
          if (self.IsEmpty())
@@ -220,14 +221,14 @@ namespace Langulus::Anyness::Component
                   return;
 
                const auto subT = T.GetDeptr();
-               const auto ptr = *static_cast<void**>(const_cast<void*>(self.GetRaw())); //TODO this won't work for packed pointers
+               const auto ptr = *static_cast<void**>(const_cast<void*>(self.GetRaw()));
                LglsAssumeDev(ptr, "Null pointer");
 
                if (subT.IsSparse()) {
                   // Pointer to pointer                                 
                   if (auto subEntry = entries + 1) {
                      H temp {ptr, subEntry, subT};
-                     temp.KeepElementDeep();
+                     temp.KeepElementDeepStandardPointers();
                   }
                }
                else if (const auto referencer = subT.GetReferencer()) {
@@ -255,7 +256,7 @@ namespace Langulus::Anyness::Component
                   // Pointer to pointer                                 
                   using DenserH = typename H::Denser;
                   DenserH temp {ptr, entries + 1};
-                  temp.KeepElementDeep();
+                  temp.KeepElementDeepStandardPointers();
                }
                else if constexpr (CT::Referenced<DT>) {
                   // Pointer to dense                                   
@@ -267,11 +268,55 @@ namespace Langulus::Anyness::Component
          }
       }      
 
+      /// Nests through all indirection layers and references elements and    
+      /// their entries. Supports any number or custom pointer indirections.  
+      ///   @attention doesn't change any container state                     
+      //TODO could use some statically-typed optimizations
+      template<CT::Container C>
+      void KeepElementDeepCustomPointers(this C& self) assumptious {
+         static_assert(CT::ContainsOne<C>,
+            "Referencing only first element in a container with many");
+         LglsAssumeDev(not self.IsEmpty(),
+            "No point in calling this on an empty container");
+
+         // Check if containing indirections                            
+         DMeta T = self.GetType();
+         auto indirections = T.GetIndirections();
+         if (not indirections)
+            return;
+
+         // Check if disowned/outside authority                         
+         EntryPtr entries = self.GetEntries();
+         if (not entries)
+            return;
+
+         void const* src = self.GetRaw();
+         while (*entries and src and T.IsSparse()) {            
+            auto nextT = T.GetDeptr();
+            
+            if (nextT.IsSparse()) {
+               // Pointer T -> Pointer nextT                            
+               T.GetDereffer()(const_cast<void*>(src), &src);
+            }
+            else if (const auto referencer = nextT.GetReferencer()) {
+               // Pointer T -> Dense nextT                              
+               referencer(const_cast<void*>(UnpackPointer(T, nextT, src)), 1);
+            }
+
+            (*entries)->AddRef(1);
+
+            // Move to next indirection                                 
+            T = nextT;
+            entries += 1;
+         }
+      }      
+
       /// Nests through all indirection layers and destroys elements and      
-      /// entries if they're fully dereferenced                               
+      /// their entries if they are fully dereferenced.                       
+      ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
       template<bool DESTROY = true, CT::Container C>
-      void DestroyElementDeep(this C& self) has_assumptions {
+      void DestroyElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
          if (self.IsEmpty())
@@ -291,7 +336,7 @@ namespace Langulus::Anyness::Component
                // If T is Text**, subT is Text*                         
                const auto subT = T.GetDeptr();
                // If T is Text**, ptr becomes Text**                    
-               const auto ptr = *static_cast<void**>(self.GetRaw()); //TODO this won't work for packed pointers
+               const auto ptr = *static_cast<void**>(self.GetRaw());
                LglsAssumeDev(ptr, "Null pointer");
 
                if (1 == (*entries)->GetUses()) {
@@ -300,7 +345,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      if (auto subEntry = entries + 1) {
                         H temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeep<DESTROY>();
+                        temp.template DestroyElementDeepStandardPointers<DESTROY>();
                      }
                   }
                   else if (auto destructor = subT.GetDestructor()) {
@@ -321,7 +366,7 @@ namespace Langulus::Anyness::Component
                      // Dereference all indirection layers.             
                      if (auto subEntry = entries + 1) {
                         H temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeep<DESTROY>();
+                        temp.template DestroyElementDeepStandardPointers<DESTROY>();
                      }
                   }
                   else if (const auto referencer = subT.GetReferencer()) {
@@ -368,7 +413,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      using DenserH = typename H::Denser;
                      DenserH temp{ptr, entries + 1};
-                     temp.template DestroyElementDeep<DESTROY>();
+                     temp.template DestroyElementDeepStandardPointers<DESTROY>();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
                      // Pointer to a complete, destroyable dense.       
@@ -388,7 +433,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      using DenserH = typename H::Denser;
                      DenserH temp {ptr, entries + 1};
-                     temp.template DestroyElementDeep<DESTROY>();
+                     temp.template DestroyElementDeepStandardPointers<DESTROY>();
                   }
                   else if constexpr (CT::Referenced<DT>) {
                      // This element occurs in more than one place.     
@@ -410,6 +455,85 @@ namespace Langulus::Anyness::Component
                IF_SAFE(if constexpr (CT::Referenced<T>)
                   element.Reference(-1));
                element.~T();
+            }
+         }
+      }
+      
+      /// Nests through all indirection layers and destroys elements and      
+      /// their entries if they are fully dereferenced.                       
+      ///   @attention doesn't change any container state                     
+      ///   @tparam DESTROY will never destroy a dense element if true        
+      //TODO could use some statically-typed optimizations
+      template<bool DESTROY = true, CT::Container C>
+      void DestroyElementDeepCustomPointers(this C& self) assumptious {
+         static_assert(CT::ContainsOne<C>,
+            "Destroying only first element in a container with many");
+         if (self.IsEmpty())
+            return;
+
+         //                                                             
+         // Destroying a type-erased element                            
+         DMeta T = self.GetType();         
+         if (T.IsSparse()) {
+            EntryPtr entries = self.GetEntries();
+            if (not entries)
+               return;
+            
+            void const* src = self.GetRaw();
+            while (*entries and src and T.IsSparse()) {
+               auto nextT = T.GetDeptr();
+               const bool nextDense = nextT.IsDense();
+               if (not nextDense) {
+                  // Pointer T -> Pointer nextT                         
+                  T.GetDereffer()(const_cast<void*>(src), &src);
+               }
+               else if (1 == (*entries)->GetUses()) {                  
+                  // Pointer T -> Dense nextT                           
+                  if (auto destructor = nextT.GetDestructor()) {
+                     // Pointer to a complete, destroyable dense.       
+                     // Call the destructor.                            
+                     void* unpacked = const_cast<void*>(UnpackPointer(T, nextT, src));
+                     if (const auto referencer = nextT.GetReferencer()) {
+                        if (referencer(unpacked, -1) == 0)
+                           destructor(unpacked);
+                     }
+                     else destructor(unpacked);
+                  }
+               }
+               else {
+                  // Pointer T -> Dense nextT                           
+                  if (const auto referencer = nextT.GetReferencer()) {
+                     // This element occurs in more than one place.     
+                     // We're not allowed to deallocate the memory      
+                     // behind it, but we must call destructors if T is 
+                     // referencable and its individual references have 
+                     // reached 0. This can happen when hive elements   
+                     // are dereferenced.                               
+                     void* unpacked = const_cast<void*>(UnpackPointer(T, nextT, src));
+                     referencer(unpacked, 1);
+                     if (referencer(unpacked, -1) == 0)
+                        nextT.GetDestructor()(unpacked);
+                  }                       
+               }
+
+               // Deallocate or dereference                             
+               if (1 == (*entries)->GetUses())
+                  Allocator::Deallocate(*entries);
+               else
+                  (*entries)->AddRef(-1);                  
+
+               // Move to next indirection                              
+               T = nextT;
+               ++entries;
+            }
+         }
+         else if constexpr (DESTROY) {
+            if (const auto destructor = T.GetDestructor()) {
+               // Call destructor of dense element                   
+               const auto ptr = self.GetRaw();
+               IF_SAFE(if (const auto referencer = T.GetReferencer())
+                  referencer(ptr, -1));
+               destructor(ptr);
             }
          }
       }
@@ -438,8 +562,8 @@ namespace Langulus::Anyness::Component
 
          const auto indirections = self.GetIndirections();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
-         if constexpr ((CT::Handle<IT> and     I::IsKept())
-         or (       not CT::Handle<IT> and not CT::Disowned<I>)) {
+         if constexpr ((    CT::Handle<IT> and     I::IsKept())
+         or (           not CT::Handle<IT> and not CT::Disowned<I>)) {
             // When it's a keeping intent, copy all entries and         
             // reference them                                           
             if constexpr (CT::Handle<IT>)

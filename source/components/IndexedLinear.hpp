@@ -51,7 +51,7 @@ namespace Langulus::Anyness::Component
       ///   @return a simple element offset into contiguous memory            
       template<CT::Container C, CT::Index INDEX>
       constexpr auto SimplifyIndex(this C const& self, INDEX index)
-      has_assumptions -> Count<C> {
+      assumptious -> Count<C> {
          if constexpr      (::std::same_as<INDEX, Index::Inner::All>)
             static_assert(false, "Index::All can't be used here");
          else if constexpr (::std::same_as<INDEX, Index::Inner::Many>)
@@ -114,7 +114,7 @@ namespace Langulus::Anyness::Component
       ///   @return the selected contiguous range                             
       template<CT::Container C>
       auto SelectInner(this C&& self, Count<C> start, Count<C> count)
-      has_assumptions -> Decay<C> /*PickRange<C>*/ {
+      assumptious -> Decay<C> /*PickRange<C>*/ {
          LglsAssumeDev(self.IsAllocated(), "Block is not allocated");
          LglsAssumeDev(self.IsTyped(),     "Block is not typed");
          
@@ -130,7 +130,7 @@ namespace Langulus::Anyness::Component
       ///   @return the picked element                                        
       template<CT::Container C>
       auto operator[] (this C&& self, CT::Index auto idx)
-      has_assumptions -> Pick<C> {
+      assumptious -> Pick<C> {
          return self.GetAt(idx);
       }
 
@@ -139,7 +139,7 @@ namespace Langulus::Anyness::Component
       ///   @return the picked element                                        
       template<CT::Container C>
       auto GetAt(this C&& self, CT::Index auto idx)
-      has_assumptions -> Pick<C> {
+      assumptious -> Pick<C> {
          const auto offset = self.SimplifyIndex(idx);
          if constexpr (CT::Handle<Pick<C>>)
             return self.GetHandle() += offset;
@@ -150,27 +150,27 @@ namespace Langulus::Anyness::Component
       }
 
       template<CT::NotVoid AS, CT::Container C>
-      auto AsAt(this C&&, CT::Index auto) has_assumptions -> Tif<CT::Dense<AS>, AS&, AS>;
+      auto AsAt(this C&&, CT::Index auto) assumptious -> Tif<CT::Dense<AS>, AS&, AS>;
 
       template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
       auto CastAt(this C const&, CT::Index auto) -> AS;
 
       template<CT::Container C>
-      auto GetItemAt(this C&&, CT::Index auto) has_assumptions -> Deep<C>;
+      auto GetItemAt(this C&&, CT::Index auto) assumptious -> Deep<C>;
 
       template<CT::Container C>
-      auto GetItemAtDeep(this C&&, CT::Index auto) has_assumptions-> Deep<C>;
+      auto GetItemAtDeep(this C&&, CT::Index auto) assumptious-> Deep<C>;
 
       template<CT::Container C>
-      auto GetDeepAt(this C&&, CT::Index auto) has_assumptions-> Deep<C>*;
+      auto GetDeepAt(this C&&, CT::Index auto) assumptious-> Deep<C>*;
 
       template<CT::Container C>
-      auto GetIndexMode(this C const&, Count<C>&) has_assumptions -> Count<C>;
+      auto GetIndexMode(this C const&, Count<C>&) assumptious -> Count<C>;
 
       template<CT::Container C>
-      auto Select(this C&&, CT::Index auto, Count<C>) has_assumptions -> PickRange<C>;
+      auto Select(this C&&, CT::Index auto, Count<C>) assumptious -> PickRange<C>;
 
       template<CT::Container C>
-      void SwapIndices(this C&, CT::Index auto, CT::Index auto) has_assumptions;
+      void SwapIndices(this C&, CT::Index auto, CT::Index auto) assumptious;
    };
 }

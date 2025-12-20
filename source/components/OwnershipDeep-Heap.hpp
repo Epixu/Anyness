@@ -30,7 +30,7 @@ namespace Langulus::Anyness::Component
       /// Get entry array if containing pointers                              
       ///   @return the array of entries                                      
       template<CT::Container C>
-      auto GetEntries(this C&& self) has_assumptions -> EntryPtr {
+      auto GetEntries(this C&& self) assumptious -> EntryPtr {
          if (self.IsSparse()) {
             LglsAssumeDev(self.GetRaw(),
                "No memory available");

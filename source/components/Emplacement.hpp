@@ -513,7 +513,7 @@ namespace Langulus::Anyness::Component
          if (self.IsEmpty())
             self.AllocateMore(1);
          else if constexpr (CT::DeeplyOwned<C>)
-            self.DestroyElementDeep();
+            self.DestroyElementDeepCustomPointers();
          else
             self.DestroyElement();
 

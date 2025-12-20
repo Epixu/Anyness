@@ -42,10 +42,10 @@ namespace Langulus::Fractalloc
          size_t mVerbDefinitions {};
       #endif
 
-      bool operator == (const Statistics&) const has_assumptions;
+      bool operator == (const Statistics&) const assumptious;
 
-      void AddPool(const Pool*) has_assumptions;
-      void DelPool(const Pool*) has_assumptions;
+      void AddPool(const Pool*) assumptious;
+      void DelPool(const Pool*) assumptious;
    };
 
    ///                                                                        

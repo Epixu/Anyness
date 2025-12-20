@@ -74,7 +74,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes the container is allocated                     
       ///   @tparam ALT optional type override, use T if void                 
       template<class ALT = void, CT::Container C>
-      constexpr decltype(auto) Get(this C&& self) has_assumptions {
+      constexpr decltype(auto) Get(this C&& self) assumptious {
          static_assert(not CT::Handle<ALT>,    "ALT can't be a handle");
          static_assert(not CT::Reference<ALT>, "Strip references first");
          using TC = T;
@@ -107,7 +107,7 @@ namespace Langulus::Anyness::Component
       ///   @return ALT, either as a reference if possible, or as a value if  
       ///      an incompatible pointer arithmetic happened                    
       template<class ALT, CT::Container C>
-      decltype(auto) As(this C&& self) has_assumptions {
+      decltype(auto) As(this C&& self) assumptious {
          if constexpr (CT::Handle<ALT>) {
             static_assert(not CT::Reference<ALT>, "Strip references first");
 

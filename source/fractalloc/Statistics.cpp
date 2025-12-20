@@ -17,7 +17,7 @@
 namespace Langulus::Fractalloc
 {
    /// Compare two states                                                     
-   bool Statistics::operator == (const Statistics& rhs) const has_assumptions {
+   bool Statistics::operator == (const Statistics& rhs) const assumptious {
       LglsAssumeDevAndOptimize(
          mBytesAllocatedByFrontend <= mBytesAllocatedByBackend,
          "Impossible amount of frontend allocation"

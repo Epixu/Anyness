@@ -90,7 +90,7 @@ namespace Langulus::Fractalloc
          pot_t data_min_alloc,
          pot_t pool_alignment,
          pot_t client_size
-      ) has_assumptions;
+      ) assumptious;
 
       static size_t Cost(pot_t dataAlignment, pot_t dataMinAlloc, pot_t) noexcept;
 
@@ -168,19 +168,19 @@ namespace Langulus::Fractalloc
 
       bool ContainsData(const void*) const noexcept;
       bool ContainsAllocation(const Allocation*) const noexcept;
-      auto Find(const void*) const has_assumptions -> const Allocation*;
+      auto Find(const void*) const assumptious -> const Allocation*;
 
-      auto Allocate(pot_t) has_assumptions -> Allocation*;
-      auto AllocatePacked(size_t entry_budget, pot_t) has_assumptions -> Allocation*;
-      bool Reallocate(Allocation*, pot_t) has_assumptions;
-      void Deallocate(Allocation*) has_assumptions;
+      auto Allocate(pot_t) assumptious -> Allocation*;
+      auto AllocatePacked(size_t entry_budget, pot_t) assumptious -> Allocation*;
+      bool Reallocate(Allocation*, pot_t) assumptious;
+      void Deallocate(Allocation*) assumptious;
       
       auto ThresholdFromIndex(size_t) const noexcept -> pot_t;
-      auto IndexFromAddress(const void*) const has_assumptions -> size_t;
-      auto IndexFromAllocation(const Allocation*) const has_assumptions -> size_t;
+      auto IndexFromAddress(const void*) const assumptious -> size_t;
+      auto IndexFromAllocation(const Allocation*) const assumptious -> size_t;
       auto UpIndex(size_t) const noexcept -> size_t;
       auto AllocationFromIndex(size_t) const noexcept -> Allocation*;
-      auto AllocationFromAddress(const void*) const has_assumptions -> Allocation*;
+      auto AllocationFromAddress(const void*) const assumptious -> Allocation*;
 
       void FreePoolChain();
       void Null();

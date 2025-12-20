@@ -319,14 +319,14 @@ namespace Langulus::Anyness::Component
       bool CastsTo(size_t) const;
 
       /// Dereference the first element inside the container                  
-      constexpr auto& operator * (this auto&& self) has_assumptions
+      constexpr auto& operator * (this auto&& self) assumptious
       requires (not TypeErased and requires { *self.template GetRawAs<TYPE>(); }) {
          LglsAssumeDev(not self.IsEmpty(), "Container is empty");
          return *self.template GetRawAs<TYPE>();
       }
 
       /// Access the first element inside the container                       
-      constexpr auto* operator -> (this auto&& self) has_assumptions
+      constexpr auto* operator -> (this auto&& self) assumptious
       requires (not TypeErased and requires { self.template GetRawAs<TYPE>(); }) {
          LglsAssumeDev(not self.IsEmpty(), "Container is empty");
          return self.template GetRawAs<TYPE>();

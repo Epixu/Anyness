@@ -1083,7 +1083,7 @@ namespace Langulus::RTTI
    ///   @attention private bases will end up as imposed                      
    ///   @return the generated base descriptor                                
    template<CT::Dense T, CT::Dense B>
-   auto DefinitionData::Base::From() has_assumptions -> Base {
+   auto DefinitionData::Base::From() assumptious -> Base {
       using BASE = CT::ReflectedAs<B>;
       static_assert(not CT::Void<BASE>,
          "Can't have void as base");

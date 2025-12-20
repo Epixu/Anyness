@@ -123,9 +123,9 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::ContainsMany<C>) {
                auto item = IterateHandles(self).begin();
                while (item)
-                  (item++)->KeepElementDeep();
+                  (item++)->KeepElementDeepCustomPointers();
             }
-            else self.KeepElementDeep();
+            else self.KeepElementDeepCustomPointers();
          }
       }
 
@@ -144,7 +144,7 @@ namespace Langulus::Anyness::Component
             // indirections, as well as dense elements.                 
             if constexpr (CT::ContainsOne<C>) {
                if constexpr (CT::DeeplyOwned<C>)
-                  self.DestroyElementDeep();
+                  self.DestroyElementDeepCustomPointers();
                else
                   self.DestroyElement();
             }
@@ -152,7 +152,7 @@ namespace Langulus::Anyness::Component
                auto item = IterateHandles(self).begin();
                while (item) {
                   if constexpr (CT::DeeplyOwned<C>)
-                     item->DestroyElementDeep();
+                     item->DestroyElementDeepCustomPointers();
                   else
                      item->DestroyElement();
                   
@@ -167,11 +167,11 @@ namespace Langulus::Anyness::Component
             // affect indirections and elements behind them only!       
             if constexpr (CT::DeeplyOwned<C>) {
                if constexpr (CT::ContainsOne<C>)
-                  self.template DestroyElementDeep<false>();
+                  self.template DestroyElementDeepCustomPointers<false>();
                else {
                   auto item = IterateHandles(self).begin();
                   while (item) {
-                     item->template DestroyElementDeep<false>();
+                     item->template DestroyElementDeepCustomPointers<false>();
                      ++item;
                   }
                }

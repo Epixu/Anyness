@@ -159,7 +159,7 @@ namespace Langulus::Anyness
       }
 
       template<class A>
-      constexpr Compared operator <=> (const A& argument) const has_assumptions {
+      constexpr Compared operator <=> (const A& argument) const assumptious {
          if constexpr (CT::ContainsOne<A>) {
             LglsAssumeUser((Same<Deint<A>, Any>),
                "Ambiguous use of three-way comparison "
@@ -179,7 +179,7 @@ namespace Langulus::Anyness
       }
 
       template<class A>
-      constexpr bool operator == (const A& argument) const has_assumptions {
+      constexpr bool operator == (const A& argument) const assumptious {
          if constexpr (CT::ContainsOne<A>) {
             LglsAssumeUser((Same<Deint<A>, Any>),
                "Ambiguous use of equality comparison "

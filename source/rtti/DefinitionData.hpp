@@ -163,7 +163,7 @@ namespace Langulus::RTTI
          FAccessMember getBase = nullptr;
 
          template<CT::Dense T, CT::Dense BASE> static auto
-         From() has_assumptions -> Base;
+         From() assumptious -> Base;
       };
       
       /// Used to reflect a morphism                                          
