@@ -62,10 +62,9 @@ protected:
       }
       else {
          using NEXT_T = Deptr<INNER>;
-         auto new_alloc = Allocator::AllocatePacked<INNER>(
+         *entry = Allocator::AllocatePacked<INNER>(
             Langulus::MetaDataOf<NEXT_T>(), pot_t(Roof2(sizeof(NEXT_T))));
-         *entry = reinterpret_cast<Allocation*>(new_alloc);
-         place = new_alloc->GetBlockStart();
+         place = (*entry)->GetBlockStartPackedAs<INNER>();
          
          NestedConstructor(*place, entry + 1, FWD(arguments)...);
       }

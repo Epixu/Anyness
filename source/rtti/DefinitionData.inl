@@ -57,14 +57,14 @@ namespace Langulus::RTTI
          static_assert(CT::NotConvolutedAnywhere<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          if constexpr (::std::is_same_v<T, void*>) {
-            auto typed_from = static_cast<void**>(from);
+            auto typed_from = static_cast<void***>(from);
             auto typed_to   = static_cast<void**>(to);
-            *typed_to = *typed_from;            
+            *typed_to = **typed_from;            
          }
          else {
             static_assert(CT::CustomPointer<T>,
                "T should be a custom pointer, use void* if not");
-            using DenserT = Deref<Deptr<T>>;
+            using DenserT = Deptr<T>;
             auto typed_from = static_cast<T*>(from);
             auto typed_to   = static_cast<DenserT*>(to);
             *typed_to = **typed_from;
@@ -868,6 +868,9 @@ namespace Langulus::RTTI
       using DTOnce = Decvq<T>;
       using DTAll  = DecvqAll<T>;
 
+      if constexpr (CT::CustomPointer<T>)
+         definition.mPointerSpecification = DTAll::Specification;
+
       if constexpr (not ::std::same_as<T, DTAll>) {
          // T has qualifiers                                            
          definition.mDecvqOnce = Reflect<DTOnce>();
@@ -908,7 +911,7 @@ namespace Langulus::RTTI
          definition.mDeptr = reinterpret_cast<DefinitionData*>(intptr_t {1});
       }
 
-      if constexpr (CT::CustomPointer<T>) {
+      /*if constexpr (CT::CustomPointer<T>) {
          definition.mCurrentBoundary.mPacker = [](void* from, void* to) {
             //new (to) T {from->GetBlockStartPacked<T>()};
             T::Pack(from, to);
@@ -916,7 +919,7 @@ namespace Langulus::RTTI
          definition.mCurrentBoundary.mUnpacker = [](void* ptr) -> void* {
             return (*static_cast<T*>(ptr)).Unpack();
          };
-      }
+      }*/
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          if constexpr (not CT::Complete<DenserT> or ::std::is_const_v<DenserT>

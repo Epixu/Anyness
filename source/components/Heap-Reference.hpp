@@ -253,19 +253,16 @@ namespace Langulus::Anyness::Component
 
       /// Get the first contained element, removing 'count' indirections      
       ///   @attention throws if type is incomplete and origin was reached    
+      ///   @tparam AS specify the type we wrap the result in.                
+      ///      Using 'void' will choose C::DeepType.                          
       ///   @param self deduced this                                          
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
       template<class AS = void, CT::Container C>
       auto GetDense(this C&& self, Count<C> count = CountMax<C>) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
-         static_assert(CT::Container<D>,
-            "D must result in a container type");
-         static_assert(CT::HasVariableCount<D>,
-            "D must allow for being empty");
-
-         if (self.IsEmpty())
-            return D {};
+         static_assert(CT::Container<D>, "D must result in a container type");
+         LglsAssert(not self.IsEmpty(), "Can't GetDense from empty container");
          if (not self.IsSparse() or count <= 0)
             return D {Disown(self)};
 
@@ -290,20 +287,52 @@ namespace Langulus::Anyness::Component
          }
 
          // Start iterating until dereferenced enough                   
-         D iterator = Disown(self);
+         /*D iterator {Disown(self)};
          while (count and iterator.IsSparse()) {
             auto dereffer = iterator.GetType().GetDereffer();
             auto newtype = iterator.GetType().GetDeptr();
             auto src = iterator.GetHeapInner();
-            iterator.Reset();
+            //iterator.Reset();
             iterator.SetTypeInner(newtype);
-            iterator.AllocateFresh(iterator.RequestHeap(1));
-            dereffer(src, iterator.GetHeapInner());
-            if_available(iterator.SetCountInner(1));
+            //iterator.AllocateFresh(iterator.RequestHeap(1));
+            dereffer(src, &iterator.GetHeapInner());
+            //if_available(iterator.SetCountInner(1));
             --count;
          };
+         return iterator;*/
 
-         return iterator;
+         auto src = reinterpret_cast<uintptr_t>(self.GetHeapInner());
+         auto T = self.GetType();
+         while (count and T.IsSparse()) {
+            auto dereffer  = T.GetDereffer();
+            auto nextT = T.GetDeptr();
+            if (nextT.IsSparse()) {
+               // Pointer T -> Pointer nextT                            
+               dereffer(reinterpret_cast<void*>(src), &src);
+            }
+            else {
+               // Pointer T -> Dense nextT                              
+               D temp {Disown(self)};
+               temp.SetTypeInner(nextT);
+               const auto ptrSpec = T.GetPointerSpecification();
+               if (ptrSpec.IsPacked()) {
+                  // T might be packed, we need to unpack it            
+                  auto unpack = Allocator::UnpackPointer(ptrSpec, nextT, src);
+                  temp.SetHeapInner(unpack);
+               }
+               else {
+                  temp.SetHeapInner(reinterpret_cast<void*>(src));
+               }
+               
+               if_available(temp.SetCountInner(1));
+               return temp;
+            }
+
+            --count;
+         }
+         
+         LglsError("Should never be reached");
+         return D {Disown(self)};
       }
 
    protected:

@@ -90,6 +90,11 @@ namespace Langulus::RTTI::Inner
       return result;
    }
 
+   /// Get the pointer specification of a sparse type                         
+   inline auto MetaDataNaked::GetPointerSpecification() const noexcept -> PointerSpecification {
+      return mDefinition ? mDefinition->mPointerSpecification : PointerSpecification {};
+   }
+
    /// Check if type is CT::Dense                                             
    inline bool MetaDataNaked::IsDense() const noexcept {
       return mDefinition ? mDefinition->mDeptr == nullptr : true;
@@ -142,10 +147,10 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get the reflected unpacker                                             
-   inline auto MetaDataNaked::GetUnpacker()
+   /*inline auto MetaDataNaked::GetUnpacker()
    const noexcept -> DefinitionData::FUnpack {
       return mDefinition ? mDefinition->mCurrentBoundary.mUnpacker : nullptr;
-   }
+   }*/
    
    /// Get the reflected destructor                                           
    inline auto MetaDataNaked::GetDestructor()

@@ -16,10 +16,10 @@
 
 
 namespace Langulus::Fractalloc
-{
+{   
    ///                                                                        
-   ///   Memory allocation                                                    
-   ///                                                                        
+   ///   A single, continuous memory allocation.                              
+   ///   Produced and managed by Pool.                                        
    struct Allocation {
    private:      
       // The number of references to this memory.                       
@@ -27,8 +27,8 @@ namespace Langulus::Fractalloc
       int32_t mReferences = 1;
 
       // This has two states depending on mReferences:                  
-      // If mReferences > 0, the struct is used                         
-      // If mReferences == 0, mNextFreeEntryFinder is used              
+      // If mReferences > 0, the struct is used;                        
+      // If mReferences == 0, mNextFreeEntryFinder is used.             
       union {
          struct {
             #if LANGULUS_FEATURE(MEMORY_STATISTICS)
@@ -36,13 +36,14 @@ namespace Langulus::Fractalloc
                uint64_t mStep;
             #endif
             
-            // Used to find the pool pointer by rounding 'this'         
-            // Represented as a bit number                              
+            // Used to find the pool pointer by rounding 'this'.        
+            // Represented as a bit number.                             
             uint8_t mPoolAlignment;
-            // Allocated bytes usable by client                         
-            // Represented as a bit number                              
+            // Allocated bytes usable by client.                        
+            // Represented as a bit number.                             
             uint8_t mSize;
          };
+         // Used when mReferences == 0 to chain free entries            
          int32_t mNextFreeEntryFinder;
       };
 
@@ -94,8 +95,31 @@ namespace Langulus::Fractalloc
       /// specification.                                                      
       ///   @attention use this only if the allocation was produced using     
       ///      Allocator::AllocatePacked or Allocator::ReallocatePacked!      
+      ///      Otherwise IDs might go beyond the limits.                      
+      auto GetBlockStartPacked(PointerSpecification const& spec) const
+      has_assumptions -> uintptr_t {
+         if (not spec.IsPacked())
+            return reinterpret_cast<uintptr_t>(GetBlockStart());
+         
+         LglsAssumeDev(mReferences != 0,
+            "Can't get block start if entry isn't in use");
+
+         // Return a packed pointer                                     
+         auto pool = GetPool();
+         uintptr_t result = pool->GetID();
+         result <<= spec.EntryBits;
+         result += pool->IndexFromAllocation(this);
+         result <<= spec.OffsetBits;
+         return result;
+      }
+      
+      /// Return the aligned start of usable block memory, packed to some     
+      /// specification.                                                      
+      ///   @attention use this only if the allocation was produced using     
+      ///      Allocator::AllocatePacked or Allocator::ReallocatePacked!      
+      ///      Otherwise IDs might go beyond the limits.                      
       template<CT::CustomPointer T>
-      auto GetBlockStartPacked() const has_assumptions -> T {
+      auto GetBlockStartPackedAs() const has_assumptions -> T {
          LglsAssumeDev(mReferences != 0,
             "Can't get block start if entry isn't in use");
 
@@ -167,12 +191,5 @@ namespace Langulus::Fractalloc
             reinterpret_cast<uintptr_t>(this) & ~((uintptr_t{1} << mPoolAlignment) - uintptr_t{1})
          );
       }
-   };
-
-   /// Structure for describing custom packed pointers                        
-   struct PointerSpecification {
-      unsigned PoolBits;
-      unsigned EntryBits;
-      unsigned OffsetBits;
    };
 }

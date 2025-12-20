@@ -141,7 +141,8 @@ namespace Langulus::RTTI
             auto GetPoolTactic()      const noexcept -> PoolTactic;
          #endif
 
-         constexpr size_t GetIndirections() const noexcept;
+         constexpr auto GetIndirections() const noexcept -> size_t;
+         constexpr auto GetPointerSpecification() const noexcept -> PointerSpecification;
          constexpr bool IsDense()     const noexcept;
          constexpr bool IsSparse()    const noexcept;
          constexpr bool IsConstant()  const noexcept;
@@ -153,7 +154,7 @@ namespace Langulus::RTTI
          constexpr bool HasGetHashMethod() const noexcept;
 
          auto GetDereffer()           const noexcept -> DefinitionData::FBinary;
-         auto GetUnpacker()           const noexcept -> DefinitionData::FUnpack;
+         //auto GetUnpacker()           const noexcept -> DefinitionData::FUnpack;
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
          auto GetResolver()           const noexcept -> DefinitionData::FResolve;
@@ -229,7 +230,8 @@ namespace Langulus::RTTI
             auto GetPoolTactic()      const noexcept -> PoolTactic;
          #endif
                                       
-         size_t GetIndirections()     const noexcept;
+         auto GetIndirections()       const noexcept -> size_t;
+         auto GetPointerSpecification() const noexcept -> PointerSpecification;
          bool IsDense()               const noexcept;
          bool IsSparse()              const noexcept;
          bool IsConstant()            const noexcept;
@@ -241,7 +243,7 @@ namespace Langulus::RTTI
          bool HasGetHashMethod()      const noexcept;
 
          auto GetDereffer()           const noexcept -> DefinitionData::FBinary;
-         auto GetUnpacker()           const noexcept -> DefinitionData::FUnpack;
+         //auto GetUnpacker()           const noexcept -> DefinitionData::FUnpack;
          auto GetDestructor()         const noexcept -> DefinitionData::FUnary;
          auto GetReferencer()         const noexcept -> DefinitionData::FReference;
          auto GetResolver()           const noexcept -> DefinitionData::FResolve;

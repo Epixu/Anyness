@@ -431,6 +431,30 @@ namespace Langulus
           and ((not ConvolutedAnywhere<T>) and ...);
    }
 
+   ///                                                                        
+   /// Structure for describing custom packed pointers.                       
+   /// The default PointerSpecification with all members initialized to zero  
+   /// corresponds to a pointer with sizeof(void*) and thus not packed.       
+   struct PointerSpecification {
+      unsigned PoolBits = 0;
+      unsigned EntryBits = 0;
+      unsigned OffsetBits = 0;
+
+      constexpr unsigned GetTotalBits() const noexcept {
+         const auto total = PoolBits + EntryBits + OffsetBits;
+         return total ? total : sizeof(void*)*8;
+      }
+      
+      constexpr unsigned GetTotalBytes() const noexcept {
+         const auto total = PoolBits + EntryBits + OffsetBits;
+         return total ? total/8u : sizeof(void*);
+      }
+      
+      constexpr bool IsPacked() const noexcept {
+         return (PoolBits + EntryBits + OffsetBits) != 0;
+      }
+   };
+   
    namespace Inner
    {
       /// Removes all const/volatile qualifiers from all indirections.        

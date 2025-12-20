@@ -257,51 +257,63 @@ namespace Langulus::Anyness::Component
          }
 
          // Clone the origin first                                      
-         const DMeta T = self.GetTypeInner();
+         const DMeta T = self.GetType();
          auto indirections = T.GetIndirections();
-         DMeta prev_type = T.GetDeptr(indirections - 1);
-         DMeta type = T.GetOrigin();      
-         auto cloned = Allocator::AllocatePackedInner(
-            prev_type.GetPointerSpecification(),
-            type, pot_t(Roof2(type.GetSize()))
-         );         
-         LglsAssert(cloned, "Out of memory");
 
-         type.GetCloneConstructor()(
-            const_cast<void*>(src_origin),
-            cloned->GetBlockStart()
-         );
-
-         // Then clone all indirection layers in reverse order          
-         auto entries = self.GetEntries();         
-         auto next_pointer = cloned->GetBlockStartPacked();
-         
-         while (indirections > 1) {
-            entries[indirections - 1] = cloned;
-            
-            type = prev_type;
-            prev_type = T.GetDeptr(indirections - 2);            
-            cloned = Allocator::AllocatePackedInner(
+         if (indirections) {
+            // Containing sparse data                                   
+            DMeta prev_type = T.GetDeptr(indirections - 1);
+            DMeta type = T.GetOrigin();
+            auto cloned = Allocator::AllocatePackedInner(
                prev_type.GetPointerSpecification(),
                type, pot_t(Roof2(type.GetSize()))
             );
+            LglsAssert(cloned, "Out of memory");
 
-            // Chain the pointers                                       
-            memcpy(cloned->GetBlockStart(), &next_pointer, type.GetSize());
-            next_pointer = cloned->GetBlockStartPacked();
-            --indirections;
+            type.GetCloneConstructor()(
+               const_cast<void*>(src_origin),
+               cloned->GetBlockStart()
+            );
+
+            // Then clone all indirection layers in reverse order       
+            EntryPtr entries = nullptr;
+            if_available(entries = self.GetEntries());
+         
+            auto next_pointer = cloned->GetBlockStartPacked(prev_type.GetPointerSpecification());
+            while (indirections > 1) {
+               if (entries)
+                  entries[indirections - 1] = cloned;
+               type = prev_type;
+               prev_type = T.GetDeptr(indirections - 2);
+               cloned = Allocator::AllocatePackedInner(
+                  prev_type.GetPointerSpecification(),
+                  type, pot_t(Roof2(type.GetSize()))
+               );
+
+               // Chain the pointers                                    
+               memcpy(cloned->GetBlockStart(), &next_pointer, type.GetSize());
+               next_pointer = cloned->GetBlockStartPacked(prev_type.GetPointerSpecification());
+               --indirections;
+            }
+
+            // The final indirection is stored in mHeap                 
+            memcpy(self.GetHeapInner(), &next_pointer, T.GetSize());
          }
-
-         // The final indirection is stored in mHeap                    
-         memcpy(self.GetHeapInner(), &next_pointer, T.GetSize());
+         else {
+            // Containing dense data                                    
+            T.GetCloneConstructor()(
+               const_cast<void*>(src_origin),
+               self.GetHeapInner()
+            );
+         }
       }
 
       /// Emplace on top of the first element using an intent                 
-      ///   @attention assumes destination memory has been preallocated,      
-      ///      including all levels of indirection                            
-      ///   @attention does not modify any container state                    
-      ///   @attention this overwrites previous handle without dereferencing  
-      ///      it, and without destroying anything                            
+      ///   @attention Assumes destination memory has been preallocated,      
+      ///      including all levels of indirection.                           
+      ///   @attention Does not modify any container state.                   
+      ///   @attention This overwrites previous handle without dereferencing  
+      ///      it and without destroying anything.                            
       ///   @param intent constructor argument. If this container             
       ///      is statically typed, this can be any constructor argument,     
       ///      otherwise it has to be an instance of the contained type.      

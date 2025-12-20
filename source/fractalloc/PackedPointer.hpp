@@ -57,15 +57,8 @@ namespace Langulus::Fractalloc
    protected:
       friend struct Allocator;
       friend struct Allocation;
-
-      union {
-         struct {
-            Inner mPool   : Specification.PoolBits;
-            Inner mEntry  : Specification.EntryBits;
-            Inner mOffset : Specification.OffsetBits;
-         };
-         Inner mAll : TotalBits;
-      };
+      
+      Inner mAll;
 
       /// Manually construct the packed pointer                               
       constexpr PackedPointer(size_t poolId, size_t entryId, size_t elementId = 0)
@@ -76,9 +69,11 @@ namespace Langulus::Fractalloc
             "Entry ID beyond limits");
          LglsAssumeDevAndOptimize(elementId < (1u << Specification.OffsetBits),
             "Element ID beyond limits");
-         mPool = static_cast<Inner>(poolId);
-         mEntry = static_cast<Inner>(entryId);
-         mOffset = static_cast<Inner>(elementId);
+         mAll  = static_cast<Inner>(poolId);
+         mAll <<= Specification.EntryBits;
+         mAll += static_cast<Inner>(entryId);
+         mAll <<= Specification.OffsetBits;
+         mAll += static_cast<Inner>(elementId);
       }
 
    public:
@@ -115,14 +110,31 @@ namespace Langulus::Fractalloc
       constexpr bool operator == (const PackedPointer& a) const noexcept {
          return mAll == a.mAll;
       }
+
+      /*constexpr auto GetPoolId() const noexcept -> Inner {
+         return mAll >> (Specification.EntryBits + Specification.OffsetBits);
+      }
       
+      constexpr auto GetEntryId() const noexcept -> Inner {
+         auto no_pool_id = mAll << Specification.PoolBits;
+         return no_pool_id >> (Specification.PoolBits + Specification.OffsetBits);
+      }
+
+      constexpr auto GetElementId() const noexcept -> Inner {
+         return mAll & ((1u << Specification.OffsetBits) - 1u);
+      }*/
+
+      /// Unpack and dereference the pointer                                  
       T& operator * () const has_assumptions {
          LglsAssumeDev(mAll, "Trying to dereference a null pointer");
          return *Unpack();
       }
-      
+
+      /// Unpack the pointer                                                  
       auto Unpack() const noexcept -> T* {
-         return Allocator::UnpackPointer(*this);
+         return reinterpret_cast<T*>(Allocator::UnpackPointer(
+            Specification, MetaDataOf<T>(), mAll
+         ));
       }
    };
    #pragma pack(pop)

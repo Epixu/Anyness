@@ -42,68 +42,72 @@ namespace Langulus::RTTI
       template<unsigned, unsigned>
       friend struct Inner::MetaDataStructured_XY;
 
-      // The origin type, with all qualifiers and sparseness removed    
-      // Will be null for incomplete types                              
+      // The origin type, with all qualifiers and sparseness removed.   
+      // Will be null for incomplete types.                             
       DefinitionData const* mOrigin = nullptr;
-      // The type, when a single level of indirection is removed        
+      
+      // The type, when a single level of indirection is removed.       
       // Will be null if data is dense. Will be exactly 1 if sparse,    
-      // but pointing to an incomplete type                             
+      // but pointing to an incomplete type.                            
       DefinitionData const* mDeptr = nullptr;
+      // The pointer specification of a sparse type.                    
+      PointerSpecification mPointerSpecification;
+      
       // This is required in some corner cases involving multiple       
-      // layers of indirection, or incomplete types                     
+      // layers of indirection, or incomplete types.                    
       bool mPtrIncludedInID = false;
       IF_SAFE(bool mDedicatedID = false);
 
-      // The type, when all qualifiers are removed down to the origin   
+      // The type, when all qualifiers are removed down to the origin.  
       DefinitionData const* mDecvqAll IF_SAFE(= nullptr);
-      // The type, when topmost qualifiers are removed                  
+      // The type, when topmost qualifiers are removed.                 
       DefinitionData const* mDecvqOnce IF_SAFE(= nullptr);
-      // The type, but with an additional level of indirection          
-      // @attention this is not null only after the pointer type has    
-      //    been reflected elsewhere at runtime                         
+      // The type, but with an additional level of indirection.         
+      // @attention This is not null only after the pointer type has    
+      //    been reflected elsewhere at runtime.                        
       DefinitionData const* mAddPtr = nullptr;
-      // The type, but constant                                         
-      // @attention this is not null only after the constant type has   
-      //    been reflected elsewhere at runtime                         
+      // The type, but constant.                                        
+      // @attention This is not null only after the constant type has   
+      //    been reflected elsewhere at runtime.                        
       DefinitionData const* mAddConst = nullptr;
 
-      // True if data is constant, set by CT::Constant                  
+      // True if data is constant, set by CT::Constant.                 
       bool mConst IF_SAFE(= false);
-      // True if data is deep, set by CT::Deep                          
+      // True if data is deep, set by CT::Deep.                         
       bool mDeep IF_SAFE(= false);
-      // True if data is pod, set by CT::POD                            
+      // True if data is pod, set by CT::POD.                           
       bool mPOD IF_SAFE(= false);
-      // True if data is nullable, set by CT::Nullable                  
+      // True if data is nullable, set by CT::Nullable.                 
       bool mNullable IF_SAFE(= false);
-      // True if data is abstract, set by CT::Abstract                  
+      // True if data is abstract, set by CT::Abstract.                 
       bool mAbstract IF_SAFE(= false);
-      // Decides whether POD data is batch-hashable or not              
-      // If there's a custom GetHash() method, POD data is not batchable
+      // Decides whether POD data is batch-hashable or not.             
+      // A custom GetHash() method disables POD batch-hashing.          
       bool mHasGetHashMethod = false;
 
-      // Data instance size in bytes, set by sizeof()                   
+      // Data instance size in bytes, set by sizeof().                  
       size_t mSize IF_SAFE(= 0);
-      // Data instance alignment in bytes, set by alignof()             
+      // Data instance alignment in bytes, set by alignof().            
       pot_t mAlign IF_SAFE(= pot_t(Alignment));
-      // Minimal element allocation, in bytes                           
+      // Minimal element allocation, in bytes.                          
       pot_t mMinimalAllocation IF_SAFE(= pot_t(MinimalAllocation));
       // Precomputed counts indexed by MSB (avoids division by stride   
-      // for that extra oompf)                                          
+      // for that extra oompf).                                         
       size_t mAllocationTable[sizeof(size_t) * 8 + 1] IF_SAFE(= {});
-      // Reflected suffix                                               
+      // Reflected suffix.                                              
       ::std::string mSuffixOf;
-      // Reflected file extensions, separated with commas               
+      // Reflected file extensions, separated by commas.                
       ::std::string mFilesOf;
       
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         // Minimal pool allocation, in bytes                           
+         // Minimal pool allocation in bytes.                           
          pot_t mMinimalPoolSize IF_SAFE(= pot_t(MinimalPoolSize));
-         // The reflected pool tactic                                   
+         // The reflected pool tactic.                                  
          PoolTactic mPoolTactic = PoolTactic::Default;
       #endif
 
       //                                                                
-      //    These methods are sought in each reflected type             
+      //    These methods are sought for each reflected type            
       //                                                                
       //    These function pointers will be different for different     
       // libraries. We just collect them all. If a shared object is     
@@ -128,15 +132,15 @@ namespace Langulus::RTTI
       struct Member {
          using CTTI_ReflectAs = void;
 
-         // Type of data                                                
+         // Type of data.                                               
          FTypeRetriever type IF_SAFE(= nullptr);
-         // Get pointer to the member                                   
+         // Get pointer to the member.                                  
          FAccessMember member IF_SAFE(= nullptr);
-         // Number of elements in mData (in case of an array)           
+         // Number of elements in mData (in case of an array).          
          size_t extent IF_SAFE(= 1);
-         // Tags                                                        
+         // Tags.                                                       
          ::std::unordered_set<DefinitionTag const*> tags;
-         // Name of the member                                          
+         // Name of the member.                                         
          ::std::string name;
 
          template<class HANDLE>
@@ -147,14 +151,15 @@ namespace Langulus::RTTI
       struct Base {
          using CTTI_ReflectAs = void;
 
-         // Type of the base                                            
+         // Type of the base.                                           
          DefinitionData const* type IF_SAFE(= nullptr);
-         // Usually true when base completely fills the derived type    
+         // Usually true when base completely fills the derived type.   
          bool binaryCompatible = false;
-         // Get a pointer to the base inside an instance                
+         // Get a pointer to the base inside an instance.               
          // If nullptr, then base is imposed. Imposed bases are not     
          // serialized and don't participate in type-distance           
-         // computation or dispatching                                  
+         // computation or dispatching. They are just used to associate 
+         // data types.                                                 
          FAccessMember getBase = nullptr;
 
          template<CT::Dense T, CT::Dense BASE> static auto
@@ -165,9 +170,9 @@ namespace Langulus::RTTI
       struct Morphism {
          using CTTI_ReflectAs = void;
 
-         // Simple converter, encapsulating a static_cast               
+         // Simple converter, encapsulating a static_cast.              
          FBinary convert;
-         // A serializer if supported, also takes in a context          
+         // A serializer if supported, also takes in a context.         
          FSerialize serialize;
       };
       
@@ -188,11 +193,11 @@ namespace Langulus::RTTI
          FBinary mDereference = nullptr;
 
          // Turns a normal pointer into a packed one.                   
-         FBinary mPacker = nullptr;
+         //FBinary mPacker = nullptr;
 
          // If available, indicates a custom pointer is reflected.      
          // This function can be used to turn it back into a normal one.
-         FUnpack mUnpacker = nullptr;
+         //FUnpack mUnpacker = nullptr;
 
          // The default constructor, wrapped in a lambda expression if  
          // available. Takes a pointer for a placement-new expression.  

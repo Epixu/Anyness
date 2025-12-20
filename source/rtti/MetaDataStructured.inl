@@ -288,6 +288,15 @@ namespace Langulus::RTTI::Inner
       return result;
    }
 
+   /// Get the pointer specification for a sparse type                        
+   TEMPLATE()
+   constexpr auto ME()::GetPointerSpecification() const noexcept -> PointerSpecification {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mPointerSpecification;
+      return {};
+   }
+
    /// Check if type is CT::Dense                                             
    TEMPLATE()
    constexpr bool ME()::IsDense() const noexcept {
@@ -369,14 +378,14 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the reflected unpacker                                             
-   TEMPLATE()
+   /*TEMPLATE()
    auto ME()::GetUnpacker()
    const noexcept -> DefinitionData::FUnpack {
       const auto id = Base::GetID();
       if (id)
          return Instance.GetMetaDataByID(id, sparse, constant)->mCurrentBoundary.mUnpacker;
       return {};
-   }
+   }*/
 
    /// Get the reflected referencer                                           
    TEMPLATE()

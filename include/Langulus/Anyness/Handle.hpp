@@ -19,6 +19,8 @@
 
 namespace Langulus::Anyness
 {
+   struct HandleDisowned;
+   
    ///                                                                        
    /// A type-erased mutable handle with ownership.                           
    /// It refers to a picked element inside a type-erased container.          
@@ -39,6 +41,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using HandleMutType  = HandleMut;
+      using DeepType       = HandleDisowned;
 
       HandleMut() = delete;
       
@@ -73,6 +76,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using HandleMutType  = HandleDisownedMut;
+      using DeepType       = HandleDisowned;
 
       HandleDisownedMut() = delete;
       
@@ -110,6 +114,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using HandleType     = Handle;
+      using DeepType       = HandleDisowned;
 
       Handle() = delete;
       
@@ -142,6 +147,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using HandleType     = HandleDisowned;
+      using DeepType       = HandleDisowned;
 
       HandleDisowned() = delete;
       
@@ -156,5 +162,12 @@ namespace Langulus::Anyness
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
       }
+
+      /// Construction that absorbs the provided container                    
+      template<CT::Container C>
+      explicit constexpr HandleDisowned(C&& argument) {
+         this->ConstructFrom(FWD(argument));
+      }
+
    };
 }

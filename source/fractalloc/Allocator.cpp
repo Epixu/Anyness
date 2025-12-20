@@ -514,34 +514,43 @@ namespace Langulus::Fractalloc
    }
 
    /// Unpack a packed pointer                                                
-   void* Allocator::UnpackPointerInner(
-      DMeta meta,
-      size_t poolId,
-      size_t entryId,
-      size_t elementId
+   ///   @param spec pointer specification                                    
+   ///   @param deptr_type type the 'packed' points to (T* points to T)       
+   ///   @param packed the pointer, packed inside, but not necessarily filling
+   ///      an entire uintptr_t                                               
+   ///   @return the unpacked raw pointer                                     
+   void* Allocator::UnpackPointer(
+      PointerSpecification const& spec,
+      DMeta deptr_type, uintptr_t packed
    ) has_assumptions {
       // Decide pool chain based on meta data                           
-      LglsAssumeDev(meta, "Invalid meta data");
-      if (not poolId)
+      if (not packed)
          return nullptr;
+      if (not spec.IsPacked())
+         return reinterpret_cast<void*>(packed);
       
-      PoolBank* p = nullptr;
-      switch (meta.GetPoolTactic()) {
+      LglsAssumeDev(deptr_type, "Invalid meta data");
+      PoolBank* bank = nullptr;
+      switch (deptr_type.GetPoolTactic()) {
       case PoolTactic::Size:
-         p = &gSizePoolChain[FastLog2(meta.GetSize())];
+         bank = &gSizePoolChain[FastLog2(deptr_type.GetSize())];
          break;
       case PoolTactic::Type:
-         p = &gTypePoolChain.at(meta);            
+         bank = &gTypePoolChain.at(deptr_type);            
          break;
       case PoolTactic::Main:
-         p = &gMainPoolChain;
+         bank = &gMainPoolChain;
          break;
       }
 
-      LglsAssumeDevAndOptimize(p, "Pool bank should always be valid");
-      LglsAssumeDev(p->indexed.contains(poolId), "Invalid pool id");
-      auto e = p->indexed.at(poolId)->AllocationFromIndex(entryId);
-      return e->GetBlockStart() + meta.GetSize() * elementId;
+      // Unpack indices and return raw pointer                          
+      const size_t poolId  = packed >> (spec.EntryBits + spec.OffsetBits);
+      LglsAssumeDevAndOptimize(bank, "Pool bank should always be valid");
+      LglsAssumeDev(bank->indexed.contains(poolId), "Invalid pool id");
+      const size_t entryId = (packed >> spec.OffsetBits) & ((1u << spec.EntryBits) - 1u);
+      auto e = bank->indexed.at(poolId)->AllocationFromIndex(entryId);
+      const size_t elementId = packed & ((1u << spec.OffsetBits) - 1u);
+      return e->GetBlockStart() + deptr_type.GetSize() * elementId;
    }
    
 #if LANGULUS_FEATURE(MEMORY_STATISTICS)
