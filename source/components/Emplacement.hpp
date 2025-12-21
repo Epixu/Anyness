@@ -274,17 +274,21 @@ namespace Langulus::Anyness::Component
                const_cast<void*>(src_origin),
                cloned->GetBlockStart()
             );
+            --indirections;
 
             // Then clone all indirection layers in reverse order       
-            EntryPtr entries = nullptr;
-            if_available(entries = self.GetEntries());
+            [[maybe_unused]] EntryPtr entries;
+            if constexpr (CT::DeeplyOwned<C>) {
+               entries = self.GetEntries();
+               entries[indirections] = cloned;
+            }
          
             auto next_pointer = cloned->GetBlockStartPacked(prev_type.GetPointerSpecification());
-            while (indirections > 1) {
-               if (entries)
-                  entries[indirections - 1] = cloned;
+            while (indirections) {
+               if constexpr (CT::DeeplyOwned<C>)
+                  entries[indirections] = cloned;
                type = prev_type;
-               prev_type = T.GetDeptr(indirections - 2);
+               prev_type = T.GetDeptr(indirections - 1);
                cloned = Allocator::AllocatePackedInner(
                   prev_type.GetPointerSpecification(),
                   type, pot_t(Roof2(type.GetSize()))

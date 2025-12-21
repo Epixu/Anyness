@@ -18,8 +18,7 @@
 namespace Langulus::Fractalloc
 {   
    ///                                                                        
-   ///   A single, continuous memory allocation.                              
-   ///   Produced and managed by Pool.                                        
+   /// A single, continuous memory allocation. Produced and managed by Pool.  
    struct Allocation {
    private:      
       // The number of references to this memory.                       
@@ -55,7 +54,7 @@ namespace Langulus::Fractalloc
       /// Initialize an allocation                                            
       ///   @param size the number of allocated bytes                         
       ///   @param pool_alignment the pool alignment                          
-      Allocation(pot_t size, pot_t pool_alignment) noexcept{
+      Allocation(pot_t size, pot_t pool_alignment) noexcept {
          mPoolAlignment = pool_alignment.bit;
          mSize = size.bit;
       }
