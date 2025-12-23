@@ -57,9 +57,9 @@ namespace Langulus::RTTI
          static_assert(CT::NotConvolutedAnywhere<T>,
             "Strip qualifiers to avoid unnecessary instantiations");
          if constexpr (::std::is_same_v<T, void*>) {
-            auto typed_from = static_cast<void***>(from);
+            auto typed_from = static_cast<void**>(from);
             auto typed_to   = static_cast<void**>(to);
-            *typed_to = **typed_from;            
+            *typed_to = *typed_from;
          }
          else {
             static_assert(CT::CustomPointer<T>,
@@ -103,7 +103,7 @@ namespace Langulus::RTTI
          else {
             auto lhsT = static_cast<T const*>(lhs);
             auto rhsT = static_cast<T const*>(rhs);
-            return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;            
+            return *lhsT == *rhsT ? Compared::Equal : Compared::Unordered;
          }
       };
 
@@ -120,7 +120,7 @@ namespace Langulus::RTTI
          else {
             auto lhsT = static_cast<T const*>(lhs);
             auto rhsT = static_cast<T const*>(rhs);
-            return *lhsT == *rhsT;            
+            return *lhsT == *rhsT;
          }
       };
 
