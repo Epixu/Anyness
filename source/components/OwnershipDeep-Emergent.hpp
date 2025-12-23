@@ -492,12 +492,12 @@ namespace Langulus::Anyness::Component
                   if (auto destructor = nextT.GetDestructor()) {
                      // Pointer to a complete, destroyable dense.       
                      // Call the destructor.                            
-                     void* unpacked = const_cast<void*>(UnpackPointer(T, nextT, src));
+                     src /*void* unpacked*/ = UnpackPointer(T, nextT, src);
                      if (const auto referencer = nextT.GetReferencer()) {
-                        if (referencer(unpacked, -1) == 0)
-                           destructor(unpacked);
+                        if (referencer(const_cast<void*>(src), -1) == 0)
+                           destructor(const_cast<void*>(src));
                      }
-                     else destructor(unpacked);
+                     else destructor(const_cast<void*>(src));
                   }
                }
                else {
@@ -509,10 +509,10 @@ namespace Langulus::Anyness::Component
                      // referencable and its individual references have 
                      // reached 0. This can happen when hive elements   
                      // are dereferenced.                               
-                     void* unpacked = const_cast<void*>(UnpackPointer(T, nextT, src));
-                     referencer(unpacked, 1);
-                     if (referencer(unpacked, -1) == 0)
-                        nextT.GetDestructor()(unpacked);
+                     src /*void* unpacked*/ = UnpackPointer(T, nextT, src);
+                     //referencer(const_cast<void*>(src), 1);
+                     if (referencer(const_cast<void*>(src), -1) == 0)
+                        nextT.GetDestructor()(const_cast<void*>(src));
                   }                       
                }
 
@@ -526,6 +526,15 @@ namespace Langulus::Anyness::Component
                T = nextT;
                ++entries;
             }
+
+            /*if constexpr (DESTROY) {
+               if (const auto destructor = T.GetDestructor()) {
+                  // Call destructor of dense element                      
+                  IF_SAFE(if (const auto referencer = T.GetReferencer())
+                     referencer(const_cast<void*>(src), -1));
+                  //destructor(const_cast<void*>(src));
+               }
+            }*/
          }
          else if constexpr (DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
