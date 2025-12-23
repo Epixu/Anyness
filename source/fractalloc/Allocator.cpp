@@ -409,6 +409,9 @@ namespace Langulus::Fractalloc
    auto Allocator::AllocatePackedInner(
       PointerSpecification const& spec, DMeta meta, pot_t size
    ) assumptious -> Allocation* {
+      if (not spec.IsPacked())
+         return Allocate(meta, size);
+
       // Decide pool chain based on meta data                           
       auto pool_bank = SelectPoolBank(meta);
       LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
@@ -478,6 +481,9 @@ namespace Langulus::Fractalloc
       PointerSpecification const& spec, 
       DMeta type, pot_t size, Allocation* previous
    ) assumptious -> Allocation* {
+      if (not spec.IsPacked())
+         return Reallocate(type, size, previous);
+
       LglsAssumeDevAndOptimize(previous,
          "Reallocating nullptr");
       LglsAssumeDev(size != previous->GetSize(),

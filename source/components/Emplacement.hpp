@@ -285,8 +285,6 @@ namespace Langulus::Anyness::Component
          
             auto next_pointer = cloned->GetBlockStartPacked(prev_type.GetPointerSpecification());
             while (indirections) {
-               if constexpr (CT::DeeplyOwned<C>)
-                  entries[indirections] = cloned;
                type = prev_type;
                prev_type = T.GetDeptr(indirections - 1);
                cloned = Allocator::AllocatePackedInner(
@@ -298,6 +296,12 @@ namespace Langulus::Anyness::Component
                memcpy(cloned->GetBlockStart(), &next_pointer, type.GetSize());
                next_pointer = cloned->GetBlockStartPacked(prev_type.GetPointerSpecification());
                --indirections;
+
+               // Save the new indirection allocation                   
+               if constexpr (CT::DeeplyOwned<C>) {
+                  // ReSharper disable once CppLocalVariableMightNotBeInitialized
+                  entries[indirections] = cloned;
+               }
             }
 
             // The final indirection is stored in mHeap                 
