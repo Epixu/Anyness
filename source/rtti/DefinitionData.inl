@@ -805,18 +805,36 @@ namespace Langulus::RTTI
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Try to get an already existing definition - the data might  
          // have been reflected previously in another shared library    
-         ::std::string cppname {CppNameOf<Decvq<Deptr<T>>>()};
-         if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
-         if constexpr (CT::Constant<T>) cppname += "* const";
-         else cppname += "*";
-         DefinitionData const* meta = Instance.GetMetaDataByCppName(cppname);
-         if (meta and meta->IsInRelevantBoundary())
-            return meta;
+         ::std::string cppname;
+         ::std::string token;
+         DefinitionData const* meta;
 
-         ::std::string token {NameOf<Decvq<Deptr<T>>, false>()};
-         if constexpr (CT::Constant<Deptr<T>>) token += " const";
-         if constexpr (CT::Constant<T>) token += "* const";
-         else token += "*";
+         if constexpr (::std::is_pointer_v<T>) {
+            // Recostruct pointer name and token at runtime to avoid a lot of compilation time
+            // @attention we do this for conventional pointers only
+            cppname = CppNameOf<Decvq<Deptr<T>>>();
+            if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
+            if constexpr (CT::Constant<T>) cppname += "* const";
+            else cppname += "*";
+            meta = Instance.GetMetaDataByCppName(cppname);
+            if (meta and meta->IsInRelevantBoundary())
+               return meta;
+
+            token = NameOf<Decvq<Deptr<T>>, false>();
+            if constexpr (CT::Constant<Deptr<T>>) token += " const";
+            if constexpr (CT::Constant<T>) token += "* const";
+            else token += "*";
+         }
+         else {
+            // Custom pointers
+            cppname = CppNameOf<Decvq<T>>();
+            meta = Instance.GetMetaDataByCppName(cppname);
+            if (meta and meta->IsInRelevantBoundary())
+               return meta;
+
+            token = NameOf<Decvq<T>, false>();
+         }
+
          DefinitionData& definition = meta
             ? const_cast<DefinitionData&>(*meta)
             : Instance.RegisterData(cppname, token);
@@ -829,20 +847,30 @@ namespace Langulus::RTTI
          if (s_definition.has_value())
             return &s_definition.value();
 
-         ::std::string cppname {CppNameOf<Decvq<Deptr<T>>>()};
-         if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
-         if constexpr (CT::Constant<T>) cppname += "* const";
-         else cppname += "*";
-         DefinitionData& definition = s_definition.emplace(cppname);
+         ::std::string cppname;
+         if constexpr (::std::is_pointer_v<T>) {
+            cppname = CppNameOf<Decvq<Deptr<T>>>();
+            if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
+            if constexpr (CT::Constant<T>) cppname += "* const";
+            else cppname += "*";
+         }
+         else cppname = CppNameOf<Decvq<T>>();
 
-         definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<Deptr<T>>, false>());
-         if constexpr (CT::Constant<Deptr<T>>)
-            definition.mNameOf += " const";
-         if constexpr (CT::Constant<T>)
-            definition.mNameOf += "* const";
-         else
-            definition.mNameOf += "*";
-         definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
+         DefinitionData& definition = s_definition.emplace(cppname);
+         if constexpr (::std::is_pointer_v<T>) {
+            definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<Deptr<T>>, false>());
+            if constexpr (CT::Constant<Deptr<T>>)
+               definition.mNameOf += " const";
+            if constexpr (CT::Constant<T>)
+               definition.mNameOf += "* const";
+            else
+               definition.mNameOf += "*";
+            definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
+         }
+         else {
+            definition.mNameOf = Inner::NormalizeAtRuntime(NameOf<Decvq<T>, false>());
+            definition.mNameOf[0] = ToUppercase(definition.mNameOf[0]);
+         }
       #endif
       
       //                                                                
