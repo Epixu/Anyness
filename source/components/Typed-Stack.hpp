@@ -394,7 +394,7 @@ namespace Langulus::Anyness::Component
             // This container is statically typed                       
             if (not t)
                t = MetaDataOf<TYPE>();
-            LglsAssert(t.IsExact(type), "Type mismatch");
+            LglsAssert(t.IsExact(type), "Type mismatch: ", t, " is not akin to ", type);
          }
       }
    };

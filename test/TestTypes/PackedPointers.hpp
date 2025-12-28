@@ -36,7 +36,7 @@ static_assert(sizeof(pptr32) == 4);
 
 /// Useful for creating instances of types on the heap, with multiple levels  
 /// of indirection                                                            
-template<CT::CustomPointer T>
+template<::Langulus::CT::CustomPointer T>
 struct ScopedElementPacked {
    using CTTI_ReflectAs = void;
    using Type = T;

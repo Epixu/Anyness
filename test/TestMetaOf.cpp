@@ -7,9 +7,10 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/MetaOf.hpp>
-#include <../include/Langulus/Utils/Values.hpp>
+#include <Langulus/Utils/Values.hpp>
 #include <Langulus/Tag.hpp>
 #include <Langulus/CT/Members.hpp>
+#include "TestTypes/PackedPointers.hpp"
 
 using namespace Langulus;
 using RTTI::DMeta;
@@ -384,6 +385,24 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]"
 /// Reflecting names                                                          
 ///                                                                           
 SCENARIO("Testing reflection of names", "[rtti]") {
+   {
+      const DMeta meta = MetaDataOf<pptr8>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>");
+      REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>");
+   }
+   {
+      const DMeta meta = MetaDataOf<pptr16>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>");
+      REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>");
+   }
+   {
+      const DMeta meta = MetaDataOf<pptr32>();
+      REQUIRE(meta);
+      REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char>");
+      REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char>");
+   }
    {
       const DMeta meta = MetaDataOf<int>();
       REQUIRE(meta);

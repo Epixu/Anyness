@@ -921,14 +921,18 @@ namespace Langulus::RTTI
          // Reflect the denser type                                     
          definition.mDeptr = Reflect<CT::ReflectedAs<DenserT>>();
          auto deptr = const_cast<DefinitionData*>(definition.mDeptr);
-         deptr->mAddPtr = definition.mDecvqOnce;
+
+         if constexpr (not CT::CustomPointer<T>)
+            deptr->mAddPtr = definition.mDecvqOnce;
+         else if (not deptr->mAddPtr)
+            deptr->mAddPtr = definition.mDecvqOnce;
 
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             // Propagate ID only if there's exactly one level of        
             // unqualifided indirection, because that will be encoded   
             // in the packed meta data pointer perfectly - otherwise    
             // we need a new ID                                         
-            if constexpr (CT::Dense<DenserT> and not CT::Constant<DenserT>)
+            if constexpr (CT::Dense<DenserT> and not CT::Constant<DenserT> and not CT::CustomPointer<T>)
                definition.mID = deptr->mID;
          #endif
 
@@ -940,7 +944,7 @@ namespace Langulus::RTTI
       }
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-         if constexpr (not CT::Complete<DenserT> or ::std::is_const_v<DenserT>
+         if constexpr (CT::CustomPointer<T> or not CT::Complete<DenserT> or ::std::is_const_v<DenserT>
          or LglsSif(CT::Complete<DenserT>, return CT::Sparse<DenserT>, return false)) {
             // Custom pointers always result in a unique ID             
             // Multiple indirections always result in a unique ID       

@@ -413,7 +413,7 @@ namespace Langulus::RTTI
             size_t already_replaced = not pattern.with.empty()
                ? result.find(pattern.with, 0)
                : result.npos;
-            if (curr == result.npos
+            if (curr == result.npos or not IsTransition(result, curr, curr + pattern.what.size())
             or (already_replaced != result.npos and curr == already_replaced))
                continue;
             
@@ -465,7 +465,7 @@ namespace Langulus::RTTI
             size_t already_replaced = not pattern.with.empty()
                ? result.find(pattern.with, 0)
                : result.npos;
-            if (curr == result.npos
+            if (curr == result.npos or not IsTransition(result, curr, curr + pattern.what.size())
             or (already_replaced != result.npos and curr == already_replaced))
                continue;
             
