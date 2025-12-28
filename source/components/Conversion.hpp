@@ -105,10 +105,14 @@ namespace Langulus::Anyness::Component
                   // deallocate and make sure CountStatic reports as    
                   // empty.                                             
                   while (n) {
-                     if constexpr (requires { to->DestroyElementDeepCustomPointers(); })
-                        to->DestroyElementDeepCustomPointers();
-                     else
-                        to->DestroyElement();
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        if constexpr (requires { to->DestroyElementDeepCustomPointers(); })
+                           to->DestroyElementDeepCustomPointers();
+                     #else
+                        if constexpr (requires { to->DestroyElementDeepStandardPointers(); })
+                           to->DestroyElementDeepStandardPointers();
+                     #endif
+                     else to->DestroyElement();
                      --to; --n;
                   }
                   out.Reset();

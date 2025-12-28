@@ -150,20 +150,28 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::ContainsMany<C>) {
                auto item = IterateHandles(self).begin();
                while (item) {
-                  if constexpr (CT::DeeplyOwned<C>)
-                     item->DestroyElementDeepCustomPointers();
-                  else
-                     item->DestroyElement();
+                  if constexpr (CT::DeeplyOwned<C>) {
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        item->DestroyElementDeepCustomPointers();
+                     #else
+                        item->DestroyElementDeepStandardPointers();
+                     #endif
+                  }
+                  else item->DestroyElement();
 
                   ++item;
                }
                self.AllocateLess(1);
             }
             else {
-               if constexpr (CT::DeeplyOwned<C>)
-                  self.DestroyElementDeepCustomPointers();
-               else
-                  self.DestroyElement();
+               if constexpr (CT::DeeplyOwned<C>) {
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     self.DestroyElementDeepCustomPointers();
+                  #else
+                     self.DestroyElementDeepStandardPointers();
+                  #endif
+               }
+               else self.DestroyElement();
             }
             return;
          }
@@ -196,10 +204,14 @@ namespace Langulus::Anyness::Component
                // But we have to destroy all trailing elements          
                auto item = IterateHandles(self).begin() + 1;
                while (item) {
-                  if constexpr (CT::DeeplyOwned<C>)
-                     item->DestroyElementDeepCustomPointers();
-                  else
-                     item->DestroyElement();
+                  if constexpr (CT::DeeplyOwned<C>) {
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        item->DestroyElementDeepCustomPointers();
+                     #else
+                        item->DestroyElementDeepStandardPointers();
+                     #endif
+                  }
+                  else item->DestroyElement();
 
                   ++item;
                }
@@ -208,10 +220,14 @@ namespace Langulus::Anyness::Component
             if (self.IsSparse()) {
                // Just make sure indirections are dereferenced          
                // for the first element, in case it's sparse            
-               if constexpr (CT::DeeplyOwned<C>)
-                  self.DestroyElementDeepCustomPointers();
-               else
-                  self.DestroyElement();
+               if constexpr (CT::DeeplyOwned<C>) {
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     self.DestroyElementDeepCustomPointers();
+                  #else
+                     self.DestroyElementDeepStandardPointers();
+                  #endif
+               }
+               else self.DestroyElement();
             }
             
             return true;

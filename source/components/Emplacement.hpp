@@ -228,6 +228,7 @@ namespace Langulus::Anyness::Component
          }
       }
 
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Clone the 'rhs'.                                                    
       /// This is a more generic approach that is considerably slower.        
       ///TODO could benefit from static optimization                          
@@ -315,6 +316,7 @@ namespace Langulus::Anyness::Component
             );
          }
       }
+   #endif
 
       /// Emplace on top of the first element using an intent                 
       ///   @attention Assumes destination memory has been preallocated,      
@@ -334,8 +336,13 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::Copied<I>)
             self.EmplaceByCopying(rhs);
-         else if constexpr (CT::Cloned<I>)
-            self.EmplaceByCloningCustomPointers(rhs);
+         else if constexpr (CT::Cloned<I>) {
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               self.EmplaceByCloningCustomPointers(rhs);
+            #else
+               self.EmplaceByCloningStandardPointers(rhs);
+            #endif
+         }
          else if constexpr (CT::Handle<IT>) {
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
@@ -520,10 +527,14 @@ namespace Langulus::Anyness::Component
       requires CT::RangeEmplaceable<C, A...> {
          if (self.IsEmpty())
             self.AllocateMore(1);
-         else if constexpr (CT::DeeplyOwned<C>)
-            self.DestroyElementDeepCustomPointers();
-         else
-            self.DestroyElement();
+         else if constexpr (CT::DeeplyOwned<C>) {
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               self.DestroyElementDeepCustomPointers();
+            #else
+               self.DestroyElementDeepStandardPointers();
+            #endif
+         }
+         else self.DestroyElement();
 
          if constexpr (sizeof...(arguments) > 0)
             self.EmplaceConstruct(FWD(arguments)...);

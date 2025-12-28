@@ -115,10 +115,14 @@ namespace Langulus::Anyness::Component
                   // deallocate and make sure CountStatic reports as    
                   // empty.                                             
                   while (n) {
-                     if constexpr (requires { dst->DestroyElementDeepCustomPointers(); })
-                        dst->DestroyElementDeepCustomPointers();
-                     else
-                        dst->DestroyElement();
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        if constexpr (requires { dst->DestroyElementDeepCustomPointers(); })
+                           dst->DestroyElementDeepCustomPointers();
+                     #else
+                        if constexpr (requires { dst->DestroyElementDeepStandardPointers(); })
+                           dst->DestroyElementDeepStandardPointers();
+                     #endif
+                     else dst->DestroyElement();
                      --dst; --n;
                   }
                   Allocator::Deallocate(al);

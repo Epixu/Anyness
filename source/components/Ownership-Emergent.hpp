@@ -143,18 +143,26 @@ namespace Langulus::Anyness::Component
             // Dereference, and eventually destroy all elements - all   
             // indirections, as well as dense elements.                 
             if constexpr (CT::ContainsOne<C>) {
-               if constexpr (CT::DeeplyOwned<C>)
-                  self.DestroyElementDeepCustomPointers();
-               else
-                  self.DestroyElement();
+               if constexpr (CT::DeeplyOwned<C>) {
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     self.DestroyElementDeepCustomPointers();
+                  #else
+                     self.DestroyElementDeepStandardPointers();
+                  #endif
+               }
+               else self.DestroyElement();
             }
             else {
                auto item = IterateHandles(self).begin();
                while (item) {
-                  if constexpr (CT::DeeplyOwned<C>)
-                     item->DestroyElementDeepCustomPointers();
-                  else
-                     item->DestroyElement();
+                  if constexpr (CT::DeeplyOwned<C>) {
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        self.DestroyElementDeepCustomPointers();
+                     #else
+                        self.DestroyElementDeepStandardPointers();
+                     #endif
+                  }
+                  else item->DestroyElement();
                   
                   ++item;
                }
@@ -166,12 +174,22 @@ namespace Langulus::Anyness::Component
             // Dereference, and eventually destroy all elements -       
             // affect indirections and elements behind them only!       
             if constexpr (CT::DeeplyOwned<C>) {
-               if constexpr (CT::ContainsOne<C>)
-                  self.template DestroyElementDeepCustomPointers<false>();
+               if constexpr (CT::ContainsOne<C>) {
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     self.template DestroyElementDeepCustomPointers<false>();
+                  #else
+                     self.template DestroyElementDeepStandardPointers<false>();
+                  #endif
+               }
                else {
                   auto item = IterateHandles(self).begin();
                   while (item) {
-                     item->template DestroyElementDeepCustomPointers<false>();
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        item->template DestroyElementDeepCustomPointers<false>();
+                     #else
+                        item->template DestroyElementDeepStandardPointers<false>();
+                     #endif
+
                      ++item;
                   }
                }

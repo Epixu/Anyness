@@ -10,7 +10,10 @@
 #include <Langulus/Utils/Values.hpp>
 #include <Langulus/Tag.hpp>
 #include <Langulus/CT/Members.hpp>
-#include "TestTypes/PackedPointers.hpp"
+
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
+   #include "TestTypes/PackedPointers.hpp"
+#endif
 
 using namespace Langulus;
 using RTTI::DMeta;
@@ -385,6 +388,7 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]"
 /// Reflecting names                                                          
 ///                                                                           
 SCENARIO("Testing reflection of names", "[rtti]") {
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
    {
       const DMeta meta = MetaDataOf<pptr8>();
       REQUIRE(meta);
@@ -403,6 +407,8 @@ SCENARIO("Testing reflection of names", "[rtti]") {
       REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char>");
       REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char>");
    }
+#endif
+
    {
       const DMeta meta = MetaDataOf<int>();
       REQUIRE(meta);

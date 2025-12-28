@@ -572,7 +572,7 @@ namespace Langulus::RTTI
             "registered from ", (Boundary?Boundary:"MAIN")
          );
       #else
-         VERBOSE(
+         LglsVerbose(
             Logger::Cyan, "Data ", definition.mNameOf,
             Logger::Green, " reflected"
          );
@@ -772,7 +772,7 @@ namespace Langulus::RTTI
             "registered from ", (Boundary?Boundary:"MAIN")
          );
       #else
-         VERBOSE(
+         LglsVerbose(
             Logger::Cyan, "Data ", definition.mNameOf,
             Logger::Green, " reflected"
          );
@@ -1066,7 +1066,7 @@ namespace Langulus::RTTI
             "registered from ", (Boundary?Boundary:"MAIN")
          );
       #else
-         VERBOSE(
+         LglsVerbose(
             Logger::Cyan, "Data ", definition.mNameOf,
             Logger::Green, " reflected"
          );

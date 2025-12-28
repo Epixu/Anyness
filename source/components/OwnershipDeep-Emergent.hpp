@@ -459,6 +459,7 @@ namespace Langulus::Anyness::Component
          }
       }
       
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Nests through all indirection layers and destroys elements and      
       /// their entries if they are fully dereferenced.                       
       ///   @attention doesn't change any container state                     
@@ -546,7 +547,8 @@ namespace Langulus::Anyness::Component
             }
          }
       }
-      
+   #endif
+
       /// Emplace on top of the first element using an intent                 
       ///   @attention this overwrites previous entries without dereferencing 
       ///   @attention emplacing using a handle is faster due to carrying     

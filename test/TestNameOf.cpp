@@ -7,7 +7,10 @@
 ///                                                                           
 #include "Main.hpp"
 #include <Langulus/NameOf.hpp>
-#include "TestTypes/PackedPointers.hpp"
+
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
+   #include "TestTypes/PackedPointers.hpp"
+#endif
 
 #if 0
    #include <Langulus/Logger.hpp>
@@ -457,13 +460,15 @@ SCENARIO("NameOf", "[nameof]") {
 
    DEFINE_NAMEOF_TYPE_TEST(z, "z")
 
-   DEFINE_NAMEOF_TYPE_TEST(pptr8, "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>")
-   DEFINE_NAMEOF_TYPE_TEST(pptr16, "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>")
-   DEFINE_NAMEOF_TYPE_TEST(pptr32, "Langulus::Fractalloc::PackedPointer<char>")
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      DEFINE_NAMEOF_TYPE_TEST(pptr8, "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>")
+      DEFINE_NAMEOF_TYPE_TEST(pptr16, "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>")
+      DEFINE_NAMEOF_TYPE_TEST(pptr32, "Langulus::Fractalloc::PackedPointer<char>")
 
-   DEFINE_NAMEOF_TYPE_TEST(pptr8*, "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>*")
-   DEFINE_NAMEOF_TYPE_TEST(pptr16*, "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>*")
-   DEFINE_NAMEOF_TYPE_TEST(pptr32*, "Langulus::Fractalloc::PackedPointer<char>*")
+      DEFINE_NAMEOF_TYPE_TEST(pptr8*, "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>*")
+      DEFINE_NAMEOF_TYPE_TEST(pptr16*, "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>*")
+      DEFINE_NAMEOF_TYPE_TEST(pptr32*, "Langulus::Fractalloc::PackedPointer<char>*")
+   #endif
 
    WHEN("Taken the name of type Nаsty (with cyrillic 'a')") {
       //REQUIRE_STATIC(NameOf<Nаsty>()); // shouldn't compile at all
