@@ -101,7 +101,7 @@ TEMPLATE_TEST_CASE(
       WHEN("Given a default-constructed map") {
          Map_CheckState_Default<K, V>(map);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("Anyness::map::default construction") (timer meter) {
                some<uninitialized<MapType>> storage(meter.runs());
                meter.measure([&](int i) {
@@ -130,7 +130,7 @@ TEMPLATE_TEST_CASE(
          REQUIRE(map["five hundred"] == pair.GetValue());
          REQUIRE_THROWS(map["missing"] != pair.GetValue());
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("Anyness::TUnorderedMap::operator = (single pair copy)") (timer meter) {
                some<Pair> source(meter.runs());
                for (auto& i : source)
@@ -246,7 +246,7 @@ TEMPLATE_TEST_CASE(
          #endif
          REQUIRE(map.GetReserved() >= 10);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("Anyness::TUnorderedMap::operator << (5 consecutive pair copies)") (timer meter) {
                some<MapType> storage(meter.runs());
                for (auto& i : storage)
@@ -339,7 +339,7 @@ TEMPLATE_TEST_CASE(
          #endif
          REQUIRE(map.GetReserved() >= 10);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("Anyness::TUnorderedMap::operator << (5 consecutive trivial moves)") (timer meter) {
                some<MapType> storage(meter.runs());
                meter.measure([&](int i) {
@@ -390,7 +390,7 @@ TEMPLATE_TEST_CASE(
          REQUIRE_FALSE(map.ContainsValue(darray1[3].GetValue()));
          REQUIRE(map.ContainsValue(darray1[4].GetValue()));
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("Anyness::TUnorderedMap::RemoveValue") (timer meter) {
                some<MapType> storage(meter.runs());
                for (auto&& o : storage)
@@ -452,7 +452,7 @@ TEMPLATE_TEST_CASE(
          REQUIRE_FALSE(map.ContainsValue(darray1[3].GetValue()));
          REQUIRE(map.ContainsValue(darray1[4].GetValue()));
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("Anyness::TUnorderedMap::RemoveKey") (timer meter) {
                some<MapType> storage(meter.runs());
                for (auto&& o : storage)

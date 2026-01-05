@@ -53,7 +53,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
 
          Allocator::Deallocate(entry);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
                std::vector<Allocation*> storage(meter.runs());
                meter.measure([&](int i) {
@@ -212,7 +212,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
          REQUIRE(entry->GetSize() == pot_t(Align(static_cast<size_t>(s), testAlignment)));
          REQUIRE(entry->GetUses() == 1);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
          BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
             std::vector<Allocation*> storage(meter.runs());
             meter.measure([&](int i) {

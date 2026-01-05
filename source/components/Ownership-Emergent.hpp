@@ -157,9 +157,9 @@ namespace Langulus::Anyness::Component
                while (item) {
                   if constexpr (CT::DeeplyOwned<C>) {
                      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        self.DestroyElementDeepCustomPointers();
+                        item->DestroyElementDeepCustomPointers();
                      #else
-                        self.DestroyElementDeepStandardPointers();
+                        item->DestroyElementDeepStandardPointers();
                      #endif
                   }
                   else item->DestroyElement();

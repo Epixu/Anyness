@@ -82,10 +82,10 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
    // Packed pointers                                                   
    , (Types<Any, pptr16, ScopedElementPacked<pptr16>>)
-   , (Types<Any, pptr8, ScopedElementPacked<pptr8>>)
+   , (Types<Any, pptr8,  ScopedElementPacked<pptr8>>)
    , (Types<Any, pptr32, ScopedElementPacked<pptr32>>)
 
-   , (Types<TAny<pptr8>, pptr8, ScopedElementPacked<pptr8>>)
+   , (Types<TAny<pptr8>,  pptr8, ScopedElementPacked<pptr8>>)
    , (Types<TAny<pptr16>, pptr16, ScopedElementPacked<pptr16>>)
    , (Types<TAny<pptr32>, pptr32, ScopedElementPacked<pptr32>>)
    #endif
@@ -200,7 +200,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
       Any_CheckState_Default<E>(pack);
       
-      #ifdef LANGULUS_STD_BENCHMARK
+      #if LANGULUS(BENCHMARK)
          BENCHMARK_ADVANCED("default construction") (timer meter) {
             some<uninitialized<T>> storage(meter.runs());
             meter.measure([&](int i) {
@@ -229,7 +229,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
          
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
                some<T> storage(meter.runs());
                meter.measure([&](int i) {
@@ -261,7 +261,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
 
-            #ifdef LANGULUS_STD_BENCHMARK
+            #if LANGULUS(BENCHMARK)
                BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
                   some<T> storage(meter.runs());
                   meter.measure([&](int i) {
@@ -297,7 +297,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
                some<T> storage(meter.runs());
                meter.measure([&](int i) {
@@ -333,7 +333,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
 
-            #ifdef LANGULUS_STD_BENCHMARK
+            #if LANGULUS(BENCHMARK)
                BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
                   some<T> storage(meter.runs());
                   meter.measure([&](int i) {
@@ -363,7 +363,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element, true);
          
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
                some<T> storage(meter.runs());
                meter.measure([&](int i) {
@@ -399,7 +399,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
 
-            #ifdef LANGULUS_STD_BENCHMARK
+            #if LANGULUS(BENCHMARK)
                BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
                   some<T> storage(meter.runs());
                   meter.measure([&](int i) {
@@ -434,7 +434,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
                some<T> storage(meter.runs());
                meter.measure([&](int i) {
@@ -469,7 +469,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
 
-            #ifdef LANGULUS_STD_BENCHMARK
+            #if LANGULUS(BENCHMARK)
                BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
                   some<T> storage(meter.runs());
                   meter.measure([&](int i) {
@@ -500,7 +500,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          Any_CheckState_Default<E>(pack);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
                some<T> storage(meter.runs());
                meter.measure([&](int i) {
@@ -627,7 +627,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       Any_CheckState_OwnedFull<E>(pack);
       Any_CheckState_ContainsOne(pack, originalElement);
 
-      #ifdef LANGULUS_STD_BENCHMARK
+      #if LANGULUS(BENCHMARK)
          BENCHMARK_ADVANCED("construction (single value copy)") (timer meter) {
             some<uninitialized<T>> storage(meter.runs());
             meter.measure([&](int i) {
@@ -649,7 +649,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
                some<T> storage(meter.runs(), element);
                   
@@ -682,7 +682,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
 
-            #ifdef LANGULUS_STD_BENCHMARK
+            #if LANGULUS(BENCHMARK)
                BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
                   some<T> storage(meter.runs(), element);
                   meter.measure([&](int i) {
@@ -710,7 +710,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
                some<T> storage(meter.runs(), element);
                meter.measure([&](int i) {
@@ -745,7 +745,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
 
-            #ifdef LANGULUS_STD_BENCHMARK
+            #if LANGULUS(BENCHMARK)
                BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
                   some<T> storage(meter.runs(), element);
                   meter.measure([&](int i) {
@@ -769,7 +769,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element, true);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
                some<T> storage(meter.runs(), element);
                meter.measure([&](int i) {
@@ -805,7 +805,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
 
-            #ifdef LANGULUS_STD_BENCHMARK
+            #if LANGULUS(BENCHMARK)
                BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
                   some<T> storage(meter.runs(), element);
                   meter.measure([&](int i) {
@@ -833,7 +833,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
                some<T> storage(meter.runs(), element);
                meter.measure([&](int i) {
@@ -868,7 +868,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
 
-            #ifdef LANGULUS_STD_BENCHMARK
+            #if LANGULUS(BENCHMARK)
                BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
                   some<T> storage(meter.runs(), element);
                   meter.measure([&](int i) {
@@ -891,7 +891,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          Any_CheckState_Default<E>(pack);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
                some<T> storage(meter.runs(), element);
                meter.measure([&](int i) {
@@ -921,7 +921,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          REQUIRE(pack.GetUses() == uses_before);
 
-         #ifdef LANGULUS_STD_BENCHMARK
+         #if LANGULUS(BENCHMARK)
             BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
                some<T> storage(meter.runs(), element);
                meter.measure([&](int i) {
@@ -1124,7 +1124,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       Any_CheckState_OwnedFull<E>(pack);
       Any_CheckState_ContainsOne(pack, element);
 
-      #ifdef LANGULUS_STD_BENCHMARK
+      #if LANGULUS(BENCHMARK)
          BENCHMARK_ADVANCED("construction (single value move)") (timer meter) {
             some<uninitialized<T>> storage(meter.runs());
             meter.measure([&](int i) {
@@ -1158,7 +1158,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       Any_CheckState_OwnedFull<E>(pack);
       Any_CheckState_ContainsOne(pack, element, true);
       
-   #ifdef LANGULUS_STD_BENCHMARK
+   #if LANGULUS(BENCHMARK)
       BENCHMARK_ADVANCED("construction (single disowned value)") (timer meter) {
          some<uninitialized<T>> storage(meter.runs());
          meter.measure([&](int i) {
@@ -1195,7 +1195,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       Any_CheckState_OwnedFull<E>(pack);
       Any_CheckState_ContainsOne(pack, element);
 
-   #ifdef LANGULUS_STD_BENCHMARK
+   #if LANGULUS(BENCHMARK)
       BENCHMARK_ADVANCED("construction (single abandoned value)") (timer meter) {
          some<uninitialized<T>> storage(meter.runs());
          meter.measure([&](int i) {

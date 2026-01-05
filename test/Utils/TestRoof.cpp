@@ -28,7 +28,7 @@ TEMPLATE_TEST_CASE("Testing Roof2 calls", "[allocator]",
          }
       }
 
-      #ifdef LANGULUS_STD_BENCHMARK // Last result: 
+      #if LANGULUS(BENCHMARK) // Last result: 
          ///TODO test if std::bit_ceil is better, benchmark it!
          BENCHMARK_ADVANCED("Roof2 with instrinsics") (timer meter) {
             meter.measure([&](int i) {
