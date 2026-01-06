@@ -176,6 +176,15 @@ if (LANGULUS_OPTION_BENCHMARK OR LANGULUS_OPTION_PROFILING)
    )
    target_link_libraries(LangulusAnyness PUBLIC ctrack)
    set(LANGULUS_OPTION_SAFE_MODE OFF CACHE BOOL "Disabled due to LANGULUS_OPTION_BENCHMARK or LANGULUS_OPTION_PROFILING being enabled" FORCE)
+
+   # If there's a highscore provided with the source, use that when checking for regressions
+   if(EXISTS         "ctrack_highscore.txt"
+      AND NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ctrack_highscore.txt")
+      file(
+         COPY        "ctrack_highscore.txt"
+         DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+      )
+   endif()
 endif()
 
 # Reflect all the options, so that code is aware of them						
