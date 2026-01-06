@@ -59,7 +59,7 @@ jobs:
         run: echo "git_hash=$(git rev-parse --short ${{github.ref}})" >> $GITHUB_ENV
 
       - name: Get build id
-        run: echo "build_id=${{github.job}}-${{github.ref_name}}-${{env.git_hash}}" >> $GITHUB_ENV
+        run: echo "build_id=${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}-${{github.ref_name}}-${{env.git_hash}}" >> $GITHUB_ENV
 
       - if: matrix.os == 'ubuntu-24.04' && matrix.arch == 'x86'
         name: Prepare Linux for cross-compilation
