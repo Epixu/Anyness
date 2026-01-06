@@ -49,7 +49,7 @@ option(LANGULUS_OPTION_TESTING
     and might increase your build time and RAM usage significantly" OFF)
     
 option(LANGULUS_OPTION_BENCHMARK
-    "Enable benchmarking in tests, disabled by default. Will increase test time tenfold!" OFF)
+    "Enable benchmarking in tests, disabled by default. Will increase test time tenfold! Will disable LANGULUS_OPTION_SAFE_MODE in order to avoid overhead!" OFF)
 
 option(LANGULUS_OPTION_DEBUGGING 
     "Explicitly define debug mode, in the case that default flags are \
@@ -70,21 +70,21 @@ option(LANGULUS_OPTION_ENCRYPTION
     "Allows for memory encryption for use with any container of your liking (WIP)" OFF)
 
 option(LANGULUS_OPTION_PROFILING
-    "Performance measurements" OFF)
+    "Performance measurements at runtime" OFF)
 
-option(LANGULUS_OPTION_LOGGING              "Master logger switch" ON)
+option(LANGULUS_OPTION_LOGGING               "Master logger switch" ON)
 option(LANGULUS_LOGGER_DISABLE_FATALERRORS	"Disables fatal error logging via Logger::Fatal()" OFF)
-option(LANGULUS_LOGGER_DISABLE_ERRORS		"Disables error logging via Logger::Error()" OFF)
+option(LANGULUS_LOGGER_DISABLE_ERRORS		   "Disables error logging via Logger::Error()" OFF)
 option(LANGULUS_LOGGER_DISABLE_WARNINGS		"Disables warning logging via Logger::Warning()" OFF)
-option(LANGULUS_LOGGER_DISABLE_INFOS		"Disables information logging via Logger::Info()" OFF)
+option(LANGULUS_LOGGER_DISABLE_INFOS		   "Disables information logging via Logger::Info()" OFF)
 option(LANGULUS_LOGGER_DISABLE_MESSAGES		"Disables message logging via Logger::Message()" OFF)
-option(LANGULUS_LOGGER_DISABLE_PROMPTS		"Disables prompts logging via Logger::Prompt()" OFF)
-option(LANGULUS_LOGGER_DISABLE_VERBOSE		"Disables verbose logging via Logger::Verbose()" OFF)
+option(LANGULUS_LOGGER_DISABLE_PROMPTS		   "Disables prompts logging via Logger::Prompt()" OFF)
+option(LANGULUS_LOGGER_DISABLE_VERBOSE		   "Disables verbose logging via Logger::Verbose()" OFF)
 option(LANGULUS_LOGGER_DISABLE_SPECIALS		"Disables special message logging via Logger::Special()" OFF)
-option(LANGULUS_LOGGER_DISABLE_FLOWS		"Disables flow logging via Logger::Flow()" OFF)
-option(LANGULUS_LOGGER_DISABLE_INPUTS		"Disables input logging via Logger::Input()" OFF)
+option(LANGULUS_LOGGER_DISABLE_FLOWS		   "Disables flow logging via Logger::Flow()" OFF)
+option(LANGULUS_LOGGER_DISABLE_INPUTS		   "Disables input logging via Logger::Input()" OFF)
 option(LANGULUS_LOGGER_DISABLE_NETWORKS		"Disables network logging via Logger::Network()" OFF)
-option(LANGULUS_LOGGER_DISABLE_OS			"Disables OS logging via Logger::OS()" OFF)
+option(LANGULUS_LOGGER_DISABLE_OS			   "Disables OS logging via Logger::OS()" OFF)
 
 option(LANGULUS_OPTION_MANAGED_MEMORY
     "Memory will be pooled and recycled when freed, and you can safely push any kind of pointer, \
@@ -131,10 +131,10 @@ set(fractalloc_related_cpp_files source/fractalloc/Allocator.cpp
 set(statistic_enabled "$<AND:$<BOOL:${LANGULUS_OPTION_MEMORY_STATISTICS}>,$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>>")
 
 add_langulus_library(LangulusAnyness
-	SOURCES  $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:${logger_related_cpp_files}>
-		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:${fractalloc_related_cpp_files}>
-		     $<$<BOOL:${statistic_enabled}>:source/fractalloc/Statistics.cpp>
-		     $<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
+   SOURCES $<$<BOOL:${LANGULUS_OPTION_LOGGING}>:${logger_related_cpp_files}>
+           $<$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>:${fractalloc_related_cpp_files}>
+           $<$<BOOL:${statistic_enabled}>:source/fractalloc/Statistics.cpp>
+           $<$<BOOL:${LANGULUS_OPTION_MANAGED_REFLECTION}>:source/rtti/Registry.cpp>
 )
 
 if(MSVC AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
@@ -167,6 +167,17 @@ if (LANGULUS_OPTION_TESTING)
     add_subdirectory(test)
 endif()
 
+# Include profiler
+if (LANGULUS_OPTION_BENCHMARK OR LANGULUS_OPTION_PROFILING)
+   fetch_external_module(
+       ctrack
+       GIT_REPOSITORY  https://github.com/Epixu/ctrack.git
+       GIT_TAG         persistence
+   )
+   target_link_libraries(LangulusAnyness PUBLIC ctrack)
+   set(LANGULUS_OPTION_SAFE_MODE OFF CACHE BOOL "Disabled due to LANGULUS_OPTION_BENCHMARK or LANGULUS_OPTION_PROFILING being enabled" FORCE)
+endif()
+
 # Reflect all the options, so that code is aware of them						
 macro(reflect_option OPTION MESSAGE)
     if (${OPTION})
@@ -185,7 +196,7 @@ reflect_option(LANGULUS_OPTION_PROFILING           "Profiling enabled")
 reflect_option(LANGULUS_OPTION_NEWDELETE           "New/Delete operator override enabled")
 reflect_option(LANGULUS_OPTION_UNICODE             "Unicode text containers enabled")
 reflect_option(LANGULUS_OPTION_COMPRESSION         "Compressable memory enabled")
-reflect_option(LANGULUS_OPTION_ENCRYPTION		   "Encryptable memory enabled")
+reflect_option(LANGULUS_OPTION_ENCRYPTION		      "Encryptable memory enabled")
 reflect_option(LANGULUS_OPTION_MANAGED_MEMORY      "Managed memory enabled")
 reflect_option(LANGULUS_OPTION_MANAGED_REFLECTION  "Managed reflection enabled")
 reflect_option(LANGULUS_OPTION_MEMORY_STATISTICS   "Memory statistics enabled")

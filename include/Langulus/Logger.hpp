@@ -855,7 +855,7 @@ namespace Langulus::Logger
 
    inline void DettachDuplicator(Interface* d) noexcept {
       GlobalState.DettachDuplicator(d);
-      Logger::Info("Logging duplicator dettached: ", d->GetFilename());
+      Logger::Info("Logging duplicator detached: ", d->GetFilename());
    }
 
    inline void AttachRedirector(Interface* r) noexcept {
@@ -865,6 +865,6 @@ namespace Langulus::Logger
 
    inline void DettachRedirector(Interface* r) noexcept {
       GlobalState.DettachRedirector(r);
-      Logger::Info("Logging redirector dettached: ", r->GetFilename());
+      Logger::Info("Logging redirector detached: ", r->GetFilename());
    }
 }

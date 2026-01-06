@@ -68,6 +68,7 @@
    #define LANGULUS_BENCHMARK() 1
    #define IF_LANGULUS_BENCHMARK(a)       a
    #define IF_NOT_LANGULUS_BENCHMARK(a)   LANGULUS(NOOP)
+   #include <ctrack.hpp>
 #else
    #define LANGULUS_BENCHMARK() 0
    #define IF_LANGULUS_BENCHMARK(a)       LANGULUS(NOOP)

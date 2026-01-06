@@ -243,7 +243,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
       REQUIRE(pool->ContainsData(entry->GetBlockStart()));
       REQUIRE(pool->IsInUse());
 
-      #if LANGULUS(BENCHMARK)
+      #if not LANGULUS(BENCHMARK)
          BENCHMARK_ADVANCED("Pool::Allocate(5)") (timer meter) {
             std::vector<Allocation*> storage(meter.runs());
             meter.measure([&](int i) {
@@ -447,7 +447,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
 
          Allocator::Deallocate(entry);
 
-         #if LANGULUS(BENCHMARK) 
+         #if not LANGULUS(BENCHMARK) 
             BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
                std::vector<Allocation*> storage(meter.runs());
                meter.measure([&](int i) {
@@ -597,7 +597,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          REQUIRE(entry->GetSize() == s);
          REQUIRE(entry->GetUses() == 1);
 
-         #if LANGULUS(BENCHMARK)
+         #if not LANGULUS(BENCHMARK)
          BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
             std::vector<Allocation*> storage(meter.runs());
             meter.measure([&](int i) {

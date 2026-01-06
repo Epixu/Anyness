@@ -15,12 +15,6 @@
 
 #include <Langulus/Core.hpp>
 #include <Langulus/Except.hpp>
-
-
-#if LANGULUS(BENCHMARK)
-   #define CATCH_CONFIG_ENABLE_BENCHMARKING
-#endif
-
 #include <catch2/catch.hpp>
 
 #define BOOL_TYPES            bool

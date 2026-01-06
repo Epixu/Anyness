@@ -264,6 +264,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "LANGULUS_OPTION_SAFE_MODE": "ON",
+        "LANGULUS_OPTION_BENCHMARK": "ON",
         "LANGULUS_LOGGER_DISABLE_VERBOSE": "ON",
         "LANGULUS_LOGGER_DISABLE_SPECIALS": "ON",
         "LANGULUS_LOGGER_DISABLE_FLOWS": "ON",
