@@ -7,7 +7,6 @@
 ///                                                                           
 #include "../Main.hpp"
 #include <Langulus/Utils/Roof.hpp>
-#include <Langulus/Logger.hpp>
 
 using namespace Langulus;
 
@@ -40,9 +39,8 @@ TEMPLATE_TEST_CASE("Testing Roof2 calls", "[allocator]",
          constexpr T limit = ::std::numeric_limits<T>::max() >> 1;
 
          for (volatile int i = 0; i < 10000; i += 1) {
-            CTRACK_NAME("Test/Langulus::Roof2");
+            CTRACK_NAME_PERSIST("Test/Langulus::Roof2");
             [[maybe_unused]] volatile auto r = Roof2(static_cast<T>(i % limit));
-            //Logger::Info("make me slowerrrr", r);
          }
 
          for (volatile int i = 0; i < 10000; i += 1) {
@@ -51,8 +49,8 @@ TEMPLATE_TEST_CASE("Testing Roof2 calls", "[allocator]",
          }
 
          auto results = ctrack::result_get_detail_table();
-         REQUIRE(results.check_same("Test/Langulus::Roof2", "Test/std::bit_ceil"));
          REQUIRE(results.check_highscore());
+         REQUIRE(results.check_same("Test/Langulus::Roof2", "Test/std::bit_ceil"));
       #endif
    }
 }

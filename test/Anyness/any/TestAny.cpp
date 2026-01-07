@@ -198,29 +198,37 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       const ScopedE element {555};
       T pack;
 
-      Any_CheckState_Default<E>(pack);
+      WHEN("Default-constructed") {
+         Any_CheckState_Default<E>(pack);
       
-      #if not LANGULUS(BENCHMARK)
-         BENCHMARK_ADVANCED("default construction") (timer meter) {
-            some<uninitialized<T>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct();
-            });
-         };
-
-         BENCHMARK_ADVANCED("std::any::default construction") (timer meter) {
-            some<uninitialized<std::any>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct();
-            });
-         };
-      #endif
-
-      if constexpr (Ambiguous) {
-         WHEN("Ambiguous assign value by referral") {
-            REQUIRE_THROWS(pack = *element);
-            REQUIRE_THROWS(pack = Refer(*element));
+         if constexpr (Ambiguous) {
+            WHEN("Ambiguous assign value by referral") {
+               REQUIRE_THROWS(pack = *element);
+               REQUIRE_THROWS(pack = Refer(*element));
+            }
          }
+
+         #if LANGULUS(BENCHMARK)
+            constexpr auto token = "Test/" + NameOf<T>() + "::default_constructor";
+            T temp;
+            for (int i = 0; i < 10000; i += 1) {
+               CTRACK_NAME_PERSIST(token.c_str());
+               new (&temp) T {};
+            }
+
+            ::std::any temp_std;
+            for (int i = 0; i < 10000; i += 1) {
+               CTRACK_NAME("Test/std::any::default_constructor");
+               new (&temp_std) ::std::any {};
+            }
+
+            auto results = ctrack::result_get_detail_table();
+            REQUIRE(results.check_highscore());
+            // Anyness::Any usually has one more member to zero on default-construction,
+            // so it's a bit slower than ::std::any.
+            // We're talking about a difference of about 7 ns here, so no biggie.
+            REQUIRE(results.check_same(token.c_str(), "Test/std::any::default_constructor", 40.0f));
+         #endif
       }
 
       WHEN("Assigned value by referral") {
@@ -229,20 +237,34 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
          
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
+         #if LANGULUS(BENCHMARK)
+            constexpr auto token_assign = "Test/" + NameOf<T>() + "::Assign(element)";
+            T temp;
+            for (int i = 0; i < 10000; i += 1) {
+               CTRACK_NAME_PERSIST(token_assign.c_str());
+               temp.Assign(*element);
+            }
 
-            BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
+            constexpr auto token_assign_op = "Test/" + NameOf<T>() + "::operator = (element)";
+            for (int i = 0; i < 10000; i += 1) {
+               CTRACK_NAME_PERSIST(token_assign_op.c_str());
+               temp = *element;
+            }
+
+            ::std::any temp_std;
+            for (int i = 0; i < 10000; i += 1) {
+               CTRACK_NAME("Test/std::any::operator = (element)");
+               temp_std = *element;
+            }
+
+            auto results = ctrack::result_get_detail_table();
+            REQUIRE(results.check_highscore());
+            REQUIRE(results.check_same(token_assign.c_str(), token_assign_op.c_str()));
+
+            // Anyness::Any usually has one more member to copy on assignment,
+            // so it's a bit slower than ::std::any.
+            // We're talking about a difference of about 7 ns here, so no biggie.
+            REQUIRE(results.check_same(token_assign.c_str(), "Test/std::any::operator = (element)", 50.0f));
          #endif
       }
 

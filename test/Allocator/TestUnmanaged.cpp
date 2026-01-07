@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "TestAllocatorCommon.hpp"
+#include <Langulus/MetaOf.hpp>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is enabled"
@@ -52,92 +53,6 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
          REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + Align(static_cast<size_t>(s), testAlignment)));
 
          Allocator::Deallocate(entry);
-
-         #if LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
-               std::vector<Allocation*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Allocator::Allocate(5);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     Allocator::Deallocate(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("malloc(5)") (timer meter) {
-               std::vector<void*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::malloc(5);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     ::std::free(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("Allocator::Allocate(512)") (timer meter) {
-               std::vector<Allocation*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Allocator::Allocate(512);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     Allocator::Deallocate(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("malloc(512)") (timer meter) {
-               std::vector<void*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::malloc(512);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     ::std::free(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("Allocator::Allocate(Pool::DefaultPoolSize)") (timer meter) {
-               std::vector<Allocation*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Allocator::Allocate(1024 * 1024);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     Allocator::Deallocate(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("malloc(Pool::DefaultPoolSize)") (timer meter) {
-               std::vector<void*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::malloc(1024 * 1024);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     ::std::free(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-         #endif
       }
 
       WHEN("Referenced once") {
@@ -211,94 +126,99 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
          REQUIRE(IsAligned(entry->GetBlockStart(), alignof(TestType)));
          REQUIRE(entry->GetSize() == pot_t(Align(static_cast<size_t>(s), testAlignment)));
          REQUIRE(entry->GetUses() == 1);
-
-         #if LANGULUS(BENCHMARK)
-         BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = Allocator::Allocate(5);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  Allocator::Deallocate(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
-
-         BENCHMARK_ADVANCED("malloc(5)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = ::std::malloc(5);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  ::std::free(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
-
-         BENCHMARK_ADVANCED("Allocator::Allocate(512)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = Allocator::Allocate(512);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  Allocator::Deallocate(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
-
-         BENCHMARK_ADVANCED("malloc(512)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = ::std::malloc(512);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  ::std::free(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
-
-         BENCHMARK_ADVANCED("Allocator::Allocate(Pool::DefaultPoolSize)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = Allocator::Allocate(1024 * 1024);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  Allocator::Deallocate(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
-
-         BENCHMARK_ADVANCED("malloc(Pool::DefaultPoolSize)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = ::std::malloc(1024 * 1024);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  ::std::free(i);
-               else
-                  LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-            }
-         };
-         #endif
       }
 
       Allocator::Deallocate(entry);
    }
+}
+
+TEST_CASE("Stress test and benchmarking", "[allocator]") {
+   std::random_device rd;
+   std::mt19937 generator(rd());
+
+   const std::array types {
+        MetaDataOf<Type1>()
+      , MetaDataOf<Type2>()
+      , MetaDataOf<Type3>()
+      , MetaDataOf<Type4>()
+      , MetaDataOf<Type8>()
+      , MetaDataOf<TypeBig>()
+      , MetaDataOf<TypeVeryBig>()
+      , MetaDataOf<TypeVeryBigAligned>()
+      , MetaDataOf<TypeVeryBigPacked>()
+   };
+
+   // Perform a million random allocations using the memory manager
+   for (int i = 0; i < 1'000'000; ++i) {
+      auto random_type = types[generator() % types.size()];
+      auto random_size = pot_t(Roof2(random_type.GetSize() * (generator() % 1000)));
+      auto random_alignment = random_type.GetAlignment();
+      Allocation* entry;
+      {
+         CTRACK_NAME_PERSIST("Test/Unmanaged::Allocate");
+         entry = Allocator::Allocate(random_alignment, random_size);
+      }
+
+      REQUIRE(entry);
+
+      {
+         CTRACK_NAME_PERSIST("Test/Unmanaged::Deallocate");
+         Allocator::Deallocate(entry);
+      }
+   }
+
+   // Perform a million random allocations using malloc, for comparison
+   for (int i = 0; i < 1'000'000; ++i) {
+      auto random_type = types[generator() % types.size()];
+      auto random_size = Roof2(random_type.GetSize() * (generator() % 1000));
+      void* entry;
+      {
+         CTRACK_NAME("Test/malloc");
+         entry = malloc(random_size);
+      }
+
+      REQUIRE(entry);
+
+      {
+         CTRACK_NAME("Test/free");
+         free(entry);
+      }
+   }
+
+   // Perform a million random allocations using aligned_malloc, for comparison
+   for (int i = 0; i < 1'000'000; ++i) {
+      auto random_type = types[generator() % types.size()];
+      auto random_size = Roof2(random_type.GetSize() * (generator() % 1000));
+      auto random_alignment = static_cast<size_t>(random_type.GetAlignment());
+      void* entry;
+      {
+         CTRACK_NAME("Test/aligned_malloc");
+         #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
+            entry = _aligned_malloc(random_size, random_alignment);
+         #else
+            entry = ::std::aligned_alloc(random_size, random_alignment);
+         #endif
+      }
+
+      REQUIRE(entry);
+
+      {
+         CTRACK_NAME("Test/aligned_free");
+         #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
+            _aligned_free(entry);
+         #else
+            ::std::free(entry);
+         #endif
+      }
+   }
+
+   #if LANGULUS(BENCHMARK)
+      auto benchmark = ctrack::result_get_detail_table();
+      REQUIRE(benchmark.check_highscore());
+      // Unfortunately, there's always overhead due to prepending an Allocation structure for managing references.
+      // Hopefully, the capability to reference memory blocks of containers, instead of always allocating new ones will be faster overall.
+      // In other words: allocations are slower, but less frequently used by Anyness containers.
+      //REQUIRE(benchmark.check_same("Test/Unmanaged::Allocate", "Test/aligned_malloc"));
+      //REQUIRE(benchmark.check_same("Test/Unmanaged::Deallocate", "Test/aligned_free"));
+   #endif
 }
