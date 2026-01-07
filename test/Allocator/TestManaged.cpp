@@ -8,6 +8,7 @@
 #include "TestAllocatorCommon.hpp"
 #include "../../source/fractalloc/Pool.cpp"
 #include <Langulus/MetaOf.hpp>
+#include <random>
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
@@ -48,7 +49,6 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
    constexpr size_t testAlignment = alignof(TestType);
 
    REQUIRE(meta);
-   //IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(nullptr)));
    IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(meta, 0_pot)));
    IF_SAFE(REQUIRE_THROWS(Allocator::AllocatePool(meta, 3_pot)));
 
@@ -243,156 +243,6 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
       REQUIRE(pool->ContainsData(entry->GetBlockStart()));
       REQUIRE(pool->IsInUse());
 
-      #if not LANGULUS(BENCHMARK)
-         BENCHMARK_ADVANCED("Pool::Allocate(5)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = pool->Allocate(5);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  pool->Deallocate(i);
-               else {
-                  LANGULUS_THROW(Deallocate,
-                     "The test is invalid, because the pool got full - use a bigger pool");
-               }
-            }
-         };
-
-         BENCHMARK_ADVANCED("std::malloc(5)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = ::std::malloc(5);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  ::std::free(i);
-               else {
-                  LANGULUS_THROW(Deallocate,
-                     "The test is invalid, because malloc returned a zero");
-               }
-            }
-         };
-
-         BENCHMARK_ADVANCED("Pool::Allocate(32)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = pool->Allocate(32);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  pool->Deallocate(i);
-               else {
-                  LANGULUS_THROW(Deallocate,
-                     "The test is invalid, because the pool got full - use a bigger pool");
-               }
-            }
-         };
-
-         BENCHMARK_ADVANCED("std::malloc(32)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i] = ::std::malloc(32);
-               });
-
-            for (auto& i : storage) {
-               if (i)
-                  ::std::free(i);
-               else {
-                  LANGULUS_THROW(Deallocate,
-                     "The test is invalid, because malloc returned a zero");
-               }
-            }
-         };
-
-         BENCHMARK_ADVANCED("Pool::Reallocate(32 -> 5)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            for (auto& i : storage) {
-               i = pool->Allocate(32);
-               if (!i) {
-                  LANGULUS_THROW(Deallocate,
-                     "The test is invalid, because the pool got full - use a bigger pool");
-               }
-            }
-
-            meter.measure([&](int i) {
-               const auto r = pool->Reallocate(storage[i], 5);
-               if (r)
-                  storage[i] = storage[i];
-               return r;
-               });
-
-            for (auto& i : storage)
-               pool->Deallocate(i);
-         };
-
-         BENCHMARK_ADVANCED("std::realloc(32 -> 5)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            for (auto& i : storage) {
-               i = ::std::malloc(32);
-               if (!i) {
-                  LANGULUS_THROW(Deallocate,
-                     "The test is invalid, because malloc returned a zero");
-               }
-            }
-
-            meter.measure([&](int i) {
-               const auto r = ::std::realloc(storage[i], 5);
-               if (r)
-                  storage[i] = r;
-               return r;
-               });
-
-            for (auto& i : storage)
-               ::std::free(i);
-         };
-
-         BENCHMARK_ADVANCED("Pool::Reallocate(5 -> 32)") (timer meter) {
-            std::vector<Allocation*> storage(meter.runs());
-            for (auto& i : storage) {
-               i = pool->Allocate(5);
-               if (!i) {
-                  LANGULUS_THROW(Deallocate,
-                     "The test is invalid, because the pool got full - use a bigger pool");
-               }
-            }
-
-            meter.measure([&](int i) {
-               const auto r = pool->Reallocate(storage[i], 32);
-               if (r)
-                  storage[i] = storage[i];
-               return r;
-               });
-
-            for (auto& i : storage)
-               pool->Deallocate(i);
-         };
-
-         BENCHMARK_ADVANCED("std::realloc(5 -> 32)") (timer meter) {
-            std::vector<void*> storage(meter.runs());
-            for (auto& i : storage) {
-               i = ::std::malloc(5);
-               if (!i) {
-                  LANGULUS_THROW(Deallocate,
-                     "The test is invalid, because malloc returned a zero");
-               }
-            }
-
-            meter.measure([&](int i) {
-               const auto r = ::std::realloc(storage[i], 32);
-               if (r)
-                  storage[i] = r;
-               return r;
-               });
-
-            for (auto& i : storage)
-               ::std::free(i);
-         };
-      #endif
-
       Allocator::DeallocatePool(pool);
    }
 
@@ -442,96 +292,9 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          }
          REQUIRE(matches == rounded_s);
          REQUIRE(mismatches == rounded_s);
-
          REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + rounded_s + 1));
 
          Allocator::Deallocate(entry);
-
-         #if not LANGULUS(BENCHMARK) 
-            BENCHMARK_ADVANCED("Allocator::Allocate(5)") (timer meter) {
-               std::vector<Allocation*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Allocator::Allocate(5);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     Allocator::Deallocate(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("malloc(5)") (timer meter) {
-               std::vector<void*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::malloc(5);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     ::std::free(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("Allocator::Allocate(512)") (timer meter) {
-               std::vector<Allocation*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Allocator::Allocate(512);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     Allocator::Deallocate(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("malloc(512)") (timer meter) {
-               std::vector<void*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::malloc(512);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     ::std::free(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("Allocator::Allocate(Pool::DefaultPoolSize)") (timer meter) {
-               std::vector<Allocation*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Allocator::Allocate(1024 * 1024);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     Allocator::Deallocate(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-
-            BENCHMARK_ADVANCED("malloc(Pool::DefaultPoolSize)") (timer meter) {
-               std::vector<void*> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::malloc(1024 * 1024);
-                  });
-
-               for (auto& i : storage) {
-                  if (i)
-                     ::std::free(i);
-                  else
-                     LANGULUS_THROW(Deallocate, "The test is invalid, because memory got full");
-               }
-            };
-         #endif
       }
 
       WHEN("Referenced once") {
@@ -686,6 +449,71 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
 
       Allocator::Deallocate(entry);
    }
+
+   REQUIRE(memoryState.Assert());
+   REQUIRE_FALSE(Allocator::CollectGarbage());
+}
+
+TEST_CASE("Stress test and benchmarking", "[fractalloc]") {
+   static MemoryState memoryState;
+
+   std::random_device rd;
+   std::mt19937 generator(rd());
+
+   const std::array types {
+        MetaDataOf<Type1>()
+      , MetaDataOf<Type2>()
+      , MetaDataOf<Type3>()
+      , MetaDataOf<Type4>()
+      , MetaDataOf<Type8>()
+      , MetaDataOf<TypeBig>()
+      , MetaDataOf<TypeVeryBig>()
+      , MetaDataOf<TypeVeryBigAligned>()
+      , MetaDataOf<TypeVeryBigPacked>()
+   };
+
+   // Perform a million random allocations using the memory manager
+   for (int i = 0; i < 1'000'000; ++i) {
+      auto random_type = types[generator() % types.size()];
+      auto random_size = pot_t(Roof2(random_type.GetSize() * (generator() % 1000)));
+      Allocation* entry;
+      {
+         CTRACK_NAME("Test/Allocator::Allocate");
+         entry = Allocator::Allocate(random_type, random_size);
+      }
+
+      REQUIRE(entry);
+
+      {
+         CTRACK_NAME("Test/Allocator::Deallocate");
+         Allocator::Deallocate(entry);
+      }
+   }
+
+   // Perform a million random allocations using malloc, for comparison
+   for (int i = 0; i < 1'000'000; ++i) {
+      auto random_type = types[generator() % types.size()];
+      auto random_size = Roof2(random_type.GetSize() * (generator() % 1000));
+      void* entry;
+      {
+         CTRACK_NAME("Test/malloc");
+         entry = malloc(random_size);
+      }
+
+      REQUIRE(entry);
+
+      {
+         CTRACK_NAME("Test/free");
+         free(entry);
+      }
+   }
+
+   #if LANGULUS(BENCHMARK)
+      auto benchmark = ctrack::result_get_detail_table();
+      REQUIRE(benchmark.check_faster("Test/Allocator::Allocate", "Test/malloc"));
+      REQUIRE(benchmark.check_faster("Test/Allocator::Deallocate", "Test/free"));
+      REQUIRE(benchmark.check_highscore());
+   #endif
 
    REQUIRE(memoryState.Assert());
    REQUIRE_FALSE(Allocator::CollectGarbage());
