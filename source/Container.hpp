@@ -447,7 +447,7 @@ namespace Langulus::Anyness
       /// Call ConstructFrom whenever possible, fallback to                   
       /// ConstructDefault otherwise                                          
       template<CT::Container SELF, CT::Container FROM>
-      constexpr void ConstructFrom(this SELF& self, FROM&& from) {
+      constexpr void Absorb(this SELF& self, FROM&& from) {
          static_assert(CT::Handle<FROM> == CT::Handle<SELF>,
             "Handles can't be absorbed into non-handles, use insertion instead");
          ComponentList::ForEach([&]<class C>{
@@ -477,7 +477,7 @@ namespace Langulus::Anyness
       /// Call AssignFrom whenever possible, fallback to AssignDefault        
       /// otherwise                                                           
       template<CT::Container SELF, CT::Container FROM>
-      constexpr SELF& AssignFrom(this SELF& self, FROM&& rhs) {
+      constexpr SELF& AssignAbsorb(this SELF& self, FROM&& rhs) {
          static_assert(CT::Handle<FROM> == CT::Handle<SELF>,
             "Handles can't be absorbed into non-handles, use insertion instead");
          ComponentList::ForEach([&]<class C>{

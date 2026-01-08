@@ -156,7 +156,7 @@ namespace Langulus::RTTI::Inner
       const auto id = Base::GetID();
       if (id)
          return Instance.GetMetaDataByID(id, sparse, constant)->mNameOf;
-      return {};
+      return DefinitionData::InvalidName;
    }
    
    /// Get the info of the type, the result of InfoOf                         
@@ -267,7 +267,7 @@ namespace Langulus::RTTI::Inner
          const auto id = Base::GetID();
          if (id)
             return Instance.GetMetaDataByID(id, sparse, constant)->mPoolTactic;
-         return {};
+         return PoolTactic::Default;
       }
    #endif
 

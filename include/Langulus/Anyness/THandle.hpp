@@ -100,10 +100,10 @@ namespace Langulus::Anyness
       THandle() = delete;
       
       constexpr THandle(THandle const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr THandle(THandle&& other) noexcept {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
       constexpr ~THandle() noexcept {
          this->Destroy();
@@ -131,10 +131,10 @@ namespace Langulus::Anyness
       THandle() = delete;
       
       constexpr THandle(THandle const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr THandle(THandle&& other) noexcept {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
       constexpr ~THandle() noexcept {
          this->Destroy();
@@ -164,10 +164,10 @@ namespace Langulus::Anyness
       THandleDisowned() = delete;
       
       constexpr THandleDisowned(THandleDisowned const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr THandleDisowned(THandleDisowned&& other) noexcept {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
       constexpr ~THandleDisowned() noexcept {
          this->Destroy();
@@ -191,10 +191,10 @@ namespace Langulus::Anyness
       THandle() = delete;
       
       constexpr THandle(THandle const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr THandle(THandle&& other) noexcept {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
       constexpr ~THandle() noexcept {
          this->Destroy();
@@ -218,10 +218,10 @@ namespace Langulus::Anyness
       THandle() = delete;
       
       constexpr THandle(THandle const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr THandle(THandle&& other) noexcept {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
       constexpr ~THandle() noexcept {
          this->Destroy();

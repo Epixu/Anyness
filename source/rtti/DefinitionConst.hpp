@@ -29,6 +29,8 @@ namespace Langulus::RTTI
    public:
       using CTTI_ReflectAs = void;
 
+      static constexpr Token InvalidName = "novalue";
+
       template<auto>
       static auto Reflect() -> DefinitionConst const*;
       

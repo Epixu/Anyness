@@ -8,6 +8,7 @@
 #include "TestAnyCommon.hpp"
 #include "../../TestTypes/ReferencedType.hpp"
 #include <any>
+#include <Langulus/Profiler.hpp>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #include "../../TestTypes/PackedPointers.hpp"
@@ -224,10 +225,10 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
             auto results = ctrack::result_get_detail_table();
             REQUIRE(results.check_highscore());
+
             // Anyness::Any usually has one more member to zero on default-construction,
             // so it's a bit slower than ::std::any.
-            // We're talking about a difference of about 7 ns here, so no biggie.
-            REQUIRE(results.check_same(token.c_str(), "Test/std::any::default_constructor", 40.0f));
+            REQUIRE(results.check_same(token.c_str(), "Test/std::any::default_constructor", 40));
          #endif
       }
 
@@ -238,39 +239,40 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_ContainsOne(pack, element);
          
          #if LANGULUS(BENCHMARK)
-            constexpr auto token_assign = "Test/" + NameOf<T>() + "::Assign(element)";
+            constexpr auto token_assign = "Test/" + NameOf<T>() + "::Assign(" + NameOf<E>() + ")";
             T temp;
             for (int i = 0; i < 10000; i += 1) {
                CTRACK_NAME_PERSIST(token_assign.c_str());
                temp.Assign(*element);
             }
 
-            constexpr auto token_assign_op = "Test/" + NameOf<T>() + "::operator = (element)";
-            for (int i = 0; i < 10000; i += 1) {
-               CTRACK_NAME_PERSIST(token_assign_op.c_str());
-               temp = *element;
-            }
-
+            constexpr auto token_std = "Test/std::any::operator = (" + NameOf<E>() + ")";
             ::std::any temp_std;
             for (int i = 0; i < 10000; i += 1) {
-               CTRACK_NAME("Test/std::any::operator = (element)");
+               CTRACK_NAME(token_std.c_str());
                temp_std = *element;
             }
 
             auto results = ctrack::result_get_detail_table();
             REQUIRE(results.check_highscore());
-            REQUIRE(results.check_same(token_assign.c_str(), token_assign_op.c_str()));
 
             // Anyness::Any usually has one more member to copy on assignment,
             // so it's a bit slower than ::std::any.
-            // We're talking about a difference of about 7 ns here, so no biggie.
-            REQUIRE(results.check_same(token_assign.c_str(), "Test/std::any::operator = (element)", 50.0f));
+            REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
          #endif
       }
 
-      if constexpr (Same<T, E>) {
+      if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed by referral") {
-            pack.AssignFrom(*element);
+            if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
+               const auto element_backup = *element;
+               REQUIRE_THROWS(pack.AssignAbsorb(*element));
+               Any_CheckState_Default<E>(pack);
+               Any_Helper_TestSame(element_backup, *element);
+               return;
+            }
+
+            pack.AssignAbsorb(*element);
 
             Any_Helper_TestSame(pack, *element);
          
@@ -282,22 +284,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float>() == 0.0f);
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
-
-            #if not LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
-                  some<T> storage(meter.runs());
-                  meter.measure([&](int i) {
-                     return storage[i] = value;
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-                  some<std::any> storage(meter.runs());
-                  meter.measure([&](int i) {
-                     return storage[i] = value;
-                  });
-               };
-            #endif
          }
       }
 
@@ -318,28 +304,20 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
-
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(value);
-               });
-            };
-         #endif
       }
 
-      if constexpr (Same<T, E>) {
+      if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed by move") {
             auto movable = *element;
-            pack.AssignFrom(::std::move(movable));
+
+            if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
+               REQUIRE_THROWS(pack.AssignAbsorb(::std::move(movable)));
+               Any_CheckState_Default<E>(pack);
+               Any_Helper_TestSame(movable, *element);
+               return;
+            }
+
+            pack.AssignAbsorb(::std::move(movable));
          
             if constexpr (CT::Container<E>)
                Any_CheckState_Default<TypeOf<E>>(movable);
@@ -354,22 +332,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float>() == 0.0f);
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
-
-            #if not LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
-                  some<T> storage(meter.runs());
-                  meter.measure([&](int i) {
-                     return storage[i] = ::std::move(value);
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-                  some<std::any> storage(meter.runs());
-                  meter.measure([&](int i) {
-                     return storage[i] = ::std::move(value);
-                  });
-               };
-            #endif
          }
       }
 
@@ -384,27 +346,19 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element, true);
-         
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Disown(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
-         #endif
       }
 
-      if constexpr (Same<T, E>) {
+      if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed disowned value") {
-            pack.AssignFrom(Disown(*element));
+            if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
+               const auto element_backup = *element;
+               REQUIRE_THROWS(pack.AssignAbsorb(Disown(*element)));
+               Any_CheckState_Default<E>(pack);
+               Any_Helper_TestSame(element_backup, *element);
+               return;
+            }
+
+            pack.AssignAbsorb(Disown(*element));
 
             REQUIRE(pack.GetRaw() == element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -420,22 +374,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float>() == 0.0f);
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
-
-            #if not LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
-                  some<T> storage(meter.runs());
-                  meter.measure([&](int i) {
-                     return storage[i] = Disown(value);
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-                  some<std::any> storage(meter.runs());
-                  meter.measure([&](int i) {
-                     return storage[i] = value;
-                  });
-               };
-            #endif
          }
       }
 
@@ -455,28 +393,20 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
-
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = Abandon(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(value);
-               });
-            };
-         #endif
       }
 
-      if constexpr (Same<T, E>) {
+      if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed abandoned value") {
             auto movable = *element;
-            pack.AssignFrom(Abandon(movable));
+
+            if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
+               REQUIRE_THROWS(pack.AssignAbsorb(Abandon(movable)));
+               Any_CheckState_Default<E>(pack);
+               Any_Helper_TestSame(movable, *element);
+               return;
+            }
+
+            pack.AssignAbsorb(Abandon(movable));
 
             if constexpr (CT::Container<E>)
                Any_CheckState_Abandoned<E>(movable);
@@ -490,22 +420,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float>() == 0.0f);
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
-
-            #if not LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
-                  some<T> storage(meter.runs());
-                  meter.measure([&](int i) {
-                     return storage[i] = Abandon(value);
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-                  some<std::any> storage(meter.runs());
-                  meter.measure([&](int i) {
-                     return storage[i] = ::std::move(value);
-                  });
-               };
-            #endif
          }
       }
 
@@ -518,25 +432,9 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       }
       
       WHEN("Assigned empty self") {
-         pack.AssignFrom(pack);
+         pack.AssignAbsorb(pack);
 
          Any_CheckState_Default<E>(pack);
-
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
-               some<T> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (self)") (timer meter) {
-               some<std::any> storage(meter.runs());
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-         #endif
       }
 
       WHEN("Emplace") {
@@ -649,49 +547,23 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       Any_CheckState_OwnedFull<E>(pack);
       Any_CheckState_ContainsOne(pack, originalElement);
 
-      #if not LANGULUS(BENCHMARK)
-         BENCHMARK_ADVANCED("construction (single value copy)") (timer meter) {
-            some<uninitialized<T>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct(value);
-            });
-         };
-
-         BENCHMARK_ADVANCED("std::any::construction (single value copy)") (timer meter) {
-            some<uninitialized<std::any>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct(value);
-            });
-         };
-      #endif
-
       WHEN("Assigned compatible value by referral") {
          pack.Assign(*element);
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
-
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
-               some<T> storage(meter.runs(), element);
-                  
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-               some<std::any> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
-         #endif
       }
 
-      if constexpr (Same<T, E>) {
+      if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed by referral") {
-            pack.AssignFrom(*element);
+            if (not pack.IsSame(element->GetType())) {
+               REQUIRE_THROWS(pack.AssignAbsorb(*element));
+               Any_CheckState_OwnedFull<E>(pack);
+               Any_CheckState_ContainsOne(pack, originalElement);
+               return;
+            }
+
+            pack.AssignAbsorb(*element);
 
             Any_Helper_TestSame(pack, *element);
          
@@ -703,22 +575,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float>() == 0.0f);
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
-
-            #if not LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single value copy)") (timer meter) {
-                  some<T> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = value;
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-                  some<std::any> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = value;
-                  });
-               };
-            #endif
          }
       }
       
@@ -731,28 +587,22 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
-
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
-               some<T> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-               some<std::any> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(value);
-               });
-            };
-         #endif
       }
 
-      if constexpr (Same<T, E>) {
+      if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed by move") {
             auto movable = *element;
-            pack.AssignFrom(::std::move(movable));
+            if (not pack.IsSame(element->GetType())) {
+               REQUIRE_THROWS(pack.AssignAbsorb(::std::move(movable)));
+               Any_CheckState_OwnedFull<E>(pack);
+               Any_CheckState_ContainsOne(pack, originalElement);
+               Any_CheckState_OwnedFull<int>(movable);
+               REQUIRE(movable.GetUses() == 2);
+               REQUIRE(movable.template As<int>() == 555);
+               return;
+            }
+
+            pack.AssignAbsorb(::std::move(movable));
 
             if constexpr (CT::Container<E>)
                Any_CheckState_Default<TypeOf<E>>(movable);
@@ -766,22 +616,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float>() == 0.0f);
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
-
-            #if not LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single value move)") (timer meter) {
-                  some<T> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = ::std::move(value);
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-                  some<std::any> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = ::std::move(value);
-                  });
-               };
-            #endif
          }
       }
 
@@ -790,27 +624,18 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element, true);
-
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
-               some<T> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = Disown(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-               some<std::any> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = value;
-               });
-            };
-         #endif
       }
 
-      if constexpr (Same<T, E>) {
+      if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed disowned value") {
-            pack.AssignFrom(Disown(*element));
+            if (not pack.IsSame(element->GetType())) {
+               REQUIRE_THROWS(pack.AssignAbsorb(Disown(*element)));
+               Any_CheckState_OwnedFull<E>(pack);
+               Any_CheckState_ContainsOne(pack, originalElement);
+               return;
+            }
+
+            pack.AssignAbsorb(Disown(*element));
 
             REQUIRE(pack.GetRaw() == element->GetRaw());
             REQUIRE(pack.IsExact(element->GetType()));
@@ -826,22 +651,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float>() == 0.0f);
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
-
-            #if not LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single disowned value)") (timer meter) {
-                  some<T> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = Disown(value);
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value copy)") (timer meter) {
-                  some<std::any> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = value;
-                  });
-               };
-            #endif
          }
       }
       
@@ -854,28 +663,22 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, element);
-
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
-               some<T> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = Abandon(value);
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-               some<std::any> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = ::std::move(value);
-               });
-            };
-         #endif
       }
 
-      if constexpr (Same<T, E>) {
+      if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed abandoned value") {
             auto movable = *element;
-            pack.AssignFrom(Abandon(movable));
+            if (not pack.IsSame(element->GetType())) {
+               REQUIRE_THROWS(pack.AssignAbsorb(::std::move(movable)));
+               Any_CheckState_OwnedFull<E>(pack);
+               Any_CheckState_ContainsOne(pack, originalElement);
+               Any_CheckState_OwnedFull<int>(movable);
+               REQUIRE(movable.GetUses() == 2);
+               REQUIRE(movable.template As<int>() == 555);
+               return;
+            }
+
+            pack.AssignAbsorb(Abandon(movable));
 
             if constexpr (CT::Container<E>)
                Any_CheckState_Abandoned<TypeOf<E>>(movable);
@@ -889,22 +692,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
                REQUIRE_THROWS(pack.template As<float>() == 0.0f);
                REQUIRE_THROWS(pack.template As<float*>() == nullptr);
             }
-
-            #if not LANGULUS(BENCHMARK)
-               BENCHMARK_ADVANCED("operator = (single abandoned value)") (timer meter) {
-                  some<T> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = Abandon(value);
-                  });
-               };
-
-               BENCHMARK_ADVANCED("std::any::operator = (single value move)") (timer meter) {
-                  some<std::any> storage(meter.runs(), element);
-                  meter.measure([&](int i) {
-                     return storage[i] = ::std::move(value);
-                  });
-               };
-            #endif
          }
       }
 
@@ -912,22 +699,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          pack = T {};
 
          Any_CheckState_Default<E>(pack);
-
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
-               some<T> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (self)") (timer meter) {
-               some<std::any> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-         #endif
       }
 
       WHEN("Assigned compatible full self") {
@@ -942,22 +713,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_Helper_TestSame(pack, packbackup);
 
          REQUIRE(pack.GetUses() == uses_before);
-
-         #if not LANGULUS(BENCHMARK)
-            BENCHMARK_ADVANCED("operator = (self)") (timer meter) {
-               some<T> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-
-            BENCHMARK_ADVANCED("std::any::operator = (self)") (timer meter) {
-               some<std::any> storage(meter.runs(), element);
-               meter.measure([&](int i) {
-                  return storage[i] = storage[i];
-               });
-            };
-         #endif
       }
 
       WHEN("Absorbed by referral") {
@@ -1145,22 +900,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
       Any_CheckState_OwnedFull<E>(pack);
       Any_CheckState_ContainsOne(pack, element);
-
-      #if not LANGULUS(BENCHMARK)
-         BENCHMARK_ADVANCED("construction (single value move)") (timer meter) {
-            some<uninitialized<T>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct(::std::move(value));
-            });
-         };
-
-         BENCHMARK_ADVANCED("std::any::construction (single value move)") (timer meter) {
-            some<uninitialized<std::any>> storage(meter.runs());
-            meter.measure([&](int i) {
-               return storage[i].construct(::std::move(value));
-            });
-         };
-      #endif
    }
 
    if constexpr (Ambiguous) {
@@ -1179,22 +918,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
       Any_CheckState_OwnedFull<E>(pack);
       Any_CheckState_ContainsOne(pack, element, true);
-      
-   #if not LANGULUS(BENCHMARK)
-      BENCHMARK_ADVANCED("construction (single disowned value)") (timer meter) {
-         some<uninitialized<T>> storage(meter.runs());
-         meter.measure([&](int i) {
-            return storage[i].construct(Disowned(value));
-         });
-      };
-
-      BENCHMARK_ADVANCED("std::any::construction (single value copy)") (timer meter) {
-         some<uninitialized<std::any>> storage(meter.runs());
-         meter.measure([&](int i) {
-            return storage[i].construct(value);
-         });
-      };
-   #endif
    }
 
    if constexpr (Ambiguous) {
@@ -1216,22 +939,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
       Any_CheckState_OwnedFull<E>(pack);
       Any_CheckState_ContainsOne(pack, element);
-
-   #if not LANGULUS(BENCHMARK)
-      BENCHMARK_ADVANCED("construction (single abandoned value)") (timer meter) {
-         some<uninitialized<T>> storage(meter.runs());
-         meter.measure([&](int i) {
-            return storage[i].construct(Abandon(value));
-         });
-      };
-
-      BENCHMARK_ADVANCED("std::any::construction (single value move)") (timer meter) {
-         some<uninitialized<std::any>> storage(meter.runs());
-         meter.measure([&](int i) {
-            return storage[i].construct(::std::move(value));
-         });
-      };
-   #endif
    }
 
    GIVEN("Two full containers") {

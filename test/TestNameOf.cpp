@@ -373,7 +373,7 @@ namespace Langulus::CTTI
 
 SCENARIO("NameOf", "[nameof]") {
    DEFINE_NAMEOF_TYPE_TEST(void, "void")
-   DEFINE_NAMEOF_TYPE_TEST(nullptr_t, "null")
+   //DEFINE_NAMEOF_TYPE_TEST(nullptr_t, "null")
    DEFINE_NAMEOF_TYPE_TEST(int32_t(&)[5], "int32[5]&")
    DEFINE_NAMEOF_TYPE_TEST(int32_t[5], "int32[5]")
    

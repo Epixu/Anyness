@@ -18,11 +18,6 @@ namespace Langulus::CTTI
    /// across different compilers                                             
    ///                                                                        
    template<>
-   struct Named<nullptr_t> {
-      static constexpr Literal Name = "null";
-   };
-
-   template<>
    struct Named<int8_t> {
       static constexpr Literal Name = "int8";
    };
@@ -69,8 +64,31 @@ namespace Langulus::RTTI
 
    namespace Inner
    {
-      /// Types used for pattern matching while isolating typenames           
-      /// These need to be in exactly this namespace to avoid corner cases    
+      /// Reserved keywords - you're not allowed to name types after them     
+      constexpr Token ReservedKeywords[] = {
+         "null", "notype", "notag", "noverb", "novalue", "const"
+      };
+
+      /// Check if a name is reserved                                         
+      consteval bool IsReserved(const Token& name) {
+         for (auto& reserved : ReservedKeywords) {
+            if (name.size() != reserved.size())
+               continue;
+
+            size_t i = 0;
+            for (; i < name.size(); ++i) {
+               if (ToLowercase(name[i]) != reserved[i])
+                  break;
+            }
+
+            if (i == name.size())
+               return true;
+         }
+         return false;
+      }
+
+      /// Types used for pattern matching while isolating typenames.          
+      /// These need to be in exactly this namespace to avoid corner cases.   
       class Oddly_Specific_TypeASFNWEAFNOLAWFNWAFK {};
       enum { Oddly_Specific_EnumASDOLSAJDPAFHOAF };
 
@@ -176,6 +194,9 @@ namespace Langulus::RTTI
                "must be ASCII, starting with an alphabetical symbol, "
                "and must not contain any spaces or operators"
             );
+            static_assert(not IsReserved(CTTI::Named<T>::Name),
+               "Not a valid CTTI::Named - token is reserved"
+            );
             return CTTI::Named<T>::Name;
          }
          else if constexpr (::std::is_const_v<T> or ::std::is_volatile_v<T>) {
@@ -249,6 +270,9 @@ namespace Langulus::RTTI
                   "must be ASCII, starting with an alphabetical symbol, "
                   "and must not contain any spaces or operators"
                );
+               static_assert(not IsReserved(T::CTTI_Named::Constant),
+                  "Not a valid CTTI_Named - token is reserved"
+               );
                return T::CTTI_Named::Constant;
             }
             else return IsolateTypename<T, NORMALIZE, false>();
@@ -262,6 +286,10 @@ namespace Langulus::RTTI
             static_assert(size > left + right, "Invalid type name");
 
             constexpr auto isolated = name.substr(left, size - right - left);
+            static_assert(not IsReserved(isolated),
+               "Not a valid C++ name - token is reserved"
+            );
+
             if constexpr (not NORMALIZE) {
                if constexpr (::std::is_function_v<T>)
                   return "<" + isolated + ">";
@@ -293,6 +321,9 @@ namespace Langulus::RTTI
                "must be ASCII, starting with an alphabetical symbol, "
                "and must not contain any spaces or operators"
             );
+            static_assert(not IsReserved(CTTI::NamedValue<T>::Name),
+               "Not a valid CTTI::NamedValue - token is reserved"
+            );
             return CTTI::NamedValue<T>::Name;
          }
          else {
@@ -304,6 +335,10 @@ namespace Langulus::RTTI
             static_assert(size > left + right, "Invalid enum name");
 
             constexpr auto isolated = name.substr(left, size - right - left);
+            static_assert(not IsReserved(isolated),
+               "Not a valid C++ value name - token is reserved"
+            );
+
             if constexpr (NORMALIZE)
                return Normalize<isolated>();
             else
@@ -337,6 +372,7 @@ namespace Langulus::RTTI
             {"<unnamed>::",   ""},
             {"{anonymous}::", ""},
          #endif
+
          {" *",           "*"},
          {" &",           "&"},
          {" >",           ">"},
@@ -502,7 +538,7 @@ namespace Langulus::RTTI
       
       /// Get the last, most relevant part of a token that may or may not     
       /// have namespaces in it. Essentially finds last "::" that isn't       
-      /// enclosed in a <template>, and skip forward to that                  
+      /// enclosed in a <template>, and skip forward to that.                 
       ///   @param token the token to scan                                    
       ///   @return the last token                                            
       // ReSharper disable once CppDFAUnreachableFunctionCall           
@@ -586,9 +622,9 @@ namespace Langulus
       return fullName.substr(lastName);
    }
 
-   /// Get the name of a type at compile-time                                 
-   /// Considers CTTI::Named, or fallbacks to the C++ name                    
-   /// If you want to avoid custom names, use CppNameOf directly instead      
+   /// Get the name of a type at compile-time.                                
+   /// Considers CTTI::Named, or fallbacks to the C++ name.                   
+   /// If you want to avoid custom names, use CppNameOf directly instead.     
    ///   @attention similarly named types in anonymous namespaces will result 
    ///      in the same name. If this is not desired disable NORMALIZE, or    
    ///      specialize CTTI::Named for each translation unit the type         
@@ -605,8 +641,8 @@ namespace Langulus
       return RTTI::Inner::IsolateTypename<T, NORMALIZE>();
    }
    
-   /// Get the name of an enum value at compile-time                          
-   /// Considers CTTI::NamedValue, or fallbacks to the C++ name               
+   /// Get the name of an enum value at compile-time.                         
+   /// Considers CTTI::NamedValue, or fallbacks to the C++ name.              
    ///   @attention similarly named values in anonymous namespaces will result
    ///      in the same name. If this is not desired disable NORMALIZE, or    
    ///      specialize CTTI::NamedValue for each translation unit the value   

@@ -285,6 +285,8 @@ namespace Langulus::RTTI
    public:
       using CTTI_ReflectAs = void;
 
+      static constexpr Token InvalidName = "nodata";
+
       template<class T> requires (CT::Dense<T> and not ::std::is_const_v<T>)
       static auto Reflect() -> DefinitionData const*;
       template<class T> requires (CT::Dense<T> and ::std::is_const_v<T>)

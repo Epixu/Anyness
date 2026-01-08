@@ -46,10 +46,10 @@ namespace Langulus::Anyness
       HandleMut() = delete;
       
       constexpr HandleMut(HandleMut const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr HandleMut(HandleMut&& other) noexcept {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
 
       constexpr HandleMut(void* ptr, EntryPtr entry, DMeta type) noexcept {
@@ -81,10 +81,10 @@ namespace Langulus::Anyness
       HandleDisownedMut() = delete;
       
       constexpr HandleDisownedMut(HandleDisownedMut const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr HandleDisownedMut(HandleDisownedMut&& other) noexcept {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
 
       constexpr HandleDisownedMut(void* ptr, DMeta type) noexcept {
@@ -119,10 +119,10 @@ namespace Langulus::Anyness
       Handle() = delete;
       
       constexpr Handle(Handle const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr Handle(Handle&& other) noexcept {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
 
       constexpr Handle(void* ptr, EntryPtr entry, DMeta type) noexcept {
@@ -152,10 +152,10 @@ namespace Langulus::Anyness
       HandleDisowned() = delete;
       
       constexpr HandleDisowned(HandleDisowned const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr HandleDisowned(HandleDisowned&& other) noexcept {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
 
       constexpr HandleDisowned(void* ptr, DMeta type) noexcept {
@@ -166,7 +166,7 @@ namespace Langulus::Anyness
       /// Construction that absorbs the provided container                    
       template<CT::Container C>
       explicit constexpr HandleDisowned(C&& argument) {
-         this->ConstructFrom(FWD(argument));
+         this->Absorb(FWD(argument));
       }
 
    };

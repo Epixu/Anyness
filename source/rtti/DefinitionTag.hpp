@@ -23,6 +23,8 @@ namespace Langulus::RTTI
    public:
       using CTTI_ReflectAs = void;
 
+      static constexpr Token InvalidName = "notag";
+
       template<CT::Decayed>
       static auto Reflect() -> DefinitionTag const*;
 

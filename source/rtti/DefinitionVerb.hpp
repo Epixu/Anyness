@@ -72,6 +72,8 @@ namespace Langulus::RTTI
    public:
       using CTTI_ReflectAs = void;
 
+      static constexpr Token InvalidName = "noverb";
+
       template<CT::Decayed>
       static auto Reflect() -> DefinitionVerb const*;
       

@@ -75,7 +75,7 @@ namespace Langulus::Anyness
       /// Construction from any kind of text that is an Anyness container     
       template<CT::Text T> requires CT::Container<T>
       constexpr Text(T&& text) {
-         this->ConstructFrom(FWD(text));
+         this->Absorb(FWD(text));
       }
 
       /// Construction from any kind of text that isn't an Anyness container  
@@ -152,10 +152,10 @@ namespace Langulus::Anyness
       
       /// Assignment                                                          
       constexpr Text& operator = (Text const& other) {
-         return this->AssignFrom(Refer {other});
+         return this->AssignAbsorb(Refer {other});
       }
       constexpr Text& operator = (Text&& other) noexcept {
-         return this->AssignFrom(Move {other});
+         return this->AssignAbsorb(Move {other});
       }
 
       /// Construction from all kinds of text, trim length to desired count   

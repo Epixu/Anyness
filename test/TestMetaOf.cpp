@@ -250,7 +250,14 @@ namespace
    struct InvalidName4    { using CTTI_Named = Yes<"MyType[]">; };
    struct InvalidName5    { using CTTI_Named = Yes<"MyType,">;  };
    struct InvalidName6    { using CTTI_Named = Yes<"My Type">;  };
-   
+
+   struct ReservedName1   { using CTTI_Named = Yes<"const">;    };
+   struct ReservedName2   { using CTTI_Named = Yes<"null">;     };
+   struct ReservedName3   { using CTTI_Named = Yes<"noverb">;   };
+   struct ReservedName4   { using CTTI_Named = Yes<"nodata">;   };
+   struct ReservedName5   { using CTTI_Named = Yes<"novalue">;  };
+   struct ReservedName6   { using CTTI_Named = Yes<"notag">;    };
+
    struct CheckingWhatGetsInherited : ImplicitlyReflectedDataWithTraits {
       using CTTI_Named = Yes<"CheckingWhatGetsInherited">;
       using ImplicitlyReflectedDataWithTraits::ImplicitlyReflectedDataWithTraits;
@@ -273,6 +280,82 @@ namespace Langulus::CTTI
    };
 }
 
+
+///                                                                           
+/// Testing empty meta data                                                   
+///                                                                           
+TEST_CASE("Testing empty meta data", "[rtti]") {
+   const DMeta meta = {};
+   REQUIRE_FALSE(meta);
+   REQUIRE(meta.GetHash() == Hash {});
+   REQUIRE(meta.GetCppName() == "");
+   REQUIRE(meta.GetName() == RTTI::DefinitionData::InvalidName);
+   REQUIRE(meta.GetInfo() == "");
+   REQUIRE(meta.GetFiles() == "");
+   REQUIRE(meta.GetSuffix() == "");
+   REQUIRE(meta.GetVersionMajor() == 0);
+   REQUIRE(meta.GetVersionMinor() == 0);
+
+   #if LANGULUS_FEATURE(MANAGED_REFLECTION)
+      REQUIRE(meta.GetID() == 0);
+      REQUIRE(meta.GetBoundaries().empty());
+   #endif
+
+   REQUIRE(meta.GetOrigin() == nullptr);
+   REQUIRE(meta.GetDeptr() == nullptr);
+   REQUIRE(meta.GetDecvqAll() == nullptr);
+   REQUIRE(meta.GetDecvq() == nullptr);
+   REQUIRE(meta.AddPtr() == nullptr);
+   REQUIRE(meta.AddConst() == nullptr);
+   
+   REQUIRE(meta.GetSize() == 0);
+   REQUIRE(meta.GetAlignment() == Alignment);
+   REQUIRE(meta.IsConstant() == false);
+   REQUIRE(meta.IsDeep() == false);
+   REQUIRE(meta.IsPOD() == false);
+   REQUIRE(meta.IsNullable() == false);
+   REQUIRE(meta.IsAbstract() == false);
+   REQUIRE(meta.HasGetHashMethod() == false);
+
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      REQUIRE(meta.GetMinPoolsize() == MinimalPoolSize);
+      REQUIRE(meta.GetPoolTactic() == PoolTactic::Default);
+   #endif
+   
+   REQUIRE(meta.GetDefaultConstructor() == nullptr);
+   REQUIRE(meta.GetDescribeConstructor()== nullptr);
+   REQUIRE(meta.GetReferConstructor()   == nullptr);
+   REQUIRE(meta.GetCopyConstructor()    == nullptr);
+   REQUIRE(meta.GetDisownConstructor()  == nullptr);
+   REQUIRE(meta.GetCloneConstructor()   == nullptr);
+   REQUIRE(meta.GetMoveConstructor()    == nullptr);
+   REQUIRE(meta.GetAbandonConstructor() == nullptr);
+   
+   REQUIRE(meta.GetDestructor()      == nullptr);
+   REQUIRE(meta.GetComparer()        == nullptr);
+   REQUIRE(meta.GetComparerEqual()   == nullptr);
+
+   REQUIRE(meta.GetReferAssigner()   == nullptr);
+   REQUIRE(meta.GetCopyAssigner()    == nullptr);
+   REQUIRE(meta.GetDisownAssigner()  == nullptr);
+   REQUIRE(meta.GetCloneAssigner()   == nullptr);
+   REQUIRE(meta.GetMoveAssigner()    == nullptr);
+   REQUIRE(meta.GetAbandonAssigner() == nullptr);
+
+   REQUIRE(meta.GetResolver()   == nullptr);
+   REQUIRE(meta.GetHasher()     == nullptr);
+   REQUIRE(meta.GetReferencer() == nullptr);
+   REQUIRE(meta.GetDispatcher() == nullptr);
+   REQUIRE(meta.GetConcrete()   == nullptr);
+   REQUIRE(meta.GetProducer()   == nullptr);
+
+   REQUIRE(meta.GetMembers().size() == 0);
+   REQUIRE(meta.GetVerbs().size() == 0);
+   REQUIRE(meta.GetBases().size() == 0);
+   REQUIRE(meta.GetMorphismsTo().size() == 0);
+   REQUIRE(meta.GetMorphismsFrom().size() == 0);
+   REQUIRE(meta.GetNamedValues().size() == 0);
+}
 
 ///                                                                           
 /// Reflecting incomplete types                                               
@@ -565,12 +648,19 @@ SCENARIO("Testing reflection of names", "[rtti]") {
       REQUIRE_THROWS(MetaConstOf<Pi::ConflictingNumber>());
    #endif
    
-   //REQUIRE_THROWS(MetaDataOf<InvalidName1>()); // shouldn't compile
-   //REQUIRE_THROWS(MetaDataOf<InvalidName2>()); // shouldn't compile
-   //REQUIRE_THROWS(MetaDataOf<InvalidName3>()); // shouldn't compile
-   //REQUIRE_THROWS(MetaDataOf<InvalidName4>()); // shouldn't compile
-   //REQUIRE_THROWS(MetaDataOf<InvalidName5>()); // shouldn't compile
-   //REQUIRE_THROWS(MetaDataOf<InvalidName6>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName1>());  // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName2>());  // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName3>());  // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName4>());  // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName5>());  // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<InvalidName6>());  // shouldn't compile
+
+   //REQUIRE_THROWS(MetaDataOf<ReservedName1>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<ReservedName2>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<ReservedName3>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<ReservedName4>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<ReservedName5>()); // shouldn't compile
+   //REQUIRE_THROWS(MetaDataOf<ReservedName6>()); // shouldn't compile
 }
 
 ///                                                                           
@@ -805,39 +895,90 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
 /// Reflecting verbs                                                          
 ///                                                                           
 SCENARIO("Reflecting a verb", "[rtti]") {
-   const auto vdef = RTTI::DefinitionVerb::Reflect<Verbs::Create>();
-   const VMeta vmeta = MetaVerbOf<Verbs::Create>();
-   REQUIRE(vmeta != nullptr);
-   REQUIRE(vmeta.GetPositiveName() == "create");
-   REQUIRE(vmeta.GetNegativeName() == "destroy");
-   REQUIRE(vmeta.GetInfo().starts_with("Used for allocating new elements."));
-   REQUIRE(vmeta.GetVersionMajor() == 6);
-   REQUIRE(vmeta.GetVersionMinor() == 10);
-   REQUIRE(vmeta.GetPositiveOperator() == " + ");
-   REQUIRE(vmeta.GetNegativeOperator() == " - ");
-   REQUIRE(vmeta.GetPrecedence() == 5);
+   {
+      const VMeta vmeta = {};
+      REQUIRE_FALSE(vmeta);
+      REQUIRE(vmeta.GetPositiveName() == RTTI::DefinitionVerb::InvalidName);
+      REQUIRE(vmeta.GetNegativeName() == RTTI::DefinitionVerb::InvalidName);
+      REQUIRE(vmeta.GetInfo() == "");
+      REQUIRE(vmeta.GetVersionMajor() == 0);
+      REQUIRE(vmeta.GetVersionMinor() == 0);
+      REQUIRE(vmeta.GetPositiveOperator() == "");
+      REQUIRE(vmeta.GetNegativeOperator() == "");
+      REQUIRE(vmeta.GetPrecedence() == 0);
+   }
+   {
+      const auto vdef = RTTI::DefinitionVerb::Reflect<Verbs::Create>();
+      const VMeta vmeta = MetaVerbOf<Verbs::Create>();
+      REQUIRE(vmeta != nullptr);
+      REQUIRE(vmeta.GetPositiveName() == "create");
+      REQUIRE(vmeta.GetNegativeName() == "destroy");
+      REQUIRE(vmeta.GetInfo().starts_with("Used for allocating new elements."));
+      REQUIRE(vmeta.GetVersionMajor() == 6);
+      REQUIRE(vmeta.GetVersionMinor() == 10);
+      REQUIRE(vmeta.GetPositiveOperator() == " + ");
+      REQUIRE(vmeta.GetNegativeOperator() == " - ");
+      REQUIRE(vmeta.GetPrecedence() == 5);
 
-   Flow::Verb verb;
-   REQUIRE(vmeta.GetContextless()(verb));
+      Flow::Verb verb;
+      REQUIRE(vmeta.GetContextless()(verb));
 
-   const DMeta dmeta = MetaDataOf<DMeta>();
-   REQUIRE(dmeta.GetVerbs().at(vdef)(const_cast<DMeta*>(&dmeta), verb));
+      const DMeta dmeta = MetaDataOf<DMeta>();
+      REQUIRE(dmeta.GetVerbs().at(vdef)(const_cast<DMeta*>(&dmeta), verb));
 
-   const DMeta dmeta_const = MetaDataOf<const DMeta>();
-   REQUIRE(dmeta_const.GetVerbs().at(vdef)(const_cast<DMeta*>(&dmeta_const), verb));
+      const DMeta dmeta_const = MetaDataOf<const DMeta>();
+      REQUIRE(dmeta_const.GetVerbs().at(vdef)(const_cast<DMeta*>(&dmeta_const), verb));
+   }
 }
 
 ///                                                                           
 /// Reflecting tags                                                           
 ///                                                                           
 SCENARIO("Reflecting a tag", "[rtti]") {
-   const TMeta meta = MetaTagOf<Tags::Name>();
+   {
+      const TMeta meta = {};
 
-   REQUIRE(meta != nullptr);
-   REQUIRE(meta.GetName() == "name");
-   REQUIRE(meta.GetInfo() == "Used for tagging names");
-   REQUIRE(meta.GetVersionMajor() == 7);
-   REQUIRE(meta.GetVersionMinor() == 10);
+      REQUIRE_FALSE(meta);
+      REQUIRE(meta.GetName() == RTTI::DefinitionTag::InvalidName);
+      REQUIRE(meta.GetInfo() == "");
+      REQUIRE(meta.GetVersionMajor() == 0);
+      REQUIRE(meta.GetVersionMinor() == 0);
+   }
+   {
+      const TMeta meta = MetaTagOf<Tags::Name>();
+
+      REQUIRE(meta != nullptr);
+      REQUIRE(meta.GetName() == "name");
+      REQUIRE(meta.GetInfo() == "Used for tagging names");
+      REQUIRE(meta.GetVersionMajor() == 7);
+      REQUIRE(meta.GetVersionMinor() == 10);
+   }
+}
+
+///                                                                           
+/// Reflecting values                                                         
+///                                                                           
+SCENARIO("Reflecting a value", "[rtti]") {
+   {
+      const CMeta meta = {};
+      REQUIRE_FALSE(meta);
+      REQUIRE(meta.GetCppName() == "");
+      REQUIRE(meta.GetName() == RTTI::DefinitionConst::InvalidName);
+      REQUIRE(meta.GetVersionMajor() == 0);
+      REQUIRE(meta.GetVersionMinor() == 0);
+   }
+   {
+      const CMeta meta = MetaConstOf<Pi::Number>();
+      REQUIRE(meta);
+      #if LANGULUS_COMPILER(GCC)
+         REQUIRE(meta.GetCppName() == "<unnamed>::Pi::Number");
+      #else
+         REQUIRE(meta.GetCppName() == "(anonymous namespace)::Pi::Number");
+      #endif
+      REQUIRE(meta.GetName() == "Pi::Number");
+      REQUIRE(meta.GetVersionMajor() == 1);
+      REQUIRE(meta.GetVersionMinor() == 0);
+   }
 }
 
 ///                                                                           

@@ -50,78 +50,106 @@ namespace Langulus::RTTI::Inner
    constexpr bool MetaVerbStructured_X8<ID_SIZE>::operator == (const MetaVerbStructured_X8& rhs) const noexcept {
       return Base::operator == (rhs);
    }
-
-   /// Get the verb definition                                                
-   template<unsigned ID_SIZE>
-   auto MetaVerbStructured_X8<ID_SIZE>::GetDefinition() const noexcept -> DefinitionVerb const* {
-      return Instance.GetMetaVerbByID(Base::GetID());
-   }
    
    /// Get the C++ name of the verb                                           
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetCppName() const noexcept -> Token {
-      return GetDefinition()->mCppNameOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mCppNameOf;
+      return {};
    }
    
    /// Get any reflected information about the verb                           
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetInfo() const noexcept -> Token {
-      return GetDefinition()->mInfoOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mInfoOf;
+      return {};
    }
    
    /// Get major verb version                                                 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor()  const noexcept -> unsigned {
-      return GetDefinition()->mVersionMajor;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mVersionMajor;
+      return 0;
    }
 
    /// Get minor verb version                                                 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMinor()  const noexcept -> unsigned {
-      return GetDefinition()->mVersionMinor;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mVersionMinor;
+      return 0;
    }
    
    /// Get the reflected boundaries                                           
    template<unsigned ID_SIZE> auto MetaVerbStructured_X8<ID_SIZE>::GetBoundaries()
    const noexcept -> Definition::BoundarySet const& {
-      return GetDefinition()->mBoundaries;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mBoundaries;
+
+      static const Definition::BoundarySet fallback;
+      return fallback;
    }
 
 
    /// Get the positive verb token                                            
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveName() const noexcept -> Token {
-      return GetDefinition()->mNameOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mNameOf;
+      return DefinitionVerb::InvalidName;
    }
 
    /// Get the negative verb token, a.k.a. the antonym                        
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeName() const noexcept -> Token {
-      return GetDefinition()->mNameOfReverse;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mNameOfReverse;
+      return DefinitionVerb::InvalidName;
    }
 
    /// Get the positive reflected operator token                              
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveOperator() const noexcept -> Token {
-      return GetDefinition()->mOperator;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mOperator;
+      return {};
    }
 
    /// Get the negative reflected operator token                              
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeOperator() const noexcept -> Token {
-      return GetDefinition()->mOperatorReverse;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mOperatorReverse;
+      return {};
    }
 
    /// Get the default reflected precedence for the verb                      
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPrecedence() const noexcept -> float {
-      return GetDefinition()->mPrecedence;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mPrecedence;
+      return 0;
    }
 
    /// Get the contextless execution routine if such was defined              
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetContextless() const noexcept -> DefinitionVerb::FContextless {
-      return contextless ? GetDefinition()->mCurrentBoundary.mContextless : nullptr;
+      return contextless
+         ? Instance.GetMetaVerbByID(Base::GetID())->mCurrentBoundary.mContextless
+         : nullptr;
    }
 
    /// Check if the verb has a negative token defined                         
@@ -140,7 +168,8 @@ namespace Langulus::RTTI::Inner
    template<unsigned ID_SIZE>
    MetaVerbStructured_X8<ID_SIZE>::operator bool() const noexcept {
       if (Base::operator bool()) {
-         LglsAssert(GetDefinition(), "Valid meta with invalid definition");
+         LglsAssert(Instance.GetMetaVerbByID(Base::GetID()),
+            "Valid meta with invalid definition");
          return true;
       }
       return false;

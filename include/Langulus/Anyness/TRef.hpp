@@ -57,7 +57,7 @@ namespace Langulus::Anyness
       template<class A>
       constexpr TRef(A&& pointer) noexcept {
          if constexpr (CT::ContainsOne<A>)
-            this->ConstructFrom(FWDIntent(pointer));
+            this->Absorb(FWDIntent(pointer));
          else if constexpr (CT::Sparse<A>) {
             if (DeintCast(pointer)) {
                this->SetHeapInner(DeintCast(pointer));
@@ -71,17 +71,17 @@ namespace Langulus::Anyness
       
       /// Assignment                                                          
       constexpr TRef& operator = (TRef const& other) {
-         return this->AssignFrom(Refer(other));
+         return this->AssignAbsorb(Refer(other));
       }
       constexpr TRef& operator = (TRef&& other) noexcept {
-         return this->AssignFrom(Move(other));
+         return this->AssignAbsorb(Move(other));
       }
 
       /// Assign a pointer. Respects intents.                                 
       template<class A>
       constexpr TRef& operator = (A&& pointer) noexcept {
          if constexpr (CT::ContainsOne<A>)
-            return this->AssignFrom(FWDIntent(pointer));
+            return this->AssignAbsorb(FWDIntent(pointer));
          else if constexpr (CT::Sparse<A>) {
             if (DeintCast(pointer) == this->GetRaw())
                return *this;

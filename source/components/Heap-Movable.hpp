@@ -171,9 +171,20 @@ namespace Langulus::Anyness::Component
                return self;
          }
 
+         // Never modify containers if type-incompatible                
+         if constexpr (CT::TypeErased<Decay<I>> or CT::TypeErased<C>) {
+            auto t1 = self.GetType();
+            auto t2 = intent->GetType();
+            if (t1 and t2) {
+               LglsAssert(t1.IsSame(t2), "Type mismatch: ", t1, " is not same as ", t2);
+            }
+         }
+         else static_assert(Same<TypeOf<C>, TypeOf<Decay<I>>>, "Type mismatch");
+
+         // Free old data and absorb the new container                  
          self.Free();
          self.SetHeapInner(nullptr);
-         self.ConstructFrom(FWD(intent));
+         self.Absorb(FWD(intent));
          return self;
       }
       

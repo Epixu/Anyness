@@ -80,10 +80,10 @@ namespace Langulus::Anyness
          this->ConstructDefault();
       }
       constexpr Any(Any const& other) {
-         this->ConstructFrom(Refer(other));
+         this->Absorb(Refer(other));
       }
       constexpr Any(Any&& other) noexcept  {
-         this->ConstructFrom(Move(other));
+         this->Absorb(Move(other));
       }
       constexpr ~Any() noexcept {
          this->Destroy();
@@ -101,7 +101,7 @@ namespace Langulus::Anyness
                "(if you want to overwrite the first item) in order to clearly "
                "state your intent. Absorb will be used by default!"
             );
-            this->ConstructFrom(FWD(argument));
+            this->Absorb(FWD(argument));
          }
          else {
             this->SetType<Decvq<Deref<Deint<A>>>>();
@@ -114,7 +114,7 @@ namespace Langulus::Anyness
       /// Construction that absorbs the provided container                    
       template<class A>
       constexpr Any(Inner::Absorb, A&& argument) {
-         this->ConstructFrom(FWD(argument));
+         this->Absorb(FWD(argument));
       }
       
       /// Construction that emplaces A inside                                 
@@ -132,10 +132,10 @@ namespace Langulus::Anyness
       
       /// Assignment                                                          
       constexpr Any& operator = (Any const& other) {
-         return this->AssignFrom(Refer(other));
+         return this->AssignAbsorb(Refer(other));
       }
       constexpr Any& operator = (Any&& other) noexcept {
-         return this->AssignFrom(Move(other));
+         return this->AssignAbsorb(Move(other));
       }
       
       template<class A>
@@ -143,12 +143,12 @@ namespace Langulus::Anyness
          if constexpr (CT::ContainsOne<A>) {
             LglsAssumeUser((Same<Deint<A>, Any>),
                "Ambiguous use of assignment "
-               "- you should use either AssignFrom (if you want to overwrite "
+               "- you should use either AssignAbsorb (if you want to overwrite "
                "the container itself) or Assign (if you want to overwrite the "
                "first item) in order to clearly state your intent. "
-               "AssignFrom will be used by default!"
+               "AssignAbsorb will be used by default!"
             );
-            return this->AssignFrom(FWD(argument));
+            return this->AssignAbsorb(FWD(argument));
          }
          else return this->Assign(FWD(argument));
       }

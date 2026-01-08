@@ -35,35 +35,45 @@ namespace Langulus::RTTI::Inner
    constexpr bool MetaTagPacked_16::operator == (const MetaTagPacked_16& rhs) const noexcept {
       return Base::operator == (rhs);
    }
-   
-   /// Get the tag definition                                                 
-   inline auto MetaTagPacked_16::GetDefinition() const noexcept -> DefinitionTag const* {
-      return Instance.GetMetaTagByID(GetID());
-   }
  
    /// Get the C++ name of the tag, the result of CppNameOf                   
    inline auto MetaTagPacked_16::GetCppName() const noexcept -> Token {
-      return GetDefinition()->mCppNameOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaTagByID(id)->mCppNameOf;
+      return {};
    }
 
    /// Get the name of the tag, the result of NameOf                          
    inline auto MetaTagPacked_16::GetName() const noexcept -> Token {
-      return GetDefinition()->mNameOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaTagByID(id)->mNameOf;
+      return DefinitionTag::InvalidName;
    }
 
    /// Get the info of the tag, the result of InfoOf                          
    inline auto MetaTagPacked_16::GetInfo() const noexcept -> Token {
-      return GetDefinition()->mInfoOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaTagByID(id)->mInfoOf;
+      return {};
    }
 
    /// Get the major version                                                  
    inline auto MetaTagPacked_16::GetVersionMajor()  const noexcept -> unsigned {
-      return GetDefinition()->mVersionMajor;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaTagByID(id)->mVersionMajor;
+      return 0;
    }
 
    /// Get the minor version                                                  
    inline auto MetaTagPacked_16::GetVersionMinor()  const noexcept -> unsigned {
-      return GetDefinition()->mVersionMinor;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaTagByID(id)->mVersionMinor;
+      return 0;
    }
 
 #if LANGULUS(SAFE)

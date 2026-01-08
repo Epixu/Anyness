@@ -62,10 +62,10 @@ namespace Langulus::Anyness
          this->ConstructDefault();
       }
       constexpr Bytes(Bytes const& other) {
-         this->ConstructFrom(Refer {other});
+         this->Absorb(Refer {other});
       }
       constexpr Bytes(Bytes&& other) noexcept {
-         this->ConstructFrom(Move {other});
+         this->Absorb(Move {other});
       }
       constexpr ~Bytes() noexcept {
          this->Destroy();
@@ -74,15 +74,15 @@ namespace Langulus::Anyness
       /// Construction from any kind of other bytes with intent               
       template<template<class> class I> requires CT::Intent<I<Bytes>>
       constexpr Bytes(I<Bytes>&& bytes) {
-         this->ConstructFrom(FWD(bytes));
+         this->Absorb(FWD(bytes));
       }
       
       /// Assignment                                                          
       constexpr Bytes& operator = (Bytes const& other) {
-         return this->AssignFrom(Refer {other});
+         return this->AssignAbsorb(Refer {other});
       }
       constexpr Bytes& operator = (Bytes&& other) noexcept {
-         return this->AssignFrom(Move {other});
+         return this->AssignAbsorb(Move {other});
       }
       
       /// Comparison                                                          

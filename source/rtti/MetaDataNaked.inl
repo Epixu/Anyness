@@ -71,7 +71,7 @@ namespace Langulus::RTTI::Inner
    
    /// Get the reflected pool tactic                                          
    inline auto MetaDataNaked::GetPoolTactic() const noexcept -> PoolTactic {
-      return mDefinition ? mDefinition->mPoolTactic : PoolTactic::Type;
+      return mDefinition ? mDefinition->mPoolTactic : PoolTactic::Default;
    }
 #endif
 

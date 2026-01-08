@@ -32,40 +32,51 @@ namespace Langulus::RTTI::Inner
       return *this;
    }
 
-   /// Get the constant definition                                            
-   inline auto MetaConstPacked_16::GetDefinition() const noexcept -> DefinitionConst const* {
-      return Instance.GetMetaConstByID(GetID());
-   }
-
    /// Get the C++ name of the constant, the result of CppNameOf              
    inline auto MetaConstPacked_16::GetCppName() const noexcept -> Token {
-      return GetDefinition()->mCppNameOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaConstByID(id)->mCppNameOf;
+      return {};
    }
 
    /// Get the name of the constant, the result of NameOf                     
    inline auto MetaConstPacked_16::GetName() const noexcept -> Token {
-      return GetDefinition()->mNameOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaConstByID(id)->mNameOf;
+      return DefinitionConst::InvalidName;
    }
 
    /// Get the info of the constant, the result of NameOf                     
    inline auto MetaConstPacked_16::GetInfo() const noexcept -> Token {
-      return GetDefinition()->mInfoOf;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaConstByID(id)->mInfoOf;
+      return {};
    }
 
    /// Get the major version                                                  
    inline auto MetaConstPacked_16::GetVersionMajor()  const noexcept -> unsigned {
-      return GetDefinition()->mVersionMajor;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaConstByID(id)->mVersionMajor;
+      return 0;
    }
 
    /// Get the minor version                                                  
    inline auto MetaConstPacked_16::GetVersionMinor()  const noexcept -> unsigned {
-      return GetDefinition()->mVersionMinor;
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaConstByID(id)->mVersionMinor;
+      return 0;
    }
 
 #if LANGULUS(SAFE)
    inline MetaConstPacked_16::operator bool() const noexcept {
       if (Base::operator bool()) {
-         LglsAssert(GetDefinition(), "Valid meta with invalid definition");
+         LglsAssert(Instance.GetMetaConstByID(Base::GetID()),
+            "Valid meta with invalid definition");
          return true;
       }
       return false;

@@ -68,11 +68,21 @@
    #define LANGULUS_BENCHMARK() 1
    #define IF_LANGULUS_BENCHMARK(a)       a
    #define IF_NOT_LANGULUS_BENCHMARK(a)   LANGULUS(NOOP)
-   #include <ctrack.hpp>
 #else
    #define LANGULUS_BENCHMARK() 0
    #define IF_LANGULUS_BENCHMARK(a)       LANGULUS(NOOP)
    #define IF_NOT_LANGULUS_BENCHMARK(a)   a
+#endif
+
+/// Profiling                                                                 
+#ifdef LANGULUS_OPTION_PROFILING
+   #define LANGULUS_PROFILING() 1
+   #define IF_LANGULUS_PROFILING(a)       a
+   #define IF_NOT_LANGULUS_PROFILING(a)   LANGULUS(NOOP)
+#else
+   #define LANGULUS_PROFILING() 0
+   #define IF_LANGULUS_PROFILING(a)       LANGULUS(NOOP)
+   #define IF_NOT_LANGULUS_PROFILING(a)   a
 #endif
 
 /// Paranoid mode introduces overhead, but zeroes any freed memory            

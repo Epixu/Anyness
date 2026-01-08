@@ -79,7 +79,8 @@ namespace Langulus::Anyness::Component
             return mState == (mState & StateStack::template GetStateBit<S>());
          }
 
-         constexpr bool operator == (const StateWrapper& rhs) const noexcept {
+         template<class S> requires requires (S s) { s.mState == 0; }
+         constexpr bool operator == (S const& rhs) const noexcept {
             return mState == rhs.mState;
          }
 

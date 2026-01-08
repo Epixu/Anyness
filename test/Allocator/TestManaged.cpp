@@ -8,6 +8,7 @@
 #include "TestAllocatorCommon.hpp"
 #include "../../source/fractalloc/Pool.cpp"
 #include <Langulus/MetaOf.hpp>
+#include <Langulus/Profiler.hpp>
 #include <random>
 
 #if not LANGULUS_FEATURE(MANAGED_MEMORY)

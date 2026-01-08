@@ -38,8 +38,6 @@ namespace Langulus::RTTI
             uint8_t all {};
          };
          
-         auto GetDefinition() const noexcept -> DefinitionVerb const*;
-         
       public:
          using Base = MetaPacked<ID_SIZE>;
 

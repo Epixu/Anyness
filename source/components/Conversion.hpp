@@ -72,7 +72,7 @@ namespace Langulus::Anyness::Component
             if (FROM.IsSame(TO)) {
                // Types are already the same, don't convert anything    
                if (not out.IsEmpty())
-                  out.AssignFrom(self);
+                  out.AssignAbsorb(self);
                else
                   out.Concat(self);
                return out.GetCount() - initial_out;

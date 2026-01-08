@@ -42,9 +42,6 @@ namespace Langulus::RTTI
          auto GetBoundaries()    const noexcept -> Definition::BoundarySet const&;
 
          IF_SAFE(explicit operator bool() const noexcept);
-
-      protected:
-         auto GetDefinition()    const noexcept -> DefinitionTag const*;
       };
       #pragma pack(pop)
       
