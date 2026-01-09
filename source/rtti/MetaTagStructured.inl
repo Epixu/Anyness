@@ -79,7 +79,8 @@ namespace Langulus::RTTI::Inner
 #if LANGULUS(SAFE)
    inline MetaTagPacked_16::operator bool() const noexcept {
       if (Base::operator bool()) {
-         LglsAssert(GetDefinition(), "Valid meta with invalid definition");
+         LglsAssert(Instance.GetMetaTagByID(Base::GetID()),
+            "Valid meta with invalid definition");
          return true;
       }
       return false;

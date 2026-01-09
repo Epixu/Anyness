@@ -248,8 +248,7 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "LANGULUS_OPTION_SAFE_MODE": "ON",
         "LANGULUS_OPTION_DEBUGGING": "ON",
-        "LANGULUS_OPTION_MEMORY_STATISTICS": "ON",
-        "LANGULUS_OPTION_PROFILING": "ON"
+        "LANGULUS_OPTION_MEMORY_STATISTICS": "ON"
       },
       "environment": {
         "BUILDTYPE_FLAGS": "",

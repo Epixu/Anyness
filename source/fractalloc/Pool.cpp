@@ -129,7 +129,7 @@ namespace Langulus::Fractalloc
             mBiggestEntry = bytes;
       }
       else {
-         if (mClogged)
+         if (IsClogged())
             return nullptr;
 
          // The entire pool is full or empty, skip search for free      
@@ -148,15 +148,6 @@ namespace Langulus::Fractalloc
             // ever smaller entries, as long the size of the new        
             // allocation doesn't prevent it                            
             mThresholdMax >>= 1u;
-
-            if (mBiggestEntry > mThresholdMax) {
-               // A bigger-than-threshold entry will disrupt the usual  
-               // entry sequence. Make sure no new entries are allowed  
-               // by marking the pool as clogged. It will be restored   
-               // eventually after trimming.                            
-               //mThresholdMax <<= 1;
-               mClogged = true;
-            }
          }
       }
 
@@ -164,7 +155,8 @@ namespace Langulus::Fractalloc
       ++mDistribution[bytes.bit];
       LglsAssumeDev(
          mAllocatedByFrontend + static_cast<size_t>(bytes) > mAllocatedByFrontend,
-         "mAllocatedByFrontend overflowed");
+         "mAllocatedByFrontend overflowed"
+      );
       mAllocatedByFrontend += static_cast<size_t>(bytes);
       ++mValidEntries;
       return newEntry;
@@ -195,7 +187,7 @@ namespace Langulus::Fractalloc
             mBiggestEntry = bytes;
       }
       else {
-         if (mClogged)
+         if (IsClogged())
             return nullptr;
 
          // The entire pool is full or empty, skip search for free      
@@ -214,14 +206,6 @@ namespace Langulus::Fractalloc
             // ever smaller entries, as long the size of the new        
             // allocation doesn't prevent it                            
             mThresholdMax >>= 1u;
-
-            if (mBiggestEntry > mThresholdMax) {
-               // A bigger-than-threshold entry will disrupt the usual  
-               // entry sequence. Make sure no new entries are allowed  
-               // by marking the pool as clogged. It will be restored   
-               // eventually after trimming.                            
-               mClogged = true;
-            }
          }
       }
 
@@ -229,7 +213,8 @@ namespace Langulus::Fractalloc
       ++mDistribution[bytes.bit];
       LglsAssumeDev(
          mAllocatedByFrontend + static_cast<size_t>(bytes) > mAllocatedByFrontend,
-         "mAllocatedByFrontend overflowed");
+         "mAllocatedByFrontend overflowed"
+      );
       mAllocatedByFrontend += static_cast<size_t>(bytes);
       ++mValidEntries;
       return newEntry;
@@ -321,6 +306,8 @@ namespace Langulus::Fractalloc
          // The removed entry becomes the last freed entry, and its     
          // pool pointer becomes a jump to the previous last freed.     
          if (mLastFreed) {
+            LglsAssumeDev(mLastFreed != entry,
+               "Oops");
             LglsAssumeDev(mLastFreed->GetUses() == 0,
                "Free entry is in use - shouldn't be possible");
             entry->SetNextFreeEntry(mLastFreed);
@@ -330,6 +317,8 @@ namespace Langulus::Fractalloc
          LglsVerbose("New entry was freed, previous last freed was: ", Logger::Hex(mLastFreed));
          mLastFreed = entry;
          LglsVerbose("New last freed is: ", Logger::Hex(mLastFreed));
+         LglsAssumeDev(mValidEntries > 1, "Incorrect mValidEntries");
+         --mValidEntries;
 
          // Update the distribution                                     
          size_t it = size.bit;
@@ -343,11 +332,8 @@ namespace Langulus::Fractalloc
             mBiggestEntry.bit = static_cast<uint8_t>(it);
             Trim();
          }
-         else if (::std::has_single_bit(mValidEntries))
+         else if (::std::has_single_bit(mValidEntries+1))
             Trim();
-
-         LglsAssumeDev(mValidEntries > 1, "Incorrect mValidEntries");
-         --mValidEntries;
       }
    }
 
@@ -389,6 +375,9 @@ namespace Langulus::Fractalloc
    /// Remove all empty entries at the end, increase mThresholdMax and lower  
    /// mNextEntry as much as possible. Will unclog the pool if able to.       
    void Pool::Trim() {
+      LglsAssumeDev(mNextEntry >= mValidEntries,
+         "Impossible number of valid entries");
+
       {
          LglsAssumeDev(IsInUse(), "Should have at least one valid entry");
          const size_t max_entries = static_cast<size_t>(mMaxEntries);
@@ -408,10 +397,8 @@ namespace Langulus::Fractalloc
             --trimmed;
             
             if (entry - entry_gap < mAllocationData) {
-               // It is now safe to lower mNextEntry and increase       
-               // mThresholdMax, as well as unclog                      
+               // It is now safe to increase mThresholdMax (may unclog) 
                ++mThresholdMax.bit;
-               mClogged = mBiggestEntry > mThresholdMax;
             
                // Level up, so wrap around back to the ending entry     
                entry_gap <<= 1u;
@@ -425,6 +412,16 @@ namespace Langulus::Fractalloc
          }
       
          mNextEntry = trimmed + 1;
+         LglsAssumeDev(mNextEntry >= mValidEntries,
+            "Impossible number of trimmed entries: ", mNextEntry, " < ", mValidEntries);
+      }
+
+      //                                                                
+      // There's the rare case where trimmed count is all filled up.    
+      // In this case, there's no need to stitch the free entry chain.  
+      if (mNextEntry == mValidEntries) {
+         mLastFreed = nullptr;
+         return;
       }
 
       //                                                                
@@ -448,13 +445,21 @@ namespace Langulus::Fractalloc
 
       if (mLastFreed) {
          LglsVerboseScoped("Patching up the free chain, starting with: ", Logger::Hex(mLastFreed));
+
          auto last_valid_freed = mLastFreed;
          auto freed = mLastFreed->GetNextFreeEntry();
+         ::std::unordered_set<Allocation*> mask;
+         mask.insert(last_valid_freed);
+
          while (freed) {
             LglsAssumeDev(freed->GetUses() == 0,
                "Next free entry is in use - shouldn't be possible");
-            
+
             if (is_in_range(freed)) {
+               LglsAssumeDev(not mask.contains(freed),
+                  "Pool free chain integrity failure");
+               mask.insert(freed);
+
                LglsVerbose(Logger::Hex(last_valid_freed), " -> ", Logger::Hex(freed));
                last_valid_freed->SetNextFreeEntry(freed);
                last_valid_freed = freed;
@@ -463,11 +468,16 @@ namespace Langulus::Fractalloc
                LglsVerbose(Logger::Hex(freed), " fell out of range, skipping to: ",
                   Logger::Hex(freed->GetNextFreeEntry()));
             }
+
             freed = freed->GetNextFreeEntry();
          }
          
          last_valid_freed->ResetNextFreeEntry();
          LglsVerbose("Free chain finalized with: ", Logger::Hex(last_valid_freed));
+         LglsAssumeDev(mask.size() == mNextEntry - mValidEntries,
+            "Pool free chain count mismatch: ",
+            mask.size(), " != ", mNextEntry - mValidEntries
+         );
       }
    }
 

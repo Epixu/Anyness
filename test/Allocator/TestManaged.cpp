@@ -369,7 +369,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEST_CASE("Stress test and benchmarking", "[fractalloc]") {
+TEST_CASE("Memory stress test and benchmarking", "[fractalloc]") {
    static MemoryState memoryState;
 
    std::random_device rd;
@@ -455,6 +455,165 @@ TEST_CASE("Stress test and benchmarking", "[fractalloc]") {
       REQUIRE(benchmark.check_highscore());
       REQUIRE(benchmark.check_faster("Test/Fractalloc::Allocate", "Test/aligned_malloc"));
       REQUIRE(benchmark.check_faster("Test/Fractalloc::Deallocate", "Test/aligned_free"));
+   #endif
+
+   REQUIRE(memoryState.Assert());
+   REQUIRE_FALSE(Allocator::CollectGarbage());
+}
+
+TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
+   static MemoryState memoryState;
+
+   std::random_device rd;
+   std::mt19937 generator(rd());
+
+   const std::array types {
+        MetaDataOf<Type1>()
+      , MetaDataOf<Type2>()
+      , MetaDataOf<Type3>()
+      , MetaDataOf<Type4>()
+      , MetaDataOf<Type8>()
+      , MetaDataOf<TypeBig>()
+      , MetaDataOf<TypeVeryBig>()
+      , MetaDataOf<TypeVeryBigAligned>()
+      , MetaDataOf<TypeVeryBigPacked>()
+   };
+
+   {
+      // Perform a million random allocations using the memory manager  
+      ::std::unordered_set<Allocation*> mask;
+      mask.reserve(1'000'000);
+
+      ::std::vector<Allocation*> entries;
+      entries.reserve(1'000'000);
+
+      for (int i = 0; i < 333'333; ++i) {
+         // Allocate 2 entries, and then deallocate one random          
+         for (int k = 0; k < 2; ++k) {
+            auto random_type = types[generator() % types.size()];
+            auto random_size = pot_t(Roof2(random_type.GetSize() * (generator() % 100)));
+            Allocation* entry;
+            {
+               CTRACK_NAME_PERSIST("Test/Accumulator/Fractalloc::Allocate");
+               entry = Allocator::Allocate(random_type, random_size);
+            }
+
+            REQUIRE(entry);
+            REQUIRE(not mask.contains(entry));
+            mask.insert(entry);
+            entries.push_back(entry);
+         }
+
+         auto random_deletion = generator() % entries.size();
+         auto& e = entries[random_deletion];
+         if (e) {
+            CTRACK_NAME_PERSIST("Test/Accumulator/Fractalloc::Deallocate");
+            Allocator::Deallocate(e);
+            mask.erase(e);
+         }
+         e = nullptr;
+      }
+
+      for (auto& e : entries) {
+         if (e) {
+            CTRACK_NAME_PERSIST("Test/Accumulator/Fractalloc::Deallocate");
+            Allocator::Deallocate(e);
+         }
+      }
+   }
+
+   {
+      // Perform a million random allocations using the malloc          
+      ::std::vector<void*> entries;
+      entries.reserve(1'000'000);
+
+      for (int i = 0; i < 333'333; ++i) {
+         // Allocate 2 entries, and then deallocate one random          
+         for (int k = 0; k < 2; ++k) {
+            auto random_type = types[generator() % types.size()];
+            auto random_size = Roof2(random_type.GetSize() * (generator() % 100));
+            void* entry;
+            {
+               CTRACK_NAME("Test/Accumulator/malloc");
+               entry = malloc(random_size);
+            }
+
+            REQUIRE(entry);
+            entries.push_back(entry);
+         }
+
+         auto random_deletion = generator() % entries.size();
+         auto& e = entries[random_deletion];
+         if (e) {
+            CTRACK_NAME("Test/Accumulator/free");
+            free(e);
+         }
+         e = nullptr;
+      }
+
+      for (auto& e : entries) {
+         if (e) {
+            CTRACK_NAME("Test/Accumulator/free");
+            free(e);
+         }
+      }
+   }
+
+   {
+      // Perform a million random allocations using the aligned_alloc   
+      ::std::vector<void*> entries;
+      entries.reserve(1'000'000);
+
+      for (int i = 0; i < 333'333; ++i) {
+         // Allocate 2 entries, and then deallocate one random          
+         for (int k = 0; k < 2; ++k) {
+            auto random_type = types[generator() % types.size()];
+            auto random_size = Roof2(random_type.GetSize() * (generator() % 100));
+            auto random_alignment = static_cast<size_t>(random_type.GetAlignment());
+            void* entry;
+            {
+               CTRACK_NAME("Test/Accumulator/aligned_malloc");
+               #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
+                  entry = _aligned_malloc(random_size, random_alignment);
+               #else
+                  entry = ::std::aligned_alloc(random_size, random_alignment);
+               #endif
+            }
+
+            REQUIRE(entry);
+            entries.push_back(entry);
+         }
+
+         auto random_deletion = generator() % entries.size();
+         auto& e = entries[random_deletion];
+         if (e) {
+            CTRACK_NAME("Test/Accumulator/aligned_free");
+            #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
+               _aligned_free(e);
+            #else
+               ::std::free(e);
+            #endif
+         }
+         e = nullptr;
+      }
+
+      for (auto& e : entries) {
+         if (e) {
+            CTRACK_NAME("Test/Accumulator/aligned_free");
+            #if LANGULUS_COMPILER(MSVC) or LANGULUS_COMPILER(CLANG_CL)
+               _aligned_free(e);
+            #else
+               ::std::free(e);
+            #endif
+         }
+      }
+   }
+
+   #if LANGULUS(BENCHMARK)
+      auto benchmark = ctrack::result_get_detail_table();
+      REQUIRE(benchmark.check_highscore());
+      REQUIRE(benchmark.check_faster("Test/Accumulator/Fractalloc::Allocate", "Test/Accumulator/aligned_malloc"));
+      REQUIRE(benchmark.check_faster("Test/Accumulator/Fractalloc::Deallocate", "Test/Accumulator/aligned_free"));
    #endif
 
    REQUIRE(memoryState.Assert());

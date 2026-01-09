@@ -54,9 +54,6 @@ namespace Langulus::Fractalloc
       size_t mNextEntry = 0;
       // Keeps track of how many entries are currently in use           
       size_t mValidEntries = 0;
-      // An entry larger than the next allowed mThresholdMax will clog  
-      // the pool, until it is freed.                                   
-      bool mClogged = false;
 
       #if LANGULUS_FEATURE(MEMORY_STATISTICS)
          // Acts like a timestamp of when the allocation happened       
@@ -156,6 +153,14 @@ namespace Langulus::Fractalloc
       ///   @return true on at least one valid entry                          
       bool IsInUse() const noexcept {
          return mAllocatedByFrontend > 0;
+      }
+
+      /// An entry larger than the next allowed mThresholdMax will clog       
+      /// the pool, until it is freed. This means that no new entries are     
+      /// allowed. Reallocations are allowed, as long as they don't exceed    
+      /// the biggest entry size. A pool may unclog after trimming.           
+      bool IsClogged() const noexcept {
+         return mBiggestEntry > mThresholdMax;
       }
 
       /// Check if memory can contain a number of bytes                       

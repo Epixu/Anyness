@@ -7,6 +7,7 @@
 ///                                                                           
 #include "../Main.hpp"
 #include <Langulus/Utils/Roof.hpp>
+#include <Langulus/Profiler.hpp>
 
 using namespace Langulus;
 
