@@ -7,6 +7,7 @@
 ///                                                                           
 #include "TestAllocatorCommon.hpp"
 #include <Langulus/MetaOf.hpp>
+#include <Langulus/Profiler.hpp>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #error "This file shouldn't be included if MANAGED_MEMORY is enabled"
