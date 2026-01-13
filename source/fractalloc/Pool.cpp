@@ -159,6 +159,8 @@ namespace Langulus::Fractalloc
       );
       mAllocatedByFrontend += static_cast<size_t>(bytes);
       ++mValidEntries;
+      LglsAssumeDev(mNextEntry >= mValidEntries,
+         "Impossible number of valid entries: ", mNextEntry, " < ", mValidEntries);
       return newEntry;
    }
 
@@ -217,6 +219,8 @@ namespace Langulus::Fractalloc
       );
       mAllocatedByFrontend += static_cast<size_t>(bytes);
       ++mValidEntries;
+      LglsAssumeDev(mNextEntry >= mValidEntries,
+         "Impossible number of valid entries: ", mNextEntry, " < ", mValidEntries);
       return newEntry;
    }
 
@@ -335,6 +339,9 @@ namespace Langulus::Fractalloc
          else if (::std::has_single_bit(mValidEntries+1))
             Trim();
       }
+
+      LglsAssumeDev(mNextEntry >= mValidEntries,
+         "Impossible number of valid entries: ", mNextEntry, " < ", mValidEntries);
    }
 
    /// Get valid entry that corresponds to an arbitrary pointer               
@@ -375,8 +382,14 @@ namespace Langulus::Fractalloc
    /// Remove all empty entries at the end, increase mThresholdMax and lower  
    /// mNextEntry as much as possible. Will unclog the pool if able to.       
    void Pool::Trim() {
+      if (mNextEntry == mValidEntries) {
+         // Nothing to trim                                             
+         mLastFreed = nullptr;
+         return;
+      }
+
       LglsAssumeDev(mNextEntry >= mValidEntries,
-         "Impossible number of valid entries");
+         "Impossible number of valid entries: ", mNextEntry, " < ", mValidEntries);
 
       {
          LglsAssumeDev(IsInUse(), "Should have at least one valid entry");
@@ -385,7 +398,8 @@ namespace Langulus::Fractalloc
          //                                                             
          // First pass checks how many entries we can trim              
          size_t trimmed = mNextEntry - 1;
-         size_t entry_gap = 1u << (mMaxEntries.bit - ::std::bit_width(trimmed) + 1);
+         //size_t entry_gap = 1u << (mMaxEntries.bit - ::std::bit_width(trimmed) + 1);
+         size_t entry_gap = 1u << (mMaxEntries.bit + 1 - ::std::bit_width(mNextEntry));
          auto entry = AllocationFromIndex(trimmed);
          while (trimmed) {
             LglsVerboseScoped("Trimming: ", Logger::Hex(entry));
@@ -413,7 +427,9 @@ namespace Langulus::Fractalloc
       
          mNextEntry = trimmed + 1;
          LglsAssumeDev(mNextEntry >= mValidEntries,
-            "Impossible number of trimmed entries: ", mNextEntry, " < ", mValidEntries);
+            "Impossible number of trimmed entries: ", mNextEntry, " < ", mValidEntries,
+            " after trimming ", trimmed, " entries"
+         );
       }
 
       //                                                                
@@ -448,8 +464,8 @@ namespace Langulus::Fractalloc
 
          auto last_valid_freed = mLastFreed;
          auto freed = mLastFreed->GetNextFreeEntry();
-         ::std::unordered_set<Allocation*> mask;
-         mask.insert(last_valid_freed);
+         IF_SAFE(::std::unordered_set<Allocation*> mask);
+         IF_SAFE(mask.insert(last_valid_freed));
 
          while (freed) {
             LglsAssumeDev(freed->GetUses() == 0,
@@ -458,7 +474,7 @@ namespace Langulus::Fractalloc
             if (is_in_range(freed)) {
                LglsAssumeDev(not mask.contains(freed),
                   "Pool free chain integrity failure");
-               mask.insert(freed);
+               IF_SAFE(mask.insert(freed));
 
                LglsVerbose(Logger::Hex(last_valid_freed), " -> ", Logger::Hex(freed));
                last_valid_freed->SetNextFreeEntry(freed);
@@ -499,11 +515,10 @@ namespace Langulus::Fractalloc
       if (index == 0)
          return mAllocationData;
 
-      constexpr size_t one = 1;
-      const size_t basePower = ::std::bit_width(index) - 1;
-      const size_t baselessIndex = index - (one << basePower);
-      const size_t levelIndex = (baselessIndex << one) + one;
-      const size_t levelSize = (one << (mMaxEntries.bit - basePower - 1));
+      const size_t basePower = ::std::bit_width(index);
+      const size_t baselessIndex = index - (1u << (basePower - 1u));
+      const size_t levelIndex = (baselessIndex << 1u) + 1u;
+      const size_t levelSize = (1u << (mMaxEntries.bit - basePower));
       return mAllocationData + levelIndex * levelSize;
    }
 
@@ -520,9 +535,8 @@ namespace Langulus::Fractalloc
          return 0;
 
       // We got the index, but it is not constrained to the pool        
-      constexpr size_t one = 1;
-      size_t i_clear_lsb = i & ~(i - one);
-      size_t index = ((mAllocatedByBackend + i) / i_clear_lsb - one) >> one;
+      size_t i_clear_lsb = i & ~(i - 1u);
+      size_t index = ((mAllocatedByBackend + i) / i_clear_lsb - 1u) >> 1u;
       while (index >= mNextEntry)
          index = UpIndex(index);
       return index;

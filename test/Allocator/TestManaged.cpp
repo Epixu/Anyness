@@ -96,6 +96,29 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
       REQUIRE_FALSE(pool->ContainsData(nullptr));
       REQUIRE_FALSE(pool->IsInUse());
 
+      auto is_in_range = [pool](Allocation const* a) {
+         if (a < pool->GetAllocationData() or a >= pool->GetAllocationData() + static_cast<size_t>(pool->GetMaxEntries()))
+            return false;
+         size_t i = a - pool->GetAllocationData();
+         //if (i == 0)
+         //   return true;
+
+         // Each new power-of-two index starts a level, which begins at GetAllocationData() + base + 1
+         // Each new entry on the same level offsets by gap * (index - (base + 1))
+         // We can easily discard top level by checking if divisible by two, because those entries are always reserved to the last indices
+         size_t level = 1;
+         while (i) {
+            if (i % 2) {
+               const size_t base = 1u << (pool->GetMaxEntries().bit - level);
+               return (i/2 + base - 1) <= pool->GetCurrentEntries();
+            }
+
+            i /= 2;
+            ++level;
+         }
+         return true;
+      };
+
       WHEN("Small entry is allocated") {
          auto entry = pool->Allocate(pot_t(Roof2(sizeof(TestType))));
 
@@ -114,6 +137,11 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
             REQUIRE(entry);
             REQUIRE(entry->GetSize() == min_alloc);
             REQUIRE(IsAligned(entry->GetBlockStart(), testAlignment));
+            REQUIRE(pool->IndexFromAllocation(entry) == i);
+            REQUIRE(pool->IndexFromAddress(entry->GetBlockStart()) == i);
+            REQUIRE(is_in_range(entry));
+            if(i==512)
+               REQUIRE(not is_in_range(entry + 2));
 
             entry->AddRef(i);
 
