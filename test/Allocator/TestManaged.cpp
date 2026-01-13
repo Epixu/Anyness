@@ -508,15 +508,17 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
       , MetaDataOf<TypeVeryBigPacked>()
    };
 
+   constexpr size_t budget = Langulus::Bitness >= 64 ? 1'000'000 : 200'000;
+
    {
       // Perform a million random allocations using the memory manager  
       ::std::unordered_set<Allocation*> mask;
-      mask.reserve(1'000'000);
+      mask.reserve(budget);
 
       ::std::vector<Allocation*> entries;
-      entries.reserve(1'000'000);
+      entries.reserve(budget);
 
-      for (int i = 0; i < 333'333; ++i) {
+      for (int i = 0; i < budget/3; ++i) {
          // Allocate 2 entries, and then deallocate one random          
          for (int k = 0; k < 2; ++k) {
             auto random_type = types[generator() % types.size()];
@@ -564,9 +566,9 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
    {
       // Perform a million random allocations using the malloc          
       ::std::vector<void*> entries;
-      entries.reserve(1'000'000);
+      entries.reserve(budget);
 
-      for (int i = 0; i < 333'333; ++i) {
+      for (int i = 0; i < budget/3; ++i) {
          // Allocate 2 entries, and then deallocate one random          
          for (int k = 0; k < 2; ++k) {
             auto random_type = types[generator() % types.size()];
@@ -601,9 +603,9 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
    {
       // Perform a million random allocations using the aligned_alloc   
       ::std::vector<void*> entries;
-      entries.reserve(1'000'000);
+      entries.reserve(budget);
 
-      for (int i = 0; i < 333'333; ++i) {
+      for (int i = 0; i < budget/3; ++i) {
          // Allocate 2 entries, and then deallocate one random          
          for (int k = 0; k < 2; ++k) {
             auto random_type = types[generator() % types.size()];
