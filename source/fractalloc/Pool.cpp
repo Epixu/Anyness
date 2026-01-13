@@ -393,36 +393,40 @@ namespace Langulus::Fractalloc
 
       {
          LglsAssumeDev(IsInUse(), "Should have at least one valid entry");
-         const size_t max_entries = static_cast<size_t>(mMaxEntries);
+         //const size_t max_entries = static_cast<size_t>(mMaxEntries);
 
          //                                                             
          // First pass checks how many entries we can trim              
          size_t trimmed = mNextEntry - 1;
-         //size_t entry_gap = 1u << (mMaxEntries.bit - ::std::bit_width(trimmed) + 1);
-         size_t entry_gap = 1u << (mMaxEntries.bit + 1 - ::std::bit_width(mNextEntry));
-         auto entry = AllocationFromIndex(trimmed);
+         //size_t entry_gap = 1u << (mMaxEntries.bit + 1 - ::std::bit_width(mNextEntry));
+         //if (entry_gap < 2)
+         //   entry_gap = 2;
+         //auto entry = AllocationFromIndex(trimmed);
          while (trimmed) {
+            auto entry = AllocationFromIndex(trimmed);
             LglsVerboseScoped("Trimming: ", Logger::Hex(entry));
             if (entry->GetUses()) {
                LglsVerbose("Trimming ceased - valid entry encountered");
                break;
             }
          
-            --trimmed;
+            //--trimmed;
             
-            if (entry - entry_gap < mAllocationData) {
+            if (::std::has_single_bit(trimmed) /*entry - entry_gap < mAllocationData*/) {
                // It is now safe to increase mThresholdMax (may unclog) 
                ++mThresholdMax.bit;
             
                // Level up, so wrap around back to the ending entry     
-               entry_gap <<= 1u;
-               entry = mAllocationData + max_entries - entry_gap;
+               //entry_gap <<= 1u;
+               //entry = mAllocationData + max_entries - entry_gap;
                LglsVerbose("Trimmed and wrapped around");
             }
             else {
-               entry -= entry_gap;
+               //entry -= entry_gap;
                LglsVerbose("Trimmed");
             }
+
+            --trimmed;
          }
       
          mNextEntry = trimmed + 1;

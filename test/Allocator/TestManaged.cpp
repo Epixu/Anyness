@@ -99,24 +99,14 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
       auto is_in_range = [pool](Allocation const* a) {
          if (a < pool->GetAllocationData() or a >= pool->GetAllocationData() + static_cast<size_t>(pool->GetMaxEntries()))
             return false;
-         size_t i = a - pool->GetAllocationData();
-         //if (i == 0)
-         //   return true;
 
-         // Each new power-of-two index starts a level, which begins at GetAllocationData() + base + 1
-         // Each new entry on the same level offsets by gap * (index - (base + 1))
-         // We can easily discard top level by checking if divisible by two, because those entries are always reserved to the last indices
-         size_t level = 1;
-         while (i) {
-            if (i % 2) {
-               const size_t base = 1u << (pool->GetMaxEntries().bit - level);
-               return (i/2 + base - 1) <= pool->GetCurrentEntries();
-            }
+         if (a == pool->GetAllocationData())
+            return pool->GetCurrentEntries() > 0;
 
-            i /= 2;
-            ++level;
-         }
-         return true;
+         const size_t i = a - pool->GetAllocationData();
+         size_t i_clear_lsb = i & ~(i - 1u);
+         size_t index = ((pool->GetMaxEntries() + i) / i_clear_lsb - 1u) >> 1u;
+         return index < pool->GetCurrentEntries();
       };
 
       WHEN("Small entry is allocated") {
@@ -140,7 +130,9 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
             REQUIRE(pool->IndexFromAllocation(entry) == i);
             REQUIRE(pool->IndexFromAddress(entry->GetBlockStart()) == i);
             REQUIRE(is_in_range(entry));
-            if(i==512)
+            if (i < (pool->GetMaxEntries() >> 1u))
+               REQUIRE(not is_in_range(entry + 1));
+            else
                REQUIRE(not is_in_range(entry + 2));
 
             entry->AddRef(i);
@@ -183,12 +175,10 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          Logger::Special("Deallocating random entries in pool...");
          Allocation* prev_entry = nullptr;
          for (size_t i = 0; i < pool->GetMaxEntries(); i += 20u) {
-            //Logger::Special("> Deallocating entry ", i, "/", static_cast<size_t>(pool->GetMaxEntries()));
             auto entry = pool->AllocationFromIndex(i);
             REQUIRE(entry->GetUses() == static_cast<int32_t>(1 + i));
             REQUIRE(pool->ContainsAllocation(entry));
             REQUIRE(pool->ContainsData(entry->GetBlockStart()));
-            //Logger::Special("> Entry seems valid");
             pool->Deallocate(entry);
             REQUIRE(entry->GetUses() == 0);
             REQUIRE(entry->GetNextFreeEntry() == prev_entry);
@@ -196,6 +186,17 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          }
          REQUIRE(pool->CanContain(pool->GetMinAllocation()));
          REQUIRE_FALSE(pool->CanContain(pot_t(pool->GetMinAllocation()*2u)));
+
+         // Test the integrity of the free entry chain                  
+         Logger::Special("Testing free chain integrity...");
+         prev_entry = pool->GetLastFreedEntry();
+         size_t chain_counter = 0;
+         while (prev_entry) {
+            REQUIRE(prev_entry->GetUses() == 0);
+            ++chain_counter;
+            prev_entry = prev_entry->GetNextFreeEntry();
+         }
+         REQUIRE(chain_counter == pool->GetCurrentEntries() - pool->GetValidEntries());
 
          // Deallocate right half of entries                            
          Logger::Special("Deallocating right half of entries in pool...");
@@ -210,7 +211,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
          // Test the integrity of the free entry chain                  
          Logger::Special("Testing free chain integrity...");
          prev_entry = pool->GetLastFreedEntry();
-         size_t chain_counter = 0;
+         chain_counter = 0;
          while (prev_entry) {
             REQUIRE(prev_entry->GetUses() == 0);
             ++chain_counter;
@@ -433,6 +434,7 @@ TEST_CASE("Memory stress test and benchmarking", "[fractalloc]") {
       }
    }
 
+   #if LANGULUS(BENCHMARK)
    // Perform a million random allocations using malloc, for comparison
    for (int i = 0; i < 1'000'000; ++i) {
       auto random_type = types[generator() % types.size()];
@@ -478,7 +480,6 @@ TEST_CASE("Memory stress test and benchmarking", "[fractalloc]") {
       }
    }
 
-   #if LANGULUS(BENCHMARK)
       auto benchmark = ctrack::result_get_detail_table();
       REQUIRE(benchmark.check_highscore());
       REQUIRE(benchmark.check_faster("Test/Fractalloc::Allocate", "Test/aligned_malloc"));
@@ -527,7 +528,12 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
             }
 
             REQUIRE(entry);
-            REQUIRE(not mask.contains(entry));
+            if (mask.contains(entry)) {
+               Logger::Error("Entry with index ",
+                  entry->GetPool()->IndexFromAllocation(entry), " shouldn't be reused");
+               FAIL();
+            }
+
             mask.insert(entry);
             entries.push_back(entry);
          }
@@ -535,11 +541,15 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
          auto random_deletion = generator() % entries.size();
          auto& e = entries[random_deletion];
          if (e) {
-            CTRACK_NAME_PERSIST("Test/Accumulator/Fractalloc::Deallocate");
-            Allocator::Deallocate(e);
+            REQUIRE(mask.contains(e));
+            {
+               CTRACK_NAME_PERSIST("Test/Accumulator/Fractalloc::Deallocate");
+               Allocator::Deallocate(e);
+            }
+
             mask.erase(e);
+            e = nullptr;
          }
-         e = nullptr;
       }
 
       for (auto& e : entries) {
@@ -550,6 +560,7 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
       }
    }
 
+   #if LANGULUS(BENCHMARK)
    {
       // Perform a million random allocations using the malloc          
       ::std::vector<void*> entries;
@@ -637,11 +648,10 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
       }
    }
 
-   #if LANGULUS(BENCHMARK)
-      auto benchmark = ctrack::result_get_detail_table();
-      REQUIRE(benchmark.check_highscore());
-      REQUIRE(benchmark.check_faster("Test/Accumulator/Fractalloc::Allocate", "Test/Accumulator/aligned_malloc"));
-      REQUIRE(benchmark.check_faster("Test/Accumulator/Fractalloc::Deallocate", "Test/Accumulator/aligned_free"));
+   auto benchmark = ctrack::result_get_detail_table();
+   REQUIRE(benchmark.check_highscore());
+   REQUIRE(benchmark.check_faster("Test/Accumulator/Fractalloc::Allocate", "Test/Accumulator/aligned_malloc"));
+   REQUIRE(benchmark.check_faster("Test/Accumulator/Fractalloc::Deallocate", "Test/Accumulator/aligned_free"));
    #endif
 
    REQUIRE(memoryState.Assert());
