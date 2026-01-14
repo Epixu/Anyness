@@ -102,7 +102,11 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::UnfoldConstructible<T, A&&>) {
                   // Just construct the first element                   
                   self.PrepareForReconstruction();
-                  self.EmplaceWithIntent(FWDIntent(argument));
+
+                  if constexpr (CT::Copied<IntentOf(argument)>)
+                     self.EmplaceWithIntent(Refer(FWD(argument)));
+                  else
+                     self.EmplaceWithIntent(FWDIntent(argument));
                }
                else static_assert(false, "T can't be reconstructed");
             }
@@ -110,16 +114,28 @@ namespace Langulus::Anyness::Component
                // Container has at least one element                    
                if constexpr (CT::UnfoldAssignable<T, A&&>) {
                   // Reduce to one item and reassign if possible        
-                  if (self.PrepareForReassignment())
-                     self.AssignWithIntent(FWDIntent(argument));
-                  else
-                     self.EmplaceWithIntent(FWDIntent(argument));
+                  if (self.PrepareForReassignment()) {
+                     if constexpr (CT::Copied<IntentOf(argument)>)
+                        self.AssignWithIntent(Refer(FWD(argument)));
+                     else
+                        self.AssignWithIntent(FWDIntent(argument));
+                  }
+                  else {
+                     if constexpr (CT::Copied<IntentOf(argument)>)
+                        self.EmplaceWithIntent(Refer(FWD(argument)));
+                     else
+                        self.EmplaceWithIntent(FWDIntent(argument));
+                  }
                }
                else if constexpr (CT::UnfoldConstructible<T, A&&>) {
                   // Assignment isn't available for T - destroy all     
                   // items and reconstruct the first one                
                   self.PrepareForReconstruction();
-                  self.EmplaceWithIntent(FWDIntent(argument));
+
+                  if constexpr (CT::Copied<IntentOf(argument)>)
+                     self.EmplaceWithIntent(Refer(FWD(argument)));
+                  else
+                     self.EmplaceWithIntent(FWDIntent(argument));
                }
                else static_assert(false, "T can't be reassigned or reconstructed");
             }
@@ -257,11 +273,21 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
          decltype(auto) rhs = FWD(intent.what);
+         static_assert(not CT::Copied<I>,
+            "Since this function assumes container has been preallocated, "
+            "it makes no sense to copy here - it should be handled outside this call."
+         );
 
-         if constexpr (CT::Copied<I>)
+         /*if constexpr (CT::Copied<I>)
             self.AssignByCopying(rhs);
-         else if constexpr (CT::Cloned<I>)
-            self.AssignByCloning(rhs);
+         else*/
+         if constexpr (CT::Cloned<I>) {
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               self.AssignByCloningCustomPointers(rhs);
+            #else
+               self.AssignByCloningStandardPointers(rhs);
+            #endif
+         }
          else if constexpr (CT::Handle<IT>) {
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     

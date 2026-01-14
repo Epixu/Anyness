@@ -333,10 +333,15 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
          decltype(auto) rhs = FWD(intent.what);
+         static_assert(not CT::Copied<I>,
+            "Since this function assumes container has been preallocated, "
+            "it makes no sense to copy here - it should be handled outside this call."
+         );
 
-         if constexpr (CT::Copied<I>)
+         /*if constexpr (CT::Copied<I>)
             self.EmplaceByCopying(rhs);
-         else if constexpr (CT::Cloned<I>) {
+         else*/
+         if constexpr (CT::Cloned<I>) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                self.EmplaceByCloningCustomPointers(rhs);
             #else
