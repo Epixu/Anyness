@@ -112,7 +112,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Container has at least one element                    
-               if constexpr (CT::UnfoldAssignable<T, A&&>) {
+               if constexpr (not CT::Cloned<IntentOf(argument)> and CT::UnfoldAssignable<T, A&&>) {
                   // Reduce to one item and reassign if possible        
                   if (self.PrepareForReassignment()) {
                      if constexpr (CT::Copied<IntentOf(argument)>)
@@ -273,22 +273,18 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
          decltype(auto) rhs = FWD(intent.what);
+         static_assert(not CT::Cloned<I>,
+            "Since this function assumes container has been preallocated, "
+            "it makes no sense to clone here "
+            "- it should be handled outside this call."
+         );
          static_assert(not CT::Copied<I>,
             "Since this function assumes container has been preallocated, "
-            "it makes no sense to copy here - it should be handled outside this call."
+            "it makes no sense to copy here "
+            "- it should be handled outside this call."
          );
-
-         /*if constexpr (CT::Copied<I>)
-            self.AssignByCopying(rhs);
-         else*/
-         if constexpr (CT::Cloned<I>) {
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               self.AssignByCloningCustomPointers(rhs);
-            #else
-               self.AssignByCloningStandardPointers(rhs);
-            #endif
-         }
-         else if constexpr (CT::Handle<IT>) {
+         
+         if constexpr (CT::Handle<IT>) {
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership    

@@ -13,9 +13,9 @@
 
 namespace Langulus::CTTI
 {
-   /// A rule for serializing any deep container.                             
-   /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
-   /// as well as any templated equivalents. It basically places scopes,      
+   /// A rule for serializing any deep container that contains multiple items.
+   /// This includes Text, Bytes, Many, Map, Set, Pair, Neat, Tag, etc...     
+   /// as well as their templated equivalents. It basically places scopes,    
    /// separators and state decorators, depending on the kind of container.   
    template<CT::Deep C>
    void SerializationRule<Anyness::Text, C>::Serialize(C const& self, Anyness::Text& out, Context* context)
@@ -79,6 +79,8 @@ namespace Langulus::CTTI
       }
    }
       
+   /// A rule for serializing any deep container that contains single item.   
+   /// This includes Any, Handle, Own, Ref and their templated equivalents.   
    template<CT::Deep C>
    void SerializationRule<Anyness::Text, C>::Serialize(C const& self, Anyness::Text& out, Context* context)
    requires CT::ContainsOne<C> {
@@ -155,11 +157,17 @@ namespace Langulus::CTTI
    
    /// Convert Any -> Text                                                    
    constexpr void Converter<Anyness::Any, Anyness::Text>::Convert(Anyness::Any const& from, Anyness::Text& to) {
+      if (from.IsEmpty())
+         return;
+
       Serialize(from, to);
    }
    
    constexpr auto Converter<Anyness::Any, Anyness::Text>::Convert(Anyness::Any const& from) -> Anyness::Text {
       Anyness::Text result;
+      if (from.IsEmpty())
+         return result;
+
       Serialize(from, result);
       return result;
    }
@@ -167,12 +175,18 @@ namespace Langulus::CTTI
    /// Convert TAny -> Text                                                   
    template<class T>
    constexpr void Converter<Anyness::TAny<T>, Anyness::Text>::Convert(Anyness::TAny<T> const& from, Anyness::Text& to) {
+      if (from.IsEmpty())
+         return;
+
       Serialize(from, to);
    }
 
    template<class T>
    constexpr auto Converter<Anyness::TAny<T>, Anyness::Text>::Convert(Anyness::TAny<T> const& from) -> Anyness::Text {
       Anyness::Text result;
+      if (from.IsEmpty())
+         return result;
+
       Serialize(from, result);
       return result;
    }

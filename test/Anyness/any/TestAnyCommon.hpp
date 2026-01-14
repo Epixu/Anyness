@@ -66,8 +66,8 @@ void Any_CheckState_DisownedFullConst(const auto&);
 template<class E>
 void Any_CheckState_Abandoned(const auto&);
 
-template<class E>
-void Any_Helper_TestType(const auto& any) {
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Any_Helper_TestType(const C& any) {
    if constexpr (CT::Void<E>) {
       REQUIRE(any.template IsSame<int>());
       REQUIRE(any.template IsExact<int>());
@@ -88,7 +88,7 @@ void Any_Helper_TestType(const auto& any) {
    REQUIRE(any.IsTyped());
 }
 
-template<CT::Container LHS, CT::Container RHS>
+template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
 void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
    REQUIRE(lhs.GetRaw() == rhs.GetRaw());
    REQUIRE(lhs.IsExact(rhs.GetType()));
@@ -101,12 +101,10 @@ void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
 
 ///                                                                           
 /// Possible state test implementations                                       
-template<class E>
-void Any_CheckState_Default(const auto& any) {
-   using T = Decay<decltype(any)>;
-
-   if constexpr (CT::Typed<T>) {
-      static_assert(Exact<TypeOf<T>, E>);
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Any_CheckState_Default(const C& any) {
+   if constexpr (CT::Typed<C>) {
+      static_assert(Exact<TypeOf<C>, E>);
       Any_Helper_TestType<E>(any);
 
       if constexpr (requires { any.GetState(); })
@@ -122,8 +120,8 @@ void Any_CheckState_Default(const auto& any) {
          REQUIRE(any.GetState() == State::Default);
    }
 
-   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (any.IsConstant() /*== CT::Constant<E>*/);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (any.IsConstant());
    REQUIRE_FALSE(any.IsValid());
    REQUIRE_FALSE(any.GetAllocation());
    REQUIRE      (any.IsEmpty());
@@ -141,13 +139,11 @@ void Any_CheckState_Default(const auto& any) {
    }
 }
 
-template<class E>
-void Any_CheckState_OwnedEmpty(const auto& any) {
-   using T = Decay<decltype(any)>;
-
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Any_CheckState_OwnedEmpty(const C& any) {
    Any_Helper_TestType<E>(any);
 
-   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant() == CT::Constant<E>);
    REQUIRE_FALSE(any.IsValid());
    REQUIRE      (any.GetAllocation());
@@ -160,13 +156,11 @@ void Any_CheckState_OwnedEmpty(const auto& any) {
    REQUIRE      (not any);
 }
 
-template<class E>
-void Any_CheckState_OwnedFull(const auto& any) {
-   using T = Decay<decltype(any)>;
-
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Any_CheckState_OwnedFull(const C& any) {
    Any_Helper_TestType<E>(any);
 
-   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant() == CT::Constant<E>);
    REQUIRE      (any.IsValid());
    REQUIRE      (any.GetAllocation());
@@ -179,13 +173,11 @@ void Any_CheckState_OwnedFull(const auto& any) {
    REQUIRE_FALSE(not any);
 }
 
-template<class E>
-void Any_CheckState_DisownedFull(const auto& any) {
-   using T = Decay<decltype(any)>;
-
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Any_CheckState_DisownedFull(const C& any) {
    Any_Helper_TestType<E>(any);
 
-   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant());
    REQUIRE      (any.IsValid());
    REQUIRE_FALSE(any.GetAllocation());
@@ -198,13 +190,11 @@ void Any_CheckState_DisownedFull(const auto& any) {
    REQUIRE_FALSE(not any);
 }
 
-template<class E>
-void Any_CheckState_DisownedFullConst(const auto& any) {
-   using T = Decay<decltype(any)>;
-
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Any_CheckState_DisownedFullConst(const C& any) {
    Any_Helper_TestType<E>(any);
 
-   REQUIRE      (any.IsTypeConstrained() == CT::Typed<T>);
+   REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant());
    REQUIRE      (any.IsValid());
    REQUIRE_FALSE(any.GetAllocation());
@@ -217,22 +207,31 @@ void Any_CheckState_DisownedFullConst(const auto& any) {
    REQUIRE_FALSE(not any);
 }
 
-template<class E>
-void Any_CheckState_Abandoned(const auto& any) {
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Any_CheckState_Abandoned(const C& any) {
    REQUIRE_FALSE(any.GetAllocation());
 }
 
-template<CT::Container T>
-void Any_CheckState_ContainsOne(T const& pack, const auto& e, [[maybe_unused]] bool disowned = false) {
-   using E = typename Decay<decltype(e)>::Type;
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent) {
+   auto& e = e_with_intent.what;
+   using E = typename Decay<Deint<I>>::Type;
    REQUIRE(pack.GetCount() == 1);
    REQUIRE(pack.GetUses() == 1);
    REQUIRE(pack.GetReserved() >= 1);
 
    REQUIRE(pack.template As<Decay<E>>() == DenseCast(*e));
-   REQUIRE(pack.template As<E>() == *e);
-   REQUIRE((*pack.template As<E*>()) == *e);
-   REQUIRE(*pack.template GetRawAs<E>() == *e);
+
+   if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
+      REQUIRE(pack.template As<E>() != *e);
+      REQUIRE((*pack.template As<E*>()) != *e);
+      REQUIRE(*pack.template GetRawAs<E>() != *e);
+   }
+   else {
+      REQUIRE(pack.template As<E>() == *e);
+      REQUIRE((*pack.template As<E*>()) == *e);
+      REQUIRE(*pack.template GetRawAs<E>() == *e);
+   }
 
    if constexpr(::std::ranges::range<T>) {
       for (auto& it : pack)
@@ -244,9 +243,13 @@ void Any_CheckState_ContainsOne(T const& pack, const auto& e, [[maybe_unused]] b
    else {
       REQUIRE(pack.GetEntries() != nullptr);
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         if (not disowned) {
-            for (size_t i = 0; i < IndirectsOf<E>; ++i)
-               REQUIRE(pack.GetEntries()[i] == e.entries[i+1]);
+         if constexpr (not CT::Disowned<I>) {
+            for (size_t i = 0; i < IndirectsOf<E>; ++i) {
+               if constexpr (CT::Cloned<I>)
+                  REQUIRE(pack.GetEntries()[i] != e.entries[i + 1]);
+               else
+                  REQUIRE(pack.GetEntries()[i] == e.entries[i + 1]);
+            }
          }
          else {
             for (size_t i = 0; i < IndirectsOf<E>; ++i)
@@ -264,7 +267,7 @@ void Any_CheckState_ContainsOne(T const& pack, const auto& e, [[maybe_unused]] b
    }
 }
 
-template<CT::Container T, class E>
+template<CT::Container T, class E> requires CT::NoIntent<T>
 void Any_Helper_CompareOne(const T& pack, const E& e) {
    if constexpr (CT::TypeErased<T>) {
       REQUIRE(pack.CompareOne(e) == Compared::Equal);

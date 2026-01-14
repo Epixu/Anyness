@@ -338,9 +338,6 @@ namespace Langulus::Anyness::Component
             "it makes no sense to copy here - it should be handled outside this call."
          );
 
-         /*if constexpr (CT::Copied<I>)
-            self.EmplaceByCopying(rhs);
-         else*/
          if constexpr (CT::Cloned<I>) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                self.EmplaceByCloningCustomPointers(rhs);

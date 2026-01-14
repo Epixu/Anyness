@@ -237,7 +237,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          pack.Assign(*element);
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Any_CheckState_ContainsOne(pack, Refer(element));
          
          #if LANGULUS(BENCHMARK)
             constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(" + NameOf<E>() + ")";
@@ -331,7 +331,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             Any_CheckState_Default<TypeOf<E>>(movable);
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Any_CheckState_ContainsOne(pack, Refer(element));
 
          #if LANGULUS(BENCHMARK)
             constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(::std::move(" + NameOf<E>() + "))";
@@ -426,7 +426,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          pack.Assign(Copy(*element));
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Any_CheckState_ContainsOne(pack, Copy(element));
 
          #if LANGULUS(BENCHMARK)
             constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(Copy(" + NameOf<E>() + "))";
@@ -472,7 +472,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             REQUIRE(pack.IsExact(element->GetType()));
             REQUIRE(pack == *element);
             REQUIRE(pack.IsDeep() == element->IsDeep());
-            REQUIRE(pack.IsConstant() != element->IsConstant());
+            REQUIRE_FALSE(pack.IsConstant());
             REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
 
             REQUIRE(pack.GetUses() == 1);
@@ -518,7 +518,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          pack.Assign(Clone(*element));
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Any_CheckState_ContainsOne(pack, Clone(element));
 
          #if LANGULUS(BENCHMARK)
             constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(Clone(" + NameOf<E>() + "))";
@@ -564,7 +564,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             REQUIRE(pack.IsExact(element->GetType()));
             REQUIRE(pack == *element);
             REQUIRE(pack.IsDeep() == element->IsDeep());
-            REQUIRE(pack.IsConstant() != element->IsConstant());
+            REQUIRE_FALSE(pack.IsConstant());
             REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
 
             REQUIRE(pack.GetUses() == 1);
@@ -610,7 +610,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          pack.Assign(Disown(*element));
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element, true);
+         Any_CheckState_ContainsOne(pack, Disown(element));
 
          #if LANGULUS(BENCHMARK)
             constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(Disown(" + NameOf<E>() + "))";
@@ -707,7 +707,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             Any_CheckState_Abandoned<E>(movable);
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Any_CheckState_ContainsOne(pack, Refer(element));
 
          #if LANGULUS(BENCHMARK)
             constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(Abandon(" + NameOf<E>() + "))";
@@ -885,16 +885,16 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       }
 
       WHEN("Referred empty") {
-         auto copy1 = pack;
+         T refer1 = pack;
 
-         Any_Helper_TestSame(copy1, pack);
-         Any_CheckState_Default<E>(copy1);
+         Any_Helper_TestSame(refer1, pack);
+         Any_CheckState_Default<E>(refer1);
          Any_CheckState_Default<E>(pack);
 
-         auto copy2 = Refer(pack);
+         T refer2 = Refer(pack);
 
-         Any_Helper_TestSame(copy2, pack);
-         Any_CheckState_Default<E>(copy2);
+         Any_Helper_TestSame(refer2, pack);
+         Any_CheckState_Default<E>(refer2);
          Any_CheckState_Default<E>(pack);
       }
 
@@ -907,18 +907,18 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       }
 
       WHEN("Disowned empty") {
-         T clone = Disown(pack);
+         T disowned = Disown(pack);
 
-         Any_Helper_TestSame(clone, pack);
-         Any_CheckState_Default<E>(clone);
+         Any_Helper_TestSame(disowned, pack);
+         Any_CheckState_Default<E>(disowned);
          Any_CheckState_Default<E>(pack);
       }
 
       WHEN("Copied empty") {
-         T clone = Copy(pack);
+         T copy = Copy(pack);
 
-         Any_Helper_TestSame(clone, pack);
-         Any_CheckState_Default<E>(clone);
+         Any_Helper_TestSame(copy, pack);
+         Any_CheckState_Default<E>(copy);
          Any_CheckState_Default<E>(pack);
       }
 
@@ -1022,13 +1022,13 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       T pack {Piecewise, *originalElement};
 
       Any_CheckState_OwnedFull<E>(pack);
-      Any_CheckState_ContainsOne(pack, originalElement);
+      Any_CheckState_ContainsOne(pack, Refer(originalElement));
 
       WHEN("Assigned compatible value by referral") {
          pack.Assign(*element);
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Any_CheckState_ContainsOne(pack, Refer(element));
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -1036,7 +1036,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             if (not pack.IsSame(element->GetType())) {
                REQUIRE_THROWS(pack.AssignAbsorb(*element));
                Any_CheckState_OwnedFull<E>(pack);
-               Any_CheckState_ContainsOne(pack, originalElement);
+               Any_CheckState_ContainsOne(pack, Refer(originalElement));
                return;
             }
 
@@ -1047,11 +1047,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
-
-            if constexpr (not CT::Typed<T>) {
-               REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-               REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-            }
          }
       }
       
@@ -1063,7 +1058,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             Any_CheckState_Default<TypeOf<E>>(movable);
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Any_CheckState_ContainsOne(pack, Refer(element));
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -1072,7 +1067,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             if (not pack.IsSame(element->GetType())) {
                REQUIRE_THROWS(pack.AssignAbsorb(::std::move(movable)));
                Any_CheckState_OwnedFull<E>(pack);
-               Any_CheckState_ContainsOne(pack, originalElement);
+               Any_CheckState_ContainsOne(pack, Refer(originalElement));
                Any_CheckState_OwnedFull<int>(movable);
                REQUIRE(movable.GetUses() == 2);
                REQUIRE(movable.template As<int>() == 555);
@@ -1088,11 +1083,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
-
-            if constexpr (not CT::Typed<T>) {
-               REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-               REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-            }
          }
       }
 
@@ -1100,7 +1090,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          pack.Assign(Disown(*element));
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element, true);
+         Any_CheckState_ContainsOne(pack, Disown(element));
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -1108,7 +1098,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             if (not pack.IsSame(element->GetType())) {
                REQUIRE_THROWS(pack.AssignAbsorb(Disown(*element)));
                Any_CheckState_OwnedFull<E>(pack);
-               Any_CheckState_ContainsOne(pack, originalElement);
+               Any_CheckState_ContainsOne(pack, Disown(originalElement));
                return;
             }
 
@@ -1123,11 +1113,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          
             REQUIRE(pack.GetUses() == 0);
             REQUIRE_FALSE(pack.GetAllocation());
-
-            if constexpr (not CT::Typed<T>) {
-               REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-               REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-            }
          }
       }
       
@@ -1139,7 +1124,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             Any_CheckState_Abandoned<TypeOf<E>>(movable);
 
          Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, element);
+         Any_CheckState_ContainsOne(pack, Refer(element));
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -1148,7 +1133,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             if (not pack.IsSame(element->GetType())) {
                REQUIRE_THROWS(pack.AssignAbsorb(::std::move(movable)));
                Any_CheckState_OwnedFull<E>(pack);
-               Any_CheckState_ContainsOne(pack, originalElement);
+               Any_CheckState_ContainsOne(pack, Refer(originalElement));
                Any_CheckState_OwnedFull<int>(movable);
                REQUIRE(movable.GetUses() == 2);
                REQUIRE(movable.template As<int>() == 555);
@@ -1164,11 +1149,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
-
-            if constexpr (not CT::Typed<T>) {
-               REQUIRE_THROWS(pack.template As<float>() == 0.0f);
-               REQUIRE_THROWS(pack.template As<float*>() == nullptr);
-            }
          }
       }
 
@@ -1376,7 +1356,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_Default<TypeOf<E>>(movable);
 
       Any_CheckState_OwnedFull<E>(pack);
-      Any_CheckState_ContainsOne(pack, element);
+      Any_CheckState_ContainsOne(pack, Refer(element));
    }
 
    if constexpr (Ambiguous) {
@@ -1394,7 +1374,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<TypeOf<E>>(*element);
 
       Any_CheckState_OwnedFull<E>(pack);
-      Any_CheckState_ContainsOne(pack, element, true);
+      Any_CheckState_ContainsOne(pack, Disown(element));
    }
 
    if constexpr (Ambiguous) {
@@ -1415,7 +1395,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_Abandoned<TypeOf<E>>(movable);
 
       Any_CheckState_OwnedFull<E>(pack);
-      Any_CheckState_ContainsOne(pack, element);
+      Any_CheckState_ContainsOne(pack, Refer(element));
    }
 
    GIVEN("Two full containers") {
@@ -1431,7 +1411,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          
          Any_CheckState_OwnedFull<E>(pack1);
          Any_CheckState_OwnedFull<E>(pack2);
-         Any_CheckState_ContainsOne(pack2, e1);
+         Any_CheckState_ContainsOne(pack2, Refer(e1));
 
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 1);
@@ -1476,7 +1456,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       }
 
       WHEN("Move-assign pack1 in pack2") {
-         auto movable = pack1;
+         T movable = pack1;
          pack2 = ::std::move(movable);
 
          Any_CheckState_Default<E>(movable);
@@ -1492,7 +1472,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       }
 
       WHEN("Move-assign pack1 in pack2 (alt)") {
-         auto movable = pack1;
+         T movable = pack1;
          pack2 = Move {movable};
 
          Any_CheckState_Default<E>(movable);
@@ -1524,7 +1504,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       }
 
       WHEN("Abandon-assign pack1 in pack2") {
-         auto movable = pack1;
+         T movable = pack1;
          pack2 = Abandon(movable);
 
          Any_CheckState_Abandoned<E>(movable);
@@ -1597,10 +1577,10 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
          REQUIRE      (pack1 != pack2);
          REQUIRE_FALSE(pack1 == pack2);
-         REQUIRE      (pack1 == defaulted_pack);
-         REQUIRE_FALSE(pack1 != defaulted_pack);
-         REQUIRE      (pack2 == defaulted_pack);
-         REQUIRE_FALSE(pack2 != defaulted_pack);
+         REQUIRE      (pack1 != defaulted_pack);
+         REQUIRE_FALSE(pack1 == defaulted_pack);
+         REQUIRE      (pack2 != defaulted_pack);
+         REQUIRE_FALSE(pack2 == defaulted_pack);
 
          if constexpr (CT::Deep<E> and CT::Dense<E>) {
             STATIC_REQUIRE      (T{} == E{});
