@@ -139,36 +139,55 @@ namespace Langulus::RTTI::Inner
       
       /// Get the name of the type, the result of NameOf                      
       auto GetName() const noexcept -> Token {
-         return mDefinition->mNameOf;
+         if (mDefinition)
+            return mDefinition->mNameOf;
+         return T::InvalidName;
       }
    
       /// Get the info of the type, the result of InfoOf                      
       auto GetInfo() const noexcept -> Token {
-         return mDefinition->mInfoOf;
+         if (mDefinition)
+            return mDefinition->mInfoOf;
+         return {};
       }
    
       /// Get the name of the type as it appearch in C++                      
       auto GetCppName() const noexcept -> Token {
-         return mDefinition->mCppNameOf;
+         if (mDefinition)
+            return mDefinition->mCppNameOf;
+         return {};
       }
 
       /// Get the type hash                                                   
       auto GetHash() const noexcept -> Hash {
-         return mDefinition->mHash;
+         if (mDefinition)
+            return mDefinition->mHash;
+         return {};
       }
    
    #if LANGULUS_FEATURE(MANAGED_REFLECTION)
       /// Get the active type boundaries                                      
       auto GetBoundaries() const noexcept -> Definition::BoundarySet const& {
-         return mDefinition->mBoundaries;
+         if (mDefinition)
+            return mDefinition->mBoundaries;
+
+         static const Definition::BoundarySet fallback;
+         return fallback;
       }
    #endif
 
+   /// Get the major version                                                  
       unsigned GetVersionMajor() const noexcept {
-         return mDefinition->mVersionMajor;
+         if (mDefinition)
+            return mDefinition->mVersionMajor;
+         return 0;
       }
+
+   /// Get the minor version                                                  
       unsigned GetVersionMinor() const noexcept {
-         return mDefinition->mVersionMinor;
+         if (mDefinition)
+            return mDefinition->mVersionMinor;
+         return 0;
       }
    };
 }
