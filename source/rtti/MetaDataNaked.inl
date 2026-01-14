@@ -275,16 +275,16 @@ namespace Langulus::RTTI::Inner
    /// Remove a layer of indirection                                          
    ///   @attention will return invalid meta if type is incomplete            
    inline auto MetaDataNaked::GetDeptr(size_t count) const -> MetaDataNaked {
-      if (not mDefinition)
-         return {};
+      if (not count)
+         return *this;
 
-      MetaDataNaked result =
-         mDefinition->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t {1})
-         ? nullptr : mDefinition->mDeptr;
-      
-      if (count - 1)
+      if (mDefinition) {
+         MetaDataNaked result =
+            mDefinition->mDeptr <= reinterpret_cast<DefinitionData*>(intptr_t{1})
+            ? nullptr : mDefinition->mDeptr;
          return result.GetDeptr(count - 1);
-      return result;
+      }
+      return {};
    }
 
    /// Get the origin type, if complete.                                      
