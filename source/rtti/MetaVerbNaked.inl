@@ -45,16 +45,22 @@ namespace Langulus::RTTI::Inner
 
    /// Get the contextless execution routine if such was defined              
    inline auto MetaVerbNaked::GetContextless() const noexcept -> DefinitionVerb::FContextless {
-      return mDefinition ? mDefinition->mCurrentBoundary.mContextless : nullptr;
+      if (mDefinition)
+         return mDefinition->mCurrentBoundary.mContextless;
+      return nullptr;
    }
 
    /// Check if the verb has a negative token defined                         
    constexpr bool MetaVerbNaked::IsReversible() const noexcept {
-      return mDefinition ? not mDefinition->mNameOfReverse.empty() : false;
+      if (mDefinition)
+         return not mDefinition->mNameOfReverse.empty();
+      return false;
    }
 
    /// Check if the verb provides a contextless execution routine             
    constexpr bool MetaVerbNaked::IsContextless() const noexcept {
-      return mDefinition ? mDefinition->mCurrentBoundary.mContextless : false;
+      if (mDefinition)
+         return mDefinition->mCurrentBoundary.mContextless != nullptr;
+      return false;
    }
 }
