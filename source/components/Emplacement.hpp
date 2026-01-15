@@ -494,8 +494,12 @@ namespace Langulus::Anyness::Component
                using A1 = typename Types<A...>::First;
                if constexpr (Same<A1, Describe>)
                   T.GetDescribeConstructor()(self.GetRaw(), FWD(arguments.what)...);
-               else
-                  static_assert(false, "Argument must be a Describe instance");
+               else {
+                  static_assert(false,
+                     "When emplacing a type-erased instance, "
+                     "argument must be an instance of the Describe intent"
+                  );
+               }
             }
             else static_assert(false,
                "Too many arguments for emplacing a type-erased instance. "
@@ -506,8 +510,12 @@ namespace Langulus::Anyness::Component
             //                                                          
             // This container is statically-typed                       
             using T = TypeOf<C>;
-            if constexpr (sizeof...(A) == 1 and (CT::Sparse<T> or Same<T, Deint<A>...>))
-               self.EmplaceWithIntent(FWDIntent(arguments)...);
+            if constexpr (sizeof...(A) == 1 and (CT::Sparse<T> or Same<T, Deint<A>...>)) {
+               if constexpr (CT::Copied<IntentOf(arguments)...>)
+                  self.EmplaceWithIntent(Refer(FWD(arguments))...);
+               else
+                  self.EmplaceWithIntent(FWDIntent(arguments)...);
+            }
             else if constexpr (CT::Dense<T>)
                self.EmplaceWithIntent(Abandon {Decvq<T> {FWD(arguments)...}});
             else static_assert(false,

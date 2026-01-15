@@ -24,6 +24,7 @@ namespace Langulus::Anyness::Inner
       Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
+      Com::Conversion,                 // Allows conversion             
       Com::Comparison<>,               // Allows comparisons            
       Com::StateStack<                 // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
@@ -132,7 +133,7 @@ namespace Langulus::Anyness
       }
       
       /// Three-way comparison                                                
-      constexpr auto operator <=> (TAny const& other) const noexcept
+      /*constexpr auto operator <=> (TAny const& other) const noexcept
       -> ::std::partial_ordering {
          return this->Compare(other);
       }
@@ -173,7 +174,10 @@ namespace Langulus::Anyness
             return this->CompareEqual(argument);
          }
          else return this->CompareOneEqual(argument);
-      }
+      }*/
+
+      using Com::Comparison<>::operator <=>;
+      using Com::Comparison<>::operator ==;
    };
 }
 

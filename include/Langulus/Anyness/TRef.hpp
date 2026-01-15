@@ -98,10 +98,11 @@ namespace Langulus::Anyness
          return *this;
       }
 
-      /// Comparison                                                          
-      friend constexpr auto operator <=> (const TRef& lhs, const TRef& rhs) noexcept {
-         return lhs.GetHeapInner() <=> rhs.GetHeapInner();
+      /// Three-way comparison                                                
+      constexpr auto operator <=> (const TRef& rhs) const noexcept {
+         return Base::GetHeapInner() <=> rhs.GetHeapInner();
       }
+
       friend constexpr auto operator <=> (const TRef& lhs, const T* rhs) noexcept {
          if (rhs == nullptr) {
             return lhs.IsEmpty() ? ::std::strong_ordering::equal
@@ -109,12 +110,48 @@ namespace Langulus::Anyness
          }
          return lhs.GetRaw() <=> rhs;
       }
+
+      friend constexpr auto operator <=> (const T* lhs, const TRef& rhs) noexcept {
+         if (lhs == nullptr) {
+            return rhs.IsEmpty() ? ::std::strong_ordering::equal
+                                 : ::std::strong_ordering::greater;
+         }
+         return lhs <=> rhs.GetRaw();
+      }
+
       friend constexpr auto operator <=> (const TRef& lhs, nullptr_t) noexcept {
          return lhs.IsEmpty() ? ::std::strong_ordering::equal
                               : ::std::strong_ordering::greater;
-      }      
-      friend constexpr bool operator ==  (const TRef& lhs, const TRef& rhs) noexcept {
-         return lhs.GetHeapInner() == rhs.GetHeapInner();
-      }      
+      }
+
+      friend constexpr auto operator <=> (nullptr_t, const TRef& rhs) noexcept {
+         return rhs.IsEmpty() ? ::std::strong_ordering::equal
+                              : ::std::strong_ordering::greater;
+      }
+
+      /// Equality comparison                                                 
+      constexpr bool operator == (const TRef& rhs) const noexcept {
+         return Base::GetHeapInner() == rhs.GetHeapInner();
+      }
+
+      friend constexpr bool operator == (const TRef& lhs, const T* rhs) noexcept {
+         if (rhs == nullptr)
+            return lhs.IsEmpty();
+         return lhs.GetRaw() == rhs;
+      }
+
+      friend constexpr bool operator == (const T* lhs, const TRef& rhs) noexcept {
+         if (lhs == nullptr)
+            return rhs.IsEmpty();
+         return lhs == rhs.GetRaw();
+      }
+
+      friend constexpr bool operator == (const TRef& lhs, nullptr_t) noexcept {
+         return lhs.IsEmpty();
+      }
+
+      friend constexpr bool operator == (nullptr_t, const TRef& rhs) noexcept {
+         return rhs.IsEmpty();
+      }
    };
 }

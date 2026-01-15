@@ -165,9 +165,8 @@ namespace Langulus::Anyness
 
       /// Construction that absorbs the provided container                    
       template<CT::Container C>
-      explicit constexpr HandleDisowned(C&& argument) {
+      constexpr HandleDisowned(C&& argument) {
          this->Absorb(FWD(argument));
       }
-
    };
 }

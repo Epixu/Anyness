@@ -18,6 +18,7 @@
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Conversion.hpp"
+#include "../../../source/components/Comparison.hpp"
 #include "../../../source/components/State-Stack.hpp"
 #include "../../../source/states/Typed.hpp"
 #include "../../../source/states/Future.hpp"
@@ -41,6 +42,7 @@ namespace Langulus::Anyness::Inner
       Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
+      Com::Conversion,                 // Allows conversion             
       Com::Comparison<>,               // Allows comparisons            
       Com::StateStack<                 // Variable state                
          DefineState::Typed<>,         // Can be type-constrained       
@@ -127,7 +129,11 @@ namespace Langulus::Anyness
             
          this->AllocateFresh(this->RequestHeap(1));
          this->ResetState();
-         this->EmplaceWithIntent(FWDIntent(argument));
+
+         if constexpr (CT::Copied<IntentOf(argument)>)
+            this->EmplaceWithIntent(Refer(FWD(argument)));
+         else
+            this->EmplaceWithIntent(FWDIntent(argument));
       }
       
       /// Assignment                                                          
@@ -154,7 +160,7 @@ namespace Langulus::Anyness
       }
 
       /// Three-way comparison                                                
-      constexpr Compared operator <=> (Any const& other) const noexcept {
+      /*constexpr Compared operator <=> (Any const& other) const noexcept {
          return this->Compare(other);
       }
 
@@ -191,7 +197,9 @@ namespace Langulus::Anyness
             return this->CompareEqual(argument);
          }
          else return this->CompareOneEqual(argument);
-      }
+      }*/
+      using Com::Comparison<>::operator <=>;
+      using Com::Comparison<>::operator ==;
    };
 }
 

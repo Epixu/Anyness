@@ -637,6 +637,48 @@ namespace Langulus::Anyness::Component
          else
             return self.CompareOneEqual(item);
       }
+
+      /// Three-way comparison                                                
+      template<CT::Container C>
+      constexpr Compared operator <=> (this C const& lhs, C const& rhs) noexcept {
+         return lhs.Compare(rhs);
+      }
+
+      template<CT::Container C, class A>
+      constexpr Compared operator <=> (this C const& lhs, A const& rhs) assumptious {
+         if constexpr (CT::ContainsOne<C> == CT::ContainsOne<A>) {
+            LglsAssumeUser((Same<Deint<A>, C>),
+               "Ambiguous use of three-way comparison "
+               "- you should use either Compare (if you want to compare "
+               "containers) or CompareOne (if you want to compare the "
+               "first item) in order to clearly state your intent. "
+               "Compare will be used by default!"
+            );
+            return lhs.Compare(rhs);
+         }
+         else return lhs.CompareOne(rhs);
+      }
+
+      /// Equality comparison                                                 
+      template<CT::Container C>
+      constexpr bool operator == (this C const& lhs, C const& rhs) noexcept {
+         return lhs.CompareEqual(rhs);
+      }
+
+      template<CT::Container C, class A>
+      constexpr bool operator == (this C const& lhs, A const& rhs) assumptious {
+         if constexpr (CT::ContainsOne<C> == CT::ContainsOne<A>) {
+            LglsAssumeUser((Same<Deint<A>, C>),
+               "Ambiguous use of equality comparison "
+               "- you should use either CompareEqual (if you want to compare "
+               "containers) or CompareOneEqual (if you want to compare the "
+               "first item) in order to clearly state your intent. "
+               "Compare will be used by default!"
+            );
+            return lhs.CompareEqual(rhs);
+         }
+         else return lhs.CompareOneEqual(rhs);
+      }
    };
 }
 

@@ -42,16 +42,31 @@ namespace Langulus::Anyness
       constexpr  TOwn(const T& source) : Base {Stackwise, source} {}
       constexpr  TOwn(T&& source) noexcept : Base {Stackwise, FWD(source)} {}
       constexpr ~TOwn() noexcept = default;
-      
-      /// Comparison                                                          
-      friend constexpr auto operator <=> (const TOwn& lhs, const TOwn& rhs) noexcept {
-         return lhs.GetStackInner() <=> rhs.GetStackInner();
+
+      /// Three-way comparison                                                
+      constexpr auto operator <=> (const TOwn& rhs) const noexcept {
+         return Base::GetStackInner() <=> rhs.GetStackInner();
       }
-      friend constexpr auto operator <=> (const TOwn& lhs, const T& rhs) noexcept {
+
+      friend constexpr auto operator <=> (const TOwn& lhs, T const& rhs) noexcept {
          return lhs.GetStackInner() <=> rhs;
       }
-      friend constexpr bool operator ==  (const TOwn& lhs, const TOwn& rhs) noexcept {
-         return lhs.GetStackInner() == rhs.GetStackInner();
-      }      
+
+      friend constexpr auto operator <=> (T const& lhs, const TOwn& rhs) noexcept {
+         return lhs <=> rhs.GetStackInner();
+      }
+
+      /// Equality comparison                                                 
+      constexpr bool operator == (const TOwn& rhs) const noexcept {
+         return Base::GetStackInner() == rhs.GetStackInner();
+      }
+
+      friend constexpr bool operator == (const TOwn& lhs, T const& rhs) noexcept {
+         return lhs.GetStackInner() == rhs;
+      }
+
+      friend constexpr bool operator == (T const& lhs, const TOwn& rhs) noexcept {
+         return lhs == rhs.GetStackInner();
+      }
    };
 }
