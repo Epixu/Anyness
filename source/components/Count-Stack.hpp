@@ -75,11 +75,11 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
-         if constexpr (I::IsShallow() and not CT::Copied<I>) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = FWD(intent.what);
             self.SetCountInner(from.GetCountInner());
             if constexpr (I::ResetsOnMove())
-               from.SetCountInner(0);
+               if_available(from.SetCountInner(0));
          }
       }
    };
