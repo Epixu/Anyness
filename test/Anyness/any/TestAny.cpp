@@ -806,27 +806,36 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_Default<E>(pack);
       }
 
-      WHEN("Emplace") {
+      WHEN("Emplace (insert)") {
          ScopedE i666 {666};
          const auto i666backup = *i666;
+         decltype(auto) instance = pack.Emplace(::std::move(*i666));
+         Any_CheckState_OwnedFull<E>(pack);
+         REQUIRE(instance == i666backup);
+         REQUIRE(pack.GetCount() == 1);
+         REQUIRE(pack.GetReserved() >= 1);
+
          if constexpr (CT::Typed<T>) {
-            decltype(auto) instance = pack.Emplace(::std::move(*i666));
+            REQUIRE(*pack == i666backup);
+            REQUIRE(&*pack == &*instance);
+         }
+      }
+
+      WHEN("Emplace (insert, describe)") {
+         ScopedE i666{666};
+         const auto i666backup = *i666;
+         Many descriptor{::std::move(*i666)};
+         if constexpr (CT::DescribeConstructible<E>) {
+            decltype(auto) instance = pack.template Emplace<E>(Describe{descriptor});
             Any_CheckState_OwnedFull<E>(pack);
             REQUIRE(instance == i666backup);
             REQUIRE(pack.GetCount() == 1);
             REQUIRE(pack.GetReserved() >= 1);
-            REQUIRE(*pack == i666backup);
-            REQUIRE(&*pack == &*instance);
          }
-         else {
-            Many descriptor {::std::move(*i666)};
-            REQUIRE_THROWS(pack.template Emplace<E>(Describe{descriptor}));
+         else if constexpr (CT::TypeErased<T>) {
+            pack.template SetType<E>();
+            REQUIRE_THROWS(pack.Emplace(Describe{descriptor}));
             Any_CheckState_Default<E>(pack, true);
-
-            /*Any_CheckState_OwnedFull<E>(pack);
-            REQUIRE(instance == i666backup);
-            REQUIRE(pack.GetCount() == 1);
-            REQUIRE(pack.GetReserved() >= 1);*/
          }
       }
 
@@ -1034,7 +1043,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          Any_CheckState_OwnedFull<E>(pack_moved1);
          Any_CheckState_OwnedFull<E>(pack_moved2);
          Any_CheckState_OwnedFull<E>(pack_abandoned);
-         Any_CheckState_DisownedFull<E>(pack_disowned);
+         Any_CheckState_OwnedFull<E>(pack_disowned);
 
          Any_CheckState_ContainsOne(pack_referred1, Refer(originalElement));
          Any_CheckState_ContainsOne(pack_referred2, Refer(originalElement));
@@ -1510,23 +1519,18 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          absorb_construct_clone(pack_disowned);
       }
       
-      WHEN("Emplace (overwrite existing)") {
+      WHEN("Emplace (overwrite)") {
          #define emplace_overwrite(a) { \
             ScopedE i666{666}; \
             const auto i666backup = *i666; \
+            decltype(auto) instance = a.Emplace(::std::move(*i666)); \
+            Any_CheckState_OwnedFull<E>(a); \
+            REQUIRE(instance == i666backup); \
+            REQUIRE(a.GetCount() == 1); \
+            REQUIRE(a.GetReserved() >= 1); \
             if constexpr (CT::Typed<T>) { \
-               decltype(auto) instance = a.Emplace(::std::move(*i666)); \
-               Any_CheckState_OwnedFull<E>(a); \
-               REQUIRE(instance == i666backup); \
-               REQUIRE(a.GetCount() == 1); \
-               REQUIRE(a.GetReserved() >= 1); \
                REQUIRE(*a == i666backup); \
                REQUIRE(&*a == &*instance); \
-            } \
-            else { \
-               Many descriptor {::std::move(*i666)}; \
-               REQUIRE_THROWS(a.template Emplace<E>(Describe{descriptor})); \
-               Any_CheckState_Default<E>(a, true); \
             } \
          }
 
@@ -1538,6 +1542,34 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          emplace_overwrite(pack_moved2);
          emplace_overwrite(pack_abandoned);
          emplace_overwrite(pack_disowned);
+      }
+
+      WHEN("Emplace (overwrite, describe)") {
+         #define emplace_overwrite_describe(a) { \
+            ScopedE i666{666}; \
+            const auto i666backup = *i666; \
+            Many descriptor {::std::move(*i666)}; \
+            if constexpr (CT::DescribeConstructible<E>) { \
+               decltype(auto) instance = a.Emplace(Describe{descriptor}); \
+               Any_CheckState_OwnedFull<E>(a); \
+               REQUIRE(instance == i666backup); \
+               REQUIRE(a.GetCount() == 1); \
+               REQUIRE(a.GetReserved() >= 1); \
+            } \
+            else if constexpr (CT::TypeErased<T>) { \
+               REQUIRE_THROWS(a.Emplace(Describe{descriptor})); \
+               Any_CheckState_OwnedFull<E>(a); \
+            } \
+         }
+
+         emplace_overwrite_describe(pack_referred1);
+         emplace_overwrite_describe(pack_referred2);
+         emplace_overwrite_describe(pack_copied);
+         emplace_overwrite_describe(pack_cloned);
+         emplace_overwrite_describe(pack_moved1);
+         emplace_overwrite_describe(pack_moved2);
+         emplace_overwrite_describe(pack_abandoned);
+         emplace_overwrite_describe(pack_disowned);
       }
       
       WHEN("Cleared") {

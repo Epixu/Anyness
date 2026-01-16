@@ -18,10 +18,11 @@ namespace Langulus
 
    ///                                                                        
    /// Descriptor intermediate type, used in constructors and assignment      
-   /// operators to enable descriptor construction/assignment. The inner type 
+   /// operators to enable describe-construction/assignment. The inner type   
    /// is always a reference to a type-erased container.                      
    /// You should #include <Langulus/Anyness/Many.hpp>                        
    ///        and #include <Langulus/CT/Describable.hpp>                      
+   ///        in order to use Describe semantics                              
    struct Describe {
       using Many = Anyness::Many;
       const Many& what;
@@ -46,7 +47,7 @@ namespace Langulus
 
 namespace Langulus::CT
 {
-   /// Check if all T are descriptor-constructible.                           
+   /// Check if all T are describe-constructible.                             
    /// It has to have the T (Describe&&) constructor in order to be so.       
    template<class...T>
    concept DescribeConstructible = not Abstract<T...>
@@ -55,7 +56,7 @@ namespace Langulus::CT
          (T (Describe {a}), ...);
        };
    
-   /// Check if all T are descriptor-assignable.                              
+   /// Check if all T are describe-assignable.                                
    /// It has to have the T::operator = (Describe&&) constructor.             
    template<class...T>
    concept DescribeAssignable = not Abstract<T...>

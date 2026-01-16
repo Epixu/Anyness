@@ -118,10 +118,11 @@ namespace Langulus::Anyness
             this->Absorb(FWD(argument));
          }
          else {
-            this->SetType<Decvq<Deref<Deint<A>>>>();
+            /*this->SetType<Decvq<Deref<Deint<A>>>>();
             this->AllocateFresh(this->RequestHeap(1));
             this->ResetState();
-            this->EmplaceWithIntent(FWDIntent(argument));
+            this->EmplaceWithIntent(FWDIntent(argument));*/
+            this->EmplaceConstruct(FWD(argument));
          }
       }
       
@@ -134,7 +135,9 @@ namespace Langulus::Anyness
       /// Construction that emplaces A inside                                 
       template<class A>
       constexpr Many(Inner::Piecewise, A&& argument) {
-         if constexpr (CT::Handle<A>)
+         this->EmplaceConstruct(FWD(argument));
+
+         /*if constexpr (CT::Handle<A>)
             this->SetType(DeintCast(argument).GetType());
          else
             this->SetType(MetaDataOf<Decvq<Deref<Deint<A>>>>());
@@ -145,7 +148,7 @@ namespace Langulus::Anyness
          if constexpr (CT::Copied<IntentOf(argument)>)
             this->EmplaceWithIntent(Refer(FWD(argument)));
          else
-            this->EmplaceWithIntent(FWDIntent(argument));
+            this->EmplaceWithIntent(FWDIntent(argument));*/
       }
       
       /// Assignment                                                          

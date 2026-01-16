@@ -49,6 +49,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<unsigned>        friend struct Removal;
+      template<unsigned>        friend struct Emplacement;
       template<unsigned, class> friend struct Insertion;
       template<unsigned, class> friend struct IndexedLinear;
       template<unsigned>        friend struct HeapMovable;

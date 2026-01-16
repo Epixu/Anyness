@@ -450,35 +450,55 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // This container is type-erased                            
-            if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate
-                       or STRAT == AllocationStrategy::TypeAndReallocate
-            ) {
+            if constexpr (STRAT != AllocationStrategy::NoStateChange) {
                if constexpr (CT::NotVoid<E>)
                   self.template SetType<E>();
             }
 
-            auto T = self.GetTypeInner();
-            auto constructor = T.GetDefaultConstructor();
-            LglsAssert(constructor, "Contained type is not default-constructible");
+            if constexpr (CT::NotVoid<E>) {
+               // The type we're constructing is statically known       
+               static_assert(CT::Defaultable<E>,
+                  "Contained type is not default-constructible");
+               LglsAssumeDev(self.template IsSame<E>(), "Type mismatch");
 
-            // Allocate if we have to. Do it only after we're sure that 
-            // construction is possible                                 
-            if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
-               self.AllocateFresh(self.RequestHeap(1));
-            else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
-               self.AllocateMore(1);
+               // Allocate if we have to                                
+               if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
+                  self.AllocateFresh(self.RequestHeap(1));
+               else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
+                  self.AllocateMore(1);
 
-            // Construct the first element                              
-            constructor(self.GetRaw());
-            
-            if constexpr (requires { self.GetEntries(); }) {
-               if (T.IsSparse())
-                 *self.GetEntries() = nullptr;
+               // Construct the first element                           
+               new (self.GetRaw()) E {};
+
+               if constexpr (CT::Sparse<E>)
+                  if_available(*self.GetEntries() = nullptr);
+            }
+            else {
+               // The type we're constructing isn't statically known    
+               auto T = self.GetTypeInner();
+               auto constructor = T.GetDefaultConstructor();
+               LglsAssert(constructor,
+                  "Contained type is not default-constructible");
+
+               // Allocate if we have to. Do it only after we're sure   
+               // that construction is possible                         
+               if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
+                  self.AllocateFresh(self.RequestHeap(1));
+               else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
+                  self.AllocateMore(1);
+
+               // Construct the first element                           
+               constructor(self.GetRaw());
+
+               if constexpr (requires { self.GetEntries(); }) {
+                  if (T.IsSparse())
+                     *self.GetEntries() = nullptr;
+               }
             }
          }
          else {
             //                                                          
-            // This container is statically-typed                       
+            // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
             if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
                self.GetType();
@@ -491,20 +511,29 @@ namespace Langulus::Anyness::Component
 
             // Construct the first element                              
             using T = TypeOf<C>;
+            LglsAssumeDev(self.template IsSame<T>(), "Type mismatch");
             new (self.GetRaw()) T {};
             
-            if constexpr (CT::Sparse<T>) {
+            if constexpr (CT::Sparse<T>)
                if_available(*self.GetEntries() = nullptr);
-            }
+         }
+
+         // Update count                                                
+         if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
+            if_available(self.SetCountInner(1));
+         }
+         else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate
+         and requires { self.SetCountInner(1); }) {
+            if (self.IsEmpty())
+               self.SetCountInner(1);
          }
       }
 
       /// Emplace a new manually constructed item at the first position.      
       /// If zero arguments were provided, this will EmplaceDefault.          
-      /// When C is type-erased, this will perform a describe-construction.   
+      /// Supports describe-construction and handles.                         
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
-      ///   @attention doesn't modify count                                   
       template<AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C, class...A>
       void EmplaceConstruct(this C& self, A&&...arguments) {
          static_assert(sizeof...(A) > 0,
@@ -517,55 +546,87 @@ namespace Langulus::Anyness::Component
                using A1 = typename Types<A...>::First;
 
                // Set type if we have to                                
-               if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate
-                          or STRAT == AllocationStrategy::TypeAndReallocate
-               ) {
+               if constexpr (STRAT != AllocationStrategy::NoStateChange) {
                   if constexpr (CT::NotVoid<E>)
                      self.template SetType<E>();
                   else if constexpr (CT::Handle<A1>)
                      self.SetType(DeintCast(arguments...).GetType());
-                  else
+                  else if constexpr (not Same<A1, Describe>)
                      self.SetType(MetaDataOf<Decvq<Deref<Deint<A1>>>>());
                }
-               auto T = self.GetTypeInner();
 
                if constexpr (Same<A1, Describe>) {
                   // Describe-construct first element                   
-                  LglsAssert(T.IsDense(),
-                     "Describe-construction works only for dense containers");
-                  auto constructor = T.GetDescribeConstructor();
-                  LglsAssert(constructor,
-                     "Contained type is not describe-constructible");
+                  if constexpr (CT::NotVoid<E>) {
+                     // The type we're describing is statically known   
+                     static_assert(CT::Dense<E>,
+                        "Describe-construction works only for dense data");
+                     static_assert(CT::DescribeConstructible<E>,
+                        "Contained type is not describe-constructible");
+                     LglsAssumeDev(self.template IsSame<E>(), "Type mismatch");
 
-                  // Allocate if we have to. Do it only after we're sure
-                  // that construction is possible                      
+                     // Allocate if we have to                          
+                     if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
+                        self.AllocateFresh(self.RequestHeap(1));
+                     else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
+                        self.AllocateMore(1);
+
+                     new (self.GetRaw()) E {FWD(arguments)...};
+                  }
+                  else {
+                     // The type we're describing isn't known statically
+                     auto T = self.GetTypeInner();
+                     LglsAssert(T.IsDense(),
+                        "Describe-construction works only for dense data");
+                     auto constructor = T.GetDescribeConstructor();
+                     LglsAssert(constructor,
+                        "Contained type is not describe-constructible");
+
+                     // Allocate if we have to. Do it only after we're  
+                     // sure that construction is possible              
+                     if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
+                        self.AllocateFresh(self.RequestHeap(1));
+                     else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
+                        self.AllocateMore(1);
+
+                     // Describe-construct the first element            
+                     constructor(self.GetRaw(), FWD(arguments.what)...);
+                  }
+               }
+               else {
+                  // Allocate if we have to                             
                   if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
                      self.AllocateFresh(self.RequestHeap(1));
                   else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
                      self.AllocateMore(1);
 
-                  constructor(self.GetRaw(), FWD(arguments.what)...);
-               }
-               else {
+                  // Construct the first element                        
                   if constexpr (CT::Copied<IntentOf(arguments)...>)
                      self.EmplaceWithIntent(Refer(FWD(arguments))...);
                   else
                      self.EmplaceWithIntent(FWDIntent(arguments)...);
-
-                  /*static_assert(false,
-                     "When emplacing a type-erased instance, "
-                     "argument must be an instance of the Describe intent"
-                  );*/
                }
             }
+            else if constexpr (CT::NotVoid<E>) {
+               // Set type if we have to                                
+               if constexpr (STRAT != AllocationStrategy::NoStateChange)
+                  self.template SetType<E>();
+
+               // Construct the first element                           
+               if constexpr (CT::Dense<E>)
+                  self.EmplaceWithIntent(Abandon{E {FWD(arguments)...}});
+               else static_assert(false,
+                  "Too many arguments for emplacing a sparse instance");
+            }
             else static_assert(false,
-               "Too many arguments for emplacing a type-erased instance. "
-               "You should group all arguments inside a Describe intent."
+               "Too many arguments for emplacing in a type-erased container. "
+               "You should either provide E type, or set pack type and pack "
+               "all arguments inside a Describe intent first."
             );
          }
          else {
             //                                                          
-            // This container is statically-typed                       
+            // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
             if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
                self.GetType();
@@ -589,6 +650,16 @@ namespace Langulus::Anyness::Component
             else static_assert(false,
                "Too many arguments for emplacing a sparse instance");
          }
+         
+         // Update count                                                
+         if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
+            if_available(self.SetCountInner(1));
+         }
+         else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate
+         and requires { self.SetCountInner(1); }) {
+            if (self.IsEmpty())
+               self.SetCountInner(1);
+         }
       }
 
    public:
@@ -603,47 +674,53 @@ namespace Langulus::Anyness::Component
       ///   @return a reference or handle to the newly created element        
       template<class E = void, CT::ContainsMany C, class...A>
       auto EmplaceAt(this C&, CT::Index auto, A&&...)
-         -> PickMut<C> requires CT::RangeEmplaceable<C, A...>;
+         -> PickMut<C> /*requires CT::RangeEmplaceable<C, A...>*/;
 
       /// Generic emplacement that constructs/overwrites the first element.   
       /// Any overwritten element will be dereferenced/destroyed first.       
       ///   @tparam E Sets the type of the container if empty. Ignored if     
       ///      container is statically-typed.                                 
       ///   @param self Deduced this                                          
-      ///   @param arguments Constructor arguments for initializing an        
-      ///      element. If C is type-erased, argument must be Describe.       
+      ///   @param arguments Constructor arguments                            
       ///   @return a reference or handle to the newly created element        
       template<class E = void, CT::Container C, class...A>
       auto Emplace(this C& self, A&&...arguments) -> PickMut<C>
-      requires CT::RangeEmplaceable<C, A...> {
+      requires CT::HasVariableCount<C>
+      /*requires CT::RangeEmplaceable<C, A...>*/ {
          if (self.IsEmpty()) {
-            // Emplace a new element on the first position              
-            // This will set type and allocate if required              
+            // Emplace a new element on the first position.             
+            // This will set type and allocate if required.             
             if constexpr (sizeof...(arguments) > 0)
                self.template EmplaceConstruct<AllocationStrategy::TypeAndReallocate, E>(FWD(arguments)...);
             else
                self.template EmplaceDefault<AllocationStrategy::TypeAndReallocate, E>();
-
-            // Update count                                             
-            if_available(self.SetCountInner(1));
          }
          else {
             // Need to destroy first element                            
             if constexpr (CT::DeeplyOwned<C>) {
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  self.DestroyElementDeepCustomPointers();
-               #else
-                  self.DestroyElementDeepStandardPointers();
-               #endif
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               self.DestroyElementDeepCustomPointers();
+            #else
+               self.DestroyElementDeepStandardPointers();
+            #endif
             }
             else self.DestroyElement();
 
-            // Emplace a new element on the first position              
-            // This will set type and allocate if required              
-            if constexpr (sizeof...(arguments) > 0)
-               self.template EmplaceConstruct<AllocationStrategy::TypeAndReallocate, E>(FWD(arguments)...);
-            else
-               self.template EmplaceDefault<AllocationStrategy::TypeAndReallocate, E>();
+            // Emplace a new element on the first position.             
+            // Any state change is forbidden, because container is full.
+            try {
+               if constexpr (sizeof...(arguments) > 0)
+                  self.template EmplaceConstruct<AllocationStrategy::NoStateChange, E>(FWD(arguments)...);
+               else
+                  self.template EmplaceDefault<AllocationStrategy::NoStateChange, E>();
+            }
+            catch (...) {
+               // If emplacement fails, we have to modify count         
+               // because first element has been destroyed.             
+               LglsAssumeDev(self.GetCount() == 1, "TODO we're forced to either shift all entries to the left, or destroy everything");
+               if_available(self.SetCountInner(0));
+               throw;
+            }
          }
 
          // Return a reference/handle to the newly emplaced element     

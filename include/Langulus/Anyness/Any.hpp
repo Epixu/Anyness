@@ -110,7 +110,7 @@ namespace Langulus::Anyness
             this->AllocateFresh(this->RequestHeap(1));
             this->ResetState();
             this->EmplaceWithIntent(FWDIntent(argument));*/
-            this->EmplaceConstruct(FWDIntent(argument));
+            this->EmplaceConstruct(FWD(argument));
          }
       }
       
@@ -123,7 +123,7 @@ namespace Langulus::Anyness
       /// Construction that emplaces A inside                                 
       template<class A>
       constexpr Any(Inner::Piecewise, A&& argument) {
-         this->EmplaceConstruct(FWDIntent(argument));
+         this->EmplaceConstruct(FWD(argument));
 
          /*if constexpr (CT::Handle<A>)
             this->SetType(DeintCast(argument).GetType());
