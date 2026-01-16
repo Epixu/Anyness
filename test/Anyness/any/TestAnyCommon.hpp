@@ -46,26 +46,6 @@ namespace Catch
    };
 }
 
-
-///                                                                           
-/// Possible states                                                           
-template<class E>
-void Any_CheckState_Default(const auto&);
-template<class E>
-void Any_CheckState_Invariant(const auto&);
-template<class E>
-void Any_CheckState_OwnedFull(const auto&);
-template<class E>
-void Any_CheckState_OwnedFullConst(const auto&);
-template<class E>
-void Any_CheckState_OwnedEmpty(const auto&);
-template<class E>
-void Any_CheckState_DisownedFull(const auto&);
-template<class E>
-void Any_CheckState_DisownedFullConst(const auto&);
-template<class E>
-void Any_CheckState_Abandoned(const auto&);
-
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_Helper_TestType(const C& any) {
    if constexpr (CT::Void<E>) {
@@ -102,7 +82,7 @@ void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
 ///                                                                           
 /// Possible state test implementations                                       
 template<class E, CT::Container C> requires CT::NoIntent<C>
-void Any_CheckState_Default(const C& any) {
+void Any_CheckState_Default(const C& any, bool typed = false) {
    if constexpr (CT::Typed<C>) {
       static_assert(Exact<TypeOf<C>, E>);
       Any_Helper_TestType<E>(any);
@@ -110,12 +90,18 @@ void Any_CheckState_Default(const C& any) {
       if constexpr (requires { any.GetState(); })
          REQUIRE(any.GetState() == State::Typed);
    }
-   else {
+   else if (not typed) {
       REQUIRE_FALSE(any.IsTyped());
       REQUIRE      (any.GetType() == nullptr);
       REQUIRE_FALSE(any.IsSparse());
       REQUIRE_FALSE(any.IsDeep());
-      
+
+      if constexpr (requires { any.GetState(); })
+         REQUIRE(any.GetState() == State::Default);
+   }
+   else {
+      Any_Helper_TestType<E>(any);
+
       if constexpr (requires { any.GetState(); })
          REQUIRE(any.GetState() == State::Default);
    }

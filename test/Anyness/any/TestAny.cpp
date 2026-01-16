@@ -820,11 +820,13 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          }
          else {
             Many descriptor {::std::move(*i666)};
-            decltype(auto) instance = pack.Emplace(Describe{descriptor});
-            Any_CheckState_OwnedFull<E>(pack);
+            REQUIRE_THROWS(pack.template Emplace<E>(Describe{descriptor}));
+            Any_CheckState_Default<E>(pack, true);
+
+            /*Any_CheckState_OwnedFull<E>(pack);
             REQUIRE(instance == i666backup);
             REQUIRE(pack.GetCount() == 1);
-            REQUIRE(pack.GetReserved() >= 1);
+            REQUIRE(pack.GetReserved() >= 1);*/
          }
       }
 
@@ -1523,11 +1525,8 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             } \
             else { \
                Many descriptor {::std::move(*i666)}; \
-               decltype(auto) instance = a.Emplace(Describe{descriptor}); \
-               Any_CheckState_OwnedFull<E>(a); \
-               REQUIRE(instance == i666backup); \
-               REQUIRE(a.GetCount() == 1); \
-               REQUIRE(a.GetReserved() >= 1); \
+               REQUIRE_THROWS(a.template Emplace<E>(Describe{descriptor})); \
+               Any_CheckState_Default<E>(a, true); \
             } \
          }
 

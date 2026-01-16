@@ -86,9 +86,9 @@ namespace Langulus::Anyness
             this->Absorb(FWD(arguments)...);
          }
          else {
-            this->GetType();
+            /*this->GetType();
             this->AllocateFresh(this->RequestHeap(1));
-            this->ResetState();
+            this->ResetState();*/
             this->EmplaceConstruct(FWD(arguments)...);
          }
       }
@@ -102,9 +102,9 @@ namespace Langulus::Anyness
       /// Emplaces T inside, using A... as constructor arguments              
       template<class...A>
       constexpr TAny(Inner::Piecewise, A&&...arguments) {
-         this->GetType();
+         /*this->GetType();
          this->AllocateFresh(this->RequestHeap(1));
-         this->ResetState();
+         this->ResetState();*/
          this->EmplaceConstruct(FWD(arguments)...);
       }
 
@@ -132,50 +132,6 @@ namespace Langulus::Anyness
          else return this->Assign(FWD(argument));
       }
       
-      /// Three-way comparison                                                
-      /*constexpr auto operator <=> (TAny const& other) const noexcept
-      -> ::std::partial_ordering {
-         return this->Compare(other);
-      }
-
-      template<class A>
-      constexpr auto operator <=> (const A& argument) const assumptious
-      -> decltype(Fake<T>() <=> argument) {
-         if constexpr (CT::ContainsOne<A>) {
-            LglsAssumeUser(
-               (Same<Deint<A>, TAny> or Same<TypeOf<Deint<A>>, T>),
-               "Ambiguous use of three-way comparison "
-               "- you should use either Compare (if you want to compare "
-               "containers) or CompareOne (if you want to compare the "
-               "first item) in order to clearly state your intent. "
-               "Compare will be used by default!"
-            );
-            return this->Compare(argument);
-         }
-         else return this->CompareOne(argument);
-      }
-      
-      /// Equality comparison                                                 
-      constexpr bool operator == (TAny const& other) const noexcept {
-         return this->CompareEqual(other);
-      }
-
-      template<class A>
-      constexpr bool operator == (const A& argument) const assumptious {
-         if constexpr (CT::ContainsOne<A>) {
-            LglsAssumeUser(
-               (Same<Deint<A>, TAny> or Same<TypeOf<Deint<A>>, T>),
-               "Ambiguous use of equality comparison "
-               "- you should use either CompareEqual (if you want to compare "
-               "containers) or CompareOneEqual (if you want to compare the "
-               "first item) in order to clearly state your intent. "
-               "Compare will be used by default!"
-            );
-            return this->CompareEqual(argument);
-         }
-         else return this->CompareOneEqual(argument);
-      }*/
-
       using Com::Comparison<>::operator <=>;
       using Com::Comparison<>::operator ==;
    };

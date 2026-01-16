@@ -640,10 +640,10 @@ namespace Langulus::Anyness::Component
          return lhs.Compare(rhs);
       }
 
-      template<CT::Container C, class A>
+      template<CT::Container C, CT::NoIntent A>
       constexpr Compared operator <=> (this C const& lhs, A const& rhs) assumptious {
          if constexpr (CT::ContainsOne<C> == CT::ContainsOne<A>) {
-            LglsAssumeUser((Same<Deint<A>, C>),
+            LglsAssumeUser((Same<A, C>) or (CT::Typed<C> and Same<TypeOf<A>, TypeOf<C>>),
                "Ambiguous use of three-way comparison "
                "- you should use either Compare (if you want to compare "
                "containers) or CompareOne (if you want to compare the "
@@ -661,10 +661,10 @@ namespace Langulus::Anyness::Component
          return lhs.CompareEqual(rhs);
       }
 
-      template<CT::Container C, class A>
+      template<CT::Container C, CT::NoIntent A>
       constexpr bool operator == (this C const& lhs, A const& rhs) assumptious {
          if constexpr (CT::ContainsOne<C> == CT::ContainsOne<A>) {
-            LglsAssumeUser((Same<Deint<A>, C>),
+            LglsAssumeUser((Same<A, C>) or (CT::Typed<C> and Same<TypeOf<A>, TypeOf<C>>),
                "Ambiguous use of equality comparison "
                "- you should use either CompareEqual (if you want to compare "
                "containers) or CompareOneEqual (if you want to compare the "

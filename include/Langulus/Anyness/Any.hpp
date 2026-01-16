@@ -106,10 +106,11 @@ namespace Langulus::Anyness
             this->Absorb(FWD(argument));
          }
          else {
-            this->SetType<Decvq<Deref<Deint<A>>>>();
+            /*this->SetType<Decvq<Deref<Deint<A>>>>();
             this->AllocateFresh(this->RequestHeap(1));
             this->ResetState();
-            this->EmplaceWithIntent(FWDIntent(argument));
+            this->EmplaceWithIntent(FWDIntent(argument));*/
+            this->EmplaceConstruct(FWDIntent(argument));
          }
       }
       
@@ -122,7 +123,9 @@ namespace Langulus::Anyness
       /// Construction that emplaces A inside                                 
       template<class A>
       constexpr Any(Inner::Piecewise, A&& argument) {
-         if constexpr (CT::Handle<A>)
+         this->EmplaceConstruct(FWDIntent(argument));
+
+         /*if constexpr (CT::Handle<A>)
             this->SetType(DeintCast(argument).GetType());
          else
             this->SetType(MetaDataOf<Decvq<Deref<Deint<A>>>>());
@@ -133,7 +136,7 @@ namespace Langulus::Anyness
          if constexpr (CT::Copied<IntentOf(argument)>)
             this->EmplaceWithIntent(Refer(FWD(argument)));
          else
-            this->EmplaceWithIntent(FWDIntent(argument));
+            this->EmplaceWithIntent(FWDIntent(argument));*/
       }
       
       /// Assignment                                                          
@@ -159,45 +162,6 @@ namespace Langulus::Anyness
          else return this->Assign(FWD(argument));
       }
 
-      /// Three-way comparison                                                
-      /*constexpr Compared operator <=> (Any const& other) const noexcept {
-         return this->Compare(other);
-      }
-
-      template<class A>
-      constexpr Compared operator <=> (const A& argument) const assumptious {
-         if constexpr (CT::ContainsOne<A>) {
-            LglsAssumeUser((Same<Deint<A>, Any>),
-               "Ambiguous use of three-way comparison "
-               "- you should use either Compare (if you want to compare "
-               "containers) or CompareOne (if you want to compare the "
-               "first item) in order to clearly state your intent. "
-               "Compare will be used by default!"
-            );
-            return this->Compare(argument);
-         }
-         else return this->CompareOne(argument);
-      }
-
-      /// Equality comparison                                                 
-      constexpr bool operator == (Any const& other) const noexcept {
-         return this->CompareEqual(other);
-      }
-
-      template<class A>
-      constexpr bool operator == (const A& argument) const assumptious {
-         if constexpr (CT::ContainsOne<A>) {
-            LglsAssumeUser((Same<Deint<A>, Any>),
-               "Ambiguous use of equality comparison "
-               "- you should use either CompareEqual (if you want to compare "
-               "containers) or CompareOneEqual (if you want to compare the "
-               "first item) in order to clearly state your intent. "
-               "Compare will be used by default!"
-            );
-            return this->CompareEqual(argument);
-         }
-         else return this->CompareOneEqual(argument);
-      }*/
       using Com::Comparison<>::operator <=>;
       using Com::Comparison<>::operator ==;
    };

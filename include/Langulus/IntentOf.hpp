@@ -120,7 +120,7 @@ namespace Langulus
       struct CommonIntent {
          using CTTI_ReflectAs     = void;
          using CTTI_Abstract      = Yes<>;
-         using CTTI_Unallocatable = Yes<>;
+         using CTTI_Allocatable   = No;
          using CTTI_Intent        = Yes<>;
 
          static consteval unsigned GetDepth() { return DEPTH; }

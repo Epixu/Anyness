@@ -26,10 +26,11 @@ namespace Langulus
       using Many = Anyness::Many;
       const Many& what;
 
-      using CTTI_Typed         = Many;
+      //using CTTI_Typed         = Many;
       using CTTI_ReflectAs     = void;
       using CTTI_Abstract      = Yes<>;
       using CTTI_Allocatable   = No;
+      using CTTI_Intent        = Yes<>;
 
       Describe() = delete;
       constexpr Describe(const Describe&) noexcept = default;
