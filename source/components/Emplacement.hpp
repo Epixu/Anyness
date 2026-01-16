@@ -685,7 +685,6 @@ namespace Langulus::Anyness::Component
       ///   @return a reference or handle to the newly created element        
       template<class E = void, CT::Container C, class...A>
       auto Emplace(this C& self, A&&...arguments) -> PickMut<C>
-      requires CT::HasVariableCount<C>
       /*requires CT::RangeEmplaceable<C, A...>*/ {
          if (self.IsEmpty()) {
             // Emplace a new element on the first position.             
@@ -717,8 +716,8 @@ namespace Langulus::Anyness::Component
             catch (...) {
                // If emplacement fails, we have to modify count         
                // because first element has been destroyed.             
-               LglsAssumeDev(self.GetCount() == 1, "TODO we're forced to either shift all entries to the left, or destroy everything");
-               if_available(self.SetCountInner(0));
+               LglsAssumeDev(self.GetCount() == 1, "TODO we're forced to destroy everything else");
+               self.PartialSuccess(0);
                throw;
             }
          }

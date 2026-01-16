@@ -96,14 +96,9 @@ namespace Langulus::Anyness::Component
             catch (...) {
                // Partial success                                       
                auto n = from - IterateHandles(self).begin();
-               if constexpr (requires { out.SetCountInner(1); }) {
-                  out.SetCountInner(out.GetCount() + n);
-                  out.ResetHash();
-               }
-               else {
+               if constexpr (not requires { out.SetCountInner(1); }) {
                   // Partial success is not allowed - we have to        
-                  // deallocate and make sure CountStatic reports as    
-                  // empty.                                             
+                  // destroy everything we initialized                  
                   while (n) {
                      #if LANGULUS_FEATURE(MANAGED_MEMORY)
                         if constexpr (requires { to->DestroyElementDeepCustomPointers(); })
@@ -115,8 +110,8 @@ namespace Langulus::Anyness::Component
                      else to->DestroyElement();
                      --to; --n;
                   }
-                  out.Reset();
                }
+               out.PartialSuccess(out.GetCount() + n);
                throw;
             }
             

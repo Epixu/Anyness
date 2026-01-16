@@ -1558,7 +1558,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             } \
             else if constexpr (CT::TypeErased<T>) { \
                REQUIRE_THROWS(a.Emplace(Describe{descriptor})); \
-               Any_CheckState_OwnedFull<E>(a); \
+               Any_CheckState_Default<E>(a, true); \
             } \
          }
 

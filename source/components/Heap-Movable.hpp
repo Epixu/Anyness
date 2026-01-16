@@ -92,7 +92,7 @@ namespace Langulus::Anyness::Component
                   "Contained type is not clone-constructible");
             }
 
-            auto al  = self.AllocateFresh(self.RequestHeap(count));
+            self.AllocateFresh(self.RequestHeap(count));
             auto src = IterateHandles(from).begin();
             auto dst = IterateHandles(self).begin();
             try {
@@ -106,14 +106,9 @@ namespace Langulus::Anyness::Component
             } catch (...) {
                // Partial success                                       
                auto n = src - IterateHandles(from).begin();
-               if constexpr (requires { self.SetCountInner(1); }) {
-                  self.SetCountInner(n);
-                  self.ResetHash();
-               }
-               else {
+               if constexpr (not requires { self.SetCountInner(1); }) {
                   // Partial success is not allowed - we have to        
-                  // deallocate and make sure CountStatic reports as    
-                  // empty.                                             
+                  // destroy everything we initialized                  
                   while (n) {
                      #if LANGULUS_FEATURE(MANAGED_MEMORY)
                         if constexpr (requires { dst->DestroyElementDeepCustomPointers(); })
@@ -125,10 +120,8 @@ namespace Langulus::Anyness::Component
                      else dst->DestroyElement();
                      --dst; --n;
                   }
-                  Allocator::Deallocate(al);
-                  self.SetAllocationInner(nullptr);
-                  if_available(self.SetHashInner(1));
                }
+               self.PartialSuccess(n);
                throw;
             }
                      
@@ -465,6 +458,24 @@ namespace Langulus::Anyness::Component
          while (idx) {
             --idx;
             memmove(header + to[idx], header + from[idx], from[idx+1] - from[idx]);
+         }
+      }
+
+      /// Invoked to remedy the situation when element constructors throw     
+      template<CT::Container C>
+      void PartialSuccess(this C& self, Count<C> n) {
+         if constexpr (requires { self.SetCountInner(1); }) {
+            // Partial success is supported                             
+            self.SetCountInner(n);
+            self.ResetHash();
+         }
+         else {
+            // Partial success is not allowed - we have to              
+            // deallocate and make sure CountStatic reports as empty.   
+            (void) n;
+            Allocator::Deallocate(self.GetAllocationInner());
+            self.SetAllocationInner(nullptr);
+            if_available(self.SetHashInner(1));
          }
       }
    };

@@ -105,13 +105,7 @@ namespace Langulus::Anyness
             );
             this->Absorb(FWD(argument));
          }
-         else {
-            /*this->SetType<Decvq<Deref<Deint<A>>>>();
-            this->AllocateFresh(this->RequestHeap(1));
-            this->ResetState();
-            this->EmplaceWithIntent(FWDIntent(argument));*/
-            this->EmplaceConstruct(FWD(argument));
-         }
+         else this->EmplaceConstruct(FWD(argument));
       }
       
       /// Construction that absorbs the provided container                    
@@ -124,19 +118,6 @@ namespace Langulus::Anyness
       template<class A>
       constexpr Any(Inner::Piecewise, A&& argument) {
          this->EmplaceConstruct(FWD(argument));
-
-         /*if constexpr (CT::Handle<A>)
-            this->SetType(DeintCast(argument).GetType());
-         else
-            this->SetType(MetaDataOf<Decvq<Deref<Deint<A>>>>());
-            
-         this->AllocateFresh(this->RequestHeap(1));
-         this->ResetState();
-
-         if constexpr (CT::Copied<IntentOf(argument)>)
-            this->EmplaceWithIntent(Refer(FWD(argument)));
-         else
-            this->EmplaceWithIntent(FWDIntent(argument));*/
       }
       
       /// Assignment                                                          

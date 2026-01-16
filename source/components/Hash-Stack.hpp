@@ -23,7 +23,7 @@ namespace Langulus::Anyness::Component
       
       /// Reset the hash. It will be recomputed on next comparison.           
       void ResetHash(this auto& self) noexcept {
-         self.SetHashInner(0);
+         self.SetHashInner(self.IsEmpty() ? 1 : 0);
       }
 
       /// Get the hash, recompute it if uninitialized                         

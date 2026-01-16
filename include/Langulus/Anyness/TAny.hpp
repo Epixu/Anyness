@@ -85,12 +85,7 @@ namespace Langulus::Anyness
             );
             this->Absorb(FWD(arguments)...);
          }
-         else {
-            /*this->GetType();
-            this->AllocateFresh(this->RequestHeap(1));
-            this->ResetState();*/
-            this->EmplaceConstruct(FWD(arguments)...);
-         }
+         else this->EmplaceConstruct(FWD(arguments)...);
       }
       
       /// Construction that absorbs the provided container                    
@@ -102,9 +97,6 @@ namespace Langulus::Anyness
       /// Emplaces T inside, using A... as constructor arguments              
       template<class...A>
       constexpr TAny(Inner::Piecewise, A&&...arguments) {
-         /*this->GetType();
-         this->AllocateFresh(this->RequestHeap(1));
-         this->ResetState();*/
          this->EmplaceConstruct(FWD(arguments)...);
       }
 
