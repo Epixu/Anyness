@@ -15,6 +15,7 @@
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Comparison.hpp"
+#include "../../../source/components/Removal.hpp"
 
 
 namespace Langulus::Anyness::Inner
@@ -28,7 +29,8 @@ namespace Langulus::Anyness::Inner
       Com::ReserveEmergent<>,             // Reserve derived from alloc
       Com::Emplacement<>,                 // Can be emplaced           
       Com::Assignment<>,                  // Can be reassigned         
-      Com::Comparison<>                   // Can be compared           
+      Com::Comparison<>,                  // Can be compared           
+      Com::Removal<>                      // Can be cleared/reset      
    >;
 }
 

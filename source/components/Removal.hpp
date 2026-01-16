@@ -40,7 +40,7 @@ namespace Langulus::Anyness::Component
       auto RemoveDeepAt(this C&, CT::Index auto) -> Count<C>;
 
       /// Sets a new smaller count by destroying elements on the back.        
-      /// Does nothing if count is larger or equals the current count.        
+      /// Does nothing if 'desiredCount' is larger or equals the current.     
       ///   @attention never reallocates                                      
       ///   @param desiredCount the new count                                 
       template<CT::Container C> requires CT::ContainsMany<C>

@@ -475,7 +475,9 @@ namespace Langulus::Anyness::Component
             (void) n;
             Allocator::Deallocate(self.GetAllocationInner());
             self.SetAllocationInner(nullptr);
+            self.SetHeapInner(nullptr);
             if_available(self.SetHashInner(1));
+            //self.Reset();
          }
       }
    };

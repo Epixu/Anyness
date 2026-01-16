@@ -811,7 +811,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          const auto i666backup = *i666;
          decltype(auto) instance = pack.Emplace(::std::move(*i666));
          Any_CheckState_OwnedFull<E>(pack);
-         REQUIRE(instance == i666backup);
+         REQUIRE(instance.CompareOneEqual(i666backup));
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
 
@@ -824,11 +824,11 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       WHEN("Emplace (insert, describe)") {
          ScopedE i666{666};
          const auto i666backup = *i666;
-         Many descriptor{::std::move(*i666)};
+         Many descriptor {Piecewise, ::std::move(*i666)};
          if constexpr (CT::DescribeConstructible<E>) {
             decltype(auto) instance = pack.template Emplace<E>(Describe{descriptor});
             Any_CheckState_OwnedFull<E>(pack);
-            REQUIRE(instance == i666backup);
+            REQUIRE(instance.CompareOneEqual(i666backup));
             REQUIRE(pack.GetCount() == 1);
             REQUIRE(pack.GetReserved() >= 1);
          }
@@ -1525,7 +1525,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             const auto i666backup = *i666; \
             decltype(auto) instance = a.Emplace(::std::move(*i666)); \
             Any_CheckState_OwnedFull<E>(a); \
-            REQUIRE(instance == i666backup); \
+            REQUIRE(instance.CompareOneEqual(i666backup)); \
             REQUIRE(a.GetCount() == 1); \
             REQUIRE(a.GetReserved() >= 1); \
             if constexpr (CT::Typed<T>) { \
@@ -1548,11 +1548,11 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          #define emplace_overwrite_describe(a) { \
             ScopedE i666{666}; \
             const auto i666backup = *i666; \
-            Many descriptor {::std::move(*i666)}; \
+            Many descriptor {Piecewise, ::std::move(*i666)}; \
             if constexpr (CT::DescribeConstructible<E>) { \
                decltype(auto) instance = a.Emplace(Describe{descriptor}); \
                Any_CheckState_OwnedFull<E>(a); \
-               REQUIRE(instance == i666backup); \
+               REQUIRE(instance.CompareOneEqual(i666backup)); \
                REQUIRE(a.GetCount() == 1); \
                REQUIRE(a.GetReserved() >= 1); \
             } \

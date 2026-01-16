@@ -447,6 +447,10 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't modify count                                   
       template<AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C>
       void EmplaceDefault(this C& self) {
+         if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
+            if_available(self.ResetState());
+         }
+
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // This container is type-erased                            
@@ -538,6 +542,9 @@ namespace Langulus::Anyness::Component
       void EmplaceConstruct(this C& self, A&&...arguments) {
          static_assert(sizeof...(A) > 0,
             "No arguments - use EmplaceDefault instead");
+         if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
+            if_available(self.ResetState());
+         }
 
          if constexpr (CT::TypeErased<C>) {
             //                                                          
@@ -697,11 +704,11 @@ namespace Langulus::Anyness::Component
          else {
             // Need to destroy first element                            
             if constexpr (CT::DeeplyOwned<C>) {
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               self.DestroyElementDeepCustomPointers();
-            #else
-               self.DestroyElementDeepStandardPointers();
-            #endif
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  self.DestroyElementDeepCustomPointers();
+               #else
+                  self.DestroyElementDeepStandardPointers();
+               #endif
             }
             else self.DestroyElement();
 
