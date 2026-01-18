@@ -17,6 +17,8 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
+   , (Types<Any, Text, ScopedElement<Text, true>>)
+
    // Elements are not allocated by the memory manager                  
    , (Types<Any, Text, ScopedElement<Text>>)
    , (Types<Any, int,  ScopedElement<int>>)
@@ -52,7 +54,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , (Types<Any, Text, ScopedElement<Text, true>>)
    , (Types<Any, int, ScopedElement<int, true>>)
    , (Types<Any, Any, ScopedElement<Any, true>>)
    , (Types<Any, RT, ScopedElement<RT, true>>)
@@ -825,7 +826,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          ScopedE i666{666};
          const auto i666backup = *i666;
          Many descriptor {Piecewise, ::std::move(*i666)};
-         if constexpr (CT::DescribeConstructible<E>) {
+         if constexpr (CT::DescribeConstructible<E> and not CT::Container<T>) {
             decltype(auto) instance = pack.template Emplace<E>(Describe{descriptor});
             Any_CheckState_OwnedFull<E>(pack);
             REQUIRE(instance.CompareOneEqual(i666backup));
@@ -1463,7 +1464,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       }
       
       WHEN("Absorbed by copy") {
-         #define absorb_construct_copy(a) { \
+         #define absorb_construct_copy(a, entry_refs) { \
             T absorbed {Copy {a}}; \
             Any_CheckState_OwnedFull<E>(a); \
             Any_CheckState_OwnedFull<E>(absorbed); \
@@ -1472,11 +1473,13 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             REQUIRE(absorbed.template As<E>() == a.template As<E>()); \
             if constexpr (CT::Sparse<E>) { \
                auto entry = *absorbed.GetEntries(); \
+               if (entry_refs == 0) \
+                  REQUIRE(entry == nullptr); \
                if (entry) { \
-                  REQUIRE(entry->GetUses() == 3); \
+                  REQUIRE(entry->GetUses() == entry_refs); \
                   if constexpr (CT::Referenced<Decay<E>>) { \
                      auto e = absorbed.template As<E>(); \
-                     REQUIRE(DenseCast(e).GetReferences() == 3); \
+                     REQUIRE(DenseCast(e).GetReferences() == entry_refs); \
                   } \
                } \
                else { \
@@ -1490,14 +1493,14 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             REQUIRE(a.GetUses() == 1); \
          }
 
-         absorb_construct_copy(pack_referred1);
-         absorb_construct_copy(pack_referred2);
-         absorb_construct_copy(pack_copied);
-         absorb_construct_copy(pack_cloned);
-         absorb_construct_copy(pack_moved1);
-         absorb_construct_copy(pack_moved2);
-         absorb_construct_copy(pack_abandoned);
-         absorb_construct_copy(pack_disowned);
+         absorb_construct_copy(pack_referred1, 3);
+         absorb_construct_copy(pack_referred2, 3);
+         absorb_construct_copy(pack_copied,    3);
+         absorb_construct_copy(pack_cloned,    2);
+         absorb_construct_copy(pack_moved1,    1);
+         absorb_construct_copy(pack_moved2,    1);
+         absorb_construct_copy(pack_abandoned, 1);
+         absorb_construct_copy(pack_disowned,  0);
       }
       
       WHEN("Absorbed by clone") {
@@ -1549,7 +1552,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             ScopedE i666{666}; \
             const auto i666backup = *i666; \
             Many descriptor {Piecewise, ::std::move(*i666)}; \
-            if constexpr (CT::DescribeConstructible<E>) { \
+            if constexpr (CT::DescribeConstructible<E> and not CT::Container<T>) { \
                decltype(auto) instance = a.Emplace(Describe{descriptor}); \
                Any_CheckState_OwnedFull<E>(a); \
                REQUIRE(instance.CompareOneEqual(i666backup)); \
@@ -1681,7 +1684,14 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          contains_full(pack_referred1);
          contains_full(pack_referred2);
          contains_full(pack_copied);
-         contains_full(pack_cloned);
+
+         if constexpr (CT::Sparse<E>) {
+            REQUIRE      (pack_cloned.GetDense().Contains(DenseCast(*originalElement)));
+            REQUIRE_FALSE(pack_cloned.Contains(*originalElement));
+            REQUIRE_FALSE(pack_cloned.Contains(*e1));
+         }
+         else contains_full(pack_cloned);
+
          contains_full(pack_moved1);
          contains_full(pack_moved2);
          contains_full(pack_abandoned);

@@ -97,8 +97,10 @@ namespace Langulus::Anyness
       using Denser         = THandle;
       using DeepType       = HandleDisowned;
 
+      /// Handles can't be default- or piecewise-initialized                  
       THandle() = delete;
-      
+      THandle(Inner::Piecewise, auto&&) = delete;
+
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));
       }
@@ -128,8 +130,10 @@ namespace Langulus::Anyness
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;
 
+      /// Handles can't be default- or piecewise-initialized                  
       THandle() = delete;
-      
+      THandle(Inner::Piecewise, auto&&) = delete;
+
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));
       }
@@ -161,8 +165,10 @@ namespace Langulus::Anyness
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;
 
+      /// Handles can't be default- or piecewise-initialized                  
       THandleDisowned() = delete;
-      
+      THandleDisowned(Inner::Piecewise, auto&&) = delete;
+
       constexpr THandleDisowned(THandleDisowned const& other) {
          this->Absorb(Refer(other));
       }
@@ -188,8 +194,10 @@ namespace Langulus::Anyness
       using Denser         = THandle;
       using DeepType       = HandleDisowned;
 
+      /// Handles can't be default- or piecewise-initialized                  
       THandle() = delete;
-      
+      THandle(Inner::Piecewise, auto&&) = delete;
+
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));
       }
@@ -215,8 +223,10 @@ namespace Langulus::Anyness
       using Denser         = THandle<Deptr<T>>;
       using DeepType       = HandleDisowned;
 
+      /// Handles can't be default- or piecewise-initialized                  
       THandle() = delete;
-      
+      THandle(Inner::Piecewise, auto&&) = delete;
+
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));
       }

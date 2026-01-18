@@ -10,9 +10,42 @@
 #include "Logger.hpp"
 #include "NameOf.hpp"
 
+#if LANGULUS(DEBUG)
+   #include <stacktrace>
+   #ifndef LANGULUS_DEFAULT_STACK_SKIP
+      #define LANGULUS_DEFAULT_STACK_SKIP 3
+   #endif
+   #ifndef LANGULUS_DEFAULT_STACK_DEPTH
+      #define LANGULUS_DEFAULT_STACK_DEPTH 3
+   #endif
+#endif
 
 namespace Langulus
 {
+   #if LANGULUS(DEBUG)
+      namespace Inner
+      {
+         /// Dump the stack                                                   
+         inline void DumpStack(
+            int skip = LANGULUS_DEFAULT_STACK_SKIP,
+            int depth = LANGULUS_DEFAULT_STACK_DEPTH
+         ) {
+            auto group = Logger::ErrorScoped(Logger::Red, "Current stack:");
+            for (auto const& frame : std::stacktrace::current()) {
+               if (skip) {
+                  --skip;
+                  continue;
+               }
+
+               Logger::Error(std::to_string(frame));
+               --depth;
+               if (not depth)
+                  break;
+            }
+         }
+      }
+   #endif
+
    /// Will throw an exception                                                
    ///   @param m1 optional main error message                                
    ///   @param location optional location of the error                       
@@ -29,6 +62,7 @@ namespace Langulus
          if (location) {
             Logger::Error("At ");
             Logger::Append(location);
+            DEBUGGERY(Inner::DumpStack());
          }
 
          // Log error message                                           
@@ -66,6 +100,7 @@ namespace Langulus
             if (location) {
                Logger::Error("At ");
                Logger::Append(location);
+               DEBUGGERY(Inner::DumpStack());
             }
 
             // Log error message                                        
@@ -140,6 +175,7 @@ namespace Langulus
             if (location) {
                Logger::Error("At ");
                Logger::Append(location);
+               DEBUGGERY(Inner::DumpStack());
             }
 
             // Log error message                                        
@@ -226,6 +262,7 @@ namespace Langulus
             if (location) {
                Logger::Error("At ");
                Logger::Append(location);
+               DEBUGGERY(Inner::DumpStack());
             }
 
             // Log error message                                        
@@ -311,6 +348,7 @@ namespace Langulus
                if (location) {
                   Logger::Error("At ");
                   Logger::Append(location);
+                  DEBUGGERY(Inner::DumpStack());
                }
 
                // Log error message                                     

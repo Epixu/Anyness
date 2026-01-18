@@ -264,7 +264,7 @@ namespace Langulus::Anyness::Component
          static_assert(CT::Container<D>, "D must result in a container type");
          LglsAssert(not self.IsEmpty(), "Can't GetDense from empty container");
          if (not self.IsSparse() or count <= 0)
-            return D {Disown(self)};
+            return D {Absorb, Disown(self)};
 
          // Check if origin type is complete before attempting anything 
          if constexpr (CT::TypeErased<C>) {
@@ -297,7 +297,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Pointer T -> Dense nextT                              
-               D temp {Disown(self)};
+               D temp {Absorb, Disown(self)};
                temp.SetTypeInner(nextT);
                temp.SetHeapInner(UnpackPointer(T, nextT, src));               
                if_available(temp.SetCountInner(1));
@@ -309,7 +309,7 @@ namespace Langulus::Anyness::Component
          }
          
          LglsError("Should never be reached");
-         return D {Disown(self)};
+         return D {Absorb, Disown(self)};
       }
 
    protected:

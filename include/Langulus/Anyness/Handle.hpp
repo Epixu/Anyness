@@ -43,8 +43,10 @@ namespace Langulus::Anyness
       using HandleMutType  = HandleMut;
       using DeepType       = HandleDisowned;
 
+      /// Handles can't be default- or piecewise-initialized                  
       HandleMut() = delete;
-      
+      HandleMut(Inner::Piecewise, auto&&) = delete;
+
       constexpr HandleMut(HandleMut const& other) {
          this->Absorb(Refer(other));
       }
@@ -78,8 +80,10 @@ namespace Langulus::Anyness
       using HandleMutType  = HandleDisownedMut;
       using DeepType       = HandleDisowned;
 
+      /// Handles can't be default- or piecewise-initialized                  
       HandleDisownedMut() = delete;
-      
+      HandleDisownedMut(Inner::Piecewise, auto&&) = delete;
+
       constexpr HandleDisownedMut(HandleDisownedMut const& other) {
          this->Absorb(Refer(other));
       }
@@ -116,8 +120,10 @@ namespace Langulus::Anyness
       using HandleType     = Handle;
       using DeepType       = HandleDisowned;
 
+      /// Handles can't be default- or piecewise-initialized                  
       Handle() = delete;
-      
+      Handle(Inner::Piecewise, auto&&) = delete;
+
       constexpr Handle(Handle const& other) {
          this->Absorb(Refer(other));
       }
@@ -149,24 +155,34 @@ namespace Langulus::Anyness
       using HandleType     = HandleDisowned;
       using DeepType       = HandleDisowned;
 
+      /// Handles can't be default- or piecewise-initialized                  
       HandleDisowned() = delete;
-      
+      HandleDisowned(Inner::Piecewise, auto&&) = delete;
+
+      /// Refer constructor                                                   
       constexpr HandleDisowned(HandleDisowned const& other) {
          this->Absorb(Refer(other));
       }
+
+      /// Move constructor                                                    
       constexpr HandleDisowned(HandleDisowned&& other) noexcept {
          this->Absorb(Move(other));
-      }
-
-      constexpr HandleDisowned(void* ptr, DMeta type) noexcept {
-         this->SetHeapInner(ptr);
-         this->SetTypeInner(type);
       }
 
       /// Construction that absorbs the provided container                    
       template<CT::Container C>
       constexpr HandleDisowned(C&& argument) {
          this->Absorb(FWD(argument));
+      }
+      template<CT::Container C>
+      constexpr HandleDisowned(Inner::Absorb, C&& argument) {
+         this->Absorb(FWD(argument));
+      }
+
+      /// Manual constructor for some niche uses, like iterators              
+      constexpr HandleDisowned(void* ptr, DMeta type) noexcept {
+         this->SetHeapInner(ptr);
+         this->SetTypeInner(type);
       }
    };
 }
