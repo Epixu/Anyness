@@ -9,49 +9,59 @@
 #include "Except.hpp"
 #include "Logger.hpp"
 #include "NameOf.hpp"
-#include <stacktrace>
 
-#ifndef LANGULUS_DEFAULT_STACK_SKIP
-   #define LANGULUS_DEFAULT_STACK_SKIP 2
-#endif
-#ifndef LANGULUS_DEFAULT_STACK_DEPTH
-   #define LANGULUS_DEFAULT_STACK_DEPTH 3
+#if LANGULUS(STACKTRACE)
+   #include <stacktrace>
+
+   #ifndef LANGULUS_DEFAULT_STACK_SKIP
+      #define LANGULUS_DEFAULT_STACK_SKIP 2
+   #endif
+
+   #ifndef LANGULUS_DEFAULT_STACK_DEPTH
+      #define LANGULUS_DEFAULT_STACK_DEPTH 3
+   #endif
 #endif
 
 
 namespace Langulus
 {
-   /// Dump the stack                                                         
-   inline void Stacktrace(
-      const int depth = LANGULUS_DEFAULT_STACK_DEPTH,
-      const int skip = LANGULUS_DEFAULT_STACK_SKIP
-   ) {
-      auto stack = std::stacktrace::current();
-      if (depth > 1) {
-         auto group = Logger::Section("Current stack:");
-         auto skipped = skip;
-         auto dumped = depth;
-         for (auto const& frame : stack) {
-            if (skipped) {
-               --skipped;
-               continue;
+   #if LANGULUS(STACKTRACE)
+      /// Dump the stack                                                      
+      ///   @param depth - the number of stack entries to log                 
+      ///   @param skip - the number of stack entries to skip. These are      
+      ///      usually the Stacktrace() function itself, as well as the       
+      ///      ErrorInner/AssertInner/AssumeInner function that called it.    
+      inline void Stacktrace(
+         const int depth = LANGULUS_DEFAULT_STACK_DEPTH,
+         const int skip = LANGULUS_DEFAULT_STACK_SKIP
+      ) {
+         auto stack = std::stacktrace::current();
+         if (depth > 1) {
+            auto group = Logger::Section("Current stack:");
+            auto skipped = skip;
+            auto dumped = depth;
+            for (auto const& frame : stack) {
+               if (skipped) {
+                  --skipped;
+                  continue;
+               }
+
+               Logger::Line(std::to_string(frame));
+               --dumped;
+               if (not dumped)
+                  break;
             }
 
-            Logger::Line(std::to_string(frame));
-            --dumped;
-            if (not dumped)
-               break;
+            if (stack.size() > depth + skip) {
+               Logger::Line("(", stack.size() - (depth + skip),
+                  " additional hidden entries, "
+                  "define LANGULUS_DEFAULT_STACK_DEPTH to show more)"
+               );
+            }
          }
-
-         if (stack.size() > depth + skip) {
-            Logger::Line("(", stack.size() - (depth + skip),
-               " additional hidden entries, "
-               "define LANGULUS_DEFAULT_STACK_DEPTH to show more)"
-            );
-         }
+         else Logger::Line("At: ", std::to_string(stack[skip]));
       }
-      else Logger::Line("At: ", std::to_string(stack[skip]));
-   }
+   #endif
 
    /// Will throw an exception                                                
    ///   @param m1 optional main error message                                
@@ -67,7 +77,12 @@ namespace Langulus
       auto s = Logger::ErrorScoped("Assertion failure: ");
       Logger::Append(m1);
       (Logger::Append(FWD(mn)), ...);
-      Stacktrace();
+      #if LANGULUS(STACKTRACE)
+         Stacktrace();
+      #else
+         if (location)
+            Logger::Line("At: ", location);
+      #endif
 
       // Throw                                                          
       if constexpr (CT::Exception<E>)
@@ -97,7 +112,12 @@ namespace Langulus
             auto s = Logger::ErrorScoped("Assertion failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
-            Stacktrace();
+            #if LANGULUS(STACKTRACE)
+               Stacktrace();
+            #else
+               if (location)
+                  Logger::Line("At: ", location);
+            #endif
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -130,7 +150,12 @@ namespace Langulus
             auto s = Logger::WarningScoped("Assertion failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
-            Stacktrace(1);
+            #if LANGULUS(STACKTRACE)
+               Stacktrace(1);
+            #else
+               if (location)
+                  Logger::Line("At: ", location);
+            #endif
          }
       }
    }
@@ -159,7 +184,12 @@ namespace Langulus
             auto s = Logger::ErrorScoped("User assumption failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
-            Stacktrace();
+            #if LANGULUS(STACKTRACE)
+               Stacktrace();
+            #else
+               if (location)
+                  Logger::Line("At: ", location);
+            #endif
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -190,7 +220,12 @@ namespace Langulus
             auto s = Logger::WarningScoped("User assumption failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
-            Stacktrace(1);
+            #if LANGULUS(STACKTRACE)
+               Stacktrace(1);
+            #else
+               if (location)
+                  Logger::Line("At: ", location);
+            #endif
          }
       }
    }
@@ -233,7 +268,12 @@ namespace Langulus
             auto s = Logger::ErrorScoped("Dev assumption failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
-            Stacktrace();
+            #if LANGULUS(STACKTRACE)
+               Stacktrace();
+            #else
+               if (location)
+                  Logger::Line("At: ", location);
+            #endif
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -263,7 +303,12 @@ namespace Langulus
             auto s = Logger::WarningScoped("Dev assumption failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
-            Stacktrace(1);
+            #if LANGULUS(STACKTRACE)
+               Stacktrace(1);
+            #else
+               if (location)
+                  Logger::Line("At: ", location);
+            #endif
          }
       }
    }
@@ -306,7 +351,12 @@ namespace Langulus
                auto s = Logger::ErrorScoped("Assumption level ", LEVEL, " failure: ");
                Logger::Append(m1);
                (Logger::Append(FWD(mn)), ...);
-               Stacktrace();
+               #if LANGULUS(STACKTRACE)
+                  Stacktrace();
+               #else
+                  if (location)
+                     Logger::Line("At: ", location);
+               #endif
 
                // Throw                                                 
                if constexpr (CT::Exception<E>)
@@ -347,7 +397,12 @@ namespace Langulus
                auto s = Logger::WarningScoped("Assumption level ", LEVEL, " failure: ");
                Logger::Append(m1);
                (Logger::Append(FWD(mn)), ...);
-               Stacktrace(1);
+               #if LANGULUS(STACKTRACE)
+                  Stacktrace(1);
+               #else
+                  if (location)
+                     Logger::Line("At: ", location);
+               #endif
             }
          }
       }

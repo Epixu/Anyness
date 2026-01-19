@@ -85,6 +85,17 @@
    #define IF_NOT_LANGULUS_PROFILING(a)   a
 #endif
 
+/// Stacktracing                                                              
+#ifdef LANGULUS_OPTION_STACKTRACE
+   #define LANGULUS_STACKTRACE() 1
+   #define IF_LANGULUS_STACKTRACE(a)      a
+   #define IF_NOT_LANGULUS_STACKTRACE(a)  LANGULUS(NOOP)
+#else
+   #define LANGULUS_STACKTRACE() 0
+   #define IF_LANGULUS_STACKTRACE(a)      LANGULUS(NOOP)
+   #define IF_NOT_LANGULUS_STACKTRACE(a)  a
+#endif
+
 /// Paranoid mode introduces overhead, but zeroes any freed memory            
 #ifdef LANGULUS_OPTION_PARANOIA
    #define LANGULUS_PARANOID() 1

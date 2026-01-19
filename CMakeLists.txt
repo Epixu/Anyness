@@ -72,6 +72,9 @@ option(LANGULUS_OPTION_ENCRYPTION
 option(LANGULUS_OPTION_PROFILING
     "Performance measurements at runtime" OFF)
 
+option(LANGULUS_OPTION_STACKTRACE
+    "Enables logging of stacktrace on errors and assumptions (currently not available on GCC 14.2+)" OFF)
+
 option(LANGULUS_OPTION_LOGGING               "Master logger switch" ON)
 option(LANGULUS_LOGGER_DISABLE_FATALERRORS	"Disables fatal error logging via Logger::Fatal()" OFF)
 option(LANGULUS_LOGGER_DISABLE_ERRORS		   "Disables error logging via Logger::Error()" OFF)
@@ -202,6 +205,7 @@ reflect_option(LANGULUS_OPTION_BENCHMARK           "Benchmarking enabled")
 reflect_option(LANGULUS_OPTION_DEBUGGING           "Debugging enabled")
 reflect_option(LANGULUS_OPTION_LOGGING             "Logging enabled")
 reflect_option(LANGULUS_OPTION_PROFILING           "Profiling enabled")
+reflect_option(LANGULUS_OPTION_STACKTRACE          "Stacktracing enabled")
 reflect_option(LANGULUS_OPTION_NEWDELETE           "New/Delete operator override enabled")
 reflect_option(LANGULUS_OPTION_UNICODE             "Unicode text containers enabled")
 reflect_option(LANGULUS_OPTION_COMPRESSION         "Compressable memory enabled")
