@@ -461,11 +461,11 @@ SCENARIO("NameOf", "[nameof]") {
    DEFINE_NAMEOF_TYPE_TEST(z, "z")
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
-      DEFINE_NAMEOF_TYPE_TEST(pptr8, "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>")
+      DEFINE_NAMEOF_TYPE_TEST(pptr8, "Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>")
       DEFINE_NAMEOF_TYPE_TEST(pptr16, "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>")
       DEFINE_NAMEOF_TYPE_TEST(pptr32, "Langulus::Fractalloc::PackedPointer<char>")
 
-      DEFINE_NAMEOF_TYPE_TEST(pptr8*, "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>*")
+      DEFINE_NAMEOF_TYPE_TEST(pptr8*, "Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>*")
       DEFINE_NAMEOF_TYPE_TEST(pptr16*, "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>*")
       DEFINE_NAMEOF_TYPE_TEST(pptr32*, "Langulus::Fractalloc::PackedPointer<char>*")
    #endif

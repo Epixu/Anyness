@@ -475,8 +475,8 @@ SCENARIO("Testing reflection of names", "[rtti]") {
    {
       const DMeta meta = MetaDataOf<pptr8>();
       REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>");
-      REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>");
+      REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>");
+      REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>");
    }
    {
       const DMeta meta = MetaDataOf<pptr16>();

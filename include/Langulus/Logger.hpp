@@ -240,7 +240,6 @@ namespace Langulus::Logger
       size_t GetTabs() const noexcept { return mTabulator; }
 
       LANGULUS_API(LOGGER)  State();
-      // ReSharper disable once CppEnforceOverridingDestructorStyle     
       LANGULUS_API(LOGGER) ~State();
 
       ///                                                                     
@@ -381,7 +380,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            #ifdef LANGULUS_LOGGER_DISABLE_FATALERRORS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -423,7 +426,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return Scope {0};
+            #ifdef LANGULUS_LOGGER_DISABLE_ERRORS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -465,7 +472,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            #ifdef LANGULUS_LOGGER_DISABLE_WARNINGS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -507,7 +518,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return Scope {0};
+            #ifdef LANGULUS_LOGGER_DISABLE_VERBOSE
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -549,7 +564,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return Scope {0};
+            #ifdef LANGULUS_LOGGER_DISABLE_INFOS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -591,7 +610,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            #ifdef LANGULUS_LOGGER_DISABLE_MESSAGES
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -633,7 +656,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            #ifdef LANGULUS_LOGGER_DISABLE_SPECIALS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -675,7 +702,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            #ifdef LANGULUS_LOGGER_DISABLE_FLOWS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -717,7 +748,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            #ifdef LANGULUS_LOGGER_DISABLE_INPUTS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -759,7 +794,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            #ifdef LANGULUS_LOGGER_DISABLE_NETWORKS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -801,7 +840,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            #ifdef LANGULUS_LOGGER_DISABLE_OS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }
@@ -843,7 +886,11 @@ namespace Langulus::Logger
             #endif
          }
          else {
-            return UnusedScope {};
+            #ifdef LANGULUS_LOGGER_DISABLE_PROMPTS
+               return UnusedScope {};
+            #else
+                return Scope {0};
+            #endif
          }
       #endif
    }

@@ -9,42 +9,49 @@
 #include "Except.hpp"
 #include "Logger.hpp"
 #include "NameOf.hpp"
+#include <stacktrace>
 
-#if LANGULUS(DEBUG)
-   #include <stacktrace>
-   #ifndef LANGULUS_DEFAULT_STACK_SKIP
-      #define LANGULUS_DEFAULT_STACK_SKIP 3
-   #endif
-   #ifndef LANGULUS_DEFAULT_STACK_DEPTH
-      #define LANGULUS_DEFAULT_STACK_DEPTH 3
-   #endif
+#ifndef LANGULUS_DEFAULT_STACK_SKIP
+   #define LANGULUS_DEFAULT_STACK_SKIP 2
 #endif
+#ifndef LANGULUS_DEFAULT_STACK_DEPTH
+   #define LANGULUS_DEFAULT_STACK_DEPTH 3
+#endif
+
 
 namespace Langulus
 {
-   #if LANGULUS(DEBUG)
-      namespace Inner
-      {
-         /// Dump the stack                                                   
-         inline void DumpStack(
-            int skip = LANGULUS_DEFAULT_STACK_SKIP,
-            int depth = LANGULUS_DEFAULT_STACK_DEPTH
-         ) {
-            auto group = Logger::ErrorScoped(Logger::Red, "Current stack:");
-            for (auto const& frame : std::stacktrace::current()) {
-               if (skip) {
-                  --skip;
-                  continue;
-               }
-
-               Logger::Error(std::to_string(frame));
-               --depth;
-               if (not depth)
-                  break;
+   /// Dump the stack                                                         
+   inline void Stacktrace(
+      const int depth = LANGULUS_DEFAULT_STACK_DEPTH,
+      const int skip = LANGULUS_DEFAULT_STACK_SKIP
+   ) {
+      auto stack = std::stacktrace::current();
+      if (depth > 1) {
+         auto group = Logger::Section("Current stack:");
+         auto skipped = skip;
+         auto dumped = depth;
+         for (auto const& frame : stack) {
+            if (skipped) {
+               --skipped;
+               continue;
             }
+
+            Logger::Line(std::to_string(frame));
+            --dumped;
+            if (not dumped)
+               break;
+         }
+
+         if (stack.size() > depth + skip) {
+            Logger::Line("(", stack.size() - (depth + skip),
+               " additional hidden entries, "
+               "define LANGULUS_DEFAULT_STACK_DEPTH to show more)"
+            );
          }
       }
-   #endif
+      else Logger::Line("At: ", std::to_string(stack[skip]));
+   }
 
    /// Will throw an exception                                                
    ///   @param m1 optional main error message                                
@@ -56,26 +63,17 @@ namespace Langulus
       const char* m1 = "<unknown error>",
       MORE&&...mn
    ) {
-      //if not consteval {
-         // Log location first, because message might cause             
-         // additional errors                                           
-         if (location) {
-            Logger::Error("At ");
-            Logger::Append(location);
-            DEBUGGERY(Inner::DumpStack());
-         }
+      // Log error message                                              
+      auto s = Logger::ErrorScoped("Assertion failure: ");
+      Logger::Append(m1);
+      (Logger::Append(FWD(mn)), ...);
+      Stacktrace();
 
-         // Log error message                                           
-         Logger::Error("Assertion failure: ");
-         Logger::Append(m1);
-         (Logger::Append(FWD(mn)), ...);
-
-         // Throw                                                       
-         if constexpr (CT::Exception<E>)
-            throw E {m1, location};
-         else
-            throw E {m1};
-      //}
+      // Throw                                                          
+      if constexpr (CT::Exception<E>)
+         throw E {m1, location};
+      else
+         throw E {m1};
    }
 
    #define LglsError(...) ::Langulus::ErrorInner(HERE() __VA_OPT__(,) __VA_ARGS__)
@@ -95,18 +93,11 @@ namespace Langulus
    ) {
       if not consteval {
          if (not condition) {
-            // Log location first, because message might cause          
-            // additional errors                                        
-            if (location) {
-               Logger::Error("At ");
-               Logger::Append(location);
-               DEBUGGERY(Inner::DumpStack());
-            }
-
             // Log error message                                        
-            Logger::Error("Assertion failure: ");
+            auto s = Logger::ErrorScoped("Assertion failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
+            Stacktrace();
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -135,17 +126,11 @@ namespace Langulus
    ) noexcept {
       if not consteval {
          if (not condition) {
-            // Log location first, because message might cause          
-            // additional errors                                        
-            if (location) {
-               Logger::Warning("At ");
-               Logger::Append(location);
-            }
-
             // Log error message                                        
-            Logger::Warning("Assertion failure: ");
+            auto s = Logger::WarningScoped("Assertion failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
+            Stacktrace(1);
          }
       }
    }
@@ -170,18 +155,11 @@ namespace Langulus
    ) {
       if not consteval {
          if (not condition) {
-            // Log location first, because message might cause          
-            // additional errors                                        
-            if (location) {
-               Logger::Error("At ");
-               Logger::Append(location);
-               DEBUGGERY(Inner::DumpStack());
-            }
-
             // Log error message                                        
-            Logger::Error("User assumption failure: ");
+            auto s = Logger::ErrorScoped("User assumption failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
+            Stacktrace();
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -208,17 +186,11 @@ namespace Langulus
    ) noexcept {
       if not consteval {
          if (not condition) {
-            // Log location first, because message might cause          
-            // additional errors                                        
-            if (location) {
-               Logger::Warning("At ");
-               Logger::Append(location);
-            }
-
             // Log error message                                        
-            Logger::Warning("User assumption failure: ");
+            auto s = Logger::WarningScoped("User assumption failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
+            Stacktrace(1);
          }
       }
    }
@@ -257,18 +229,11 @@ namespace Langulus
    ) {
       if not consteval {
          if (not condition) {
-            // Log location first, because message might cause          
-            // additional errors                                        
-            if (location) {
-               Logger::Error("At ");
-               Logger::Append(location);
-               DEBUGGERY(Inner::DumpStack());
-            }
-
             // Log error message                                        
-            Logger::Error("Dev assumption failure: ");
+            auto s = Logger::ErrorScoped("Dev assumption failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
+            Stacktrace();
 
             // Throw                                                    
             if constexpr (CT::Exception<E>)
@@ -294,17 +259,11 @@ namespace Langulus
    ) noexcept {
       if not consteval {
          if (not condition) {
-            // Log location first, because message might cause          
-            // additional errors                                        
-            if (location) {
-               Logger::Warning("At ");
-               Logger::Append(location);
-            }
-
             // Log error message                                        
-            Logger::Warning("Dev assumption failure: ");
+            auto s = Logger::WarningScoped("Dev assumption failure: ");
             Logger::Append(m1);
             (Logger::Append(FWD(mn)), ...);
+            Stacktrace(1);
          }
       }
    }
@@ -343,18 +302,11 @@ namespace Langulus
       if constexpr (LANGULUS(SAFE) >= LEVEL) {
          if not consteval {
             if (not condition) {
-               // Log location first, because message might cause       
-               // additional errors                                     
-               if (location) {
-                  Logger::Error("At ");
-                  Logger::Append(location);
-                  DEBUGGERY(Inner::DumpStack());
-               }
-
                // Log error message                                     
-               Logger::Error("Assumption level ", LEVEL, " failure: ");
+               auto s = Logger::ErrorScoped("Assumption level ", LEVEL, " failure: ");
                Logger::Append(m1);
                (Logger::Append(FWD(mn)), ...);
+               Stacktrace();
 
                // Throw                                                 
                if constexpr (CT::Exception<E>)
@@ -391,17 +343,11 @@ namespace Langulus
       if constexpr (LANGULUS(SAFE) >= LEVEL) {
          if not consteval {
             if (not condition) {
-               // Log location first, because message might cause       
-               // additional errors                                     
-               if (location) {
-                  Logger::Error("At ");
-                  Logger::Append(location);
-               }
-
                // Log error message                                     
-               Logger::Warning("Assumption level ", LEVEL, " failure: ");
+               auto s = Logger::WarningScoped("Assumption level ", LEVEL, " failure: ");
                Logger::Append(m1);
                (Logger::Append(FWD(mn)), ...);
+               Stacktrace(1);
             }
          }
       }

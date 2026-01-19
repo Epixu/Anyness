@@ -20,6 +20,7 @@ struct ScopedElement {
    using Type = T;
    using Allocation = Langulus::Allocation;
    using Allocator = Langulus::Allocator;
+   static constexpr bool Managed = MANAGED;
    
    T* element = nullptr;
    Allocation* entries[Langulus::IndirectsOf<T> + 1] = {};

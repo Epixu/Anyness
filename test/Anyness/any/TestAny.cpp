@@ -97,6 +97,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
    using T = typename TestType::First;
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
+   constexpr bool Managed = ScopedE::Managed;
 
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              
@@ -1082,6 +1083,8 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
       WHEN("Assigned compatible referred value") {
          #define assign_refer(a) \
             a.Assign(*element); \
+            if constexpr (CT::Container<E>) \
+               Any_CheckState_OwnedFull<TypeOf<E>>(*element); \
             Any_CheckState_OwnedFull<E>(a); \
             Any_CheckState_ContainsOne(a, Refer(element));
 
@@ -1132,6 +1135,124 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          }
       }
       
+      WHEN("Assigned compatible cloned value") {
+         #define assign_clone(a) { \
+            a.Assign(Clone(*element)); \
+            if constexpr (CT::Container<E>) \
+               Any_CheckState_OwnedFull<TypeOf<E>>(*element); \
+            Any_CheckState_OwnedFull<E>(a); \
+            Any_CheckState_ContainsOne(a, Clone(element)); \
+         }
+
+         assign_clone(pack_referred1);
+         assign_clone(pack_referred2);
+         assign_clone(pack_copied);
+         assign_clone(pack_cloned);
+         assign_clone(pack_moved1);
+         assign_clone(pack_moved2);
+         assign_clone(pack_abandoned);
+         assign_clone(pack_disowned);
+      }
+
+      if constexpr (CT::ContainsOne<E>) {
+         WHEN("Assigned and absorbed cloned container") {
+            if (not pack_referred1.IsSame(element->GetType())) {
+               #define misabsorb_clone(a) { \
+                  REQUIRE_THROWS(a.AssignAbsorb(Clone(*element))); \
+                  Any_CheckState_OwnedFull<E>(a); \
+                  Any_CheckState_ContainsOne(a, Clone(originalElement)); \
+               }
+
+               misabsorb_clone(pack_referred1);
+               misabsorb_clone(pack_referred2);
+               misabsorb_clone(pack_copied);
+               misabsorb_clone(pack_cloned);
+               misabsorb_clone(pack_moved1);
+               misabsorb_clone(pack_moved2);
+               misabsorb_clone(pack_abandoned);
+               misabsorb_clone(pack_disowned);
+               return;
+            }
+
+            #define absorb_clone(a) { \
+               a.AssignAbsorb(Clone(*element)); \
+               if constexpr (CT::Container<E>) \
+                  Any_CheckState_OwnedFull<TypeOf<E>>(*element); \
+               Any_Helper_TestSame(a, *element); \
+               REQUIRE(a.GetUses() == 2); \
+               REQUIRE(a.GetAllocation() == element->GetAllocation()); \
+            }
+
+            absorb_clone(pack_referred1);
+            absorb_clone(pack_referred2);
+            absorb_clone(pack_copied);
+            absorb_clone(pack_cloned);
+            absorb_clone(pack_moved1);
+            absorb_clone(pack_moved2);
+            absorb_clone(pack_abandoned);
+            absorb_clone(pack_disowned);
+         }
+      }
+
+      WHEN("Assigned compatible copied value") {
+         #define assign_copy(a) { \
+            a.Assign(Copy(*element)); \
+            if constexpr (CT::Container<E>) \
+               Any_CheckState_OwnedFull<TypeOf<E>>(*element); \
+            Any_CheckState_OwnedFull<E>(a); \
+            Any_CheckState_ContainsOne(a, Refer(element)); \
+         }
+
+         assign_copy(pack_referred1);
+         assign_copy(pack_referred2);
+         assign_copy(pack_copied);
+         assign_copy(pack_cloned);
+         assign_copy(pack_moved1);
+         assign_copy(pack_moved2);
+         assign_copy(pack_abandoned);
+         assign_copy(pack_disowned);
+      }
+
+      if constexpr (CT::ContainsOne<E>) {
+         WHEN("Assigned and absorbed copied container") {
+            if (not pack_referred1.IsSame(element->GetType())) {
+               #define misabsorb_copy(a) { \
+                  REQUIRE_THROWS(a.AssignAbsorb(Copy(*element))); \
+                  Any_CheckState_OwnedFull<E>(a); \
+                  Any_CheckState_ContainsOne(a, Refer(originalElement)); \
+               }
+
+               misabsorb_copy(pack_referred1);
+               misabsorb_copy(pack_referred2);
+               misabsorb_copy(pack_copied);
+               misabsorb_copy(pack_cloned);
+               misabsorb_copy(pack_moved1);
+               misabsorb_copy(pack_moved2);
+               misabsorb_copy(pack_abandoned);
+               misabsorb_copy(pack_disowned);
+               return;
+            }
+
+            #define absorb_copy(a) { \
+               a.AssignAbsorb(Copy(*element)); \
+               if constexpr (CT::Container<E>) \
+                  Any_CheckState_OwnedFull<TypeOf<E>>(*element); \
+               Any_Helper_TestSame(a, *element); \
+               REQUIRE(a.GetUses() == 2); \
+               REQUIRE(a.GetAllocation() == element->GetAllocation()); \
+            }
+
+            absorb_copy(pack_referred1);
+            absorb_copy(pack_referred2);
+            absorb_copy(pack_copied);
+            absorb_copy(pack_cloned);
+            absorb_copy(pack_moved1);
+            absorb_copy(pack_moved2);
+            absorb_copy(pack_abandoned);
+            absorb_copy(pack_disowned);
+         }
+      }
+
       WHEN("Assigned compatible moved value") {
          #define assign_move(a) { \
             auto movable = *element; \
@@ -1473,19 +1594,19 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             REQUIRE(absorbed.template As<E>() == a.template As<E>()); \
             if constexpr (CT::Sparse<E>) { \
                auto entry = *absorbed.GetEntries(); \
-               if (entry_refs == 0) \
+               if ((entry_refs) == 0) \
                   REQUIRE(entry == nullptr); \
                if (entry) { \
-                  REQUIRE(entry->GetUses() == entry_refs); \
+                  REQUIRE(entry->GetUses() == (entry_refs)); \
                   if constexpr (CT::Referenced<Decay<E>>) { \
                      auto e = absorbed.template As<E>(); \
-                     REQUIRE(DenseCast(e).GetReferences() == entry_refs); \
+                     REQUIRE(DenseCast(e).GetReferences() == (entry_refs)); \
                   } \
                } \
                else { \
                   if constexpr (CT::Referenced<Decay<E>>) { \
                      auto e = absorbed.template As<E>(); \
-                     REQUIRE(DenseCast(e).GetReferences() == 1); \
+                     REQUIRE(DenseCast(e).GetReferences() == (managed_sparse ? 7 : 1)); \
                   } \
                } \
             } \
@@ -1493,13 +1614,14 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             REQUIRE(a.GetUses() == 1); \
          }
 
-         absorb_construct_copy(pack_referred1, 3);
-         absorb_construct_copy(pack_referred2, 3);
-         absorb_construct_copy(pack_copied,    3);
+         const bool managed_sparse = CT::Sparse<E> and Managed;
+         absorb_construct_copy(pack_referred1, managed_sparse ? 8 : 3);
+         absorb_construct_copy(pack_referred2, managed_sparse ? 8 : 3);
+         absorb_construct_copy(pack_copied,    managed_sparse ? 8 : 3);
          absorb_construct_copy(pack_cloned,    2);
-         absorb_construct_copy(pack_moved1,    1);
-         absorb_construct_copy(pack_moved2,    1);
-         absorb_construct_copy(pack_abandoned, 1);
+         absorb_construct_copy(pack_moved1,    managed_sparse ? 8 : 1);
+         absorb_construct_copy(pack_moved2,    managed_sparse ? 8 : 1);
+         absorb_construct_copy(pack_abandoned, managed_sparse ? 8 : 1);
          absorb_construct_copy(pack_disowned,  0);
       }
       

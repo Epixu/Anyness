@@ -15,7 +15,7 @@
 
 
 /// Packed pointers                                                           
-using pptr8  = Langulus::Fractalloc::PackedPointer<char, 2, 2, 4>;
+using pptr8  = Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>;
 static_assert(sizeof(pptr8) == 1);
 
 using pptr16 = Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>;
@@ -24,7 +24,7 @@ static_assert(sizeof(pptr16) == 2);
 using pptr32 = Langulus::Fractalloc::PackedPointer<char>;
 static_assert(sizeof(pptr32) == 4);
 
-using pptr8rt  = Langulus::Fractalloc::PackedPointer<RT, 2, 2, 4>;
+using pptr8rt  = Langulus::Fractalloc::PackedPointer<RT, 2, 6, 0>;
 static_assert(sizeof(pptr8) == 1);
 
 using pptr16rt = Langulus::Fractalloc::PackedPointer<RT, 4, 4, 8>;
@@ -43,7 +43,8 @@ struct ScopedElementPacked {
    using Inner = typename T::Type;
    using Allocation = Langulus::Allocation;
    using Allocator = Langulus::Allocator;
-   
+   static constexpr bool Managed = true;
+
    T element = nullptr;
    Allocation* entries[Langulus::IndirectsOf<T> + 1] = {};
 
