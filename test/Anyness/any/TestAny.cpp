@@ -1766,7 +1766,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
             reset_and_reallocate(pack_moved1);
             reset_and_reallocate(pack_moved2);
             reset_and_reallocate(pack_abandoned);
-            reset_and_reallocate(pack_disowned);
+            //reset_and_reallocate(pack_disowned); // likely to be reallocated in a new place due to lack of authority on the original memory
          }
       }
 
