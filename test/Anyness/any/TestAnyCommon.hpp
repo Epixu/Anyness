@@ -228,7 +228,7 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent) {
       REQUIRE(pack.GetEntries() == nullptr);
    else {
       REQUIRE(pack.GetEntries() != nullptr);
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      //#if LANGULUS_FEATURE(MANAGED_MEMORY)
          if constexpr (not CT::Disowned<I>) {
             for (size_t i = 0; i < IndirectsOf<E>; ++i) {
                if constexpr (CT::Cloned<I>)
@@ -241,10 +241,10 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent) {
             for (size_t i = 0; i < IndirectsOf<E>; ++i)
                REQUIRE(pack.GetEntries()[i] == nullptr);         
          }
-      #else
-         for (size_t i = 0; i < IndirectsOf<E>; ++i)
-            REQUIRE(pack.GetEntries()[i] == nullptr);         
-      #endif
+      //#else
+      //   for (size_t i = 0; i < IndirectsOf<E>; ++i)
+      //      REQUIRE(pack.GetEntries()[i] == nullptr);         
+      //#endif
    }
 
    if constexpr (CT::TypeErased<T>) {

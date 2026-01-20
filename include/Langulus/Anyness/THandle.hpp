@@ -22,6 +22,7 @@ namespace Langulus::Anyness
 {
    namespace Inner
    {
+      /// Statically typed handle to a dense element held inside a container  
       template<CT::Reference T> requires CT::Dense<T>
       using THandleEmbeddedDense = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
@@ -35,6 +36,7 @@ namespace Langulus::Anyness
          Com::IterationOperators<>
       >;
       
+      /// Statically typed handle to a sparse element held inside a container 
       template<CT::Reference T> requires CT::Sparse<T>
       using THandleEmbeddedSparse = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
@@ -47,6 +49,7 @@ namespace Langulus::Anyness
          Com::IterationOperators<>
       >;
       
+      /// Statically typed handle to a disowned element held inside container 
       template<CT::Reference T>
       using THandleDisownedEmbedded = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
@@ -58,23 +61,27 @@ namespace Langulus::Anyness
          Com::IterationOperators<>
       >;
       
+      /// Statically typed handle to a local dense value                      
+      /// (isomorphic to TOwn)                                                
       template<CT::NotReference T> requires CT::Dense<T>
       using THandleLocalDense = Container<
-         Com::TypedStatic<DMeta, T>,         // Statically typed        
-         Com::Stack<T>,                      // Element on the stack    
-         Com::Assignment<>,                  // Allows for reassignment 
-         Com::Comparison<>                   // Can be compared         
+         Com::TypedStatic<DMeta, T>,
+         Com::Stack<T>,
+         Com::Assignment<>,
+         Com::Comparison<>
       >;
       
+      /// Statically typed handle to a local sparse value                     
+      /// (isomorphic to TRef)                                                
       template<CT::NotReference T> requires CT::Sparse<T>
       using THandleLocalSparse = Container<
-         Com::TypedStatic<DMeta, Deptr<T>>,  // Statically typed        
-         Com::HeapMovable<>,                 // Data on the heap        
-         Com::OwnershipStack<0, false>,      // Allocation is referenced
-         Com::CountStatic<1u>,               // Statically sized        
-         Com::Emplacement<>,                 // Can be emplaced         
-         Com::Assignment<>,                  // Can be reassigned       
-         Com::Comparison<>                   // Can be compared         
+         Com::TypedStatic<DMeta, Deptr<T>>,
+         Com::HeapMovable<>,
+         Com::OwnershipStack<0, false>,
+         Com::CountStatic<1u>,
+         Com::Emplacement<>,
+         Com::Assignment<>,
+         Com::Comparison<>
       >;
    }
 

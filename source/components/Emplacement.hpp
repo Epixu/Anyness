@@ -55,6 +55,7 @@ namespace Langulus::Anyness::Component
       /// Assumes all indirections are ordinary pointers, and is thus faster. 
       template<CT::Container C, CT::NoIntent IT>
       void EmplaceByCloningStandardPointers(this C& self, IT const& rhs) {
+         constexpr bool has_entries = requires { self.GetEntries(); };
          [[maybe_unused]] DMeta T;
          // If T is Text**, then dst/src are Text***                    
          void** dst = static_cast<void**>(self.GetHeapInner());
@@ -77,7 +78,7 @@ namespace Langulus::Anyness::Component
             src = static_cast<void**>(const_cast<void*>(static_cast<const void*>(&rhs)));
          }
 
-         if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
+         if constexpr (CT::TypeErased<C>) {
             const size_t indirects = T.GetIndirections();
             if (indirects > 0) {
                // Allocate the origin first                             
@@ -95,7 +96,9 @@ namespace Langulus::Anyness::Component
                #endif
                LglsAssert(cloned_origin, "Out of memory");
                // If T is Text**, ent is Allocation*[2]                 
-               auto ent = self.GetEntries();
+               [[maybe_unused]] EntryPtr ent;
+               if constexpr (has_entries)
+                  ent = self.GetEntries();
                
                if (indirects > 1) {
                   // Allocate multiple indirections                     
@@ -126,18 +129,23 @@ namespace Langulus::Anyness::Component
                   //  ***dst = ***src                                   
                   void** ptr = static_cast<void**>(static_cast<void*>(cloned_ptrs->GetBlockStart()));
                   *dst = ptr;
-                  *ent = cloned_ptrs;
+
+                  if constexpr (has_entries)
+                     *ent = cloned_ptrs;
+
                   T = T.GetDeptr();
 
                   do {
                      // Chain all intermediate pointers                 
                      src = static_cast<void**>(*src);
                      dst = static_cast<void**>(*dst);
-                     ++ent;
                      T = T.GetDeptr();
-
                      *dst = dst + 1;
-                     *ent = cloned_ptrs;
+
+                     if constexpr (has_entries) {
+                        ++ent;
+                        *ent = cloned_ptrs;
+                     }
                   }
                   while (T.IsSparse());
                }
@@ -145,10 +153,11 @@ namespace Langulus::Anyness::Component
 
                // The last indirection points to the cloned origin      
                *dst = cloned_origin->GetBlockStart();
-               *ent = cloned_origin;
-               
                src = static_cast<void**>(*src);
                dst = static_cast<void**>(*dst);
+
+               if constexpr (has_entries)
+                  *ent = cloned_origin;
             }
 
             // Finally, clone inside the allocated origin               
@@ -175,8 +184,10 @@ namespace Langulus::Anyness::Component
                   );
                #endif
                LglsAssert(cloned_origin, "Out of memory");
-               auto ent = self.GetEntries();
-               
+               [[maybe_unused]] EntryPtr ent;
+               if constexpr (has_entries)
+                  ent = self.GetEntries();
+
                if constexpr (indirects > 1) {
                   // Multiple indirections                              
                   #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -203,25 +214,29 @@ namespace Langulus::Anyness::Component
                   //  ***dst = ***src                                   
                   void** ptr = static_cast<void**>(static_cast<void*>(cloned_ptrs->GetBlockStart()));
                   *dst = ptr;
-                  *ent = cloned_ptrs;
+                  if constexpr (has_entries)
+                     *ent = cloned_ptrs;
 
                   ForEachIndirection<Deptr<T>>([&src, &dst, &ent, &cloned_ptrs] {
                      // Chain all intermediate pointers                 
                      src = static_cast<void**>(*src);
                      dst = static_cast<void**>(*dst);
-                     ++ent;
 
                      *dst = dst + 1;
-                     *ent = cloned_ptrs;
+
+                     if constexpr (has_entries) {
+                        ++ent;
+                        *ent = cloned_ptrs;
+                     }
                   });
                }
                
                // The last indirection points to the cloned origin      
                *dst = cloned_origin->GetBlockStart();
-               *ent = cloned_origin;
-
                src = static_cast<void**>(*src);
                dst = static_cast<void**>(*dst);
+               if constexpr (has_entries)
+                  *ent = cloned_origin;
             }
 
             IntentNew(dst, Clone(*static_cast<Decay<T>*>(static_cast<void*>(src))));

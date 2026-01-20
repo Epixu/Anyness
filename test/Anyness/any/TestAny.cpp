@@ -17,7 +17,7 @@
 
 
 TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
-   , (Types<Any, Text, ScopedElement<Text, true>>)
+   , (Types<TAny<Any>, Any, ScopedElement<Any>>)
 
    // Elements are not allocated by the memory manager                  
    , (Types<Any, Text, ScopedElement<Text>>)
@@ -39,7 +39,6 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
    , (Types<TAny<Text>, Text, ScopedElement<Text>>)
    , (Types<TAny<int>,  int,  ScopedElement<int>>)
-   , (Types<TAny<Any>,  Any,  ScopedElement<Any>>)
    , (Types<TAny<char>, char, ScopedElement<char>>)
 
    , (Types<TAny<Text*>, Text*, ScopedElement<Text*>>)
@@ -54,6 +53,7 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
+   , (Types<Any, Text, ScopedElement<Text, true>>)
    , (Types<Any, int, ScopedElement<int, true>>)
    , (Types<Any, Any, ScopedElement<Any, true>>)
    , (Types<Any, RT, ScopedElement<RT, true>>)
