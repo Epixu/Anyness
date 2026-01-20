@@ -11,15 +11,15 @@ jobs:
       matrix:
         managed: [ON, OFF]
         os: [ubuntu-24.04, windows-latest]
-        build: [Debug, Release]
-        cxx: [g++-14, clang++-19, ClangCl] # v143 suppport has been dropped indefinitely due to too many compiler bugs and bad C++23 support. tested on v145, too - not there yet
+        build: [debug, release]
+        cxx: [g++-14, clang++-19, clangcl] # v143 suppport has been dropped indefinitely due to too many compiler bugs and bad C++23 support. tested on v145, too - not there yet
         arch: [x86, x64]
 
         exclude:
           - os: ubuntu-24.04
             cxx: v143
           - os: ubuntu-24.04
-            cxx: ClangCl
+            cxx: clangcl
           - os: windows-latest
             cxx: g++-14
           - os: windows-latest
@@ -46,7 +46,7 @@ jobs:
             suffix: ''
           - managed: ON
             suffix: '-managed'
-          - build: Debug
+          - build: debug
             debug_flags: "-DLANGULUS_OPTION_SAFE_MODE=ON"
 
     name: "${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}"
