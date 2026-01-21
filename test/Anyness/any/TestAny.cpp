@@ -196,7 +196,7 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
       Logger::Info("-----------------------------------------");
       Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
       Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      //STATIC_REQUIRE(sizeof(T) <= sizeof(::std::any)); // G++ implements std::any entirely on the heap, and I refuse to do it like this
+      //static_assert(sizeof(T) <= sizeof(::std::any)); // G++ implements std::any entirely on the heap, and I refuse to do it like this
    }
 
    GIVEN("Default-constructed container") {

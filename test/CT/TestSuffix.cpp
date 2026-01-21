@@ -79,7 +79,7 @@ SCENARIO("SuffixOf") {
    DEFINE_SUFFIXOF_TYPE_TEST( double,  (::std::same_as<double, Real> ? "" : "d"))
    
    WHEN("Taken the suffix of type NastySuffixUsingMember (with cyrillic 'a')") {
-      //STATIC_REQUIRE(SuffixOf<NastySuffixUsingMember>()); // shouldn't compile at all
+      //static_assert(SuffixOf<NastySuffixUsingMember>()); // shouldn't compile at all
    }
 
    //DEFINE_SUFFIXOF_TYPE_TEST(IncompleteType, "") // shouldn't compile at all

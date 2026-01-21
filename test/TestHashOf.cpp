@@ -360,7 +360,7 @@ TEST_CASE_TEMPLATE("Hashing same values of differently sized types should result
 
    if constexpr (sizeof(wchar_t) == 4) {
       REQUIRE(HashOf(c32) == HashOf(wc));
-      STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) == HashOf(static_cast<wchar_t>(init)));
+      static_assert(HashOf(static_cast<char32_t>(init)) == HashOf(static_cast<wchar_t>(init)));
    }
 
    REQUIRE(HashOf(c32) == HashOf(u32));

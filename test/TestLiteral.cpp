@@ -213,7 +213,7 @@ TEST_CASE_TEMPLATE("Testing literal strings", TestType,
       IF_SAFE(volatile size_t idx = fixedString.size() + 1);
       IF_SAFE(REQUIRE_THROWS(fixedString[idx]));
       static_assert(fixedString[0] == carrayString[0]);
-      //STATIC_REQUIRE(fixedString[fixedString.size() + 1]); // shouldn't compile
+      //static_assert(fixedString[fixedString.size() + 1]); // shouldn't compile
    }
 
    WHEN("Resized") {
