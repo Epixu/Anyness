@@ -1,7 +1,13 @@
-fetch_external_module(
+#[[fetch_external_module(
     Catch2
     GIT_REPOSITORY  https://github.com/catchorg/Catch2.git
     GIT_TAG         ee1450f268dfd5c13aa8670ba97e93cabaf2e15d #v2.x
+)]]
+
+fetch_external_module(
+    doctest
+    GIT_REPOSITORY  https://github.com/doctest/doctest.git
+    GIT_TAG         1da23a3e8119ec5cce4f9388e91b065e20bf06f5 #v2.4.12
 )
 
 add_langulus_test(LangulusAnynessTest
@@ -39,7 +45,7 @@ add_langulus_test(LangulusAnynessTest
 
                Anyness/any/TestAny.cpp
         
-   LIBRARIES	Catch2
+   LIBRARIES	doctest #Catch2
                LangulusAnyness
 )
 

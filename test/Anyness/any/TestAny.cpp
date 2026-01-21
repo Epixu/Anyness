@@ -15,84 +15,83 @@
    #include "../../TestTypes/PackedPointers.hpp"
 #endif
 
-constexpr int BenchmarkCycles = 1000;
+[[maybe_unused]] constexpr int BenchmarkCycles = 1000;
 
 
-TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
-
+TEST_CASE_TEMPLATE("Test Any/TAny", TestType
    // Elements are not allocated by the memory manager                  
-   , (Types<Any, Text,   ScopedElement<Text>>)
-   , (Types<Any, int,    ScopedElement<int>>)
-   , (Types<Any, Any,    ScopedElement<Any>>)
-   , (Types<Any, RT,     ScopedElement<RT>>)
-   , (Types<Any, char,   ScopedElement<char>>)
-                         
-   , (Types<Any, Text*,  ScopedElement<Text*>>)
-   , (Types<Any, int*,   ScopedElement<int*>>)
-   , (Types<Any, Any*,   ScopedElement<Any*>>)
-   , (Types<Any, RT*,    ScopedElement<RT*>>)
-   , (Types<Any, char*,  ScopedElement<char*>>)
+   , Types<Any, Text,   ScopedElement<Text>>
+   , Types<Any, int,    ScopedElement<int>>
+   , Types<Any, Any,    ScopedElement<Any>>
+   , Types<Any, RT,     ScopedElement<RT>>
+   , Types<Any, char,   ScopedElement<char>>
+                        
+   , Types<Any, Text*,  ScopedElement<Text*>>
+   , Types<Any, int*,   ScopedElement<int*>>
+   , Types<Any, Any*,   ScopedElement<Any*>>
+   , Types<Any, RT*,    ScopedElement<RT*>>
+   , Types<Any, char*,  ScopedElement<char*>>
 
-   , (Types<Any, Text**, ScopedElement<Text**>>)
-   , (Types<Any, int**,  ScopedElement<int**>>)
-   , (Types<Any, Any**,  ScopedElement<Any**>>)
-   , (Types<Any, char**, ScopedElement<char**>>)
+   , Types<Any, Text**, ScopedElement<Text**>>
+   , Types<Any, int**,  ScopedElement<int**>>
+   , Types<Any, Any**,  ScopedElement<Any**>>
+   , Types<Any, char**, ScopedElement<char**>>
 
-   , (Types<TAny<Text>,   Text,   ScopedElement<Text>>)
-   , (Types<TAny<int>,    int,    ScopedElement<int>>)
-   , (Types<TAny<Any>,    Any,    ScopedElement<Any>>)
-   , (Types<TAny<char>,   char,   ScopedElement<char>>)
-                                  
-   , (Types<TAny<Text*>,  Text*,  ScopedElement<Text*>>)
-   , (Types<TAny<int*>,   int*,   ScopedElement<int*>>)
-   , (Types<TAny<Any*>,   Any*,   ScopedElement<Any*>>)
-   , (Types<TAny<char*>,  char*,  ScopedElement<char*>>)
+   , Types<TAny<Text>,   Text,   ScopedElement<Text>>
+   , Types<TAny<int>,    int,    ScopedElement<int>>
+   , Types<TAny<Any>,    Any,    ScopedElement<Any>>
+   , Types<TAny<char>,   char,   ScopedElement<char>>
+                                 
+   , Types<TAny<Text*>,  Text*,  ScopedElement<Text*>>
+   , Types<TAny<int*>,   int*,   ScopedElement<int*>>
+   , Types<TAny<Any*>,   Any*,   ScopedElement<Any*>>
+   , Types<TAny<char*>,  char*,  ScopedElement<char*>>
 
-   , (Types<TAny<Text**>, Text**, ScopedElement<Text**>>)
-   , (Types<TAny<int**>,  int**,  ScopedElement<int**>>)
-   , (Types<TAny<Any**>,  Any**,  ScopedElement<Any**>>)
-   , (Types<TAny<char**>, char**, ScopedElement<char**>>)
+   , Types<TAny<Text**>, Text**, ScopedElement<Text**>>
+   , Types<TAny<int**>,  int**,  ScopedElement<int**>>
+   , Types<TAny<Any**>,  Any**,  ScopedElement<Any**>>
+   , Types<TAny<char**>, char**, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , (Types<Any, Text,   ScopedElement<Text, true>>)
-   , (Types<Any, int,    ScopedElement<int, true>>)
-   , (Types<Any, Any,    ScopedElement<Any, true>>)
-   , (Types<Any, RT,     ScopedElement<RT, true>>)
-                         
-   , (Types<Any, Text*,  ScopedElement<Text*, true>>)
-   , (Types<Any, int*,   ScopedElement<int*, true>>)
-   , (Types<Any, Any*,   ScopedElement<Any*, true>>)
-   , (Types<Any, RT*,    ScopedElement<RT*, true>>)
+   , Types<Any, Text,   ScopedElement<Text, true>>
+   , Types<Any, int,    ScopedElement<int, true>>
+   , Types<Any, Any,    ScopedElement<Any, true>>
+   , Types<Any, RT,     ScopedElement<RT, true>>
+                        
+   , Types<Any, Text*,  ScopedElement<Text*, true>>
+   , Types<Any, int*,   ScopedElement<int*, true>>
+   , Types<Any, Any*,   ScopedElement<Any*, true>>
+   , Types<Any, RT*,    ScopedElement<RT*, true>>
 
-   , (Types<Any, Text**, ScopedElement<Text**, true>>)
-   , (Types<Any, int**,  ScopedElement<int**, true>>)
-   , (Types<Any, Any**,  ScopedElement<Any**, true>>)
-   , (Types<Any, RT**,   ScopedElement<RT**, true>>)
+   , Types<Any, Text**, ScopedElement<Text**, true>>
+   , Types<Any, int**,  ScopedElement<int**, true>>
+   , Types<Any, Any**,  ScopedElement<Any**, true>>
+   , Types<Any, RT**,   ScopedElement<RT**, true>>
 
-   , (Types<TAny<Text>,   Text,   ScopedElement<Text, true>>)
-   , (Types<TAny<int>,    int,    ScopedElement<int, true>>)
-   , (Types<TAny<Any>,    Any,    ScopedElement<Any, true>>)
-   , (Types<TAny<RT>,     RT,     ScopedElement<RT, true>>)
-                                  
-   , (Types<TAny<Text*>,  Text*,  ScopedElement<Text*, true>>)
-   , (Types<TAny<int*>,   int*,   ScopedElement<int*, true>>)
-   , (Types<TAny<Any*>,   Any*,   ScopedElement<Any*, true>>)
-   , (Types<TAny<RT*>,    RT*,    ScopedElement<RT*, true>>)
+   , Types<TAny<Text>,   Text,   ScopedElement<Text, true>>
+   , Types<TAny<int>,    int,    ScopedElement<int, true>>
+   , Types<TAny<Any>,    Any,    ScopedElement<Any, true>>
+   , Types<TAny<RT>,     RT,     ScopedElement<RT, true>>
+                                 
+   , Types<TAny<Text*>,  Text*,  ScopedElement<Text*, true>>
+   , Types<TAny<int*>,   int*,   ScopedElement<int*, true>>
+   , Types<TAny<Any*>,   Any*,   ScopedElement<Any*, true>>
+   , Types<TAny<RT*>,    RT*,    ScopedElement<RT*, true>>
 
-   , (Types<TAny<Text**>, Text**, ScopedElement<Text**, true>>)
-   , (Types<TAny<int**>,  int**,  ScopedElement<int**, true>>)
-   , (Types<TAny<Any**>,  Any**,  ScopedElement<Any**, true>>)
-   , (Types<TAny<RT**>,   RT**,   ScopedElement<RT**, true>>)
+   , Types<TAny<Text**>, Text**, ScopedElement<Text**, true>>
+   , Types<TAny<int**>,  int**,  ScopedElement<int**, true>>
+   , Types<TAny<Any**>,  Any**,  ScopedElement<Any**, true>>
+   , Types<TAny<RT**>,   RT**,   ScopedElement<RT**, true>>
 
    // Packed pointers                                                   
-   , (Types<Any, pptr8,  ScopedElementPacked<pptr8>>)
-   , (Types<Any, pptr16, ScopedElementPacked<pptr16>>)
-   , (Types<Any, pptr32, ScopedElementPacked<pptr32>>)
+   , Types<Any, pptr8,  ScopedElementPacked<pptr8>>
+   , Types<Any, pptr16, ScopedElementPacked<pptr16>>
+   , Types<Any, pptr32, ScopedElementPacked<pptr32>>
 
-   , (Types<TAny<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>)
-   , (Types<TAny<pptr16>, pptr16, ScopedElementPacked<pptr16>>)
-   , (Types<TAny<pptr32>, pptr32, ScopedElementPacked<pptr32>>)
+   , Types<TAny<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
+   , Types<TAny<pptr16>, pptr16, ScopedElementPacked<pptr16>>
+   , Types<TAny<pptr32>, pptr32, ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
@@ -1000,10 +999,10 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          T another_pack1;
          T another_pack2;
 
-         REQUIRE             (another_pack1 == another_pack2);
-         REQUIRE_FALSE       (another_pack1 != another_pack2);
-         STATIC_REQUIRE      (T{} == T{});
-         STATIC_REQUIRE_FALSE(T{} != T{});
+         REQUIRE      (another_pack1 == another_pack2);
+         REQUIRE_FALSE(another_pack1 != another_pack2);
+         static_assert(     T{} == T{} );
+         static_assert(not (T{} != T{}));
 
          #if LANGULUS(BENCHMARK)
             constexpr auto token1 = "Test/Empty/" + NameOf<T>() + "::operator == (" + NameOf<E>() + ")";
@@ -2187,16 +2186,16 @@ TEMPLATE_TEST_CASE("Test Any/TAny", "[any]"
          REQUIRE_FALSE(pack2 == defaulted_pack);
 
          if constexpr (CT::Deep<E> and CT::Dense<E>) {
-            STATIC_REQUIRE      (T{} == E{});
-            STATIC_REQUIRE_FALSE(T{} != E{});
-            STATIC_REQUIRE      (E{} == T{});
-            STATIC_REQUIRE_FALSE(E{} != T{});
+            static_assert(     T{} == E{} );
+            static_assert(not (T{} != E{}));
+            static_assert(     E{} == T{} );
+            static_assert(not (E{} != T{}));
          }
          else {
-            STATIC_REQUIRE      (T{} != E{});
-            STATIC_REQUIRE_FALSE(T{} == E{});
-            STATIC_REQUIRE      (E{} != T{});
-            STATIC_REQUIRE_FALSE(E{} == T{});
+            static_assert(     T{} != E{} );
+            static_assert(not (T{} == E{}));
+            static_assert(     E{} != T{} );
+            static_assert(not (E{} == T{}));
          }
       }
    }

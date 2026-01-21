@@ -284,7 +284,7 @@ namespace Langulus::CTTI
 ///                                                                           
 /// Testing empty meta data                                                   
 ///                                                                           
-TEST_CASE("Testing empty meta data", "[rtti]") {
+TEST_CASE("Testing empty meta data") {
    const DMeta meta = {};
    REQUIRE_FALSE(meta);
    REQUIRE(meta.GetHash() == Hash {});
@@ -360,11 +360,11 @@ TEST_CASE("Testing empty meta data", "[rtti]") {
 ///                                                                           
 /// Reflecting incomplete types                                               
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]"
-   //void,           // shouldn't compile
-   //nullptr_t,      // shouldn't compile
-   //IncompleteType, // shouldn't compile
-   //NotReflectable, // shouldn't compile
+TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
+   //, void           // shouldn't compile
+   //, nullptr_t      // shouldn't compile
+   //, IncompleteType // shouldn't compile
+   //, NotReflectable // shouldn't compile
    , IncompleteType*
    , IncompleteType**
    , const IncompleteType**
@@ -372,7 +372,6 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]"
    , const IncompleteType* const* const&
    , const IncompleteType* const* const&&
 ) {
-   using T = TestType;
    const DMeta meta = MetaDataOf<T>();
    REQUIRE(meta);
    REQUIRE(meta != nullptr);
@@ -470,27 +469,27 @@ TEMPLATE_TEST_CASE("Testing reflection of incomplete types", "[rtti]"
 ///                                                                           
 /// Reflecting names                                                          
 ///                                                                           
-SCENARIO("Testing reflection of names", "[rtti]") {
-#if LANGULUS_FEATURE(MANAGED_MEMORY)
-   {
-      const DMeta meta = MetaDataOf<pptr8>();
-      REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>");
-      REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>");
-   }
-   {
-      const DMeta meta = MetaDataOf<pptr16>();
-      REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>");
-      REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>");
-   }
-   {
-      const DMeta meta = MetaDataOf<pptr32>();
-      REQUIRE(meta);
-      REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char>");
-      REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char>");
-   }
-#endif
+SCENARIO("Testing reflection of names") {
+   #if LANGULUS_FEATURE(MANAGED_MEMORY)
+      {
+         const DMeta meta = MetaDataOf<pptr8>();
+         REQUIRE(meta);
+         REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>");
+         REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char, 2, 6, 0>");
+      }
+      {
+         const DMeta meta = MetaDataOf<pptr16>();
+         REQUIRE(meta);
+         REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>");
+         REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char, 4, 4, 8>");
+      }
+      {
+         const DMeta meta = MetaDataOf<pptr32>();
+         REQUIRE(meta);
+         REQUIRE(meta.GetCppName() == "Langulus::Fractalloc::PackedPointer<char>");
+         REQUIRE(meta.GetName() == "Langulus::Fractalloc::PackedPointer<char>");
+      }
+   #endif
 
    {
       const DMeta meta = MetaDataOf<int>();
@@ -706,7 +705,7 @@ namespace Langulus::CTTI
    };
 }
 
-TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]"
+TEST_CASE_TEMPLATE("Reflecting abstract types", T
    , PureAbstract
    , ForcedAbstractExternally
    , ForcedAbstractInternally
@@ -714,7 +713,6 @@ TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]"
    , InheritedAbstract2
    , InheritedAbstract2ButPrivate
 ) {
-   using T = TestType;
    const DMeta meta = MetaDataOf<T>();
    REQUIRE(meta != nullptr);
    REQUIRE(meta.IsDeep() == false);
@@ -726,13 +724,12 @@ TEMPLATE_TEST_CASE("Reflecting abstract types", "[rtti]"
    REQUIRE(meta.GetAlignment() == alignof(T));
 }
 
-TEMPLATE_TEST_CASE("Reflecting non-abstract types", "[rtti]"
+TEST_CASE_TEMPLATE("Reflecting non-abstract types", T
    , int
    , ImpureVirtual
    , InheritedAbstract1ButPrivate
    , InheritedAbstractExternally
 ) {
-   using T = TestType;
    const DMeta meta = MetaDataOf<T>();
    REQUIRE(meta != nullptr);
    REQUIRE(meta.IsAbstract() == false);
@@ -757,10 +754,9 @@ namespace
    };
 }
 
-TEMPLATE_TEST_CASE("Reflecting virtual bases", "[rtti]",
+TEST_CASE_TEMPLATE("Reflecting virtual bases", T,
    VirtuallyDerived
 ) {
-   using T = TestType;
    const DMeta meta = MetaDataOf<T>();
    T instance {};
    auto instance_base = dynamic_cast<ImpureVirtual*>(&instance);
@@ -776,10 +772,9 @@ TEMPLATE_TEST_CASE("Reflecting virtual bases", "[rtti]",
    REQUIRE(meta.GetBases()[1].getBase == nullptr);
 }
 
-TEMPLATE_TEST_CASE("Reflecting non-virtual bases", "[rtti]",
+TEST_CASE_TEMPLATE("Reflecting non-virtual bases", T,
    PrivatelyDerived
 ) {
-   using T = TestType;
    const DMeta meta = MetaDataOf<T>();
 
    REQUIRE(meta.GetBases().size() == 3);
@@ -800,7 +795,7 @@ TEMPLATE_TEST_CASE("Reflecting non-virtual bases", "[rtti]",
 ///                                                                           
 /// Reflecting a complex type                                                 
 ///                                                                           
-SCENARIO("A type reflected with all traits", "[rtti]") {
+SCENARIO("A type reflected with all traits") {
    ImplicitlyReflectedDataWithTraits instance;
    auto ptrtobase = static_cast<ImplicitlyReflectedData*>(&instance);
    const DMeta meta = MetaDataOf<ImplicitlyReflectedDataWithTraits>();
@@ -894,7 +889,7 @@ SCENARIO("A type reflected with all traits", "[rtti]") {
 ///                                                                           
 /// Reflecting verbs                                                          
 ///                                                                           
-SCENARIO("Reflecting a verb", "[rtti]") {
+SCENARIO("Reflecting a verb") {
    {
       const VMeta vmeta = {};
       REQUIRE_FALSE(vmeta);
@@ -934,7 +929,7 @@ SCENARIO("Reflecting a verb", "[rtti]") {
 ///                                                                           
 /// Reflecting tags                                                           
 ///                                                                           
-SCENARIO("Reflecting a tag", "[rtti]") {
+SCENARIO("Reflecting a tag") {
    {
       const TMeta meta = {};
 
@@ -958,7 +953,7 @@ SCENARIO("Reflecting a tag", "[rtti]") {
 ///                                                                           
 /// Reflecting values                                                         
 ///                                                                           
-SCENARIO("Reflecting a value", "[rtti]") {
+SCENARIO("Reflecting a value") {
    {
       const CMeta meta = {};
       REQUIRE_FALSE(meta);
@@ -984,7 +979,7 @@ SCENARIO("Reflecting a value", "[rtti]") {
 ///                                                                           
 /// Reflecting functions                                                      
 ///                                                                           
-TEMPLATE_TEST_CASE("A reflected function signature", "[rtti]",
+TEST_CASE_TEMPLATE("A reflected function signature", TestType,
    //decltype(FunctionForTesting), // shouldn't compile
    void(*)(void*)
 ) {

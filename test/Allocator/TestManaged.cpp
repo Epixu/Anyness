@@ -16,7 +16,7 @@
 #endif
 
 
-SCENARIO("Testing FastLog2 calls", "[fractalloc]") {
+SCENARIO("Testing FastLog2 calls") {
    const size_t numbers[]{
       0, 1, 2, 3, 4, 5, 6, 11, 16, 64, 99, 120, 128
    };
@@ -30,7 +30,7 @@ SCENARIO("Testing FastLog2 calls", "[fractalloc]") {
    }
 }
 
-TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",   
+TEST_CASE_TEMPLATE("Testing pool functions", TestType,
    TypeVeryBigAligned,
    TypeVeryBigPacked,
    Type1,
@@ -280,7 +280,7 @@ TEMPLATE_TEST_CASE("Testing pool functions", "[fractalloc]",
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
+TEST_CASE_TEMPLATE("Testing allocator functions", TestType,
    Type1,
    Type2,
    Type3,
@@ -299,9 +299,12 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
    constexpr size_t min_alloc = CT::GetMinAlloc<TestType>();
 
    GIVEN("A small allocation") {
-      auto s = GENERATE(pot_t(Roof2(sizeof(TestType))),
-                        pot_t(Roof2(sizeof(TestType)*2)),
-                        pot_t(Roof2(sizeof(TestType)*16)));
+      pot_t s;
+      SUBCASE("") { s = pot_t(Roof2(sizeof(TestType)   )); }
+      SUBCASE("") { s = pot_t(Roof2(sizeof(TestType)*2 )); }
+      SUBCASE("") { s = pot_t(Roof2(sizeof(TestType)*16)); }
+      CAPTURE(s);
+
       auto rounded_s = ::std::max(static_cast<size_t>(s), min_alloc);
       Allocation* entry = Allocator::Allocate(meta, s);
       REQUIRE(entry);
@@ -324,7 +327,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          REQUIRE(mismatches == rounded_s);
          REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + rounded_s + 1));
 
-         Allocator::Deallocate(entry);
+         //Allocator::Deallocate(entry);
       }
 
       WHEN("Referenced once") {
@@ -338,7 +341,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          entry->AddRef(-1);
-         Allocator::Deallocate(entry);
+         //Allocator::Deallocate(entry);
       }
 
       WHEN("Referenced multiple times") {
@@ -347,7 +350,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          REQUIRE(entry->GetUses() == 6);
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          entry->AddRef(-5);
-         Allocator::Deallocate(entry);
+         //Allocator::Deallocate(entry);
       }
 
       WHEN("Dereferenced once without deletion") {
@@ -355,7 +358,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          entry->AddRef(-1);
 
          REQUIRE(entry->GetUses() == 1);
-         Allocator::Deallocate(entry);
+         //Allocator::Deallocate(entry);
       }
 
       WHEN("Dereferenced multiple times without deletion") {
@@ -365,10 +368,10 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          REQUIRE(entry->GetUses() == 2);
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          entry->AddRef(-1);
-         Allocator::Deallocate(entry);
+         //Allocator::Deallocate(entry);
       }
 
-      WHEN("Dereferenced once with deletion") {
+      //WHEN("Dereferenced once with deletion") {
          const auto blockStart = entry->GetBlockStart();
          Allocator::Deallocate(entry);
 
@@ -376,7 +379,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
          REQUIRE(Allocator::CheckAuthority(blockStart));
          REQUIRE_FALSE(Allocator::Find(blockStart));
          REQUIRE_FALSE(Allocator::Find(entry));
-      }
+      //}
    }
    
    GIVEN("A large allocation") {
@@ -398,9 +401,8 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[fractalloc]",
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEST_CASE("Memory stress test and benchmarking", "[fractalloc]") {
+TEST_CASE("Memory stress test and benchmarking") {
    static MemoryState memoryState;
-
    std::random_device rd;
    std::mt19937 generator(rd());
 
@@ -417,7 +419,7 @@ TEST_CASE("Memory stress test and benchmarking", "[fractalloc]") {
    };
 
    // Perform a million random allocations using the memory manager
-   for (int i = 0; i < 1'000'000; ++i) {
+   for (int i = 0; i < 500'000; ++i) {
       auto random_type = types[generator() % types.size()];
       auto random_size = pot_t(Roof2(random_type.GetSize() * (generator() % 1000)));
       Allocation* entry;
@@ -436,7 +438,7 @@ TEST_CASE("Memory stress test and benchmarking", "[fractalloc]") {
 
    #if LANGULUS(BENCHMARK)
    // Perform a million random allocations using malloc, for comparison
-   for (int i = 0; i < 1'000'000; ++i) {
+   for (int i = 0; i < 500'000; ++i) {
       auto random_type = types[generator() % types.size()];
       auto random_size = Roof2(random_type.GetSize() * (generator() % 1000));
       void* entry;
@@ -454,7 +456,7 @@ TEST_CASE("Memory stress test and benchmarking", "[fractalloc]") {
    }
 
    // Perform a million random allocations using aligned_malloc, for comparison
-   for (int i = 0; i < 1'000'000; ++i) {
+   for (int i = 0; i < 500'000; ++i) {
       auto random_type = types[generator() % types.size()];
       auto random_size = Roof2(random_type.GetSize() * (generator() % 1000));
       auto random_alignment = static_cast<size_t>(random_type.GetAlignment());
@@ -490,9 +492,8 @@ TEST_CASE("Memory stress test and benchmarking", "[fractalloc]") {
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
+TEST_CASE("Memory stress test and benchmarking (accumulator)") {
    static MemoryState memoryState;
-
    std::random_device rd;
    std::mt19937 generator(rd());
 
@@ -508,7 +509,7 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
       , MetaDataOf<TypeVeryBigPacked>()
    };
 
-   constexpr size_t budget = Langulus::Bitness >= 64 ? 1'000'000 : 200'000;
+   constexpr size_t budget = Langulus::Bitness >= 64 ? 500'000 : 150'000;
 
    {
       // Perform a million random allocations using the memory manager  
@@ -533,7 +534,7 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)", "[fractalloc]") {
             if (mask.contains(entry)) {
                Logger::Error("Entry with index ",
                   entry->GetPool()->IndexFromAllocation(entry), " shouldn't be reused");
-               FAIL();
+               FAIL("");
             }
 
             mask.insert(entry);

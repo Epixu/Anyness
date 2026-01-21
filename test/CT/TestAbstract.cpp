@@ -57,10 +57,10 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Abstract                                                              
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Abstract types", "[ct]"
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //SheddableType<IncompleteType>, // shouldn't compile
+TEST_CASE_TEMPLATE("Testing CT::Abstract types", TestType
+   //, IncompleteType                // shouldn't compile
+   //, IncompleteType const          // shouldn't compile
+   //, SheddableType<IncompleteType> // shouldn't compile
    , SheddableType<PureAbstract>
    , SheddableType<PureAbstract const>
    , SheddableType<PureAbstract const&>
@@ -85,10 +85,10 @@ TEMPLATE_TEST_CASE("Testing CT::Abstract types", "[ct]"
    static_assert(not CT::NotAbstract<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotAbstract types", "[ct]"
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //SheddableType<IncompleteType>, // shouldn't compile
+TEST_CASE_TEMPLATE("Testing CT::NotAbstract types", TestType
+   //, IncompleteType                // shouldn't compile
+   //, IncompleteType const          // shouldn't compile
+   //, SheddableType<IncompleteType> // shouldn't compile
    , void
    , void*
    , SheddableType<PureAbstract*>

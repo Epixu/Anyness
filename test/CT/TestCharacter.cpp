@@ -29,6 +29,7 @@ namespace Langulus::CTTI
 {
    template<>
    struct Character<CharacterExternally> {};
+
    template<>
    struct Character<NotCharacterExternally> {
       static constexpr bool Enabled = false;
@@ -39,12 +40,12 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Character                                                             
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Character types", "[ct]"
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //IncompleteType const&,         // shouldn't compile
-   //SheddableType<IncompleteType>, // shouldn't compile
-   //SheddableType<IncompleteType>&,// shouldn't compile
+TEST_CASE_TEMPLATE("Testing CT::Character types", TestType
+   //, IncompleteType                  // shouldn't compile
+   //, IncompleteType const            // shouldn't compile
+   //, IncompleteType const&           // shouldn't compile
+   //, SheddableType<IncompleteType>   // shouldn't compile
+   //, SheddableType<IncompleteType>&  // shouldn't compile
    , CharacterExternally
    , CharacterExternally const
    , CharacterExternally&
@@ -60,12 +61,12 @@ TEMPLATE_TEST_CASE("Testing CT::Character types", "[ct]"
    static_assert(not CT::NotCharacter<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotCharacter types", "[ct]"
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //IncompleteType const&,         // shouldn't compile
-   //SheddableType<IncompleteType>, // shouldn't compile
-   //SheddableType<IncompleteType>&,// shouldn't compile
+TEST_CASE_TEMPLATE("Testing CT::NotCharacter types", TestType
+   //, IncompleteType                  // shouldn't compile
+   //, IncompleteType const            // shouldn't compile
+   //, IncompleteType const&           // shouldn't compile
+   //, SheddableType<IncompleteType>   // shouldn't compile
+   //, SheddableType<IncompleteType>&  // shouldn't compile
    , IncompleteType*
    , bool
    , void, void*

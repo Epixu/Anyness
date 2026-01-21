@@ -12,20 +12,19 @@
 using namespace Langulus;
 
 
-TEMPLATE_TEST_CASE("Testing Roof2 calls", "[allocator]",
+TEST_CASE_TEMPLATE("Testing Roof2 calls", T,
    uint8_t, uint16_t, uint32_t, uint64_t
 ) {
-   using T = TestType;
    const T numbers[]{0, 1, 2, 3, 4, 5, 6, 11, 16, 64,  99, 120, 128};
    const T results[]{1, 1, 2, 4, 4, 8, 8, 16, 16, 64, 128, 128, 128};
 
    WHEN("Roof2 is executed") {
-      STATIC_REQUIRE(Roof2(0u) == 1u);
-      STATIC_REQUIRE(Roof2(1u) == 1u);
-      STATIC_REQUIRE(Roof2(2u) == 2u);
-      STATIC_REQUIRE(Roof2(3u) == 4u);
-      STATIC_REQUIRE(Roof2(4u) == 4u);
-      STATIC_REQUIRE(Roof2(99u) == 128u);
+      static_assert(Roof2(0u) == 1u);
+      static_assert(Roof2(1u) == 1u);
+      static_assert(Roof2(2u) == 2u);
+      static_assert(Roof2(3u) == 4u);
+      static_assert(Roof2(4u) == 4u);
+      static_assert(Roof2(99u) == 128u);
 
       for (unsigned i = 0; i < sizeof(numbers) / sizeof(T); ++i) {
          if (numbers[i] <= 128 || sizeof(T) > 1) {

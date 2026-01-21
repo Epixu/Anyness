@@ -9,6 +9,8 @@
 #include "Literal.hpp"
 #include "CT/Named.hpp"
 #include "Utils/ASCII.hpp"
+#include <string>
+#include <stdexcept>
 
 
 namespace Langulus::CTTI
@@ -439,7 +441,7 @@ namespace Langulus::RTTI
       ///   @return new literal                                               
       inline ::std::string NormalizeAtRuntime(const Token& SRC) {
          if (not IsASCII(SRC))
-            throw ::std::runtime_error{"Token isn't ASCII"};
+            throw ::std::runtime_error {"Token isn't ASCII"};
          ::std::string result {SRC};
    
          for (const auto& pattern : ReplacePatterns) {

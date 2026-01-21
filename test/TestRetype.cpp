@@ -41,7 +41,7 @@ namespace
    };
 }
 
-SCENARIO("Retype", "[retype]") {
+SCENARIO("Retype"/*, "[retype]"*/) {
    static_assert(::std::same_as<Retype<void, float>, void>);
    static_assert(::std::same_as<Retype<TypedNotRetypable, float>, TypedNotRetypable>);
    static_assert(::std::same_as<Retype<TypedRetypable, float>, float>);

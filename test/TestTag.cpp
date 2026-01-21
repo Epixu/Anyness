@@ -51,11 +51,9 @@ namespace Langulus::CTTI
    };
 }
 
-TEMPLATE_TEST_CASE("Tags", "[tag]",
+TEST_CASE_TEMPLATE("Tags", T,
    int, ::std::string
 ) {
-   using T = TestType;
-
    // Will cause a runtime meta conflict with another test              
    // if that test has been executed prior to this one (!!!)            
    // Sad thing is, that this can't be guaranteed, so I've disabled it  

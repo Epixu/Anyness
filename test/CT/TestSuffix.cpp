@@ -43,11 +43,11 @@ namespace Langulus::CTTI
 
 #define DEFINE_SUFFIXOF_TYPE_TEST(WHAT, RESULT) \
    WHEN("Taken the suffix of type " #WHAT) { \
-      STATIC_REQUIRE(SuffixOf<WHAT>() == RESULT); \
+      static_assert(SuffixOf<WHAT>() == RESULT); \
    }
 
 
-SCENARIO("SuffixOf", "[suffixof]") {
+SCENARIO("SuffixOf") {
    DEFINE_SUFFIXOF_TYPE_TEST(void, "")
    DEFINE_SUFFIXOF_TYPE_TEST(nullptr_t, "")
    DEFINE_SUFFIXOF_TYPE_TEST(int32_t(&)[5], "") 

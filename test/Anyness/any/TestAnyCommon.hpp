@@ -17,7 +17,7 @@ using namespace Langulus;
 using namespace Anyness;
 
 
-namespace Catch
+/*namespace Catch
 {
    template<>
    struct is_range<Any> {
@@ -42,6 +42,27 @@ namespace Catch
          return static_cast<::std::string>(
             NameOf<TAny<T>>() + "(" + Convert<Text>(value) + ")"
          );
+      }
+   };
+}*/
+
+namespace doctest
+{
+   template<>
+   struct StringMaker<Any> {
+      static String convert(Any const& value) {
+         return toString(static_cast<::std::string>(
+            NameOf<Any>() + "(" + Convert<Text>(value) + ")"
+         ));
+      }
+   };
+
+   template<class T>
+   struct StringMaker<TAny<T>> {
+      static String convert(TAny<T> const& value) {
+         return toString(static_cast<::std::string>(
+            NameOf<TAny<T>>() + "(" + Convert<Text>(value) + ")"
+         ));
       }
    };
 }

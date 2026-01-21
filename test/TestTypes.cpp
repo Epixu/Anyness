@@ -31,7 +31,7 @@ namespace Langulus::CTTI
    struct Void<VoidTypeExternal> {};
 }
 
-TEMPLATE_TEST_CASE("Testing void types", "[ct]"
+TEST_CASE_TEMPLATE("Testing void types", TestType
    , void
    , VoidType
    , VoidType const
@@ -48,14 +48,14 @@ TEMPLATE_TEST_CASE("Testing void types", "[ct]"
    static_assert(not CT::NotVoid<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing non-void types", "[ct]"
+TEST_CASE_TEMPLATE("Testing non-void types", TestType
    , void*
    , VoidType*
    , NonVoidTypeDerived
    , NonVoidTypeDerived const
    , NonVoidTypeDerived*
-   //IncompleteType         // shouldn't compile
-   //IncompleteType const   // shouldn't compile
+   //, IncompleteType         // shouldn't compile
+   //, IncompleteType const   // shouldn't compile
    , IncompleteType*
    , int
    , int const
@@ -63,7 +63,7 @@ TEMPLATE_TEST_CASE("Testing non-void types", "[ct]"
    , int&
    , Types<void>
    , Types<void*>
-   , (Types<void, void>)
+   , Types<void, void>
 ) {
    static_assert(not CT::Void<TestType>);
    static_assert(    CT::NotVoid<TestType>);
@@ -97,12 +97,12 @@ namespace Langulus::CTTI
    struct Typelist<CustomTypelistExternal> {};
 }
 
-TEMPLATE_TEST_CASE("Testing typelists", "[ct]"
+TEST_CASE_TEMPLATE("Testing typelists", TestType
    , Types<>
    , Types<void>
-   , (Types<void, void>)
+   , Types<void, void>
    , Types<int>
-   , (Types<int, float>)
+   , Types<int, float>
    , CustomTypelist
    , CustomTypelist const
    , CustomTypelist&
@@ -117,15 +117,15 @@ TEMPLATE_TEST_CASE("Testing typelists", "[ct]"
    static_assert(not CT::NotTypelist<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing non-typelists", "[ct]"
+TEST_CASE_TEMPLATE("Testing non-typelists", TestType
    , void
    , void*
    , CustomTypelist*
    , CustomNonTypelistDerived
    , CustomNonTypelistDerived const
    , CustomNonTypelistDerived*
-   //IncompleteType         // shouldn't compile
-   //IncompleteType const   // shouldn't compile
+   //, IncompleteType         // shouldn't compile
+   //, IncompleteType const   // shouldn't compile
    , IncompleteType*
    , int
    , int const
@@ -156,6 +156,6 @@ static_assert(::std::same_as<typename TestingList7::template At<4>, char>);
 static_assert(::std::same_as<typename TestingList7::template At<5>, CustomTypelist>);
 static_assert(::std::same_as<typename TestingList7::template At<6>, CustomTypelistExternal>);
 
-SCENARIO("Types", "[types]") {
+/*SCENARIO("Types", "[types]") {
 
-}
+}*/

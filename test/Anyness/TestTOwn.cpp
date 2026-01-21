@@ -15,18 +15,17 @@ using namespace Langulus;
 using Anyness::TOwn;
 
 
-TEMPLATE_TEST_CASE("Owned value", "[TOwn]"
+TEST_CASE_TEMPLATE("Owned value", T
    , TOwn<RT>
-   //TOwn<const RT>
+   //, TOwn<const RT>
    , TOwn<int>
-   //TOwn<const int>
+   //, TOwn<const int>
    , TOwn<RT*>
    , TOwn<const RT*>
    , TOwn<int*>
    , TOwn<const int*>
 ) {
    static MemoryState memoryState;
-   using T  = TestType;
    using TT = TypeOf<T>;
    
    GIVEN("Default-initialized") {
@@ -147,18 +146,18 @@ TEMPLATE_TEST_CASE("Owned value", "[TOwn]"
       }
 
       WHEN("Compared") {
-         STATIC_REQUIRE(T{} == T{});
-         STATIC_REQUIRE(T{} == TT{});
-         STATIC_REQUIRE(TT{} == T{});
-         STATIC_REQUIRE(T{ TT{} } == T{ TT{} });
-         STATIC_REQUIRE(T{ TT{} } == TT{});
-         STATIC_REQUIRE(TT{} == T{ TT{} });
+         static_assert(T{} == T{});
+         static_assert(T{} == TT{});
+         static_assert(TT{} == T{});
+         static_assert(T{ TT{} } == T{ TT{} });
+         static_assert(T{ TT{} } == TT{});
+         static_assert(TT{} == T{ TT{} });
 
          if constexpr (CT::Dense<TT>) {
-            STATIC_REQUIRE(T{} != static_cast<TT>(1));
-            STATIC_REQUIRE(static_cast<TT>(1) != T{});
-            STATIC_REQUIRE(T{ TT{} } != static_cast<TT>(1));
-            STATIC_REQUIRE(static_cast<TT>(1) != T{ TT{} });
+            static_assert(T{} != static_cast<TT>(1));
+            static_assert(static_cast<TT>(1) != T{});
+            static_assert(T{ TT{} } != static_cast<TT>(1));
+            static_assert(static_cast<TT>(1) != T{ TT{} });
          }
       }
    }

@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Convertible.hpp"
+#include <stdexcept>
 
 
 namespace Langulus
@@ -48,7 +49,7 @@ namespace Langulus
          switch (c) {
          case Compared::Unordered:
          case Compared::Unknown:
-            throw ::std::runtime_error{ "Partial ordering not mappable to strong ordering" };
+            throw ::std::runtime_error {"Partial ordering not mappable to strong ordering"};
          case Compared::Less:
             return ::std::strong_ordering::less;
          case Compared::Equal:
@@ -68,7 +69,7 @@ namespace Langulus
          switch (c) {
          case Compared::Unordered:
          case Compared::Unknown:
-            throw ::std::runtime_error{ "Partial ordering not mappable to weak ordering" };
+            throw ::std::runtime_error {"Partial ordering not mappable to weak ordering"};
          case Compared::Less:
             return ::std::weak_ordering::less;
          case Compared::Equal:

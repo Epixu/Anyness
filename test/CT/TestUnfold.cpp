@@ -31,6 +31,7 @@ namespace Langulus::CTTI
 {
    template<>
    struct Unfoldable<UnfoldableExternally> {};
+
    template<>
    struct Unfoldable<NotUnfoldableExternally> {
       static constexpr bool Enabled = false;
@@ -41,7 +42,7 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Unfoldable                                                            
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Unfoldable types", "[ct]"
+TEST_CASE_TEMPLATE("Testing CT::Unfoldable types", TestType
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile
@@ -67,7 +68,7 @@ TEMPLATE_TEST_CASE("Testing CT::Unfoldable types", "[ct]"
    static_assert(not CT::NotUnfoldable<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotUnfoldable types", "[ct]"
+TEST_CASE_TEMPLATE("Testing CT::NotUnfoldable types", TestType
    //IncompleteType,                // shouldn't compile
    //IncompleteType const,          // shouldn't compile
    //IncompleteType const&,         // shouldn't compile

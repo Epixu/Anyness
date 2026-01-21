@@ -15,7 +15,9 @@
 
 #include <Langulus/Core.hpp>
 #include <Langulus/Except.hpp>
-#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_VOID_CAST_EXPRESSIONS
+#include <doctest/doctest.h>
+//#include <catch2/catch.hpp>
 
 #define BOOL_TYPES            bool
 #define CHARACTER_TYPES       char, wchar_t, char8_t, char16_t, char32_t
@@ -26,7 +28,16 @@
 #define SIGNED_TYPES          SIGNED_INTEGER_TYPES, REAL_TYPES
 #define ALL_TYPES             UNSIGNED_TYPES, SIGNED_TYPES, CHARACTER_TYPES, BOOL_TYPES
 
-CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception& e) {
+/*CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception& e) {
+   #if LANGULUS(DEBUG)
+      return e.mMessage;
+   #else
+      (void)e;
+      return ::Langulus::Exception::DefaultMessage;
+   #endif
+}*/
+
+REGISTER_EXCEPTION_TRANSLATOR(::Langulus::Exception& e) {
    #if LANGULUS(DEBUG)
       return e.mMessage;
    #else

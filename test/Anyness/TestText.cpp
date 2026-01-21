@@ -12,7 +12,7 @@ using namespace Langulus;
 using Anyness::Text;
 using Anyness::operator""_text;
 
-namespace Catch
+/*namespace Catch
 {
    template<>
    struct is_range<Text> { static const bool value = false; };
@@ -21,6 +21,16 @@ namespace Catch
    struct StringMaker<Text> {
       static std::string convert(Text const& value) {
          return "\"" + static_cast<::std::string>(value) + "\"_text";
+      }
+   };
+}*/
+
+namespace doctest
+{
+   template<>
+   struct StringMaker<Text> {
+      static String convert(Text const& value) {
+         return "\"" + toString(static_cast<::std::string>(value)) + "\"_text";
       }
    };
 }
@@ -48,20 +58,116 @@ namespace
 }
 
 /// Possible states:                                                          
-void Text_CheckState_Default(const CT::Container auto&);
-void Text_CheckState_Invariant(const CT::Container auto&);
-void Text_CheckState_OwnedFull(const CT::Container auto&);
-void Text_CheckState_OwnedFullConst(const CT::Container auto&);
-void Text_CheckState_OwnedEmpty(const CT::Container auto&);
-void Text_CheckState_DisownedFull(const CT::Container auto&);
-void Text_CheckState_DisownedFullConst(const CT::Container auto&);
-void Text_CheckState_Abandoned(const CT::Container auto&);
+void Text_CheckState_Default(const CT::Container auto& text) {
+   REQUIRE      (text.IsConstant());
+   REQUIRE_FALSE(text.IsDeep());
+   REQUIRE_FALSE(text.IsSparse());
+   REQUIRE      (text.IsTyped());
+   REQUIRE_FALSE(text.IsValid());
+   REQUIRE      (text.IsEmpty());
+   REQUIRE_FALSE(text.GetAllocation());
+   REQUIRE      (text.IsTypeConstrained());
+   REQUIRE      (text.GetType() == MetaOf<char>());
+   REQUIRE      (text.template IsExact<char>());
+   REQUIRE      (text.GetCount() == 0);
+   REQUIRE      (text.GetReserved() == 0);
+   REQUIRE      (text.GetUses() == 0);
+   REQUIRE      (text.GetRaw() == nullptr);
+   REQUIRE      (text == nullptr);
+   REQUIRE_FALSE(text != nullptr);
+   REQUIRE      (text == (char*)nullptr);
+   REQUIRE_FALSE(text != (char*)nullptr);
+   REQUIRE      (not text);
+   REQUIRE_FALSE(text);
+   REQUIRE      (text == "");
+   REQUIRE_FALSE(text != "");
+   REQUIRE_FALSE(text == "no match");
+}
 
-TEMPLATE_TEST_CASE("Testing text containers", "[text]",
+void Text_CheckState_OwnedEmpty(const CT::Container auto& text) {
+   REQUIRE_FALSE(text.IsConstant());
+   REQUIRE_FALSE(text.IsDeep());
+   REQUIRE_FALSE(text.IsSparse());
+   REQUIRE      (text.IsTyped());
+   REQUIRE_FALSE(text.IsValid());
+   REQUIRE      (text.IsEmpty());
+   REQUIRE      (text.GetAllocation());
+   REQUIRE      (text.IsTypeConstrained());
+   REQUIRE      (text.GetType() == MetaOf<char>());
+   REQUIRE      (text.template IsExact<char>());
+   REQUIRE      (text.GetCount() == 0);
+   REQUIRE      (text.GetReserved() > 0);
+   REQUIRE      (text.GetUses() == 1);
+   REQUIRE      (text.GetRaw());
+   REQUIRE      (text == nullptr);
+   REQUIRE_FALSE(text != nullptr);
+   REQUIRE      (text == (char*)nullptr);
+   REQUIRE_FALSE(text != (char*)nullptr);
+   REQUIRE      (not text);
+   REQUIRE_FALSE(text);
+   REQUIRE      (text == "");
+   REQUIRE_FALSE(text != "");
+   REQUIRE_FALSE(text == "no match");
+}
+
+void Text_CheckState_OwnedFull(const CT::Container auto& text) {
+   REQUIRE_FALSE(text.IsConstant());
+   REQUIRE_FALSE(text.IsDeep());
+   REQUIRE_FALSE(text.IsSparse());
+   REQUIRE      (text.IsTyped());
+   REQUIRE      (text.IsValid());
+   REQUIRE_FALSE(text.IsEmpty());
+   REQUIRE      (text.GetAllocation());
+   REQUIRE      (text.IsTypeConstrained());
+   REQUIRE      (text.GetType() == MetaOf<char>());
+   REQUIRE      (text.template IsExact<char>());
+   REQUIRE      (text.GetCount() > 0);
+   REQUIRE      (text.GetReserved() > 0);
+   REQUIRE      (text.GetUses() > 0);
+   REQUIRE      (text.GetRaw());
+   REQUIRE      (text != nullptr);
+   REQUIRE_FALSE(text == nullptr);
+   REQUIRE      (text != (char*)nullptr);
+   REQUIRE_FALSE(text == (char*)nullptr);
+   REQUIRE      (text);
+   REQUIRE_FALSE(not text);
+   REQUIRE      (text != "");
+   REQUIRE_FALSE(text == "");
+   REQUIRE_FALSE(text == "no match");
+}
+
+void Text_CheckState_DisownedFullConst(const CT::Container auto& text) {
+   REQUIRE      (text.IsConstant());
+   REQUIRE_FALSE(text.IsDeep());
+   REQUIRE_FALSE(text.IsSparse());
+   REQUIRE      (text.IsTyped());
+   REQUIRE      (text.IsValid());
+   REQUIRE_FALSE(text.IsEmpty());
+   REQUIRE_FALSE(text.GetAllocation());
+   REQUIRE      (text.IsTypeConstrained());
+   REQUIRE      (text.GetType() == MetaOf<char>());
+   REQUIRE      (text.template IsExact<char>());
+   REQUIRE      (text.GetCount() > 0);
+   REQUIRE      (text.GetReserved() == 0);
+   REQUIRE      (text.GetUses() == 0);
+   REQUIRE      (text.GetRaw());
+   REQUIRE      (text != nullptr);
+   REQUIRE_FALSE(text == nullptr);
+   REQUIRE      (text != (char*)nullptr);
+   REQUIRE_FALSE(text == (char*)nullptr);
+   REQUIRE      (text);
+   REQUIRE_FALSE(not text);
+   REQUIRE      (text != "");
+   REQUIRE_FALSE(text == "");
+   REQUIRE_FALSE(text == "no match");
+}
+
+
+
+TEST_CASE_TEMPLATE("Testing text containers", T,
    Text
    //TODO Path
 ) {
-   using T = TestType;
    static MemoryState memoryState;
    static_assert(    CT::Typed<T>, "Container not typed");
    static_assert(not CT::Array<T>, "Wrongly typed container");
@@ -75,7 +181,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
          REQUIRE(b != 254);
       }
       Logger::Info("Size of ", NameOf<::std::string>(), " container is: ", sizeof(::std::string), " bytes");
-      auto s = Logger::Section("Size of ", NameOf<TestType>(), " container is: ", sizeof(TestType), " bytes");
+      auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
       size_t accumulated_size = 0;
       size_t accumulated_stack_size = 0;
       T::ComponentList::ForEach([&]<class C> {
@@ -89,7 +195,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       Logger::Info("-----------------------------------------");
       Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
       Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      STATIC_REQUIRE(sizeof(TestType) <= sizeof(::std::string));
+      static_assert(sizeof(T) <= sizeof(::std::string));
    }
    
    GIVEN("Default text container") {
@@ -128,16 +234,16 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
       }
 
       WHEN("Compared") {
-         STATIC_REQUIRE(T{} == T{});
-         STATIC_REQUIRE(T{} == nullptr);
-         STATIC_REQUIRE(nullptr == T{});
-         STATIC_REQUIRE(T{} == "");
-         STATIC_REQUIRE("" == T{});
-         STATIC_REQUIRE(T{ nullptr } == T{ nullptr });
-         STATIC_REQUIRE(T{ "" } == T{ "" });
-         STATIC_REQUIRE(nullptr == T{ nullptr });
-         STATIC_REQUIRE(T{ "" } == "");
-         STATIC_REQUIRE("" == T{ "" });
+         static_assert(T{} == T{});
+         static_assert(T{} == nullptr);
+         static_assert(nullptr == T{});
+         static_assert(T{} == "");
+         static_assert("" == T{});
+         static_assert(T{ nullptr } == T{ nullptr });
+         static_assert(T{ "" } == T{ "" });
+         static_assert(nullptr == T{ nullptr });
+         static_assert(T{ "" } == "");
+         static_assert("" == T{ "" });
       }
    }
 
@@ -377,7 +483,7 @@ TEMPLATE_TEST_CASE("Testing text containers", "[text]",
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
+TEST_CASE_TEMPLATE("Unsigned number stringification", TestType,
    uint8_t, uint16_t, uint32_t, uint64_t
 ) {
    static MemoryState memoryState;
@@ -410,7 +516,7 @@ TEMPLATE_TEST_CASE("Unsigned number stringification", "[text]",
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Signed number stringification", "[text]",
+TEST_CASE_TEMPLATE("Signed number stringification", TestType,
    int8_t, int16_t, int32_t, int64_t
 ) {
    static MemoryState memoryState;
@@ -443,7 +549,7 @@ TEMPLATE_TEST_CASE("Signed number stringification", "[text]",
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Real number stringification", "[text]",
+TEST_CASE_TEMPLATE("Real number stringification", TestType,
    float, double
 ) {
    static MemoryState memoryState;
@@ -476,7 +582,9 @@ TEMPLATE_TEST_CASE("Real number stringification", "[text]",
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Logging text containers", "[text]", Text/*TODO , Path*/) {
+TEST_CASE_TEMPLATE("Logging text containers", TestType,
+   Text/*TODO , Path*/
+) {
    static MemoryState memoryState;
 
    WHEN("Logging") {
@@ -492,7 +600,9 @@ TEMPLATE_TEST_CASE("Logging text containers", "[text]", Text/*TODO , Path*/) {
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }
 
-TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", Stringifiable, StringifiableConst) {
+TEST_CASE_TEMPLATE("Reflected coverters to text", TestType,
+   Stringifiable, StringifiableConst
+) {
    static MemoryState memoryState;
 
    GIVEN("A stringifiable type") {
@@ -644,107 +754,3 @@ TEMPLATE_TEST_CASE("Reflected coverters to text", "[text]", Stringifiable, Strin
    REQUIRE(memoryState.Assert());
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }*/
-
-void Text_CheckState_Default(const CT::Container auto& text) {
-   REQUIRE      (text.IsConstant());
-   REQUIRE_FALSE(text.IsDeep());
-   REQUIRE_FALSE(text.IsSparse());
-   REQUIRE      (text.IsTyped());
-   REQUIRE_FALSE(text.IsValid());
-   REQUIRE      (text.IsEmpty());
-   REQUIRE_FALSE(text.GetAllocation());
-   REQUIRE      (text.IsTypeConstrained());
-   REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.template IsExact<char>());
-   REQUIRE      (text.GetCount() == 0);
-   REQUIRE      (text.GetReserved() == 0);
-   REQUIRE      (text.GetUses() == 0);
-   REQUIRE      (text.GetRaw() == nullptr);
-   REQUIRE      (text == nullptr);
-   REQUIRE_FALSE(text != nullptr);
-   REQUIRE      (text == (char*)nullptr);
-   REQUIRE_FALSE(text != (char*)nullptr);
-   REQUIRE      (not text);
-   REQUIRE_FALSE(text);
-   REQUIRE      (text == "");
-   REQUIRE_FALSE(text != "");
-   REQUIRE_FALSE(text == "no match");
-}
-
-void Text_CheckState_OwnedEmpty(const CT::Container auto& text) {
-   REQUIRE_FALSE(text.IsConstant());
-   REQUIRE_FALSE(text.IsDeep());
-   REQUIRE_FALSE(text.IsSparse());
-   REQUIRE      (text.IsTyped());
-   REQUIRE_FALSE(text.IsValid());
-   REQUIRE      (text.IsEmpty());
-   REQUIRE      (text.GetAllocation());
-   REQUIRE      (text.IsTypeConstrained());
-   REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.template IsExact<char>());
-   REQUIRE      (text.GetCount() == 0);
-   REQUIRE      (text.GetReserved() > 0);
-   REQUIRE      (text.GetUses() == 1);
-   REQUIRE      (text.GetRaw());
-   REQUIRE      (text == nullptr);
-   REQUIRE_FALSE(text != nullptr);
-   REQUIRE      (text == (char*)nullptr);
-   REQUIRE_FALSE(text != (char*)nullptr);
-   REQUIRE      (not text);
-   REQUIRE_FALSE(text);
-   REQUIRE      (text == "");
-   REQUIRE_FALSE(text != "");
-   REQUIRE_FALSE(text == "no match");
-}
-
-void Text_CheckState_OwnedFull(const CT::Container auto& text) {
-   REQUIRE_FALSE(text.IsConstant());
-   REQUIRE_FALSE(text.IsDeep());
-   REQUIRE_FALSE(text.IsSparse());
-   REQUIRE      (text.IsTyped());
-   REQUIRE      (text.IsValid());
-   REQUIRE_FALSE(text.IsEmpty());
-   REQUIRE      (text.GetAllocation());
-   REQUIRE      (text.IsTypeConstrained());
-   REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.template IsExact<char>());
-   REQUIRE      (text.GetCount() > 0);
-   REQUIRE      (text.GetReserved() > 0);
-   REQUIRE      (text.GetUses() > 0);
-   REQUIRE      (text.GetRaw());
-   REQUIRE      (text != nullptr);
-   REQUIRE_FALSE(text == nullptr);
-   REQUIRE      (text != (char*)nullptr);
-   REQUIRE_FALSE(text == (char*)nullptr);
-   REQUIRE      (text);
-   REQUIRE_FALSE(not text);
-   REQUIRE      (text != "");
-   REQUIRE_FALSE(text == "");
-   REQUIRE_FALSE(text == "no match");
-}
-
-void Text_CheckState_DisownedFullConst(const CT::Container auto& text) {
-   REQUIRE      (text.IsConstant());
-   REQUIRE_FALSE(text.IsDeep());
-   REQUIRE_FALSE(text.IsSparse());
-   REQUIRE      (text.IsTyped());
-   REQUIRE      (text.IsValid());
-   REQUIRE_FALSE(text.IsEmpty());
-   REQUIRE_FALSE(text.GetAllocation());
-   REQUIRE      (text.IsTypeConstrained());
-   REQUIRE      (text.GetType() == MetaOf<char>());
-   REQUIRE      (text.template IsExact<char>());
-   REQUIRE      (text.GetCount() > 0);
-   REQUIRE      (text.GetReserved() == 0);
-   REQUIRE      (text.GetUses() == 0);
-   REQUIRE      (text.GetRaw());
-   REQUIRE      (text != nullptr);
-   REQUIRE_FALSE(text == nullptr);
-   REQUIRE      (text != (char*)nullptr);
-   REQUIRE_FALSE(text == (char*)nullptr);
-   REQUIRE      (text);
-   REQUIRE_FALSE(not text);
-   REQUIRE      (text != "");
-   REQUIRE_FALSE(text == "");
-   REQUIRE_FALSE(text == "no match");
-}

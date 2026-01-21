@@ -14,17 +14,17 @@ using namespace Langulus;
 using Anyness::TRef;
 
 
-TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
-   , (Types<TRef<RT>,        ScopedElement<RT, true>>)
+TEST_CASE_TEMPLATE("Shared pointer", TestType
+   , Types<TRef<RT>,        ScopedElement<RT, true>>
    
-   , (Types<TRef<RT>,        ScopedElement<RT>>)
-   , (Types<TRef<const RT>,  ScopedElement<RT>>)
-   , (Types<TRef<int>,       ScopedElement<int>>)
-   , (Types<TRef<const int>, ScopedElement<int>>)
+   , Types<TRef<RT>,        ScopedElement<RT>>
+   , Types<TRef<const RT>,  ScopedElement<RT>>
+   , Types<TRef<int>,       ScopedElement<int>>
+   , Types<TRef<const int>, ScopedElement<int>>
    
-   , (Types<TRef<const RT>,  ScopedElement<RT, true>>)
-   , (Types<TRef<int>,       ScopedElement<int, true>>)
-   , (Types<TRef<const int>, ScopedElement<int, true>>)
+   , Types<TRef<const RT>,  ScopedElement<RT, true>>
+   , Types<TRef<int>,       ScopedElement<int, true>>
+   , Types<TRef<const int>, ScopedElement<int, true>>
 ) {
    static MemoryState memoryState;
    using T  = typename TestType::First;
@@ -145,17 +145,17 @@ TEMPLATE_TEST_CASE("Shared pointer", "[TRef]"
       }
 
       WHEN("Compared") {
-         STATIC_REQUIRE(T{} == T{});
-         STATIC_REQUIRE(T{} == nullptr);
-         STATIC_REQUIRE(nullptr == T{});
-         STATIC_REQUIRE(T{} == (TT*) {});
-         STATIC_REQUIRE((TT*) {} == T{});
-         STATIC_REQUIRE(T{ nullptr } == T{ nullptr });
-         STATIC_REQUIRE(T{ (TT*) {} } == T{ (TT*) {} });
-         STATIC_REQUIRE(T{ nullptr } == nullptr);
-         STATIC_REQUIRE(nullptr == T{ nullptr });
-         STATIC_REQUIRE(T{ (TT*) {} } == (TT*) {});
-         STATIC_REQUIRE((TT*) {} == T{ (TT*) {} });
+         static_assert(T{} == T{});
+         static_assert(T{} == nullptr);
+         static_assert(nullptr == T{});
+         static_assert(T{} == (TT*) {});
+         static_assert((TT*) {} == T{});
+         static_assert(T{ nullptr } == T{ nullptr });
+         static_assert(T{ (TT*) {} } == T{ (TT*) {} });
+         static_assert(T{ nullptr } == nullptr);
+         static_assert(nullptr == T{ nullptr });
+         static_assert(T{ (TT*) {} } == (TT*) {});
+         static_assert((TT*) {} == T{ (TT*) {} });
       }
    }
 

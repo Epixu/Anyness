@@ -61,10 +61,10 @@ namespace
    struct IncompleteType;
 }
 
-TEMPLATE_TEST_CASE("Testing typed type", "[ct]"
+TEST_CASE_TEMPLATE("Testing typed type", TestType
    , std::vector<bool>
    , std::string_view
-   , (std::array<double, 5>)
+   , std::array<double, 5>
    , TypedEnum
    , TypedEnumClass
    , CustomTypedType
@@ -76,9 +76,9 @@ TEMPLATE_TEST_CASE("Testing typed type", "[ct]"
    static_assert(not CT::Untyped<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing untyped type", "[ct]"
+TEST_CASE_TEMPLATE("Testing untyped type", TestType
    , CustomUntypedType
-   //IncompleteType, // shouldn't compile
+   //, IncompleteType // shouldn't compile
    , void, int
 ) {
    static_assert(not CT::Typed<TestType>);
@@ -97,7 +97,7 @@ static_assert(not CT::Untyped<CustomUntypedType, void, TypedEnum>);
 ///                                                                           
 /// TypeOf                                                                    
 ///                                                                           
-TEST_CASE("Testing TypeOf", "[ct]") {
+TEST_CASE("Testing TypeOf") {
    static_assert(::std::same_as<TypeOf<SheddableType<int>>, int>);
    static_assert(::std::same_as<TypeOf<SheddableType<int&>>, int&>);
    static_assert(::std::same_as<TypeOf<SheddableType<int const* const>>, int const* const>);
@@ -119,7 +119,7 @@ TEST_CASE("Testing TypeOf", "[ct]") {
 ///                                                                           
 /// TypedCast                                                                 
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing TypedCast", "[ct]"
+TEST_CASE_TEMPLATE("Testing TypedCast", TestType
    , int
    , int&&
    , const int&
@@ -151,7 +151,7 @@ TEMPLATE_TEST_CASE("Testing TypedCast", "[ct]"
 ///                                                                           
 /// ShedCast                                                                  
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing ShedCast", "[ct]"
+TEST_CASE_TEMPLATE("Testing ShedCast", TestType
    , int
    , int&&
    , const int&
@@ -180,7 +180,7 @@ TEMPLATE_TEST_CASE("Testing ShedCast", "[ct]"
 ///                                                                           
 /// SparseCast                                                                
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing SparseCast", "[ct]"
+TEST_CASE_TEMPLATE("Testing SparseCast", TestType
    , int
    , int&&
    , const int&
@@ -241,7 +241,7 @@ TEMPLATE_TEST_CASE("Testing SparseCast", "[ct]"
 ///                                                                           
 /// DenseCast                                                                 
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing DenseCast", "[ct]"
+TEST_CASE_TEMPLATE("Testing DenseCast", TestType
    , int
    , int&&
    , const int&

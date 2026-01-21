@@ -326,7 +326,6 @@ namespace
 
 namespace Langulus::CTTI
 {
-
    template<>
    struct Named<NamedBySpecialization> {
       static constexpr Literal Name = "NameOverridedBySpecializing_CTTI_Named";
@@ -352,28 +351,27 @@ namespace Langulus::CTTI
    struct NamedValue<AnonymousNumberButNamed> {
       static constexpr Literal Name = "AnonymousNumberButNamedByCTTI";
    };
-
-} // namespace Langulus::CTTI
+}
 
 
 #define DEFINE_NAMEOF_TYPE_TEST(WHAT, RESULT) \
    WHEN("Taken the name of type " #WHAT) { \
       auto name_runtime = IsolateTypenameAtRuntime<WHAT, true, true>(); \
       REQUIRE(name_runtime == RESULT); \
-      /*STATIC_REQUIRE(NameOf<WHAT>() == RESULT);*/ \
+      /*static_assert(NameOf<WHAT>() == RESULT);*/ \
    }
 
 #define DEFINE_NAMEOF_CONST_TEST(WHAT, RESULT) \
    WHEN("Taken the name of constant " #WHAT) { \
       auto name_runtime = IsolateConstantAtRuntime<WHAT, true, true>(); \
       REQUIRE(name_runtime == RESULT); \
-      /*STATIC_REQUIRE(NameOf<WHAT>() == RESULT);*/ \
+      /*static_assert(NameOf<WHAT>() == RESULT);*/ \
    }
 
 
-SCENARIO("NameOf", "[nameof]") {
+SCENARIO("NameOf") {
    DEFINE_NAMEOF_TYPE_TEST(void, "void")
-   //DEFINE_NAMEOF_TYPE_TEST(nullptr_t, "null")
+   //DEFINE_NAMEOF_TYPE_TEST(nullptr_t, "null") // no longer valid
    DEFINE_NAMEOF_TYPE_TEST(int32_t(&)[5], "int32[5]&")
    DEFINE_NAMEOF_TYPE_TEST(int32_t[5], "int32[5]")
    
@@ -471,7 +469,7 @@ SCENARIO("NameOf", "[nameof]") {
    #endif
 
    WHEN("Taken the name of type Nаsty (with cyrillic 'a')") {
-      //REQUIRE_STATIC(NameOf<Nаsty>()); // shouldn't compile at all
+      //static_assert(NameOf<Nаsty>()); // shouldn't compile at all
       REQUIRE_THROWS(IsolateTypenameAtRuntime<Nаsty, true, true>());
    }
 
@@ -551,18 +549,18 @@ SCENARIO("NameOf", "[nameof]") {
    WHEN("Taken the raw name of type " #WHAT) { \
       auto name_runtime = IsolateTypenameAtRuntime<WHAT, true, false>(); \
       REQUIRE(name_runtime == RESULT); \
-      /*STATIC_REQUIRE(CppNameOf<WHAT>() == RESULT);*/ \
+      /*static_assert(CppNameOf<WHAT>() == RESULT);*/ \
    }
 
 #define DEFINE_CPPNAMEOF_CONST_TEST(WHAT, RESULT) \
    WHEN("Taken the raw name of constant " #WHAT) { \
       auto name_runtime = IsolateConstantAtRuntime<WHAT, true, false>(); \
       REQUIRE(name_runtime == RESULT); \
-      /*STATIC_REQUIRE(CppNameOf<WHAT>() == RESULT);*/ \
+      /*static_assert(CppNameOf<WHAT>() == RESULT);*/ \
    }
 
 
-SCENARIO("CppNameOf", "[nameof]") {
+SCENARIO("CppNameOf") {
    DEFINE_CPPNAMEOF_TYPE_TEST(void, "void")
    DEFINE_CPPNAMEOF_TYPE_TEST(nullptr_t, "std::nullptr_t")
    DEFINE_CPPNAMEOF_TYPE_TEST(int32_t(&)[5], "int32[5]&")

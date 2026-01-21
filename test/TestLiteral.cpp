@@ -37,7 +37,7 @@ namespace
 ///                                                                           
 /// CT::Literal                                                               
 ///                                                                           
-SCENARIO("Testing CT::Literal", "[ct]") {
+SCENARIO("Testing CT::Literal") {
    //static_assert(CT::Literal<>); // shouldn't compile
    static_assert(    CT::Literal<decltype(emptyUndefined)>);
    static_assert(    CT::Literal<decltype(fixedString)>);
@@ -55,7 +55,7 @@ SCENARIO("Testing CT::Literal", "[ct]") {
 ///                                                                           
 /// CT::LiteralUndefined                                                      
 ///                                                                           
-SCENARIO("Testing CT::LiteralUndefined", "[ct]") {
+SCENARIO("Testing CT::LiteralUndefined") {
    //static_assert(CT::LiteralUndefined<>); // shouldn't compile
    static_assert(    CT::LiteralUndefined<decltype(emptyUndefined)>);
    static_assert(not CT::LiteralUndefined<decltype(emptyString2)>);
@@ -76,7 +76,7 @@ SCENARIO("Testing CT::LiteralUndefined", "[ct]") {
 ///                                                                           
 /// CT::LiteralString                                                         
 ///                                                                           
-SCENARIO("Testing CT::LiteralString", "[ct]") {
+SCENARIO("Testing CT::LiteralString") {
    //static_assert(CT::LiteralString<>); // shouldn't compile
    static_assert(not CT::LiteralString<decltype(emptyUndefined)>);
    static_assert(    CT::LiteralString<decltype(emptyString2)>);
@@ -97,7 +97,7 @@ SCENARIO("Testing CT::LiteralString", "[ct]") {
 ///                                                                           
 /// CT::LiteralValue                                                          
 ///                                                                           
-SCENARIO("Testing CT::LiteralValue", "[ct]") {
+SCENARIO("Testing CT::LiteralValue") {
    //static_assert(CT::LiteralValue<>); // shouldn't compile
    static_assert(not CT::LiteralValue<decltype(emptyUndefined)>);
    static_assert(not CT::LiteralValue<decltype(emptyString2)>);
@@ -118,7 +118,7 @@ SCENARIO("Testing CT::LiteralValue", "[ct]") {
 ///                                                                           
 /// CT::LiteralChar                                                           
 ///                                                                           
-SCENARIO("Testing CT::LiteralChar", "[ct]") {
+SCENARIO("Testing CT::LiteralChar") {
    //static_assert(CT::LiteralChar<>); // shouldn't compile
    static_assert(    CT::LiteralChar<char, wchar_t, char8_t, char16_t, char32_t>);
    static_assert(not CT::LiteralChar<char, wchar_t, char8_t, char16_t, int>);
@@ -128,13 +128,13 @@ SCENARIO("Testing CT::LiteralChar", "[ct]") {
 ///                                                                           
 /// Literal strings                                                           
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing literal strings", "[ct]",
+TEST_CASE_TEMPLATE("Testing literal strings", TestType,
    char, wchar_t, char8_t, char16_t, char32_t
 ) {
-   STATIC_REQUIRE(    LiteralAsTemplateArgument<"string">());
-   STATIC_REQUIRE(    LiteralAsTemplateArgument<5.5f>());
-   STATIC_REQUIRE(not LiteralAsTemplateArgument<"">());
-   STATIC_REQUIRE(not LiteralAsTemplateArgument<0>());
+   static_assert(    LiteralAsTemplateArgument<"string">());
+   static_assert(    LiteralAsTemplateArgument<5.5f>());
+   static_assert(not LiteralAsTemplateArgument<"">());
+   static_assert(not LiteralAsTemplateArgument<0>());
 
    WHEN("Constructed") {
       Literal defaultConstructed;
@@ -147,13 +147,13 @@ TEMPLATE_TEST_CASE("Testing literal strings", "[ct]",
       REQUIRE(defaultConstructed == emptyString4);
 
       constexpr Literal defaultConstructedCxpr;
-      STATIC_REQUIRE(not defaultConstructedCxpr);
-      STATIC_REQUIRE(defaultConstructedCxpr.size() == 0);
-      STATIC_REQUIRE(defaultConstructedCxpr.empty() == true);
-      STATIC_REQUIRE(defaultConstructedCxpr == emptyUndefined);
-      STATIC_REQUIRE(defaultConstructedCxpr == emptyString2);
-      STATIC_REQUIRE(defaultConstructedCxpr == emptyString3);
-      STATIC_REQUIRE(defaultConstructedCxpr == emptyString4);
+      static_assert(not defaultConstructedCxpr);
+      static_assert(defaultConstructedCxpr.size() == 0);
+      static_assert(defaultConstructedCxpr.empty() == true);
+      static_assert(defaultConstructedCxpr == emptyUndefined);
+      static_assert(defaultConstructedCxpr == emptyString2);
+      static_assert(defaultConstructedCxpr == emptyString3);
+      static_assert(defaultConstructedCxpr == emptyString4);
 
       Literal arrayConstructed = "array constructed";
       REQUIRE(arrayConstructed);
@@ -165,13 +165,13 @@ TEMPLATE_TEST_CASE("Testing literal strings", "[ct]",
       REQUIRE(arrayConstructed != emptyString4);
 
       constexpr Literal arrayConstructedCxpr = "array constructed";
-      STATIC_REQUIRE(arrayConstructedCxpr);
-      STATIC_REQUIRE(arrayConstructedCxpr.size() == 17);
-      STATIC_REQUIRE(arrayConstructedCxpr.empty() == false);
-      STATIC_REQUIRE(arrayConstructedCxpr != emptyUndefined);
-      STATIC_REQUIRE(arrayConstructedCxpr != emptyString2);
-      STATIC_REQUIRE(arrayConstructedCxpr != emptyString3);
-      STATIC_REQUIRE(arrayConstructedCxpr != emptyString4);
+      static_assert(arrayConstructedCxpr);
+      static_assert(arrayConstructedCxpr.size() == 17);
+      static_assert(arrayConstructedCxpr.empty() == false);
+      static_assert(arrayConstructedCxpr != emptyUndefined);
+      static_assert(arrayConstructedCxpr != emptyString2);
+      static_assert(arrayConstructedCxpr != emptyString3);
+      static_assert(arrayConstructedCxpr != emptyString4);
 
       Literal emptyArrayConstructed = "";
       REQUIRE(not emptyArrayConstructed);
@@ -183,13 +183,13 @@ TEMPLATE_TEST_CASE("Testing literal strings", "[ct]",
       REQUIRE(emptyArrayConstructed == emptyString4);
 
       constexpr Literal emptyArrayConstructedCxpr = "";
-      STATIC_REQUIRE(not emptyArrayConstructedCxpr);
-      STATIC_REQUIRE(emptyArrayConstructedCxpr.size() == 0);
-      STATIC_REQUIRE(emptyArrayConstructedCxpr.empty() == true);
-      STATIC_REQUIRE(emptyArrayConstructedCxpr == emptyUndefined);
-      STATIC_REQUIRE(emptyArrayConstructedCxpr == emptyString2);
-      STATIC_REQUIRE(emptyArrayConstructedCxpr == emptyString3);
-      STATIC_REQUIRE(emptyArrayConstructedCxpr == emptyString4);
+      static_assert(not emptyArrayConstructedCxpr);
+      static_assert(emptyArrayConstructedCxpr.size() == 0);
+      static_assert(emptyArrayConstructedCxpr.empty() == true);
+      static_assert(emptyArrayConstructedCxpr == emptyUndefined);
+      static_assert(emptyArrayConstructedCxpr == emptyString2);
+      static_assert(emptyArrayConstructedCxpr == emptyString3);
+      static_assert(emptyArrayConstructedCxpr == emptyString4);
    }
 
    WHEN("Assigned") {
@@ -212,7 +212,7 @@ TEMPLATE_TEST_CASE("Testing literal strings", "[ct]",
    WHEN("Accessed") {
       IF_SAFE(volatile size_t idx = fixedString.size() + 1);
       IF_SAFE(REQUIRE_THROWS(fixedString[idx]));
-      STATIC_REQUIRE(fixedString[0] == carrayString[0]);
+      static_assert(fixedString[0] == carrayString[0]);
       //STATIC_REQUIRE(fixedString[fixedString.size() + 1]); // shouldn't compile
    }
 

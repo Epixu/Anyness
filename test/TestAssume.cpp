@@ -11,7 +11,7 @@
 using namespace Langulus;
 
 
-SCENARIO("Testing whether assumptions throw properly, in both constant-evaluated and not contexts", "[assume]") {
+SCENARIO("Testing whether assumptions throw properly, in both constant-evaluated and not contexts") {
    constexpr auto test = [] {
       if consteval {
          LglsAssert(false, "Message");

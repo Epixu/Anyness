@@ -8,14 +8,19 @@
 #include <Langulus/Core.hpp>
 LANGULUS_BOUNDARY(nullptr)
 
-#define CATCH_CONFIG_RUNNER
-#include <catch2/catch.hpp>
+//#define CATCH_CONFIG_RUNNER
+//#include <catch2/catch.hpp>
+#define DOCTEST_CONFIG_IMPLEMENT
+#include <doctest/doctest.h>
 
 #if LANGULUS(BENCHMARK)
    #include <windows.h>
 #endif
 
 int main(int argc, char* argv[]) {
+   doctest::Context context;
+   context.applyCommandLine(argc, argv);
+
    #if LANGULUS(BENCHMARK)
       // Programatically dedicate a CPU that is unlikely to be used, and elevate process priority to minimize benchmarking noise
       HANDLE process = GetCurrentProcess();
@@ -31,12 +36,21 @@ int main(int argc, char* argv[]) {
          std::cerr << "Failed to set process affinity. Error code: " << GetLastError() << std::endl;
    #endif
 
-   Catch::Session session;
+   int result = context.run();
+   if (context.shouldExit()) {
+      #if LANGULUS(BENCHMARK)
+         SetPriorityClass(process, NORMAL_PRIORITY_CLASS);
+         CloseHandle(process);
+      #endif
+      return result;
+   }
+
+   /*Catch::Session session;
    auto result = session.run(argc, argv);
 
    #if LANGULUS(BENCHMARK)
       SetPriorityClass(process, NORMAL_PRIORITY_CLASS);
       CloseHandle(process);
    #endif
-   return result;
+   return result;*/
 }

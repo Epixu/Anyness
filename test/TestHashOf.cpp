@@ -48,7 +48,7 @@ namespace
    struct HashableViaBoth : HashableViaConstMethod, HashableViaBeingPOD {};
 }
 
-TEMPLATE_TEST_CASE("Testing hashable types", "[ct]"
+TEST_CASE_TEMPLATE("Testing hashable types", TestType
    , SheddableType<HashableViaConstMethod>
    , SheddableType<HashableViaBeingPOD>
    , SheddableType<HashableViaBoth>
@@ -67,7 +67,7 @@ TEMPLATE_TEST_CASE("Testing hashable types", "[ct]"
    static_assert(not CT::NotHashable<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing non-hashable types", "[ct]"
+TEST_CASE_TEMPLATE("Testing non-hashable types", TestType
    , SheddableType<NonHashable>
    , SheddableType<NonHashable&>
    , NonHashable
@@ -90,7 +90,7 @@ static_assert(not CT::NotHashable<SheddableType<NonHashable>, NonHashable, Hasha
 ///                                                                           
 /// CT::HasGetHashMethod                                                      
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing types with GetHash() method", "[ct]"
+TEST_CASE_TEMPLATE("Testing types with GetHash() method", TestType
    , SheddableType<HashableViaConstMethod>
    , SheddableType<HashableViaBoth>
    , HashableViaConstMethod
@@ -100,11 +100,11 @@ TEMPLATE_TEST_CASE("Testing types with GetHash() method", "[ct]"
    static_assert(CT::HasGetHashMethod<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing types without GetHash() method", "[ct]",
-   SheddableType<HashableViaBeingPOD>,
-   HashableViaBeingPOD,
-   NonHashable,
-   int, int&, int*, void
+TEST_CASE_TEMPLATE("Testing types without GetHash() method", TestType
+   , SheddableType<HashableViaBeingPOD>
+   , HashableViaBeingPOD
+   , NonHashable
+   , int, int&, int*, void
 ) {
    static_assert(not CT::HasGetHashMethod<TestType>);
 }
@@ -117,7 +117,7 @@ static_assert(not CT::HasGetHashMethod<SheddableType<HashableViaConstMethod>, Ha
 ///                                                                           
 /// CT::HasStdHasher                                                          
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing for if types are hashable by std", "[ct]"
+TEST_CASE_TEMPLATE("Testing for if types are hashable by std", TestType
    , std::string
    , std::string_view, int
    , SheddableType<HashableViaConstMethod>
@@ -129,13 +129,13 @@ TEMPLATE_TEST_CASE("Testing for if types are hashable by std", "[ct]"
    static_assert(CT::HasStdHasher<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing for if types are not hashable by std", "[ct]"
-   , (std::unordered_map<int, bool>)
+TEST_CASE_TEMPLATE("Testing for if types are not hashable by std", TestType
+   , std::unordered_map<int, bool>
    , std::unordered_set<int>
    , std::set<int>
-   , (std::array<int, 5>)
-   , (std::map<int, bool>)
-   , (SheddableType<std::map<int, bool>>)
+   , std::array<int, 5>
+   , std::map<int, bool>
+   , SheddableType<std::map<int, bool>>
    , void
    , NonHashable
    , HashableViaBeingPOD
@@ -154,12 +154,22 @@ static_assert(not CT::HasStdHasher<std::string, SheddableType<HashableViaConstMe
 static_assert(CT::Nullable<Hash>, "Hash needs to be batch-nullable");
 static_assert(CT::POD<Hash>,      "Hash needs to be POD");
 
-namespace Catch
+/*namespace Catch
 {
    template <>
    struct StringMaker<Langulus::Hash> {
       static std::string convert(Langulus::Hash k) {
          return "Hash(" + std::to_string(k.value) + ")";
+      }
+   };
+}*/
+
+namespace doctest
+{
+   template<>
+   struct StringMaker<Langulus::Hash> {
+      static String convert(const Langulus::Hash& k) {
+         return "Hash(" + toString(k.value) + ")";
       }
    };
 }
@@ -168,7 +178,7 @@ namespace Catch
 ///                                                                           
 /// Hashing using standard containers                                         
 ///                                                                           
-SCENARIO("Hashing standard containers should result in the same hashes", "[hash]") {
+SCENARIO("Hashing standard containers should result in the same hashes") {
    std::string_view same1 = "Same1";
    std::string_view same2 = "Same1";
    std::string same1str = "Same1";
@@ -193,12 +203,12 @@ SCENARIO("Hashing standard containers should result in the same hashes", "[hash]
    };
 
    REQUIRE(HashOf(c_same2arr) == HashOf('S', 'a', 'm', 'e', '2'));
-   STATIC_REQUIRE(HashOf(c_same2arr) == HashOf('S', 'a', 'm', 'e', '2'));
+   static_assert(HashOf(c_same2arr) == HashOf('S', 'a', 'm', 'e', '2'));
 
    constexpr std::array<Hash, 1> c_wrappedHash = {Hash{666}};
    REQUIRE(HashOf(c_wrappedHash) == Hash {666});
 
-   STATIC_REQUIRE(HashOf(HashableViaConstMethod {}) == Hash {666});
+   static_assert(HashOf(HashableViaConstMethod {}) == Hash {666});
 
    std::vector<HashableViaConstMethod> vec3;
    vec3.emplace_back();
@@ -212,7 +222,7 @@ SCENARIO("Hashing standard containers should result in the same hashes", "[hash]
       HashableViaConstMethod {}
    };
    REQUIRE(HashOf(vec3ca) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
-   STATIC_REQUIRE(HashOf(vec3ca) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
+   static_assert(HashOf(vec3ca) == HashOf(HashableViaConstMethod {}, HashableViaConstMethod {}, HashableViaConstMethod {}));
 
    std::vector<HashableViaConstMethod> vec1;
    vec1.emplace_back();
@@ -220,7 +230,7 @@ SCENARIO("Hashing standard containers should result in the same hashes", "[hash]
 
    HashableViaConstMethod vec1ca[1] = {HashableViaConstMethod {}};
    REQUIRE(HashOf(vec1ca) == Hash {666});
-   STATIC_REQUIRE(HashOf(vec1ca) == Hash {666});
+   static_assert(HashOf(vec1ca) == Hash {666});
 }
 
 template<int V>
@@ -232,7 +242,7 @@ struct TestValue {
 ///                                                                           
 /// Hash similarities with fundamental types (and constexpr hashing)          
 ///                                                                           
-TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result in different hashes", "[hash]"
+TEST_CASE_TEMPLATE("Hashing same values of differently sized types should result in different hashes", TestType
    , TestValue<0>
    , TestValue<1>
    , TestValue<2>
@@ -280,10 +290,10 @@ TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result
       REQUIRE(HashOf(b) == HashOf(u8));
       REQUIRE(HashOf(b) == HashOf(i8));
 
-      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) == HashOf(static_cast<char>(init)));
-      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) == HashOf(static_cast<char8_t>(init)));
-      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) == HashOf(static_cast<uint8_t>(init)));
-      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) == HashOf(static_cast<int8_t>(init)));
+      static_assert(HashOf(static_cast<bool>(init)) == HashOf(static_cast<char>(init)));
+      static_assert(HashOf(static_cast<bool>(init)) == HashOf(static_cast<char8_t>(init)));
+      static_assert(HashOf(static_cast<bool>(init)) == HashOf(static_cast<uint8_t>(init)));
+      static_assert(HashOf(static_cast<bool>(init)) == HashOf(static_cast<int8_t>(init)));
    }
    else {
       REQUIRE(HashOf(b) != HashOf(c));
@@ -291,10 +301,10 @@ TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result
       REQUIRE(HashOf(b) != HashOf(u8));
       REQUIRE(HashOf(b) != HashOf(i8));
 
-      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char>(init)));
-      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char8_t>(init)));
-      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint8_t>(init)));
-      STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int8_t>(init)));
+      static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char>(init)));
+      static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char8_t>(init)));
+      static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint8_t>(init)));
+      static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int8_t>(init)));
    }
 
    REQUIRE(HashOf(b) != HashOf(wc));
@@ -309,17 +319,17 @@ TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result
    REQUIRE(HashOf(b) != HashOf(f));
    REQUIRE(HashOf(b) != HashOf(d));
 
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<wchar_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char16_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char32_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint16_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint32_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint64_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int16_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int32_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int64_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<float>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<bool>(init)) != HashOf(static_cast<double>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<wchar_t>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char16_t>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<char32_t>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint16_t>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint32_t>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<uint64_t>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int16_t>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int32_t>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<int64_t>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<float>(init)));
+   static_assert(HashOf(static_cast<bool>(init)) != HashOf(static_cast<double>(init)));
 
    if constexpr (sizeof(wchar_t) == 2) {
       REQUIRE(HashOf(c16) == HashOf(wc));
@@ -337,16 +347,16 @@ TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result
    REQUIRE(HashOf(c16) != HashOf(f));
    REQUIRE(HashOf(c16) != HashOf(d));
 
-   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) == HashOf(static_cast<uint16_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) == HashOf(static_cast<int16_t>(init)));
+   static_assert(HashOf(static_cast<char16_t>(init)) == HashOf(static_cast<uint16_t>(init)));
+   static_assert(HashOf(static_cast<char16_t>(init)) == HashOf(static_cast<int16_t>(init)));
 
-   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<char32_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<uint32_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<uint64_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<int32_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<int64_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<float>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<double>(init)));
+   static_assert(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<char32_t>(init)));
+   static_assert(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<uint32_t>(init)));
+   static_assert(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<uint64_t>(init)));
+   static_assert(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<int32_t>(init)));
+   static_assert(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<int64_t>(init)));
+   static_assert(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<float>(init)));
+   static_assert(HashOf(static_cast<char16_t>(init)) != HashOf(static_cast<double>(init)));
 
    if constexpr (sizeof(wchar_t) == 4) {
       REQUIRE(HashOf(c32) == HashOf(wc));
@@ -360,12 +370,12 @@ TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result
    REQUIRE(HashOf(c32) != HashOf(u64));
    REQUIRE(HashOf(c32) != HashOf(i64));
 
-   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) == HashOf(static_cast<uint32_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) == HashOf(static_cast<int32_t>(init)));
+   static_assert(HashOf(static_cast<char32_t>(init)) == HashOf(static_cast<uint32_t>(init)));
+   static_assert(HashOf(static_cast<char32_t>(init)) == HashOf(static_cast<int32_t>(init)));
 
-   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<char16_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<uint64_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<int64_t>(init)));
+   static_assert(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<char16_t>(init)));
+   static_assert(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<uint64_t>(init)));
+   static_assert(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<int64_t>(init)));
 
    if constexpr (init == 0 and sizeof(float) == 4)
       REQUIRE(HashOf(c32) == HashOf(f));
@@ -382,15 +392,15 @@ TEMPLATE_TEST_CASE("Hashing same values of differently sized types should result
 
    REQUIRE(HashOf(i64) != HashOf(f));
 
-   STATIC_REQUIRE(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<double>(init)));
+   static_assert(HashOf(static_cast<char32_t>(init)) != HashOf(static_cast<double>(init)));
 
-   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) == HashOf(static_cast<uint64_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<char16_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<char32_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<uint32_t>(init)));
-   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<int32_t>(init)));
+   static_assert(HashOf(static_cast<int64_t>(init)) == HashOf(static_cast<uint64_t>(init)));
+   static_assert(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<char16_t>(init)));
+   static_assert(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<char32_t>(init)));
+   static_assert(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<uint32_t>(init)));
+   static_assert(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<int32_t>(init)));
 
-   STATIC_REQUIRE(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<float>(init)));
+   static_assert(HashOf(static_cast<int64_t>(init)) != HashOf(static_cast<float>(init)));
 
    if constexpr (init == 0 and sizeof(double) == 8)
       REQUIRE(HashOf(i64) == HashOf(d));

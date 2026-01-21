@@ -39,12 +39,12 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Allocatable                                                           
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Allocatable types", "[ct]"
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //IncompleteType const&,         // shouldn't compile
-   //SheddableType<IncompleteType>, // shouldn't compile
-   //SheddableType<IncompleteType>&,// shouldn't compile
+TEST_CASE_TEMPLATE("Testing CT::Allocatable types", TestType
+   //, IncompleteType                  // shouldn't compile
+   //, IncompleteType const            // shouldn't compile
+   //, IncompleteType const&           // shouldn't compile
+   //, SheddableType<IncompleteType>   // shouldn't compile
+   //, SheddableType<IncompleteType>&  // shouldn't compile
    , AllocatableExternally
    , AllocatableExternally const
    , AllocatableExternally&
@@ -71,12 +71,12 @@ TEMPLATE_TEST_CASE("Testing CT::Allocatable types", "[ct]"
    static_assert(not CT::NotAllocatable<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotAllocatable types", "[ct]"
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //IncompleteType const&,         // shouldn't compile
-   //SheddableType<IncompleteType>, // shouldn't compile
-   //SheddableType<IncompleteType>&,// shouldn't compile
+TEST_CASE_TEMPLATE("Testing CT::NotAllocatable types", TestType
+   //, IncompleteType                    // shouldn't compile
+   //, IncompleteType const              // shouldn't compile
+   //, IncompleteType const&             // shouldn't compile
+   //, SheddableType<IncompleteType>     // shouldn't compile
+   //, SheddableType<IncompleteType>&    // shouldn't compile
    , void
    , SheddableType<InheritedAllocatableDisabled>
    , SheddableType<InheritedAllocatableDisabled const>

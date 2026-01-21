@@ -41,13 +41,13 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Deep                                                                  
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Deep types", "[ct]"
-   //IncompleteType,                 // shouldn't compile
-   //IncompleteType const,           // shouldn't compile
-   //SheddableType<IncompleteType>,  // shouldn't compile
-   //IncompleteType*,                // shouldn't compile
-   //IncompleteType const*,          // shouldn't compile
-   //SheddableType<IncompleteType*>, // shouldn't compile
+TEST_CASE_TEMPLATE("Testing CT::Deep types", TestType
+   //, IncompleteType                 // shouldn't compile
+   //, IncompleteType const           // shouldn't compile
+   //, SheddableType<IncompleteType>  // shouldn't compile
+   //, IncompleteType*                // shouldn't compile
+   //, IncompleteType const*          // shouldn't compile
+   //, SheddableType<IncompleteType*> // shouldn't compile
    
    , ForcedDeepExternally
    , ForcedDeepExternally const
@@ -73,11 +73,11 @@ TEMPLATE_TEST_CASE("Testing CT::Deep types", "[ct]"
    static_assert(not CT::NotDeep<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotDeep types", "[ct]"
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //SheddableType<IncompleteType>, // shouldn't compile
-   //IncompleteType*,
+TEST_CASE_TEMPLATE("Testing CT::NotDeep types", TestType
+   //, IncompleteType                // shouldn't compile
+   //, IncompleteType const          // shouldn't compile
+   //, SheddableType<IncompleteType> // shouldn't compile
+   //, IncompleteType*
    , void
    , void*
    , InheritedDeep1ButPrivate

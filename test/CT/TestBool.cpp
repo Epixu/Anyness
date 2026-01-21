@@ -39,12 +39,12 @@ namespace Langulus::CTTI
 ///                                                                           
 /// CT::Bool                                                                  
 ///                                                                           
-TEMPLATE_TEST_CASE("Testing CT::Bool types", "[ct]"
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //IncompleteType const&,         // shouldn't compile
-   //SheddableType<IncompleteType>, // shouldn't compile
-   //SheddableType<IncompleteType>&,// shouldn't compile
+TEST_CASE_TEMPLATE("Testing CT::Bool types", TestType
+   //, IncompleteType                  // shouldn't compile
+   //, IncompleteType const            // shouldn't compile
+   //, IncompleteType const&           // shouldn't compile
+   //, SheddableType<IncompleteType>   // shouldn't compile
+   //, SheddableType<IncompleteType>&  // shouldn't compile
    , BoolExternally
    , BoolExternally const
    , BoolExternally&
@@ -60,12 +60,12 @@ TEMPLATE_TEST_CASE("Testing CT::Bool types", "[ct]"
    static_assert(not CT::NotBool<TestType>);
 }
 
-TEMPLATE_TEST_CASE("Testing CT::NotBool types", "[ct]"
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //IncompleteType const&,         // shouldn't compile
-   //SheddableType<IncompleteType>, // shouldn't compile
-   //SheddableType<IncompleteType>&,// shouldn't compile
+TEST_CASE_TEMPLATE("Testing CT::NotBool types", TestType
+   //, IncompleteType                  // shouldn't compile
+   //, IncompleteType const            // shouldn't compile
+   //, IncompleteType const&           // shouldn't compile
+   //, SheddableType<IncompleteType>   // shouldn't compile
+   //, SheddableType<IncompleteType>&  // shouldn't compile
    , IncompleteType*
    , void, void*
    , int, int const, int const&, int&

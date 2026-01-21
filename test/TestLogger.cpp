@@ -13,7 +13,7 @@
 using namespace Langulus;
 
 
-SCENARIO("Logging to console (stateless)", "[logger]") {
+SCENARIO("Logging to console (stateless)") {
    Logger::LineRaw("\n\nTESTING STATELESS LOGGING\n");
    
    Logger::LineRaw("This should be line #1");
@@ -86,7 +86,7 @@ SCENARIO("Logging to console (stateless)", "[logger]") {
    Logger::SpecialRaw("#2 The answer is ", 42, '!', " It's ", true, ", I tell ya!");
 }
 
-SCENARIO("Logging to console (stateful)", "[logger]") {
+SCENARIO("Logging to console (stateful)") {
    // Duplicate any logging messages to an external HTML file           
    Logger::ToHTML html_test {"html_test.htm"};
    Logger::AttachDuplicator(&html_test);
