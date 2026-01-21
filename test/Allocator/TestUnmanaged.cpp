@@ -14,7 +14,7 @@
 #endif
 
 
-TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
+TEST_CASE_TEMPLATE("Testing allocator functions", TestType,
    Type1,
    Type2,
    Type3,
@@ -29,7 +29,12 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
    constexpr size_t testAlignment = ::std::max(alignof(TestType), Alignment);
    
    GIVEN("A small allocation") {
-      auto s = GENERATE(1_pot, 2_pot, 512_pot);
+      pot_t s;
+      SUBCASE("") { s = 1_pot; }
+      SUBCASE("") { s = 2_pot; }
+      SUBCASE("") { s = 512_pot; }
+      CAPTURE(s);
+
       Allocation* entry = Allocator::Allocate(pot_t(alignof(TestType)), s);
       REQUIRE(entry);
 
@@ -133,7 +138,7 @@ TEMPLATE_TEST_CASE("Testing allocator functions", "[allocator]",
    }
 }
 
-TEST_CASE("Stress test and benchmarking", "[allocator]") {
+TEST_CASE("Stress test and benchmarking") {
    std::random_device rd;
    std::mt19937 generator(rd());
 
