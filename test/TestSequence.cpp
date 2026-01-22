@@ -11,7 +11,7 @@
 using namespace Langulus;
 
 
-TEST_CASE_TEMPLATE("Sequences"/*, "[sequence]"*/, T
+TEST_CASE_TEMPLATE("Sequences", T
    , int
    , unsigned long long
 ) {

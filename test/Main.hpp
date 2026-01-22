@@ -5,19 +5,12 @@
 ///                                                                           
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
-
-/// INTENTIONALLY NOT GUARDED                                                 
-/// Include this file once in each test cpp file, after all other headers     
-// ReSharper disable once CppMissingIncludeGuard
-#ifdef TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
-   #error "Catch has already been included prior to this header"
-#endif
-
+#pragma once
 #include <Langulus/Core.hpp>
 #include <Langulus/Except.hpp>
+#include <Langulus/MetaOf.hpp>
 #define DOCTEST_CONFIG_VOID_CAST_EXPRESSIONS
 #include <doctest/doctest.h>
-//#include <catch2/catch.hpp>
 
 #define BOOL_TYPES            bool
 #define CHARACTER_TYPES       char, wchar_t, char8_t, char16_t, char32_t
@@ -28,15 +21,6 @@
 #define SIGNED_TYPES          SIGNED_INTEGER_TYPES, REAL_TYPES
 #define ALL_TYPES             UNSIGNED_TYPES, SIGNED_TYPES, CHARACTER_TYPES, BOOL_TYPES
 
-/*CATCH_TRANSLATE_EXCEPTION(::Langulus::Exception& e) {
-   #if LANGULUS(DEBUG)
-      return e.mMessage;
-   #else
-      (void)e;
-      return ::Langulus::Exception::DefaultMessage;
-   #endif
-}*/
-
 REGISTER_EXCEPTION_TRANSLATOR(::Langulus::Exception& e) {
    #if LANGULUS(DEBUG)
       return e.mMessage;
@@ -44,4 +28,21 @@ REGISTER_EXCEPTION_TRANSLATOR(::Langulus::Exception& e) {
       (void)e;
       return ::Langulus::Exception::DefaultMessage;
    #endif
+}
+
+namespace doctest
+{
+   template<>
+   struct StringMaker<::Langulus::RTTI::DMeta> {
+      static String convert(::Langulus::RTTI::DMeta const& value) {
+         return toString(static_cast<::std::string>(value.GetName()));
+      }
+   };
+
+   template<>
+   struct StringMaker<::Langulus::pot_t> {
+      static String convert(::Langulus::pot_t const& value) {
+         return toString(static_cast<size_t>(value));
+      }
+   };
 }

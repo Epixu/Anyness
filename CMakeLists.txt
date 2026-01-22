@@ -23,7 +23,7 @@ else()
 endif()
 
 if(CMAKE_CXX_FLAGS)
-    # Make sure trigraphs are disabled											
+    # Make sure trigraphs are disabled                                        
     STRING(FIND ${CMAKE_CXX_FLAGS} "/Zc:trigraphs" TRIGRAPHS_ENABLED1)
     STRING(FIND ${CMAKE_CXX_FLAGS} "-trigraphs"    TRIGRAPHS_ENABLED2)
     if (${TRIGRAPHS_ENABLED1} GREATER -1 OR ${TRIGRAPHS_ENABLED2} GREATER -1)
@@ -31,7 +31,7 @@ if(CMAKE_CXX_FLAGS)
     endif()
 endif()
 
-# Reflected options																
+# Reflected options                                                           
 option(LANGULUS_OPTION_SHARED_LIBRARIES 
     "Will build shared libraries (DLL/SO/WASM) if enabled, \
     true by default" ON)
@@ -110,14 +110,14 @@ else()
     message("Building Langulus as static library")
 endif()
 
-# Check if this project is built as standalone, or as a part of something else	
+# Check if this project is built as standalone, or as a part of something else
 if (PROJECT_IS_TOP_LEVEL OR NOT LANGULUS)
     # It is very important these are set before any targets are introduced		
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
     if (LANGULUS_OPTION_LOGGING)
-        # Configure and link {fmt} library                                      
+        # Configure and link {fmt} library                                    
         fetch_external_module(
             fmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
@@ -164,13 +164,13 @@ set(LANGULUS_FPU 32 CACHE STRING "Default langulus real number size (in bits)")
 message(STATUS "[FEATURE] Real number size was set to ${LANGULUS_FPU}bit")
 target_compile_definitions(LangulusAnyness PUBLIC LANGULUS_FPU=${LANGULUS_FPU})
 
-# Include tests																	
+# Include tests                                                               
 if (LANGULUS_OPTION_TESTING)
     enable_testing()
     add_subdirectory(test)
 endif()
 
-# Include profiler
+# Include profiler                                                            
 if (LANGULUS_OPTION_BENCHMARK OR LANGULUS_OPTION_PROFILING)
    fetch_external_module(
        ctrack
@@ -180,8 +180,9 @@ if (LANGULUS_OPTION_BENCHMARK OR LANGULUS_OPTION_PROFILING)
    target_link_libraries(LangulusAnyness PUBLIC ctrack)
    set(LANGULUS_OPTION_SAFE_MODE OFF CACHE BOOL "Disabled due to LANGULUS_OPTION_BENCHMARK or LANGULUS_OPTION_PROFILING being enabled" FORCE)
 
-   # If there's a highscore provided with the source, use that when checking for regressions
-   if(EXISTS         "ctrack_highscore.txt"
+   # If there's a highscore provided with the source, use it as baseline      
+   # when testing for performance regression                                  
+   if(        EXISTS "ctrack_highscore.txt"
       AND NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ctrack_highscore.txt")
       file(
          COPY        "ctrack_highscore.txt"
@@ -190,7 +191,7 @@ if (LANGULUS_OPTION_BENCHMARK OR LANGULUS_OPTION_PROFILING)
    endif()
 endif()
 
-# Reflect all the options, so that code is aware of them						
+# Reflect all the options, so that code is aware of them                      
 macro(reflect_option OPTION MESSAGE)
     if (${OPTION})
         message(STATUS "[FEATURE] ${MESSAGE} (${OPTION})")

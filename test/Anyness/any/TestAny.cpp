@@ -8,14 +8,70 @@
 #include "TestAnyCommon.hpp"
 #include "../../TestTypes/ReferencedType.hpp"
 #include <any>
-#include <Langulus/Profiler.hpp>
 #include <Langulus/Anyness/Many.hpp>
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)
    #include "../../TestTypes/PackedPointers.hpp"
 #endif
 
-[[maybe_unused]] constexpr int BenchmarkCycles = 1000;
+#if LANGULUS(BENCHMARK)
+   #include <Langulus/Profiler.hpp>
+   constexpr int BenchmarkWarmupCycles  =  100;
+   constexpr int BenchmarkMeasureCycles = 1000;
+
+   #define Benchmark(func, tolerance, my_init, my) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance); \
+   }
+
+   #define BenchmarkStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      i = 0; \
+      const auto token_std = ::std::string("Test/") + static_cast<::std::string>(func) + " |std::any|"; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         theirs_init; \
+         theirs; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         theirs_init; \
+         { \
+            CTRACK_NAME(token_std.c_str()); \
+            theirs; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance_highscore); \
+      REQUIRE(results.check_same(token.c_str(), token_std.c_str(), tolerance)); \
+   }
+#else
+   #define Benchmark(func, tolerance, my_init, my)
+   #define BenchmarkStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
+#endif
 
 
 TEST_CASE_TEMPLATE("Test Any/TAny", TestType
@@ -143,34 +199,36 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
       static_assert(CT::DisownAssignable<T>     == CT::DisownAssignable<E>);      
    }
    
-   static_assert(    CT::Deep<T>);
-   static_assert(    CT::ContainsOne<T>);
-   static_assert(not CT::ContainsMany<T>);
-   static_assert(    CT::HasVariableCount<T>);
-   static_assert(    CT::HeapAllocated<T>);
-   static_assert(    CT::DeeplyOwned<T>);
-   static_assert(    CT::Owned<T>);
-   static_assert(    CT::AutoOwned<T>);
-   static_assert(    CT::Comparable<T, T>);
-   static_assert(    CT::Comparable<T, E>);
-   static_assert(not ::std::ranges::range<T>);
+   {
+      static_assert(CT::Deep<T>);
+      static_assert(CT::ContainsOne<T>);
+      static_assert(not CT::ContainsMany<T>);
+      static_assert(CT::HasVariableCount<T>);
+      static_assert(CT::HeapAllocated<T>);
+      static_assert(CT::DeeplyOwned<T>);
+      static_assert(CT::Owned<T>);
+      static_assert(CT::AutoOwned<T>);
+      static_assert(CT::Comparable<T, T>);
+      static_assert(CT::Comparable<T, E>);
+      static_assert(not ::std::ranges::range<T>);
 
-   static_assert(not requires (T pack, E item) { pack.operator +   (item); });
-   static_assert(not requires (T pack, E item) { pack.operator +=  (item); });
-   static_assert(not requires (T pack, E item) { pack.operator <<  (item); });
-   static_assert(not requires (T pack, E item) { pack.operator >>  (item); });
-   static_assert(not requires (T pack, E item) { pack.operator <<= (item); });
-   static_assert(not requires (T pack, E item) { pack.operator >>= (item); });
-   static_assert(not requires (T pack, E item) { pack.InsertAt (Index::Back, item); });
-   static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
-   static_assert(not requires (T pack, E item) { pack.Remove(item); });
-   static_assert(not requires (T pack, E item) { pack.RemoveAt(Index::Front); });
-   static_assert(not requires (T pack, E item) { pack.Reserve(20); });
-   static_assert(not requires (T pack, E item) { pack.EnableOr(); });
-   static_assert(not requires (T pack, E item) { pack.IsOr(); });
-   static_assert(not requires (T pack, E item) { pack.Find(item); });
-   static_assert(not requires (T pack, E item) { pack.ForEach([](const int&){}); });
-   static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&){}); });
+      static_assert(not requires (T pack, E item) { pack.operator +   (item); });
+      static_assert(not requires (T pack, E item) { pack.operator +=  (item); });
+      static_assert(not requires (T pack, E item) { pack.operator <<  (item); });
+      static_assert(not requires (T pack, E item) { pack.operator >>  (item); });
+      static_assert(not requires (T pack, E item) { pack.operator <<= (item); });
+      static_assert(not requires (T pack, E item) { pack.operator >>= (item); });
+      static_assert(not requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
+      static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+      static_assert(not requires (T pack, E item) { pack.Remove(item); });
+      static_assert(not requires (T pack, E item) { pack.RemoveAt(Index::Front); });
+      static_assert(not requires (T pack, E item) { pack.Reserve(20); });
+      static_assert(not requires (T pack, E item) { pack.EnableOr(); });
+      static_assert(not requires (T pack, E item) { pack.IsOr(); });
+      static_assert(not requires (T pack, E item) { pack.Find(item); });
+      static_assert(not requires (T pack, E item) { pack.ForEach([](const int&) {}); });
+      static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
+   }
 
    constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);
    
@@ -213,28 +271,10 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
             }
          }
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token = "Test/" + NameOf<T>() + "::default_constructor";
-            T temp;
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               CTRACK_NAME_PERSIST(token.c_str());
-               new (&temp) T {};
-            }
-
-            constexpr Literal token_std = "Test/std::any::default_constructor";
-            ::std::any temp_std;
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               CTRACK_NAME(token_std.c_str());
-               new (&temp_std) ::std::any {};
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-
-            // Anyness::Any usually has one more member to zero on default-construction,
-            // so it's a bit slower than ::std::any.
-            REQUIRE(results.check_same(token.c_str(), token_std.c_str(), 40));
-         #endif
+         BenchmarkStd("Empty/DefaultConstructor", 30, 40,
+            T temp,                 new (&temp)     T{},
+            ::std::any temp_std,    new (&temp_std) ::std::any{}
+         );
       }
 
       WHEN("Assigned value by referral") {
@@ -242,33 +282,11 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
 
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Refer(element));
-         
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(" + NameOf<E>() + ")";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               T temp;
-               {
-                  CTRACK_NAME_PERSIST(token_assign.c_str());
-                  temp.Assign(*element);
-               }
-            }
 
-            constexpr auto token_std = "Test/Empty/std::any::operator = (" + NameOf<E>() + ")";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               ::std::any temp_std;
-               {
-                  CTRACK_NAME(token_std.c_str());
-                  temp_std = *element;
-               }
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-
-            // Anyness::Any usually has one more member to copy on assignment,
-            // so it's a bit slower than ::std::any.
-            REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-         #endif
+         BenchmarkStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
+            T temp,                 temp.Assign(*element),
+            ::std::any temp_std,    temp_std = *element
+         );
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -283,39 +301,16 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
 
             pack.AssignAbsorb(*element);
 
-            Any_Helper_TestSame(pack, *element);
-         
+            Any_Helper_TestSame(pack, *element);         
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            #if LANGULUS(BENCHMARK)
-               constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::AssignAbsorb(" + NameOf<E>() + ")";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  T temp;
-                  {
-                     CTRACK_NAME_PERSIST(token_assign.c_str());
-                     temp.AssignAbsorb(*element);
-                  }
-               }
-
-               constexpr Literal token_std = "Test/Empty/std::any::operator = (std::any)";
-               ::std::any src_std = 555;
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  ::std::any temp_std;
-                  {
-                     CTRACK_NAME(token_std.c_str());
-                     temp_std = src_std;
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-
-               // Anyness::Any usually has one more member to copy on assignment,
-               // so it's a bit slower than ::std::any.
-               REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-            #endif
+            [[maybe_unused]] ::std::any src_std{*element};
+            BenchmarkStd("Empty/AssignAbsorb(Refer(" + NameOf<E>() + "))", 30, 100,
+               T temp,              temp.AssignAbsorb(*element),
+               ::std::any temp_std, temp_std = src_std;
+            );
          }
       }
 
@@ -337,34 +332,10 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Refer(element));
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(::std::move(" + NameOf<E>() + "))";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               auto movable = *element;
-               T temp;
-               {
-                  CTRACK_NAME_PERSIST(token_assign.c_str());
-                  temp.Assign(::std::move(movable));
-               }
-            }
-
-            constexpr auto token_std = "Test/Empty/std::any::operator = (::std::move(" + NameOf<E>() + "))";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               auto movable = *element;
-               ::std::any temp_std;
-               {
-                  CTRACK_NAME(token_std.c_str());
-                  temp_std = ::std::move(movable);
-               }
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-
-            // Anyness::Any usually has one more member to copy on assignment,
-            // so it's a bit slower than ::std::any.
-            REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-         #endif
+         BenchmarkStd("Empty/Assign(Move(" + NameOf<E>() + "))", 30, 100,
+            auto movable = *element; T temp,                temp.Assign(::std::move(movable)),
+            auto movable = *element; ::std::any temp_std,   temp_std = ::std::move(movable)
+         );
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -379,44 +350,18 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
             }
 
             pack.AssignAbsorb(::std::move(movable));
-         
+
             if constexpr (CT::Container<E>)
                Any_CheckState_Default<TypeOf<E>>(movable);
-
             Any_Helper_TestSame(pack, *element);
-
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            #if LANGULUS(BENCHMARK)
-               constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::AssignAbsorb(::std::move(" + NameOf<E>() + "))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  auto movable = *element;
-                  T temp;
-                  {
-                     CTRACK_NAME_PERSIST(token_assign.c_str());
-                     temp.AssignAbsorb(::std::move(movable));
-                  }
-               }
-
-               constexpr Literal token_std = "Test/Empty/std::any::operator = (::std::move(std::any))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  ::std::any movable = 555;
-                  ::std::any temp_std;
-                  {
-                     CTRACK_NAME(token_std.c_str());
-                     temp_std = ::std::move(movable);
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-
-               // Anyness::Any usually has one more member to copy on assignment,
-               // so it's a bit slower than ::std::any.
-               REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-            #endif
+            BenchmarkStd("Empty/AssignAbsorb(Move(" + NameOf<E>() + "))", 30, 100,
+               auto movable = *element;  T temp,                temp.AssignAbsorb(::std::move(movable)),
+               ::std::any movable = 555; ::std::any temp_std,   temp_std = ::std::move(movable)
+            );
          }
       }
 
@@ -432,32 +377,10 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Copy(element));
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(Copy(" + NameOf<E>() + "))";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               T temp;
-               {
-                  CTRACK_NAME_PERSIST(token_assign.c_str());
-                  temp.Assign(Copy(*element));
-               }
-            }
-
-            constexpr auto token_std = "Test/Empty/std::any::operator = (" + NameOf<E>() + ")";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               ::std::any temp_std;
-               {
-                  CTRACK_NAME(token_std.c_str());
-                  temp_std = *element;
-               }
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-
-            // Anyness::Any usually has one more member to copy on assignment,
-            // so it's a bit slower than ::std::any.
-            REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-         #endif
+         BenchmarkStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
+            T temp,                 temp.Assign(Copy(*element)),
+            ::std::any temp_std,    temp_std = *element
+         );
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -482,33 +405,11 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            #if LANGULUS(BENCHMARK)
-               constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::AssignAbsorb(Copy(" + NameOf<E>() + "))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  T temp;
-                  {
-                     CTRACK_NAME_PERSIST(token_assign.c_str());
-                     temp.AssignAbsorb(Copy(*element));
-                  }
-               }
-
-               constexpr Literal token_std = "Test/Empty/std::any::operator = (std::any)";
-               ::std::any src_std = 555;
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  ::std::any temp_std;
-                  {
-                     CTRACK_NAME(token_std.c_str());
-                     temp_std = src_std;
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-
-               // Anyness::Any usually has one more member to copy on assignment,
-               // so it's a bit slower than ::std::any.
-               REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-            #endif
+            [[maybe_unused]] ::std::any src_std = *element;
+            BenchmarkStd("Empty/AssignAbsorb(Copy(" + NameOf<E>() + "))", 30, 100,
+               T temp,                 temp.AssignAbsorb(Copy(*element)),
+               ::std::any temp_std,    temp_std = src_std
+            );
          }
       }
 
@@ -524,32 +425,10 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Clone(element));
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(Clone(" + NameOf<E>() + "))";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               T temp;
-               {
-                  CTRACK_NAME_PERSIST(token_assign.c_str());
-                  temp.Assign(Clone(*element));
-               }
-            }
-
-            constexpr auto token_std = "Test/Empty/std::any::operator = (" + NameOf<E>() + ")";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               ::std::any temp_std;
-               {
-                  CTRACK_NAME(token_std.c_str());
-                  temp_std = *element;
-               }
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-
-            // Anyness::Any usually has one more member to copy on assignment,
-            // so it's a bit slower than ::std::any.
-            REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-         #endif
+         BenchmarkStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
+            T temp,                 temp.Assign(Clone(*element)),
+            ::std::any temp_std,    temp_std = *element
+         );
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -570,37 +449,14 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
             REQUIRE(pack.IsDeep() == element->IsDeep());
             REQUIRE_FALSE(pack.IsConstant());
             REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
-
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            #if LANGULUS(BENCHMARK)
-               constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::AssignAbsorb(Clone(" + NameOf<E>() + "))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  T temp;
-                  {
-                     CTRACK_NAME_PERSIST(token_assign.c_str());
-                     temp.AssignAbsorb(Clone(*element));
-                  }
-               }
-
-               constexpr Literal token_std = "Test/Empty/std::any::operator = (std::any)";
-               ::std::any src_std = 555;
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  ::std::any temp_std;
-                  {
-                     CTRACK_NAME(token_std.c_str());
-                     temp_std = src_std;
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-
-               // Anyness::Any usually has one more member to copy on assignment,
-               // so it's a bit slower than ::std::any.
-               REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-            #endif
+            [[maybe_unused]] ::std::any src_std = *element;
+            BenchmarkStd("Empty/AssignAbsorb(Clone(" + NameOf<E>() + "))", 30, 100,
+               T temp,                 temp.AssignAbsorb(Clone(*element)),
+               ::std::any temp_std,    temp_std = src_std
+            );
          }
       }
 
@@ -616,32 +472,10 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Disown(element));
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(Disown(" + NameOf<E>() + "))";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               T temp;
-               {
-                  CTRACK_NAME_PERSIST(token_assign.c_str());
-                  temp.Assign(Disown(*element));
-               }
-            }
-
-            constexpr auto token_std = "Test/Empty/std::any::operator = (" + NameOf<E>() + ")";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               ::std::any temp_std;
-               {
-                  CTRACK_NAME(token_std.c_str());
-                  temp_std = *element;
-               }
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-
-            // Anyness::Any usually has one more member to copy on assignment,
-            // so it's a bit slower than ::std::any.
-            REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-         #endif
+         BenchmarkStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
+            T temp,                 temp.Assign(Disown(*element)),
+            ::std::any temp_std,    temp_std = *element
+         );
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -662,37 +496,14 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
             REQUIRE(pack.IsDeep() == element->IsDeep());
             REQUIRE(pack.IsConstant() != element->IsConstant());
             REQUIRE(pack.GetUnconstrainedState() == element->GetUnconstrainedState());
-
             REQUIRE(pack.GetUses() == 0);
             REQUIRE_FALSE(pack.GetAllocation());
 
-            #if LANGULUS(BENCHMARK)
-               constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::AssignAbsorb(Disown(" + NameOf<E>() + "))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  T temp;
-                  {
-                     CTRACK_NAME_PERSIST(token_assign.c_str());
-                     temp.AssignAbsorb(Disown(*element));
-                  }
-               }
-
-               constexpr Literal token_std = "Test/Empty/std::any::operator = (std::any)";
-               ::std::any src_std = 555;
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  ::std::any temp_std;
-                  {
-                     CTRACK_NAME(token_std.c_str());
-                     temp_std = src_std;
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-
-               // Anyness::Any usually has one more member to copy on assignment,
-               // so it's a bit slower than ::std::any.
-               REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-            #endif
+            [[maybe_unused]] ::std::any src_std = *element;
+            BenchmarkStd("Empty/AssignAbsorb(Disown(" + NameOf<E>() + "))", 30, 100,
+               T temp,                 temp.AssignAbsorb(Disown(*element)),
+               ::std::any temp_std,    temp_std = src_std
+            );
          }
       }
 
@@ -709,38 +520,13 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
 
          if constexpr (CT::Container<E>)
             Any_CheckState_Abandoned<E>(movable);
-
          Any_CheckState_OwnedFull<E>(pack);
          Any_CheckState_ContainsOne(pack, Refer(element));
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Assign(Abandon(" + NameOf<E>() + "))";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               auto movable = *element;
-               T temp;
-               {
-                  CTRACK_NAME_PERSIST(token_assign.c_str());
-                  temp.Assign(Abandon(movable));
-               }
-            }
-
-            constexpr auto token_std = "Test/Empty/std::any::operator = (::std::move(" + NameOf<E>() + "))";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               auto movable = *element;
-               ::std::any temp_std;
-               {
-                  CTRACK_NAME(token_std.c_str());
-                  temp_std = ::std::move(movable);
-               }
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-
-            // Anyness::Any usually has one more member to copy on assignment,
-            // so it's a bit slower than ::std::any.
-            REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-         #endif
+         BenchmarkStd("Empty/Assign(Abandon(" + NameOf<E>() + "))", 30, 100,
+            auto movable = *element; T temp,                temp.Assign(Abandon(movable)),
+            auto movable = *element; ::std::any temp_std,   temp_std = ::std::move(movable)
+         );
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -758,47 +544,20 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
 
             if constexpr (CT::Container<E>)
                Any_CheckState_Abandoned<E>(movable);
-
             Any_Helper_TestSame(pack, *element);
-
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            #if LANGULUS(BENCHMARK)
-               constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::AssignAbsorb(Abandon(" + NameOf<E>() + "))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  auto movable = *element;
-                  T temp;
-                  {
-                     CTRACK_NAME_PERSIST(token_assign.c_str());
-                     temp.AssignAbsorb(Abandon(movable));
-                  }
-               }
-
-               constexpr Literal token_std = "Test/Empty/std::any::operator = (::std::move(std::any))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  ::std::any movable = 555;
-                  ::std::any temp_std;
-                  {
-                     CTRACK_NAME(token_std.c_str());
-                     temp_std = ::std::move(movable);
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-
-               // Anyness::Any usually has one more member to copy on assignment,
-               // so it's a bit slower than ::std::any.
-               REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-            #endif
+            BenchmarkStd("Empty/AssignAbsorb(Abandon(" + NameOf<E>() + "))", 30, 100,
+               auto movable = *element;  T temp,                temp.AssignAbsorb(Abandon(movable)),
+               ::std::any movable = 555; ::std::any temp_std,   temp_std = ::std::move(movable)
+            );
          }
       }
 
       WHEN("Ambigous assigned empty self") {
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
-         // ReSharper disable once CppIdenticalOperandsInBinaryExpression
          REQUIRE_NOTHROW(pack = pack);
          LglsDisableWarningPop
       }
@@ -823,20 +582,10 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
             REQUIRE(&*pack == &*instance);
          }
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token = "Test/Empty/" + NameOf<T>() + "::Emplace(" + NameOf<E>() + ")";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               auto movable = *element;
-               T temp;
-               {
-                  CTRACK_NAME_PERSIST(token.c_str());
-                  temp.Emplace(::std::move(movable));
-               }
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-         #endif
+         Benchmark("Empty/Emplace(" + NameOf<E>() + ")", 30,
+            auto movable = *element; T temp,
+            temp.Emplace(::std::move(movable))
+         );
       }
 
       WHEN("Emplace (insert, describe)") {
@@ -850,19 +599,10 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
             REQUIRE(pack.GetCount() == 1);
             REQUIRE(pack.GetReserved() >= 1);
 
-            #if LANGULUS(BENCHMARK)
-               constexpr auto token = "Test/Empty/" + NameOf<T>() + "::Emplace(Describe(" + NameOf<E>() + "))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  T temp;
-                  {
-                     CTRACK_NAME_PERSIST(token.c_str());
-                     temp.Emplace(Describe{descriptor});
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-            #endif
+            Benchmark("Empty/Emplace(Describe(" + NameOf<E>() + "))", 30,
+               T temp,
+               temp.Emplace(Describe{descriptor})
+            );
          }
          else if constexpr (CT::TypeErased<T>) {
             pack.template SetType<E>();
@@ -876,28 +616,10 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
 
          Any_CheckState_Default<E>(pack);
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Clear(" + NameOf<E>() + ")";
-            T temp;
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               CTRACK_NAME_PERSIST(token_assign.c_str());
-               temp.Clear();
-            }
-
-            constexpr auto token_std = "Test/Empty/std::any::reset(" + NameOf<E>() + ")";
-            ::std::any temp_std;
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               CTRACK_NAME(token_std.c_str());
-               temp_std.reset();
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-
-            // Anyness::Any usually has one more member to copy on assignment,
-            // so it's a bit slower than ::std::any.
-            REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-         #endif
+         BenchmarkStd("Empty/Clear(" + NameOf<E>() + ")", 30, 100,
+            T temp,                 temp.Clear(),
+            ::std::any temp_std,    temp_std.reset()
+         );
       }
 
       WHEN("Reset") {
@@ -905,28 +627,10 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
 
          Any_CheckState_Default<E>(pack);
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token_assign = "Test/Empty/" + NameOf<T>() + "::Reset(" + NameOf<E>() + ")";
-            T temp;
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               CTRACK_NAME_PERSIST(token_assign.c_str());
-               temp.Reset();
-            }
-
-            constexpr auto token_std = "Test/Empty/std::any::reset(" + NameOf<E>() + ")";
-            ::std::any temp_std;
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               CTRACK_NAME(token_std.c_str());
-               temp_std.reset();
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-
-            // Anyness::Any usually has one more member to copy on assignment,
-            // so it's a bit slower than ::std::any.
-            REQUIRE(results.check_same(token_assign.c_str(), token_std.c_str(), 100));
-         #endif
+         BenchmarkStd("Empty/Reset(" + NameOf<E>() + ")", 30, 100,
+            T temp,                 temp.Reset(),
+            ::std::any temp_std,    temp_std.reset()
+         );
       }
 
       WHEN("Referred empty") {
@@ -1004,29 +708,23 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
          static_assert(     T{} == T{} );
          static_assert(not (T{} != T{}));
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token1 = "Test/Empty/" + NameOf<T>() + "::operator == (" + NameOf<E>() + ")";
-            volatile bool dont_optimize = false;
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               CTRACK_NAME_PERSIST(token1.c_str());
-               dont_optimize |= (another_pack1 == another_pack2);
-            }
-
-            constexpr auto token2 = "Test/Empty/" + NameOf<T>() + "::operator != (" + NameOf<E>() + ")";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               CTRACK_NAME_PERSIST(token2.c_str());
-               dont_optimize |= (another_pack1 != another_pack2);
-            }
-
-            // Unfortunately, ::std::any aren't comparable when empty   
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-            REQUIRE(results.check_same(token1.c_str(), token2.c_str()));
-         #endif
+         // Unfortunately, ::std::any aren't comparable when empty      
+         [[maybe_unused]] volatile bool dont_optimize = false;
+         Benchmark("Empty/operator==(" + NameOf<E>() + ")", 30,
+            (void) 0, dont_optimize |= (another_pack1 == another_pack2)
+         );
+         Benchmark("Empty/operator!=(" + NameOf<E>() + ")", 30,
+            (void) 0, dont_optimize |= (another_pack1 != another_pack2)
+         );
       }
 
       WHEN("Contains when empty") {
          REQUIRE_FALSE(pack.Contains(*element));
+
+         [[maybe_unused]] volatile bool dont_optimize = false;
+         Benchmark("Empty/Contains(" + NameOf<E>() + ")", 30,
+            (void) 0, dont_optimize |= pack.Contains(*element)
+         );
       }
 
       if constexpr (Exact<E, Text>) {
@@ -1085,72 +783,34 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
          Any_CheckState_ContainsOne(pack_abandoned, Refer(originalElement));
          Any_CheckState_ContainsOne(pack_disowned,  Disown(originalElement));
 
-         #if LANGULUS(BENCHMARK)
-            constexpr auto token = "Test/" + NameOf<T>() + "::piecewise_constructor(" + NameOf<E>() + ")";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               T temp;
-               {
-                  CTRACK_NAME_PERSIST(token.c_str());
-                  new (&temp) T {Piecewise, *originalElement};
-               }
-            }
-
-            constexpr auto token_std = "Test/std::any::piecewise_constructor(" + NameOf<E>() + ")";
-            for (int i = 0; i < BenchmarkCycles; i += 1) {
-               ::std::any temp_std;
-               {
-                  CTRACK_NAME(token_std.c_str());
-                  new (&temp_std) ::std::any {*originalElement};
-               }
-            }
-
-            auto results = ctrack::result_get_detail_table();
-            results.check_highscore();
-            REQUIRE(results.check_same(token.c_str(), token_std.c_str(), 400));
-         #endif
+         BenchmarkStd("Empty/PiecewiseConstructor(" + NameOf<E>() + ")", 30, 400,
+            T temp,              (new (&temp)     T{Piecewise, *originalElement}),
+            ::std::any temp_std, new (&temp_std) ::std::any{*originalElement}
+         );
       }
 
       WHEN("Assigned compatible referred value") {
-         auto assign_refer = [&](auto& a, const char* tag) {
+         auto assign_refer = [&](auto& a, const char* intent) {
             a.Assign(*element);
+
             if constexpr (CT::Container<E>)
                Any_CheckState_OwnedFull<TypeOf<E>>(*element);
             Any_CheckState_OwnedFull<E>(a);
             Any_CheckState_ContainsOne(a, Refer(element));
 
-            #if LANGULUS(BENCHMARK)
-               ::std::string token = ::std::string("Test/Full/") + tag + "/" + NameOf<T>().c_str() + "::Assign(" + NameOf<E>().c_str() + ")";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  a.Assign(*element);
-                  {
-                     CTRACK_NAME_PERSIST(token.c_str());
-                     a.Assign(*originalElement);
-                  }
-               }
-
-               constexpr auto token_std = "Test/Full/std::any::operator = (" + NameOf<E>() + ")";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  ::std::any temp_std = *element;
-                  {
-                     CTRACK_NAME(token_std.c_str());
-                     temp_std = *originalElement;
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-               REQUIRE(results.check_same(token.c_str(), token_std.c_str(), 100));
-            #endif
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/Assign(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               a.Assign(*element),              a.Assign(*originalElement),
+               ::std::any temp_std = *element,  temp_std = *originalElement
+            );
          };
 
-         assign_refer(pack_referred1, "Referred");
-         assign_refer(pack_referred2, "Referred(alt)");
-         assign_refer(pack_copied,    "Copied");
-         assign_refer(pack_cloned,    "Cloned");
-         assign_refer(pack_moved1,    "Moved");
-         assign_refer(pack_moved2,    "Moved(alt)");
-         assign_refer(pack_abandoned, "Abandoned");
-         assign_refer(pack_disowned,  "Disowned");
+         assign_refer(pack_referred1, "Refer");
+         assign_refer(pack_copied,    "Copy");
+         assign_refer(pack_cloned,    "Clone");
+         assign_refer(pack_moved1,    "Move");
+         assign_refer(pack_abandoned, "Abandon");
+         assign_refer(pack_disowned,  "Disown");
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -1173,91 +833,53 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
                return;
             }
 
-            auto absorb_refer = [&](auto& a, const char* tag) {
+            auto absorb_refer = [&](auto& a, const char* intent) {
                a.AssignAbsorb(*element);
+
                Any_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == element->GetUses());
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               #if LANGULUS(BENCHMARK)
-                  ::std::string token = ::std::string("Test/Full/") + tag + "/" + NameOf<T>().c_str() + "::AssignAbsorb(" + NameOf<E>().c_str() + ")";
-                  for (int i = 0; i < BenchmarkCycles; i += 1) {
-                     a.AssignAbsorb(*element);
-                     {
-                        CTRACK_NAME_PERSIST(token.c_str());
-                        a.AssignAbsorb(*originalElement);
-                     }
-                  }
-
-                  constexpr auto token_std = "Test/Full/std::any::operator = (std::any(" + NameOf<E>() + "))";
-                  for (int i = 0; i < BenchmarkCycles; i += 1) {
-                     ::std::any temp_std1 = *element;
-                     ::std::any temp_std2 = *originalElement;
-                     {
-                        CTRACK_NAME(token_std.c_str());
-                        temp_std1 = temp_std2;
-                     }
-                  }
-
-                  auto results = ctrack::result_get_detail_table();
-                  results.check_highscore();
-                  REQUIRE(results.check_same(token.c_str(), token_std.c_str(), 100));
-               #endif
+               BenchmarkStd(
+                  std::string("Piecewise/") + intent + "/AssignAbsorb(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+                  a.AssignAbsorb(*element),                 a.AssignAbsorb(*originalElement),
+                  ::std::any temp_std1 = *element;
+                  ::std::any temp_std2 = *originalElement,  temp_std1 = temp_std2
+               );
             };
 
-            absorb_refer(pack_referred1, "Referred");
-            absorb_refer(pack_referred2, "Referred(alt)");
-            absorb_refer(pack_copied,    "Copied");
-            absorb_refer(pack_cloned,    "Cloned");
-            absorb_refer(pack_moved1,    "Moved");
-            absorb_refer(pack_moved2,    "Moved(alt)");
-            absorb_refer(pack_abandoned, "Abandoned");
-            absorb_refer(pack_disowned,  "Disowned");
+            absorb_refer(pack_referred1, "Refer");
+            absorb_refer(pack_copied,    "Copy");
+            absorb_refer(pack_cloned,    "Clone");
+            absorb_refer(pack_moved1,    "Move");
+            absorb_refer(pack_abandoned, "Abandon");
+            absorb_refer(pack_disowned,  "Disown");
          }
       }
       
       WHEN("Assigned compatible cloned value") {
-         auto assign_clone = [&](auto& a, const char* tag) {
+         auto assign_clone = [&](auto& a, const char* intent) {
             a.Assign(Clone(*element));
+
             if constexpr (CT::Container<E>)
                Any_CheckState_OwnedFull<TypeOf<E>>(*element);
             Any_CheckState_OwnedFull<E>(a);
             Any_CheckState_ContainsOne(a, Clone(element));
 
-            #if LANGULUS(BENCHMARK)
-               ::std::string token = ::std::string("Test/Full/") + tag + "/" + NameOf<T>().c_str() + "::Assign(Clone(" + NameOf<E>().c_str() + "))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  a.Assign(Clone(*element));
-                  {
-                     CTRACK_NAME_PERSIST(token.c_str());
-                     a.Assign(Clone(*originalElement));
-                  }
-               }
-
-               constexpr auto token_std = "Test/Full/std::any::operator = (" + NameOf<E>() + ")";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  ::std::any temp_std = *element;
-                  {
-                     CTRACK_NAME(token_std.c_str());
-                     temp_std = *originalElement;
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-               REQUIRE(results.check_same(token.c_str(), token_std.c_str(), 100));
-            #endif
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/Assign(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               a.Assign(Clone(*element)),          a.Assign(Clone(*originalElement)),
+               ::std::any temp_std = *element,     temp_std = *originalElement
+            );
          };
 
-         assign_clone(pack_referred1, "Referred");
-         assign_clone(pack_referred2, "Referred(alt)");
-         assign_clone(pack_copied,    "Copied");
-         assign_clone(pack_cloned,    "Cloned");
-         assign_clone(pack_moved1,    "Moved");
-         assign_clone(pack_moved2,    "Moved(alt)");
-         assign_clone(pack_abandoned, "Abandoned");
-         assign_clone(pack_disowned,  "Disowned");
+         assign_clone(pack_referred1, "Refer");
+         assign_clone(pack_copied,    "Copy");
+         assign_clone(pack_cloned,    "Clone");
+         assign_clone(pack_moved1,    "Move");
+         assign_clone(pack_abandoned, "Abandon");
+         assign_clone(pack_disowned,  "Disown");
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -1280,92 +902,54 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
                return;
             }
 
-            auto absorb_clone = [&](auto& a, const char* tag) {
+            auto absorb_clone = [&](auto& a, const char* intent) {
                a.AssignAbsorb(Clone(*element));
+
                if constexpr (CT::Container<E>)
                   Any_CheckState_OwnedFull<TypeOf<E>>(*element);
                Any_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               #if LANGULUS(BENCHMARK)
-                  ::std::string token = ::std::string("Test/Full/") + tag + "/" + NameOf<T>().c_str() + "::AssignAbsorb(Clone(" + NameOf<E>().c_str() + "))";
-                  for (int i = 0; i < BenchmarkCycles; i += 1) {
-                     a.AssignAbsorb(Clone(*element));
-                     {
-                        CTRACK_NAME_PERSIST(token.c_str());
-                        a.AssignAbsorb(Clone(*originalElement));
-                     }
-                  }
-
-                  constexpr auto token_std = "Test/Full/std::any::operator = (std::any(" + NameOf<E>() + "))";
-                  for (int i = 0; i < BenchmarkCycles; i += 1) {
-                     ::std::any temp_std1 = *element;
-                     ::std::any temp_std2 = *originalElement;
-                     {
-                        CTRACK_NAME(token_std.c_str());
-                        temp_std1 = temp_std2;
-                     }
-                  }
-
-                  auto results = ctrack::result_get_detail_table();
-                  results.check_highscore();
-                  REQUIRE(results.check_same(token.c_str(), token_std.c_str(), 100));
-               #endif
+               BenchmarkStd(
+                  std::string("Piecewise/") + intent + "/AssignAbsorb(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+                  a.AssignAbsorb(Clone(*element)),          a.AssignAbsorb(Clone(*originalElement)),
+                  ::std::any temp_std1 = *element;
+                  ::std::any temp_std2 = *originalElement,  temp_std1 = temp_std2
+               );
             };
 
-            absorb_clone(pack_referred1, "Referred");
-            absorb_clone(pack_referred2, "Referred(alt)");
-            absorb_clone(pack_copied,    "Copied");
-            absorb_clone(pack_cloned,    "Cloned");
-            absorb_clone(pack_moved1,    "Moved");
-            absorb_clone(pack_moved2,    "Moved(alt)");
-            absorb_clone(pack_abandoned, "Abandoned");
-            absorb_clone(pack_disowned,  "Disowned");
+            absorb_clone(pack_referred1, "Refer");
+            absorb_clone(pack_copied,    "Copy");
+            absorb_clone(pack_cloned,    "Clone");
+            absorb_clone(pack_moved1,    "Move");
+            absorb_clone(pack_abandoned, "Abandon");
+            absorb_clone(pack_disowned,  "Disown");
          }
       }
 
       WHEN("Assigned compatible copied value") {
-         auto assign_copy = [&](auto& a, const char* tag) {
+         auto assign_copy = [&](auto& a, const char* intent) {
             a.Assign(Copy(*element));
+
             if constexpr (CT::Container<E>)
                Any_CheckState_OwnedFull<TypeOf<E>>(*element);
             Any_CheckState_OwnedFull<E>(a);
             Any_CheckState_ContainsOne(a, Refer(element));
 
-            #if LANGULUS(BENCHMARK)
-               ::std::string token = ::std::string("Test/Full/") + tag + "/" + NameOf<T>().c_str() + "::Assign(Copy(" + NameOf<E>().c_str() + "))";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  a.Assign(Copy(*element));
-                  {
-                     CTRACK_NAME_PERSIST(token.c_str());
-                     a.Assign(Copy(*originalElement));
-                  }
-               }
-
-               constexpr auto token_std = "Test/Full/std::any::operator = (" + NameOf<E>() + ")";
-               for (int i = 0; i < BenchmarkCycles; i += 1) {
-                  ::std::any temp_std = *element;
-                  {
-                     CTRACK_NAME(token_std.c_str());
-                     temp_std = *originalElement;
-                  }
-               }
-
-               auto results = ctrack::result_get_detail_table();
-               results.check_highscore();
-               REQUIRE(results.check_same(token.c_str(), token_std.c_str(), 100));
-            #endif
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/Assign(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               a.Assign(Copy(*element)),        a.Assign(Copy(*originalElement)),
+               ::std::any temp_std = *element,  temp_std = *originalElement
+            );
          };
 
-         assign_copy(pack_referred1, "Referred");
-         assign_copy(pack_referred2, "Referred(alt)");
-         assign_copy(pack_copied,    "Copied");
-         assign_copy(pack_cloned,    "Cloned");
-         assign_copy(pack_moved1,    "Moved");
-         assign_copy(pack_moved2,    "Moved(alt)");
-         assign_copy(pack_abandoned, "Abandoned");
-         assign_copy(pack_disowned,  "Disowned");
+         assign_copy(pack_referred1, "Refer");
+         assign_copy(pack_copied,    "Copy");
+         assign_copy(pack_cloned,    "Clone");
+         assign_copy(pack_moved1,    "Move");
+         assign_copy(pack_abandoned, "Abandon");
+         assign_copy(pack_disowned,  "Disown");
       }
 
       if constexpr (CT::ContainsOne<E>) {
@@ -1388,83 +972,74 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
                return;
             }
 
-            auto absorb_copy = [&](auto& a, const char* tag) {
+            auto absorb_copy = [&](auto& a, const char* intent) {
                a.AssignAbsorb(Copy(*element));
+
                if constexpr (CT::Container<E>)
                   Any_CheckState_OwnedFull<TypeOf<E>>(*element);
                Any_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               #if LANGULUS(BENCHMARK)
-                  ::std::string token = ::std::string("Test/Full/") + tag + "/" + NameOf<T>().c_str() + "::AssignAbsorb(Copy(" + NameOf<E>().c_str() + "))";
-                  for (int i = 0; i < BenchmarkCycles; i += 1) {
-                     a.AssignAbsorb(Copy(*element));
-                     {
-                        CTRACK_NAME_PERSIST(token.c_str());
-                        a.AssignAbsorb(Copy(*originalElement));
-                     }
-                  }
-
-                  constexpr auto token_std = "Test/Full/std::any::operator = (std::any(" + NameOf<E>() + "))";
-                  for (int i = 0; i < BenchmarkCycles; i += 1) {
-                     ::std::any temp_std1 = *element;
-                     ::std::any temp_std2 = *originalElement;
-                     {
-                        CTRACK_NAME(token_std.c_str());
-                        temp_std1 = temp_std2;
-                     }
-                  }
-
-                  auto results = ctrack::result_get_detail_table();
-                  results.check_highscore();
-                  REQUIRE(results.check_same(token.c_str(), token_std.c_str(), 100));
-               #endif
+               BenchmarkStd(
+                  std::string("Piecewise/") + intent + "/AssignAbsorb(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+                  a.AssignAbsorb(Copy(*element)),           a.AssignAbsorb(Copy(*originalElement)),
+                  ::std::any temp_std1 = *element;
+                  ::std::any temp_std2 = *originalElement,  temp_std1 = temp_std2
+               );
             };
 
-            absorb_copy(pack_referred1, "Referred");
-            absorb_copy(pack_referred2, "Referred(alt)");
-            absorb_copy(pack_copied,    "Copied");
-            absorb_copy(pack_cloned,    "Cloned");
-            absorb_copy(pack_moved1,    "Moved");
-            absorb_copy(pack_moved2,    "Moved(alt)");
-            absorb_copy(pack_abandoned, "Abandoned");
-            absorb_copy(pack_disowned,  "Disowned");
+            absorb_copy(pack_referred1, "Refer");
+            absorb_copy(pack_copied,    "Copy");
+            absorb_copy(pack_cloned,    "Clone");
+            absorb_copy(pack_moved1,    "Move");
+            absorb_copy(pack_abandoned, "Abandon");
+            absorb_copy(pack_disowned,  "Disown");
          }
       }
 
       WHEN("Assigned compatible moved value") {
-         #define assign_move(a) { \
-            auto movable = *element; \
-            a.Assign(::std::move(movable)); \
-            if constexpr (CT::Container<E>) \
-               Any_CheckState_Default<TypeOf<E>>(movable); \
-            Any_CheckState_OwnedFull<E>(a); \
-            Any_CheckState_ContainsOne(a, Refer(element)); \
-         }
+         auto assign_move = [&](auto& a, const char* intent) {
+            auto movable = *element;
+            a.Assign(::std::move(movable));
 
-         assign_move(pack_referred1);
-         assign_move(pack_referred2);
-         assign_move(pack_copied);
-         assign_move(pack_cloned);
-         assign_move(pack_moved1);
-         assign_move(pack_moved2);
-         assign_move(pack_abandoned);
-         assign_move(pack_disowned);
+            if constexpr (CT::Container<E>)
+               Any_CheckState_Default<TypeOf<E>>(movable);
+            Any_CheckState_OwnedFull<E>(a);
+            Any_CheckState_ContainsOne(a, Refer(element));
+
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/Assign(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               auto movable1 = *element;
+               auto movable2 = *originalElement;
+               a.Assign(Move(movable1)),                       a.Assign(Move(movable2)),
+               auto movable1 = *element;
+               auto movable2 = *originalElement;
+               ::std::any temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
+            );
+         };
+
+         assign_move(pack_referred1, "Refer");
+         assign_move(pack_copied,    "Copy");
+         assign_move(pack_cloned,    "Clone");
+         assign_move(pack_moved1,    "Move");
+         assign_move(pack_abandoned, "Abandon");
+         assign_move(pack_disowned,  "Disown");
       }
 
       if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed moved container") {
             if (not pack_referred1.IsSame(element->GetType())) {
-               #define misabsorb_move(a) { \
-                  auto movable = *element; \
-                  REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable))); \
-                  Any_CheckState_OwnedFull<E>(a); \
-                  Any_CheckState_ContainsOne(a, Refer(originalElement)); \
-                  Any_CheckState_OwnedFull<int>(movable); \
-                  REQUIRE(movable.GetUses() == 2); \
-                  REQUIRE(movable.template As<int>() == 555); \
-               }
+               auto misabsorb_move = [&](auto& a) {
+                  auto movable = *element;
+                  REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
+
+                  Any_CheckState_OwnedFull<E>(a);
+                  Any_CheckState_ContainsOne(a, Refer(originalElement));
+                  Any_CheckState_OwnedFull<int>(movable);
+                  REQUIRE(movable.GetUses() == 2);
+                  REQUIRE(movable.template As<int>() == 555);
+               };
 
                misabsorb_move(pack_referred1);
                misabsorb_move(pack_referred2);
@@ -1475,54 +1050,67 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
                misabsorb_move(pack_abandoned);
                misabsorb_move(pack_disowned);
                return;
-            }
+            };
 
-            #define absorb_move(a) { \
-               auto movable = *element; \
-               a.AssignAbsorb(::std::move(movable)); \
-               if constexpr (CT::Container<E>) \
-                  Any_CheckState_Default<TypeOf<E>>(movable); \
-               Any_Helper_TestSame(a, *element); \
-               REQUIRE(a.GetUses() == 2); \
-               REQUIRE(a.GetAllocation() == element->GetAllocation()); \
-            }
+            auto absorb_move = [&](auto& a, const char* intent) {
+               auto movable = *element;
+               a.AssignAbsorb(::std::move(movable));
 
-            absorb_move(pack_referred1);
-            absorb_move(pack_referred2);
-            absorb_move(pack_copied);
-            absorb_move(pack_cloned);
-            absorb_move(pack_moved1);
-            absorb_move(pack_moved2);
-            absorb_move(pack_abandoned);
-            absorb_move(pack_disowned);
+               if constexpr (CT::Container<E>)
+                  Any_CheckState_Default<TypeOf<E>>(movable);
+               Any_Helper_TestSame(a, *element);
+               REQUIRE(a.GetUses() == 2);
+               REQUIRE(a.GetAllocation() == element->GetAllocation());
+
+               BenchmarkStd(
+                  std::string("Piecewise/") + intent + "/AssignAbsorb(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+                  T movable1 = *element;
+                  T movable2 = *originalElement;
+                  a.AssignAbsorb(Move(movable1)),           a.AssignAbsorb(Move(movable2)),
+                  ::std::any movable1 = *element;
+                  ::std::any movable2 = *originalElement,   movable1 = ::std::move(movable2)
+               );
+            };
+
+            absorb_move(pack_referred1, "Refer");
+            absorb_move(pack_copied,    "Copy");
+            absorb_move(pack_cloned,    "Clone");
+            absorb_move(pack_moved1,    "Move");
+            absorb_move(pack_abandoned, "Abandon");
+            absorb_move(pack_disowned,  "Disown");
          }
       }
 
       WHEN("Assigned compatible disowned value") {
-         #define assign_disown(a) { \
-            a.Assign(Disown(*element)); \
-            Any_CheckState_OwnedFull<E>(a); \
-            Any_CheckState_ContainsOne(a, Disown(element)); \
-         }
+         auto assign_disown = [&](auto& a, const char* intent) {
+            a.Assign(Disown(*element));
 
-         assign_disown(pack_referred1);
-         assign_disown(pack_referred2);
-         assign_disown(pack_copied);
-         assign_disown(pack_cloned);
-         assign_disown(pack_moved1);
-         assign_disown(pack_moved2);
-         assign_disown(pack_abandoned);
-         assign_disown(pack_disowned);
+            Any_CheckState_OwnedFull<E>(a);
+            Any_CheckState_ContainsOne(a, Disown(element));
+
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/Assign(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               a.Assign(Disown(*element)),         a.Assign(Disown(*originalElement)),
+               ::std::any temp_std = *element,     temp_std = *originalElement
+            );
+         };
+
+         assign_disown(pack_referred1, "Refer");
+         assign_disown(pack_copied,    "Copy");
+         assign_disown(pack_cloned,    "Clone");
+         assign_disown(pack_moved1,    "Move");
+         assign_disown(pack_abandoned, "Abandon");
+         assign_disown(pack_disowned,  "Disown");
       }
 
       if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed disowned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
-               #define misabsorb_disown(a) { \
-                  REQUIRE_THROWS(a.AssignAbsorb(Disown(*element))); \
-                  Any_CheckState_OwnedFull<E>(a); \
-                  Any_CheckState_ContainsOne(a, Disown(originalElement)); \
-               }
+               auto misabsorb_disown = [&](auto& a) {
+                  REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
+                  Any_CheckState_OwnedFull<E>(a);
+                  Any_CheckState_ContainsOne(a, Disown(originalElement));
+               };
 
                misabsorb_disown(pack_referred1);
                misabsorb_disown(pack_referred2);
@@ -1535,61 +1123,77 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
                return;
             }
 
-            #define absorb_disown(a) { \
-               a.AssignAbsorb(Disown(*element)); \
-               REQUIRE(a.GetRaw() == element->GetRaw()); \
-               REQUIRE(a.IsExact(element->GetType())); \
-               REQUIRE(a == *element); \
-               REQUIRE(a.IsDeep() == element->IsDeep()); \
-               REQUIRE(a.IsConstant() != element->IsConstant()); \
-               REQUIRE(a.GetUnconstrainedState() == element->GetUnconstrainedState()); \
-               REQUIRE(a.GetUses() == 0); \
-               REQUIRE_FALSE(a.GetAllocation()); \
-            }
+            auto absorb_disown = [&](auto& a, const char* intent) {
+               a.AssignAbsorb(Disown(*element));
 
-            absorb_disown(pack_referred1);
-            absorb_disown(pack_referred2);
-            absorb_disown(pack_copied);
-            absorb_disown(pack_cloned);
-            absorb_disown(pack_moved1);
-            absorb_disown(pack_moved2);
-            absorb_disown(pack_abandoned);
-            absorb_disown(pack_disowned);
+               REQUIRE(a.GetRaw() == element->GetRaw());
+               REQUIRE(a.IsExact(element->GetType()));
+               REQUIRE(a == *element);
+               REQUIRE(a.IsDeep() == element->IsDeep());
+               REQUIRE(a.IsConstant() != element->IsConstant());
+               REQUIRE(a.GetUnconstrainedState() == element->GetUnconstrainedState());
+               REQUIRE(a.GetUses() == 0);
+               REQUIRE_FALSE(a.GetAllocation());
+
+               BenchmarkStd(
+                  std::string("Piecewise/") + intent + "/AssignAbsorb(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+                  a.AssignAbsorb(Disown(*element)),         a.AssignAbsorb(Disown(*originalElement)),
+                  ::std::any temp_std1 = *element;
+                  ::std::any temp_std2 = *originalElement,  temp_std1 = temp_std2
+               );
+            };
+
+            absorb_disown(pack_referred1, "Refer");
+            absorb_disown(pack_copied,    "Copy");
+            absorb_disown(pack_cloned,    "Clone");
+            absorb_disown(pack_moved1,    "Move");
+            absorb_disown(pack_abandoned, "Abandon");
+            absorb_disown(pack_disowned,  "Disown");
          }
       }
       
       WHEN("Assigned compatible abandoned value") {
-         #define assign_abandon(a) { \
-            auto movable = *element; \
-            a.Assign(Abandon(movable)); \
-            if constexpr (CT::Container<E>) \
-               Any_CheckState_Abandoned<TypeOf<E>>(movable); \
-            Any_CheckState_OwnedFull<E>(a); \
-            Any_CheckState_ContainsOne(a, Refer(element)); \
-         }
+         auto assign_abandon = [&](auto& a, const char* intent) {
+            auto movable = *element;
+            a.Assign(Abandon(movable));
 
-         assign_abandon(pack_referred1);
-         assign_abandon(pack_referred2);
-         assign_abandon(pack_copied);
-         assign_abandon(pack_cloned);
-         assign_abandon(pack_moved1);
-         assign_abandon(pack_moved2);
-         assign_abandon(pack_abandoned);
-         assign_abandon(pack_disowned);
+            if constexpr (CT::Container<E>)
+               Any_CheckState_Abandoned<TypeOf<E>>(movable);
+            Any_CheckState_OwnedFull<E>(a);
+            Any_CheckState_ContainsOne(a, Refer(element));
+
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/Assign(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+               auto movable1 = *element;
+               auto movable2 = *originalElement;
+               a.Assign(Abandon(movable1)),                    a.Assign(Abandon(movable2)),
+               auto movable1 = *element;
+               auto movable2 = *originalElement;
+               ::std::any temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
+            );
+         };
+
+         assign_abandon(pack_referred1, "Refer");
+         assign_abandon(pack_copied,    "Copy");
+         assign_abandon(pack_cloned,    "Clone");
+         assign_abandon(pack_moved1,    "Move");
+         assign_abandon(pack_abandoned, "Abandon");
+         assign_abandon(pack_disowned,  "Disown");
       }
 
       if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed abandoned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
-               #define misabsorb_abandon(a) { \
-                  auto movable = *element; \
-                  REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable))); \
-                  Any_CheckState_OwnedFull<E>(a); \
-                  Any_CheckState_ContainsOne(a, Refer(originalElement)); \
-                  Any_CheckState_OwnedFull<int>(movable); \
-                  REQUIRE(movable.GetUses() == 2); \
-                  REQUIRE(movable.template As<int>() == 555); \
-               }
+               auto misabsorb_abandon = [&](auto& a) {
+                  auto movable = *element;
+                  REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable)));
+
+                  Any_CheckState_OwnedFull<E>(a);
+                  Any_CheckState_ContainsOne(a, Refer(originalElement));
+                  Any_CheckState_OwnedFull<int>(movable);
+                  REQUIRE(movable.GetUses() == 2);
+                  REQUIRE(movable.template As<int>() == 555);
+               };
 
                misabsorb_abandon(pack_referred1);
                misabsorb_abandon(pack_referred2);
@@ -1602,24 +1206,33 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
                return;
             }
 
-            #define absorb_abandon(a) { \
-               auto movable = *element; \
-               a.AssignAbsorb(Abandon(movable)); \
-               if constexpr (CT::Container<E>) \
-                  Any_CheckState_Abandoned<TypeOf<E>>(movable); \
-               Any_Helper_TestSame(a, *element); \
-               REQUIRE(a.GetUses() == 2); \
-               REQUIRE(a.GetAllocation() == element->GetAllocation()); \
-            }
+            auto absorb_abandon = [&](auto& a, const char* intent) {
+               auto movable = *element;
+               a.AssignAbsorb(Abandon(movable));
 
-            absorb_abandon(pack_referred1);
-            absorb_abandon(pack_referred2);
-            absorb_abandon(pack_copied);
-            absorb_abandon(pack_cloned);
-            absorb_abandon(pack_moved1);
-            absorb_abandon(pack_moved2);
-            absorb_abandon(pack_abandoned);
-            absorb_abandon(pack_disowned);
+               if constexpr (CT::Container<E>)
+                  Any_CheckState_Abandoned<TypeOf<E>>(movable);
+               Any_Helper_TestSame(a, *element);
+               REQUIRE(a.GetUses() == 2);
+               REQUIRE(a.GetAllocation() == element->GetAllocation());
+
+               BenchmarkStd(
+                  std::string("Piecewise/") + intent + "/AssignAbsorb(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
+                  T movable1 = *element;
+                  T movable2 = *originalElement;
+                  a.AssignAbsorb(Abandon(movable1)),              a.AssignAbsorb(Abandon(movable2)),
+                  ::std::any movable1 = *element;
+                  ::std::any movable2 = *originalElement;
+                  ::std::any temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
+               );
+            };
+
+            absorb_abandon(pack_referred1, "Refer");
+            absorb_abandon(pack_copied,    "Copy");
+            absorb_abandon(pack_cloned,    "Clone");
+            absorb_abandon(pack_moved1,    "Move");
+            absorb_abandon(pack_abandoned, "Abandon");
+            absorb_abandon(pack_disowned,  "Disown");
          }
       }
 
@@ -1825,108 +1438,112 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
       }
       
       WHEN("Emplace (overwrite)") {
-         #define emplace_overwrite(a) { \
-            ScopedE i666{666}; \
-            const auto i666backup = *i666; \
-            decltype(auto) instance = a.Emplace(::std::move(*i666)); \
-            Any_CheckState_OwnedFull<E>(a); \
-            REQUIRE(instance.CompareOneEqual(i666backup)); \
-            REQUIRE(a.GetCount() == 1); \
-            REQUIRE(a.GetReserved() >= 1); \
-            if constexpr (CT::Typed<T>) { \
-               REQUIRE(*a == i666backup); \
-               REQUIRE(&*a == &*instance); \
-            } \
-         }
+         auto emplace_overwrite = [&](auto& a, const char* intent) {
+            ScopedE i666{666};
+            const auto i666backup = *i666;
+            decltype(auto) instance = a.Emplace(::std::move(*i666));
 
-         emplace_overwrite(pack_referred1);
-         emplace_overwrite(pack_referred2);
-         emplace_overwrite(pack_copied);
-         emplace_overwrite(pack_cloned);
-         emplace_overwrite(pack_moved1);
-         emplace_overwrite(pack_moved2);
-         emplace_overwrite(pack_abandoned);
-         emplace_overwrite(pack_disowned);
+            Any_CheckState_OwnedFull<E>(a);
+            REQUIRE(instance.CompareOneEqual(i666backup));
+            REQUIRE(a.GetCount() == 1);
+            REQUIRE(a.GetReserved() >= 1);
+            if constexpr (CT::Typed<T>) {
+               REQUIRE(*a == i666backup);
+               REQUIRE(&*a == &*instance);
+            }
+
+            Benchmark(
+               std::string("Piecewise/") + intent + "/Emplace(" + static_cast<std::string>(NameOf<E>()) + ")", 30,
+               auto movable1 = *element;
+               auto movable2 = *originalElement;
+               a.Emplace(::std::move(movable1)),      a.Emplace(::std::move(movable2))
+            );
+         };
+
+         emplace_overwrite(pack_referred1, "Refer");
+         emplace_overwrite(pack_copied,    "Copy");
+         emplace_overwrite(pack_cloned,    "Clone");
+         emplace_overwrite(pack_moved1,    "Move");
+         emplace_overwrite(pack_abandoned, "Abandon");
+         emplace_overwrite(pack_disowned,  "Disown");
       }
 
       WHEN("Emplace (overwrite, describe)") {
-         #define emplace_overwrite_describe(a) { \
-            ScopedE i666{666}; \
-            const auto i666backup = *i666; \
-            Many descriptor {Piecewise, ::std::move(*i666)}; \
-            if constexpr (CT::DescribeConstructible<E> and not CT::Container<T>) { \
-               decltype(auto) instance = a.Emplace(Describe{descriptor}); \
-               Any_CheckState_OwnedFull<E>(a); \
-               REQUIRE(instance.CompareOneEqual(i666backup)); \
-               REQUIRE(a.GetCount() == 1); \
-               REQUIRE(a.GetReserved() >= 1); \
-            } \
-            else if constexpr (CT::TypeErased<T>) { \
-               REQUIRE_THROWS(a.Emplace(Describe{descriptor})); \
-               Any_CheckState_Default<E>(a, true); \
-            } \
-         }
+         auto emplace_overwrite_describe = [&](auto& a, const char* intent) {
+            ScopedE i666{666};
+            const auto i666backup = *i666;
+            Many descriptor {Piecewise, ::std::move(*i666)};
 
-         emplace_overwrite_describe(pack_referred1);
-         emplace_overwrite_describe(pack_referred2);
-         emplace_overwrite_describe(pack_copied);
-         emplace_overwrite_describe(pack_cloned);
-         emplace_overwrite_describe(pack_moved1);
-         emplace_overwrite_describe(pack_moved2);
-         emplace_overwrite_describe(pack_abandoned);
-         emplace_overwrite_describe(pack_disowned);
+            if constexpr (CT::DescribeConstructible<E> and not CT::Container<T>) {
+               decltype(auto) instance = a.Emplace(Describe{descriptor});
+
+               Any_CheckState_OwnedFull<E>(a);
+               REQUIRE(instance.CompareOneEqual(i666backup));
+               REQUIRE(a.GetCount() == 1);
+               REQUIRE(a.GetReserved() >= 1);
+
+               Benchmark(
+                  std::string("Piecewise/") + intent + "/Emplace(Describe(" + static_cast<std::string>(NameOf<E>()) + "))", 30,
+                  auto movable1 = *element;
+                  a.Emplace(::std::move(movable1)),      a.Emplace(Describe{descriptor})
+               );
+            }
+            else if constexpr (CT::TypeErased<T>) {
+               REQUIRE_THROWS(a.Emplace(Describe{descriptor}));
+
+               Any_CheckState_Default<E>(a, true);
+            }
+         };
+
+         emplace_overwrite_describe(pack_referred1, "Refer");
+         emplace_overwrite_describe(pack_copied,    "Copy");
+         emplace_overwrite_describe(pack_cloned,    "Clone");
+         emplace_overwrite_describe(pack_moved1,    "Move");
+         emplace_overwrite_describe(pack_abandoned, "Abandon");
+         emplace_overwrite_describe(pack_disowned,  "Disown");
       }
       
       WHEN("Cleared") {
-         pack_referred1.Clear();
-         Any_CheckState_OwnedEmpty<E>(pack_referred1);
+         auto clear_full = [&](auto& a, const char* intent) {
+            CAPTURE(intent);
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
+               T temp = a,                      temp.Clear(),
+               ::std::any temp_std = *element,  temp_std.reset()
+            );
 
-         pack_referred2.Clear();
-         Any_CheckState_OwnedEmpty<E>(pack_referred2);
+            a.Clear();
 
-         pack_copied.Clear();
-         Any_CheckState_OwnedEmpty<E>(pack_copied);
+            Any_CheckState_OwnedEmpty<E>(a);
+         };
 
-         pack_cloned.Clear();
-         Any_CheckState_OwnedEmpty<E>(pack_cloned);
-
-         pack_moved1.Clear();
-         Any_CheckState_OwnedEmpty<E>(pack_moved1);
-
-         pack_moved2.Clear();
-         Any_CheckState_OwnedEmpty<E>(pack_moved2);
-
-         pack_abandoned.Clear();
-         Any_CheckState_OwnedEmpty<E>(pack_abandoned);
-
-         pack_disowned.Clear();
-         Any_CheckState_OwnedEmpty<E>(pack_disowned);
+         clear_full(pack_referred1, "Refer");
+         clear_full(pack_copied,    "Copy");
+         clear_full(pack_cloned,    "Clone");
+         clear_full(pack_moved1,    "Move");
+         clear_full(pack_abandoned, "Abandon");
+         clear_full(pack_disowned,  "Disown");
       }
 
       WHEN("Reset") {
-         pack_referred1.Reset();
-         Any_CheckState_Default<E>(pack_referred1);
+         auto reset_full = [&](auto& a, const char* intent) {
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/Reset(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
+               T temp = a,                      temp.Reset(),
+               ::std::any temp_std = *element,  temp_std.reset()
+            );
 
-         pack_referred2.Reset();
-         Any_CheckState_Default<E>(pack_referred2);
+            a.Reset();
 
-         pack_copied.Reset();
-         Any_CheckState_Default<E>(pack_copied);
+            Any_CheckState_Default<E>(a);
+         };
 
-         pack_cloned.Reset();
-         Any_CheckState_Default<E>(pack_cloned);
-
-         pack_moved1.Reset();
-         Any_CheckState_Default<E>(pack_moved1);
-
-         pack_moved2.Reset();
-         Any_CheckState_Default<E>(pack_moved2);
-
-         pack_abandoned.Reset();
-         Any_CheckState_Default<E>(pack_abandoned);
-
-         pack_disowned.Reset();
-         Any_CheckState_Default<E>(pack_disowned);
+         reset_full(pack_referred1, "Refer");
+         reset_full(pack_copied,    "Copy");
+         reset_full(pack_cloned,    "Clone");
+         reset_full(pack_moved1,    "Move");
+         reset_full(pack_abandoned, "Abandon");
+         reset_full(pack_disowned,  "Disown");
       }
 
       if constexpr (LANGULUS_FEATURE(MANAGED_MEMORY) and not CT::Container<E>) {
@@ -1955,24 +1572,37 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
          T another_pack1 {Piecewise, *e1};
          T defaulted_pack;
 
-         #define compared_full(a) { \
-            T same_pack {a}; \
-            REQUIRE      (a != another_pack1); \
-            REQUIRE_FALSE(a == another_pack1); \
-            REQUIRE      (a != defaulted_pack); \
-            REQUIRE_FALSE(a == defaulted_pack); \
-            REQUIRE      (a == same_pack); \
-            REQUIRE_FALSE(a != same_pack); \
-         }
+         auto compared_full = [&](auto& a, const char* intent) {
+            T same_pack {a};
 
-         compared_full(pack_referred1);
-         compared_full(pack_referred2);
-         compared_full(pack_copied);
-         compared_full(pack_cloned);
-         compared_full(pack_moved1);
-         compared_full(pack_moved2);
-         compared_full(pack_abandoned);
-         compared_full(pack_disowned);
+            REQUIRE      (a != another_pack1);
+            REQUIRE_FALSE(a == another_pack1);
+            REQUIRE      (a != defaulted_pack);
+            REQUIRE_FALSE(a == defaulted_pack);
+            REQUIRE      (a == same_pack);
+            REQUIRE_FALSE(a != same_pack);
+
+            [[maybe_unused]] volatile bool dont_optimize = false;
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/operator==(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
+               (void) 0,                                    dont_optimize |= (a == same_pack),
+               const ::std::any a_std = *element;
+               const ::std::any another_pack1_std = *e1,    dont_optimize |= (std::any_cast<E const&>(a_std) == std::any_cast<E const&>(another_pack1_std))
+            );
+            BenchmarkStd(
+               std::string("Piecewise/") + intent + "/operator!=(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
+               (void) 0,                                    dont_optimize |= (a != same_pack),
+               const ::std::any a_std = *element;
+               const ::std::any another_pack1_std = *e1,    dont_optimize |= (std::any_cast<E const&>(a_std) != std::any_cast<E const&>(another_pack1_std))
+            );
+         };
+
+         compared_full(pack_referred1, "Refer");
+         compared_full(pack_copied,    "Copy");
+         compared_full(pack_cloned,    "Clone");
+         compared_full(pack_moved1,    "Move");
+         compared_full(pack_abandoned, "Abandon");
+         compared_full(pack_disowned,  "Disown");
       }
 
       WHEN("Contains when full") {
@@ -1998,6 +1628,11 @@ TEST_CASE_TEMPLATE("Test Any/TAny", TestType
          contains_full(pack_moved2);
          contains_full(pack_abandoned);
          contains_full(pack_disowned);
+
+         [[maybe_unused]] volatile bool dont_optimize = false;
+         Benchmark("Piecewise/Contains(" + NameOf<E>() + ")", 30,
+            (void) 0, dont_optimize |= pack_referred1.Contains(*element)
+         );
       }
    }
 

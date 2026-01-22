@@ -29,9 +29,8 @@ TEST_CASE_TEMPLATE("Testing allocator functions", TestType,
    constexpr size_t testAlignment = ::std::max(alignof(TestType), Alignment);
    
    GIVEN("A small allocation") {
-      pot_t s;
-      SUBCASE("") { s = 1_pot; }
-      SUBCASE("") { s = 2_pot; }
+      pot_t s = 1_pot;
+      SUBCASE("") { s =   2_pot; }
       SUBCASE("") { s = 512_pot; }
       CAPTURE(s);
 
@@ -154,7 +153,7 @@ TEST_CASE("Stress test and benchmarking") {
       , MetaDataOf<TypeVeryBigPacked>()
    };
 
-   // Perform a million random allocations using the memory manager
+   // Perform a million random allocations using the memory manager     
    for (int i = 0; i < 1'000'000; ++i) {
       auto random_type = types[generator() % types.size()];
       auto random_size = pot_t(Roof2(random_type.GetSize() * (generator() % 1000)));
@@ -173,7 +172,7 @@ TEST_CASE("Stress test and benchmarking") {
       }
    }
 
-   // Perform a million random allocations using malloc, for comparison
+   // Perform a million random allocations using malloc, for comparison 
    for (int i = 0; i < 1'000'000; ++i) {
       auto random_type = types[generator() % types.size()];
       auto random_size = Roof2(random_type.GetSize() * (generator() % 1000));

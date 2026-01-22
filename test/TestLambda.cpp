@@ -46,7 +46,7 @@ namespace
 ///                                                                           
 /// ArgumentOf                                                                
 ///                                                                           
-SCENARIO("Testing ArgumentOf"/*, "[ct]"*/) {
+SCENARIO("Testing ArgumentOf") {
    int   suppress_warnings1 = 666;
    float suppress_warnings2 = 666.0f;
    (void) testLambdaNoArgs();
@@ -78,7 +78,7 @@ SCENARIO("Testing ArgumentOf"/*, "[ct]"*/) {
 ///                                                                           
 /// ArgumentsOf                                                               
 ///                                                                           
-SCENARIO("Testing ArgumentsOf"/*, "[ct]"*/) {
+SCENARIO("Testing ArgumentsOf") {
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaNoArgs)>, NoTypes>);
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaOne)>,    Types<int>>);
    static_assert(::std::same_as<ArgumentsOf<decltype(testLambdaOneRef)>, Types<int&>>);
@@ -102,7 +102,7 @@ SCENARIO("Testing ArgumentsOf"/*, "[ct]"*/) {
 ///                                                                           
 /// ReturnOf                                                                  
 ///                                                                           
-SCENARIO("Testing ReturnOf"/*, "[ct]"*/) {
+SCENARIO("Testing ReturnOf") {
    static_assert(::std::same_as<ReturnOf<decltype(testLambdaNoArgs)>, double>);
    static_assert(::std::same_as<ReturnOf<decltype(testLambdaOne)>,    double>);
    static_assert(::std::same_as<ReturnOf<decltype(testLambdaOneRef)>, double>);
@@ -126,7 +126,7 @@ SCENARIO("Testing ReturnOf"/*, "[ct]"*/) {
 ///                                                                           
 /// IsNoexcept                                                                
 ///                                                                           
-SCENARIO("Testing IsNoexcept"/*, "[ct]"*/) {
+SCENARIO("Testing IsNoexcept") {
    static_assert(not IsNoexcept<decltype(testLambdaNoArgs)>);
    static_assert(not IsNoexcept<decltype(testLambdaOne)>);
    static_assert(not IsNoexcept<decltype(testLambdaOneRef)>);

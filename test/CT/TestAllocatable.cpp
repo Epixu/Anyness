@@ -29,6 +29,7 @@ namespace Langulus::CTTI
 {
    template<>
    struct Allocatable<AllocatableExternally> {};
+
    template<>
    struct Allocatable<AllocatableExternallyDisabled> {
       static constexpr bool Enabled = false;

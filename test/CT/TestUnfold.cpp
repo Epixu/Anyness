@@ -43,11 +43,11 @@ namespace Langulus::CTTI
 /// CT::Unfoldable                                                            
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::Unfoldable types", TestType
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //IncompleteType const&,         // shouldn't compile
-   , SheddableType<IncompleteType>  // shouldn't compile
-   , SheddableType<IncompleteType>& // shouldn't compile
+   //, IncompleteType                  // shouldn't compile
+   //, IncompleteType const            // shouldn't compile
+   //, IncompleteType const&           // shouldn't compile
+   , SheddableType<IncompleteType>     // shouldn't compile
+   , SheddableType<IncompleteType>&    // shouldn't compile
    , SheddableType<UnfoldableInternally*>
    , SheddableType<UnfoldableInternally* const>
    , SheddableType<UnfoldableInternally* const&>
@@ -69,9 +69,9 @@ TEST_CASE_TEMPLATE("Testing CT::Unfoldable types", TestType
 }
 
 TEST_CASE_TEMPLATE("Testing CT::NotUnfoldable types", TestType
-   //IncompleteType,                // shouldn't compile
-   //IncompleteType const,          // shouldn't compile
-   //IncompleteType const&,         // shouldn't compile
+   //, IncompleteType,                 // shouldn't compile
+   //, IncompleteType const,           // shouldn't compile
+   //, IncompleteType const&,          // shouldn't compile
    , IncompleteType*
    , bool, bool*
    , void, void*

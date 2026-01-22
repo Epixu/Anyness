@@ -16,36 +16,6 @@
 using namespace Langulus;
 using namespace Anyness;
 
-
-/*namespace Catch
-{
-   template<>
-   struct is_range<Any> {
-      static const bool value = false;
-   };
-   template<class T>
-   struct is_range<TAny<T>> {
-      static const bool value = false;
-   };
-
-   template<>
-   struct StringMaker<Any> {
-      static ::std::string convert(Any const& value) {
-         return static_cast<::std::string>(
-            NameOf<Any>() + "(" + Convert<Text>(value) + ")"
-         );
-      }
-   };
-   template<class T>
-   struct StringMaker<TAny<T>> {
-      static ::std::string convert(TAny<T> const& value) {
-         return static_cast<::std::string>(
-            NameOf<TAny<T>>() + "(" + Convert<Text>(value) + ")"
-         );
-      }
-   };
-}*/
-
 namespace doctest
 {
    template<>
@@ -249,23 +219,19 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent) {
       REQUIRE(pack.GetEntries() == nullptr);
    else {
       REQUIRE(pack.GetEntries() != nullptr);
-      //#if LANGULUS_FEATURE(MANAGED_MEMORY)
-         if constexpr (not CT::Disowned<I>) {
-            for (size_t i = 0; i < IndirectsOf<E>; ++i) {
-               if constexpr (CT::Cloned<I>)
-                  REQUIRE(pack.GetEntries()[i] != e.entries[i + 1]);
-               else
-                  REQUIRE(pack.GetEntries()[i] == e.entries[i + 1]);
-            }
+
+      if constexpr (not CT::Disowned<I>) {
+         for (size_t i = 0; i < IndirectsOf<E>; ++i) {
+            if constexpr (CT::Cloned<I>)
+               REQUIRE(pack.GetEntries()[i] != e.entries[i + 1]);
+            else
+               REQUIRE(pack.GetEntries()[i] == e.entries[i + 1]);
          }
-         else {
-            for (size_t i = 0; i < IndirectsOf<E>; ++i)
-               REQUIRE(pack.GetEntries()[i] == nullptr);         
-         }
-      //#else
-      //   for (size_t i = 0; i < IndirectsOf<E>; ++i)
-      //      REQUIRE(pack.GetEntries()[i] == nullptr);         
-      //#endif
+      }
+      else {
+         for (size_t i = 0; i < IndirectsOf<E>; ++i)
+            REQUIRE(pack.GetEntries()[i] == nullptr);         
+      }
    }
 
    if constexpr (CT::TypeErased<T>) {

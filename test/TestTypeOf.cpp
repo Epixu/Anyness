@@ -188,22 +188,22 @@ TEST_CASE_TEMPLATE("Testing SparseCast", TestType
    , const int* const* const&
    , const int* const* const* const&
    , const int* const* const*
-   //SheddableTypeCastableExplicit<int> // shouldn't compile, can't get a pointer out of rvalue
-   //SheddableTypeCastableExplicit<int&&>// shouldn't compile, can't get a pointer out of rvalue
+   //, SheddableTypeCastableExplicit<int>    // shouldn't compile, can't get a pointer out of rvalue
+   //, SheddableTypeCastableExplicit<int&&>  // shouldn't compile, can't get a pointer out of rvalue
    , SheddableTypeCastableExplicit<const int&>
    , SheddableTypeCastableExplicit<const int* const&>
    , SheddableTypeCastableExplicit<const int* const* const&>
    , SheddableTypeCastableExplicit<const int* const* const* const&>
    , SheddableTypeCastableExplicit<const int* const* const*>
-   , SheddableTypeCastableUsingMethod<int> // compiles, because method in test always returns a reference
-   //const SheddableTypeCastableExplicit<int> // shouldn't compile, because operator returns temporary
-   //const SheddableTypeCastableExplicit<int&&> // shouldn't compile, can't get a pointer out of rvalue
+   , SheddableTypeCastableUsingMethod<int>         // compiles, because method in test always returns a reference
+   //, const SheddableTypeCastableExplicit<int>    // shouldn't compile, because operator returns temporary
+   //, const SheddableTypeCastableExplicit<int&&>  // shouldn't compile, can't get a pointer out of rvalue
    , const SheddableTypeCastableExplicit<const int&>
    , const SheddableTypeCastableExplicit<const int* const&>
    , const SheddableTypeCastableExplicit<const int* const* const&>
    , const SheddableTypeCastableExplicit<const int* const* const* const&>
    , const SheddableTypeCastableExplicit<const int* const* const*>
-   , const SheddableTypeCastableUsingMethod<int> // compiles, because method in test always returns a reference
+   , const SheddableTypeCastableUsingMethod<int>   // compiles, because method in test always returns a reference
 ) {
    int value = 656;
 

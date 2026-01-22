@@ -459,7 +459,7 @@ namespace Langulus
       }
    };
 
-   Literal() -> Literal</*Unsupported, 0*/>;
+   Literal() -> Literal<>;
 
    template<class T>
    Literal(const T&) -> Literal<T, 0>;

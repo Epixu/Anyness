@@ -299,8 +299,7 @@ TEST_CASE_TEMPLATE("Testing allocator functions", TestType,
    constexpr size_t min_alloc = CT::GetMinAlloc<TestType>();
 
    GIVEN("A small allocation") {
-      pot_t s;
-      SUBCASE("") { s = pot_t(Roof2(sizeof(TestType)   )); }
+      pot_t s = pot_t(Roof2(sizeof(TestType)));
       SUBCASE("") { s = pot_t(Roof2(sizeof(TestType)*2 )); }
       SUBCASE("") { s = pot_t(Roof2(sizeof(TestType)*16)); }
       CAPTURE(s);
@@ -326,8 +325,6 @@ TEST_CASE_TEMPLATE("Testing allocator functions", TestType,
          REQUIRE(matches == rounded_s);
          REQUIRE(mismatches == rounded_s);
          REQUIRE_FALSE(entry->Contains(entry->GetBlockStart() + rounded_s + 1));
-
-         //Allocator::Deallocate(entry);
       }
 
       WHEN("Referenced once") {
@@ -341,7 +338,6 @@ TEST_CASE_TEMPLATE("Testing allocator functions", TestType,
 
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          entry->AddRef(-1);
-         //Allocator::Deallocate(entry);
       }
 
       WHEN("Referenced multiple times") {
@@ -350,7 +346,6 @@ TEST_CASE_TEMPLATE("Testing allocator functions", TestType,
          REQUIRE(entry->GetUses() == 6);
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          entry->AddRef(-5);
-         //Allocator::Deallocate(entry);
       }
 
       WHEN("Dereferenced once without deletion") {
@@ -358,7 +353,6 @@ TEST_CASE_TEMPLATE("Testing allocator functions", TestType,
          entry->AddRef(-1);
 
          REQUIRE(entry->GetUses() == 1);
-         //Allocator::Deallocate(entry);
       }
 
       WHEN("Dereferenced multiple times without deletion") {
@@ -368,18 +362,15 @@ TEST_CASE_TEMPLATE("Testing allocator functions", TestType,
          REQUIRE(entry->GetUses() == 2);
          IF_SAFE(REQUIRE_THROWS(Allocator::Deallocate(entry)));
          entry->AddRef(-1);
-         //Allocator::Deallocate(entry);
       }
 
-      //WHEN("Dereferenced once with deletion") {
-         const auto blockStart = entry->GetBlockStart();
-         Allocator::Deallocate(entry);
+      const auto blockStart = entry->GetBlockStart();
+      Allocator::Deallocate(entry);
 
-         REQUIRE_FALSE(Allocator::CheckAuthority(entry));
-         REQUIRE(Allocator::CheckAuthority(blockStart));
-         REQUIRE_FALSE(Allocator::Find(blockStart));
-         REQUIRE_FALSE(Allocator::Find(entry));
-      //}
+      REQUIRE_FALSE(Allocator::CheckAuthority(entry));
+      REQUIRE(Allocator::CheckAuthority(blockStart));
+      REQUIRE_FALSE(Allocator::Find(blockStart));
+      REQUIRE_FALSE(Allocator::Find(entry));
    }
    
    GIVEN("A large allocation") {

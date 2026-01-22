@@ -154,19 +154,6 @@ namespace Langulus
    }
 }
 
-
-#ifdef TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
-namespace Catch
-{
-   template<>
-   struct StringMaker<::Langulus::pot_t> {
-      static ::std::string convert(::Langulus::pot_t const& value) {
-         return std::to_string(static_cast<size_t>(value));
-      }
-   };
-}
-#endif
-
 #if LANGULUS_FEATURE(LOGGING)
 namespace fmt
 {

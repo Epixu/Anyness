@@ -324,15 +324,3 @@ namespace fmt
    };
 }
 #endif
-
-#ifdef TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
-namespace Catch
-{
-   template<>
-   struct StringMaker<::Langulus::RTTI::DMeta> {
-      static ::std::string convert(::Langulus::RTTI::DMeta const& value) {
-         return static_cast<::std::string>(value.GetName());
-      }
-   };
-}
-#endif

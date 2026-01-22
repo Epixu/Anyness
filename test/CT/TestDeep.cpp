@@ -20,7 +20,6 @@ namespace
    /// Proper type, reflected as abstract                                     
    struct ForcedDeepExternally {};
    struct ForcedDeepInternally {
-      // ReSharper disable once CppTypeAliasNeverUsed
       using CTTI_Deep = Yes<>;
    };
 

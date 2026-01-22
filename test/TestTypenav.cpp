@@ -42,8 +42,8 @@ TEST_CASE_TEMPLATE("Testing non-sheddable types", TestType
    , NonSheddableTypeDerived1&
    , NonSheddableTypeDerived2
    , NonSheddableTypeDerived2&
-   //NonSheddableTypeDerived3   // shouldn't compile
-   //NonSheddableTypeDerived3&  // shouldn't compile
+   //, NonSheddableTypeDerived3   // shouldn't compile
+   //, NonSheddableTypeDerived3&  // shouldn't compile
    , IncompleteType               // incomplete types are always assumed unsheddable
    , int
    , int&
@@ -96,7 +96,7 @@ TEST_CASE_TEMPLATE("Testing non-array types", TestType
    , ArrayType*
    , CustomNonArrayType
    , CustomNonArrayTypeDerived
-   //IncompleteType,    // shouldn't compile
+   //, IncompleteType    // shouldn't compile
    , int
    , int&
 ) {
@@ -150,7 +150,7 @@ TEST_CASE_TEMPLATE("Testing sparse types", TestType
 }
 
 TEST_CASE_TEMPLATE("Testing dense types", TestType
-   //IncompleteType,    // shouldn't compile, we must check whether it's a custom pointer type
+   //, IncompleteType    // shouldn't compile, we must check whether it's a custom pointer type
    , SheddableType<CustomNonPointerType>
    , CustomNonPointerType
    , int, int&, void, nullptr_t
@@ -296,7 +296,7 @@ TEST_CASE_TEMPLATE("Testing non-null types", TestType
    , NonNullTypeDerived
    , NonNullTypeDerived&
    , SheddableType<NonNullTypeDerived&>
-   // IncompleteType, // shouldn't compile
+   //, IncompleteType // shouldn't compile
    , int
    , int&
 ) {
@@ -348,7 +348,7 @@ TEST_CASE_TEMPLATE("Testing non-enum types", TestType
    , NonEnumTypeDerived
    , NonEnumTypeDerived&
    , SheddableType<NonEnumTypeDerived&>
-   //IncompleteType,    // shouldn't compile
+   //, IncompleteType    // shouldn't compile
    , int
    , int&
 ) {
@@ -410,7 +410,7 @@ TEST_CASE_TEMPLATE("Testing non-aggregate types", TestType
    , NonAggregateTypeDerived
    , NonAggregateTypeDerived&
    , SheddableType<NonAggregateTypeDerived&>
-   //IncompleteType,    // shouldn't compile out
+   //, IncompleteType    // shouldn't compile out
    , int
    , int&
 ) {
@@ -451,7 +451,7 @@ TEST_CASE_TEMPLATE("Testing fundamental types", TestType
 }
 
 TEST_CASE_TEMPLATE("Testing non-fundamental types", TestType
-   //IncompleteType,    // shouldn't compile
+   //, IncompleteType    // shouldn't compile
    , SheddableType<FundamentalType*>
    , FundamentalType*
    , NonFundamentalTypeDerived
@@ -510,8 +510,8 @@ static_assert(not CT::NotReference<SheddableType<int>&, int*, IncompleteType&>);
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing decayed types", TestType
    , SheddableType<int&>
-   , int, void//,
-   //IncompleteType // shouldn't compile at all
+   , int, void
+   //, IncompleteType // shouldn't compile at all
 ) {
    static_assert(    CT::Decayed<TestType>);
    static_assert(not CT::NotDecayed<TestType>);

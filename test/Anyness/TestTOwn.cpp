@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "../Main.hpp"
-//#include <Langulus/Allocator.hpp>
 #include <Langulus/Anyness/TOwn.hpp>
 #include "../TestTypes/ReferencedType.hpp"
 #include "../TestTypes/ScopedElement.hpp"

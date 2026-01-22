@@ -154,16 +154,6 @@ static_assert(not CT::HasStdHasher<std::string, SheddableType<HashableViaConstMe
 static_assert(CT::Nullable<Hash>, "Hash needs to be batch-nullable");
 static_assert(CT::POD<Hash>,      "Hash needs to be POD");
 
-/*namespace Catch
-{
-   template <>
-   struct StringMaker<Langulus::Hash> {
-      static std::string convert(Langulus::Hash k) {
-         return "Hash(" + std::to_string(k.value) + ")";
-      }
-   };
-}*/
-
 namespace doctest
 {
    template<>

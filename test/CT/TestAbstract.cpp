@@ -14,7 +14,6 @@ namespace
 {
    template<class T>
    struct SheddableType { using CTTI_Sheddable = T; };
-
    struct IncompleteType;
 
    /// Built-in abstract type via a pure virtual function                     
@@ -28,13 +27,11 @@ namespace
    /// Proper type, reflected as abstract                                     
    struct ForcedAbstractExternally {};
    struct ForcedAbstractInternally {
-      // ReSharper disable once CppTypeAliasNeverUsed
       using CTTI_Abstract = Yes<>;
    };
 
    /// Types that can inherit abstractness                                    
    struct InheritedAbstract1 : ForcedAbstractInternally {};
-   // ReSharper disable once CppTypeAliasNeverUsed
    struct InheritedAbstract1Disabled : ForcedAbstractInternally { using CTTI_Abstract = No; };
    struct InheritedAbstract2 : PureAbstract {};
 

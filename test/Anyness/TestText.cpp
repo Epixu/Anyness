@@ -12,19 +12,6 @@ using namespace Langulus;
 using Anyness::Text;
 using Anyness::operator""_text;
 
-/*namespace Catch
-{
-   template<>
-   struct is_range<Text> { static const bool value = false; };
-   
-   template<>
-   struct StringMaker<Text> {
-      static std::string convert(Text const& value) {
-         return "\"" + static_cast<::std::string>(value) + "\"_text";
-      }
-   };
-}*/
-
 namespace doctest
 {
    template<>
@@ -42,7 +29,6 @@ namespace
    ///      good thing we don't support MSVC any longer :)                    
    struct Stringifiable {
       using CTTI_MapsTo = Text;
-      // ReSharper disable once CppMemberFunctionMayBeConst
       explicit operator Text() {
          return "Stringifiable converted to Text";
       }
@@ -219,7 +205,6 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
       WHEN("Self-assign") {
          LglsDisableWarningPush
          LglsDisableWarning_SelfAssign
-         // ReSharper disable once CppIdenticalOperandsInBinaryExpression
          text = text;
          LglsDisableWarningPop
          
