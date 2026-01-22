@@ -119,14 +119,14 @@ namespace Langulus::CTTI
    }
 
    /// Rule for serializing Code to Text. Wraps it in {} symbols.             
-   void SerializationRule<Anyness::Text, Anyness::Code>::Serialize(const Anyness::Code& item, Anyness::Text& out, Context*) {
+   inline void SerializationRule<Anyness::Text, Anyness::Code>::Serialize(const Anyness::Code& item, Anyness::Text& out, Context*) {
       out += Serial::OpenCode;
       out += item;
       out += Serial::CloseCode;
    }
    
    /// Rule for serializing Text to Text. Wraps it in "".                     
-   void SerializationRule<Anyness::Text, Anyness::Text>::Serialize(const Anyness::Text& item, Anyness::Text& out, Context*) {
+   inline void SerializationRule<Anyness::Text, Anyness::Text>::Serialize(const Anyness::Text& item, Anyness::Text& out, Context*) {
       out += Serial::OpenString;
       out += item;
       out += Serial::CloseString;
@@ -141,7 +141,7 @@ namespace Langulus::CTTI
    }
 
    /// Rule for serializing Bytes to Text. Prepends 0x.                       
-   void SerializationRule<Anyness::Text, Anyness::Bytes>::Serialize(const Anyness::Bytes& item, Anyness::Text& out, Context*) {
+   inline void SerializationRule<Anyness::Text, Anyness::Bytes>::Serialize(const Anyness::Bytes& item, Anyness::Text& out, Context*) {
       out += Serial::OpenByte;
       out.Reserve(item.GetCount()*2);
       ::std::array<char, sizeof(Byte) * 2> temp;

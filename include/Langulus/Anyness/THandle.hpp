@@ -155,6 +155,10 @@ namespace Langulus::Anyness
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
       }
+
+      auto GetAllocation() const noexcept -> Allocation const* {
+         return *this->GetEntriesInner();
+      }
    };
    
 

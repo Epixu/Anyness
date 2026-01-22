@@ -201,12 +201,15 @@ namespace Langulus::Anyness::Component
 
       /// Nests through all indirection layers and references elements and    
       /// their entries.                                                      
+      ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
       template<CT::Container C>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many");
+         LglsAssumeDev(self.GetAllocation(),
+            "Can't keep anything in a container without ownership");
          if (self.IsEmpty())
             return;
 
@@ -270,6 +273,7 @@ namespace Langulus::Anyness::Component
 
       /// Nests through all indirection layers and references elements and    
       /// their entries. Supports any number or custom pointer indirections.  
+      ///   @attention assumes container is not disowned!                     
       ///   @attention doesn't change any container state                     
       //TODO could use some statically-typed optimizations
       template<CT::Container C>
@@ -278,6 +282,8 @@ namespace Langulus::Anyness::Component
             "Referencing only first element in a container with many");
          LglsAssumeDev(not self.IsEmpty(),
             "No point in calling this on an empty container");
+         LglsAssumeDev(self.GetAllocation(),
+            "Can't keep anything in a container without ownership");
 
          // Check if containing indirections                            
          DMeta T = self.GetType();
@@ -313,12 +319,15 @@ namespace Langulus::Anyness::Component
 
       /// Nests through all indirection layers and destroys elements and      
       /// their entries if they are fully dereferenced.                       
+      ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
       template<bool DESTROY = true, CT::Container C>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
+         LglsAssumeDev(self.GetAllocation(),
+            "Can't destroy anything in a container without ownership");
          if (self.IsEmpty())
             return;
 
@@ -462,6 +471,7 @@ namespace Langulus::Anyness::Component
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Nests through all indirection layers and destroys elements and      
       /// their entries if they are fully dereferenced.                       
+      ///   @attention assumes container is not disowned!                     
       ///   @attention doesn't change any container state                     
       ///   @tparam DESTROY will never destroy a dense element if true        
       //TODO could use some statically-typed optimizations
@@ -469,6 +479,8 @@ namespace Langulus::Anyness::Component
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
+         LglsAssumeDev(self.GetAllocation(),
+            "Can't destroy anything in a container without ownership");
          if (self.IsEmpty())
             return;
 
@@ -577,16 +589,21 @@ namespace Langulus::Anyness::Component
          or (           not CT::Handle<IT> and not CT::Disowned<I>)) {
             // When it's a keeping intent, copy all entries and         
             // reference them                                           
-            if constexpr (CT::Handle<IT>)
-               memcpy(self.GetEntries(), rhs.GetEntries(), entries_size);
-            else
-               memset(self.GetEntries(), 0, entries_size);
+            if constexpr (CT::Handle<IT>) {
+               if (auto entries_src = rhs.GetEntries())
+                  memcpy(self.GetEntries(), entries_src, entries_size);
+               else {
+                  // RHS might be a disowned handle                     
+                  memset(self.GetEntries(), 0, entries_size);
+               }
+            }
+            else memset(self.GetEntries(), 0, entries_size);
 
             if constexpr (CT::Handle<IT> or LANGULUS_FEATURE(MANAGED_MEMORY)) {
                auto entries = self.GetEntries();
                const auto entriesEnd = entries + indirections;
                auto meta = self.GetType().GetDeptr();
-               void** handle = self.template GetRawAs<void*>();
+               void** handle = self.template GetRawAs<void*>(); //TODO this won't work with packed pointers, would it?
 
                while (entries < entriesEnd) {
                   // When it's a keeping intent, copy all entries and   
@@ -612,7 +629,7 @@ namespace Langulus::Anyness::Component
                   if (meta.IsDense() and referencer)
                      referencer(*handle, 1);
 
-                  handle = reinterpret_cast<void**>(*handle);
+                  handle = reinterpret_cast<void**>(*handle); //TODO this won't work with packed pointers, would it?
                   meta = meta.GetDeptr();
                   ++entries;
                }

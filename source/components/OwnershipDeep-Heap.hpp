@@ -31,11 +31,11 @@ namespace Langulus::Anyness::Component
       ///   @return the array of entries                                      
       template<CT::Container C>
       auto GetEntries(this C&& self) assumptious -> EntryPtr {
-         if (self.IsSparse()) {
-            LglsAssumeDev(self.GetRaw(),
+         if (self.IsSparse() and self.GetRaw() and self.GetAllocation()) {
+            /*LglsAssumeDev(self.GetRaw(),
                "No memory available");
             LglsAssumeDev(self.GetAllocation(),
-               "Entries do not exist for sparse containers which are out of jurisdiction");
+               "Entries do not exist for sparse containers which are out of jurisdiction");*/
             return const_cast<EntryPtr>(self.template AccessHeap<OwnershipDeepHeap>());
          }
          return nullptr;

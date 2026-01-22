@@ -8,13 +8,83 @@
 #pragma once
 #include "../../Main.hpp"
 #include "../../TestTypes/ScopedElement.hpp"
+#include "../../TestTypes/ReferencedType.hpp"
 #include <Langulus/Anyness/Any.hpp>
 #include <Langulus/Anyness/TAny.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
 #include <ranges>
+#include <any>
 
 using namespace Langulus;
 using namespace Anyness;
+
+#if LANGULUS(BENCHMARK)
+   #include <Langulus/Profiler.hpp>
+
+   constexpr int BenchmarkWarmupCycles  =  100;
+   constexpr int BenchmarkMeasureCycles = 1000;
+
+   /// Perform a persistent benchmark across build and verify performance     
+   #define Benchmark(func, tolerance, my_init, my) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance); \
+   }
+
+   /// Perform two persistent benchmarks across builds - one for Any and      
+   /// one for std::any. Make sure they don't deviate a lot.                  
+   #define BenchmarkStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      i = 0; \
+      const auto token_std = ::std::string("Test/") + static_cast<::std::string>(func) + " |std::any|"; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         theirs_init; \
+         theirs; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         theirs_init; \
+         { \
+            CTRACK_NAME(token_std.c_str()); \
+            theirs; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance_highscore); \
+      REQUIRE(results.check_same(token.c_str(), token_std.c_str(), tolerance)); \
+   }
+#else
+   #define Benchmark(func, tolerance, my_init, my)
+   #define BenchmarkStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
+#endif
+
+#if LANGULUS_FEATURE(MANAGED_MEMORY)
+   #include "../../TestTypes/PackedPointers.hpp"
+#endif
+
 
 namespace doctest
 {
@@ -190,13 +260,12 @@ void Any_CheckState_Abandoned(const C& any) {
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
-void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent) {
+void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) {
    auto& e = e_with_intent.what;
    using E = typename Decay<Deint<I>>::Type;
    REQUIRE(pack.GetCount() == 1);
-   REQUIRE(pack.GetUses() == 1);
-   REQUIRE(pack.GetReserved() >= 1);
-
+   REQUIRE(pack.GetUses() == uses);
+   REQUIRE(pack.GetReserved() >= (uses ? 1 : 0));
    REQUIRE(pack.template As<Decay<E>>() == DenseCast(*e));
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
@@ -217,7 +286,7 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent) {
 
    if constexpr (CT::Dense<E>)
       REQUIRE(pack.GetEntries() == nullptr);
-   else {
+   else if (uses) {
       REQUIRE(pack.GetEntries() != nullptr);
 
       if constexpr (not CT::Disowned<I>) {

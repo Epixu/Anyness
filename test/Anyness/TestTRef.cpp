@@ -7,6 +7,7 @@
 ///                                                                           
 #include "../Main.hpp"
 #include <Langulus/Anyness/TRef.hpp>
+#include <Langulus/Anyness/SerializeText.hpp>
 #include "../TestTypes/ReferencedType.hpp"
 #include "../TestTypes/ScopedElement.hpp"
 

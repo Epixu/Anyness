@@ -7,6 +7,7 @@
 ///                                                                           
 #include "../Main.hpp"
 #include <Langulus/Anyness/Text.hpp>
+#include <Langulus/Anyness/SerializeText.hpp>
 
 using namespace Langulus;
 using Anyness::Text;

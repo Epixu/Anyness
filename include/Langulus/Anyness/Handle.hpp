@@ -59,6 +59,10 @@ namespace Langulus::Anyness
          this->SetEntriesInner(entry);
          this->SetTypeInner(type);
       }
+
+      auto GetAllocation() const noexcept -> Allocation const* {
+         return *this->GetEntriesInner();
+      }
    };
    
 
@@ -135,6 +139,10 @@ namespace Langulus::Anyness
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
          this->SetTypeInner(type);
+      }
+
+      auto GetAllocation() const noexcept -> Allocation const* {
+         return *this->GetEntriesInner();
       }
    };
    

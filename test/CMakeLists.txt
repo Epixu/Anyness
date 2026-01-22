@@ -37,7 +37,9 @@ add_langulus_test(LangulusAnynessTest
                Anyness/TestTRef.cpp
                Anyness/TestTOwn.cpp
 
-               Anyness/any/TestAny.cpp
+               Anyness/any/TestAny-Empty.cpp
+               Anyness/any/TestAny-Absorb.cpp
+               Anyness/any/TestAny-Piecewise.cpp
         
    LIBRARIES	doctest
                LangulusAnyness
