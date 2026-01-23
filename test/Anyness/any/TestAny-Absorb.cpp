@@ -10,6 +10,7 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
+   , Types<Any, Text*, ScopedElement<Text*, true>>
    // Elements are not allocated by the memory manager                  
    , Types<Any, Text,   ScopedElement<Text>>
    , Types<Any, int,    ScopedElement<int>>
@@ -50,7 +51,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, Any,    ScopedElement<Any, true>>
    , Types<Any, RT,     ScopedElement<RT, true>>
                         
-   , Types<Any, Text*,  ScopedElement<Text*, true>>
    , Types<Any, int*,   ScopedElement<int*, true>>
    , Types<Any, Any*,   ScopedElement<Any*, true>>
    , Types<Any, RT*,    ScopedElement<RT*, true>>
@@ -781,7 +781,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                else {
                   if constexpr (CT::Referenced<Decay<E>>) {
                      auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == (managed_sparse ? 7 : 1));
+                     REQUIRE(DenseCast(e).GetReferences() == (managed_sparse ? 8 : 1));
                   }
                }
             }
@@ -789,13 +789,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             REQUIRE(a.GetUses() == uses);
          };
 
-         absorb_construct_copy(pack_referred1, 3, managed_sparse ? 8 : 3);
-         absorb_construct_copy(pack_referred2, 3, managed_sparse ? 8 : 3);
-         absorb_construct_copy(pack_copied,    1, managed_sparse ? 8 : 3);
+         absorb_construct_copy(pack_referred1, 3, managed_sparse ? 9 : 3);
+         absorb_construct_copy(pack_referred2, 3, managed_sparse ? 9 : 3);
+         absorb_construct_copy(pack_copied,    1, managed_sparse ? 9 : 3);
          absorb_construct_copy(pack_cloned,    1, 2);
-         absorb_construct_copy(pack_moved1,    1, managed_sparse ? 8 : 1);
-         absorb_construct_copy(pack_moved2,    1, managed_sparse ? 8 : 1);
-         absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 8 : 1);
+         absorb_construct_copy(pack_moved1,    1, managed_sparse ? 9 : 1);
+         absorb_construct_copy(pack_moved2,    1, managed_sparse ? 9 : 1);
+         absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 9 : 1);
          absorb_construct_copy(pack_disowned,  0, 0);
       }
       
