@@ -696,7 +696,7 @@ namespace Langulus::Anyness::Component
       ///   @return a reference or handle to the newly created element        
       template<class E = void, CT::ContainsMany C, class...A>
       auto EmplaceAt(this C&, CT::Index auto, A&&...)
-         -> PickMut<C> /*requires CT::RangeEmplaceable<C, A...>*/;
+      -> PickMut<C> /*requires CT::RangeEmplaceable<C, A...>*/;
 
       /// Generic emplacement that constructs/overwrites the first element.   
       /// Any overwritten element will be dereferenced/destroyed first.       
@@ -706,41 +706,89 @@ namespace Langulus::Anyness::Component
       ///   @param arguments Constructor arguments                            
       ///   @return a reference or handle to the newly created element        
       template<class E = void, CT::Container C, class...A>
-      auto Emplace(this C& self, A&&...arguments) -> PickMut<C>
-      /*requires CT::RangeEmplaceable<C, A...>*/ {
-         if (self.IsEmpty()) {
-            // Emplace a new element on the first position.             
-            // This will set type and allocate if required.             
-            if constexpr (sizeof...(arguments) > 0)
-               self.template EmplaceConstruct<AllocationStrategy::TypeAndReallocate, E>(FWD(arguments)...);
-            else
-               self.template EmplaceDefault<AllocationStrategy::TypeAndReallocate, E>();
-         }
-         else {
-            // Need to destroy first element                            
-            if constexpr (CT::DeeplyOwned<C>) {
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  self.DestroyElementDeepCustomPointers();
-               #else
-                  self.DestroyElementDeepStandardPointers();
-               #endif
-            }
-            else self.DestroyElement();
-
-            // Emplace a new element on the first position.             
-            // Any state change is forbidden, because container is full.
+      auto Emplace(this C& self, A&&...arguments)
+      -> PickMut<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
+         auto a = self.GetAllocation();
+         if (not a) {
+            // No ownership, just fresh-allocate                        
             try {
                if constexpr (sizeof...(arguments) > 0)
-                  self.template EmplaceConstruct<AllocationStrategy::NoStateChange, E>(FWD(arguments)...);
+                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(FWD(arguments)...);
                else
-                  self.template EmplaceDefault<AllocationStrategy::NoStateChange, E>();
+                  self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
             }
             catch (...) {
-               // If emplacement fails, we have to modify count         
-               // because first element has been destroyed.             
-               LglsAssumeDev(self.GetCount() == 1, "TODO we're forced to destroy everything else");
-               self.PartialSuccess(0);
+               // Reset the heap pointer in case 'self' was disowned    
+               self.SetHeapInner(nullptr);
+               if_available(self.SetCountInner(0));
+               if_available(self.SetHashInner(1));
                throw;
+            }
+         }
+         else if (self.IsEmpty()) {
+            // The container is empty, but an allocation is available   
+            if (a->GetUses() != 1) {
+               // We're not the only owner of this memory.              
+               // We have to branch off with a fresh allocation.        
+               a->AddRef(-1);
+               self.SetAllocationInner(nullptr);
+               self.SetHeapInner(nullptr);
+
+               if constexpr (sizeof...(arguments) > 0)
+                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(FWD(arguments)...);
+               else
+                  self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
+            }
+            else {
+               // Emplace a new element on the first position.          
+               // We're allowed to reuse the memory.                    
+               if constexpr (sizeof...(arguments) > 0)
+                  self.template EmplaceConstruct<AllocationStrategy::TypeAndReallocate, E>(FWD(arguments)...);
+               else
+                  self.template EmplaceDefault<AllocationStrategy::TypeAndReallocate, E>();
+            }
+         }
+         else {
+            // The container is not empty                               
+            if (a->GetUses() != 1) {
+               // We're not the only owner of this memory.              
+               // We have to branch off with a fresh allocation.        
+               self.Free();
+               self.SetAllocationInner(nullptr);
+               self.SetHeapInner(nullptr);
+               if_available(self.SetCountInner(0));
+               if_available(self.SetHashInner(1));
+
+               if constexpr (sizeof...(arguments) > 0)
+                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(FWD(arguments)...);
+               else
+                  self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
+            }
+            else {
+               // We're allowed to reuse the memory.                    
+               // Need to destroy and overwrite only the first element. 
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  if_available(self.DestroyElementDeepCustomPointers())
+               #else
+                  if_available(self.DestroyElementDeepStandardPointers())
+               #endif
+               else self.DestroyElement();
+
+               // Emplace a new element on the first position.          
+               // Any state change is forbidden - container is full.    
+               try {
+                  if constexpr (sizeof...(arguments) > 0)
+                     self.template EmplaceConstruct<AllocationStrategy::NoStateChange, E>(FWD(arguments)...);
+                  else
+                     self.template EmplaceDefault<AllocationStrategy::NoStateChange, E>();
+               }
+               catch (...) {
+                  // If emplacement fails, we have to modify count      
+                  // because first element has been destroyed.          
+                  LglsAssumeDev(self.GetCount() == 1, "TODO we're forced to destroy everything else as well");
+                  self.PartialSuccess(0);
+                  throw;
+               }
             }
          }
 

@@ -282,8 +282,11 @@ namespace Langulus::Anyness::Component
             "Referencing only first element in a container with many");
          LglsAssumeDev(not self.IsEmpty(),
             "No point in calling this on an empty container");
-         LglsAssumeDev(self.GetAllocation(),
-            "Can't keep anything in a container without ownership");
+
+         if constexpr (not CT::Handle<C>) {
+            LglsAssumeDev(self.GetAllocation(),
+               "Can't keep anything in a container without ownership");
+         }
 
          // Check if containing indirections                            
          DMeta T = self.GetType();
@@ -320,16 +323,22 @@ namespace Langulus::Anyness::Component
       /// Nests through all indirection layers and destroys elements and      
       /// their entries if they are fully dereferenced.                       
       ///   @attention assumes container is not disowned!                     
+      ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
       template<bool DESTROY = true, CT::Container C>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
-         LglsAssumeDev(self.GetAllocation(),
-            "Can't destroy anything in a container without ownership");
-         if (self.IsEmpty())
-            return;
+
+         if constexpr (not CT::Handle<C>) {
+            LglsAssumeDev(self.GetAllocation(),
+               "Can't destroy anything in a container without ownership");
+            LglsAssumeDev(not DESTROY or self.GetUses() == 1,
+               "Can't destroy data used from multiple locations");
+            if (self.IsEmpty())
+               return;
+         }
 
          using H = typename C::HandleMutType;
          if constexpr (CT::TypeErased<C>) {
@@ -472,6 +481,7 @@ namespace Langulus::Anyness::Component
       /// Nests through all indirection layers and destroys elements and      
       /// their entries if they are fully dereferenced.                       
       ///   @attention assumes container is not disowned!                     
+      ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention doesn't change any container state                     
       ///   @tparam DESTROY will never destroy a dense element if true        
       //TODO could use some statically-typed optimizations
@@ -479,14 +489,19 @@ namespace Langulus::Anyness::Component
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
-         LglsAssumeDev(self.GetAllocation(),
-            "Can't destroy anything in a container without ownership");
-         if (self.IsEmpty())
-            return;
+
+         if constexpr (not CT::Handle<C>) {
+            LglsAssumeDev(self.GetAllocation(),
+               "Can't destroy anything in a container without ownership");
+            LglsAssumeDev(not DESTROY or self.GetUses() == 1,
+               "Can't destroy data used from multiple locations");
+            if (self.IsEmpty())
+               return;
+         }
 
          //                                                             
          // Destroying a type-erased element                            
-         DMeta T = self.GetType();         
+         DMeta T = self.GetType();
          if (T.IsSparse()) {
             EntryPtr entries = self.GetEntries();
             if (not entries)
@@ -500,12 +515,12 @@ namespace Langulus::Anyness::Component
                   // Pointer T -> Pointer nextT                         
                   T.GetDereffer()(const_cast<void*>(src), &src);
                }
-               else if (1 == (*entries)->GetUses()) {                  
+               else if (1 == (*entries)->GetUses()) {
                   // Pointer T -> Dense nextT                           
                   if (auto destructor = nextT.GetDestructor()) {
                      // Pointer to a complete, destroyable dense.       
                      // Call the destructor.                            
-                     src /*void* unpacked*/ = UnpackPointer(T, nextT, src);
+                     src = UnpackPointer(T, nextT, src);
                      if (const auto referencer = nextT.GetReferencer()) {
                         if (referencer(const_cast<void*>(src), -1) == 0)
                            destructor(const_cast<void*>(src));
@@ -522,32 +537,22 @@ namespace Langulus::Anyness::Component
                      // referencable and its individual references have 
                      // reached 0. This can happen when hive elements   
                      // are dereferenced.                               
-                     src /*void* unpacked*/ = UnpackPointer(T, nextT, src);
-                     //referencer(const_cast<void*>(src), 1);
+                     src = UnpackPointer(T, nextT, src);
                      if (referencer(const_cast<void*>(src), -1) == 0)
                         nextT.GetDestructor()(const_cast<void*>(src));
-                  }                       
+                  }
                }
 
                // Deallocate or dereference                             
                if (1 == (*entries)->GetUses())
                   Allocator::Deallocate(*entries);
                else
-                  (*entries)->AddRef(-1);                  
+                  (*entries)->AddRef(-1);
 
                // Move to next indirection                              
                T = nextT;
                ++entries;
             }
-
-            /*if constexpr (DESTROY) {
-               if (const auto destructor = T.GetDestructor()) {
-                  // Call destructor of dense element                      
-                  IF_SAFE(if (const auto referencer = T.GetReferencer())
-                     referencer(const_cast<void*>(src), -1));
-                  //destructor(const_cast<void*>(src));
-               }
-            }*/
          }
          else if constexpr (DESTROY) {
             if (const auto destructor = T.GetDestructor()) {

@@ -890,8 +890,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       }
       
       WHEN("Cleared") {
-         auto clear_full = [&](auto& a, const char* intent) {
-            CAPTURE(intent);
+         auto clear_full = [&](auto& a, const char* intent, int uses = 1) {
             BenchmarkStd(
                std::string("Absorb/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
                T temp = a,                      temp.Clear(),
@@ -900,15 +899,18 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
 
             a.Clear();
 
-            Any_CheckState_OwnedEmpty<E>(a);
+            if (uses != 1)
+               Any_CheckState_Default<E>(a, true);
+            else
+               Any_CheckState_OwnedEmpty<E>(a);
          };
 
-         clear_full(pack_referred1, "Refer");
+         clear_full(pack_referred1, "Refer", 3);
          clear_full(pack_copied,    "Copy");
          clear_full(pack_cloned,    "Clone");
          clear_full(pack_moved1,    "Move");
          clear_full(pack_abandoned, "Abandon");
-         clear_full(pack_disowned,  "Disown");
+         clear_full(pack_disowned,  "Disown", 0);
       }
 
       WHEN("Reset") {
@@ -942,8 +944,8 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                REQUIRE(a.GetRaw() == memory);
             };
 
-            reset_and_reallocate(pack_referred1);
-            reset_and_reallocate(pack_referred2);
+            //reset_and_reallocate(pack_referred1); // referred too many times to be deallocated
+            //reset_and_reallocate(pack_referred2); // referred too many times to be deallocated
             reset_and_reallocate(pack_copied);
             reset_and_reallocate(pack_cloned);
             reset_and_reallocate(pack_moved1);

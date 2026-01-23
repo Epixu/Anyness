@@ -60,9 +60,9 @@ namespace Langulus::Anyness
          this->SetTypeInner(type);
       }
 
-      auto GetAllocation() const noexcept -> Allocation const* {
+      /*auto GetAllocation() const noexcept -> Allocation const* {
          return *this->GetEntriesInner();
-      }
+      }*/
    };
    
 
@@ -141,9 +141,9 @@ namespace Langulus::Anyness
          this->SetTypeInner(type);
       }
 
-      auto GetAllocation() const noexcept -> Allocation const* {
+      /*auto GetAllocation() const noexcept -> Allocation const* {
          return *this->GetEntriesInner();
-      }
+      }*/
    };
    
 

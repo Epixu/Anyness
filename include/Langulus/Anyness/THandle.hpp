@@ -156,9 +156,9 @@ namespace Langulus::Anyness
          this->SetEntriesInner(entry);
       }
 
-      auto GetAllocation() const noexcept -> Allocation const* {
+      /*auto GetAllocation() const noexcept -> Allocation const* {
          return *this->GetEntriesInner();
-      }
+      }*/
    };
    
 

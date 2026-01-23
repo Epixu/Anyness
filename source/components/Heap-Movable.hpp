@@ -111,11 +111,9 @@ namespace Langulus::Anyness::Component
                   // destroy everything we initialized                  
                   while (n) {
                      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        if constexpr (requires { dst->DestroyElementDeepCustomPointers(); })
-                           dst->DestroyElementDeepCustomPointers();
+                        if_available(dst->DestroyElementDeepCustomPointers())
                      #else
-                        if constexpr (requires { dst->DestroyElementDeepStandardPointers(); })
-                           dst->DestroyElementDeepStandardPointers();
+                        if_available(dst->DestroyElementDeepStandardPointers())
                      #endif
                      else dst->DestroyElement();
                      --dst; --n;
@@ -467,7 +465,7 @@ namespace Langulus::Anyness::Component
          if constexpr (requires { self.SetCountInner(1); }) {
             // Partial success is supported                             
             self.SetCountInner(n);
-            self.ResetHash();
+            self.ResetHash(); // If n == 0, hash is 1; 0 otherwise      
          }
          else {
             // Partial success is not allowed - we have to              
@@ -477,7 +475,6 @@ namespace Langulus::Anyness::Component
             self.SetAllocationInner(nullptr);
             self.SetHeapInner(nullptr);
             if_available(self.SetHashInner(1));
-            //self.Reset();
          }
       }
    };

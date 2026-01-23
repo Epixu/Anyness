@@ -101,11 +101,9 @@ namespace Langulus::Anyness::Component
                   // destroy everything we initialized                  
                   while (n) {
                      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        if constexpr (requires { to->DestroyElementDeepCustomPointers(); })
-                           to->DestroyElementDeepCustomPointers();
+                        if_available(to->DestroyElementDeepCustomPointers())
                      #else
-                        if constexpr (requires { to->DestroyElementDeepStandardPointers(); })
-                           to->DestroyElementDeepStandardPointers();
+                        if_available(to->DestroyElementDeepStandardPointers())
                      #endif
                      else to->DestroyElement();
                      --to; --n;

@@ -68,6 +68,7 @@ namespace Langulus::Anyness::Component
             "Can't trim disowned container");
          LglsAssert(self.GetAllocation()->GetUses() != 1,
             "Can't trim container used elsewhere");
+
          self.SelectInner(desiredCount, currentCount - desiredCount).FreeInner();
          self.SetCount(desiredCount);
       }
@@ -75,10 +76,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C> requires CT::ContainsMany<C>
       void Optimize(this C&);
 
-      /// Destroy all elements but don't deallocate memory, unless this pack  
-      /// can only contain one element, in which case we have to deallocate   
-      /// in order to reset count.                                            
-      ///   @attention won't reset state                                      
+      /// Destroy all elements but don't deallocate memory, unless we have to 
+      ///   @attention will never reset state or type                         
       template<CT::Container C>
       void Clear(this C& self) {
          const auto al = self.GetAllocation();
@@ -87,59 +86,93 @@ namespace Langulus::Anyness::Component
             // Don't call destructors, just clear it up.                
             self.SetHeapInner(nullptr);
             if_available(self.SetCountInner(0));
+            if_available(self.SetHashInner(1));
             return;
          }
 
          if (al->GetUses() == 1) {
             // Entry is used only in this block, so it's safe to        
-            // destroy all elements. We will reuse the entry and type   
+            // destroy all elements. We will reuse the memory and type  
             // only if the container keeps track of the count separately
             if constexpr (CT::ContainsOne<C>) {
-               if constexpr (CT::DeeplyOwned<C>)
-                  self.DestroyElementDeepStandardPointers();
-               else
-                  self.DestroyElement();
+               if constexpr (CT::DeeplyOwned<C>) {
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     self.DestroyElementDeepCustomPointers();
+                  #else
+                     self.DestroyElementDeepStandardPointers();
+                  #endif
+               }
+               else self.DestroyElement();
+
+               // Count is dictated by the availability of a heap       
+               // pointer. We can't afford to reuse it, and be          
+               // cleared at the same time, unless SetCountInner is     
+               // available.                                            
+               if_available(self.SetCountInner(0))
+               else self.SetHeapInner(nullptr);
             }
             else {
                auto item = IterateHandles(self).begin();
                while (item) {
-                  if constexpr (CT::DeeplyOwned<C>)
-                     item->DestroyElementDeepStandardPointers();
-                  else
-                     item->DestroyElement();
-
+                  if constexpr (CT::DeeplyOwned<C>) {
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        item->DestroyElementDeepCustomPointers();
+                     #else
+                        item->DestroyElementDeepStandardPointers();
+                     #endif
+                  }
+                  else item->DestroyElement();
+                  
                   ++item;
                }
-            }
-
-            if constexpr (CT::ContainsOne<C>)
-               self.SetHeapInner(nullptr);
-            else {
                if_available(self.SetCountInner(0));
-               //TODO in this case type is not reset, but wouldn't that cause problems if type changes, but the same memory is reused, because pools are designed for specific data types and specific alignments. anything aligned to more than Alignment is potentially UB
             }
          }
          else {
-            // If reached, then data is referenced from multiple places 
-            // Don't call destructors, just clear it up and dereference 
-            if_available(self.FreeDeep());
+            // If reached, then data is referenced from multiple places.
+            // Don't call destructors, just clear it up and dereference.
+            if constexpr (CT::DeeplyOwned<C>) {
+               if constexpr (CT::ContainsOne<C>) {
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     self.template DestroyElementDeepCustomPointers<false>();
+                  #else
+                     self.template DestroyElementDeepStandardPointers<false>();
+                  #endif
+               }
+               else {
+                  auto item = IterateHandles(self).begin();
+                  while (item) {
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        item->template DestroyElementDeepCustomPointers<false>();
+                     #else
+                        item->template DestroyElementDeepStandardPointers<false>();
+                     #endif
+
+                     ++item;
+                  }
+               }
+            }
 
             // Dereference memory                                       
             al->AddRef(-1);
             self.SetHeapInner(nullptr);
             if_available(self.SetAllocationInner(nullptr));
-            if_available(self.SetCountInner(0));
             if_available(self.SetReserveInner(0));
+            if_available(self.SetCountInner(0));
          }
+
+         if_available(self.SetHashInner(1));
       }
 
-      /// Destroy all elements, deallocate block and reset state              
+      /// Destroy all elements, deallocate block and reset state and type,    
+      /// if type-erased.                                                     
       void Reset(this auto& self) {
          self.Free();
          self.SetHeapInner(nullptr);
          if_available(self.SetAllocationInner(nullptr));
          if_available(self.SetCountInner(0));
          if_available(self.SetReserveInner(0));
+         if_available(self.SetHashInner(1));
          if_available(self.ResetState());
          if_available(self.ResetType());
       }

@@ -47,6 +47,8 @@ namespace Langulus::Anyness::Component
 
       /// Reset the type of the container, unless it's type-constrained.      
       /// If this container isn't type-erased, this call is a no-op.          
+      ///   @attention allocation remains the same, and might not correspond  
+      ///      to the next type which is set                                  
       constexpr void ResetType(this auto& self) noexcept {
          if constexpr (TypeErased) {
             if constexpr (requires { self.IsTypeConstrained(); }) {
