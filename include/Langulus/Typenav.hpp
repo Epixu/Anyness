@@ -401,8 +401,7 @@ namespace Langulus
          
       namespace Inner
       {
-         /// Checks for const/volatile qualifiers in all indirections.        
-         /// Preserves references.                                            
+         /// Checks for const/volatile qualifiers in all indirections/refs.   
          template<class T>
          consteval bool NestedCheckCVQ() {
             if constexpr (CT::Convoluted<T>)
@@ -415,6 +414,19 @@ namespace Langulus
                return NestedCheckCVQ<::std::remove_extent_t<T>>();
             else
                return false;
+         }
+
+         /// Checks if all indirections/refs are constant.                    
+         template<class T>
+         consteval bool NestedConstantEverywhere() {
+            if constexpr (::std::is_reference_v<T>)
+               return CT::Constant<Deref<T>> and NestedConstantEverywhere<Deref<T>>();
+            else if constexpr (CT::Sparse<T>)
+               return CT::Constant<Deptr<T>> and NestedConstantEverywhere<Deptr<T>>();
+            else if constexpr (::std::is_bounded_array_v<T>)
+               return CT::Constant<Deext<T>> and NestedConstantEverywhere<Deext<T>>();
+            else
+               return CT::Constant<T>;
          }
       }
       
@@ -429,6 +441,18 @@ namespace Langulus
       template<class...T>
       concept NotConvolutedAnywhere = PartialValidate<T...>
           and ((not ConvolutedAnywhere<T>) and ...);
+
+      /// Check if all T are either const- and/or volatile-qualified on any   
+      /// level of indirection.                                               
+      template<class...T>
+      concept ConstantEverywhere = PartialValidate<T...>
+          and (Inner::NestedConstantEverywhere<T>() and ...);
+
+      /// Check if none of T are const- and/or volatile-qualified on any      
+      /// level of indirection.                                               
+      template<class...T>
+      concept NotConstantEverywhere = PartialValidate<T...>
+          and ((not ConstantEverywhere<T>) and ...);
    }
 
    ///                                                                        

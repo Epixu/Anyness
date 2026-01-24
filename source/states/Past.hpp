@@ -12,7 +12,10 @@
 namespace Langulus::Anyness::DefineState
 {
    ///                                                                        
-   /// If enabled, data is marked as a missing past                           
+   /// If enabled, data is marked as a missing past.                          
+   /// Processing natural language involves incomplete information a lot of   
+   /// the time. Missing past represents a linking point, which will get      
+   /// filled with already available context.                                 
    ///   @tparam V decides whether state is dynamic or static                 
    template<State::StateValue V>
    struct Past {

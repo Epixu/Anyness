@@ -86,8 +86,10 @@ namespace Langulus::Anyness::Component
                ForEachInner<false>(FWD(lambdas), result.count)
          )));
 
-         if (result.control == Loop::Discard)
-            self.Reset();
+         if constexpr (CT::Mutable<C>) {
+            if (result.control == Loop::Discard)
+               self.Reset();
+         }
          return result;
       }
 
@@ -104,8 +106,10 @@ namespace Langulus::Anyness::Component
                ForEachInner<true>(FWD(lambdas), result.count)
          )));
 
-         if (result.control == Loop::Discard)
-            self.Reset();
+         if constexpr (CT::Mutable<C>) {
+            if (result.control == Loop::Discard)
+               self.Reset();
+         }
          return result;
       }
 
@@ -130,8 +134,10 @@ namespace Langulus::Anyness::Component
                ForEachDeepInner<false, true>(FWD(lambdas), result.count)
          )));
 
-         if (result.control == Loop::Discard)
-            self.Reset();
+         if constexpr (CT::Mutable<C>) {
+            if (result.control == Loop::Discard)
+               self.Reset();
+         }
          return result;
       }
 
@@ -148,8 +154,10 @@ namespace Langulus::Anyness::Component
                ForEachDeepInner<true, true>(FWD(lambdas), result.count)
          )));
 
-         if (result.control == Loop::Discard)
-            self.Reset();
+         if constexpr (CT::Mutable<C>) {
+            if (result.control == Loop::Discard)
+               self.Reset();
+         }
          return result;
       }
 
@@ -164,8 +172,10 @@ namespace Langulus::Anyness::Component
                ForEachDeepInner<false, false>(FWD(lambdas), result.count)
          )));
 
-         if (result.control == Loop::Discard)
-            self.Reset();
+         if constexpr (CT::Mutable<C>) {
+            if (result.control == Loop::Discard)
+               self.Reset();
+         }
          return result;
       }
 
@@ -180,8 +190,10 @@ namespace Langulus::Anyness::Component
                ForEachDeepInner<true, false>(FWD(lambdas), result.count)
          )));
 
-         if (result.control == Loop::Discard)
-            self.Reset();
+         if constexpr (CT::Mutable<C>) {
+            if (result.control == Loop::Discard)
+               self.Reset();
+         }
          return result;
       }
 
@@ -194,30 +206,23 @@ namespace Langulus::Anyness::Component
       ///   @param index [out] counts the successful executions               
       ///   @return the last 'f' result - dictates whether loop continues     
       template<bool REVERSE, CT::Container C, class F>
-      LoopControl ForEachInner(this C&& self, F&& f, Count<C>& index) noexcept(IsNoexcept<F>) {
+      LoopControl ForEachInner(this C&& self, F&& f, Count<C>& index) noexcept_if(f) {
+         using A = ArgumentOf<F>;
+         static_assert(CT::Slab<A> or CT::Mutable<C> or CT::ConstantEverywhere<A>,
+            "Mutable reference/pointer iterator not allowed for constant container");
          LglsAssumeDev(not self.IsEmpty(), "Can't iterate empty container");
-         LglsAssumeDev(self.IsTyped(),     "Can't iterate untyped container");
+         LglsAssumeDev(    self.IsTyped(), "Can't iterate untyped container");
+         using R = ReturnOf<F>;
 
-         using A  = ArgumentOf<F>;
-         using R  = ReturnOf<F>;
-         using DA = Decay<A>;
-         constexpr bool TypeErased = Deref<C>::TypeErased;
-
-         static_assert(CT::Slab<A> or CT::Constant<Deptr<A>> or CT::Mutable<C>,
-            "Non-constant iterator for constant container is not allowed");
-
-         LoopControl loop = Loop::NextLoop;
-
-         if constexpr (not TypeErased) {
+         if constexpr (not CT::TypeErased<C>) {
             // Container is statically-typed.                           
             // Leverage compile-time optimizations.                     
-            using T  = TypeOf<C>;
-            using DT = Decay<T>;
+            using T = TypeOf<C>;
 
-            if constexpr (CT::Deep<DA, DT> or (not CT::Deep<DA> and CT::DerivedFrom<T, A>)) {
-               loop = self.template IterateInner<REVERSE>(
+            if constexpr (CT::Deep<A, T> or (not CT::Deep<A> and CT::DerivedFrom<T, A>)) {
+               return self.template IterateInner<REVERSE>(
                   self.GetCount(),
-                  [&index, &f](T& element) noexcept(IsNoexcept<F>) -> R {
+                  [&index, &f](T& element) noexcept_if(f) -> R {
                      ++index;
 
                      //TODO this does only one dereference if needed, but it should actually
@@ -236,98 +241,76 @@ namespace Langulus::Anyness::Component
             }
             else return Loop::NextLoop;
          }
-         else if constexpr (not CT::DefineTag<DA>) {
-            // Container is type-erased.                                
-            // And we're NOT iterating using a tag.                     
-            const auto T = self.GetType();
-
-            if ((CT::Deep<DA> and self.IsDeep()) or (not CT::Deep<DA> and self.template CastsTo<A, true>())) {
-               if (T.IsSparse()) {
-                  // Iterate sparse container                           
-                  loop = self.template IterateInner<REVERSE>(
-                     self.GetCount(),
-                     [&index, &f](void*& element) noexcept(IsNoexcept<F>) -> R {
-                        ++index;
-                        if constexpr (CT::Dense<A>)
-                           return f(*reinterpret_cast<Deref<A>*>(element));
-                        else
-                           return f( reinterpret_cast<A>(element));
-                     }
-                  );
-               }
-               else {
-                  // Iterate dense container where A is binary-         
-                  // compatible to the type, but may not be it exactly  
-                  LglsAssumeDev(T.GetSize() % sizeof(DA) == 0, "Unaligned iterator");
-                  loop = self.template IterateInner<REVERSE>(
-                     self.GetCount() * (T.GetSize() / sizeof(DA)),
-                     [&index, &f](DA& element) noexcept(IsNoexcept<F>) -> R {
-                        ++index;
-                        if constexpr (CT::Dense<A>)
-                           return f( element);
-                        else
-                           return f(&element);
-                     }
-                  );
-               }
-            }
-         }
          else {
-            // Container is type-erased.                                
-            // And we're iterating using a tag.                         
-            using Identity = CT::ReflectedAs<DA>;
+            // Container is type-erased. We're NOT iterating with tag.  
             const auto T = self.GetType();
-
-            if (not T.template Is<Identity>())
+            if (not (CT::Deep<A> and T.IsDeep())
+            and not (CT::DefineTag<A> and T.Is(MetaDataOf<Decay<A>>()))
+            and not (CT::DefineVerb<A> and T.Is(MetaDataOf<Decay<A>>()))
+            and not (not CT::Deep<A> and self.template CastsTo<A, true>()))
                return Loop::NextLoop;
 
-            // Container is type-erased and full of tags. Iterator is   
-            // a static tag, so we iterate all tags visiting only       
-            // those that match the definition in the argument          
-            if (T.IsSparse()) {
-               // Iterate sparse container                              
-               loop = self.template IterateInner<REVERSE>(
-                  self.GetCount(),
-                  [&index, &f](Identity*& element) noexcept(IsNoexcept<F>) -> R {
-                     if constexpr (CT::Void<R>) {
-                        if (not element->template IsTag<DA>())
-                           return;
+            // Iterate container where A is binary-compatible to the    
+            // type, but may not be it exactly.                         
+            using IT_STRAT = Tif<REVERSE, IterateHandlesInReverse<Deref<C>>, IterateHandles<Deref<C>>>;
+            for (auto handle : IT_STRAT(self)) {
+               decltype(auto) element = handle.template As<Deref<A>>();
+               if constexpr (CT::DefineTag<A>) {
+                  // We're iterating using a statically defined tag.    
+                  // We don't execute in tags that don't match.         
+                  if (not DenseCast(element).GetTagInner().template Is<Decay<A>>())
+                     continue;
+               }
+               if constexpr (CT::DefineVerb<A>) {
+                  // We're iterating using a statically defined verb.   
+                  // We don't execute in verbs that don't match.        
+                  if (not DenseCast(element).GetVerbInner().template Is<Decay<A>>())
+                     continue;
+               }
+
+               ++index;
+
+               if constexpr (CT::Bool<R>) {
+                  // Execute and consider 'f' returning true/false      
+                  if (not f(element))
+                     return Loop::Break;
+               }
+               else if constexpr (Exact<R, LoopControl>) {
+                  // Execute and consider 'f' returning LoopControl     
+                  const R loop = f(element);
+                  switch (loop.mControl) {
+                  case LoopControl::Break:
+                  case LoopControl::NextLoop: return loop;
+                  case LoopControl::Continue: break;
+                  case LoopControl::Repeat: --handle; break;
+                  case LoopControl::Discard:
+                     if constexpr (CT::Mutable<C>) {
+                        // Discard is allowed only if THIS is mutable   
+                        // Why bother removing, when there's only one   
+                        // element? Just propagate discard instead!     
+                        // The pack should be reset from above.         
+                        if (self.GetCount() == 1)
+                           return Loop::Discard;
+
+                        handle = self.RemoveAt(handle);
+                        --handle;
                      }
-                     else if (not element->template IsTag<DA>())
-                        return Loop::Continue;
-
-                     ++index;
-
-                     if constexpr (CT::Dense<A>)
-                        return f(*reinterpret_cast<Deref<A>*>(element));
-                     else
-                        return f( reinterpret_cast<A>(element));
-                  }
-               );
-            }
-            else {
-               // Iterate dense container                               
-               loop = self.template IterateInner<REVERSE>(
-                  self.GetCount(),
-                  [&index, &f](Identity& element) noexcept(IsNoexcept<F>) -> R {
-                     if constexpr (CT::Void<R>) {
-                        if (not element.template IsTag<DA>())
-                           return;
+                     else {
+                        LglsAssumeUserWarn(false,
+                           "Attempting to Loop::Discard while iterating constant container. "
+                           "No discard will be performed."
+                        );
                      }
-                     else if (not element.template IsTag<DA>())
-                        return Loop::Continue;
-
-                     ++index;
-                     if constexpr (CT::Dense<A>)
-                        return f(reinterpret_cast<Deref<A>&>( element));
-                     else
-                        return f(reinterpret_cast<Deref<A>*>(&element));
+                     break;
                   }
-               );
+               }
+               else {
+                  // Just execute, always loop through everything       
+                  f(element);
+               }
             }
+            return Loop::NextLoop;
          }
-
-         return loop;
       }
       
       /// Iterate and execute call for each deep element, counting each       
@@ -338,16 +321,14 @@ namespace Langulus::Anyness::Component
       ///   @param counter [out] counts the successful executions             
       ///   @return the last 'f' result                                       
       template<bool REVERSE, bool SKIP, CT::Container C, class F>
-      LoopControl ForEachDeepInner(this C&& self, F&& f, Count<C>& counter) noexcept(IsNoexcept<F>) {
+      LoopControl ForEachDeepInner(this C&& self, F&& f, Count<C>& counter) noexcept_if(f) {
          using A = ArgumentOf<F>;
+         static_assert(CT::Slab<A> or CT::Mutable<C> or CT::ConstantEverywhere<A>,
+            "Mutable reference/pointer iterator not allowed for constant container");
          using R = ReturnOf<F>;
-         constexpr bool TypeErased = Deref<C>::TypeErased;
-         [[maybe_unused]] LoopControl loop = Loop::Continue;
 
-         static_assert(CT::Slab<A> or CT::Constant<Deptr<A>> or CT::Mutable<C>,
-            "Non-constant iterator for constant container is not allowed");
-
-         if constexpr (TypeErased) {
+         LoopControl loop = Loop::Continue;
+         if constexpr (CT::TypeErased<C>) {
             const bool deep = self.IsDeep();
             using D = Deep<C>;
 
@@ -390,6 +371,10 @@ namespace Langulus::Anyness::Component
                         }
                         else {
                            // ...otherwise it acts like a Loop::Continue
+                           LglsAssumeUserWarn(false,
+                              "Attempting to Loop::Discard while iterating constant container. "
+                              "No discard will be performed."
+                           );
                            break;
                         }
                      }
@@ -474,6 +459,10 @@ namespace Langulus::Anyness::Component
                      }
                      else {
                         // ...otherwise it acts like a Loop::Continue   
+                        LglsAssumeUserWarn(false,
+                           "Attempting to Loop::Discard while iterating constant container. "
+                           "No discard will be performed."
+                        );
                         break;
                      }
                   }
@@ -596,6 +585,10 @@ namespace Langulus::Anyness::Component
                   }
                   else {
                      // ...otherwise it acts like a Loop::Continue      
+                     LglsAssumeUserWarn(false,
+                        "Attempting to Loop::Discard while iterating constant container. "
+                        "No discard will be performed."
+                     );
                      next();
                   }
                   break;

@@ -12,7 +12,10 @@
 namespace Langulus::Anyness::DefineState
 {
    ///                                                                        
-   /// If enabled, data is marked as a missing future                         
+   /// If enabled, data is marked as a missing future.                        
+   /// Processing natural language involves incomplete information a lot of   
+   /// the time. Missing future represents a linking point, where new         
+   /// information will end up at.                                            
    ///   @tparam V decides whether state is dynamic or static                 
    template<State::StateValue V>
    struct Future {

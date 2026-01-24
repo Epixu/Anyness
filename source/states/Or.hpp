@@ -12,8 +12,9 @@
 namespace Langulus::Anyness::DefineState
 {
    ///                                                                        
-   /// If enabled, data is considered disjunct instead of conjunct            
-   /// Useful to encode alternative arguments or branched execution           
+   /// If enabled, data is considered disjunct instead of conjunct.           
+   /// Useful to encode alternative arguments or branched execution.          
+   /// This simple bit is crucial for handling ambiguity.                     
    ///   @tparam V decides whether state is dynamic or static                 
    template<State::StateValue V>
    struct Or {
@@ -32,18 +33,18 @@ namespace Langulus::Anyness::DefineState
 
       template<CT::Container C>
       constexpr bool IsOr(this const C& self) noexcept requires Dynamic {
-         return self.mState & Or {};
+         return self.GetStateInner() & Or {};
       }
 
       template<CT::Container C>
       auto EnableOr(this C& self) noexcept -> C& requires Dynamic {
-         self.mState += Or {};
+         self.GetStateInner() += Or {};
          return self;
       }
 
       template<CT::Container C>
       auto DisableOr(this C& self) noexcept -> C& requires Dynamic {
-         self.mState -= Or {};
+         self.GetStateInner() -= Or {};
          return self;
       }
    };
