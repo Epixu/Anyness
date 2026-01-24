@@ -5,94 +5,94 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "TestAnyCommon.hpp"
+#include "TestManyCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
 
-TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
+TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    // Elements are not allocated by the memory manager                  
-   , Types<Any, Text,   ScopedElement<Text>>
-   , Types<Any, int,    ScopedElement<int>>
-   , Types<Any, Any,    ScopedElement<Any>>
-   , Types<Any, RT,     ScopedElement<RT>>
-   , Types<Any, char,   ScopedElement<char>>
-                        
-   , Types<Any, Text*,  ScopedElement<Text*>>
-   , Types<Any, int*,   ScopedElement<int*>>
-   , Types<Any, Any*,   ScopedElement<Any*>>
-   , Types<Any, RT*,    ScopedElement<RT*>>
-   , Types<Any, char*,  ScopedElement<char*>>
+   , Types<Many, Text,   ScopedElement<Text>>
+   , Types<Many, int,    ScopedElement<int>>
+   , Types<Many, Any,    ScopedElement<Any>>
+   , Types<Many, RT,     ScopedElement<RT>>
+   , Types<Many, char,   ScopedElement<char>>
 
-   , Types<Any, Text**, ScopedElement<Text**>>
-   , Types<Any, int**,  ScopedElement<int**>>
-   , Types<Any, Any**,  ScopedElement<Any**>>
-   , Types<Any, RT**,   ScopedElement<RT**>>
-   , Types<Any, char**, ScopedElement<char**>>
+   , Types<Many, Text*,  ScopedElement<Text*>>
+   , Types<Many, int*,   ScopedElement<int*>>
+   , Types<Many, Any*,   ScopedElement<Any*>>
+   , Types<Many, RT*,    ScopedElement<RT*>>
+   , Types<Many, char*,  ScopedElement<char*>>
 
-   , Types<TAny<Text>,   Text,   ScopedElement<Text>>
-   , Types<TAny<int>,    int,    ScopedElement<int>>
-   , Types<TAny<Any>,    Any,    ScopedElement<Any>>
-   , Types<TAny<RT>,     RT,     ScopedElement<RT>>
-   , Types<TAny<char>,   char,   ScopedElement<char>>
-                                 
-   , Types<TAny<Text*>,  Text*,  ScopedElement<Text*>>
-   , Types<TAny<int*>,   int*,   ScopedElement<int*>>
-   , Types<TAny<Any*>,   Any*,   ScopedElement<Any*>>
-   , Types<TAny<RT*>,    RT*,    ScopedElement<RT*>>
-   , Types<TAny<char*>,  char*,  ScopedElement<char*>>
+   , Types<Many, Text**, ScopedElement<Text**>>
+   , Types<Many, int**,  ScopedElement<int**>>
+   , Types<Many, Any**,  ScopedElement<Any**>>
+   , Types<Many, RT**,   ScopedElement<RT**>>
+   , Types<Many, char**, ScopedElement<char**>>
 
-   , Types<TAny<Text**>, Text**, ScopedElement<Text**>>
-   , Types<TAny<int**>,  int**,  ScopedElement<int**>>
-   , Types<TAny<Any**>,  Any**,  ScopedElement<Any**>>
-   , Types<TAny<RT**>,   RT**,   ScopedElement<RT**>>
-   , Types<TAny<char**>, char**, ScopedElement<char**>>
+   , Types<TMany<Text>,   Text,   ScopedElement<Text>>
+   , Types<TMany<int>,    int,    ScopedElement<int>>
+   , Types<TMany<Any>,    Any,    ScopedElement<Any>>
+   , Types<TMany<RT>,     RT,     ScopedElement<RT>>
+   , Types<TMany<char>,   char,   ScopedElement<char>>
+
+   , Types<TMany<Text*>,  Text*,  ScopedElement<Text*>>
+   , Types<TMany<int*>,   int*,   ScopedElement<int*>>
+   , Types<TMany<Any*>,   Any*,   ScopedElement<Any*>>
+   , Types<TMany<RT*>,    RT*,    ScopedElement<RT*>>
+   , Types<TMany<char*>,  char*,  ScopedElement<char*>>
+
+   , Types<TMany<Text**>, Text**, ScopedElement<Text**>>
+   , Types<TMany<int**>,  int**,  ScopedElement<int**>>
+   , Types<TMany<Any**>,  Any**,  ScopedElement<Any**>>
+   , Types<TMany<RT**>,   RT**,   ScopedElement<RT**>>
+   , Types<TMany<char**>, char**, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , Types<Any, Text,   ScopedElement<Text, true>>
-   , Types<Any, int,    ScopedElement<int, true>>
-   , Types<Any, Any,    ScopedElement<Any, true>>
-   , Types<Any, RT,     ScopedElement<RT, true>>
-   , Types<Any, char,   ScopedElement<char, true>>
-                        
-   , Types<Any, Text*,  ScopedElement<Text*, true>>
-   , Types<Any, int*,   ScopedElement<int*, true>>
-   , Types<Any, Any*,   ScopedElement<Any*, true>>
-   , Types<Any, RT*,    ScopedElement<RT*, true>>
-   , Types<Any, char*,  ScopedElement<char*, true>>
+   , Types<Many, Text,   ScopedElement<Text, true>>
+   , Types<Many, int,    ScopedElement<int, true>>
+   , Types<Many, Any,    ScopedElement<Any, true>>
+   , Types<Many, RT,     ScopedElement<RT, true>>
+   , Types<Many, char,   ScopedElement<char, true>>
 
-   , Types<Any, Text**, ScopedElement<Text**, true>>
-   , Types<Any, int**,  ScopedElement<int**, true>>
-   , Types<Any, Any**,  ScopedElement<Any**, true>>
-   , Types<Any, RT**,   ScopedElement<RT**, true>>
-   , Types<Any, char**, ScopedElement<char**, true>>
+   , Types<Many, Text*,  ScopedElement<Text*, true>>
+   , Types<Many, int*,   ScopedElement<int*, true>>
+   , Types<Many, Any*,   ScopedElement<Any*, true>>
+   , Types<Many, RT*,    ScopedElement<RT*, true>>
+   , Types<Many, char*,  ScopedElement<char*, true>>
 
-   , Types<TAny<Text>,   Text,   ScopedElement<Text, true>>
-   , Types<TAny<int>,    int,    ScopedElement<int, true>>
-   , Types<TAny<Any>,    Any,    ScopedElement<Any, true>>
-   , Types<TAny<RT>,     RT,     ScopedElement<RT, true>>
-   , Types<TAny<char>,   char,   ScopedElement<char, true>>
-                                 
-   , Types<TAny<Text*>,  Text*,  ScopedElement<Text*, true>>
-   , Types<TAny<int*>,   int*,   ScopedElement<int*, true>>
-   , Types<TAny<Any*>,   Any*,   ScopedElement<Any*, true>>
-   , Types<TAny<RT*>,    RT*,    ScopedElement<RT*, true>>
-   , Types<TAny<char*>,  char*,  ScopedElement<char*, true>>
+   , Types<Many, Text**, ScopedElement<Text**, true>>
+   , Types<Many, int**,  ScopedElement<int**, true>>
+   , Types<Many, Any**,  ScopedElement<Any**, true>>
+   , Types<Many, RT**,   ScopedElement<RT**, true>>
+   , Types<Many, char**, ScopedElement<char**, true>>
 
-   , Types<TAny<Text**>, Text**, ScopedElement<Text**, true>>
-   , Types<TAny<int**>,  int**,  ScopedElement<int**, true>>
-   , Types<TAny<Any**>,  Any**,  ScopedElement<Any**, true>>
-   , Types<TAny<RT**>,   RT**,   ScopedElement<RT**, true>>
-   , Types<TAny<char**>, char**, ScopedElement<char**, true>>
+   , Types<TMany<Text>,   Text,   ScopedElement<Text, true>>
+   , Types<TMany<int>,    int,    ScopedElement<int, true>>
+   , Types<TMany<Any>,    Any,    ScopedElement<Any, true>>
+   , Types<TMany<RT>,     RT,     ScopedElement<RT, true>>
+   , Types<TMany<char>,   char,   ScopedElement<char, true>>
+
+   , Types<TMany<Text*>,  Text*,  ScopedElement<Text*, true>>
+   , Types<TMany<int*>,   int*,   ScopedElement<int*, true>>
+   , Types<TMany<Any*>,   Any*,   ScopedElement<Any*, true>>
+   , Types<TMany<RT*>,    RT*,    ScopedElement<RT*, true>>
+   , Types<TMany<char*>,  char*,  ScopedElement<char*, true>>
+
+   , Types<TMany<Text**>, Text**, ScopedElement<Text**, true>>
+   , Types<TMany<int**>,  int**,  ScopedElement<int**, true>>
+   , Types<TMany<Any**>,  Any**,  ScopedElement<Any**, true>>
+   , Types<TMany<RT**>,   RT**,   ScopedElement<RT**, true>>
+   , Types<TMany<char**>, char**, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Any, pptr8,  ScopedElementPacked<pptr8>>
-   , Types<Any, pptr16, ScopedElementPacked<pptr16>>
-   , Types<Any, pptr32, ScopedElementPacked<pptr32>>
+   , Types<Many, pptr8,  ScopedElementPacked<pptr8>>
+   , Types<Many, pptr16, ScopedElementPacked<pptr16>>
+   , Types<Many, pptr32, ScopedElementPacked<pptr32>>
 
-   , Types<TAny<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
-   , Types<TAny<pptr16>, pptr16, ScopedElementPacked<pptr16>>
-   , Types<TAny<pptr32>, pptr32, ScopedElementPacked<pptr32>>
+   , Types<TMany<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
+   , Types<TMany<pptr16>, pptr16, ScopedElementPacked<pptr16>>
+   , Types<TMany<pptr32>, pptr32, ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
@@ -145,8 +145,8 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
    
    {
       static_assert(CT::Deep<T>);
-      static_assert(CT::ContainsOne<T>);
-      static_assert(not CT::ContainsMany<T>);
+      static_assert(not CT::ContainsOne<T>);
+      static_assert(CT::ContainsMany<T>);
       static_assert(CT::HasVariableCount<T>);
       static_assert(CT::HeapAllocated<T>);
       static_assert(CT::DeeplyOwned<T>);
@@ -154,24 +154,24 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       static_assert(CT::AutoOwned<T>);
       static_assert(CT::Comparable<T, T>);
       static_assert(CT::Comparable<T, E>);
-      static_assert(not ::std::ranges::range<T>);
+      static_assert(::std::ranges::range<T>);
 
-      static_assert(not requires (T pack, E item) { pack.operator +   (item); });
-      static_assert(not requires (T pack, E item) { pack.operator +=  (item); });
-      static_assert(not requires (T pack, E item) { pack.operator <<  (item); });
-      static_assert(not requires (T pack, E item) { pack.operator >>  (item); });
-      static_assert(not requires (T pack, E item) { pack.operator <<= (item); });
-      static_assert(not requires (T pack, E item) { pack.operator >>= (item); });
-      static_assert(not requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
-      static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
-      static_assert(not requires (T pack, E item) { pack.Remove(item); });
-      static_assert(not requires (T pack, E item) { pack.RemoveAt(Index::Front); });
-      static_assert(not requires (T pack, E item) { pack.Reserve(20); });
-      static_assert(not requires (T pack, E item) { pack.EnableOr(); });
-      static_assert(not requires (T pack, E item) { pack.IsOr(); });
-      static_assert(not requires (T pack, E item) { pack.Find(item); });
-      static_assert(not requires (T pack, E item) { pack.ForEach([](const int&) {}); });
-      static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
+      static_assert(requires (T pack, E item) { pack.operator +   (item); });
+      static_assert(requires (T pack, E item) { pack.operator +=  (item); });
+      static_assert(requires (T pack, E item) { pack.operator <<  (item); });
+      static_assert(requires (T pack, E item) { pack.operator >>  (item); });
+      static_assert(requires (T pack, E item) { pack.operator <<= (item); });
+      static_assert(requires (T pack, E item) { pack.operator >>= (item); });
+      static_assert(requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
+      static_assert(requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+      static_assert(requires (T pack, E item) { pack.Remove(item); });
+      static_assert(requires (T pack, E item) { pack.RemoveAt(Index::Front); });
+      static_assert(requires (T pack, E item) { pack.Reserve(20); });
+      static_assert(requires (T pack, E item) { pack.EnableOr(); });
+      static_assert(requires (T pack, E item) { pack.IsOr(); });
+      static_assert(requires (T pack, E item) { pack.Find(item); });
+      static_assert(requires (T pack, E item) { pack.ForEach([](const int&) {}); });
+      static_assert(requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
    }
 
    constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);

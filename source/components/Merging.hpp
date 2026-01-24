@@ -13,6 +13,7 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Implements merging for containers                                      
+   template<unsigned ID, class AS>
    struct Merging {
    private:
       template<CT::Container C>
@@ -27,7 +28,7 @@ namespace Langulus::Anyness::Component
       /// Merging at specific index                                           
       template<bool FORCE = true, class A1, class...AN, CT::IndexedLinearly C>
       auto MergeAt(this C&, CT::Index auto, A1&&, AN&&...)
-         -> Count<C> requires RangeInsertable<C, A1, AN...>;
+         -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
 
       template<bool FORCE = true, CT::IndexedLinearly C>
       auto MergeRangeAt(this C&, CT::Index auto, CT::Container auto&&)
@@ -36,7 +37,7 @@ namespace Langulus::Anyness::Component
       /// Generic merge                                                       
       template<bool FORCE = true, class A1, class...AN, CT::Container C>
       auto Merge(this C&, A1&&, AN&&...)
-         -> Count<C> requires RangeInsertable<C, A1, AN...>;
+         -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
 
       template<bool FORCE = true, CT::Container C>
       auto MergeRange(this C&, CT::Container auto&&)

@@ -26,21 +26,25 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, Text**, ScopedElement<Text**>>
    , Types<Any, int**,  ScopedElement<int**>>
    , Types<Any, Any**,  ScopedElement<Any**>>
+   , Types<Any, RT**,   ScopedElement<RT**>>
    , Types<Any, char**, ScopedElement<char**>>
 
    , Types<TAny<Text>,   Text,   ScopedElement<Text>>
    , Types<TAny<int>,    int,    ScopedElement<int>>
    , Types<TAny<Any>,    Any,    ScopedElement<Any>>
+   , Types<TAny<RT>,     RT,     ScopedElement<RT>>
    , Types<TAny<char>,   char,   ScopedElement<char>>
                                  
    , Types<TAny<Text*>,  Text*,  ScopedElement<Text*>>
    , Types<TAny<int*>,   int*,   ScopedElement<int*>>
    , Types<TAny<Any*>,   Any*,   ScopedElement<Any*>>
+   , Types<TAny<RT*>,    RT*,    ScopedElement<RT*>>
    , Types<TAny<char*>,  char*,  ScopedElement<char*>>
 
    , Types<TAny<Text**>, Text**, ScopedElement<Text**>>
    , Types<TAny<int**>,  int**,  ScopedElement<int**>>
    , Types<TAny<Any**>,  Any**,  ScopedElement<Any**>>
+   , Types<TAny<RT**>,   RT**,   ScopedElement<RT**>>
    , Types<TAny<char**>, char**, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -49,31 +53,37 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, int,    ScopedElement<int, true>>
    , Types<Any, Any,    ScopedElement<Any, true>>
    , Types<Any, RT,     ScopedElement<RT, true>>
+   , Types<Any, char,   ScopedElement<char, true>>
                         
    , Types<Any, Text*,  ScopedElement<Text*, true>>
    , Types<Any, int*,   ScopedElement<int*, true>>
    , Types<Any, Any*,   ScopedElement<Any*, true>>
    , Types<Any, RT*,    ScopedElement<RT*, true>>
+   , Types<Any, char*,  ScopedElement<char*, true>>
 
    , Types<Any, Text**, ScopedElement<Text**, true>>
    , Types<Any, int**,  ScopedElement<int**, true>>
    , Types<Any, Any**,  ScopedElement<Any**, true>>
    , Types<Any, RT**,   ScopedElement<RT**, true>>
+   , Types<Any, char**, ScopedElement<char**, true>>
 
    , Types<TAny<Text>,   Text,   ScopedElement<Text, true>>
    , Types<TAny<int>,    int,    ScopedElement<int, true>>
    , Types<TAny<Any>,    Any,    ScopedElement<Any, true>>
    , Types<TAny<RT>,     RT,     ScopedElement<RT, true>>
+   , Types<TAny<char>,   char,   ScopedElement<char, true>>
                                  
    , Types<TAny<Text*>,  Text*,  ScopedElement<Text*, true>>
    , Types<TAny<int*>,   int*,   ScopedElement<int*, true>>
    , Types<TAny<Any*>,   Any*,   ScopedElement<Any*, true>>
    , Types<TAny<RT*>,    RT*,    ScopedElement<RT*, true>>
+   , Types<TAny<char*>,  char*,  ScopedElement<char*, true>>
 
    , Types<TAny<Text**>, Text**, ScopedElement<Text**, true>>
    , Types<TAny<int**>,  int**,  ScopedElement<int**, true>>
    , Types<TAny<Any**>,  Any**,  ScopedElement<Any**, true>>
    , Types<TAny<RT**>,   RT**,   ScopedElement<RT**, true>>
+   , Types<TAny<char**>, char**, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
    , Types<Any, pptr8,  ScopedElementPacked<pptr8>>

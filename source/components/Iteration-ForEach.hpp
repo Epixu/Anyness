@@ -15,54 +15,35 @@
 #include <Langulus/MetaOf.hpp>
 
 
-namespace Langulus
+namespace Langulus::Anyness
 {
-   /// Loop controls from inside ForEach lambdas when iterating containers    
-   struct LoopControl {
-      enum Command : int {
-         Break = 0,     // Break the loop                               
-         Continue = 1,  // Continue the loop                            
-         Repeat = 2,    // Repeat the current element                   
-         Discard = 3,   // Remove the current element                   
-         NextLoop = 4   // Skip to next function in the ForEach         
-      } mControl;
-
-      LoopControl() = delete;
-
-      constexpr LoopControl(bool a) noexcept
-         : mControl {static_cast<Command>(a)} {}
-      constexpr LoopControl(Command a) noexcept
-         : mControl {a} {}
-
-      explicit constexpr operator bool() const noexcept {
-         return mControl == Continue or mControl == Repeat;
-      }
-
-      constexpr bool operator == (const LoopControl&) const noexcept = default;
-   };
-
-   namespace Loop
-   {
-      /// Break the entire iteration as a whole                               
-      constexpr LoopControl Break      = LoopControl::Break;
-      /// Continue to next element or function                                
-      constexpr LoopControl Continue   = LoopControl::Continue;
-      /// Repeat the current element                                          
-      constexpr LoopControl Repeat     = LoopControl::Repeat;
-      /// Remove the current element                                          
-      constexpr LoopControl Discard    = LoopControl::Discard;
-      /// End this iterating function and jump immediately to the next        
-      constexpr LoopControl NextLoop   = LoopControl::NextLoop;
-   }
-
-   namespace Anyness
-   {
-      class Neat;
-   }
+   class Neat;
 }
 
 namespace Langulus::Anyness::Component
 {
+   namespace Inner
+   {
+      /// A helper structure that shows how ForEach iteration went            
+      template<CT::Container C>
+      struct ForEachResult {
+         static_assert(CT::Decayed<C>, "Trip all decorations from C first");
+
+         using Count = typename Deref<C>::CountType;
+
+         // Number of iterations                                        
+         Count count = 0;
+
+         // Last loop control return - useful only when you want to     
+         // control an outer loop depending on the iteration result     
+         LoopControl control = Loop::Continue;
+
+         // Implicitly cast to the count member, because that's the     
+         // most likely use                                             
+         operator Count() const noexcept { return count; }
+      };
+   }
+
    ///                                                                        
    /// Implements ForEach iteration interface for containers                  
    ///   @tparam ID heap/stack we're iterating                                
@@ -74,23 +55,10 @@ namespace Langulus::Anyness::Component
    private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
-
       template<CT::Container C>
       using Deep = Tmut<C, typename Deref<C>::DeepType&, typename Deref<C>::DeepType const&>;
-
-      /// A helper structure that shows how ForEach iteration went            
       template<CT::Container C>
-      struct ForEachResult {
-         // Number of iterations                                        
-         Count<C> count = 0;
-         // Last loop control return - useful only when you want to     
-         // control an outer loop depending on the iteration result     
-         LoopControl control = Loop::Continue;
-
-         // Implicitly cast to the count member, because that's the     
-         // most likely use                                             
-         operator Count<C>() const noexcept { return count; }
-      };
+      using ForEachResult = Inner::ForEachResult<Decay<C>>;
 
    public:
       template<CT::Container C>
@@ -98,12 +66,12 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       auto ForEachElementRev(this C&&, auto&&...) -> ForEachResult<C>;
 
-      /// Execute functions for each element inside container                 
+      /// Execute functions for each element inside container.                
       /// Each function has a distinct argument type, that is tested against  
       /// the contained type. If argument is compatible with the type, the    
       /// container is iterated and the function - executed for all elements. 
       /// The rest of the provided functions are ignored after the first      
-      /// function with viable argument                                       
+      /// function with viable argument.                                      
       ///   @param lambdas all potential functions to iterate with            
       ///   @return the number of executions and the control end code         
       template<CT::Container C, class...F>
@@ -112,121 +80,123 @@ namespace Langulus::Anyness::Component
          if (self.IsEmpty())
             return {};
 
-         LoopControl loop = Loop::Break;
-         Count<C> result = 0;
+         ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::NextLoop != (
-            loop = self.template ForEachInner<false>(::std::forward<F>(lambdas), result)
+            result.control = self.template
+               ForEachInner<false>(FWD(lambdas), result.count)
          )));
 
-         if (loop == Loop::Discard)
+         if (result.control == Loop::Discard)
             self.Reset();
-         return {result, loop};
+         return result;
       }
 
       /// Do it in reverse                                                    
       template<CT::Container C, class...F>
       auto ForEachRev(this C&& self, F&&...lambdas) -> ForEachResult<C> {
-         static_assert(sizeof...(F) > 0, "No functions in ForEach");
+         static_assert(sizeof...(F) > 0, "No functions in ForEachRev");
          if (self.IsEmpty())
             return {};
 
-         LoopControl loop = Loop::Break;
-         Count<C> result = 0;
+         ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::NextLoop != (
-            loop = self.template ForEachInner<true>(::std::forward<F>(lambdas), result)
+            result.control = self.template
+               ForEachInner<true>(FWD(lambdas), result.count)
          )));
 
-         if (loop == Loop::Discard)
+         if (result.control == Loop::Discard)
             self.Reset();
-         return {result, loop};
+         return result;
       }
 
-      /// Execute functions in each sub-block, inclusively                    
-      /// Unlike the flat variants above, this one reaches into sub-blocks.   
+      /// Execute functions in each sub-block, inclusively.                   
+      /// Unlike the flat variants above, this one reaches deeper.            
       /// Each function has a distinct argument type, that is tested against  
       /// the contained type. If argument is compatible with the type, the    
       /// block is iterated, and F is executed for all elements. None of the  
       /// provided functions are ignored, unless Loop::Break is returned at   
-      /// some point                                                          
+      /// some point.                                                         
       ///   @param lambdas all potential functions to iterate with            
       ///   @return the number of executions                                  
       template<CT::Container C, class...F>
       auto ForEachDeep(this C&& self, F&&...lambdas) -> ForEachResult<C> {
-         static_assert(sizeof...(F) > 0, "No functions in ForEach");
+         static_assert(sizeof...(F) > 0, "No functions in ForEachDeep");
          if (self.IsEmpty())
             return {};
 
-         LoopControl loop = Loop::Break;
-         Count<C> result = 0;
+         ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::Break == (
-            loop = self.template ForEachDeepInner<false, true>(::std::forward<F>(lambdas), result)
+            result.control = self.template
+               ForEachDeepInner<false, true>(FWD(lambdas), result.count)
          )));
 
-         if (loop == Loop::Discard)
+         if (result.control == Loop::Discard)
             self.Reset();
-         return {result, loop};
+         return result;
       }
 
       /// Do it in reverse                                                    
       template<CT::Container C, class...F>
       auto ForEachDeepRev(this C&& self, F&&...lambdas) -> ForEachResult<C> {
-         static_assert(sizeof...(F) > 0, "No functions in ForEach");
+         static_assert(sizeof...(F) > 0, "No functions in ForEachDeepRev");
          if (self.IsEmpty())
             return {};
 
-         LoopControl loop = Loop::Break;
-         Count<C> result = 0;
+         ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::Break == (
-            loop = self.template ForEachDeepInner<true, true>(::std::forward<F>(lambdas), result)
+            result.control = self.template
+               ForEachDeepInner<true, true>(FWD(lambdas), result.count)
          )));
 
-         if (loop == Loop::Discard)
+         if (result.control == Loop::Discard)
             self.Reset();
-         return {result, loop};
+         return result;
       }
 
       /// Do it without skipping the intermediate containers                  
       template<CT::Container C, class...F>
       auto ForEachDeepNoskip(this C&& self, F&&...lambdas) -> ForEachResult<C> {
-         static_assert(sizeof...(F) > 0, "No functions in ForEach");
-         LoopControl loop = Loop::Break;
-         Count<C> result = 0;
+         static_assert(sizeof...(F) > 0, "No functions in ForEachDeepNoskip");
+
+         ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::Break == (
-            loop = self.template ForEachDeepInner<false, false>(::std::forward<F>(lambdas), result)
+            result.control = self.template
+               ForEachDeepInner<false, false>(FWD(lambdas), result.count)
          )));
 
-         if (loop == Loop::Discard)
+         if (result.control == Loop::Discard)
             self.Reset();
-         return {result, loop};
+         return result;
       }
 
       /// Do it without skipping the intermediate containers in reverse       
       template<CT::Container C, class...F>
       auto ForEachDeepNoskipRev(this C&& self, F&&...lambdas) -> ForEachResult<C> {
-         static_assert(sizeof...(F) > 0, "No functions in ForEach");
-         LoopControl loop = Loop::Break;
-         Count<C> result = 0;
+         static_assert(sizeof...(F) > 0, "No functions in ForEachDeepNoskipRev");
+
+         ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::Break == (
-            loop = self.template ForEachDeepInner<true, false>(::std::forward<F>(lambdas), result)
+            result.control = self.template
+               ForEachDeepInner<true, false>(FWD(lambdas), result.count)
          )));
 
-         if (loop == Loop::Discard)
+         if (result.control == Loop::Discard)
             self.Reset();
-         return {result, loop};
+         return result;
       }
 
    protected:
       /// Iterate and execute call for each flat element, counting each       
-      /// successfull execution                                               
+      /// successfull execution.                                              
       ///   @attention assumes block is typed and non empty                   
       ///   @tparam REVERSE whether to iterate in reverse                     
       ///   @param f the function to execute for each element of type A       
       ///   @param index [out] counts the successful executions               
-      ///   @return the last 'f' result                                       
+      ///   @return the last 'f' result - dictates whether loop continues     
       template<bool REVERSE, CT::Container C, class F>
       LoopControl ForEachInner(this C&& self, F&& f, Count<C>& index) noexcept(IsNoexcept<F>) {
-         AssumeDev(self.GetCount(), "Can't iterate empty container");
-         AssumeDev(self.IsTyped(), "Can't iterate untyped container");
+         LglsAssumeDev(not self.IsEmpty(), "Can't iterate empty container");
+         LglsAssumeDev(self.IsTyped(),     "Can't iterate untyped container");
 
          using A  = ArgumentOf<F>;
          using R  = ReturnOf<F>;
@@ -239,8 +209,8 @@ namespace Langulus::Anyness::Component
          LoopControl loop = Loop::NextLoop;
 
          if constexpr (not TypeErased) {
-            // Container is not type-erased                             
-            // Leverage compile-time optimizations                      
+            // Container is statically-typed.                           
+            // Leverage compile-time optimizations.                     
             using T  = TypeOf<C>;
             using DT = Decay<T>;
 
@@ -267,10 +237,12 @@ namespace Langulus::Anyness::Component
             else return Loop::NextLoop;
          }
          else if constexpr (not CT::DefineTag<DA>) {
-            // Container is type-erased                                 
-            // And we're NOT iterating using a tag                      
+            // Container is type-erased.                                
+            // And we're NOT iterating using a tag.                     
+            const auto T = self.GetType();
+
             if ((CT::Deep<DA> and self.IsDeep()) or (not CT::Deep<DA> and self.template CastsTo<A, true>())) {
-               if (self.mType.IsSparse()) {
+               if (T.IsSparse()) {
                   // Iterate sparse container                           
                   loop = self.template IterateInner<REVERSE>(
                      self.GetCount(),
@@ -286,9 +258,9 @@ namespace Langulus::Anyness::Component
                else {
                   // Iterate dense container where A is binary-         
                   // compatible to the type, but may not be it exactly  
-                  AssumeDev(self.GetStride() % sizeof(DA) == 0, "Unaligned iterator");
+                  LglsAssumeDev(T.GetSize() % sizeof(DA) == 0, "Unaligned iterator");
                   loop = self.template IterateInner<REVERSE>(
-                     self.GetCount() * (self.GetStride() / sizeof(DA)),
+                     self.GetCount() * (T.GetSize() / sizeof(DA)),
                      [&index, &f](DA& element) noexcept(IsNoexcept<F>) -> R {
                         ++index;
                         if constexpr (CT::Dense<A>)
@@ -301,16 +273,18 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            // Container is type-erased                                 
-            // And we're iterating using a tag                          
+            // Container is type-erased.                                
+            // And we're iterating using a tag.                         
             using Identity = CT::ReflectedAs<DA>;
-            if (not self.mType.template Is<Identity>())
+            const auto T = self.GetType();
+
+            if (not T.template Is<Identity>())
                return Loop::NextLoop;
 
             // Container is type-erased and full of tags. Iterator is   
             // a static tag, so we iterate all tags visiting only       
             // those that match the definition in the argument          
-            if (self.mType.IsSparse()) {
+            if (T.IsSparse()) {
                // Iterate sparse container                              
                loop = self.template IterateInner<REVERSE>(
                   self.GetCount(),
@@ -357,7 +331,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Iterate and execute call for each deep element, counting each       
-      /// successfull execution                                               
+      /// successfull execution.                                              
       ///   @tparam REVERSE whether to iterate in reverse                     
       ///   @tparam SKIP whether to execute call for intermediate blocks      
       ///   @param f the function to execute for each element of type A       
@@ -432,14 +406,12 @@ namespace Langulus::Anyness::Component
                      if constexpr (Akin<A, D>) {
                         // Loop control is available only if iterator   
                         // is deep, too...                              
-                        return group.template ForEachDeepInner<REVERSE, SKIP>(
-                           ::std::move(f), counter);
+                        return group.template ForEachDeepInner<REVERSE, SKIP>(MOV(f), counter);
                      }
                      else {
                         // ... otherwise we have to pass through all    
                         // deep sub-blocks                              
-                        group.template ForEachDeepInner<REVERSE, SKIP>(
-                           ::std::move(f), counter);
+                        group.template ForEachDeepInner<REVERSE, SKIP>(MOV(f), counter);
                      }
                   },
                   intermediateCounterSink
@@ -451,15 +423,14 @@ namespace Langulus::Anyness::Component
 
                loop = self.template ForEachInner<REVERSE>(
                   [&f](SubNeat neat) {
-                     return neat.ForEachDeep(::std::move(f));
+                     return neat.ForEachDeep(MOV(f));
                   },
                   counter
                );
             }
             else if constexpr (not CT::Deep<A>) {
                // Equivalent to non-deep iteration                      
-               loop = self.template ForEachInner<REVERSE>(
-                  ::std::move(f), counter);
+               loop = self.template ForEachInner<REVERSE>(MOV(f), counter);
             }
          }
          else {
@@ -517,8 +488,7 @@ namespace Langulus::Anyness::Component
 
                loop = self.template ForEachInner<REVERSE>(
                   [&counter, &f](SubBlock group) {
-                     return group.template ForEachDeepInner<REVERSE, SKIP>(
-                        ::std::move(f), counter);
+                     return group.template ForEachDeepInner<REVERSE, SKIP>(MOV(f), counter);
                   },
                   intermediateCounterSink
                );
@@ -529,46 +499,42 @@ namespace Langulus::Anyness::Component
 
                loop = self.template ForEachInner<REVERSE>(
                   [&f](SubNeat neat) {
-                     return neat.ForEachDeep(::std::move(f));
+                     return neat.ForEachDeep(MOV(f));
                   },
                   counter
                );
             }
             else if constexpr (not CT::Deep<A>) {
                // Equivalent to non-deep iteration                      
-               loop = self.template ForEachInner<REVERSE>(
-                  ::std::move(f), counter);
+               loop = self.template ForEachInner<REVERSE>(MOV(f), counter);
             }
          }
 
          return loop;
       }
 
-      /// Execute a function for each element inside container                
-      /// Lowest-level element iteration function (for internal use only)     
+      /// Execute a function for each element inside container.               
+      /// Lowest-level element iteration function (for internal use only).    
       ///   @attention assumes A is binary compatible with the contained type 
       ///   @attention assumes container is not empty                         
       ///   @attention assumes sparseness matches                             
       ///   @tparam REVERSE direction we're iterating in                      
-      ///   @param f the constexpr noexcept function to call on each item     
+      ///   @param f the function to call on each item                        
       template<bool REVERSE, CT::Container C, class F>
       LoopControl IterateInner(this C&& self, Count<C> count, F&& f) noexcept(IsNoexcept<F>) {
          using A = ArgumentOf<F>;
-         using R = ReturnOf<F>;
-
          static_assert(CT::Complete<Decay<A>> or CT::Sparse<A>,
             "Can't iterate with incomplete type, use pointer instead");
-
-         AssumeDev(self.IsTyped(), 
+         LglsAssumeDev(self.IsTyped(), 
             "Block is not typed");
-         AssumeDev(not self.IsEmpty(), 
+         LglsAssumeDev(not self.IsEmpty(),
             "Block is empty (of type `", self.GetType(), "`)");
-         AssumeDev(self.IsSparse() == CT::Sparse<A>,
+         LglsAssumeDev(self.IsSparse() == CT::Sparse<A>,
             "Sparseness mismatch (`", self.GetType(),
             "` compared against `", MetaDataOf<A>(), "`)");
 
          if constexpr (CT::Dense<A>) {
-            AssumeDev(self.template CastsTo<A, true>(),
+            LglsAssumeDev((self.template CastsTo<A, true>()),
                "Incompatible iterator type", " `", MetaDataOf<A>(), 
                "` (iterating block of type `", self.GetType(), "`)");
          }
@@ -585,6 +551,7 @@ namespace Langulus::Anyness::Component
          };
          auto dataEnd = REVERSE ? raw - 1 : raw + count;
 
+         using R = ReturnOf<F>;
          while (data != dataEnd) {
             // Execute function                                         
             if constexpr (CT::Bool<R>) {
@@ -616,27 +583,16 @@ namespace Langulus::Anyness::Component
                      const Count<C> idx = raw - data;
                      self.RemoveAt(idx);
 
-                     /*if (IsDeep() and mCount == 1) { //TODO this is quite experimental and not fully working right now. can be achieved by Optimize() after the loop for now
-                        // Is only one element remaining? Is that element  
-                        // deep? Then optimize this container away!        
-                        auto temporary = GetDeep();
-                        const_cast<Block*>(this)->GetDeep().ResetMemory();
-                        const_cast<Block*>(this)->Free();
-                        *const_cast<Block*>(this) = temporary;
-                        return Loop::Repeat;
-                     }
-                     else {*/
-                        // Block might BranchOut on RemoveIndex - make  
-                        // sure 'raw', 'data' and 'dataEnd' are up-to-  
-                        // date with new block memory                   
-                        --count;
-                        raw = self.template GetRawAs<DA>();
-                        data = raw + idx;
-                        dataEnd = REVERSE ? raw - 1 : raw + count;
+                     // Block might BranchOut on RemoveIndex - make     
+                     // sure 'raw', 'data' and 'dataEnd' are up-to-     
+                     // date with new block memory                      
+                     --count;
+                     raw = self.template GetRawAs<DA>();
+                     data = raw + idx;
+                     dataEnd = REVERSE ? raw - 1 : raw + count;
 
-                        if constexpr (REVERSE)
-                           next();
-                     //}
+                     if constexpr (REVERSE)
+                        next();
                   }
                   else {
                      // ...otherwise it acts like a Loop::Continue      

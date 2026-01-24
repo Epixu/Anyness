@@ -151,6 +151,7 @@ namespace Langulus::RTTI
          constexpr bool IsPOD()       const noexcept;
          constexpr bool IsNullable()  const noexcept;
          constexpr bool IsAbstract()  const noexcept;
+         constexpr bool IsExecutable()const noexcept;
          constexpr bool HasGetHashMethod() const noexcept;
 
          auto GetDereffer()           const noexcept -> DefinitionData::FBinary;
@@ -239,6 +240,7 @@ namespace Langulus::RTTI
          bool IsPOD()                 const noexcept;
          bool IsNullable()            const noexcept;
          bool IsAbstract()            const noexcept;
+         bool IsExecutable()          const noexcept;
          bool HasGetHashMethod()      const noexcept;
 
          auto GetDereffer()           const noexcept -> DefinitionData::FBinary;

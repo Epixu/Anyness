@@ -84,6 +84,8 @@ namespace Langulus::RTTI
       // Decides whether POD data is batch-hashable or not.             
       // A custom GetHash() method disables POD batch-hashing.          
       bool mHasGetHashMethod = false;
+      // Does data represent an executable verb.                        
+      bool mExecutable IF_SAFE(= false);
 
       // Data instance size in bytes, set by sizeof().                  
       size_t mSize IF_SAFE(= 0);
@@ -297,7 +299,6 @@ namespace Langulus::RTTI
       DefinitionData(const Token& cppname) noexcept
          : Definition {cppname} {}
       
-      // ReSharper disable once CppEnforceOverridingDestructorStyle     
       ~DefinitionData();
    };
 }

@@ -127,7 +127,7 @@ namespace Langulus::Anyness::Component
                return *static_cast<THQ1>(mHeap);
             }
             else if (indirections > IndirectsOf<TH>) {
-               // We need to dereference                                
+               // We need to dereference. Supports packed pointers.     
                auto diff = indirections - IndirectsOf<TH>;
                Deep<C> denser = Disown(self.GetDense(diff));
                return *static_cast<THQ1>(denser.GetHeapInner());
@@ -147,7 +147,8 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
                // We need to dereference. Can be done without a         
-               // reinterpret_cast, and thus be constexpr-friendly      
+               // reinterpret_cast, and thus be constexpr-friendly.     
+               // Supports packed pointers as well.                     
                return *static_cast<THQ1>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TC*>(mHeap)));
             }
             else {

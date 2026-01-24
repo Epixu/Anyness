@@ -74,7 +74,7 @@ namespace Langulus
          CTTI::SerializationRule<DTO, DFROM>::Serialize(from, to, context);
       }
       else {
-         // No rule exists, just cast and concatenate                   
+         // No rule exists, just cast and concatenate, if possible      
          (void) context;
          to += Convert<DTO>(from);
       }
@@ -84,12 +84,15 @@ namespace Langulus
 
 namespace Langulus::Serial
 {
+   /// Helps to define an operator                                            
    struct Operator {
       Token mToken;
       bool mCharge = false;
    };
 
-   /// Built-in operator properties                                           
+   /// Built-in operator properties.                                          
+   /// These are tuned for Langulus::Code specification, but you can          
+   /// use your own in your custom CTTI_Serializer.                           
    constexpr Operator OpenScope      { "(" };
    constexpr Operator CloseScope     { ")" };
    constexpr Operator OpenScopeAlt   { "[" };

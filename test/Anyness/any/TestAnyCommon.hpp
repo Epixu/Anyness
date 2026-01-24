@@ -110,20 +110,20 @@ namespace doctest
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_Helper_TestType(const C& any) {
    if constexpr (CT::Void<E>) {
-      REQUIRE(any.template IsSame<int>());
-      REQUIRE(any.template IsExact<int>());
-      REQUIRE(any.template Is<int>());
+      REQUIRE(    any.template IsSame<int>());
+      REQUIRE(    any.template IsExact<int>());
+      REQUIRE(    any.template Is<int>());
       REQUIRE(not any.IsSparse());
       REQUIRE(not any.IsDeep());
-      REQUIRE(any.GetType() == MetaDataOf<int>());
+      REQUIRE(    any.GetType() == MetaDataOf<int>());
    }
    else {
-      REQUIRE(any.template IsSame<E>());
-      REQUIRE(any.template IsExact<E>());
-      REQUIRE(any.template Is<E>());
-      REQUIRE(any.IsSparse() == CT::Sparse<E>);
-      REQUIRE(any.IsDeep() == CT::Deep<E>);
-      REQUIRE(any.GetType() == MetaDataOf<E>());      
+      REQUIRE(    any.template IsSame<E>());
+      REQUIRE(    any.template IsExact<E>());
+      REQUIRE(    any.template Is<E>());
+      REQUIRE(    any.IsSparse() == CT::Sparse<E>);
+      REQUIRE(    any.IsDeep() == CT::Deep<E>);
+      REQUIRE(    any.GetType() == MetaDataOf<E>());      
    }
    
    REQUIRE(any.IsTyped());
@@ -143,7 +143,7 @@ void Any_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
 ///                                                                           
 /// Possible state test implementations                                       
 template<class E, CT::Container C> requires CT::NoIntent<C>
-void Any_CheckState_Default(const C& any, bool typed = false) {
+void Common_CheckState_Default(const C& any, bool typed = false) {
    if constexpr (CT::Typed<C>) {
       static_assert(Exact<TypeOf<C>, E>);
       Any_Helper_TestType<E>(any);
@@ -178,6 +178,11 @@ void Any_CheckState_Default(const C& any, bool typed = false) {
    REQUIRE      (any.GetRaw() == nullptr);
    REQUIRE_FALSE(any);
    REQUIRE      (not any);
+}
+
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Any_CheckState_Default(const C& any, bool typed = false) {
+   Common_CheckState_Default<E>(any, typed);
 
    if constexpr (requires { any.GetState(); }) {
       REQUIRE_FALSE(any.IsMissing());
@@ -222,23 +227,6 @@ void Any_CheckState_OwnedFull(const C& any) {
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Any_CheckState_DisownedFull(const C& any) {
-   Any_Helper_TestType<E>(any);
-
-   REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (any.IsConstant());
-   REQUIRE      (any.IsValid());
-   REQUIRE_FALSE(any.GetAllocation());
-   REQUIRE_FALSE(any.IsEmpty());
-   REQUIRE      (any.GetCount() > 0);
-   REQUIRE      (any.GetReserved() == 0);
-   REQUIRE      (any.GetUses() == 0);
-   REQUIRE      (any.GetRaw());
-   REQUIRE      (any);
-   REQUIRE_FALSE(not any);
-}
-
-template<class E, CT::Container C> requires CT::NoIntent<C>
-void Any_CheckState_DisownedFullConst(const C& any) {
    Any_Helper_TestType<E>(any);
 
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);

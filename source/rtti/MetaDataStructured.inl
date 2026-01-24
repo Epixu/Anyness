@@ -345,7 +345,16 @@ namespace Langulus::RTTI::Inner
       const auto id = Base::GetID();
       if (id)
          return Instance.GetMetaDataByID(id, sparse, constant)->mAbstract;
-      return {};
+      return false;
+   }
+
+   /// Check if type is CT::Executable                                        
+   TEMPLATE()
+   constexpr bool ME()::IsExecutable() const noexcept {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaDataByID(id, sparse, constant)->mExecutable;
+      return false;
    }
 
    /// Check if type has an explicit GetHash() method                         

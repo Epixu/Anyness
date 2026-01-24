@@ -27,6 +27,7 @@
 #include <Langulus/CT/Files.hpp>
 #include <Langulus/CT/Suffix.hpp>
 #include <Langulus/CT/Serializer.hpp>
+#include <Langulus/CT/Executable.hpp>
 #include <Langulus/IntentOf.hpp>
 
 #if not LANGULUS_FEATURE(MANAGED_REFLECTION)
@@ -205,16 +206,17 @@ namespace Langulus::RTTI
       // If this is reached, then data is not defined yet from the      
       // viewpoint of the current boundary                              
       definition.ReflectCommon<T>();
-      definition.mSize      = sizeof(T);
-      definition.mAlign     = alignof(T);
-      definition.mConst     = false;
-      definition.mDeep      = CT::Deep<T>;
-      definition.mPOD       = CT::POD<T> and not CT::Abstract<T>;
-      definition.mNullable  = CT::Nullable<T> and not CT::Abstract<T>;
-      definition.mAbstract  = CT::Abstract<T>;
-      definition.mOrigin    = &definition;
-      definition.mDecvqOnce = &definition;
-      definition.mDecvqAll  = &definition;
+      definition.mSize       = sizeof(T);
+      definition.mAlign      = alignof(T);
+      definition.mConst      = false;
+      definition.mDeep       = CT::Deep<T>;
+      definition.mPOD        = CT::POD<T> and not CT::Abstract<T>;
+      definition.mNullable   = CT::Nullable<T> and not CT::Abstract<T>;
+      definition.mAbstract   = CT::Abstract<T>;
+      definition.mExecutable = CT::Executable<T>;
+      definition.mOrigin     = &definition;
+      definition.mDecvqOnce  = &definition;
+      definition.mDecvqAll   = &definition;
 
       if constexpr (CT::Suffix<T>)
          definition.mSuffixOf = SuffixOf<T>();
@@ -647,13 +649,14 @@ namespace Langulus::RTTI
       // If this is reached, then data is not defined yet from the      
       // viewpoint of the current boundary                              
       definition.ReflectCommon<T>();
-      definition.mSize      = sizeof(T);
-      definition.mAlign     = alignof(T);
-      definition.mConst     = true;
-      definition.mDeep      = CT::Deep<T>;
-      definition.mPOD       = CT::POD<T> and not CT::Abstract<T>;
-      definition.mNullable  = CT::Nullable<T> and not CT::Abstract<T>;
-      definition.mAbstract  = CT::Abstract<T>;
+      definition.mSize       = sizeof(T);
+      definition.mAlign      = alignof(T);
+      definition.mConst      = true;
+      definition.mDeep       = CT::Deep<T>;
+      definition.mPOD        = CT::POD<T> and not CT::Abstract<T>;
+      definition.mNullable   = CT::Nullable<T> and not CT::Abstract<T>;
+      definition.mAbstract   = CT::Abstract<T>;
+      definition.mExecutable = CT::Executable<T>;
 
       // Reflect the origin type                                        
       definition.mOrigin    = Reflect<CT::ReflectedAs<Decay<T>>>();
@@ -880,13 +883,18 @@ namespace Langulus::RTTI
       definition.mSize      = sizeof(T);
       definition.mAlign     = alignof(T);
       definition.mConst     = CT::Constant<T>;
-      if constexpr (CT::Complete<Decay<T>>)
-         definition.mDeep   = CT::Deep<T>;
-      else
-         definition.mDeep   = false;
       definition.mPOD       = true;
       definition.mNullable  = true;
       definition.mAbstract  = false;
+
+      if constexpr (CT::Complete<Decay<T>>) {
+         definition.mDeep = CT::Deep<T>;
+         definition.mExecutable = CT::Executable<T>;
+      }
+      else {
+         definition.mDeep = false;
+         definition.mExecutable = false;
+      }
 
       // Reflect the origin type                                        
       if constexpr (CT::Complete<Decay<T>>)

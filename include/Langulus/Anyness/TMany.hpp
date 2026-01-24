@@ -6,70 +6,33 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/Container.hpp"
-#include "../../../source/components/Heap-Movable.hpp"
-#include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership-Heap.hpp"
-#include "../../../source/components/Contiguous.hpp"
-#include "../../../source/components/IndexedLinear.hpp"
-#include "../../../source/components/Insertion.hpp"
-#include "../../../source/components/InsertionOperators.hpp"
-#include "../../../source/components/Emplacement.hpp"
-#include "../../../source/components/Removal.hpp"
-#include "../../../source/components/Assignment.hpp"
-#include "../../../source/components/Typed-Stack.hpp"
-#include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Stack.hpp"
-#include "../../../source/components/Hash-Stack.hpp"
-#include "../../../source/components/Descriptor.hpp"
-#include "../../../source/components/Iteration-ForEach.hpp"
-#include "../../../source/components/Iteration-Range.hpp"
-#include "../../../source/components/Comparison.hpp"
-#include "../../../source/components/Conversion.hpp"
-#include "../../../source/components/State-Stack.hpp"
-#include "../../../source/states/Typed.hpp"
-#include "../../../source/states/Future.hpp"
-#include "../../../source/states/Past.hpp"
-#include "../../../source/states/Compressed.hpp"
-#include "../../../source/states/Encrypted.hpp"
-#include "../../../source/states/Or.hpp"
-#include "../../../source/states/Tracked.hpp"
-#include "../../../source/rtti/MetaData.hpp"
+#include "Many.hpp"
 #include "THandle.hpp"
 
 
-namespace Langulus::Anyness
+namespace Langulus::Anyness::Inner
 {
-   struct Many;
-   template<CT::NotVoid> struct TMany;
-   template<CT::NotVoid> struct TManyView;
-
-
-   ///                                                                        
-   /// A statically-typed contiguous container of variable size that is       
-   /// binary-compatible with the type-erased alternative above               
-   ///                                                                        
    template<CT::NotVoid T>
-   struct TMany : Container<
+   using TManyBase = Container<
+      Com::TypedStack<DMeta, T>,       // Type-constrained              
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::OwnershipStack<>,           // Allocation is referenced      
-      Com::DeepOwnershipHeap<>,        // Referenced indirections       
-      Com::Contiguous,                 // Heap memory is continuous     
+      Com::CountStack<>,               // Dynamically sized             
+      Com::ReserveEmergent<>,          // Reserve derived from alloc    
+      Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
+      Com::HashStack<>,                // Hash can be cached            
       Com::IndexedLinear<>,            // Indexed directly              
-      Com::Emplacement<>,              // Allows emplacement            
       Com::Insertion<>,                // Allows insertion              
       Com::InsertionOperators<>,       // << and >> insertion           
-      Com::Removal<>,                  // Allows removal                
+      Com::Merging<>,                  // Allows merging                
+      Com::MergingOperators<>,         // <<= and >>= merging           
+      Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
-      Com::TypedStack<DMeta, T>,       // Type-constrained              
-      Com::CountStack<>,               // Variable count                
-      Com::ReserveStack<>,             // Variable capacity             
-      Com::HashStack<>,                // Variable hash (cached)        
-      Com::Descriptor,                 // Descriptor interface          
+      Com::Removal<>,                  // Allows clear/reset            
+      Com::Conversion,                 // Allows conversions            
+      Com::Comparison<>,               // Allows comparisons            
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
-      Com::Comparison,                 // Allows for comparison         
-      Com::Conversion,                 // Allows conversion             
       Com::StateStack<                 // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Future<>,        // Adds a 'missing future' state 
@@ -79,63 +42,95 @@ namespace Langulus::Anyness
          DefineState::Or<>,            // Adds 'or' state               
          DefineState::Tracked<>        // Adds 'tracked' state          
       >
-   > {
+   >;
+}
+
+namespace Langulus::Anyness
+{
+   ///                                                                        
+   /// A statically-typed contiguous container of variable size that is       
+   /// binary-compatible with the type-erased alternative `Many`.             
+   template<CT::NotVoid T>
+   struct TMany : Inner::TManyBase<T> {
       using CTTI_ReflectAs = Many;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_MapsTo    = Text;
 
-      // View                                                           
-      using  ViewType = TManyView<T>;
+      using Base = Inner::TManyBase<T>;
+      using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
-      // Deep type                                                      
-      using  DeepType = Many;
+      using Pick          = T const&;
+      using PickMut       = THandle<T&>;
+      using HandleType    = THandle<T const&>;
+      using HandleMutType = THandle<T&>;
+      using DeepType      = Any;
 
-      // Single element selections                                      
-      using  PickDenseMut  = T&;
-      using  PickDense     = T const&;
-      using  PickSparseMut = THandle<T&>;
-      using  PickSparse    = THandle<T const&>;
-      using  Pick          = Tif<CT::Sparse<T>, PickSparse,    PickDense>;
-      using  PickMut       = Tif<CT::Sparse<T>, PickSparseMut, PickDenseMut>;
+      constexpr TMany() noexcept {
+         this->ConstructDefault();
+      }
+      constexpr TMany(TMany const& other) {
+         this->Absorb(Refer(other));
+      }
+      constexpr TMany(TMany&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+      constexpr ~TMany() noexcept {
+         this->Destroy();
+      }
+      
+      /// Construction that either absorbs the provided container, or         
+      /// emplaces T in the container, using A... as constructor arguments    
+      template<class...A>
+      constexpr TMany(A&&...arguments) {
+         if constexpr (sizeof...(A) == 1 and CT::Container<A...>) {
+            LglsAssumeUser(
+               ((Same<Deint<A>, TMany> or Same<TypeOf<Deint<A>>, T>) and ...),
+               "Ambiguous use of construction "
+               "- you should use tag-dispatch with first argument either Absorb "
+               "(if you want to overwrite the container itself) or Piecewise "
+               "(if you want to overwrite the first item) in order to clearly "
+               "state your intent. Absorb will be used by default!"
+            );
+            this->Absorb(FWD(arguments)...);
+         }
+         else this->EmplaceConstruct(FWD(arguments)...);
+      }
+      
+      /// Construction that absorbs the provided container                    
+      constexpr TMany(Inner::Absorb, auto&& argument) {
+         this->Absorb(FWD(argument));
+      }
+      
+      /// Emplaces T inside, using A... as constructor arguments              
+      constexpr TMany(Inner::Piecewise, auto&&...arguments) {
+         this->EmplaceConstruct(FWD(arguments)...);
+      }
 
-      // Range selections                                               
-      struct PickRangeDenseMut : Container<
-         Com::HeapMovable<>,
-         Com::Contiguous,
-         Com::IndexedLinear<>,
-         Com::Assignment<>,
-         Com::TypedStatic<DMeta, T>,
-         Com::CountStack<>
-      > {};
-      using  PickRangeDense = PickRangeDenseMut;
-      struct PickRangeSparseMut : Container<
-         Com::HeapMovable<>,
-         Com::OwnershipStack<0, false>,
-         Com::DeepOwnershipHeap<>,
-         Com::Contiguous,
-         Com::IndexedLinear<>,
-         Com::Assignment<>,
-         Com::TypedStatic<DMeta, T>,
-         Com::CountStack<>,
-         Com::ReserveStack<>
-      > {};
-      using  PickRangeSparse = PickRangeSparseMut;
-      using  PickRange       = Tif<CT::Sparse<T>, PickRangeSparse,    PickRangeDense>;
-      using  PickRangeMut    = Tif<CT::Sparse<T>, PickRangeSparseMut, PickRangeDenseMut>;
-
-      ///                                                                     
-      /// Construction                                                        
-      constexpr TMany() noexcept = default;
-      constexpr TMany(const TMany&) noexcept = default;
-      constexpr TMany(TMany&&) noexcept = default;
-
-      template<class A1, class...AN>
-      TMany(A1&&, AN&&...) requires CT::RangeInsertable<TMany, A1, AN...>;
-
-      ///                                                                     
       /// Assignment                                                          
-      TMany& operator = (TMany const&) noexcept = default;
-      TMany& operator = (TMany&&) noexcept = default;
+      constexpr TMany& operator = (TMany const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr TMany& operator = (TMany&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
+      }
 
-      template<class A1> requires CT::RangeAssignable<TMany, A1>
-      TMany& operator = (A1&&);
+      template<class A>
+      constexpr TMany& operator = (A&& argument) {
+         if constexpr (CT::Container<A>) {
+            LglsAssumeUser(
+               (Same<Deint<A>, TMany> or Same<TypeOf<Deint<A>>, T>),
+               "Ambiguous use of assignment "
+               "- you should use either AssignAbsorb (if you want to overwrite "
+               "the container itself) or Assign (if you want to overwrite the "
+               "first item) in order to clearly state your intent. "
+               "AssignAbsorb will be used by default!"
+            );
+            return this->AssignAbsorb(FWD(argument));
+         }
+         else return this->Assign(FWD(argument));
+      }
+      
+      using Com::Comparison<>::operator <=>;
+      using Com::Comparison<>::operator ==;
    };
 }

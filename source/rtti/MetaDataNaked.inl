@@ -135,6 +135,11 @@ namespace Langulus::RTTI::Inner
       return mDefinition ? mDefinition->mAbstract : false;
    }
 
+   /// Check if type is CT::Executable                                        
+   inline bool MetaDataNaked::IsExecutable() const noexcept {
+      return mDefinition ? mDefinition->mExecutable : false;
+   }
+
    /// Check if type has an explicit GetHash() method                         
    inline bool MetaDataNaked::HasGetHashMethod() const noexcept {
       return mDefinition ? mDefinition->mHasGetHashMethod : false;

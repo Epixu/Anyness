@@ -479,11 +479,12 @@ namespace Langulus::Anyness
       }
 
       /// The presence of this structure makes Text a CT::Serializer          
-      struct CTTI_Serializer {         
+      struct CTTI_Serializer {
          // Text serializer can be lossy to omit unnecessary details,   
-         // and you can configure how many elements to show             
+         // and you can configure how many elements to show by defining 
+         // LANGULUS_MAX_DEBUGGABLE_ELEMENTS.                           
          #ifdef LANGULUS_MAX_DEBUGGABLE_ELEMENTS
-            static constexpr Count MaxIterations = LANGULUS_MAX_DEBUGGABLE_ELEMENTS;
+            static constexpr CountType MaxIterations = LANGULUS_MAX_DEBUGGABLE_ELEMENTS;
          #elif LANGULUS(DEBUG) or LANGULUS(SAFE)
             static constexpr CountType MaxIterations = 32;
          #else
@@ -496,7 +497,7 @@ namespace Langulus::Anyness
          static constexpr bool SkipElements = true;
 
          static void BeginScope(const CT::Container auto& from, Text& to, Context*) {
-            const bool scoped = from.GetCount() > 1 or from.IsInvalid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
+            const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
             if (scoped) {
                if (from.IsPast())
                   to += Serial::Past;
@@ -508,7 +509,7 @@ namespace Langulus::Anyness
          }
          
          static void EndScope(const CT::Container auto& from, Text& to, Context*) {
-            const bool scoped = from.GetCount() > 1 or from.IsInvalid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
+            const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
             if (scoped)
                to += Serial::CloseScope;
          }
@@ -525,7 +526,7 @@ namespace Langulus::Anyness
             else {
                to += "/*";
                to += type.GetName();
-               to += " -> empty Text*/";            
+               to += " -> empty Text*/";
             }
          }
          
@@ -537,7 +538,7 @@ namespace Langulus::Anyness
             else {
                to += "/*";
                to += type.GetName();
-               to += " -> Text failed*/";            
+               to += " -> Text failed*/";
             }
          }
       };
@@ -559,7 +560,7 @@ namespace Langulus::CT
       concept StringifiableByOperator = (std::is_object_v<T> and ...)
           and requires (const T&...a) {
             ((a.operator ::Langulus::Anyness::Text()), ...);
-         };
+          };
 
       /// Does Text has an explicit/implicit constructor that accepts T       
       template<class...T>

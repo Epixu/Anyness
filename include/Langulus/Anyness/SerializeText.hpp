@@ -45,7 +45,11 @@ namespace Langulus::CTTI
                " from ", T.GetName(), " to ", text_meta.GetName());
 
             for (Count i = 0; i < self.GetCount(); ++i) {
-               serializer(self.GetAt(i), &out, context);
+               decltype(auto) element = self.GetAt(i);
+               if constexpr (CT::Typed<C>)
+                  serializer(&element, &out, context);
+               else
+                  serializer(const_cast<void*>(element), &out, context);
 
                if (i < self.GetCount() - 1)
                   S::Separate(self, out, context);

@@ -164,6 +164,26 @@ namespace Langulus::Anyness::Component
          return CT::Deep<TYPE>;
       }
       
+      /// Check if container contains executable items                        
+      ///   @return true if the container has at least one executable element 
+      template<CT::Container C>
+      constexpr bool IsExecutable(this C const& self) noexcept {
+         if (self.IsEmpty())
+            return false;
+
+         if constexpr (CT::Executable<TYPE>)
+            return true;
+         else if constexpr (CT::Deep<TYPE>) {
+            // Dig deeper                                               
+            for (TYPE const& inner : self) {
+               if (inner.IsExecutable())
+                  return true;
+            }
+            return false;
+         }
+         else return false;
+      }
+      
       /// Always returns true                                                 
       constexpr bool IsTypeConstrained() const noexcept {
          return true;

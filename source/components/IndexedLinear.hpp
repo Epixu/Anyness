@@ -9,6 +9,7 @@
 #include "../Container.hpp"
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Signed.hpp>
+#include <Langulus/CT/Contiguous.hpp>
 #include <limits>
 
 
@@ -134,19 +135,77 @@ namespace Langulus::Anyness::Component
          return self.GetAt(idx);
       }
 
-      /// Access element at a specific index                                  
+      /// Get reference to Nth element as sparse or dense, depending on T.    
+      /// This is a lower-level routine that does only sparseness checking.   
+      /// No conversion or copying occurs, only pointer arithmetic.           
+      ///   @attention no type-safety                                         
+      ///   @attention assumes the container is typed                         
+      ///   @attention assumes the container is allocated                     
+      ///   @tparam AS the type of data we're accessing - use void to use the 
+      ///      type of the container, if statically typed                     
       ///   @param idx the index                                              
       ///   @return the picked element                                        
-      template<CT::Container C>
-      auto GetAt(this C&& self, CT::Index auto idx)
-      assumptious -> Pick<C> {
+      template<class AS = void, CT::Container C>
+      constexpr decltype(auto) GetAt(this C&& self, CT::Index auto&& idx) assumptious {
+         static_assert(not CT::Handle<AS>,    "T can't be a handle");
+         static_assert(not CT::Reference<AS>, "Strip references first");
+         using TC   = TypeOf<C>;
+         using TH   = Tif<CT::Void<AS>, TC, AS>;
+         using THQ1 = Tmut<C, TH*, ConstAll<TH*>>;
+
+         // Get the first element without dereferencing anything        
+         auto heap = self.GetRaw();
+
+         // Offset it                                                   
          const auto offset = self.SimplifyIndex(idx);
-         if constexpr (CT::Handle<Pick<C>>)
-            return self.GetHandle() += offset;
-         else if constexpr (Deref<C>::TypeErased)
-            return self.GetRaw() + offset * self.GetStride();
-         else
-            return *(self.GetRaw() + offset);
+         if constexpr (CT::Void<TH>) {
+            const auto byte_offset = self.GetStride() * offset;
+            if constexpr (CT::Mutable<C>) {
+               heap = reinterpret_cast<void*>(
+                  reinterpret_cast<uint8_t*>(heap) + byte_offset
+               );
+            }
+            else {
+               heap = reinterpret_cast<void const*>(
+                  reinterpret_cast<uint8_t const*>(heap) + byte_offset
+               );
+            }
+         }
+         else heap += offset;
+
+         // Dereference it if we have to                                
+         if constexpr (CT::Void<TH>)
+            return heap;
+         else if constexpr (CT::TypeErased<C>) {
+            // Casting to a desired runtime type                        
+            LglsAssumeDev(self.IsTyped(), "Block is not typed");
+            const auto indirections = self.GetIndirections();
+
+            if (indirections == IndirectsOf<TH>) {
+               // No difference in indirections                         
+               return *static_cast<THQ1>(heap);
+            }
+            else if (indirections > IndirectsOf<TH>) {
+               // We need to dereference                                
+               auto diff = indirections - IndirectsOf<TH>;
+               Deep<C> denser = Disown(self.GetDense(diff));
+               return *static_cast<THQ1>(denser.GetHeapInner());
+            }
+            else LglsError("Too many indirections");
+         }
+         else {
+            // Casting to a desired static type                         
+            if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
+               // No difference in indirections                         
+               return *static_cast<THQ1>(static_cast<TC*>(heap));
+            }
+            else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
+               // We need to dereference. Can be done without a         
+               // reinterpret_cast, and thus be constexpr-friendly      
+               return *static_cast<THQ1>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TC*>(heap)));
+            }
+            else static_assert(false, "Too many indirections");
+         }
       }
 
       template<CT::NotVoid AS, CT::Container C>
@@ -173,4 +232,11 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       void SwapIndices(this C&, CT::Index auto, CT::Index auto) assumptious;
    };
+}
+
+namespace Langulus::CT
+{
+   /// Check if listed types are linearly indexed                             
+   template<class...T>
+   concept IndexedLinearly = Container<T...> and Contiguous<T...> and ((ShedDeref<T>::Indexed) and ...);
 }

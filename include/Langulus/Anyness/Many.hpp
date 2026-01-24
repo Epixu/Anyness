@@ -18,6 +18,8 @@
 #include "../../../source/components/IndexedLinear.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
+#include "../../../source/components/Merging.hpp"
+#include "../../../source/components/MergingOperators.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Conversion.hpp"
@@ -48,6 +50,8 @@ namespace Langulus::Anyness::Inner
       Com::IndexedLinear<>,            // Indexed directly              
       Com::Insertion<>,                // Allows insertion              
       Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Merging<>,                  // Allows merging                
+      Com::MergingOperators<>,         // <<= and >>= merging           
       Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
@@ -157,6 +161,8 @@ namespace Langulus::Anyness
 
       using Com::Comparison<>::operator <=>;
       using Com::Comparison<>::operator ==;
+      //using Com::IterationRange<>::begin;
+      //using Com::IterationRange<>::end;
    };
 }
 

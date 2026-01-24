@@ -103,11 +103,12 @@ namespace Langulus::Anyness
       template<unsigned ID = 0, class T = void> struct IndexedLinear;
       template<unsigned ID = 0, class AS = void> struct Insertion;
       template<unsigned ID = 0, class AS = void> struct InsertionOperators;
+      template<unsigned ID = 0, class AS = void> struct Merging;
+      template<unsigned ID = 0, class AS = void> struct MergingOperators;
       struct Interpolation;
       template<unsigned ID = 0> struct IterationForEach;
       template<unsigned ID = 0> struct IterationOperators;
       template<unsigned ID = 0> struct IterationRange;
-      struct Merging;
       template<unsigned ID = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipEmergent;
       template<unsigned ID = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipStack;
       template<unsigned ID = 0> struct Removal;
@@ -549,4 +550,45 @@ namespace Langulus::CT
    /// Check if listed types are type-erased containers                       
    template<class...T>
    concept TypeErased = Container<T...> and ((ShedDeref<T>::TypeErased) and ...);
+}
+
+namespace Langulus
+{
+   /// Loop controls from inside ForEach lambdas when iterating containers    
+   struct LoopControl {
+      enum Command : int {
+         Break = 0,     // Break the loop                               
+         Continue = 1,  // Continue the loop                            
+         Repeat = 2,    // Repeat the current element                   
+         Discard = 3,   // Remove the current element                   
+         NextLoop = 4   // Skip to next function in the ForEach         
+      } mControl;
+
+      LoopControl() = delete;
+
+      constexpr LoopControl(bool a) noexcept
+         : mControl {static_cast<Command>(a)} {}
+      constexpr LoopControl(Command a) noexcept
+         : mControl {a} {}
+
+      explicit constexpr operator bool() const noexcept {
+         return mControl == Continue or mControl == Repeat;
+      }
+
+      constexpr bool operator == (const LoopControl&) const noexcept = default;
+   };
+
+   namespace Loop
+   {
+      /// Break the entire iteration as a whole                               
+      constexpr LoopControl Break      = LoopControl::Break;
+      /// Continue to next element or function                                
+      constexpr LoopControl Continue   = LoopControl::Continue;
+      /// Repeat the current element                                          
+      constexpr LoopControl Repeat     = LoopControl::Repeat;
+      /// Remove the current element                                          
+      constexpr LoopControl Discard    = LoopControl::Discard;
+      /// End this iterating function and jump immediately to the next        
+      constexpr LoopControl NextLoop   = LoopControl::NextLoop;
+   }
 }

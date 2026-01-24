@@ -83,7 +83,7 @@ namespace Langulus
 
       if constexpr (CT::Complete<CTTI::Converter<DFROM, DTO>>)
          CTTI::Converter<DFROM, DTO>::Convert(from, to);
-      else if constexpr (requires { TF(from); })
+      else if constexpr (requires { DTO(from); })
          new (&to) DTO(from);
       else if constexpr (requires { DTO(static_cast<DTO>(from)); })
          new (&to) DTO(static_cast<DTO>(from));
@@ -105,7 +105,7 @@ namespace Langulus
 
       if constexpr (CT::Complete<CTTI::Converter<DFROM, DTO>>)
          return CTTI::Converter<DFROM, DTO>::Convert(from);
-      else if constexpr (requires { TF(from); })
+      else if constexpr (requires { DTO(from); })
          return DTO(from);
       else if constexpr (requires { DTO(static_cast<DTO>(from)); })
          return DTO(static_cast<DTO>(from));
