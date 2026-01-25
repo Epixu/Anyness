@@ -27,6 +27,7 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipStack<>,              // Allocation is referenced  
       Com::CountStatic<1u>,               // Statically sized          
       Com::ReserveEmergent<>,             // Reserve derived from alloc
+      Com::OwnershipDeepHeap<>,           // Indirections referenced   
       Com::Emplacement<>,                 // Can be emplaced           
       Com::Assignment<>,                  // Can be reassigned         
       Com::Comparison<>,                  // Can be compared           
@@ -39,7 +40,7 @@ namespace Langulus::Anyness
    ///                                                                        
    ///   A statically typed shared pointer                                    
    ///                                                                        
-   ///   Works fine with packed pointers as well. Has deep ownership, but no  
+   /// Works fine with packed pointers as well. Has deep ownership, but no    
    /// states are applied. You can use TAny instead if you want states.       
    template<class T>
    struct TRef : Inner::TRefBase<T> {

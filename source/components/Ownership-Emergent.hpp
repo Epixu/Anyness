@@ -6,6 +6,8 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "../Container.hpp"
+#include "Iteration-Range.hpp"
 #include <Langulus/Allocator.hpp>
 
 
@@ -62,6 +64,7 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      template<unsigned, CT::Sparse> friend struct HeapReference;
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;
@@ -142,72 +145,28 @@ namespace Langulus::Anyness::Component
          if (a->GetUses() == 1) {
             // Dereference, and eventually destroy all elements - all   
             // indirections, as well as dense elements.                 
-            if constexpr (CT::ContainsOne<C>) {
-               if constexpr (CT::DeeplyOwned<C>) {
-                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     self.DestroyElementDeepCustomPointers();
-                  #else
-                     self.DestroyElementDeepStandardPointers();
-                  #endif
-               }
-               else self.DestroyElement();
-            }
-            else {
-               auto item = IterateHandles(self).begin();
-               while (item) {
-                  if constexpr (CT::DeeplyOwned<C>) {
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        item->DestroyElementDeepCustomPointers();
-                     #else
-                        item->DestroyElementDeepStandardPointers();
-                     #endif
-                  }
-                  else item->DestroyElement();
-                  
-                  ++item;
-               }
-            }
-
+            self.DestroyAllElements();
             Allocator::Deallocate(a);
          }
          else {
             // Dereference, and eventually destroy all elements -       
             // affect indirections and elements behind them only!       
-            if constexpr (CT::DeeplyOwned<C>) {
-               if constexpr (CT::ContainsOne<C>) {
-                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     self.template DestroyElementDeepCustomPointers<false>();
-                  #else
-                     self.template DestroyElementDeepStandardPointers<false>();
-                  #endif
-               }
-               else {
-                  auto item = IterateHandles(self).begin();
-                  while (item) {
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        item->template DestroyElementDeepCustomPointers<false>();
-                     #else
-                        item->template DestroyElementDeepStandardPointers<false>();
-                     #endif
-
-                     ++item;
-                  }
-               }
-            }
-
+            self.template DestroyAllElements<false>();
             a->AddRef(-1);
          }
       }
       
-      /// Dereference and eventually destroy the first element                
-      ///   @attention this function should be completely overridden by       
-      ///      OwnershipDeep component's equivalent, if both are present      
+      /// Destroy the first element                                           
+      ///   @attention doesn't perform any referencing or indirection         
       ///   @attention assumes first element is validly constructed           
       ///   @attention does not modify any container state                    
-      template<CT::Container C> requires (not CT::DeeplyOwned<C>)
-      void DestroyElement(this C& self) noexcept {
+      template<CT::Container C>
+      void DestroyElementShallow(this C& self) noexcept {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many");
+         static_assert(not CT::DeeplyOwned<C>,
+            "You are shallow-destroying a deeply-owned container");
+
          if (self.IsEmpty())
             return;
 
@@ -216,8 +175,6 @@ namespace Langulus::Anyness::Component
             auto T = self.GetType();
             if (const auto destructor = T.GetDestructor()) {
                const auto ptr = self.GetRaw();
-               //if (const auto referencer = T.GetReferencer())
-               //   referencer(ptr, -1);
                destructor(ptr);
             }
          }
@@ -226,8 +183,6 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C>;
             if constexpr (CT::Destroyable<T>) {
                auto& element = self.Get();
-               //if constexpr (CT::Referenced<T>)
-               //   element.Reference(-1);
                element.~T();
             }
          }

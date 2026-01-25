@@ -26,6 +26,7 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = 2000;
 
    protected:
+      template<unsigned, CT::Sparse> friend struct HeapReference;
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;
@@ -557,7 +558,7 @@ namespace Langulus::Anyness::Component
          else if constexpr (DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
                // Call destructor of dense element                      
-               const auto ptr = self.GetRaw();
+               void* const ptr = self.GetHeapInner();
                IF_SAFE(if (const auto referencer = T.GetReferencer())
                   referencer(ptr, -1));
                destructor(ptr);

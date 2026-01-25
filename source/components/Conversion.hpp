@@ -100,13 +100,9 @@ namespace Langulus::Anyness::Component
                   // Partial success is not allowed - we have to        
                   // destroy everything we initialized                  
                   while (n) {
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        if_available(to->DestroyElementDeepCustomPointers())
-                     #else
-                        if_available(to->DestroyElementDeepStandardPointers())
-                     #endif
-                     else to->DestroyElement();
-                     --to; --n;
+                     to->DestroyElement();
+                     --to;
+                     --n;
                   }
                }
                out.PartialSuccess(out.GetCount() + n);

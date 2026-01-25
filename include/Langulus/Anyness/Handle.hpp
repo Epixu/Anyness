@@ -90,13 +90,6 @@ namespace Langulus::Anyness
       >;
    }
 
-   struct Handle;
-   struct HandleMut;
-   struct HandleDisowned;
-   struct HandleDisownedMut;
-   template<class T> struct THandle;
-   template<class T> struct THandleDisowned;
-
    
    ///                                                                        
    /// A type-erased mutable handle with ownership.                           
@@ -423,32 +416,4 @@ namespace Langulus::Anyness
          this->Destroy();
       }
    };
-
-
-   namespace Inner
-   {
-      /// Inner function that picks the best possible handle type, depending  
-      /// on a container's constness and type-erasedness.                     
-      template<CT::Container C>
-      consteval auto DecideHandleType() {
-         if constexpr (CT::TypeErased<C>) {
-            // Type-erased handle                                       
-            if constexpr (CT::Owned<C>)
-               return Types<Tmut<C, HandleMut,         Handle>> {};
-            else
-               return Types<Tmut<C, HandleDisownedMut, HandleDisowned>> {};
-         }
-         else {
-            // Statically-typed handle                                  
-            using T = TypeOf<C>;
-            if constexpr (CT::Owned<C>)
-               return Types<THandle        <Tmut<C, T&, ConstAll<T&>>>> {};
-            else
-               return Types<THandleDisowned<Tmut<C, T&, ConstAll<T&>>>> {};
-         }
-      }
-   }
-
-   template<CT::Container C>
-   using DecideHandle = typename decltype(Inner::DecideHandleType<C>())::First;
 }

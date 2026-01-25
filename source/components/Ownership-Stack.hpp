@@ -57,6 +57,7 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      template<unsigned, CT::Sparse> friend struct HeapReference;
       template<unsigned> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;

@@ -122,6 +122,13 @@ namespace Langulus::Anyness
       template<class META, class TYPE = void, bool CONSTRAIN = not ::std::is_void_v<TYPE>, unsigned ID = 0> struct TypedStack;
       template<class META, CT::NotVoid TYPE,  unsigned ID = 0> struct TypedStatic;
    }
+   
+   struct Handle;
+   struct HandleMut;
+   struct HandleDisowned;
+   struct HandleDisownedMut;
+   template<class T> struct THandle;
+   template<class T> struct THandleDisowned;
 
    namespace Com = Component;
 
@@ -591,4 +598,34 @@ namespace Langulus
       /// End this iterating function and jump immediately to the next        
       constexpr LoopControl NextLoop   = LoopControl::NextLoop;
    }
+}
+
+namespace Langulus::Anyness
+{
+   namespace Inner
+   {
+      /// Inner function that picks the best possible handle type, depending  
+      /// on a container's constness and type-erasedness.                     
+      template<CT::Container C>
+      consteval auto DecideHandleType() {
+         if constexpr (CT::TypeErased<C>) {
+            // Type-erased handle                                       
+            if constexpr (CT::Owned<C>)
+               return Types<Tmut<C, HandleMut,         Handle>> {};
+            else
+               return Types<Tmut<C, HandleDisownedMut, HandleDisowned>> {};
+         }
+         else {
+            // Statically-typed handle                                  
+            using T = TypeOf<C>;
+            if constexpr (CT::Owned<C>)
+               return Types<THandle        <Tmut<C, T&, ConstAll<T&>>>> {};
+            else
+               return Types<THandleDisowned<Tmut<C, T&, ConstAll<T&>>>> {};
+         }
+      }
+   }
+
+   template<CT::Container C>
+   using DecideHandle = typename decltype(Inner::DecideHandleType<C>())::First;
 }

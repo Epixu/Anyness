@@ -33,7 +33,6 @@ namespace Langulus::Anyness::Component
       template<unsigned, class> friend struct Insertion;
       template<unsigned>        friend struct HeapMovable;
 
-   private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
       template<CT::Container C>
@@ -45,9 +44,9 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using PickRange = Tmut<C, typename Deref<C>::PickRangeMut, typename Deref<C>::PickRange>;
       
-      /// Convert an index to an offset                                       
-      /// Special indices will be contextualized                              
-      /// Unsigned/signed indices are directly forwarded without any overhead 
+      /// Convert an index to an offset.                                      
+      /// Special indices will be contextualized.                             
+      /// Unsigned/signed indices are directly forwarded without any overhead.
       ///   @param index the index to simplify                                
       ///   @return a simple element offset into contiguous memory            
       template<CT::Container C, CT::Index INDEX>
@@ -107,22 +106,28 @@ namespace Langulus::Anyness::Component
          else static_assert(false, "Unsupported index type");
       }
       
-      /// Select a contiguous region from the memory block - unsafe and may   
-      /// return memory that has not been initialized yet                     
+      /// Select a contiguous region from the memory block. Unsafe and may    
+      /// return memory that has not been initialized yet!                    
       ///   @attention assumes container is typed and allocated               
       ///   @param start starting element index (included)                    
       ///   @param count number of sequential elements                        
-      ///   @return the selected contiguous range                             
+      ///   @return the selected disowned contiguous range                    
       template<CT::Container C>
       auto SelectInner(this C&& self, Count<C> start, Count<C> count)
-      assumptious -> Decay<C> /*PickRange<C>*/ {
+      assumptious -> Decay<C> {
          LglsAssumeDev(self.IsAllocated(), "Block is not allocated");
          LglsAssumeDev(self.IsTyped(),     "Block is not typed");
+         LglsAssumeDev(count,              "Invalid count");
          
-         Decay<C> /*PickRange<C>*/ result {self};
+         Decay<C> result {Disown(self)};
          result.SetCountInner(count);
          result.SetHeapInner(result.template GetRawAs<uint8_t>() + start * result.GetStride());
          return result;
+      }
+
+      template<CT::Container C>
+      auto SelectInner(this C&& self, Count<C> start) assumptious -> Decay<C> {
+         return self.SelectInner(start, self.GetCount() - start);
       }
 
    public:

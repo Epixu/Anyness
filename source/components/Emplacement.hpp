@@ -8,7 +8,8 @@
 #pragma once
 #include "../Container.hpp"
 #include "IndexedLinear.hpp"
-#include "Langulus/CT/Describable.hpp"
+#include <Langulus/CT/Describable.hpp>
+#include <Langulus/Allocator.hpp>
 
 
 namespace Langulus::CT
@@ -767,12 +768,7 @@ namespace Langulus::Anyness::Component
             else {
                // We're allowed to reuse the memory.                    
                // Need to destroy and overwrite only the first element. 
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  if_available(self.DestroyElementDeepCustomPointers())
-               #else
-                  if_available(self.DestroyElementDeepStandardPointers())
-               #endif
-               else self.DestroyElement();
+               self.DestroyElement();
 
                // Emplace a new element on the first position.          
                // Any state change is forbidden - container is full.    

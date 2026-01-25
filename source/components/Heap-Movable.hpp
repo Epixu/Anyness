@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Heap-Reference.hpp"
+#include "Iteration-Range.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -24,6 +25,7 @@ namespace Langulus::Anyness::Component
       template<unsigned>            friend struct IterationOperators;
       template<unsigned, class AS>  friend struct Insertion;
       template<unsigned>            friend struct Emplacement;
+      template<unsigned, bool, bool> friend struct OwnershipEmergent;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -109,13 +111,9 @@ namespace Langulus::Anyness::Component
                   // Partial success is not allowed - we have to        
                   // destroy everything we initialized                  
                   while (n) {
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        if_available(dst->DestroyElementDeepCustomPointers())
-                     #else
-                        if_available(dst->DestroyElementDeepStandardPointers())
-                     #endif
-                     else dst->DestroyElement();
-                     --dst; --n;
+                     dst->DestroyElement();
+                     --dst;
+                     --n;
                   }
                }
                self.PartialSuccess(n);
@@ -294,67 +292,32 @@ namespace Langulus::Anyness::Component
       ///   @param desiredReserve number of elements to reserve               
       template<CT::Container C>
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
+         static_assert(CT::ContainsMany<C>,
+            "This makes sense to be called only by containers that support many elements");
          LglsAssumeDev(desiredReserve < self.GetReserved(),
             "Can't shrink allocation using more elements");
          const auto al = self.GetAllocation();
          LglsAssumeDev(al, "Invalid allocation");
          LglsAssumeDev(al->GetUses() == 1,
-            "Can't reuse memory of a block used from multiple places, "
-            "BranchOut should've been called prior to AllocateMore"
-         );
+            "Can't reuse memory of a block used from multiple places");
 
          const auto request = self.RequestHeap(desiredReserve);
-         if constexpr (CT::TypeErased<C>) {
-            //                                                          
-            // Type-erased shrinking                                    
-            const auto T = self.GetType();
-            LglsAssumeDev(T, "Invalid type");
-            const auto currentCount = self.GetCount();
-            
-            if (currentCount > desiredReserve) {
-               // Destroy elements on the back                          
-               if (T.GetDestructor())
-                  self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
-               if_available(self.SetCountInner(desiredReserve));
-            }
+         if (request.mReserved == self.GetReserved())
+            return;
 
-            // Early return if reserve itself didn't change             
-            if (request.mElementCount == self.GetReserved())
-               return;
-
-            self.RemapHeapRequests(request.mReserved);
-
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               self.SetAllocation(Allocator::Reallocate(T, request.mByteSize, al));
-            #else
-               self.SetAllocation(Allocator::Reallocate(request.mByteSize, al));
-            #endif
+         if (self.GetCount() > desiredReserve) {
+            auto temp = self.SelectInner(desiredReserve);
+            temp.DestroyAllElements();
+            if_available(self.SetCountInner(desiredReserve));
          }
-         else {
-            //                                                          
-            // Statically-typed shrinking                               
-            using T = TypeOf<C>;
-            const auto currentCount = self.GetCount();
-            
-            if (currentCount > desiredReserve) {
-               // Destroy elements on the back                          
-               if constexpr (CT::Destroyable<T>)
-                  self.SelectInner(desiredReserve, currentCount - desiredReserve).FreeInner();
-               if_available(self.SetCountInner(desiredReserve));
-            }
-            
-            // Early return if reserve itself didn't change             
-            if (request.mReserved == self.GetReserved())
-               return;
 
-            self.RemapHeapRequests(request.mReserved);
+         self.RemapHeapRequests(request.mReserved);
 
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               self.SetAllocationInner(Allocator::Reallocate(self.GetType(), request.mTotalBytes, al));
-            #else
-               self.SetAllocationInner(Allocator::Reallocate(request.mTotalBytes, al));
-            #endif
-         }
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            self.SetAllocationInner(Allocator::Reallocate(self.GetType(), request.mTotalBytes, al));
+         #else
+            self.SetAllocationInner(Allocator::Reallocate(request.mTotalBytes, al));
+         #endif
 
          if_available(self.SetReserveInner(request.mReserved));
       }

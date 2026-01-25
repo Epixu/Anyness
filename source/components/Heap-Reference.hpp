@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "Iteration-Range.hpp"
 #include <Langulus/CT/Resolvable.hpp>
 #include <Langulus/CT/MinAlloc.hpp>
 #include <Langulus/MetaOf.hpp>
@@ -33,6 +34,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool HeapCanBeNull = false;
 
    protected:
+
       template<unsigned>         friend struct IterationOperators;
       template<unsigned>         friend struct Removal;
       template<unsigned, class>  friend struct IndexedLinear;
@@ -40,6 +42,8 @@ namespace Langulus::Anyness::Component
       template<unsigned>         friend struct Emplacement;
       template<unsigned, bool>   friend struct Comparison;
       template<auto COUNT>       friend struct CountStatic;
+      template<unsigned, bool, bool> friend struct OwnershipEmergent;
+      template<unsigned>         friend struct OwnershipDeepEmergent;
       
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -372,6 +376,50 @@ namespace Langulus::Anyness::Component
          }
 
          return result;
+      }
+
+      /// Destroys only the first element.                                    
+      ///   @tparam DESTROY set to 'false' if you only want to dereference    
+      ///      and destroy only fully dereferenced indirections               
+      template<bool DESTROY = true, CT::Container C>
+      void DestroyElement(this C& self) assumptious {
+         static_assert(CT::ContainsOne<C>,
+            "Destroying only first element in a container that may contain many");
+
+         if constexpr (DESTROY) {
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               if_available(self.DestroyElementDeepCustomPointers())
+            #else
+               if_available(self.DestroyElementDeepStandardPointers())
+            #endif
+            else if_available(self.DestroyElementShallow())
+            else static_assert(false, "No destruction routine was called");
+         }
+         else {
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               if_available(self.template DestroyElementDeepCustomPointers<false>())
+            #else
+               if_available(self.template DestroyElementDeepStandardPointers<false>())
+            #endif
+            else static_assert(false, "No destruction routine was called");
+         }
+      }
+
+      /// Destroys all elements.                                              
+      ///   @tparam DESTROY set to 'false' if you only want to dereference    
+      ///      and destroy only fully dereferenced indirections               
+      template<bool DESTROY = true, CT::Container C>
+      void DestroyAllElements(this C& self) assumptious {
+         if constexpr (CT::ContainsOne<C>) {
+            self.template DestroyElement<DESTROY>();
+         }
+         else if constexpr (DESTROY or CT::DeeplyOwned<C>) {
+            auto item = IterateHandles(self).begin();
+            while (item) {
+               item->template DestroyElement<DESTROY>();
+               ++item;
+            }
+         }
       }
    };
 }

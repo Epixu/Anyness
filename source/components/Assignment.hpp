@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "Iteration-Range.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
 
@@ -90,7 +91,7 @@ namespace Langulus::Anyness::Component
             // This container is on the stack, and by extension         
             // statically-typed and always initialized                  
             auto& data = self.template AccessStackById<ID>();
-            data = FWD(argument);       
+            data = FWD(argument);
          }
          else {
             // This container is heap-allocated                         
@@ -163,32 +164,9 @@ namespace Langulus::Anyness::Component
          if (a->GetUses() == 1) {
             // We don't deallocate the memory - we can reuse it         
             // But we have to destroy all elements                      
-            if constexpr (CT::ContainsMany<C>) {
-               auto item = IterateHandles(self).begin();
-               while (item) {
-                  if constexpr (CT::DeeplyOwned<C>) {
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        item->DestroyElementDeepCustomPointers();
-                     #else
-                        item->DestroyElementDeepStandardPointers();
-                     #endif
-                  }
-                  else item->DestroyElement();
-
-                  ++item;
-               }
+            self.DestroyAllElements();
+            if constexpr (CT::ContainsMany<C>)
                self.AllocateLess(1);
-            }
-            else {
-               if constexpr (CT::DeeplyOwned<C>) {
-                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     self.DestroyElementDeepCustomPointers();
-                  #else
-                     self.DestroyElementDeepStandardPointers();
-                  #endif
-               }
-               else self.DestroyElement();
-            }
             return;
          }
 
@@ -218,34 +196,16 @@ namespace Langulus::Anyness::Component
             // We don't deallocate the memory - we can reuse it         
             if constexpr (CT::ContainsMany<C>) {
                // But we have to destroy all trailing elements          
-               auto item = IterateHandles(self).begin() + 1;
+               // Just make sure indirections are dereferenced          
+               // for the first element, in case it's sparse            
+               auto item = IterateHandles(self).begin() + (self.IsSparse() ? 0 : 1);
                while (item) {
-                  if constexpr (CT::DeeplyOwned<C>) {
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        item->DestroyElementDeepCustomPointers();
-                     #else
-                        item->DestroyElementDeepStandardPointers();
-                     #endif
-                  }
-                  else item->DestroyElement();
-
+                  item->DestroyElement();
                   ++item;
                }
             }
-
-            if (self.IsSparse()) {
-               // Just make sure indirections are dereferenced          
-               // for the first element, in case it's sparse            
-               if constexpr (CT::DeeplyOwned<C>) {
-                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     self.DestroyElementDeepCustomPointers();
-                  #else
-                     self.DestroyElementDeepStandardPointers();
-                  #endif
-               }
-               else self.DestroyElement();
-            }
-            
+            else if (self.IsSparse())
+               self.DestroyElement();            
             return true;
          }
 

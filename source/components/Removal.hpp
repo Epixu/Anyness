@@ -94,64 +94,18 @@ namespace Langulus::Anyness::Component
             // Entry is used only in this block, so it's safe to        
             // destroy all elements. We will reuse the memory and type  
             // only if the container keeps track of the count separately
-            if constexpr (CT::ContainsOne<C>) {
-               if constexpr (CT::DeeplyOwned<C>) {
-                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     self.DestroyElementDeepCustomPointers();
-                  #else
-                     self.DestroyElementDeepStandardPointers();
-                  #endif
-               }
-               else self.DestroyElement();
+            self.DestroyAllElements();
 
-               // Count is dictated by the availability of a heap       
-               // pointer. We can't afford to reuse it, and be          
-               // cleared at the same time, unless SetCountInner is     
-               // available.                                            
-               if_available(self.SetCountInner(0))
-               else self.SetHeapInner(nullptr);
-            }
-            else {
-               auto item = IterateHandles(self).begin();
-               while (item) {
-                  if constexpr (CT::DeeplyOwned<C>) {
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        item->DestroyElementDeepCustomPointers();
-                     #else
-                        item->DestroyElementDeepStandardPointers();
-                     #endif
-                  }
-                  else item->DestroyElement();
-                  
-                  ++item;
-               }
-               if_available(self.SetCountInner(0));
-            }
+            // Count is dictated by the availability of a heap pointer. 
+            // We can't afford to reuse it, and be cleared at the same  
+            // time, unless SetCountInner is available.                 
+            if_available(self.SetCountInner(0))
+            else self.SetHeapInner(nullptr);
          }
          else {
             // If reached, then data is referenced from multiple places.
             // Don't call destructors, just clear it up and dereference.
-            if constexpr (CT::DeeplyOwned<C>) {
-               if constexpr (CT::ContainsOne<C>) {
-                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     self.template DestroyElementDeepCustomPointers<false>();
-                  #else
-                     self.template DestroyElementDeepStandardPointers<false>();
-                  #endif
-               }
-               else {
-                  auto item = IterateHandles(self).begin();
-                  while (item) {
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        item->template DestroyElementDeepCustomPointers<false>();
-                     #else
-                        item->template DestroyElementDeepStandardPointers<false>();
-                     #endif
-
-                     ++item;
-                  }
-               }
-            }
+            self.template DestroyAllElements<false>();
 
             // Dereference memory                                       
             al->AddRef(-1);
