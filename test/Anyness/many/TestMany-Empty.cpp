@@ -206,7 +206,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       T pack;
 
       WHEN("Default-constructed") {
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
       
          if constexpr (Ambiguous) {
             WHEN("Ambiguous assign value by referral") {
@@ -224,8 +224,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       WHEN("Assigned value by referral") {
          pack.Assign(*element);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, Refer(element));
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, Refer(element));
 
          BenchmarkStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
             T temp,                 temp.Assign(*element),
@@ -238,14 +238,14 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
                REQUIRE_THROWS(pack.AssignAbsorb(*element));
-               Any_CheckState_Default<E>(pack);
-               Any_Helper_TestSame(element_backup, *element);
+               Many_CheckState_Default<E>(pack);
+               Many_Helper_TestSame(element_backup, *element);
                return;
             }
 
             pack.AssignAbsorb(*element);
 
-            Any_Helper_TestSame(pack, *element);         
+            Many_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
@@ -271,10 +271,10 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          pack.Assign(::std::move(movable));
          
          if constexpr (CT::Container<E>)
-            Any_CheckState_Default<TypeOf<E>>(movable);
+            Many_CheckState_Default<TypeOf<E>>(movable);
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, Refer(element));
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, Refer(element));
 
          BenchmarkStd("Empty/Assign(Move(" + NameOf<E>() + "))", 30, 100,
             auto movable = *element; T temp,                temp.Assign(::std::move(movable)),
@@ -288,16 +288,16 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                REQUIRE_THROWS(pack.AssignAbsorb(::std::move(movable)));
-               Any_CheckState_Default<E>(pack);
-               Any_Helper_TestSame(movable, *element);
+               Many_CheckState_Default<E>(pack);
+               Many_Helper_TestSame(movable, *element);
                return;
             }
 
             pack.AssignAbsorb(::std::move(movable));
 
             if constexpr (CT::Container<E>)
-               Any_CheckState_Default<TypeOf<E>>(movable);
-            Any_Helper_TestSame(pack, *element);
+               Many_CheckState_Default<TypeOf<E>>(movable);
+            Many_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
@@ -318,8 +318,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       WHEN("Assigned copied value") {
          pack.Assign(Copy(*element));
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, Copy(element));
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, Copy(element));
 
          BenchmarkStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
             T temp,                 temp.Assign(Copy(*element)),
@@ -332,8 +332,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
                REQUIRE_THROWS(pack.AssignAbsorb(Copy(*element)));
-               Any_CheckState_Default<E>(pack);
-               Any_Helper_TestSame(element_backup, *element);
+               Many_CheckState_Default<E>(pack);
+               Many_Helper_TestSame(element_backup, *element);
                return;
             }
 
@@ -366,8 +366,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       WHEN("Assigned cloned value") {
          pack.Assign(Clone(*element));
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, Clone(element));
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, Clone(element));
 
          BenchmarkStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
             T temp,                 temp.Assign(Clone(*element)),
@@ -380,8 +380,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
                REQUIRE_THROWS(pack.AssignAbsorb(Clone(*element)));
-               Any_CheckState_Default<E>(pack);
-               Any_Helper_TestSame(element_backup, *element);
+               Many_CheckState_Default<E>(pack);
+               Many_Helper_TestSame(element_backup, *element);
                return;
             }
 
@@ -413,8 +413,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       WHEN("Assigned disowned value") {
          pack.Assign(Disown(*element));
 
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, Disown(element));
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, Disown(element));
 
          BenchmarkStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
             T temp,                 temp.Assign(Disown(*element)),
@@ -427,8 +427,8 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
                REQUIRE_THROWS(pack.AssignAbsorb(Disown(*element)));
-               Any_CheckState_Default<E>(pack);
-               Any_Helper_TestSame(element_backup, *element);
+               Many_CheckState_Default<E>(pack);
+               Many_Helper_TestSame(element_backup, *element);
                return;
             }
 
@@ -463,9 +463,9 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          pack.Assign(Abandon(movable));
 
          if constexpr (CT::Container<E>)
-            Any_CheckState_Abandoned<E>(movable);
-         Any_CheckState_OwnedFull<E>(pack);
-         Any_CheckState_ContainsOne(pack, Refer(element));
+            Many_CheckState_Abandoned<E>(movable);
+         Many_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_ContainsOne(pack, Refer(element));
 
          BenchmarkStd("Empty/Assign(Abandon(" + NameOf<E>() + "))", 30, 100,
             auto movable = *element; T temp,                temp.Assign(Abandon(movable)),
@@ -479,16 +479,16 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
 
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                REQUIRE_THROWS(pack.AssignAbsorb(Abandon(movable)));
-               Any_CheckState_Default<E>(pack);
-               Any_Helper_TestSame(movable, *element);
+               Many_CheckState_Default<E>(pack);
+               Many_Helper_TestSame(movable, *element);
                return;
             }
 
             pack.AssignAbsorb(Abandon(movable));
 
             if constexpr (CT::Container<E>)
-               Any_CheckState_Abandoned<E>(movable);
-            Any_Helper_TestSame(pack, *element);
+               Many_CheckState_Abandoned<E>(movable);
+            Many_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
@@ -509,14 +509,14 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       WHEN("Assigned empty self") {
          pack.AssignAbsorb(pack);
 
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Emplace (insert)") {
          ScopedE i666 {666};
          const auto i666backup = *i666;
          decltype(auto) instance = pack.Emplace(::std::move(*i666));
-         Any_CheckState_OwnedFull<E>(pack);
+         Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(instance.CompareOneEqual(i666backup));
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
@@ -538,7 +538,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          Many descriptor {Piecewise, ::std::move(*i666)};
          if constexpr (CT::DescribeConstructible<E> and not CT::Container<T>) {
             decltype(auto) instance = pack.template Emplace<E>(Describe{descriptor});
-            Any_CheckState_OwnedFull<E>(pack);
+            Many_CheckState_OwnedFull<E>(pack);
             REQUIRE(instance.CompareOneEqual(i666backup));
             REQUIRE(pack.GetCount() == 1);
             REQUIRE(pack.GetReserved() >= 1);
@@ -551,14 +551,14 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          else if constexpr (CT::TypeErased<T>) {
             pack.template SetType<E>();
             REQUIRE_THROWS(pack.Emplace(Describe{descriptor}));
-            Any_CheckState_Default<E>(pack, true);
+            Many_CheckState_Default<E>(pack, true);
          }
       }
 
       WHEN("Cleared") {
          pack.Clear();
 
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
 
          BenchmarkStd("Empty/Clear(" + NameOf<E>() + ")", 30, 100,
             T temp,                 temp.Clear(),
@@ -569,7 +569,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       WHEN("Reset") {
          pack.Reset();
 
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(pack);
 
          BenchmarkStd("Empty/Reset(" + NameOf<E>() + ")", 30, 100,
             T temp,                 temp.Reset(),
@@ -580,67 +580,67 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       WHEN("Referred empty") {
          T refer1 = pack;
 
-         Any_Helper_TestSame(refer1, pack);
-         Any_CheckState_Default<E>(refer1);
-         Any_CheckState_Default<E>(pack);
+         Many_Helper_TestSame(refer1, pack);
+         Many_CheckState_Default<E>(refer1);
+         Many_CheckState_Default<E>(pack);
 
          T refer2 = Refer(pack);
 
-         Any_Helper_TestSame(refer2, pack);
-         Any_CheckState_Default<E>(refer2);
-         Any_CheckState_Default<E>(pack);
+         Many_Helper_TestSame(refer2, pack);
+         Many_CheckState_Default<E>(refer2);
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Cloned empty") {
          T clone = Clone(pack);
 
-         Any_Helper_TestSame(clone, pack);
-         Any_CheckState_Default<E>(clone);
-         Any_CheckState_Default<E>(pack);
+         Many_Helper_TestSame(clone, pack);
+         Many_CheckState_Default<E>(clone);
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Disowned empty") {
          T disowned = Disown(pack);
 
-         Any_Helper_TestSame(disowned, pack);
-         Any_CheckState_Default<E>(disowned);
-         Any_CheckState_Default<E>(pack);
+         Many_Helper_TestSame(disowned, pack);
+         Many_CheckState_Default<E>(disowned);
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Copied empty") {
          T copy = Copy(pack);
 
-         Any_Helper_TestSame(copy, pack);
-         Any_CheckState_Default<E>(copy);
-         Any_CheckState_Default<E>(pack);
+         Many_Helper_TestSame(copy, pack);
+         Many_CheckState_Default<E>(copy);
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Moved empty") {
          T movable1 = pack;
          const T moved1 = ::std::move(movable1);
 
-         Any_CheckState_Default<E>(movable1);
-         Any_Helper_TestSame(moved1, pack);
-         Any_CheckState_Default<E>(moved1);
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(movable1);
+         Many_Helper_TestSame(moved1, pack);
+         Many_CheckState_Default<E>(moved1);
+         Many_CheckState_Default<E>(pack);
 
          T movable2 = pack;
          const T moved2 = Move(movable2);
 
-         Any_CheckState_Default<E>(movable2);
-         Any_Helper_TestSame(moved2, pack);
-         Any_CheckState_Default<E>(moved2);
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(movable2);
+         Many_Helper_TestSame(moved2, pack);
+         Many_CheckState_Default<E>(moved2);
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Abandoned empty") {
          T movable = pack;
          const T moved = Abandon(movable);
 
-         Any_CheckState_Default<E>(movable);
-         Any_Helper_TestSame(moved, pack);
-         Any_CheckState_Default<E>(moved);
-         Any_CheckState_Default<E>(pack);
+         Many_CheckState_Default<E>(movable);
+         Many_Helper_TestSame(moved, pack);
+         Many_CheckState_Default<E>(moved);
+         Many_CheckState_Default<E>(pack);
       }
 
       WHEN("Compared empty") {

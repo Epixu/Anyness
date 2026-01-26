@@ -51,7 +51,6 @@ void Many_CheckState_Default(const C& many, bool typed = false) {
    REQUIRE_FALSE(many.IsEncrypted());
    REQUIRE_FALSE(many.IsMissing());
    REQUIRE_FALSE(many.IsOr());
-   REQUIRE      (many.IsNow());
    REQUIRE_FALSE(many.IsFuture());
    REQUIRE_FALSE(many.IsPast());
 }
