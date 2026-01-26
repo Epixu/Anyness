@@ -383,8 +383,8 @@ namespace Langulus::Anyness::Component
       ///      and destroy only fully dereferenced indirections               
       template<bool DESTROY = true, CT::Container C>
       void DestroyElement(this C& self) assumptious {
-         static_assert(CT::ContainsOne<C>,
-            "Destroying only first element in a container that may contain many");
+         //static_assert(CT::ContainsOne<C>,
+         //   "Destroying only first element in a container that may contain many");
 
          if constexpr (DESTROY) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)

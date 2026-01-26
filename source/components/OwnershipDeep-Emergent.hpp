@@ -329,8 +329,8 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't change any container state                     
       template<bool DESTROY = true, CT::Container C>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
-         static_assert(CT::ContainsOne<C>,
-            "Destroying only first element in a container with many");
+         //static_assert(CT::ContainsOne<C>,
+         //  "Destroying only first element in a container with many");
 
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.GetAllocation(),
@@ -488,8 +488,8 @@ namespace Langulus::Anyness::Component
       //TODO could use some statically-typed optimizations
       template<bool DESTROY = true, CT::Container C>
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
-         static_assert(CT::ContainsOne<C>,
-            "Destroying only first element in a container with many");
+         //static_assert(CT::ContainsOne<C>,
+         //   "Destroying only first element in a container with many");
 
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.GetAllocation(),

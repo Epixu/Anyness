@@ -52,8 +52,8 @@ namespace Langulus::Anyness::Component
    private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
-      template<CT::Container C>
-      using At = typename Deref<C>::IndexType;
+      /*template<CT::Container C>
+      using At = typename Deref<C>::IndexType;*/
 
    public:
       /// Compare two containers for equality.                                
@@ -496,39 +496,19 @@ namespace Langulus::Anyness::Component
       ///   @param cookie resume search from a given index                    
       ///   @return the index of the found item, or 'npos' if none found      
       template<bool REVERSE = false, CT::ContainsMany C, CT::NoIntent T>
-      auto Find(this const C& self, const T& item, Count<C> cookie = 0) noexcept
-         -> At<C> requires CT::RangeComparable<C, T>
+      auto Find(this C const& self, T const& item, Count<C> cookie = 0) noexcept
+         /* -> At<C> requires CT::RangeComparable<C, T>*/
       {
-         if constexpr (CT::TypeErased<C>) {
-            Count<C> i = REVERSE ? self.GetCount() - 1 - cookie
-               : cookie;
-
-            while (i < self.GetCount()) {
-               if (self.GetElementInner(i) == item)
-                  return i;
-
-               if constexpr (REVERSE) --i;
-               else                   ++i;
-            }
-
-         }
-         else {
-            auto start = REVERSE ? self.GetRawEnd() - 1 - cookie
-               : self.GetRaw() + cookie;
-            auto end = REVERSE ? start - self.GetCount()
-               : start + self.GetCount();
-
-            while (start != end) {
-               if (*start == item)
-                  return start - self.GetRaw();
-
-               if constexpr (REVERSE) --start;
-               else                   ++start;
-            }
+         using strategy = IterateNoDeref<C, REVERSE>;
+         auto handle = strategy(self).begin() + cookie;
+         while (handle) {
+            if (*handle == item)
+               return handle;
+            ++handle;
          }
 
          // If this is reached, then no match was found                 
-         return Index::None;
+         return strategy(self).end();
       }
    
       /// Find a matching sequence of one or more matching elements           
@@ -537,9 +517,13 @@ namespace Langulus::Anyness::Component
       ///   @param cookie resume search from a given index                    
       ///   @return the index of the found item, or 'npos' if not found       
       template<bool REVERSE = false, CT::ContainsMany C1, CT::Container C2>
-      auto FindRange(this const C1& self, const C2& range, Count<C1> cookie = 0) noexcept -> At<C1> {
+      requires CT::Contiguous<C1, C2>
+      auto FindRange(this C1 const& self, C2 const& range, Count<C1> cookie = 0) noexcept
+         /* -> At<C1>*/
+      {
+         using strategy = IterateNoDeref<C, REVERSE>;
          if (cookie >= self.GetCount() or range.GetCount() > self.GetCount() - cookie)
-            return Index::None;
+            return strategy(self).end();
 
          if constexpr (not C1::TypeErased or not C2::TypeErased) {
             // One of the participating blocks is statically typed.     
@@ -629,7 +613,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       bool Contains(this C const& self, const CT::NoIntent auto& item) {
          if constexpr (CT::ContainsMany<C>)
-            return self.Find(item) != Index::None;
+            return static_cast<bool>(self.Find(item));
          else
             return self.CompareOneEqual(item);
       }

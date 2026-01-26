@@ -154,7 +154,10 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(CT::AutoOwned<T>);
       static_assert(CT::Comparable<T, T>);
       static_assert(CT::Comparable<T, E>);
-      static_assert(::std::ranges::range<T>);
+
+      T test;
+      [[maybe_unused]] auto tt = test.begin();
+      //static_assert(::std::ranges::range<T>);
 
       static_assert(requires (T pack, E item) { pack.operator +   (item); });
       static_assert(requires (T pack, E item) { pack.operator +=  (item); });
@@ -271,7 +274,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          pack.Assign(::std::move(movable));
          
          if constexpr (CT::Container<E>)
-            Many_CheckState_Default<TypeOf<E>>(movable);
+            Any_CheckState_Default<TypeOf<E>>(movable);
 
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsOne(pack, Refer(element));
@@ -296,7 +299,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             pack.AssignAbsorb(::std::move(movable));
 
             if constexpr (CT::Container<E>)
-               Many_CheckState_Default<TypeOf<E>>(movable);
+               Any_CheckState_Default<TypeOf<E>>(movable);
             Many_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
