@@ -252,7 +252,7 @@ namespace Langulus::Anyness::Component
 
             // Iterate container where A is binary-compatible to the    
             // type, but may not be it exactly.                         
-            using IT_STRAT = Tif<REVERSE, IterateHandlesInReverse<Deref<C>>, IterateHandles<Deref<C>>>;
+            using IT_STRAT = IterateHandles<REVERSE, Deref<C>>;
             for (auto handle : IT_STRAT(self)) {
                decltype(auto) element = handle.template As<Deref<A>>();
                if constexpr (CT::DefineTag<A>) {

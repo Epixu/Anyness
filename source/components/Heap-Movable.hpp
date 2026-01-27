@@ -94,30 +94,41 @@ namespace Langulus::Anyness::Component
             }
 
             self.AllocateFresh(self.RequestHeap(count));
-            auto src = IterateHandles(from).begin();
-            auto dst = IterateHandles(self).begin();
-            try {
-               while (src) {
-                  if constexpr (CT::Copied<I>)
-                     dst->EmplaceWithIntent(Refer(*src));
-                  else
-                     dst->EmplaceWithIntent(Clone(*src));
-                  ++dst; ++src;
-               }
-            } catch (...) {
-               // Partial success                                       
-               auto n = src - IterateHandles(from).begin();
-               if constexpr (not requires { self.SetCountInner(1); }) {
-                  // Partial success is not allowed - we have to        
-                  // destroy everything we initialized                  
-                  while (n) {
-                     dst->DestroyElement();
-                     --dst;
-                     --n;
+
+            if constexpr (CT::ContainsMany<C>) {
+               auto src = IterateHandles(from).begin();
+               auto dst = IterateHandles(self).begin();
+               try {
+                  while (src) {
+                     if constexpr (CT::Copied<I>)
+                        dst->EmplaceWithIntent(Refer(*src));
+                     else
+                        dst->EmplaceWithIntent(Clone(*src));
+                     ++dst; ++src;
                   }
                }
-               self.PartialSuccess(n);
-               throw;
+               catch (...) {
+                  // Partial success                                    
+                  auto n = src - IterateHandles(from).begin();
+                  if constexpr (not requires { self.SetCountInner(1); }) {
+                     // Partial success is not allowed - we have to     
+                     // destroy everything we initialized               
+                     while (n) {
+                        dst->DestroyElement();
+                        --dst;
+                        --n;
+                     }
+                  }
+                  self.PartialSuccess(n);
+                  throw;
+               }
+            }
+            else {
+               decltype(auto) src = from.template As<DecideHandle<IT>>();
+               if constexpr (CT::Copied<I>)
+                  self.EmplaceWithIntent(Refer(src));
+               else
+                  self.EmplaceWithIntent(Clone(src));
             }
                      
             // Full success                                             
@@ -201,7 +212,11 @@ namespace Langulus::Anyness::Component
       ///   @param elements number of elements to allocate                    
       template<bool CREATE = false, bool SETSIZE = false, CT::Container C>
       void AllocateMore(this C& self, const Count<C> elements) {
+         //static_assert(CT::ContainsMany<C>,
+         //   "This makes sense to be called only by containers that support many elements");
          LglsAssumeDev(elements > self.GetCount(), "Bad element count");
+         if constexpr (CT::ContainsOne<C>)
+            LglsAssumeDev(elements == 1, "Container allows only one allocated element");
          const auto al = self.GetAllocation();
          const auto request = self.RequestHeap(elements);
 
@@ -220,69 +235,69 @@ namespace Langulus::Anyness::Component
             return;
          }
 
-         //                                                             
-         // Reallocate                                                  
-         if (self.GetReserved() >= elements) {
-            // Required memory is already available                     
-            if constexpr (CREATE) {
-               // But is not yet initialized, so do it                  
-               if (self.GetCount() < elements) {
-                  const auto count = elements - self.GetCount();
-                  self.SelectInner(self.GetCount(), count).CreateDefault();
+         LglsAssumeDev(al->GetUses() == 1,
+            "Can't reuse memory of a heap used from multiple places. "
+            "Container should've branched-out prior to AllocateMore. "
+         );
+
+         if constexpr (CT::ContainsMany<C>) {
+            //                                                          
+            // Reallocate                                               
+            if (self.GetReserved() >= elements) {
+               // Required memory is already available                  
+               if constexpr (CREATE) {
+                  // But is not yet initialized, so do it               
+                  if (self.GetCount() < elements) {
+                     const auto count = elements - self.GetCount();
+                     self.SelectInner(self.GetCount(), count).CreateDefault();
+                  }
                }
+
+               if constexpr (CREATE or SETSIZE)
+                  self.SetCount(elements);
+               return;
+            }
+
+            C previous {Abandon {self}};
+            #if LANGULUS_FEATURE(MANAGED_MEMORY)
+               auto reallocated = Allocator::Reallocate(self.GetType(), request.mTotalBytes, al);
+            #else
+               auto reallocated = Allocator::Reallocate(request.mTotalBytes, al);
+            #endif
+            LglsAssert(reallocated, "Out of memory");
+            self.SetAllocationInner(reallocated);
+
+            if (reallocated != al) {
+               self.SetHeapInner(reallocated->GetBlockStart() + request.mHeaderBytes);
+
+               if (previous.GetCount()) {
+                  // Memory moved, and we should move all elements      
+                  // in it. We're moving to new memory, so no reverse   
+                  // is required.                                       
+                  auto from = IterateHandles(previous).begin();
+                  for (auto to : IterateHandles(self))
+                     to.EmplaceWithIntent(Abandon(*(from++)));
+               }
+            }
+            else {
+               // Memory didn't move, but reserved count changed        
+               // so all HeapRequests which are PerElement need to      
+               // be moved around.                                      
+               self.RemapHeapRequests(request.mReserved);
+               previous.SetAllocationInner(nullptr);
+            }
+
+            if_available(self.SetReserveInner(request.mReserved));
+         
+            if constexpr (CREATE) {
+               // Default-construct the rest                            
+               const auto count = elements - self.GetCount();
+               self.CropInner(self.GetCount(), count).CreateDefault();
             }
 
             if constexpr (CREATE or SETSIZE)
                self.SetCount(elements);
-            return;
          }
-
-         LglsAssumeDev(self.GetUses() == 1,
-            "Can't reuse memory of a heap used from multiple places, "
-            "BranchOut should've been called prior to AllocateMore"
-         );
-
-         C previous {Abandon {self}};
-         
-      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-         auto reallocated = Allocator::Reallocate(self.GetType(), request.mTotalBytes, al);
-      #else
-         auto reallocated = Allocator::Reallocate(request.mTotalBytes, al);
-      #endif
-         
-         LglsAssert(reallocated, "Out of memory");
-         self.SetAllocationInner(reallocated);
-
-         if (reallocated != al) {
-            self.SetHeapInner(reallocated->GetBlockStart() + request.mHeaderBytes);
-
-            if (previous.GetCount()) {
-               // Memory moved, and we should move all elements         
-               // in it. We're moving to new memory, so no reverse      
-               // is required.                                          
-               auto from = IterateHandles(previous).begin();
-               for (auto to : IterateHandles(self))
-                  to.EmplaceWithIntent(Abandon(*(from++)));
-            }
-         }
-         else {
-            // Memory didn't move, but reserved count changed           
-            // so all HeapRequests which are PerElement need to         
-            // be moved around.                                         
-            self.RemapHeapRequests(request.mReserved);
-            previous.SetAllocationInner(nullptr);
-         }
-
-         if_available(self.SetReserveInner(request.mReserved));
-         
-         if constexpr (CREATE) {
-            // Default-construct the rest                               
-            const auto count = elements - self.GetCount();
-            self.CropInner(self.GetCount(), count).CreateDefault();
-         }
-
-         if constexpr (CREATE or SETSIZE)
-            self.SetCount(elements);
       }
 
       /// Shrink the block, depending on currently reserved	elements.         

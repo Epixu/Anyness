@@ -156,7 +156,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(CT::Comparable<T, E>);
 
       T test;
-      [[maybe_unused]] auto tt = test.begin();
+      for (auto& it : test) { }
       //static_assert(::std::ranges::range<T>);
 
       static_assert(requires (T pack, E item) { pack.operator +   (item); });
