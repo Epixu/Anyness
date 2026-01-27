@@ -156,7 +156,9 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(CT::Comparable<T, E>);
 
       T test;
-      for (auto& it : test) { }
+      for (auto& it : IterateNoDeref(test)) {
+         (void) it;
+      }
       //static_assert(::std::ranges::range<T>);
 
       static_assert(requires (T pack, E item) { pack.operator +   (item); });

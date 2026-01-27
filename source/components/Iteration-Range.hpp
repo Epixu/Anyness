@@ -13,17 +13,6 @@
 namespace Langulus::Anyness
 {
    ///                                                                        
-   ///   A weightless 'end' iterator helper type                              
-   ///                                                                        
-   /// Used to return from container's end() methods. It only compares equal  
-   /// to other iterators if they have reached their end marker.              
-   /*struct IteratorEnd final {
-      using CTTI_Iterator  = Yes<>;
-      using CTTI_ReflectAs = void;
-   };*/
-
-   
-   ///                                                                        
    ///   Reverse iteration adapter                                            
    ///                                                                        
    /// Use like this: for(auto i : IterateInReverse(container)), where        
@@ -63,7 +52,7 @@ namespace Langulus::Anyness
       C& range;
 
    public:
-      explicit constexpr IterateNoDeref(C& a) noexcept
+      constexpr IterateNoDeref(C& a) noexcept
          : range {a} {}
 
       /// The iterator                                                        
@@ -71,11 +60,9 @@ namespace Langulus::Anyness
          using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
 
-      protected:
          mutable H mIt;
          C& mRange;
 
-      public:
          Iterator() = delete;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
@@ -91,14 +78,6 @@ namespace Langulus::Anyness
                "Iterators are for different containers");
             return mIt == rhs.mIt;
          }
-
-         /*bool operator == (const Iterator& rhs) const noexcept {
-            return mIt == rhs.mIt;
-         }
-
-         bool operator == (const IteratorEnd&) const noexcept {
-            return mIt == IteratorEnd {};
-         }*/
          
          explicit constexpr operator bool() const noexcept {
             if constexpr (REVERSE) return mIt != mRange.rend();
@@ -108,23 +87,27 @@ namespace Langulus::Anyness
          auto operator *  () const noexcept -> H& { return mIt; }
          auto operator -> () const noexcept -> H& { return mIt; }
 
+         /// Prefix increment                                                 
          auto operator ++ () noexcept -> Iterator& {
             if constexpr (REVERSE) --mIt;
             else                   ++mIt;
             return *this;
          }
 
+         /// Suffix increment                                                 
          auto operator ++ (int) noexcept -> Iterator {
             if constexpr (REVERSE) return mIt--;
             else                   return mIt++;
          }
 
+         /// Prefix decrement                                                 
          auto operator -- () noexcept -> Iterator& {
             if constexpr (REVERSE) ++mIt;
             else                   --mIt;
             return *this;
          }
 
+         /// Suffix decrement                                                 
          auto operator -- (int) noexcept -> Iterator {
             if constexpr (REVERSE) return mIt++;
             else                   return mIt--;
@@ -142,7 +125,7 @@ namespace Langulus::Anyness
       }
    };
 
-   template<::std::ranges::range C>
+   template<class C>
    IterateNoDeref(C&) -> IterateNoDeref<false, C>;
 
 
@@ -152,10 +135,11 @@ namespace Langulus::Anyness
    /// Used by default when doing for(auto i : container)                     
    /// When container is type-erased, or mutable and sparse, 'i' will be a    
    /// handle. Otherwise, 'i' will be a direct reference to the element       
-   template<bool REVERSE, CT::ContainsMany C>
+   template<bool REVERSE, CT::Container C>
    struct IterateDefault {
       static_assert(CT::NoIntent<C>,     "C can't have an intent");
       static_assert(CT::NotReference<C>, "C can't be a reference");
+      static_assert(CT::ContainsMany<C>, "C is not iteratable because it contains exactly one element");
       using CTTI_ReflectAs = void;
 
    protected:
@@ -180,11 +164,9 @@ namespace Langulus::Anyness
          using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
 
-      protected:
          mutable H mIt;
          C& mRange;
 
-      public:
          Iterator() = delete;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
@@ -200,20 +182,6 @@ namespace Langulus::Anyness
                "Iterators are for different containers");
             return mIt == rhs.mIt;
          }
-
-         /*constexpr bool operator == (const Iterator& rhs) const noexcept {
-            if constexpr (CT::Handle<H>)
-               return mIt.GetRaw() == rhs.mIt.GetRaw();
-            else
-               return mIt == rhs.mIt;
-         }
-
-         constexpr bool operator == (const IteratorEnd&) const noexcept {
-            if constexpr (CT::Handle<H>)
-               return mIt.GetRaw() == mRange.GetRawEnd();
-            else
-               return mIt == mRange.GetRawEnd();
-         }*/
          
          explicit constexpr operator bool() const noexcept {
             if constexpr (CT::Handle<H>)
@@ -225,23 +193,27 @@ namespace Langulus::Anyness
          auto operator *  () const noexcept -> H& { return  mIt; }
          auto operator -> () const noexcept -> H* { return &mIt; }
 
+         /// Prefix increment                                                 
          auto operator ++ () noexcept -> Iterator& {
             if constexpr (REVERSE) --mIt;
             else                   ++mIt;
             return *this;
          }
 
+         /// Suffix increment                                                 
          auto operator ++ (int) noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt--, mRange};
             else                   return {mIt++, mRange};
          }
 
+         /// Prefix decrement                                                 
          auto operator -- () noexcept -> Iterator& {
             if constexpr (REVERSE) ++mIt;
             else                   --mIt;
             return *this;
          }
 
+         /// Suffix decrement                                                 
          auto operator -- (int) noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt++, mRange};
             else                   return {mIt--, mRange};
@@ -263,7 +235,7 @@ namespace Langulus::Anyness
       }
    };
 
-   template<CT::ContainsMany C>
+   template<CT::Container C>
    IterateDefault(C&) -> IterateDefault<false, C>;
 
 
@@ -297,11 +269,9 @@ namespace Langulus::Anyness
          using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
 
-      protected:
          mutable H mIt;
          C& mRange;
 
-      public:
          Iterator() = delete;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
@@ -317,14 +287,6 @@ namespace Langulus::Anyness
                "Iterators are for different containers");
             return mIt.GetRaw() == rhs.mIt.GetRaw();
          }
-
-         /*constexpr bool operator == (const Iterator& rhs) const noexcept {
-            return mIt.GetRaw() == rhs.mIt.GetRaw();
-         }
-
-         constexpr bool operator == (const IteratorEnd&) const noexcept {
-            return mIt.GetRaw() == mRange.GetRawEnd();
-         }*/
 
          explicit constexpr operator bool() const noexcept {
             return mIt.GetRaw() != mRange.GetRawEnd();
@@ -343,23 +305,27 @@ namespace Langulus::Anyness
             else                   return {mIt - c, mRange};
          }
          
+         /// Prefix increment                                                 
          auto operator ++ () noexcept -> Iterator& {
             if constexpr (REVERSE) --mIt;
             else                   ++mIt;
             return *this;
          }
 
+         /// Suffix increment                                                 
          auto operator ++ (int) noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt--, mRange};
             else                   return {mIt++, mRange};
          }
 
+         /// Prefix decrement                                                 
          auto operator -- () noexcept -> Iterator& {
             if constexpr (REVERSE) ++mIt;
             else                   --mIt;
             return *this;
          }
 
+         /// Suffix decrement                                                 
          auto operator -- (int) noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt++, mRange};
             else                   return {mIt--, mRange};
@@ -425,11 +391,9 @@ namespace Langulus::Anyness
          using CTTI_Iterator = Yes<>;
          using CTTI_ReflectAs = void;
 
-      protected:
          mutable Hs mIt;
          Cs mRanges;
 
-      public:
          decltype(auto) one() noexcept { return ::std::get<0>(mIt); }
          decltype(auto) two() noexcept { return ::std::get<1>(mIt); }
 
@@ -443,38 +407,91 @@ namespace Langulus::Anyness
             : mIt    {FWD(it)}
             , mRanges{ranges} {}
 
-         /*bool operator == (const Iterator& rhs) const noexcept {
-            return mIt == rhs.mIt;
+         constexpr bool operator == (CT::Iterator auto const& rhs) const noexcept {
+            return LglsSequence(Count, {
+               LglsAssumeUser(((&::std::get<I>(mIt.mRange) == &::std::get<I>(rhs.mRange)) and ...),
+                  "Iterators are for different containers");
+               return ((::std::get<I>(mIt.GetRaw()) == ::std::get<I>(rhs.mIt.GetRaw())) and ...);
+            });
          }
 
-         bool operator == (const IteratorEnd&) const noexcept {
-            return mIt == IteratorEnd {};
-         }*/
-         
          explicit constexpr operator bool() const noexcept {
             return LglsSequence(Count, {
                return ((::std::get<I>(mIt) != ::std::get<I>(mRanges).end()) and ...);
             });
          }
 
-         Iterator& operator *  () const noexcept { return *this; }
-         Iterator& operator -> () const noexcept { return *this; }
+         auto operator *  () const noexcept -> Iterator& { return *this; }
+         auto operator -> () const noexcept -> Iterator& { return *this; }
 
-         Iterator& operator ++ ()    noexcept { ++mIt; return *this; }
-         Iterator  operator ++ (int) noexcept { return mIt++; }
-         Iterator& operator -- ()    noexcept { --mIt; return *this; }
-         Iterator  operator -- (int) noexcept { return mIt--; }
+         /// Prefix increment                                                 
+         auto operator ++ () noexcept -> Iterator& {
+            if constexpr (REVERSE) {
+               LglsSequence(Count, {
+                  ((--::std::get<I>(mIt)), ...);
+               });
+            }
+            else {
+               LglsSequence(Count, {
+                  ((++::std::get<I>(mIt)), ...);
+               });
+            }
+            return *this;
+         }
+
+         /// Suffix increment                                                 
+         auto operator ++ (int) noexcept -> Iterator {
+            if constexpr (REVERSE) {
+               return LglsSequence(Count, {
+                  return Iterator(Hs{(::std::get<I>(mIt)--)...}, mRanges);
+               });
+            }
+            else {
+               return LglsSequence(Count, {
+                  return Iterator(Hs{(::std::get<I>(mIt)++)...}, mRanges);
+               });
+            }
+         }
+
+         /// Prefix decrement                                                 
+         auto operator -- () noexcept -> Iterator& {
+            if constexpr (REVERSE) {
+               LglsSequence(Count, {
+                  ((++::std::get<I>(mIt)), ...);
+               });
+            }
+            else {
+               LglsSequence(Count, {
+                  ((--::std::get<I>(mIt)), ...);
+               });
+            }
+            return *this;
+         }
+
+         /// Suffix decrement                                                 
+         auto operator -- (int) noexcept -> Iterator {
+            if constexpr (REVERSE) {
+               return LglsSequence(Count, {
+                  return Iterator(Hs{(::std::get<I>(mIt)++)...}, mRanges);
+               });
+            }
+            else {
+               return LglsSequence(Count, {
+                  return Iterator(Hs{(::std::get<I>(mIt)--)...}, mRanges);
+               });
+            }
+         }
       };
 
-      Iterator begin() {
+      auto begin() -> Iterator {
          return ::std::apply([](auto&...i) {
-            return Iterator {{i.begin()...}};
+            return Iterator{{i.begin()...}};
          }, range);
       }
 
-      Iterator end() {
+      auto end() -> Iterator {
          return ::std::apply([](auto&...i) {
-            return Iterator {{i.end()...}};
+            return Iterator{{i.end()...}};
          }, range);
       }
    };
