@@ -74,7 +74,7 @@ namespace Langulus::Anyness
             : mIt    {it}
             , mRange {range} {}
          constexpr Iterator(H&& it, C& range) noexcept
-            : mIt    {FWD(it)}
+            : mIt    {LglsFwd(it)}
             , mRange {range} {}
 
          constexpr auto operator = (Iterator const& rhs) assumptious -> Iterator& {
@@ -215,7 +215,7 @@ namespace Langulus::Anyness
             : mIt    {it}
             , mRange {range} {}
          constexpr Iterator(H&& it, C& range) noexcept
-            : mIt    {FWD(it)}
+            : mIt    {LglsFwd(it)}
             , mRange {range} {}
 
          constexpr auto operator = (Iterator const& rhs) assumptious -> Iterator& {
@@ -382,7 +382,7 @@ namespace Langulus::Anyness
             : mIt    {it}
             , mRange {range} {}
          constexpr Iterator(H&& it, C& range) noexcept
-            : mIt    {FWD(it)}
+            : mIt    {LglsFwd(it)}
             , mRange {range} {}
 
          constexpr auto operator = (Iterator const& rhs) assumptious -> Iterator& {
@@ -531,7 +531,7 @@ namespace Langulus::Anyness
             : mIt    {it}
             , mRanges{ranges} {}
          constexpr Iterator(Hs&& it, Cs& ranges) noexcept
-            : mIt    {FWD(it)}
+            : mIt    {LglsFwd(it)}
             , mRanges{ranges} {}
 
          constexpr bool operator == (CT::Iterator auto const& rhs) const assumptious {

@@ -80,7 +80,7 @@ namespace Langulus::Anyness::Component
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (I::IsShallow() and not CT::Copied<I>) {
-            decltype(auto) from = FWD(intent.what);
+            decltype(auto) from = LglsFwd(intent.what);
             self.SetCountInner(from.GetCountInner());
             if constexpr (I::ResetsOnMove())
                from.SetCountInner(0);

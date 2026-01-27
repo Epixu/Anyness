@@ -74,7 +74,7 @@ namespace Langulus::Anyness
       /// Construction from any kind of other bytes with intent               
       template<template<class> class I> requires CT::Intent<I<Bytes>>
       constexpr Bytes(I<Bytes>&& bytes) {
-         this->Absorb(FWD(bytes));
+         this->Absorb(LglsFwd(bytes));
       }
       
       /// Assignment                                                          

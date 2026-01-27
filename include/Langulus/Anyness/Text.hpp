@@ -67,16 +67,27 @@ namespace Langulus::Anyness
       using Pick    = char const&;
       using PickMut = char&;
 
-      constexpr Text() noexcept { this->ConstructDefault(); }
-      constexpr Text(nullptr_t) noexcept    : Text {} {}
-      constexpr Text(Text const& other)     : Text {Refer {other}} {}
-      constexpr Text(Text&& other) noexcept : Text {Move  {other}} {}
-      constexpr ~Text() noexcept { this->Destroy(); }
+      constexpr Text() noexcept {
+         this->ConstructDefault();
+      }
+
+      constexpr Text(nullptr_t) noexcept
+         : Text {} {}
+
+      constexpr Text(Text const& other)
+         : Text {Refer {other}} {}
+
+      constexpr Text(Text&& other) noexcept
+         : Text {Move  {other}} {}
+
+      constexpr ~Text() noexcept {
+         this->Destroy();
+      }
 
       /// Construction from any kind of text that is an Anyness container     
       template<CT::Text T> requires CT::Container<T>
       constexpr Text(T&& text) {
-         this->Absorb(FWD(text));
+         this->Absorb(LglsFwd(text));
       }
 
       /// Construction from any kind of text that isn't an Anyness container  
@@ -84,7 +95,7 @@ namespace Langulus::Anyness
       constexpr Text(T&& text) {
          using S  = IntentOf(text);
          using ST = TypeOf<S>;
-         decltype(auto) source = DeintCast(FWD(text));
+         decltype(auto) source = DeintCast(LglsFwd(text));
 
          if constexpr (CT::TextLiteral<ST>) {
             // Create from a text literal/bounded array                 
@@ -322,13 +333,13 @@ namespace Langulus::Anyness
       template<CT::Character T>
       Text& operator += (T&& rhs) {
          if (not this->IsAllocated()) {
-            *this = Text {FWD(rhs)};
+            *this = Text {LglsFwd(rhs)};
             return *this;
          }
 
          using CHAR = Decvq<Deref<Deint<T>>>;
          static_assert(::std::same_as<CHAR, char>, "Type mismatch");
-         decltype(auto) source = DeintCast(FWD(rhs));
+         decltype(auto) source = DeintCast(LglsFwd(rhs));
          const auto newCount = this->GetCount() + 1;
          this->AllocateMore(newCount);
          *this->GetRawAs<char>() = source;
@@ -342,12 +353,12 @@ namespace Langulus::Anyness
       template<CT::Text T> requires CT::NotContainer<T>
       Text& operator += (T&& rhs) {
          if (not this->IsAllocated()) {
-            *this = Text {FWD(rhs)};
+            *this = Text {LglsFwd(rhs)};
             return *this;
          }
 
          using DT = Deint<T>;
-         decltype(auto) source = DeintCast(FWD(rhs));
+         decltype(auto) source = DeintCast(LglsFwd(rhs));
          const auto currentCount = this->GetCount();
 
          if constexpr (CT::TextLiteral<DT>) {
@@ -396,7 +407,7 @@ namespace Langulus::Anyness
       template<CT::Container T>
       Text& operator += (T&& rhs) {
          if constexpr (CT::Text<T>)
-            this->Concat(FWD(rhs));
+            this->Concat(LglsFwd(rhs));
          else
             Serialize(rhs, *this);
          return *this;
@@ -407,10 +418,10 @@ namespace Langulus::Anyness
       template<CT::Text T> requires CT::NotContainer<T>
       Text operator + (T const& rhs) const {
          if (not this->IsAllocated())
-            return Text {FWD(rhs)};
+            return Text {LglsFwd(rhs)};
 
          using DT = Deint<T>;
-         decltype(auto) source = DeintCast(FWD(rhs));
+         decltype(auto) source = DeintCast(LglsFwd(rhs));
          const auto currentCount = this->GetCount();
          Text result;
 

@@ -39,18 +39,18 @@ protected:
 
             place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
 
-            if constexpr (requires { new INNER (FWD(arguments)...); })
-               new (place) INNER (FWD(arguments)...);
-            else if constexpr (requires { new INNER (INNER::FromNumber(FWD(arguments)...)); })
-               new (place) INNER (INNER::FromNumber(FWD(arguments)...));
+            if constexpr (requires { new INNER (LglsFwd(arguments)...); })
+               new (place) INNER (LglsFwd(arguments)...);
+            else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
+               new (place) INNER (INNER::FromNumber(LglsFwd(arguments)...));
             else
                static_assert(false, "Unable to construct");
          }
          else {
-            if constexpr (requires { new INNER (FWD(arguments)...); })
-               place = new INNER (FWD(arguments)...);
-            else if constexpr (requires { new INNER (INNER::FromNumber(FWD(arguments)...)); })
-               place = new INNER (INNER::FromNumber(FWD(arguments)...));
+            if constexpr (requires { new INNER (LglsFwd(arguments)...); })
+               place = new INNER (LglsFwd(arguments)...);
+            else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
+               place = new INNER (INNER::FromNumber(LglsFwd(arguments)...));
             else
                static_assert(false, "Unable to construct");
          }
@@ -69,7 +69,7 @@ protected:
             place = new INNER{ nullptr };
          }
 
-         NestedConstructor(*place, entry + 1, FWD(arguments)...);
+         NestedConstructor(*place, entry + 1, LglsFwd(arguments)...);
       }
    }
    
@@ -112,7 +112,7 @@ protected:
 public:
    template<class...A>
    ScopedElement(A&&...arguments) {
-      NestedConstructor(element, entries, FWD(arguments)...);
+      NestedConstructor(element, entries, LglsFwd(arguments)...);
    }
    
    ~ScopedElement() {

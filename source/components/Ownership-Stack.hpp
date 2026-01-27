@@ -101,7 +101,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
-         decltype(auto) from = FWD(intent.what);
+         decltype(auto) from = LglsFwd(intent.what);
 
          // @important notice that Copy and Clone intents are not       
          //    handled here. They're handled in heap components instead,

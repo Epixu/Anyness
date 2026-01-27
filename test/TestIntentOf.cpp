@@ -136,7 +136,7 @@ namespace
 
       T instance;
 
-      SheddableType(T t) : instance {FWD(t)} {}
+      SheddableType(T t) : instance {LglsFwd(t)} {}
    };
    
    /// Implicit assignment is disabled due to custom copy/move constructors   
@@ -536,7 +536,7 @@ TEST_CASE_TEMPLATE("Testing not CT::HasCopyConstructor", TestType
    , DisownAssignableButNotConstructible
    , CloneAssignableButNotConstructible
 ) {
-   static_assert(not requires (Copy<TestType>&& a) { TestType {FWD(a)}; });
+   static_assert(not requires (Copy<TestType>&& a) { TestType {LglsFwd(a)}; });
    static_assert(not CT::HasIntentConstructor<Copy, TestType>);
    static_assert(not CT::HasIntentConstructorAlt<Copy<TestType>>);
    static_assert(not CT::HasCopyConstructor<TestType>);
@@ -593,7 +593,7 @@ TEST_CASE_TEMPLATE("Testing not CT::HasCloneConstructor", TestType
    , DisownAssignableButNotConstructible
    , CloneAssignableButNotConstructible
 ) {
-   static_assert(not requires (Clone<TestType>&& a) { TestType {FWD(a)}; });
+   static_assert(not requires (Clone<TestType>&& a) { TestType {LglsFwd(a)}; });
    static_assert(not CT::HasIntentConstructor<Clone, TestType>);
    static_assert(not CT::HasIntentConstructorAlt<Clone<TestType>>);
    static_assert(not CT::HasCloneConstructor<TestType>);
@@ -1305,7 +1305,7 @@ TEST_CASE_TEMPLATE("Testing move-constructible types", T
    alignas(T) char storage2[sizeof(T)] {};
    auto test1 = reinterpret_cast<T*>(storage1);
    auto test2 = reinterpret_cast<T*>(storage2);
-   new (test1) T {MOV(*test2)};
+   new (test1) T {LglsMov(*test2)};
 }
 
 TEST_CASE_TEMPLATE("Testing non-move-constructible types", T
@@ -1375,7 +1375,7 @@ TEST_CASE_TEMPLATE("Testing move-assignable types", T
    alignas(T) char storage2[sizeof(T)] {};
    auto test1 = reinterpret_cast<T*>(storage1);
    auto test2 = reinterpret_cast<T*>(storage2);
-   *test1 = MOV(*test2);
+   *test1 = LglsMov(*test2);
 }
 
 TEST_CASE_TEMPLATE("Testing non-move-assignable types", T
@@ -2069,7 +2069,7 @@ TEST_CASE_TEMPLATE("Testing DeintCast (moving)", TestType
 ) {
    int* value = new int {656};
    TestType i {static_cast<int&&>(*value)};
-   static_assert(::std::same_as<decltype(DeintCast(FWD(i))), int&&>);
-   REQUIRE(DeintCast(FWD(i)) == 656);
+   static_assert(::std::same_as<decltype(DeintCast(LglsFwd(i))), int&&>);
+   REQUIRE(DeintCast(LglsFwd(i)) == 656);
    delete value;
 }

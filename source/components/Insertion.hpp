@@ -219,7 +219,7 @@ namespace Langulus::Anyness::Component
          if constexpr (sizeof...(A) == 0)
             self.InsertDefault(count);
          else if (count == 1)
-            self.InsertConstruct(FWD(arguments)...);
+            self.InsertConstruct(LglsFwd(arguments)...);
          else {
             LglsAssert(
                ((not IntentOfT<decltype(arguments)>::IsMoved()) and ...),
@@ -229,7 +229,7 @@ namespace Langulus::Anyness::Component
             
             self.AllocateMore(previousCount + count);
             for (Count<C> i = 0; i < count; i++)
-               self.InsertConstruct(FWD(arguments)...); //TODO this is a pretty slow way to batch-insert, lots of overhead
+               self.InsertConstruct(LglsFwd(arguments)...); //TODO this is a pretty slow way to batch-insert, lots of overhead
          }
          return self.SelectInner(previousCount, count);
       }
@@ -263,7 +263,7 @@ namespace Langulus::Anyness::Component
          }
 
          // Construct data in place                                     
-         self.SelectInner(idx, rhs_count).CreateWithIntent(FWD(data));
+         self.SelectInner(idx, rhs_count).CreateWithIntent(LglsFwd(data));
          self.SetCount(lhs_count + rhs_count);
          return rhs_count;
       }

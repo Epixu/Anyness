@@ -9,6 +9,7 @@
 #include "../any/TestAnyCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 #include <Langulus/Anyness/TMany.hpp>
+#include <vector>
 
 namespace doctest
 {
@@ -77,7 +78,7 @@ void Many_CheckState_Abandoned(const C& many) {
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Many_CheckState_ContainsOne(T const& many, I&& e_with_intent, int uses = 1) {
-   Any_CheckState_ContainsOne(many, FWD(e_with_intent), uses);
+   Any_CheckState_ContainsOne(many, LglsFwd(e_with_intent), uses);
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>

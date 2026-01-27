@@ -95,11 +95,11 @@ SCENARIO("Data normalization", "[neat]") {
    static_assert(CT::NotVoid<Copy<TMapUnsorted<TMeta, TMany<Many>>>>);
    static_assert(CT::Copied<Copy<TMapUnsorted<TMeta, TMany<Many>>>>);
    static_assert(requires (Copy<TMapUnsorted<TMeta, TMany<Many>>>&& a) {
-      TMapUnsorted<TMeta, TMany<Many>>(FWD(a));
+      TMapUnsorted<TMeta, TMany<Many>>(LglsFwd(a));
    });
    static_assert(CT::HasCopyConstructor<TMapUnsorted<TMeta, TMany<Many>>>);
    static_assert(requires (Copy<TMapUnsorted<TMeta, TMany<Many>>>&& arg) {
-      {IntentNew<true>(nullptr, FWD(arg))} -> CT::Supported;
+      {IntentNew<true>(nullptr, LglsFwd(arg))} -> CT::Supported;
    });
 
    static_assert(CT::CopyConstructible  <TMapUnsorted<TMeta, TMany<Many>>>);

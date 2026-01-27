@@ -111,7 +111,7 @@ namespace Langulus
             "TypeOf returns the same type, and will result in infinite regress");
 
          if constexpr (CT::Void<InnerT>)
-            return FWD(what);
+            return LglsFwd(what);
          else if constexpr (requires { what.operator InnerT (); })
             return what.operator InnerT ();
          else {
@@ -128,9 +128,9 @@ namespace Langulus
    template<class T>
    constexpr decltype(auto) ShedCast(T&& item) noexcept {
       if constexpr (CT::Sheddable<T>)
-         return ShedCast(TypedCast(FWD(item)));
+         return ShedCast(TypedCast(LglsFwd(item)));
       else
-         return FWD(item);
+         return LglsFwd(item);
    };
    
    /// Always returns a pointer to the argument                               
@@ -139,9 +139,9 @@ namespace Langulus
    template<class T>
    constexpr decltype(auto) SparseCast(T&& a) noexcept {
       if constexpr (::std::is_pointer_v<Shed<T>>)
-         return  ShedCast(FWD(a));
+         return  ShedCast(LglsFwd(a));
       else
-         return &ShedCast(FWD(a));
+         return &ShedCast(LglsFwd(a));
    }
 
    /// Dereference the argument as many times as you need                     
@@ -154,8 +154,8 @@ namespace Langulus
       using ST = Shed<T>;
       if constexpr (TIMES > 0 and (CT::Array<ST> or CT::Sparse<ST>))
          // Security depends on your unary oeprator* - call can throw   
-         return DenseCast<TIMES - 1>(*ShedCast(FWD(a)));
+         return DenseCast<TIMES - 1>(*ShedCast(LglsFwd(a)));
       else
-         return ShedCast(FWD(a));
+         return ShedCast(LglsFwd(a));
    }
 }

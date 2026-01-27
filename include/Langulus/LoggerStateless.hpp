@@ -237,7 +237,7 @@ namespace Langulus::Logger
       #if LANGULUS_FEATURE(LOGGING)
          if not consteval {
             Detail::FmtWrite("\n          | ");
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #else
          LANGULUS(NOOP);
@@ -249,7 +249,7 @@ namespace Langulus::Logger
    constexpr void AppendRaw(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
          if not consteval {
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #else
          LANGULUS(NOOP);
@@ -269,7 +269,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::FatalError)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -287,7 +287,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Error)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -305,7 +305,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Warning)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -323,7 +323,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Verbose)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -341,7 +341,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Info)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -359,7 +359,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Message)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -377,7 +377,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Special)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -395,7 +395,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Flow)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -413,7 +413,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Input)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -431,7 +431,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Network)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -449,7 +449,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::OS)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }
@@ -467,7 +467,7 @@ namespace Langulus::Logger
             auto& style = DefaultIntentStyle[static_cast<int>(Intent::Prompt)];
             Detail::FmtWrite(style.prefix);
             Detail::FmtPrintStyle(style.style);
-            (Detail::FmtWrite(FWD(arguments)), ...);
+            (Detail::FmtWrite(LglsFwd(arguments)), ...);
          }
       #endif
    }

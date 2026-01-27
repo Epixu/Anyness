@@ -48,7 +48,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent) {
          using IT = Deint<I>;
-         IT from = FWD(intent.what);
+         IT from = LglsFwd(intent.what);
 
          if constexpr (CT::Copied<I> or CT::Cloned<I>) {
             // Do a copy or clone.                                      
@@ -171,19 +171,20 @@ namespace Langulus::Anyness::Component
          }
 
          // Never modify containers if type-incompatible                
-         if constexpr (CT::TypeErased<Decay<I>> or CT::TypeErased<C>) {
+         using DI = Deint<I>;
+         if constexpr (CT::TypeErased<DI> or CT::TypeErased<C>) {
             auto t1 = self.GetType();
             auto t2 = intent->GetType();
             if (t1 and t2) {
                LglsAssert(t1.IsSame(t2), "Type mismatch: ", t1, " is not same as ", t2);
             }
          }
-         else static_assert(Same<TypeOf<C>, TypeOf<Decay<I>>>, "Type mismatch");
+         else static_assert(Same<TypeOf<C>, TypeOf<DI>>, "Type mismatch");
 
          // Free old data and absorb the new container                  
          self.Free();
          self.SetHeapInner(nullptr);
-         self.Absorb(FWD(intent));
+         self.Absorb(LglsFwd(intent));
          return self;
       }
       

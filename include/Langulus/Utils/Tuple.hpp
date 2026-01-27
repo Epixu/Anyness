@@ -221,13 +221,13 @@ namespace Langulus::Inner
    constexpr auto forward_shuffled_tuple(indices<I...>, Tuple&& t)
    -> ShuffleTuple<Tuple, I...> {
       using std::get;
-      return std::forward_as_tuple(get<I>(FWD(t))...);
+      return std::forward_as_tuple(get<I>(LglsFwd(t))...);
    }
    
    template<size_t...I, class...T>
    constexpr auto forward_shuffled(indices<I...> map, T&&... t)
    -> ShuffleTuple<std::tuple<T&&...>, I...> {
-      return forward_shuffled_tuple(map, std::forward_as_tuple(FWD(t)...));
+      return forward_shuffled_tuple(map, std::forward_as_tuple(LglsFwd(t)...));
    }
    
    template<class From, class To>
@@ -270,7 +270,7 @@ namespace Langulus
       template<class...U>
       requires (std::is_convertible_v<U, T> and ...)
       explicit constexpr compact_tuple(U&&...u)
-         : storage_type {forward_shuffled(to_interface{}, FWD(u)...)} {}
+         : storage_type {forward_shuffled(to_interface{}, LglsFwd(u)...)} {}
 
       constexpr compact_tuple(compact_tuple const&) = default;
       constexpr compact_tuple(compact_tuple&&) = default;
@@ -283,7 +283,7 @@ namespace Langulus
       template<class...U>
       requires (std::is_constructible_v<T, U&&> and ...)
       constexpr compact_tuple(compact_tuple<U...>&& t)
-         : storage_type {forward_shuffled_tuple(MapFor<U...>{}, MOV(t))} {}
+         : storage_type {forward_shuffled_tuple(MapFor<U...>{}, LglsMov(t))} {}
 
       template<class U1, class U2>
       requires (std::is_convertible_v<U1 const&, Inner::PackElement<0, T...>>
@@ -297,7 +297,7 @@ namespace Langulus
       requires (std::is_convertible_v<U1 const&, Inner::PackElement<0, T...>>
             and std::is_convertible_v<U2 const&, Inner::PackElement<1, T...>>)
       constexpr compact_tuple(std::pair<U1, U2>&& p)
-         : compact_tuple {MOV(p.first), MOV(p.second)} {
+         : compact_tuple {LglsMov(p.first), LglsMov(p.second)} {
          static_assert(sizeof...(T) == 2, "Tuple size must be 2");
       }
 
@@ -309,7 +309,7 @@ namespace Langulus
       template<class...U>
       requires (std::is_constructible_v<T, U&&> and ...)
       constexpr compact_tuple(std::tuple<U...>&& t)
-         : compact_tuple {forward_shuffled_tuple(to_interface{}, MOV(t))} {}
+         : compact_tuple {forward_shuffled_tuple(to_interface{}, LglsMov(t))} {}
 
       template<class Alloc>
       constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a)
@@ -325,7 +325,7 @@ namespace Langulus
       template<class Alloc, class...U>
       requires (std::is_convertible_v<U, T> and ...)
       explicit constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, U&&... u)
-         : storage_type {tag, a, forward_shuffled(to_interface{}, FWD(u)...)} {}
+         : storage_type {tag, a, forward_shuffled(to_interface{}, LglsFwd(u)...)} {}
 
       template<class Alloc>
       constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, compact_tuple const& t)
@@ -333,7 +333,7 @@ namespace Langulus
       
       template<class Alloc>
       constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, compact_tuple&& t)
-         : storage_type {tag, a, MOV(t)} {}
+         : storage_type {tag, a, LglsMov(t)} {}
 
       template<class Alloc, class...U>
       requires (std::is_constructible_v<T, U const&> and ...)
@@ -343,7 +343,7 @@ namespace Langulus
       template<class Alloc, class... U>
       requires (std::is_constructible_v<T, U&&> and ...)
       constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, compact_tuple<U...>&& t)
-         : storage_type {tag, a, forward_shuffled_tuple(MapFor<U...>{}, MOV(t))} {}
+         : storage_type {tag, a, forward_shuffled_tuple(MapFor<U...>{}, LglsMov(t))} {}
 
       template<class Alloc, class U1, class U2>
       requires (std::is_convertible_v<U1 const&, Inner::PackElement<0, T...>>
@@ -356,7 +356,7 @@ namespace Langulus
       requires (std::is_convertible_v<U1 const&, Inner::PackElement<0, T...>>
             and std::is_convertible_v<U2 const&, Inner::PackElement<1, T...>>)
       constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, std::pair<U1, U2>&& p)
-         : compact_tuple {tag, a, MOV(p.first), MOV(p.second)} {
+         : compact_tuple {tag, a, LglsMov(p.first), LglsMov(p.second)} {
          static_assert(sizeof...(T) == 2, "tuple size must be 2");
       }
 
@@ -368,7 +368,7 @@ namespace Langulus
       template<class Alloc, class...U>
       requires (std::is_constructible_v<T, U&&> and ...)
       constexpr compact_tuple(std::allocator_arg_t tag, Alloc const& a, std::tuple<U...>&& t)
-         : compact_tuple {tag, a, forward_shuffled_tuple(to_interface{}, MOV(t))} {}
+         : compact_tuple {tag, a, forward_shuffled_tuple(to_interface{}, LglsMov(t))} {}
 
       constexpr compact_tuple& operator=(compact_tuple const&) = default;
       constexpr compact_tuple& operator=(compact_tuple&&) = default;
@@ -385,7 +385,7 @@ namespace Langulus
       constexpr compact_tuple& operator = (compact_tuple<U...>&& t) {
          static_assert((std::is_assignable_v<T&, U&&> and ...),
             "all elements must be move-assignable to the corresponding element");
-         storage_type::operator=(forward_shuffled_tuple(MapFor<U...>{}, MOV(t)));
+         storage_type::operator=(forward_shuffled_tuple(MapFor<U...>{}, LglsMov(t)));
          return *this;
       }
 
@@ -407,7 +407,7 @@ namespace Langulus
             "first pair element must be move-assignable to first tuple element");
          static_assert(std::is_assignable_v<Inner::PackElement<1, T...>&, U2&&>,
             "second pair element must be move-assignable to second tuple element");
-         storage_type::operator=(forward_shuffled(to_interface {}, MOV(p.first), MOV(p.second)));
+         storage_type::operator=(forward_shuffled(to_interface {}, LglsMov(p.first), LglsMov(p.second)));
          return *this;
       }
 
@@ -423,7 +423,7 @@ namespace Langulus
       constexpr compact_tuple& operator = (std::tuple<U...>&& t) {
          static_assert((std::is_assignable_v<T&, U&&> and ...),
             "all elements must be move-assignable to the corresponding element");
-         storage_type::operator=(forward_shuffled_tuple(to_interface {}, MOV(t)));
+         storage_type::operator=(forward_shuffled_tuple(to_interface {}, LglsMov(t)));
          return *this;
       }
 
@@ -462,12 +462,12 @@ namespace Langulus
 
    template<class...T>
    constexpr auto make_tuple(T&&...t) -> compact_tuple<Inner::DecayReference<T>...> {
-      return {FWD(t)...};
+      return {LglsFwd(t)...};
    }
    
    template<class...T>
    constexpr auto forward_as_tuple(T&&... t) noexcept -> compact_tuple<T&&...> {
-      return {FWD(t)...};
+      return {LglsFwd(t)...};
    }
    
    template<class...T>

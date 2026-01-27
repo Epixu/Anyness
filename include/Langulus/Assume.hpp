@@ -76,7 +76,7 @@ namespace Langulus
       // Log error message                                              
       auto s = Logger::ErrorScoped("Assertion failure: ");
       Logger::Append(m1);
-      (Logger::Append(FWD(mn)), ...);
+      (Logger::Append(LglsFwd(mn)), ...);
       #if LANGULUS(STACKTRACE)
          Stacktrace();
       #else
@@ -111,7 +111,7 @@ namespace Langulus
             // Log error message                                        
             auto s = Logger::ErrorScoped("Assertion failure: ");
             Logger::Append(m1);
-            (Logger::Append(FWD(mn)), ...);
+            (Logger::Append(LglsFwd(mn)), ...);
             #if LANGULUS(STACKTRACE)
                Stacktrace();
             #else
@@ -149,7 +149,7 @@ namespace Langulus
             // Log error message                                        
             auto s = Logger::WarningScoped("Assertion failure: ");
             Logger::Append(m1);
-            (Logger::Append(FWD(mn)), ...);
+            (Logger::Append(LglsFwd(mn)), ...);
             #if LANGULUS(STACKTRACE)
                Stacktrace(1);
             #else
@@ -183,7 +183,7 @@ namespace Langulus
             // Log error message                                        
             auto s = Logger::ErrorScoped("User assumption failure: ");
             Logger::Append(m1);
-            (Logger::Append(FWD(mn)), ...);
+            (Logger::Append(LglsFwd(mn)), ...);
             #if LANGULUS(STACKTRACE)
                Stacktrace();
             #else
@@ -219,7 +219,7 @@ namespace Langulus
             // Log error message                                        
             auto s = Logger::WarningScoped("User assumption failure: ");
             Logger::Append(m1);
-            (Logger::Append(FWD(mn)), ...);
+            (Logger::Append(LglsFwd(mn)), ...);
             #if LANGULUS(STACKTRACE)
                Stacktrace(1);
             #else
@@ -267,7 +267,7 @@ namespace Langulus
             // Log error message                                        
             auto s = Logger::ErrorScoped("Dev assumption failure: ");
             Logger::Append(m1);
-            (Logger::Append(FWD(mn)), ...);
+            (Logger::Append(LglsFwd(mn)), ...);
             #if LANGULUS(STACKTRACE)
                Stacktrace();
             #else
@@ -302,7 +302,7 @@ namespace Langulus
             // Log error message                                        
             auto s = Logger::WarningScoped("Dev assumption failure: ");
             Logger::Append(m1);
-            (Logger::Append(FWD(mn)), ...);
+            (Logger::Append(LglsFwd(mn)), ...);
             #if LANGULUS(STACKTRACE)
                Stacktrace(1);
             #else
@@ -350,7 +350,7 @@ namespace Langulus
                // Log error message                                     
                auto s = Logger::ErrorScoped("Assumption level ", LEVEL, " failure: ");
                Logger::Append(m1);
-               (Logger::Append(FWD(mn)), ...);
+               (Logger::Append(LglsFwd(mn)), ...);
                #if LANGULUS(STACKTRACE)
                   Stacktrace();
                #else
@@ -396,7 +396,7 @@ namespace Langulus
                // Log error message                                     
                auto s = Logger::WarningScoped("Assumption level ", LEVEL, " failure: ");
                Logger::Append(m1);
-               (Logger::Append(FWD(mn)), ...);
+               (Logger::Append(LglsFwd(mn)), ...);
                #if LANGULUS(STACKTRACE)
                   Stacktrace(1);
                #else

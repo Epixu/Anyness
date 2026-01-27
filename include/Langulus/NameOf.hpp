@@ -483,7 +483,7 @@ namespace Langulus::RTTI
                buffer[fill++] = result[prev++];
             }
             
-            result = MOV(buffer);
+            result = LglsMov(buffer);
          }
          return result;
       }

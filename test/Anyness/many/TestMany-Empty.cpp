@@ -203,7 +203,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       for (auto b : unininitialized) {
          REQUIRE(b != 254);
       }
-      Logger::Info("Size of ", NameOf<::std::any>(), " container is: ", sizeof(::std::any), " bytes");
+      Logger::Info("Size of ", NameOf<::std::vector<E>>(), " container is: ", sizeof(::std::vector<E>), " bytes");
       auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
       size_t accumulated_size = 0;
       size_t accumulated_stack_size = 0;
@@ -218,7 +218,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       Logger::Info("-----------------------------------------");
       Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
       Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      //static_assert(sizeof(T) <= sizeof(::std::any)); // G++ implements std::any entirely on the heap, and I refuse to do it like this
+      //static_assert(sizeof(T) <= sizeof(::std::vector<E>)); // bigger, because it precomputes and stores a hash on the stack
    }
 
    GIVEN("Default-constructed container") {

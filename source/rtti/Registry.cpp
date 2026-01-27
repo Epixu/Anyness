@@ -392,12 +392,12 @@ namespace Langulus::RTTI
       auto meta = new_meta.get();
 
       // Index by C++ name                                              
-      mMetaDataByCppName[meta->mCppNameOf] = MOV(new_meta);
+      mMetaDataByCppName[meta->mCppNameOf] = LglsMov(new_meta);
       
       // Index by lowercased token                                      
       meta->mNameOf = token;
       meta->mNameOf[0] = ToUppercase(token[0]);
-      meta->mNameOfLowercased = MOV(lowercased_token);
+      meta->mNameOfLowercased = LglsMov(lowercased_token);
       // @important notice how key is made from heap-allocated          
       // member variable. This guarantees, that if a boundary is        
       // unloaded, the name data remains untouched on the heap          
@@ -460,16 +460,16 @@ namespace Langulus::RTTI
       auto meta = new_meta.get();
 
       // Index by C++ name                                              
-      mMetaConstantsByCppName[meta->mCppNameOf] = MOV(new_meta);
+      mMetaConstantsByCppName[meta->mCppNameOf] = LglsMov(new_meta);
 
       // Index by ID                                                    
       mMetaConstantsByID.push_back(meta);
       meta->mID = mMetaConstantsByID.size();
 
       // Index by lowercased token                                      
-      meta->mNameOf = MOV(token);
+      meta->mNameOf = LglsMov(token);
       meta->mNameOf[0] = ToUppercase(meta->mNameOf[0]);
-      meta->mNameOfLowercased = MOV(lowercased_token);
+      meta->mNameOfLowercased = LglsMov(lowercased_token);
       // @important notice how key is made from heap-allocated          
       // member variable. This guarantees, that if a boundary is        
       // unloaded, the name data remains untouched on the heap          
@@ -521,14 +521,14 @@ namespace Langulus::RTTI
       auto meta = new_meta.get();
 
       // Index by C++ name                                              
-      mMetaTagsByCppName[meta->mCppNameOf] = MOV(new_meta);
+      mMetaTagsByCppName[meta->mCppNameOf] = LglsMov(new_meta);
 
       // Index by ID                                                    
       mMetaTagsByID.push_back(meta);
       meta->mID = mMetaTagsByID.size();
 
       // Index by lowercased token                                      
-      meta->mNameOf = MOV(lowercased_token);
+      meta->mNameOf = LglsMov(lowercased_token);
       meta->mNameOfLowercased = meta->mNameOf;
       // @important notice how key is made from heap-allocated          
       // member variable. This guarantees, that if a boundary is        
@@ -632,17 +632,17 @@ namespace Langulus::RTTI
       auto meta = new_meta.get();
 
       // Index by C++ name                                              
-      mMetaVerbsByCppName[meta->mCppNameOf] = MOV(new_meta);
+      mMetaVerbsByCppName[meta->mCppNameOf] = LglsMov(new_meta);
 
       // Index by ID                                                    
       mMetaVerbsByID.push_back(meta);
       meta->mID = mMetaVerbsByID.size();
 
       // Index by lowercased tokens                                     
-      meta->mNameOf = MOV(lowercased_token);
-      meta->mNameOfReverse = MOV(lowercased_token_rev);
-      meta->mOperator = MOV(lowercased_op);
-      meta->mOperatorReverse = MOV(lowercased_op_rev);
+      meta->mNameOf = LglsMov(lowercased_token);
+      meta->mNameOfReverse = LglsMov(lowercased_token_rev);
+      meta->mOperator = LglsMov(lowercased_op);
+      meta->mOperatorReverse = LglsMov(lowercased_op_rev);
       meta->mOperatorStripped = Inner::StripSpaces(meta->mOperator);
       meta->mOperatorReverseStripped = Inner::StripSpaces(meta->mOperatorReverse);
       // Amalgamate all tokens in this one                              

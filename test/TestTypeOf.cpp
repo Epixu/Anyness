@@ -26,23 +26,23 @@ namespace
 
       T instance;
 
-      SheddableType(T t) : instance {FWD(t)} {}
+      SheddableType(T t) : instance {LglsFwd(t)} {}
    };
 
    template<class T>
    struct SheddableTypeCastableExplicit : SheddableType<T> {
       using SheddableType<T>::SheddableType;
       using SheddableType<T>::instance;
-      explicit operator T () noexcept { return FWD(instance); }
-      explicit operator T () const noexcept { return FWD(const_cast<SheddableTypeCastableExplicit<T>*>(this)->instance); }
+      explicit operator T () noexcept { return LglsFwd(instance); }
+      explicit operator T () const noexcept { return LglsFwd(const_cast<SheddableTypeCastableExplicit<T>*>(this)->instance); }
    };
 
    template<class T>
    struct SheddableTypeCastableImplicit : SheddableType<T> {
       using SheddableType<T>::SheddableType;
       using SheddableType<T>::instance;
-      operator T () noexcept { return FWD(instance); }
-      operator T () const noexcept { return FWD(const_cast<SheddableTypeCastableImplicit<T>*>(this)->instance); }
+      operator T () noexcept { return LglsFwd(instance); }
+      operator T () const noexcept { return LglsFwd(const_cast<SheddableTypeCastableImplicit<T>*>(this)->instance); }
    };
 
    template<class T>

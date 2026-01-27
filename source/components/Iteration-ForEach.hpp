@@ -83,7 +83,7 @@ namespace Langulus::Anyness::Component
          ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::NextLoop != (
             result.control = self.template
-               ForEachInner<false>(FWD(lambdas), result.count)
+               ForEachInner<false>(LglsFwd(lambdas), result.count)
          )));
 
          if constexpr (CT::Mutable<C>) {
@@ -103,7 +103,7 @@ namespace Langulus::Anyness::Component
          ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::NextLoop != (
             result.control = self.template
-               ForEachInner<true>(FWD(lambdas), result.count)
+               ForEachInner<true>(LglsFwd(lambdas), result.count)
          )));
 
          if constexpr (CT::Mutable<C>) {
@@ -131,7 +131,7 @@ namespace Langulus::Anyness::Component
          ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::Break == (
             result.control = self.template
-               ForEachDeepInner<false, true>(FWD(lambdas), result.count)
+               ForEachDeepInner<false, true>(LglsFwd(lambdas), result.count)
          )));
 
          if constexpr (CT::Mutable<C>) {
@@ -151,7 +151,7 @@ namespace Langulus::Anyness::Component
          ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::Break == (
             result.control = self.template
-               ForEachDeepInner<true, true>(FWD(lambdas), result.count)
+               ForEachDeepInner<true, true>(LglsFwd(lambdas), result.count)
          )));
 
          if constexpr (CT::Mutable<C>) {
@@ -169,7 +169,7 @@ namespace Langulus::Anyness::Component
          ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::Break == (
             result.control = self.template
-               ForEachDeepInner<false, false>(FWD(lambdas), result.count)
+               ForEachDeepInner<false, false>(LglsFwd(lambdas), result.count)
          )));
 
          if constexpr (CT::Mutable<C>) {
@@ -187,7 +187,7 @@ namespace Langulus::Anyness::Component
          ForEachResult<C> result {0, Loop::Break};
          (void)(... or (Loop::Break == (
             result.control = self.template
-               ForEachDeepInner<true, false>(FWD(lambdas), result.count)
+               ForEachDeepInner<true, false>(LglsFwd(lambdas), result.count)
          )));
 
          if constexpr (CT::Mutable<C>) {
@@ -244,10 +244,10 @@ namespace Langulus::Anyness::Component
          else {
             // Container is type-erased. We're NOT iterating with tag.  
             const auto T = self.GetType();
-            if (not (CT::Deep<A> and T.IsDeep())
-            and not (CT::DefineTag<A> and T.Is(MetaDataOf<Decay<A>>()))
+            if (not (CT::Deep<A>       and T.IsDeep())
+            and not (CT::DefineTag<A>  and T.Is(MetaDataOf<Decay<A>>()))
             and not (CT::DefineVerb<A> and T.Is(MetaDataOf<Decay<A>>()))
-            and not (not CT::Deep<A> and self.template CastsTo<A, true>()))
+            and not (not CT::Deep<A>   and self.template CastsTo<A, true>()))
                return Loop::NextLoop;
 
             // Iterate container where A is binary-compatible to the    
@@ -391,12 +391,12 @@ namespace Langulus::Anyness::Component
                      if constexpr (Akin<A, D>) {
                         // Loop control is available only if iterator   
                         // is deep, too...                              
-                        return group.template ForEachDeepInner<REVERSE, SKIP>(MOV(f), counter);
+                        return group.template ForEachDeepInner<REVERSE, SKIP>(LglsMov(f), counter);
                      }
                      else {
                         // ... otherwise we have to pass through all    
                         // deep sub-blocks                              
-                        group.template ForEachDeepInner<REVERSE, SKIP>(MOV(f), counter);
+                        group.template ForEachDeepInner<REVERSE, SKIP>(LglsMov(f), counter);
                      }
                   },
                   intermediateCounterSink
@@ -408,14 +408,14 @@ namespace Langulus::Anyness::Component
 
                loop = self.template ForEachInner<REVERSE>(
                   [&f](SubNeat neat) {
-                     return neat.ForEachDeep(MOV(f));
+                     return neat.ForEachDeep(LglsMov(f));
                   },
                   counter
                );
             }
             else if constexpr (not CT::Deep<A>) {
                // Equivalent to non-deep iteration                      
-               loop = self.template ForEachInner<REVERSE>(MOV(f), counter);
+               loop = self.template ForEachInner<REVERSE>(LglsMov(f), counter);
             }
          }
          else {
@@ -477,7 +477,7 @@ namespace Langulus::Anyness::Component
 
                loop = self.template ForEachInner<REVERSE>(
                   [&counter, &f](SubBlock group) {
-                     return group.template ForEachDeepInner<REVERSE, SKIP>(MOV(f), counter);
+                     return group.template ForEachDeepInner<REVERSE, SKIP>(LglsMov(f), counter);
                   },
                   intermediateCounterSink
                );
@@ -488,14 +488,14 @@ namespace Langulus::Anyness::Component
 
                loop = self.template ForEachInner<REVERSE>(
                   [&f](SubNeat neat) {
-                     return neat.ForEachDeep(MOV(f));
+                     return neat.ForEachDeep(LglsMov(f));
                   },
                   counter
                );
             }
             else if constexpr (not CT::Deep<A>) {
                // Equivalent to non-deep iteration                      
-               loop = self.template ForEachInner<REVERSE>(MOV(f), counter);
+               loop = self.template ForEachInner<REVERSE>(LglsMov(f), counter);
             }
          }
 

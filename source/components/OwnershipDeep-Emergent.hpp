@@ -582,7 +582,7 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.IsSparse(),
             "EmplaceEntries shouldn't be called on dense containers");
          using IT = Decvq<Deref<TypeOf<I>>>;
-         decltype(auto) rhs = FWD(intent.what);
+         decltype(auto) rhs = LglsFwd(intent.what);
 
          if constexpr (CT::Handle<IT>)
             LglsAssumeDev(rhs.IsSparse(), "Sparseness mismatch");

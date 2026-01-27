@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
    void ForEachIndirection(auto&& lambda) {
       if constexpr (CT::Sparse<T>) {
          lambda();
-         ForEachIndirection<Deptr<T>>(FWD(lambda));
+         ForEachIndirection<Deptr<T>>(LglsFwd(lambda));
       }
    }
    
@@ -348,7 +348,7 @@ namespace Langulus::Anyness::Component
          using IT = Decvq<Deref<TypeOf<I>>>;
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
-         decltype(auto) rhs = FWD(intent.what);
+         decltype(auto) rhs = LglsFwd(intent.what);
          static_assert(not CT::Copied<I>,
             "Since this function assumes container has been preallocated, "
             "it makes no sense to copy here - it should be handled outside this call."
@@ -394,7 +394,7 @@ namespace Langulus::Anyness::Component
                   static_assert(false, "Unrecognized intent");
 
                if (T.IsSparse()) {
-                  if_available(self.EmplaceEntries(FWD(intent)));
+                  if_available(self.EmplaceEntries(LglsFwd(intent)));
                }
             }
             else {
@@ -409,7 +409,7 @@ namespace Langulus::Anyness::Component
                   IntentNew(self.GetHeapInner(), Refer(*rhs.GetRaw()));
 
                if constexpr (CT::Sparse<T>) {
-                  if_available(self.EmplaceEntries(FWD(intent)));
+                  if_available(self.EmplaceEntries(LglsFwd(intent)));
                }
             }
          }
@@ -434,7 +434,7 @@ namespace Langulus::Anyness::Component
                   static_assert(false, "Unrecognized intent");
 
                if (T.IsSparse()) {
-                  if_available(self.EmplaceEntries(FWD(intent)));
+                  if_available(self.EmplaceEntries(LglsFwd(intent)));
                }
             }
             else {
@@ -442,10 +442,10 @@ namespace Langulus::Anyness::Component
                // This container is statically-typed                    
                using T = TypeOf<C>;
                static_assert(Same<T, IT>, "Type mismatch");
-               IntentNew(self.GetHeapInner(), FWD(intent));
+               IntentNew(self.GetHeapInner(), LglsFwd(intent));
 
                if constexpr (CT::Sparse<T>) {
-                  if_available(self.EmplaceEntries(FWD(intent)));
+                  if_available(self.EmplaceEntries(LglsFwd(intent)));
                }
             }
          }
@@ -594,7 +594,7 @@ namespace Langulus::Anyness::Component
                      else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
                         self.AllocateMore(1);
 
-                     new (self.GetRaw()) E {FWD(arguments)...};
+                     new (self.GetRaw()) E {LglsFwd(arguments)...};
                   }
                   else {
                      // The type we're describing isn't known statically
@@ -613,7 +613,7 @@ namespace Langulus::Anyness::Component
                         self.AllocateMore(1);
 
                      // Describe-construct the first element            
-                     constructor(self.GetRaw(), FWD(arguments.what)...);
+                     constructor(self.GetRaw(), LglsFwd(arguments.what)...);
                   }
                }
                else {
@@ -625,7 +625,7 @@ namespace Langulus::Anyness::Component
 
                   // Construct the first element                        
                   if constexpr (CT::Copied<IntentOf(arguments)...>)
-                     self.EmplaceWithIntent(Refer(FWD(arguments))...);
+                     self.EmplaceWithIntent(Refer(LglsFwd(arguments))...);
                   else
                      self.EmplaceWithIntent(FWDIntent(arguments)...);
                }
@@ -637,7 +637,7 @@ namespace Langulus::Anyness::Component
 
                // Construct the first element                           
                if constexpr (CT::Dense<E>)
-                  self.EmplaceWithIntent(Abandon{E {FWD(arguments)...}});
+                  self.EmplaceWithIntent(Abandon{E {LglsFwd(arguments)...}});
                else static_assert(false,
                   "Too many arguments for emplacing a sparse instance");
             }
@@ -664,12 +664,12 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C>;
             if constexpr (sizeof...(A) == 1 and (CT::Sparse<T> or Same<T, Deint<A>...>)) {
                if constexpr (CT::Copied<IntentOf(arguments)...>)
-                  self.EmplaceWithIntent(Refer(FWD(arguments))...);
+                  self.EmplaceWithIntent(Refer(LglsFwd(arguments))...);
                else
                   self.EmplaceWithIntent(FWDIntent(arguments)...);
             }
             else if constexpr (CT::Dense<T>)
-               self.EmplaceWithIntent(Abandon {Decvq<T> {FWD(arguments)...}});
+               self.EmplaceWithIntent(Abandon {Decvq<T> {LglsFwd(arguments)...}});
             else static_assert(false,
                "Too many arguments for emplacing a sparse instance");
          }
@@ -714,7 +714,7 @@ namespace Langulus::Anyness::Component
             // No ownership, just fresh-allocate                        
             try {
                if constexpr (sizeof...(arguments) > 0)
-                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(FWD(arguments)...);
+                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
                else
                   self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
             }
@@ -736,7 +736,7 @@ namespace Langulus::Anyness::Component
                self.SetHeapInner(nullptr);
 
                if constexpr (sizeof...(arguments) > 0)
-                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(FWD(arguments)...);
+                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
                else
                   self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
             }
@@ -744,7 +744,7 @@ namespace Langulus::Anyness::Component
                // Emplace a new element on the first position.          
                // We're allowed to reuse the memory.                    
                if constexpr (sizeof...(arguments) > 0)
-                  self.template EmplaceConstruct<AllocationStrategy::TypeAndReallocate, E>(FWD(arguments)...);
+                  self.template EmplaceConstruct<AllocationStrategy::TypeAndReallocate, E>(LglsFwd(arguments)...);
                else
                   self.template EmplaceDefault<AllocationStrategy::TypeAndReallocate, E>();
             }
@@ -761,7 +761,7 @@ namespace Langulus::Anyness::Component
                if_available(self.SetHashInner(1));
 
                if constexpr (sizeof...(arguments) > 0)
-                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(FWD(arguments)...);
+                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
                else
                   self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
             }
@@ -774,7 +774,7 @@ namespace Langulus::Anyness::Component
                // Any state change is forbidden - container is full.    
                try {
                   if constexpr (sizeof...(arguments) > 0)
-                     self.template EmplaceConstruct<AllocationStrategy::NoStateChange, E>(FWD(arguments)...);
+                     self.template EmplaceConstruct<AllocationStrategy::NoStateChange, E>(LglsFwd(arguments)...);
                   else
                      self.template EmplaceDefault<AllocationStrategy::NoStateChange, E>();
                }

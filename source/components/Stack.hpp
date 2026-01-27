@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
       }
 
       constexpr void SetStackInner(this auto& self, T&& data) noexcept {
-         self.GetStackInner() = FWD(data);
+         self.GetStackInner() = LglsFwd(data);
       }
 
    public:

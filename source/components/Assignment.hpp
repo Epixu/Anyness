@@ -91,7 +91,7 @@ namespace Langulus::Anyness::Component
             // This container is on the stack, and by extension         
             // statically-typed and always initialized                  
             auto& data = self.template AccessStackById<ID>();
-            data = FWD(argument);
+            data = LglsFwd(argument);
          }
          else {
             // This container is heap-allocated                         
@@ -105,7 +105,7 @@ namespace Langulus::Anyness::Component
                   self.PrepareForReconstruction();
 
                   if constexpr (CT::Copied<IntentOf(argument)>)
-                     self.EmplaceWithIntent(Refer(FWD(argument)));
+                     self.EmplaceWithIntent(Refer(LglsFwd(argument)));
                   else
                      self.EmplaceWithIntent(FWDIntent(argument));
                }
@@ -117,13 +117,13 @@ namespace Langulus::Anyness::Component
                   // Reduce to one item and reassign if possible        
                   if (self.PrepareForReassignment()) {
                      if constexpr (CT::Copied<IntentOf(argument)>)
-                        self.AssignWithIntent(Refer(FWD(argument)));
+                        self.AssignWithIntent(Refer(LglsFwd(argument)));
                      else
                         self.AssignWithIntent(FWDIntent(argument));
                   }
                   else {
                      if constexpr (CT::Copied<IntentOf(argument)>)
-                        self.EmplaceWithIntent(Refer(FWD(argument)));
+                        self.EmplaceWithIntent(Refer(LglsFwd(argument)));
                      else
                         self.EmplaceWithIntent(FWDIntent(argument));
                   }
@@ -134,7 +134,7 @@ namespace Langulus::Anyness::Component
                   self.PrepareForReconstruction();
 
                   if constexpr (CT::Copied<IntentOf(argument)>)
-                     self.EmplaceWithIntent(Refer(FWD(argument)));
+                     self.EmplaceWithIntent(Refer(LglsFwd(argument)));
                   else
                      self.EmplaceWithIntent(FWDIntent(argument));
                }
@@ -232,7 +232,7 @@ namespace Langulus::Anyness::Component
          using IT = Decvq<Deref<TypeOf<I>>>;
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
-         decltype(auto) rhs = FWD(intent.what);
+         decltype(auto) rhs = LglsFwd(intent.what);
          static_assert(not CT::Cloned<I>,
             "Since this function assumes container has been preallocated, "
             "it makes no sense to clone here "
@@ -268,7 +268,7 @@ namespace Langulus::Anyness::Component
                   static_assert(false, "Unrecognized intent");
 
                if (T.IsSparse()) {
-                  if_available(self.EmplaceEntries(FWD(intent)));
+                  if_available(self.EmplaceEntries(LglsFwd(intent)));
                }
             }
             else {
@@ -281,7 +281,7 @@ namespace Langulus::Anyness::Component
                IntentAssign(*data, I::Nest(*rhs.GetRaw()));
 
                if constexpr (CT::Sparse<T>) {
-                  if_available(self.EmplaceEntries(FWD(intent)));
+                  if_available(self.EmplaceEntries(LglsFwd(intent)));
                }
             }
          }
@@ -306,7 +306,7 @@ namespace Langulus::Anyness::Component
                   static_assert(false, "Unrecognized intent");
 
                if (T.IsSparse()) {
-                  if_available(self.EmplaceEntries(FWD(intent)));
+                  if_available(self.EmplaceEntries(LglsFwd(intent)));
                }
             }
             else {
@@ -315,10 +315,10 @@ namespace Langulus::Anyness::Component
                using T = TypeOf<C>;
                static_assert(Same<T, IT>, "Type mismatch");
                T* data = static_cast<T*>(self.template AccessStackById<ID>());
-               IntentAssign(*data, FWD(intent));
+               IntentAssign(*data, LglsFwd(intent));
 
                if constexpr (CT::Sparse<T>) {
-                  if_available(self.EmplaceEntries(FWD(intent)));
+                  if_available(self.EmplaceEntries(LglsFwd(intent)));
                }
             }
          }

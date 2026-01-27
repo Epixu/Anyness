@@ -82,21 +82,21 @@ namespace Langulus::Anyness
                "(if you want to overwrite the first item) in order to clearly "
                "state your intent. Absorb will be used by default!"
             );
-            this->Absorb(FWD(arguments)...);
+            this->Absorb(LglsFwd(arguments)...);
          }
-         else this->EmplaceConstruct(FWD(arguments)...);
+         else this->EmplaceConstruct(LglsFwd(arguments)...);
       }
       
       /// Construction that absorbs the provided container                    
       template<class A>
       constexpr TAny(Inner::Absorb, A&& argument) {
-         this->Absorb(FWD(argument));
+         this->Absorb(LglsFwd(argument));
       }
       
       /// Emplaces T inside, using A... as constructor arguments              
       template<class...A>
       constexpr TAny(Inner::Piecewise, A&&...arguments) {
-         this->EmplaceConstruct(FWD(arguments)...);
+         this->EmplaceConstruct(LglsFwd(arguments)...);
       }
 
       /// Assignment                                                          
@@ -118,9 +118,9 @@ namespace Langulus::Anyness
                "first item) in order to clearly state your intent. "
                "AssignAbsorb will be used by default!"
             );
-            return this->AssignAbsorb(FWD(argument));
+            return this->AssignAbsorb(LglsFwd(argument));
          }
-         else return this->Assign(FWD(argument));
+         else return this->Assign(LglsFwd(argument));
       }
       
       using Com::Comparison<>::operator <=>;

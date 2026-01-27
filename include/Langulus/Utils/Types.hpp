@@ -200,7 +200,7 @@ namespace Langulus
       }
       
       static constexpr auto Expand(auto&& lambda) {
-         return ForEach(FWD(lambda));
+         return ForEach(LglsFwd(lambda));
       }
 
       template<unsigned I>

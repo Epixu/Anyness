@@ -242,11 +242,11 @@ namespace Langulus::Anyness
       /// Construction that absorbs the provided container                    
       template<CT::Container C>
       constexpr HandleDisowned(C&& argument) {
-         this->Absorb(FWD(argument));
+         this->Absorb(LglsFwd(argument));
       }
       template<CT::Container C>
       constexpr HandleDisowned(Inner::Absorb, C&& argument) {
-         this->Absorb(FWD(argument));
+         this->Absorb(LglsFwd(argument));
       }
 
       /// Manual constructor for some niche uses, like iterators              

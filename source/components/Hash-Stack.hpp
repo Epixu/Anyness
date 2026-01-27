@@ -62,7 +62,7 @@ namespace Langulus::Anyness::Component
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
-            decltype(auto) from = FWD(intent.what);
+            decltype(auto) from = LglsFwd(intent.what);
             self.SetHashInner(from.GetHashInner());
             if constexpr (I::ResetsOnMove())
                if_available(from.SetHashInner(1));

@@ -37,9 +37,16 @@ namespace Langulus::Anyness
    struct TOwn : Inner::TOwnBase<T> {
       using Base = Inner::TOwnBase<T>;
 
-      constexpr  TOwn() noexcept { this->ConstructDefault(); }
-      constexpr  TOwn(const T& source) : Base {Stackwise, source} {}
-      constexpr  TOwn(T&& source) noexcept : Base {Stackwise, FWD(source)} {}
+      constexpr  TOwn() noexcept {
+         this->ConstructDefault();
+      }
+
+      constexpr  TOwn(const T& source)
+         : Base {Stackwise, source} {}
+
+      constexpr  TOwn(T&& source) noexcept
+         : Base {Stackwise, LglsFwd(source)} {}
+
       constexpr ~TOwn() noexcept = default;
 
       /// Three-way comparison                                                

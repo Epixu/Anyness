@@ -54,10 +54,10 @@ protected:
       using namespace Langulus;
 
       if constexpr (CT::Dense<INNER>) {
-         if constexpr (requires { new INNER (FWD(arguments)...); })
-            new (&place) INNER (FWD(arguments)...);
-         else if constexpr (requires { new INNER (INNER::FromNumber(FWD(arguments)...)); })
-            new (&place) INNER (INNER::FromNumber(FWD(arguments)...));
+         if constexpr (requires { new INNER (LglsFwd(arguments)...); })
+            new (&place) INNER (LglsFwd(arguments)...);
+         else if constexpr (requires { new INNER (INNER::FromNumber(LglsFwd(arguments)...)); })
+            new (&place) INNER (INNER::FromNumber(LglsFwd(arguments)...));
          else
             static_assert(false, "Unable to construct");
       }
@@ -67,7 +67,7 @@ protected:
             Langulus::MetaDataOf<NEXT_T>(), pot_t(Roof2(sizeof(NEXT_T))));
          place = (*entry)->GetBlockStartPackedAs<INNER>();
          
-         NestedConstructor(*place, entry + 1, FWD(arguments)...);
+         NestedConstructor(*place, entry + 1, LglsFwd(arguments)...);
       }
    }
    
@@ -104,7 +104,7 @@ protected:
 public:
    template<class...A>
    ScopedElementPacked(A&&...arguments) {
-      NestedConstructor(element, entries, FWD(arguments)...);
+      NestedConstructor(element, entries, LglsFwd(arguments)...);
    }
    
    ~ScopedElementPacked() {

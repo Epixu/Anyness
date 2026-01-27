@@ -168,7 +168,7 @@ namespace Langulus::Anyness
          T value;
          constexpr StackVariable() noexcept {};
          constexpr StackVariable(T const& v) noexcept : value {v} {}
-         constexpr StackVariable(T&& v) noexcept : value {FWD(v)} {}
+         constexpr StackVariable(T&& v) noexcept : value {LglsFwd(v)} {}
       };
       
       /// Go through all components and accumulate their stack requests into  
@@ -333,7 +333,7 @@ namespace Langulus::Anyness
       /// A tag-dispatch constructor that forwards arguments to mStack.       
       /// Used in some niche container cases, like TOwn.                      
       constexpr Container(Inner::Stackwise, auto&&...arguments)
-         : mStack {FWD(arguments)...} {}
+         : mStack {LglsFwd(arguments)...} {}
 
       /// Default destructor does nothing. Each container has to implement    
       /// it, most likely by calling this->Destroy(). This is needed, because 
@@ -597,15 +597,15 @@ namespace Langulus
    namespace Loop
    {
       /// Break the entire iteration as a whole                               
-      constexpr LoopControl Break      = LoopControl::Break;
+      constexpr LoopControl Break    = LoopControl::Break;
       /// Continue to next element or function                                
-      constexpr LoopControl Continue   = LoopControl::Continue;
+      constexpr LoopControl Continue = LoopControl::Continue;
       /// Repeat the current element                                          
-      constexpr LoopControl Repeat     = LoopControl::Repeat;
+      constexpr LoopControl Repeat   = LoopControl::Repeat;
       /// Remove the current element                                          
-      constexpr LoopControl Discard    = LoopControl::Discard;
+      constexpr LoopControl Discard  = LoopControl::Discard;
       /// End this iterating function and jump immediately to the next        
-      constexpr LoopControl NextLoop   = LoopControl::NextLoop;
+      constexpr LoopControl NextLoop = LoopControl::NextLoop;
    }
 }
 

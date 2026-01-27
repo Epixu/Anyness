@@ -182,7 +182,7 @@ namespace Langulus::Logger
    struct Scope : Tabs {
       using Tabs::Tabs;
       constexpr Scope(Scope&& other) noexcept
-         : Tabs {FWD(other)} {}
+         : Tabs {LglsFwd(other)} {}
       constexpr ~Scope() noexcept;
    };
 
@@ -293,7 +293,7 @@ namespace Langulus::Logger
       #if LANGULUS_FEATURE(LOGGING)
          if not consteval {
             GlobalState.NewLine();
-            (GlobalState.Write(FWD(arguments)), ...);
+            (GlobalState.Write(LglsFwd(arguments)), ...);
          }
       #else
          LANGULUS(NOOP);
@@ -305,7 +305,7 @@ namespace Langulus::Logger
    constexpr void Append(T&&...arguments) noexcept {
       #if LANGULUS_FEATURE(LOGGING)
          if not consteval {
-            (GlobalState.Write(FWD(arguments)), ...);
+            (GlobalState.Write(LglsFwd(arguments)), ...);
          }
       #else
          LANGULUS(NOOP);
@@ -328,7 +328,7 @@ namespace Langulus::Logger
                GlobalState.Write(Push);
                //GlobalState.Write(currentStyle);
                GlobalState.Write(Underline);
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                //GlobalState.Write(GlobalState.mDefaultStyle);
                GlobalState.Write(Pop);
                return GlobalState.NewScope();
@@ -355,7 +355,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::FatalError);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -375,7 +375,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::FatalError);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -401,7 +401,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Error);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -421,7 +421,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Error);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -447,7 +447,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Warning);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -467,7 +467,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Warning);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -493,7 +493,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Verbose);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -513,7 +513,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Verbose);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -539,7 +539,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Info);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -559,7 +559,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Info);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -585,7 +585,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Message);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -605,7 +605,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Message);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -631,7 +631,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Special);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -651,7 +651,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Special);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -677,7 +677,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Flow);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -697,7 +697,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Flow);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -723,7 +723,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Input);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -743,7 +743,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Input);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -769,7 +769,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Network);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -789,7 +789,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Network);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -815,7 +815,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::OS);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -835,7 +835,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::OS);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
@@ -861,7 +861,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Prompt);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
             #endif
          }
       #endif
@@ -881,7 +881,7 @@ namespace Langulus::Logger
             #else
                GlobalState.Write(Intent::Prompt);
                GlobalState.NewLine();
-               (GlobalState.Write(FWD(arguments)), ...);
+               (GlobalState.Write(LglsFwd(arguments)), ...);
                return GlobalState.NewScope();
             #endif
          }
