@@ -95,7 +95,7 @@ namespace Langulus::Anyness::Component
 
             self.AllocateFresh(self.RequestHeap(count));
 
-            if constexpr (CT::ContainsMany<C>) {
+            if constexpr (CT::ContainsMany<C, IT>) {
                auto src = IterateHandles(from).begin();
                auto dst = IterateHandles(self).begin();
                try {

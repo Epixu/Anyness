@@ -606,8 +606,11 @@ namespace Langulus::Anyness
    {
       /// Inner function that picks the best possible handle type, depending  
       /// on a container's constness and type-erasedness.                     
-      template<CT::Container C>
+      template<CT::Container C> 
       consteval auto DecideHandleType() {
+         static_assert(not CT::Sheddable<C>, "Strip sheddables first");
+         static_assert(not CT::Reference<C>, "Strip references first");
+
          if constexpr (CT::TypeErased<C>) {
             // Type-erased handle                                       
             if constexpr (CT::Owned<C>)

@@ -29,6 +29,18 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, class A>
       C& operator >> (this C&, A&&) requires CT::RangeInsertable<C, A>;
 
+      /// Copy left side and push back rhs                                    
+      template<CT::Container C>
+      C operator + (this C const& lhs, CT::NotContainer auto&& rhs) {
+         return C {Copy {lhs}} << FWD(rhs);
+      }
+
+      /// Same as push back operator (<<)                                     
+      template<CT::Container C>
+      C& operator += (this C& self, CT::NotContainer auto&& rhs) {
+         return self << FWD(rhs);
+      }
+
       /// Concatenate another container at the back, resulting in a new one   
       template<CT::Container C>
       C operator + (this C const& lhs, CT::Container auto&& rhs) {

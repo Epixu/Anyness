@@ -156,7 +156,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       static_assert(CT::Comparable<T, E>);
       static_assert(not ::std::ranges::range<T>);
 
+      static_assert(not requires (T pack)         { pack.operator +   (pack); });
       static_assert(not requires (T pack, E item) { pack.operator +   (item); });
+      static_assert(not requires (T pack)         { pack.operator +=  (pack); });
       static_assert(not requires (T pack, E item) { pack.operator +=  (item); });
       static_assert(not requires (T pack, E item) { pack.operator <<  (item); });
       static_assert(not requires (T pack, E item) { pack.operator >>  (item); });

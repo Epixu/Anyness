@@ -499,10 +499,10 @@ namespace Langulus::Anyness::Component
       auto Find(this C const& self, T const& item, Count<C> cookie = 0) noexcept
          /* -> At<C> requires CT::RangeComparable<C, T>*/
       {
-         using strategy = IterateNoDeref<REVERSE, C>;
+         using strategy = IterateNoDeref<REVERSE, const C>;
          auto handle = strategy(self).begin() + cookie;
          while (handle) {
-            if (*handle == item)
+            if (**handle == item)
                return handle;
             ++handle;
          }
@@ -521,7 +521,7 @@ namespace Langulus::Anyness::Component
       auto FindRange(this C1 const& self, C2 const& range, Count<C1> cookie = 0) noexcept
          /* -> At<C1>*/
       {
-         using strategy = IterateNoDeref<REVERSE, C1>;
+         using strategy = IterateNoDeref<REVERSE, const C1>;
          if (cookie >= self.GetCount() or range.GetCount() > self.GetCount() - cookie)
             return strategy(self).end();
 

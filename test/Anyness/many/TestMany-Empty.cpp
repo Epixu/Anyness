@@ -155,13 +155,28 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(CT::Comparable<T, T>);
       static_assert(CT::Comparable<T, E>);
 
+      static_assert(::std::input_or_output_iterator<decltype(Fake<T>().begin())>);
+      static_assert(::std::input_or_output_iterator<decltype(Fake<T>().end())>);
+
+      //static_assert(::std::ranges::range<T>);
+
       T test;
+      for (auto& it : IterateInReverse(test)) {
+         (void) it;
+      }
+      for (auto& it : test) {
+         (void) it;
+      }
+      for (auto& it : IterateDefault(test)) {
+         (void) it;
+      }
       for (auto& it : IterateNoDeref(test)) {
          (void) it;
       }
-      //static_assert(::std::ranges::range<T>);
 
+      static_assert(requires (T pack)         { pack.operator +   (pack); });
       static_assert(requires (T pack, E item) { pack.operator +   (item); });
+      static_assert(requires (T pack)         { pack.operator +=  (pack); });
       static_assert(requires (T pack, E item) { pack.operator +=  (item); });
       static_assert(requires (T pack, E item) { pack.operator <<  (item); });
       static_assert(requires (T pack, E item) { pack.operator >>  (item); });

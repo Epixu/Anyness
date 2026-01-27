@@ -17,20 +17,20 @@ namespace Langulus::Anyness
    ///                                                                        
    /// Use like this: for(auto i : IterateInReverse(container)), where        
    /// 'container' can be any range, including std one.                       
-   template<::std::ranges::range C>
+   template<class C>
    struct IterateInReverse {
       using CTTI_ReflectAs = void;
 
       C& range;
 
-      explicit constexpr IterateInReverse(C& a) noexcept
+      constexpr IterateInReverse(C& a) noexcept
          : range {a} {}
 
       decltype(auto) begin() noexcept { return range.rbegin(); }
       decltype(auto) end()   noexcept { return range.rend();   }
    };
 
-   template<::std::ranges::range C>
+   template<class C>
    IterateInReverse(C&) -> IterateInReverse<C>;
 
 
@@ -42,12 +42,15 @@ namespace Langulus::Anyness
    /// Counteract this, and make 'i' be the iterator type instead.            
    /// Use like this: for(auto i : IterateNoDeref(container)), where          
    /// 'container' can be any range, including std one                        
-   template<bool REVERSE, ::std::ranges::range C>
+   template<bool REVERSE, class C>
    struct IterateNoDeref {
       using CTTI_ReflectAs = void;
 
    protected:
-      using H = decltype(Fake<C>().begin());
+      using Count = typename Deref<C>::CountType;
+      using H = Tif<REVERSE, decltype(Fake<C>().rbegin()),
+                             decltype(Fake<C>().begin())>;
+      static_assert(CT::NotReference<H>, "Iterator can't be a reference");
 
       C& range;
 
@@ -59,6 +62,7 @@ namespace Langulus::Anyness
       struct Iterator {
          using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
+         using difference_type = std::ptrdiff_t;
 
          mutable H mIt;
          C& mRange;
@@ -73,7 +77,21 @@ namespace Langulus::Anyness
             : mIt    {FWD(it)}
             , mRange {range} {}
 
-         constexpr bool operator == (CT::Iterator auto const& rhs) const noexcept {
+         constexpr auto operator = (Iterator const& rhs) assumptious -> Iterator& {
+            LglsAssumeUser(&mRange == &rhs.mRange,
+               "Iterators are for different containers");
+            mIt = rhs.mIt;
+            return *this;
+         }
+
+         constexpr auto operator = (Iterator&& rhs) assumptious -> Iterator& {
+            LglsAssumeUser(&mRange == &rhs.mRange,
+               "Iterators are for different containers");
+            mIt = rhs.mIt;
+            return *this;
+         }
+
+         constexpr bool operator == (CT::Iterator auto const& rhs) const assumptious {
             LglsAssumeUser(&mRange == &rhs.mRange,
                "Iterators are for different containers");
             return mIt == rhs.mIt;
@@ -86,6 +104,16 @@ namespace Langulus::Anyness
 
          auto operator *  () const noexcept -> H& { return mIt; }
          auto operator -> () const noexcept -> H& { return mIt; }
+
+         auto operator + (Count c) const noexcept -> Iterator {
+            if constexpr (REVERSE) return {mIt - c, mRange};
+            else                   return {mIt + c, mRange};
+         }
+
+         auto operator - (Count c) const noexcept -> Iterator {
+            if constexpr (REVERSE) return {mIt + c, mRange};
+            else                   return {mIt - c, mRange};
+         }
 
          /// Prefix increment                                                 
          auto operator ++ () noexcept -> Iterator& {
@@ -112,7 +140,17 @@ namespace Langulus::Anyness
             if constexpr (REVERSE) return mIt++;
             else                   return mIt--;
          }
+
+         /// Get the integer element difference between two iterators         
+         auto operator - (CT::Iterator auto const& rhs) const assumptious
+         -> difference_type {
+            LglsAssumeUser(&mRange == &rhs.mRange,
+               "Iterators are for different containers");
+            const auto range = mIt - rhs.mIt;
+            return static_cast<difference_type>(range);
+         }
       };
+      static_assert(::std::input_or_output_iterator<Iterator>);
 
       auto begin() -> Iterator  {
          if constexpr (REVERSE) return {range.rbegin(), range};
@@ -135,7 +173,7 @@ namespace Langulus::Anyness
    /// Used by default when doing for(auto i : container)                     
    /// When container is type-erased, or mutable and sparse, 'i' will be a    
    /// handle. Otherwise, 'i' will be a direct reference to the element       
-   template<bool REVERSE, CT::Container C>
+   template<bool REVERSE, class C>
    struct IterateDefault {
       static_assert(CT::NoIntent<C>,     "C can't have an intent");
       static_assert(CT::NotReference<C>, "C can't be a reference");
@@ -145,13 +183,15 @@ namespace Langulus::Anyness
    protected:
       using Pick    = typename C::Pick;
       using PickMut = typename C::PickMut;
+      using Count   = typename Deref<C>::CountType;
 
       // The handle is either a pointer/THandle for statically-typed    
       // containers, or Handle/HandleMut for type-erased ones           
       using H = Tmut<C,
-         Tif<CT::Handle<Pick>,    PickMut, Deref<PickMut>*>,
-         Tif<CT::Handle<PickMut>, Pick,    Deref<Pick>*>
+         Tif<CT::Handle<PickMut>,   PickMut, Deref<PickMut>*>,
+         Tif<CT::Handle<Pick>,      Pick,    Deref<Pick>*>
       >;
+      static_assert(CT::NotReference<H>, "Iterator can't be a reference");
 
       C& range;
 
@@ -163,6 +203,7 @@ namespace Langulus::Anyness
       struct Iterator {
          using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
+         using difference_type = std::ptrdiff_t;
 
          mutable H mIt;
          C& mRange;
@@ -177,10 +218,25 @@ namespace Langulus::Anyness
             : mIt    {FWD(it)}
             , mRange {range} {}
 
-         constexpr bool operator == (CT::Iterator auto const& rhs) const noexcept {
+         constexpr auto operator = (Iterator const& rhs) assumptious -> Iterator& {
             LglsAssumeUser(&mRange == &rhs.mRange,
                "Iterators are for different containers");
-            return mIt == rhs.mIt;
+            mIt = rhs.mIt;
+            return *this;
+         }
+
+         constexpr auto operator = (Iterator&& rhs) assumptious -> Iterator& {
+            LglsAssumeUser(&mRange == &rhs.mRange,
+               "Iterators are for different containers");
+            mIt = rhs.mIt;
+            return *this;
+         }
+
+         constexpr bool operator == (CT::Iterator auto const& rhs) const noexcept {
+            if constexpr (CT::Handle<H>)
+               return mIt.GetRaw() == rhs.mIt.GetRaw();
+            else
+               return mIt == rhs.mIt;
          }
          
          explicit constexpr operator bool() const noexcept {
@@ -192,6 +248,16 @@ namespace Langulus::Anyness
 
          auto operator *  () const noexcept -> H& { return  mIt; }
          auto operator -> () const noexcept -> H* { return &mIt; }
+
+         auto operator + (Count c) const noexcept -> Iterator {
+            if constexpr (REVERSE) return {mIt - c, mRange};
+            else                   return {mIt + c, mRange};
+         }
+
+         auto operator - (Count c) const noexcept -> Iterator {
+            if constexpr (REVERSE) return {mIt + c, mRange};
+            else                   return {mIt - c, mRange};
+         }
 
          /// Prefix increment                                                 
          auto operator ++ () noexcept -> Iterator& {
@@ -218,7 +284,24 @@ namespace Langulus::Anyness
             if constexpr (REVERSE) return {mIt++, mRange};
             else                   return {mIt--, mRange};
          }
+
+         /// Get the integer element difference between two iterators         
+         auto operator - (CT::Iterator auto const& rhs) const assumptious
+         -> difference_type {
+            LglsAssumeUser(&mRange == &rhs.mRange,
+               "Iterators are for different containers");
+
+            if constexpr (CT::TypeErased<C>) {
+               const auto range = mIt.template GetRawAs<uint8_t>() - rhs.mIt.template GetRawAs<uint8_t>();
+               return static_cast<difference_type>(range / mRange.GetStride());
+            }
+            else {
+               const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
+               return static_cast<difference_type>(range);
+            }
+         }
       };
+      static_assert(::std::input_or_output_iterator<Iterator>);
 
       constexpr auto begin() const noexcept -> Iterator {
          if constexpr (REVERSE)
@@ -235,7 +318,7 @@ namespace Langulus::Anyness
       }
    };
 
-   template<CT::Container C>
+   template<class C>
    IterateDefault(C&) -> IterateDefault<false, C>;
 
 
@@ -247,7 +330,7 @@ namespace Langulus::Anyness
    /// values in-place while iterating.                                       
    /// Use like this: for(auto i : IterateHandles(container)), where          
    /// 'container' can be any CT::Container.                                  
-   template<bool REVERSE, CT::Container C>
+   template<bool REVERSE, class C>
    struct IterateHandles {
       using CTTI_ReflectAs = void;
       static_assert(CT::NoIntent<C>,     "C can't have an intent");
@@ -257,6 +340,7 @@ namespace Langulus::Anyness
    protected:
       using Count = typename Deref<C>::CountType;
       using H = DecideHandle<C>;
+      static_assert(CT::NotReference<H>, "Iterator can't be a reference");
 
       C& range;
 
@@ -268,6 +352,7 @@ namespace Langulus::Anyness
       struct Iterator {
          using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
+         using difference_type = std::ptrdiff_t;
 
          mutable H mIt;
          C& mRange;
@@ -282,7 +367,21 @@ namespace Langulus::Anyness
             : mIt    {FWD(it)}
             , mRange {range} {}
 
-         constexpr bool operator == (CT::Iterator auto const& rhs) const noexcept {
+         constexpr auto operator = (Iterator const& rhs) assumptious -> Iterator& {
+            LglsAssumeUser(&mRange == &rhs.mRange,
+               "Iterators are for different containers");
+            mIt = rhs.mIt;
+            return *this;
+         }
+
+         constexpr auto operator = (Iterator&& rhs) assumptious -> Iterator& {
+            LglsAssumeUser(&mRange == &rhs.mRange,
+               "Iterators are for different containers");
+            mIt = rhs.mIt;
+            return *this;
+         }
+
+         constexpr bool operator == (CT::Iterator auto const& rhs) const assumptious {
             LglsAssumeUser(&mRange == &rhs.mRange,
                "Iterators are for different containers");
             return mIt.GetRaw() == rhs.mIt.GetRaw();
@@ -332,17 +431,22 @@ namespace Langulus::Anyness
          }
 
          /// Get the integer element difference between two iterators         
-         auto operator - (const Iterator& rhs) const noexcept -> ptrdiff_t {
+         auto operator - (CT::Iterator auto const& rhs) const assumptious
+         -> difference_type {
+            LglsAssumeUser(&mRange == &rhs.mRange,
+               "Iterators are for different containers");
+
             if constexpr (CT::TypeErased<C>) {
                const auto range = mIt.template GetRawAs<uint8_t>() - rhs.mIt.template GetRawAs<uint8_t>();
-               return static_cast<ptrdiff_t>(range / mRange.GetStride());
+               return static_cast<difference_type>(range / mRange.GetStride());
             }
             else {
                const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
-               return static_cast<ptrdiff_t>(range);
+               return static_cast<difference_type>(range);
             }
          }
       };
+      static_assert(::std::input_or_output_iterator<Iterator>);
 
       constexpr Iterator begin() const noexcept {
          if constexpr (REVERSE)
@@ -359,7 +463,7 @@ namespace Langulus::Anyness
       }
    };
 
-   template<CT::Container C>
+   template<class C>
    IterateHandles(C&) -> IterateHandles<false, C>;
 
 
@@ -369,15 +473,17 @@ namespace Langulus::Anyness
    /// Use like this: for(auto i : IterateTogether(pack1, pack2)), where      
    /// 'packN' can be any range, including std one. You can retrieve the      
    /// current element by using i[N], or i.one() i.two() for the first two.   
-   template<bool REVERSE, ::std::ranges::range...C>
+   template<bool REVERSE, class...C>
    struct IterateTogether {
       using CTTI_ReflectAs = void;
-      static constexpr size_t Count = sizeof...(C);
-      static_assert(Count > 1,
+      static constexpr size_t Size = sizeof...(C);
+      static_assert(Size > 1,
          "IterateTogether needs at least two containers");
 
    protected:
-      using Hs = ::std::tuple<decltype(Fake<C>().begin())...>;
+      using Count = size_t;
+      using Hs = ::std::tuple<Tif<REVERSE, decltype(Fake<C>().rbegin()),
+                                           decltype(Fake<C>().begin())   >...>;
       using Cs = ::std::tuple<C&...>;
 
       Cs range;
@@ -390,6 +496,7 @@ namespace Langulus::Anyness
       struct Iterator {
          using CTTI_Iterator = Yes<>;
          using CTTI_ReflectAs = void;
+         using difference_type = std::ptrdiff_t;
 
          mutable Hs mIt;
          Cs mRanges;
@@ -407,8 +514,8 @@ namespace Langulus::Anyness
             : mIt    {FWD(it)}
             , mRanges{ranges} {}
 
-         constexpr bool operator == (CT::Iterator auto const& rhs) const noexcept {
-            return LglsSequence(Count, {
+         constexpr bool operator == (CT::Iterator auto const& rhs) const assumptious {
+            return LglsSequence(Size, {
                LglsAssumeUser(((&::std::get<I>(mIt.mRange) == &::std::get<I>(rhs.mRange)) and ...),
                   "Iterators are for different containers");
                return ((::std::get<I>(mIt.GetRaw()) == ::std::get<I>(rhs.mIt.GetRaw())) and ...);
@@ -416,7 +523,7 @@ namespace Langulus::Anyness
          }
 
          explicit constexpr operator bool() const noexcept {
-            return LglsSequence(Count, {
+            return LglsSequence(Size, {
                return ((::std::get<I>(mIt) != ::std::get<I>(mRanges).end()) and ...);
             });
          }
@@ -424,15 +531,41 @@ namespace Langulus::Anyness
          auto operator *  () const noexcept -> Iterator& { return *this; }
          auto operator -> () const noexcept -> Iterator& { return *this; }
 
+         auto operator + (Count c) const noexcept -> Iterator {
+            if constexpr (REVERSE) {
+               return LglsSequence(Size, {
+                  return Iterator(Hs{(::std::get<I>(mIt) + c)...}, mRanges);
+               });
+            }
+            else {
+               return LglsSequence(Size, {
+                  return Iterator(Hs{(::std::get<I>(mIt) + c)...}, mRanges);
+               });
+            }
+         }
+
+         auto operator - (Count c) const noexcept -> Iterator {
+            if constexpr (REVERSE) {
+               return LglsSequence(Size, {
+                  return Iterator(Hs{(::std::get<I>(mIt) - c)...}, mRanges);
+               });
+            }
+            else {
+               return LglsSequence(Size, {
+                  return Iterator(Hs{(::std::get<I>(mIt) - c)...}, mRanges);
+               });
+            }
+         }
+
          /// Prefix increment                                                 
          auto operator ++ () noexcept -> Iterator& {
             if constexpr (REVERSE) {
-               LglsSequence(Count, {
+               LglsSequence(Size, {
                   ((--::std::get<I>(mIt)), ...);
                });
             }
             else {
-               LglsSequence(Count, {
+               LglsSequence(Size, {
                   ((++::std::get<I>(mIt)), ...);
                });
             }
@@ -442,12 +575,12 @@ namespace Langulus::Anyness
          /// Suffix increment                                                 
          auto operator ++ (int) noexcept -> Iterator {
             if constexpr (REVERSE) {
-               return LglsSequence(Count, {
+               return LglsSequence(Size, {
                   return Iterator(Hs{(::std::get<I>(mIt)--)...}, mRanges);
                });
             }
             else {
-               return LglsSequence(Count, {
+               return LglsSequence(Size, {
                   return Iterator(Hs{(::std::get<I>(mIt)++)...}, mRanges);
                });
             }
@@ -456,12 +589,12 @@ namespace Langulus::Anyness
          /// Prefix decrement                                                 
          auto operator -- () noexcept -> Iterator& {
             if constexpr (REVERSE) {
-               LglsSequence(Count, {
+               LglsSequence(Size, {
                   ((++::std::get<I>(mIt)), ...);
                });
             }
             else {
-               LglsSequence(Count, {
+               LglsSequence(Size, {
                   ((--::std::get<I>(mIt)), ...);
                });
             }
@@ -471,17 +604,36 @@ namespace Langulus::Anyness
          /// Suffix decrement                                                 
          auto operator -- (int) noexcept -> Iterator {
             if constexpr (REVERSE) {
-               return LglsSequence(Count, {
+               return LglsSequence(Size, {
                   return Iterator(Hs{(::std::get<I>(mIt)++)...}, mRanges);
                });
             }
             else {
-               return LglsSequence(Count, {
+               return LglsSequence(Size, {
                   return Iterator(Hs{(::std::get<I>(mIt)--)...}, mRanges);
                });
             }
          }
+
+         /// Get the integer element difference between two iterators         
+         auto operator - (CT::Iterator auto const& rhs) const assumptious
+         -> difference_type {
+            auto& lhs_range = ::std::get<0>(    mRanges);
+            auto& rhs_range = ::std::get<0>(rhs.mRanges);
+            LglsAssumeUser(&lhs_range == &rhs_range,
+               "Iterators are for different containers");
+
+            if constexpr (CT::TypeErased<decltype(lhs_range)>) {
+               const auto range = one().template GetRawAs<uint8_t>() - rhs.one().template GetRawAs<uint8_t>();
+               return static_cast<difference_type>(range / lhs_range.GetStride());
+            }
+            else {
+               const auto range = one().GetRaw() - rhs.one().GetRaw();
+               return static_cast<difference_type>(range);
+            }
+         }
       };
+      static_assert(::std::input_or_output_iterator<Iterator>);
 
       auto begin() -> Iterator {
          return ::std::apply([](auto&...i) {
@@ -496,7 +648,7 @@ namespace Langulus::Anyness
       }
    };
 
-   template<::std::ranges::range...C>
+   template<class...C>
    IterateTogether(C&...) -> IterateTogether<false, C...>;
 }
 
@@ -525,9 +677,22 @@ namespace Langulus::Anyness::Component
          return IterateDefault(self).begin();
       }
 
+      /// Return the end sentinel                                             
       template<CT::Container C>
-      constexpr auto end(this C const& self) noexcept {
+      constexpr auto end(this C&& self) noexcept {
          return IterateDefault(self).end();
+      }
+
+      /// Return an iterator to the first element, reversed                   
+      template<CT::Container C>
+      constexpr auto rbegin(this C&& self) noexcept {
+         return IterateDefault<true, Deref<C>>(self).begin();
+      }
+
+      /// Return the end sentinel                                             
+      template<CT::Container C>
+      constexpr auto rend(this C&& self) noexcept {
+         return IterateDefault<true, Deref<C>>(self).end();
       }
 
       /// Return the last item                                                

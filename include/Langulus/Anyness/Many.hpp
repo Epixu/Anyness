@@ -163,6 +163,19 @@ namespace Langulus::Anyness
       using Com::Comparison<>::operator ==;
       //using Com::IterationRange<>::begin;
       //using Com::IterationRange<>::end;
+
+      auto begin() {
+         return this->IterationRange<>::begin();
+      }
+      auto begin() const {
+         return this->IterationRange<>::begin();
+      }
+      auto end() {
+         return this->IterationRange<>::end();
+      }
+      auto end() const {
+         return this->IterationRange<>::end();
+      }
    };
 }
 
