@@ -502,8 +502,15 @@ namespace Langulus::Anyness::Component
          using strategy = IterateNoDeref<REVERSE, const C>;
          auto handle = strategy(self).begin() + cookie;
          while (handle) {
-            if (**handle == item)
-               return handle;
+            if constexpr (CT::TypeErased<C>) {
+               if (*handle == item)
+                  return handle;
+            }
+            else {
+               if (**handle == item)
+                  return handle;
+            }
+
             ++handle;
          }
 

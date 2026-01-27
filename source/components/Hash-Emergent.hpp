@@ -114,7 +114,7 @@ namespace Langulus::Anyness::Component
                // @note this is reached only if GetCount() > 1          
                ::std::vector<H> h;
                h.reserve(self.GetCount());
-               for (T& element : self)
+               for (T const& element : self)
                   h.emplace_back(HashOf(element));
                
                return HashBytes(

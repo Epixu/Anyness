@@ -125,8 +125,10 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::DeeplyOwned<C>) {
             if constexpr (CT::ContainsMany<C>) {
                auto item = IterateHandles(self).begin();
-               while (item)
-                  (item++)->KeepElementDeepCustomPointers();
+               while (item) {
+                  item->KeepElementDeepCustomPointers();
+                  ++item;
+               }
             }
             else self.KeepElementDeepCustomPointers();
          }

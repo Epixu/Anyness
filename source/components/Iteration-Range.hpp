@@ -64,7 +64,7 @@ namespace Langulus::Anyness
          using CTTI_ReflectAs = void;
          using difference_type = std::ptrdiff_t;
 
-         mutable H mIt;
+         H mIt;
          C& mRange;
 
          Iterator() = delete;
@@ -102,8 +102,8 @@ namespace Langulus::Anyness
             else                   return mIt != mRange.end();
          }
 
-         auto operator *  () const noexcept -> H& { return mIt; }
-         auto operator -> () const noexcept -> H& { return mIt; }
+         decltype(auto) operator *  () const noexcept { return *mIt; }
+         decltype(auto) operator -> () const noexcept { return *mIt; }
 
          auto operator + (Count c) const noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt - c, mRange};
@@ -205,7 +205,7 @@ namespace Langulus::Anyness
          using CTTI_ReflectAs = void;
          using difference_type = std::ptrdiff_t;
 
-         mutable H mIt;
+         H mIt;
          C& mRange;
 
          Iterator() = delete;
@@ -246,8 +246,25 @@ namespace Langulus::Anyness
                return mIt != mRange.GetRawEnd();
          }
 
-         auto operator *  () const noexcept -> H& { return  mIt; }
-         auto operator -> () const noexcept -> H* { return &mIt; }
+         decltype(auto) operator * () noexcept {
+            if constexpr (CT::Handle<H>) return (mIt);
+            else                         return *mIt;
+         }
+
+         decltype(auto) operator * () const noexcept {
+            if constexpr (CT::Handle<H>) return (mIt);
+            else                         return *mIt;
+         }
+
+         decltype(auto) operator -> () noexcept {
+            if constexpr (CT::Handle<H>) return &mIt;
+            else                         return mIt;
+         }
+
+         decltype(auto) operator -> () const noexcept {
+            if constexpr (CT::Handle<H>) return &mIt;
+            else                         return mIt;
+         }
 
          auto operator + (Count c) const noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt - c, mRange};
@@ -341,6 +358,7 @@ namespace Langulus::Anyness
       using Count = typename Deref<C>::CountType;
       using H = DecideHandle<C>;
       static_assert(CT::NotReference<H>, "Iterator can't be a reference");
+      static_assert(CT::Handle<H>, "Iterator must always be a handle");
 
       C& range;
 
@@ -354,7 +372,7 @@ namespace Langulus::Anyness
          using CTTI_ReflectAs = void;
          using difference_type = std::ptrdiff_t;
 
-         mutable H mIt;
+         H mIt;
          C& mRange;
 
          Iterator() = delete;
@@ -391,8 +409,10 @@ namespace Langulus::Anyness
             return mIt.GetRaw() != mRange.GetRawEnd();
          }
          
-         auto operator *  () const noexcept -> H& { return  mIt; }
-         auto operator -> () const noexcept -> H* { return &mIt; }
+         decltype(auto) operator *  ()       noexcept { return (mIt); }
+         decltype(auto) operator *  () const noexcept { return (mIt); }
+         decltype(auto) operator -> ()       noexcept { return &mIt; }
+         decltype(auto) operator -> () const noexcept { return &mIt; }
 
          auto operator + (Count c) const noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt - c, mRange};
@@ -498,7 +518,7 @@ namespace Langulus::Anyness
          using CTTI_ReflectAs = void;
          using difference_type = std::ptrdiff_t;
 
-         mutable Hs mIt;
+         Hs mIt;
          Cs mRanges;
 
          decltype(auto) one() noexcept { return ::std::get<0>(mIt); }

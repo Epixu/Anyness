@@ -47,8 +47,8 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Container C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent) {
-         using IT = Decay<I>;
-         decltype(auto) from = FWD(intent.what);
+         using IT = Deint<I>;
+         IT from = FWD(intent.what);
 
          if constexpr (CT::Copied<I> or CT::Cloned<I>) {
             // Do a copy or clone.                                      
@@ -124,7 +124,7 @@ namespace Langulus::Anyness::Component
                }
             }
             else {
-               decltype(auto) src = from.template As<DecideHandle<IT>>();
+               decltype(auto) src = from.template As<DecideHandle<Deref<IT>>>();
                if constexpr (CT::Copied<I>)
                   self.EmplaceWithIntent(Refer(src));
                else
@@ -275,8 +275,10 @@ namespace Langulus::Anyness::Component
                   // in it. We're moving to new memory, so no reverse   
                   // is required.                                       
                   auto from = IterateHandles(previous).begin();
-                  for (auto to : IterateHandles(self))
-                     to.EmplaceWithIntent(Abandon(*(from++)));
+                  for (auto to : IterateHandles(self)) {
+                     to.EmplaceWithIntent(Abandon(*from));
+                     ++from;
+                  }
                }
             }
             else {

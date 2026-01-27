@@ -521,42 +521,51 @@ namespace Langulus::Anyness
 
 namespace Langulus::CT
 {
-   /// Check if listed types are containers with any kind of DeepOwnership    
-   /// component                                                              
-   template<class...T>
-   concept DeeplyOwned = Container<T...> and (ShedDeref<T>::DeeplyOwned and ...);
-
    /// Check if listed types are containers with any kind of Ownership        
    /// component                                                              
    template<class...T>
-   concept Owned = Container<T...> and (ShedDeref<T>::Owned and ...);
+   concept Owned = Container<T...>
+       and (ShedDeref<T>::Owned and ...);
 
    /// Check if listed containers are referenced upon construction/assignment 
    /// and then automatically dereferenced on destruction                     
    template<class...T>
-   concept AutoOwned = Container<T...> and ((ShedDeref<T>::AutoOwned) and ...);
+   concept AutoOwned = Container<T...>
+       and ((ShedDeref<T>::AutoOwned) and ...);
    
    /// Check if listed types are containers with any kind of heap memory      
    template<class...T>
-   concept HeapAllocated = Container<T...> and (ShedDeref<T>::HeapAllocated and ...);
+   concept HeapAllocated = Container<T...>
+       and (ShedDeref<T>::HeapAllocated and ...);
    
    /// Check if listed types are containers with variable count               
    /// @attention this includes containers with Com::CountStatic, but have    
    ///   nullifiable heap pointer                                             
    template<class...T>
-   concept HasVariableCount = HeapAllocated<T...> and (ShedDeref<T>::HeapCanBeNull and ...);
+   concept HasVariableCount = HeapAllocated<T...>
+       and (ShedDeref<T>::HeapCanBeNull and ...);
    
    /// Check if listed types are containers that can have multiple elements   
    template<class...T>
-   concept ContainsMany = Container<T...> and (ShedDeref<T>::ContainsMany and ...);
+   concept ContainsMany = Container<T...>
+       and (ShedDeref<T>::ContainsMany and ...);
    
    /// Check if listed types are containers that can have single element      
    template<class...T>
-   concept ContainsOne = Container<T...> and ((not ShedDeref<T>::ContainsMany) and ...);
+   concept ContainsOne = Container<T...>
+       and ((not ShedDeref<T>::ContainsMany) and ...);
    
    /// Check if listed types are type-erased containers                       
    template<class...T>
-   concept TypeErased = Container<T...> and ((ShedDeref<T>::TypeErased) and ...);
+   concept TypeErased = Container<T...>
+       and ((ShedDeref<T>::TypeErased) and ...);
+
+   /// Check if listed types are containers with any kind of DeepOwnership    
+   /// component                                                              
+   template<class...T>
+   concept DeeplyOwned = Container<T...>
+       and (ShedDeref<T>::DeeplyOwned and ...)
+       and ((CT::TypeErased<T> or CT::Sparse<TypeOf<T>>) and ...);
 }
 
 namespace Langulus
