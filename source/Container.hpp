@@ -376,44 +376,47 @@ namespace Langulus::Anyness
       typename decltype(Inner::DefineStack<COMPONENTS...>())::TupleOptimized mStack;
 
       /// Access a variable on the stack associated with a component          
-      template<class C>
-      constexpr auto& AccessStack(this auto&& self) noexcept {
+      template<class C, class SELF>
+      constexpr auto& AccessStack(this SELF&& self) noexcept {
          constexpr size_t IDX = Inner::GetStackOffset<C, COMPONENTS...>();
-         return ::Langulus::get<IDX>(self.mStack).value;
+         auto& result = ::Langulus::get<IDX>(self.mStack).value;
+         using ConstOrNot = LglsMutIf(SELF, decltype(result));
+         return const_cast<ConstOrNot>(result);
       }
 
       /// Access a variable on the heap associated with a component           
-      template<CT::Component COM, CT::Container CON>
-      constexpr auto AccessHeap(this CON&& self) noexcept {
+      template<CT::Component COM, CT::Container SELF>
+      constexpr auto AccessHeap(this SELF&& self) noexcept {
          size_t offset = Inner::GetHeapOffset<COM, COMPONENTS...>(
             static_cast<size_t>(self.GetReserved()),
             static_cast<size_t>(self.GetIndirections())
          );
 
+         auto heap = self.GetAllocationInner()->GetBlockStart() + offset;
          using R = typename COM::HeapRequest;
          if constexpr (requires { R::AllocatedPerIndirection; }) {
             if constexpr (requires { R::Type::AllocatedPerElement; }) {
-               using RC = Tmut<CON, typename R::Type::Type*, typename R::Type::Type const*>;
-               return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+               using RC = LglsMutIf(SELF, typename R::Type::Type*);
+               return reinterpret_cast<RC>(heap);
             }
             else {
-               using RC = Tmut<CON, typename R::Type*, typename R::Type const*>;
-               return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+               using RC = LglsMutIf(SELF, typename R::Type*);
+               return reinterpret_cast<RC>(heap);
             }
          }
          else if constexpr (requires { R::AllocatedPerElement; }) {
             if constexpr (requires { R::Type::AllocatedPerIndirection; }) {
-               using RC = Tmut<CON, typename R::Type::Type*, typename R::Type::Type const*>;
-               return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+               using RC = LglsMutIf(SELF, typename R::Type::Type*);
+               return reinterpret_cast<RC>(heap);
             }
             else {
-               using RC = Tmut<CON, typename R::Type*, typename R::Type const*>;
-               return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+               using RC = LglsMutIf(SELF, typename R::Type*);
+               return reinterpret_cast<RC>(heap);
             }
          }
          else {
-            using RC = Tmut<CON, R*, R const*>;
-            return reinterpret_cast<RC>(self.GetAllocationInner()->GetBlockStart() + offset);
+            using RC = LglsMutIf(SELF, R*);
+            return reinterpret_cast<RC>(heap);
          }
       }
       

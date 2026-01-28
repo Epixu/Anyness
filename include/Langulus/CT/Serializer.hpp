@@ -63,7 +63,7 @@ namespace Langulus
 
    /// Serialize                                                              
    template<class FROM, CT::Serializer TO>
-   auto Serialize(FROM& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr)
+   auto Serialize(FROM const& from, TO& to, typename SerializerOf<TO>::Context* context = nullptr)
    -> typename TO::CountType {
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;

@@ -44,17 +44,28 @@ namespace Langulus::Anyness
    /// states are applied. You can use TAny instead if you want states.       
    template<class T>
    struct TRef : Inner::TRefBase<T> {
-      using Base = Inner::TRefBase<T>;
+      using Base          = Inner::TRefBase<T>;
+      using Pick          = ConstAll<T>;
+      using PickMut       = T;
+      using HandleType    = THandle<ConstAll<T> const&>;
+      using HandleMutType = THandle<T&>;
 
-      // Single element selections                                      
-      using Pick    = T;
-      using PickMut = T;
+      constexpr TRef() noexcept {
+         this->ConstructDefault();
+      }
 
-      constexpr  TRef() noexcept { this->ConstructDefault(); }
-      constexpr  TRef(nullptr_t) noexcept : TRef {} {}
-      constexpr  TRef(TRef const& other) : Base {Absorb, Refer {other}} {}
-      constexpr  TRef(TRef&& other) noexcept : Base {Absorb, Move {other}} {}
-      constexpr ~TRef() noexcept { this->Destroy(); }
+      constexpr TRef(nullptr_t) noexcept
+         : TRef {} {}
+
+      constexpr TRef(TRef const& other)
+         : Base {Absorb, Refer {other}} {}
+
+      constexpr TRef(TRef&& other) noexcept
+         : Base {Absorb, Move {other}} {}
+
+      constexpr ~TRef() noexcept {
+         this->Destroy();
+      }
 
       /// Initialize with a pointer. Respects intents.                        
       template<class A>

@@ -58,9 +58,9 @@ namespace Langulus::Anyness
       using Base = Inner::TManyBase<T>;
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
-      using Pick          = T const&;
+      using Pick          = ConstAll<T> const&;
       using PickMut       = THandle<T&>;
-      using HandleType    = THandle<T const&>;
+      using HandleType    = THandle<ConstAll<T> const&>;
       using HandleMutType = THandle<T&>;
       using DeepType      = Any;
 
@@ -115,9 +115,9 @@ namespace Langulus::Anyness
 
       template<class A>
       constexpr TMany& operator = (A&& argument) {
-         if constexpr (CT::Container<A>) {
+         if constexpr (SameAsOneOf<Deint<A>, TMany, Many>) {
             LglsAssumeUser(
-               (Same<Deint<A>, TMany> or Same<TypeOf<Deint<A>>, T>),
+               (not SameAsOneOf<T, TMany, Many>),
                "Ambiguous use of assignment "
                "- you should use either AssignAbsorb (if you want to overwrite "
                "the container itself) or Assign (if you want to overwrite the "

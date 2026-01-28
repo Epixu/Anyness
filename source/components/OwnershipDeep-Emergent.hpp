@@ -220,7 +220,7 @@ namespace Langulus::Anyness::Component
             // Referencing a type-erased element                        
             const auto T = self.GetType();
             if (T.IsSparse()) {
-               EntryPtr entries = self.GetEntries();
+               AllocationPtr* entries = self.GetEntries();
                if (not entries or not *entries)
                   return;
 
@@ -240,7 +240,7 @@ namespace Langulus::Anyness::Component
                   referencer(ptr, 1);
                }
 
-               (*entries)->AddRef(1);
+               DecvqAllCast(*entries)->AddRef(1);
             }
          }
          else {
@@ -249,7 +249,7 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C>;            
             if constexpr (CT::Sparse<T>) {
                using DT = Deptr<T>;
-               EntryPtr entries = self.GetEntries();
+               AllocationPtr* entries = self.GetEntries();
                if (not entries or not *entries)
                   return;
 
@@ -267,7 +267,7 @@ namespace Langulus::Anyness::Component
                   ptr->Reference(1);
                }
 
-               (*entries)->AddRef(1);
+               DecvqAllCast(*entries)->AddRef(1);
             }
          }
       }      
@@ -296,14 +296,13 @@ namespace Langulus::Anyness::Component
             return;
 
          // Check if disowned/outside authority                         
-         EntryPtr entries = self.GetEntries();
+         AllocationPtr* entries = self.GetEntriesInner();
          if (not entries)
             return;
 
          void const* src = self.GetRaw();
          while (*entries and src and T.IsSparse()) {            
-            auto nextT = T.GetDeptr();
-            
+            auto nextT = T.GetDeptr();            
             if (nextT.IsSparse()) {
                // Pointer T -> Pointer nextT                            
                T.GetDereffer()(const_cast<void*>(src), &src);
@@ -313,7 +312,7 @@ namespace Langulus::Anyness::Component
                referencer(const_cast<void*>(UnpackPointer(T, nextT, src)), 1);
             }
 
-            (*entries)->AddRef(1);
+            DecvqAllCast(*entries)->AddRef(1);
 
             // Move to next indirection                                 
             T = nextT;
@@ -331,7 +330,6 @@ namespace Langulus::Anyness::Component
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
          //static_assert(CT::ContainsOne<C>,
          //  "Destroying only first element in a container with many");
-
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.GetAllocation(),
                "Can't destroy anything in a container without ownership");
@@ -348,7 +346,7 @@ namespace Langulus::Anyness::Component
             const auto T = self.GetType();
             
             if (T.IsSparse()) {
-               EntryPtr entries = self.GetEntries();
+               AllocationPtr* entries = self.GetEntriesInner();
                if (not entries or not *entries)
                   return;
 
@@ -377,7 +375,7 @@ namespace Langulus::Anyness::Component
                      else destructor(ptr);
                   }
 
-                  Allocator::Deallocate(*entries);
+                  Allocator::Deallocate(DecvqAllCast(*entries));
                }
                else {
                   if (subT.IsSparse()) {
@@ -399,7 +397,7 @@ namespace Langulus::Anyness::Component
                         subT.GetDestructor()(ptr);
                   }
 
-                  (*entries)->AddRef(-1);
+                  DecvqAllCast(*entries)->AddRef(-1);
                }
             }
             else if constexpr (DESTROY) {
@@ -419,7 +417,7 @@ namespace Langulus::Anyness::Component
             
             if constexpr (CT::Sparse<T>) {
                using DT = Deptr<T>;
-               EntryPtr entries = self.GetEntries();
+               AllocationPtr* entries = self.GetEntries();
                if (not entries or not *entries)
                   return;
 
@@ -444,7 +442,7 @@ namespace Langulus::Anyness::Component
                      else ptr->~DT();
                   }
 
-                  Allocator::Deallocate(*entries);
+                  Allocator::Deallocate(DecvqAllCast(*entries));
                }
                else {
                   if constexpr (CT::Sparse<DT>) {
@@ -465,7 +463,7 @@ namespace Langulus::Anyness::Component
                         ptr->~DT();
                   }
 
-                  (*entries)->AddRef(-1);
+                  DecvqAllCast(*entries)->AddRef(-1);
                }
             }
             else if constexpr (DESTROY and CT::Destroyable<T>) {
@@ -504,7 +502,7 @@ namespace Langulus::Anyness::Component
          // Destroying a type-erased element                            
          DMeta T = self.GetType();
          if (T.IsSparse()) {
-            EntryPtr entries = self.GetEntries();
+            AllocationPtr* entries = self.GetEntries();
             if (not entries)
                return;
             
@@ -597,17 +595,17 @@ namespace Langulus::Anyness::Component
             // reference them                                           
             if constexpr (CT::Handle<IT>) {
                if (auto entries_src = rhs.GetEntries())
-                  memcpy(self.GetEntries(), entries_src, entries_size);
+                  memcpy(self.GetEntriesInner(), entries_src, entries_size);
                else {
                   // RHS might be a disowned handle                     
-                  memset(self.GetEntries(), 0, entries_size);
+                  memset(self.GetEntriesInner(), 0, entries_size);
                }
             }
-            else memset(self.GetEntries(), 0, entries_size);
+            else memset(self.GetEntriesInner(), 0, entries_size);
 
             if constexpr (CT::Handle<IT> or LANGULUS_FEATURE(MANAGED_MEMORY)) {
-               auto entries = self.GetEntries();
-               const auto entriesEnd = entries + indirections;
+               auto entries = self.GetEntriesInner();
+               auto const entriesEnd = self.GetEntries() + indirections;
                auto meta = self.GetType().GetDeptr();
                void** handle = self.template GetRawAs<void*>(); //TODO this won't work with packed pointers, would it?
 
@@ -624,7 +622,7 @@ namespace Langulus::Anyness::Component
                   if (not *entries)
                      break;
 
-                  (*entries)->AddRef(1);
+                  DecvqAllCast(*entries)->AddRef(1);
 
                   LglsAssumeDev(meta,
                      "Valid entry, but invalid type");
@@ -643,7 +641,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Disowning just zeroes all entries                        
-            memset(self.GetEntries(), 0, entries_size);
+            memset(self.GetEntriesInner(), 0, entries_size);
          }
       }
    };

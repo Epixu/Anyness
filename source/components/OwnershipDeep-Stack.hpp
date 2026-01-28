@@ -33,7 +33,7 @@ namespace Langulus::Anyness::Component
       /// Set the entry array (inner)                                         
       template<unsigned SELECTOR = ID> requires (SELECTOR == ID)
       constexpr void SetEntriesInner(this auto& self, EntryPtr entries) noexcept {
-         self.template GetEntriesInner<SELECTOR>() = entries;
+         self.template GetEntriesInner<SELECTOR>() = DecvqAllCast(entries);
       }
       
       /// Transfer from any kind of container, respecting intents             
@@ -58,9 +58,10 @@ namespace Langulus::Anyness::Component
          }
       }
       
-   IF_LANGULUS_TESTING(public:)
+   public:
       /// Get entry array if containing pointers                              
-      auto GetEntries(this auto&& self) assumptious -> EntryPtr {
+      auto GetEntries(this auto const& self) assumptious
+      -> Decvq<Deref<decltype(self.GetEntriesInner())>> {
          if (self.IsSparse()) {
             LglsAssumeDev(self.GetRaw(), "No memory available");
             return self.GetEntriesInner();

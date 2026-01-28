@@ -507,7 +507,7 @@ namespace Langulus::Anyness::Component
                   return handle;
             }
             else {
-               if (**handle == item)
+               if (*handle == item)
                   return handle;
             }
 

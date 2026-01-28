@@ -97,9 +97,9 @@ namespace Langulus::Anyness::Component
                #endif
                LglsAssert(cloned_origin, "Out of memory");
                // If T is Text**, ent is Allocation*[2]                 
-               [[maybe_unused]] EntryPtr ent;
+               [[maybe_unused]] AllocationPtr* ent;
                if constexpr (has_entries)
-                  ent = self.GetEntries();
+                  ent = self.GetEntriesInner();
                
                if (indirects > 1) {
                   // Allocate multiple indirections                     
@@ -185,7 +185,7 @@ namespace Langulus::Anyness::Component
                   );
                #endif
                LglsAssert(cloned_origin, "Out of memory");
-               [[maybe_unused]] EntryPtr ent;
+               [[maybe_unused]] AllocationPtr* ent;
                if constexpr (has_entries)
                   ent = self.GetEntries();
 

@@ -45,7 +45,7 @@ namespace Langulus::Anyness::Component
       #if LANGULUS_FEATURE(MANAGED_MEMORY)
          // The heap might already be ours and we just don't know it    
          if (auto found = Allocator::Find(self.GetHeapInner())) {
-            a = const_cast<AllocationPtr>(found);
+            a = DecvqCast(found);
             a->AddRef(1);
             return;
          }

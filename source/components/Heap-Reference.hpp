@@ -79,14 +79,14 @@ namespace Langulus::Anyness::Component
       /// Get a direct access to the heap memory                              
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
-         using Tcvq = Tmut<C, TypeOf<C>*, TypeOf<C> const*>;
+         using Tcvq = LglsMutIf(C, TypeOf<C>*);
          return static_cast<Tcvq>(self.GetHeapInner());
       }
       
       /// Get a direct access to the heap memory as a different type          
       template<class T, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
-         using Tcvq = Tmut<C, T*, T const*>;
+         using Tcvq = LglsMutIf(C, T*);
          return static_cast<Tcvq>(self.GetHeapInner());
       }
 
@@ -112,14 +112,14 @@ namespace Langulus::Anyness::Component
       constexpr decltype(auto) Get(this C&& self) assumptious {
          static_assert(not CT::Handle<T>,    "T can't be a handle");
          static_assert(not CT::Reference<T>, "Strip references first");
-         using TC   = TypeOf<C>;
+         using TC   = LglsMutIf(C, TypeOf<C>);
          using TH   = Tif<CT::Void<T>, TC, T>;
-         using THQ1 = Tmut<C, TH*,  ConstAll<TH* >>;
-         auto& mHeap = self.GetHeapInner();
+         using THQ1 = LglsMutIf(C, TH*);
+         auto& heap = self.GetHeapInner();
 
          if constexpr (CT::Void<TH>) {
             // Unknown type, just return the heap pointer reference     
-            return (mHeap);
+            return (heap);
          }
          else if constexpr (CT::TypeErased<C>) {
             // Casting to a desired runtime type                        
@@ -128,7 +128,7 @@ namespace Langulus::Anyness::Component
 
             if (indirections == IndirectsOf<TH>) {
                // No difference in indirections                         
-               return *static_cast<THQ1>(mHeap);
+               return *static_cast<THQ1>(heap);
             }
             else if (indirections > IndirectsOf<TH>) {
                // We need to dereference. Supports packed pointers.     
@@ -140,26 +140,26 @@ namespace Langulus::Anyness::Component
                // We are allowed to add one additional indirection      
                LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
                   "Too many indirections");
-               return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
+               return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&heap));
             }
          }
          else {
             // Casting to a desired static type                         
             if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
                // No difference in indirections                         
-               return *static_cast<THQ1>(static_cast<TC*>(mHeap));
+               return *static_cast<THQ1>(static_cast<TC*>(heap));
             }
             else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
                // We need to dereference. Can be done without a         
                // reinterpret_cast, and thus be constexpr-friendly.     
                // Supports packed pointers as well.                     
-               return *static_cast<THQ1>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TC*>(mHeap)));
+               return *static_cast<THQ1>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TC*>(heap)));
             }
             else {
                // We are allowed to add one additional indirection      
                static_assert(IndirectsOf<TC>+1 == IndirectsOf<TH>,
                   "Too many indirections");
-               return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&mHeap));
+               return *const_cast<THQ1>(reinterpret_cast<ConstAll<THQ1>>(&heap));
             }
          }
       }
@@ -214,11 +214,7 @@ namespace Langulus::Anyness::Component
       ///   @return a pointer to the first deep item, or nullptr if not deep  
       template<class AS = void, CT::Container C>
       auto GetDeep(this C&& self) noexcept {
-         using D = Tif<CT::Void<AS>,
-            Tmut<C, Deep<C>*, Deep<C> const*>,
-            Tmut<C, AS*,      AS const*>
-         >;
-
+         using D = Tif<CT::Void<AS>, LglsMutIf(C, Deep<C>*), LglsMutIf(C, AS*)>;
          if (self.IsEmpty() or not self.IsDeep())
             return D {nullptr};
          return self.template As<D>();
@@ -291,9 +287,9 @@ namespace Langulus::Anyness::Component
             }
          }
 
-         void* src = self.GetHeapInner();
+         void* src = DecvqAllCast(self.GetHeapInner());
          auto T = self.GetType();
-         while (count and T.IsSparse()) {            
+         while (count and T.IsSparse()) {
             auto nextT = T.GetDeptr();
             
             if (nextT.IsSparse()) {

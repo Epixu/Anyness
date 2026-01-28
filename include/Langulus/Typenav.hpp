@@ -527,14 +527,14 @@ namespace Langulus
    /// Strip all qualifiers on all levels of indirection of a type.           
    /// Preserves references, makes them mutable.                              
    /// For example: `void const volatile* const* const` becomes `void**`.     
-   /// For example: `void const volatile* const&` becomes `void*&`.           
+   ///              `void const volatile* const&` becomes `void*&`.           
    template<class T>
    using DecvqAll = typename decltype(Inner::NestedDecvq<T>())::First;
 
    /// Adds const qualifiers to all levels of indirection of a type.          
    /// Preserves references, makes them constant.                             
    /// For example: `void**` becomes `void const* const* const`.              
-   /// For example: `void*&` becomes `void const* const&`.                    
+   ///              `void*&` becomes `void const* const&`.                    
    template<class T>
    using ConstAll = typename decltype(Inner::NestedConst<T>())::First;
 
@@ -552,6 +552,20 @@ namespace Langulus
       return const_cast<DecvqAll<Deext<T>>*>(what);
    }
    
+   /// Add const qualifiers to the provided argument                          
+   ///   @attention this will return pointers for bounded array arguments     
+   template<class T> requires (not ::std::is_bounded_array_v<T>)
+   LANGULUS(ALWAYS_INLINED)
+   constexpr auto ConstAllCast(T&& what) noexcept -> ConstAll<T> {
+      return const_cast<ConstAll<T>>(what);
+   }
+   
+   template<class T> requires ::std::is_bounded_array_v<T>
+   LANGULUS(ALWAYS_INLINED)
+   constexpr auto ConstAllCast(T&& what) noexcept -> ConstAll<Deext<T>> const* {
+      return const_cast<ConstAll<Deext<T>> const*>(what);
+   }
+   
    /// Count the number of indirections, including custom pointers.           
    ///   @attention ignores sheddable layers                                  
    template<class T>
@@ -562,6 +576,8 @@ namespace Langulus
          ::std::type_identity<YES>,
          ::std::type_identity<NO>
       >::type;
+
+   #define LglsMutIf(CONDITION_TYPE, TYPE) Tmut<CONDITION_TYPE, TYPE, ConstAll<TYPE>>
 }
 
 

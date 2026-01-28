@@ -107,7 +107,8 @@ namespace Langulus::Anyness::Component
       }
       
       /// Select a contiguous region from the memory block. Unsafe and may    
-      /// return memory that has not been initialized yet!                    
+      /// return memory that has not been initialized yet! The resulting      
+      /// data will be disowned.                                              
       ///   @attention assumes container is typed and allocated               
       ///   @param start starting element index (included)                    
       ///   @param count number of sequential elements                        
@@ -125,6 +126,9 @@ namespace Langulus::Anyness::Component
          return result;
       }
 
+      /// Same as above, but implies that count is the remainder              
+      ///   @param start starting element index (included)                    
+      ///   @return the selected disowned contiguous range                    
       template<CT::Container C>
       auto SelectInner(this C&& self, Count<C> start) assumptious -> Decay<C> {
          return self.SelectInner(start, self.GetCount() - start);
@@ -135,8 +139,7 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @return the picked element                                        
       template<CT::Container C>
-      auto operator[] (this C&& self, CT::Index auto idx)
-      assumptious -> Pick<C> {
+      decltype(auto) operator[] (this C&& self, CT::Index auto idx) assumptious {
          return self.GetAt(idx);
       }
 
@@ -151,32 +154,29 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @return the picked element                                        
       template<class AS = void, CT::Container C>
-      constexpr decltype(auto) GetAt(this C&& self, CT::Index auto&& idx) assumptious {
+      decltype(auto) GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "T can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
          using TC   = TypeOf<C>;
          using TH   = Tif<CT::Void<AS>, TC, AS>;
-         using THQ1 = Tmut<C, TH*, ConstAll<TH*>>;
+         using THQ1 = LglsMutIf(C, TH*);
 
          // Get the first element without dereferencing anything        
-         auto heap = self.GetRaw();
+         auto heap = self.GetHeapInner();
 
          // Offset it                                                   
          const auto offset = self.SimplifyIndex(idx);
-         if constexpr (CT::Void<TH>) {
-            const auto byte_offset = self.GetStride() * offset;
-            if constexpr (CT::Mutable<C>) {
-               heap = reinterpret_cast<void*>(
-                  reinterpret_cast<uint8_t*>(heap) + byte_offset
-               );
-            }
-            else {
-               heap = reinterpret_cast<void const*>(
-                  reinterpret_cast<uint8_t const*>(heap) + byte_offset
-               );
-            }
+         const auto byte_offset = self.GetStride() * offset;
+         if constexpr (CT::Mutable<C>) {
+            heap = reinterpret_cast<void*>(
+               reinterpret_cast<uint8_t*>(heap) + byte_offset
+            );
          }
-         else heap += offset;
+         else {
+            heap = reinterpret_cast<void const*>(
+               reinterpret_cast<uint8_t const*>(heap) + byte_offset
+            );
+         }
 
          // Dereference it if we have to                                
          if constexpr (CT::Void<TH>)

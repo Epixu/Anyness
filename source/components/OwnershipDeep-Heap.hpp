@@ -26,18 +26,19 @@ namespace Langulus::Anyness::Component
       template<unsigned> friend struct Emplacement;
       template<unsigned> friend struct OwnershipDeepEmergent;
 
-   IF_LANGULUS_TESTING(public:)
+      /// Get entry array if containing pointers (inner)                      
+      ///   @attention may be uninitialized                                   
+      constexpr auto GetEntriesInner(this auto&& self) noexcept {
+         return self.template AccessHeap<OwnershipDeepHeap>();
+      }
+
+   public:
       /// Get entry array if containing pointers                              
       ///   @return the array of entries                                      
-      template<CT::Container C>
-      auto GetEntries(this C&& self) assumptious -> EntryPtr {
-         if (self.IsSparse() and self.GetRaw() and self.GetAllocation()) {
-            /*LglsAssumeDev(self.GetRaw(),
-               "No memory available");
-            LglsAssumeDev(self.GetAllocation(),
-               "Entries do not exist for sparse containers which are out of jurisdiction");*/
-            return const_cast<EntryPtr>(self.template AccessHeap<OwnershipDeepHeap>());
-         }
+      auto GetEntries(this auto const& self) assumptious
+      -> decltype(self.GetEntriesInner()) {
+         if (self.IsSparse() and self.GetRaw() and self.GetAllocation())
+            return self.GetEntriesInner();
          return nullptr;
       }
    };

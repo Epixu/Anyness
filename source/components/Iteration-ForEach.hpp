@@ -56,7 +56,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
       template<CT::Container C>
-      using Deep = Tmut<C, typename Deref<C>::DeepType&, typename Deref<C>::DeepType const&>;
+      using Deep = LglsMutIf(C, typename Deref<C>::DeepType&);
       template<CT::Container C>
       using ForEachResult = Inner::ForEachResult<Decay<C>>;
 
@@ -404,7 +404,7 @@ namespace Langulus::Anyness::Component
             }
             else if (self.template Is<Neat>()) {
                // Nest inside normalized subblocks                      
-               using SubNeat = Tmut<C, Neat&, Neat const&>;
+               using SubNeat = LglsMutIf(C, Neat&);
 
                loop = self.template ForEachInner<REVERSE>(
                   [&f](SubNeat neat) {
@@ -473,7 +473,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Deep<T>) {
                // Iterate subblocks                                     
                Count<C> intermediateCounterSink = 0;
-               using SubBlock = Tmut<C, Decay<T>&, Decay<T> const&>;
+               using SubBlock = LglsMutIf(C, Decay<T>&);
 
                loop = self.template ForEachInner<REVERSE>(
                   [&counter, &f](SubBlock group) {
@@ -484,7 +484,7 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (Akin<T, Neat>) {
                // Iterate normalized subblocks                          
-               using SubNeat = Tmut<C, Neat&, Neat const&>;
+               using SubNeat = LglsMutIf(C, Neat&);
 
                loop = self.template ForEachInner<REVERSE>(
                   [&f](SubNeat neat) {

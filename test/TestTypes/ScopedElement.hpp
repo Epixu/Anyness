@@ -19,15 +19,16 @@ struct ScopedElement {
    using CTTI_ReflectAs = void;
    using Type = T;
    using Allocation = Langulus::Allocation;
+   using AllocationPtr = Langulus::AllocationPtr;
    using Allocator = Langulus::Allocator;
    static constexpr bool Managed = MANAGED;
    
    T* element = nullptr;
-   Allocation* entries[Langulus::IndirectsOf<T> + 1] = {};
+   AllocationPtr entries[Langulus::IndirectsOf<T> + 1] = {};
 
 protected:
    template<class INNER, class...A>
-   static void NestedConstructor(INNER*& place, Allocation** entry, A&&...arguments) {
+   static void NestedConstructor(INNER*& place, AllocationPtr* entry, A&&...arguments) {
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
          if constexpr (MANAGED) {
@@ -74,7 +75,7 @@ protected:
    }
    
    template<class INNER>
-   static void NestedDestructor(INNER* place, Allocation** entry) {
+   static void NestedDestructor(INNER* place, AllocationPtr* entry) {
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
          #if not LANGULUS_FEATURE(NEWDELETE)
@@ -89,9 +90,9 @@ protected:
             if ((*entry)->GetUses() == 1) {
                if constexpr (requires { place->~INNER(); })
                   place->~INNER();
-               Allocator::Deallocate(*entry);
+               Allocator::Deallocate(DecvqAllCast(*entry));
             }
-            else (*entry)->AddRef(-1);
+            else DecvqAllCast(*entry)->AddRef(-1);
          }
       }
       else if (place) {
@@ -102,9 +103,9 @@ protected:
          else if constexpr (MANAGED) {
             LglsAssumeDev((*entry)->GetUses() >= 1);
             if ((*entry)->GetUses() == 1)
-               Allocator::Deallocate(*entry);
+               Allocator::Deallocate(DecvqAllCast(*entry));
             else
-               (*entry)->AddRef(-1);
+               DecvqAllCast(*entry)->AddRef(-1);
          }
       }
    }

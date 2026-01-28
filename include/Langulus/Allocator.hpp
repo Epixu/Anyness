@@ -63,8 +63,8 @@ namespace Langulus
    #endif
    
    /// Can be a packed pointer                                                
-   using AllocationPtr = Allocation*;
+   using AllocationPtr = Allocation const*;
 
    /// Can be a packed pointer                                                
-   using EntryPtr = AllocationPtr*;
+   using EntryPtr = AllocationPtr const*;
 }

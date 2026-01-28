@@ -79,8 +79,8 @@ namespace Langulus::Anyness::Component
          static_assert(not CT::Reference<ALT>, "Strip references first");
          using TC = T;
          using TH = Tif<CT::Void<ALT>, TC, ALT>;
-         using THQ1 = Tmut<C, TH*,  TH const*>;
-         using THQ2 = Tmut<C, TH**, TH const* const*>;
+         using THQ1 = LglsMutIf(C, TH* );
+         using THQ2 = LglsMutIf(C, TH**);
          auto& mStack = self.GetStackInner();
 
          // Casting to a desired static type                            

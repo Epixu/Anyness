@@ -218,7 +218,7 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(elements > self.GetCount(), "Bad element count");
          if constexpr (CT::ContainsOne<C>)
             LglsAssumeDev(elements == 1, "Container allows only one allocated element");
-         const auto al = self.GetAllocation();
+         const auto al = DecvqAllCast(self.GetAllocation());
          const auto request = self.RequestHeap(elements);
 
          if (not al) {
@@ -314,7 +314,7 @@ namespace Langulus::Anyness::Component
             "This makes sense to be called only by containers that support many elements");
          LglsAssumeDev(desiredReserve < self.GetReserved(),
             "Can't shrink allocation using more elements");
-         const auto al = self.GetAllocation();
+         const auto al = DecvqAllCast(self.GetAllocation());
          LglsAssumeDev(al, "Invalid allocation");
          LglsAssumeDev(al->GetUses() == 1,
             "Can't reuse memory of a block used from multiple places");

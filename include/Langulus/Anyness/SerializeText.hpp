@@ -9,6 +9,7 @@
 #include "Text.hpp"
 #include "Bytes.hpp"
 #include "TAny.hpp"
+#include "TMany.hpp"
 
 
 namespace Langulus::CTTI
@@ -82,7 +83,7 @@ namespace Langulus::CTTI
          }
       }
    }
-      
+
    /// A rule for serializing any deep container that contains single item.   
    /// This includes Any, Handle, Own, Ref and their templated equivalents.   
    template<CT::Deep C>
@@ -104,7 +105,7 @@ namespace Langulus::CTTI
             const auto serializer = T.GetMorphism(text_meta).serialize;
             LglsAssert(serializer, "Missing serializer",
                " from ", T.GetName(), " to ", text_meta.GetName());
-            serializer(self.Get(), &out, context);
+            serializer(DecvqAllCast(self.Get()), &out, context);
          }
       }
       else {
@@ -159,6 +160,12 @@ namespace Langulus::CTTI
       out += Serial::CloseByte;
    }
    
+
+
+   ///                                                                        
+   /// Any/TAny                                                               
+   ///                                                                        
+   
    /// Convert Any -> Text                                                    
    constexpr void Converter<Anyness::Any, Anyness::Text>::Convert(Anyness::Any const& from, Anyness::Text& to) {
       if (from.IsEmpty())
@@ -187,6 +194,48 @@ namespace Langulus::CTTI
 
    template<class T>
    constexpr auto Converter<Anyness::TAny<T>, Anyness::Text>::Convert(Anyness::TAny<T> const& from) -> Anyness::Text {
+      Anyness::Text result;
+      if (from.IsEmpty())
+         return result;
+
+      Serialize(from, result);
+      return result;
+   }
+
+
+
+   ///                                                                        
+   /// Many/TMany                                                             
+   ///                                                                        
+
+   /// Convert Many -> Text                                                   
+   constexpr void Converter<Anyness::Many, Anyness::Text>::Convert(Anyness::Many const& from, Anyness::Text& to) {
+      if (from.IsEmpty())
+         return;
+
+      Serialize(from, to);
+   }
+   
+   constexpr auto Converter<Anyness::Many, Anyness::Text>::Convert(Anyness::Many const& from) -> Anyness::Text {
+      Anyness::Text result;
+      if (from.IsEmpty())
+         return result;
+
+      Serialize(from, result);
+      return result;
+   }
+   
+   /// Convert TMany -> Text                                                  
+   template<class T>
+   constexpr void Converter<Anyness::TMany<T>, Anyness::Text>::Convert(Anyness::TMany<T> const& from, Anyness::Text& to) {
+      if (from.IsEmpty())
+         return;
+
+      Serialize(from, to);
+   }
+
+   template<class T>
+   constexpr auto Converter<Anyness::TMany<T>, Anyness::Text>::Convert(Anyness::TMany<T> const& from) -> Anyness::Text {
       Anyness::Text result;
       if (from.IsEmpty())
          return result;

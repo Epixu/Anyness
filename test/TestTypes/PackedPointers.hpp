@@ -46,11 +46,11 @@ struct ScopedElementPacked {
    static constexpr bool Managed = true;
 
    T element = nullptr;
-   Allocation* entries[Langulus::IndirectsOf<T> + 1] = {};
+   AllocationPtr entries[Langulus::IndirectsOf<T> + 1] = {};
 
 protected:
    template<class INNER, class...A>
-   static void NestedConstructor(INNER& place, Allocation** entry, A&&...arguments) {
+   static void NestedConstructor(INNER& place, AllocationPtr* entry, A&&...arguments) {
       using namespace Langulus;
 
       if constexpr (CT::Dense<INNER>) {
@@ -72,7 +72,7 @@ protected:
    }
    
    template<class INNER>
-   static void NestedDestructor(INNER place, Allocation** entry) {
+   static void NestedDestructor(INNER place, AllocationPtr* entry) {
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
          if constexpr (CT::Referenced<INNER>)

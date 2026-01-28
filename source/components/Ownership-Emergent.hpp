@@ -115,12 +115,12 @@ namespace Langulus::Anyness::Component
       /// If container has DeepOwnership component, all entries will be       
       /// individually referenced as well.                                    
       template<CT::Container C>
-      void Keep(this C const& self) noexcept {
+      void Keep(this C& self) noexcept {
          auto a = self.GetAllocation();
          if (not a)
             return;
 
-         a->AddRef(1);
+         DecvqAllCast(a)->AddRef(1);
 
          if constexpr (CT::DeeplyOwned<C>) {
             if constexpr (CT::ContainsMany<C>) {
@@ -148,13 +148,13 @@ namespace Langulus::Anyness::Component
             // Dereference, and eventually destroy all elements - all   
             // indirections, as well as dense elements.                 
             self.DestroyAllElements();
-            Allocator::Deallocate(a);
+            Allocator::Deallocate(DecvqAllCast(a));
          }
          else {
             // Dereference, and eventually destroy all elements -       
             // affect indirections and elements behind them only!       
             self.template DestroyAllElements<false>();
-            a->AddRef(-1);
+            DecvqAllCast(a)->AddRef(-1);
          }
       }
       

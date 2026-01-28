@@ -201,7 +201,7 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
-      constexpr Handle(void* ptr, EntryPtr entry, DMeta type) noexcept {
+      constexpr Handle(void const* ptr, EntryPtr entry, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
          this->SetTypeInner(type);
@@ -250,7 +250,7 @@ namespace Langulus::Anyness
       }
 
       /// Manual constructor for some niche uses, like iterators              
-      constexpr HandleDisowned(void* ptr, DMeta type) noexcept {
+      constexpr HandleDisowned(void const* ptr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
       }
