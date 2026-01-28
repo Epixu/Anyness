@@ -296,7 +296,7 @@ namespace Langulus::Anyness::Component
             return;
 
          // Check if disowned/outside authority                         
-         AllocationPtr* entries = self.GetEntriesInner();
+         auto entries = self.GetEntriesInner();
          if (not entries)
             return;
 
@@ -502,7 +502,7 @@ namespace Langulus::Anyness::Component
          // Destroying a type-erased element                            
          DMeta T = self.GetType();
          if (T.IsSparse()) {
-            AllocationPtr* entries = self.GetEntries();
+            auto entries = self.GetEntriesInner();
             if (not entries)
                return;
             
@@ -544,9 +544,9 @@ namespace Langulus::Anyness::Component
 
                // Deallocate or dereference                             
                if (1 == (*entries)->GetUses())
-                  Allocator::Deallocate(*entries);
+                  Allocator::Deallocate(DecvqAllCast(*entries));
                else
-                  (*entries)->AddRef(-1);
+                  DecvqAllCast(*entries)->AddRef(-1);
 
                // Move to next indirection                              
                T = nextT;
@@ -575,8 +575,7 @@ namespace Langulus::Anyness::Component
       void EmplaceEntries(this C& self, I&& intent) {
          static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
-            "because it will overwrite/reference new allocations"
-         );
+            "because it will overwrite/reference new allocations");
          LglsAssumeDev(self.IsSparse(),
             "EmplaceEntries shouldn't be called on dense containers");
          using IT = Decvq<Deref<TypeOf<I>>>;
@@ -589,19 +588,19 @@ namespace Langulus::Anyness::Component
 
          const auto indirections = self.GetIndirections();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
-         if constexpr ((    CT::Handle<IT> and     I::IsKept())
-         or (           not CT::Handle<IT> and not CT::Disowned<I>)) {
+         if constexpr ((CT::Handle<IT> and     I::IsKept())
+         or (       not CT::Handle<IT> and not CT::Disowned<I>)) {
             // When it's a keeping intent, copy all entries and         
             // reference them                                           
             if constexpr (CT::Handle<IT>) {
                if (auto entries_src = rhs.GetEntries())
-                  memcpy(self.GetEntriesInner(), entries_src, entries_size);
+                  memcpy(DecvqAllCast(self.GetEntriesInner()), entries_src, entries_size);
                else {
                   // RHS might be a disowned handle                     
-                  memset(self.GetEntriesInner(), 0, entries_size);
+                  memset(DecvqAllCast(self.GetEntriesInner()), 0, entries_size);
                }
             }
-            else memset(self.GetEntriesInner(), 0, entries_size);
+            else memset(DecvqAllCast(self.GetEntriesInner()), 0, entries_size);
 
             if constexpr (CT::Handle<IT> or LANGULUS_FEATURE(MANAGED_MEMORY)) {
                auto entries = self.GetEntriesInner();
@@ -641,7 +640,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Disowning just zeroes all entries                        
-            memset(self.GetEntriesInner(), 0, entries_size);
+            memset(DecvqAllCast(self.GetEntriesInner()), 0, entries_size);
          }
       }
    };

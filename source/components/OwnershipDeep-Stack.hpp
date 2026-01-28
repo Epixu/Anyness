@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Component
    template<unsigned ID>
    struct OwnershipDeepStack : OwnershipDeepEmergent<ID> {
       using StackRequest = EntryPtr;
-      using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
+      using HeapRequest  = PerElement<PerIndirection<AllocationPtr>>;
 
    protected:
       template<unsigned> friend struct Emplacement;
@@ -47,14 +47,12 @@ namespace Langulus::Anyness::Component
             // Since new memory is allocated, we recalculate the        
             // pointer to the entries. Populating the pointers is       
             // handled by the heap component.                           
-            self.SetEntriesInner(const_cast<EntryPtr>(
-               self.template AccessHeap<OwnershipDeepStack>())
-            );
+            self.SetEntriesInner(self.template AccessHeap<OwnershipDeepStack>());
          }
          else if constexpr (I::IsKept() or I::IsMoved()) {
             // Move/Refer/Abandon other                                 
             static_assert(I::IsShallow());
-            self.SetEntriesInner(from.GetEntries());
+            self.SetEntriesInner(from.GetEntriesInner());
          }
       }
       

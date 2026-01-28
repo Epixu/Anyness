@@ -296,8 +296,8 @@ namespace Langulus::Anyness::Component
             // Then clone all indirection layers in reverse order       
             [[maybe_unused]] EntryPtr entries;
             if constexpr (CT::DeeplyOwned<C>) {
-               entries = self.GetEntries();
-               entries[indirections] = cloned;
+               entries = self.GetEntriesInner();
+               DecvqAllCast(entries[indirections]) = cloned;
             }
          
             auto next_pointer = cloned->GetBlockStartPacked(prev_type.GetPointerSpecification());
@@ -317,7 +317,7 @@ namespace Langulus::Anyness::Component
                // Save the new indirection allocation                   
                if constexpr (CT::DeeplyOwned<C>) {
                   // ReSharper disable once CppLocalVariableMightNotBeInitialized
-                  entries[indirections] = cloned;
+                  DecvqAllCast(entries[indirections]) = cloned;
                }
             }
 
@@ -731,7 +731,7 @@ namespace Langulus::Anyness::Component
             if (a->GetUses() != 1) {
                // We're not the only owner of this memory.              
                // We have to branch off with a fresh allocation.        
-               a->AddRef(-1);
+               DecvqAllCast(a)->AddRef(-1);
                self.SetAllocationInner(nullptr);
                self.SetHeapInner(nullptr);
 

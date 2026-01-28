@@ -298,15 +298,18 @@ namespace Langulus::Anyness::Component
             if (T.IsExecutable())
                return true;
             else if (T.IsDeep()) {
-               bool result = false;
-               self.ForEach([&result](typename C::DeepType const& inner) noexcept {
-                  if (inner.IsExecutable()) {
-                     result = true;
-                     return Loop::Break;
-                  }
-                  return Loop::Continue;
-               });
-               return result;
+               if constexpr (CT::ContainsMany<C>) {
+                  bool result = false;
+                  self.ForEach([&result](typename C::DeepType const& inner) noexcept {
+                     if (inner.IsExecutable()) {
+                        result = true;
+                        return Loop::Break;
+                     }
+                     return Loop::Continue;
+                  });
+                  return result;
+               }
+               else return self.GetDeep()->IsExecutable();
             }
             else return false;
          }
@@ -315,11 +318,14 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Executable<TYPE>)
                return true;
             else if constexpr (CT::Deep<TYPE>) {
-               for (TYPE const& inner : self) {
-                  if (DenseCast(inner).IsExecutable())
-                     return true;
+               if constexpr (CT::ContainsMany<C>) {
+                  for (TYPE const& inner : self) {
+                     if (DenseCast(inner).IsExecutable())
+                        return true;
+                  }
+                  return false;
                }
-               return false;
+               else return self.GetDeep()->IsExecutable();
             }
             else return false;
          }

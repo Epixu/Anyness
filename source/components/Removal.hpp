@@ -108,7 +108,7 @@ namespace Langulus::Anyness::Component
             self.template DestroyAllElements<false>();
 
             // Dereference memory                                       
-            al->AddRef(-1);
+            DecvqAllCast(al)->AddRef(-1);
             self.SetHeapInner(nullptr);
             if_available(self.SetAllocationInner(nullptr));
             if_available(self.SetReserveInner(0));

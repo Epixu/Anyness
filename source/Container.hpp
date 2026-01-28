@@ -10,6 +10,7 @@
 #include <Langulus/Sequence.hpp>
 #include <Langulus/HashOf.hpp>
 #include <Langulus/Utils/Tuple.hpp>
+#include <Langulus/CT/Contiguous.hpp>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
@@ -376,9 +377,9 @@ namespace Langulus::Anyness
       typename decltype(Inner::DefineStack<COMPONENTS...>())::TupleOptimized mStack;
 
       /// Access a variable on the stack associated with a component          
-      template<class C, class SELF>
+      template<class COM, class SELF>
       constexpr auto& AccessStack(this SELF&& self) noexcept {
-         constexpr size_t IDX = Inner::GetStackOffset<C, COMPONENTS...>();
+         constexpr size_t IDX = Inner::GetStackOffset<COM, COMPONENTS...>();
          auto& result = ::Langulus::get<IDX>(self.mStack).value;
          using ConstOrNot = LglsMutIf(SELF, decltype(result));
          return const_cast<ConstOrNot>(result);
@@ -542,8 +543,8 @@ namespace Langulus::CT
        and (ShedDeref<T>::HeapAllocated and ...);
    
    /// Check if listed types are containers with variable count               
-   /// @attention this includes containers with Com::CountStatic, but have    
-   ///   nullifiable heap pointer                                             
+   ///   @attention this includes containers with Com::CountStatic, but have  
+   ///      nullifiable heap pointer                                          
    template<class...T>
    concept HasVariableCount = HeapAllocated<T...>
        and (ShedDeref<T>::HeapCanBeNull and ...);
@@ -569,6 +570,11 @@ namespace Langulus::CT
    concept DeeplyOwned = Container<T...>
        and (ShedDeref<T>::DeeplyOwned and ...)
        and ((CT::TypeErased<T> or CT::Sparse<TypeOf<T>>) and ...);
+
+   /// Check if listed types are containers, and are linearly indexed         
+   template<class...T>
+   concept IndexedLinearly = Container<T...> and Contiguous<T...>
+       and ((ShedDeref<T>::Indexed) and ...);
 }
 
 namespace Langulus

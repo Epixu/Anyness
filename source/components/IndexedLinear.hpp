@@ -19,9 +19,9 @@ namespace Langulus::Anyness::Component
    /// Provides random element access based on a linear index, that is        
    /// mapped directly onto contiguous memory                                 
    ///   @tparam ID the stack/heap we're indexing                             
-   ///   @tparam T constrain the type of allowed indices. Leave as 'void'     
-   ///      to allow for all the usual integer types                          
-   template<unsigned ID, class T>
+   ///   @tparam INDEX_CONSTRAINT constrain the type of allowed indices.      
+   ///      Leave as 'void' to allow for all the usual integer types          
+   template<unsigned ID, class INDEX_CONSTRAINT>
    struct IndexedLinear {
       using CTTI_Component  = Yes<>;
       using CTTI_Contiguous = Yes<>;
@@ -139,7 +139,7 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @return the picked element                                        
       template<CT::Container C>
-      decltype(auto) operator[] (this C&& self, CT::Index auto idx) assumptious {
+      decltype(auto) operator[] (this C&& self, CT::Index auto&& idx) assumptious {
          return self.GetAt(idx);
       }
 
@@ -157,9 +157,10 @@ namespace Langulus::Anyness::Component
       decltype(auto) GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "T can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
-         using TC   = TypeOf<C>;
-         using TH   = Tif<CT::Void<AS>, TC, AS>;
-         using THQ1 = LglsMutIf(C, TH*);
+         using TC  = LglsMutIf(C, TypeOf<C>);
+         using TCP = LglsMutIf(C, TC*);
+         using TH  = Tif<CT::Void<AS>, TC, AS>;
+         using THP = LglsMutIf(C, TH*);
 
          // Get the first element without dereferencing anything        
          auto heap = self.GetHeapInner();
@@ -188,13 +189,13 @@ namespace Langulus::Anyness::Component
 
             if (indirections == IndirectsOf<TH>) {
                // No difference in indirections                         
-               return *static_cast<THQ1>(heap);
+               return *static_cast<THP>(heap);
             }
             else if (indirections > IndirectsOf<TH>) {
                // We need to dereference                                
                auto diff = indirections - IndirectsOf<TH>;
                Deep<C> denser = Disown(self.GetDense(diff));
-               return *static_cast<THQ1>(denser.GetHeapInner());
+               return *static_cast<THP>(denser.GetHeapInner());
             }
             else LglsError("Too many indirections");
          }
@@ -202,19 +203,62 @@ namespace Langulus::Anyness::Component
             // Casting to a desired static type                         
             if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
                // No difference in indirections                         
-               return *static_cast<THQ1>(static_cast<TC*>(heap));
+               return *static_cast<THP>(static_cast<TCP>(heap));
             }
             else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
                // We need to dereference. Can be done without a         
                // reinterpret_cast, and thus be constexpr-friendly      
-               return *static_cast<THQ1>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TC*>(heap)));
+               return *static_cast<THP>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TCP>(heap)));
             }
             else static_assert(false, "Too many indirections");
          }
       }
 
+      /// Get Nth element as a handle, or any desired wrapping type           
+      ///   @tparam AS the type we're wrapping in                             
+      ///   @param idx the index                                              
+      ///   @return the element, as a reference if possible                   
       template<CT::NotVoid AS, CT::Container C>
-      auto AsAt(this C&&, CT::Index auto) assumptious -> Tif<CT::Dense<AS>, AS&, AS>;
+      decltype(auto) AsAt(this C&& self, CT::Index auto&& idx) assumptious {
+         static_assert(not CT::Reference<AS>, "Strip references first");
+
+         if constexpr (CT::Handle<AS>) {
+            if constexpr (CT::TypeErased<AS>) {
+               // Type-erased handle                                    
+               if constexpr (CT::DeeplyOwned<AS>)
+                  return AS {self.GetAt(LglsFwd(idx)), self.GetEntries(), self.GetType()};
+               else if constexpr (CT::Owned<AS>)
+                  return AS {self.GetAt(LglsFwd(idx)), self.GetAllocation(), self.GetType()};
+               else
+                  return AS {self.GetAt(LglsFwd(idx)), self.GetType()};
+            }
+            else {
+               // Statically typed handle                               
+               using HT = Deref<TypeOf<AS>>;
+               if constexpr (CT::TypeErased<C>) {
+                  LglsAssert(self.template IsSame<HT>(), "Type mismatch",
+                     ": ", self.GetType(), " not same as ", MetaDataOf<HT>());
+               }
+               else static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
+
+               if constexpr (CT::DeeplyOwned<AS>)
+                  return AS {&self.GetAt(LglsFwd(idx)), self.GetEntries()};
+               else if constexpr (CT::Owned<AS>)
+                  return AS {&self.GetAt(LglsFwd(idx)), self.GetAllocation()};
+               else
+                  return AS {&self.GetAt(LglsFwd(idx))};
+            }
+         }
+         else {
+            // Access directly                                          
+            if constexpr (CT::TypeErased<C>) {
+               LglsAssert(self.template Is<AS>(), "Type mismatch",
+                  ": ", self.GetType(), " not akin to ", MetaDataOf<AS>());
+            }
+            else static_assert(Akin<TypeOf<C>, AS>, "Type mismatch");
+            return self.template GetAt<AS>(LglsFwd(idx));
+         }
+      }
 
       template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
       auto CastAt(this C const&, CT::Index auto) -> AS;
@@ -237,11 +281,4 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       void SwapIndices(this C&, CT::Index auto, CT::Index auto) assumptious;
    };
-}
-
-namespace Langulus::CT
-{
-   /// Check if listed types are linearly indexed                             
-   template<class...T>
-   concept IndexedLinearly = Container<T...> and Contiguous<T...> and ((ShedDeref<T>::Indexed) and ...);
 }

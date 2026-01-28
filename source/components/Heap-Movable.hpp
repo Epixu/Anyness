@@ -451,7 +451,7 @@ namespace Langulus::Anyness::Component
             // Partial success is not allowed - we have to              
             // deallocate and make sure CountStatic reports as empty.   
             (void) n;
-            Allocator::Deallocate(self.GetAllocationInner());
+            Allocator::Deallocate(DecvqAllCast(self.GetAllocationInner()));
             self.SetAllocationInner(nullptr);
             self.SetHeapInner(nullptr);
             if_available(self.SetHashInner(1));

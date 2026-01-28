@@ -42,6 +42,7 @@ struct ScopedElementPacked {
    using Type = T;
    using Inner = typename T::Type;
    using Allocation = Langulus::Allocation;
+   using AllocationPtr = Langulus::AllocationPtr;
    using Allocator = Langulus::Allocator;
    static constexpr bool Managed = true;
 
@@ -83,9 +84,9 @@ protected:
             if ((*entry)->GetUses() == 1) {
                if constexpr (requires { place.~INNER(); })
                   place.~INNER();
-               Allocator::Deallocate(*entry);
+               Allocator::Deallocate(DecvqAllCast(*entry));
             }
-            else (*entry)->AddRef(-1);
+            else DecvqAllCast(*entry)->AddRef(-1);
          }
       }
       else if (place) {
@@ -94,9 +95,9 @@ protected:
          if (*entry) {
             LglsAssumeDev((*entry)->GetUses() >= 1);
             if ((*entry)->GetUses() == 1)
-               Allocator::Deallocate(*entry);
+               Allocator::Deallocate(DecvqAllCast(*entry));
             else
-               (*entry)->AddRef(-1);
+               DecvqAllCast(*entry)->AddRef(-1);
          }
       }
    }
