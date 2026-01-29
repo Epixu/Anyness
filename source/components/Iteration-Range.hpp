@@ -20,6 +20,9 @@ namespace Langulus::Anyness
    template<class C>
    struct IterateInReverse {
       using CTTI_ReflectAs = void;
+      static_assert(CT::NoIntent<C>,         "C can't have an intent");
+      static_assert(CT::NotReference<C>,     "C can't be a reference");
+      static_assert(::std::ranges::range<C>, "C is not a range");
 
       C& range;
 
@@ -45,6 +48,9 @@ namespace Langulus::Anyness
    template<bool REVERSE, class C>
    struct IterateNoDeref {
       using CTTI_ReflectAs = void;
+      static_assert(CT::NoIntent<C>,     "C can't have an intent");
+      static_assert(CT::NotReference<C>, "C can't be a reference");
+      static_assert(::std::ranges::range<C>, "C is not a range");
 
    protected:
       using Count = typename Deref<C>::CountType;
@@ -178,6 +184,7 @@ namespace Langulus::Anyness
       static_assert(CT::NoIntent<C>,     "C can't have an intent");
       static_assert(CT::NotReference<C>, "C can't be a reference");
       static_assert(CT::ContainsMany<C>, "C is not iteratable because it contains exactly one element");
+      static_assert(CT::Indexed<C>,      "C is not indexed");
       using CTTI_ReflectAs = void;
 
    protected:
@@ -188,10 +195,11 @@ namespace Langulus::Anyness
       // The handle is either a pointer/THandle for statically-typed    
       // containers, or Handle/HandleMut for type-erased ones           
       using H = Tmut<C,
-         Tif<CT::Handle<PickMut>,   PickMut, Deref<PickMut>*>,
-         Tif<CT::Handle<Pick>,      Pick,    Deref<Pick>*>
+         Tif<CT::Handle<PickMut>,   PickMut,          Deref<PickMut>*>,
+         Tif<CT::Handle<Pick>,      Pick,    ConstAll<Deref<Pick>*>>
       >;
       static_assert(CT::NotReference<H>, "Iterator can't be a reference");
+      static_assert(CT::Handle<H> or CT::Sparse<H>, "Must be either a pointer, or a handle");
 
       C& range;
 
@@ -353,7 +361,8 @@ namespace Langulus::Anyness
       static_assert(CT::NoIntent<C>,     "C can't have an intent");
       static_assert(CT::NotReference<C>, "C can't be a reference");
       static_assert(CT::ContainsMany<C>, "C is not iteratable because it contains exactly one element");
-      
+      static_assert(CT::Indexed<C>,      "C is not indexed");
+
    protected:
       using Count = typename Deref<C>::CountType;
       using H = DecideHandle<C>;
@@ -496,6 +505,10 @@ namespace Langulus::Anyness
    template<bool REVERSE, class...C>
    struct IterateTogether {
       using CTTI_ReflectAs = void;
+      static_assert(CT::NoIntent<C...>,     "C can't have an intent");
+      static_assert(CT::NotReference<C...>, "C can't be a reference");
+      static_assert((::std::ranges::range<C> and ...), "C is not a range");
+
       static constexpr size_t Size = sizeof...(C);
       static_assert(Size > 1,
          "IterateTogether needs at least two containers");

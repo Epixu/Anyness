@@ -571,10 +571,14 @@ namespace Langulus::CT
        and (ShedDeref<T>::DeeplyOwned and ...)
        and ((CT::TypeErased<T> or CT::Sparse<TypeOf<T>>) and ...);
 
+   /// Check if listed types are containers, and are indexed                  
+   template<class...T>
+   concept Indexed = Container<T...>
+       and ((ShedDeref<T>::Indexed) and ...);
+
    /// Check if listed types are containers, and are linearly indexed         
    template<class...T>
-   concept IndexedLinearly = Container<T...> and Contiguous<T...>
-       and ((ShedDeref<T>::Indexed) and ...);
+   concept IndexedLinearly = Indexed<T...> and Contiguous<T...>;
 }
 
 namespace Langulus
