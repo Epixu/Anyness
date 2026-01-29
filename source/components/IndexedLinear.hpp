@@ -160,10 +160,11 @@ namespace Langulus::Anyness::Component
       auto* GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "T can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
-         using TC  = TypeOf<C>;
+         using TC  = TypeOf<C>*;
          using TH  = Tif<CT::Void<AS>, TC, AS>;
-         using TCP = LglsMutIf(C, TC*);
-         using THP = LglsMutIf(C, TH*);
+         using TCP = LglsMutIf(C, TC);
+         using THS = Tif<CT::Sparse<TH>, TH, TH*>;
+         using THP = LglsMutIf(C, THS);
 
          // Get the first element without dereferencing anything        
          auto heap = self.GetHeapInner();
@@ -193,17 +194,17 @@ namespace Langulus::Anyness::Component
             const auto indirections = self.GetIndirections();
 
             if (indirections == IndirectsOf<TH>) {
-               // No difference in indirections                         
-               return static_cast<THP>(heap);
+               // No difference in indirections                      
+               return static_cast<THP>(static_cast<TCP>(heap));
             }
             else if (indirections > IndirectsOf<TH>) {
-               // We need to dereference. Supports packed pointers.     
+               // We need to dereference. Supports packed pointers.  
                auto diff = indirections - IndirectsOf<TH>;
                Deep<C> denser = Disown(self.GetDense(diff));
                return static_cast<THP>(denser.GetHeapInner());
             }
             else {
-               // We are allowed to add one additional indirection      
+               // We are allowed to add one additional indirection   
                LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
                   "Too many indirections");
                return static_cast<THP>(static_cast<TCP>(heap));
@@ -211,19 +212,21 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Casting to a desired static type                         
-            if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
+            constexpr auto indirections = IndirectsOf<TypeOf<C>>;
+
+            if constexpr (indirections == IndirectsOf<TH>) {
                // No difference in indirections                         
                return static_cast<THP>(static_cast<TCP>(heap));
             }
-            else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
+            else if constexpr (indirections > IndirectsOf<TH>) {
                // We need to dereference. Can be done without a         
                // reinterpret_cast, and thus be constexpr-friendly.     
                // Supports packed pointers as well.                     
-               return static_cast<THP>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(static_cast<TCP>(heap)));
+               return static_cast<THP>(DenseCast<indirections - IndirectsOf<TH>>(static_cast<TCP>(heap)));
             }
             else {
                // We are allowed to add one additional indirection      
-               static_assert(IndirectsOf<TCP> == IndirectsOf<TH>,
+               static_assert(indirections + 1 == IndirectsOf<TH>,
                   "Too many indirections");
                return static_cast<THP>(static_cast<TCP>(heap));
             }
@@ -274,7 +277,7 @@ namespace Langulus::Anyness::Component
             else static_assert(Akin<TypeOf<C>, AS>, "Type mismatch");
 
             if constexpr (CT::Dense<AS>)
-               return *self.template GetAt<AS>(LglsFwd(idx));
+               return *self.template GetAt<AS*>(LglsFwd(idx));
             else
                return  self.template GetAt<AS>(LglsFwd(idx));
          }

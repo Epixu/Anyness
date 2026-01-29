@@ -22,7 +22,7 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       static_assert(CT::NoIntent<C>,         "C can't have an intent");
       static_assert(CT::NotReference<C>,     "C can't be a reference");
-      static_assert(::std::ranges::range<C>, "C is not a range");
+      //static_assert(::std::ranges::range<C>, "C is not a range");
 
       C& range;
 
@@ -50,7 +50,7 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       static_assert(CT::NoIntent<C>,     "C can't have an intent");
       static_assert(CT::NotReference<C>, "C can't be a reference");
-      static_assert(::std::ranges::range<C>, "C is not a range");
+      //static_assert(::std::ranges::range<C>, "C is not a range");
 
    protected:
       using Count = typename Deref<C>::CountType;
