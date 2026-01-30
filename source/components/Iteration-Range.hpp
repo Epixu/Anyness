@@ -212,6 +212,10 @@ namespace Langulus::Anyness
          using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
          using difference_type = std::ptrdiff_t;
+         using iterator_category = std::random_access_iterator_tag;
+         using value_type = Deptr<H>;
+         //using pointer = T* const;
+         using reference = H&;
 
          H  mIt;
          C* mRange;
@@ -284,6 +288,10 @@ namespace Langulus::Anyness
             else                   return {mIt - c, mRange};
          }
 
+         reference operator[](const difference_type offset) const noexcept {
+            return *(*this + offset);
+         }
+
          /// Prefix increment                                                 
          auto operator ++ () noexcept -> Iterator& {
             if constexpr (REVERSE) --mIt;
@@ -336,17 +344,23 @@ namespace Langulus::Anyness
 
       static_assert(::std::input_or_output_iterator<Iterator>);
 
-      /*template <class _It>
-      concept _Indirectly_readable_impl = common_reference_with<iter_reference_t<_It>&&, iter_value_t<_It>&>
-         && common_reference_with<iter_reference_t<_It>&&, iter_rvalue_reference_t<_It>&&>
-         && common_reference_with<iter_rvalue_reference_t<_It>&&, const iter_value_t<_It>&>;*/
-
+      static_assert(::std::common_reference_with<::std::iter_reference_t<Iterator>&&, ::std::iter_value_t<Iterator>&>);
+      static_assert(::std::common_reference_with<::std::iter_reference_t<Iterator>&&, ::std::iter_rvalue_reference_t<Iterator>&&>);
+      static_assert(::std::common_reference_with<::std::iter_rvalue_reference_t<Iterator>&&, const ::std::iter_value_t<Iterator>&>);
 
       static_assert(requires(const Iterator __i) {
          typename ::std::iter_value_t<Iterator>;
+      });
+      static_assert(requires(const Iterator __i) {
          typename ::std::iter_reference_t<Iterator>;
+      });
+      static_assert(requires(const Iterator __i) {
          typename ::std::iter_rvalue_reference_t<Iterator>;
+      });
+      static_assert(requires(const Iterator __i) {
          { *__i } -> ::std::same_as<::std::iter_reference_t<Iterator>>;
+      });
+      static_assert(requires(const Iterator __i) {
          { _RANGES iter_move(__i) } -> ::std::same_as<::std::iter_rvalue_reference_t<Iterator>>;
       });
 
