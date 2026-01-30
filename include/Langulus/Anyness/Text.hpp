@@ -38,9 +38,9 @@ namespace Langulus::Anyness
       using TextBase = Container<
          Com::TypedStatic<DMeta, char>,   // Type-constrained           
          Com::HeapMovable<>,              // Pointer to heap memory     
-         Com::OwnershipStack<>,           // Allocation is referenced   
          Com::CountStack<>,               // Variable count             
          Com::ReserveEmergent<>,          // Capacity derived from alloc
+         Com::OwnershipStack<>,           // Allocation is referenced   
          Com::HashStack<>,                // Variable hash (cached)     
          Com::Insertion<0, Text>,         // Serialize + insert         
          Com::InsertionOperators<0, Text>,// << and >> insertion        

@@ -33,9 +33,9 @@ namespace Langulus::Anyness
       using BytesBase = Container<
          Com::TypedStatic<DMeta, Byte>,   // Type-constrained           
          Com::HeapMovable<>,              // Pointer to heap memory     
-         Com::OwnershipStack<>,           // Allocation is referenced   
          Com::CountStack<>,               // Variable count             
          Com::ReserveEmergent<>,          // Capacity derived from alloc
+         Com::OwnershipStack<>,           // Allocation is referenced   
          Com::HashStack<>,                // Variable hash (cached)     
          Com::Insertion<0, Bytes>,        // Serialize + insert         
          Com::InsertionOperators<0, Bytes>,// << and >> insertion       

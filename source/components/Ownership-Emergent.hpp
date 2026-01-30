@@ -32,7 +32,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool Owned = true;
       static constexpr bool AutoOwned = AUTO;
       static constexpr bool DeeplyReferenced = DEEPREF;
-      static constexpr int  ComponentPrecedence = -1000;
+      static constexpr int  ComponentPrecedence = 1000;
 
       /// Get the allocation                                                  
       auto GetAllocation(this auto const& self) noexcept {

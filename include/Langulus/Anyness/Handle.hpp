@@ -30,9 +30,9 @@ namespace Langulus::Anyness
       using THandleEmbeddedDense = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<>,
-         Com::OwnershipStack<0, false>,
          Com::CountStatic<1u>,
          Com::ReserveEmergent<>,
+         Com::OwnershipStack<0, false>,
          Com::Assignment<>,
          Com::Emplacement<>,
          Com::Comparison<>,
@@ -82,8 +82,8 @@ namespace Langulus::Anyness
       using THandleLocalSparse = Container<
          Com::TypedStatic<DMeta, Deptr<T>>,
          Com::HeapMovable<>,
-         Com::OwnershipStack<0, false>,
          Com::CountStatic<1u>,
+         Com::OwnershipStack<0, false>,
          Com::Emplacement<>,
          Com::Assignment<>,
          Com::Comparison<>
@@ -113,13 +113,17 @@ namespace Langulus::Anyness
       using HandleMutType  = HandleMut;
       using DeepType       = HandleDisowned;
 
-      /// Handles can't be default- or piecewise-initialized                  
-      HandleMut() = delete;
+      /// Handles can't be piecewise-initialized                              
       HandleMut(Inner::Piecewise, auto&&) = delete;
+
+      constexpr HandleMut() noexcept {
+         this->ConstructDefault();
+      }
 
       constexpr HandleMut(HandleMut const& other) {
          this->Absorb(Refer(other));
       }
+
       constexpr HandleMut(HandleMut&& other) noexcept {
          this->Absorb(Move(other));
       }
@@ -150,13 +154,17 @@ namespace Langulus::Anyness
       using HandleMutType  = HandleDisownedMut;
       using DeepType       = HandleDisowned;
 
-      /// Handles can't be default- or piecewise-initialized                  
-      HandleDisownedMut() = delete;
+      /// Handles can't be piecewise-initialized                              
       HandleDisownedMut(Inner::Piecewise, auto&&) = delete;
+
+      constexpr HandleDisownedMut() noexcept {
+         this->ConstructDefault();
+      }
 
       constexpr HandleDisownedMut(HandleDisownedMut const& other) {
          this->Absorb(Refer(other));
       }
+
       constexpr HandleDisownedMut(HandleDisownedMut&& other) noexcept {
          this->Absorb(Move(other));
       }
@@ -190,13 +198,17 @@ namespace Langulus::Anyness
       using HandleType     = Handle;
       using DeepType       = HandleDisowned;
 
-      /// Handles can't be default- or piecewise-initialized                  
-      Handle() = delete;
+      /// Handles can't be piecewise-initialized                              
       Handle(Inner::Piecewise, auto&&) = delete;
+
+      constexpr Handle() noexcept {
+         this->ConstructDefault();
+      }
 
       constexpr Handle(Handle const& other) {
          this->Absorb(Refer(other));
       }
+
       constexpr Handle(Handle&& other) noexcept {
          this->Absorb(Move(other));
       }
@@ -225,9 +237,12 @@ namespace Langulus::Anyness
       using HandleType     = HandleDisowned;
       using DeepType       = HandleDisowned;
 
-      /// Handles can't be default- or piecewise-initialized                  
-      HandleDisowned() = delete;
+      /// Handles can't be piecewise-initialized                              
       HandleDisowned(Inner::Piecewise, auto&&) = delete;
+
+      constexpr HandleDisowned() noexcept {
+         this->ConstructDefault();
+      }
 
       /// Refer constructor                                                   
       constexpr HandleDisowned(HandleDisowned const& other) {
@@ -244,6 +259,7 @@ namespace Langulus::Anyness
       constexpr HandleDisowned(C&& argument) {
          this->Absorb(LglsFwd(argument));
       }
+
       template<CT::Container C>
       constexpr HandleDisowned(Inner::Absorb, C&& argument) {
          this->Absorb(LglsFwd(argument));
@@ -276,16 +292,21 @@ namespace Langulus::Anyness
       using Denser         = THandle;
       using DeepType       = HandleDisowned;
 
-      /// Handles can't be default- or piecewise-initialized                  
-      THandle() = delete;
+      /// Handles can't be piecewise-initialized                              
       THandle(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandle() noexcept {
+         this->ConstructDefault();
+      }
 
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));
       }
+
       constexpr THandle(THandle&& other) noexcept {
          this->Absorb(Move(other));
       }
+
       constexpr ~THandle() noexcept {
          this->Destroy();
       }
@@ -294,6 +315,7 @@ namespace Langulus::Anyness
          this->SetHeapInner(&ptr);
          this->SetAllocationInner(alloc);
       }
+
       constexpr THandle(Deref<T>* ptr, AllocationPtr alloc) noexcept {
          this->SetHeapInner(ptr);
          this->SetAllocationInner(alloc);
@@ -309,16 +331,21 @@ namespace Langulus::Anyness
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;
 
-      /// Handles can't be default- or piecewise-initialized                  
-      THandle() = delete;
+      /// Handles can't be piecewise-initialized                              
       THandle(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandle() noexcept {
+         this->ConstructDefault();
+      }
 
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));
       }
+
       constexpr THandle(THandle&& other) noexcept {
          this->Absorb(Move(other));
       }
+
       constexpr ~THandle() noexcept {
          this->Destroy();
       }
@@ -344,16 +371,21 @@ namespace Langulus::Anyness
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;
 
-      /// Handles can't be default- or piecewise-initialized                  
-      THandleDisowned() = delete;
+      /// Handles can't be piecewise-initialized                              
       THandleDisowned(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandleDisowned() noexcept {
+         this->ConstructDefault();
+      }
 
       constexpr THandleDisowned(THandleDisowned const& other) {
          this->Absorb(Refer(other));
       }
+
       constexpr THandleDisowned(THandleDisowned&& other) noexcept {
          this->Absorb(Move(other));
       }
+
       constexpr ~THandleDisowned() noexcept {
          this->Destroy();
       }
@@ -373,16 +405,21 @@ namespace Langulus::Anyness
       using Denser         = THandle;
       using DeepType       = HandleDisowned;
 
-      /// Handles can't be default- or piecewise-initialized                  
-      THandle() = delete;
+      /// Handles can't be piecewise-initialized                              
       THandle(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandle() noexcept {
+         this->ConstructDefault();
+      }
 
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));
       }
+
       constexpr THandle(THandle&& other) noexcept {
          this->Absorb(Move(other));
       }
+
       constexpr ~THandle() noexcept {
          this->Destroy();
       }
@@ -402,16 +439,21 @@ namespace Langulus::Anyness
       using Denser         = THandle<Deptr<T>>;
       using DeepType       = HandleDisowned;
 
-      /// Handles can't be default- or piecewise-initialized                  
-      THandle() = delete;
+      /// Handles can't be piecewise-initialized                              
       THandle(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandle() noexcept {
+         this->ConstructDefault();
+      }
 
       constexpr THandle(THandle const& other) {
          this->Absorb(Refer(other));
       }
+
       constexpr THandle(THandle&& other) noexcept {
          this->Absorb(Move(other));
       }
+
       constexpr ~THandle() noexcept {
          this->Destroy();
       }

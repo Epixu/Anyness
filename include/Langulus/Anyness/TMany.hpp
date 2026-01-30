@@ -15,9 +15,9 @@ namespace Langulus::Anyness::Inner
    using TManyBase = Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
       Com::HeapMovable<>,              // Pointer to heap memory        
-      Com::OwnershipStack<>,           // Allocation is referenced      
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveEmergent<>,          // Reserve derived from alloc    
+      Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashStack<>,                // Hash can be cached            
       Com::IndexedLinear<>,            // Indexed directly              
@@ -81,9 +81,9 @@ namespace Langulus::Anyness
       /// emplaces T in the container, using A... as constructor arguments    
       template<class...A>
       constexpr TMany(A&&...arguments) {
-         if constexpr (sizeof...(A) == 1 and CT::Container<A...>) {
+         if constexpr (sizeof...(A) == 1 and (SameAsOneOf<Deint<A>, TMany, Many> and ...)) {
             LglsAssumeUser(
-               ((Same<Deint<A>, TMany> or Same<TypeOf<Deint<A>>, T>) and ...),
+               (not SameAsOneOf<T, TMany, Many>),
                "Ambiguous use of construction "
                "- you should use tag-dispatch with first argument either Absorb "
                "(if you want to overwrite the container itself) or Piecewise "

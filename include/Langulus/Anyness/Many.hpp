@@ -42,9 +42,9 @@ namespace Langulus::Anyness::Inner
    using ManyBase = Container<
       Com::TypedStack<DMeta>,          // Type-erased                   
       Com::HeapMovable<>,              // Pointer to heap memory        
-      Com::OwnershipStack<>,           // Allocation is referenced      
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveEmergent<>,          // Reserve derived from alloc    
+      Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashStack<>,                // Hash can be cached            
       Com::IndexedLinear<>,            // Indexed directly              
@@ -111,7 +111,7 @@ namespace Langulus::Anyness
       /// emplaces A in the container                                         
       template<class A>
       constexpr Many(A&& argument) {
-         if constexpr (CT::ContainsOne<A>) {
+         if constexpr (CT::Deep<Deint<A>> and CT::Dense<Deint<A>>) {
             LglsAssumeUser((Same<Deint<A>, Many>),
                "Ambiguous use of construction "
                "- you should use tag-dispatch with first argument either Absorb "
@@ -146,7 +146,7 @@ namespace Langulus::Anyness
       
       template<class A>
       constexpr Many& operator = (A&& argument) {
-         if constexpr (CT::ContainsOne<A>) {
+         if constexpr (CT::Deep<Deint<A>> and CT::Dense<Deint<A>>) {
             LglsAssumeUser((Same<Deint<A>, Many>),
                "Ambiguous use of assignment "
                "- you should use either AssignAbsorb (if you want to overwrite "

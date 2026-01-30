@@ -24,9 +24,9 @@ namespace Langulus::Anyness::Inner
    using TRefBase = Container<
       Com::TypedStatic<DMeta, T>,         // Statically typed          
       Com::HeapMovable<>,                 // Data on the heap          
-      Com::OwnershipStack<>,              // Allocation is referenced  
       Com::CountStatic<1u>,               // Statically sized          
       Com::ReserveEmergent<>,             // Reserve derived from alloc
+      Com::OwnershipStack<>,              // Allocation is referenced  
       Com::OwnershipDeepHeap<>,           // Indirections referenced   
       Com::Emplacement<>,                 // Can be emplaced           
       Com::Assignment<>,                  // Can be reassigned         

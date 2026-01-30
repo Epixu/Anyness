@@ -316,8 +316,9 @@ namespace Langulus::Anyness::Component
 
    protected:
       /// Default-initialization of this component is impossible              
-      constexpr void ConstructDefault() const {
-         static_assert(false, "Can't default-construct this component");
+      void ConstructDefault(this auto& self) noexcept {
+         //static_assert(false, "Can't default-construct this component");
+         self.SetHeapInner(nullptr);
       }
       
       /// Transfer from any kind of container.                                
@@ -327,7 +328,7 @@ namespace Langulus::Anyness::Component
       ///   @param self deduced this                                          
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
-      void ConstructFrom(this auto& self, I&& intent) {
+      void ConstructFrom(this auto& self, I&& intent) noexcept {
          self.SetHeapInner(intent.what.GetRaw());
       }
 

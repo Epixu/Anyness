@@ -329,6 +329,9 @@ namespace Langulus::Anyness
       static_assert(::std::input_or_output_iterator<Iterator>);
 
       constexpr auto begin() const noexcept -> Iterator {
+         if (range.IsEmpty())
+            return {{}, range};
+
          if constexpr (REVERSE)
             return {range.template AsAt<H>(range.GetCount() - 1), range};
          else
@@ -336,6 +339,9 @@ namespace Langulus::Anyness
       }
 
       constexpr auto end() const noexcept -> Iterator {
+         if (range.IsEmpty())
+            return {{}, range};
+
          if constexpr (REVERSE)
             return --Iterator{range.template As<H>(), range};
          else
@@ -478,6 +484,9 @@ namespace Langulus::Anyness
       static_assert(::std::input_or_output_iterator<Iterator>);
 
       constexpr Iterator begin() const noexcept {
+         if (range.IsEmpty())
+            return {{}, range};
+
          if constexpr (REVERSE)
             return {range.template AsAt<H>(range.GetCount() - 1), range};
          else
@@ -485,6 +494,9 @@ namespace Langulus::Anyness
       }
 
       constexpr Iterator end() const noexcept {
+         if (range.IsEmpty())
+            return {{}, range};
+
          if constexpr (REVERSE)
             return --Iterator{range.template As<H>(), range};
          else

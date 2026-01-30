@@ -26,7 +26,7 @@ namespace Langulus::Anyness::Component
    struct CountStatic {
       using CTTI_Component  = Yes<>;
       using CTTI_Contiguous = Maybe<COUNT == 1>;
-      static constexpr int  ComponentPrecedence = 1000;
+      static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = COUNT > 1;
 
       static_assert(COUNT > 0, "Can't have a container of zero or negative count");

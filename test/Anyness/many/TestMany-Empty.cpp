@@ -10,40 +10,41 @@
 
 
 TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
+   , Types<Many, Many, ScopedElement<Many>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Many, Text,   ScopedElement<Text>>
    , Types<Many, int,    ScopedElement<int>>
-   , Types<Many, Any,    ScopedElement<Any>>
    , Types<Many, RT,     ScopedElement<RT>>
    , Types<Many, char,   ScopedElement<char>>
 
    , Types<Many, Text*,  ScopedElement<Text*>>
    , Types<Many, int*,   ScopedElement<int*>>
-   , Types<Many, Any*,   ScopedElement<Any*>>
+   , Types<Many, Many*,  ScopedElement<Many*>>
    , Types<Many, RT*,    ScopedElement<RT*>>
    , Types<Many, char*,  ScopedElement<char*>>
 
    , Types<Many, Text**, ScopedElement<Text**>>
    , Types<Many, int**,  ScopedElement<int**>>
-   , Types<Many, Any**,  ScopedElement<Any**>>
+   , Types<Many, Many**, ScopedElement<Many**>>
    , Types<Many, RT**,   ScopedElement<RT**>>
    , Types<Many, char**, ScopedElement<char**>>
 
    , Types<TMany<Text>,   Text,   ScopedElement<Text>>
    , Types<TMany<int>,    int,    ScopedElement<int>>
-   , Types<TMany<Any>,    Any,    ScopedElement<Any>>
+   , Types<TMany<Many>,   Many,   ScopedElement<Many>>
    , Types<TMany<RT>,     RT,     ScopedElement<RT>>
    , Types<TMany<char>,   char,   ScopedElement<char>>
 
    , Types<TMany<Text*>,  Text*,  ScopedElement<Text*>>
    , Types<TMany<int*>,   int*,   ScopedElement<int*>>
-   , Types<TMany<Any*>,   Any*,   ScopedElement<Any*>>
+   , Types<TMany<Many*>,  Many*,  ScopedElement<Many*>>
    , Types<TMany<RT*>,    RT*,    ScopedElement<RT*>>
    , Types<TMany<char*>,  char*,  ScopedElement<char*>>
 
    , Types<TMany<Text**>, Text**, ScopedElement<Text**>>
    , Types<TMany<int**>,  int**,  ScopedElement<int**>>
-   , Types<TMany<Any**>,  Any**,  ScopedElement<Any**>>
+   , Types<TMany<Many**>, Many**, ScopedElement<Many**>>
    , Types<TMany<RT**>,   RT**,   ScopedElement<RT**>>
    , Types<TMany<char**>, char**, ScopedElement<char**>>
 
@@ -51,37 +52,37 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    // Elements are allocated by the memory manager                      
    , Types<Many, Text,   ScopedElement<Text, true>>
    , Types<Many, int,    ScopedElement<int, true>>
-   , Types<Many, Any,    ScopedElement<Any, true>>
+   , Types<Many, Many,   ScopedElement<Many, true>>
    , Types<Many, RT,     ScopedElement<RT, true>>
    , Types<Many, char,   ScopedElement<char, true>>
 
    , Types<Many, Text*,  ScopedElement<Text*, true>>
    , Types<Many, int*,   ScopedElement<int*, true>>
-   , Types<Many, Any*,   ScopedElement<Any*, true>>
+   , Types<Many, Many*,  ScopedElement<Many*, true>>
    , Types<Many, RT*,    ScopedElement<RT*, true>>
    , Types<Many, char*,  ScopedElement<char*, true>>
 
    , Types<Many, Text**, ScopedElement<Text**, true>>
    , Types<Many, int**,  ScopedElement<int**, true>>
-   , Types<Many, Any**,  ScopedElement<Any**, true>>
+   , Types<Many, Many**, ScopedElement<Many**, true>>
    , Types<Many, RT**,   ScopedElement<RT**, true>>
    , Types<Many, char**, ScopedElement<char**, true>>
 
    , Types<TMany<Text>,   Text,   ScopedElement<Text, true>>
    , Types<TMany<int>,    int,    ScopedElement<int, true>>
-   , Types<TMany<Any>,    Any,    ScopedElement<Any, true>>
+   , Types<TMany<Many>,   Many,   ScopedElement<Many, true>>
    , Types<TMany<RT>,     RT,     ScopedElement<RT, true>>
    , Types<TMany<char>,   char,   ScopedElement<char, true>>
 
    , Types<TMany<Text*>,  Text*,  ScopedElement<Text*, true>>
    , Types<TMany<int*>,   int*,   ScopedElement<int*, true>>
-   , Types<TMany<Any*>,   Any*,   ScopedElement<Any*, true>>
+   , Types<TMany<Many*>,  Many*,  ScopedElement<Many*, true>>
    , Types<TMany<RT*>,    RT*,    ScopedElement<RT*, true>>
    , Types<TMany<char*>,  char*,  ScopedElement<char*, true>>
 
    , Types<TMany<Text**>, Text**, ScopedElement<Text**, true>>
    , Types<TMany<int**>,  int**,  ScopedElement<int**, true>>
-   , Types<TMany<Any**>,  Any**,  ScopedElement<Any**, true>>
+   , Types<TMany<Many**>, Many**, ScopedElement<Many**, true>>
    , Types<TMany<RT**>,   RT**,   ScopedElement<RT**, true>>
    , Types<TMany<char**>, char**, ScopedElement<char**, true>>
 
@@ -253,7 +254,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed by referral") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -302,7 +303,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed by move") {
             auto movable = *element;
 
@@ -347,7 +348,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed copied value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -395,7 +396,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed cloned value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -442,7 +443,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed disowned value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -493,7 +494,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::ContainsOne<E>) {
+      if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed abandoned value") {
             auto movable = *element;
 
