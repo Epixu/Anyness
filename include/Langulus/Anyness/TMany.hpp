@@ -131,6 +131,10 @@ namespace Langulus::Anyness
       
       using Com::Comparison<>::operator <=>;
       using Com::Comparison<>::operator ==;
+      using Com::IterationRange<>::begin;
+      using Com::IterationRange<>::end;
+      using Com::IterationRange<>::rbegin;
+      using Com::IterationRange<>::rend;
    };
 }
 

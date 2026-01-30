@@ -176,9 +176,9 @@ namespace Langulus::Anyness
    ///                                                                        
    ///   Default iteration                                                    
    ///                                                                        
-   /// Used by default when doing for(auto i : container)                     
+   /// Used by default when doing `for(auto i : container)`.                  
    /// When container is type-erased, or mutable and sparse, 'i' will be a    
-   /// handle. Otherwise, 'i' will be a direct reference to the element       
+   /// handle. Otherwise, 'i' will be a direct reference to the element.      
    template<bool REVERSE, class C>
    struct IterateDefault {
       static_assert(CT::NoIntent<C>,     "C can't have an intent");
@@ -213,28 +213,28 @@ namespace Langulus::Anyness
          using CTTI_ReflectAs = void;
          using difference_type = std::ptrdiff_t;
 
-         H mIt;
-         C& mRange;
+         H  mIt;
+         C* mRange;
 
-         Iterator() = delete;
+         constexpr Iterator() noexcept = default;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
-         constexpr Iterator(H const& it, C& range) noexcept
+         constexpr Iterator(H const& it, C* range) noexcept
             : mIt    {it}
             , mRange {range} {}
-         constexpr Iterator(H&& it, C& range) noexcept
+         constexpr Iterator(H&& it, C* range) noexcept
             : mIt    {LglsFwd(it)}
             , mRange {range} {}
 
          constexpr auto operator = (Iterator const& rhs) assumptious -> Iterator& {
-            LglsAssumeUser(&mRange == &rhs.mRange,
+            LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
             mIt = rhs.mIt;
             return *this;
          }
 
          constexpr auto operator = (Iterator&& rhs) assumptious -> Iterator& {
-            LglsAssumeUser(&mRange == &rhs.mRange,
+            LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
             mIt = rhs.mIt;
             return *this;
@@ -249,9 +249,9 @@ namespace Langulus::Anyness
          
          explicit constexpr operator bool() const noexcept {
             if constexpr (CT::Handle<H>)
-               return mIt.GetRaw() != mRange.GetRawEnd();
+               return mIt.GetRaw() != mRange->GetRawEnd();
             else
-               return mIt != mRange.GetRawEnd();
+               return mIt != mRange->GetRawEnd();
          }
 
          decltype(auto) operator * () noexcept {
@@ -313,12 +313,12 @@ namespace Langulus::Anyness
          /// Get the integer element difference between two iterators         
          auto operator - (CT::Iterator auto const& rhs) const assumptious
          -> difference_type {
-            LglsAssumeUser(&mRange == &rhs.mRange,
+            LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
 
             if constexpr (CT::TypeErased<C>) {
                const auto range = mIt.template GetRawAs<uint8_t>() - rhs.mIt.template GetRawAs<uint8_t>();
-               return static_cast<difference_type>(range / mRange.GetStride());
+               return static_cast<difference_type>(range / mRange->GetStride());
             }
             else {
                const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
@@ -326,26 +326,88 @@ namespace Langulus::Anyness
             }
          }
       };
+
+      static_assert(::std::weakly_incrementable<Iterator>,
+         "Failed the weakly incrementable test");
+      static_assert(::std::movable<Iterator>,
+         "Failed the moveable test");
+      static_assert(::std::default_initializable<Iterator>,
+         "Failed the default initializable test");
+
       static_assert(::std::input_or_output_iterator<Iterator>);
+
+      /*template <class _It>
+      concept _Indirectly_readable_impl = common_reference_with<iter_reference_t<_It>&&, iter_value_t<_It>&>
+         && common_reference_with<iter_reference_t<_It>&&, iter_rvalue_reference_t<_It>&&>
+         && common_reference_with<iter_rvalue_reference_t<_It>&&, const iter_value_t<_It>&>;*/
+
+
+      static_assert(requires(const Iterator __i) {
+         typename ::std::iter_value_t<Iterator>;
+         typename ::std::iter_reference_t<Iterator>;
+         typename ::std::iter_rvalue_reference_t<Iterator>;
+         { *__i } -> ::std::same_as<::std::iter_reference_t<Iterator>>;
+         { _RANGES iter_move(__i) } -> ::std::same_as<::std::iter_rvalue_reference_t<Iterator>>;
+      });
+
+
+      static_assert(::std::indirectly_readable<Iterator>);
+      static_assert(requires {typename ::std::_Iter_concept<Iterator>; });
+      static_assert(::std::derived_from<::std::_Iter_concept<Iterator>, ::std::input_iterator_tag>);
+
+      static_assert(::std::input_iterator<Iterator>,
+         "failed input iterator");
+      static_assert(::std::output_iterator<Iterator, int>,
+         "failed output iterator");
+      static_assert(::std::forward_iterator<Iterator>,
+         "failed forward iterator");
+      static_assert(::std::input_iterator<Iterator>,
+         "failed input iterator");
+      static_assert(::std::bidirectional_iterator<Iterator>,
+         "failed bidirectional iterator");
+      static_assert(::std::random_access_iterator<Iterator>,
+         "failed random access iterator");
+      static_assert(::std::contiguous_iterator<Iterator>,
+         "failed contiguous iterator");
 
       constexpr auto begin() const noexcept -> Iterator {
          if (range.IsEmpty())
-            return {{}, range};
+            return {{}, &range};
 
          if constexpr (REVERSE)
-            return {range.template AsAt<H>(range.GetCount() - 1), range};
+            return {range.template AsAt<H>(range.GetCount() - 1), &range};
          else
-            return {range.template As<H>(), range};
+            return {range.template As<H>(), &range};
       }
 
       constexpr auto end() const noexcept -> Iterator {
          if (range.IsEmpty())
-            return {{}, range};
+            return {{}, &range};
 
          if constexpr (REVERSE)
-            return --Iterator{range.template As<H>(), range};
+            return --Iterator{range.template As<H>(), &range};
          else
-            return ++Iterator{range.template AsAt<H>(range.GetCount() - 1), range};
+            return ++Iterator{range.template AsAt<H>(range.GetCount() - 1), &range};
+      }
+
+      constexpr auto rbegin() const noexcept -> Iterator {
+         if (range.IsEmpty())
+            return {{}, &range};
+
+         if constexpr (REVERSE)
+            return {range.template As<H>(), &range};
+         else
+            return {range.template AsAt<H>(range.GetCount() - 1), &range};
+      }
+
+      constexpr auto rend() const noexcept -> Iterator {
+         if (range.IsEmpty())
+            return {{}, &range};
+
+         if constexpr (REVERSE)
+            return ++Iterator{range.template AsAt<H>(range.GetCount() - 1), &range};
+         else
+            return --Iterator{range.template As<H>(), &range};
       }
    };
 
