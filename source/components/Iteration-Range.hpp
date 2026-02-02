@@ -212,12 +212,12 @@ namespace Langulus::Anyness
          using CTTI_Iterator  = Yes<>;
          using CTTI_ReflectAs = void;
          using difference_type = std::ptrdiff_t;
-         using iterator_category = std::random_access_iterator_tag;
+         using iterator_category = Tif<CT::Contiguous<C>, std::contiguous_iterator_tag, std::random_access_iterator_tag>;
          using value_type = Deptr<H>;
          //using pointer = T* const;
-         using reference = H&;
+         using reference = Deptr<H>&;
 
-         H  mIt;
+         mutable H mIt;
          C* mRange;
 
          constexpr Iterator() noexcept = default;
@@ -250,6 +250,13 @@ namespace Langulus::Anyness
             else
                return mIt == rhs.mIt;
          }
+
+         constexpr auto operator <=> (CT::Iterator auto const& rhs) const noexcept {
+            if constexpr (CT::Handle<H>)
+               return mIt.GetRaw() <=> rhs.mIt.GetRaw();
+            else
+               return mIt <=> rhs.mIt;
+         }
          
          explicit constexpr operator bool() const noexcept {
             if constexpr (CT::Handle<H>)
@@ -278,18 +285,36 @@ namespace Langulus::Anyness
             else                         return mIt;
          }
 
-         auto operator + (Count c) const noexcept -> Iterator {
+         friend auto operator + (difference_type lhs, Iterator const& rhs) noexcept -> Iterator {
+            static_assert(not REVERSE);
+            return {rhs.mIt + lhs, rhs.mRange};
+         }
+
+         auto operator + (difference_type c) const noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt - c, mRange};
             else                   return {mIt + c, mRange};
          }
 
-         auto operator - (Count c) const noexcept -> Iterator {
+         auto operator - (difference_type c) const noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt + c, mRange};
             else                   return {mIt - c, mRange};
          }
 
-         reference operator[](const difference_type offset) const noexcept {
-            return *(*this + offset);
+         auto operator += (difference_type c) noexcept -> Iterator& {
+            if constexpr (REVERSE) mIt -= c;
+            else                   mIt += c;
+            return *this;
+         }
+
+         auto operator -= (difference_type c) noexcept -> Iterator& {
+            if constexpr (REVERSE) mIt += c;
+            else                   mIt -= c;
+            return *this;
+         }
+
+         decltype(auto) operator[] (const difference_type offset) const noexcept {
+            if constexpr (CT::Handle<H>) return   mIt + offset;
+            else                         return *(mIt + offset);
          }
 
          /// Prefix increment                                                 
@@ -368,23 +393,46 @@ namespace Langulus::Anyness
       static_assert(::std::indirectly_readable<Iterator>);
       static_assert(requires {typename ::std::_Iter_concept<Iterator>; });
       static_assert(::std::derived_from<::std::_Iter_concept<Iterator>, ::std::input_iterator_tag>);
+      static_assert(::std::derived_from<::std::_Iter_concept<Iterator>, ::std::random_access_iterator_tag>);
 
       static_assert(::std::input_iterator<Iterator>,
          "failed input iterator");
-      static_assert(::std::output_iterator<Iterator, int>,
-         "failed output iterator");
+      //static_assert(::std::output_iterator<Iterator, int>,
+      //   "failed output iterator");
       static_assert(::std::forward_iterator<Iterator>,
          "failed forward iterator");
       static_assert(::std::input_iterator<Iterator>,
          "failed input iterator");
       static_assert(::std::bidirectional_iterator<Iterator>,
          "failed bidirectional iterator");
-      static_assert(::std::random_access_iterator<Iterator>,
+      static_assert(::std::totally_ordered<Iterator>);
+      static_assert(::std::sized_sentinel_for<Iterator, Iterator>);
+      static_assert(requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
+         { __i += __n } -> ::std::same_as<Iterator&>;
+         { __j +  __n } -> ::std::same_as<Iterator>;
+      });
+      static_assert(requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
+         { __n +  __j } -> ::std::same_as<Iterator>;
+      });
+      static_assert(requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
+         { __i -= __n } -> ::std::same_as<Iterator&>;
+      });
+      static_assert(requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
+         { __j -  __n } -> ::std::same_as<Iterator>;
+      });
+
+      // These are not possible to satisfy if C is type-erased
+      static_assert(CT::TypeErased<C> or CT::Sparse<TypeOf<C>> or requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
+         { __j[__n]   } -> ::std::same_as<::std::iter_reference_t<Iterator>>;
+      });
+
+      // These are not possible to satisfy if C is type-erased
+      static_assert(CT::TypeErased<C> or CT::Sparse<TypeOf<C>> or ::std::random_access_iterator<Iterator>,
          "failed random access iterator");
-      static_assert(::std::contiguous_iterator<Iterator>,
+      static_assert(CT::TypeErased<C> or CT::Sparse<TypeOf<C>> or ::std::contiguous_iterator<Iterator>,
          "failed contiguous iterator");
 
-      constexpr auto begin() const noexcept -> Iterator {
+      constexpr auto begin() noexcept -> Iterator {
          if (range.IsEmpty())
             return {{}, &range};
 
@@ -394,7 +442,7 @@ namespace Langulus::Anyness
             return {range.template As<H>(), &range};
       }
 
-      constexpr auto end() const noexcept -> Iterator {
+      constexpr auto end() noexcept -> Iterator {
          if (range.IsEmpty())
             return {{}, &range};
 
@@ -404,7 +452,7 @@ namespace Langulus::Anyness
             return ++Iterator{range.template AsAt<H>(range.GetCount() - 1), &range};
       }
 
-      constexpr auto rbegin() const noexcept -> Iterator {
+      constexpr auto rbegin() noexcept -> Iterator {
          if (range.IsEmpty())
             return {{}, &range};
 
@@ -414,7 +462,7 @@ namespace Langulus::Anyness
             return {range.template AsAt<H>(range.GetCount() - 1), &range};
       }
 
-      constexpr auto rend() const noexcept -> Iterator {
+      constexpr auto rend() noexcept -> Iterator {
          if (range.IsEmpty())
             return {{}, &range};
 

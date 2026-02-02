@@ -789,7 +789,7 @@ namespace Langulus::Anyness::Component
          }
 
          // Return a reference/handle to the newly emplaced element     
-         return self.template As<PickMut<C>>();
+         return self.template As<Deref<PickMut<C>>>();
       }
    };
 }

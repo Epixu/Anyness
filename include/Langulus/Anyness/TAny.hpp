@@ -51,7 +51,7 @@ namespace Langulus::Anyness
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       using Pick          = ConstAll<T> const&;
-      using PickMut       = THandle<T&>;
+      using PickMut       = Tif<CT::Sparse<T>, THandle<T&>, T&>;
       using HandleType    = THandle<ConstAll<T> const&>;
       using HandleMutType = THandle<T&>;
       using DeepType      = Any;

@@ -840,12 +840,18 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
             decltype(auto) instance = a.Emplace(::std::move(*i666));
 
             Any_CheckState_OwnedFull<E>(a);
-            REQUIRE(instance.CompareOneEqual(i666backup));
+            if constexpr (CT::Handle<decltype(instance)>)
+               REQUIRE(instance.CompareOneEqual(i666backup));
+            else
+               REQUIRE(instance == i666backup);
             REQUIRE(a.GetCount() == 1);
             REQUIRE(a.GetReserved() >= 1);
             if constexpr (CT::Typed<T>) {
                REQUIRE(*a == i666backup);
-               REQUIRE(&*a == &*instance);
+               if constexpr (CT::Handle<decltype(instance)>)
+                  REQUIRE(&*a == &*instance);
+               else
+                  REQUIRE(&*a == &instance);
             }
 
             Benchmark(

@@ -538,13 +538,19 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          const auto i666backup = *i666;
          decltype(auto) instance = pack.Emplace(::std::move(*i666));
          Many_CheckState_OwnedFull<E>(pack);
-         REQUIRE(instance.CompareOneEqual(i666backup));
+         if constexpr (CT::Handle<decltype(instance)>)
+            REQUIRE(instance.CompareOneEqual(i666backup));
+         else
+            REQUIRE(instance == i666backup);
          REQUIRE(pack.GetCount() == 1);
          REQUIRE(pack.GetReserved() >= 1);
 
          if constexpr (CT::Typed<T>) {
             REQUIRE(*pack == i666backup);
-            REQUIRE(&*pack == &*instance);
+            if constexpr (CT::Handle<decltype(instance)>)
+               REQUIRE(&*pack == &*instance);
+            else
+               REQUIRE(&*pack == &instance);
          }
 
          Benchmark("Empty/Emplace(" + NameOf<E>() + ")", 30,

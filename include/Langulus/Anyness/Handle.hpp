@@ -133,6 +133,14 @@ namespace Langulus::Anyness
          this->SetEntriesInner(entry);
          this->SetTypeInner(type);
       }
+
+      /// Assignment                                                          
+      constexpr HandleMut& operator = (HandleMut const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr HandleMut& operator = (HandleMut&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
+      }
    };
    
 
@@ -162,16 +170,24 @@ namespace Langulus::Anyness
       }
 
       constexpr HandleDisownedMut(HandleDisownedMut const& other) {
-         this->Absorb(Refer(other));
+         this->Absorb(Disown(other));
       }
 
       constexpr HandleDisownedMut(HandleDisownedMut&& other) noexcept {
-         this->Absorb(Move(other));
+         this->Absorb(Disown(other));
       }
 
       constexpr HandleDisownedMut(void* ptr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
+      }
+
+      /// Assignment                                                          
+      constexpr HandleDisownedMut& operator = (HandleDisownedMut const& other) {
+         return this->AssignAbsorb(Disown(other));
+      }
+      constexpr HandleDisownedMut& operator = (HandleDisownedMut&& other) noexcept {
+         return this->AssignAbsorb(Disown(other));
       }
    };
    
@@ -218,6 +234,14 @@ namespace Langulus::Anyness
          this->SetEntriesInner(entry);
          this->SetTypeInner(type);
       }
+
+      /// Assignment                                                          
+      constexpr Handle& operator = (Handle const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr Handle& operator = (Handle&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
+      }
    };
    
 
@@ -246,29 +270,37 @@ namespace Langulus::Anyness
 
       /// Refer constructor                                                   
       constexpr HandleDisowned(HandleDisowned const& other) {
-         this->Absorb(Refer(other));
+         this->Absorb(Disown(other));
       }
 
       /// Move constructor                                                    
       constexpr HandleDisowned(HandleDisowned&& other) noexcept {
-         this->Absorb(Move(other));
+         this->Absorb(Disown(other));
       }
 
       /// Construction that absorbs the provided container                    
       template<CT::Container C>
       constexpr HandleDisowned(C&& argument) {
-         this->Absorb(LglsFwd(argument));
+         this->Absorb(Disown(argument));
       }
 
       template<CT::Container C>
       constexpr HandleDisowned(Inner::Absorb, C&& argument) {
-         this->Absorb(LglsFwd(argument));
+         this->Absorb(Disown(argument));
       }
 
       /// Manual constructor for some niche uses, like iterators              
       constexpr HandleDisowned(void const* ptr, DMeta type) noexcept {
          this->SetHeapInner(ptr);
          this->SetTypeInner(type);
+      }
+
+      /// Assignment                                                          
+      constexpr HandleDisowned& operator = (HandleDisowned const& other) {
+         return this->AssignAbsorb(Disown(other));
+      }
+      constexpr HandleDisowned& operator = (HandleDisowned&& other) noexcept {
+         return this->AssignAbsorb(Disown(other));
       }
    };
 
@@ -320,6 +352,14 @@ namespace Langulus::Anyness
          this->SetHeapInner(ptr);
          this->SetAllocationInner(alloc);
       }
+
+      /// Assignment                                                          
+      constexpr THandle& operator = (THandle const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr THandle& operator = (THandle&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
+      }
    };
    
    template<CT::Reference T> requires CT::Sparse<T>
@@ -354,6 +394,14 @@ namespace Langulus::Anyness
          this->SetHeapInner(ptr);
          this->SetEntriesInner(entry);
       }
+
+      /// Assignment                                                          
+      constexpr THandle& operator = (THandle const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr THandle& operator = (THandle&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
+      }
    };
    
 
@@ -379,15 +427,23 @@ namespace Langulus::Anyness
       }
 
       constexpr THandleDisowned(THandleDisowned const& other) {
-         this->Absorb(Refer(other));
+         this->Absorb(Disown(other));
       }
 
       constexpr THandleDisowned(THandleDisowned&& other) noexcept {
-         this->Absorb(Move(other));
+         this->Absorb(Disown(other));
       }
 
       constexpr ~THandleDisowned() noexcept {
          this->Destroy();
+      }
+
+      /// Assignment                                                          
+      constexpr THandleDisowned& operator = (THandleDisowned const& other) {
+         return this->AssignAbsorb(Disown(other));
+      }
+      constexpr THandleDisowned& operator = (THandleDisowned&& other) noexcept {
+         return this->AssignAbsorb(Disown(other));
       }
    };
    
@@ -423,6 +479,14 @@ namespace Langulus::Anyness
       constexpr ~THandle() noexcept {
          this->Destroy();
       }
+
+      /// Assignment                                                          
+      constexpr THandle& operator = (THandle const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr THandle& operator = (THandle&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
+      }
    };
    
 
@@ -456,6 +520,14 @@ namespace Langulus::Anyness
 
       constexpr ~THandle() noexcept {
          this->Destroy();
+      }
+
+      /// Assignment                                                          
+      constexpr THandle& operator = (THandle const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr THandle& operator = (THandle&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
       }
    };
 }
