@@ -165,7 +165,7 @@ namespace Langulus::Fractalloc
    }
 
    /// Allocate an entry inside the pool                                      
-   ///   @param entry_budget available bits for an entry id                   
+   ///   @param entry_budget the biggest allowed entry ID (including)
    ///   @param bytes number of bytes to allocate                             
    ///   @return the new allocation, or nullptr if pool is full               
    auto Pool::AllocatePacked(size_t entry_budget, pot_t bytes)
@@ -177,7 +177,7 @@ namespace Langulus::Fractalloc
          return nullptr;
 
       Allocation* newEntry;
-      if (mLastFreed) {
+      if (mLastFreed and IndexFromAllocation(mLastFreed) <= entry_budget) {
          // Recycle entries                                             
          newEntry = mLastFreed;
          LglsVerbose("Used last freed entry: ", Logger::Hex(mLastFreed));
@@ -188,7 +188,7 @@ namespace Langulus::Fractalloc
          if (bytes > mBiggestEntry)
             mBiggestEntry = bytes;
       }
-      else {
+      else if (mNextEntry <= entry_budget) {
          if (IsClogged())
             return nullptr;
 
@@ -209,6 +209,10 @@ namespace Langulus::Fractalloc
             // allocation doesn't prevent it                            
             mThresholdMax >>= 1u;
          }
+      }
+      else {
+         // Entry ID exceeds budget
+         return nullptr;
       }
 
       // Update the distribution                                        

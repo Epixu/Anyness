@@ -418,12 +418,13 @@ namespace Langulus::Fractalloc
 
       //	Attempt to place allocation in the chosen chain                
       LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
-      const size_t max_pool_id = (1u << spec.PoolBits) - 1u;
+      const size_t max_pool_budget = (1u << spec.PoolBits) - 1u;
+      const size_t max_entry_budget = (1u << spec.EntryBits) - 1u;
       size_t pool_misses = 1;
       Allocation* entry = nullptr;
       for (auto& p : pool_bank->indexed) {
-         entry = p.second->AllocatePacked(spec.EntryBits, size);
-         if (entry or p.first > max_pool_id)
+         entry = p.second->AllocatePacked(max_entry_budget, size);
+         if (entry or p.first > max_pool_budget)
             break;
          ++pool_misses;
       }
@@ -444,7 +445,7 @@ namespace Langulus::Fractalloc
       //                                                                
       // If reached, chosen pool chain can't contain the memory.        
       // Allocate a new pool and add it at the front of the chain.      
-      if (pool_misses >= max_pool_id) {
+      if (pool_misses >= max_pool_budget) {
          // We've gone beyond the possible pool ID - request denied     
          return nullptr;
       }
@@ -464,7 +465,7 @@ namespace Langulus::Fractalloc
       );
 
       // Place allocation in the new pool. This is guaranteed to work.  
-      entry = new_pool->AllocatePacked(spec.EntryBits, size);
+      entry = new_pool->AllocatePacked(max_entry_budget, size);
 
       // Time to update the pool chain with the new pool.               
       pool_bank->LinkPool(new_pool);

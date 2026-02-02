@@ -32,8 +32,8 @@ namespace Langulus
       ///      usually the Stacktrace() function itself, as well as the       
       ///      ErrorInner/AssertInner/AssumeInner function that called it.    
       inline void Stacktrace(
-         const int depth = LANGULUS_DEFAULT_STACK_DEPTH,
-         const int skip = LANGULUS_DEFAULT_STACK_SKIP
+         const size_t depth = LANGULUS_DEFAULT_STACK_DEPTH,
+         const size_t skip = LANGULUS_DEFAULT_STACK_SKIP
       ) {
          auto stack = std::stacktrace::current();
          if (depth > 1) {
