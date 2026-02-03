@@ -510,7 +510,7 @@ TEST_CASE("Memory stress test and benchmarking (accumulator)") {
       ::std::vector<Allocation*> entries;
       entries.reserve(budget);
 
-      for (int i = 0; i < budget/3; ++i) {
+      for (size_t i = 0; i < budget/3; ++i) {
          // Allocate 2 entries, and then deallocate one random          
          for (int k = 0; k < 2; ++k) {
             auto random_type = types[generator() % types.size()];

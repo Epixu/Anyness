@@ -143,7 +143,7 @@ void Many_CheckState_ContainsN(size_t n, const T& many, I&& e_scoped_with_intent
 }
 
 template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
-void Many_CheckState_ContainsArray(const T& many, I&& e_scoped_array_with_intent, int uses = 1) {
+void Many_CheckState_ContainsArray(const T& many, I&& e_scoped_array_with_intent) {
    auto  e = e_scoped_array_with_intent.what;
    using E = typename Decay<Deint<I>>::Type;
    constexpr size_t n = ExtentOf<decltype(e_scoped_array_with_intent.what)>;

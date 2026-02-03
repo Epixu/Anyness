@@ -43,7 +43,7 @@ add_langulus_test(LangulusAnynessTest
 
                Anyness/many/TestMany-Empty.cpp
 
-   LIBRARIES	doctest
+   LIBRARIES   doctest
                LangulusAnyness
 )
 
