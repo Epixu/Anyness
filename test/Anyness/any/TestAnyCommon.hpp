@@ -267,11 +267,6 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) 
       REQUIRE(*pack.template GetRawAs<E>() == *e);
    }
 
-   if constexpr(::std::ranges::range<T>) {
-      for (auto& it : pack)
-         REQUIRE(it == *e);
-   }
-
    if constexpr (CT::Dense<E>)
       REQUIRE(pack.GetEntries() == nullptr);
    else if (uses) {

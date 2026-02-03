@@ -35,15 +35,15 @@ namespace Langulus::Anyness::Component
 
    protected:
 
-      template<unsigned>         friend struct IterationOperators;
-      template<unsigned>         friend struct Removal;
-      template<unsigned, class>  friend struct IndexedLinear;
-      template<unsigned>         friend struct HeapMovable;
-      template<unsigned>         friend struct Emplacement;
-      template<unsigned, bool>   friend struct Comparison;
-      template<auto COUNT>       friend struct CountStatic;
+      template<unsigned>             friend struct IterationOperators;
+      template<unsigned>             friend struct Removal;
+      template<unsigned, class>      friend struct IndexedLinear;
+      template<unsigned>             friend struct HeapMovable;
+      template<unsigned>             friend struct Emplacement;
+      template<unsigned, bool>       friend struct Comparison;
+      template<auto COUNT>           friend struct CountStatic;
       template<unsigned, bool, bool> friend struct OwnershipEmergent;
-      template<unsigned>         friend struct OwnershipDeepEmergent;
+      template<unsigned>             friend struct OwnershipDeepEmergent;
       
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -106,42 +106,44 @@ namespace Langulus::Anyness::Component
       ///   @attention no type-safety                                         
       ///   @attention assumes the container is typed                         
       ///   @attention assumes the container is allocated                     
-      ///   @tparam T the type of data we're accessing - use void to use the  
+      ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the container, if statically typed                     
-      template<class T = void, CT::Container C>
+      template<class AS = void, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) assumptious {
-         static_assert(not CT::Handle<T>,    "T can't be a handle");
-         static_assert(not CT::Reference<T>, "Strip references first");
+         static_assert(not CT::Handle<AS>,    "AS can't be a handle");
+         static_assert(not CT::Reference<AS>, "Strip references first");
          using TC   = LglsMutIf(C, TypeOf<C>);
          using TCP  = LglsMutIf(C, TC*);
-         using TH   = Tif<CT::Void<T>, TC, T>;
-         using THP = LglsMutIf(C, TH*);
+         using TH   = Tif<CT::Void<AS>, TC, AS>;
+         using THP  = LglsMutIf(C, TH*);
          auto& heap = self.GetHeapInner();
 
-         if constexpr (CT::Void<TH>) {
-            // Unknown type, just return the heap pointer reference     
-            return (heap);
-         }
-         else if constexpr (CT::TypeErased<C>) {
-            // Casting to a desired runtime type                        
-            LglsAssumeDev(self.IsTyped(), "Block is not typed");
-            const auto indirections = self.GetIndirections();
-
-            if (indirections == IndirectsOf<TH>) {
-               // No difference in indirections                         
-               return *static_cast<THP>(heap);
-            }
-            else if (indirections > IndirectsOf<TH>) {
-               // We need to dereference. Supports packed pointers.     
-               auto diff = indirections - IndirectsOf<TH>;
-               Deep<C> denser = Disown(self.GetDense(diff));
-               return *static_cast<THP>(denser.GetHeapInner());
+         if constexpr (CT::TypeErased<C>) {
+            if constexpr (CT::Void<AS>) {
+               // Unknown type, just return the heap pointer reference  
+               return (heap);
             }
             else {
-               // We are allowed to add one additional indirection      
-               LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
-                  "Too many indirections");
-               return *const_cast<THP>(reinterpret_cast<ConstAll<THP>>(&heap));
+               // Casting to a desired runtime type                     
+               LglsAssumeDev(self.IsTyped(), "Block is not typed");
+               const auto indirections = self.GetIndirections();
+
+               if (indirections == IndirectsOf<TH>) {
+                  // No difference in indirections                      
+                  return *static_cast<THP>(heap);
+               }
+               else if (indirections > IndirectsOf<TH>) {
+                  // We need to dereference. Supports packed pointers.  
+                  auto diff = indirections - IndirectsOf<TH>;
+                  Deep<C> denser = Disown(self.GetDense(diff));
+                  return *static_cast<THP>(denser.GetHeapInner());
+               }
+               else {
+                  // We are allowed to add one additional indirection   
+                  LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
+                     "Too many indirections");
+                  return *const_cast<THP>(reinterpret_cast<ConstAll<THP>>(&heap));
+               }
             }
          }
          else {
@@ -301,7 +303,7 @@ namespace Langulus::Anyness::Component
                // Pointer T -> Dense nextT                              
                D temp {Absorb, Disown(self)};
                temp.SetTypeInner(nextT);
-               temp.SetHeapInner(UnpackPointer(T, nextT, src));               
+               temp.SetHeapInner(UnpackPointer(T, nextT, src));
                if_available(temp.SetCountInner(1));
                return temp;
             }
@@ -315,9 +317,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      /// Default-initialization of this component is impossible              
+      /// Default-initialization of this component                            
       void ConstructDefault(this auto& self) noexcept {
-         //static_assert(false, "Can't default-construct this component");
          self.SetHeapInner(nullptr);
       }
       

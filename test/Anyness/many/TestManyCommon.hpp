@@ -79,6 +79,20 @@ void Many_CheckState_Abandoned(const C& many) {
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Many_CheckState_ContainsOne(T const& many, I&& e_with_intent, int uses = 1) {
    Any_CheckState_ContainsOne(many, LglsFwd(e_with_intent), uses);
+
+   auto& e = e_with_intent.what;
+   using E = typename Decay<Deint<I>>::Type;
+
+   if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
+      //TODO test all kinds of ranged modifiers??
+      for (auto& it : many)
+         REQUIRE(it != *e);
+   }
+   else {
+      //TODO test all kinds of ranged modifiers??
+      for (auto& it : many)
+         REQUIRE(it == *e);
+   }
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>

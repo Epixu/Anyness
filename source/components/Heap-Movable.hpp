@@ -93,7 +93,10 @@ namespace Langulus::Anyness::Component
                   "Contained type is not clone-constructible");
             }
 
+            // Allocate new memory and set count, so that handle        
+            // iteration is valid                                       
             self.AllocateFresh(self.RequestHeap(count));
+            if_available(self.SetCountInner(count));
 
             if constexpr (CT::ContainsMany<C, IT>) {
                auto src = IterateHandles(from).begin();
@@ -132,8 +135,6 @@ namespace Langulus::Anyness::Component
             }
                      
             // Full success                                             
-            if_available(self.SetCountInner(count));
-
             if constexpr (requires { from.GetHashInner(); }) {
                     if_available(self.SetHashInner(from.GetHashInner()))
                else if_available(self.ResetHash())
@@ -159,27 +160,29 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Reassign from any kind of container, respecting intents             
+      /// Free this container and absorb from any other, respecting intents   
       ///   @param intent the intent and container to assign from             
       template<class C, CT::Intent I> requires CT::Container<I>
       auto AssignFrom(this C& self, I&& intent) -> C& {
-         if constexpr (requires { &self == &intent.what; }) {
+         using IT = Deint<I>;
+         IT from = LglsFwd(intent.what);
+
+         if constexpr (requires { &self == &from; }) {
             // Make sure 'lhs' and 'rhs' are different instances,       
             // otherwise we lose rhs if we free lhs                     
-            if (&self == &intent.what)
+            if (&self == &from)
                return self;
          }
 
          // Never modify containers if type-incompatible                
-         using DI = Deint<I>;
-         if constexpr (CT::TypeErased<DI> or CT::TypeErased<C>) {
+         if constexpr (CT::TypeErased<IT> or CT::TypeErased<C>) {
             auto t1 = self.GetType();
-            auto t2 = intent->GetType();
+            auto t2 = from.GetType();
             if (t1 and t2) {
                LglsAssert(t1.IsSame(t2), "Type mismatch: ", t1, " is not same as ", t2);
             }
          }
-         else static_assert(Same<TypeOf<C>, TypeOf<DI>>, "Type mismatch");
+         else static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
 
          // Free old data and absorb the new container                  
          self.Free();
@@ -384,7 +387,7 @@ namespace Langulus::Anyness::Component
                   }
                   
                   // Move index only when a gap forms, so that we       
-                  // minimize the 'memmove' calls                       
+                  // minimize 'memmove' calls                           
                   ++idx;
                   continuous = false;
                }
@@ -413,7 +416,7 @@ namespace Langulus::Anyness::Component
                   }
                   
                   // Move index only when a gap forms, so that we       
-                  // minimize the 'memmove' calls                       
+                  // minimize 'memmove' calls                           
                   ++idx;
                   continuous = false;
                }
@@ -448,8 +451,8 @@ namespace Langulus::Anyness::Component
             self.ResetHash(); // If n == 0, hash is 1; 0 otherwise      
          }
          else {
-            // Partial success is not allowed - we have to              
-            // deallocate and make sure CountStatic reports as empty.   
+            // Partial success is not allowed - we have to deallocate   
+            // and make sure CountStatic reports as empty.              
             (void) n;
             Allocator::Deallocate(DecvqAllCast(self.GetAllocationInner()));
             self.SetAllocationInner(nullptr);

@@ -41,9 +41,10 @@ namespace Langulus::Anyness::Component
       static constexpr bool Dense = not TypeErased and CT::Dense<TYPE>;
 
    protected:
-      template<unsigned> friend struct Removal;
-      template<unsigned> friend struct HeapMovable;
-      template<unsigned> friend struct Emplacement;
+      template<unsigned>        friend struct Removal;
+      template<unsigned>        friend struct HeapMovable;
+      template<unsigned>        friend struct Emplacement;
+      template<unsigned, class> friend struct IndexedLinear;
 
       /// Reset the type of the container, unless it's type-constrained.      
       /// If this container isn't type-erased, this call is a no-op.          
@@ -73,11 +74,11 @@ namespace Langulus::Anyness::Component
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this is noop when constructing from deep intents,      
       ///      since element constructors might throw and stuff be partially  
-      ///      inserted. In those cases, count is set by the heap components. 
+      ///      inserted. In those cases, type is set by the heap components.  
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I, CT::Container C> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent) {
-         if constexpr (I::IsShallow() and not CT::Copied<I>) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             if constexpr (CT::TypeErased<C>) {
                self.SetType(intent->GetType());
 

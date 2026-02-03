@@ -608,8 +608,24 @@ namespace Langulus::Anyness
       static_assert(::std::input_or_output_iterator<Iterator>);
 
       constexpr Iterator begin() const noexcept {
-         if (range.IsEmpty())
-            return {{}, range};
+         if (range.IsEmpty()) {
+            if constexpr (CT::TypeErased<H>) {
+               if constexpr (CT::DeeplyOwned<H>)
+                  return {H {range.Get(), nullptr, {}}, range};
+               else if constexpr (CT::Owned<H>)
+                  return {H {range.Get(), nullptr, {}}, range};
+               else
+                  return {H {range.Get(), {}}, range};
+            }
+            else {
+               if constexpr (CT::DeeplyOwned<H>)
+                  return {H {&range.Get(), nullptr}, range};
+               else if constexpr (CT::Owned<H>)
+                  return {H {&range.Get(), nullptr}, range};
+               else
+                  return {H {&range.Get()}, range};
+            }
+         }
 
          if constexpr (REVERSE)
             return {range.template AsAt<H>(range.GetCount() - 1), range};
@@ -618,8 +634,24 @@ namespace Langulus::Anyness
       }
 
       constexpr Iterator end() const noexcept {
-         if (range.IsEmpty())
-            return {{}, range};
+         if (range.IsEmpty()) {
+            if constexpr (CT::TypeErased<H>) {
+               if constexpr (CT::DeeplyOwned<H>)
+                  return {H {range.Get(), nullptr, {}}, range};
+               else if constexpr (CT::Owned<H>)
+                  return {H {range.Get(), nullptr, {}}, range};
+               else
+                  return {H {range.Get(), {}}, range};
+            }
+            else {
+               if constexpr (CT::DeeplyOwned<H>)
+                  return {H {&range.Get(), nullptr}, range};
+               else if constexpr (CT::Owned<H>)
+                  return {H {&range.Get(), nullptr}, range};
+               else
+                  return {H {&range.Get()}, range};
+            }
+         }
 
          if constexpr (REVERSE)
             return --Iterator{range.template As<H>(), range};
