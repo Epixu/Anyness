@@ -63,14 +63,14 @@ namespace Langulus::Anyness::Component
 
       /// Set the heap pointer, any data pointer will do                      
       template<CT::Sparse P>
-      constexpr void SetHeapInner(this auto& self, P heap) assumptious {
+      /*constexpr*/ void SetHeapInner(this auto& self, P heap) assumptious { //can't be constexpr due to GCC ICE
          if constexpr (CT::CustomPointer<P>)
             self.GetHeapInner() = static_cast<POINTER_TYPE>(heap.Unpack());
          else
-            self.GetHeapInner() = static_cast<POINTER_TYPE>(*DecvqAllCast(&heap)); // The additional pointer is a workaround for a GCC ICE
+            self.GetHeapInner() = static_cast<POINTER_TYPE>(DecvqAllCast(heap));
       }
 
-      constexpr void SetHeapInner(this auto& self, nullptr_t) assumptious {
+      constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
          self.GetHeapInner() = nullptr;
       }
 
