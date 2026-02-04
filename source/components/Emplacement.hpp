@@ -10,6 +10,7 @@
 #include "IndexedLinear.hpp"
 #include <Langulus/CT/Describable.hpp>
 #include <Langulus/Allocator.hpp>
+#include <Langulus/MetaOf.hpp>
 
 
 namespace Langulus::CT
@@ -23,6 +24,11 @@ namespace Langulus::CT
    concept RangeEmplaceable = Container<C> and (
       Untyped<C> or ::std::constructible_from<TypeOf<C>, A...>
    );
+}
+
+namespace Langulus::Anyness
+{
+   using DMeta = RTTI::DMeta;
 }
 
 namespace Langulus::Anyness::Component
@@ -59,7 +65,7 @@ namespace Langulus::Anyness::Component
          constexpr bool has_entries = requires { self.GetEntries(); };
          [[maybe_unused]] DMeta T;
          // If T is Text**, then dst/src are Text***                    
-         void** dst = static_cast<void**>(self.GetHeapInner());
+         void** dst = static_cast<void**>(self.GetHeapInnerAsVoid());
          void** src;
          
          if constexpr (CT::Handle<IT>) {
@@ -68,7 +74,7 @@ namespace Langulus::Anyness::Component
                LglsAssumeDev(self.IsSame(T), "Type mismatch");               
             }
             else static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
-            src = static_cast<void**>(const_cast<void*>(rhs.GetHeapInner()));
+            src = static_cast<void**>(rhs.GetHeapInnerAsVoid());
          }
          else {
             if constexpr (CT::TypeErased<C>) {
@@ -98,7 +104,7 @@ namespace Langulus::Anyness::Component
                LglsAssert(cloned_origin, "Out of memory");
 
                // If T is Text**, ent is Allocation*[2]                 
-               [[maybe_unused]] AllocationPtr* ent;
+               [[maybe_unused]] Allocation const* const* ent;
                if constexpr (has_entries)
                   ent = self.GetEntriesInner();
                
@@ -133,7 +139,7 @@ namespace Langulus::Anyness::Component
                   *dst = ptr;
 
                   if constexpr (has_entries)
-                     *ent = cloned_ptrs;
+                     DecvqAllCast(*ent) = cloned_ptrs;
 
                   T = T.GetDeptr();
 
@@ -146,7 +152,7 @@ namespace Langulus::Anyness::Component
 
                      if constexpr (has_entries) {
                         ++ent;
-                        *ent = cloned_ptrs;
+                        DecvqAllCast(*ent) = cloned_ptrs;
                      }
                   }
                   while (T.IsSparse());
@@ -159,7 +165,7 @@ namespace Langulus::Anyness::Component
                dst = static_cast<void**>(*dst);
 
                if constexpr (has_entries)
-                  *ent = cloned_origin;
+                  DecvqAllCast(*ent) = cloned_origin;
             }
 
             // Finally, clone inside the allocated origin               
@@ -186,7 +192,7 @@ namespace Langulus::Anyness::Component
                   );
                #endif
                LglsAssert(cloned_origin, "Out of memory");
-               [[maybe_unused]] AllocationPtr* ent;
+               [[maybe_unused]] Allocation const* const* ent;
                if constexpr (has_entries)
                   ent = self.GetEntries();
 
@@ -217,7 +223,7 @@ namespace Langulus::Anyness::Component
                   void** ptr = static_cast<void**>(static_cast<void*>(cloned_ptrs->GetBlockStart()));
                   *dst = ptr;
                   if constexpr (has_entries)
-                     *ent = cloned_ptrs;
+                     DecvqAllCast(*ent) = cloned_ptrs;
 
                   ForEachIndirection<Deptr<T>>([&src, &dst, &ent, &cloned_ptrs] {
                      // Chain all intermediate pointers                 
@@ -228,7 +234,7 @@ namespace Langulus::Anyness::Component
 
                      if constexpr (has_entries) {
                         ++ent;
-                        *ent = cloned_ptrs;
+                        DecvqAllCast(*ent) = cloned_ptrs;
                      }
                   });
                }
@@ -238,7 +244,7 @@ namespace Langulus::Anyness::Component
                src = static_cast<void**>(*src);
                dst = static_cast<void**>(*dst);
                if constexpr (has_entries)
-                  *ent = cloned_origin;
+                  DecvqAllCast(*ent) = cloned_origin;
             }
 
             IntentNew(dst, Clone(*static_cast<Decay<T>*>(static_cast<void*>(src))));

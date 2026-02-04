@@ -9,9 +9,15 @@
 #include "../Container.hpp"
 #include <Langulus/Assume.hpp>
 #include <Langulus/Allocator.hpp>
+#include <Langulus/MetaOf.hpp>
 #include <Langulus/CT/Allocatable.hpp>
 #include <Langulus/CT/Referenced.hpp>
 
+
+namespace Langulus::Anyness
+{
+   using DMeta = RTTI::DMeta;
+}
 
 namespace Langulus::Anyness::Component
 {
@@ -353,7 +359,7 @@ namespace Langulus::Anyness::Component
             const auto T = self.GetType();
             
             if (T.IsSparse()) {
-               AllocationPtr* entries = self.GetEntriesInner();
+               auto entries = self.GetEntriesInner();
                if (not entries or not *entries)
                   return;
 
@@ -424,7 +430,7 @@ namespace Langulus::Anyness::Component
             
             if constexpr (CT::Sparse<T>) {
                using DT = Deptr<T>;
-               AllocationPtr* entries = self.GetEntries();
+               auto entries = self.GetEntries();
                if (not entries or not *entries)
                   return;
 

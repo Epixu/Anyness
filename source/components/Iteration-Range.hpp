@@ -840,15 +840,6 @@ namespace Langulus::Anyness::Component
             return {self.GetHandle() + offset, self};
          else
             return {self.GetRaw() + offset, self};
-      }
-
-      /// Return a reverse iterator to the last element                       
-      template<CT::Container C>
-      constexpr auto rbegin(this C&& self) noexcept -> IteratorRev<C> {
-         return self.last();
       }*/
-
-
-      //constexpr auto rend() const noexcept -> IteratorEnd { return {}; }
    };
 }

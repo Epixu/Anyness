@@ -27,7 +27,7 @@
          "typeParameter": "#d279e4",
          "concept": "#c1ebff",
          "operator": "#f0e117",
-         "parameter": "#b9b9b9"
+         "parameter": "#b9b9b9",
       }
    },
    "editor.tokenColorCustomizations": {
@@ -64,6 +64,12 @@
         }
       },
       {
+        "scope": "keyword.control",
+        "settings": {
+          "foreground": "#569CD6"
+        }
+      },
+      {
         "scope": "variable.other.object.access.cpp",
         "settings": {
           "foreground": "#569CD6"
@@ -88,6 +94,12 @@
         }
       },
       {
+        "scope": "entity.other.attribute",
+        "settings": {
+          "foreground": "#f8fa8b"
+        }
+      },
+      {
         "scope": "entity.name.namespace",
         "settings": {
           "foreground": "#ffffff"
@@ -105,5 +117,6 @@
          "backgroundColor": "#ffffff",
          "color": "#000000"
       }]
-   }
+   },
+   "workbench.editor.wrapTabs": true
 }
