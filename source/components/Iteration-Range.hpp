@@ -22,7 +22,7 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       static_assert(CT::NoIntent<C>,         "C can't have an intent");
       static_assert(CT::NotReference<C>,     "C can't be a reference");
-      //static_assert(::std::ranges::range<C>, "C is not a range");
+      static_assert(::std::ranges::range<C>, "C is not a range");
 
       C& range;
 
@@ -50,7 +50,7 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       static_assert(CT::NoIntent<C>,     "C can't have an intent");
       static_assert(CT::NotReference<C>, "C can't be a reference");
-      //static_assert(::std::ranges::range<C>, "C is not a range");
+      static_assert(::std::ranges::range<C>, "C is not a range");
 
    protected:
       using Count = typename Deref<C>::CountType;
@@ -214,7 +214,6 @@ namespace Langulus::Anyness
          using difference_type = std::ptrdiff_t;
          using iterator_category = Tif<CT::Contiguous<C>, std::contiguous_iterator_tag, std::random_access_iterator_tag>;
          using value_type = Deptr<H>;
-         //using pointer = T* const;
          using reference = Deptr<H>&;
 
          mutable H mIt;
@@ -360,73 +359,9 @@ namespace Langulus::Anyness
          }
       };
 
-      static_assert(::std::weakly_incrementable<Iterator>,
-         "Failed the weakly incrementable test");
-      static_assert(::std::movable<Iterator>,
-         "Failed the moveable test");
-      static_assert(::std::default_initializable<Iterator>,
-         "Failed the default initializable test");
-
       static_assert(::std::input_or_output_iterator<Iterator>);
 
-      static_assert(::std::common_reference_with<::std::iter_reference_t<Iterator>&&, ::std::iter_value_t<Iterator>&>);
-      static_assert(::std::common_reference_with<::std::iter_reference_t<Iterator>&&, ::std::iter_rvalue_reference_t<Iterator>&&>);
-      static_assert(::std::common_reference_with<::std::iter_rvalue_reference_t<Iterator>&&, const ::std::iter_value_t<Iterator>&>);
-
-      static_assert(requires(const Iterator __i) {
-         typename ::std::iter_value_t<Iterator>;
-      });
-      static_assert(requires(const Iterator __i) {
-         typename ::std::iter_reference_t<Iterator>;
-      });
-      static_assert(requires(const Iterator __i) {
-         typename ::std::iter_rvalue_reference_t<Iterator>;
-      });
-      static_assert(requires(const Iterator __i) {
-         { *__i } -> ::std::same_as<::std::iter_reference_t<Iterator>>;
-      });
-      static_assert(requires(const Iterator __i) {
-         { _RANGES iter_move(__i) } -> ::std::same_as<::std::iter_rvalue_reference_t<Iterator>>;
-      });
-
-
-      static_assert(::std::indirectly_readable<Iterator>);
-      static_assert(requires {typename ::std::_Iter_concept<Iterator>; });
-      static_assert(::std::derived_from<::std::_Iter_concept<Iterator>, ::std::input_iterator_tag>);
-      static_assert(::std::derived_from<::std::_Iter_concept<Iterator>, ::std::random_access_iterator_tag>);
-
-      static_assert(::std::input_iterator<Iterator>,
-         "failed input iterator");
-      //static_assert(::std::output_iterator<Iterator, int>,
-      //   "failed output iterator");
-      static_assert(::std::forward_iterator<Iterator>,
-         "failed forward iterator");
-      static_assert(::std::input_iterator<Iterator>,
-         "failed input iterator");
-      static_assert(::std::bidirectional_iterator<Iterator>,
-         "failed bidirectional iterator");
-      static_assert(::std::totally_ordered<Iterator>);
-      static_assert(::std::sized_sentinel_for<Iterator, Iterator>);
-      static_assert(requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
-         { __i += __n } -> ::std::same_as<Iterator&>;
-         { __j +  __n } -> ::std::same_as<Iterator>;
-      });
-      static_assert(requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
-         { __n +  __j } -> ::std::same_as<Iterator>;
-      });
-      static_assert(requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
-         { __i -= __n } -> ::std::same_as<Iterator&>;
-      });
-      static_assert(requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
-         { __j -  __n } -> ::std::same_as<Iterator>;
-      });
-
-      // These are not possible to satisfy if C is type-erased
-      static_assert(CT::TypeErased<C> or CT::Sparse<TypeOf<C>> or requires(Iterator __i, const Iterator __j, const ::std::iter_difference_t<Iterator> __n) {
-         { __j[__n]   } -> ::std::same_as<::std::iter_reference_t<Iterator>>;
-      });
-
-      // These are not possible to satisfy if C is type-erased
+      // These are not possible to satisfy if C is type-erased          
       static_assert(CT::TypeErased<C> or CT::Sparse<TypeOf<C>> or ::std::random_access_iterator<Iterator>,
          "failed random access iterator");
       static_assert(CT::TypeErased<C> or CT::Sparse<TypeOf<C>> or ::std::contiguous_iterator<Iterator>,

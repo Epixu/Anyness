@@ -10,12 +10,10 @@
 
 
 TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
-   , Types<Many, Text**, ScopedElement<Text**>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Many, Text,   ScopedElement<Text>>
    , Types<Many, int,    ScopedElement<int>>
-   , Types<Many, Many, ScopedElement<Many>>
+   , Types<Many, Many,   ScopedElement<Many>>
    , Types<Many, RT,     ScopedElement<RT>>
    , Types<Many, char,   ScopedElement<char>>
 
@@ -25,6 +23,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    , Types<Many, RT*,    ScopedElement<RT*>>
    , Types<Many, char*,  ScopedElement<char*>>
 
+   , Types<Many, Text**, ScopedElement<Text**>>
    , Types<Many, int**,  ScopedElement<int**>>
    , Types<Many, Many**, ScopedElement<Many**>>
    , Types<Many, RT**,   ScopedElement<RT**>>
