@@ -29,7 +29,7 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires CT::Dense<T>
       using THandleEmbeddedDense = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<>,
+         Com::HeapReference<0, Deref<T>*>,
          Com::CountStatic<1u>,
          Com::ReserveEmergent<>,
          Com::OwnershipStack<0, false>,
@@ -43,7 +43,7 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires CT::Sparse<T>
       using THandleEmbeddedSparse = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<>,
+         Com::HeapReference<0, Deref<T>*>,
          Com::CountStatic<1u>,
          Com::OwnershipDeepStack<>,
          Com::Assignment<>,
@@ -56,7 +56,7 @@ namespace Langulus::Anyness
       template<CT::Reference T>
       using THandleDisownedEmbedded = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<>,
+         Com::HeapReference<0, Deref<T>*>,
          Com::CountStatic<1u>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -81,7 +81,7 @@ namespace Langulus::Anyness
       template<CT::NotReference T> requires CT::Sparse<T>
       using THandleLocalSparse = Container<
          Com::TypedStatic<DMeta, Deptr<T>>,
-         Com::HeapMovable<>,
+         Com::HeapMovable<0, T>,
          Com::CountStatic<1u>,
          Com::OwnershipStack<0, false>,
          Com::Emplacement<>,

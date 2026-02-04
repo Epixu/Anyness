@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Component
       template<unsigned>             friend struct IterationOperators;
       template<unsigned>             friend struct Removal;
       template<unsigned, class>      friend struct IndexedLinear;
-      template<unsigned>             friend struct HeapMovable;
+      template<unsigned, CT::Sparse> friend struct HeapMovable;
       template<unsigned>             friend struct Emplacement;
       template<unsigned, bool>       friend struct Comparison;
       template<auto COUNT>           friend struct CountStatic;
@@ -56,18 +56,22 @@ namespace Langulus::Anyness::Component
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
          return self.template AccessStack<HeapReference>();
       }
+      /// Get the heap pointer as a void* (inner)                             
+      constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
+         return static_cast<void*>(const_cast<DecvqAll<POINTER_TYPE>>(self.GetHeapInner()));
+      }
 
       /// Set the heap pointer, any data pointer will do                      
-      constexpr void SetHeapInner(this auto& self, auto heap) assumptious {
-         if constexpr (CT::CustomPointer<POINTER_TYPE>)
-            self.GetHeapInner() = heap;
-         else if constexpr (CT::CustomPointer<decltype(heap)>)
+      template<CT::Sparse P>
+      constexpr void SetHeapInner(this auto& self, P heap) assumptious {
+         if constexpr (CT::CustomPointer<P>)
             self.GetHeapInner() = heap.Unpack();
-         else {
-            self.GetHeapInner() = const_cast<void*>(
-               static_cast<const void*>(heap)
-            );
-         }
+         else
+            self.GetHeapInner() = static_cast<POINTER_TYPE>(DecvqAllCast(heap));
+      }
+
+      constexpr void SetHeapInner(this auto& self, nullptr_t) assumptious {
+         self.GetHeapInner() = nullptr;
       }
 
    public:
@@ -79,7 +83,7 @@ namespace Langulus::Anyness::Component
       /// Get a direct access to the heap memory                              
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
-         using Tcvq = LglsMutIf(C, TypeOf<C>*);
+         using Tcvq = LglsMutIf(C, POINTER_TYPE /*TypeOf<C>**/);
          return static_cast<Tcvq>(self.GetHeapInner());
       }
       
@@ -87,7 +91,7 @@ namespace Langulus::Anyness::Component
       template<class T, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, T*);
-         return static_cast<Tcvq>(self.GetHeapInner());
+         return static_cast<Tcvq>(self.GetHeapInnerAsVoid());
       }
 
       /// Get a direct access to the heap memory's end.                       
@@ -386,21 +390,23 @@ namespace Langulus::Anyness::Component
          //   "Destroying only first element in a container that may contain many");
 
          if constexpr (DESTROY) {
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               if_available(self.DestroyElementDeepCustomPointers())
-            #else
-               if_available(self.DestroyElementDeepStandardPointers())
-            #endif
+            if constexpr (CT::DeeplyOwned<C>) {
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  self.DestroyElementDeepCustomPointers();
+               #else
+                  self.DestroyElementDeepStandardPointers();
+               #endif
+            }
             else if_available(self.DestroyElementShallow())
             else static_assert(false, "No destruction routine was called");
          }
-         else {
+         else if constexpr (CT::DeeplyOwned<C>) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               if_available(self.template DestroyElementDeepCustomPointers<false>())
+               self.template DestroyElementDeepCustomPointers<false>();
             #else
-               if_available(self.template DestroyElementDeepStandardPointers<false>())
+               self.template DestroyElementDeepStandardPointers<false>();
             #endif
-            else static_assert(false, "No destruction routine was called");
+            //else static_assert(false, "No destruction routine was called");
          }
       }
 

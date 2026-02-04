@@ -27,7 +27,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<unsigned, CT::Sparse> friend struct HeapReference;
-      template<unsigned> friend struct HeapMovable;
+      template<unsigned, CT::Sparse> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;
       template<unsigned, bool, bool> friend struct OwnershipEmergent;
@@ -207,6 +207,8 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't change any container state                     
       template<CT::Container C>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
+         static_assert(CT::DeeplyOwned<C>,
+            "Shouldn't be called in shallow owned containers");
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many");
          LglsAssumeDev(self.GetAllocation(),
@@ -279,6 +281,8 @@ namespace Langulus::Anyness::Component
       //TODO could use some statically-typed optimizations
       template<CT::Container C>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
+         static_assert(CT::DeeplyOwned<C>,
+            "Shouldn't be called in shallow owned containers");
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many");
          LglsAssumeDev(not self.IsEmpty(),
@@ -328,6 +332,9 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't change any container state                     
       template<bool DESTROY = true, CT::Container C>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
+         static_assert(CT::DeeplyOwned<C>,
+            "Shouldn't be called in shallow owned containers");
+
          //static_assert(CT::ContainsOne<C>,
          //  "Destroying only first element in a container with many");
          if constexpr (not CT::Handle<C>) {
@@ -486,6 +493,9 @@ namespace Langulus::Anyness::Component
       //TODO could use some statically-typed optimizations
       template<bool DESTROY = true, CT::Container C>
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
+         static_assert(CT::DeeplyOwned<C>,
+            "Shouldn't be called in shallow owned containers");
+
          //static_assert(CT::ContainsOne<C>,
          //   "Destroying only first element in a container with many");
 
@@ -556,7 +566,7 @@ namespace Langulus::Anyness::Component
          else if constexpr (DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
                // Call destructor of dense element                      
-               void* const ptr = self.GetHeapInner();
+               void* const ptr = self.GetHeapInnerAsVoid();
                IF_SAFE(if (const auto referencer = T.GetReferencer())
                   referencer(ptr, -1));
                destructor(ptr);
@@ -571,8 +581,10 @@ namespace Langulus::Anyness::Component
       ///      allocation data with itself when sparse, rather than searching 
       ///      for it on demand.                                              
       ///   @param intent entries will be copied/sought if handle/sparse      
-      template<CT::Container C, CT::Intent I>
+      template<CT::Container C, CT::Intent I> requires CT::DeeplyOwned<C>
       void EmplaceEntries(this C& self, I&& intent) {
+         //static_assert(CT::DeeplyOwned<C>,
+         //   "Shouldn't be called in shallow owned containers");
          static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
             "because it will overwrite/reference new allocations");

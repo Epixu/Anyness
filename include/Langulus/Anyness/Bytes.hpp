@@ -32,7 +32,7 @@ namespace Langulus::Anyness
    {
       using BytesBase = Container<
          Com::TypedStatic<DMeta, Byte>,   // Type-constrained           
-         Com::HeapMovable<>,              // Pointer to heap memory     
+         Com::HeapMovable<0, Byte*>,      // Pointer to heap memory     
          Com::CountStack<>,               // Variable count             
          Com::ReserveEmergent<>,          // Capacity derived from alloc
          Com::OwnershipStack<>,           // Allocation is referenced   

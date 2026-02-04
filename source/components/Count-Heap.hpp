@@ -52,11 +52,11 @@ namespace Langulus::Anyness::Component
       T GetCountItemsDeep() const noexcept;
 
    protected:
-      template<unsigned>        friend struct Removal;
-      template<unsigned, class> friend struct Insertion;
-      template<unsigned, class> friend struct IndexedLinear;
-      template<unsigned>        friend struct HeapMovable;
-      
+      template<unsigned>             friend struct Removal;
+      template<unsigned, class>      friend struct Insertion;
+      template<unsigned, class>      friend struct IndexedLinear;
+      template<unsigned, CT::Sparse> friend struct HeapMovable;
+
       /// Get count (inner)                                                   
       constexpr auto& GetCountInner(this auto&& self) noexcept {
          return self.template AccessHeap<CountStack>();

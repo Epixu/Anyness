@@ -31,8 +31,8 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = 3000;
 
    protected:
-      template<unsigned, class> friend struct Insertion;
-      template<unsigned>        friend struct HeapMovable;
+      template<unsigned, class>      friend struct Insertion;
+      template<unsigned, CT::Sparse> friend struct HeapMovable;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -123,7 +123,10 @@ namespace Langulus::Anyness::Component
          
          Decay<C> result {Disown(self)};
          result.SetCountInner(count);
-         result.SetHeapInner(result.template GetRawAs<uint8_t>() + start * result.GetStride());
+         if constexpr (CT::TypeErased<C>)
+            result.SetHeapInner(result.template GetRawAs<uint8_t>() + start * result.GetStride());
+         else
+            result.SetHeapInner(result.GetRaw() + start);
          return result;
       }
 

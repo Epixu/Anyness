@@ -46,8 +46,8 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = 3000;
 
    protected:
-      template<unsigned> friend struct HeapMovable;
-      template<unsigned, class> friend struct Insertion;
+      template<unsigned, CT::Sparse> friend struct HeapMovable;
+      template<unsigned, class>      friend struct Insertion;
       
       template<CT::Container C>
       using PickMut = typename Deref<C>::PickMut;
@@ -96,6 +96,7 @@ namespace Langulus::Anyness::Component
                   );
                #endif
                LglsAssert(cloned_origin, "Out of memory");
+
                // If T is Text**, ent is Allocation*[2]                 
                [[maybe_unused]] AllocationPtr* ent;
                if constexpr (has_entries)
@@ -316,13 +317,12 @@ namespace Langulus::Anyness::Component
 
                // Save the new indirection allocation                   
                if constexpr (CT::DeeplyOwned<C>) {
-                  // ReSharper disable once CppLocalVariableMightNotBeInitialized
                   DecvqAllCast(entries[indirections]) = cloned;
                }
             }
 
             // The final indirection is stored in mHeap                 
-            memcpy(self.GetHeapInner(), &next_pointer, T.GetSize());
+            memcpy(self.GetHeapInnerAsVoid(), &next_pointer, T.GetSize());
          }
          else {
             // Containing dense data                                    
@@ -442,7 +442,7 @@ namespace Langulus::Anyness::Component
                // This container is statically-typed                    
                using T = TypeOf<C>;
                static_assert(Same<T, IT>, "Type mismatch");
-               IntentNew(self.GetHeapInner(), LglsFwd(intent));
+               IntentNew(self.GetHeapInnerAsVoid(), LglsFwd(intent));
 
                if constexpr (CT::Sparse<T>) {
                   if_available(self.EmplaceEntries(LglsFwd(intent)));

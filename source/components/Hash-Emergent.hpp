@@ -126,9 +126,8 @@ namespace Langulus::Anyness::Component
       }
       
    protected:
-      template<unsigned>
-      friend struct HeapMovable;
-      
+      template<unsigned, CT::Sparse> friend struct HeapMovable;
+
       /// This always returns an invalid hash to enforce regeneration         
       constexpr H GetHashInner() const noexcept { return 0; }
    };

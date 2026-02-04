@@ -30,7 +30,10 @@ namespace Langulus::Anyness::Component
          // Increment the heap pointer                                  
          C copy = self;
          auto& data = copy.template AccessStackById<ID>();
-         data = static_cast<uint8_t*>(data) + copy.GetStride() * offset;
+         if constexpr (CT::TypeErased<C>)
+            data  = static_cast<uint8_t*>(data) + copy.GetStride() * offset;
+         else
+            data += offset;
 
          // Increment deep ownership entries, but only if on the stack  
          if_available(copy.template GetEntriesInner<ID>() += offset);
@@ -45,7 +48,10 @@ namespace Langulus::Anyness::Component
       constexpr C& operator += (this C& self, size_t offset) noexcept {
          // Increment the heap pointer                                  
          auto& data = self.template AccessStackById<ID>();
-         data = static_cast<uint8_t*>(data) + self.GetStride() * offset;
+         if constexpr (CT::TypeErased<C>)
+            data  = static_cast<uint8_t*>(data) + self.GetStride() * offset;
+         else
+            data += offset;
          
          // Increment deep ownership entries, but only if on the stack  
          if_available(self.template GetEntriesInner<ID>() += offset);
@@ -59,7 +65,10 @@ namespace Langulus::Anyness::Component
       constexpr C& operator ++ (this C& self) noexcept {
          // Increment the heap pointer                                  
          auto& data = self.template AccessStackById<ID>();
-         data = static_cast<uint8_t*>(data) + self.GetStride();
+         if constexpr (CT::TypeErased<C>)
+            data = static_cast<uint8_t*>(data) + self.GetStride();
+         else
+            ++data;
 
          // Increment deep ownership entries, but only if on the stack  
          if_available(++self.template GetEntriesInner<ID>());
@@ -85,7 +94,10 @@ namespace Langulus::Anyness::Component
          // Increment the heap pointer                                  
          C copy = self;
          auto& data = copy.template AccessStackById<ID>();
-         data = static_cast<uint8_t*>(data) - copy.GetStride() * offset;
+         if constexpr (CT::TypeErased<C>)
+            data = static_cast<uint8_t*>(data) - copy.GetStride() * offset;
+         else
+            data -= offset;
          
          // Increment deep ownership entries, but only if on the stack  
          if_available(copy.template GetEntriesInner<ID>() -= offset);
@@ -100,7 +112,10 @@ namespace Langulus::Anyness::Component
       constexpr C& operator -= (this C& self, size_t offset) noexcept {
          // Increment the heap pointer                                  
          auto& data = self.template AccessStackById<ID>();
-         data = static_cast<uint8_t*>(data) - self.GetStride() * offset;
+         if constexpr (CT::TypeErased<C>)
+            data = static_cast<uint8_t*>(data) - self.GetStride() * offset;
+         else
+            data -= offset;
          
          // Increment deep ownership entries, but only if on the stack  
          if_available(self.template GetEntriesInner<ID>() -= offset);
@@ -114,7 +129,10 @@ namespace Langulus::Anyness::Component
       constexpr C& operator -- (this C& self) noexcept {
          // Decrement the heap pointer                                  
          auto& data = self.template AccessStackById<ID>();
-         data = static_cast<uint8_t*>(data) - self.GetStride();
+         if constexpr (CT::TypeErased<C>)
+            data = static_cast<uint8_t*>(data) - self.GetStride();
+         else
+            --data;
          
          // Decrement deep ownership entries, but only if on the stack  
          if_available(--self.template GetEntriesInner<ID>());

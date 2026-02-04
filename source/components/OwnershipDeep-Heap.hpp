@@ -21,10 +21,10 @@ namespace Langulus::Anyness::Component
       using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
 
    protected:
-      template<unsigned> friend struct HeapMovable;
-      template<unsigned> friend struct Removal;
-      template<unsigned> friend struct Emplacement;
-      template<unsigned> friend struct OwnershipDeepEmergent;
+      template<unsigned, CT::Sparse> friend struct HeapMovable;
+      template<unsigned>             friend struct Removal;
+      template<unsigned>             friend struct Emplacement;
+      template<unsigned>             friend struct OwnershipDeepEmergent;
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   

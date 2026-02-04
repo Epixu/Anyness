@@ -65,7 +65,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<unsigned, CT::Sparse> friend struct HeapReference;
-      template<unsigned> friend struct HeapMovable;
+      template<unsigned, CT::Sparse> friend struct HeapMovable;
       template<unsigned> friend struct Removal;
       template<unsigned> friend struct Emplacement;
       template<unsigned, bool, bool> friend struct OwnershipEmergent;
@@ -164,10 +164,10 @@ namespace Langulus::Anyness::Component
       ///   @attention does not modify any container state                    
       template<CT::Container C>
       void DestroyElementShallow(this C& self) noexcept {
-         static_assert(CT::ContainsOne<C>,
-            "Destroying only first element in a container with many");
+         //static_assert(CT::ContainsOne<C>,
+         //   "Destroying only first element in a container with many");
          static_assert(not CT::DeeplyOwned<C>,
-            "You are shallow-destroying a deeply-owned container");
+            "Can't only shallow-destroy a deeply-owned container");
 
          if (self.IsEmpty())
             return;

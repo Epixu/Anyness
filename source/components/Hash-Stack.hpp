@@ -35,9 +35,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<unsigned>
-      friend struct HeapMovable;
-      
+      template<unsigned, CT::Sparse> friend struct HeapMovable;
+
       /// Get hash (inner) - will not recompute it                            
       constexpr auto& GetHashInner(this auto&& self) noexcept {
          return self.template AccessStack<HashStack>();

@@ -96,8 +96,8 @@ namespace Langulus::Anyness
       template<unsigned ID, class H> struct HashEmergent;
       template<unsigned ID, class H> struct HashHeap;
       template<unsigned ID, class H> struct HashStack;
-      template<unsigned ID = 0> struct HeapImmovable;
-      template<unsigned ID = 0> struct HeapMovable;
+      template<unsigned ID = 0, CT::Sparse POINTER_TYPE = void*> struct HeapImmovable;
+      template<unsigned ID = 0, CT::Sparse POINTER_TYPE = void*> struct HeapMovable;
       template<unsigned ID = 0, CT::Sparse POINTER_TYPE = void*> struct HeapReference;
       template<unsigned ID = 0, class HASH = Hash> struct IndexedHashHeap;
       template<unsigned ID = 0, class HASH = Hash> struct IndexedHashStack;
@@ -358,19 +358,19 @@ namespace Langulus::Anyness
       static constexpr bool HasComponent = AkinAsOneOf<C, COMPONENTS...>;
 
    protected:
-      template<unsigned>               friend struct Com::IterationOperators;
+      template<unsigned>                     friend struct Com::IterationOperators;
       template<class, class, bool, unsigned> friend struct Com::TypedStack;
-      template<CT::NotVoid, unsigned>  friend struct Com::Stack;
-      template<unsigned, CT::Sparse>   friend struct Com::HeapReference;
-      template<unsigned>               friend struct Com::HeapMovable;
-      template<unsigned, bool, bool>   friend struct Com::OwnershipStack;
-      template<unsigned>               friend struct Com::OwnershipDeepStack;
-      template<unsigned>               friend struct Com::OwnershipDeepHeap;
-      template<unsigned, class>        friend struct Com::CountStack;
-      template<unsigned, class>        friend struct Com::HashStack;
-      template<unsigned, bool>         friend struct Com::Comparison;
-      template<unsigned>               friend struct Com::Assignment;
-      template<CT::State...>           friend struct Com::StateStack;
+      template<CT::NotVoid, unsigned>        friend struct Com::Stack;
+      template<unsigned, CT::Sparse>         friend struct Com::HeapReference;
+      template<unsigned, CT::Sparse>         friend struct Com::HeapMovable;
+      template<unsigned, bool, bool>         friend struct Com::OwnershipStack;
+      template<unsigned>                     friend struct Com::OwnershipDeepStack;
+      template<unsigned>                     friend struct Com::OwnershipDeepHeap;
+      template<unsigned, class>              friend struct Com::CountStack;
+      template<unsigned, class>              friend struct Com::HashStack;
+      template<unsigned, bool>               friend struct Com::Comparison;
+      template<unsigned>                     friend struct Com::Assignment;
+      template<CT::State...>                 friend struct Com::StateStack;
 
       // Here lies the stack. It is an optimized tuple that is filled   
       // with requests from components.                                 
@@ -433,7 +433,8 @@ namespace Langulus::Anyness
             if constexpr (requires { C::Id; }) {
                if constexpr (C::Id == ID)
                   return (self.template AccessStack<C>());
-               else return No {};
+               else
+                  return No {};
             }
             else return No {};
          });

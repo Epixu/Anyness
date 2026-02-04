@@ -18,7 +18,8 @@ namespace Langulus::Anyness::Component
    /// The pointer is not allowed to move on reallocation, and instead        
    /// multiple allocations are chained together                              
    ///   @tparam ID multiple heap interfaces are supported                    
-   template<unsigned ID>
+   ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
+   template<unsigned ID, CT::Sparse POINTER_TYPE>
    struct HeapImmovable {
       using CTTI_Component = Yes<>;
       static constexpr unsigned Id = ID;

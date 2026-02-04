@@ -212,9 +212,9 @@ namespace Langulus::Anyness::Component
       ///   @param arguments the arguments to use for each constructor call   
       ///      - no arguments will result in default construction             
       ///   @return the newly allocated mutable range                         
-      template<CT::Container C, class...A>
+      /*template<CT::Container C, class...A>
       auto Extend(this C& self, Count<C> count = 1, A&&...arguments)
-      -> Decay<C> /*PickRangeMut<C>*/ {
+      -> Decay<C> { // PickRangeMut<C>
          const auto previousCount = self.GetCount();
          if constexpr (sizeof...(A) == 0)
             self.InsertDefault(count);
@@ -232,7 +232,7 @@ namespace Langulus::Anyness::Component
                self.InsertConstruct(LglsFwd(arguments)...); //TODO this is a pretty slow way to batch-insert, lots of overhead
          }
          return self.SelectInner(previousCount, count);
-      }
+      }*/
 
       
       /// Concatenation at specific index                                     

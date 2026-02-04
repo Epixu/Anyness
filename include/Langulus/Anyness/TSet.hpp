@@ -16,7 +16,7 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid K>
    struct TSet : Container<
-      Com::HeapMovable<>,              // Heap for keys                 
+      Com::HeapMovable<0, K*>,         // Heap for keys                 
       Com::OwnershipStack<>,           // Keys allocation is referenced 
       Com::DeepOwnershipHeap<>,        // Sparse keys are referenced    
       Com::HashHeap<>,                 // Keys can be hashed            
@@ -53,7 +53,7 @@ namespace Langulus::Anyness
    ///                                                                        
    template<CT::NotVoid K>
    struct TSetUnsorted : Container<
-      Com::HeapMovable<>,              // Heap for keys                 
+      Com::HeapMovable<0, K*>,         // Heap for keys                 
       Com::OwnershipStack<>,           // Keys allocation is referenced 
       Com::DeepOwnershipHeap<>,        // Sparse keys are referenced    
       Com::HashHeap<>,                 // Keys can be hashed            

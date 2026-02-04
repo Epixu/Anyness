@@ -16,8 +16,9 @@ namespace Langulus::Anyness::Component
    /// Interfaces a heap. Adds a member that points to the heap memory.       
    /// The heap is allowed to move on reallocation.                           
    ///   @tparam ID multiple heaps are supported                              
-   template<unsigned ID>
-   struct HeapMovable : HeapReference<ID> {
+   ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
+   template<unsigned ID, CT::Sparse POINTER_TYPE>
+   struct HeapMovable : HeapReference<ID, POINTER_TYPE> {
       static constexpr bool HeapCanBeNull = true;
 
    protected:
@@ -35,8 +36,8 @@ namespace Langulus::Anyness::Component
       using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
-
-      using typename HeapReference<ID>::Request;
+      using Base = HeapReference<ID, POINTER_TYPE>;
+      using typename Base::Request;
       
       /// Default-initialize the heap pointer                                 
       constexpr void ConstructDefault(this auto& self) noexcept {
@@ -203,7 +204,7 @@ namespace Langulus::Anyness::Component
          #endif
          LglsAssert(al, "Out of memory");
          
-         self.SetHeapInner(al->GetBlockStart() + request.mHeaderBytes);
+         self.SetHeapInner(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
          self.SetAllocationInner(al);
          if_available(self.SetReserveInner(request.mReserved));
          return al;
@@ -272,7 +273,7 @@ namespace Langulus::Anyness::Component
             self.SetAllocationInner(reallocated);
 
             if (reallocated != al) {
-               self.SetHeapInner(reallocated->GetBlockStart() + request.mHeaderBytes);
+               self.SetHeapInner(static_cast<void*>(reallocated->GetBlockStart() + request.mHeaderBytes));
 
                if (previous.GetCount()) {
                   // Memory moved, and we should move all elements      
@@ -322,15 +323,15 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(al->GetUses() == 1,
             "Can't reuse memory of a block used from multiple places");
 
-         const auto request = self.RequestHeap(desiredReserve);
-         if (request.mReserved == self.GetReserved())
-            return;
-
          if (self.GetCount() > desiredReserve) {
             auto temp = self.SelectInner(desiredReserve);
             temp.DestroyAllElements();
             if_available(self.SetCountInner(desiredReserve));
          }
+
+         const auto request = self.RequestHeap(desiredReserve);
+         if (request.mReserved == self.GetReserved())
+            return;
 
          self.RemapHeapRequests(request.mReserved);
 
