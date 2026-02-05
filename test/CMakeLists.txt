@@ -43,6 +43,7 @@ add_langulus_test(LangulusAnynessTest
 
                Anyness/many/TestMany-Empty.cpp
                Anyness/many/TestMany-Absorb.cpp
+               Anyness/many/TestMany-Piecewise.cpp
 
    LIBRARIES   doctest
                LangulusAnyness

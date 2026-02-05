@@ -633,7 +633,7 @@ namespace Langulus::Anyness::Component
 
       template<CT::Container C, CT::NoIntent A>
       constexpr Compared operator <=> (this C const& lhs, A const& rhs) assumptious {
-         if constexpr (CT::ContainsOne<C> == CT::ContainsOne<A>) {
+         if constexpr (CT::Deep<A> and CT::Dense<A>) {
             LglsAssumeUser((Same<A, C>) or (CT::Typed<C> and Same<TypeOf<A>, TypeOf<C>>),
                "Ambiguous use of three-way comparison "
                "- you should use either Compare (if you want to compare "
@@ -654,7 +654,7 @@ namespace Langulus::Anyness::Component
 
       template<CT::Container C, CT::NoIntent A>
       constexpr bool operator == (this C const& lhs, A const& rhs) assumptious {
-         if constexpr (CT::ContainsOne<C> == CT::ContainsOne<A>) {
+         if constexpr (CT::Deep<A> and CT::Dense<A>) {
             LglsAssumeUser((Same<A, C>) or (CT::Typed<C> and Same<TypeOf<A>, TypeOf<C>>),
                "Ambiguous use of equality comparison "
                "- you should use either CompareEqual (if you want to compare "
