@@ -150,7 +150,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
          Any_CheckState_ContainsOne(pack_abandoned, Refer(originalElement));
          Any_CheckState_ContainsOne(pack_disowned,  Disown(originalElement));
 
-         BenchmarkStd("Empty/PiecewiseConstructor(" + NameOf<E>() + ")", 30, 400,
+         BenchmarkAnyStd("Empty/PiecewiseConstructor(" + NameOf<E>() + ")", 30, 400,
             T temp,              (new (&temp)     T{Piecewise, *originalElement}),
             ::std::any temp_std, new (&temp_std) ::std::any{*originalElement}
          );
@@ -165,7 +165,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
             Any_CheckState_OwnedFull<E>(a);
             Any_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Assign(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                a.Assign(*element),              a.Assign(*originalElement),
                ::std::any temp_std = *element,  temp_std = *originalElement
@@ -208,7 +208,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkStd(
+               BenchmarkAnyStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                   a.AssignAbsorb(*element),                 a.AssignAbsorb(*originalElement),
                   ::std::any temp_std1 = *element;
@@ -234,7 +234,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
             Any_CheckState_OwnedFull<E>(a);
             Any_CheckState_ContainsOne(a, Clone(element));
 
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Assign(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                a.Assign(Clone(*element)),          a.Assign(Clone(*originalElement)),
                ::std::any temp_std = *element,     temp_std = *originalElement
@@ -278,7 +278,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkStd(
+               BenchmarkAnyStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                   a.AssignAbsorb(Clone(*element)),          a.AssignAbsorb(Clone(*originalElement)),
                   ::std::any temp_std1 = *element;
@@ -304,7 +304,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
             Any_CheckState_OwnedFull<E>(a);
             Any_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Assign(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                a.Assign(Copy(*element)),        a.Assign(Copy(*originalElement)),
                ::std::any temp_std = *element,  temp_std = *originalElement
@@ -348,7 +348,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkStd(
+               BenchmarkAnyStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                   a.AssignAbsorb(Copy(*element)),           a.AssignAbsorb(Copy(*originalElement)),
                   ::std::any temp_std1 = *element;
@@ -375,7 +375,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
             Any_CheckState_OwnedFull<E>(a);
             Any_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Assign(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
@@ -429,7 +429,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkStd(
+               BenchmarkAnyStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
@@ -455,7 +455,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
             Any_CheckState_OwnedFull<E>(a);
             Any_CheckState_ContainsOne(a, Disown(element));
 
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Assign(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                a.Assign(Disown(*element)),         a.Assign(Disown(*originalElement)),
                ::std::any temp_std = *element,     temp_std = *originalElement
@@ -502,7 +502,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                REQUIRE(a.GetUses() == 0);
                REQUIRE_FALSE(a.GetAllocation());
 
-               BenchmarkStd(
+               BenchmarkAnyStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                   a.AssignAbsorb(Disown(*element)),         a.AssignAbsorb(Disown(*originalElement)),
                   ::std::any temp_std1 = *element;
@@ -529,7 +529,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
             Any_CheckState_OwnedFull<E>(a);
             Any_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Assign(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
@@ -583,7 +583,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkStd(
+               BenchmarkAnyStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
@@ -833,7 +833,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                   REQUIRE(&*a == &instance);
             }
 
-            Benchmark(
+            BenchmarkAny(
                std::string("Piecewise/") + intent + "/Emplace(" + static_cast<std::string>(NameOf<E>()) + ")", 30,
                auto movable1 = *element;
                auto movable2 = *originalElement;
@@ -863,7 +863,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                REQUIRE(a.GetCount() == 1);
                REQUIRE(a.GetReserved() >= 1);
 
-               Benchmark(
+               BenchmarkAny(
                   std::string("Piecewise/") + intent + "/Emplace(Describe(" + static_cast<std::string>(NameOf<E>()) + "))", 30,
                   auto movable1 = *element;
                   a.Emplace(::std::move(movable1)),      a.Emplace(Describe{descriptor})
@@ -886,7 +886,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       
       WHEN("Cleared") {
          auto clear_full = [&](auto& a, [[maybe_unused]] const char* intent) {
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
                T temp = a,                      temp.Clear(),
                ::std::any temp_std = *element,  temp_std.reset()
@@ -907,7 +907,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
 
       WHEN("Reset") {
          auto reset_full = [&](auto& a, [[maybe_unused]] const char* intent) {
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Reset(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
                T temp = a,                      temp.Reset(),
                ::std::any temp_std = *element,  temp_std.reset()
@@ -963,13 +963,13 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
             REQUIRE_FALSE(a != same_pack);
 
             [[maybe_unused]] volatile bool dont_optimize = false;
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/operator==(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
                (void) 0,                                    dont_optimize |= (a == same_pack),
                const ::std::any a_std = *element;
                const ::std::any another_pack1_std = *e1,    dont_optimize |= (std::any_cast<E const&>(a_std) == std::any_cast<E const&>(another_pack1_std))
             );
-            BenchmarkStd(
+            BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/operator!=(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
                (void) 0,                                    dont_optimize |= (a != same_pack),
                const ::std::any a_std = *element;
@@ -1010,7 +1010,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         Benchmark("Piecewise/Contains(" + NameOf<E>() + ")", 30,
+         BenchmarkAny("Piecewise/Contains(" + NameOf<E>() + ")", 30,
             (void) 0, dont_optimize |= pack_referred1.Contains(*element)
          );
       }

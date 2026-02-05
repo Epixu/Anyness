@@ -19,13 +19,8 @@ using namespace Langulus;
 using namespace Anyness;
 
 #if LANGULUS(BENCHMARK)
-   #include <Langulus/Profiler.hpp>
-
-   constexpr int BenchmarkWarmupCycles  =  100;
-   constexpr int BenchmarkMeasureCycles = 1000;
-
    /// Perform a persistent benchmark across build and verify performance     
-   #define Benchmark(func, tolerance, my_init, my) { \
+   #define BenchmarkAny(func, tolerance, my_init, my) { \
       const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
@@ -45,7 +40,7 @@ using namespace Anyness;
 
    /// Perform two persistent benchmarks across builds - one for Any and      
    /// one for std::any. Make sure they don't deviate a lot.                  
-   #define BenchmarkStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
+   #define BenchmarkAnyStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
       const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
       volatile int i = 0; \
       for (; i < BenchmarkWarmupCycles; i += 1) { \
@@ -77,8 +72,8 @@ using namespace Anyness;
       REQUIRE(results.check_same(token.c_str(), token_std.c_str(), tolerance)); \
    }
 #else
-   #define Benchmark(func, tolerance, my_init, my)
-   #define BenchmarkStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
+   #define BenchmarkAny(func, tolerance, my_init, my)
+   #define BenchmarkAnyStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
 #endif
 
 #if LANGULUS_FEATURE(MANAGED_MEMORY)

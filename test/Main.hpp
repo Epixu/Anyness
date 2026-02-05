@@ -46,3 +46,10 @@ namespace doctest
       }
    };
 }
+
+#if LANGULUS(BENCHMARK)
+   #include <Langulus/Profiler.hpp>
+
+   constexpr int BenchmarkWarmupCycles  =  100;
+   constexpr int BenchmarkMeasureCycles = 1000;
+#endif

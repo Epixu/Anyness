@@ -11,6 +11,64 @@
 #include <Langulus/Anyness/TMany.hpp>
 #include <vector>
 
+#if LANGULUS(BENCHMARK)
+   /// Perform a persistent benchmark across build and verify performance     
+   #define BenchmarkMany(func, tolerance, my_init, my) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance); \
+   }
+
+   /// Perform two persistent benchmarks across builds - one for Any and      
+   /// one for std::any. Make sure they don't deviate a lot.                  
+   #define BenchmarkManyStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      i = 0; \
+      const auto token_std = ::std::string("Test/") + static_cast<::std::string>(func) + " |std::vector|"; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         theirs_init; \
+         theirs; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         theirs_init; \
+         { \
+            CTRACK_NAME(token_std.c_str()); \
+            theirs; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance_highscore); \
+      REQUIRE(results.check_same(token.c_str(), token_std.c_str(), tolerance)); \
+   }
+#else
+   #define BenchmarkMany(func, tolerance, my_init, my)
+   #define BenchmarkManyStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
+#endif
+
 namespace doctest
 {
    template<>
