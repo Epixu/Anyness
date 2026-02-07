@@ -371,6 +371,7 @@ namespace Langulus::Anyness
       template<unsigned, bool>               friend struct Com::Comparison;
       template<unsigned>                     friend struct Com::Assignment;
       template<CT::State...>                 friend struct Com::StateStack;
+      template<unsigned, class>              friend struct Com::ReserveEmergent;
 
       // Here lies the stack. It is an optimized tuple that is filled   
       // with requests from components.                                 

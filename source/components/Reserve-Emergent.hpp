@@ -25,7 +25,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the number of reserved (maybe uninitialized) elements           
       template<CT::Container C>
-      T GetReserved(this const C& self) noexcept {
+      constexpr T GetReserved(this const C& self) noexcept {
          if constexpr (requires { self.GetAllocation(); }) {
             const auto al = self.GetAllocation();
             if (not al)
@@ -35,7 +35,20 @@ namespace Langulus::Anyness::Component
                // Compile-time benefit for statically sized containers  
                return 1;
             }
-            else return al->GetSize() / self.GetStride(); //TODO should this account for header size?
+            else {
+               const size_t header = self.GetHeapHeaderSize(
+                  self.GetCount(), self.GetIndirections());
+
+               if constexpr (CT::TypeErased<C>) {
+                  const auto type = self.GetType();
+                  LglsAssumeDev(type, "Requesting allocation size for an untyped container");
+                  return (al->GetSize() - Align(header, type.GetAlignment())) / type.GetSize();
+               }
+               else {
+                  using type = TypeOf<C>;
+                  return (al->GetSize() - Align(header, alignof(type))) / sizeof(type);
+               }
+            }
          }
          else if constexpr (CT::ContainsOne<C>)
             return 1;

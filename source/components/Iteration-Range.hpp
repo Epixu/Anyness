@@ -109,7 +109,7 @@ namespace Langulus::Anyness
          }
 
          decltype(auto) operator *  () const noexcept { return *mIt; }
-         decltype(auto) operator -> () const noexcept { return *mIt; }
+         decltype(auto) operator -> () const noexcept { return &(*mIt); }
 
          auto operator + (Count c) const noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt - c, mRange};

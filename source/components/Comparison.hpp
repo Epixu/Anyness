@@ -52,8 +52,6 @@ namespace Langulus::Anyness::Component
    private:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
-      /*template<CT::Container C>
-      using At = typename Deref<C>::IndexType;*/
 
    public:
       /// Compare two containers for equality.                                
@@ -86,19 +84,22 @@ namespace Langulus::Anyness::Component
                   return false;
                }
                else {
-                  // Types are similar                                  
-                  if (lhs.template AccessStackById<ID>() == rhs.template AccessStackById<ID>()) {
-                     // Containers point to the same memory, so it's a  
-                     // matter of whether they have the same count      
-                     return lhs.GetCount() == rhs.GetCount();
-                  }
-
-                  if (lhs.GetCount() != rhs.GetCount()) {
+                  //                                                    
+                  // Types are similar if reached                       
+                  const auto lhs_count = lhs.GetCount();
+                  const auto rhs_count = rhs.GetCount();
+                  if (lhs_count != rhs_count) {
                      // Early failure if count differs, no point in     
                      // comparing anything at all                       
                      LglsVerbose(Logger::Red, "Different count (typed): ",
                         lhs.GetCount(), " != ", rhs.GetCount());
                      return false;
+                  }
+                  else {
+                     if (not lhs_count)
+                        return true;   // Both empty                    
+                     else if (lhs.GetHeapInner() == rhs.GetHeapInner())
+                        return true;   // Both point to same memory     
                   }
 
                   if constexpr (HASH and CT::Hashable<LT, RT>) {
@@ -110,9 +111,10 @@ namespace Langulus::Anyness::Component
                      }
                   }
 
+                  const auto bytesize = lhs_count * sizeof(LT);
                   if constexpr (CT::POD<LT>) {
                      // Batch compare POD data, including pointers      
-                     const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
+                     const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), bytesize));
                      if (not same) {
                         LglsVerbose(Logger::Red,
                            "Different POD memory after memcmp (typed)");
@@ -125,7 +127,7 @@ namespace Langulus::Anyness::Component
                      // Use comparison operator between all elements    
                      auto t1 = lhs.GetRaw();
                      auto t2 = rhs.GetRaw();
-                     const auto t1end = t1 + lhs.GetCount();
+                     const auto t1end = t1 + lhs_count;
                      while (t1 < t1end and *t1 == *t2) {
                         ++t1;
                         ++t2;
@@ -156,17 +158,20 @@ namespace Langulus::Anyness::Component
                   return false;
                }
 
-               // Types are similar                                     
-               if (lhs.GetHeapInner() == rhs.GetHeapInner()) {
-                  // Containers point to the same memory, so it's a     
-                  // matter of whether they have the same count         
-                  return lhs.GetCount() == rhs.GetCount();
-               }
-
-               if (lhs.GetCount() != rhs.GetCount()) {
+               //                                                       
+               // Types are similar if reached                          
+               const auto lhs_count = lhs.GetCount();
+               const auto rhs_count = rhs.GetCount();
+               if (lhs_count != rhs_count) {
                   LglsVerbose(Logger::Red, "Different count (type-erased): ",
-                     lhs.GetCount(), " != ", rhs.GetCount());
+                     lhs_count, " != ", rhs_count);
                   return false;
+               }
+               else {
+                  if (not lhs_count)
+                     return true;   // Both empty                       
+                  else if (lhs.GetHeapInner() == rhs.GetHeapInner())
+                     return true;   // Both point to same memory        
                }
 
                if constexpr (requires { lhs.CompareHashes(rhs); }) {
@@ -178,9 +183,10 @@ namespace Langulus::Anyness::Component
                   }
                }
 
+               const auto size = LT.GetSize();
+               const auto bytesize = lhs_count * size;
                if (LT.IsPOD()) {
                   // Batch-compare memory if POD or sparse              
-                  const auto bytesize = lhs.GetBytesize();
                   const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), bytesize));
                   if (not same) {
                      LglsVerbose(Logger::Red,
@@ -197,8 +203,7 @@ namespace Langulus::Anyness::Component
                   auto t1 = lhs.template GetRawAs<uint8_t>();
                   auto t2 = rhs.template GetRawAs<uint8_t>();
                   [[maybe_unused]] const auto t1_start = t1;
-                  const auto t1end = t1 + lhs.GetBytesize();
-                  const auto size = LT.GetSize();
+                  const auto t1end = t1 + bytesize;
                   while (t1 < t1end) {
                      if (not comparer(t1, t2)) {
                         LglsVerbose(Logger::Red,
@@ -243,32 +248,22 @@ namespace Langulus::Anyness::Component
                   LT, " != ", RT);
                return Compared::Unordered;
             }
-
-            // Types are similar                                        
-            if (lhs.GetHeapInner() == rhs.GetHeapInner()) {
-               // Containers point to the same memory, so it's a        
-               // matter of whether they have the same count            
-               return lhs.GetCount() == rhs.GetCount() ? Compared::Equal
-                                                       : Compared::Unordered;
-            }
             
-            if (lhs.GetCount() != rhs.GetCount()) {
+            //                                                          
+            // Types are similar if reached                             
+            const auto lhs_count = lhs.GetCount();
+            const auto rhs_count = rhs.GetCount();
+            if (lhs_count != rhs_count) {
                LglsVerbose(Logger::Red, "Different count (type-erased): ",
-                  lhs.GetCount(), " != ", rhs.GetCount());
+                  lhs_count, " != ", rhs_count);
                return Compared::Unordered;
             }
-
-            /*if (LT.IsPOD()) {
-               // Batch-compare memory if POD or sparse                 
-               const auto order = ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize());
-               if (order != 0) {
-                  VERBOSE(Logger::Red,
-                     "Different POD memory after memcmp (type-erased)");
-                  VERBOSE(Logger::Red,
-                     "Most likely padding bytes filled with junk - pack your struct: ", LT);
-               }
-               return static_cast<Compared>(order);
-            }*/
+            else {
+               if (not lhs_count)
+                  return Compared::Equal;   // Both empty               
+               else if (lhs.GetHeapInner() == rhs.GetHeapInner())
+                  return Compared::Equal;   // Both point to same memory
+            }
 
             const auto comparer = LT.GetComparer();
             if (comparer) {
@@ -276,8 +271,8 @@ namespace Langulus::Anyness::Component
                auto t1 = lhs.template GetRawAs<uint8_t>();
                auto t2 = rhs.template GetRawAs<uint8_t>();
                [[maybe_unused]] const auto t1_start = t1;
-               const auto t1end = t1 + lhs.GetBytesize();
                const auto size = LT.GetSize();
+               const auto t1end = t1 + lhs_count * size;
                while (t1 < t1end) {
                   const Compared last_compare = comparer(t1, t2);
                   if (last_compare != Compared::Equal) {
@@ -309,39 +304,29 @@ namespace Langulus::Anyness::Component
                return ::std::partial_ordering::unordered;
             }
             else {
-               // Types are similar                                     
-               if (lhs.template AccessStackById<ID>() == rhs.template AccessStackById<ID>()) {
-                  // Containers point to the same memory, so it's a     
-                  // matter of whether they have the same count         
-                  return lhs.GetCount() == rhs.GetCount() ? ::std::partial_ordering::equivalent
-                                                          : ::std::partial_ordering::unordered;
-               }
-
-               if (lhs.GetCount() != rhs.GetCount()) {
+               //                                                       
+               // Types are similar if rached                           
+               const auto lhs_count = lhs.GetCount();
+               const auto rhs_count = rhs.GetCount();
+               if (lhs_count != rhs_count) {
                   // Early failure if count differs, no point in        
                   // comparing anything at all                          
                   LglsVerbose(Logger::Red, "Different count (typed): ",
-                     lhs.GetCount(), " != ", rhs.GetCount());
+                     lhs_count, " != ", rhs_count);
                   return ::std::partial_ordering::unordered;
                }
-               
-               /*if constexpr (CT::POD<LT>) {
-                  // Batch compare POD data, including pointers         
-                  const auto order = ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize());
-                  if (order != 0) {
-                     VERBOSE(Logger::Red,
-                        "Different POD memory after memcmp (typed)");
-                     VERBOSE(Logger::Red,
-                        "Most likely padding bytes filled with junk - pack your struct: ", NameOf<LT>());
-                  }
-                  return static_cast<::std::partial_ordering>(order);
+               else {
+                  if (not lhs_count)
+                     return ::std::partial_ordering::equivalent;
+                  else if (lhs.GetHeapInner() == rhs.GetHeapInner())
+                     return ::std::partial_ordering::equivalent;
                }
-               else*/
+
                if constexpr (CT::Comparable<LT, LT>) {
                   // Use comparison operator between all elements       
                   auto t1 = lhs.GetRaw();
                   auto t2 = rhs.GetRaw();
-                  const auto t1end = t1 + lhs.GetCount();
+                  const auto t1end = t1 + lhs_count;
                   auto last_compare = ::std::partial_ordering::unordered;
                   while (t1 < t1end and ((last_compare = (*t1 <=> *t2)) == ::std::partial_ordering::equivalent)) {
                      ++t1;
@@ -496,14 +481,12 @@ namespace Langulus::Anyness::Component
       ///   @param cookie resume search from a given index                    
       ///   @return the index of the found item, or 'npos' if none found      
       template<bool REVERSE = false, CT::ContainsMany C, CT::NoIntent T>
-      auto Find(this C const& self, T const& item, Count<C> cookie = 0) noexcept
-         /* -> At<C> requires CT::RangeComparable<C, T>*/
-      {
-         using strategy = IterateNoDeref<REVERSE, const C>;
-         auto handle = strategy(self).begin() + cookie;
+      auto Find(this C const& self, T const& item, Count<C> cookie = 0) noexcept {
+         IterateNoDeref<REVERSE, const C> strategy(self);
+         auto handle = strategy.begin() + cookie;
          while (handle) {
             if constexpr (CT::TypeErased<C>) {
-               if (*handle == item)
+               if (handle->CompareOneEqual(item))
                   return handle;
             }
             else {
@@ -515,7 +498,7 @@ namespace Langulus::Anyness::Component
          }
 
          // If this is reached, then no match was found                 
-         return strategy(self).end();
+         return strategy.end();
       }
    
       /// Find a matching sequence of one or more matching elements           
