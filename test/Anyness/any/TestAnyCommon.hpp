@@ -170,7 +170,7 @@ void Common_CheckState_Default(const C& any, bool typed = false) {
    REQUIRE      (any.GetCount() == 0);
    REQUIRE      (any.GetReserved() == 0);
    REQUIRE      (any.GetUses() == 0);
-   REQUIRE      (any.GetRaw() == nullptr);
+   //REQUIRE      (any.GetRaw() == nullptr); // not really a requirement for the default state. Count being 0 is enough in most cases
    REQUIRE_FALSE(any);
    REQUIRE      (not any);
 }
@@ -198,7 +198,7 @@ void Any_CheckState_OwnedEmpty(const C& any) {
    REQUIRE      (any.GetCount() == 0);
    REQUIRE      (any.GetReserved() > 0);
    REQUIRE      (any.GetUses() == 1);
-   REQUIRE      (any.GetRaw() == nullptr);
+   //REQUIRE      (any.GetRaw() == nullptr); // not really a requirement for the owned-empty state. Count being 0 is enough in most cases
    REQUIRE_FALSE(any);
    REQUIRE      (not any);
 }

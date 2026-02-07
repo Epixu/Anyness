@@ -52,6 +52,10 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      template<unsigned>             friend struct Removal;
+      template<unsigned>             friend struct Emplacement;
+      template<unsigned, class>      friend struct Insertion;
+      template<unsigned, class>      friend struct IndexedLinear;
       template<unsigned, CT::Sparse> friend struct HeapMovable;
 
       /// Get count (inner)                                                   
@@ -61,6 +65,14 @@ namespace Langulus::Anyness::Component
             return self.GetHeapInner() ? COUNT : CountType {0};
          else
             return COUNT;
+      }
+
+      /// Reset count (inner)                                                 
+      ///   @attention doesn't destroy elements, only resets hash and count   
+      template<CT::Container C>
+      constexpr void ResetCount(this C& self) noexcept {
+         if_available(self.SetHeapInner(nullptr));
+         if_available(self.SetHashInner(1));
       }
    };
 }

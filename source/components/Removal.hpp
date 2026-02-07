@@ -78,15 +78,12 @@ namespace Langulus::Anyness::Component
 
       /// Destroy all elements but don't deallocate memory, unless we have to 
       ///   @attention will never reset state or type                         
-      template<CT::Container C>
-      void Clear(this C& self) {
+      void Clear(this auto& self) {
          const auto al = self.GetAllocation();
          if (not al) {
             // Data is either static or unallocated.                    
             // Don't call destructors, just clear it up.                
-            self.SetHeapInner(nullptr);
-            if_available(self.SetCountInner(0));
-            if_available(self.SetHashInner(1));
+            self.ResetCount();
             return;
          }
 
@@ -95,38 +92,26 @@ namespace Langulus::Anyness::Component
             // destroy all elements. We will reuse the memory and type  
             // only if the container keeps track of the count separately
             self.DestroyAllElements();
-
-            // Count is dictated by the availability of a heap pointer. 
-            // We can't afford to reuse it, and be cleared at the same  
-            // time, unless SetCountInner is available.                 
-            if_available(self.SetCountInner(0))
-            else self.SetHeapInner(nullptr);
          }
          else {
             // If reached, then data is referenced from multiple places.
-            // Don't call destructors, just clear it up and dereference.
+            // Don't call destructors, just dereference.                
             self.template DestroyAllElements<false>();
 
             // Dereference memory                                       
             DecvqAllCast(al)->AddRef(-1);
-            self.SetHeapInner(nullptr);
             if_available(self.SetAllocationInner(nullptr));
-            if_available(self.SetReserveInner(0));
-            if_available(self.SetCountInner(0));
          }
 
-         if_available(self.SetHashInner(1));
+         self.ResetCount();
       }
 
       /// Destroy all elements, deallocate block and reset state and type,    
       /// if type-erased.                                                     
       void Reset(this auto& self) {
          self.Free();
-         self.SetHeapInner(nullptr);
          if_available(self.SetAllocationInner(nullptr));
-         if_available(self.SetCountInner(0));
-         if_available(self.SetReserveInner(0));
-         if_available(self.SetHashInner(1));
+         self.ResetCount();
          if_available(self.ResetState());
          if_available(self.ResetType());
       }

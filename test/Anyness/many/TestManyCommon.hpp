@@ -143,13 +143,21 @@ void Many_CheckState_ContainsOne(T const& many, I&& e_with_intent, int uses = 1)
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
       //TODO test all kinds of ranged modifiers??
-      for (auto& it : many)
-         REQUIRE(it != *e);
+      for (auto& it : many) {
+         if constexpr (CT::TypeErased<T>)
+            REQUIRE(not it.CompareOneEqual(*e));
+         else
+            REQUIRE(it != *e);
+      }
    }
    else {
       //TODO test all kinds of ranged modifiers??
-      for (auto& it : many)
-         REQUIRE(it == *e);
+      for (auto& it : many) {
+         if constexpr (CT::TypeErased<T>)
+            REQUIRE(it.CompareOneEqual(*e));
+         else
+            REQUIRE(it == *e);
+      }
    }
 }
 

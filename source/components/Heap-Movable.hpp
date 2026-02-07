@@ -60,10 +60,11 @@ namespace Langulus::Anyness::Component
             self.SetType(type);
             auto count = from.GetCount();
             if (0 == count) {
-               self.SetHeapInner(nullptr);
                self.SetAllocationInner(nullptr);
+               self.ResetCount();
+               /*self.SetHeapInner(nullptr);
                if_available(self.SetCountInner(0));
-               if_available(self.SetHashInner(1));
+               if_available(self.SetHashInner(1));*/
                return;
             }
 
@@ -187,7 +188,7 @@ namespace Langulus::Anyness::Component
 
          // Free old data and absorb the new container                  
          self.Free();
-         self.SetHeapInner(nullptr);
+         self.ResetCount();
          self.Absorb(LglsFwd(intent));
          return self;
       }
@@ -316,7 +317,7 @@ namespace Langulus::Anyness::Component
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
          static_assert(CT::ContainsMany<C>,
             "This makes sense to be called only by containers that support many elements");
-         LglsAssumeDev(desiredReserve < self.GetReserved(),
+         LglsAssumeDev(desiredReserve <= self.GetReserved(),
             "Can't shrink allocation using more elements");
          const auto al = DecvqAllCast(self.GetAllocation());
          LglsAssumeDev(al, "Invalid allocation");
@@ -437,6 +438,7 @@ namespace Langulus::Anyness::Component
 
          // Move regions, starting from the back ones                   
          auto header = self.GetAllocation()->GetBlockStart();
+         --idx;
          while (idx) {
             --idx;
             memmove(header + to[idx], header + from[idx], from[idx+1] - from[idx]);
@@ -457,8 +459,7 @@ namespace Langulus::Anyness::Component
             (void) n;
             Allocator::Deallocate(DecvqAllCast(self.GetAllocationInner()));
             self.SetAllocationInner(nullptr);
-            self.SetHeapInner(nullptr);
-            if_available(self.SetHashInner(1));
+            self.ResetCount();
          }
       }
    };

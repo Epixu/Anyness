@@ -36,9 +36,9 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Always allocated on the stack                                       
-      constexpr bool IsAllocated() const noexcept {
+      /*constexpr bool IsAllocated() const noexcept {
          return true;
-      }
+      }*/
 
       /// Get a direct access to the stack memory                             
       template<CT::Container C>

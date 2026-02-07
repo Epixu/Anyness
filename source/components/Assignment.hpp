@@ -142,6 +142,7 @@ namespace Langulus::Anyness::Component
             }
 
             if_available(self.SetCountInner(1));
+            if_available(self.SetHashInner(0));
          }
          
          return self;

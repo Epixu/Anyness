@@ -76,11 +76,12 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Check if the container has valid heap memory associated with it     
-      bool IsAllocated(this auto const& self) noexcept {
+      /*bool IsAllocated(this auto const& self) noexcept {
          return self.GetHeapInner() != nullptr;
-      }
+      }*/
       
       /// Get a direct access to the heap memory                              
+      ///   @attention accessing this while GetCount() is zero is undefined   
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, POINTER_TYPE /*TypeOf<C>**/);
@@ -88,6 +89,7 @@ namespace Langulus::Anyness::Component
       }
       
       /// Get a direct access to the heap memory as a different type          
+      ///   @attention accessing this while GetCount() is zero is undefined   
       template<class T, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, T*);
@@ -96,6 +98,7 @@ namespace Langulus::Anyness::Component
 
       /// Get a direct access to the heap memory's end.                       
       /// Depends on the number of initialized elements.                      
+      ///   @attention accessing this while GetCount() is zero is undefined   
       template<CT::Container C>
       constexpr auto GetRawEnd(this C&& self) noexcept {
          if constexpr (CT::Typed<C>)
@@ -109,7 +112,7 @@ namespace Langulus::Anyness::Component
       /// No conversion or copying occurs, only pointer arithmetic.           
       ///   @attention no type-safety                                         
       ///   @attention assumes the container is typed                         
-      ///   @attention assumes the container is allocated                     
+      ///   @attention assumes the container has valid heap                   
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the container, if statically typed                     
       template<class AS = void, CT::Container C>

@@ -53,6 +53,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<unsigned>             friend struct Removal;
+      template<unsigned>             friend struct Emplacement;
       template<unsigned, class>      friend struct Insertion;
       template<unsigned, class>      friend struct IndexedLinear;
       template<unsigned, CT::Sparse> friend struct HeapMovable;
@@ -85,6 +86,14 @@ namespace Langulus::Anyness::Component
             if constexpr (I::ResetsOnMove())
                from.SetCountInner(0);
          }
+      }
+
+      /// Reset count (inner)                                                 
+      ///   @attention doesn't destroy elements, only resets hash and count   
+      template<CT::Container C>
+      constexpr void ResetCount(this C& self) noexcept {
+         self.SetCountInner(0);
+         if_available(self.SetHashInner(1));
       }
    };
 }

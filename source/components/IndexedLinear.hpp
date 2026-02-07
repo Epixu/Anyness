@@ -117,9 +117,9 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       auto SelectInner(this C&& self, Count<C> start, Count<C> count)
       assumptious -> Decay<C> {
-         LglsAssumeDev(self.IsAllocated(), "Block is not allocated");
-         LglsAssumeDev(self.IsTyped(),     "Block is not typed");
-         LglsAssumeDev(count,              "Invalid count");
+         LglsAssumeDev(self.GetRaw(),  "Block is not allocated");
+         LglsAssumeDev(self.IsTyped(), "Block is not typed");
+         LglsAssumeDev(count,          "Invalid count");
          
          Decay<C> result {Disown(self)};
          result.SetCountInner(count);

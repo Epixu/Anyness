@@ -1296,7 +1296,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.IsTypeConstrained() == CT::Typed<T>);
          REQUIRE(pack.GetUses() == (CT::Deep<E> and CT::Same<T, E> ? 3 : 2));
          REQUIRE(pack.IsDeep() == (CT::Deep<E> and not CT::Same<T, E>));
-         REQUIRE(pack.IsAllocated());
+         //REQUIRE(pack.IsAllocated());
 
       #if LANGULUS(BENCHMARK)
          BENCHMARK_ADVANCED("operator = (self)") (timer meter) {

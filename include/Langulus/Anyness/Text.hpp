@@ -332,7 +332,7 @@ namespace Langulus::Anyness
       /// Custom concatenation operator that includes characters              
       template<CT::Character T>
       Text& operator += (T&& rhs) {
-         if (not this->IsAllocated()) {
+         if (IsEmpty()/* not this->IsAllocated()*/) {
             *this = Text {LglsFwd(rhs)};
             return *this;
          }
@@ -352,7 +352,7 @@ namespace Langulus::Anyness
       /// null-terminated string pointers, and std::continuous_ranges         
       template<CT::Text T> requires CT::NotContainer<T>
       Text& operator += (T&& rhs) {
-         if (not this->IsAllocated()) {
+         if (IsEmpty()/*not this->IsAllocated()*/) {
             *this = Text {LglsFwd(rhs)};
             return *this;
          }
@@ -417,7 +417,7 @@ namespace Langulus::Anyness
       /// null-terminated string pointers, and std::continuous_ranges         
       template<CT::Text T> requires CT::NotContainer<T>
       Text operator + (T const& rhs) const {
-         if (not this->IsAllocated())
+         if (IsEmpty()/*not this->IsAllocated()*/)
             return Text {LglsFwd(rhs)};
 
          using DT = Deint<T>;

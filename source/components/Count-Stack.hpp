@@ -80,8 +80,16 @@ namespace Langulus::Anyness::Component
             decltype(auto) from = LglsFwd(intent.what);
             self.SetCountInner(from.GetCountInner());
             if constexpr (I::ResetsOnMove())
-               if_available(from.SetCountInner(0));
+               from.SetCountInner(0);
          }
+      }
+
+      /// Reset count (inner)                                                 
+      ///   @attention doesn't destroy elements, only resets hash and count   
+      template<CT::Container C>
+      constexpr void ResetCount(this C& self) noexcept {
+         self.SetCountInner(0);
+         if_available(self.SetHashInner(1));
       }
    };
 }

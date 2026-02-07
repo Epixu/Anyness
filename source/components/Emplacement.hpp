@@ -553,6 +553,9 @@ namespace Langulus::Anyness::Component
             if (self.IsEmpty())
                self.SetCountInner(1);
          }
+
+         // Update hash                                                 
+         if_available(self.SetHashInner(0));
       }
 
       /// Emplace a new manually constructed item at the first position.      
@@ -689,6 +692,9 @@ namespace Langulus::Anyness::Component
             if (self.IsEmpty())
                self.SetCountInner(1);
          }
+
+         // Update hash                                                 
+         if_available(self.SetHashInner(0));
       }
 
    public:
@@ -725,10 +731,8 @@ namespace Langulus::Anyness::Component
                   self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
             }
             catch (...) {
-               // Reset the heap pointer in case 'self' was disowned    
-               self.SetHeapInner(nullptr);
-               if_available(self.SetCountInner(0));
-               if_available(self.SetHashInner(1));
+               // Reset heap count in case 'self' was disowned          
+               self.ResetCount();
                throw;
             }
          }
@@ -738,13 +742,20 @@ namespace Langulus::Anyness::Component
                // We're not the only owner of this memory.              
                // We have to branch off with a fresh allocation.        
                DecvqAllCast(a)->AddRef(-1);
-               self.SetAllocationInner(nullptr);
-               self.SetHeapInner(nullptr);
+               //self.SetAllocationInner(nullptr);
+               //self.SetHeapInner(nullptr);
 
-               if constexpr (sizeof...(arguments) > 0)
-                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
-               else
-                  self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
+               try {
+                  if constexpr (sizeof...(arguments) > 0)
+                     self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                  else
+                     self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
+               }
+               catch (...) {
+                  self.SetAllocationInner(nullptr);
+                  self.ResetCount();
+                  throw;
+               }
             }
             else {
                // Emplace a new element on the first position.          
@@ -761,15 +772,22 @@ namespace Langulus::Anyness::Component
                // We're not the only owner of this memory.              
                // We have to branch off with a fresh allocation.        
                self.Free();
-               self.SetAllocationInner(nullptr);
+               /*self.SetAllocationInner(nullptr);
                self.SetHeapInner(nullptr);
                if_available(self.SetCountInner(0));
-               if_available(self.SetHashInner(1));
+               if_available(self.SetHashInner(1));*/
 
-               if constexpr (sizeof...(arguments) > 0)
-                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
-               else
-                  self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
+               try {
+                  if constexpr (sizeof...(arguments) > 0)
+                     self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                  else
+                     self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
+               }
+               catch (...) {
+                  self.SetAllocationInner(nullptr);
+                  self.ResetCount();
+                  throw;
+               }
             }
             else {
                // We're allowed to reuse the memory.                    
@@ -785,10 +803,18 @@ namespace Langulus::Anyness::Component
                      self.template EmplaceDefault<AllocationStrategy::NoStateChange, E>();
                }
                catch (...) {
-                  // If emplacement fails, we have to modify count      
-                  // because first element has been destroyed.          
-                  LglsAssumeDev(self.GetCount() == 1, "TODO we're forced to destroy everything else as well");
-                  self.PartialSuccess(0);
+                  // If emplacement fails, we are forced to destroy     
+                  // all remaining elements as well.                    
+                  if constexpr (CT::ContainsMany<C>) {
+                     auto item = IterateHandles(self).begin() + 1;
+                     while (item) {
+                        item->DestroyElement();
+                        ++item;
+                     }
+                  }
+                  Allocator::Deallocate(DecvqAllCast(a));
+                  self.SetAllocationInner(nullptr);
+                  self.ResetCount();
                   throw;
                }
             }
