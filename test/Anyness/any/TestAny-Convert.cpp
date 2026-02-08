@@ -22,8 +22,8 @@ SCENARIO("Converting Any/TAny") {
          pack2.ConvertTo(converted2);
 
          REQUIRE(converted1 == converted2);
-         REQUIRE(converted1.GetCount() == 3);
-         REQUIRE(*converted1 == "double");
+         REQUIRE(converted1.GetCount() == 1);
+         REQUIRE(*converted1 == "Double");
       }
    }
 

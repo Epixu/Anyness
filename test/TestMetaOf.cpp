@@ -271,8 +271,8 @@ namespace
 namespace Langulus::CTTI
 {
    template<>
-   struct MapsTo<Pi> {
-      using Type = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
+   struct MapsFrom<Pi> {
+      using To = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
    };
    template<>
    struct NamedValue<Pi::ConflictingNumber> {

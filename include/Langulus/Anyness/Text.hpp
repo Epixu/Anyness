@@ -59,9 +59,10 @@ namespace Langulus::Anyness
    /// A continuous text container of variable size                           
    ///                                                                        
    struct Text : Inner::TextBase {
-      using CountType   = Base::CountType;
-      using CTTI_Text   = Yes<>;
-      using CTTI_MapsTo = Text;
+      using CountType     = Base::CountType;
+      using CTTI_Text     = Yes<>;
+      using CTTI_MapsTo   = Text;
+      using CTTI_MapsFrom = Types<RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta>;
 
       // Single element selections                                      
       using Pick    = char const&;
@@ -649,12 +650,40 @@ namespace Langulus::CTTI
    /// Convert Number -> Text                                                 
    template<CT::Number T>
    struct Converter<T, Anyness::Text> {
-      static constexpr void Convert(T const& from, Anyness::Text& to) {
-         to += Anyness::Text::FromNumber(from);
-      }
-      
       static constexpr auto Convert(T const& from) -> Anyness::Text {
          return Anyness::Text::FromNumber(from);
+      }
+   };
+
+   /// Convert DMeta -> Text                                                  
+   template<>
+   struct Converter<RTTI::DMeta, Anyness::Text> {
+      static constexpr auto Convert(RTTI::DMeta const& from) -> Anyness::Text {
+         return from.GetName();
+      }
+   };
+
+   /// Convert TMeta -> Text                                                  
+   template<>
+   struct Converter<RTTI::TMeta, Anyness::Text> {
+      static constexpr auto Convert(RTTI::TMeta const& from) -> Anyness::Text {
+         return from.GetName();
+      }
+   };
+
+   /// Convert CMeta -> Text                                                  
+   template<>
+   struct Converter<RTTI::CMeta, Anyness::Text> {
+      static constexpr auto Convert(RTTI::CMeta const& from) -> Anyness::Text {
+         return from.GetName();
+      }
+   };
+
+   /// Convert VMeta -> Text                                                  
+   template<>
+   struct Converter<RTTI::VMeta, Anyness::Text> {
+      static constexpr auto Convert(RTTI::VMeta const& from) -> Anyness::Text {
+         return from.GetCppName();
       }
    };
 }

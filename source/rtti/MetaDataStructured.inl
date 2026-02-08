@@ -737,20 +737,26 @@ namespace Langulus::RTTI::Inner
       return fallback;
    }
 
-   /// Get a specific coverter, if it exists                                  
+   /// Get a specific coverter, if it exists.                                 
+   /// This will check if this type has a morphism TO the desired type, or    
+   /// the desired type has a morphism FROM this type.                        
    TEMPLATE()
    auto ME()::GetMorphism(MetaDataStructured_XY to)
    const noexcept -> DefinitionData::Morphism {
       const auto from_id = Base::GetID();
       const auto to_id = to.Base::GetID();
-      if (from_id and to_id) {
-         const auto dfrom = Instance.GetMetaDataByID(from_id, sparse, constant);
-         const auto dto = Instance.GetMetaDataByID(to_id, to.sparse, to.constant);
-         auto& morphisms = dfrom->mCurrentBoundary.mMorphismsTo;
-         auto found = morphisms.find(dto->mDecvqAll);
-         if (found != morphisms.end())
-            return found->second;
-      }
+      if (not from_id or not to_id)
+         return {nullptr, nullptr};
+
+      const auto dfrom = Instance.GetMetaDataByID(from_id, sparse, constant);
+      const auto dto = Instance.GetMetaDataByID(to_id, to.sparse, to.constant);
+      auto found = dfrom->mCurrentBoundary.mMorphismsTo.find(dto->mDecvqAll);
+      if (found != dfrom->mCurrentBoundary.mMorphismsTo.end())
+         return found->second;
+
+      found = dto->mCurrentBoundary.mMorphismsFrom.find(dfrom->mDecvqAll);
+      if (found != dto->mCurrentBoundary.mMorphismsFrom.end())
+         return found->second;
       return {nullptr, nullptr};
    }
 

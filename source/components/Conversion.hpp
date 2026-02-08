@@ -47,7 +47,7 @@ namespace Langulus::Anyness::Component
                }
                else {
                   static_assert(CT::Convertible<FROM, TO>, "Not convertible");
-                  out.Assign(static_cast<TO>(*self));
+                  out.Assign(Langulus::Convert<TO>(*self));
                   return 1;
                }
             }
@@ -107,7 +107,7 @@ namespace Langulus::Anyness::Component
                   auto to = out.GetRaw() + out.GetCount();
                   try {
                      while (from != fromEnd) {
-                        new (to) TO (static_cast<TO>(*from));
+                        new (to) TO {Langulus::Convert(*from)};
                         ++to; ++from;
                      }
                   }

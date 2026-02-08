@@ -133,7 +133,6 @@ namespace Langulus::CTTI
    /// Convert TAny -> Text                                                   
    template<class T>
    struct Converter<Anyness::TAny<T>, Anyness::Text> {
-      static constexpr void Convert(Anyness::TAny<T> const&, Anyness::Text&);
       static constexpr auto Convert(Anyness::TAny<T> const&) -> Anyness::Text;
    };
 }

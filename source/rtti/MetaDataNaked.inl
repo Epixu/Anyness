@@ -418,14 +418,21 @@ namespace Langulus::RTTI::Inner
       return mDefinition->mCurrentBoundary.mMorphismsFrom;
    }
    
-   /// Get a specific coverter, if it exists                                  
+   /// Get a specific coverter, if it exists.                                 
+   /// This will check if this type has a morphism TO the desired type, or    
+   /// the desired type has a morphism FROM this type.                        
    inline auto MetaDataNaked::GetMorphism(MetaDataNaked to)
    const noexcept -> DefinitionData::Morphism {
-      if (not mDefinition)
+      if (not mDefinition or not to.mDefinition)
          return {nullptr, nullptr};
 
-      auto found = mDefinition->mCurrentBoundary.mMorphismsTo.find(to.mDefinition);
+      auto other = to.mDefinition;
+      auto found = mDefinition->mCurrentBoundary.mMorphismsTo.find(other);
       if (found != mDefinition->mCurrentBoundary.mMorphismsTo.end())
+         return found->second;
+
+      found = other->mCurrentBoundary.mMorphismsFrom.find(mDefinition);
+      if (found != other->mCurrentBoundary.mMorphismsFrom.end())
          return found->second;
       return {nullptr, nullptr};
    }

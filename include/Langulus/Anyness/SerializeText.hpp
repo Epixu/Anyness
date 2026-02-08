@@ -167,37 +167,22 @@ namespace Langulus::CTTI
    ///                                                                        
    
    /// Convert Any -> Text                                                    
-   constexpr void Converter<Anyness::Any, Anyness::Text>::Convert(Anyness::Any const& from, Anyness::Text& to) {
-      if (from.IsEmpty())
-         return;
-
-      Serialize(from, to);
-   }
-   
    constexpr auto Converter<Anyness::Any, Anyness::Text>::Convert(Anyness::Any const& from) -> Anyness::Text {
-      Anyness::Text result;
       if (from.IsEmpty())
-         return result;
+         return {};
 
+      Anyness::Text result;
       Serialize(from, result);
       return result;
    }
    
    /// Convert TAny -> Text                                                   
    template<class T>
-   constexpr void Converter<Anyness::TAny<T>, Anyness::Text>::Convert(Anyness::TAny<T> const& from, Anyness::Text& to) {
-      if (from.IsEmpty())
-         return;
-
-      Serialize(from, to);
-   }
-
-   template<class T>
    constexpr auto Converter<Anyness::TAny<T>, Anyness::Text>::Convert(Anyness::TAny<T> const& from) -> Anyness::Text {
-      Anyness::Text result;
       if (from.IsEmpty())
-         return result;
+         return {};
 
+      Anyness::Text result;
       Serialize(from, result);
       return result;
    }
@@ -209,37 +194,22 @@ namespace Langulus::CTTI
    ///                                                                        
 
    /// Convert Many -> Text                                                   
-   constexpr void Converter<Anyness::Many, Anyness::Text>::Convert(Anyness::Many const& from, Anyness::Text& to) {
-      if (from.IsEmpty())
-         return;
-
-      Serialize(from, to);
-   }
-   
    constexpr auto Converter<Anyness::Many, Anyness::Text>::Convert(Anyness::Many const& from) -> Anyness::Text {
-      Anyness::Text result;
       if (from.IsEmpty())
-         return result;
+         return {};
 
+      Anyness::Text result;
       Serialize(from, result);
       return result;
    }
    
    /// Convert TMany -> Text                                                  
    template<class T>
-   constexpr void Converter<Anyness::TMany<T>, Anyness::Text>::Convert(Anyness::TMany<T> const& from, Anyness::Text& to) {
-      if (from.IsEmpty())
-         return;
-
-      Serialize(from, to);
-   }
-
-   template<class T>
    constexpr auto Converter<Anyness::TMany<T>, Anyness::Text>::Convert(Anyness::TMany<T> const& from) -> Anyness::Text {
-      Anyness::Text result;
       if (from.IsEmpty())
-         return result;
+         return {};
 
+      Anyness::Text result;
       Serialize(from, result);
       return result;
    }
