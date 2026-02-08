@@ -149,6 +149,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      friend struct Conversion;
+
       /// A helper for clearing and allocating memory before construction.    
       /// Calls destructors on all elements, if any were initialized.         
       template<CT::HeapAllocated C>

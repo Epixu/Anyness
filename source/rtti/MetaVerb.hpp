@@ -39,6 +39,7 @@ namespace Langulus::RTTI
          };
          
       public:
+         using CTTI_Abstract = No;
          using Base = MetaPacked<ID_SIZE>;
 
          constexpr MetaVerbStructured_X8() noexcept = default;
@@ -82,8 +83,8 @@ namespace Langulus::RTTI
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems.                                
       struct MetaVerbNaked : MetaNaked<DefinitionVerb> {
+         using CTTI_Abstract = No;
          using Base = MetaNaked;
-
          using Base::Base;
          using Base::operator =;
          using Base::operator bool;

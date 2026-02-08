@@ -19,6 +19,7 @@ namespace Langulus::RTTI
       /// Supports up to 65,535 tags                                          
       #pragma pack(push, 1)
       struct MetaTagPacked_16 : MetaPacked<2> {
+         using CTTI_Abstract = No;
          using Base = MetaPacked;
 
          constexpr MetaTagPacked_16() noexcept = default;
@@ -52,8 +53,8 @@ namespace Langulus::RTTI
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems.                                
       struct MetaTagNaked : MetaNaked<DefinitionTag> {
+         using CTTI_Abstract = No;
          using Base = MetaNaked;
-
          using Base::Base;
          using Base::operator =;
          using Base::operator bool;

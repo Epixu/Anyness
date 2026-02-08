@@ -25,6 +25,7 @@ namespace Langulus::RTTI
       /// and worth experimenting with                                        
       #pragma pack(push, 1)
       struct MetaConstPacked_16 : MetaPacked<2> {
+         using CTTI_Abstract = No;
          using Base = MetaPacked;
 
          constexpr MetaConstPacked_16() noexcept = default;
@@ -55,6 +56,7 @@ namespace Langulus::RTTI
       /// A naked pointer to a definition. Probably the fastest, but most     
       /// memory-inefficient on 64bit systems                                 
       struct MetaConstNaked : MetaNaked<DefinitionConst> {
+         using CTTI_Abstract = No;
          using MetaNaked::MetaNaked;
          using MetaNaked::operator =;
          using MetaNaked::operator bool;

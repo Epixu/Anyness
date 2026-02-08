@@ -104,6 +104,7 @@ namespace Langulus::RTTI
          auto GetDefinition() const noexcept -> DefinitionData const*;
 
       public:
+         using CTTI_Abstract = No;
          using Base = MetaPacked<ID_SIZE>;
 
          constexpr MetaDataStructured_XY() noexcept = default;
@@ -210,6 +211,7 @@ namespace Langulus::RTTI
       /// A naked pointer to a definition. Probably (not likely) the fastest, 
       /// but most memory-inefficient on 64bit systems                        
       struct MetaDataNaked : MetaNaked<DefinitionData> {
+         using CTTI_Abstract = No;
          using Base = MetaNaked;
          using Base::Base;
          using Base::operator =;

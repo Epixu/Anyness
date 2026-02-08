@@ -41,6 +41,7 @@ namespace Langulus::Anyness::Component
       template<unsigned, CT::Sparse> friend struct HeapMovable;
       template<unsigned>             friend struct Emplacement;
       template<unsigned, bool>       friend struct Comparison;
+                                     friend struct Conversion;
       template<auto COUNT>           friend struct CountStatic;
       template<unsigned, bool, bool> friend struct OwnershipEmergent;
       template<unsigned>             friend struct OwnershipDeepEmergent;

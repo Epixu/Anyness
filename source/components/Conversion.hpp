@@ -23,96 +23,137 @@ namespace Langulus::Anyness::Component
       using Count = typename Deref<C>::CountType;
 
    public:
-      /// Convert block's contents to another kind of contents, by iterating  
-      /// all elements, and casting them one by one                           
+      /// Convert block's contents to another block of contents, by iterating 
+      /// all elements, and converting them one by one. Each contained item   
+      /// will be converted to a corresponding item in 'out'.                 
       ///   @param out what are we converting to?                             
       ///   @return the number of converted elements inserted in 'out'.       
       ///      this will be smaller than self.GetCount() on partial success   
-      template<CT::Container C, CT::Deep OUT>
+      template<CT::Container C, CT::Deep OUT> requires CT::Dense<OUT>
       auto ConvertTo(this C const& self, OUT& out) -> Count<C> {
          if (self.IsEmpty())
             return 0;
 
-         if constexpr (not CT::TypeErased<C> and not CT::TypeErased<OUT>) {
-            //                                                          
-            // Both containers are statically-typed, so leverage it to  
-            // generate a well inlined routine for conversion           
-            using TO   = TypeOf<OUT>;
-            using FROM = TypeOf<C>;
-            
-            if constexpr (Same<FROM, TO>) {
-               // Types are already the same, just copy elements        
-               out.AllocateMore(out.GetCount() + self.GetCount());
-               try {
-                  out.Concat(self);
+         if constexpr (CT::ContainsOne<OUT>) {
+            // If OUT contains a single item, we can avoid inserting    
+            // and concatenating, and just assigning every time.        
+            if constexpr (CT::Typed<C, OUT>) {
+               using TO = TypeOf<OUT>;
+               using FROM = TypeOf<C>;
+
+               if constexpr (Same<FROM, TO>) {
+                  out.AssignAbsorb(self);
+                  return 1;
                }
-               catch (...) {
-                  out.AllocateLess(out.GetCount());
-                  throw;
-               }               
+               else {
+                  static_assert(CT::Convertible<FROM, TO>, "Not convertible");
+                  out.Assign(static_cast<TO>(*self));
+                  return 1;
+               }
             }
-            else if constexpr (CT::Convertible<FROM, TO>) {
-               // Types are statically convertible                      
-               out.AllocateMore(out.GetCount() + self.GetCount());
+            else {
+               const auto TO = out.GetType();
+               const auto FROM = self.GetType();
+               if (FROM.IsSame(TO)) {
+                  out.AssignAbsorb(self);
+                  return 1;
+               }
+
+               // Search for a reflected conversion routine             
+               LglsAssert(TO, "Can't convert to unknown type");
+               const auto converter = FROM.GetMorphism(TO);
+               if (not converter.convert)
+                  return 0;         // Not convertible                  
+
+               if (out.IsEmpty()) {
+                  out.PrepareForReconstruction();
+                  if_available(out.SetCountInner(1));
+                  if_available(out.SetHashInner(0));
+               }
+               else {
+                  out.PrepareForReassignment();
+                  if_available(out.SetHashInner(0));
+               }
+
                try {
-                  for (auto& from : self)
-                     out.InsertInner(static_cast<TO>(from));
+                  converter.convert(self.GetHeapInnerAsVoid(), out.GetHeapInnerAsVoid());
                }
                catch (...) {
-                  out.AllocateLess(out.GetCount());
+                  out.ResetCount();
                   throw;
                }
-            }         
+
+               return 1;
+            }
          }
          else {
-            const auto TO = out.GetType();
-            const auto FROM = self.GetType();
-            const auto initial_out = out.GetCount();
+            // OUT can contain many items, so we always concatenate     
+            // convertions to the back, preserving contents.            
+            if constexpr (CT::Typed<C, OUT>) {
+               //                                                       
+               // Both containers are statically-typed, so leverage it  
+               // to generate a well inlined routine for conversion     
+               using TO   = TypeOf<OUT>;
+               using FROM = TypeOf<C>;
 
-            if (FROM.IsSame(TO)) {
-               // Types are already the same, don't convert anything    
-               if (not out.IsEmpty())
-                  out.AssignAbsorb(self);
-               else
-                  out.Concat(self);
-               return out.GetCount() - initial_out;
-            }
-            
-            // Search for a reflected conversion routine                
-            LglsAssert(TO, "Can't convert to unknown type");
-            const auto converter = FROM.GetMorphism(TO);
-            if (not converter)
-               return 0;
-
-            out.AllocateMore(out.GetCount() + self.GetCount());
-            auto from = IterateHandles(self).begin();
-            auto to   = IterateHandles(out).begin() + out.GetCount();
-            try {
-               while (from) {
-                  converter(from.GetRaw(), to.GetRaw());
-                  ++to; ++from;
-               }
-            }
-            catch (...) {
-               // Partial success                                       
-               auto n = from - IterateHandles(self).begin();
-               if constexpr (not requires { out.SetCountInner(1); }) {
-                  // Partial success is not allowed - we have to        
-                  // destroy everything we initialized                  
-                  while (n) {
-                     to->DestroyElement();
-                     --to;
-                     --n;
+               if constexpr (Same<FROM, TO>)
+                  return out.Concat(self);
+               else {
+                  // Types are statically convertible                   
+                  static_assert(CT::Convertible<FROM, TO>, "Not convertible");
+                  out.AllocateMore(out.GetCount() + self.GetCount());
+                  auto from = self.GetRaw();
+                  const auto fromEnd = from + self.GetCount();
+                  auto to = out.GetRaw() + out.GetCount();
+                  try {
+                     while (from != fromEnd) {
+                        new (to) TO (static_cast<TO>(*from));
+                        ++to; ++from;
+                     }
+                  }
+                  catch (...) {
+                     // Partial success                                 
+                     auto n = from - self.GetRaw();
+                     out.PartialSuccess(out.GetCount() + n);
+                     throw;
                   }
                }
-               out.PartialSuccess(out.GetCount() + n);
-               throw;
             }
+            else {
+               //                                                       
+               // One of the containers is type-erased                  
+               const auto TO = out.GetType();
+               const auto FROM = self.GetType();
+               if (FROM.IsSame(TO))
+                  return out.Concat(self);
             
+               // Search for a reflected conversion routine             
+               LglsAssert(TO, "Can't convert to unknown type");
+               const auto converter = FROM.GetMorphism(TO);
+               if (not converter.convert)
+                  return 0;         // Not convertible                  
+
+               out.AllocateMore(out.GetCount() + self.GetCount());
+               auto from = IterateHandles(self).begin();
+               auto to   = IterateHandles(out).begin() + out.GetCount();
+               try {
+                  while (from) {
+                     converter.convert(from.GetRaw(), to.GetRaw());
+                     ++to; ++from;
+                  }
+               }
+               catch (...) {
+                  // Partial success                                    
+                  auto n = from - IterateHandles(self).begin();
+                  out.PartialSuccess(out.GetCount() + n);
+                  throw;
+               }            
+            }
+
             out.SetCountInner(out.GetCount() + self.GetCount());
-            out.ResetHash();
+            out.SetHashInner(0);
+            return self.GetCount();
          }
-         return true;
       }
    };
 }

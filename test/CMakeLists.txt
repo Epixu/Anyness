@@ -40,6 +40,7 @@ add_langulus_test(LangulusAnynessTest
                Anyness/any/TestAny-Empty.cpp
                Anyness/any/TestAny-Absorb.cpp
                Anyness/any/TestAny-Piecewise.cpp
+               Anyness/any/TestAny-Convert.cpp
 
                Anyness/many/TestMany-Empty.cpp
                Anyness/many/TestMany-Absorb.cpp

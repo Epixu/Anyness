@@ -99,6 +99,7 @@ namespace Langulus::RTTI::Inner
    ///   @tparam T the type of the meta (data/tag/verb/const)                 
    template<class T>
    struct MetaNaked {
+      using CTTI_Abstract = Yes<>;
       using CTTI_POD      = Yes<>;
       using CTTI_Nullable = Yes<>;
 
@@ -176,14 +177,14 @@ namespace Langulus::RTTI::Inner
       }
    #endif
 
-   /// Get the major version                                                  
+      /// Get the major version                                               
       unsigned GetVersionMajor() const noexcept {
          if (mDefinition)
             return mDefinition->mVersionMajor;
          return 0;
       }
 
-   /// Get the minor version                                                  
+      /// Get the minor version                                               
       unsigned GetVersionMinor() const noexcept {
          if (mDefinition)
             return mDefinition->mVersionMinor;
