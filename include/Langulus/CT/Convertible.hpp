@@ -35,7 +35,10 @@ namespace Langulus::CT
       /// Helper function to extract reflected morphisms from others to T     
       template<class T>
       consteval auto GetMorphismsTo() {
-         static_assert(not ::std::is_reference_v<T>, "Strip references first");
+         static_assert(not Convoluted<T>, "Strip qualifiers first");
+         static_assert(not Reference<T>, "Strip references first");
+         static_assert(not Sheddable<T>, "Strip sheddables first");
+
          if constexpr (CT::Complete<CTTI::MapsTo<T>>) {
             // Checked externally, T doesn't have to be complete        
             using LIST = typename CTTI::MapsTo<T>::From;
@@ -58,7 +61,10 @@ namespace Langulus::CT
       /// Helper function to extract reflected morphisms from T to other types
       template<class T>
       consteval auto GetMorphismsFrom() {
-         static_assert(not ::std::is_reference_v<T>, "Strip references first");
+         static_assert(not Convoluted<T>, "Strip qualifiers first");
+         static_assert(not Reference<T>, "Strip references first");
+         static_assert(not Sheddable<T>, "Strip sheddables first");
+
          if constexpr (CT::Complete<CTTI::MapsFrom<T>>) {
             // Checked externally, T doesn't have to be complete        
             using LIST = typename CTTI::MapsFrom<T>::To;
@@ -79,17 +85,39 @@ namespace Langulus::CT
       };
    }
 
-   /// Check if 'FROM' is convertible to all 'TO'                             
+   /// Check if 'FROM' is implicitly convertible to all 'TO'                  
+   template<class FROM, class...TO>
+   concept ConvertibleImplicit = PartialValidate<TO...> and (
+         std::is_convertible_v<DecvqAll<ShedDeref<FROM>>, DecvqAll<ShedDeref<TO>>>
+      and ...);
+
+   /// Check if 'FROM' is explicitly convertible to all 'TO'                  
+   template<class FROM, class...TO>
+   concept ConvertibleExplicit = PartialValidate<TO...> and (
+         std::constructible_from<DecvqAll<ShedDeref<TO>>, DecvqAll<ShedDeref<FROM>>>
+      and ...);
+
+   /// Check if 'FROM' is custom-convertible to all 'TO'                      
+   template<class FROM, class...TO>
+   concept ConvertibleCustom = PartialValidate<TO...> and (
+         CT::Complete<CTTI::Converter<DecvqAll<ShedDeref<FROM>>, DecvqAll<ShedDeref<TO>>>>
+      and ...);
+
+   /// Check if 'FROM' is somehow convertible to all 'TO'                     
    template<class FROM, class...TO>
    concept Convertible = PartialValidate<TO...>
-       and ((::std::convertible_to<FROM, TO>
-          or CT::Complete<CTTI::Converter<FROM, TO>>) and ...);
+       and ((ConvertibleImplicit<FROM, TO>
+          or ConvertibleExplicit<FROM, TO>
+          or ConvertibleCustom  <FROM, TO>
+       ) and ...);
 
-   /// Check if 'FROM' is convertible to one of 'TO'                          
+   /// Check if 'FROM' is somehow convertible to one of 'TO'                  
    template<class FROM, class...TO>
    concept ConvertibleToOneOf = PartialValidate<TO...>
-       and ((::std::convertible_to<FROM, TO>
-          or CT::Complete<CTTI::Converter<FROM, TO>>) or ...);
+       and ((ConvertibleImplicit<FROM, TO>
+          or ConvertibleExplicit<FROM, TO>
+          or ConvertibleCustom  <FROM, TO>
+       ) or ...);
 }
 
 namespace Langulus
@@ -107,19 +135,21 @@ namespace Langulus
    ///   @attention assumes 'from' is constructed                             
    template<class TO, class FROM>
    constexpr auto Convert(FROM& from) -> TO {
+      static_assert(CT::NotReference<TO, FROM>, "Strip references first");
+      static_assert(CT::NotSheddable<TO, FROM>, "Strip sheddables first");
       using DFROM = DecvqAll<FROM>;
       using DTO   = DecvqAll<TO>;
 
-      if constexpr (CT::Complete<CTTI::Converter<DFROM, DTO>>)
+      if constexpr (CT::ConvertibleCustom<DFROM, DTO>)
          return CTTI::Converter<DFROM, DTO>::Convert(from);
-      else if constexpr (requires { DTO(from); })
+      else if constexpr (CT::ConvertibleImplicit<DFROM, DTO>)
          return DTO(from);
-      else if constexpr (requires { DTO(static_cast<DTO>(from)); })
-         return DTO(static_cast<DTO>(from));
+      else if constexpr (CT::ConvertibleExplicit<DFROM, DTO>)
+         return DTO{static_cast<DTO>(from)};
       else {
          static_assert(false,
             "FROM can't be converted to TO - add CTTI::Converter, "
-            "explicit/implicit constructor, or cast operator"
+            "implicit constructor, or implicit/explicit cast operator"
          );
       }
    }

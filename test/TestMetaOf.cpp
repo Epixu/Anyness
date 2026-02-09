@@ -274,9 +274,27 @@ namespace Langulus::CTTI
    struct MapsFrom<Pi> {
       using To = Types<ImplicitlyReflectedDataWithTraits, ConvertibleData>;
    };
+
+   template<>
+   struct MapsTo<ImplicitlyReflectedDataWithTraits> {
+      using From = Pi;
+   };
+
+   template<>
+   struct MapsTo<int> {
+      using From = ::std::string;
+   };
+   
    template<>
    struct NamedValue<Pi::ConflictingNumber> {
       static constexpr Literal Name = "Pi::Number";
+   };
+
+   template<>
+   struct Converter<::std::string, int> {
+      static constexpr auto Convert(::std::string const& from) -> int {
+         return from == "the devil" ? 666 : -1;
+      }
    };
 }
 
@@ -864,26 +882,58 @@ SCENARIO("A type reflected with all traits") {
    REQUIRE(DMeta(meta.GetMembers()[3].type()).Is(MetaDataOf<int>()));
 
    REQUIRE(meta.GetNamedValues().size() == 0);
-
-   const auto intmeta = RTTI::DefinitionData::Reflect<int>();
    REQUIRE(meta.GetMorphismsTo().size() == 1);
-   REQUIRE(meta.GetMorphismsTo().at(intmeta).convert != nullptr);
-
-   const auto pimeta = RTTI::DefinitionData::Reflect<Pi>();
    REQUIRE(meta.GetMorphismsFrom().size() == 1);
-   REQUIRE(meta.GetMorphismsFrom().at(pimeta).convert != nullptr);
 
-   const auto impmeta = RTTI::DefinitionData::Reflect<ImplicitlyReflectedDataWithTraits>();
-   REQUIRE(DMeta(pimeta).GetMorphismsTo().at(impmeta).convert == meta.GetMorphismsFrom().at(pimeta).convert);
+   const auto int_definition = RTTI::DefinitionData::Reflect<int>();
+   const auto pi_definition  = RTTI::DefinitionData::Reflect<Pi>();
+   const auto imp_definition = RTTI::DefinitionData::Reflect<ImplicitlyReflectedDataWithTraits>();
+   const auto cvt_definition = RTTI::DefinitionData::Reflect<ConvertibleData>();
+
+   REQUIRE(meta == imp_definition);
+   REQUIRE(meta.GetMorphismsTo().at(int_definition).convert != nullptr);
+   REQUIRE(meta.GetMorphismsFrom().at(pi_definition).convert != nullptr);
+   REQUIRE(DMeta(int_definition).GetMorphismsFrom().size() == 1);
+   REQUIRE(DMeta(int_definition).GetMorphismsTo().size() == 0);
+   REQUIRE(DMeta(pi_definition).GetMorphismsFrom().size() == 0);
+   REQUIRE(DMeta(pi_definition).GetMorphismsTo().size() == 2);
+   REQUIRE(DMeta(pi_definition).GetMorphismsTo().at(imp_definition).convert != nullptr);
+   REQUIRE(DMeta(pi_definition).GetMorphismsTo().at(cvt_definition).convert != nullptr);
+   REQUIRE(DMeta(cvt_definition).GetMorphismsFrom().size() == 0);
+   REQUIRE(DMeta(cvt_definition).GetMorphismsTo().size() == 1);
+   REQUIRE(DMeta(cvt_definition).GetMorphismsTo().at(int_definition).convert != nullptr);
 
    int converted = 1;
-   meta.GetMorphismsTo().at(intmeta).convert(&instance, &converted);
+   meta.GetMorphismsTo().at(int_definition).convert(&instance, &converted);
    REQUIRE(converted == 664);
-
-   Pi source;
-   ImplicitlyReflectedDataWithTraits convertedFromPi1;
-   meta.GetMorphismsFrom().at(pimeta).convert(&source, &convertedFromPi1);
-   REQUIRE(convertedFromPi1.member == 314);
+   {
+      Pi source;
+      ImplicitlyReflectedDataWithTraits convertedFromPi1;
+      meta.GetMorphismsFrom().at(pi_definition).convert(&source, &convertedFromPi1);
+      REQUIRE(convertedFromPi1.member == 314);
+   }
+   {
+      Pi source;
+      ImplicitlyReflectedDataWithTraits convertedFromPi1;
+      DMeta(pi_definition).GetMorphismsTo().at(imp_definition).convert(&source, &convertedFromPi1);
+      REQUIRE(convertedFromPi1.member == 314);
+   }
+   {
+      Pi source;
+      ImplicitlyReflectedDataWithTraits convertedFromPi1;
+      DMeta(pi_definition).GetMorphism(imp_definition).convert(&source, &convertedFromPi1);
+      REQUIRE(convertedFromPi1.member == 314);
+   }
+   {
+      std::string source = "the devil";
+      int convertedFromString = 0;
+      auto stdmeta = MetaDataOf<std::string>();
+      REQUIRE(stdmeta.GetMorphismsTo().size() == 0);
+      REQUIRE(stdmeta.GetMorphismsFrom().size() == 0);
+      REQUIRE(stdmeta.GetMorphism(int_definition).convert);
+      stdmeta.GetMorphism(int_definition).convert(&source, &convertedFromString);
+      REQUIRE(convertedFromString == 666);
+   }
 }
 
 ///                                                                           

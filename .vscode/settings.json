@@ -118,5 +118,6 @@
          "color": "#000000"
       }]
    },
-   "workbench.editor.wrapTabs": true
+   "workbench.editor.wrapTabs": true,
+   "editor.hover.delay": 1250
 }
