@@ -92,6 +92,7 @@ namespace Langulus::CT
       and ...);
 
    /// Check if 'FROM' is explicitly convertible to all 'TO'                  
+   ///   @attention this is also true if TO is aggregate containing FROM      
    template<class FROM, class...TO>
    concept ConvertibleExplicit = PartialValidate<TO...> and (
          std::constructible_from<DecvqAll<ShedDeref<TO>>, DecvqAll<ShedDeref<FROM>>>
@@ -104,6 +105,7 @@ namespace Langulus::CT
       and ...);
 
    /// Check if 'FROM' is somehow convertible to all 'TO'                     
+   ///   @attention this is also true if TO are aggregates containing FROM    
    template<class FROM, class...TO>
    concept Convertible = PartialValidate<TO...>
        and ((ConvertibleImplicit<FROM, TO>
@@ -112,6 +114,7 @@ namespace Langulus::CT
        ) and ...);
 
    /// Check if 'FROM' is somehow convertible to one of 'TO'                  
+   ///   @attention this is also true if one of TO is aggregate of FROM       
    template<class FROM, class...TO>
    concept ConvertibleToOneOf = PartialValidate<TO...>
        and ((ConvertibleImplicit<FROM, TO>

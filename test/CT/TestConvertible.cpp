@@ -16,20 +16,19 @@ namespace
    struct SheddableType { using CTTI_Sheddable = T; };
    struct IncompleteType;
 
-   /// Built-in convertible from int by using constructor                     
+   ///                                                                        
+   /// Convertible from int                                                   
    struct BuiltinConvertibleFromIntViaConstructor {
       int inner = 0;
       BuiltinConvertibleFromIntViaConstructor(int x) : inner {x} {}
    };
 
-   /// Built-in convertible from int by using explicit constructor            
    struct BuiltinConvertibleFromIntViaExplicitConstructor {
       int inner = 0;
       explicit BuiltinConvertibleFromIntViaExplicitConstructor(int x) : inner {x} {}
    };
 
-   /// Proper types, reflected as convertible from int                        
-   struct ConvertibleFromIntExternallyMisingConverter {};
+   struct ConvertibleFromIntExternallyMissingConverter {};
    class  ConvertibleFromIntExternally {
       int inner = 0;
    public:
@@ -72,12 +71,87 @@ namespace
    struct InheritedConvertibleFromInt2ButPrivate : private BuiltinConvertibleFromIntViaConstructor {};
    struct InheritedConvertibleFromInt3ButPrivate : private BuiltinConvertibleFromIntViaExplicitConstructor {};
    struct InheritedConvertibleFromIntExternally : ConvertibleFromIntExternally {};
+
+
+   ///                                                                        
+   /// Convertible to int                                                     
+   class BuiltinConvertibleToIntViaOperator {
+      int inner = 0;
+   public:
+      operator int() const noexcept {
+         return inner;
+      }
+   };
+
+   class BuiltinConvertibleToIntViaOperatorMutable {
+      int inner = 0;
+   public:
+      operator int() noexcept {
+         return inner;
+      }
+   };
+
+   class BuiltinConvertibleToIntViaExplicitOperator {
+      int inner = 0;
+   public:
+      explicit operator int() const noexcept {
+         return inner;
+      }
+   };
+
+   class BuiltinConvertibleToIntViaExplicitOperatorMutable {
+      int inner = 0;
+   public:
+      explicit operator int() noexcept {
+         return inner;
+      }
+   };
+
+   struct BuiltinConvertibleToIntBecauseAggregate {
+      int inner = 0;
+   };
+
+   struct ConvertibleToIntExternallyMissingConverter {};
+   struct ConvertibleToIntExternally {
+      ::std::string inner;
+   };
+
+   struct ConvertibleToIntInternallyMissingConverter {
+      using CTTI_MapsTo = int;
+   };
+
+   struct ConvertibleToIntInternally {
+      ::std::string inner;
+      using CTTI_MapsTo = int;
+   };
+
+   /// Types that inherit convertible properties                              
+   struct InheritedConvertibleToInt1
+      : ConvertibleToIntInternally {};
+   struct InheritedConvertibleToInt1Disabled
+      : ConvertibleToIntInternally { using CTTI_MapsTo = void; };
+   struct InheritedConvertibleToInt2
+      : ConvertibleToIntExternally {};
+   struct InheritedConvertibleToInt3
+      : BuiltinConvertibleToIntViaOperator {};
+   struct InheritedConvertibleToInt4
+      : BuiltinConvertibleToIntViaOperatorMutable {};
+   struct InheritedConvertibleToInt5
+      : BuiltinConvertibleToIntViaExplicitOperator {};
+   struct InheritedConvertibleToInt6
+      : BuiltinConvertibleToIntViaExplicitOperatorMutable {};
+
+   /// Types that inherit convertible properties privately                    
+   struct InheritedConvertibleToInt1ButPrivate : private ConvertibleToIntInternally {};
+   struct InheritedConvertibleToInt2ButPrivate : private BuiltinConvertibleToIntViaOperator {};
+   struct InheritedConvertibleToInt3ButPrivate : private BuiltinConvertibleToIntViaExplicitOperator {};
+   struct InheritedConvertibleToIntExternally : ConvertibleToIntExternally {};
 }
 
 namespace Langulus::CTTI
 {
    template<>
-   struct MapsTo<ConvertibleFromIntExternallyMisingConverter> {
+   struct MapsTo<ConvertibleFromIntExternallyMissingConverter> {
       using From = int;
    };
    template<>
@@ -94,6 +168,28 @@ namespace Langulus::CTTI
    struct Converter<int, ConvertibleFromIntInternally> {
       static constexpr auto Convert(int const& from) -> ConvertibleFromIntInternally {
          return ConvertibleFromIntInternally::Init(from);
+      }
+   };
+
+
+   template<>
+   struct MapsFrom<ConvertibleToIntExternallyMissingConverter> {
+      using To = int;
+   };
+   template<>
+   struct MapsFrom<ConvertibleToIntExternally> {
+      using To = int;
+   };
+   template<>
+   struct Converter<ConvertibleToIntExternally, int> {
+      static constexpr auto Convert(ConvertibleToIntExternally const& from) -> int {
+         return from.inner.size();
+      }
+   };
+   template<>
+   struct Converter<ConvertibleToIntInternally, int> {
+      static constexpr auto Convert(ConvertibleToIntInternally const& from) -> int {
+         return from.inner.size();
       }
    };
 }
@@ -131,10 +227,10 @@ TEST_CASE_TEMPLATE("Testing not CT::ConvertibleImplicit from int", TestType
    , BuiltinConvertibleFromIntViaExplicitConstructor
    , BuiltinConvertibleFromIntViaExplicitConstructor const
    , BuiltinConvertibleFromIntViaExplicitConstructor&
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter*>
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter* const>
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter* const&>
-   , ConvertibleFromIntExternallyMisingConverter*
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter*>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const&>
+   , ConvertibleFromIntExternallyMissingConverter*
    , SheddableType<ConvertibleFromIntInternallyMissingConverter*>
    , SheddableType<ConvertibleFromIntInternallyMissingConverter* const>
    , SheddableType<ConvertibleFromIntInternallyMissingConverter* const&>
@@ -166,6 +262,27 @@ TEST_CASE_TEMPLATE("Testing not CT::ConvertibleImplicit from int", TestType
    , IncompleteType*
    , Types<void*>
    , int*, float*, bool*
+
+   , BuiltinConvertibleToIntViaOperator
+   , BuiltinConvertibleToIntViaOperatorMutable
+   , BuiltinConvertibleToIntViaExplicitOperator
+   , BuiltinConvertibleToIntViaExplicitOperatorMutable
+   , BuiltinConvertibleToIntBecauseAggregate
+   , ConvertibleToIntExternallyMissingConverter
+   , ConvertibleToIntExternally
+   , ConvertibleToIntInternallyMissingConverter
+   , ConvertibleToIntInternally
+   , InheritedConvertibleToInt1
+   , InheritedConvertibleToInt1Disabled
+   , InheritedConvertibleToInt2
+   , InheritedConvertibleToInt3
+   , InheritedConvertibleToInt4
+   , InheritedConvertibleToInt5
+   , InheritedConvertibleToInt6
+   , InheritedConvertibleToInt1ButPrivate
+   , InheritedConvertibleToInt2ButPrivate
+   , InheritedConvertibleToInt3ButPrivate
+   , InheritedConvertibleToIntExternally
 ) {
    static_assert(not CT::ConvertibleImplicit<int, TestType>);
 }
@@ -201,6 +318,7 @@ TEST_CASE_TEMPLATE("Testing CT::ConvertibleExplicit from int", TestType
    , int, const int, const int&, int&
    , float, float const, float const&, float&
    , bool, bool const, bool const&, bool&
+   , BuiltinConvertibleToIntBecauseAggregate
 ) {
    static_assert(CT::ConvertibleExplicit<int, TestType>);
 }
@@ -211,10 +329,10 @@ TEST_CASE_TEMPLATE("Testing not CT::ConvertibleExplicit from int", TestType
    //, SheddableType<IncompleteType> // shouldn't compile
    , void
    , void*
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter*>
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter* const>
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter* const&>
-   , ConvertibleFromIntExternallyMisingConverter*
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter*>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const&>
+   , ConvertibleFromIntExternallyMissingConverter*
    , SheddableType<ConvertibleFromIntInternallyMissingConverter*>
    , SheddableType<ConvertibleFromIntInternallyMissingConverter* const>
    , SheddableType<ConvertibleFromIntInternallyMissingConverter* const&>
@@ -242,7 +360,27 @@ TEST_CASE_TEMPLATE("Testing not CT::ConvertibleExplicit from int", TestType
    , InheritedConvertibleFromInt4*
    , IncompleteType*
    , Types<void*>
-   , int*, float*, bool*   
+   , int*, float*, bool*
+
+   , BuiltinConvertibleToIntViaOperator
+   , BuiltinConvertibleToIntViaOperatorMutable
+   , BuiltinConvertibleToIntViaExplicitOperator
+   , BuiltinConvertibleToIntViaExplicitOperatorMutable
+   , ConvertibleToIntExternallyMissingConverter
+   , ConvertibleToIntExternally
+   , ConvertibleToIntInternallyMissingConverter
+   , ConvertibleToIntInternally
+   , InheritedConvertibleToInt1
+   , InheritedConvertibleToInt1Disabled
+   , InheritedConvertibleToInt2
+   , InheritedConvertibleToInt3
+   , InheritedConvertibleToInt4
+   , InheritedConvertibleToInt5
+   , InheritedConvertibleToInt6
+   , InheritedConvertibleToInt1ButPrivate
+   , InheritedConvertibleToInt2ButPrivate
+   , InheritedConvertibleToInt3ButPrivate
+   , InheritedConvertibleToIntExternally
 ) {
    static_assert(not CT::ConvertibleExplicit<int, TestType>);
 }
@@ -294,14 +432,14 @@ TEST_CASE_TEMPLATE("Testing not CT::ConvertibleCustom from int", TestType
    , bool, bool const, bool const&, bool&
    , void
    , void*
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter*>
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter* const>
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter* const&>
-   , ConvertibleFromIntExternallyMisingConverter*
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter*>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const&>
+   , ConvertibleFromIntExternallyMissingConverter*
    , SheddableType<ConvertibleFromIntInternallyMissingConverter*>
    , SheddableType<ConvertibleFromIntInternallyMissingConverter* const>
    , SheddableType<ConvertibleFromIntInternallyMissingConverter* const&>
-   , ConvertibleFromIntInternallyMissingConverter*   
+   , ConvertibleFromIntInternallyMissingConverter*
    , SheddableType<InheritedConvertibleFromInt1Disabled*>
    , SheddableType<InheritedConvertibleFromInt1Disabled* const>
    , SheddableType<InheritedConvertibleFromInt1Disabled* const&>
@@ -319,7 +457,28 @@ TEST_CASE_TEMPLATE("Testing not CT::ConvertibleCustom from int", TestType
    , InheritedConvertibleFromInt4*
    , IncompleteType*
    , Types<void*>
-   , int*, float*, bool*   
+   , int*, float*, bool*
+
+   , BuiltinConvertibleToIntViaOperator
+   , BuiltinConvertibleToIntViaOperatorMutable
+   , BuiltinConvertibleToIntViaExplicitOperator
+   , BuiltinConvertibleToIntViaExplicitOperatorMutable
+   , BuiltinConvertibleToIntBecauseAggregate
+   , ConvertibleToIntExternallyMissingConverter
+   , ConvertibleToIntExternally
+   , ConvertibleToIntInternallyMissingConverter
+   , ConvertibleToIntInternally
+   , InheritedConvertibleToInt1
+   , InheritedConvertibleToInt1Disabled
+   , InheritedConvertibleToInt2
+   , InheritedConvertibleToInt3
+   , InheritedConvertibleToInt4
+   , InheritedConvertibleToInt5
+   , InheritedConvertibleToInt6
+   , InheritedConvertibleToInt1ButPrivate
+   , InheritedConvertibleToInt2ButPrivate
+   , InheritedConvertibleToInt3ButPrivate
+   , InheritedConvertibleToIntExternally
 ) {
    static_assert(not CT::ConvertibleCustom<int, TestType>);
 }
@@ -331,7 +490,7 @@ static_assert(not CT::ConvertibleCustom<int, ConvertibleFromIntExternally, int>)
 
 
 ///                                                                           
-/// CT::Convertible                                                           
+/// CT::Convertible from int                                                  
 ///                                                                           
 TEST_CASE_TEMPLATE("Testing CT::Convertible from int", TestType
    //, IncompleteType                // shouldn't compile
@@ -361,6 +520,7 @@ TEST_CASE_TEMPLATE("Testing CT::Convertible from int", TestType
    , int, const int, const int&, int&
    , float, float const, float const&, float&
    , bool, bool const, bool const&, bool&
+   , BuiltinConvertibleToIntBecauseAggregate
 ) {
    static_assert(CT::Convertible<int, TestType>);
    static_assert(CT::ConvertibleToOneOf<int, void, void*, TestType>);
@@ -372,10 +532,10 @@ TEST_CASE_TEMPLATE("Testing not CT::Convertible from int", TestType
    //, SheddableType<IncompleteType> // shouldn't compile
    , void
    , void*
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter*>
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter* const>
-   , SheddableType<ConvertibleFromIntExternallyMisingConverter* const&>
-   , ConvertibleFromIntExternallyMisingConverter*
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter*>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const&>
+   , ConvertibleFromIntExternallyMissingConverter*
    , SheddableType<ConvertibleFromIntInternallyMissingConverter*>
    , SheddableType<ConvertibleFromIntInternallyMissingConverter* const>
    , SheddableType<ConvertibleFromIntInternallyMissingConverter* const&>
@@ -398,6 +558,26 @@ TEST_CASE_TEMPLATE("Testing not CT::Convertible from int", TestType
    , IncompleteType*
    , Types<void*>
    , int*, float*, bool*
+
+   , BuiltinConvertibleToIntViaOperator
+   , BuiltinConvertibleToIntViaOperatorMutable
+   , BuiltinConvertibleToIntViaExplicitOperator
+   , BuiltinConvertibleToIntViaExplicitOperatorMutable
+   , ConvertibleToIntExternallyMissingConverter
+   , ConvertibleToIntExternally
+   , ConvertibleToIntInternallyMissingConverter
+   , ConvertibleToIntInternally
+   , InheritedConvertibleToInt1
+   , InheritedConvertibleToInt1Disabled
+   , InheritedConvertibleToInt2
+   , InheritedConvertibleToInt3
+   , InheritedConvertibleToInt4
+   , InheritedConvertibleToInt5
+   , InheritedConvertibleToInt6
+   , InheritedConvertibleToInt1ButPrivate
+   , InheritedConvertibleToInt2ButPrivate
+   , InheritedConvertibleToInt3ButPrivate
+   , InheritedConvertibleToIntExternally
 ) {
    static_assert(not CT::Convertible<int, TestType>);
    static_assert(not CT::ConvertibleToOneOf<int, TestType, SheddableType<TestType>>);
@@ -407,3 +587,151 @@ TEST_CASE_TEMPLATE("Testing not CT::Convertible from int", TestType
 //static_assert(    CT::Convertible<int>);  // shouldn't compile at all
 static_assert(    CT::Convertible<int, int, float, bool>);
 static_assert(not CT::Convertible<int, int, float, bool, void>);
+
+
+///                                                                           
+/// CT::Convertible to int                                                    
+///                                                                           
+TEST_CASE_TEMPLATE("Testing CT::Convertible to int", TestType
+   //, IncompleteType                // shouldn't compile
+   //, IncompleteType const          // shouldn't compile
+   //, SheddableType<IncompleteType> // shouldn't compile
+   , BuiltinConvertibleToIntViaOperator
+   , BuiltinConvertibleToIntViaOperatorMutable
+   , BuiltinConvertibleToIntViaExplicitOperator
+   , BuiltinConvertibleToIntViaExplicitOperatorMutable
+   , ConvertibleToIntExternally
+   , ConvertibleToIntInternally
+   , InheritedConvertibleToInt3
+   , InheritedConvertibleToInt4
+   , InheritedConvertibleToInt5
+   , InheritedConvertibleToInt6
+   , int, const int, const int&, int&
+   , float, float const, float const&, float&
+   , bool, bool const, bool const&, bool&
+) {
+   static_assert(CT::Convertible<TestType, int>);
+}
+
+TEST_CASE_TEMPLATE("Testing not CT::Convertible to int", TestType
+   //, IncompleteType                // shouldn't compile
+   //, IncompleteType const          // shouldn't compile
+   //, SheddableType<IncompleteType> // shouldn't compile
+   , void
+   , void*
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter*>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const>
+   , SheddableType<ConvertibleFromIntExternallyMissingConverter* const&>
+   , ConvertibleFromIntExternallyMissingConverter*
+   , SheddableType<ConvertibleFromIntInternallyMissingConverter*>
+   , SheddableType<ConvertibleFromIntInternallyMissingConverter* const>
+   , SheddableType<ConvertibleFromIntInternallyMissingConverter* const&>
+   , ConvertibleFromIntInternallyMissingConverter*
+   , SheddableType<InheritedConvertibleFromInt1Disabled*>
+   , SheddableType<InheritedConvertibleFromInt1Disabled* const>
+   , SheddableType<InheritedConvertibleFromInt1Disabled* const&>
+   , InheritedConvertibleFromInt1Disabled*
+   , SheddableType<InheritedConvertibleFromInt2*>
+   , SheddableType<InheritedConvertibleFromInt2* const>
+   , SheddableType<InheritedConvertibleFromInt2* const&>
+   , InheritedConvertibleFromInt1
+   , InheritedConvertibleFromInt1 const
+   , InheritedConvertibleFromInt1&
+   , InheritedConvertibleFromInt2*
+   , SheddableType<InheritedConvertibleFromInt4*>
+   , SheddableType<InheritedConvertibleFromInt4* const>
+   , SheddableType<InheritedConvertibleFromInt4* const&>
+   , InheritedConvertibleFromInt4*
+   , IncompleteType*
+   , Types<void*>
+   , int*, float*, bool*
+
+   , SheddableType<BuiltinConvertibleFromIntViaConstructor>
+   , SheddableType<BuiltinConvertibleFromIntViaConstructor const>
+   , SheddableType<BuiltinConvertibleFromIntViaConstructor const&>
+   , BuiltinConvertibleFromIntViaConstructor
+   , BuiltinConvertibleFromIntViaConstructor const
+   , BuiltinConvertibleFromIntViaConstructor&
+   , SheddableType<BuiltinConvertibleFromIntViaExplicitConstructor>
+   , SheddableType<BuiltinConvertibleFromIntViaExplicitConstructor const>
+   , SheddableType<BuiltinConvertibleFromIntViaExplicitConstructor const&>
+   , BuiltinConvertibleFromIntViaExplicitConstructor
+   , BuiltinConvertibleFromIntViaExplicitConstructor const
+   , BuiltinConvertibleFromIntViaExplicitConstructor&
+   , ConvertibleFromIntExternally
+   , ConvertibleFromIntExternally const
+   , ConvertibleFromIntExternally&
+   , ConvertibleFromIntInternally
+   , ConvertibleFromIntInternally const
+   , ConvertibleFromIntInternally&
+   , InheritedConvertibleFromInt3
+   , InheritedConvertibleFromInt3 const
+   , InheritedConvertibleFromInt3&
+   , BuiltinConvertibleToIntBecauseAggregate
+
+   , ConvertibleToIntExternallyMissingConverter
+   , ConvertibleToIntInternallyMissingConverter
+   , InheritedConvertibleToInt1
+   , InheritedConvertibleToInt1Disabled
+   , InheritedConvertibleToInt2
+   , InheritedConvertibleToInt1ButPrivate
+   , InheritedConvertibleToInt2ButPrivate
+   , InheritedConvertibleToInt3ButPrivate
+   , InheritedConvertibleToIntExternally
+) {
+   static_assert(not CT::Convertible<TestType, int>);
+}
+
+///                                                                           
+/// Langulus::MorphismsFrom                                                   
+///                                                                           
+TEST_CASE_TEMPLATE("Testing Langulus::MorphismsFrom to int", TestType
+   //, IncompleteType                // shouldn't compile
+   //, IncompleteType const          // shouldn't compile
+   //, SheddableType<IncompleteType> // shouldn't compile
+   , ConvertibleToIntExternally
+   , ConvertibleToIntInternally
+) {
+   static_assert(Exact<Langulus::MorphismsFrom<TestType>, Types<int>>);
+}
+
+TEST_CASE_TEMPLATE("Testing Langulus::MorphismsFrom to nothing", TestType
+   //, IncompleteType                // shouldn't compile
+   //, IncompleteType const          // shouldn't compile
+   //, SheddableType<IncompleteType> // shouldn't compile
+   , BuiltinConvertibleToIntViaOperator
+   , BuiltinConvertibleToIntViaOperatorMutable
+   , BuiltinConvertibleToIntViaExplicitOperator
+   , BuiltinConvertibleToIntViaExplicitOperatorMutable
+   , InheritedConvertibleToInt3
+   , InheritedConvertibleToInt4
+   , InheritedConvertibleToInt5
+   , InheritedConvertibleToInt6
+   , int, const int, const int&, int&
+   , float, float const, float const&, float&
+   , bool, bool const, bool const&, bool&
+) {
+   static_assert(Exact<Langulus::MorphismsFrom<TestType>, Types<>>);
+}
+
+///                                                                           
+/// Langulus::MorphismsTo                                                     
+///                                                                           
+TEST_CASE_TEMPLATE("Testing Langulus::MorphismsTo from int", TestType
+   //, IncompleteType                // shouldn't compile
+   //, IncompleteType const          // shouldn't compile
+   //, SheddableType<IncompleteType> // shouldn't compile
+   , ConvertibleFromIntExternally
+   , ConvertibleFromIntInternally
+) {
+   static_assert(Exact<Langulus::MorphismsTo<TestType>, Types<int>>);
+}
+
+TEST_CASE_TEMPLATE("Testing Langulus::MorphismsTo from ::std::string (defined in Main.hpp)", TestType
+   //, IncompleteType                // shouldn't compile
+   //, IncompleteType const          // shouldn't compile
+   //, SheddableType<IncompleteType> // shouldn't compile
+   , int, const int, const int&, int&
+) {
+   static_assert(Exact<Langulus::MorphismsTo<TestType>, Types<::std::string>>);
+}

@@ -281,21 +281,25 @@ namespace Langulus::CTTI
    };
 
    template<>
+   struct NamedValue<Pi::ConflictingNumber> {
+      static constexpr Literal Name = "Pi::Number";
+   };
+
+   ///   @important fundamental types are very sensitive of when you define   
+   /// external properties. They must be defined as early as possbile in      
+   /// order to work properly, because if int gets reflectged elsewhere,      
+   /// these might never be captured by the reflector.                        
+   /*template<> 
    struct MapsTo<int> {
       using From = ::std::string;
    };
    
    template<>
-   struct NamedValue<Pi::ConflictingNumber> {
-      static constexpr Literal Name = "Pi::Number";
-   };
-
-   template<>
    struct Converter<::std::string, int> {
       static constexpr auto Convert(::std::string const& from) -> int {
          return from == "the devil" ? 666 : -1;
       }
-   };
+   };*/
 }
 
 
@@ -894,6 +898,8 @@ SCENARIO("A type reflected with all traits") {
    REQUIRE(meta.GetMorphismsTo().at(int_definition).convert != nullptr);
    REQUIRE(meta.GetMorphismsFrom().at(pi_definition).convert != nullptr);
    REQUIRE(DMeta(int_definition).GetMorphismsFrom().size() == 1);
+   static_assert(Exact<MorphismsTo<int>, Types<::std::string>>);
+
    REQUIRE(DMeta(int_definition).GetMorphismsTo().size() == 0);
    REQUIRE(DMeta(pi_definition).GetMorphismsFrom().size() == 0);
    REQUIRE(DMeta(pi_definition).GetMorphismsTo().size() == 2);

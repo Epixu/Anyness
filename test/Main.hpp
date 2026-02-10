@@ -53,3 +53,25 @@ namespace doctest
    constexpr int BenchmarkWarmupCycles  =  100;
    constexpr int BenchmarkMeasureCycles = 1000;
 #endif
+
+namespace Langulus::CTTI
+{
+   /// These customizations need to appear as early as possible, in order     
+   /// to be consistently reflected in all tests                              
+   template<>
+   struct MapsTo<int> {
+      using From = ::std::string;
+   };
+
+   template<>
+   struct Converter<::std::string, int> {
+      static constexpr auto Convert(::std::string const& from) -> int {
+         return from == "the devil" ? 666 : -1;
+      }
+   };
+
+   template<>
+   struct Named<::std::string> {
+      static constexpr Literal Name = "string";
+   };
+}

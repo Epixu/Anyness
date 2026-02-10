@@ -43,13 +43,6 @@ namespace Langulus::Tags
       using CTTI_Info      = Yes<"Used for tagging counters">;
    };
 }
-namespace Langulus::CTTI
-{
-   template<>
-   struct Named<::std::string> {
-      static constexpr Literal Name = "string";
-   };
-}
 
 TEST_CASE_TEMPLATE("Tags", T,
    int, ::std::string
@@ -79,7 +72,10 @@ TEST_CASE_TEMPLATE("Tags", T,
       //[[maybe_unused]] auto meta1 = MetaDataOf<Tags::Count<>>(); // shouldn't compile    
       auto meta = MetaDataOf<Tags::TCount<T>>();
       REQUIRE(meta);
-      REQUIRE(meta.GetName() == (::std::same_as<T, int> ? "Int32" : "String"));
+      if constexpr (::std::same_as<T, int>)
+         REQUIRE(meta.GetName() == "Int32");
+      else
+         REQUIRE(meta.GetName() == "String");
       REQUIRE(meta.GetInfo() == InfoOf<T>());
       REQUIRE(meta.GetVersionMajor() == 1);
       REQUIRE(meta.GetVersionMinor() == 0);
