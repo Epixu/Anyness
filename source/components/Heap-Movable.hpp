@@ -22,10 +22,11 @@ namespace Langulus::Anyness::Component
       static constexpr bool HeapCanBeNull = true;
 
    protected:
-      template<unsigned, class>     friend struct ReserveEmergent;
-      template<unsigned>            friend struct IterationOperators;
-      template<unsigned, class AS>  friend struct Insertion;
-      template<unsigned>            friend struct Emplacement;
+      template<unsigned, class>      friend struct ReserveEmergent;
+      template<unsigned>             friend struct IterationOperators;
+      template<unsigned, class AS>   friend struct Insertion;
+      template<unsigned>             friend struct Emplacement;
+                                     friend struct Conversion;
       template<unsigned, bool, bool> friend struct OwnershipEmergent;
 
       template<CT::Container C>

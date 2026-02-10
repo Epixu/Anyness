@@ -138,7 +138,7 @@ namespace Langulus::Anyness::Component
                auto to   = IterateHandles(out).begin() + out.GetCount();
                try {
                   while (from) {
-                     converter.convert(from.GetRaw(), to.GetRaw());
+                     converter.convert(from->GetRaw(), to->GetRaw());
                      ++to; ++from;
                   }
                }
