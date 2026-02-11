@@ -77,32 +77,42 @@ namespace Langulus::Anyness
          this->Destroy();
       }
       
-      /// Construction that either absorbs the provided container, or         
-      /// emplaces T in the container, using A... as constructor arguments    
-      template<class...A>
-      constexpr TMany(A&&...arguments) {
-         if constexpr (sizeof...(A) == 1 and (SameAsOneOf<Deint<A>, TMany, Many> and ...)) {
-            LglsAssumeUser(
-               (not SameAsOneOf<T, TMany, Many>),
-               "Ambiguous use of construction "
-               "- you should use tag-dispatch with first argument either Absorb "
-               "(if you want to overwrite the container itself) or Piecewise "
-               "(if you want to overwrite the first item) in order to clearly "
-               "state your intent. Absorb will be used by default!"
-            );
-            this->Absorb(LglsFwd(arguments)...);
+      /// Construction that either absorbs the provided containers, or        
+      /// emplaces all A in the container                                     
+      template<class A1, class...AN>
+      constexpr TMany(A1&& a1, AN&&...an) {
+         if constexpr (sizeof...(AN) == 0) {
+            if constexpr (SameAsOneOf<Deint<A1>, TMany, Many>) {
+               LglsAssumeUser((not SameAsOneOf<T, TMany, Many>),
+                  "Ambiguous use of construction "
+                  "- you should use tag-dispatch with first argument either Absorb "
+                  "(if you want to overwrite the container itself) or Piecewise "
+                  "(if you want to overwrite the first item) in order to clearly "
+                  "state your intent. Absorb will be used by default!"
+               );
+               this->Absorb(LglsFwd(a1));
+            }
+            else this->EmplaceConstruct(LglsFwd(a1));
          }
-         else this->EmplaceConstruct(LglsFwd(arguments)...);
+         else this->Insert(LglsFwd(a1), LglsFwd(an)...);
       }
       
       /// Construction that absorbs the provided container                    
-      constexpr TMany(Inner::Absorb, auto&& argument) {
-         this->Absorb(LglsFwd(argument));
+      template<class A1, class...AN>
+      constexpr TMany(Inner::Absorb, A1&& a1, AN&&...an) {
+         if constexpr (sizeof...(AN) == 0)
+            this->Absorb(LglsFwd(a1));
+         else
+            this->Concat(LglsFwd(a1), LglsFwd(an)...);
       }
       
-      /// Emplaces T inside, using A... as constructor arguments              
-      constexpr TMany(Inner::Piecewise, auto&&...arguments) {
-         this->EmplaceConstruct(LglsFwd(arguments)...);
+      /// Construction that emplaces all arguments inside                     
+      template<class A1, class...AN>
+      constexpr TMany(Inner::Piecewise, A1&& a1, AN&&...an) {
+         if constexpr (sizeof...(AN) == 0)
+            this->EmplaceConstruct(LglsFwd(a1));
+         else
+            this->Insert(LglsFwd(a1), LglsFwd(an)...);
       }
 
       /// Assignment                                                          
@@ -116,8 +126,7 @@ namespace Langulus::Anyness
       template<class A>
       constexpr TMany& operator = (A&& argument) {
          if constexpr (SameAsOneOf<Deint<A>, TMany, Many>) {
-            LglsAssumeUser(
-               (not SameAsOneOf<T, TMany, Many>),
+            LglsAssumeUser((not SameAsOneOf<T, TMany, Many>),
                "Ambiguous use of assignment "
                "- you should use either AssignAbsorb (if you want to overwrite "
                "the container itself) or Assign (if you want to overwrite the "

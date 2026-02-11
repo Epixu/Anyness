@@ -124,24 +124,25 @@ namespace Langulus::Anyness
             }
             else this->EmplaceConstruct(LglsFwd(a1));
          }
-         else {
-            this->EmplaceConstruct(LglsFwd(a1));
-            //TODO
-         }
+         else this->Insert(LglsFwd(a1), LglsFwd(an)...);
       }
       
       /// Construction that absorbs the provided containers                   
       template<class A1, class...AN>
       constexpr Many(Inner::Absorb, A1&& a1, AN&&...an) {
-         this->Absorb(LglsFwd(a1));
-         //TODO
+         if constexpr (sizeof...(AN) == 0)
+            this->Absorb(LglsFwd(a1));
+         else
+            this->Concat(LglsFwd(a1), LglsFwd(an)...);
       }
       
       /// Construction that emplaces all arguments inside                     
       template<class A1, class...AN>
       constexpr Many(Inner::Piecewise, A1&& a1, AN&&...an) {
-         this->EmplaceConstruct(LglsFwd(a1));
-         //TODO
+         if constexpr (sizeof...(AN) == 0)
+            this->EmplaceConstruct(LglsFwd(a1));
+         else
+            this->Insert(LglsFwd(a1), LglsFwd(an)...);
       }
       
       /// Assignment                                                          

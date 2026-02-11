@@ -107,7 +107,7 @@ namespace Langulus::Anyness::Component
                   auto to = out.GetRaw() + out.GetCount();
                   try {
                      while (from != fromEnd) {
-                        new (to) TO {Langulus::Convert(*from)};
+                        new (to) TO {Langulus::Convert<TO>(*from)};
                         ++to; ++from;
                      }
                   }

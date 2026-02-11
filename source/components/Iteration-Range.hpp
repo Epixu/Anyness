@@ -312,8 +312,14 @@ namespace Langulus::Anyness
          }
 
          decltype(auto) operator[] (const difference_type offset) const noexcept {
-            if constexpr (CT::Handle<H>) return   mIt + offset;
-            else                         return *(mIt + offset);
+            if constexpr (REVERSE) {
+               if constexpr (CT::Handle<H>) return   mIt - offset;
+               else                         return *(mIt - offset);
+            }
+            else {
+               if constexpr (CT::Handle<H>) return   mIt + offset;
+               else                         return *(mIt + offset);
+            }
          }
 
          /// Prefix increment                                                 
@@ -497,7 +503,24 @@ namespace Langulus::Anyness
             if constexpr (REVERSE) return {mIt + c, mRange};
             else                   return {mIt - c, mRange};
          }
-         
+
+         auto operator += (difference_type c) noexcept -> Iterator& {
+            if constexpr (REVERSE) mIt -= c;
+            else                   mIt += c;
+            return *this;
+         }
+
+         auto operator -= (difference_type c) noexcept -> Iterator& {
+            if constexpr (REVERSE) mIt += c;
+            else                   mIt -= c;
+            return *this;
+         }
+
+         decltype(auto) operator[] (const difference_type offset) const noexcept {
+            if constexpr (REVERSE) return mIt - offset;
+            else                   return mIt + offset;
+         }
+
          /// Prefix increment                                                 
          auto operator ++ () noexcept -> Iterator& {
             if constexpr (REVERSE) --mIt;

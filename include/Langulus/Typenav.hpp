@@ -130,7 +130,7 @@ namespace Langulus
    /// Remove an array extent from a type                                     
    ///   @attention will remove references as well                            
    template<class T>
-   using Deext = ::std::remove_extent_t<Deref<T>>;
+   using Deext = ::std::remove_extent_t<Deref<T>>; //TODO Deext-ing a custom CT::Array should give the inner type!!!
 
    namespace CT
    {
@@ -175,11 +175,11 @@ namespace Langulus
       /// Check if all T are sheddable types (like intents), that serve only  
       /// to wrap data for tag dispatching and semantics. Sheddable types     
       /// don't carry any real data, and often just contain a reference       
-      /// to the eal data.                                                    
+      /// to the real data.                                                   
       /// They should be aggressively optimized out from the final binary.    
       /// Marking types as sheddable means that they don't interfere with most
-      /// other CT concepts - these will act as if the sheddable type doesn't 
-      /// exist at all.                                                       
+      /// other CT concepts - these will act as if sheddable types don't      
+      /// exist at all, with the exception of CT::Sheddable itself.           
       ///   @attention sheddable types can only be defined through a member   
       ///      called CTTI_Sheddable, and are always assumed complete,        
       ///      otherwise this check will return false                         
@@ -216,6 +216,17 @@ namespace Langulus
                else return CTTI::Array<T>::Count;
             }
             else return CTTI::Array<T>::Count;
+         };
+
+         /// Multiplies all the nested bounded arrays' size together.         
+         /// Results in 1 if T is not an array.                               
+         template<class T>
+         consteval size_t GetBoundedArrayExtentNested() {
+            constexpr size_t result = GetBoundedArrayExtent<T>();
+            if constexpr (not ::std::same_as<T, Deext<T>>)
+               return result * GetBoundedArrayExtentNested<Deext<T>>();
+            else
+               return result;
          };
 
          /// Removes a pointer from the type. Supports custom pointers.       
@@ -280,6 +291,16 @@ namespace Langulus
    /// Get the extent of an array argument, or 1 if T is not an array         
    template<class T>
    consteval size_t GetExtentOf(T&&) { return ExtentOf<ShedDeref<T>>; }
+
+   /// Get all nested extents of a bounded array type, multiplied, or 1       
+   /// if T is not an array                                                   
+   template<class T>
+   constexpr size_t AllExtentsOf = CT::Inner::GetBoundedArrayExtentNested<ShedDeref<T>>();
+
+   /// Get all nested extents of a bounded array argument, multiplied, or 1   
+   /// if T is not an array                                                   
+   template<class T>
+   consteval size_t GetAllExtentsOf(T&&) { return AllExtentsOf<ShedDeref<T>>; }
 
    /// Remove a number of pointers from type. Supports custom pointer types.  
    ///   @attention may result in a reference                                 

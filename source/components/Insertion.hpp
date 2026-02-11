@@ -113,10 +113,71 @@ namespace Langulus::Anyness::Component
       auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {})
          -> Count<C>;
 
-      /// Insert one or more elements at the back                             
+      /// Insert one or more elements at the back. Supports intents and       
+      /// arrays.                                                             
+      ///   @tparam FORCE if true, the container is allowed to deepen in      
+      ///      order to incorporate elements of different types. Otherwise    
+      ///      a compile-time or runtime exception will be thrown, if an      
+      ///      incompatible type is encountered.                              
+      ///   @param a1, an elements (and their intents) to insert              
+      ///   @return the number of inserted elements                           
       template<bool FORCE = true, class A1, class...AN, CT::Container C>
-      auto Insert(this C&, A1&&, AN&&...)
-         -> Count<C> requires CT::RangeInsertable<C, A1, AN...>;
+      auto Insert(this C& self, A1&& a1, AN&&...an) -> Count<C> {
+         static_assert(CT::ContainsMany<C>,
+            "Container should support multiple elements");
+
+         // Gather the number of all elements and types.                
+         // Empty containers can't change type. If one of the type      
+         // changes raises a conflict, this function will throw.        
+         Count<C> rhs_count = 0;
+          self.PrepareForInsertion(LglsFwd(a1));
+         (self.PrepareForInsertion(LglsFwd(an)), ...);
+         if (not rhs_count)
+            return 0;
+         
+         const Count<C> lhs_count = self.GetCount();
+         auto it = IterateHandles(self);
+         auto to = it.begin();
+
+         if (self.GetUses() > 1) {
+            // We have to branch out                                    
+            const C backup {Abandon{self}};
+            self.AllocateFresh(self.RequestHeap(lhs_count + rhs_count));
+            
+            // Reinsert the old items                                   
+            auto old = IterateHandles(backup).begin();
+            while (old) {
+               to->EmplaceWithIntent(Refer(*old));
+               ++old; ++to;
+            }            
+         }
+         else {
+            // No need to branch out                                    
+            self.AllocateMore(lhs_count + rhs_count);
+            to += lhs_count;
+         }
+         
+         // Insert the new                                              
+         auto insert = [&to](auto&& a) {
+            to->EmplaceWithIntent(FWDIntent(a));
+            ++to;
+         };
+
+         try {
+             insert(LglsFwd(a1));
+            (insert(LglsFwd(an)), ...);
+         }
+         catch (...) {
+            // Account for throws inside constructors                   
+            const Count<C> inserted = to - it.begin();
+            self.SetCountInner(inserted);
+            throw;
+         }
+
+         // Finalize insertions by setting count                        
+         self.SetCountInner(lhs_count + rhs_count);
+         return rhs_count;
+      }
 
       /// Insert a number of elements at the back, nullifying them if able to 
       ///   @param count the number of elements to insert                     
@@ -268,53 +329,108 @@ namespace Langulus::Anyness::Component
          return rhs_count;
       }
 
-      /// Concatenation at the back                                           
-      template<CT::Container C>
-      auto Concat(this C& self, CT::Container auto&& data) -> Count<C> {
-         const auto rhs_count = DeintCast(data).GetCount();
+      /// Concatenation at the back. Unlike insertion, concatenation always   
+      /// inserts the contents of the argument containers one by one.         
+      ///   @param a1_intent, an_intent the containers to concatenate to the  
+      ///      right of 'this'                                                
+      ///   @return the number of concatenated elements                       
+      template<CT::Container C, CT::Container A1, CT::Container...AN>
+      auto Concat(this C& self, A1&& a1_intent, AN&&...an_intent) -> Count<C> {
+         static_assert(CT::ContainsMany<C>,
+            "Container should support multiple elements");
+
+         // Gather the number of all elements and types.                
+         // Empty containers can't change type. If one of the type      
+         // changes raises a conflict, this function will throw.        
+         Count<C> rhs_count = 0;
+          self.PrepareForAbsorption(LglsFwd(a1_intent));
+         (self.PrepareForAbsorption(LglsFwd(an_intent)), ...);
          if (not rhs_count)
             return 0;
          
-         using S = IntentOf(data);
-         //using T = Tif<CT::TypeErased<C>, TypeOf<Deint<S>>, TypeOf<C>>;
-         if constexpr (CT::TypeErased<C>)
-            self.SetType(DeintCast(data).GetType());
-         else
-            self.template SetType<TypeOf<Deint<S>>>();
-         
-         const auto lhs_count = self.GetCount();
+         const Count<C> lhs_count = self.GetCount();
+         auto to = IterateHandles(self).begin();
+
          if (self.GetUses() > 1) {
             // We have to branch out                                    
             const C backup {Abandon{self}};
             self.AllocateFresh(self.RequestHeap(lhs_count + rhs_count));
             
-            auto from1 = IterateHandles(backup).begin();
-            auto to    = IterateHandles(self).begin();
-            while (from1) {
-               to->EmplaceWithIntent(Refer(*from1));
-               ++from1; ++to;
-            }
-            
-            auto from2 = IterateHandles(data).begin();
-            while (from2) {
-               to->EmplaceWithIntent(S::Nest(*from2));
-               ++from2; ++to;
-            }
+            // Reinsert the old items                                   
+            auto old = IterateHandles(backup).begin();
+            while (old) {
+               to->EmplaceWithIntent(Refer(*old));
+               ++old; ++to;
+            }            
          }
          else {
-            // No need to branch out - reuse memory instead             
+            // No need to branch out                                    
             self.AllocateMore(lhs_count + rhs_count);
-            
-            auto from2 = IterateHandles(data).begin();
-            auto to    = IterateHandles(self).begin() + lhs_count;
-            while (from2) {
-               to->EmplaceWithIntent(S::Nest(*from2));
-               ++from2; ++to;
-            }
+            to += lhs_count;
          }
          
+         // Insert the new                                              
+         auto insert = [&to](auto&& a) {
+            auto item = IterateHandles(DeintCast(a)).begin();
+            while (item) {
+               to->EmplaceWithIntent(IntentOf(a)::Nest(*item));
+               ++item; ++to;
+            }
+         };
+
+         try {
+             insert(LglsFwd(a1_intent));
+            (insert(LglsFwd(an_intent)), ...);
+         }
+         catch (...) {
+            // Account for throws inside constructors                   
+            const Count<C> inserted = to - IterateHandles(self).begin();
+            self.SetCountInner(inserted);
+            throw;
+         }
+
+         // Finalize insertions by setting count                        
          self.SetCountInner(lhs_count + rhs_count);
          return rhs_count;
+      }
+
+   protected:
+      /// Helper function that gathers the number of elements and types.      
+      /// An incompatible type will result in 'deepened' being true, and      
+      /// 'out_count' being rewritten to reflect the number of required sub-  
+      /// containers.                                                         
+      template<CT::Container C, CT::Container A>
+      void PrepareForInsertion(this C& self, A&& a, Count<C>& out_count, bool& deepened) {
+         using S = IntentOf(a);
+
+         if constexpr (CT::Array<A>) {
+            using E = Decvq<Deref<DeextAll<Deint<S>>>>;
+            self.template SetType<E>();
+            out_count += GetAllExtentsOf(a);
+         }
+         else {
+            using E = Decvq<Deref<Deint<S>>>;
+            self.template SetType<E>();
+            out_count += 1;
+         }
+      }
+
+      /// Helper function that gathers the number of elements and types.      
+      /// Empty containers can't change this container's type. If one of the  
+      /// type changes raises a conflict the function will throw.             
+      template<CT::Container C, CT::Container A>
+      void PrepareForAbsorption(this C& self, A&& a, Count<C>& out_count) {
+         const auto c = DeintCast(a).GetCount();
+         if (not c)
+            return;
+
+         using S = IntentOf(a);
+         using E = TypeOf<Deint<S>>;
+         if constexpr (CT::NotVoid<E>)
+            self.template SetType<E>();
+         else
+            self.SetType(DeintCast(a).GetType());
+         out_count += c;
       }
    };
 }
