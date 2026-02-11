@@ -502,6 +502,16 @@ namespace Langulus
    
    namespace Inner
    {
+      /// Removes all extents from a bounded array.                           
+      /// Removes references.                                                 
+      template<class T>
+      consteval CT::Typelist auto NestedDeext() {
+         if constexpr (CT::Array<T>)
+            return Types<typename decltype(NestedDeext<Deext<T>>())::First> {};
+         else
+            return Types<T> {};
+      }
+
       /// Removes all const/volatile qualifiers from all indirections.        
       /// Preserves references.                                               
       template<class T>
@@ -558,6 +568,13 @@ namespace Langulus
    ///              `void*&` becomes `void const* const&`.                    
    template<class T>
    using ConstAll = typename decltype(Inner::NestedConst<T>())::First;
+
+   /// Removes all bounded array extents from a type.                         
+   /// Removes references if type had extent.                                 
+   /// For example: `void**[6][6][6]` becomes `void**`.                       
+   ///              `void*&` remains `void*&`.                                
+   template<class T>
+   using DeextAll = typename decltype(Inner::NestedDeext<T>())::First;
 
    /// Strips all cv-qualifiers from the provided argument                    
    ///   @attention this will return pointers for bounded array arguments     

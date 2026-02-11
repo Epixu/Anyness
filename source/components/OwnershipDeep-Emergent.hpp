@@ -606,23 +606,24 @@ namespace Langulus::Anyness::Component
 
          const auto indirections = self.GetIndirections();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
+         auto entries = self.GetEntriesInner();
+
          if constexpr ((CT::Handle<IT> and     I::IsKept())
          or (       not CT::Handle<IT> and not CT::Disowned<I>)) {
             // When it's a keeping intent, copy all entries and         
             // reference them                                           
             if constexpr (CT::Handle<IT>) {
                if (auto entries_src = rhs.GetEntries())
-                  memcpy(DecvqAllCast(self.GetEntriesInner()), entries_src, entries_size);
+                  memcpy(DecvqAllCast(entries), entries_src, entries_size);
                else {
                   // RHS might be a disowned handle                     
-                  memset(DecvqAllCast(self.GetEntriesInner()), 0, entries_size);
+                  memset(DecvqAllCast(entries), 0, entries_size);
                }
             }
-            else memset(DecvqAllCast(self.GetEntriesInner()), 0, entries_size);
+            else memset(DecvqAllCast(entries), 0, entries_size);
 
             if constexpr (CT::Handle<IT> or LANGULUS_FEATURE(MANAGED_MEMORY)) {
-               auto entries = self.GetEntriesInner();
-               auto const entriesEnd = self.GetEntries() + indirections;
+               auto const entriesEnd = entries + indirections;
                auto meta = self.GetType().GetDeptr();
                void** handle = self.template GetRawAs<void*>(); //TODO this won't work with packed pointers, would it?
 
@@ -633,7 +634,7 @@ namespace Langulus::Anyness::Component
                   // because we can't abandon a raw pointer.            
                   #if LANGULUS_FEATURE(MANAGED_MEMORY)
                      if constexpr (not CT::Handle<IT>)
-                        *entries = const_cast<AllocationPtr>(Allocator::Find(*handle));
+                        const_cast<AllocationPtr&>(*entries) = Allocator::Find(*handle);
                   #endif
 
                   if (not *entries)
@@ -658,7 +659,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             // Disowning just zeroes all entries                        
-            memset(DecvqAllCast(self.GetEntriesInner()), 0, entries_size);
+            memset(DecvqAllCast(entries), 0, entries_size);
          }
       }
    };

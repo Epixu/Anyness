@@ -129,35 +129,40 @@ namespace Langulus::Anyness::Component
          // Gather the number of all elements and types.                
          // Empty containers can't change type. If one of the type      
          // changes raises a conflict, this function will throw.        
+         bool deepened = false;
          Count<C> rhs_count = 0;
-          self.PrepareForInsertion(LglsFwd(a1));
-         (self.PrepareForInsertion(LglsFwd(an)), ...);
+          self.PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
+         (self.PrepareForInsertion(LglsFwd(an), rhs_count, deepened), ...);
          if (not rhs_count)
             return 0;
          
          const Count<C> lhs_count = self.GetCount();
+         const Count<C> all_count = lhs_count + rhs_count;
          auto it = IterateHandles(self);
-         auto to = it.begin();
 
          if (self.GetUses() > 1) {
             // We have to branch out                                    
             const C backup {Abandon{self}};
-            self.AllocateFresh(self.RequestHeap(lhs_count + rhs_count));
-            
+            self.AllocateFresh(self.RequestHeap(all_count));
+            // Set count immediately, so that iterators are valid.      
+            self.SetCountInner(all_count);
+
             // Reinsert the old items                                   
             auto old = IterateHandles(backup).begin();
+            auto to = it.begin();
             while (old) {
                to->EmplaceWithIntent(Refer(*old));
                ++old; ++to;
             }            
          }
          else {
-            // No need to branch out                                    
-            self.AllocateMore(lhs_count + rhs_count);
-            to += lhs_count;
+            self.AllocateMore(all_count);
+            // Set count immediately, so that iterators are valid.      
+            self.SetCountInner(all_count);
          }
          
-         // Insert the new                                              
+         // Insert the new.                                             
+         auto to = it.begin() + lhs_count;
          auto insert = [&to](auto&& a) {
             to->EmplaceWithIntent(FWDIntent(a));
             ++to;
@@ -174,8 +179,6 @@ namespace Langulus::Anyness::Component
             throw;
          }
 
-         // Finalize insertions by setting count                        
-         self.SetCountInner(lhs_count + rhs_count);
          return rhs_count;
       }
 
@@ -343,33 +346,38 @@ namespace Langulus::Anyness::Component
          // Empty containers can't change type. If one of the type      
          // changes raises a conflict, this function will throw.        
          Count<C> rhs_count = 0;
-          self.PrepareForAbsorption(LglsFwd(a1_intent));
-         (self.PrepareForAbsorption(LglsFwd(an_intent)), ...);
+          self.PrepareForAbsorption(LglsFwd(a1_intent), rhs_count);
+         (self.PrepareForAbsorption(LglsFwd(an_intent), rhs_count), ...);
          if (not rhs_count)
             return 0;
          
          const Count<C> lhs_count = self.GetCount();
-         auto to = IterateHandles(self).begin();
+         const Count<C> all_count = lhs_count + rhs_count;
+         auto it = IterateHandles(self);
 
          if (self.GetUses() > 1) {
             // We have to branch out                                    
             const C backup {Abandon{self}};
-            self.AllocateFresh(self.RequestHeap(lhs_count + rhs_count));
-            
-            // Reinsert the old items                                   
+            self.AllocateFresh(self.RequestHeap(all_count));
+            // Set count immediately, so that iterators are valid.      
+            self.SetCountInner(all_count);
+
+            // Reinsert the old items.                                  
             auto old = IterateHandles(backup).begin();
+            auto to = it.begin();
             while (old) {
                to->EmplaceWithIntent(Refer(*old));
                ++old; ++to;
             }            
          }
          else {
-            // No need to branch out                                    
-            self.AllocateMore(lhs_count + rhs_count);
-            to += lhs_count;
+            self.AllocateMore(all_count);
+            // Set count immediately, so that iterators are valid.      
+            self.SetCountInner(all_count);
          }
          
-         // Insert the new                                              
+         // Insert the new.                                             
+         auto to = it.begin() + lhs_count;
          auto insert = [&to](auto&& a) {
             auto item = IterateHandles(DeintCast(a)).begin();
             while (item) {
@@ -384,13 +392,11 @@ namespace Langulus::Anyness::Component
          }
          catch (...) {
             // Account for throws inside constructors                   
-            const Count<C> inserted = to - IterateHandles(self).begin();
+            const Count<C> inserted = to - it.begin();
             self.SetCountInner(inserted);
             throw;
          }
 
-         // Finalize insertions by setting count                        
-         self.SetCountInner(lhs_count + rhs_count);
          return rhs_count;
       }
 
@@ -399,7 +405,7 @@ namespace Langulus::Anyness::Component
       /// An incompatible type will result in 'deepened' being true, and      
       /// 'out_count' being rewritten to reflect the number of required sub-  
       /// containers.                                                         
-      template<CT::Container C, CT::Container A>
+      template<CT::Container C, class A>
       void PrepareForInsertion(this C& self, A&& a, Count<C>& out_count, bool& deepened) {
          using S = IntentOf(a);
 

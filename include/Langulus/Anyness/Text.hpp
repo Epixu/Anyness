@@ -199,13 +199,15 @@ namespace Langulus::Anyness
       template<CT::Number T>
       static Text FromNumber(T&& number, int precision = 0) {
          Text result;
+         using DT = Decay<T>;
 
          if constexpr (CT::Real<T>) {
             // Stringify a real number                                  
-            constexpr auto size = ::std::numeric_limits<T>::max_digits10 * 2;
+            constexpr auto size = ::std::numeric_limits<DT>::max_digits10 * 2;
             char temp[size];
             auto [lastChar, errorCode] = ::std::to_chars(
-               temp, temp + size, number, ::std::chars_format::general);
+               temp, temp + size, number, ::std::chars_format::general
+            );
             LglsAssert(errorCode == ::std::errc(), "std::to_chars failure");
 
             // Find the dot                                             
@@ -277,7 +279,7 @@ namespace Langulus::Anyness
          }
          else if constexpr (CT::Integer<T>) {
             // Stringify an integer                                     
-            constexpr auto size = ::std::numeric_limits<T>::digits10 * 2;
+            constexpr auto size = ::std::numeric_limits<DT>::digits10 * 2;
             char temp[size];
             auto [lastChar, errorCode] = ::std::to_chars(temp, temp + size, number);
             LglsAssert(errorCode == ::std::errc(), "std::to_chars failure");

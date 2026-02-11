@@ -8,17 +8,6 @@
 #include "TestAnyCommon.hpp"
 #include <Langulus/Anyness/SerializeText.hpp>
 
-namespace
-{
-   struct ConvertibleToInt {
-      using CTTI_MapsTo = int;
-
-      explicit operator int() const noexcept {
-         return 666;
-      }
-   };
-}
-
 
 SCENARIO("Converting Any/TAny") {
    static MemoryState memoryState;

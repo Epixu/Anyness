@@ -8,23 +8,6 @@
 #include "TestManyCommon.hpp"
 #include <Langulus/Anyness/SerializeText.hpp>
 
-namespace
-{
-   struct ConvertibleToInt {
-      using CTTI_MapsTo = int;
-
-      ConvertibleToInt(int inner = 666)
-         : member{inner} {}
-
-      explicit operator int() const noexcept {
-         return member;
-      }
-
-   private:
-      int member;
-   };
-}
-
 
 SCENARIO("Converting Many/TMany") {
    static MemoryState memoryState;

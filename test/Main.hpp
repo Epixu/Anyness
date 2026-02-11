@@ -75,3 +75,17 @@ namespace Langulus::CTTI
       static constexpr Literal Name = "string";
    };
 }
+
+struct ConvertibleToInt {
+   using CTTI_MapsTo = int;
+
+   ConvertibleToInt(int inner = 666)
+      : member{inner} {}
+
+   explicit operator int() const noexcept {
+      return member;
+   }
+
+private:
+   int member;
+};

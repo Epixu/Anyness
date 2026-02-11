@@ -124,7 +124,10 @@ namespace Langulus::Anyness
             }
             else this->EmplaceConstruct(LglsFwd(a1));
          }
-         else this->Insert(LglsFwd(a1), LglsFwd(an)...);
+         else {
+            this->ConstructDefault();
+            this->Insert(LglsFwd(a1), LglsFwd(an)...);
+         }
       }
       
       /// Construction that absorbs the provided containers                   
@@ -132,8 +135,10 @@ namespace Langulus::Anyness
       constexpr Many(Inner::Absorb, A1&& a1, AN&&...an) {
          if constexpr (sizeof...(AN) == 0)
             this->Absorb(LglsFwd(a1));
-         else
+         else {
+            this->ConstructDefault();
             this->Concat(LglsFwd(a1), LglsFwd(an)...);
+         }
       }
       
       /// Construction that emplaces all arguments inside                     
@@ -141,8 +146,10 @@ namespace Langulus::Anyness
       constexpr Many(Inner::Piecewise, A1&& a1, AN&&...an) {
          if constexpr (sizeof...(AN) == 0)
             this->EmplaceConstruct(LglsFwd(a1));
-         else
+         else {
+            this->ConstructDefault();
             this->Insert(LglsFwd(a1), LglsFwd(an)...);
+         }
       }
       
       /// Assignment                                                          
