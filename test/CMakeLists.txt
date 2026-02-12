@@ -35,6 +35,7 @@ add_langulus_test(LangulusAnynessTest
                $<IF:$<BOOL:${LANGULUS_OPTION_MANAGED_MEMORY}>,Allocator/TestManaged.cpp,Allocator/TestUnmanaged.cpp>
 
                Anyness/TestText.cpp
+               Anyness/TestBytes.cpp
                Anyness/TestTRef.cpp
                Anyness/TestTOwn.cpp
 

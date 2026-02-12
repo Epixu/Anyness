@@ -74,5 +74,8 @@ namespace Langulus::Anyness
       friend constexpr bool operator == (T const& lhs, const TOwn& rhs) noexcept {
          return lhs == rhs.GetStackInner();
       }
+
+      /// Boolean conversion not allowed here, too error prone                
+      operator bool() = delete;
    };
 }

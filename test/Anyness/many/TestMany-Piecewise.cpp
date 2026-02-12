@@ -1196,6 +1196,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          REQUIRE      (pack2 != defaulted_pack);
          REQUIRE_FALSE(pack2 == defaulted_pack);
 
+         static_assert(not static_cast<bool>(T{}));
+
          if constexpr (CT::Deep<E> and CT::Dense<E>) {
             static_assert(     T{} == E{} );
             static_assert(not (T{} != E{}));

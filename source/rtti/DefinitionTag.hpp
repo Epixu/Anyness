@@ -30,7 +30,7 @@ namespace Langulus::RTTI
 
       DefinitionTag(const Token& cppname) noexcept
          : Definition {cppname} {}
-      // ReSharper disable once CppEnforceOverridingDestructorStyle     
+
       ~DefinitionTag();
    };
 }

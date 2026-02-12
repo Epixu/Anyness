@@ -136,7 +136,6 @@ namespace Langulus
 
          uint32_t k1 = 0;
 
-         // ReSharper disable once CppDefaultCaseNotHandledInSwitchStatement
          switch (key.size() & 3) {
          case 3:
             k1 ^= key.tail(2) << 16;
@@ -272,7 +271,7 @@ namespace Langulus
             }
          }
       }
-      else if constexpr (CT::Sparse<T> /*::std::is_pointer_v<T>*/) {
+      else if constexpr (CT::Sparse<T>) {
          // Hash pointer, never dereference it                          
          if consteval {
             if constexpr (FORCE_RUNTIME)
@@ -373,7 +372,6 @@ namespace Langulus
       }
    }
 }
-
 
 namespace std
 {

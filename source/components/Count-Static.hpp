@@ -47,7 +47,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Explicit boolean conversion to allow using containers in ifs        
-      constexpr explicit operator bool(this auto const& self) noexcept {
+      explicit constexpr operator bool(this auto const& self) noexcept {
          return self.GetCountInner() != CountType {0};
       }
 

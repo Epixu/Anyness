@@ -146,6 +146,7 @@ TEST_CASE_TEMPLATE("Owned value", T
       }
 
       WHEN("Compared") {
+         static_assert(not requires { static_cast<bool>(T{}); });
          static_assert(T{} == T{});
          static_assert(T{} == TT{});
          static_assert(TT{} == T{});

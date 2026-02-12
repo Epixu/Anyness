@@ -742,8 +742,6 @@ namespace Langulus::Anyness::Component
                // We're not the only owner of this memory.              
                // We have to branch off with a fresh allocation.        
                DecvqAllCast(a)->AddRef(-1);
-               //self.SetAllocationInner(nullptr);
-               //self.SetHeapInner(nullptr);
 
                try {
                   if constexpr (sizeof...(arguments) > 0)
@@ -772,10 +770,6 @@ namespace Langulus::Anyness::Component
                // We're not the only owner of this memory.              
                // We have to branch off with a fresh allocation.        
                self.Free();
-               /*self.SetAllocationInner(nullptr);
-               self.SetHeapInner(nullptr);
-               if_available(self.SetCountInner(0));
-               if_available(self.SetHashInner(1));*/
 
                try {
                   if constexpr (sizeof...(arguments) > 0)

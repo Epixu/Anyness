@@ -31,7 +31,6 @@ namespace Langulus::RTTI
       private:
          union {
             struct {
-               // The set of the main properties                        
                bool reversible   : 1;
                bool contextless  : 1;
             };
@@ -57,6 +56,7 @@ namespace Langulus::RTTI
 
          auto GetCppName()          const noexcept -> Token;
          auto GetInfo()             const noexcept -> Token;
+         auto GetHash()             const noexcept -> Hash;
          auto GetVersionMajor()     const noexcept -> unsigned;
          auto GetVersionMinor()     const noexcept -> unsigned;
          auto GetBoundaries()       const noexcept -> Definition::BoundarySet const&;

@@ -1,4 +1,4 @@
-///                                                                           
+﻿///                                                                           
 /// Langulus::Anyness                                                         
 /// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
 /// Part of the Langulus framework, see https://langulus.com                  
@@ -6,21 +6,23 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
+#include "Handle.hpp"
 #include "../../../source/Container.hpp"
+#include "../../../source/components/Typed-Static.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
+#include "../../../source/components/Count-Stack.hpp"
+#include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/IndexedLinear.hpp"
-#include "../../../source/components/Emplacement.hpp"
+#include "../../../source/components/Hash-Stack.hpp"
 #include "../../../source/components/Insertion.hpp"
 #include "../../../source/components/InsertionOperators.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Assignment.hpp"
-#include "../../../source/components/Typed-Static.hpp"
-#include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Emergent.hpp"
-#include "../../../source/components/Hash-Stack.hpp"
-#include "../../../source/components/Iteration-Range.hpp"
 #include "../../../source/components/Comparison.hpp"
+#include "../../../source/components/Conversion.hpp"
+#include "../../../source/components/IndexedLinear.hpp"
+#include "../../../source/components/Iteration-ForEach.hpp"
+#include "../../../source/components/Iteration-Range.hpp"
 #include <Langulus/Utils/Byte.hpp>
 
 
@@ -45,14 +47,18 @@ namespace Langulus::Anyness
          Com::Conversion,                 // Allows conversion          
          Com::IndexedLinear<>,            // Indexed directly           
          Com::IterationForEach<>,         // ForEach iteration          
-         Com::IterationRange<>            // Range iteration            
+         Com::IterationRange<>            // Range iteration         😊
       >;
    }
    
+
    ///                                                                        
    /// A continuous byte container of variable size                           
+   ///                                                                        
    struct Bytes : Inner::BytesBase {
-      using CountType = Base::CountType;
+      using CountType     = Base::CountType;
+      using CTTI_MapsTo   = Text;
+      using CTTI_MapsFrom = Types<RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta>;
 
       // Single element selections                                      
       using Pick    = Byte const&;
@@ -76,7 +82,16 @@ namespace Langulus::Anyness
       constexpr Bytes(I<Bytes>&& bytes) {
          this->Absorb(LglsFwd(bytes));
       }
-      
+
+      /// Construction from any kind of POD bounded array                     
+      template<CT::POD T, size_t SIZE> requires (SIZE > 0)
+      explicit constexpr Bytes(const T(&source)[SIZE]) {
+         this->SetHeapInner(static_cast<const void*>(source));
+         this->SetCountInner(SIZE * sizeof(T));
+         this->ResetHash();
+         this->SetAllocationInner(nullptr);
+      }
+
       /// Assignment                                                          
       constexpr Bytes& operator = (Bytes const& other) {
          return this->AssignAbsorb(Refer {other});
@@ -92,5 +107,130 @@ namespace Langulus::Anyness
       constexpr bool operator == (Bytes const& other) const noexcept {
          return this->CompareEqual(other);
       }
+
+      /// Conversion to standard string as a sequence of hex bytes            
+      explicit operator ::std::string() const {
+         if (this->IsEmpty())
+            return {};
+
+         ::std::string result;
+         result.resize(this->GetCount() * 2);
+         auto from_bytes = this->template GetRawAs<uint8_t>();
+         auto to_bytes = result.data();
+         for (size_t i = 0; i < result.size(); ++i)
+            ::fmt::format_to(to_bytes + i * 2, ::fmt::runtime("{:02X}"), from_bytes[i]);
+         return result;
+      }
+
+      /// The presence of this structure makes Bytes a CT::Serializer         
+      struct CTTI_Serializer {
+         /// The context holds the header entries, that allow us to           
+         /// serialize types, tags, consts and verbs across sessions.         
+         struct Context {
+            template<class T>
+            struct Bank {
+               ::std::unordered_map<T, uint32_t> mDefinitions;
+               uint32_t mNextId = 1;
+            };
+
+            Bank<RTTI::DMeta> mDMetaBank;
+            Bank<RTTI::TMeta> mTMetaBank;
+            Bank<RTTI::CMeta> mCMetaBank;
+            Bank<RTTI::VMeta> mVMetaBank;
+         };
+         
+         static constexpr bool CriticalFailure = true;
+         static constexpr bool SkipElements = false;
+
+         static void BeginScope(const CT::Container auto& from, Bytes& to, Context* context) {
+            const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable();
+            if (scoped) {
+               if (from.IsPast())
+                  to += Serial::Past;
+               else if (from.IsFuture())
+                  to += Serial::Future;
+
+               to += Serial::OpenScope;
+            }
+         }
+         
+         static void EndScope(const CT::Container auto&, Text&, Context*) {
+            // noop
+         }
+         
+         static void Separate(const CT::Container auto&, Text&, Context*) {
+            // noop
+         }
+         
+         static void Empty(RTTI::DMeta type, CountType i, Text& to, Context*) {
+            LglsError("Item #", i, " of type `", type.GetName(),
+               "` was serialized to an empty `Bytes`");
+         }
+         
+         static void Error(RTTI::DMeta type, CountType i, Text& to, Context*) {
+            LglsError("Item #", i, " of type `", type.GetName(),
+               "` failed to convert to `Bytes`");
+         }
+      };
+   };
+}
+
+namespace Langulus::CTTI
+{
+   /// A rule for serializing any deep container.                             
+   /// This includes Any, Many, Map, Set, Pair, Neat, Tag, etc...             
+   /// as well as any templated equivalents.                                  
+   template<CT::Deep C>
+   struct SerializationRule<Anyness::Bytes, C> {
+      using S = SerializerOf<Anyness::Bytes>;
+      using Context = typename S::Context;
+      using Count = Anyness::Bytes::CountType;
+      
+      static void Serialize(C const&, Anyness::Bytes&, Context*) requires CT::ContainsMany<C>;
+      static void Serialize(C const&, Anyness::Bytes&, Context*) requires CT::ContainsOne<C>;
+   };
+   
+   /// A rule for serializing meta data.                                      
+   /// Will register it in the Context, and write it as an ID where needed.   
+   template<>
+   struct SerializationRule<Anyness::Bytes, RTTI::DMeta> {
+      using S = SerializerOf<Anyness::Bytes>;
+      using Context = typename S::Context;
+      using Count = Anyness::Bytes::CountType;
+      
+      static void Serialize(RTTI::DMeta const&, Anyness::Bytes&, Context*);
+   };
+   
+   /// A rule for serializing meta tags.                                      
+   /// Will register it in the Context, and write it as an ID where needed.   
+   template<>
+   struct SerializationRule<Anyness::Bytes, RTTI::TMeta> {
+      using S = SerializerOf<Anyness::Bytes>;
+      using Context = typename S::Context;
+      using Count = Anyness::Bytes::CountType;
+      
+      static void Serialize(RTTI::TMeta const&, Anyness::Bytes&, Context*);
+   };
+   
+   /// A rule for serializing meta constants.                                 
+   /// Will register it in the Context, and write it as an ID where needed.   
+   template<>
+   struct SerializationRule<Anyness::Bytes, RTTI::CMeta> {
+      using S = SerializerOf<Anyness::Bytes>;
+      using Context = typename S::Context;
+      using Count = Anyness::Bytes::CountType;
+      
+      static void Serialize(RTTI::CMeta const&, Anyness::Bytes&, Context*);
+   };
+   
+   /// A rule for serializing meta verbs.                                     
+   /// Will register it in the Context, and write it as an ID where needed.   
+   template<>
+   struct SerializationRule<Anyness::Bytes, RTTI::VMeta> {
+      using S = SerializerOf<Anyness::Bytes>;
+      using Context = typename S::Context;
+      using Count = Anyness::Bytes::CountType;
+      
+      static void Serialize(RTTI::VMeta const&, Anyness::Bytes&, Context*);
    };
 }

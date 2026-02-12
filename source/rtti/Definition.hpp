@@ -66,7 +66,6 @@ namespace Langulus::RTTI::Inner
    ///   @attention assumes token is ASCII                                    
    ///   @param token the token to lowercase                                  
    ///   @return the lowercase string                                         
-   // ReSharper disable once CppDFAUnreachableFunctionCall              
    constexpr Lowercase ToLowercase(const Token& token) assumptious {
       LglsAssumeDev(IsASCII(token), "Token must be ASCII");
       Lowercase lc {token};

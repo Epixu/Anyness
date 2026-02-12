@@ -69,6 +69,15 @@ namespace Langulus::RTTI::Inner
       return {};
    }
    
+   /// Get the verb's hash                                                    
+   template<unsigned ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetHash() const noexcept -> Hash {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaVerbByID(id)->mHash;
+      return {};
+   }
+   
    /// Get major verb version                                                 
    template<unsigned ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor()  const noexcept -> unsigned {

@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Component
       /// @attention valid only if not TypeErased                             
       static constexpr bool Sparse = not TypeErased and CT::Sparse<TYPE>;
       /// @attention valid only if not TypeErased                             
-      static constexpr bool Dense = not TypeErased and CT::Dense<TYPE>;
+      static constexpr bool Dense  = not TypeErased and CT::Dense<TYPE>;
 
    protected:
       template<unsigned>             friend struct Removal;

@@ -847,8 +847,9 @@ namespace Langulus::RTTI
          DefinitionData const* meta;
 
          if constexpr (::std::is_pointer_v<T>) {
-            // Recostruct pointer name and token at runtime to avoid a lot of compilation time
-            // @attention we do this for conventional pointers only
+            // Recostruct pointer name and token at runtime to avoid a  
+            // lot of compilation time                                  
+            //    @attention we do this for conventional pointers only  
             cppname = CppNameOf<Decvq<Deptr<T>>>();
             if constexpr (CT::Constant<Deptr<T>>) cppname += " const";
             if constexpr (CT::Constant<T>) cppname += "* const";
@@ -863,7 +864,7 @@ namespace Langulus::RTTI
             else token += "*";
          }
          else {
-            // Custom pointers
+            // Custom pointers                                          
             cppname = CppNameOf<Decvq<T>>();
             meta = Instance.GetMetaDataByCppName(cppname);
             if (meta and meta->IsInRelevantBoundary())

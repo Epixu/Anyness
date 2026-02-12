@@ -5,31 +5,216 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
+#include "../Main.hpp"
 #include <Langulus/Anyness/Bytes.hpp>
-#include "Common.hpp"
+#include <Langulus/Anyness/SerializeBytes.hpp>
 
+using namespace Langulus;
+using Anyness::Bytes;
 
-SCENARIO("Byte manipulation", "[bytes]") {
-   static Allocator::State memoryState;
+namespace doctest
+{
+   template<>
+   struct StringMaker<Bytes> {
+      static String convert(Bytes const& value) {
+         return "\"" + toString(static_cast<::std::string>(value)) + "\"_text";
+      }
+   };
+}
 
-   GIVEN("An empty byte container") {
-      Bytes data;
+namespace
+{
+   /// A type that is reflected, as convertible to Bytes                      
+   struct Bytefiable {
+      using CTTI_MapsTo = Bytes;
+      explicit operator Bytes() {
+         return Bytes("Bytefiable converted to Bytes");
+      }
+   };
 
-      WHEN("Capacity is reserved, via Allocate()") {
-         data.Reserve(500);
-         auto memory = data.GetRaw();
+   /// A type that is reflected as convertible to Bytes                       
+   struct BytefiableConst {
+      using CTTI_MapsTo = Bytes;
+      explicit operator Bytes() const {
+         return Bytes("BytefiableConst converted to Bytes");
+      }
+   };
+}
 
-         REQUIRE(not data);
-         REQUIRE(data.GetCount() == 0);
-         REQUIRE(data.GetReserved() >= 500);
+/// Possible states:                                                          
+void Bytes_CheckState_Default(const CT::Container auto& bytes) {
+   REQUIRE      (bytes.IsConstant());
+   REQUIRE_FALSE(bytes.IsDeep());
+   REQUIRE_FALSE(bytes.IsSparse());
+   REQUIRE      (bytes.IsTyped());
+   REQUIRE_FALSE(bytes.IsValid());
+   REQUIRE      (bytes.IsEmpty());
+   REQUIRE_FALSE(bytes.GetAllocation());
+   REQUIRE      (bytes.IsTypeConstrained());
+   REQUIRE      (bytes.GetType() == MetaOf<Byte>());
+   REQUIRE      (bytes.template IsExact<Byte>());
+   REQUIRE      (bytes.GetCount() == 0);
+   REQUIRE      (bytes.GetReserved() == 0);
+   REQUIRE      (bytes.GetUses() == 0);
+   //REQUIRE      (bytes.GetRaw() == nullptr); // not really a requirement
+   //REQUIRE      (bytes == nullptr);
+   //REQUIRE_FALSE(bytes != nullptr);
+   //REQUIRE      (bytes == (Byte*)nullptr);
+   //REQUIRE_FALSE(bytes != (Byte*)nullptr);
+   REQUIRE      (not bytes);
+   REQUIRE_FALSE(bytes);
+   //REQUIRE      (bytes == "");
+   //REQUIRE_FALSE(bytes != "");
+   //REQUIRE_FALSE(bytes == "no match");
+}
 
-         auto region = data.Extend(10);
-         REQUIRE(data.GetCount() == 10);
-         REQUIRE(data.GetReserved() >= 500);
-         REQUIRE(data.GetRaw() == memory);
-         REQUIRE(data.GetAllocation());
-         REQUIRE(region.GetCount() == 10);
-         REQUIRE(region.GetRaw() == memory);
+void Bytes_CheckState_OwnedEmpty(const CT::Container auto& bytes) {
+   REQUIRE_FALSE(bytes.IsConstant());
+   REQUIRE_FALSE(bytes.IsDeep());
+   REQUIRE_FALSE(bytes.IsSparse());
+   REQUIRE      (bytes.IsTyped());
+   REQUIRE_FALSE(bytes.IsValid());
+   REQUIRE      (bytes.IsEmpty());
+   REQUIRE      (bytes.GetAllocation());
+   REQUIRE      (bytes.IsTypeConstrained());
+   REQUIRE      (bytes.GetType() == MetaOf<Byte>());
+   REQUIRE      (bytes.template IsExact<Byte>());
+   REQUIRE      (bytes.GetCount() == 0);
+   REQUIRE      (bytes.GetReserved() > 0);
+   REQUIRE      (bytes.GetUses() == 1);
+   REQUIRE      (bytes.GetRaw());
+   //REQUIRE      (bytes == nullptr);
+   //REQUIRE_FALSE(bytes != nullptr);
+   //REQUIRE      (bytes == (Byte*)nullptr);
+   //REQUIRE_FALSE(bytes != (Byte*)nullptr);
+   REQUIRE      (not bytes);
+   REQUIRE_FALSE(bytes);
+   //REQUIRE      (bytes == "");
+   //REQUIRE_FALSE(bytes != "");
+   //REQUIRE_FALSE(bytes == "no match");
+}
+
+void Bytes_CheckState_OwnedFull(const CT::Container auto& bytes) {
+   REQUIRE_FALSE(bytes.IsConstant());
+   REQUIRE_FALSE(bytes.IsDeep());
+   REQUIRE_FALSE(bytes.IsSparse());
+   REQUIRE      (bytes.IsTyped());
+   REQUIRE      (bytes.IsValid());
+   REQUIRE_FALSE(bytes.IsEmpty());
+   REQUIRE      (bytes.GetAllocation());
+   REQUIRE      (bytes.IsTypeConstrained());
+   REQUIRE      (bytes.GetType() == MetaOf<Byte>());
+   REQUIRE      (bytes.template IsExact<Byte>());
+   REQUIRE      (bytes.GetCount() > 0);
+   REQUIRE      (bytes.GetReserved() > 0);
+   REQUIRE      (bytes.GetUses() > 0);
+   REQUIRE      (bytes.GetRaw());
+   //REQUIRE      (bytes != nullptr);
+   //REQUIRE_FALSE(bytes == nullptr);
+   //REQUIRE      (bytes != (Byte*)nullptr);
+   //REQUIRE_FALSE(bytes == (Byte*)nullptr);
+   REQUIRE      (bytes);
+   REQUIRE_FALSE(not bytes);
+   //REQUIRE      (bytes != "");
+   //REQUIRE_FALSE(bytes == "");
+   //REQUIRE_FALSE(bytes == "no match");
+}
+
+void Bytes_CheckState_DisownedFullConst(const CT::Container auto& bytes) {
+   REQUIRE      (bytes.IsConstant());
+   REQUIRE_FALSE(bytes.IsDeep());
+   REQUIRE_FALSE(bytes.IsSparse());
+   REQUIRE      (bytes.IsTyped());
+   REQUIRE      (bytes.IsValid());
+   REQUIRE_FALSE(bytes.IsEmpty());
+   REQUIRE_FALSE(bytes.GetAllocation());
+   REQUIRE      (bytes.IsTypeConstrained());
+   REQUIRE      (bytes.GetType() == MetaOf<Byte>());
+   REQUIRE      (bytes.template IsExact<Byte>());
+   REQUIRE      (bytes.GetCount() > 0);
+   REQUIRE      (bytes.GetReserved() == 0);
+   REQUIRE      (bytes.GetUses() == 0);
+   REQUIRE      (bytes.GetRaw());
+   //REQUIRE      (bytes != nullptr);
+   //REQUIRE_FALSE(bytes == nullptr);
+   //REQUIRE      (bytes != (Byte*)nullptr);
+   //REQUIRE_FALSE(bytes == (Byte*)nullptr);
+   REQUIRE      (bytes);
+   REQUIRE_FALSE(not bytes);
+   //REQUIRE      (bytes != "");
+   //REQUIRE_FALSE(bytes == "");
+   //REQUIRE_FALSE(bytes == "no match");
+}
+
+SCENARIO("Testing byte container") {
+   static MemoryState memoryState;
+   using T = Bytes;
+   static_assert(    CT::Typed<T>, "Container not typed");
+   static_assert(not CT::Array<T>, "Wrongly typed container");
+   static_assert(    Exact<TypeOf<T>, Byte>, "Wrongly typed container");
+
+   GIVEN("Gap test") {
+      alignas(T) char unininitialized[sizeof(T)];
+      memset(unininitialized, 254, sizeof(unininitialized));
+      new (unininitialized) T {};
+      for (auto b : unininitialized) {
+         REQUIRE(b != 254);
+      }
+      Logger::Info("Size of ", NameOf<::std::vector<Byte>>(), " container is: ", sizeof(::std::vector<Byte>), " bytes");
+      auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
+      size_t accumulated_size = 0;
+      size_t accumulated_stack_size = 0;
+      T::ComponentList::ForEach([&]<class C> {
+         if constexpr (requires { typename C::StackRequest; }) {
+            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", sizeof(typename C::StackRequest), " bytes on the stack)");
+            accumulated_stack_size += sizeof(typename C::StackRequest);
+         }
+         else Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
+         accumulated_size += sizeof(C);
+      });
+      Logger::Info("-----------------------------------------");
+      Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
+      Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
+      static_assert(sizeof(T) <= sizeof(::std::vector<Byte>));
+   }
+
+   GIVEN("Default byte container") {
+      T bytes;
+
+      Bytes_CheckState_Default(bytes);
+
+      WHEN("Cleared") {
+         bytes.Clear();
+
+         Bytes_CheckState_Default(bytes);
+      }
+
+      WHEN("Reserve") {
+         bytes.Reserve(500);
+
+         Bytes_CheckState_OwnedEmpty(bytes);
+         REQUIRE(bytes.GetReserved() >= 500);
+      }
+
+      WHEN("Self-assign") {
+         LglsDisableWarningPush
+         LglsDisableWarning_SelfAssign
+         bytes = bytes;
+         LglsDisableWarningPop
+         
+         Bytes_CheckState_Default(bytes);
+      }
+
+      WHEN("Indirect self-assign") {
+         const auto anotherbytes = bytes;
+         bytes = anotherbytes;
+
+         Bytes_CheckState_Default(bytes);
+      }
+
+      WHEN("Compared") {
+         static_assert(T{} == T{});
+         static_assert(not static_cast<bool>(T{}));
       }
    }
 
@@ -68,7 +253,7 @@ SCENARIO("Byte manipulation", "[bytes]") {
          REQUIRE(data.GetAllocation());
       }
 
-      WHEN("More byte capacity is reserved, via Extend()") {
+      /*WHEN("More byte capacity is reserved, via Extend()") {
          auto region = data.Extend(10);
 
          REQUIRE(data.GetCount() == 5 * sizeof(int) + 10);
@@ -77,7 +262,7 @@ SCENARIO("Byte manipulation", "[bytes]") {
          REQUIRE(data.GetAllocation());
          REQUIRE(region.GetCount() == 10);
          REQUIRE(region.GetRaw() == data.GetRaw() + 5 * sizeof(int));
-      }
+      }*/
 
       WHEN("Less capacity is reserved") {
          data.Reserve(2);
@@ -153,10 +338,5 @@ SCENARIO("Byte manipulation", "[bytes]") {
    }
 
    REQUIRE(memoryState.Assert());
-
-   // Destroy BANK before static data - otherwise problems happen if    
-   // not using managed reflection                                      
-   BANK.Reset();
-
    REQUIRE_FALSE(Allocator::CollectGarbage());
 }

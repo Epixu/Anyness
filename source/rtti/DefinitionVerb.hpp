@@ -79,7 +79,7 @@ namespace Langulus::RTTI
       
       DefinitionVerb(const Token& cppname) noexcept
          : Definition {cppname} {}
-      // ReSharper disable once CppEnforceOverridingDestructorStyle     
+
       ~DefinitionVerb();
    };
 }

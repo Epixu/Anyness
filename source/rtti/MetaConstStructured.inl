@@ -32,14 +32,6 @@ namespace Langulus::RTTI::Inner
       return *this;
    }
 
-   /// Get the C++ name of the constant, the result of CppNameOf              
-   inline auto MetaConstPacked_16::GetCppName() const noexcept -> Token {
-      const auto id = Base::GetID();
-      if (id)
-         return Instance.GetMetaConstByID(id)->mCppNameOf;
-      return {};
-   }
-
    /// Get the name of the constant, the result of NameOf                     
    inline auto MetaConstPacked_16::GetName() const noexcept -> Token {
       const auto id = Base::GetID();
@@ -53,6 +45,22 @@ namespace Langulus::RTTI::Inner
       const auto id = Base::GetID();
       if (id)
          return Instance.GetMetaConstByID(id)->mInfoOf;
+      return {};
+   }
+
+   /// Get the C++ name of the constant, the result of CppNameOf              
+   inline auto MetaConstPacked_16::GetCppName() const noexcept -> Token {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaConstByID(id)->mCppNameOf;
+      return {};
+   }
+
+   /// Get the constant's hash                                                
+   inline auto MetaConstPacked_16::GetHash() const noexcept -> Hash {
+      const auto id = Base::GetID();
+      if (id)
+         return Instance.GetMetaConstByID(id)->mHash;
       return {};
    }
 

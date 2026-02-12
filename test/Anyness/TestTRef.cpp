@@ -146,6 +146,8 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
       }
 
       WHEN("Compared") {
+         static_assert(not static_cast<bool>(T{}));
+
          static_assert(T{} == T{});
          static_assert(T{} == nullptr);
          static_assert(nullptr == T{});

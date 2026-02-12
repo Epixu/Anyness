@@ -63,9 +63,6 @@ namespace Langulus::Anyness::Component
             if (0 == count) {
                self.SetAllocationInner(nullptr);
                self.ResetCount();
-               /*self.SetHeapInner(nullptr);
-               if_available(self.SetCountInner(0));
-               if_available(self.SetHashInner(1));*/
                return;
             }
 

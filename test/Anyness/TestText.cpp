@@ -220,6 +220,8 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
       }
 
       WHEN("Compared") {
+         static_assert(not static_cast<bool>(T{}));
+
          static_assert(T{} == T{});
          static_assert(T{} == nullptr);
          static_assert(nullptr == T{});
