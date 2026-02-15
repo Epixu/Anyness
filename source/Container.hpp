@@ -357,6 +357,16 @@ namespace Langulus::Anyness
       template<class C>
       static constexpr bool HasComponent = AkinAsOneOf<C, COMPONENTS...>;
 
+      /// Get the number of heap providers                                    
+      static consteval size_t CountHeapProviders() {
+         size_t count = 0;
+         ComponentList::ForEach([&]<class C> {
+            if constexpr (requires { C::HeapProvider; })
+               ++count;
+         });
+         return count;
+      }
+
    protected:
       template<unsigned>                     friend struct Com::IterationOperators;
       template<class, class, bool, unsigned> friend struct Com::TypedStack;
@@ -372,12 +382,14 @@ namespace Langulus::Anyness
       template<unsigned>                     friend struct Com::Assignment;
       template<CT::State...>                 friend struct Com::StateStack;
       template<unsigned, class>              friend struct Com::ReserveEmergent;
+                                             friend struct Com::Conversion;
 
       // Here lies the stack. It is an optimized tuple that is filled   
       // with requests from components.                                 
       typename decltype(Inner::DefineStack<COMPONENTS...>())::TupleOptimized mStack;
 
       /// Access a variable on the stack associated with a component          
+      ///   @attention always returns a reference                             
       template<class COM, class SELF>
       constexpr auto& AccessStack(this SELF&& self) noexcept {
          constexpr size_t IDX = Inner::GetStackOffset<COM, COMPONENTS...>();
@@ -387,6 +399,7 @@ namespace Langulus::Anyness
       }
 
       /// Access a variable on the heap associated with a component           
+      ///   @attention always returns a pointer which may be null             
       template<CT::Component COM, CT::Container SELF>
       constexpr auto AccessHeap(this SELF&& self) noexcept {
          size_t offset = Inner::GetHeapOffset<COM, COMPONENTS...>(
@@ -428,12 +441,33 @@ namespace Langulus::Anyness
       }
 
       /// Access a variable on the stack associated with an ID                
+      /*template<unsigned ID, class SELF>
+      constexpr auto& AccessStackById(this SELF&& self) noexcept {
+         auto& result = ::Langulus::get<ID>(self.mStack).value;
+         using ConstOrNot = LglsMutIf(SELF, decltype(result));
+         return const_cast<ConstOrNot>(result);
+      }*/
+
       template<unsigned ID>
       constexpr auto& AccessStackById(this auto&& self) noexcept {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { C::Id; }) {
                if constexpr (C::Id == ID)
                   return (self.template AccessStack<C>());
+               else
+                  return No{};
+            }
+            else return No{};
+         });
+      }
+
+      /// Access a heap provider with the given ID                            
+      template<unsigned ID>
+      constexpr auto& AccessHeapById(this auto&& self) noexcept {
+         return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
+            if constexpr (requires { C::HeapProvider; }) {
+               if constexpr (C::HeapProvider == ID)
+                  return (self.C);
                else
                   return No {};
             }
@@ -447,7 +481,8 @@ namespace Langulus::Anyness
          return ComponentList::ForEachConstOr([&]<class C>{
             if constexpr (C::Id == ID)
                return (self.C);
-            else return No {};
+            else
+               return No {};
          });
       }
 
@@ -487,7 +522,7 @@ namespace Langulus::Anyness
          return self;
       }
 
-   public:
+   //public:
       /// Call AssignFrom whenever possible, fallback to AssignDefault        
       /// otherwise                                                           
       template<CT::Container SELF, CT::Container FROM>
@@ -542,7 +577,13 @@ namespace Langulus::CT
    /// Check if listed types are containers with any kind of heap memory      
    template<class...T>
    concept HeapAllocated = Container<T...>
-       and (ShedDeref<T>::HeapAllocated and ...);
+       and ((ShedDeref<T>::CountHeapProviders() > 0) and ...);
+   
+   /// Check if listed types are containers with more than one heap provider, 
+   /// such as maps.                                                          
+   template<class...T>
+   concept Multiheap = Container<T...>
+       and ((ShedDeref<T>::CountHeapProviders() > 1) and ...);
    
    /// Check if listed types are containers with variable count               
    ///   @attention this includes containers with Com::CountStatic, but have  

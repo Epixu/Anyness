@@ -22,6 +22,7 @@ namespace Langulus::Anyness::Component
       using StackRequest   = T;
       
       static constexpr unsigned Id = ID;
+      static constexpr unsigned StackProvider = ID;
       static constexpr int ComponentPrecedence = -2000;
       
    protected:
@@ -35,11 +36,6 @@ namespace Langulus::Anyness::Component
       }
 
    public:
-      /// Always allocated on the stack                                       
-      /*constexpr bool IsAllocated() const noexcept {
-         return true;
-      }*/
-
       /// Get a direct access to the stack memory                             
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {

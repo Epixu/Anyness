@@ -33,7 +33,7 @@ namespace Langulus::Anyness::Component
       /// Shallow-copy all initialized elements in memory to another          
       /// allocation, that is owned once only by this container.              
       ///   @attention if we already own the memory just Keep() it once       
-      template<CT::Container C> requires C::HeapAllocated   
+      template<CT::Container C> requires CT::HeapAllocated<C>
       void TakeOwnership(this C& self) {
          if (not self.GetHeapInner())
             return;

@@ -29,8 +29,8 @@ namespace Langulus::Anyness::Component
       using StackRequest = POINTER_TYPE;
 
       static constexpr unsigned Id = ID;
+      static constexpr unsigned HeapProvider = ID;
       static constexpr int  ComponentPrecedence = -2000;
-      static constexpr bool HeapAllocated = true;
       static constexpr bool HeapCanBeNull = false;
 
    protected:

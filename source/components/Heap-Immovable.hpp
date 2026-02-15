@@ -23,8 +23,8 @@ namespace Langulus::Anyness::Component
    struct HeapImmovable {
       using CTTI_Component = Yes<>;
       static constexpr unsigned Id = ID;
+      static constexpr unsigned HeapProvider = ID;
       static constexpr int  ComponentPrecedence = -2000;
-      static constexpr bool HeapAllocated = true;
       static constexpr bool HeapCanBeNull = true;
 
    protected:

@@ -16,13 +16,12 @@ using Anyness::TRef;
 
 
 TEST_CASE_TEMPLATE("Shared pointer", TestType
-   , Types<TRef<RT>,        ScopedElement<RT, true>>
-   
    , Types<TRef<RT>,        ScopedElement<RT>>
    , Types<TRef<const RT>,  ScopedElement<RT>>
    , Types<TRef<int>,       ScopedElement<int>>
    , Types<TRef<const int>, ScopedElement<int>>
    
+   , Types<TRef<RT>,        ScopedElement<RT, true>>
    , Types<TRef<const RT>,  ScopedElement<RT, true>>
    , Types<TRef<int>,       ScopedElement<int, true>>
    , Types<TRef<const int>, ScopedElement<int, true>>
@@ -31,6 +30,18 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
    using T  = typename TestType::First;
    using TT = TypeOf<T>;
    using ScopedE = typename TestType::Second;
+
+   static_assert(    CT::HeapAllocated<T>);
+   static_assert(not CT::Multiheap<T>);
+   static_assert(    CT::AutoOwned<T>);
+   static_assert(    CT::Owned<T>);
+   static_assert(    CT::HasVariableCount<T>);
+   static_assert(not CT::ContainsMany<T>);
+   static_assert(    CT::ContainsOne<T>);
+   static_assert(not CT::TypeErased<T>);
+   static_assert(not CT::DeeplyOwned<T>);
+   static_assert(not CT::Indexed<T>);
+   static_assert(not CT::IndexedLinearly<T>);
 
    GIVEN("Nullptr-initialized") {
       T pointer {nullptr};

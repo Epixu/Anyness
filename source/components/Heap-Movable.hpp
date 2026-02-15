@@ -19,6 +19,12 @@ namespace Langulus::Anyness::Component
    ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
    template<unsigned ID, CT::Sparse POINTER_TYPE>
    struct HeapMovable : HeapReference<ID, POINTER_TYPE> {
+      //using CTTI_Component = Yes<>;
+      //using StackRequest = POINTER_TYPE;
+
+      static constexpr unsigned Id = ID;
+      static constexpr unsigned HeapProvider = ID;
+      static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapCanBeNull = true;
 
    protected:

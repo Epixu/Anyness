@@ -24,7 +24,9 @@ namespace Langulus::Anyness::Component
       /// Get the hash, but never recompute it                                
       template<CT::Container C>
       H const& GetHashNoRecompute(this const C& self) noexcept {
-         return self.template AccessHeap<HashHeap>();
+         if (self.IsEmpty())
+            return H {1};
+         return *self.template AccessHeap<HashHeap>();
       }
 
       /// Get the hash, recompute it if uninitialized                         

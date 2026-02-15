@@ -5,148 +5,167 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-
-/// INTENTIONALLY NOT GUARDED                                                 
-/// Include this file once in each cpp file, after all other headers          
-#include <Langulus/Anyness/Text.hpp>
-#include <Langulus/Anyness/Tag.hpp>
-#include <Langulus/Anyness/TSet.hpp>
+#pragma once
+#include "../many/TestManyCommon.hpp"
 #include <Langulus/Anyness/Set.hpp>
+#include <Langulus/Anyness/TSet.hpp>
 #include <unordered_set>
-#include "../Common.hpp"
+#include <set>
 
+#if LANGULUS(BENCHMARK)
+   /// Perform a persistent benchmark across build and verify performance     
+   #define BenchmarkSet(func, tolerance, my_init, my) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance); \
+   }
+
+   /// Perform two persistent benchmarks across builds - one for Set and      
+   /// one for std::unordered_set. Make sure they don't deviate in a bad way. 
+   #define BenchmarkSetStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      i = 0; \
+      const auto token_std = ::std::string("Test/") + static_cast<::std::string>(func) + " |std::unordered_set|"; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         theirs_init; \
+         theirs; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         theirs_init; \
+         { \
+            CTRACK_NAME(token_std.c_str()); \
+            theirs; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance_highscore); \
+      REQUIRE(results.check_same(token.c_str(), token_std.c_str(), tolerance)); \
+   }
+#else
+   #define BenchmarkSet(func, tolerance, my_init, my)
+   #define BenchmarkSetStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
+#endif
+
+namespace doctest
+{
+   template<Anyness::State::StateValue SORT>
+   struct StringMaker<Anyness::Inner::Set<SORT>> {
+      static String convert(Anyness::Inner::Set<SORT> const& value) {
+         return toString(static_cast<::std::string>(
+            NameOf<Anyness::Inner::Set<SORT>>() + "(" + Convert<Text>(value) + ")"
+         ));
+      }
+   };
+
+   template<CT::NotVoid T, Anyness::State::StateValue SORT>
+   struct StringMaker<TSet<T, SORT>> {
+      static String convert(TSet<T, SORT> const& value) {
+         return toString(static_cast<::std::string>(
+            NameOf<TSet<T, SORT>>() + "(" + Convert<Text>(value) + ")"
+         ));
+      }
+   };
+}
+
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Set_Helper_TestType(const C& set) {
+   Many_Helper_TestType<E>(set);
+}
+
+template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
+void Set_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
+   Many_Helper_TestSame(lhs, rhs);
+}
 
 ///                                                                           
-/// Possible states:                                                          
-///   - uninitialized                                                         
-///   - default                                                               
-template<class K>
-void Set_CheckState_Default(const auto&);
-///   - invariant                                                             
-template<class K>
-void Set_CheckState_Invariant(const auto&);
-///   - owned-full                                                            
-template<class K>
-void Set_CheckState_OwnedFull(const auto&);
-///   - owned-full-const                                                      
-template<class K>
-void Set_CheckState_OwnedFullConst(const auto&);
-///   - owned-empty                                                           
-template<class K>
-void Set_CheckState_OwnedEmpty(const auto&);
-///   - disowned-full                                                         
-template<class K>
-void Set_CheckState_DisownedFull(const auto&);
-///   - disowned-full-const                                                   
-template<class K>
-void Set_CheckState_DisownedFullConst(const auto&);
-///   - abandoned                                                             
-template<class K>
-void Set_CheckState_Abandoned(const auto&);
+/// Possible state test implementations                                       
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Set_CheckState_Default(const C& set, bool typed = false) {
+   Common_CheckState_Default<E>(set, typed);
 
-
-
-template<class K>
-void Set_Helper_TestType(const auto& set) {
-   REQUIRE      (set.IsTyped());
-   REQUIRE      (set.GetType() == MetaDataOf<K>());
-   REQUIRE      (set.GetType()->template IsSimilar<const K>());
-   REQUIRE      (set.GetType()->template IsExact<K>());
-   REQUIRE      (set.GetType()->template Is<K*>());
-   REQUIRE      (set.IsDense() == CT::Dense<K>);
-   REQUIRE      (set.IsSparse() == CT::Sparse<K>);
-   REQUIRE      (set.IsDeep() == CT::Deep<K>);
-}
-
-template<CT::Set LHS, CT::Set RHS>
-void Set_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
-   REQUIRE(lhs.GetRaw() == rhs.GetRaw());
-   REQUIRE(lhs.IsExact(rhs.GetType()));
-   REQUIRE(lhs == rhs);
-   REQUIRE(lhs.IsDeep() == rhs.IsDeep());
-   REQUIRE(lhs.IsConstant() == rhs.IsConstant());
-   REQUIRE(lhs.GetUnconstrainedState() == rhs.GetUnconstrainedState());
-}
-
-
-
-template<class K>
-void Set_CheckState_Default(const auto& set) {
-   using T = Decay<decltype(set)>;
-
-   if constexpr (CT::Typed<T>) {
-      static_assert(CT::Exact<TypeOf<T>, K>);
-      Set_Helper_TestType<K>(set);
-      REQUIRE      (set.GetState() == State::Typed);
-   }
-   else {
-      REQUIRE_FALSE(set.IsTyped());
-      REQUIRE      (set.GetType() == nullptr);
-      REQUIRE      (set.IsDense());
-      REQUIRE_FALSE(set.IsSparse());
-      REQUIRE      (set.GetState() == State::Default);
-      REQUIRE_FALSE(set.IsDeep());
-   }
-
-   REQUIRE      (set.IsTypeConstrained() == CT::Typed<T>);
    REQUIRE_FALSE(set.IsCompressed());
-   REQUIRE      (set.IsConstant() == CT::Constant<K>);
    REQUIRE_FALSE(set.IsEncrypted());
-   REQUIRE_FALSE(set.IsMissing());
-   REQUIRE_FALSE(set.IsValid());
-   REQUIRE      (set.IsInvalid());
-   REQUIRE_FALSE(set.GetAllocation());
-   REQUIRE      (set.IsEmpty());
-   REQUIRE      (set.GetCount() == 0);
-   REQUIRE      (set.GetReserved() == 0);
-   REQUIRE      (set.GetUses() == 0);
-   REQUIRE      (set.GetRawMemory() == nullptr);
-   REQUIRE_FALSE(set);
-   REQUIRE      (not set);
+   REQUIRE_FALSE(set.IsSorted());
 }
 
-template<class K>
-void Set_CheckState_OwnedEmpty(const auto& set) {
-   using T = Decay<decltype(set)>;
-
-   Set_Helper_TestType<K>(set);
-
-   REQUIRE      (set.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(set.IsCompressed());
-   REQUIRE      (set.IsConstant() == CT::Constant<K>);
-   REQUIRE_FALSE(set.IsEncrypted());
-   REQUIRE_FALSE(set.IsMissing());
-   REQUIRE_FALSE(set.IsValid());
-   REQUIRE      (set.IsInvalid());
-   REQUIRE      (set.GetAllocation());
-   REQUIRE      (set.IsEmpty());
-   REQUIRE      (set.GetCount() == 0);
-   REQUIRE      (set.GetReserved() > 0);
-   REQUIRE      (set.GetUses() == 1);
-   REQUIRE      (set.GetRawMemory());
-   REQUIRE_FALSE(set);
-   REQUIRE      (not set);
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Set_CheckState_OwnedEmpty(const C& set) {
+   Many_CheckState_OwnedEmpty<E>(set);
 }
 
-template<class K>
-void Set_CheckState_OwnedFull(const auto& set) {
-   using T = Decay<decltype(set)>;
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Set_CheckState_OwnedFull(const C& set) {
+   Many_CheckState_OwnedFull<E>(set);
+}
 
-   Set_Helper_TestType<K>(set);
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Set_CheckState_DisownedFull(const C& set) {
+   Many_CheckState_DisownedFull<E>(set);
+}
 
-   REQUIRE      (set.IsTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(set.IsCompressed());
-   REQUIRE      (set.IsConstant() == CT::Constant<K>);
-   REQUIRE_FALSE(set.IsEncrypted());
-   REQUIRE_FALSE(set.IsMissing());
-   REQUIRE      (set.IsValid());
-   REQUIRE_FALSE(set.IsInvalid());
-   REQUIRE      (set.GetAllocation());
-   REQUIRE_FALSE(set.IsEmpty());
-   REQUIRE      (set.GetCount() > 0);
-   REQUIRE      (set.GetReserved() > 0);
-   REQUIRE      (set.GetUses() > 0);
-   REQUIRE      (set.GetRawMemory());
-   REQUIRE      (set);
-   REQUIRE_FALSE(not set);
+template<class E, CT::Container C> requires CT::NoIntent<C>
+void Set_CheckState_Abandoned(const C& set) {
+   Many_CheckState_Abandoned<E>(set);
+}
+
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
+   Many_CheckState_ContainsOne(set, LglsFwd(e_with_intent), uses);
+}
+
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Set_CheckState_ContainsN(size_t n, const T& set, I&& e_scoped_with_intent, int uses = 1) {
+   auto& e = e_scoped_with_intent.what;
+   using E = typename Decay<Deint<I>>::Type;
+
+   REQUIRE(set.GetCount() == n);
+   REQUIRE(set.GetUses() == 1);
+   REQUIRE(set.GetReserved() >= n);
+
+   for (auto& it : set)
+      REQUIRE(it == e);
+
+   //TODO other kinds of iterations
+}
+
+template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
+void Set_CheckState_ContainsArray(const T& set, I&& e_scoped_array_with_intent) {
+   auto  e = e_scoped_array_with_intent.what;
+   using E = typename Decay<Deint<I>>::Type;
+   constexpr size_t n = ExtentOf<decltype(e_scoped_array_with_intent.what)>;
+
+   REQUIRE(set.GetCount() == n);
+   REQUIRE(set.GetUses() == 1);
+   REQUIRE(set.GetReserved() >= n);
+
+   //TODO
+}
+
+template<CT::Container T, class E> requires CT::NoIntent<T>
+void Set_Helper_CompareOne(const T& set, const E& e) {
+   Many_Helper_CompareOne(set, e);
 }
