@@ -21,12 +21,15 @@ namespace Langulus::Anyness::Component
    ///   @tparam HASH type of the hash                                        
    template<unsigned ID, class HASH>
    struct IndexedHashHeap {
-      using CTTI_Component  = Yes<>;
-      using TableType       = uint8_t;
-      using HeapRequest     = PerElement<TableType>;
-      
+      using CTTI_Component   = Yes<>;
+      using TableType        = uint8_t;
+      using HeapRequest      = PerElement<TableType>;
+      using IteratorCategory = ::std::random_access_iterator_tag;
+
       static constexpr bool Indexed = true;
       static constexpr int  ComponentPrecedence = 3000;
+      static constexpr int  InitialTableSize = 8;
+      static constexpr int  TableGrowthFactor = 2;
 
    protected:
       template<unsigned, class>      friend struct Insertion;
@@ -41,13 +44,127 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
       template<CT::Container C>
-      using PickRange = Tmut<C, typename Deref<C>::PickRangeMut, typename Deref<C>::PickRange>;
+      using PickRange = Tmut<C, typename Deref<C>::PickRangeMut, typename Deref<C>::PickRange>;      
+      
+      /// Get the start of the hash table (inner)                             
+      constexpr auto* GetHashTableInner(this auto&& self) noexcept {
+         return self.template AccessHeap<IndexedHashHeap>();
+      }
+
+      /// Browse table, converting contiguous index into table index.         
+      /// Table is indexed the following way:                                 
+      /// 0-8:  [ ][ ][ ][ ][ ][ ][ ][ ]                                      
+      /// 9-24: [ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]              
+      /// 25-56:[ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ][ ]...  
+      /// It's a so called cascading table structure, designed this way       
+      /// to minimize movement and avoid rehashing when table is resized.     
+      /// When an element is sought in this cascading table structure, it is  
+      /// sought first in the biggest (last) table, and if not found, the     
+      /// previous (smaller) tables are searched using the truncated hash.    
+      template<CT::Container C>
+      constexpr auto BrowseTable(this C const& self, Count<C> index)
+      assumptious -> Count<C> {
+         LglsAssumeDev(not self.IsEmpty(), "Container can't be empty");
+         LglsAssumeDev(index < self.GetCount(), "Index out of bounds");
+
+         const auto reserved = self.GetReserved();
+         if (index < self.GetCount() / 2) {
+            // Index is in the lower half, so we begin search from start
+            Count<C> counter = 0;
+            auto table = self.GetHashTableInner();
+
+            while (counter < reserved) {
+               if (*table) {
+                  if (index == 0)
+                     return counter;
+                  --index;
+                  ++counter;
+               }
+               ++table;
+            }
+         }
+         else {
+            // Index is in the upper half, so we begin search from end  
+            int counter = reserved - 1;
+            auto table = self.GetHashTableInner() + reserved;
+
+            while (counter >= 0) {
+               if (*table) {
+                  if (index == 0)
+                     return static_cast<Count<C>>(counter);
+                  --index;
+                  --counter;
+               }
+               --table;
+            }
+         }
+
+         LglsError("Should not be reached");
+         return 0;
+      }
+
+      /// Convert an index to an offset.                                      
+      /// Special indices will be contextualized.                             
+      ///   @param index the index to simplify                                
+      ///   @return a simple element offset into contiguous memory            
+      template<CT::Container C, CT::Index INDEX>
+      constexpr auto SimplifyIndex(this C const& self, INDEX index)
+      assumptious -> Count<C> {
+         LglsAssumeDev(not self.IsEmpty(), "Container can't be empty");
+
+         if constexpr      (::std::same_as<INDEX, Index::Inner::All>)
+            static_assert(false, "Index::All can't be used here");
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Many>)
+            static_assert(false, "Index::Many can't be used here");
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Single>)
+            static_assert(false, "Index::Single can't be used here");
+         else if constexpr (::std::same_as<INDEX, Index::Inner::None>)
+            static_assert(false, "Index::None can't be used here");
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Mode>)
+            static_assert(false, "Index::Mode can't be used here");
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Front>)
+            return self.BrowseTable(0);
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Middle>)
+            return self.BrowseTable(self.GetCount() / 2);
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Back>)
+            return self.BrowseTable(self.GetCount());
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Biggest>)
+            return self.GetIndexLargest();
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Smallest>)
+            return self.GetIndexSmallest();
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Random>)
+            return self.GetIndexRandom();
+         else if constexpr (::std::same_as<INDEX, Index::Inner::First>)
+            return self.BrowseTable(0);
+         else if constexpr (::std::same_as<INDEX, Index::Inner::Last>)
+            return self.BrowseTable(self.GetCount() - 1);
+         else if constexpr (requires { index.index; }) {
+            const auto c = self.GetCount();
+            // If index is negative, wrap it around (if in range)       
+            if (index.index < 0)
+               return self.BrowseTable(c + index.index >= 0 ? c + index.index : CountMax<C>);
+            return self.BrowseTable(index.index >= c ? CountMax<C> : index.index);
+
+         }
+         else if constexpr (CT::Integer<INDEX>) {
+            // Using an integer index explicitly makes a statement,     
+            // that you know what you're doing                          
+            if constexpr (CT::Signed<INDEX>) {
+               LglsAssumeUser(index >= 0,
+                  "Integer index is below zero, "
+                  "use Index::At for reverse indices instead"
+               );
+            }
+            return self.BrowseTable(index);
+         }
+         else static_assert(false, "Unsupported index type");
+      }
 
    public:
       /// Subscript operator for accessing element at a specific index        
       ///   @param idx the index                                              
       ///   @return the picked element                                        
-      template<CT::Container C> requires CT::Multiheap<C>
+      template<CT::Container C>
       decltype(auto) operator[] (this C&& self, CT::Index auto&& idx) assumptious {
          if constexpr (CT::TypeErased<C>)
             return self.template AsAt<DecideHandle<C>>(LglsFwd(idx));
@@ -65,7 +182,7 @@ namespace Langulus::Anyness::Component
       ///      type of the container, if statically typed                     
       ///   @param idx the index                                              
       ///   @return the chosen element                                        
-      template<class AS = void, CT::Container C> requires CT::Multiheap<C>
+      template<class AS = void, CT::Container C>
       auto* GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -139,7 +256,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam AS the type we're wrapping in                             
       ///   @param idx the index                                              
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, CT::Container C> requires CT::Multiheap<C>
+      template<CT::NotVoid AS, CT::Container C>
       decltype(auto) AsAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
@@ -189,7 +306,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparseness                                     
       ///   @param idx the index                                              
       ///   @return a pointer to the first deep item, or nullptr if not deep  
-      template<class AS = void, CT::Container C> requires CT::Multiheap<C>
+      template<class AS = void, CT::Container C>
       auto GetDeepAt(this C&& self, CT::Index auto&&) noexcept {
          using D = Tif<CT::Void<AS>, LglsMutIf(C, Deep<C>*), LglsMutIf(C, AS*)>;
          if (self.IsEmpty() or not self.IsDeep())
@@ -201,7 +318,7 @@ namespace Langulus::Anyness::Component
       /// the most concrete type.                                             
       ///   @param idx the index                                              
       ///   @return the most concrete representation of the first item        
-      template<class AS = void, CT::Container C> requires CT::Multiheap<C>
+      template<class AS = void, CT::Container C>
       auto GetResolvedAt(this C&& self, CT::Index auto&&) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -237,7 +354,7 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<class AS = void, CT::Container C> requires CT::Multiheap<C>
+      template<class AS = void, CT::Container C>
       auto GetDenseAt(this C&& self, CT::Index auto&& idx, size_t count = -1) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");

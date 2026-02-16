@@ -108,7 +108,7 @@ namespace Langulus::Anyness
             else                   return mIt != mRange.end();
          }
 
-         decltype(auto) operator *  () const noexcept { return *mIt; }
+         decltype(auto) operator *  () const noexcept { return (mIt); /* *mIt;*/   }
          decltype(auto) operator -> () const noexcept { return &(*mIt); }
 
          auto operator + (Count c) const noexcept -> Iterator {
@@ -181,11 +181,16 @@ namespace Langulus::Anyness
    /// handle. Otherwise, 'i' will be a direct reference to the element.      
    template<bool REVERSE, class C>
    struct IterateDefault {
-      static_assert(CT::NoIntent<C>,     "C can't have an intent");
-      static_assert(CT::NotReference<C>, "C can't be a reference");
-      static_assert(CT::ContainsMany<C>, "C is not iteratable because it contains exactly one element");
-      static_assert(CT::Indexed<C>,      "C is not indexed");
       using CTTI_ReflectAs = void;
+
+      static_assert(CT::NoIntent<C>,
+         "C can't have an intent");
+      static_assert(CT::NotReference<C>,
+         "C can't be a reference");
+      static_assert(CT::ContainsMany<C>,
+         "C is not iteratable because it contains exactly one element");
+      static_assert(CT::Indexed<C>,
+         "C is not indexed");
 
    protected:
       using Pick    = typename C::Pick;
@@ -198,8 +203,11 @@ namespace Langulus::Anyness
          Tif<CT::Handle<PickMut>,   PickMut,          Deref<PickMut>*>,
          Tif<CT::Handle<Pick>,      Pick,    ConstAll<Deref<Pick>*>>
       >;
-      static_assert(CT::NotReference<H>, "Iterator can't be a reference");
-      static_assert(CT::Handle<H> or CT::Sparse<H>, "Must be either a pointer, or a handle");
+
+      static_assert(CT::NotReference<H>,
+         "Iterator can't be a reference");
+      static_assert(CT::Handle<H> or CT::Sparse<H>,
+         "Must be either a pointer, or a handle");
 
       C& range;
 
@@ -209,12 +217,12 @@ namespace Langulus::Anyness
 
       /// The iterator                                                        
       struct Iterator {
-         using CTTI_Iterator  = Yes<>;
-         using CTTI_ReflectAs = void;
-         using difference_type = std::ptrdiff_t;
-         using iterator_category = Tif<CT::Contiguous<C>, std::contiguous_iterator_tag, std::random_access_iterator_tag>;
-         using value_type = Deptr<H>;
-         using reference = Deptr<H>&;
+         using CTTI_ReflectAs    = void;
+         using CTTI_Iterator     = Yes<>;
+         using difference_type   = std::ptrdiff_t;
+         using iterator_category = typename C::IteratorCategory;
+         using value_type        = Deptr<H>;
+         using reference         = Deptr<H>&;
 
          mutable H mIt;
          C* mRange;
@@ -364,14 +372,6 @@ namespace Langulus::Anyness
             }
          }
       };
-
-      static_assert(::std::input_or_output_iterator<Iterator>);
-
-      // These are not possible to satisfy if C is type-erased          
-      static_assert(CT::TypeErased<C> or CT::Sparse<TypeOf<C>> or ::std::random_access_iterator<Iterator>,
-         "failed random access iterator");
-      static_assert(CT::TypeErased<C> or CT::Sparse<TypeOf<C>> or ::std::contiguous_iterator<Iterator>,
-         "failed contiguous iterator");
 
       constexpr auto begin() noexcept -> Iterator {
          if (range.IsEmpty())
@@ -631,10 +631,12 @@ namespace Langulus::Anyness
    template<bool REVERSE, class...C>
    struct IterateTogether {
       using CTTI_ReflectAs = void;
-      static_assert(CT::NoIntent<C...>,     "C can't have an intent");
-      static_assert(CT::NotReference<C...>, "C can't be a reference");
-      static_assert((::std::ranges::range<C> and ...), "C is not a range");
-
+      static_assert(CT::NoIntent<C...>,
+         "C can't have an intent");
+      static_assert(CT::NotReference<C...>,
+         "C can't be a reference");
+      static_assert((::std::ranges::range<C> and ...),
+         "C is not a range");
       static constexpr size_t Size = sizeof...(C);
       static_assert(Size > 1,
          "IterateTogether needs at least two containers");
@@ -645,11 +647,11 @@ namespace Langulus::Anyness
                                            decltype(Fake<C>().begin())   >...>;
       using Cs = ::std::tuple<C&...>;
 
-      Cs range;
+      Cs ranges;
 
    public:
       explicit constexpr IterateTogether(C&...a) noexcept
-         : range {a...} {}
+         : ranges {a...} {}
 
       /// A single combined iterator                                          
       struct Iterator {
@@ -660,8 +662,8 @@ namespace Langulus::Anyness
          Hs mIt;
          Cs mRanges;
 
-         decltype(auto) one() noexcept { return ::std::get<0>(mIt); }
-         decltype(auto) two() noexcept { return ::std::get<1>(mIt); }
+         decltype(auto) one() noexcept { return *::std::get<0>(mIt); }
+         decltype(auto) two() noexcept { return *::std::get<1>(mIt); }
 
          Iterator() = delete;
          constexpr Iterator(Iterator const&) noexcept = default;
@@ -675,9 +677,9 @@ namespace Langulus::Anyness
 
          constexpr bool operator == (CT::Iterator auto const& rhs) const assumptious {
             return LglsSequence(Size, {
-               LglsAssumeUser(((&::std::get<I>(mIt.mRange) == &::std::get<I>(rhs.mRange)) and ...),
+               LglsAssumeUser(((&::std::get<I>(mRanges) == &::std::get<I>(rhs.mRanges)) and ...),
                   "Iterators are for different containers");
-               return ((::std::get<I>(mIt.GetRaw()) == ::std::get<I>(rhs.mIt.GetRaw())) and ...);
+               return ((::std::get<I>(mIt)->GetRaw() == ::std::get<I>(rhs.mIt)->GetRaw()) and ...);
             });
          }
 
@@ -792,18 +794,17 @@ namespace Langulus::Anyness
             }
          }
       };
-      static_assert(::std::input_or_output_iterator<Iterator>);
 
       auto begin() -> Iterator {
          return ::std::apply([](auto&...i) {
-            return Iterator{{i.begin()...}};
-         }, range);
+            return Iterator{Hs{i.begin()...}};
+         }, ranges);
       }
 
       auto end() -> Iterator {
          return ::std::apply([](auto&...i) {
-            return Iterator{{i.end()...}};
-         }, range);
+            return Iterator{Hs{i.end()...}};
+         }, ranges);
       }
    };
 

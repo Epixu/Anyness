@@ -154,25 +154,12 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(CT::AutoOwned<T>);
       static_assert(CT::Comparable<T, T>);
       static_assert(CT::Comparable<T, E>);
-
-      static_assert(::std::input_or_output_iterator<decltype(Fake<T>().begin())>);
-      static_assert(::std::input_or_output_iterator<decltype(Fake<T>().end())>);
-
       static_assert(::std::ranges::range<T>);
 
-      T test;
-      for (auto& it : IterateInReverse(test)) {
-         (void) it;
-      }
-      for (auto& it : test) {
-         (void) it;
-      }
-      for (auto& it : IterateDefault(test)) {
-         (void) it;
-      }
-      for (auto& it : IterateNoDeref(test)) {
-         (void) it;
-      }
+      // Can't be recognized as contiguous_range when iterators are handles
+      static_assert(CT::TypeErased<T> or ::std::ranges::contiguous_range<T>);
+      // Thankfully can be recognized as CT::Contiguous, though!
+      static_assert(CT::Contiguous<T>);
 
       static_assert(requires (T pack)         { pack.operator +   (pack); });
       static_assert(requires (T pack, E item) { pack.operator +   (item); });
@@ -708,6 +695,136 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             Text owned_text = "666";
             pack = Text(owned_text.operator Token());
          }
+      }
+
+      WHEN("Range-iterated (default)") {
+         IterateDefault strategy(pack);
+         using Iterator = decltype(strategy.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+
+         // These are not possible to satisfy if C is type-erased       
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<Iterator>);
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<Iterator>);
+
+         size_t counter = 0;
+         for (auto& it : pack) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>)
+               static_assert(CT::Handle<decltype(it)>);
+            else
+               static_assert(Same<E, decltype(it)>);
+         }
+
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>)
+               static_assert(CT::Handle<decltype(it)>);
+            else
+               static_assert(Same<E, decltype(it)>);
+         }
+
+         REQUIRE(counter == 0);
+      }
+
+      WHEN("Range-iterated (reverse)") {
+         IterateInReverse strategy(pack);
+         using Iterator = decltype(strategy.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+
+         // These are not possible to satisfy if C is type-erased       
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<Iterator>);
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<Iterator>);
+
+         size_t counter = 0;
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>)
+               static_assert(CT::Handle<decltype(it)>);
+            else
+               static_assert(Same<E, decltype(it)>);
+         }
+
+         REQUIRE(counter == 0);
+      }
+
+      WHEN("Range-iterated (noderef)") {
+         IterateNoDeref strategy(pack);
+         using Iterator = decltype(strategy.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+
+         // These are not possible to satisfy if C is type-erased       
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<Iterator>);
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<Iterator>);
+
+         size_t counter = 0;
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            static_assert(Same<typename IterateDefault<false, T>::Iterator, decltype(it)>);
+         }
+
+         REQUIRE(counter == 0);
+      }
+
+      WHEN("Range-iterated (handles)") {
+         IterateHandles strategy(pack);
+         using Iterator = decltype(strategy.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
+
+         // These are not possible to satisfy if C is type-erased       
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<Iterator>);
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<Iterator>);
+
+         size_t counter = 0;
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            static_assert(CT::Handle<decltype(it)>);
+         }
+
+         REQUIRE(counter == 0);
+      }
+
+      WHEN("Range-iterated (together)") {
+         T pack2;
+         IterateTogether strategy(pack, pack2);
+         using Iterator = decltype(strategy.begin());
+
+         static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
+         //static_assert(::std::input_or_output_iterator<Iterator>);
+
+         // These are not possible to satisfy if C is type-erased       
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<Iterator>);
+         static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::contiguous_iterator<Iterator>);
+
+         size_t counter = 0;
+         for (auto& it : strategy) {
+            (void) it;
+            ++counter;
+
+            if constexpr (CT::TypeErased<T>)
+               static_assert(CT::Handle<decltype(it.one()), decltype(it.two())>);
+            else
+               static_assert(Same<E, decltype(it.one()), decltype(it.two())>);
+         }
+
+         REQUIRE(counter == 0);
       }
    }
 

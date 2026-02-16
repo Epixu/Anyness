@@ -21,11 +21,12 @@ namespace Langulus::Anyness::Component
    ///   @tparam HASH type of the hash                                        
    template<unsigned ID, class HASH = Hash>
    struct IndexedHashStack {
-      using CTTI_Component  = Yes<>;
-      using CTTI_Contiguous = No;
-      using TableType       = uint8_t;
-      using HeapRequest     = PerElement<TableType>;
-      using StackRequest    = TableType*;
+      using CTTI_Component   = Yes<>;
+      using CTTI_Contiguous  = No;
+      using TableType        = uint8_t;
+      using HeapRequest      = PerElement<TableType>;
+      using StackRequest     = TableType*;
+      using IteratorCategory = ::std::random_access_iterator_tag;
 
       static constexpr bool Indexed = true;
       static constexpr int  ComponentPrecedence = 3000;

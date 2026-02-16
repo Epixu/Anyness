@@ -31,6 +31,7 @@ namespace Langulus::Anyness::Inner
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
       Com::StateStack<                 // Variable state                
+         DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Sorted<SORT>,    // Maybe unsorted                
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
@@ -57,6 +58,8 @@ namespace Langulus::Anyness
       using HandleType     = THandle<ConstAll<T&>>;
       using HandleMutType  = THandle<T&>;
       using DeepType       = Any;
+
+      using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       constexpr TSet() noexcept {
          this->ConstructDefault();

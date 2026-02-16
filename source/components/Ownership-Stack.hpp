@@ -26,7 +26,7 @@ namespace Langulus::Anyness::Component
       using StackRequest = AllocationPtr;
 
       /// Get the allocation                                                  
-      auto GetAllocation(this auto const& self) noexcept {
+      constexpr auto GetAllocation(this auto const& self) noexcept {
          return self.GetAllocationInner();
       }
 

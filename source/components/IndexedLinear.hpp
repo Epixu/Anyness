@@ -26,7 +26,8 @@ namespace Langulus::Anyness::Component
    struct IndexedLinear {
       using CTTI_Component  = Yes<>;
       using CTTI_Contiguous = Yes<>;
-      
+      using IteratorCategory = ::std::contiguous_iterator_tag;
+
       static constexpr bool Indexed = true;
       static constexpr int  ComponentPrecedence = 3000;
 
@@ -53,6 +54,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, CT::Index INDEX>
       constexpr auto SimplifyIndex(this C const& self, INDEX index)
       assumptious -> Count<C> {
+         LglsAssumeDev(not self.IsEmpty(), "Container can't be empty");
+
          if constexpr      (::std::same_as<INDEX, Index::Inner::All>)
             static_assert(false, "Index::All can't be used here");
          else if constexpr (::std::same_as<INDEX, Index::Inner::Many>)

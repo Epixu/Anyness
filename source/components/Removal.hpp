@@ -28,13 +28,13 @@ namespace Langulus::Anyness::Component
 
    public:
       template<bool REVERSE = false, CT::Container C> requires CT::ContainsMany<C>
-      auto Remove(this C&, const CT::NoIntent auto&) -> Count<C>;
+      auto Remove(this C&, CT::NoIntent auto const&) -> Count<C>;
 
-      template<CT::Container C> requires CT::ContainsMany<C>
+      template<CT::Container C> requires (CT::ContainsMany<C> and CT::IndexedLinearly<C>)
       auto RemoveAt(this C&, CT::Index auto, Count<C> = 1) -> Count<C>;
 
       template<CT::Container C> requires CT::ContainsMany<C>
-      auto RemoveIt(this C&, const Iterator<C>&, Count<C> = 1) -> Iterator<C>;
+      auto RemoveIt(this C&, Iterator<C> const&, Count<C> = 1) -> Iterator<C>;
       
       template<CT::Container C>
       auto RemoveDeepAt(this C&, CT::Index auto) -> Count<C>;
@@ -43,7 +43,7 @@ namespace Langulus::Anyness::Component
       /// Does nothing if 'desiredCount' is larger or equals the current.     
       ///   @attention never reallocates                                      
       ///   @param desiredCount the new count                                 
-      template<CT::Container C> requires CT::ContainsMany<C>
+      template<CT::Container C> requires (CT::ContainsMany<C> and CT::IndexedLinearly<C>)
       void Trim(this C& self, Count<C> desiredCount) noexcept {
          const auto currentCount = self.GetCount();
          if (desiredCount >= currentCount)

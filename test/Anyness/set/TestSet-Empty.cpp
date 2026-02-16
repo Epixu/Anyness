@@ -180,8 +180,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(    requires (T pack, E item) { pack.operator +=  (item); });
       static_assert(    requires (T pack, E item) { pack.operator <<  (item); });
       static_assert(    requires (T pack, E item) { pack.operator >>  (item); });
-      static_assert(    requires (T pack, E item) { pack.operator <<= (item); });
-      static_assert(    requires (T pack, E item) { pack.operator >>= (item); });
+      static_assert(not requires (T pack, E item) { pack.operator <<= (item); });
+      static_assert(not requires (T pack, E item) { pack.operator >>= (item); });
       static_assert(not requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
       static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
       static_assert(    requires (T pack, E item) { pack.Remove(item); });
@@ -191,7 +191,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(not requires (T pack, E item) { pack.IsOr(); });
       static_assert(    requires (T pack, E item) { pack.Find(item); });
       static_assert(    requires (T pack, E item) { pack.ForEach([](const int&) {}); });
-      static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
+      static_assert(    requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
    }
 
    constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);

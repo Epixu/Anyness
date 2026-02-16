@@ -709,7 +709,7 @@ namespace Langulus::Anyness::Component
       ///   @return a reference or handle to the newly created element        
       template<class E = void, CT::ContainsMany C, class...A>
       auto EmplaceAt(this C&, CT::Index auto, A&&...)
-      -> PickMut<C> /*requires CT::RangeEmplaceable<C, A...>*/;
+      -> PickMut<C> requires CT::IndexedLinearly<C> /*requires CT::RangeEmplaceable<C, A...>*/;
 
       /// Generic emplacement that constructs/overwrites the first element.   
       /// Any overwritten element will be dereferenced/destroyed first.       

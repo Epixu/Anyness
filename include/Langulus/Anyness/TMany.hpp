@@ -55,14 +55,14 @@ namespace Langulus::Anyness
       using CTTI_Deep      = Yes<>;
       using CTTI_MapsTo    = Text;
 
-      using Base = Inner::TManyBase<T>;
-      using Com::TypedStack<DMeta, T>::IsTypeConstrained;
-
+      using Base          = Inner::TManyBase<T>;
       using Pick          = ConstAll<T&>;
       using PickMut       = Tif<CT::Sparse<T>, THandle<T&>, T&>;
       using HandleType    = THandle<ConstAll<T&>>;
       using HandleMutType = THandle<T&>;
       using DeepType      = Any;
+
+      using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       constexpr TMany() noexcept {
          this->ConstructDefault();

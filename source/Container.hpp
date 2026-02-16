@@ -378,11 +378,14 @@ namespace Langulus::Anyness
       template<unsigned>                     friend struct Com::OwnershipDeepHeap;
       template<unsigned, class>              friend struct Com::CountStack;
       template<unsigned, class>              friend struct Com::HashStack;
+      template<unsigned, class>              friend struct Com::HashHeap;
       template<unsigned, bool>               friend struct Com::Comparison;
       template<unsigned>                     friend struct Com::Assignment;
       template<CT::State...>                 friend struct Com::StateStack;
       template<unsigned, class>              friend struct Com::ReserveEmergent;
                                              friend struct Com::Conversion;
+      template<unsigned ID, class HASH>      friend struct Com::IndexedHashHeap;
+
 
       // Here lies the stack. It is an optimized tuple that is filled   
       // with requests from components.                                 
@@ -401,7 +404,7 @@ namespace Langulus::Anyness
       /// Access a variable on the heap associated with a component           
       ///   @attention always returns a pointer which may be null             
       template<CT::Component COM, CT::Container SELF>
-      constexpr auto AccessHeap(this SELF&& self) noexcept {
+      constexpr auto* AccessHeap(this SELF&& self) noexcept {
          size_t offset = Inner::GetHeapOffset<COM, COMPONENTS...>(
             static_cast<size_t>(self.GetReserved()),
             static_cast<size_t>(self.GetIndirections())
@@ -522,7 +525,7 @@ namespace Langulus::Anyness
          return self;
       }
 
-   //public:
+   public:
       /// Call AssignFrom whenever possible, fallback to AssignDefault        
       /// otherwise                                                           
       template<CT::Container SELF, CT::Container FROM>
