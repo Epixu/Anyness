@@ -807,7 +807,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          using Iterator = decltype(strategy.begin());
 
          static_assert(::std::same_as<Iterator, decltype(strategy.end())>);
-         //static_assert(::std::input_or_output_iterator<Iterator>);
+         static_assert(::std::input_or_output_iterator<Iterator>);
 
          // These are not possible to satisfy if C is type-erased       
          static_assert(CT::TypeErased<T> or CT::Sparse<E> or ::std::random_access_iterator<Iterator>);

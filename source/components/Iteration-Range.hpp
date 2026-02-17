@@ -48,9 +48,12 @@ namespace Langulus::Anyness
    template<bool REVERSE, class C>
    struct IterateNoDeref {
       using CTTI_ReflectAs = void;
-      static_assert(CT::NoIntent<C>,     "C can't have an intent");
-      static_assert(CT::NotReference<C>, "C can't be a reference");
-      static_assert(::std::ranges::range<C>, "C is not a range");
+      static_assert(CT::NoIntent<C>,
+         "C can't have an intent");
+      static_assert(CT::NotReference<C>,
+         "C can't be a reference");
+      static_assert(::std::ranges::range<C>,
+         "C is not a range");
 
    protected:
       using Count = typename Deref<C>::CountType;
@@ -66,9 +69,12 @@ namespace Langulus::Anyness
 
       /// The iterator                                                        
       struct Iterator {
-         using CTTI_Iterator  = Yes<>;
-         using CTTI_ReflectAs = void;
-         using difference_type = std::ptrdiff_t;
+         using CTTI_ReflectAs    = void;
+         using CTTI_Iterator     = Yes<>;
+         using difference_type   = std::ptrdiff_t;
+         using iterator_category = typename C::IteratorCategory;
+         using value_type        = H;
+         using reference         = H&;
 
          H mIt;
          C& mRange;
@@ -102,7 +108,11 @@ namespace Langulus::Anyness
                "Iterators are for different containers");
             return mIt == rhs.mIt;
          }
-         
+
+         constexpr auto operator <=> (CT::Iterator auto const& rhs) const noexcept {
+            return mIt <=> rhs.mIt;
+         }
+
          explicit constexpr operator bool() const noexcept {
             if constexpr (REVERSE) return mIt != mRange.rend();
             else                   return mIt != mRange.end();
@@ -111,14 +121,43 @@ namespace Langulus::Anyness
          decltype(auto) operator *  () const noexcept { return (mIt); /* *mIt;*/   }
          decltype(auto) operator -> () const noexcept { return &(*mIt); }
 
-         auto operator + (Count c) const noexcept -> Iterator {
+         
+         friend auto operator + (difference_type lhs, Iterator const& rhs) noexcept -> Iterator {
+            static_assert(not REVERSE);
+            return {rhs.mIt + lhs, rhs.mRange};
+         }
+
+         auto operator + (difference_type c) const noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt - c, mRange};
             else                   return {mIt + c, mRange};
          }
 
-         auto operator - (Count c) const noexcept -> Iterator {
+         auto operator - (difference_type c) const noexcept -> Iterator {
             if constexpr (REVERSE) return {mIt + c, mRange};
             else                   return {mIt - c, mRange};
+         }
+
+         auto operator += (difference_type c) noexcept -> Iterator& {
+            if constexpr (REVERSE) mIt -= c;
+            else                   mIt += c;
+            return *this;
+         }
+
+         auto operator -= (difference_type c) noexcept -> Iterator& {
+            if constexpr (REVERSE) mIt += c;
+            else                   mIt -= c;
+            return *this;
+         }
+
+         decltype(auto) operator[] (const difference_type offset) const noexcept {
+            if constexpr (REVERSE) {
+               if constexpr (CT::Handle<H>) return   mIt - offset;
+               else                         return *(mIt - offset);
+            }
+            else {
+               if constexpr (CT::Handle<H>) return   mIt + offset;
+               else                         return *(mIt + offset);
+            }
          }
 
          /// Prefix increment                                                 
@@ -130,8 +169,8 @@ namespace Langulus::Anyness
 
          /// Suffix increment                                                 
          auto operator ++ (int) noexcept -> Iterator {
-            if constexpr (REVERSE) return mIt--;
-            else                   return mIt++;
+            if constexpr (REVERSE) return {mIt--, mRange};
+            else                   return {mIt++, mRange};
          }
 
          /// Prefix decrement                                                 
@@ -143,20 +182,26 @@ namespace Langulus::Anyness
 
          /// Suffix decrement                                                 
          auto operator -- (int) noexcept -> Iterator {
-            if constexpr (REVERSE) return mIt++;
-            else                   return mIt--;
+            if constexpr (REVERSE) return {mIt++, mRange};
+            else                   return {mIt--, mRange};
          }
 
          /// Get the integer element difference between two iterators         
          auto operator - (CT::Iterator auto const& rhs) const assumptious
          -> difference_type {
-            LglsAssumeUser(&mRange == &rhs.mRange,
+            LglsAssumeUser(mRange == rhs.mRange,
                "Iterators are for different containers");
-            const auto range = mIt - rhs.mIt;
-            return static_cast<difference_type>(range);
+
+            if constexpr (CT::TypeErased<C>) {
+               const auto range = mIt.template GetRawAs<uint8_t>() - rhs.mIt.template GetRawAs<uint8_t>();
+               return static_cast<difference_type>(range / mRange->GetStride());
+            }
+            else {
+               const auto range = mIt.GetRaw() - rhs.mIt.GetRaw();
+               return static_cast<difference_type>(range);
+            }
          }
       };
-      static_assert(::std::input_or_output_iterator<Iterator>);
 
       auto begin() -> Iterator  {
          if constexpr (REVERSE) return {range.rbegin(), range};
@@ -675,11 +720,53 @@ namespace Langulus::Anyness
             : mIt    {LglsFwd(it)}
             , mRanges{ranges} {}
 
+         constexpr auto operator = (Iterator const& rhs) noexcept -> Iterator& {
+            mIt = rhs.mIt;
+            return *this;
+         }
+
+         constexpr auto operator = (Iterator&& rhs) noexcept -> Iterator& {
+            mIt = rhs.mIt;
+            return *this;
+         }
+
          constexpr bool operator == (CT::Iterator auto const& rhs) const assumptious {
             return LglsSequence(Size, {
                LglsAssumeUser(((&::std::get<I>(mRanges) == &::std::get<I>(rhs.mRanges)) and ...),
                   "Iterators are for different containers");
                return ((::std::get<I>(mIt)->GetRaw() == ::std::get<I>(rhs.mIt)->GetRaw()) and ...);
+            });
+         }
+
+         constexpr bool operator < (CT::Iterator auto const& rhs) const assumptious {
+            return LglsSequence(Size, {
+               LglsAssumeUser(((&::std::get<I>(mRanges) == &::std::get<I>(rhs.mRanges)) and ...),
+                  "Iterators are for different containers");
+               return ((::std::get<I>(mIt)->GetRaw() < ::std::get<I>(rhs.mIt)->GetRaw()) and ...);
+            });
+         }
+
+         constexpr bool operator <= (CT::Iterator auto const& rhs) const assumptious {
+            return LglsSequence(Size, {
+               LglsAssumeUser(((&::std::get<I>(mRanges) == &::std::get<I>(rhs.mRanges)) and ...),
+                  "Iterators are for different containers");
+               return ((::std::get<I>(mIt)->GetRaw() <= ::std::get<I>(rhs.mIt)->GetRaw()) and ...);
+            });
+         }
+
+         constexpr bool operator > (CT::Iterator auto const& rhs) const assumptious {
+            return LglsSequence(Size, {
+               LglsAssumeUser(((&::std::get<I>(mRanges) == &::std::get<I>(rhs.mRanges)) and ...),
+                  "Iterators are for different containers");
+               return ((::std::get<I>(mIt)->GetRaw() > ::std::get<I>(rhs.mIt)->GetRaw()) and ...);
+            });
+         }
+
+         constexpr bool operator >= (CT::Iterator auto const& rhs) const assumptious {
+            return LglsSequence(Size, {
+               LglsAssumeUser(((&::std::get<I>(mRanges) == &::std::get<I>(rhs.mRanges)) and ...),
+                  "Iterators are for different containers");
+               return ((::std::get<I>(mIt)->GetRaw() >= ::std::get<I>(rhs.mIt)->GetRaw()) and ...);
             });
          }
 
@@ -689,10 +776,19 @@ namespace Langulus::Anyness
             });
          }
 
-         auto operator *  () const noexcept -> Iterator& { return *this; }
-         auto operator -> () const noexcept -> Iterator& { return *this; }
+         auto operator *  ()       noexcept -> Iterator&       { return *this; }
+         auto operator *  () const noexcept -> Iterator const& { return *this; }
+         auto operator -> ()       noexcept -> Iterator&       { return *this; }
+         auto operator -> () const noexcept -> Iterator const& { return *this; }
+         
+         friend auto operator + (difference_type lhs, Iterator const& rhs) noexcept -> Iterator {
+            static_assert(not REVERSE);
+            return LglsSequence(Size, {
+               return Iterator(Hs{(::std::get<I>(rhs.mIt) + lhs)...}, rhs.mRanges);
+            });
+         }
 
-         auto operator + (Count c) const noexcept -> Iterator {
+         auto operator + (difference_type c) const noexcept -> Iterator {
             if constexpr (REVERSE) {
                return LglsSequence(Size, {
                   return Iterator(Hs{(::std::get<I>(mIt) + c)...}, mRanges);
@@ -705,7 +801,7 @@ namespace Langulus::Anyness
             }
          }
 
-         auto operator - (Count c) const noexcept -> Iterator {
+         auto operator - (difference_type c) const noexcept -> Iterator {
             if constexpr (REVERSE) {
                return LglsSequence(Size, {
                   return Iterator(Hs{(::std::get<I>(mIt) - c)...}, mRanges);
@@ -714,6 +810,31 @@ namespace Langulus::Anyness
             else {
                return LglsSequence(Size, {
                   return Iterator(Hs{(::std::get<I>(mIt) - c)...}, mRanges);
+               });
+            }
+         }
+
+         auto operator += (difference_type c) noexcept -> Iterator& {
+            if constexpr (REVERSE) mIt -= c;
+            else                   mIt += c;
+            return *this;
+         }
+
+         auto operator -= (difference_type c) noexcept -> Iterator& {
+            if constexpr (REVERSE) mIt += c;
+            else                   mIt -= c;
+            return *this;
+         }
+
+         decltype(auto) operator[] (const difference_type offset) const noexcept {
+            if constexpr (REVERSE) {
+               return LglsSequence(Size, {
+                  return Iterator(Hs{(::std::get<I>(mIt) - offset)...}, mRanges);
+               });
+            }
+            else {
+               return LglsSequence(Size, {
+                  return Iterator(Hs{(::std::get<I>(mIt) + offset)...}, mRanges);
                });
             }
          }
@@ -796,14 +917,14 @@ namespace Langulus::Anyness
       };
 
       auto begin() -> Iterator {
-         return ::std::apply([](auto&...i) {
-            return Iterator{Hs{i.begin()...}};
+         return ::std::apply([&](auto&...i) {
+            return Iterator{Hs{i.begin()...}, ranges};
          }, ranges);
       }
 
       auto end() -> Iterator {
-         return ::std::apply([](auto&...i) {
-            return Iterator{Hs{i.end()...}};
+         return ::std::apply([&](auto&...i) {
+            return Iterator{Hs{i.end()...}, ranges};
          }, ranges);
       }
    };
