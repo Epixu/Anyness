@@ -143,7 +143,7 @@ void Set_CheckState_ContainsN(size_t n, const T& set, I&& e_scoped_with_intent, 
    using E = typename Decay<Deint<I>>::Type;
 
    REQUIRE(set.GetCount() == n);
-   REQUIRE(set.GetUses() == 1);
+   REQUIRE(set.GetUses() == uses);
    REQUIRE(set.GetReserved() >= n);
 
    for (auto& it : set)

@@ -3,7 +3,9 @@
    "chat.disableAIFeatures": true,
    "cmake.showConfigureWithDebuggerNotification": false,
    "C_Cpp.intelliSenseEngine": "disabled",
-   "workbench.colorCustomizations": {},
+   "workbench.colorCustomizations": {
+      "editor.selectionBackground":"#20354b"
+   },
    "workbench.editor.enablePreview": false,
    "clangd.fallbackFlags": [
       "-std=c++23"
@@ -109,15 +111,24 @@
    "highlight.regexes": {
       "(/{2}.*)": [{
          "filterLanguageRegex": "c",
-         "backgroundColor": "#FF8C00",
+         "backgroundColor": "#FF8C00B0",
          "color": "#000000"
       }],
       "(/{3}.*)": [{
          "filterLanguageRegex": "c",
-         "backgroundColor": "#ffffff",
+         "backgroundColor": "#ffffffB0",
          "color": "#000000"
       }]
    },
    "workbench.editor.wrapTabs": true,
-   "editor.hover.delay": 1250
+   "editor.hover.delay": 1250,
+   "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true
+   },
+   "hide-files.files": [],
+   "workbench.colorTheme": "Experimental Dark"
 }

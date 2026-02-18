@@ -11,6 +11,8 @@
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
 #include <Langulus/CT/Contiguous.hpp>
+#include <Langulus/CT/Nullable.hpp>
+#include <Langulus/CT/Defaultable.hpp>
 
 
 namespace Langulus::CT
@@ -113,8 +115,9 @@ namespace Langulus::Anyness::Component
       auto SmartPushAt(this C&, CT::Index auto, auto&&, State<C> = {})
          -> Count<C>;
 
-      /// Insert one or more elements at the back. Supports intents and       
-      /// arrays.                                                             
+      /// Insert one or more elements at the performance-optimal position.    
+      /// This usually means at the back of a contiguous container. Supports  
+      /// intents and arrays.                                                 
       ///   @tparam FORCE if true, the container is allowed to deepen in      
       ///      order to incorporate elements of different types. Otherwise    
       ///      a compile-time or runtime exception will be thrown, if an      
@@ -164,7 +167,10 @@ namespace Langulus::Anyness::Component
          // Insert the new.                                             
          auto to = it.begin() + lhs_count;
          auto insert = [&to](auto&& a) {
-            to->EmplaceWithIntent(FWDIntent(a));
+            if constexpr (CT::Copied<IntentOf(a)>)
+               to->EmplaceWithIntent(Refer(LglsFwd(a)));
+            else
+               to->EmplaceWithIntent(FWDIntent(a));
             ++to;
          };
 
@@ -182,12 +188,16 @@ namespace Langulus::Anyness::Component
          return rhs_count;
       }
 
-      /// Insert a number of elements at the back, nullifying them if able to 
+      /// Insert a number of elements at the performance-optimal position.    
+      /// This usually means at the back of a contiguous container. The       
+      /// inserted elements will be nullified.                                
       ///   @param count the number of elements to insert                     
       template<CT::Container C>
       auto InsertNulled(this C&, Count<C> count) -> Count<C>;
 
-      /// Insert a number of elements at the back, default-constructing them  
+      /// Insert a number of elements at the performance-optimal position.    
+      /// This usually means at the back of a contiguous container. The       
+      /// inserted elements will be default-constructed.                      
       ///   @param count the number of elements to insert                     
       template<CT::Container C>
       auto InsertDefault(this C& self, Count<C> count) -> Count<C> {
@@ -411,13 +421,32 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::Array<A>) {
             using E = Decvq<Deref<DeextAll<Deint<S>>>>;
-            self.template SetType<E>();
-            out_count += GetAllExtentsOf(a);
+            if (not deepened) {
+               try {
+                  self.template SetType<E>();
+               } catch(...) {
+                  deepened = true;
+                  out_count = 2;
+                  return;
+               }
+               out_count += GetAllExtentsOf(a);
+            }
+            else ++out_count;
          }
          else {
             using E = Decvq<Deref<Deint<S>>>;
             self.template SetType<E>();
-            out_count += 1;
+            if (not deepened) {
+               try {
+                  self.template SetType<E>();
+               } catch(...) {
+                  deepened = true;
+                  out_count = 2;
+                  return;
+               }
+               ++out_count;
+            }
+            else ++out_count;
          }
       }
 

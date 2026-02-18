@@ -502,6 +502,13 @@ namespace Langulus::Anyness
       constexpr void Absorb(this SELF& self, FROM&& from) {
          static_assert(CT::Handle<FROM> == CT::Handle<SELF>,
             "Handles can't be absorbed into non-handles, use insertion instead");
+         static_assert(CT::Set<FROM> == CT::Set<SELF>,
+            "Sets can't be absorbed into non-sets, use insertion instead");
+         static_assert(CT::Map<FROM> == CT::Map<SELF>,
+            "Maps can't be absorbed into non-maps, use insertion instead");
+         static_assert(CT::Pair<FROM> == CT::Pair<SELF>,
+            "Pairs can't be absorbed into non-pairs, use insertion instead");
+
          ComponentList::ForEach([&]<class C>{
                  if_available(self.C::ConstructFrom(FWDIntent(from)))
             else if_available(self.C::ConstructDefault())
@@ -532,6 +539,13 @@ namespace Langulus::Anyness
       constexpr SELF& AssignAbsorb(this SELF& self, FROM&& rhs) {
          static_assert(CT::Handle<FROM> == CT::Handle<SELF>,
             "Handles can't be absorbed into non-handles, use insertion instead");
+         static_assert(CT::Set<FROM> == CT::Set<SELF>,
+            "Sets can't be absorbed into non-sets, use insertion instead");
+         static_assert(CT::Map<FROM> == CT::Map<SELF>,
+            "Maps can't be absorbed into non-maps, use insertion instead");
+         static_assert(CT::Pair<FROM> == CT::Pair<SELF>,
+            "Pairs can't be absorbed into non-pairs, use insertion instead");
+
          ComponentList::ForEach([&]<class C>{
                  if_available(self.C::AssignFrom(FWDIntent(rhs)))
             else if_available(self.C::AssignDefault())

@@ -10,7 +10,7 @@
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Stack.hpp"
+#include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/OwnershipDeep-Heap.hpp"
 #include "../../../source/components/Hash-Heap.hpp"

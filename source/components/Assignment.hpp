@@ -8,6 +8,7 @@
 #pragma once
 #include "../Container.hpp"
 #include "Iteration-Range.hpp"
+#include "Langulus/CT/Contiguous.hpp"
 #include <Langulus/CT/Unfold.hpp>
 #include <Langulus/CT/ReflectAs.hpp>
 
@@ -71,22 +72,26 @@ namespace Langulus::CT
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Implements assignment for containers                                   
-   ///   @tparam ID heap we're removing from                                  
+   /// Implements element assignment for containers.                          
+   /// Assignment acts on the first element, if container is contiguous.      
+   /// For discontiguous containers, like sets and maps, the assignment falls 
+   /// back to insertion.                                                     
+   ///   @tparam ID heap/stack we're assigning to                             
    template<unsigned ID>
    struct Assignment {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;
 
-      template<CT::Container C, class A>
-      void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
+      //template<CT::Container C, class A>
+      //void Fill(this C&, A&&) requires CT::RangeAssignable<C, A>;
       
       /// Assign a value to the first element, if that element is initialized.
       /// If the element isn't initialized yet it will be constructed.        
       ///   @param argument the argument to assign                            
       ///   @return reference to self                                         
       template<CT::Container C, class A>
-      C& Assign(this C& self, A&& argument) requires CT::RangeAssignable<C, A> {
+      C& Assign(this C& self, A&& argument)
+      requires (CT::RangeAssignable<C, A> and CT::Contiguous<C>) {
          if constexpr (not CT::HeapAllocated<C>) {
             // This container is on the stack, and by extension         
             // statically-typed and always initialized                  
@@ -148,6 +153,17 @@ namespace Langulus::Anyness::Component
          return self;
       }
 
+      /// Assignment for discontiguous containers falls back to insertion.    
+      ///   @param argument the argument to insert                            
+      ///   @return reference to self                                         
+      template<CT::Container C, class A>
+      C& Assign(this C& self, A&& argument)
+      requires (CT::RangeAssignable<C, A> and not CT::Contiguous<C>) {
+         self.Clear();
+         self.Insert(LglsFwd(argument));
+         return self;
+      }
+
    protected:
       friend struct Conversion;
 
@@ -155,6 +171,8 @@ namespace Langulus::Anyness::Component
       /// Calls destructors on all elements, if any were initialized.         
       template<CT::HeapAllocated C>
       void PrepareForReconstruction(this C& self) {
+         static_assert(CT::Contiguous<C>,
+             "Can be used only for contiguous containers");
          auto& a = self.GetAllocationInner();
          if (not a) {
             // Nothing was allocated                                    
@@ -186,6 +204,9 @@ namespace Langulus::Anyness::Component
       ///   @return true if first element is valid and can be assigned to     
       template<CT::HeapAllocated C>
       bool PrepareForReassignment(this C& self) {
+         static_assert(CT::Contiguous<C>,
+             "Can be used only for contiguous containers");
+
          auto& a = self.GetAllocationInner();
          if (not a) {
             // Nothing was allocated                                    
@@ -232,6 +253,8 @@ namespace Langulus::Anyness::Component
       ///      otherwise it has to be an instance of the contained type.      
       template<CT::Container C, CT::Intent I>
       void AssignWithIntent(this C& self, I&& intent) {
+         static_assert(CT::Contiguous<C>,
+             "Can be used only for contiguous containers");
          using IT = Decvq<Deref<TypeOf<I>>>;
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");

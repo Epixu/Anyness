@@ -419,7 +419,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] ::std::unordered_set<E> src_std (1, *element);
+            [[maybe_unused]] ::std::unordered_set<E> src_std ({*element});
             BenchmarkSetStd("Empty/AssignAbsorb(Clone(" + NameOf<E>() + "))", 30, 100,
                T temp,                             temp.AssignAbsorb(Clone(*element)),
                ::std::unordered_set<E> temp_std,   temp_std = src_std

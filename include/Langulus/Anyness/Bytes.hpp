@@ -131,6 +131,14 @@ namespace Langulus::Anyness
             struct Bank {
                ::std::unordered_map<T, uint32_t> mDefinitions;
                uint32_t mNextId = 1;
+
+               uint32_t Define(T&& meta) {
+                  auto found = mDefinitions.find(meta);
+                  if (found != mDefinitions.end())
+                     return found->second;
+                  mDefinitions[meta] = mNextId;
+                  return mNextId++;
+               }
             };
 
             Bank<RTTI::DMeta> mDMetaBank;
@@ -143,15 +151,19 @@ namespace Langulus::Anyness
          static constexpr bool SkipElements = false;
 
          static void BeginScope(const CT::Container auto& from, Bytes& to, Context* context) {
-            const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable();
-            if (scoped) {
-               if (from.IsPast())
-                  to += Serial::Past;
-               else if (from.IsFuture())
-                  to += Serial::Future;
-
-               to += Serial::OpenScope;
+            if constexpr (requires { from.GetType(); }) {
+               if (context) {
+                  const auto typeId = context->mDMetaBank.Define(from.GetType());
+                  to += typeId;
+               }
+               else to += from.GetType();
             }
+
+            if constexpr (requires { from.GetState(); })
+               to += from.GetState();
+
+            if constexpr (requires { from.GetCount(); })
+               to += from.GetCount();
          }
          
          static void EndScope(const CT::Container auto&, Text&, Context*) {
@@ -162,12 +174,12 @@ namespace Langulus::Anyness
             // noop
          }
          
-         static void Empty(RTTI::DMeta type, CountType i, Text& to, Context*) {
+         static void Empty(RTTI::DMeta type, CountType i, Text&, Context*) {
             LglsError("Item #", i, " of type `", type.GetName(),
                "` was serialized to an empty `Bytes`");
          }
          
-         static void Error(RTTI::DMeta type, CountType i, Text& to, Context*) {
+         static void Error(RTTI::DMeta type, CountType i, Text&, Context*) {
             LglsError("Item #", i, " of type `", type.GetName(),
                "` failed to convert to `Bytes`");
          }
