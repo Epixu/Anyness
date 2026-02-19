@@ -23,7 +23,7 @@ namespace Langulus::Anyness::Inner
       Com::IndexedHashHeap<>,          // Indexed by hash table         
       Com::Insertion<>,                // Allows insertion              
       Com::InsertionOperators<>,       // << and >> insertion           
-      Com::Emplacement<>,              // Allows emplacement            
+      //Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
       Com::Conversion,                 // Allows conversions            

@@ -220,14 +220,14 @@ namespace Langulus::Anyness::Component
       /// Available only if container has DeepType defined.                   
       ///   @attention ignores sparseness                                     
       ///   @return a pointer to the first deep item, or nullptr if not deep  
-      template<class AS = void, CT::Container C> requires CT::Contiguous<C>
+      /*template<class AS = void, CT::Container C> requires CT::Contiguous<C>
       auto GetDeep(this C&& self) noexcept
       requires requires { typename Deref<C>::DeepType; } {
          using D = Tif<CT::Void<AS>, LglsMutIf(C, typename Deref<C>::DeepType*), LglsMutIf(C, AS*)>;
          if (self.IsEmpty() or not self.IsDeep())
             return D {nullptr};
          return self.template As<D>();
-      }
+      }*/
 
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
@@ -242,7 +242,7 @@ namespace Langulus::Anyness::Component
          if (self.IsEmpty())
             return D {};
          if (not self.IsSparse())
-            return self.template GetItem<D>();
+            return self.template As<D>();
 
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.GetType();

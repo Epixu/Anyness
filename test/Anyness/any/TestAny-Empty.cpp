@@ -158,7 +158,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
 
       static_assert(    requires (T pack)         { pack.Get(); });
       static_assert(    requires (T pack)         { pack.template As<E>(); });
-      static_assert(    requires (T pack)         { pack.GetDeep(); });
+      //static_assert(    requires (T pack)         { pack.GetDeep(); });
       static_assert(    requires (T pack)         { pack.GetResolved(); });
       static_assert(    requires (T pack)         { pack.GetDense(); });
       static_assert(not requires (T pack)         { {pack +   pack} -> ::std::same_as<T >; });

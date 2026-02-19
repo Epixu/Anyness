@@ -139,17 +139,15 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
    REQUIRE(set.GetCount() == 1);
    REQUIRE(set.GetUses() == uses);
    REQUIRE(set.GetReserved() >= (uses ? 1 : 0));
-   REQUIRE(set.template As<Decay<E>>() == DenseCast(*e));
+   REQUIRE(set.template AsAt<Decay<E>>(0) == DenseCast(*e));
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
-      REQUIRE(set.template As<E>() != *e);
-      REQUIRE((*set.template As<E*>()) != *e);
-      REQUIRE(*set.template GetRawAs<E>() != *e);
+      REQUIRE(set.template AsAt<E>(0) != *e);
+      REQUIRE((*set.template AsAt<E*>(0)) != *e);
    }
    else {
-      REQUIRE(set.template As<E>() == *e);
-      REQUIRE((*set.template As<E*>()) == *e);
-      REQUIRE(*set.template GetRawAs<E>() == *e);
+      REQUIRE(set.template AsAt<E>(0) == *e);
+      REQUIRE((*set.template AsAt<E*>(0)) == *e);
    }
 
    if constexpr (CT::Dense<E>)
@@ -172,8 +170,8 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
    }
 
    if constexpr (CT::TypeErased<T>) {
-      REQUIRE_THROWS(set.template As<float>() == 0.0f);
-      REQUIRE_THROWS(set.template As<float*>() == nullptr);
+      REQUIRE_THROWS(set.template AsAt<float>(0) == 0.0f);
+      REQUIRE_THROWS(set.template AsAt<float*>(0) == nullptr);
    }
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {

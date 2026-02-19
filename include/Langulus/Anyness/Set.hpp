@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Inner
       Com::IndexedHashHeap<>,          // Indexed by hash table         
       Com::Insertion<>,                // Allows insertion              
       Com::InsertionOperators<>,       // << and >> insertion           
-      Com::Emplacement<>,              // Allows emplacement            
+      //Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
       Com::Conversion,                 // Allows conversions            
@@ -97,7 +97,7 @@ namespace Langulus::Anyness::Inner
       template<class A1, class...AN>
       constexpr Set(A1&& a1, AN&&...an) {
          if constexpr (sizeof...(AN) == 0) {
-            if constexpr (CT::Deep<Deint<A1>> and CT::Dense<Deint<A1>>) {
+            if constexpr (CT::Set<A1>) {
                LglsAssumeUser((Same<Deint<A1>, Set>),
                   "Ambiguous use of construction "
                   "- you should use tag-dispatch with first argument either Absorb "
@@ -147,7 +147,7 @@ namespace Langulus::Anyness::Inner
       
       template<class A>
       constexpr Set& operator = (A&& argument) {
-         if constexpr (CT::Deep<Deint<A>> and CT::Dense<Deint<A>>) {
+         if constexpr (CT::Set<A>) {
             LglsAssumeUser((Same<Deint<A>, Set>),
                "Ambiguous use of assignment "
                "- you should use either AssignAbsorb (if you want to overwrite "

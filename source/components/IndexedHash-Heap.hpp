@@ -15,8 +15,9 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Provides random element access by hashing a value of the provided ID.  
    /// Uses a modified Robin Hood algorithm to reuse table space and minimize 
-   /// movement on rehash. Doesn't keep a local pointer to the hash table,    
-   /// and instead recalculates it on demand from the heap.                   
+   /// reallocations. Uses multiple cascading tables in order to minimze      
+   /// moving things around when rehashing. Doesn't keep a local pointer to   
+   /// the hash table, and instead recalculates it on demand from the heap.   
    ///   @tparam ID the stack/heap we're indexing                             
    ///   @tparam HASH type of the hash                                        
    template<unsigned ID, class HASH>
@@ -370,7 +371,8 @@ namespace Langulus::Anyness::Component
 
          if (not self.IsSparse() or count <= 0) {
             // Early return if nothing to do                            
-            D temp {Absorb, Disown(self)};
+            D temp;// { Absorb, Disown(self) };
+            temp.SetTypeInner(self.GetType());
             temp.SetHeapInner(heap);
             if_available(temp.SetCountInner(1));
             return temp;
@@ -406,7 +408,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Pointer T -> Dense nextT                              
-               D temp {Absorb, Disown(self)};
+               D temp;// { Absorb, Disown(self) };
                temp.SetTypeInner(nextT);
                temp.SetHeapInner(UnpackPointer(T, nextT, heap));
                if_available(temp.SetCountInner(1));
@@ -418,7 +420,7 @@ namespace Langulus::Anyness::Component
          }
          
          LglsError("Should never be reached");
-         return D {Absorb, Disown(self)};
+         return D {};// { Absorb, Disown(self) };
       }
 
       template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C> requires CT::Multiheap<C>

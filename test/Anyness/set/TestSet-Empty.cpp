@@ -176,7 +176,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
       static_assert(    requires (T pack)         { pack.Get(); });
       static_assert(not requires (T pack)         { pack.template As<E>(); });
-      static_assert(not requires (T pack)         { pack.GetDeep(); });
+      //static_assert(not requires (T pack)         { pack.GetDeep(); });
       static_assert(not requires (T pack)         { pack.GetResolved(); });
       static_assert(not requires (T pack)         { pack.GetDense(); });
       static_assert(    requires (T pack)         { {pack +   pack} -> ::std::same_as<T >; });
@@ -258,7 +258,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed by referral") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -295,7 +295,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          auto movable = *element;
          pack.Assign(::std::move(movable));
          
-         if constexpr (CT::Deep<E> and CT::Dense<E>)
+         if constexpr (CT::Set<E>)
             Set_CheckState_Default<TypeOf<E>>(movable);
 
          Set_CheckState_OwnedFull<E>(pack);
@@ -309,7 +309,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed by move") {
             auto movable = *element;
 
@@ -355,7 +355,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed copied value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -403,7 +403,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed cloned value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -450,7 +450,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed disowned value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -490,7 +490,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          auto movable = *element;
          pack.Assign(Abandon(movable));
 
-         if constexpr (CT::Deep<E> and CT::Dense<E>)
+         if constexpr (CT::Set<E>)
             Set_CheckState_Abandoned<E>(movable);
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Refer(element));
@@ -503,7 +503,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed abandoned value") {
             auto movable = *element;
 
@@ -543,7 +543,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
          Set_CheckState_Default<E>(pack);
       }
 
-      WHEN("Emplace (insert)") {
+      /*WHEN("Emplace (insert)") {
          ScopedE i666 {666};
          const auto i666backup = *i666;
          decltype(auto) instance = pack.Emplace(::std::move(*i666));
@@ -567,9 +567,9 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             auto movable = *element; T temp,
             temp.Emplace(::std::move(movable))
          );
-      }
+      }*/
 
-      WHEN("Emplace (insert, describe)") {
+      /*WHEN("Emplace (insert, describe)") {
          ScopedE i666{666};
          const auto i666backup = *i666;
          Many descriptor {Piecewise, ::std::move(*i666)};
@@ -590,7 +590,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             REQUIRE_THROWS(pack.Emplace(Describe{descriptor}));
             Set_CheckState_Default<E>(pack, true);
          }
-      }
+      }*/
 
       WHEN("Cleared") {
          pack.Clear();
