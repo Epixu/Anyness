@@ -293,13 +293,15 @@ namespace Langulus::Anyness
       }
       
       /// Tag for calling container constructors that initalize the           
-      /// internal stack tuple                                                
+      /// internal stack tuple. Extensively used by handles and iterators.    
       struct Stackwise {};
 
-      /// Tag for calling container constructors that emplaces elements       
+      /// Tag for calling container constructors that emplace elements.       
+      /// Often used to disambiguate and state clear intent.                  
       struct Piecewise {};
 
-      /// Tag for calling container constructors that absorb container        
+      /// Tag for calling container constructors that absorb container.       
+      /// Often used to disambiguate and state clear intent.                  
       struct Absorb {};
    }
 

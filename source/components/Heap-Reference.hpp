@@ -206,13 +206,37 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            // Access directly                                          
+            // Access directly or wrapped in a container                
             if constexpr (CT::TypeErased<C>) {
-               LglsAssert(self.template Is<T>(), "Type mismatch",
-                  ": ", self.GetType(), " not akin to ", MetaDataOf<T>());
+               if (self.template Is<T>()) {
+                  // Access directly                                    
+                  return self.template Get<T>();
+               }
+               else if constexpr (CT::Deep<T> and CT::Dense<T>) {
+                  // Wrap in a container                                
+                  T temp {Absorb, self};
+                  if_available(temp.SetCountInner(1));
+                  return temp;
+               }
+               else {
+                  // Runtime type mismatch error                        
+                  LglsError("Type mismatch", ": ", self.GetType(),
+                     " not akin to ", MetaDataOf<T>());
+               }
             }
-            else static_assert(Akin<TypeOf<C>, T>, "Type mismatch");
-            return self.template Get<T>();
+            else {
+               if constexpr (Akin<TypeOf<C>, T>) {
+                  // Access directly                                    
+                  return self.template Get<T>();
+               }
+               else if constexpr (CT::Deep<T> and CT::Dense<T>) {
+                  // Wrap in a container                                
+                  T temp {Absorb, self};
+                  if_available(temp.SetCountInner(1));
+                  return temp;
+               }
+               else static_assert(false, "Type mismatch");
+            }
          }
       }
 
