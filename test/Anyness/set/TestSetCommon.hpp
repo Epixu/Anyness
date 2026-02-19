@@ -134,7 +134,66 @@ void Set_CheckState_Abandoned(const C& set) {
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
-   Many_CheckState_ContainsOne(set, LglsFwd(e_with_intent), uses);
+   auto& e = e_with_intent.what;
+   using E = typename Decay<Deint<I>>::Type;
+   REQUIRE(set.GetCount() == 1);
+   REQUIRE(set.GetUses() == uses);
+   REQUIRE(set.GetReserved() >= (uses ? 1 : 0));
+   REQUIRE(set.template As<Decay<E>>() == DenseCast(*e));
+
+   if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
+      REQUIRE(set.template As<E>() != *e);
+      REQUIRE((*set.template As<E*>()) != *e);
+      REQUIRE(*set.template GetRawAs<E>() != *e);
+   }
+   else {
+      REQUIRE(set.template As<E>() == *e);
+      REQUIRE((*set.template As<E*>()) == *e);
+      REQUIRE(*set.template GetRawAs<E>() == *e);
+   }
+
+   if constexpr (CT::Dense<E>)
+      REQUIRE(set.GetEntries() == nullptr);
+   else if (uses) {
+      REQUIRE(set.GetEntries() != nullptr);
+
+      if constexpr (not CT::Disowned<I>) {
+         for (size_t i = 0; i < IndirectsOf<E>; ++i) {
+            if constexpr (CT::Cloned<I>)
+               REQUIRE(set.GetEntries()[i] != e.entries[i + 1]);
+            else
+               REQUIRE(set.GetEntries()[i] == e.entries[i + 1]);
+         }
+      }
+      else {
+         for (size_t i = 0; i < IndirectsOf<E>; ++i)
+            REQUIRE(set.GetEntries()[i] == nullptr);
+      }
+   }
+
+   if constexpr (CT::TypeErased<T>) {
+      REQUIRE_THROWS(set.template As<float>() == 0.0f);
+      REQUIRE_THROWS(set.template As<float*>() == nullptr);
+   }
+
+   if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
+      //TODO test all kinds of ranged modifiers??
+      for (auto& it : set) {
+         if constexpr (CT::TypeErased<T>)
+            REQUIRE(not it.CompareOneEqual(*e));
+         else
+            REQUIRE(it != *e);
+      }
+   }
+   else {
+      //TODO test all kinds of ranged modifiers??
+      for (auto& it : set) {
+         if constexpr (CT::TypeErased<T>)
+            REQUIRE(it.CompareOneEqual(*e));
+         else
+            REQUIRE(it == *e);
+      }
+   }
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>

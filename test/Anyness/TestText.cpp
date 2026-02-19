@@ -156,9 +156,48 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
    //TODO Path
 ) {
    static MemoryState memoryState;
+
+   using E = TypeOf<T>;
    static_assert(    CT::Typed<T>, "Container not typed");
    static_assert(not CT::Array<T>, "Wrongly typed container");
-   static_assert(    Exact<TypeOf<T>, char>, "Wrongly typed container");
+   static_assert(    Exact<E, char>, "Wrongly typed container");
+   static_assert(not CT::Deep<T>);
+   static_assert(not CT::ContainsOne<T>);
+   static_assert(    CT::ContainsMany<T>);
+   static_assert(    CT::HasVariableCount<T>);
+   static_assert(    CT::HeapAllocated<T>);
+   static_assert(not CT::DeeplyOwned<T>);
+   static_assert(    CT::Owned<T>);
+   static_assert(    CT::AutoOwned<T>);
+   static_assert(    CT::Comparable<T, T>);
+   static_assert(    CT::Comparable<T, E>);
+   static_assert(    ::std::ranges::range<T>);
+   static_assert(    ::std::ranges::contiguous_range<T>);
+   static_assert(    CT::Contiguous<T>);
+
+   static_assert(    requires (T pack)         { pack.Get(); });
+   static_assert(    requires (T pack)         { pack.template As<E>(); });
+   static_assert(not requires (T pack)         { pack.GetDeep(); });
+   static_assert(not requires (T pack)         { pack.GetResolved(); });
+   static_assert(not requires (T pack)         { pack.GetDense(); });
+   static_assert(    requires (T pack)         { {pack +   pack} -> ::std::same_as<T >; });
+   static_assert(    requires (T pack, E item) { {pack +   item} -> ::std::same_as<T >; });
+   static_assert(    requires (T pack)         { {pack +=  pack} -> ::std::same_as<T&>; });
+   static_assert(    requires (T pack, E item) { {pack +=  item} -> ::std::same_as<T&>; });
+   static_assert(    requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
+   static_assert(    requires (T pack, E item) { {pack >>  item} -> ::std::same_as<T&>; });
+   static_assert(not requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; }); //TODO add pattern mathing?
+   static_assert(not requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; }); //TODO add pattern mathing?
+   static_assert(    requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
+   static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+   static_assert(    requires (T pack, E item) { pack.Remove(item); });
+   static_assert(    requires (T pack, E item) { pack.RemoveAt(Index::Front); });
+   static_assert(    requires (T pack, E item) { pack.Reserve(20); });
+   static_assert(not requires (T pack, E item) { pack.EnableOr(); });
+   static_assert(not requires (T pack, E item) { pack.IsOr(); });
+   static_assert(    requires (T pack, E item) { pack.Find(item); });
+   static_assert(    requires (T pack, E item) { pack.ForEach([](const int&) {}); });
+   static_assert(    requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
 
    GIVEN("Gap test") {
       alignas(T) char unininitialized[sizeof(T)];

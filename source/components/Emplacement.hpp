@@ -254,7 +254,7 @@ namespace Langulus::Anyness::Component
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Clone the 'rhs'.                                                    
       /// This is a more generic approach that is considerably slower.        
-      ///TODO could benefit from static optimization                          
+      //TODO could benefit from static optimization                          
       template<CT::Container C, CT::NoIntent IT>
       void EmplaceByCloningCustomPointers(this C& self, IT const& rhs) {
          static_assert(LANGULUS_FEATURE(MANAGED_MEMORY),
@@ -702,14 +702,17 @@ namespace Langulus::Anyness::Component
       /// Any overwritten element will be dereferenced/destroyed first.       
       ///   @tparam E Sets the type of the container if empty. Ignored if     
       ///      container is statically-typed.                                 
-      ///   @param self Deduced this                                          
       ///   @param at The index at which to emplace                           
       ///   @param arguments Constructor arguments for initializing an        
       ///      element. If C is type-erased, argument must be Describe.       
       ///   @return a reference or handle to the newly created element        
       template<class E = void, CT::ContainsMany C, class...A>
-      auto EmplaceAt(this C&, CT::Index auto, A&&...)
-      -> PickMut<C> requires CT::IndexedLinearly<C> /*requires CT::RangeEmplaceable<C, A...>*/;
+      auto EmplaceAt(this C& self, CT::Index auto&& at, A&&...arguments)
+      -> PickMut<C> requires CT::IndexedLinearly<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
+         PickMut<C> pick = self.template AsAt<PickMut<C>>(LglsFwd(at));
+         pick.Emplace(LglsFwd(arguments)...);
+         return pick;
+      }
 
       /// Generic emplacement that constructs/overwrites the first element.   
       /// Any overwritten element will be dereferenced/destroyed first.       

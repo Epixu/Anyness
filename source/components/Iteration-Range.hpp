@@ -429,7 +429,7 @@ namespace Langulus::Anyness
          if constexpr (REVERSE)
             return {range.template AsAt<H>(range.GetCount() - 1), &range};
          else
-            return {range.template As<H>(), &range};
+            return {range.template AsAt<H>(0), &range};
       }
 
       constexpr auto end() noexcept -> Iterator {
@@ -437,7 +437,7 @@ namespace Langulus::Anyness
             return {{}, &range};
 
          if constexpr (REVERSE)
-            return --Iterator{range.template As<H>(), &range};
+            return --Iterator{range.template AsAt<H>(0), &range};
          else
             return ++Iterator{range.template AsAt<H>(range.GetCount() - 1), &range};
       }
@@ -447,7 +447,7 @@ namespace Langulus::Anyness
             return {{}, &range};
 
          if constexpr (REVERSE)
-            return {range.template As<H>(), &range};
+            return {range.template AsAt<H>(0), &range};
          else
             return {range.template AsAt<H>(range.GetCount() - 1), &range};
       }
@@ -459,7 +459,7 @@ namespace Langulus::Anyness
          if constexpr (REVERSE)
             return ++Iterator{range.template AsAt<H>(range.GetCount() - 1), &range};
          else
-            return --Iterator{range.template As<H>(), &range};
+            return --Iterator{range.template AsAt<H>(0), &range};
       }
    };
 
@@ -649,7 +649,7 @@ namespace Langulus::Anyness
          if constexpr (REVERSE)
             return {range.template AsAt<H>(range.GetCount() - 1), range};
          else
-            return {range.template As<H>(), range};
+            return {range.template AsAt<H>(0), range};
       }
 
       constexpr Iterator end() const noexcept {
@@ -673,7 +673,7 @@ namespace Langulus::Anyness
          }
 
          if constexpr (REVERSE)
-            return --Iterator{range.template As<H>(), range};
+            return --Iterator{range.template AsAt<H>(0), range};
          else
             return ++Iterator{range.template AsAt<H>(range.GetCount() - 1), range};
       }
@@ -703,7 +703,6 @@ namespace Langulus::Anyness
          "IterateTogether needs at least two containers");
 
    protected:
-      //using Count = size_t;
       using Hs = ::std::tuple<Tif<REVERSE, decltype(Fake<C>().rbegin()),
                                            decltype(Fake<C>().begin())>...>;
       using Cs = ::std::tuple<C&...>;

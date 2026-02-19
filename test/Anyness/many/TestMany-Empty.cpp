@@ -161,24 +161,29 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       // Thankfully can be recognized as CT::Contiguous, though!
       static_assert(CT::Contiguous<T>);
 
-      static_assert(requires (T pack)         { pack.operator +   (pack); });
-      static_assert(requires (T pack, E item) { pack.operator +   (item); });
-      static_assert(requires (T pack)         { pack.operator +=  (pack); });
-      static_assert(requires (T pack, E item) { pack.operator +=  (item); });
-      static_assert(requires (T pack, E item) { pack.operator <<  (item); });
-      static_assert(requires (T pack, E item) { pack.operator >>  (item); });
-      static_assert(requires (T pack, E item) { pack.operator <<= (item); });
-      static_assert(requires (T pack, E item) { pack.operator >>= (item); });
-      static_assert(requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
-      static_assert(requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
-      static_assert(requires (T pack, E item) { pack.Remove(item); });
-      static_assert(requires (T pack, E item) { pack.RemoveAt(Index::Front); });
-      static_assert(requires (T pack, E item) { pack.Reserve(20); });
-      static_assert(requires (T pack, E item) { pack.EnableOr(); });
-      static_assert(requires (T pack, E item) { pack.IsOr(); });
-      static_assert(requires (T pack, E item) { pack.Find(item); });
-      static_assert(requires (T pack, E item) { pack.ForEach([](const int&) {}); });
-      static_assert(requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
+      static_assert(    requires (T pack)         { pack.Get(); });
+      static_assert(    requires (T pack)         { pack.template As<E>(); });
+      static_assert(    requires (T pack)         { pack.GetDeep(); });
+      static_assert(    requires (T pack)         { pack.GetResolved(); });
+      static_assert(    requires (T pack)         { pack.GetDense(); });
+      static_assert(    requires (T pack)         { {pack +   pack} -> ::std::same_as<T >; });
+      static_assert(    requires (T pack, E item) { {pack +   item} -> ::std::same_as<T >; });
+      static_assert(    requires (T pack)         { {pack +=  pack} -> ::std::same_as<T&>; });
+      static_assert(    requires (T pack, E item) { {pack +=  item} -> ::std::same_as<T&>; });
+      static_assert(    requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
+      static_assert(    requires (T pack, E item) { {pack >>  item} -> ::std::same_as<T&>; });
+      static_assert(    requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
+      static_assert(    requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
+      static_assert(    requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
+      static_assert(    requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+      static_assert(    requires (T pack, E item) { pack.Remove(item); });
+      static_assert(    requires (T pack, E item) { pack.RemoveAt(Index::Front); });
+      static_assert(    requires (T pack, E item) { pack.Reserve(20); });
+      static_assert(    requires (T pack, E item) { pack.EnableOr(); });
+      static_assert(    requires (T pack, E item) { pack.IsOr(); });
+      static_assert(    requires (T pack, E item) { pack.Find(item); });
+      static_assert(    requires (T pack, E item) { pack.ForEach([](const int&) {}); });
+      static_assert(    requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
    }
 
    constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);

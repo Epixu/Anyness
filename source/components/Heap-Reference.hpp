@@ -50,8 +50,8 @@ namespace Langulus::Anyness::Component
       using Count = typename Deref<C>::CountType;
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
-      template<CT::Container C>
-      using Deep = typename Deref<C>::DeepType;
+      //template<CT::Container C>
+      //using Deep = typename Deref<C>::DeepType;
       
       /// Get the heap pointer (inner)                                        
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
@@ -76,16 +76,11 @@ namespace Langulus::Anyness::Component
       }
 
    public:
-      /// Check if the container has valid heap memory associated with it     
-      /*bool IsAllocated(this auto const& self) noexcept {
-         return self.GetHeapInner() != nullptr;
-      }*/
-      
       /// Get a direct access to the heap memory                              
       ///   @attention accessing this while GetCount() is zero is undefined   
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
-         using Tcvq = LglsMutIf(C, POINTER_TYPE /*TypeOf<C>**/);
+         using Tcvq = LglsMutIf(C, POINTER_TYPE);
          return static_cast<Tcvq>(self.GetHeapInner());
       }
       
@@ -116,7 +111,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes the container has valid heap                   
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the container, if statically typed                     
-      template<class AS = void, CT::Container C>
+      template<class AS = void, CT::Container C> /*requires CT::Contiguous<C>*/
       constexpr decltype(auto) Get(this C&& self) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -143,7 +138,8 @@ namespace Langulus::Anyness::Component
                else if (indirections > IndirectsOf<TH>) {
                   // We need to dereference. Supports packed pointers.  
                   auto diff = indirections - IndirectsOf<TH>;
-                  Deep<C> denser = Disown(self.GetDense(diff));
+                  using Deep = typename Deref<C>::DeepType;
+                  Deep denser = Disown(self.GetDense(diff));
                   return *static_cast<THP>(denser.GetHeapInner());
                }
                else {
@@ -178,7 +174,7 @@ namespace Langulus::Anyness::Component
       /// Get first element as a handle, or any desired wrapping type         
       ///   @tparam T the type we're wrapping in                              
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid T, CT::Container C>
+      template<CT::NotVoid T, CT::Container C> requires CT::Contiguous<C>
       decltype(auto) As(this C&& self) {
          static_assert(not CT::Reference<T>, "Strip references first");
 
@@ -220,23 +216,26 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// A safe way to get the first deep entry                              
+      /// A safe way to get the first deep entry.                             
+      /// Available only if container has DeepType defined.                   
       ///   @attention ignores sparseness                                     
       ///   @return a pointer to the first deep item, or nullptr if not deep  
-      template<class AS = void, CT::Container C>
-      auto GetDeep(this C&& self) noexcept {
-         using D = Tif<CT::Void<AS>, LglsMutIf(C, Deep<C>*), LglsMutIf(C, AS*)>;
+      template<class AS = void, CT::Container C> requires CT::Contiguous<C>
+      auto GetDeep(this C&& self) noexcept
+      requires requires { typename Deref<C>::DeepType; } {
+         using D = Tif<CT::Void<AS>, LglsMutIf(C, typename Deref<C>::DeepType*), LglsMutIf(C, AS*)>;
          if (self.IsEmpty() or not self.IsDeep())
             return D {nullptr};
          return self.template As<D>();
       }
 
       /// A safe way to get the first sparse entry after being resolved to    
-      /// the most concrete type.                                             
+      /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<class AS = void, CT::Container C>
-      auto GetResolved(this C&& self) {
-         using D = Tif<CT::Void<AS>, Deep<C>, AS>;
+      template<class AS = void, CT::Container C> requires CT::Contiguous<C>
+      auto GetResolved(this C&& self)
+      requires requires { typename Deref<C>::DeepType; } {
+         using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
          static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
 
@@ -263,16 +262,18 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Get the first contained element, removing 'count' indirections      
+      /// Get the first contained element, removing 'count' indirections.     
+      /// Available only if container has DeepType defined.                   
       ///   @attention throws if type is incomplete and origin was reached    
       ///   @tparam AS specify the type we wrap the result in.                
       ///      Using 'void' will choose C::DeepType.                          
       ///   @param self deduced this                                          
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<class AS = void, CT::Container C>
-      auto GetDense(this C&& self, Count<C> count = CountMax<C>) {
-         using D = Tif<CT::Void<AS>, Deep<C>, AS>;
+      template<class AS = void, CT::Container C> requires CT::Contiguous<C>
+      auto GetDense(this C&& self, Count<C> count = CountMax<C>)
+      requires requires { typename Deref<C>::DeepType; } {
+         using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
          LglsAssert(not self.IsEmpty(), "Can't GetDense from empty container");
          if (not self.IsSparse() or count <= 0)
