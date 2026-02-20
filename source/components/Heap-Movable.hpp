@@ -133,7 +133,7 @@ namespace Langulus::Anyness::Component
                }
             }
             else {
-               decltype(auto) src = from.template As<DecideHandle<Deref<IT>>>();
+               decltype(auto) src = from.template As<DecideHandle<IT>>();
                if constexpr (CT::Copied<I>)
                   self.EmplaceWithIntent(Refer(src));
                else

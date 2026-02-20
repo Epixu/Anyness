@@ -80,8 +80,9 @@ namespace Langulus::Anyness::Component
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
             self.SetCountInner(from.GetCountInner());
-            if constexpr (I::ResetsOnMove())
-               from.SetCountInner(0);
+            if constexpr (I::ResetsOnMove()) {
+               if_available(from.SetCountInner(0));
+            }
          }
       }
 

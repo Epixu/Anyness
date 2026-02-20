@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "Indexed-Common.hpp"
 #include <Langulus/HashOf.hpp>
 
 
@@ -20,18 +21,16 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID the stack/heap we're indexing                             
    ///   @tparam HASH type of the hash                                        
    template<unsigned ID, class HASH = Hash>
-   struct IndexedHashStack {
-      using CTTI_Component   = Yes<>;
-      using CTTI_Contiguous  = No;
+   struct IndexedHashStack : IndexedCommon<ID> {
       using TableType        = uint8_t;
       using HeapRequest      = PerElement<TableType>;
       using StackRequest     = TableType*;
       using IteratorCategory = ::std::random_access_iterator_tag;
 
-      static constexpr bool Indexed = true;
-      static constexpr int  ComponentPrecedence = 3000;
-
    protected:
+      friend struct IndexedCommon<ID>;
+
+   /*protected:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
@@ -39,10 +38,6 @@ namespace Langulus::Anyness::Component
       using Key = Tmut<C, typename Deref<C>::KeyMut, typename Deref<C>::Key>;
 
       template<CT::Container C>
-      using Val = Tmut<C, typename Deref<C>::ValMut, typename Deref<C>::Val>;
-
-   public:
-      template<CT::Container C>
-      auto operator[] (this C&&, Key<C>) has_assumptions -> Val<C>;
+      using Val = Tmut<C, typename Deref<C>::ValMut, typename Deref<C>::Val>;*/
    };
 }

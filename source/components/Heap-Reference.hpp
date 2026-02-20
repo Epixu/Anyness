@@ -37,6 +37,7 @@ namespace Langulus::Anyness::Component
 
       template<unsigned>             friend struct IterationOperators;
       template<unsigned>             friend struct Removal;
+      template<unsigned>             friend struct IndexedCommon;
       template<unsigned, class>      friend struct IndexedLinear;
       template<unsigned, CT::Sparse> friend struct HeapMovable;
       template<unsigned>             friend struct Emplacement;
@@ -171,67 +172,71 @@ namespace Langulus::Anyness::Component
          }
       }
 
-      /// Get first element as a handle, or any desired wrapping type         
-      ///   @tparam T the type we're wrapping in                              
+      /// Get first element as a handle, or any desired wrapping type.        
+      /// Conversion or copying may occur, depending on type.                 
+      ///   @tparam AS the type we're wrapping in                             
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid T, CT::Container C> requires CT::Contiguous<C>
+      template<CT::NotVoid AS, CT::Container C> requires CT::Contiguous<C>
       decltype(auto) As(this C&& self) {
-         static_assert(not CT::Reference<T>, "Strip references first");
+         static_assert(not CT::Reference<AS>, "Strip references first");
 
-         if constexpr (CT::Handle<T>) {
-            if constexpr (CT::TypeErased<T>) {
+         if constexpr (CT::Handle<AS>) {
+            if constexpr (CT::TypeErased<AS>) {
                // Type-erased handle                                    
-               if constexpr (CT::DeeplyOwned<T>)
-                  return T {self.Get(), self.GetEntries(), self.GetType()};
-               else if constexpr (CT::Owned<T>)
-                  return T {self.Get(), self.GetAllocation(), self.GetType()};
+               if constexpr (CT::DeeplyOwned<AS>)
+                  return AS {self.Get(), self.GetEntries(), self.GetType()};
+               else if constexpr (CT::Owned<AS>)
+                  return AS {self.Get(), self.GetAllocation(), self.GetType()};
                else
-                  return T {self.Get(), self.GetType()};
+                  return AS {self.Get(), self.GetType()};
             }
             else {
                // Statically typed handle                               
-               using HT = Deref<TypeOf<T>>;
+               using HT = Deref<TypeOf<AS>>;
                if constexpr (CT::TypeErased<C>) {
                   LglsAssert(self.template IsSame<HT>(), "Type mismatch",
                      ": ", self.GetType(), " not same as ", MetaDataOf<HT>());
                }
                else static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
 
-               if constexpr (CT::DeeplyOwned<T>)
-                  return T {&self.Get(), self.GetEntries()};
-               else if constexpr (CT::Owned<T>)
-                  return T {&self.Get(), self.GetAllocation()};
+               if constexpr (CT::DeeplyOwned<AS>)
+                  return AS {&self.Get(), self.GetEntries()};
+               else if constexpr (CT::Owned<AS>)
+                  return AS {&self.Get(), self.GetAllocation()};
                else
-                  return T {&self.Get()};
+                  return AS {&self.Get()};
             }
          }
          else {
             // Access directly or wrapped in a container                
             if constexpr (CT::TypeErased<C>) {
-               if (self.template Is<T>()) {
+               if (self.template Is<AS>()) {
                   // Access directly                                    
-                  return self.template Get<T>();
+                  if constexpr (CT::Deep<AS> and CT::Dense<AS>)
+                     return Decvq<AS> {Absorb, self.template Get<AS>()};
+                  else
+                     return self.template Get<AS>();
                }
-               else if constexpr (CT::Deep<T> and CT::Dense<T>) {
+               else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
-                  T temp {Absorb, self};
+                  Decvq<AS> temp {Absorb, self};
                   if_available(temp.SetCountInner(1));
                   return temp;
                }
                else {
                   // Runtime type mismatch error                        
                   LglsError("Type mismatch", ": ", self.GetType(),
-                     " not akin to ", MetaDataOf<T>());
+                     " not akin to ", MetaDataOf<AS>());
                }
             }
             else {
-               if constexpr (Akin<TypeOf<C>, T>) {
+               if constexpr (Akin<TypeOf<C>, AS>) {
                   // Access directly                                    
-                  return self.template Get<T>();
+                  return self.template Get<AS>();
                }
-               else if constexpr (CT::Deep<T> and CT::Dense<T>) {
+               else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
-                  T temp {Absorb, self};
+                  Decvq<AS> temp {Absorb, self};
                   if_available(temp.SetCountInner(1));
                   return temp;
                }

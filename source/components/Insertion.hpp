@@ -73,8 +73,9 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Implements insertion for containers.                                   
-   /// Insertion (unlike emplacement) extents the memory space and may move   
+   /// Insertion (unlike emplacement) extends the memory space and may move   
    /// things around. It guarantees that nothing gets overwritten.            
+   /// Insertion (unlike merging) allows for duplicated elements.             
    ///   @tparam ID heap we're inserting to                                   
    ///   @tparam AS type to serialize as before inserting. Useful for byte    
    ///      and text containers. Use void to insert without serialization.    

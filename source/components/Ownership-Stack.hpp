@@ -108,22 +108,26 @@ namespace Langulus::Anyness::Component
          //    in case something throws an exception while constructing 
          if constexpr (CT::Referred<I>) {
             // Refer                                                    
-            self.SetAllocationInner(from.GetAllocation());
-            if constexpr (AUTO)
-               self.Keep();
+            if constexpr (requires { from.GetAllocationInner(); }) {
+               self.SetAllocationInner(from.GetAllocationInner());
+               if constexpr (AUTO)
+                  self.Keep();
+            }
+            else self.FindAllocationInner();
          }
          else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
             // Abandon/Move                                             
-            self.SetAllocationInner(from.GetAllocation());
-
-            if constexpr (requires { from.SetAllocationInner(nullptr); })
-               from.SetAllocationInner(nullptr);
-            else if constexpr (AUTO and CT::AutoOwned<I>) {
-               // We can't reset source allocation pointer, which means 
-               // that source destructor will dereference when out of   
-               // scope. We have to reference the data here.            
-               self.Keep();
+            if constexpr (requires { from.GetAllocationInner(); }) {
+               self.SetAllocationInner(from.GetAllocationInner());
+               if_available(from.SetAllocationInner(nullptr))
+               else if constexpr (AUTO and CT::AutoOwned<I>) {
+                  // We can't reset source allocation pointer, which    
+                  // means that source destructor will dereference when 
+                  // out of scope. We have to reference the data here.  
+                  self.Keep();
+               }
             }
+            else self.FindAllocationInner();
          }
          else if constexpr (CT::Disowned<I>) {
             // Disown                                                   
