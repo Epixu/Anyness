@@ -14,7 +14,8 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Provides a common element access interface. Needs to be specialized.   
+   /// Provides a common element access interface.                            
+   /// Needs to be specialized, relying on a custom SimplifyIndex method.     
    ///   @tparam ID the stack/heap we're indexing                             
    template<unsigned ID>
    struct IndexedCommon {
@@ -53,12 +54,13 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @return the chosen element                                        
       template<class AS = void, CT::Container C>
-      auto* GetAt(this C&& self, CT::Index auto&& idx) assumptious {
+      CT::Sparse auto GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
          using TC  = TypeOf<C>*;
          using TCP = LglsMutIf(C, TC);
-         using TH  = Tif<CT::Void<AS>, TC, Tif<CT::Sparse<AS>, AS, AS*>>;
+         using TH  = Tif<CT::Void<AS>, TC, AS>;
+         //using TH  = Tif<CT::Void<AS>, TC, Tif<CT::Sparse<AS>, AS, AS*>>;
          //using THS = Tif<CT::Sparse<TH>, TH, TH*>;
          //using THP = LglsMutIf(C, THS);
          using THP = LglsMutIf(C, TH);
@@ -80,44 +82,44 @@ namespace Langulus::Anyness::Component
             else {
                // Casting to a desired runtime type                     
                LglsAssumeDev(self.IsTyped(), "Block is not typed");
-               const auto indirections = self.GetIndirections();
+               const     auto tci = self.GetIndirections() + 1;
+               constexpr auto thi = IndirectsOf<TH>;
 
-               if (indirections == IndirectsOf<TH>) {
+               if (tci == thi) {
                   // No difference in indirections                      
                   return static_cast<THP>(static_cast<TCP>(heap));
                }
-               else if (indirections > IndirectsOf<TH>) {
+               else if (tci > thi) {
                   // We need to dereference. Supports packed pointers.  
-                  auto diff = indirections - IndirectsOf<TH>;
+                  auto diff = tci - thi;
                   Deep<C> denser = Disown(self.GetDenseAt(idx, diff)); //TODO does a redundant offset
                   return static_cast<THP>(denser.GetHeapInner());
                }
                else {
                   // We are allowed to add one additional indirection   
-                  LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
-                     "Too many indirections");
+                  LglsAssumeDev(tci + 1 == thi, "Too many indirections");
                   return static_cast<THP>(static_cast<TCP>(heap));
                }
             }
          }
          else {
             // Casting to a desired static type                         
-            constexpr auto indirections = IndirectsOf<TypeOf<C>>;
+            constexpr auto tci = IndirectsOf<TC/*TypeOf<C>*/>;
+            constexpr auto thi = IndirectsOf<TH>;
 
-            if constexpr (indirections == IndirectsOf<TH>) {
+            if constexpr (tci == thi) {
                // No difference in indirections                         
                return static_cast<THP>(static_cast<TCP>(heap));
             }
-            else if constexpr (indirections > IndirectsOf<TH>) {
+            else if constexpr (tci > thi) {
                // We need to dereference. Can be done without a         
                // reinterpret_cast, and thus be constexpr-friendly.     
                // Supports packed pointers as well.                     
-               return static_cast<THP>(DenseCast<indirections - IndirectsOf<TH>>(static_cast<TCP>(heap)));
+               return static_cast<THP>(DenseCast<tci - thi>(static_cast<TCP>(heap)));
             }
             else {
                // We are allowed to add one additional indirection      
-               static_assert(indirections + 1 == IndirectsOf<TH>,
-                  "Too many indirections");
+               static_assert(tci + 1 == thi, "Too many indirections");
                return static_cast<THP>(static_cast<TCP>(heap));
             }
          }
@@ -167,9 +169,9 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
                      return Decvq<AS> {Absorb, *self.template GetAt<AS*>(LglsFwd(idx))};
                   else if constexpr (CT::Dense<AS>)
-                     return *self.template GetAt<AS>(LglsFwd(idx));
+                     return *self.template GetAt<AS*>(LglsFwd(idx));
                   else
-                     return  self.template GetAt<AS>(LglsFwd(idx));
+                     return  self.template GetAt<AS >(LglsFwd(idx));
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
@@ -180,18 +182,18 @@ namespace Langulus::Anyness::Component
                   LglsError("Type mismatch", ": ", self.GetType(),
                      " not akin to ", MetaDataOf<AS>());
                   if constexpr (CT::Dense<AS>)
-                     return *self.template GetAt<AS>(LglsFwd(idx));
+                     return *self.template GetAt<AS*>(LglsFwd(idx));
                   else
-                     return  self.template GetAt<AS>(LglsFwd(idx));
+                     return  self.template GetAt<AS >(LglsFwd(idx));
                }
             }
             else {
                if constexpr (Akin<TypeOf<C>, AS>) {
                   // Access directly                                    
                   if constexpr (CT::Dense<AS>)
-                     return *self.template GetAt<AS>(LglsFwd(idx));
+                     return *self.template GetAt<AS*>(LglsFwd(idx));
                   else
-                     return  self.template GetAt<AS>(LglsFwd(idx));
+                     return  self.template GetAt<AS >(LglsFwd(idx));
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                

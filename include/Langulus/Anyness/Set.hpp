@@ -44,7 +44,6 @@ namespace Langulus::Anyness::Inner
       Com::IndexedHashHeap<>,          // Indexed by hash table         
       Com::Insertion<>,                // Allows insertion              
       Com::InsertionOperators<>,       // << and >> insertion           
-      //Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
       Com::Conversion,                 // Allows conversions            
@@ -61,8 +60,9 @@ namespace Langulus::Anyness::Inner
    >;
 
    ///                                                                        
-   /// A universal type-erased non-contiguous set of variable size            
-   ///                                                                        
+   /// A universal type-erased non-contiguous set of variable size.           
+   /// Emplacement is disabled for sets, because elements aren't allowed to   
+   /// change in-place. This also means that they are only const-iteratable.  
    template<State::StateValue SORTED = State::Variable>
    struct Set : SetBase<SORTED> {
       using CTTI_Set      = Yes<>;

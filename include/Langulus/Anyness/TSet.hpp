@@ -23,7 +23,6 @@ namespace Langulus::Anyness::Inner
       Com::IndexedHashHeap<>,          // Indexed by hash table         
       Com::Insertion<>,                // Allows insertion              
       Com::InsertionOperators<>,       // << and >> insertion           
-      //Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
       Com::Conversion,                 // Allows conversions            
@@ -45,6 +44,8 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A statically-typed non-contiguous set of variable size that is         
    /// binary-compatible with the type-erased alternative `Set`.              
+   /// Emplacement is disabled for sets, because elements aren't allowed to   
+   /// change in-place. This also means that they are only const-iteratable.  
    template<CT::NotVoid T, State::StateValue SORT = State::Variable>
    struct TSet : Inner::TSetBase<T, SORT> {
       using CTTI_Set       = Yes<>;

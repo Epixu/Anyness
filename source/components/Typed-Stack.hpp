@@ -311,7 +311,7 @@ namespace Langulus::Anyness::Component
                   });
                   return result;
                }
-               else return self.GetDeep()->IsExecutable();
+               else return self.template As<typename C::DeepType const>().IsExecutable();
             }
             else return false;
          }
@@ -327,7 +327,7 @@ namespace Langulus::Anyness::Component
                   }
                   return false;
                }
-               else return self.GetDeep()->IsExecutable();
+               else return self.template As<typename C::DeepType const>().IsExecutable();
             }
             else return false;
          }

@@ -227,6 +227,11 @@ namespace Langulus::Anyness::Component
                   // Runtime type mismatch error                        
                   LglsError("Type mismatch", ": ", self.GetType(),
                      " not akin to ", MetaDataOf<AS>());
+
+                  if constexpr (CT::Deep<AS> and CT::Dense<AS>)
+                     return Decvq<AS> {};
+                  else
+                     return self.template Get<AS>();
                }
             }
             else {

@@ -865,7 +865,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             (void) it;
             ++counter;
 
-            if constexpr (CT::TypeErased<T>)
+            if constexpr (CT::TypeErased<T> or CT::Sparse<E>)
                static_assert(CT::Handle<decltype(it.one()), decltype(it.two())>);
             else
                static_assert(Same<E, decltype(it.one()), decltype(it.two())>);

@@ -25,13 +25,13 @@ using pptr32 = Langulus::Fractalloc::PackedPointer<char>;
 static_assert(sizeof(pptr32) == 4);
 
 using pptr8rt  = Langulus::Fractalloc::PackedPointer<RT, 2, 6, 0>;
-static_assert(sizeof(pptr8) == 1);
+static_assert(sizeof(pptr8rt) == 1);
 
 using pptr16rt = Langulus::Fractalloc::PackedPointer<RT, 4, 4, 8>;
-static_assert(sizeof(pptr16) == 2);
+static_assert(sizeof(pptr16rt) == 2);
 
 using pptr32rt = Langulus::Fractalloc::PackedPointer<RT>;
-static_assert(sizeof(pptr32) == 4);
+static_assert(sizeof(pptr32rt) == 4);
 
 
 /// Useful for creating instances of types on the heap, with multiple levels  

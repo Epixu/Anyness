@@ -83,6 +83,9 @@ namespace Langulus::Fractalloc
       constexpr PackedPointer(nullptr_t) noexcept
          : mAll(0) {}      
 
+      explicit constexpr PackedPointer(void const*) noexcept
+         : mAll(0) {}      
+
       explicit constexpr operator bool () const noexcept {
          return mAll != 0;
       }

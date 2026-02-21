@@ -15,6 +15,8 @@ namespace Langulus::Anyness::Component
    /// Stores a precomputed hash inside the heap with the given ID.           
    /// The hash is calculated using the data inside the given heap/stack ID.  
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0.  
+   ///   @attention since hash is stored on the heap, it is recomputed as     
+   ///      emergent when we have no ownership of that heap.                  
    ///   @tparam ID the heap ID                                               
    ///   @tparam H the hash type used                                         
    template<unsigned ID = 0, class H = Hash>
@@ -26,12 +28,18 @@ namespace Langulus::Anyness::Component
          self.SetHashInner(self.IsEmpty() ? 1 : 0);
       }
 
-      /// Get the hash, recompute it if uninitialized                         
-      H GetHash(this auto const& self) noexcept {
-         auto& cached = self.GetHashInner();
-         if (not cached)
-            const_cast<H&>(cached) = self.HashRecompute();
-         return cached;
+      /// Get the hash, recompute it if uninitialized or of we don't own it.  
+      H GetHash(this auto const& self) assumptious {
+         if (self.IsEmpty())
+            return H{1};
+         else if (self.GetUses() == 0)
+            return self.HashRecompute();
+
+         auto heap = self.template AccessHeap<HashHeap>();
+         LglsAssumeDev(heap, "Invalid heap");
+         if (not *heap)
+            const_cast<H&>(*heap) = self.HashRecompute();
+         return *heap;
       }
 
    protected:
@@ -39,20 +47,23 @@ namespace Langulus::Anyness::Component
                                      friend struct Conversion;
 
       /// Get hash (inner) - will not recompute it                            
-      constexpr auto& GetHashInner(this auto&& self) noexcept {
-         return *self.template AccessHeap<HashHeap>();
+      constexpr auto GetHashInner(this auto&& self) noexcept -> H const {
+         if (self.IsEmpty())
+            return H {1};
+
+         auto heap = self.template AccessHeap<HashHeap>();
+         return heap ? *heap : H {0};
       }
       
       /// Set the hash (inner)                                                
       constexpr void SetHashInner(this auto& self, H h) noexcept {
-         self.GetHashInner() = h;
-      }
+         if (self.IsEmpty() or self.GetUses() == 0)
+            return;
 
-      /// Hash is default-initialized to 1, because that's a universal value  
-      /// for an empty container. Prevents rehash until something is pushed.  
-      /*constexpr void ConstructDefault(this auto& self) noexcept {
-         self.SetHashInner(1);
-      }*/
+         auto heap = self.template AccessHeap<HashHeap>();
+         LglsAssumeDev(heap, "Invalid heap");
+         const_cast<H&>(*heap) = h;
+      }
       
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this is noop when constructing from deep intents,      

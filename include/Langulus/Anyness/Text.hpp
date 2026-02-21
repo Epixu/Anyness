@@ -536,7 +536,16 @@ namespace Langulus::Anyness
          }
          
          static void Separate(const CT::Container auto& from, Text& to, Context*) {
-            to += (from.IsOr() ? " or " : ", ");
+            if constexpr (requires { from.IsOrdered(); }) {
+               if constexpr (requires { from.IsOr(); })
+                  to += (from.IsOr() ? " or " : (from.IsOrdered() ? ", " : "; "));
+               else
+                  to += (from.IsOrdered() ? ", " : "; ");
+            }
+            else if constexpr (requires { from.IsOr(); })
+               to += (from.IsOr() ? " or " : ", ");
+            else 
+               to += ", ";
          }
          
          static void Empty(RTTI::DMeta type, CountType i, Text& to, Context*) {

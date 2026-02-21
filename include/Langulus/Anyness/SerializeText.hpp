@@ -10,6 +10,7 @@
 #include "Bytes.hpp"
 #include "TAny.hpp"
 #include "TMany.hpp"
+#include "TSet.hpp"
 
 
 namespace Langulus::CTTI
@@ -206,6 +207,34 @@ namespace Langulus::CTTI
    /// Convert TMany -> Text                                                  
    template<class T>
    constexpr auto Converter<Anyness::TMany<T>, Anyness::Text>::Convert(Anyness::TMany<T> const& from) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+
+
+
+   ///                                                                        
+   /// Set/TSet                                                               
+   ///                                                                        
+
+   /// Convert Set -> Text                                                    
+   template<Anyness::State::StateValue SORT>
+   constexpr auto Converter<Anyness::Inner::Set<SORT>, Anyness::Text>::Convert(Anyness::Inner::Set<SORT> const& from) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+   
+   /// Convert TSet -> Text                                                   
+   template<CT::NotVoid T, Anyness::State::StateValue SORT>
+   constexpr auto Converter<Anyness::TSet<T, SORT>, Anyness::Text>::Convert(Anyness::TSet<T, SORT> const& from) -> Anyness::Text {
       if (from.IsEmpty())
          return {};
 
