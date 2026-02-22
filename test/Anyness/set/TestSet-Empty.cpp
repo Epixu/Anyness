@@ -199,7 +199,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(    requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
    }
 
-   constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);
+   constexpr bool Ambiguous = not Same<T, E> and CT::Set<E> and LANGULUS(SAFE);
    
    GIVEN("Gap test") {
       alignas(T) char unininitialized[sizeof(T)];

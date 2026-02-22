@@ -30,6 +30,16 @@ namespace Langulus::Anyness::Component
       static constexpr int  InitialTableSize = 8;
       static constexpr int  TableGrowthFactor = 2;
 
+      /// Get the start of the hash table                                     
+      constexpr auto GetHashTable(this auto const& self) noexcept -> TableType const* {
+         return self.template AccessHeap<IndexedHashHeap>();
+      }
+
+      /// Get the end of the hash table                                       
+      constexpr auto GetHashTableEnd(this auto const& self) noexcept -> TableType const* {
+         return self.GetHashTable() + self.GetReserved();
+      }
+
    protected:
       friend struct IndexedCommon<ID>;
 

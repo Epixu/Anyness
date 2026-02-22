@@ -454,9 +454,8 @@ namespace Langulus::Anyness::Component
       ///      and destroy only fully dereferenced indirections               
       template<bool DESTROY = true, CT::Container C>
       void DestroyAllElements(this C& self) assumptious {
-         if constexpr (CT::ContainsOne<C>) {
+         if constexpr (CT::ContainsOne<C>)
             self.template DestroyElement<DESTROY>();
-         }
          else if constexpr (DESTROY or CT::DeeplyOwned<C>) {
             auto item = IterateHandles(self).begin();
             while (item) {
