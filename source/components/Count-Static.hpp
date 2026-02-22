@@ -56,7 +56,7 @@ namespace Langulus::Anyness::Component
       template<unsigned>             friend struct Emplacement;
       template<unsigned, class>      friend struct Insertion;
       template<unsigned, class>      friend struct IndexedLinear;
-      template<unsigned, CT::Sparse> friend struct HeapMovable;
+      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
                                      friend struct Conversion;
 
       /// Get count (inner)                                                   

@@ -18,14 +18,22 @@ namespace Langulus::Anyness::Component
    /// The pointer is not allowed to move on reallocation, and instead        
    /// multiple allocations are chained together                              
    ///   @tparam ID multiple heap interfaces are supported                    
+   ///   @tparam INITIAL_SIZE the initial size (in elements). Used in hashed  
+   ///      containers in order to control hash table size. If 0, the heap    
+   ///      will use reflected type properties only.                          
+   ///   @tparam GROWTH_FACTOR growth factor on reallocation. Ued in hashed   
+   ///      containers in order to control hash table growth on reallocation. 
+   ///      If 0, the heap will grow according to reflected type properties.  
    ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
-   template<unsigned ID, CT::Sparse POINTER_TYPE>
+   template<unsigned ID, unsigned INITIAL_SIZE, unsigned GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
    struct HeapImmovable {
       using CTTI_Component = Yes<>;
       static constexpr unsigned Id = ID;
       static constexpr unsigned HeapProvider = ID;
-      static constexpr int  ComponentPrecedence = -2000;
-      static constexpr bool HeapCanBeNull = true;
+      static constexpr int      ComponentPrecedence = -2000;
+      static constexpr bool     HeapCanBeNull = true;
+      static constexpr unsigned InitialSize = INITIAL_SIZE;
+      static constexpr unsigned GrowthFactor = GROWTH_FACTOR;
 
    protected:
       using Byte = uint8_t;

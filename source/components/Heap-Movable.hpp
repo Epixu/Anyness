@@ -16,16 +16,21 @@ namespace Langulus::Anyness::Component
    /// Interfaces a heap. Adds a member that points to the heap memory.       
    /// The heap is allowed to move on reallocation.                           
    ///   @tparam ID multiple heaps are supported                              
+   ///   @tparam INITIAL_SIZE the initial size (in elements). Used in hashed  
+   ///      containers in order to control hash table size. If 0, the heap    
+   ///      will use reflected type properties only.                          
+   ///   @tparam GROWTH_FACTOR growth factor on reallocation. Ued in hashed   
+   ///      containers in order to control hash table growth on reallocation. 
+   ///      If 0, the heap will grow according to reflected type properties.  
    ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
-   template<unsigned ID, CT::Sparse POINTER_TYPE>
+   template<unsigned ID, unsigned INITIAL_SIZE, unsigned GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
    struct HeapMovable : HeapReference<ID, POINTER_TYPE> {
-      //using CTTI_Component = Yes<>;
-      //using StackRequest = POINTER_TYPE;
-
       static constexpr unsigned Id = ID;
       static constexpr unsigned HeapProvider = ID;
-      static constexpr int  ComponentPrecedence = -2000;
-      static constexpr bool HeapCanBeNull = true;
+      static constexpr int      ComponentPrecedence = -2000;
+      static constexpr bool     HeapCanBeNull = true;
+      static constexpr unsigned InitialSize = INITIAL_SIZE;
+      static constexpr unsigned GrowthFactor = GROWTH_FACTOR;
 
    protected:
       template<unsigned, class>      friend struct ReserveEmergent;
@@ -37,12 +42,16 @@ namespace Langulus::Anyness::Component
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
+
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
+
       template<CT::Container C>
       using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
+
       template<CT::Container C>
       using Deep = typename Deref<C>::DeepType;
+
       using Base = HeapReference<ID, POINTER_TYPE>;
       using typename Base::Request;
       

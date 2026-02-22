@@ -27,9 +27,6 @@ namespace Langulus::Anyness::Component
       using HeapRequest      = PerElement<TableType>;
       using IteratorCategory = ::std::random_access_iterator_tag;
 
-      static constexpr int  InitialTableSize = 8;
-      static constexpr int  TableGrowthFactor = 2;
-
       /// Get the start of the hash table                                     
       constexpr auto GetHashTable(this auto const& self) noexcept -> TableType const* {
          return self.template AccessHeap<IndexedHashHeap>();

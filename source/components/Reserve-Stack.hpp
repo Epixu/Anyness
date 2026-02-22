@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
       constexpr T GetReserved() const noexcept { return mReserved; }
 
    protected:
-      template<unsigned, CT::Sparse> friend struct HeapMovable;
+      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
       template<unsigned>             friend struct Removal;
    };
 }

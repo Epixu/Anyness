@@ -96,8 +96,8 @@ namespace Langulus::Anyness
       template<unsigned ID, class H> struct HashEmergent;
       template<unsigned ID, class H> struct HashHeap;
       template<unsigned ID, class H> struct HashStack;
-      template<unsigned ID = 0, CT::Sparse POINTER_TYPE = void*> struct HeapImmovable;
-      template<unsigned ID = 0, CT::Sparse POINTER_TYPE = void*> struct HeapMovable;
+      template<unsigned ID = 0, unsigned = 0, unsigned = 0, CT::Sparse POINTER_TYPE = void*> struct HeapImmovable;
+      template<unsigned ID = 0, unsigned = 0, unsigned = 0, CT::Sparse POINTER_TYPE = void*> struct HeapMovable;
       template<unsigned ID = 0, CT::Sparse POINTER_TYPE = void*> struct HeapReference;
       template<unsigned ID = 0, class HASH = Hash> struct IndexedHashHeap;
       template<unsigned ID = 0, class HASH = Hash> struct IndexedHashStack;
@@ -374,7 +374,7 @@ namespace Langulus::Anyness
       template<class, class, bool, unsigned> friend struct Com::TypedStack;
       template<CT::NotVoid, unsigned>        friend struct Com::Stack;
       template<unsigned, CT::Sparse>         friend struct Com::HeapReference;
-      template<unsigned, CT::Sparse>         friend struct Com::HeapMovable;
+      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct Com::HeapMovable;
       template<unsigned, bool, bool>         friend struct Com::OwnershipStack;
       template<unsigned>                     friend struct Com::OwnershipDeepStack;
       template<unsigned>                     friend struct Com::OwnershipDeepHeap;

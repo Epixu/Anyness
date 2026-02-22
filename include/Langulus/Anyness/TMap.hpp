@@ -66,8 +66,8 @@ namespace Langulus::Anyness
       ///                                                                     
       template<CT::NotVoid K, CT::NotVoid V>
       using TMapCommon = Container<
-         Com::HeapMovable<0, K*>,      // Heap for keys                 
-         Com::HeapMovable<1, V*>,      // Heap for values               
+         Com::HeapMovable<0, 8, 2, K*>,// Heap for keys                 
+         Com::HeapMovable<1, 8, 2, V*>,// Heap for values               
          Com::OwnershipStack<0>,       // Keys allocation is referenced 
          Com::OwnershipStack<1>,       // Vals allocation is referenced 
          Com::HashHeap<0>,             // Keys can be hashed            

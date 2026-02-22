@@ -52,7 +52,7 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = 3000;
 
    protected:
-      template<unsigned, CT::Sparse> friend struct HeapMovable;
+      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
       template<unsigned, class>      friend struct Insertion;
       
       template<CT::Container C>

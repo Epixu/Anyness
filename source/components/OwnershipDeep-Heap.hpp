@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Component
       using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
 
    protected:
-      template<unsigned, CT::Sparse> friend struct HeapMovable;
+      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
       template<unsigned>             friend struct Removal;
       template<unsigned>             friend struct Emplacement;
       template<unsigned>             friend struct OwnershipDeepEmergent;

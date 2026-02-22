@@ -81,7 +81,7 @@ namespace Langulus::Anyness
       template<CT::NotReference T> requires CT::Sparse<T>
       using THandleLocalSparse = Container<
          Com::TypedStatic<DMeta, Deptr<T>>,
-         Com::HeapMovable<0, T>,
+         Com::HeapMovable<0, 0, 0, T>,
          Com::CountStatic<1u>,
          Com::OwnershipStack<0, false>,
          Com::Emplacement<>,
