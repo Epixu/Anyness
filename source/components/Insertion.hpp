@@ -125,7 +125,7 @@ namespace Langulus::Anyness::Component
       ///      incompatible type is encountered.                              
       ///   @param a1, an elements (and their intents) to insert              
       ///   @return the number of inserted elements                           
-      template<bool FORCE = true, class A1, class...AN, CT::Container C>
+      template<bool FORCE = true, class A1, class...AN, CT::Contiguous C>
       auto Insert(this C& self, A1&& a1, AN&&...an) -> Count<C> {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
@@ -157,7 +157,7 @@ namespace Langulus::Anyness::Component
             while (old) {
                to->EmplaceWithIntent(Refer(*old));
                ++old; ++to;
-            }            
+            }
          }
          else {
             self.AllocateMore(all_count);
@@ -193,14 +193,14 @@ namespace Langulus::Anyness::Component
       /// This usually means at the back of a contiguous container. The       
       /// inserted elements will be nullified.                                
       ///   @param count the number of elements to insert                     
-      template<CT::Container C>
+      template<CT::Contiguous C>
       auto InsertNulled(this C&, Count<C> count) -> Count<C>;
 
       /// Insert a number of elements at the performance-optimal position.    
       /// This usually means at the back of a contiguous container. The       
       /// inserted elements will be default-constructed.                      
       ///   @param count the number of elements to insert                     
-      template<CT::Container C>
+      template<CT::Contiguous C>
       auto InsertDefault(this C& self, Count<C> count) -> Count<C> {
          const auto previousCount = self.GetCount();
          self.AllocateMore(previousCount + count);
@@ -273,11 +273,11 @@ namespace Langulus::Anyness::Component
          return count;
       }
 
-      template<bool CONCAT = true, bool FORCE = true, CT::Container C>
+      template<bool CONCAT = true, bool FORCE = true, CT::Contiguous C>
       auto SmartPush(this C&, auto&&, State<C> = {})
          -> Count<C>;
 
-      template<bool TRANSFER_OR = true, CT::Container C>
+      template<bool TRANSFER_OR = true, CT::Contiguous C>
       auto Deepen(this C&) -> Deep<C>&;
 
       /// Extend the container's memory and return the newly allocated range  
@@ -310,7 +310,8 @@ namespace Langulus::Anyness::Component
       }*/
 
       
-      /// Concatenation at specific index                                     
+      /// Concatenation at specific index.                                    
+      /// Possible only for contiguous containers with multiple elements.     
       template<CT::Contiguous C>
       auto ConcatAt(this C& self, CT::Index auto index, CT::Container auto&& data) -> Count<C> {
          const auto rhs_count = DeintCast(data).GetCount();
@@ -345,10 +346,11 @@ namespace Langulus::Anyness::Component
 
       /// Concatenation at the back. Unlike insertion, concatenation always   
       /// inserts the contents of the argument containers one by one.         
+      /// Possible only for contiguous containers with multiple elements.     
       ///   @param a1_intent, an_intent the containers to concatenate to the  
       ///      right of 'this'                                                
       ///   @return the number of concatenated elements                       
-      template<CT::Container C, CT::Container A1, CT::Container...AN>
+      template<CT::Contiguous C, CT::Container A1, CT::Container...AN>
       auto Concat(this C& self, A1&& a1_intent, AN&&...an_intent) -> Count<C> {
          static_assert(CT::ContainsMany<C>,
             "Container should support multiple elements");
@@ -416,7 +418,7 @@ namespace Langulus::Anyness::Component
       /// An incompatible type will result in 'deepened' being true, and      
       /// 'out_count' being rewritten to reflect the number of required sub-  
       /// containers.                                                         
-      template<CT::Container C, class A>
+      template<CT::Contiguous C, class A>
       void PrepareForInsertion(this C& self, A&& a, Count<C>& out_count, bool& deepened) {
          using S = IntentOf(a);
 
@@ -454,7 +456,7 @@ namespace Langulus::Anyness::Component
       /// Helper function that gathers the number of elements and types.      
       /// Empty containers can't change this container's type. If one of the  
       /// type changes raises a conflict the function will throw.             
-      template<CT::Container C, CT::Container A>
+      template<CT::Contiguous C, CT::Container A>
       void PrepareForAbsorption(this C& self, A&& a, Count<C>& out_count) {
          const auto c = DeintCast(a).GetCount();
          if (not c)

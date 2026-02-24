@@ -153,14 +153,15 @@ namespace Langulus::Anyness::Component
          return self;
       }
 
-      /// Assignment for discontiguous containers falls back to insertion.    
+      /// Assignment for discontiguous containers falls back to insert/merge. 
       ///   @param argument the argument to insert                            
       ///   @return reference to self                                         
       template<CT::Container C, class A>
       C& Assign(this C& self, A&& argument)
       requires (CT::RangeAssignable<C, A> and not CT::Contiguous<C>) {
          self.Clear();
-         self.Insert(LglsFwd(argument));
+              if_available(self.Insert(LglsFwd(argument)))
+         else if_available(self.Merge (LglsFwd(argument)))
          return self;
       }
 

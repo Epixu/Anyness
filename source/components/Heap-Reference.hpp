@@ -49,8 +49,10 @@ namespace Langulus::Anyness::Component
       
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
+
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
+
       //template<CT::Container C>
       //using Deep = typename Deref<C>::DeepType;
       

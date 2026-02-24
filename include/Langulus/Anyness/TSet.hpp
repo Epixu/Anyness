@@ -21,8 +21,8 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashHeap<>,                 // Hash can be cached            
       Com::IndexedHashHeap<>,          // Indexed by hash table         
-      Com::Insertion<>,                // Allows insertion              
-      Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Merging<>,                  // Allows merging                
+      Com::MergingOperators<>,         // <<= and >>= merging           
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
       Com::Conversion,                 // Allows conversions            

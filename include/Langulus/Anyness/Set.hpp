@@ -15,15 +15,16 @@
 #include "../../../source/components/OwnershipDeep-Heap.hpp"
 #include "../../../source/components/Hash-Heap.hpp"
 #include "../../../source/components/IndexedHash-Heap.hpp"
-#include "../../../source/components/Insertion.hpp"
-#include "../../../source/components/InsertionOperators.hpp"
-#include "../../../source/components/Emplacement.hpp"
+#include "../../../source/components/Merging.hpp"
+#include "../../../source/components/MergingOperators.hpp"
+#include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Removal.hpp"
 #include "../../../source/components/Conversion.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "../../../source/components/Iteration-ForEach.hpp"
 #include "../../../source/components/Iteration-Range.hpp"
 #include "../../../source/components/State-Stack.hpp"
+#include "../../../source/states/Typed.hpp"
 #include "../../../source/states/Sorted.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
@@ -42,8 +43,8 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashHeap<>,                 // Hash can be cached            
       Com::IndexedHashHeap<>,          // Indexed by hash table         
-      Com::Insertion<>,                // Allows insertion              
-      Com::InsertionOperators<>,       // << and >> insertion           
+      Com::Merging<>,                  // Allows merging                
+      Com::MergingOperators<>,         // <<= and >>= merging           
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
       Com::Conversion,                 // Allows conversions            

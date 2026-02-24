@@ -176,6 +176,12 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(    requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
       static_assert(    requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
       static_assert(    requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
+      static_assert(    requires (T pack, E item) { pack.ConcatAt(Index::Back, pack); });
+      static_assert(    requires (T pack, E item) { pack.Concat(pack); });
+      static_assert(    requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
+      static_assert(    requires (T pack, E item) { pack.MergeRangeAt(Index::Back, pack); });
+      static_assert(    requires (T pack, E item) { pack.Merge(item); });
+      static_assert(    requires (T pack, E item) { pack.MergeRange(pack); });
       static_assert(    requires (T pack, E item) { pack.Remove(item); });
       static_assert(    requires (T pack, E item) { pack.RemoveAt(Index::Front); });
       static_assert(    requires (T pack, E item) { pack.Reserve(20); });

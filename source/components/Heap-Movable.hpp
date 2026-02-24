@@ -226,13 +226,22 @@ namespace Langulus::Anyness::Component
 
       /// Allocate a number of elements, relying on the type of the container 
       ///   @attention assumes container is typed                             
-      ///   @tparam CREATE true to call constructors and set count            
-      ///   @tparam SETSIZE true to set count, despite not constructing       
       ///   @param elements number of elements to allocate                    
-      template<bool CREATE = false, bool SETSIZE = false, CT::Container C>
-      void AllocateMore(this C& self, const Count<C> elements) {
-         //static_assert(CT::ContainsMany<C>,
-         //   "This makes sense to be called only by containers that support many elements");
+      template<CT::Container C>
+      void AllocateMore(this C& self, Count<C> elements) {
+         if constexpr (InitialSize and GrowthFactor) {
+            // We override allocation size with predefined parameters,  
+            // if such are defined                                      
+            if (elements <= InitialSize)
+               elements = InitialSize;
+            else {
+               Count<C> growth = InitialSize;
+               while (elements > InitialSize + growth)
+                  growth *= GrowthFactor;
+               elements = InitialSize + growth;
+            }
+         }
+
          LglsAssumeDev(elements > self.GetCount(), "Bad element count");
          if constexpr (CT::ContainsOne<C>)
             LglsAssumeDev(elements == 1, "Container allows only one allocated element");
@@ -243,14 +252,6 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Allocate a fresh set of elements                         
             self.AllocateFresh(request);
-
-            if constexpr (CREATE) {
-               // Default-construct everything                          
-               self.CropInner(self.GetCount(), elements).CreateDefault();
-            }
-            
-            if constexpr (CREATE or SETSIZE)
-               self.SetCount(elements);
             return;
          }
 
@@ -260,23 +261,13 @@ namespace Langulus::Anyness::Component
          );
 
          if constexpr (CT::ContainsMany<C>) {
-            //                                                          
-            // Reallocate                                               
             if (self.GetReserved() >= elements) {
                // Required memory is already available                  
-               if constexpr (CREATE) {
-                  // But is not yet initialized, so do it               
-                  if (self.GetCount() < elements) {
-                     const auto count = elements - self.GetCount();
-                     self.SelectInner(self.GetCount(), count).CreateDefault();
-                  }
-               }
-
-               if constexpr (CREATE or SETSIZE)
-                  self.SetCount(elements);
                return;
             }
 
+            //                                                          
+            // Reallocate                                               
             C previous {Abandon {self}};
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                auto reallocated = Allocator::Reallocate(self.GetType(), request.mTotalBytes, al);
@@ -284,15 +275,16 @@ namespace Langulus::Anyness::Component
                auto reallocated = Allocator::Reallocate(request.mTotalBytes, al);
             #endif
             LglsAssert(reallocated, "Out of memory");
+
             self.SetAllocationInner(reallocated);
 
             if (reallocated != al) {
                self.SetHeapInner(static_cast<void*>(reallocated->GetBlockStart() + request.mHeaderBytes));
 
                if (previous.GetCount()) {
-                  // Memory moved, and we should move all elements      
-                  // in it. We're moving to new memory, so no reverse   
-                  // is required.                                       
+                  // Memory moved, and we should move all elements with 
+                  // it. We're moving to new memory, so no reverse is   
+                  // required.                                          
                   auto from = IterateHandles(previous).begin();
                   for (auto to : IterateHandles(self)) {
                      to.EmplaceWithIntent(Abandon(*from));
@@ -301,23 +293,14 @@ namespace Langulus::Anyness::Component
                }
             }
             else {
-               // Memory didn't move, but reserved count changed        
-               // so all HeapRequests which are PerElement need to      
-               // be moved around.                                      
+               // Memory didn't move, but reserved count changed so all 
+               // HeapRequests which are PerElement need to be moved    
+               // around.                                               
                self.RemapHeapRequests(request.mReserved);
                previous.SetAllocationInner(nullptr);
             }
 
             if_available(self.SetReserveInner(request.mReserved));
-         
-            if constexpr (CREATE) {
-               // Default-construct the rest                            
-               const auto count = elements - self.GetCount();
-               self.CropInner(self.GetCount(), count).CreateDefault();
-            }
-
-            if constexpr (CREATE or SETSIZE)
-               self.SetCount(elements);
          }
       }
 
