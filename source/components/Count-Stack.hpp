@@ -51,6 +51,7 @@ namespace Langulus::Anyness::Component
       template<unsigned>             friend struct Removal;
       template<unsigned>             friend struct Emplacement;
       template<unsigned, class>      friend struct Insertion;
+      template<unsigned, class>      friend struct Merging;
       template<unsigned, class>      friend struct IndexedLinear;
       template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
                                      friend struct Conversion;

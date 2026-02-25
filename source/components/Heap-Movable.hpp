@@ -35,7 +35,8 @@ namespace Langulus::Anyness::Component
    protected:
       template<unsigned, class>      friend struct ReserveEmergent;
       template<unsigned>             friend struct IterationOperators;
-      template<unsigned, class AS>   friend struct Insertion;
+      template<unsigned, class>      friend struct Insertion;
+      template<unsigned, class>      friend struct Merging;
       template<unsigned>             friend struct Emplacement;
                                      friend struct Conversion;
       template<unsigned, bool, bool> friend struct OwnershipEmergent;
@@ -457,6 +458,40 @@ namespace Langulus::Anyness::Component
             self.SetAllocationInner(nullptr);
             self.ResetCount();
          }
+      }
+
+      /// Branch out the current container by doing a shallow copy.           
+      /// Happens when you try to modify a container with strong ownership    
+      /// from somewhere else (when GetUses() > 1)                            
+      ///   @param newReserve usually branching is accompanied by a resize,   
+      ///      so specify it here                                             
+      template<CT::Container C>
+      void BranchOut(this C& self, Count<C> newReserve) {
+         if (self.GetUses() > 1) {
+            // We have to branch out                                    
+            const C backup {Abandon{self}};
+            self.AllocateFresh(self.RequestHeap(newReserve));
+
+            // Reinsert the old items.                                  
+            auto count = backup.GetCount();
+            auto from = backup.GetHandle();
+            auto to = self.GetHandle();
+            auto const fromEnd = from + count;
+            try {
+               while (from.GetRaw() != fromEnd.GetRaw()) {
+                  to.EmplaceWithIntent(Refer(from));
+                  ++from;
+                  ++to;
+               }
+            }
+            catch (...) {
+               self.SetCountInner(fromEnd - from);
+               throw;
+            }
+
+            self.SetCountInner(count);
+         }
+         else self.AllocateMore(newReserve);
       }
    };
 }

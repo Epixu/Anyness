@@ -53,7 +53,8 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<unsigned, class>      friend struct Insertion;
+      template<unsigned, class> friend struct Insertion;
+      template<unsigned, class> friend struct Merging;
       
       template<CT::Container C>
       using PickMut = typename Deref<C>::PickMut;
