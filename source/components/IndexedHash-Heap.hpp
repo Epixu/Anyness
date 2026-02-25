@@ -157,7 +157,7 @@ namespace Langulus::Anyness::Component
 
          }
          else if constexpr (CT::Integer<INDEX>) {
-            // Using an integer index explicitly makes a statement,     
+            // Using an integer index explicitly makes a statement      
             // that you know what you're doing                          
             if constexpr (CT::Signed<INDEX>) {
                LglsAssumeUser(index >= 0,
@@ -168,6 +168,175 @@ namespace Langulus::Anyness::Component
             return self.BrowseTable(index);
          }
          else static_assert(false, "Unsupported index type");
+      }
+
+      /// Get the offset, based on the provided value's hash                  
+      ///   @param value - the value to hash                                  
+      ///   @return the bucket index                                          
+      template<CT::Container C, CT::NoIntent T>
+      auto GetOffset(this C const& self, T const& value) noexcept {
+         return HashOf(value).value;   //todo & mask.value;
+      }
+
+      /// Rehashes and reinserts each element, optimizing the table           
+      ///   @param oldReserve - the old table size                            
+      ///   @attention assumes reserve > oldReserve                           
+      template<CT::Container C>
+      void Rehash(this C& self, const Count<C> oldReserve) {
+         LglsAssumeDev(self.GetReserved() > oldReserve,
+            "New reserve is not larger than oldReserve");
+
+         using H = typename C::HandleMutType;
+         auto& count = self.GetCountInner();
+         auto handle = self.template As<H>();
+         const auto tableBeg = self.GetHashTableInner();
+         const auto tableEnd = tableBeg + oldReserve;
+
+         // First run: move elements closer to their new buckets        
+         auto table = tableBeg;
+         while (table != tableEnd) {
+            if (*table) {
+               // Rehash and check if hashes match                      
+               Count<C> const oldIndex = table - tableBeg;
+               Count<C> oldBucket = (oldReserve + oldIndex) - *table + 1;
+               Count<C> newBucket = self.GetOffset(handle);
+
+               if (oldBucket < oldReserve or oldBucket - oldReserve != newBucket) {
+                  // Move it only if it won't end up in same bucket     
+                  if constexpr (CT::TypeErased<C>) {
+                     // Move the element to a temporary swapper first   
+                     Any swapper {Piecewise, Abandon(handle)};
+                     // Destroy the old element                         
+                     handle.FreeInner();
+                     *table = 0;
+                     --count;
+                     // Reinsert at the new offset                      
+                     self.InsertInner<false>(newBucket, swapper.template As<H>());
+                  }
+                  else {
+                     // Move the element to a temporary swapper first   
+                     THandle<Deref<TypeOf<C>>> swapper {Abandon(handle)};
+                     // Destroy the old element                         
+                     handle.FreeInner();
+                     *table = 0;
+                     --count;
+                     // Reinsert at the new offset                      
+                     self.InsertInner<false>(newBucket, swapper);
+                  }
+               }
+            }
+
+            ++handle;
+            ++table;
+         }
+
+         // Second run: shift elements left whereever possible to fill  
+         // any gaps produced by the first run.                         
+         self.ShiftEntries();
+      }
+   
+      /// Shift elements left whereever possible                              
+      template<CT::Container C>
+      void ShiftEntries(this C& self) {
+         const auto reserved = self.GetReserved();
+         int moves_performed;
+         do {
+            moves_performed = 0;
+            const auto tableBeg = self.GetHashTableInner();
+            const auto tableEnd = tableBeg + reserved;
+
+            auto table = tableBeg;
+            while (table != tableEnd) {
+               if (*table > 1) {
+                  // Entry can be moved *table - 1 cells to the left    
+                  const Count<C> oldIndex = table - tableBeg;
+
+                  // Might loop around                                  
+                  Count<C> newIndex = reserved + oldIndex - *table + 1;
+                  if (newIndex >= reserved)
+                     newIndex -= reserved;
+
+                  TableType attempt = 1;
+                  while (tableBeg[newIndex] and attempt < *table) {
+                     // Might loop around                               
+                     ++newIndex;
+                     if (newIndex >= reserved)
+                        newIndex -= reserved;
+                     ++attempt;
+                  }
+
+                  if (not tableBeg[newIndex] and attempt < *table) {
+                     // Empty spot found, so move element there         
+                     using H   = typename C::HandleMutType;
+                     H handle  = self.template As<H>();
+                     auto from = handle + oldIndex;
+                     auto to   = handle + newIndex;
+                     to.EmplaceWithIntent(Abandon(from));
+                     from.FreeInner();
+
+                     tableBeg[newIndex] = attempt;
+                     *table = 0;
+                     ++moves_performed;
+                  }
+               }
+
+               ++table;
+            }
+         } while (moves_performed);
+      }
+
+      /// Inner insertion function                                            
+      ///   @tparam CHECK_FOR_MATCH - false if you guarantee key doesn't exist
+      ///   @param start - the starting index                                 
+      ///   @param swapper - a swapper to use while trying to insert          
+      ///   @return the offset at which pair was inserted, or the reserved    
+      ///      count, if element wasn't inserted (possible on CHECK_FOR_MATCH)
+      template<bool CHECK_FOR_MATCH, CT::Container C, CT::Handle H> 
+      auto InsertInner(this C& self, Count<C> const start, H& swapper)
+      -> Count<C> requires CT::NoIntent<H> {
+         self.BranchOut();
+
+         // Get the starting index based on the key hash                
+         const auto reserved = self.GetReserved();
+         const auto tableBeg = self.GetHashTableInner();
+         const auto tableEnd = tableBeg + reserved;
+
+         TableType attempts = 1;
+         auto insertedAt = reserved;
+         auto table = tableBeg + start;
+         auto handle = self.template As<H>();
+         while (*table) {
+            const auto index = table - tableBeg;
+            if constexpr (CHECK_FOR_MATCH) {
+               // Check if the value already exists                     
+               if (swapper == (handle + index))
+                  return index;
+            }
+
+            if (attempts > *table) {
+               // The value we're inserting is closer to bucket, so swap
+               (handle + index).Swap(swapper);
+               ::std::swap(attempts, *table);
+               if (insertedAt == reserved)
+                  insertedAt = index;
+            }
+
+            ++attempts;
+
+            // Wrap around and start from the beginning if we have to   
+            if (table < tableEnd - 1) ++table;
+            else table = tableBeg;
+         }
+
+         // If reached, then empty slot found, so put the value there   
+         const auto index = table - tableBeg;
+         (handle + index).EmplaceWithIntent(Abandon(swapper));
+         if (insertedAt == reserved)
+            insertedAt = index;
+
+         *table = attempts;
+         ++self.GetCountInner();
+         return insertedAt;
       }
    };
 }

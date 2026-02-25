@@ -56,7 +56,7 @@ namespace Langulus::Anyness::Component
          // changes raises a conflict, this function will throw.        
          bool deepened = false;
          Count<C> rhs_count = 0;
-         self.PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
+          self.PrepareForInsertion(LglsFwd(a1), rhs_count, deepened);
          (self.PrepareForInsertion(LglsFwd(an), rhs_count, deepened), ...);
          if (not rhs_count)
             return 0;
@@ -88,8 +88,11 @@ namespace Langulus::Anyness::Component
 
          // Insert the new.                                             
          Count<C> inserted = 0;
-         auto to = it.begin() + lhs_count;
-         auto insert = [&to](auto&& a) {
+         auto insert = [&](auto&& a) {
+            if (self.Contains(a))
+               return;
+
+            auto to = it.begin() + lhs_count;
             if constexpr (CT::Copied<IntentOf(a)>)
                to->EmplaceWithIntent(Refer(LglsFwd(a)));
             else
