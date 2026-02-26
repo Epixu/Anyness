@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID the stack/heap we're indexing                             
    ///   @tparam INDEX_CONSTRAINT constrain the type of allowed indices.      
    ///      Leave as 'void' to allow for all the usual integer types          
-   template<unsigned ID, class INDEX_CONSTRAINT>
+   template<Cid ID, class INDEX_CONSTRAINT>
    struct IndexedLinear : IndexedCommon<ID> {
       using CTTI_Contiguous  = Yes<>;
       using IteratorCategory = ::std::contiguous_iterator_tag;

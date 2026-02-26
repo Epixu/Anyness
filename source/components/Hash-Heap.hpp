@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
    ///      emergent when we have no ownership of that heap.                  
    ///   @tparam ID the heap ID                                               
    ///   @tparam H the hash type used                                         
-   template<unsigned ID = 0, class H = Hash>
+   template<Cid ID = 0, class H = Hash>
    struct HashHeap : HashEmergent<ID, H> {
       using HeapRequest = H;
 
@@ -43,8 +43,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-                                                         friend struct Conversion;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+                                                    friend struct Conversion;
 
       /// Get hash (inner) - will not recompute it                            
       constexpr auto GetHashInner(this auto&& self) noexcept -> H const {

@@ -50,10 +50,10 @@ namespace Langulus::Anyness
       using Base = Inner::TAnyBase<T>;
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
-      using Pick          = ConstAll<T> const&;
+      /*using Pick          = ConstAll<T> const&;
       using PickMut       = Tif<CT::Sparse<T>, THandle<T&>, T&>;
       using HandleType    = THandle<ConstAll<T> const&>;
-      using HandleMutType = THandle<T&>;
+      using HandleMutType = THandle<T&>;*/
       using DeepType      = Any;
 
       constexpr TAny() noexcept {

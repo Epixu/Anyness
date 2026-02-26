@@ -24,7 +24,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Manages deep ownership by searching for an allocation every time       
    ///   @tparam ID which heap/stack are we keeping track of?                 
-   template<unsigned ID>
+   template<Cid ID>
    struct OwnershipDeepEmergent {
       using CTTI_Component = Yes<>;
       
@@ -32,11 +32,11 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = 2000;
 
    protected:
-      template<unsigned, CT::Sparse> friend struct HeapReference;
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<unsigned> friend struct Removal;
-      template<unsigned> friend struct Emplacement;
-      template<unsigned, bool, bool> friend struct OwnershipEmergent;
+      template<Cid, CT::Sparse>                     friend struct HeapReference;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                                 friend struct Removal;
+      template<Cid>                                 friend struct Emplacement;
+      template<Cid, bool, bool>                     friend struct OwnershipEmergent;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;

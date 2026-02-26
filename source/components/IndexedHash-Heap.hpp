@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Component
    /// the hash table, and instead recalculates it on demand from the heap.   
    ///   @tparam ID the stack/heap we're indexing                             
    ///   @tparam HASH type of the hash                                        
-   template<unsigned ID, class HASH>
+   template<Cid ID, class HASH>
    struct IndexedHashHeap : IndexedCommon<ID> {
       using TableType        = uint8_t;
       using HeapRequest      = PerElement<TableType>;

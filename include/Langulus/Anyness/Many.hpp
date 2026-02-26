@@ -85,10 +85,10 @@ namespace Langulus::Anyness
       using CTTI_MapsTo   = Text;
 
       using Base          = Inner::ManyBase;
-      using Pick          = Handle;
+      /*using Pick          = Handle;
       using PickMut       = HandleMut;
       using HandleType    = Handle;
-      using HandleMutType = HandleMut;
+      using HandleMutType = HandleMut;*/
       using DeepType      = Many;
 
       using DefineState::Typed<>::IsTypeConstrained;

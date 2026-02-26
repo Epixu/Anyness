@@ -47,7 +47,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Implements ForEach iteration interface for containers                  
    ///   @tparam ID heap/stack we're iterating                                
-   template<unsigned ID>
+   template<Cid ID>
    struct IterationForEach {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

@@ -23,29 +23,28 @@ namespace Langulus::Anyness::Component
    /// Increases the container's bytesize.                                    
    ///   @tparam ID heap's unique identifier                                  
    ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
-   template<unsigned ID, CT::Sparse POINTER_TYPE>
+   template<Cid ID, CT::Sparse POINTER_TYPE>
    struct HeapReference {
       using CTTI_Component = Yes<>;
-      using StackRequest = POINTER_TYPE;
+      using StackRequest   = POINTER_TYPE;
 
-      static constexpr unsigned Id = ID;
-      static constexpr unsigned HeapProvider = ID;
+      static constexpr Cid  Id = ID;
+      static constexpr Cid  HeapProvider = ID;
       static constexpr int  ComponentPrecedence = -2000;
       static constexpr bool HeapCanBeNull = false;
 
    protected:
-
-      template<unsigned>             friend struct IterationOperators;
-      template<unsigned>             friend struct Removal;
-      template<unsigned>             friend struct IndexedCommon;
-      template<unsigned, class>      friend struct IndexedLinear;
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<unsigned>             friend struct Emplacement;
-      template<unsigned, bool>       friend struct Comparison;
-                                     friend struct Conversion;
-      template<auto COUNT>           friend struct CountStatic;
-      template<unsigned, bool, bool> friend struct OwnershipEmergent;
-      template<unsigned>             friend struct OwnershipDeepEmergent;
+      template<Cid>             friend struct IterationOperators;
+      template<Cid>             friend struct Removal;
+      template<Cid>             friend struct IndexedCommon;
+      template<Cid, class>      friend struct IndexedLinear;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+      template<Cid>             friend struct Emplacement;
+      template<Cid, bool>       friend struct Comparison;
+                                friend struct Conversion;
+      template<auto COUNT>      friend struct CountStatic;
+      template<Cid, bool, bool> friend struct OwnershipEmergent;
+      template<Cid>             friend struct OwnershipDeepEmergent;
       
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -109,12 +108,13 @@ namespace Langulus::Anyness::Component
       /// Get reference to first element as sparse or dense, depending on T.  
       /// This is a lower-level routine that does only sparseness checking.   
       /// No conversion or copying occurs, only pointer arithmetic.           
+      ///   @attention element might be uninitialized if C is discontiguous   
       ///   @attention no type-safety                                         
       ///   @attention assumes the container is typed                         
       ///   @attention assumes the container has valid heap                   
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the container, if statically typed                     
-      template<class AS = void, CT::Container C> /*requires CT::Contiguous<C>*/
+      template<class AS = void, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -182,33 +182,8 @@ namespace Langulus::Anyness::Component
       decltype(auto) As(this C&& self) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
-         if constexpr (CT::Handle<AS>) {
-            if constexpr (CT::TypeErased<AS>) {
-               // Type-erased handle                                    
-               if constexpr (CT::DeeplyOwned<AS>)
-                  return AS {self.Get(), self.GetEntries(), self.GetType()};
-               else if constexpr (CT::Owned<AS>)
-                  return AS {self.Get(), self.GetAllocation(), self.GetType()};
-               else
-                  return AS {self.Get(), self.GetType()};
-            }
-            else {
-               // Statically typed handle                               
-               using HT = Deref<TypeOf<AS>>;
-               if constexpr (CT::TypeErased<C>) {
-                  LglsAssert(self.template IsSame<HT>(), "Type mismatch",
-                     ": ", self.GetType(), " not same as ", MetaDataOf<HT>());
-               }
-               else static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
-
-               if constexpr (CT::DeeplyOwned<AS>)
-                  return AS {&self.Get(), self.GetEntries()};
-               else if constexpr (CT::Owned<AS>)
-                  return AS {&self.Get(), self.GetAllocation()};
-               else
-                  return AS {&self.Get()};
-            }
-         }
+         if constexpr (CT::Handle<AS>)
+            return self.template GetHandle<AS>();
          else {
             // Access directly or wrapped in a container                
             if constexpr (CT::TypeErased<C>) {
@@ -361,7 +336,48 @@ namespace Langulus::Anyness::Component
          return D {Absorb, Disown(self)};
       }
 
-   protected:
+   protected:      
+      /// Get first element as a handle. Very useful for internal use.        
+      ///   @attention element might be uninitialized if C is discontiguous   
+      ///   @tparam AS the handle type, or void to decide automatically       
+      ///   @return the handle to the first element                           
+      template<class AS = void, CT::Container C>
+      decltype(auto) GetHandle(this C&& self) {
+         static_assert(CT::Handle<AS> or CT::Void<AS>,
+            "Must be either a handle or void (which will use DecideHandle");
+         static_assert(not CT::Reference<AS>, "Strip references first");
+         static_assert(CT::Dense<AS>, "Must be dense");
+
+         using H = Tif<CT::Void<AS>, DecideHandle<C>, AS>;
+
+         if constexpr (CT::TypeErased<H>) {
+            // Type-erased handle                                       
+            if constexpr (CT::DeeplyOwned<H>)
+               return H {self.Get(), self.GetEntries(), self.GetType()};
+            else if constexpr (CT::Owned<H>)
+               return H {self.Get(), self.GetAllocation(), self.GetType()};
+            else
+               return H {self.Get(), self.GetType()};
+         }
+         else {
+            // Statically typed handle                                  
+            using HT = Deref<TypeOf<H>>;
+
+            if constexpr (CT::TypeErased<C>) {
+               LglsAssert(self.template IsSame<HT>(), "Type mismatch",
+                  ": ", self.GetType(), " not same as ", MetaDataOf<HT>());
+            }
+            else static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
+
+            if constexpr (CT::DeeplyOwned<H>)
+               return H {&self.Get(), self.GetEntries()};
+            else if constexpr (CT::Owned<H>)
+               return H {&self.Get(), self.GetAllocation()};
+            else
+               return H {&self.Get()};
+         }
+      }
+
       /// Default-initialization of this component                            
       void ConstructDefault(this auto& self) noexcept {
          self.SetHeapInner(nullptr);

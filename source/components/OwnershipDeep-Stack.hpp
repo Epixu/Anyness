@@ -15,14 +15,14 @@ namespace Langulus::Anyness::Component
    /// Reserves a part of the heap to keep track of sparse element's          
    /// allocations. The pointer to the array of allocations is kept locally.  
    ///   @tparam ID which heap/stack are we keeping track of                  
-   template<unsigned ID>
+   template<Cid ID>
    struct OwnershipDeepStack : OwnershipDeepEmergent<ID> {
       using StackRequest = EntryPtr;
       using HeapRequest  = PerElement<PerIndirection<AllocationPtr>>;
 
    protected:
-      template<unsigned> friend struct Emplacement;
-      template<unsigned> friend struct OwnershipDeepEmergent;
+      template<Cid> friend struct Emplacement;
+      template<Cid> friend struct OwnershipDeepEmergent;
 
       /// Get the entry array (inner)                                         
       template<unsigned SELECTOR = ID> requires (SELECTOR == ID)

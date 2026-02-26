@@ -16,13 +16,13 @@ namespace Langulus::Anyness::Component
    /// Increases the container's bytesize                                     
    ///   @tparam T type of the variable                                       
    ///   @tparam ID multiple variables are supported                          
-   template<CT::NotVoid T, unsigned ID>
+   template<CT::NotVoid T, Cid ID>
    struct Stack {
       using CTTI_Component = Yes<>;
       using StackRequest   = T;
       
-      static constexpr unsigned Id = ID;
-      static constexpr unsigned StackProvider = ID;
+      static constexpr Cid Id = ID;
+      static constexpr Cid StackProvider = ID;
       static constexpr int ComponentPrecedence = -2000;
       
    protected:

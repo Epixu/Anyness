@@ -22,7 +22,7 @@ namespace Langulus::Anyness::Component
    /// compact containers                                                     
    ///   @tparam ID the heap ID to keep count of                              
    ///   @tparam T the count type                                             
-   template<unsigned ID, class T>
+   template<Cid ID, class T>
    struct CountHeap {
       using CTTI_Component = Yes<>;
       using CountType   = T;
@@ -52,12 +52,12 @@ namespace Langulus::Anyness::Component
       T GetCountItemsDeep() const noexcept;
 
    protected:
-      template<unsigned>             friend struct Removal;
-      template<unsigned>             friend struct Emplacement;
-      template<unsigned, class>      friend struct Insertion;
-      template<unsigned, class>      friend struct IndexedLinear;
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-                                     friend struct Conversion;
+      template<Cid>             friend struct Removal;
+      template<Cid>             friend struct Emplacement;
+      template<Cid, class>      friend struct Insertion;
+      template<Cid, class>      friend struct IndexedLinear;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+                                friend struct Conversion;
 
       /// Get count (inner)                                                   
       constexpr auto& GetCountInner(this auto&& self) noexcept {

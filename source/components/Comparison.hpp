@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID heap/stack we're comparing                                
    ///   @tparam HASH whether to compare hashes before elements. This is      
    ///      mostly useful when hash is cachable, otherwise kind of pointless. 
-   template<unsigned ID, bool HASH>
+   template<Cid ID, bool HASH>
    struct Comparison {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

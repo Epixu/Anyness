@@ -15,7 +15,7 @@ namespace Langulus::Anyness::Component
    /// Implements removal for containers. This includes Trim, Clear, Reset    
    /// and other destruction-associated services.                             
    ///   @tparam ID heap we're removing from                                  
-   template<unsigned ID>
+   template<Cid ID>
    struct Removal {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

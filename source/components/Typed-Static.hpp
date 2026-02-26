@@ -25,7 +25,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam META the type of the definition                              
    ///   @tparam TYPE static type, can't be void                              
    ///   @tparam ID which heap/stack is typed?                                
-   template<class META, CT::NotVoid TYPE, unsigned ID>
+   template<class META, CT::NotVoid TYPE, Cid ID>
    struct TypedStatic {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;

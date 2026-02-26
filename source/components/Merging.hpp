@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID heap we're merging to                                     
    ///   @tparam AS type to serialize as before merging. Useful for byte      
    ///      and text containers. Use void to insert without serialization.    
-   template<unsigned ID, class AS>
+   template<Cid ID, class AS>
    struct Merging {
    private:
       template<CT::Container C>
@@ -56,42 +56,22 @@ namespace Langulus::Anyness::Component
          if (not rhs_count)
             return 0;
 
+         // Reallocate/branch out                                       
          const Count<C> lhs_count = self.GetCount();
          const Count<C> all_count = lhs_count + rhs_count;
-         auto it = IterateHandles(self);
+         self.BranchOut(all_count);
 
-         if (self.GetUses() > 1) {
-            // We have to branch out                                    
-            const C backup{Abandon{self}};
-            self.AllocateFresh(self.RequestHeap(all_count));
-            // Set count immediately, so that iterators are valid.      
-            self.SetCountInner(all_count);
-
-            // Reinsert the old items                                   
-            auto old = IterateHandles(backup).begin();
-            auto to = it.begin();
-            while (old) {
-               to->EmplaceWithIntent(Refer(*old));
-               ++old; ++to;
-            }
-         }
-         else {
-            self.AllocateMore(all_count);
-            // Set count immediately, so that iterators are valid.      
-            self.SetCountInner(all_count);
-         }
-
-         // Insert the new.                                             
+         // Insert the new elements if they're not contained yet        
          Count<C> inserted = 0;
          auto insert = [&](auto&& a) {
             if (self.Contains(DeintCast(a)))
                return;
 
-            auto to = it.begin() + lhs_count;
+            auto to = self.GetHandle() + lhs_count;
             if constexpr (CT::Copied<IntentOf(a)>)
-               to->EmplaceWithIntent(Refer(LglsFwd(a)));
+               to.EmplaceWithIntent(Refer(LglsFwd(a)));
             else
-               to->EmplaceWithIntent(FWDIntent(a));
+               to.EmplaceWithIntent(FWDIntent(a));
             ++to;
             ++inserted;
          };
@@ -106,6 +86,7 @@ namespace Langulus::Anyness::Component
             throw;
          }
 
+         self.SetCountInner(lhs_count + inserted);
          return inserted;
       }
 

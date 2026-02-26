@@ -16,15 +16,15 @@ namespace Langulus::Anyness::Component
    /// allocations. The pointer to the array of allocations is recomputed     
    /// every time, based on the heap.                                         
    ///   @tparam ID which heap/stack are we keeping track of?                 
-   template<unsigned ID>
+   template<Cid ID>
    struct OwnershipDeepHeap : OwnershipDeepEmergent<ID> {
       using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
 
    protected:
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<unsigned>             friend struct Removal;
-      template<unsigned>             friend struct Emplacement;
-      template<unsigned>             friend struct OwnershipDeepEmergent;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                                 friend struct Removal;
+      template<Cid>                                 friend struct Emplacement;
+      template<Cid>                                 friend struct OwnershipDeepEmergent;
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   

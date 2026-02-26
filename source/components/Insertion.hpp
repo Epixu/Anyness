@@ -79,7 +79,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID heap we're inserting to                                   
    ///   @tparam AS type to serialize as before inserting. Useful for byte    
    ///      and text containers. Use void to insert without serialization.    
-   template<unsigned ID, class AS>
+   template<Cid ID, class AS>
    struct Insertion {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;
@@ -140,38 +140,18 @@ namespace Langulus::Anyness::Component
          if (not rhs_count)
             return 0;
          
+         // Reallocate/branch out                                       
          const Count<C> lhs_count = self.GetCount();
          const Count<C> all_count = lhs_count + rhs_count;
-         auto it = IterateHandles(self);
-
-         if (self.GetUses() > 1) {
-            // We have to branch out                                    
-            const C backup {Abandon{self}};
-            self.AllocateFresh(self.RequestHeap(all_count));
-            // Set count immediately, so that iterators are valid.      
-            self.SetCountInner(all_count);
-
-            // Reinsert the old items                                   
-            auto old = IterateHandles(backup).begin();
-            auto to = it.begin();
-            while (old) {
-               to->EmplaceWithIntent(Refer(*old));
-               ++old; ++to;
-            }
-         }
-         else {
-            self.AllocateMore(all_count);
-            // Set count immediately, so that iterators are valid.      
-            self.SetCountInner(all_count);
-         }
+         self.BranchOut(all_count);
          
-         // Insert the new.                                             
-         auto to = it.begin() + lhs_count;
+         // Insert the new                                              
+         auto to = self.GetHandle() + lhs_count;
          auto insert = [&to](auto&& a) {
             if constexpr (CT::Copied<IntentOf(a)>)
-               to->EmplaceWithIntent(Refer(LglsFwd(a)));
+               to.EmplaceWithIntent(Refer(LglsFwd(a)));
             else
-               to->EmplaceWithIntent(FWDIntent(a));
+               to.EmplaceWithIntent(FWDIntent(a));
             ++to;
          };
 
@@ -181,11 +161,12 @@ namespace Langulus::Anyness::Component
          }
          catch (...) {
             // Account for throws inside constructors                   
-            const Count<C> inserted = to - it.begin();
+            const Count<C> inserted = to - self.GetHandle();
             self.SetCountInner(inserted);
             throw;
          }
 
+         self.SetCountInner(all_count);
          return rhs_count;
       }
 
@@ -364,37 +345,18 @@ namespace Langulus::Anyness::Component
          if (not rhs_count)
             return 0;
          
+         // Reallocate/branch out                                       
          const Count<C> lhs_count = self.GetCount();
          const Count<C> all_count = lhs_count + rhs_count;
-         auto it = IterateHandles(self);
-
-         if (self.GetUses() > 1) {
-            // We have to branch out                                    
-            const C backup {Abandon{self}};
-            self.AllocateFresh(self.RequestHeap(all_count));
-            // Set count immediately, so that iterators are valid.      
-            self.SetCountInner(all_count);
-
-            // Reinsert the old items.                                  
-            auto old = IterateHandles(backup).begin();
-            auto to = it.begin();
-            while (old) {
-               to->EmplaceWithIntent(Refer(*old));
-               ++old; ++to;
-            }            
-         }
-         else {
-            self.AllocateMore(all_count);
-            // Set count immediately, so that iterators are valid.      
-            self.SetCountInner(all_count);
-         }
+         self.BranchOut(all_count);
          
-         // Insert the new.                                             
-         auto to = it.begin() + lhs_count;
+         // Insert the new                                              
+         auto to = self.GetHandle() + lhs_count;
          auto insert = [&to](auto&& a) {
-            auto item = IterateHandles(DeintCast(a)).begin();
-            while (item) {
-               to->EmplaceWithIntent(IntentOf(a)::Nest(*item));
+            auto item = DeintCast(a).GetHandle();
+            auto const end = item + DeintCast(a).GetCount();
+            while (item.GetRaw() != end.GetRaw()) {
+               to.EmplaceWithIntent(IntentOf(a)::Nest(item));
                ++item; ++to;
             }
          };
@@ -405,11 +367,12 @@ namespace Langulus::Anyness::Component
          }
          catch (...) {
             // Account for throws inside constructors                   
-            const Count<C> inserted = to - it.begin();
+            const Count<C> inserted = to - self.GetHandle();
             self.SetCountInner(inserted);
             throw;
          }
 
+         self.SetCountInner(all_count);
          return rhs_count;
       }
 

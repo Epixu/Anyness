@@ -14,9 +14,9 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Adds prefix and suffix operators for increment and decrement.          
    /// These operators are fundamentally unsafe so the API is protected,      
-   /// used mainly internally in other components and/or iterators.           
+   /// used mainly by handles.                                                
    ///   @tparam ID heap/stack we're iterating                                
-   template<unsigned ID>
+   template<Cid ID>
    struct IterationOperators {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;
@@ -83,6 +83,22 @@ namespace Langulus::Anyness::Component
          C backup = self;
          ++self;
          return backup;
+      }
+      
+      /// Get the element difference between two iterators                    
+      ///   @attention very usafe - assumes rhs's type is same as self        
+      ///   @param rhs the other iterator                                     
+      ///   @return the difference                                            
+      template<CT::Container C, CT::Container RHS>
+      constexpr auto operator - (this C const& self, RHS const& rhs)
+      noexcept(not CT::TypeErased<C> and not LANGULUS(SAFE)) -> ::std::ptrdiff_t {
+         if constexpr (CT::TypeErased<C>) {
+            ::std::ptrdiff_t diff = self.template GetRawAs<uint8_t>()
+                                  -  rhs.template GetRawAs<uint8_t>();
+            LglsAssumeDev((diff % self.GetStride()) == 0, "Unaligned difference");
+            return diff / self.GetStride();
+         }
+         else return self.GetRaw() - rhs.GetRaw();
       }
       
       /// Offset first element to the left by the desired amount              

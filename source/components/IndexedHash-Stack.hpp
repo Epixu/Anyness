@@ -20,7 +20,7 @@ namespace Langulus::Anyness::Component
    /// and more cache-friendly access.                                        
    ///   @tparam ID the stack/heap we're indexing                             
    ///   @tparam HASH type of the hash                                        
-   template<unsigned ID, class HASH = Hash>
+   template<Cid ID, class HASH = Hash>
    struct IndexedHashStack : IndexedCommon<ID> {
       using TableType        = uint8_t;
       using HeapRequest      = PerElement<TableType>;

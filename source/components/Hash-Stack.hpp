@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0.  
    ///   @tparam ID the stack/heap source for data                            
    ///   @tparam H the hash type used                                         
-   template<unsigned ID = 0, class H = Hash>
+   template<Cid ID = 0, class H = Hash>
    struct HashStack : HashEmergent<ID, H> {
       using StackRequest = H;
       
@@ -35,8 +35,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-                                                         friend struct Conversion;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+                                                    friend struct Conversion;
 
       /// Get hash (inner) - will not recompute it                            
       constexpr auto& GetHashInner(this auto&& self) noexcept {

@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
    /// an indirection (and a division) in order to read/write it.             
    ///   @tparam ID ID of the heap to track capacity for                      
    ///   @tparam T type of the counter                                        
-   template<unsigned ID, class T>
+   template<Cid ID, class T>
    struct ReserveEmergent {
       using CTTI_Component = Yes<>;
       using ReserveType = T;

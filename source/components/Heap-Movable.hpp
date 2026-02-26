@@ -23,23 +23,23 @@ namespace Langulus::Anyness::Component
    ///      containers in order to control hash table growth on reallocation. 
    ///      If 0, the heap will grow according to reflected type properties.  
    ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
-   template<unsigned ID, unsigned INITIAL_SIZE, unsigned GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
+   template<Cid ID, unsigned INITIAL_SIZE, unsigned GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
    struct HeapMovable : HeapReference<ID, POINTER_TYPE> {
-      static constexpr unsigned Id = ID;
-      static constexpr unsigned HeapProvider = ID;
+      static constexpr Cid      Id = ID;
+      static constexpr Cid      HeapProvider = ID;
       static constexpr int      ComponentPrecedence = -2000;
       static constexpr bool     HeapCanBeNull = true;
       static constexpr unsigned InitialSize = INITIAL_SIZE;
       static constexpr unsigned GrowthFactor = GROWTH_FACTOR;
 
    protected:
-      template<unsigned, class>      friend struct ReserveEmergent;
-      template<unsigned>             friend struct IterationOperators;
-      template<unsigned, class>      friend struct Insertion;
-      template<unsigned, class>      friend struct Merging;
-      template<unsigned>             friend struct Emplacement;
-                                     friend struct Conversion;
-      template<unsigned, bool, bool> friend struct OwnershipEmergent;
+      template<Cid, class>      friend struct ReserveEmergent;
+      template<Cid>             friend struct IterationOperators;
+      template<Cid, class>      friend struct Insertion;
+      template<Cid, class>      friend struct Merging;
+      template<Cid>             friend struct Emplacement;
+                                friend struct Conversion;
+      template<Cid, bool, bool> friend struct OwnershipEmergent;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -143,7 +143,7 @@ namespace Langulus::Anyness::Component
                }
             }
             else {
-               decltype(auto) src = from.template As<DecideHandle<IT>>();
+               auto src = from.GetHandle();
                if constexpr (CT::Copied<I>)
                   self.EmplaceWithIntent(Refer(src));
                else

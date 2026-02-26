@@ -25,11 +25,11 @@ namespace Langulus::Anyness::Component
    ///      containers in order to control hash table growth on reallocation. 
    ///      If 0, the heap will grow according to reflected type properties.  
    ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
-   template<unsigned ID, unsigned INITIAL_SIZE, unsigned GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
+   template<Cid ID, unsigned INITIAL_SIZE, unsigned GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
    struct HeapImmovable {
       using CTTI_Component = Yes<>;
-      static constexpr unsigned Id = ID;
-      static constexpr unsigned HeapProvider = ID;
+      static constexpr Cid      Id = ID;
+      static constexpr Cid      HeapProvider = ID;
       static constexpr int      ComponentPrecedence = -2000;
       static constexpr bool     HeapCanBeNull = true;
       static constexpr unsigned InitialSize = INITIAL_SIZE;

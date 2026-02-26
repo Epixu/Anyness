@@ -16,7 +16,7 @@ namespace Langulus::Anyness::Component
    /// Will increase container's stack size.                                  
    ///   @tparam ID ID of the heap/stack to track capacity for                
    ///   @tparam T type of the counter                                        
-   template<unsigned ID, class T>
+   template<Cid ID, class T>
    struct ReserveStack {
    private:
       T mReserved;
@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
       constexpr T GetReserved() const noexcept { return mReserved; }
 
    protected:
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<unsigned>             friend struct Removal;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                                 friend struct Removal;
    };
 }

@@ -27,7 +27,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam TYPE optionally static type, use void for type-erasure       
    ///   @tparam CONSTRAIN override type-constraint                           
    ///   @tparam ID which heap/stack is typed?                                
-   template<class META, class TYPE, bool CONSTRAIN, unsigned ID>
+   template<class META, class TYPE, bool CONSTRAIN, Cid ID>
    struct TypedStack {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
@@ -41,11 +41,10 @@ namespace Langulus::Anyness::Component
       static constexpr bool Dense  = not TypeErased and CT::Dense<TYPE>;
 
    protected:
-      template<unsigned>             friend struct Removal;
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<unsigned>             friend struct Emplacement;
-      template<unsigned>             friend struct IndexedCommon;
-      //template<unsigned, class>      friend struct IndexedLinear;
+      template<Cid>                                 friend struct Removal;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                                 friend struct Emplacement;
+      template<Cid>                                 friend struct IndexedCommon;
 
       /// Reset the type of the container, unless it's type-constrained.      
       /// If this container isn't type-erased, this call is a no-op.          

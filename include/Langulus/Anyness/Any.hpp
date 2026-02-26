@@ -72,10 +72,10 @@ namespace Langulus::Anyness
       using DefineState::Typed<>::IsTypeConstrained;
       using DefineState::Typed<>::EnableTypeConstrained;
 
-      using Pick          = Handle;
+      /*using Pick          = Handle;
       using PickMut       = HandleMut;
       using HandleType    = Handle;
-      using HandleMutType = HandleMut;
+      using HandleMutType = HandleMut;*/
       using DeepType      = Any;
 
       constexpr Any() noexcept {

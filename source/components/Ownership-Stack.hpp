@@ -21,7 +21,7 @@ namespace Langulus::Anyness::Component
    ///      just a view, or in other cases where you want to carry an         
    ///      allocation pointer, but not necessarily reference it.             
    ///   @tparam DEEPREF whether to reference individual elements.            
-   template<unsigned ID, bool AUTO, bool DEEPREF>
+   template<Cid ID, bool AUTO, bool DEEPREF>
    struct OwnershipStack : OwnershipEmergent<ID, AUTO, DEEPREF> {
       using StackRequest = AllocationPtr;
 
@@ -57,10 +57,10 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<unsigned, CT::Sparse> friend struct HeapReference;
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<unsigned> friend struct Removal;
-      template<unsigned> friend struct Emplacement;
+      template<Cid, CT::Sparse>                     friend struct HeapReference;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                                 friend struct Removal;
+      template<Cid>                                 friend struct Emplacement;
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   

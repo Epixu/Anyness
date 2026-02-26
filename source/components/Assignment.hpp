@@ -77,7 +77,7 @@ namespace Langulus::Anyness::Component
    /// For discontiguous containers, like sets and maps, the assignment falls 
    /// back to insertion.                                                     
    ///   @tparam ID heap/stack we're assigning to                             
-   template<unsigned ID>
+   template<Cid ID>
    struct Assignment {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

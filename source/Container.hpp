@@ -78,50 +78,53 @@ namespace Langulus::Anyness
       using Type = T;
    };
 
+   /// A component ID                                                         
+   using Cid = unsigned;
+
    namespace Component
    {
       /// Components predeclared                                              
-      template<unsigned ID = 0> struct Assignment;
-      struct Charge;
-      template<unsigned ID = 0, bool HASH = true> struct Comparison;
-      struct Conversion; template<unsigned ID = 0, class T = size_t>
-      struct CountHeap; template<unsigned ID = 0, class T = size_t>
-      struct CountStack;
-      template<auto COUNT> struct CountStatic;
-      template<unsigned ID = 0> struct OwnershipDeepHeap;
-      template<unsigned ID = 0> struct OwnershipDeepStack;
-      struct Descriptor;
-      template<unsigned ID = 0> struct Emplacement;
-      struct Extrapolation;
-      template<unsigned ID, class H> struct HashEmergent;
-      template<unsigned ID, class H> struct HashHeap;
-      template<unsigned ID, class H> struct HashStack;
-      template<unsigned ID = 0, unsigned = 0, unsigned = 0, CT::Sparse POINTER_TYPE = void*> struct HeapImmovable;
-      template<unsigned ID = 0, unsigned = 0, unsigned = 0, CT::Sparse POINTER_TYPE = void*> struct HeapMovable;
-      template<unsigned ID = 0, CT::Sparse POINTER_TYPE = void*> struct HeapReference;
-      template<unsigned ID = 0, class HASH = Hash> struct IndexedHashHeap;
-      template<unsigned ID = 0, class HASH = Hash> struct IndexedHashStack;
-      template<unsigned ID = 0, class T = void> struct IndexedLinear;
-      template<unsigned ID = 0, class AS = void> struct Insertion;
-      template<unsigned ID = 0, class AS = void> struct InsertionOperators;
-      template<unsigned ID = 0, class AS = void> struct Merging;
-      template<unsigned ID = 0, class AS = void> struct MergingOperators;
-      struct Interpolation;
-      template<unsigned ID = 0> struct IterationForEach;
-      template<unsigned ID = 0> struct IterationOperators;
-      template<unsigned ID = 0> struct IterationRange;
-      template<unsigned ID = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipEmergent;
-      template<unsigned ID = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipStack;
-      template<unsigned ID = 0> struct Removal;
-      template<unsigned ID = 0, class T = size_t> struct ReserveEmergent;
-      template<unsigned ID = 0, class T = size_t> struct ReserveStack;
-      template<auto SIZE> struct ReserveStatic;
-      template<CT::NotVoid, unsigned ID = 0> struct Stack;
-      template<CT::State...> struct StateHeap;
-      template<CT::State...> struct StateStack;
-      template<CT::State...> struct StateStatic;
-      template<class META, class TYPE = void, bool CONSTRAIN = not ::std::is_void_v<TYPE>, unsigned ID = 0> struct TypedStack;
-      template<class META, CT::NotVoid TYPE,  unsigned ID = 0> struct TypedStatic;
+      template<Cid = 0>                   struct Assignment;
+                                          struct Charge;
+      template<Cid = 0, bool HASH = true> struct Comparison;
+                                          struct Conversion;
+      template<Cid = 0, class T = size_t> struct CountHeap;
+      template<Cid = 0, class T = size_t> struct CountStack;
+      template<auto COUNT>                struct CountStatic;
+      template<Cid = 0>                   struct OwnershipDeepHeap;
+      template<Cid = 0>                   struct OwnershipDeepStack;
+                                          struct Descriptor;
+      template<Cid = 0>                   struct Emplacement;
+                                          struct Extrapolation;
+      template<Cid, class H>              struct HashEmergent;
+      template<Cid, class H>              struct HashHeap;
+      template<Cid, class H>              struct HashStack;
+      template<Cid = 0, unsigned = 0, unsigned = 0, CT::Sparse POINTER_TYPE = void*> struct HeapImmovable;
+      template<Cid = 0, unsigned = 0, unsigned = 0, CT::Sparse POINTER_TYPE = void*> struct HeapMovable;
+      template<Cid = 0, CT::Sparse POINTER_TYPE = void*> struct HeapReference;
+      template<Cid = 0, class H  = Hash>  struct IndexedHashHeap;
+      template<Cid = 0, class H  = Hash>  struct IndexedHashStack;
+      template<Cid = 0, class T  = void>  struct IndexedLinear;
+      template<Cid = 0, class AS = void>  struct Insertion;
+      template<Cid = 0, class AS = void>  struct InsertionOperators;
+      template<Cid = 0, class AS = void>  struct Merging;
+      template<Cid = 0, class AS = void>  struct MergingOperators;
+                                          struct Interpolation;
+      template<Cid = 0>                   struct IterationForEach;
+      template<Cid = 0>                   struct IterationOperators;
+      template<Cid = 0>                   struct IterationRange;
+      template<Cid = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipEmergent;
+      template<Cid = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipStack;
+      template<Cid = 0>                   struct Removal;
+      template<Cid = 0, class T = size_t> struct ReserveEmergent;
+      template<Cid = 0, class T = size_t> struct ReserveStack;
+      template<auto SIZE>                 struct ReserveStatic;
+      template<CT::NotVoid, Cid = 0>      struct Stack;
+      template<CT::State...>              struct StateHeap;
+      template<CT::State...>              struct StateStack;
+      template<CT::State...>              struct StateStatic;
+      template<class META, class TYPE = void, bool CONSTRAIN = not ::std::is_void_v<TYPE>, Cid = 0> struct TypedStack;
+      template<class META, CT::NotVoid TYPE, Cid = 0> struct TypedStatic;
    }
    
    struct Handle;
@@ -370,23 +373,23 @@ namespace Langulus::Anyness
       }
 
    protected:
-      template<unsigned>                     friend struct Com::IterationOperators;
-      template<class, class, bool, unsigned> friend struct Com::TypedStack;
-      template<CT::NotVoid, unsigned>        friend struct Com::Stack;
-      template<unsigned, CT::Sparse>         friend struct Com::HeapReference;
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct Com::HeapMovable;
-      template<unsigned, bool, bool>         friend struct Com::OwnershipStack;
-      template<unsigned>                     friend struct Com::OwnershipDeepStack;
-      template<unsigned>                     friend struct Com::OwnershipDeepHeap;
-      template<unsigned, class>              friend struct Com::CountStack;
-      template<unsigned, class>              friend struct Com::HashStack;
-      template<unsigned, class>              friend struct Com::HashHeap;
-      template<unsigned, bool>               friend struct Com::Comparison;
-      template<unsigned>                     friend struct Com::Assignment;
-      template<CT::State...>                 friend struct Com::StateStack;
-      template<unsigned, class>              friend struct Com::ReserveEmergent;
-                                             friend struct Com::Conversion;
-      template<unsigned ID, class HASH>      friend struct Com::IndexedHashHeap;
+      template<Cid>                     friend struct Com::IterationOperators;
+      template<class, class, bool, Cid> friend struct Com::TypedStack;
+      template<CT::NotVoid, Cid>        friend struct Com::Stack;
+      template<Cid, CT::Sparse>         friend struct Com::HeapReference;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct Com::HeapMovable;
+      template<Cid, bool, bool>         friend struct Com::OwnershipStack;
+      template<Cid>                     friend struct Com::OwnershipDeepStack;
+      template<Cid>                     friend struct Com::OwnershipDeepHeap;
+      template<Cid, class>              friend struct Com::CountStack;
+      template<Cid, class>              friend struct Com::HashStack;
+      template<Cid, class>              friend struct Com::HashHeap;
+      template<Cid, bool>               friend struct Com::Comparison;
+      template<Cid>                     friend struct Com::Assignment;
+      template<CT::State...>            friend struct Com::StateStack;
+      template<Cid, class>              friend struct Com::ReserveEmergent;
+                                        friend struct Com::Conversion;
+      template<Cid, class HASH>         friend struct Com::IndexedHashHeap;
 
 
       // Here lies the stack. It is an optimized tuple that is filled   
@@ -453,7 +456,7 @@ namespace Langulus::Anyness
          return const_cast<ConstOrNot>(result);
       }*/
 
-      template<unsigned ID>
+      template<Cid ID>
       constexpr auto& AccessStackById(this auto&& self) noexcept {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { C::Id; }) {
@@ -467,7 +470,7 @@ namespace Langulus::Anyness
       }
 
       /// Access a heap provider with the given ID                            
-      template<unsigned ID>
+      template<Cid ID>
       constexpr auto& AccessHeapById(this auto&& self) noexcept {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { C::HeapProvider; }) {
@@ -481,7 +484,7 @@ namespace Langulus::Anyness
       }
 
       /// Access a component on the stack associated with an ID               
-      template<unsigned ID>
+      template<Cid ID>
       constexpr auto& AccessComById(this auto&& self) noexcept {
          return ComponentList::ForEachConstOr([&]<class C>{
             if constexpr (C::Id == ID)
@@ -689,13 +692,19 @@ namespace Langulus::Anyness
    namespace Inner
    {
       /// Inner function that picks the best possible handle type, depending  
-      /// on a container's constness and type-erasedness.                     
+      /// on a container's constness and type-erasedness, as well as member   
+      /// types HandleType and HandleMutType. Guarantees to always result in  
+      /// a handle.                                                           
       template<CT::Container C> 
       consteval auto DecideHandleType() {
          static_assert(not CT::Sheddable<C>, "Strip sheddables first");
          static_assert(not CT::Reference<C>, "Strip references first");
 
-         if constexpr (CT::TypeErased<C>) {
+         if constexpr (requires {typename C::HandleType; typename C::HandleMutType; }) {
+            // Always prioritize custom handle types if defined         
+            return Types<Tmut<C, typename C::HandleMutType, typename C::HandleType>> {};
+         }
+         else if constexpr (CT::TypeErased<C>) {
             // Type-erased handle                                       
             if constexpr (CT::Owned<C>)
                return Types<Tmut<C, HandleMut,         Handle>> {};
@@ -704,15 +713,48 @@ namespace Langulus::Anyness
          }
          else {
             // Statically-typed handle                                  
-            using T = TypeOf<C>;
+            using T     = TypeOf<C>;
+            using Inner = Tmut<C, T&, ConstAll<T&>>;
             if constexpr (CT::Owned<C>)
-               return Types<THandle        <Tmut<C, T&, ConstAll<T&>>>> {};
+               return Types<THandle        <Inner>> {};
             else
-               return Types<THandleDisowned<Tmut<C, T&, ConstAll<T&>>>> {};
+               return Types<THandleDisowned<Inner>> {};
+         }
+      }
+
+      /// Inner function that picks the best possible handle or reference     
+      /// type, depending on a container's constness and type-erasedness, as  
+      /// well as member types HandleType and HandleMutType. Unlike           
+      /// DecideHandleType, this one will prefer to use references whenever   
+      /// possible.                                                           
+      template<CT::Container C> 
+      consteval auto DecidePickType() {
+         static_assert(not CT::Sheddable<C>, "Strip sheddables first");
+         static_assert(not CT::Reference<C>, "Strip references first");
+
+         if constexpr (requires {typename C::Pick; typename C::PickMut; }) {
+            // Always prioritize custom pick types if defined           
+            return Types<Tmut<C, typename C::PickMut, typename C::Pick>> {};
+         }
+         else if constexpr (CT::TypeErased<C>) {
+            // Type-erased containers always result in handle picks     
+            return DecideHandleType<C>();
+         }
+         else {
+            // Statically-typed container - always prefer a reference,  
+            // unless we're referencing an owned pointer                
+            using T = TypeOf<C>;
+            if constexpr (CT::Owned<C> and CT::Sparse<T> and CT::Mutable<C>)
+               return DecideHandleType<C>();
+            else
+               return Types<ConstAll<T&>> {};
          }
       }
    }
 
    template<CT::Container C>
    using DecideHandle = typename decltype(Inner::DecideHandleType<Deref<C>>())::First;
+
+   template<CT::Container C>
+   using DecidePick = typename decltype(Inner::DecidePickType<Deref<C>>())::First;
 }

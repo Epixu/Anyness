@@ -46,18 +46,18 @@ namespace Langulus::Anyness::Component
    /// Unlike insertion, emplacement reuses the same memory space and         
    /// guarantees that nothing moves around.                                  
    ///   @tparam ID heap we're emplacing to                                   
-   template<unsigned ID>
+   template<Cid ID>
    struct Emplacement {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;
 
    protected:
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<unsigned, class> friend struct Insertion;
-      template<unsigned, class> friend struct Merging;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+      template<Cid, class>                          friend struct Insertion;
+      template<Cid, class>                          friend struct Merging;
       
-      template<CT::Container C>
-      using PickMut = typename Deref<C>::PickMut;
+      //template<CT::Container C>
+      //using PickMut = typename Deref<C>::PickMut;
 
       /// Clone the 'rhs'.                                                    
       /// Assumes all indirections are ordinary pointers, and is thus faster. 
@@ -709,8 +709,8 @@ namespace Langulus::Anyness::Component
       ///   @return a reference or handle to the newly created element        
       template<class E = void, CT::ContainsMany C, class...A>
       auto EmplaceAt(this C& self, CT::Index auto&& at, A&&...arguments)
-      -> PickMut<C> requires CT::IndexedLinearly<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
-         PickMut<C> pick = self.template AsAt<PickMut<C>>(LglsFwd(at));
+      -> DecidePick<C> requires CT::IndexedLinearly<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
+         DecidePick<C> pick = self.template AsAt<DecidePick<C>>(LglsFwd(at));
          pick.Emplace(LglsFwd(arguments)...);
          return pick;
       }
@@ -719,12 +719,11 @@ namespace Langulus::Anyness::Component
       /// Any overwritten element will be dereferenced/destroyed first.       
       ///   @tparam E Sets the type of the container if empty. Ignored if     
       ///      container is statically-typed.                                 
-      ///   @param self Deduced this                                          
       ///   @param arguments Constructor arguments                            
       ///   @return a reference or handle to the newly created element        
       template<class E = void, CT::Container C, class...A>
       auto Emplace(this C& self, A&&...arguments)
-      -> PickMut<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
+      -> DecidePick<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
          auto a = self.GetAllocation();
          if (not a) {
             // No ownership, just fresh-allocate                        
@@ -819,7 +818,7 @@ namespace Langulus::Anyness::Component
          }
 
          // Return a reference/handle to the newly emplaced element     
-         return self.template As<Deref<PickMut<C>>>();
+         return self.template As<Deref<DecidePick<C>>>();
       }
    };
 }

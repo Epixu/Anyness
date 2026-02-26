@@ -52,12 +52,12 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<unsigned>             friend struct Removal;
-      template<unsigned>             friend struct Emplacement;
-      template<unsigned, class>      friend struct Insertion;
-      template<unsigned, class>      friend struct IndexedLinear;
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-                                     friend struct Conversion;
+      template<Cid>             friend struct Removal;
+      template<Cid>             friend struct Emplacement;
+      template<Cid, class>      friend struct Insertion;
+      template<Cid, class>      friend struct IndexedLinear;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+                                friend struct Conversion;
 
       /// Get count (inner)                                                   
       template<CT::Container C>

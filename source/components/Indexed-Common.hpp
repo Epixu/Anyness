@@ -17,7 +17,7 @@ namespace Langulus::Anyness::Component
    /// Provides a common element access interface.                            
    /// Needs to be specialized, relying on a custom SimplifyIndex method.     
    ///   @tparam ID the stack/heap we're indexing                             
-   template<unsigned ID>
+   template<Cid ID>
    struct IndexedCommon {
       using CTTI_Component = Yes<>;
 
@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       decltype(auto) operator[] (this C&& self, CT::Index auto&& idx) assumptious {
          if constexpr (CT::TypeErased<C>)
-            return self.template AsAt<DecideHandle<C>>(LglsFwd(idx));
+            return self.template AsAt<DecidePick<C>>(LglsFwd(idx));
          else
             return *self.GetAt(LglsFwd(idx));
       }

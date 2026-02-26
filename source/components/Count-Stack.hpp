@@ -19,12 +19,12 @@ namespace Langulus::Anyness::Component
    /// indirections, making count lookup faster and more cache-friendly       
    ///   @tparam ID the heap/stack ID to keep count of                        
    ///   @tparam T the count type                                             
-   template<unsigned ID, class T>
+   template<Cid ID, class T>
    struct CountStack {
       using CTTI_Component = Yes<>;
-      using CountType = T;
-      using IndexType = Index::At<T>;
-      using StackRequest = T;
+      using CountType      = T;
+      using IndexType      = Index::At<T>;
+      using StackRequest   = T;
 
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
@@ -48,13 +48,13 @@ namespace Langulus::Anyness::Component
       T GetCountItemsDeep() const noexcept;
 
    protected:
-      template<unsigned>             friend struct Removal;
-      template<unsigned>             friend struct Emplacement;
-      template<unsigned, class>      friend struct Insertion;
-      template<unsigned, class>      friend struct Merging;
-      template<unsigned, class>      friend struct IndexedLinear;
-      template<unsigned, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-                                     friend struct Conversion;
+      template<Cid>             friend struct Removal;
+      template<Cid>             friend struct Emplacement;
+      template<Cid, class>      friend struct Insertion;
+      template<Cid, class>      friend struct Merging;
+      template<Cid, class>      friend struct IndexedLinear;
+      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+                                friend struct Conversion;
 
       /// Get count (inner)                                                   
       constexpr auto& GetCountInner(this auto&& self) noexcept {
