@@ -47,12 +47,6 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
-      template<CT::Container C>
-      using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
-
-      template<CT::Container C>
-      using Deep = typename Deref<C>::DeepType;
-
       using Base = HeapReference<ID, POINTER_TYPE>;
       using typename Base::Request;
       
@@ -342,7 +336,8 @@ namespace Langulus::Anyness::Component
          if_available(self.SetReserveInner(request.mReserved));
       }
 
-      /// Remap all heap requests onto the newly reserved count               
+      /// Remap all PerElement heap requests onto the new reserve             
+      ///   @param newReserved the newly reserved number of elements          
       template<CT::Container C>
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
          const auto reserved = self.GetReserved();

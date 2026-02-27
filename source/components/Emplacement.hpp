@@ -55,9 +55,6 @@ namespace Langulus::Anyness::Component
       template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
       template<Cid, class>                          friend struct Insertion;
       template<Cid, class>                          friend struct Merging;
-      
-      //template<CT::Container C>
-      //using PickMut = typename Deref<C>::PickMut;
 
       /// Clone the 'rhs'.                                                    
       /// Assumes all indirections are ordinary pointers, and is thus faster. 

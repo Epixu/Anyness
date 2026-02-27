@@ -51,14 +51,12 @@ namespace Langulus::Anyness::Component
 
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
-
-      //template<CT::Container C>
-      //using Deep = typename Deref<C>::DeepType;
       
       /// Get the heap pointer (inner)                                        
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
          return self.template AccessStack<HeapReference>();
       }
+
       /// Get the heap pointer as a void* (inner)                             
       constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
          return static_cast<void*>(const_cast<DecvqAll<POINTER_TYPE>>(self.GetHeapInner()));
@@ -226,19 +224,6 @@ namespace Langulus::Anyness::Component
             }
          }
       }
-
-      /// A safe way to get the first deep entry.                             
-      /// Available only if container has DeepType defined.                   
-      ///   @attention ignores sparseness                                     
-      ///   @return a pointer to the first deep item, or nullptr if not deep  
-      /*template<class AS = void, CT::Container C> requires CT::Contiguous<C>
-      auto GetDeep(this C&& self) noexcept
-      requires requires { typename Deref<C>::DeepType; } {
-         using D = Tif<CT::Void<AS>, LglsMutIf(C, typename Deref<C>::DeepType*), LglsMutIf(C, AS*)>;
-         if (self.IsEmpty() or not self.IsDeep())
-            return D {nullptr};
-         return self.template As<D>();
-      }*/
 
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   

@@ -29,15 +29,5 @@ namespace Langulus::Anyness::Component
 
    protected:
       friend struct IndexedCommon<ID>;
-
-   /*protected:
-      template<CT::Container C>
-      using Count = typename Deref<C>::CountType;
-
-      template<CT::Container C>
-      using Key = Tmut<C, typename Deref<C>::KeyMut, typename Deref<C>::Key>;
-
-      template<CT::Container C>
-      using Val = Tmut<C, typename Deref<C>::ValMut, typename Deref<C>::Val>;*/
    };
 }

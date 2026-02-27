@@ -47,18 +47,16 @@ namespace Langulus::Anyness::Component
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
       /*template<unsigned, class>      friend struct Insertion;
-      template<unsigned, CT::Sparse> friend struct HeapMovable;
-
-      template<CT::Container C>
-      using Deep = typename Deref<C>::DeepType;
-      template<CT::Container C>
-      using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>;
-      template<CT::Container C>
-      using PickRange = Tmut<C, typename Deref<C>::PickRangeMut, typename Deref<C>::PickRange>;*/
+      template<unsigned, CT::Sparse> friend struct HeapMovable;*/
       
       /// Get the start of the hash table (inner)                             
       constexpr auto* GetHashTableInner(this auto&& self) noexcept {
          return self.template AccessHeap<IndexedHashHeap>();
+      }
+
+      /// This method is called upon allocation to nullify table              
+      constexpr void ConstructHeapRequest(this auto& self) noexcept {
+         memset(self.GetHashTableInner(), 0, self.GetReserved());
       }
 
       /// Browse table, converting contiguous index into table index.         

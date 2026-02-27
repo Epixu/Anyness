@@ -37,17 +37,6 @@ namespace Langulus::Anyness::Component
 
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
-
-
-      /*template<unsigned, class>      friend struct Insertion;
-      template<unsigned, CT::Sparse> friend struct HeapMovable;
-
-      template<CT::Container C>
-      static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
-      template<CT::Container C>
-      using Deep = typename Deref<C>::DeepType;
-      template<CT::Container C>
-      using Pick = Tmut<C, typename Deref<C>::PickMut, typename Deref<C>::Pick>; */
       
       /// Convert an index to an offset.                                      
       /// Special indices will be contextualized.                             

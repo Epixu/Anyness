@@ -501,6 +501,14 @@ namespace Langulus::Anyness
          });
       }
       
+      /// Explicitly call ConstructHeapRequest in all of the components.      
+      /// Used to initialize heap requests upon heap allocation.              
+      constexpr void ConstructHeapDefault(this auto& self) noexcept {
+         ComponentList::ForEach([&]<class C>{
+            if_available(self.C::ConstructHeapRequest());
+         });
+      }
+      
       /// Call ConstructFrom whenever possible, fallback to                   
       /// ConstructDefault otherwise                                          
       template<CT::Container SELF, CT::Container FROM>
