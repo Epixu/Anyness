@@ -64,7 +64,9 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
 namespace Langulus::Anyness
 {
-   /// Used for requesting dynamic data from the heap in container components 
+   /// Used for requesting dynamic data from the heap in container components.
+   /// @important Requests with this modifier are positioned after elements   
+   ///   in order to avoid moving elements as header gets resized.            
    template<class T>
    struct PerElement {
       static constexpr bool AllocatedPerElement = true;
@@ -72,6 +74,8 @@ namespace Langulus::Anyness
    };
 
    /// Used for requesting dynamic data from the heap in container components 
+   /// @important Requests with this modifier are positioned after elements   
+   ///   in order to avoid moving elements as header gets resized.            
    template<class T>
    struct PerIndirection {
       static constexpr bool AllocatedPerIndirection = true;
@@ -216,11 +220,38 @@ namespace Langulus::Anyness
       
       /// Go through all components and accumulate their heap requests into   
       /// a byte amount, used for header size when allocating                 
-      ///   @param count heap requests can depend on the amount of elements   
-      ///   @param indirects heap requests can depend on the indirections     
       ///   @return the size of the heap header in bytes                      
       template<class C1, class...CN>
-      constexpr size_t DefineHeap(
+      consteval size_t DefineHeapHeader() {
+         if constexpr (requires { typename C1::HeapRequest; }) {
+            size_t offset = 0;
+            using R = typename C1::HeapRequest;
+            if constexpr (requires { R::AllocatedPerIndirection; })
+               ;
+            else if constexpr (requires { R::AllocatedPerElement; })
+               ;
+            else offset += sizeof(R);
+            
+            if constexpr (sizeof...(CN))
+               return offset + DefineHeapHeader<CN...>();
+            else
+               return offset;
+         }
+         else {
+            if constexpr (sizeof...(CN))
+               return DefineHeapHeader<CN...>();
+            else
+               return 0;
+         }
+      }      
+      
+      /// Go through all components and accumulate their heap requests into   
+      /// a byte amount, used for footer size when allocating                 
+      ///   @param count footer can depend on the amount of elements          
+      ///   @param indirects footer can depend on the indirections            
+      ///   @return the size of the heap footer in bytes                      
+      template<class C1, class...CN>
+      constexpr size_t DefineHeapFooter(
          [[maybe_unused]] const size_t count,
          [[maybe_unused]] const size_t indirects
       ) noexcept {
@@ -239,18 +270,50 @@ namespace Langulus::Anyness
                else
                   offset += sizeof(typename R::Type) * count;
             }
-            else offset += sizeof(R);
             
             if constexpr (sizeof...(CN))
-               return offset + DefineHeap<CN...>(count, indirects);
+               return offset + DefineHeapFooter<CN...>(count, indirects);
             else
                return offset;
          }
          else {
             if constexpr (sizeof...(CN))
-               return DefineHeap<CN...>(count, indirects);
+               return DefineHeapFooter<CN...>(count, indirects);
             else
                return 0;
+         }
+      }
+      
+      /// Go through all components until PICK is reached, and accumulate     
+      /// the offset up to that point, to get the byte offset in the header   
+      ///   @return the header offset, where PICK's data resides              
+      template<class PICK, class C1, class...CN>
+      consteval size_t GetHeapHeaderOffset() {
+         static_assert(requires { typename PICK::HeapRequest; },
+            "Component data is not on the heap");
+         static_assert(
+                not requires { PICK::HeapRequest::AllocatedPerIndirection; }
+            and not requires { PICK::HeapRequest::AllocatedPerElement; },
+            "Component data doesn't reside in header, use GetHeapFooterOffset instead"
+         );
+          
+         if constexpr (CT::DerivedFrom<C1, PICK>)
+            return 0;
+         else {
+            size_t offset = 0;
+            if constexpr (requires { typename C1::HeapRequest; }) {
+               using R = typename C1::HeapRequest;
+               if constexpr (requires { R::AllocatedPerIndirection; })
+                  ;
+               else if constexpr (requires { R::AllocatedPerElement; })
+                  ;
+               else offset += sizeof(R);
+            }
+         
+            if constexpr (sizeof...(CN))
+               return offset + GetHeapHeaderOffset<PICK, CN...>();
+            else
+               return offset;
          }
       }
       
@@ -260,13 +323,18 @@ namespace Langulus::Anyness
       ///   @param indirects heap requests can depend on the indirections     
       ///   @return the heap byte offset, where PICK's data resides           
       template<class PICK, class C1, class...CN>
-      constexpr size_t GetHeapOffset(
+      constexpr size_t GetHeapFooterOffset(
          [[maybe_unused]] const size_t count,
          [[maybe_unused]] const size_t indirects
       ) noexcept {
          static_assert(requires { typename PICK::HeapRequest; },
             "Component data is not on the heap");
-          
+         static_assert(
+               requires { PICK::HeapRequest::AllocatedPerIndirection; }
+            or requires { PICK::HeapRequest::AllocatedPerElement; },
+            "Component data doesn't reside in footer, use GetHeapHeaderOffset instead"
+         );
+
          if constexpr (CT::DerivedFrom<C1, PICK>)
             return 0;
          else {
@@ -285,11 +353,10 @@ namespace Langulus::Anyness
                   else
                      offset += sizeof(typename R::Type) * count;
                }
-               else offset += sizeof(R);
             }
          
             if constexpr (sizeof...(CN))
-               return offset + GetHeapOffset<PICK, CN...>(count, indirects);
+               return offset + GetHeapFooterOffset<PICK, CN...>(count, indirects);
             else
                return offset;
          }
@@ -397,7 +464,7 @@ namespace Langulus::Anyness
       typename decltype(Inner::DefineStack<COMPONENTS...>())::TupleOptimized mStack;
 
       /// Access a variable on the stack associated with a component          
-      ///   @attention always returns a reference                             
+      ///   @attention always returns a reference to valid memory             
       template<class COM, class SELF>
       constexpr auto& AccessStack(this SELF&& self) noexcept {
          constexpr size_t IDX = Inner::GetStackOffset<COM, COMPONENTS...>();
@@ -407,13 +474,24 @@ namespace Langulus::Anyness
       }
 
       /// Access a variable on the heap associated with a component           
-      ///   @attention always returns a pointer which may be null             
+      ///   @attention always returns a pointer which may be null if container
+      ///      hasn't been heap-allocated yet. This is the price you pay for  
+      ///      keeping stuff on the heap - constant safety checks.            
       template<CT::Component COM, CT::Container SELF>
       constexpr auto* AccessHeap(this SELF&& self) noexcept {
-         size_t offset = Inner::GetHeapOffset<COM, COMPONENTS...>(
-            static_cast<size_t>(self.GetReserved()),
-            static_cast<size_t>(self.GetIndirections())
-         );
+         size_t offset;         
+         if constexpr (
+               requires { COM::HeapRequest::AllocatedPerIndirection; }
+            or requires { COM::HeapRequest::AllocatedPerElement; }
+         ) {
+            offset = Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
+               static_cast<size_t>(self.GetReserved()),
+               static_cast<size_t>(self.GetIndirections())
+            );
+         }
+         else {
+            offset = Inner::GetHeapHeaderOffset<COM, COMPONENTS...>();
+         }
 
          auto heap = self.GetAllocationInner()->GetBlockStart() + offset;
          using R = typename COM::HeapRequest;
@@ -444,8 +522,13 @@ namespace Langulus::Anyness
       }
       
       /// Calculate the heap header size                                      
-      static constexpr size_t GetHeapHeaderSize(size_t count, size_t indirects) noexcept {
-         return Inner::DefineHeap<COMPONENTS...>(count, indirects);
+      static consteval size_t GetHeapHeaderSize() {
+         return Inner::DefineHeapHeader<COMPONENTS...>();
+      }
+
+      /// Calculate the heap footer size                                      
+      static constexpr size_t GetHeapFooterSize(size_t count, size_t indirects) noexcept {
+         return Inner::DefineHeapFooter<COMPONENTS...>(count, indirects);
       }
 
       /// Access a variable on the stack associated with an ID                

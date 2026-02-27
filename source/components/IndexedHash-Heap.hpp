@@ -168,12 +168,15 @@ namespace Langulus::Anyness::Component
          else static_assert(false, "Unsupported index type");
       }
 
-      /// Get the offset, based on the provided value's hash                  
+      /// Get the offset, based on the provided value's hash. The offset is   
+      /// truncated down to the size of the biggest cascading table.          
+      /// You have to disable the most significant bit for each other table.  
       ///   @param value - the value to hash                                  
       ///   @return the bucket index                                          
       template<CT::Container C, CT::NoIntent T>
       auto GetOffset(this C const& self, T const& value) noexcept {
-         return HashOf(value).value;   //todo & mask.value;
+         const auto mask = ::std::bit_floor(self.GetReserved()) - 1u;
+         return HashOf(value).value & mask;
       }
 
       /// Rehashes and reinserts each element, optimizing the table           
