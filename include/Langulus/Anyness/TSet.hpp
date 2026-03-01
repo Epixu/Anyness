@@ -54,10 +54,6 @@ namespace Langulus::Anyness
       using CTTI_MapsTo    = Text;
 
       using Base           = Inner::TSetBase<T, SORT>;
-      /*using Pick           = ConstAll<T&>;
-      using PickMut        = Tif<CT::Sparse<T>, THandle<T&>, T&>;
-      using HandleType     = THandle<ConstAll<T&>>;
-      using HandleMutType  = THandle<T&>;*/
       using DeepType       = Any;
 
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;

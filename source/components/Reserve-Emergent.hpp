@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// A dynamic reserve derived from the allocation size directly.           
    /// As such, it will not increase container's stack size, but will require 
-   /// an indirection (and a division) in order to read/write it.             
+   /// an indirection (and a division) in order to read it.                   
    ///   @tparam ID ID of the heap to track capacity for                      
    ///   @tparam T type of the counter                                        
    template<Cid ID, class T>
@@ -36,18 +36,11 @@ namespace Langulus::Anyness::Component
                return 1;
             }
             else {
-               const size_t header = self.GetHeapHeaderSize(
-                  self.GetCount(), self.GetIndirections());
-
-               if constexpr (CT::TypeErased<C>) {
-                  const auto type = self.GetType();
-                  LglsAssumeDev(type, "Requesting allocation size for an untyped container");
-                  return (al->GetSize() - Align(header, type.GetAlignment())) / type.GetSize();
-               }
-               else {
-                  using type = TypeOf<C>;
-                  return (al->GetSize() - Align(header, alignof(type))) / sizeof(type);
-               }
+               const size_t header = self.GetHeapHeaderSize();
+               if constexpr (CT::TypeErased<C>)
+                  return (al->GetSize() - header) / self.GetStride();
+               else
+                  return (al->GetSize() - header) / sizeof(TypeOf<C>);
             }
          }
          else if constexpr (CT::ContainsOne<C>)

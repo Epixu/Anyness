@@ -291,7 +291,7 @@ namespace Langulus::Anyness::Component
                // Memory didn't move, but reserved count changed so all 
                // HeapRequests which are PerElement need to be moved    
                // around.                                               
-               self.RemapHeapRequests(request.mReserved);
+               if_available(self.RemapHeapRequests(request.mReserved));
                previous.SetAllocationInner(nullptr);
             }
 
@@ -325,7 +325,9 @@ namespace Langulus::Anyness::Component
          if (request.mReserved == self.GetReserved())
             return;
 
-         self.RemapHeapRequests(request.mReserved);
+         // Memory doesn't move, but reserved count changed so all      
+         // HeapRequests which are PerElement need to be moved around.  
+         if_available(self.RemapHeapRequests(request.mReserved));
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             self.SetAllocationInner(Allocator::Reallocate(self.GetType(), request.mTotalBytes, al));
@@ -336,104 +338,77 @@ namespace Langulus::Anyness::Component
          if_available(self.SetReserveInner(request.mReserved));
       }
 
-      /// Remap all PerElement heap requests onto the new reserve             
+      /// Remap footer requests onto the new reserve                          
       ///   @param newReserved the newly reserved number of elements          
-      template<CT::Container C>
+      template<CT::Container C> requires (C::CountHeapFooterRequests() > 0)
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
+         const auto size     = self.GetStride();
          const auto reserved = self.GetReserved();
          const auto indirect = self.GetIndirections();
-         if (self.GetHeapHeaderSize(reserved, indirect) == 0)
-            return;
 
-         //TODO when newReserved is larger than reserved stuff has to move to the right,
-         // so it must be done in reverse so that we don't destroy any data. otherwise stuff moves to the left, and all that from/to calculations are not necessary
-         size_t from[C::ComponentList::Count];
-         size_t to  [C::ComponentList::Count];
+         size_t from[C::CountHeapFooterRequests() + 1];
+         size_t to  [C::CountHeapFooterRequests() + 1];
          size_t idx = 1;
-         bool continuous = false;
          from[0] = to[0] = 0;
          
          C::ComponentList::ForEach([&]<class COM>{
             if constexpr (requires { typename COM::HeapRequest; }) {
                using R = typename COM::HeapRequest;
+
                if constexpr (requires { R::AllocatedPerIndirection; }) {
                   if constexpr (requires { R::Type::AllocatedPerElement; }) {
                      const size_t shift = sizeof(typename R::Type::Type) * indirect;
-                     if (continuous) {
-                        from[idx] += shift * reserved;
-                        to  [idx] += shift * newReserved;
-                     }
-                     else {
-                        from[idx] = from[idx-1] + shift * reserved;
-                        to  [idx] = to  [idx-1] + shift * newReserved;
-                     }
+                     from[idx] = from[idx-1] + shift * reserved;
+                     to  [idx] = to  [idx-1] + shift * newReserved;
                   }
                   else {
                      const size_t shift = sizeof(typename R::Type) * indirect;
-                     if (continuous) {
-                        from[idx] += shift;
-                        to  [idx] += shift;
-                     }
-                     else {
-                        from[idx] = from[idx-1] + shift;
-                        to  [idx] = to  [idx-1] + shift;
-                     }
+                     from[idx] = from[idx-1] + shift;
+                     to  [idx] = to  [idx-1] + shift;
                   }
                   
-                  // Move index only when a gap forms, so that we       
-                  // minimize 'memmove' calls                           
                   ++idx;
-                  continuous = false;
                }
                else if constexpr (requires { R::AllocatedPerElement; }) {
-                  if constexpr (requires { R::Type::AllocatedPerIndirection; }) {
-                     const size_t shift = sizeof(typename R::Type::Type) * indirect;
-                     if (continuous) {
-                        from[idx] += shift * reserved;
-                        to  [idx] += shift * newReserved;
-                     }
-                     else {
-                        from[idx] = from[idx-1] + shift * reserved;
-                        to  [idx] = to  [idx-1] + shift * newReserved;
-                     }
-                  }
-                  else {
-                     const size_t shift = sizeof(typename R::Type);
-                     if (continuous) {
-                        from[idx] += shift * reserved;
-                        to  [idx] += shift * newReserved;
-                     }
-                     else {
-                        from[idx] = from[idx-1] + shift * reserved;
-                        to  [idx] = to  [idx-1] + shift * newReserved;
-                     }
-                  }
+                  size_t shift;
+                  if constexpr (requires { R::Type::AllocatedPerIndirection; })
+                     shift = sizeof(typename R::Type::Type) * indirect;
+                  else
+                     shift = sizeof(typename R::Type);
                   
-                  // Move index only when a gap forms, so that we       
-                  // minimize 'memmove' calls                           
+                  from[idx] = from[idx-1] + shift * reserved;
+                  to  [idx] = to  [idx-1] + shift * newReserved;
+
                   ++idx;
-                  continuous = false;
-               }
-               else {
-                  if (continuous) {
-                     from[idx] += sizeof(R);
-                     to  [idx] += sizeof(R);
-                  }
-                  else {
-                     from[idx] = from[idx-1] + sizeof(R);
-                     to  [idx] = to  [idx-1] + sizeof(R);
-                     continuous = true;
-                  }
                }
             }            
          });
 
-         // Move regions, starting from the back ones                   
-         auto header = self.GetAllocation()->GetBlockStart();
+         const auto footer = self.GetAllocation()->GetBlockStart()
+                           + self.GetHeapHeaderSize();
+         const auto to_footer = footer + newReserved * size;
+         const auto from_footer = footer + reserved * size;
+
          --idx;
-         while (idx) {
-            --idx;
-            memmove(header + to[idx], header + from[idx], from[idx+1] - from[idx]);
+
+         if (newReserved > reserved) {
+            // When newReserved is larger than reserved, stuff has to   
+            // move left to right, so it must be done in reverse so that
+            // we don't destroy any data. The newly formed gaps need    
+            // to be filled with zeroes.                                
+            while (idx) {
+               --idx;
+               const auto range = from[idx + 1] - from[idx];
+               memmove(to_footer + to[idx], from_footer + from[idx], range);
+               memset (to_footer + to[idx] + range, 0, to[idx + 1] - to[idx] - range);
+            }
+         }
+         else {
+            // When newReserved is smaller than reserved, stuff has to  
+            // move right to left. No gaps will be formed.              
+            for (size_t i = 0; i < idx; ++i) {
+               memmove(to_footer + to[i], from_footer + from[i], from[i + 1] - from[i]);
+            }
          }
       }
 

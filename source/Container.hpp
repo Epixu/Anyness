@@ -62,6 +62,70 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Pair);
 LANGULUS_CTTI_CONCEPT_DECVQ(Handle);
 LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
+namespace Langulus::CT
+{
+   /// Check if listed types are containers with any kind of Ownership        
+   /// component                                                              
+   template<class...T>
+   concept Owned = Container<T...>
+       and (ShedDeref<T>::Owned and ...);
+
+   /// Check if listed containers are referenced upon construction/assignment 
+   /// and then automatically dereferenced on destruction                     
+   template<class...T>
+   concept AutoOwned = Container<T...>
+       and ((ShedDeref<T>::AutoOwned) and ...);
+   
+   /// Check if listed types are containers with any kind of heap memory      
+   template<class...T>
+   concept HeapAllocated = Container<T...>
+       and ((ShedDeref<T>::CountHeapProviders() > 0) and ...);
+   
+   /// Check if listed types are containers with more than one heap provider, 
+   /// such as maps.                                                          
+   template<class...T>
+   concept Multiheap = Container<T...>
+       and ((ShedDeref<T>::CountHeapProviders() > 1) and ...);
+   
+   /// Check if listed types are containers with variable count               
+   ///   @attention this includes containers with Com::CountStatic, but have  
+   ///      nullifiable heap pointer                                          
+   template<class...T>
+   concept HasVariableCount = HeapAllocated<T...>
+       and (ShedDeref<T>::HeapCanBeNull and ...);
+   
+   /// Check if listed types are containers that can have multiple elements   
+   template<class...T>
+   concept ContainsMany = Container<T...>
+       and (ShedDeref<T>::ContainsMany and ...);
+   
+   /// Check if listed types are containers that can have single element      
+   template<class...T>
+   concept ContainsOne = Container<T...>
+       and ((not ShedDeref<T>::ContainsMany) and ...);
+   
+   /// Check if listed types are type-erased containers                       
+   template<class...T>
+   concept TypeErased = Container<T...>
+       and ((ShedDeref<T>::TypeErased) and ...);
+
+   /// Check if listed types are containers with any kind of DeepOwnership    
+   /// component                                                              
+   template<class...T>
+   concept DeeplyOwned = Container<T...>
+       and (ShedDeref<T>::DeeplyOwned and ...)
+       and ((CT::TypeErased<T> or CT::Sparse<TypeOf<T>>) and ...);
+
+   /// Check if listed types are containers, and are indexed                  
+   template<class...T>
+   concept Indexed = Container<T...>
+       and ((ShedDeref<T>::Indexed) and ...);
+
+   /// Check if listed types are containers, and are linearly indexed         
+   template<class...T>
+   concept IndexedLinearly = Indexed<T...> and Contiguous<T...>;
+}
+
 namespace Langulus::Anyness
 {
    /// Used for requesting dynamic data from the heap in container components.
@@ -157,7 +221,7 @@ namespace Langulus::Anyness
          if constexpr (requires { C1::Id; }) {
             static_assert(C1::Id == ACC, "Invalid heap/stack ID");
             if constexpr (sizeof...(CN))
-               return ValidateComponentOrder<ACC+1, C2, CN...>();
+               return ValidateComponentOrder<ACC + 1, C2, CN...>();
             else
                return true;
          }
@@ -432,9 +496,22 @@ namespace Langulus::Anyness
       /// Get the number of heap providers                                    
       static consteval size_t CountHeapProviders() {
          size_t count = 0;
-         ComponentList::ForEach([&]<class C> {
+         ComponentList::ForEach([&count]<class C> {
             if constexpr (requires { C::HeapProvider; })
                ++count;
+         });
+         return count;
+      }
+
+      /// Get the number of heap requests in the header                       
+      static consteval size_t CountHeapFooterRequests() {
+         size_t count = 0;
+         ComponentList::ForEach([&count]<class C> {
+            if constexpr (requires { C::HeapRequest; }) {
+               if constexpr (requires { C::HeapRequest::AllocatedPerIndirection; }
+                          or requires { C::HeapRequest::AllocatedPerElement;     })
+                  ++count;
+            }
          });
          return count;
       }
@@ -479,56 +556,71 @@ namespace Langulus::Anyness
       ///      keeping stuff on the heap - constant safety checks.            
       template<CT::Component COM, CT::Container SELF>
       constexpr auto* AccessHeap(this SELF&& self) noexcept {
-         size_t offset;         
+         static_assert(requires { typename COM::HeapRequest; },
+            "Component doesn't have data on the heap"
+         );
+         using R = typename COM::HeapRequest;
+
          if constexpr (
                requires { COM::HeapRequest::AllocatedPerIndirection; }
             or requires { COM::HeapRequest::AllocatedPerElement; }
          ) {
-            offset = Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
+            // Access footer heap                                       
+            auto offset = Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
                static_cast<size_t>(self.GetReserved()),
                static_cast<size_t>(self.GetIndirections())
             );
-         }
-         else {
-            offset = Inner::GetHeapHeaderOffset<COM, COMPONENTS...>();
-         }
+            auto heap = reinterpret_cast<Tmut<SELF, uint8_t*, uint8_t const*>>(
+               self.GetRawReserveEnd()) + offset;
 
-         auto heap = self.GetAllocationInner()->GetBlockStart() + offset;
-         using R = typename COM::HeapRequest;
-         if constexpr (requires { R::AllocatedPerIndirection; }) {
-            if constexpr (requires { R::Type::AllocatedPerElement; }) {
-               using RC = LglsMutIf(SELF, typename R::Type::Type*);
-               return reinterpret_cast<RC>(heap);
+            if constexpr (requires { R::AllocatedPerIndirection; }) {
+               if constexpr (requires { R::Type::AllocatedPerElement; }) {
+                  using RC = LglsMutIf(SELF, typename R::Type::Type*);
+                  return reinterpret_cast<RC>(heap);
+               }
+               else {
+                  using RC = LglsMutIf(SELF, typename R::Type*);
+                  return reinterpret_cast<RC>(heap);
+               }
             }
-            else {
-               using RC = LglsMutIf(SELF, typename R::Type*);
-               return reinterpret_cast<RC>(heap);
-            }
-         }
-         else if constexpr (requires { R::AllocatedPerElement; }) {
-            if constexpr (requires { R::Type::AllocatedPerIndirection; }) {
-               using RC = LglsMutIf(SELF, typename R::Type::Type*);
-               return reinterpret_cast<RC>(heap);
-            }
-            else {
-               using RC = LglsMutIf(SELF, typename R::Type*);
-               return reinterpret_cast<RC>(heap);
+            else if constexpr (requires { R::AllocatedPerElement; }) {
+               if constexpr (requires { R::Type::AllocatedPerIndirection; }) {
+                  using RC = LglsMutIf(SELF, typename R::Type::Type*);
+                  return reinterpret_cast<RC>(heap);
+               }
+               else {
+                  using RC = LglsMutIf(SELF, typename R::Type*);
+                  return reinterpret_cast<RC>(heap);
+               }
             }
          }
          else {
+            // Access header heap                                       
+            auto offset = Inner::GetHeapHeaderOffset<COM, COMPONENTS...>();
+            auto heap = self.GetAllocationInner()->GetBlockStart() + offset;
             using RC = LglsMutIf(SELF, R*);
             return reinterpret_cast<RC>(heap);
          }
       }
       
-      /// Calculate the heap header size                                      
-      static consteval size_t GetHeapHeaderSize() {
-         return Inner::DefineHeapHeader<COMPONENTS...>();
+      /// Calculate the heap header size, aligned to the contained type       
+      template<CT::Container C>
+      constexpr size_t GetHeapHeaderSize(this C const& self) assumptious {
+         constexpr size_t header = Inner::DefineHeapHeader<COMPONENTS...>();
+         if constexpr (CT::TypeErased<C>) {
+            const auto type = self.GetType();
+            LglsAssumeDev(type, "Requesting header size for an untyped container");
+            return Align(header, type.GetAlignment());
+         }
+         else return Align(header, alignof(TypeOf<C>));
       }
 
       /// Calculate the heap footer size                                      
-      static constexpr size_t GetHeapFooterSize(size_t count, size_t indirects) noexcept {
-         return Inner::DefineHeapFooter<COMPONENTS...>(count, indirects);
+      template<CT::Container C>
+      constexpr size_t GetHeapFooterSize(this C const& self, size_t count) noexcept {
+         return Inner::DefineHeapFooter<COMPONENTS...>(
+            count, self.GetIndirections()
+         );
       }
 
       /// Access a variable on the stack associated with an ID                
@@ -671,70 +763,6 @@ namespace Langulus::Anyness
       template<State::StateValue = State::Variable> struct Tracked;
       template<State::StateValue = State::Variable> struct Typed;
    }
-}
-
-namespace Langulus::CT
-{
-   /// Check if listed types are containers with any kind of Ownership        
-   /// component                                                              
-   template<class...T>
-   concept Owned = Container<T...>
-       and (ShedDeref<T>::Owned and ...);
-
-   /// Check if listed containers are referenced upon construction/assignment 
-   /// and then automatically dereferenced on destruction                     
-   template<class...T>
-   concept AutoOwned = Container<T...>
-       and ((ShedDeref<T>::AutoOwned) and ...);
-   
-   /// Check if listed types are containers with any kind of heap memory      
-   template<class...T>
-   concept HeapAllocated = Container<T...>
-       and ((ShedDeref<T>::CountHeapProviders() > 0) and ...);
-   
-   /// Check if listed types are containers with more than one heap provider, 
-   /// such as maps.                                                          
-   template<class...T>
-   concept Multiheap = Container<T...>
-       and ((ShedDeref<T>::CountHeapProviders() > 1) and ...);
-   
-   /// Check if listed types are containers with variable count               
-   ///   @attention this includes containers with Com::CountStatic, but have  
-   ///      nullifiable heap pointer                                          
-   template<class...T>
-   concept HasVariableCount = HeapAllocated<T...>
-       and (ShedDeref<T>::HeapCanBeNull and ...);
-   
-   /// Check if listed types are containers that can have multiple elements   
-   template<class...T>
-   concept ContainsMany = Container<T...>
-       and (ShedDeref<T>::ContainsMany and ...);
-   
-   /// Check if listed types are containers that can have single element      
-   template<class...T>
-   concept ContainsOne = Container<T...>
-       and ((not ShedDeref<T>::ContainsMany) and ...);
-   
-   /// Check if listed types are type-erased containers                       
-   template<class...T>
-   concept TypeErased = Container<T...>
-       and ((ShedDeref<T>::TypeErased) and ...);
-
-   /// Check if listed types are containers with any kind of DeepOwnership    
-   /// component                                                              
-   template<class...T>
-   concept DeeplyOwned = Container<T...>
-       and (ShedDeref<T>::DeeplyOwned and ...)
-       and ((CT::TypeErased<T> or CT::Sparse<TypeOf<T>>) and ...);
-
-   /// Check if listed types are containers, and are indexed                  
-   template<class...T>
-   concept Indexed = Container<T...>
-       and ((ShedDeref<T>::Indexed) and ...);
-
-   /// Check if listed types are containers, and are linearly indexed         
-   template<class...T>
-   concept IndexedLinearly = Indexed<T...> and Contiguous<T...>;
 }
 
 namespace Langulus

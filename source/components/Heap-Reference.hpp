@@ -92,15 +92,24 @@ namespace Langulus::Anyness::Component
          return static_cast<Tcvq>(self.GetHeapInnerAsVoid());
       }
 
-      /// Get a direct access to the heap memory's end.                       
-      /// Depends on the number of initialized elements.                      
-      ///   @attention accessing this while GetCount() is zero is undefined   
-      template<CT::Container C>
+      /// Get a direct access to the initialized heap memory's end.           
+      ///   @attention this makes sense only when heap is contiguous.         
+      ///   @attention accessing this while GetCount() is zero is undefined   //why though???
+      template<CT::Container C> requires CT::Contiguous<C>
       constexpr auto GetRawEnd(this C&& self) noexcept {
-         if constexpr (CT::Typed<C>)
-            return self.GetRaw() + self.GetCount();
-         else
+         if constexpr (CT::TypeErased<C>)
             return self.template GetRawAs<uint8_t>() + self.GetBytesize();
+         else
+            return self.GetRaw() + self.GetCount();
+      }
+    
+      /// Get a direct access to the entire heap reserve's end.               
+      template<CT::Container C>
+      constexpr auto GetRawReserveEnd(this C&& self) noexcept {
+         if constexpr (CT::TypeErased<C>)
+            return self.template GetRawAs<uint8_t>() + self.GetReserved() * self.GetStride();
+         else
+            return self.GetRaw() + self.GetReserved();
       }
     
       /// Get reference to first element as sparse or dense, depending on T.  
@@ -380,20 +389,21 @@ namespace Langulus::Anyness::Component
       }
 
       /// A simple request for allocating memory, which includes heap         
-      /// byte size, number of reserved elements, and optional header offset. 
+      /// byte size, number of reserved elements, and header/footer offsets.  
       struct Request {
          pot_t  mTotalBytes;
          size_t mHeaderBytes;
+         size_t mFooterBytes;
          size_t mReserved;
       };
       
       /// Get a size based on reflected allocation page and count             
-      ///   @param self deduced this                                          
-      ///   @param count the number of elements to request                    
+      ///   @param reserve the number of elements to request                  
       template<CT::Container C>
-      Request RequestHeap(this C const& self, const size_t count) assumptious {
+      Request RequestHeap(this C const& self, const size_t reserve) assumptious {
          Request result;
-         const size_t header = self.GetHeapHeaderSize(count, self.GetIndirections());
+         result.mHeaderBytes = self.GetHeapHeaderSize();
+         result.mFooterBytes = self.GetHeapFooterSize(reserve);
          
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.GetType();
@@ -401,23 +411,21 @@ namespace Langulus::Anyness::Component
 
             // Check for reflected minimal allocation at runtime        
             const auto size = T.GetSize();
-            result.mHeaderBytes = Align(header, T.GetAlignment());
             result.mTotalBytes = Roof2(::std::max(
-               count * size + result.mHeaderBytes,
+               reserve * size + result.mHeaderBytes + result.mFooterBytes,
                static_cast<size_t>(T.GetMinAllocation())
             ));
-            result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / size;
+            result.mReserved = (result.mTotalBytes - (result.mHeaderBytes + result.mFooterBytes)) / size;
          }
          else {
             // Check for reflected minimal allocation at compile-time   
             using T = TypeOf<C>;
 
-            result.mHeaderBytes = Align(header, alignof(T));
             result.mTotalBytes = Roof2(::std::max(
-               count * sizeof(T) + result.mHeaderBytes,
+               reserve * sizeof(T) + result.mHeaderBytes + result.mFooterBytes,
                CT::GetMinAlloc<T>()
             ));
-            result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / sizeof(T);
+            result.mReserved = (result.mTotalBytes - (result.mHeaderBytes + result.mFooterBytes)) / sizeof(T);
          }
 
          return result;
