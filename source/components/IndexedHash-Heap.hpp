@@ -48,7 +48,8 @@ namespace Langulus::Anyness::Component
 
       /*template<unsigned, class>      friend struct Insertion;
       template<unsigned, CT::Sparse> friend struct HeapMovable;*/
-      
+      template<Cid, class> friend struct Merging;
+
       /// Get the start of the hash table (inner)                             
       constexpr auto* GetHashTableInner(this auto&& self) noexcept {
          return self.template AccessHeap<IndexedHashHeap>();
@@ -187,9 +188,8 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(self.GetReserved() > oldReserve,
             "New reserve is not larger than oldReserve");
 
-         using H = typename C::HandleMutType;
          auto& count = self.GetCountInner();
-         auto handle = self.template As<H>();
+         auto handle = self.GetHandle();
          const auto tableBeg = self.GetHashTableInner();
          const auto tableEnd = tableBeg + oldReserve;
 
@@ -212,17 +212,17 @@ namespace Langulus::Anyness::Component
                      *table = 0;
                      --count;
                      // Reinsert at the new offset                      
-                     self.InsertInner<false>(newBucket, swapper.template As<H>());
+                     self.TableInsert(newBucket, swapper.GetHandle());
                   }
                   else {
                      // Move the element to a temporary swapper first   
-                     THandle<Deref<TypeOf<C>>> swapper {Abandon(handle)};
+                     THandle<Decvq<Deref<TypeOf<C>>>> swapper {Abandon(handle)};
                      // Destroy the old element                         
                      handle.FreeInner();
                      *table = 0;
                      --count;
                      // Reinsert at the new offset                      
-                     self.InsertInner<false>(newBucket, swapper);
+                     self.TableInsert(newBucket, swapper);
                   }
                }
             }
@@ -251,11 +251,9 @@ namespace Langulus::Anyness::Component
                if (*table > 1) {
                   // Entry can be moved *table - 1 cells to the left    
                   const Count<C> oldIndex = table - tableBeg;
-
-                  // Might loop around                                  
                   Count<C> newIndex = reserved + oldIndex - *table + 1;
                   if (newIndex >= reserved)
-                     newIndex -= reserved;
+                     newIndex -= reserved;   // Might loop around       
 
                   TableType attempt = 1;
                   while (tableBeg[newIndex] and attempt < *table) {
@@ -268,10 +266,9 @@ namespace Langulus::Anyness::Component
 
                   if (not tableBeg[newIndex] and attempt < *table) {
                      // Empty spot found, so move element there         
-                     using H   = typename C::HandleMutType;
-                     H handle  = self.template As<H>();
-                     auto from = handle + oldIndex;
-                     auto to   = handle + newIndex;
+                     auto handle = self.GetHandle();
+                     auto from   = handle + oldIndex;
+                     auto to     = handle + newIndex;
                      to.EmplaceWithIntent(Abandon(from));
                      from.FreeInner();
 
@@ -286,17 +283,13 @@ namespace Langulus::Anyness::Component
          } while (moves_performed);
       }
 
-      /// Inner insertion function                                            
-      ///   @tparam CHECK_FOR_MATCH - false if you guarantee key doesn't exist
+      /// Table insertion function                                            
       ///   @param start - the starting index                                 
       ///   @param swapper - a swapper to use while trying to insert          
-      ///   @return the offset at which pair was inserted, or the reserved    
-      ///      count, if element wasn't inserted (possible on CHECK_FOR_MATCH)
-      template<bool CHECK_FOR_MATCH, CT::Container C, CT::Handle H> 
-      auto InsertInner(this C& self, Count<C> const start, H& swapper)
+      ///   @return the offset at which pair was inserted                     
+      template<CT::Container C, CT::Handle H> 
+      auto TableInsert(this C& self, Count<C> const start, H& swapper)
       -> Count<C> requires CT::NoIntent<H> {
-         self.BranchOut();
-
          // Get the starting index based on the key hash                
          const auto reserved = self.GetReserved();
          const auto tableBeg = self.GetHashTableInner();
@@ -305,15 +298,9 @@ namespace Langulus::Anyness::Component
          TableType attempts = 1;
          auto insertedAt = reserved;
          auto table = tableBeg + start;
-         auto handle = self.template As<H>();
+         auto handle = self.GetHandle();
          while (*table) {
             const auto index = table - tableBeg;
-            if constexpr (CHECK_FOR_MATCH) {
-               // Check if the value already exists                     
-               if (swapper == (handle + index))
-                  return index;
-            }
-
             if (attempts > *table) {
                // The value we're inserting is closer to bucket, so swap
                (handle + index).Swap(swapper);

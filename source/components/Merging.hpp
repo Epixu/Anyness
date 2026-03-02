@@ -63,16 +63,26 @@ namespace Langulus::Anyness::Component
 
          // Insert the new elements if they're not contained yet        
          Count<C> inserted = 0;
-         auto insert = [&](auto&& a) {
+         auto insert = [&]<class E>(E&& a) {
             if (self.Contains(DeintCast(a)))
                return;
 
-            auto to = self.GetHandle() + lhs_count;
-            if constexpr (CT::Copied<IntentOf(a)>)
-               to.EmplaceWithIntent(Refer(LglsFwd(a)));
-            else
-               to.EmplaceWithIntent(FWDIntent(a));
-            ++to;
+            if constexpr (CT::Contiguous<C>) {
+               // Contiguous merge                                      
+               auto to = self.GetHandle() + lhs_count;
+               if constexpr (CT::Copied<IntentOf(a)>)
+                  to.EmplaceWithIntent(Refer(LglsFwd(a)));
+               else
+                  to.EmplaceWithIntent(FWDIntent(a));
+            }
+            else {
+               // Hash table merge                                      
+               // Move the element to a temporary swapper first         
+               Count<C> bucket = self.GetOffset(a);
+               THandle<Decvq<Deref<E>>> swapper {Piecewise, FWDIntent(a)};
+               self.TableInsert(bucket, swapper);
+            }
+
             ++inserted;
          };
 

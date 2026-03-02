@@ -406,10 +406,9 @@ namespace Langulus::Anyness::Component
          result.mFooterBytes = self.GetHeapFooterSize(reserve);
          
          if constexpr (CT::TypeErased<C>) {
+            // Check for reflected minimal allocation at runtime        
             const auto T = self.GetType();
             LglsAssumeDev(T, "Requesting allocation size for an untyped container");
-
-            // Check for reflected minimal allocation at runtime        
             const auto size = T.GetSize();
             result.mTotalBytes = Roof2(::std::max(
                reserve * size + result.mHeaderBytes + result.mFooterBytes,
@@ -420,7 +419,6 @@ namespace Langulus::Anyness::Component
          else {
             // Check for reflected minimal allocation at compile-time   
             using T = TypeOf<C>;
-
             result.mTotalBytes = Roof2(::std::max(
                reserve * sizeof(T) + result.mHeaderBytes + result.mFooterBytes,
                CT::GetMinAlloc<T>()
@@ -428,6 +426,7 @@ namespace Langulus::Anyness::Component
             result.mReserved = (result.mTotalBytes - (result.mHeaderBytes + result.mFooterBytes)) / sizeof(T);
          }
 
+         LglsAssumeDev(result.mReserved >= reserve);
          return result;
       }
 

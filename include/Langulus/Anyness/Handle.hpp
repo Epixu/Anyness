@@ -71,7 +71,9 @@ namespace Langulus::Anyness
       using THandleLocalDense = Container<
          Com::TypedStatic<DMeta, T>,
          Com::Stack<T>,
+         Com::CountStatic<1u>,
          Com::Assignment<>,
+         Com::Emplacement<>,
          Com::Comparison<>
       >;
       
@@ -83,7 +85,8 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, Deptr<T>>,
          Com::HeapMovable<0, 0, 0, T>,
          Com::CountStatic<1u>,
-         Com::OwnershipStack<0, false>,
+         Com::OwnershipStack<>,
+         Com::OwnershipDeepHeap<>,
          Com::Emplacement<>,
          Com::Assignment<>,
          Com::Comparison<>
@@ -460,9 +463,10 @@ namespace Langulus::Anyness
       using HandleMutType  = THandle<DecvqAll<T>>;
       using Denser         = THandle;
       using DeepType       = HandleDisowned;
+      using Base           = typename Inner::THandleLocalDense<T>::Base;
 
-      /// Handles can't be piecewise-initialized                              
-      THandle(Inner::Piecewise, auto&&) = delete;
+      THandle(Inner::Piecewise, auto&& a) 
+         : Base {Stackwise, LglsFwd(a)} {}
 
       constexpr THandle() noexcept {
          this->ConstructDefault();
@@ -502,9 +506,10 @@ namespace Langulus::Anyness
       using HandleMutType  = THandle<DecvqAll<T>>;
       using Denser         = THandle<Deptr<T>>;
       using DeepType       = HandleDisowned;
+      using Base           = typename Inner::THandleLocalSparse<T>::Base;
 
-      /// Handles can't be piecewise-initialized                              
-      THandle(Inner::Piecewise, auto&&) = delete;
+      THandle(Inner::Piecewise, auto&& a)
+         : Base {Stackwise, LglsFwd(a)} {}
 
       constexpr THandle() noexcept {
          this->ConstructDefault();

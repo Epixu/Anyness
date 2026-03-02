@@ -31,11 +31,16 @@ namespace Langulus::Anyness::Component
             if (not al)
                return 0;
 
-            if constexpr (CT::ContainsOne<C>) {
-               // Compile-time benefit for statically sized containers  
+            if constexpr (CT::ContainsOne<C>)
                return 1;
-            }
             else {
+               static_assert(C::CountHeapFooterRequests() == 0,
+                  "ReserveEmergent can't be used in containers with heap footer, "
+                  "because it causes a circular dependency - "
+                  "reserved count can't be calculated without knowing the "
+                  "reserved elements beforehand."
+               );
+
                const size_t header = self.GetHeapHeaderSize();
                if constexpr (CT::TypeErased<C>)
                   return (al->GetSize() - header) / self.GetStride();

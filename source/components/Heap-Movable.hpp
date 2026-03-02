@@ -216,6 +216,7 @@ namespace Langulus::Anyness::Component
          self.SetHeapInner(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
          self.SetAllocationInner(al);
          if_available(self.SetReserveInner(request.mReserved));
+         self.ConstructHeapDefault();
          return al;
       }
 
@@ -322,7 +323,7 @@ namespace Langulus::Anyness::Component
          }
 
          const auto request = self.RequestHeap(desiredReserve);
-         if (request.mReserved == self.GetReserved())
+         if (request.mTotalBytes == al->GetSize())
             return;
 
          // Memory doesn't move, but reserved count changed so all      
