@@ -14,12 +14,6 @@
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
-#if defined(LANGULUS_EXPORT_ALL) or defined(LANGULUS_EXPORT_FRACTALLOC)
-   #define LANGULUS_API_FRACTALLOC() LANGULUS_EXPORT()
-#else
-   #define LANGULUS_API_FRACTALLOC() LANGULUS_IMPORT()
-#endif
-
 #if LANGULUS_FEATURE(MEMORY_STATISTICS)
    #include "Statistics.hpp"
 #endif

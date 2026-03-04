@@ -127,7 +127,7 @@ namespace Langulus::Anyness
       template<Cid, CT::Sparse>         friend struct Com::HeapReference;
       template<Cid, unsigned, unsigned, CT::Sparse> friend struct Com::HeapMovable;
       template<Cid, bool, bool>         friend struct Com::OwnershipStack;
-      template<Cid>                     friend struct Com::OwnershipDeepStack;
+      template<Cid>                     friend struct Com::OwnershipDeepReference;
       template<Cid>                     friend struct Com::OwnershipDeepHeap;
       template<Cid, class>              friend struct Com::CountStack;
       template<Cid, class>              friend struct Com::HashStack;

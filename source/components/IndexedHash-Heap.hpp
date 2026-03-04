@@ -77,32 +77,29 @@ namespace Langulus::Anyness::Component
          LglsAssumeDev(index < self.GetCount(), "Index out of bounds");
 
          const auto reserved = self.GetReserved();
-         if (index < self.GetCount() / 2) {
-            // Index is in the lower half, so we begin search from start
-            Count<C> counter = 0;
-            auto table = self.GetHashTableInner();
+         auto const tableBeg = self.GetHashTableInner();
+         auto const tableEnd = tableBeg + reserved;
 
-            while (counter < reserved) {
+         if (index <= self.GetCount() / 2) {
+            // Index is in the lower half, so we begin search from start
+            auto table = tableBeg;
+            while (table < tableEnd) {
                if (*table) {
                   if (index == 0)
-                     return counter;
+                     return table - tableBeg;
                   --index;
-                  ++counter;
                }
                ++table;
             }
          }
          else {
             // Index is in the upper half, so we begin search from end  
-            int counter = reserved - 1;
-            auto table = self.GetHashTableInner() + reserved;
-
-            while (counter >= 0) {
+            auto table = tableEnd - 1;
+            while (table >= tableBeg) {
                if (*table) {
                   if (index == 0)
-                     return static_cast<Count<C>>(counter);
+                     return table - tableBeg;
                   --index;
-                  --counter;
                }
                --table;
             }
@@ -288,7 +285,7 @@ namespace Langulus::Anyness::Component
       ///   @param swapper - a swapper to use while trying to insert          
       ///   @return the offset at which pair was inserted                     
       template<CT::Container C, CT::Handle H> 
-      auto TableInsert(this C& self, Count<C> const start, H& swapper)
+      auto TableEmplace(this C& self, Count<C> const start, H& swapper)
       -> Count<C> requires CT::NoIntent<H> {
          // Get the starting index based on the key hash                
          const auto reserved = self.GetReserved();
@@ -323,7 +320,7 @@ namespace Langulus::Anyness::Component
             insertedAt = index;
 
          *table = attempts;
-         ++self.GetCountInner();
+         //++self.GetCountInner();
          return insertedAt;
       }
    };

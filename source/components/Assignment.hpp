@@ -387,12 +387,14 @@ namespace Langulus::Anyness::Component
          }
          else {
             using T = Tif<CT::TypeErased<C>, TypeOf<RHS>, TypeOf<C>>;
+            T& lhs_item = self.template Get<T>();
+            T& rhs_item = rhs.template Get<T>();
 
             if constexpr (CT::Sparse<T>) {
-               ::std::swap(Get(), rhs.Get());
+               ::std::swap(lhs_item, rhs_item);
 
-               auto lhs_entry = GetEntries();
-               auto rhs_entry = GetEntries();
+               auto lhs_entry = DecvqAllCast(self.GetEntries());
+               auto rhs_entry = DecvqAllCast( rhs.GetEntries());
                ForEachIndirection<T>([&lhs_entry, &rhs_entry] {
                   ::std::swap(*lhs_entry, *rhs_entry);
                   ++lhs_entry;
@@ -400,9 +402,6 @@ namespace Langulus::Anyness::Component
                });
             }
             else {
-               T& lhs_item = self.template Get<T>();
-               T& rhs_item = rhs.template Get<T>();
-
                if constexpr (requires { T {Abandon(lhs_item)}; }) {
                   T tmp{Abandon(lhs_item)};
                   lhs_item.~T();

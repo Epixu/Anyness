@@ -152,7 +152,7 @@ namespace Langulus::Anyness
       template<Cid = 0, class T = size_t> struct CountStack;
       template<auto COUNT>                struct CountStatic;
       template<Cid = 0>                   struct OwnershipDeepHeap;
-      template<Cid = 0>                   struct OwnershipDeepStack;
+      template<Cid = 0>                   struct OwnershipDeepReference;
                                           struct Descriptor;
       template<Cid = 0>                   struct Emplacement;
                                           struct Extrapolation;

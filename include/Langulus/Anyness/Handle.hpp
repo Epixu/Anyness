@@ -11,7 +11,8 @@
 #include "../../../source/components/Heap-Reference.hpp"
 #include "../../../source/components/Count-Static.hpp"
 #include "../../../source/components/Reserve-Emergent.hpp"
-#include "../../../source/components/OwnershipDeep-Stack.hpp"
+#include "../../../source/components/OwnershipDeep-Heap.hpp"
+#include "../../../source/components/OwnershipDeep-Reference.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Comparison.hpp"
@@ -45,7 +46,7 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<0, Deref<T>*>,
          Com::CountStatic<1u>,
-         Com::OwnershipDeepStack<>,
+         Com::OwnershipDeepReference<>,
          Com::Assignment<>,
          Com::Emplacement<>,
          Com::Comparison<>,
@@ -78,13 +79,12 @@ namespace Langulus::Anyness
       >;
       
       /// Statically typed handle to a local sparse value                     
-      /// (isomorphic to TRef)                                                
-      //TODO inherit TRef from this?
       template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
       using THandleLocalSparse = Container<
-         Com::TypedStatic<DMeta, Deptr<T>>,
-         Com::HeapMovable<0, 0, 0, T>,
+         Com::TypedStatic<DMeta, T>,
+         Com::HeapMovable<0, 0, 0, T*>,
          Com::CountStatic<1u>,
+         Com::ReserveEmergent<>,
          Com::OwnershipStack<>,
          Com::OwnershipDeepHeap<>,
          Com::Emplacement<>,
@@ -97,7 +97,6 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased mutable handle with ownership.                           
    /// It refers to a picked element inside a type-erased container.          
-   /// Handles can never be empty.                                            
    ///   @attention handles are never (de)referenced upon construction and    
    ///      destruction - only on reassignment                                
    struct HandleMut : Container<
@@ -105,7 +104,7 @@ namespace Langulus::Anyness
       Com::HeapReference<>,
       Com::CountStatic<1u>,
       Com::ReserveEmergent<>,
-      Com::OwnershipDeepStack<>,
+      Com::OwnershipDeepReference<>,
       Com::Assignment<>,
       Com::Emplacement<>,
       Com::Comparison<>,
@@ -150,7 +149,6 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased mutable handle without ownership.                        
    /// It refers to a picked element inside a type-erased container.          
-   /// Handles can never be empty.                                            
    struct HandleDisownedMut : Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
@@ -198,7 +196,6 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased immutable handle with ownership.                         
    /// It refers to a picked element inside a type-erased container.          
-   /// Handles can never be empty.                                            
    ///   @attention handles are never (de)referenced upon construction and    
    ///      destruction - only on reassignment. Since this handle is not      
    ///      mutable, this isn't possible either, however the handle still     
@@ -208,7 +205,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
-      Com::OwnershipDeepStack<>,
+      Com::OwnershipDeepReference<>,
       Com::Comparison<>,
       Com::IterationOperators<>
    > {
@@ -251,7 +248,6 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased immutable handle without ownership.                      
    /// It refers to a picked element inside a type-erased container.          
-   /// Handles can never be empty.                                            
    struct HandleDisowned : Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
@@ -313,8 +309,7 @@ namespace Langulus::Anyness
 
    
    ///                                                                        
-   /// When T is a dense reference, then element is embedded inside container 
-   /// Handles can never be empty.                                            
+   /// When T is a reference, then element is embedded inside container       
    ///   @attention memory is never (de)referenced upon construction and      
    ///      destruction - only on reassignment                                
    ///   @tparam T the contained type                                         
@@ -409,9 +404,8 @@ namespace Langulus::Anyness
    
 
    ///                                                                        
-   /// When T is a dense reference, then element is embedded inside container.
+   /// When T is a reference, then element is embedded inside container.      
    /// This handle never propagates or modifies ownership.                    
-   /// Handles can never be empty.                                            
    ///   @tparam T the contained type                                         
    template<CT::Reference T> requires CT::NotSheddable<T>
    struct THandleDisowned<T> : Inner::THandleDisownedEmbedded<T> {
@@ -453,8 +447,7 @@ namespace Langulus::Anyness
 
    ///                                                                        
    /// When T is not a reference, then it is not embedded.                    
-   /// Such dense handles are isomorphic to TOwn<T> - data is on the stack.   
-   /// Handles can never be empty.                                            
+   /// Such dense handles are similar to TOwn<T> - data is on the stack.      
    ///   @tparam T the contained type                                         
    template<CT::NotReference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleLocalDense<T> {
@@ -501,7 +494,7 @@ namespace Langulus::Anyness
 
    ///                                                                        
    /// When T is not a reference, then it is not embedded.                    
-   /// Such sparse handles are similar to TRef<T>.                            
+   /// Such sparse handles are similar to TRef<Deptr<T>>.                     
    ///   @tparam T the contained sparse type                                  
    template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleLocalSparse<T> {
@@ -528,9 +521,11 @@ namespace Langulus::Anyness
       template<class A>
       THandle(Inner::Piecewise, A&& pointer) {
          if (DeintCast(pointer)) {
-            this->SetHeapInner(DeintCast(pointer));
+            this->EmplaceConstruct(LglsFwd(pointer));
+
+            /*this->SetHeapInner(DeintCast(pointer));
             if constexpr (not CT::Disowned<A>)
-               this->FindAllocationInner();
+               this->FindAllocationInner();*/
          }
          else this->ConstructDefault();
       }

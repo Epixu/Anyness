@@ -13,6 +13,12 @@
    #error "This file shouldn't be included if MANAGED_MEMORY is disabled"
 #endif
 
+#if defined(LANGULUS_EXPORT_ALL) or defined(LANGULUS_EXPORT_FRACTALLOC)
+   #define LANGULUS_API_FRACTALLOC() LANGULUS_EXPORT()
+#else
+   #define LANGULUS_API_FRACTALLOC() LANGULUS_IMPORT()
+#endif
+
 
 namespace Langulus::Fractalloc
 {
@@ -182,6 +188,7 @@ namespace Langulus::Fractalloc
       
       auto ThresholdFromIndex(size_t) const noexcept -> pot_t;
       auto IndexFromAddress(const void*) const assumptious -> size_t;
+      LANGULUS_API(FRACTALLOC)
       auto IndexFromAllocation(const Allocation*) const assumptious -> size_t;
       auto UpIndex(size_t) const noexcept -> size_t;
       auto AllocationFromIndex(size_t) const noexcept -> Allocation*;

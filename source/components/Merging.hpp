@@ -80,7 +80,7 @@ namespace Langulus::Anyness::Component
                // Move the element to a temporary swapper first         
                Count<C> bucket = self.GetOffset(DeintCast(a));
                THandle<Decvq<Deref<Deint<E>>>> swapper {Piecewise, LglsFwd(a)};
-               self.TableInsert(bucket, swapper);
+               self.TableEmplace(bucket, swapper);
             }
 
             ++inserted;

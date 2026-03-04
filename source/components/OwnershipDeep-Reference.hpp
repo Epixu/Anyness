@@ -12,13 +12,24 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Reserves a part of the heap to keep track of sparse element's          
-   /// allocations. The pointer to the array of allocations is kept locally.  
-   ///   @tparam ID which heap/stack are we keeping track of                  
+   /// The pointer to the array of allocations for each element and           
+   /// indirection is kept locally. Useful to carry allocation data inside    
+   /// handles.                                                               
+   ///   @tparam ID which heap/stack provider are we tracking ownership for?  
    template<Cid ID>
-   struct OwnershipDeepStack : OwnershipDeepEmergent<ID> {
+   struct OwnershipDeepReference : OwnershipDeepEmergent<ID> {
       using StackRequest = EntryPtr;
-      using HeapRequest  = PerElement<PerIndirection<AllocationPtr>>;
+      //using HeapRequest  = PerElement<PerIndirection<AllocationPtr>>;
+
+      /// Get entry array if containing pointers                              
+      auto GetEntries(this auto const& self) assumptious
+      -> Decvq<Deref<decltype(self.GetEntriesInner())>> {
+         if (self.IsSparse()) {
+            LglsAssumeDev(self.GetRaw(), "No memory available");
+            return self.GetEntriesInner();
+         }
+         return nullptr;
+      }
 
    protected:
       template<Cid> friend struct Emplacement;
@@ -27,7 +38,7 @@ namespace Langulus::Anyness::Component
       /// Get the entry array (inner)                                         
       template<unsigned SELECTOR = ID> requires (SELECTOR == ID)
       constexpr auto& GetEntriesInner(this auto&& self) noexcept {
-         return self.template AccessStack<OwnershipDeepStack>();
+         return self.template AccessStack<OwnershipDeepReference>();
       }
 
       /// Set the entry array (inner)                                         
@@ -36,9 +47,19 @@ namespace Langulus::Anyness::Component
          self.template GetEntriesInner<SELECTOR>() = DecvqAllCast(entries);
       }
       
+      /// Transfer from any kind of container.                                
+      /// This is only a reference to the entries and is not allowed          
+      /// to allocate any new memory, so all this does is copy the            
+      /// pointer, ignoring any intents.                                      
+      ///   @param intent the intent and container to transfer from           
+      template<CT::Intent I> requires CT::Container<I>
+      void ConstructFrom(this auto& self, I&& intent) noexcept {
+         self.SetEntriesInner(intent.what.GetEntriesInner());
+      }
+
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
-      template<CT::Container C, CT::Intent I> requires CT::Container<I>
+      /*template<CT::Container C, CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this C& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
 
@@ -54,17 +75,6 @@ namespace Langulus::Anyness::Component
             static_assert(I::IsShallow());
             self.SetEntriesInner(from.GetEntriesInner());
          }
-      }
-      
-   public:
-      /// Get entry array if containing pointers                              
-      auto GetEntries(this auto const& self) assumptious
-      -> Decvq<Deref<decltype(self.GetEntriesInner())>> {
-         if (self.IsSparse()) {
-            LglsAssumeDev(self.GetRaw(), "No memory available");
-            return self.GetEntriesInner();
-         }
-         return nullptr;
-      }
+      }*/
    };
 }

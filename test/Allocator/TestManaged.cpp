@@ -6,7 +6,6 @@
 /// SPDX-License-Identifier: MIT                                              
 ///                                                                           
 #include "TestAllocatorCommon.hpp"
-#include "../../source/fractalloc/Pool.cpp"
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/Profiler.hpp>
 #include <random>

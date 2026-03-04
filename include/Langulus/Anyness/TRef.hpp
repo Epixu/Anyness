@@ -42,6 +42,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// Works fine with packed pointers as well. Has deep ownership, but no    
    /// states are applied. You can use TAny instead if you want states.       
+   /// This container is similar in functionality to ::std::shared_ptr.       
    template<class T>
    struct TRef : Inner::TRefBase<T> {
       using Base          = Inner::TRefBase<T>;
