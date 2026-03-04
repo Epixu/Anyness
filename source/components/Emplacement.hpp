@@ -348,7 +348,7 @@ namespace Langulus::Anyness::Component
       ///      is statically typed, this can be any constructor argument,     
       ///      otherwise it has to be an instance of the contained type.      
       template<CT::Container C, CT::Intent I>
-      void EmplaceWithIntent(this C& self, I&& intent) {
+      void EmplaceWithIntent(this C&& self, I&& intent) {
          using IT = Decvq<Deref<TypeOf<I>>>;
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
@@ -373,9 +373,10 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
                //                                                       
                // Either this container or the handle is type-erased    
-               auto T = rhs.GetTypeInner();
+               auto T = rhs.GetType();
+               //auto T = rhs.GetTypeInner();
                LglsAssumeDev(self.IsSame(T), "Type mismatch");
-               auto src = const_cast<void*>(rhs.GetRaw());
+               auto src = const_cast<void*>(static_cast<const void*>(rhs.GetRaw()));
                auto dst = self.GetRaw();
                
                if constexpr (CT::Moved<I>) {

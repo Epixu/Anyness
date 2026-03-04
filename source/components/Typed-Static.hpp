@@ -155,7 +155,10 @@ namespace Langulus::Anyness::Component
       /// Check if contained data is constant                                 
       ///   @return true if the contents are constant                         
       constexpr bool IsConstant(this auto const& self) noexcept {
-         return CT::Constant<TYPE> or not self.GetAllocation();
+         if constexpr (requires { self.GetAllocation(); })
+            return CT::Constant<TYPE> or not self.GetAllocation();
+         else
+            return CT::Constant<TYPE>;
       }
 
       /// Check if container is made of other containers                      

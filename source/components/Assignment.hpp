@@ -350,5 +350,75 @@ namespace Langulus::Anyness::Component
             }
          }
       }
+
+      /// Swap contents. Gracefully handling transitions between embedded     
+      /// and unembedded handles.                                             
+      ///   @param rhs - right hand side                                      
+      ///   @attention assumes types are the same                             
+      ///   @attention assumes both sides are allocated and initialized       
+      template<CT::Container C, CT::Container RHS>
+      void SwapInner(this C&& self, RHS& rhs) requires CT::ContainsOne<C, RHS> {
+         if constexpr (CT::TypeErased<C, RHS>) {
+            auto T = self.GetType();
+            auto S = T.GetSize();
+
+            if (T.IsSparse()) {
+               uintptr_t tmp;
+               memcpy(&tmp,       self.Get(), S);
+               memcpy(self.Get(), rhs.Get(),  S);
+               memcpy(rhs.Get(),  &tmp,       S);
+
+               auto lhs_entry = GetEntries();
+               auto rhs_entry = GetEntries();
+               for (int i = 0; i < T.GetIndirections(); ++i) {
+                  ::std::swap(*lhs_entry, *rhs_entry);
+                  ++lhs_entry;
+                  ++rhs_entry;
+               }
+            }
+            else {
+               TODO();
+               /*T tmp{Abandon(self.template Get<T>())};
+               self.DestroyElement();
+               self.EmplaceWithIntent(Abandon(rhs));
+               rhs.DestroyElement();
+               rhs.EmplaceWithIntent(Abandon(tmp));*/
+            }
+         }
+         else {
+            using T = Tif<CT::TypeErased<C>, TypeOf<RHS>, TypeOf<C>>;
+
+            if constexpr (CT::Sparse<T>) {
+               ::std::swap(Get(), rhs.Get());
+
+               auto lhs_entry = GetEntries();
+               auto rhs_entry = GetEntries();
+               ForEachIndirection<T>([&lhs_entry, &rhs_entry] {
+                  ::std::swap(*lhs_entry, *rhs_entry);
+                  ++lhs_entry;
+                  ++rhs_entry;
+               });
+            }
+            else {
+               T& lhs_item = self.template Get<T>();
+               T& rhs_item = rhs.template Get<T>();
+
+               if constexpr (requires { T {Abandon(lhs_item)}; }) {
+                  T tmp{Abandon(lhs_item)};
+                  lhs_item.~T();
+                  new (&lhs_item) T{Abandon(rhs_item)};
+                  rhs_item.~T();
+                  new (&rhs_item) T{Abandon(tmp)};
+               }
+               else {
+                  T tmp{LglsMov(lhs_item)};
+                  lhs_item.~T();
+                  new (&lhs_item) T{LglsMov(rhs_item)};
+                  rhs_item.~T();
+                  new (&rhs_item) T{LglsMov(tmp)};
+               }
+            }
+         }
+      }
    };
 }

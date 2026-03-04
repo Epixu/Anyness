@@ -303,7 +303,7 @@ namespace Langulus::Anyness::Component
             const auto index = table - tableBeg;
             if (attempts > *table) {
                // The value we're inserting is closer to bucket, so swap
-               (handle + index).Swap(swapper);
+               (handle + index).SwapInner(swapper);
                ::std::swap(attempts, *table);
                if (insertedAt == reserved)
                   insertedAt = index;

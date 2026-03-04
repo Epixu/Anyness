@@ -26,7 +26,7 @@ namespace Langulus::Anyness
       //TODO define the type-erased bases for handles here as well??
 
       /// Statically typed handle to a dense element held inside a container  
-      template<CT::Reference T> requires CT::Dense<T>
+      template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
       using THandleEmbeddedDense = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<0, Deref<T>*>,
@@ -40,7 +40,7 @@ namespace Langulus::Anyness
       >;
       
       /// Statically typed handle to a sparse element held inside a container 
-      template<CT::Reference T> requires CT::Sparse<T>
+      template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
       using THandleEmbeddedSparse = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<0, Deref<T>*>,
@@ -53,7 +53,7 @@ namespace Langulus::Anyness
       >;
       
       /// Statically typed handle to a disowned element held inside container 
-      template<CT::Reference T>
+      template<CT::Reference T> requires CT::NotSheddable<T>
       using THandleDisownedEmbedded = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<0, Deref<T>*>,
@@ -67,7 +67,7 @@ namespace Langulus::Anyness
       /// Statically typed handle to a local dense value                      
       /// (isomorphic to TOwn)                                                
       //TODO inherit TOwn from this?
-      template<CT::NotReference T> requires CT::Dense<T>
+      template<CT::NotReference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
       using THandleLocalDense = Container<
          Com::TypedStatic<DMeta, T>,
          Com::Stack<T>,
@@ -80,7 +80,7 @@ namespace Langulus::Anyness
       /// Statically typed handle to a local sparse value                     
       /// (isomorphic to TRef)                                                
       //TODO inherit TRef from this?
-      template<CT::NotReference T> requires CT::Sparse<T>
+      template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
       using THandleLocalSparse = Container<
          Com::TypedStatic<DMeta, Deptr<T>>,
          Com::HeapMovable<0, 0, 0, T>,
@@ -318,7 +318,7 @@ namespace Langulus::Anyness
    ///   @attention memory is never (de)referenced upon construction and      
    ///      destruction - only on reassignment                                
    ///   @tparam T the contained type                                         
-   template<CT::Reference T> requires CT::Dense<T>
+   template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleEmbeddedDense<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
@@ -365,7 +365,7 @@ namespace Langulus::Anyness
       }
    };
    
-   template<CT::Reference T> requires CT::Sparse<T>
+   template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleEmbeddedSparse<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
@@ -413,7 +413,7 @@ namespace Langulus::Anyness
    /// This handle never propagates or modifies ownership.                    
    /// Handles can never be empty.                                            
    ///   @tparam T the contained type                                         
-   template<CT::Reference T>
+   template<CT::Reference T> requires CT::NotSheddable<T>
    struct THandleDisowned<T> : Inner::THandleDisownedEmbedded<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
@@ -456,7 +456,7 @@ namespace Langulus::Anyness
    /// Such dense handles are isomorphic to TOwn<T> - data is on the stack.   
    /// Handles can never be empty.                                            
    ///   @tparam T the contained type                                         
-   template<CT::NotReference T> requires CT::Dense<T>
+   template<CT::NotReference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleLocalDense<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
@@ -465,8 +465,13 @@ namespace Langulus::Anyness
       using DeepType       = HandleDisowned;
       using Base           = typename Inner::THandleLocalDense<T>::Base;
 
-      THandle(Inner::Piecewise, auto&& a) 
+      constexpr THandle(Inner::Piecewise, auto&& a)
+      requires requires { T{LglsFwd(a)}; }
          : Base {Stackwise, LglsFwd(a)} {}
+
+      constexpr THandle(Inner::Piecewise, CT::Intent auto&& a)
+      requires (not requires { T{LglsFwd(a)}; })
+         : Base {Stackwise, DeintCast(a)} {}
 
       constexpr THandle() noexcept {
          this->ConstructDefault();
@@ -496,10 +501,9 @@ namespace Langulus::Anyness
 
    ///                                                                        
    /// When T is not a reference, then it is not embedded.                    
-   /// Such sparse handles are isomorphic to TRef<T>.                         
-   /// Handles can never be empty.                                            
-   ///   @tparam T the contained type                                         
-   template<CT::NotReference T> requires CT::Sparse<T>
+   /// Such sparse handles are similar to TRef<T>.                            
+   ///   @tparam T the contained sparse type                                  
+   template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleLocalSparse<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
@@ -507,9 +511,6 @@ namespace Langulus::Anyness
       using Denser         = THandle<Deptr<T>>;
       using DeepType       = HandleDisowned;
       using Base           = typename Inner::THandleLocalSparse<T>::Base;
-
-      THandle(Inner::Piecewise, auto&& a)
-         : Base {Stackwise, LglsFwd(a)} {}
 
       constexpr THandle() noexcept {
          this->ConstructDefault();
@@ -521,6 +522,17 @@ namespace Langulus::Anyness
 
       constexpr THandle(THandle&& other) noexcept {
          this->Absorb(Move(other));
+      }
+
+      /// Piecewise constructor                                               
+      template<class A>
+      THandle(Inner::Piecewise, A&& pointer) {
+         if (DeintCast(pointer)) {
+            this->SetHeapInner(DeintCast(pointer));
+            if constexpr (not CT::Disowned<A>)
+               this->FindAllocationInner();
+         }
+         else this->ConstructDefault();
       }
 
       constexpr ~THandle() noexcept {

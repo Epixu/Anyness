@@ -84,4 +84,8 @@ struct RT : Langulus::Referenced {
       if (moved_out) return "RT(moved-out)";
       return "RT(unknown)";
    }
+
+   auto GetHash() const noexcept {
+      return Langulus::HashOf(data);
+   }
 };

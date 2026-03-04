@@ -78,8 +78,8 @@ namespace Langulus::Anyness::Component
             else {
                // Hash table merge                                      
                // Move the element to a temporary swapper first         
-               Count<C> bucket = self.GetOffset(a);
-               THandle<Decvq<Deref<E>>> swapper {Piecewise, FWDIntent(a)};
+               Count<C> bucket = self.GetOffset(DeintCast(a));
+               THandle<Decvq<Deref<Deint<E>>>> swapper {Piecewise, LglsFwd(a)};
                self.TableInsert(bucket, swapper);
             }
 
@@ -101,8 +101,7 @@ namespace Langulus::Anyness::Component
       }
 
       template<CT::Container C>
-      auto MergeRange(this C&, CT::Container auto&&)
-         -> Count<C>;
+      auto MergeRange(this C&, CT::Container auto&&) -> Count<C>;
       
    protected:
       /// Helper function that gathers the number of elements and types.      
