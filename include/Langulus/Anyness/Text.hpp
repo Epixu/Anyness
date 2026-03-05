@@ -26,6 +26,7 @@
 #include <Langulus/CT/Text.hpp>
 #include <Langulus/CT/Number.hpp>
 #include <Langulus/CT/Serializer.hpp>
+#include <Langulus/Utils/Byte.hpp>
 
 
 namespace Langulus::Anyness
@@ -62,7 +63,14 @@ namespace Langulus::Anyness
       using CountType     = Base::CountType;
       using CTTI_Text     = Yes<>;
       using CTTI_MapsTo   = Text;
-      using CTTI_MapsFrom = Types<RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta>;
+      using CTTI_MapsFrom = Types<
+         bool, char, /*wchar_t, char8_t, char16_t, char32_t,*/
+         int8_t, int16_t, int32_t, int64_t,
+         uint8_t, uint16_t, uint32_t, uint64_t,
+         float, double,
+         Hash, Byte,
+         RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta
+      >;
 
       // Single element selections                                      
       /*using Pick    = char const&;
@@ -292,6 +300,20 @@ namespace Langulus::Anyness
          else static_assert(false, "Unsupported number type");
 
          result.ResetHash();
+         return result;
+      }
+
+      /// Generate hexadecimal string from a given value                      
+      ///   @param from - the argument                                        
+      ///   @return the resulting text                                        
+      static Text Hex(const auto& from) {
+         Text result;
+         result.AllocateFresh(result.RequestHeap(sizeof(from) * 2));
+         auto from_bytes = reinterpret_cast<const std::byte*>(&from);
+         auto to_bytes = result.GetRaw();
+         for (size_t i = 0; i < sizeof(from); ++i)
+            ::fmt::format_to_n(to_bytes + i * 2, 2, "{:02X}", from_bytes[i]);
+         result.SetCountInner(sizeof(from) * 2);
          return result;
       }
 
@@ -658,6 +680,30 @@ namespace Langulus::CTTI
       static void Serialize(const Anyness::Bytes&, Anyness::Text&, Context*);
    };
    
+   /// Convert Bool -> Text                                                   
+   template<>
+   struct Converter<bool, Anyness::Text> {
+      static constexpr auto Convert(bool const& from) -> Anyness::Text {
+         return from ? "yes" : "no";
+      }
+   };
+
+   /// Convert Byte -> Text                                                   
+   template<>
+   struct Converter<Byte, Anyness::Text> {
+      static constexpr auto Convert(Byte const& from) -> Anyness::Text {
+         return Anyness::Text::Hex(from);
+      }
+   };
+
+   /// Convert Hash -> Text                                                   
+   template<>
+   struct Converter<Hash, Anyness::Text> {
+      static constexpr auto Convert(Hash const& from) -> Anyness::Text {
+         return Anyness::Text::Hex(from.value);
+      }
+   };
+
    /// Convert Number -> Text                                                 
    template<CT::Number T>
    struct Converter<T, Anyness::Text> {
