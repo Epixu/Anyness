@@ -22,11 +22,25 @@ namespace Langulus::Anyness::Component
       //using HeapRequest  = PerElement<PerIndirection<AllocationPtr>>;
 
       /// Get entry array if containing pointers                              
+      ///   @attention may contain invalid data for discontiguous containers  
+      ///   @return the array of entries                                      
       auto GetEntries(this auto const& self) assumptious
-      -> Decvq<Deref<decltype(self.GetEntriesInner())>> {
+      -> Allocation const* const* {
          if (self.IsSparse()) {
             LglsAssumeDev(self.GetRaw(), "No memory available");
             return self.GetEntriesInner();
+         }
+         return nullptr;
+      }
+
+      /// Get entry array for all indirections of a specific element          
+      ///   @return the array of entries                                      
+      template<CT::Container C> requires CT::Indexed<C>
+      auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
+      -> Allocation const* const* {
+         if (self.IsSparse()) {
+            LglsAssumeDev(self.GetRaw(), "No memory available");
+            return self.GetEntriesInner() + self.SimplifyIndex(LglsFwd(idx));
          }
          return nullptr;
       }

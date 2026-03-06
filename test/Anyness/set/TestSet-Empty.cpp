@@ -10,10 +10,11 @@
 
 
 TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
+   , Types<Set, Any, ScopedElement<Any>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Set, Text,   ScopedElement<Text>>
    , Types<Set, int,    ScopedElement<int>>
-   , Types<Set, Any,    ScopedElement<Any>>
    , Types<Set, RT,     ScopedElement<RT>>
    , Types<Set, char,   ScopedElement<char>>
 

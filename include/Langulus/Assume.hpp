@@ -18,7 +18,7 @@
    #endif
 
    #ifndef LANGULUS_DEFAULT_STACK_DEPTH
-      #define LANGULUS_DEFAULT_STACK_DEPTH 3
+      #define LANGULUS_DEFAULT_STACK_DEPTH 10
    #endif
 #endif
 

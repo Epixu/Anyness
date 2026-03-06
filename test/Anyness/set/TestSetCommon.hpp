@@ -136,6 +136,10 @@ template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
    auto& e = e_with_intent.what;
    using E = typename Decay<Deint<I>>::Type;
+
+   if constexpr (CT::Deep<E> and CT::Dense<E>)
+      REQUIRE(set.template GetAt<E*>(0)->template IsSame<int>());
+
    REQUIRE(set.GetCount() == 1);
    REQUIRE(set.GetUses() == uses);
    REQUIRE(set.GetReserved() >= (uses ? 1 : 0));
@@ -158,14 +162,14 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
       if constexpr (not CT::Disowned<I>) {
          for (size_t i = 0; i < IndirectsOf<E>; ++i) {
             if constexpr (CT::Cloned<I>)
-               REQUIRE(set.GetEntries()[i] != e.entries[i + 1]);
+               REQUIRE(set.GetEntriesAt(0)[i] != e.entries[i + 1]);
             else
-               REQUIRE(set.GetEntries()[i] == e.entries[i + 1]);
+               REQUIRE(set.GetEntriesAt(0)[i] == e.entries[i + 1]);
          }
       }
       else {
          for (size_t i = 0; i < IndirectsOf<E>; ++i)
-            REQUIRE(set.GetEntries()[i] == nullptr);
+            REQUIRE(set.GetEntriesAt(0)[i] == nullptr);
       }
    }
 
