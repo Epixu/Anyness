@@ -83,6 +83,13 @@ namespace Langulus::Fractalloc
       ///                                                                     
       /// Packed pointer support                                              
       template<CT::CustomPointer T>
+      static auto Find(T ptr) assumptious -> Allocation const* {
+         return FindPackedInner(
+            MetaDataOf<Deptr<T>>(), ptr.GetPoolId(), ptr.GetEntryId()
+         );
+      }
+
+      template<CT::CustomPointer T>
       static auto AllocatePacked(DMeta type, pot_t size)
       assumptious -> Allocation* {
          return AllocatePackedInner(T::Specification, type, size);
@@ -95,6 +102,11 @@ namespace Langulus::Fractalloc
             type, size, reinterpret_cast<Allocation*>(prev)
          );
       }
+      
+      LANGULUS_API(FRACTALLOC)
+      static auto FindPackedInner(
+         DMeta meta, size_t poolId, size_t entryId
+      ) assumptious -> Allocation*;
       
       LANGULUS_API(FRACTALLOC)
       static auto AllocatePackedInner(

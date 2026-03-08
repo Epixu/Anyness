@@ -21,6 +21,14 @@ namespace Langulus::Anyness
 
 namespace Langulus::Anyness::Component
 {
+   template<class T>
+   void ForEachIndirection(T pointer, auto&& lambda) {
+      if constexpr (CT::Sparse<T>) {
+         lambda(pointer);
+         ForEachIndirection(*pointer, LglsFwd(lambda));
+      }
+   }
+
    ///                                                                        
    /// Manages deep ownership by searching for an allocation every time       
    ///   @tparam ID which heap/stack are we keeping track of?                 
@@ -422,79 +430,133 @@ namespace Langulus::Anyness::Component
       ///      allocation data with itself when sparse, rather than searching 
       ///      for it on demand.                                              
       ///   @param intent entries will be copied/sought if handle/sparse      
-      template<CT::Container C, CT::Intent I> requires CT::DeeplyOwned<C>
+      template<CT::Container C, CT::Intent I>
       void EmplaceEntries(this C& self, I&& intent) {
-         //static_assert(CT::DeeplyOwned<C>,
-         //   "Shouldn't be called in shallow owned containers");
+         static_assert(CT::ContainsOne<C>);
          static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
             "because it will overwrite/reference new allocations");
          LglsAssumeDev(self.IsSparse(),
             "EmplaceEntries shouldn't be called on dense containers");
-         using IT = Decvq<Deref<TypeOf<I>>>;
          decltype(auto) rhs = LglsFwd(intent.what);
-
-         if constexpr (CT::Handle<IT>)
-            LglsAssumeDev(rhs.IsSparse(), "Sparseness mismatch");
-         else
-            LglsAssumeDev(CT::Sparse<decltype(rhs)>, "Sparseness mismatch");
-
          const auto indirections = self.GetIndirections();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
          auto entries = self.GetEntriesInner();
 
-         if constexpr ((CT::Handle<IT> and     I::IsKept())
-         or (       not CT::Handle<IT> and not CT::Disowned<I>)) {
-            // When it's a keeping intent, copy all entries and         
-            // reference them                                           
-            if constexpr (CT::Handle<IT>) {
-               if (auto entries_src = rhs.GetEntries())
+         if constexpr (CT::Disowned<I>) {
+            // Disowning just zeroes all entries                        
+            memset(DecvqAllCast(entries), 0, entries_size);
+         }
+         else {
+            // Copy all entries and reference them, unless we're moving 
+            // a handle                                                 
+            if constexpr (CT::Handle<I>) {
+               LglsAssumeDev(self.IsSame(rhs.GetType()), "Type mismatch");
+
+               if constexpr (requires { rhs.GetEntriesInner(); }) {
+                  auto entries_src = rhs.GetEntriesInner();
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
+
+                  if constexpr (I::IsMoved())
+                     memset(DecvqAllCast(entries_src), 0, entries_size);
+               }
                else {
                   // RHS might be a disowned handle                     
                   memset(DecvqAllCast(entries), 0, entries_size);
                }
-            }
-            else memset(DecvqAllCast(entries), 0, entries_size);
 
-            if constexpr (CT::Handle<IT> or LANGULUS_FEATURE(MANAGED_MEMORY)) {
-               auto const entriesEnd = entries + indirections;
-               auto meta = self.GetType().GetDeptr();
-               void** handle = self.template GetRawAs<void*>(); //TODO this won't work with packed pointers, would it?
+               if constexpr (CT::TypeErased<TypeOf<I>>) {
+                  // Reference each indirection of a type-erased handle 
+                  auto const entriesEnd = entries + indirections;
+                  auto meta = self.GetType().GetDeptr();
+                  void** handle = self.template GetRawAs<void*>(); //TODO this won't work with packed pointers, would it?
 
-               while (entries < entriesEnd) {
-                  // When it's a keeping intent, copy all entries and   
-                  // reference them. Notice that when NOT emplacing via 
-                  // a handle, we're forced to reference on abandon,    
-                  // because we can't abandon a raw pointer.            
-                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     if constexpr (not CT::Handle<IT>)
-                        const_cast<AllocationPtr&>(*entries) = Allocator::Find(*handle);
-                  #endif
+                  while (entries < entriesEnd) {
+                     // When it's a keeping intent, copy all entries and   
+                     // reference them. Notice that when NOT emplacing via 
+                     // a handle, we're forced to reference on abandon/move
+                     // because we can't abandon/move a raw pointer.       
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        if constexpr (not CT::Handle<I>)
+                           const_cast<AllocationPtr&>(*entries) = Allocator::Find(*handle);
+                     #endif
 
-                  if (not *entries)
-                     break;
+                     if (not *entries)
+                        continue;
 
-                  DecvqAllCast(*entries)->AddRef(1);
+                     DecvqAllCast(*entries)->AddRef(1);
 
-                  LglsAssumeDev(meta,
-                     "Valid entry, but invalid type");
-                  LglsAssumeDevAndOptimize(*handle,
-                     "Valid entry, but invalid pointer");
+                     LglsAssumeDev(meta,
+                        "Valid entry, but invalid type");
+                     LglsAssumeDevAndOptimize(*handle,
+                        "Valid entry, but invalid pointer");
 
-                  auto referencer = meta.GetReferencer();
-                  if (meta.IsDense() and referencer)
-                     referencer(*handle, 1);
+                     auto referencer = meta.GetReferencer();
+                     if (meta.IsDense() and referencer)
+                        referencer(*handle, 1);
 
-                  handle = reinterpret_cast<void**>(*handle); //TODO this won't work with packed pointers, would it?
-                  meta = meta.GetDeptr();
-                  ++entries;
+                     handle = reinterpret_cast<void**>(*handle); //TODO this won't work with packed pointers, would it?
+                     meta = meta.GetDeptr();
+                     ++entries;
+                  }
+               }
+               else {
+                  // Reference each indirection of a typed handle.      
+                  using T = TypeOf<TypeOf<I>>;
+                  LglsAssumeDev(self.template IsSame<T>(), "Type mismatch");
+                  bool was_referenced = false;
+
+                  ForEachIndirection(*rhs.Get(),
+                  [&entries,&was_referenced](auto& i) {
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        if (not *entries) {
+                           // If entry is zero, we search for it and we 
+                           // always reference it.                      
+                           const_cast<AllocationPtr&>(*entries) = Allocator::Find(i);
+                           if (*entries) {
+                              DecvqAllCast(*entries)->AddRef(1);
+                              was_referenced = true;
+                              return;  // Notice the early return here  
+                           }
+                        }
+                     #endif
+
+                     if constexpr (not I::IsMoved()) {
+                        // Reference valid entries if not zero          
+                        if (*entries)
+                           DecvqAllCast(*entries)->AddRef(1);
+                     }
+
+                     ++entries;
+                  });
+
+                  if constexpr (CT::Referenced<Decay<T>>) {
+                     if (not I::IsMoved() or was_referenced)
+                        DenseCast(rhs.Get()).Reference(1);
+                  }
                }
             }
-         }
-         else {
-            // Disowning just zeroes all entries                        
-            memset(DecvqAllCast(entries), 0, entries_size);
+            else {
+               using T = TypeOf<I>;
+               LglsAssumeDev(self.template IsSame<T>(), "Type mismatch");
+
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  // Reference each indirection of a raw pointer.       
+                  // We're forced to reference on abandon/move because  
+                  // we can't abandon/move a raw pointer.               
+                  ForEachIndirection(rhs, [&entries](auto& i) {
+                     const_cast<AllocationPtr&>(*entries) = Allocator::Find(i);
+                     if (*entries)
+                        DecvqAllCast(*entries)->AddRef(1);
+                     ++entries;
+                  });
+               #else
+                  memset(DecvqAllCast(entries), 0, entries_size);
+               #endif
+
+               if constexpr (CT::Referenced<Decay<T>>)
+                  DenseCast(rhs).Reference(1);
+            }
          }
       }
    };

@@ -227,19 +227,20 @@ namespace Langulus::Anyness
          );
       }
 
-      /// Access a variable on the stack associated with an ID                
-      /*template<unsigned ID, class SELF>
-      constexpr auto& AccessStackById(this SELF&& self) noexcept {
-         auto& result = ::Langulus::get<ID>(self.mStack).value;
-         using ConstOrNot = LglsMutIf(SELF, decltype(result));
-         return const_cast<ConstOrNot>(result);
-      }*/
-
+      /// Get a reference to a heap/stack provider's data                     
+      ///   @tparam ID provider ID                                            
+      ///   @return return a reference to the provider's data                 
       template<Cid ID>
-      constexpr auto& AccessStackById(this auto&& self) noexcept {
+      constexpr auto& AccessProvider(this auto&& self) noexcept {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
-            if constexpr (requires { C::Id; }) {
-               if constexpr (C::Id == ID)
+            if constexpr (requires { C::StackProvider; }) {
+               if constexpr (C::StackProvider == ID)
+                  return (self.template AccessStack<C>());
+               else
+                  return No{};
+            }
+            else if constexpr (requires { C::HeapProvider; }) {
+               if constexpr (C::HeapProvider == ID)
                   return (self.template AccessStack<C>());
                else
                   return No{};
@@ -248,28 +249,35 @@ namespace Langulus::Anyness
          });
       }
 
-      /// Access a heap provider with the given ID                            
+      /// Get a reference to the stack component with the given ID            
+      ///   @tparam ID stack provider ID                                      
+      ///   @return return a reference to the provider component              
       template<Cid ID>
-      constexpr auto& AccessHeapById(this auto&& self) noexcept {
+      constexpr auto& AccessStackProvider(this auto&& self) noexcept {
+         return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
+            if constexpr (requires { C::StackProvider; }) {
+               if constexpr (C::StackProvider == ID)
+                  return (self.template AccessStack<C>()); //return (self.C);
+               else
+                  return No{};
+            }
+            else return No{};
+         });
+      }
+
+      /// Get a reference to the heap component with the given ID             
+      ///   @tparam ID heap provider ID                                       
+      ///   @return return a reference to the provider component              
+      template<Cid ID>
+      constexpr auto& AccessHeapProvider(this auto&& self) noexcept {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { C::HeapProvider; }) {
                if constexpr (C::HeapProvider == ID)
-                  return (self.C);
+                  return (self.template AccessStack<C>()); //return (self.C);
                else
                   return No {};
             }
             else return No {};
-         });
-      }
-
-      /// Access a component on the stack associated with an ID               
-      template<Cid ID>
-      constexpr auto& AccessComById(this auto&& self) noexcept {
-         return ComponentList::ForEachConstOr([&]<class C>{
-            if constexpr (C::Id == ID)
-               return (self.C);
-            else
-               return No {};
          });
       }
 

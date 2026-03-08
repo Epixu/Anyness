@@ -464,13 +464,37 @@ namespace Langulus::Anyness::Component
       ///      and destroy only fully dereferenced indirections               
       template<bool DESTROY = true, CT::Container C>
       void DestroyAllElements(this C& self) assumptious {
+         if constexpr (DESTROY or CT::DeeplyOwned<C>) {
+            self.Apply([&](auto& item) {
+               item.template DestroyElement<DESTROY>();
+            });
+         }
+      }
+
+      /// Visit all element's handles and perform a function on them          
+      template<CT::Container C>
+      void Apply(this C&& self, auto&& lambda) {
          if constexpr (CT::ContainsOne<C>)
-            self.template DestroyElement<DESTROY>();
-         else if constexpr (DESTROY or CT::DeeplyOwned<C>) {
-            auto item = IterateHandles(self).begin();
-            while (item) {
-               item->template DestroyElement<DESTROY>();
-               ++item;
+            lambda(self);
+         else {
+            auto item = self.GetHandle();
+            if constexpr (CT::IndexedLinearly<C>) {
+               auto const end = item + self.GetCount();
+               while (item.GetRaw() != end.GetRaw()) {
+                  lambda(item);
+                  ++item;
+               }
+            }
+            else {
+               const auto tableBeg = self.GetHashTableInner();
+               const auto tableEnd = tableBeg + self.GetReserved();
+               auto table = tableBeg;
+               while (table != tableEnd) {
+                  if (*table)
+                     lambda(item);
+                  ++item;
+                  ++table;
+               }
             }
          }
       }

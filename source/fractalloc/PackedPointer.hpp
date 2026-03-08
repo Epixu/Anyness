@@ -76,6 +76,18 @@ namespace Langulus::Fractalloc
          mAll += static_cast<Inner>(elementId);
       }
 
+      size_t GetPoolId() const noexcept {
+         return mAll >> (Specification.EntryBits + Specification.OffsetBits);
+      }
+
+      size_t GetEntryId() const noexcept {
+         return (mAll >> Specification.OffsetBits) & ((1u << Specification.EntryBits) - 1u);
+      }
+
+      size_t GetElementId() const noexcept {
+         return mAll & ((1u << Specification.OffsetBits) - 1u);
+      }
+
    public:
       constexpr PackedPointer() noexcept
          : mAll(0) {}

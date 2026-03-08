@@ -193,6 +193,8 @@ namespace Langulus::Anyness
    {
       /// Validate all used components in a container are properly ordered,   
       /// of standard layout, and containing proper ID sequences.             
+      ///   @tparam ACC accumulated number of stack/heap providers            
+      ///   @tparam C1, C2, CN... components                                  
       template<unsigned ACC, class C1, class C2, class...CN>
       consteval bool ValidateComponentOrder() {
          static_assert(::std::is_standard_layout_v<C1>);
@@ -203,18 +205,42 @@ namespace Langulus::Anyness
          static_assert(sizeof(C1) == 1 and sizeof(C2) == 1,
             "Use StackRequest instead of adding non-static members in components");
          
-         if constexpr (requires { C1::Id; }) {
-            static_assert(C1::Id == ACC, "Invalid heap/stack ID");
+         if constexpr (requires { C1::StackProvider; }) {
+            static_assert(C1::StackProvider == ACC,
+               "Invalid stack provider ID");
+            static_assert(not requires { C1::HeapProvider; }, 
+               "Component can't be both a stack and a heap provider");
+
             if constexpr (sizeof...(CN))
                return ValidateComponentOrder<ACC + 1, C2, CN...>();
-            else
+            else {
+               static_assert(ACC > 0,
+                  "Container must have at least one heap or stack provider");
                return true;
+            }
+         }
+         else if constexpr (requires { C1::HeapProvider; }) {
+            static_assert(C1::HeapProvider == ACC,
+               "Invalid heap provider ID");
+            static_assert(not requires { C1::StackProvider; },
+               "Component can't be both a stack and a heap provider");
+
+            if constexpr (sizeof...(CN))
+               return ValidateComponentOrder<ACC + 1, C2, CN...>();
+            else {
+               static_assert(ACC > 0,
+                  "Container must have at least one heap or stack provider");
+               return true;
+            }
          }
          else {
             if constexpr (sizeof...(CN))
                return ValidateComponentOrder<ACC, C2, CN...>();
-            else
+            else {
+               static_assert(ACC > 0,
+                  "Container must have at least one heap or stack provider");
                return true;
+            }
          }
       }
 

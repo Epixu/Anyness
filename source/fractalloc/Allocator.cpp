@@ -402,6 +402,26 @@ namespace Langulus::Fractalloc
       return false;
    }
 
+   /// Find a memory entry from packed pointer.                               
+   /// Should always result in an allocation, unless poolId is zero.          
+   ///   @param poolId the pool id                                            
+   ///   @param entryId the entry id                                          
+   ///   @return the memory entry that contains the memory pointer            
+   auto Allocator::FindPackedInner(
+      DMeta meta, size_t poolId, size_t entryId
+   ) assumptious -> Allocation* {
+      LglsAssumeDevAndOptimize(meta, "Invalid pointer type");
+      LglsAssumeDevAndOptimize(poolId, "Nullptr provided");
+      auto pool_bank = SelectPoolBank(meta);
+      LglsAssumeDevAndOptimize(pool_bank, "Missing pool");
+      LglsAssumeDev(pool_bank->indexed.contains(poolId), "Missing poolId");
+      auto pool = pool_bank->indexed.at(poolId);
+      LglsAssumeDevAndOptimize(pool, "Missing pool");
+      auto entry = pool->AllocationFromIndex(entryId);
+      LglsAssumeDev(entry, "Missing entry");
+      return entry;
+   }
+
    /// Allocate while conforming to packed pointer limits                     
    ///   @param spec pointer specification                                    
    ///   @param meta data type of the allocation                              

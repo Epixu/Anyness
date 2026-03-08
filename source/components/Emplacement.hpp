@@ -370,7 +370,7 @@ namespace Langulus::Anyness::Component
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership.   
             // Doesn't matter if managed memory is disabled.            
-            if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
+            if constexpr (CT::TypeErased<C, IT>) {
                //                                                       
                // Either this container or the handle is type-erased    
                auto T = rhs.GetType();
@@ -406,9 +406,13 @@ namespace Langulus::Anyness::Component
                //                                                       
                // Both sides are statically-typed and we can benefit    
                // from a lot of compile-time optimizations.             
-               using T = TypeOf<C>;
-               static_assert(Same<T, TypeOf<IT>>, "Type mismatch");
-               if constexpr (CT::Mutable<TypeOf<IT>> or not I::IsMoved())
+               if constexpr (CT::Typed<C, IT>)
+                  static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
+               else
+                  LglsAssumeDev(self.template IsSame<TypeOf<IT>>(), "Type mismatch");
+               using T = Tif<CT::Typed<C>, TypeOf<C>, TypeOf<IT>>;
+
+               if constexpr (CT::Mutable<T> or not I::IsMoved())
                   IntentNew(self.GetHeapInner(), I::Nest(*rhs.GetRaw()));
                else
                   IntentNew(self.GetHeapInner(), Refer(*rhs.GetRaw()));

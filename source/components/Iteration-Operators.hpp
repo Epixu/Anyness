@@ -12,10 +12,12 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Adds prefix and suffix operators for increment and decrement.          
-   /// These operators are fundamentally unsafe so the API is protected,      
-   /// used mainly by handles.                                                
-   ///   @tparam ID heap/stack we're iterating                                
+   /// Adds +, -, +=, -=, ++ prefix/suffix, -- prefix/suffix operators.       
+   /// Adds - operator for difference between two containers.                 
+   /// These operators are fundamentally unsafe so the API is protected.      
+   /// Used mainly by handles. For maps and sets, these handles may point to  
+   /// uninitialized values.                                                  
+   ///   @tparam ID heap provider we're iterating                             
    template<Cid ID>
    struct IterationOperators {
       using CTTI_Component = Yes<>;
@@ -27,17 +29,8 @@ namespace Langulus::Anyness::Component
       ///   @return a shallow modified copy of this container                 
       template<CT::Container C>
       constexpr C operator + (this C const& self, size_t offset) noexcept {
-         // Increment the heap pointer                                  
          C copy = self;
-         auto& data = copy.template AccessStackById<ID>();
-         if constexpr (CT::TypeErased<C>)
-            data  = static_cast<uint8_t*>(data) + copy.GetStride() * offset;
-         else
-            data += offset;
-
-         // Increment deep ownership entries, but only if on the stack  
-         if_available(copy.template GetEntriesInner<ID>() += offset);
-         return copy;
+         return copy += offset;
       }
 
       /// Offset first element to the right by the desired amount             
@@ -46,15 +39,17 @@ namespace Langulus::Anyness::Component
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
       constexpr C& operator += (this C& self, size_t offset) noexcept {
-         // Increment the heap pointer                                  
-         auto& data = self.template AccessStackById<ID>();
-         if constexpr (CT::TypeErased<C>)
-            data  = static_cast<uint8_t*>(data) + self.GetStride() * offset;
-         else
+         auto& data = self.template AccessHeapProvider<ID>();
+         if constexpr (CT::TypeErased<C>) {
+            data = static_cast<uint8_t*>(data) + self.GetStride() * offset;
+            if_available(self.template GetEntriesInner<ID>()
+               += self.GetIndirections() * offset);
+         }
+         else {
             data += offset;
-         
-         // Increment deep ownership entries, but only if on the stack  
-         if_available(self.template GetEntriesInner<ID>() += offset);
+            if_available(self.template GetEntriesInner<ID>()
+               += IndirectsOf<TypeOf<C>> * offset);
+         }
          return self;
       }
 
@@ -63,15 +58,17 @@ namespace Langulus::Anyness::Component
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
       constexpr C& operator ++ (this C& self) noexcept {
-         // Increment the heap pointer                                  
-         auto& data = self.template AccessStackById<ID>();
-         if constexpr (CT::TypeErased<C>)
+         auto& data = self.template AccessHeapProvider<ID>();
+         if constexpr (CT::TypeErased<C>) {
             data = static_cast<uint8_t*>(data) + self.GetStride();
-         else
+            if_available(self.template GetEntriesInner<ID>()
+               += self.GetIndirections());
+         }
+         else {
             ++data;
-
-         // Increment deep ownership entries, but only if on the stack  
-         if_available(++self.template GetEntriesInner<ID>());
+            if_available(self.template GetEntriesInner<ID>()
+               += IndirectsOf<TypeOf<C>>);
+         }
          return self;
       }
 
@@ -88,7 +85,7 @@ namespace Langulus::Anyness::Component
       /// Get the element difference between two iterators                    
       ///   @attention very usafe - assumes rhs's type is same as self        
       ///   @param rhs the other iterator                                     
-      ///   @return the difference                                            
+      ///   @return the difference in number of elements                      
       template<CT::Container C, CT::Container RHS>
       constexpr auto operator - (this C const& self, RHS const& rhs)
       noexcept(not CT::TypeErased<C> and not LANGULUS(SAFE)) -> ::std::ptrdiff_t {
@@ -107,17 +104,8 @@ namespace Langulus::Anyness::Component
       ///   @return a shallow modified copy of this container                 
       template<CT::Container C>
       constexpr C operator - (this C const& self, size_t offset) noexcept {
-         // Increment the heap pointer                                  
          C copy = self;
-         auto& data = copy.template AccessStackById<ID>();
-         if constexpr (CT::TypeErased<C>)
-            data = static_cast<uint8_t*>(data) - copy.GetStride() * offset;
-         else
-            data -= offset;
-         
-         // Increment deep ownership entries, but only if on the stack  
-         if_available(copy.template GetEntriesInner<ID>() -= offset);
-         return copy;
+         return copy -= offset;
       }
 
       /// Offset first element to the left by the desired amount              
@@ -126,15 +114,17 @@ namespace Langulus::Anyness::Component
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
       constexpr C& operator -= (this C& self, size_t offset) noexcept {
-         // Increment the heap pointer                                  
-         auto& data = self.template AccessStackById<ID>();
-         if constexpr (CT::TypeErased<C>)
+         auto& data = self.template AccessHeapProvider<ID>();
+         if constexpr (CT::TypeErased<C>) {
             data = static_cast<uint8_t*>(data) - self.GetStride() * offset;
-         else
+            if_available(self.template GetEntriesInner<ID>()
+               -= self.GetIndirections() * offset);
+         }
+         else {
             data -= offset;
-         
-         // Increment deep ownership entries, but only if on the stack  
-         if_available(self.template GetEntriesInner<ID>() -= offset);
+            if_available(self.template GetEntriesInner<ID>()
+               -= IndirectsOf<TypeOf<C>> * offset);
+         }
          return self;
       }
 
@@ -143,15 +133,17 @@ namespace Langulus::Anyness::Component
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
       constexpr C& operator -- (this C& self) noexcept {
-         // Decrement the heap pointer                                  
-         auto& data = self.template AccessStackById<ID>();
-         if constexpr (CT::TypeErased<C>)
+         auto& data = self.template AccessHeapProvider<ID>();
+         if constexpr (CT::TypeErased<C>) {
             data = static_cast<uint8_t*>(data) - self.GetStride();
-         else
+            if_available(self.template GetEntriesInner<ID>()
+               -= self.GetIndirections());
+         }
+         else {
             --data;
-         
-         // Decrement deep ownership entries, but only if on the stack  
-         if_available(--self.template GetEntriesInner<ID>());
+            if_available(self.template GetEntriesInner<ID>()
+               -= IndirectsOf<TypeOf<C>>);
+         }
          return self;
       }
 
