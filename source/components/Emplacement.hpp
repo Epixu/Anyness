@@ -400,8 +400,8 @@ namespace Langulus::Anyness::Component
                if (T.IsSparse()) {
                   if_available(self.EmplaceEntries(LglsFwd(intent)));
 
-                  if constexpr (CT::AutoOwned<IT> and (CT::Abandoned<I> or CT::Moved<I>))
-                     rhs.SetAllocationInner(nullptr);
+                  //if constexpr (CT::AutoOwned<IT> and (CT::Abandoned<I> or CT::Moved<I>))
+                  //   rhs.SetAllocationInner(nullptr);
                }
             }
             else {
@@ -422,8 +422,8 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Sparse<T>) {
                   if_available(self.EmplaceEntries(LglsFwd(intent)));
 
-                  if constexpr (CT::AutoOwned<IT> and (CT::Abandoned<I> or CT::Moved<I>))
-                     rhs.SetAllocationInner(nullptr);
+                  //if constexpr (CT::AutoOwned<IT> and (CT::Abandoned<I> or CT::Moved<I>))
+                  //   rhs.SetAllocationInner(nullptr);
                }
             }
          }

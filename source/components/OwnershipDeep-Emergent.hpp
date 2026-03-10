@@ -460,7 +460,7 @@ namespace Langulus::Anyness::Component
                   auto entries_src = rhs.GetEntriesInner();
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
-                  if constexpr (I::ResetsOnMove())
+                  if constexpr (/*I::ResetsOnMove() or*/ CT::AutoOwned<TypeOf<I>> and (CT::Abandoned<I> or CT::Moved<I>))
                      memset(DecvqAllCast(entries_src), 0, entries_size);
                }
                else {
