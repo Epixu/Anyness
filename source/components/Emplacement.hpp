@@ -374,7 +374,6 @@ namespace Langulus::Anyness::Component
                //                                                       
                // Either this container or the handle is type-erased    
                auto T = rhs.GetType();
-               //auto T = rhs.GetTypeInner();
                LglsAssumeDev(self.IsSame(T), "Type mismatch");
                auto src = const_cast<void*>(static_cast<const void*>(rhs.GetRaw()));
                auto dst = self.GetRaw();
@@ -400,6 +399,9 @@ namespace Langulus::Anyness::Component
 
                if (T.IsSparse()) {
                   if_available(self.EmplaceEntries(LglsFwd(intent)));
+
+                  if constexpr (CT::AutoOwned<IT> and (CT::Abandoned<I> or CT::Moved<I>))
+                     rhs.SetAllocationInner(nullptr);
                }
             }
             else {
@@ -419,15 +421,18 @@ namespace Langulus::Anyness::Component
 
                if constexpr (CT::Sparse<T>) {
                   if_available(self.EmplaceEntries(LglsFwd(intent)));
+
+                  if constexpr (CT::AutoOwned<IT> and (CT::Abandoned<I> or CT::Moved<I>))
+                     rhs.SetAllocationInner(nullptr);
                }
             }
          }
          else {
-            if constexpr (CT::TypeErased<C>) {
+            if constexpr (CT::TypeErased<C, IT>) {
                //                                                       
                // This container is type-erased                         
                LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
-               auto T = self.GetTypeInner();
+               auto T = self.GetType();
                const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
                const auto dst = self.GetRaw();
                
@@ -449,8 +454,12 @@ namespace Langulus::Anyness::Component
             else {
                //                                                       
                // This container is statically-typed                    
-               using T = TypeOf<C>;
-               static_assert(Same<T, IT>, "Type mismatch");
+               if constexpr (CT::Typed<C>)
+                  static_assert(Same<TypeOf<C>, IT>, "Type mismatch");
+               else
+                  LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
+               using T = Tif<CT::Typed<C>, TypeOf<C>, IT>;
+
                IntentNew(self.GetHeapInnerAsVoid(), LglsFwd(intent));
 
                if constexpr (CT::Sparse<T>) {

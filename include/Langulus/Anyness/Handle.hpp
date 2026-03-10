@@ -78,7 +78,8 @@ namespace Langulus::Anyness
          Com::Comparison<>
       >;
       
-      /// Statically typed handle to a local sparse value                     
+      /// Statically typed handle to a local sparse value.                    
+      ///   @attention this handle is local and has strong ownership!         
       template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
       using THandleLocalSparse = Container<
          Com::TypedStatic<DMeta, T>,
@@ -495,6 +496,9 @@ namespace Langulus::Anyness
    ///                                                                        
    /// When T is not a reference, then it is not embedded.                    
    /// Such sparse handles are similar to TRef<Deptr<T>>.                     
+   ///   @attention such handles are local and have strong ownership! This    
+   ///      means that they need to be cleared of their allocation upon move  
+   ///      or abandon!                                                       
    ///   @tparam T the contained sparse type                                  
    template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleLocalSparse<T> {

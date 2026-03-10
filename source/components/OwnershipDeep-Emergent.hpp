@@ -432,12 +432,14 @@ namespace Langulus::Anyness::Component
       ///   @param intent entries will be copied/sought if handle/sparse      
       template<CT::Container C, CT::Intent I>
       void EmplaceEntries(this C& self, I&& intent) {
-         static_assert(CT::ContainsOne<C>);
+         static_assert(CT::ContainsOne<C>,
+            "This routine is designed for single-element containers");
          static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
             "because it will overwrite/reference new allocations");
          LglsAssumeDev(self.IsSparse(),
             "EmplaceEntries shouldn't be called on dense containers");
+
          decltype(auto) rhs = LglsFwd(intent.what);
          const auto indirections = self.GetIndirections();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
@@ -454,10 +456,11 @@ namespace Langulus::Anyness::Component
                LglsAssumeDev(self.IsSame(rhs.GetType()), "Type mismatch");
 
                if constexpr (requires { rhs.GetEntriesInner(); }) {
+                  // We can copy entries from RHS handle                
                   auto entries_src = rhs.GetEntriesInner();
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
-                  if constexpr (I::IsMoved())
+                  if constexpr (I::ResetsOnMove())
                      memset(DecvqAllCast(entries_src), 0, entries_size);
                }
                else {
@@ -503,6 +506,7 @@ namespace Langulus::Anyness::Component
                else {
                   // Reference each indirection of a typed handle.      
                   using T = TypeOf<TypeOf<I>>;
+                  static_assert(CT::Sparse<T>);
                   LglsAssumeDev(self.template IsSame<T>(), "Type mismatch");
                   bool was_referenced = false;
 
@@ -537,11 +541,12 @@ namespace Langulus::Anyness::Component
                }
             }
             else {
+               // Reference each indirection of a raw pointer           
                using T = TypeOf<I>;
+               static_assert(CT::Sparse<T>);
                LglsAssumeDev(self.template IsSame<T>(), "Type mismatch");
 
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  // Reference each indirection of a raw pointer.       
                   // We're forced to reference on abandon/move because  
                   // we can't abandon/move a raw pointer.               
                   ForEachIndirection(rhs, [&entries](auto& i) {
