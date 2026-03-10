@@ -206,7 +206,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       constexpr bool IsSame(this auto const& self, C const& other) noexcept {
          if constexpr (TypeErased or C::TypeErased)
-            return self.GetTypeInner().IsSame(other.mType);
+            return self.GetTypeInner().IsSame(other.GetType());
          else
             return Same<TYPE, TypeOf<C>>;
       }

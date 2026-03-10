@@ -177,20 +177,27 @@ namespace Langulus::Fractalloc
             and (mAllocatedByFrontend + static_cast<size_t>(bytes) <= mAllocatedByBackend);
       }
 
+      LANGULUS_API(FRACTALLOC)
       bool ContainsData(const void*) const noexcept;
+      LANGULUS_API(FRACTALLOC)
       bool ContainsAllocation(const Allocation*) const noexcept;
       auto Find(const void*) const assumptious -> const Allocation*;
 
+      LANGULUS_API(FRACTALLOC)
       auto Allocate(pot_t) assumptious -> Allocation*;
       auto AllocatePacked(size_t entry_budget, pot_t) assumptious -> Allocation*;
       bool Reallocate(Allocation*, pot_t) assumptious;
+      LANGULUS_API(FRACTALLOC)
       void Deallocate(Allocation*) assumptious;
       
+      LANGULUS_API(FRACTALLOC)
       auto ThresholdFromIndex(size_t) const noexcept -> pot_t;
+      LANGULUS_API(FRACTALLOC)
       auto IndexFromAddress(const void*) const assumptious -> size_t;
       LANGULUS_API(FRACTALLOC)
       auto IndexFromAllocation(const Allocation*) const assumptious -> size_t;
       auto UpIndex(size_t) const noexcept -> size_t;
+      LANGULUS_API(FRACTALLOC)
       auto AllocationFromIndex(size_t) const noexcept -> Allocation*;
       auto AllocationFromAddress(const void*) const assumptious -> Allocation*;
 

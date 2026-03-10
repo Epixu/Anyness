@@ -399,9 +399,6 @@ namespace Langulus::Anyness::Component
 
                if (T.IsSparse()) {
                   if_available(self.EmplaceEntries(LglsFwd(intent)));
-
-                  //if constexpr (CT::AutoOwned<IT> and (CT::Abandoned<I> or CT::Moved<I>))
-                  //   rhs.SetAllocationInner(nullptr);
                }
             }
             else {
@@ -411,19 +408,16 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Typed<C, IT>)
                   static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
                else
-                  LglsAssumeDev(self.template IsSame<TypeOf<IT>>(), "Type mismatch");
+                  LglsAssumeDev(self.IsSame(rhs), "Type mismatch");
                using T = Tif<CT::Typed<C>, TypeOf<C>, TypeOf<IT>>;
 
                if constexpr (CT::Mutable<T> or not I::IsMoved())
-                  IntentNew(self.GetHeapInner(), I::Nest(*rhs.GetRaw()));
+                  IntentNew(self.GetHeapInner(), I::Nest(*rhs.template GetRawAs<T>()));
                else
-                  IntentNew(self.GetHeapInner(), Refer(*rhs.GetRaw()));
+                  IntentNew(self.GetHeapInner(), Refer(*rhs.template GetRawAs<T>()));
 
                if constexpr (CT::Sparse<T>) {
                   if_available(self.EmplaceEntries(LglsFwd(intent)));
-
-                  //if constexpr (CT::AutoOwned<IT> and (CT::Abandoned<I> or CT::Moved<I>))
-                  //   rhs.SetAllocationInner(nullptr);
                }
             }
          }

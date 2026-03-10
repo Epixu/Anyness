@@ -432,8 +432,8 @@ namespace Langulus::Anyness::Component
       ///   @param intent entries will be copied/sought if handle/sparse      
       template<CT::Container C, CT::Intent I>
       void EmplaceEntries(this C& self, I&& intent) {
-         static_assert(CT::ContainsOne<C>,
-            "This routine is designed for single-element containers");
+         //static_assert(CT::ContainsOne<C>,
+         //   "This routine is designed for single-element containers");
          static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
             "because it will overwrite/reference new allocations");
@@ -460,7 +460,7 @@ namespace Langulus::Anyness::Component
                   auto entries_src = rhs.GetEntriesInner();
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
-                  if constexpr (/*I::ResetsOnMove() or*/ CT::AutoOwned<TypeOf<I>> and (CT::Abandoned<I> or CT::Moved<I>))
+                  if constexpr (CT::AutoOwned<TypeOf<I>> and (CT::Abandoned<I> or CT::Moved<I>))
                      memset(DecvqAllCast(entries_src), 0, entries_size);
                }
                else {
@@ -484,19 +484,18 @@ namespace Langulus::Anyness::Component
                            const_cast<AllocationPtr&>(*entries) = Allocator::Find(*handle);
                      #endif
 
-                     if (not *entries)
-                        continue;
+                     if (*entries) {
+                        DecvqAllCast(*entries)->AddRef(1);
 
-                     DecvqAllCast(*entries)->AddRef(1);
+                        LglsAssumeDev(meta,
+                           "Valid entry, but invalid type");
+                        LglsAssumeDevAndOptimize(*handle,
+                           "Valid entry, but invalid pointer");
 
-                     LglsAssumeDev(meta,
-                        "Valid entry, but invalid type");
-                     LglsAssumeDevAndOptimize(*handle,
-                        "Valid entry, but invalid pointer");
-
-                     auto referencer = meta.GetReferencer();
-                     if (meta.IsDense() and referencer)
-                        referencer(*handle, 1);
+                        auto referencer = meta.GetReferencer();
+                        if (meta.IsDense() and referencer)
+                           referencer(*handle, 1);
+                     }
 
                      handle = reinterpret_cast<void**>(*handle); //TODO this won't work with packed pointers, would it?
                      meta = meta.GetDeptr();
@@ -540,10 +539,9 @@ namespace Langulus::Anyness::Component
                   }
                }
             }
-            else {
+            else if constexpr (CT::Sparse<TypeOf<I>>) {
                // Reference each indirection of a raw pointer           
                using T = TypeOf<I>;
-               static_assert(CT::Sparse<T>);
                LglsAssumeDev(self.template IsSame<T>(), "Type mismatch");
 
                #if LANGULUS_FEATURE(MANAGED_MEMORY)

@@ -95,7 +95,7 @@ namespace Langulus::Anyness::Component
          if constexpr (not CT::HeapAllocated<C>) {
             // This container is on the stack, and by extension         
             // statically-typed and always initialized                  
-            auto& data = self.template AccessStackById<ID>();
+            auto& data = self.template AccessProvider<ID>();
             data = LglsFwd(argument);
          }
          else {
@@ -281,7 +281,7 @@ namespace Langulus::Anyness::Component
                auto T = rhs.GetTypeInner();
                LglsAssumeDev(self.IsSame(T), "Type mismatch");
                const auto src = const_cast<void*>(rhs.GetRaw());
-               const auto dst = self.template AccessStackById<ID>();
+               const auto dst = self.template AccessProvider<ID>();
 
                if constexpr (CT::Moved<I>)
                   T.GetMoveAssigner()(src, dst);
@@ -304,7 +304,7 @@ namespace Langulus::Anyness::Component
                // from a lot of compile-time optimizations              
                using T = TypeOf<C>;
                static_assert(Same<T, TypeOf<IT>>, "Type mismatch");
-               T* data = static_cast<T*>(self.template AccessStackById<ID>());
+               T* data = static_cast<T*>(self.template AccessProvider<ID>());
                IntentAssign(*data, I::Nest(*rhs.GetRaw()));
 
                if constexpr (CT::Sparse<T>) {
@@ -319,7 +319,7 @@ namespace Langulus::Anyness::Component
                LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
                auto T = self.GetTypeInner();
                const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
-               const auto dst = self.template AccessStackById<ID>();
+               const auto dst = self.template AccessProvider<ID>();
 
                if constexpr (CT::Moved<I>)
                   T.GetMoveAssigner()(src, dst);
@@ -341,7 +341,7 @@ namespace Langulus::Anyness::Component
                // This container is statically-typed                    
                using T = TypeOf<C>;
                static_assert(Same<T, IT>, "Type mismatch");
-               T* data = static_cast<T*>(self.template AccessStackById<ID>());
+               T* data = static_cast<T*>(self.template AccessProvider<ID>());
                IntentAssign(*data, LglsFwd(intent));
 
                if constexpr (CT::Sparse<T>) {
