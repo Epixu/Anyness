@@ -10,6 +10,8 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
+   , Types<Any, RT*, ScopedElement<RT*>>
+
    // Elements are not allocated by the memory manager                  
    , Types<Any, Text,   ScopedElement<Text>>
    , Types<Any, int,    ScopedElement<int>>
@@ -17,10 +19,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, RT,     ScopedElement<RT>>
    , Types<Any, char,   ScopedElement<char>>
                         
-   , Types<Any, Text*,  ScopedElement<Text*>>
+   , Types<Any, Text*, ScopedElement<Text*>>
    , Types<Any, int*,   ScopedElement<int*>>
    , Types<Any, Any*,   ScopedElement<Any*>>
-   , Types<Any, RT*,    ScopedElement<RT*>>
    , Types<Any, char*,  ScopedElement<char*>>
 
    , Types<Any, Text**, ScopedElement<Text**>>
@@ -105,10 +106,18 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
       const ScopedE originalElement {556};
       const ScopedE element {555};
 
+      if constexpr (CT::Referenced<Decay<E>>) {
+         REQUIRE(DenseCast(*originalElement).GetReferences() == 1);
+      }
+
       T piecewise1{Piecewise, *originalElement};
       T piecewise2{Piecewise, *originalElement};
       T piecewise3{Piecewise, *originalElement};
       T piecewise4{Piecewise, *originalElement};
+
+      if constexpr (CT::Referenced<Decay<E>>) {
+         REQUIRE(DenseCast(*originalElement).GetReferences() == 5);
+      }
 
       T pack_referred1{Absorb,             piecewise1};
       T pack_referred2{Absorb,       Refer(piecewise1)};
@@ -136,6 +145,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          Any_CheckState_ContainsOne(pack_moved1,     Refer(originalElement), 1);
          Any_CheckState_ContainsOne(pack_abandoned,  Refer(originalElement), 1);
          Any_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 0);
+
+         if constexpr (CT::Referenced<Decay<E>>) {
+            REQUIRE(DenseCast(*originalElement).GetReferences() == (Managed ? 8 : 5));
+         }
 
          BenchmarkAnyStd("Empty/AbsorbConstructor(" + NameOf<E>() + ")", 30, 100,
             T temp,              (new (&temp) T{Absorb, piecewise1}),

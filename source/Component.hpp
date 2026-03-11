@@ -173,8 +173,8 @@ namespace Langulus::Anyness
       template<Cid = 0>                   struct IterationForEach;
       template<Cid = 0>                   struct IterationOperators;
       template<Cid = 0>                   struct IterationRange;
-      template<Cid = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipEmergent;
-      template<Cid = 0, bool AUTO = true, bool DEEPREF = true> struct OwnershipStack;
+      template<Cid = 0, bool AUTO = true> struct OwnershipEmergent;
+      template<Cid = 0, bool AUTO = true> struct OwnershipStack;
       template<Cid = 0>                   struct Removal;
       template<Cid = 0, class T = size_t> struct ReserveEmergent;
       template<Cid = 0, class T = size_t> struct ReserveStack;

@@ -279,7 +279,7 @@ void Any_CheckState_ContainsOne(T const& pack, I&& e_with_intent, int uses = 1) 
       }
       else {
          for (size_t i = 0; i < IndirectsOf<E>; ++i)
-            REQUIRE(pack.GetEntries()[i] == nullptr);         
+            REQUIRE(pack.GetEntries()[i] == nullptr);
       }
    }
 

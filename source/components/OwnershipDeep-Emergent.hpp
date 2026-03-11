@@ -21,14 +21,6 @@ namespace Langulus::Anyness
 
 namespace Langulus::Anyness::Component
 {
-   template<class T>
-   void ForEachIndirection(T pointer, auto&& lambda) {
-      if constexpr (CT::Sparse<T>) {
-         lambda(pointer);
-         ForEachIndirection(*pointer, LglsFwd(lambda));
-      }
-   }
-
    ///                                                                        
    /// Manages deep ownership by searching for an allocation every time       
    ///   @tparam ID which heap/stack are we keeping track of?                 
@@ -44,7 +36,7 @@ namespace Langulus::Anyness::Component
       template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
       template<Cid>                                 friend struct Removal;
       template<Cid>                                 friend struct Emplacement;
-      template<Cid, bool, bool>                     friend struct OwnershipEmergent;
+      template<Cid, bool>                           friend struct OwnershipEmergent;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -446,7 +438,8 @@ namespace Langulus::Anyness::Component
          auto entries = self.GetEntriesInner();
 
          if constexpr (CT::Disowned<I>) {
-            // Disowning just zeroes all entries                        
+            // Disowning just zeroes all entries.                       
+            // Nothing gets referenced.                                 
             memset(DecvqAllCast(entries), 0, entries_size);
          }
          else {
@@ -458,10 +451,15 @@ namespace Langulus::Anyness::Component
                if constexpr (requires { rhs.GetEntriesInner(); }) {
                   // We can copy entries from RHS handle                
                   auto entries_src = rhs.GetEntriesInner();
-                  memcpy(DecvqAllCast(entries), entries_src, entries_size);
-
-                  if constexpr (CT::AutoOwned<TypeOf<I>> and (CT::Abandoned<I> or CT::Moved<I>))
-                     memset(DecvqAllCast(entries_src), 0, entries_size);
+                  if (entries_src) {
+                     memcpy(DecvqAllCast(entries), entries_src, entries_size);
+                     if constexpr (CT::AutoOwned<TypeOf<I>> and (CT::Abandoned<I> or CT::Moved<I>))
+                        memset(DecvqAllCast(entries_src), 0, entries_size);
+                  }
+                  else {
+                     // Source entries might be nullptr if disowned     
+                     memset(DecvqAllCast(entries), 0, entries_size);
+                  }
                }
                else {
                   // RHS might be a disowned handle                     

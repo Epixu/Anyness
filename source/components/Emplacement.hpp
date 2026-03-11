@@ -33,14 +33,6 @@ namespace Langulus::Anyness
 
 namespace Langulus::Anyness::Component
 {
-   template<class T>
-   void ForEachIndirection(auto&& lambda) {
-      if constexpr (CT::Sparse<T>) {
-         lambda();
-         ForEachIndirection<Deptr<T>>(LglsFwd(lambda));
-      }
-   }
-   
    ///                                                                        
    /// Implements emplacement for containers.                                 
    /// Unlike insertion, emplacement reuses the same memory space and         

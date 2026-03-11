@@ -33,13 +33,13 @@ namespace Langulus::Anyness::Component
       static constexpr unsigned GrowthFactor = GROWTH_FACTOR;
 
    protected:
-      template<Cid, class>      friend struct ReserveEmergent;
-      template<Cid>             friend struct IterationOperators;
-      template<Cid, class>      friend struct Insertion;
-      template<Cid, class>      friend struct Merging;
-      template<Cid>             friend struct Emplacement;
-                                friend struct Conversion;
-      template<Cid, bool, bool> friend struct OwnershipEmergent;
+      template<Cid, class> friend struct ReserveEmergent;
+      template<Cid>        friend struct IterationOperators;
+      template<Cid, class> friend struct Insertion;
+      template<Cid, class> friend struct Merging;
+      template<Cid>        friend struct Emplacement;
+                           friend struct Conversion;
+      template<Cid, bool>  friend struct OwnershipEmergent;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;

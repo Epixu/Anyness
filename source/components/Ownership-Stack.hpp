@@ -14,15 +14,13 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Keep a pointer to the heap allocation as a member.                     
    /// Manage its ownership by referencing and dereferencing it.              
-   /// Can also reference on per-element basis if enabled via DEEPREF.        
    ///   @tparam ID which heap are we keeping track of?                       
    ///   @tparam AUTO whether ownership will be automatically applied on      
    ///      construction, reassignment and destruction. False if container is 
    ///      just a view, or in other cases where you want to carry an         
    ///      allocation pointer, but not necessarily reference it.             
-   ///   @tparam DEEPREF whether to reference individual elements.            
-   template<Cid ID, bool AUTO, bool DEEPREF>
-   struct OwnershipStack : OwnershipEmergent<ID, AUTO, DEEPREF> {
+   template<Cid ID, bool AUTO>
+   struct OwnershipStack : OwnershipEmergent<ID, AUTO> {
       using StackRequest = AllocationPtr;
 
       /// Get the allocation                                                  

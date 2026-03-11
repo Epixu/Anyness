@@ -616,6 +616,32 @@ namespace Langulus
       >::type;
 
    #define LglsMutIf(CONDITION_TYPE, TYPE) Tmut<CONDITION_TYPE, TYPE, ConstAll<TYPE>>
+
+   /// Execute a lambda for each indirection inside a type T                  
+   /// The provided lambda must be of the form: [whatever]<class C>{...},     
+   /// so that if you provide T as void***, three lambdas will be generated   
+   /// and executed, with C being void***, void** and void*.                  
+   template<class T>
+   void ForEachIndirection(auto&& lambda) {
+      if constexpr (CT::Sparse<T>) {
+         lambda();
+         if constexpr (CT::Sparse<Deptr<T>>)
+            ForEachIndirection<Deptr<T>>(LglsFwd(lambda));
+      }
+   }
+
+   /// Execute a lambda for each indirection inside a type T by dereferencing 
+   /// The provided lambda must be of the form: [whatever](auto ptr){...},    
+   /// so that if you provide argument as void***, three lambdas will be      
+   /// generated and executed, with 'ptr' being void***, void** and void*.    
+   template<class T>
+   void ForEachIndirection(T pointer, auto&& lambda) {
+      if constexpr (CT::Sparse<T>) {
+         lambda(pointer);
+         if constexpr (CT::Sparse<Deptr<T>>)
+            ForEachIndirection(*pointer, LglsFwd(lambda));
+      }
+   }
 }
 
 

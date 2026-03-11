@@ -43,7 +43,7 @@ namespace Langulus::Anyness::Component
       template<Cid, bool>       friend struct Comparison;
                                 friend struct Conversion;
       template<auto COUNT>      friend struct CountStatic;
-      template<Cid, bool, bool> friend struct OwnershipEmergent;
+      template<Cid, bool>       friend struct OwnershipEmergent;
       template<Cid>             friend struct OwnershipDeepEmergent;
       
       template<CT::Container C>
