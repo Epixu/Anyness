@@ -52,6 +52,9 @@ namespace Langulus::Anyness::Component
       /// Assumes all indirections are ordinary pointers, and is thus faster. 
       template<CT::Container C, CT::NoIntent IT>
       void EmplaceByCloningStandardPointers(this C& self, IT const& rhs) {
+         static_assert(CT::ContainsOne<C>,
+            "Emplacing only first element in a container with many. GetHandle() first?");
+
          constexpr bool has_entries = requires { self.GetEntries(); };
          [[maybe_unused]] DMeta T;
          // If T is Text**, then dst/src are Text***                    
@@ -247,11 +250,9 @@ namespace Langulus::Anyness::Component
       //TODO could benefit from static optimization                          
       template<CT::Container C, CT::NoIntent IT>
       void EmplaceByCloningCustomPointers(this C& self, IT const& rhs) {
-         static_assert(LANGULUS_FEATURE(MANAGED_MEMORY),
-            "Custom pointers are available only when MANAGED_MEMORY is enabled. "
-            "This function shouldn't be instantiated otherwise."
-         );
-         
+         static_assert(CT::ContainsOne<C>,
+            "Emplacing only first element in a container with many. GetHandle() first?");
+
          void const* src_origin;         
          if constexpr (CT::Handle<IT>) {
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>)
@@ -341,6 +342,8 @@ namespace Langulus::Anyness::Component
       ///      otherwise it has to be an instance of the contained type.      
       template<CT::Container C, CT::Intent I>
       void EmplaceWithIntent(this C&& self, I&& intent) {
+         static_assert(CT::ContainsOne<C>,
+            "Emplacing only first element in a container with many. GetHandle() first?");
          using IT = Decvq<Deref<TypeOf<I>>>;
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
@@ -632,9 +635,9 @@ namespace Langulus::Anyness::Component
 
                   // Construct the first element                        
                   if constexpr (CT::Copied<IntentOf(arguments)...>)
-                     self.EmplaceWithIntent(Refer(LglsFwd(arguments))...);
+                     self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(arguments))...);
                   else
-                     self.EmplaceWithIntent(FWDIntent(arguments)...);
+                     self.GetHandle().EmplaceWithIntent(FWDIntent(arguments)...);
                }
             }
             else if constexpr (CT::NotVoid<E>) {
@@ -644,7 +647,7 @@ namespace Langulus::Anyness::Component
 
                // Construct the first element                           
                if constexpr (CT::Dense<E>)
-                  self.EmplaceWithIntent(Abandon{E {LglsFwd(arguments)...}});
+                  self.GetHandle().EmplaceWithIntent(Abandon{E {LglsFwd(arguments)...}});
                else static_assert(false,
                   "Too many arguments for emplacing a sparse instance");
             }
@@ -671,12 +674,12 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C>;
             if constexpr (sizeof...(A) == 1 and (CT::Sparse<T> or Same<T, Deint<A>...>)) {
                if constexpr (CT::Copied<IntentOf(arguments)...>)
-                  self.EmplaceWithIntent(Refer(LglsFwd(arguments))...);
+                  self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(arguments))...);
                else
-                  self.EmplaceWithIntent(FWDIntent(arguments)...);
+                  self.GetHandle().EmplaceWithIntent(FWDIntent(arguments)...);
             }
             else if constexpr (CT::Dense<T>)
-               self.EmplaceWithIntent(Abandon {Decvq<T> {LglsFwd(arguments)...}});
+               self.GetHandle().EmplaceWithIntent(Abandon {Decvq<T> {LglsFwd(arguments)...}});
             else static_assert(false,
                "Too many arguments for emplacing a sparse instance");
          }
@@ -786,23 +789,25 @@ namespace Langulus::Anyness::Component
             else {
                // We're allowed to reuse the memory.                    
                // Need to destroy and overwrite only the first element. 
-               self.DestroyElement();
+               auto item = self.GetHandle();
+               item.DestroyElement();
 
                // Emplace a new element on the first position.          
                // Any state change is forbidden - container is full.    
                try {
                   if constexpr (sizeof...(arguments) > 0)
-                     self.template EmplaceConstruct<AllocationStrategy::NoStateChange, E>(LglsFwd(arguments)...);
+                     item.template EmplaceConstruct<AllocationStrategy::NoStateChange, E>(LglsFwd(arguments)...);
                   else
-                     self.template EmplaceDefault<AllocationStrategy::NoStateChange, E>();
+                     item.template EmplaceDefault<AllocationStrategy::NoStateChange, E>();
                }
                catch (...) {
                   // If emplacement fails, we are forced to destroy     
                   // all remaining elements as well.                    
                   if constexpr (CT::ContainsMany<C>) {
-                     auto item = IterateHandles(self).begin() + 1;
-                     while (item) {
-                        item->DestroyElement();
+                     item += 1;
+                     const auto itemsEnd = self.GetHandle() + self.GetCount();
+                     while (item.GetRaw() != itemsEnd.GetRaw()) {
+                        item.DestroyElement();
                         ++item;
                      }
                   }

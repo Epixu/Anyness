@@ -151,8 +151,9 @@ namespace Langulus::Anyness
       template<Cid = 0, class T = size_t> struct CountHeap;
       template<Cid = 0, class T = size_t> struct CountStack;
       template<auto COUNT>                struct CountStatic;
-      template<Cid = 0>                   struct OwnershipDeepHeap;
-      template<Cid = 0>                   struct OwnershipDeepReference;
+      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepEmergent;
+      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepHeap;
+      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepReference;
                                           struct Descriptor;
       template<Cid = 0>                   struct Emplacement;
                                           struct Extrapolation;

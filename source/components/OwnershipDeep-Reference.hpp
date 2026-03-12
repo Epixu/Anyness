@@ -16,8 +16,14 @@ namespace Langulus::Anyness::Component
    /// indirection is kept locally. Useful to carry allocation data inside    
    /// handles.                                                               
    ///   @tparam ID which heap/stack provider are we tracking ownership for?  
-   template<Cid ID>
-   struct OwnershipDeepReference : OwnershipDeepEmergent<ID> {
+   ///   @tparam REF_INDIVIDUAL toggles whether contained items that were     
+   ///      reflected as CT::Referenced get referenced. Elements will get     
+   ///      referenced even if no entry for the element exist, but you can    
+   ///      avoid referencing altogether if you use the Disown intent.        
+   ///      To be more specific - when GetReference() is nullptr and the      
+   ///      entire container is considered disowned.                          
+   template<Cid ID, bool REF_INDIVIDUAL>
+   struct OwnershipDeepReference : OwnershipDeepEmergent<ID, REF_INDIVIDUAL> {
       using StackRequest = EntryPtr;
       //using HeapRequest  = PerElement<PerIndirection<AllocationPtr>>;
 
@@ -46,8 +52,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid> friend struct Emplacement;
-      template<Cid> friend struct OwnershipDeepEmergent;
+      template<Cid>       friend struct Emplacement;
+      template<Cid, bool> friend struct OwnershipDeepEmergent;
 
       /// Get the entry array (inner)                                         
       template<unsigned SELECTOR = ID> requires (SELECTOR == ID)

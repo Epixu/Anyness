@@ -115,19 +115,19 @@ namespace Langulus::Anyness::Component
       void Keep(this C& self) noexcept {
          auto a = self.GetAllocation();
          if (not a)
-            return;
+            return; // Container is disowned, and nothing gets reffed   
 
          DecvqAllCast(a)->AddRef(1);
 
          if constexpr (CT::DeeplyOwned<C>) {
-            if constexpr (CT::ContainsMany<C>) {
-               auto item = IterateHandles(self).begin();
-               while (item) {
-                  item->KeepElementDeepCustomPointers();
-                  ++item;
-               }
-            }
-            else self.KeepElementDeepCustomPointers();
+            // Reference all indirections and (optionally) items        
+            self.Apply([](auto& item) {
+               #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                  item.KeepElementDeepCustomPointers();
+               #else
+                  item.KeepElementDeepStandardPointers();
+               #endif
+            });
          }
       }
 
@@ -164,7 +164,7 @@ namespace Langulus::Anyness::Component
          //static_assert(CT::ContainsOne<C>,
          //   "Destroying only first element in a container with many");
          static_assert(not CT::DeeplyOwned<C>,
-            "Can't only shallow-destroy a deeply-owned container");
+            "Can't shallow-destroy a deeply-owned container");
 
          if (self.IsEmpty())
             return;

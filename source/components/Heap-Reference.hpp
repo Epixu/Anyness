@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
                                 friend struct Conversion;
       template<auto COUNT>      friend struct CountStatic;
       template<Cid, bool>       friend struct OwnershipEmergent;
-      template<Cid>             friend struct OwnershipDeepEmergent;
+      template<Cid, bool>       friend struct OwnershipDeepEmergent;
       
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -332,10 +332,11 @@ namespace Langulus::Anyness::Component
 
    protected:      
       /// Get first element as a handle. Very useful for internal use.        
+      /// No-op if C is already a handle, even if AS is specified.            
       ///   @attention element might be uninitialized if C is discontiguous   
       ///   @tparam AS the handle type, or void to decide automatically       
       ///   @return the handle to the first element                           
-      template<class AS = void, CT::Container C>
+      template<class AS = void, CT::NotHandle C>
       decltype(auto) GetHandle(this C&& self) {
          static_assert(CT::Handle<AS> or CT::Void<AS>,
             "Must be either a handle or void (which will use DecideHandle");
@@ -370,6 +371,12 @@ namespace Langulus::Anyness::Component
             else
                return H {&self.Get()};
          }
+      }
+
+      /// No-op in case C is already a handle                                 
+      template<class AS = void, CT::Handle C>
+      constexpr C&& GetHandle(this C&& self) noexcept {
+         return LglsFwd(self);
       }
 
       /// Default-initialization of this component                            
@@ -435,8 +442,8 @@ namespace Langulus::Anyness::Component
       ///      and destroy only fully dereferenced indirections               
       template<bool DESTROY = true, CT::Container C>
       void DestroyElement(this C& self) assumptious {
-         //static_assert(CT::ContainsOne<C>,
-         //   "Destroying only first element in a container that may contain many");
+         static_assert(CT::ContainsOne<C>,
+            "Destroying only first element in a container with many. GetHandle() first?");
 
          if constexpr (DESTROY) {
             if constexpr (CT::DeeplyOwned<C>) {
@@ -465,13 +472,15 @@ namespace Langulus::Anyness::Component
       template<bool DESTROY = true, CT::Container C>
       void DestroyAllElements(this C& self) assumptious {
          if constexpr (DESTROY or CT::DeeplyOwned<C>) {
-            self.Apply([&](auto& item) {
+            self.Apply([](auto& item) {
                item.template DestroyElement<DESTROY>();
             });
          }
       }
 
-      /// Visit all element's handles and perform a function on them          
+      /// Visit all element's handles and perform a function on them.         
+      /// Handles both linear and non-linear containers gracefully.           
+      ///   @param lambda the function to perform                             
       template<CT::Container C>
       void Apply(this C&& self, auto&& lambda) {
          if constexpr (CT::ContainsOne<C>)

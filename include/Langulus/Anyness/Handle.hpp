@@ -113,7 +113,7 @@ namespace Langulus::Anyness
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using HandleMutType  = HandleMut;
+      //using HandleMutType  = HandleMut;
       using DeepType       = HandleDisowned;
 
       /// Handles can't be piecewise-initialized                              
@@ -161,7 +161,7 @@ namespace Langulus::Anyness
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using HandleMutType  = HandleDisownedMut;
+      //using HandleMutType  = HandleDisownedMut;
       using DeepType       = HandleDisowned;
 
       /// Handles can't be piecewise-initialized                              
@@ -212,7 +212,7 @@ namespace Langulus::Anyness
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using HandleType     = Handle;
+      //using HandleType     = Handle;
       using DeepType       = HandleDisowned;
 
       /// Handles can't be piecewise-initialized                              
@@ -258,7 +258,7 @@ namespace Langulus::Anyness
    > {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using HandleType     = HandleDisowned;
+      //using HandleType     = HandleDisowned;
       using DeepType       = HandleDisowned;
 
       /// Handles can't be piecewise-initialized                              
@@ -319,7 +319,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using HandleMutType  = THandle<DecvqAll<T>>;
+      //using HandleMutType  = THandle<DecvqAll<T>>;
       using Denser         = THandle;
       using DeepType       = HandleDisowned;
 
@@ -366,7 +366,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using HandleMutType  = THandle<DecvqAll<T>>;
+      //using HandleMutType  = THandle<DecvqAll<T>>;
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;
 
@@ -413,7 +413,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
-      using HandleMutType  = THandleDisowned<DecvqAll<T>>;
+      //using HandleMutType  = THandleDisowned<DecvqAll<T>>;
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;
 
@@ -454,8 +454,8 @@ namespace Langulus::Anyness
    struct THandle<T> : Inner::THandleLocalDense<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using HandleMutType  = THandle<DecvqAll<T>>;
-      using Denser         = THandle;
+      //using HandleMutType  = THandle<DecvqAll<T>>;
+      using Denser         = THandle<T&>; // avoids nested local handles (and thus copies) by adding a reference
       using DeepType       = HandleDisowned;
       using Base           = typename Inner::THandleLocalDense<T>::Base;
 
@@ -504,8 +504,8 @@ namespace Langulus::Anyness
    struct THandle<T> : Inner::THandleLocalSparse<T> {
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using HandleMutType  = THandle<DecvqAll<T>>;
-      using Denser         = THandle<Deptr<T>>;
+      //using HandleMutType  = THandle<DecvqAll<T>>;
+      using Denser         = THandle<Deptr<T>&>; // avoids nested local handles (and thus copies) by adding a reference
       using DeepType       = HandleDisowned;
       using Base           = typename Inner::THandleLocalSparse<T>::Base;
 

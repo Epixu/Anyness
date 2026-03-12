@@ -19,7 +19,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam INITIAL_SIZE the initial size (in elements). Used in hashed  
    ///      containers in order to control hash table size. If 0, the heap    
    ///      will use reflected type properties only.                          
-   ///   @tparam GROWTH_FACTOR growth factor on reallocation. Ued in hashed   
+   ///   @tparam GROWTH_FACTOR growth factor on reallocation. Used in hashed  
    ///      containers in order to control hash table growth on reallocation. 
    ///      If 0, the heap will grow according to reflected type properties.  
    ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 

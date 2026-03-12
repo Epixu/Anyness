@@ -56,7 +56,7 @@ namespace
    uintptr_t gPossiblePoolMemorySpace = 0;
 
    PoolBank* SelectPoolBank(DMeta meta) assumptious {
-      LglsAssumeDev(meta, "Invalid meta data");
+      LglsAssumeDevAndOptimize(meta, "Invalid meta data");
       switch (meta.GetPoolTactic()) {
       case Langulus::PoolTactic::Size:
          return &gSizePoolChain[Langulus::Fractalloc::FastLog2(meta.GetSize())];
@@ -402,15 +402,15 @@ namespace Langulus::Fractalloc
       return false;
    }
 
-   /// Find a memory entry from packed pointer.                               
-   /// Should always result in an allocation, unless poolId is zero.          
+   /// Get a memory entry using IDs, usually coming from packed pointers.     
+   ///   @attention assumes 'meta' and 'poolId' are valid                     
+   ///   @param meta the type of the data                                     
    ///   @param poolId the pool id                                            
    ///   @param entryId the entry id                                          
-   ///   @return the memory entry that contains the memory pointer            
-   auto Allocator::FindPackedInner(
+   ///   @return the corresponding allocation                                 
+   auto Allocator::GetAllocation(
       DMeta meta, size_t poolId, size_t entryId
    ) assumptious -> Allocation* {
-      LglsAssumeDevAndOptimize(meta, "Invalid pointer type");
       LglsAssumeDevAndOptimize(poolId, "Nullptr provided");
       auto pool_bank = SelectPoolBank(meta);
       LglsAssumeDevAndOptimize(pool_bank, "Missing pool");
@@ -550,13 +550,35 @@ namespace Langulus::Fractalloc
       PointerSpecification const& spec,
       DMeta deptr_type, uintptr_t packed
    ) assumptious {
+      if (not spec.IsPacked())
+         return reinterpret_cast<void*>(packed);
+
+      auto e = FindPackedPointer(spec, deptr_type, packed);
+      const size_t elementId = packed & ((1u << spec.OffsetBits) - 1u);
+      return e->GetBlockStart() + deptr_type.GetSize() * elementId;
+   }
+   
+
+   /// Find the allocation where a packed pointer resides in                  
+   ///   @param spec pointer specification                                    
+   ///   @param deptr_type type the 'packed' points to (T* points to T)       
+   ///   @param packed the pointer, packed inside, but not necessarily filling
+   ///      an entire uintptr_t                                               
+   ///   @return the corresponding allocation                                 
+   auto Allocator::FindPackedPointer(
+      PointerSpecification const& spec,
+      DMeta deptr_type, uintptr_t packed
+   ) assumptious -> Allocation const* {
       // Decide pool chain based on meta data                           
       if (not packed)
          return nullptr;
       if (not spec.IsPacked())
-         return reinterpret_cast<void*>(packed);
+         return Find(reinterpret_cast<void*>(packed));
       
-      LglsAssumeDev(deptr_type, "Invalid meta data");
+      auto pool_bank = SelectPoolBank(deptr_type);
+      LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
+
+      /*LglsAssumeDev(deptr_type, "Invalid meta data");
       PoolBank* bank = nullptr;
       switch (deptr_type.GetPoolTactic()) {
       case PoolTactic::Size:
@@ -568,16 +590,13 @@ namespace Langulus::Fractalloc
       case PoolTactic::Main:
          bank = &gMainPoolChain;
          break;
-      }
+      }*/
 
       // Unpack indices and return raw pointer                          
-      const size_t poolId  = packed >> (spec.EntryBits + spec.OffsetBits);
-      LglsAssumeDevAndOptimize(bank, "Pool bank should always be valid");
-      LglsAssumeDev(bank->indexed.contains(poolId), "Invalid pool id");
+      const size_t poolId = packed >> (spec.EntryBits + spec.OffsetBits);
+      LglsAssumeDev(pool_bank->indexed.contains(poolId), "Invalid pool id");
       const size_t entryId = (packed >> spec.OffsetBits) & ((1u << spec.EntryBits) - 1u);
-      auto e = bank->indexed.at(poolId)->AllocationFromIndex(entryId);
-      const size_t elementId = packed & ((1u << spec.OffsetBits) - 1u);
-      return e->GetBlockStart() + deptr_type.GetSize() * elementId;
+      return pool_bank->indexed.at(poolId)->AllocationFromIndex(entryId);
    }
    
 #if LANGULUS_FEATURE(MEMORY_STATISTICS)

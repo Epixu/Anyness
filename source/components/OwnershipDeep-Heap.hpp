@@ -23,8 +23,14 @@ namespace Langulus::Anyness::Component
    /// essentially forming an array of indirections indexed like:             
    ///   entries[item_index * number_of_indirections + indirection_index]     
    ///   @tparam ID which heap provider are we using?                         
-   template<Cid ID>
-   struct OwnershipDeepHeap : OwnershipDeepEmergent<ID> {
+   ///   @tparam REF_INDIVIDUAL toggles whether contained items that were     
+   ///      reflected as CT::Referenced get referenced. Elements will get     
+   ///      referenced even if no entry for the element exist, but you can    
+   ///      avoid referencing altogether if you use the Disown intent.        
+   ///      To be more specific - when GetReference() is nullptr and the      
+   ///      entire container is considered disowned.                          
+   template<Cid ID, bool REF_INDIVIDUAL>
+   struct OwnershipDeepHeap : OwnershipDeepEmergent<ID, REF_INDIVIDUAL> {
       using HeapRequest = PerElement<PerIndirection<AllocationPtr>>;
 
       /// Get entry array if containing pointers                              
@@ -51,7 +57,7 @@ namespace Langulus::Anyness::Component
       template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
       template<Cid>                                 friend struct Removal;
       template<Cid>                                 friend struct Emplacement;
-      template<Cid>                                 friend struct OwnershipDeepEmergent;
+      template<Cid, bool>                           friend struct OwnershipDeepEmergent;
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   

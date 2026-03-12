@@ -127,8 +127,8 @@ namespace Langulus::Anyness
       template<Cid, CT::Sparse>         friend struct Com::HeapReference;
       template<Cid, unsigned, unsigned, CT::Sparse> friend struct Com::HeapMovable;
       template<Cid, bool>               friend struct Com::OwnershipStack;
-      template<Cid>                     friend struct Com::OwnershipDeepReference;
-      template<Cid>                     friend struct Com::OwnershipDeepHeap;
+      template<Cid, bool>               friend struct Com::OwnershipDeepReference;
+      template<Cid, bool>               friend struct Com::OwnershipDeepHeap;
       template<Cid, class>              friend struct Com::CountStack;
       template<Cid, class>              friend struct Com::HashStack;
       template<Cid, class>              friend struct Com::HashHeap;
@@ -407,13 +407,17 @@ namespace Langulus::Anyness
       /// Inner function that picks the best possible handle type, depending  
       /// on a container's constness and type-erasedness, as well as member   
       /// types HandleType and HandleMutType. Guarantees to always result in  
-      /// a handle.                                                           
+      /// a handle. No-op if C is already a handle.                           
       template<CT::Container C> 
       consteval auto DecideHandleType() {
          static_assert(not CT::Sheddable<C>, "Strip sheddables first");
          static_assert(not CT::Reference<C>, "Strip references first");
 
-         if constexpr (requires {typename C::HandleType; typename C::HandleMutType; }) {
+         if constexpr (CT::Handle<C>) {
+            // No-op                                                    
+            return Types<C> {};
+         }
+         else if constexpr (requires {typename C::HandleType; typename C::HandleMutType; }) {
             // Always prioritize custom handle types if defined         
             return Types<Tmut<C, typename C::HandleMutType, typename C::HandleType>> {};
          }

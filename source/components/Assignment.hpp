@@ -110,9 +110,9 @@ namespace Langulus::Anyness::Component
                   self.PrepareForReconstruction();
 
                   if constexpr (CT::Copied<IntentOf(argument)>)
-                     self.EmplaceWithIntent(Refer(LglsFwd(argument)));
+                     self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(argument)));
                   else
-                     self.EmplaceWithIntent(FWDIntent(argument));
+                     self.GetHandle().EmplaceWithIntent(FWDIntent(argument));
                }
                else static_assert(false, "T can't be reconstructed");
             }
@@ -122,15 +122,15 @@ namespace Langulus::Anyness::Component
                   // Reduce to one item and reassign if possible        
                   if (self.PrepareForReassignment()) {
                      if constexpr (CT::Copied<IntentOf(argument)>)
-                        self.AssignWithIntent(Refer(LglsFwd(argument)));
+                        self.GetHandle().AssignWithIntent(Refer(LglsFwd(argument)));
                      else
-                        self.AssignWithIntent(FWDIntent(argument));
+                        self.GetHandle().AssignWithIntent(FWDIntent(argument));
                   }
                   else {
                      if constexpr (CT::Copied<IntentOf(argument)>)
-                        self.EmplaceWithIntent(Refer(LglsFwd(argument)));
+                        self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(argument)));
                      else
-                        self.EmplaceWithIntent(FWDIntent(argument));
+                        self.GetHandle().EmplaceWithIntent(FWDIntent(argument));
                   }
                }
                else if constexpr (CT::UnfoldConstructible<T, A&&>) {
@@ -139,9 +139,9 @@ namespace Langulus::Anyness::Component
                   self.PrepareForReconstruction();
 
                   if constexpr (CT::Copied<IntentOf(argument)>)
-                     self.EmplaceWithIntent(Refer(LglsFwd(argument)));
+                     self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(argument)));
                   else
-                     self.EmplaceWithIntent(FWDIntent(argument));
+                     self.GetHandle().EmplaceWithIntent(FWDIntent(argument));
                }
                else static_assert(false, "T can't be reassigned or reconstructed");
             }
@@ -253,21 +253,18 @@ namespace Langulus::Anyness::Component
       ///      is statically typed, this can be any assignment argument,      
       ///      otherwise it has to be an instance of the contained type.      
       template<CT::Container C, CT::Intent I>
-      void AssignWithIntent(this C& self, I&& intent) {
+      void AssignWithIntent(this C&& self, I&& intent) {
+         static_assert(CT::ContainsOne<C>,
+            "Assigning only first element in a container with many. GetHandle() first?");
          static_assert(CT::Contiguous<C>,
              "Can be used only for contiguous containers");
          using IT = Decvq<Deref<TypeOf<I>>>;
          LglsAssumeDev(self.GetRaw(), "Invalid heap");
          LglsAssumeDev(self.IsTyped(), "Invalid type");
          decltype(auto) rhs = LglsFwd(intent.what);
-         static_assert(not CT::Cloned<I>,
+         static_assert(not CT::Cloned<I> and not CT::Copied<I>,
             "Since this function assumes container has been preallocated, "
-            "it makes no sense to clone here "
-            "- it should be handled outside this call."
-         );
-         static_assert(not CT::Copied<I>,
-            "Since this function assumes container has been preallocated, "
-            "it makes no sense to copy here "
+            "it makes no sense to clone or copy here "
             "- it should be handled outside this call."
          );
          
@@ -358,6 +355,9 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes both sides are allocated and initialized       
       template<CT::Container C, CT::Container RHS>
       void SwapInner(this C&& self, RHS& rhs) requires CT::ContainsOne<C, RHS> {
+         static_assert(CT::ContainsOne<C, RHS>,
+            "Swapping only first element in a container with many. GetHandle() first?");
+
          if constexpr (CT::TypeErased<C, RHS>) {
             auto T = self.GetType();
             auto S = T.GetSize();
