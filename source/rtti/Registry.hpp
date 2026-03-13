@@ -77,16 +77,14 @@ namespace Langulus::RTTI
       auto GetMetaByID(const auto& where, size_t id) const assumptious;
 
    protected:
-      friend class DefinitionVerb;
-      friend class DefinitionData;
-      friend class DefinitionTag;
-      friend class DefinitionConst;
-      friend struct Inner::MetaTagPacked_16;
-      friend struct Inner::MetaConstPacked_16;
-      template<unsigned, unsigned>
-      friend struct Inner::MetaDataStructured_XY;
-      template<unsigned>
-      friend struct Inner::MetaVerbStructured_X8;
+                           friend class DefinitionVerb;
+                           friend class DefinitionData;
+                           friend class DefinitionTag;
+                           friend class DefinitionConst;
+                           friend struct Inner::MetaTagPacked_16;
+                           friend struct Inner::MetaConstPacked_16;
+      template<uint, uint> friend struct Inner::MetaDataStructured_XY;
+      template<uint>       friend struct Inner::MetaVerbStructured_X8;
 
       LANGULUS_API(RTTI)
       auto RegisterData(Token const& cppname, Token const& token) -> DefinitionData&;

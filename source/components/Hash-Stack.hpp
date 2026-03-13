@@ -35,8 +35,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-                                                    friend struct Conversion;
+      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
+                                            friend struct Conversion;
 
       /// Get hash (inner) - will not recompute it                            
       constexpr auto& GetHashInner(this auto&& self) noexcept {

@@ -22,7 +22,7 @@ namespace Langulus
       static constexpr size_t Count = sizeof...(EN) + 1;
 
    protected:
-      template<unsigned I>
+      template<uint I>
       static consteval auto AtInner() {
          if constexpr (I == 0)
             return E1;
@@ -33,7 +33,7 @@ namespace Langulus
       }
 
    public:
-      template<unsigned I>
+      template<uint I>
       static constexpr auto At = AtInner<I>();
 
       static constexpr void ForEach(auto&& lambda) {

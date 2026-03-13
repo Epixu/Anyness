@@ -147,7 +147,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
          Any_CheckState_ContainsOne(pack_disowned,  Disown(originalElement), 0);
 
          if constexpr (CT::Referenced<Decay<E>>) {
-            REQUIRE(DenseCast(*originalElement).GetReferences() == (Managed ? 8 : 5));
+            REQUIRE(DenseCast(*originalElement).GetReferences() == 8);
          }
 
          BenchmarkAnyStd("Empty/AbsorbConstructor(" + NameOf<E>() + ")", 30, 100,

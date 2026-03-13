@@ -54,15 +54,23 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                                 friend struct Removal;
-      template<Cid>                                 friend struct Emplacement;
-      template<Cid, bool>                           friend struct OwnershipDeepEmergent;
+      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                         friend struct Removal;
+      template<Cid>                         friend struct Emplacement;
+      template<Cid, bool>                   friend struct OwnershipDeepEmergent;
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   
       constexpr auto GetEntriesInner(this auto&& self) noexcept {
          return self.template AccessHeap<OwnershipDeepHeap>();
+      }
+
+      /// This method is called upon allocation to nullify entries            
+      constexpr void ConstructHeapRequest(this auto& self) noexcept {
+         memset(
+            self.GetEntriesInner(), 0,
+            self.GetReserved() * self.GetIndirections() * sizeof(AllocationPtr)
+         );
       }
    };
 }

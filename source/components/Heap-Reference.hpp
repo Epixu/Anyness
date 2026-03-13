@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Component
       template<Cid>             friend struct Removal;
       template<Cid>             friend struct IndexedCommon;
       template<Cid, class>      friend struct IndexedLinear;
-      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
+      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
       template<Cid>             friend struct Emplacement;
       template<Cid, bool>       friend struct Comparison;
                                 friend struct Conversion;

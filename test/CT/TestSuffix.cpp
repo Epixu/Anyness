@@ -67,8 +67,8 @@ SCENARIO("SuffixOf") {
    
    DEFINE_SUFFIXOF_TYPE_TEST(uint8_t,  "u8")
    DEFINE_SUFFIXOF_TYPE_TEST(uint16_t, "u16")
-   DEFINE_SUFFIXOF_TYPE_TEST(uint32_t, (::std::same_as<uint32_t, unsigned int> ? "u" : "u32"))
-   DEFINE_SUFFIXOF_TYPE_TEST(uint64_t, (::std::same_as<uint64_t, unsigned int> ? "u" : "u64"))
+   DEFINE_SUFFIXOF_TYPE_TEST(uint32_t, (::std::same_as<uint32_t, uint> ? "u" : "u32"))
+   DEFINE_SUFFIXOF_TYPE_TEST(uint64_t, (::std::same_as<uint64_t, uint> ? "u" : "u64"))
    
    DEFINE_SUFFIXOF_TYPE_TEST( int8_t,  "i8")
    DEFINE_SUFFIXOF_TYPE_TEST( int16_t, "i16")

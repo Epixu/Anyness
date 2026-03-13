@@ -32,9 +32,9 @@ namespace Langulus::CT
    ///                                                                        
    /// All intents are defined in terms of three properties, and the          
    /// combinations between them:                                             
-   ///   unsigned Depth - decides whether the intent is deep or shallow       
-   ///   bool     Keep  - decides whether to exercise ownership or not        
-   ///   bool     Move  - decides whether it's a move semantic or not         
+   ///   uint Depth - decides whether the intent is deep or shallow           
+   ///   bool Keep  - decides whether to exercise ownership or not            
+   ///   bool Move  - decides whether it's a move semantic or not             
 
    /// Checks if all T are shallow intents                                    
    /// Shallow intents are propagated through mostly a single indirection     
@@ -116,14 +116,14 @@ namespace Langulus
       ///   @tparam DEPTH the depth of the intent, use -1 for infinite        
       ///   @tparam KEEP does the intent practice ownership                   
       ///   @tparam MOVE does the intent involve transfer of ownership        
-      template<unsigned DEPTH, bool KEEP, bool MOVE>
+      template<uint DEPTH, bool KEEP, bool MOVE>
       struct CommonIntent {
          using CTTI_ReflectAs     = void;
          using CTTI_Abstract      = Yes<>;
          using CTTI_Allocatable   = No;
          using CTTI_Intent        = Yes<>;
 
-         static consteval unsigned GetDepth() { return DEPTH; }
+         static consteval uint GetDepth()     { return DEPTH; }
          static consteval bool IsKept()       { return KEEP;  }
          static consteval bool IsMoved()      { return MOVE;  }
          static consteval bool ResetsOnMove() { return KEEP and MOVE; }
@@ -536,7 +536,7 @@ namespace Langulus
    /// to clone container, doing a deep copy instead of default shallow one   
    ///   @tparam T the type to clone                                          
    template<class T> requires (not ::std::is_reference_v<T>)
-   struct Clone final : Inner::CommonIntent<static_cast<unsigned>(-1), true, false> {
+   struct Clone final : Inner::CommonIntent<static_cast<uint>(-1), true, false> {
       const T& what;
       
       using CTTI_Typed     = decltype(what);

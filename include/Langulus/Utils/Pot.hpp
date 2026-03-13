@@ -149,7 +149,7 @@ namespace Langulus
       }
    };
 
-   constexpr pot_t operator""_pot(unsigned long long int num) assumptious {
+   constexpr pot_t operator""_pot(ulonger num) assumptious {
       return pot_t(num);
    }
 }

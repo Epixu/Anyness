@@ -44,9 +44,9 @@ namespace Langulus::Anyness::Component
       static constexpr int ComponentPrecedence = 3000;
 
    protected:
-      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<Cid, class>                          friend struct Insertion;
-      template<Cid, class>                          friend struct Merging;
+      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
+      template<Cid, class>                  friend struct Insertion;
+      template<Cid, class>                  friend struct Merging;
 
       /// Clone the 'rhs'.                                                    
       /// Assumes all indirections are ordinary pointers, and is thus faster. 

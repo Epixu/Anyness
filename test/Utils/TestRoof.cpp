@@ -26,7 +26,7 @@ TEST_CASE_TEMPLATE("Testing Roof2 calls", T,
       static_assert(Roof2(4u) == 4u);
       static_assert(Roof2(99u) == 128u);
 
-      for (unsigned i = 0; i < sizeof(numbers) / sizeof(T); ++i) {
+      for (uint i = 0; i < sizeof(numbers) / sizeof(T); ++i) {
          if (numbers[i] <= 128 || sizeof(T) > 1) {
             REQUIRE(Roof2(numbers[i]) == results[i]);
          }

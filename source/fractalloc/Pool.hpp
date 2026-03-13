@@ -50,7 +50,7 @@ namespace Langulus::Fractalloc
       // Set by meta.GetMinAlloc()                                      
       pot_t mDataMinAlloc;
       // Id of pool inside a type chain (used for packing pointers)     
-      unsigned mID = 0;
+      uint  mID = 0;
       // Next pool in the pool chain                                    
       Pool* mNext = nullptr;
 

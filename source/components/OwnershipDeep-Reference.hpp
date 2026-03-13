@@ -56,13 +56,13 @@ namespace Langulus::Anyness::Component
       template<Cid, bool> friend struct OwnershipDeepEmergent;
 
       /// Get the entry array (inner)                                         
-      template<unsigned SELECTOR = ID> requires (SELECTOR == ID)
+      template<uint SELECTOR = ID> requires (SELECTOR == ID)
       constexpr auto& GetEntriesInner(this auto&& self) noexcept {
          return self.template AccessStack<OwnershipDeepReference>();
       }
 
       /// Set the entry array (inner)                                         
-      template<unsigned SELECTOR = ID> requires (SELECTOR == ID)
+      template<uint SELECTOR = ID> requires (SELECTOR == ID)
       constexpr void SetEntriesInner(this auto& self, EntryPtr entries) noexcept {
          self.template GetEntriesInner<SELECTOR>() = DecvqAllCast(entries);
       }

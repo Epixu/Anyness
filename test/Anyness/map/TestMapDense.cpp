@@ -659,7 +659,7 @@ TEMPLATE_TEST_CASE(
          for (auto& comparer : darray1)
             REQUIRE(map[comparer.GetKey()] == comparer.GetValue());
 
-         unsigned i = 0;
+         uint i = 0;
          for (auto pair : map) {
             static_assert(not CT::Typed<T> or ::std::is_reference_v<decltype(pair.GetKey())>,
                "Pair key type is not a reference for statically optimized map");
@@ -733,7 +733,7 @@ TEMPLATE_TEST_CASE(
          for (auto& comparer : darray1)
             REQUIRE(map[comparer.GetKey()] == comparer.GetValue());
 
-         unsigned i = 0;
+         uint i = 0;
          const auto done = map.ForEachKey([&](const K& key) {
             // Different architectures result in different hashes       
             if constexpr (Bitness == 32) {

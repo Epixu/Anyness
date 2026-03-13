@@ -139,7 +139,7 @@ namespace Langulus::Anyness
    };
 
    /// A component ID                                                         
-   using Cid = unsigned;
+   using Cid = uint;
 
    namespace Component
    {
@@ -160,8 +160,8 @@ namespace Langulus::Anyness
       template<Cid, class H>              struct HashEmergent;
       template<Cid, class H>              struct HashHeap;
       template<Cid, class H>              struct HashStack;
-      template<Cid = 0, unsigned = 0, unsigned = 0, CT::Sparse POINTER_TYPE = void*> struct HeapImmovable;
-      template<Cid = 0, unsigned = 0, unsigned = 0, CT::Sparse POINTER_TYPE = void*> struct HeapMovable;
+      template<Cid = 0, uint = 0, uint = 0, CT::Sparse POINTER_TYPE = void*> struct HeapImmovable;
+      template<Cid = 0, uint = 0, uint = 0, CT::Sparse POINTER_TYPE = void*> struct HeapMovable;
       template<Cid = 0, CT::Sparse POINTER_TYPE = void*> struct HeapReference;
       template<Cid = 0, class H  = Hash>  struct IndexedHashHeap;
       template<Cid = 0, class H  = Hash>  struct IndexedHashStack;
@@ -196,7 +196,7 @@ namespace Langulus::Anyness
       /// of standard layout, and containing proper ID sequences.             
       ///   @tparam ACC accumulated number of stack/heap providers            
       ///   @tparam C1, C2, CN... components                                  
-      template<unsigned ACC, class C1, class C2, class...CN>
+      template<uint ACC, class C1, class C2, class...CN>
       consteval bool ValidateComponentOrder() {
          static_assert(::std::is_standard_layout_v<C1>);
          static_assert(::std::is_standard_layout_v<C2>);

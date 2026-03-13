@@ -30,7 +30,7 @@ namespace Langulus::RTTI::Inner
    /// this requires an additional level of indirection                       
    ///   @tparam BYTESIZE the size of the handle in bytes                     
    #pragma pack(push, 1)
-   template<unsigned BYTESIZE>
+   template<uint BYTESIZE>
    struct MetaPacked {
       using CTTI_Abstract  = Yes<>;
       using CTTI_POD       = Yes<>;
@@ -178,14 +178,14 @@ namespace Langulus::RTTI::Inner
    #endif
 
       /// Get the major version                                               
-      unsigned GetVersionMajor() const noexcept {
+      uint GetVersionMajor() const noexcept {
          if (mDefinition)
             return mDefinition->mVersionMajor;
          return 0;
       }
 
       /// Get the minor version                                               
-      unsigned GetVersionMinor() const noexcept {
+      uint GetVersionMinor() const noexcept {
          if (mDefinition)
             return mDefinition->mVersionMinor;
          return 0;

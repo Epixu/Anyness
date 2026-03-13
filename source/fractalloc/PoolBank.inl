@@ -13,9 +13,9 @@ namespace Langulus::Fractalloc
    struct PoolBank {
       using Pool = Langulus::Fractalloc::Pool;
       Pool* unindexed = nullptr;
-      ::std::map<unsigned, Pool*> indexed;
-      unsigned lastId = 0;
-      unsigned freeIds = 0;
+      ::std::map<uint, Pool*> indexed;
+      uint lastId = 0;
+      uint freeIds = 0;
 
       /// Link a new pool, adding it to the unindexed chain, as well as       
       /// giving it a unique ID                                               
@@ -27,7 +27,7 @@ namespace Langulus::Fractalloc
          
          // Give the new pool a unique ID as well, so that packed       
          // pointers can utilize it.                                    
-         for (unsigned reused = 1; reused < lastId and freeIds; ++reused) {
+         for (uint reused = 1; reused < lastId and freeIds; ++reused) {
             // Always try reusing IDs                                   
             if (not indexed.contains(reused)) {
                pool->mID = reused;
@@ -180,7 +180,7 @@ namespace Langulus::Fractalloc
       void DumpPools(DMeta type) const {
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
             if (type) {
-               Logger::Append("(boundaries: ");
+               Logger::Append(" (boundaries: ");
                if (type.GetBoundaries().empty())
                   Logger::Append("MAIN");
                else for (auto& boundary : type.GetBoundaries())
@@ -199,7 +199,7 @@ namespace Langulus::Fractalloc
                continue;
 
          #if LANGULUS_FEATURE(MANAGED_REFLECTION)
-            Logger::Append("(boundaries: ");
+            Logger::Append(" (boundaries: ");
             if (type.GetBoundaries().empty())
                Logger::Append("MAIN");
             else for (auto& boundary : type.GetBoundaries())

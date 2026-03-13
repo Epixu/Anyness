@@ -337,7 +337,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 5);
          REQUIRE(pack.GetReserved() >= 5);
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray2[i]);
          
          #if LANGULUS(BENCHMARK)
@@ -370,7 +370,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 5);
          REQUIRE(pack.GetReserved() >= 5);
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray2[4-i]);
          
          #if LANGULUS(BENCHMARK)
@@ -403,7 +403,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 5);
          REQUIRE(pack.GetReserved() >= 5);
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray2[i]);
          
          #if LANGULUS(BENCHMARK)
@@ -431,7 +431,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 5);
          REQUIRE(pack.GetReserved() >= 5);
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray2[i]);
          
          #if LANGULUS(BENCHMARK)
@@ -481,7 +481,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 5);
          REQUIRE(pack.GetReserved() >= 5);
 
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray3backup[i]);
          
          #if LANGULUS(BENCHMARK)
@@ -541,7 +541,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 5);
          REQUIRE(pack.GetReserved() >= 5);
 
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray3backup[4 - i]);
          
          #if LANGULUS(BENCHMARK)
@@ -1558,7 +1558,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
       REQUIRE(pack.GetCount() == 5);
       REQUIRE(pack.GetReserved() >= 5);
       REQUIRE(pack.GetRaw());
-      for (unsigned i = 0; i < pack.GetCount(); ++i)
+      for (uint i = 0; i < pack.GetCount(); ++i)
          REQUIRE(pack[i] == darray1[i]);
 
       WHEN("Shallow-copy more of the same stuff to the back (<<)") {
@@ -1568,9 +1568,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray1[i]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
+         for (uint i = 5; i < pack.GetCount(); ++i)
             REQUIRE(pack[i] == darray2[i-5]);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -1609,9 +1609,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
-         for (unsigned i = 5; i > 0; --i)
+         for (uint i = 5; i > 0; --i)
             REQUIRE(pack[5 - i] == darray2[i - 1]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
+         for (uint i = 5; i < pack.GetCount(); ++i)
             REQUIRE(pack[i] == darray1[i-5]);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -1650,9 +1650,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray1[i]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
+         for (uint i = 5; i < pack.GetCount(); ++i)
             REQUIRE(pack[i] == darray2[i-5]);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -1687,9 +1687,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray2[i]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
+         for (uint i = 5; i < pack.GetCount(); ++i)
             REQUIRE(pack[i] == darray1[i-5]);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -1745,9 +1745,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray1[i]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
+         for (uint i = 5; i < pack.GetCount(); ++i)
             REQUIRE(pack[i] == darray3backup[i - 5]);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -1811,9 +1811,9 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 10);
          REQUIRE(pack.GetReserved() >= 10);
 
-         for (unsigned i = 5; i > 0; --i)
+         for (uint i = 5; i > 0; --i)
             REQUIRE(pack[5 - i] == darray3backup[i - 1]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
+         for (uint i = 5; i < pack.GetCount(); ++i)
             REQUIRE(pack[i] == darray1[i - 5]);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -2246,7 +2246,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(clone.GetUses() == 1);
          REQUIRE(pack.GetUses() == 1);
 
-         for (unsigned i = 0; i < 5; ++i) {
+         for (uint i = 0; i < 5; ++i) {
             REQUIRE(pack[i] == darray1[i]);
             REQUIRE(clone[i] == darray1[i]);
          }
@@ -2338,7 +2338,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray1[i]);
          REQUIRE(pack[5] == darray2[3]);
 
@@ -2375,7 +2375,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          REQUIRE(pack[0] == darray2[3]);
-         for (unsigned i = 1; i < 6; ++i)
+         for (uint i = 1; i < 6; ++i)
             REQUIRE(pack[i] == darray1[i-1]);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -2411,7 +2411,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          Many_CheckState_OwnedFull<E>(pack);
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray1[i]);
          REQUIRE(pack[5] == darray2[3]);
 
@@ -2449,7 +2449,7 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
          REQUIRE(pack.GetCount() == 6);
          REQUIRE(pack.GetReserved() >= 6);
          REQUIRE(pack[0] == darray2[3]);
-         for (unsigned i = 1; i < 6; ++i)
+         for (uint i = 1; i < 6; ++i)
             REQUIRE(pack[i] == darray1[i-1]);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
@@ -2496,11 +2496,11 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             }
          );
 
-         REQUIRE(static_cast<unsigned>(it) == foreachit);
+         REQUIRE(static_cast<uint>(it) == foreachit);
          if constexpr (CT::Text<E>)
             REQUIRE(it == 0);
          else
-            REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
+            REQUIRE(static_cast<uint>(it) == pack.GetCount());
       }
 
       WHEN("ForEach flat dense element (mutable)") {
@@ -2521,12 +2521,12 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             }
          );
 
-         REQUIRE(static_cast<unsigned>(it) == foreachit);
+         REQUIRE(static_cast<uint>(it) == foreachit);
 
          if constexpr (CT::Same<E, Text>)
             REQUIRE(it == 0);
          else
-            REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
+            REQUIRE(static_cast<uint>(it) == pack.GetCount());
       }
 
       WHEN("ForEachRev flat dense element (immutable)") {
@@ -2547,12 +2547,12 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             }
          );
 
-         REQUIRE(static_cast<unsigned>(it) == foreachit);
+         REQUIRE(static_cast<uint>(it) == foreachit);
 
          if constexpr (CT::Same<E, Text>)
             REQUIRE(it == 0);
          else
-            REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
+            REQUIRE(static_cast<uint>(it) == pack.GetCount());
       }
 
       WHEN("ForEachRev flat dense element (mutable)") {
@@ -2573,12 +2573,12 @@ TEMPLATE_TEST_CASE("Dense Many/TMany", "[many]",
             }
          );
 
-         REQUIRE(static_cast<unsigned>(it) == foreachit);
+         REQUIRE(static_cast<uint>(it) == foreachit);
 
          if constexpr (CT::Same<E, Text>)
             REQUIRE(it == 0);
          else
-            REQUIRE(static_cast<unsigned>(it) == pack.GetCount());
+            REQUIRE(static_cast<uint>(it) == pack.GetCount());
       }
    }
 

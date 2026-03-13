@@ -65,12 +65,12 @@ namespace Langulus::CTTI
 
    template<>
    struct Suffix<uint32_t> {
-      static constexpr Literal Name = ::std::same_as<uint32_t, unsigned int> ? "u\0\0" : "u32";
+      static constexpr Literal Name = ::std::same_as<uint32_t, uint> ? "u\0\0" : "u32";
    };
 
    template<>
    struct Suffix<uint64_t> {
-      static constexpr Literal Name = ::std::same_as<uint64_t, unsigned int> ? "u\0\0" : "u64";
+      static constexpr Literal Name = ::std::same_as<uint64_t, uint> ? "u\0\0" : "u64";
    };
    
    template<>

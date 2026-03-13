@@ -35,7 +35,7 @@ namespace Langulus::Logger
 {
    /// Color codes, consistent with ANSI/VT100 escapes.                       
    /// Also consistent with fmt::terminal_color.                              
-   enum class Color : unsigned {
+   enum class Color : uint {
       NoForeground = 0,
       NoBackground = 1,
 
@@ -483,7 +483,7 @@ namespace Langulus::Logger
          if (bytes < 1'024LL)
             oss << bytes << " B";
          else if (bytes < 1'048'576LL)
-            oss << (bytes * 1. / 1023LL) << " KB";
+            oss << (bytes * 1. / 1'024LL) << " KB";
          else if (bytes < 1'073'741'824LL)
             oss << (bytes * 1. / 1'048'576LL) << " MB";
          else if constexpr (sizeof(size_t) > 4) {
@@ -503,7 +503,7 @@ namespace Langulus::Logger
    };
 
    /// Bytes only with integer                                                
-   constexpr Size operator""_B(unsigned long long int num) noexcept {
+   constexpr Size operator""_B(ulonger num) noexcept {
       return {static_cast<size_t>(num)};
    }
 
@@ -543,36 +543,36 @@ namespace Langulus::Logger
 #endif
 
    /// Integer literals so that e.g. 5_KB works                               
-   constexpr Size operator""_KiB(unsigned long long num) noexcept {
+   constexpr Size operator""_KiB(ulonger num) noexcept {
       return {static_cast<size_t>((1LL << 10) * num)};
    }
-   constexpr Size operator""_MiB(unsigned long long num) noexcept {
+   constexpr Size operator""_MiB(ulonger num) noexcept {
       return {static_cast<size_t>((1LL << 20) * num)};
    }
-   constexpr Size operator""_GiB(unsigned long long num) noexcept {
+   constexpr Size operator""_GiB(ulonger num) noexcept {
       return {static_cast<size_t>((1LL << 30) * num)};
    }
-   constexpr Size operator""_KB(unsigned long long num) noexcept {
+   constexpr Size operator""_KB(ulonger num) noexcept {
       return {static_cast<size_t>(1'024LL * num)};
    }
-   constexpr Size operator""_MB(unsigned long long num) noexcept {
+   constexpr Size operator""_MB(ulonger num) noexcept {
       return {static_cast<size_t>(1'048'576LL * num)};
    }
-   constexpr Size operator""_GB(unsigned long long num) noexcept {
+   constexpr Size operator""_GB(ulonger num) noexcept {
       return {static_cast<size_t>(1'073'741'824LL * num)};
    }
 
 #if LANGULUS_BITNESS() > 32
-   constexpr Size operator""_TiB(unsigned long long num) noexcept {
+   constexpr Size operator""_TiB(ulonger num) noexcept {
       return {static_cast<size_t>((1LL << 40) * num)};
    }
-   constexpr Size operator""_PiB(unsigned long long num) noexcept {
+   constexpr Size operator""_PiB(ulonger num) noexcept {
       return {static_cast<size_t>((1LL << 50) * num)};
    }
-   constexpr Size operator""_TB(unsigned long long num) noexcept {
+   constexpr Size operator""_TB(ulonger num) noexcept {
       return {static_cast<size_t>(1'099'511'627'776LL * num)};
    }
-   constexpr Size operator""_PB(unsigned long long num) noexcept {
+   constexpr Size operator""_PB(ulonger num) noexcept {
       return {static_cast<size_t>(1'125'899'906'842'624LL * num)};
    }
 #endif

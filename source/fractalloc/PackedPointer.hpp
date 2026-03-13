@@ -42,13 +42,13 @@ namespace Langulus::Fractalloc
    ///      move from the start of the entry to the right. The byte offset is 
    ///      calculated as `sizeof(T) * offset`.                               
    #pragma pack(push, 1)
-   template<class T, unsigned POOL_BITS = 4, unsigned ENTRY_BITS = 16, unsigned OFFSET_BITS = 12>
+   template<class T, uint POOL_BITS = 4, uint ENTRY_BITS = 16, uint OFFSET_BITS = 12>
    struct PackedPointer {
       using CTTI_Sparse = Yes<>;
       using Type = T;
 
       static constexpr PointerSpecification Specification {POOL_BITS, ENTRY_BITS, OFFSET_BITS};
-      static constexpr unsigned TotalBits = POOL_BITS + ENTRY_BITS + OFFSET_BITS;
+      static constexpr uint TotalBits = POOL_BITS + ENTRY_BITS + OFFSET_BITS;
       static_assert(TotalBits == 8 or TotalBits == 16 or TotalBits == 32);
 
       using Inner = Tif<TotalBits == 8,  uint8_t,

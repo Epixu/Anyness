@@ -55,10 +55,10 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, CT::Sparse>                     friend struct HeapReference;
-      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                                 friend struct Removal;
-      template<Cid>                                 friend struct Emplacement;
+      template<Cid, CT::Sparse>             friend struct HeapReference;
+      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                         friend struct Removal;
+      template<Cid>                         friend struct Emplacement;
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   

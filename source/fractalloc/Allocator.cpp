@@ -130,7 +130,7 @@ namespace Langulus::Fractalloc
       LglsAssumeDevAndOptimize(pool_bank, "Pool bank should always be valid");
       
       //	Attempt to place allocation in the chosen chain                
-      unsigned pool_misses = 0;
+      uint pool_misses = 0;
       Allocation* entry = nullptr;
       auto pool = pool_bank->unindexed;
       while (pool) {
@@ -633,7 +633,7 @@ namespace Langulus::Fractalloc
       for (auto& type : gTypePoolChain) {
          const auto scope = Logger::InfoScoped(Logger::Purple,
             "TYPE POOL CHAIN FOR `", Logger::Red, type.first.GetCppName(),
-            Logger::Purple, "` "
+            Logger::Purple, '`'
          );
 
          type.second.DumpPools(type.first);

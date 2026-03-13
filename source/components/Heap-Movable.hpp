@@ -23,14 +23,14 @@ namespace Langulus::Anyness::Component
    ///      containers in order to control hash table growth on reallocation. 
    ///      If 0, the heap will grow according to reflected type properties.  
    ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
-   template<Cid ID, unsigned INITIAL_SIZE, unsigned GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
+   template<Cid ID, uint INITIAL_SIZE, uint GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
    struct HeapMovable : HeapReference<ID, POINTER_TYPE> {
-      static constexpr Cid      Id = ID;
-      static constexpr Cid      HeapProvider = ID;
-      static constexpr int      ComponentPrecedence = -2000;
-      static constexpr bool     HeapCanBeNull = true;
-      static constexpr unsigned InitialSize = INITIAL_SIZE;
-      static constexpr unsigned GrowthFactor = GROWTH_FACTOR;
+      static constexpr Cid  Id = ID;
+      static constexpr Cid  HeapProvider = ID;
+      static constexpr int  ComponentPrecedence = -2000;
+      static constexpr bool HeapCanBeNull = true;
+      static constexpr uint InitialSize = INITIAL_SIZE;
+      static constexpr uint GrowthFactor = GROWTH_FACTOR;
 
    protected:
       template<Cid, class> friend struct ReserveEmergent;

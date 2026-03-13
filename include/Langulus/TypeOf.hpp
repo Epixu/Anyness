@@ -149,7 +149,7 @@ namespace Langulus
    ///      all indirections by default                                       
    ///   @param a the argument to dereference                                 
    ///   @attention will shed all sheddables                                  
-   template<unsigned TIMES = 1000000, class T>
+   template<uint TIMES = 1000000, class T>
    constexpr decltype(auto) DenseCast(T&& a) {
       using ST = Shed<T>;
       if constexpr (TIMES > 0 and (CT::Array<ST> or CT::Sparse<ST>))

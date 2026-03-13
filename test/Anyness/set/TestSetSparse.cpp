@@ -501,7 +501,7 @@ TEMPLATE_TEST_CASE(
       }
 
       WHEN("Sets are iterated with ranged-for") {
-         unsigned i = 0;
+         uint i = 0;
          for (auto& item : set) {
             // Pointers are always random, can't ensure order           
             (void) item;
@@ -512,7 +512,7 @@ TEMPLATE_TEST_CASE(
       }
 
       WHEN("ForEach flat dense key (immutable)") {
-         unsigned i = 0;
+         uint i = 0;
          const auto done = set.ForEach([&](const K& key) {
             // Pointers are always random, can't ensure order           
             (void) key;

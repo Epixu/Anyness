@@ -61,11 +61,11 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, CT::Sparse>                     friend struct HeapReference;
-      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                                 friend struct Removal;
-      template<Cid>                                 friend struct Emplacement;
-      template<Cid, bool>                           friend struct OwnershipEmergent;
+      template<Cid, CT::Sparse>             friend struct HeapReference;
+      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                         friend struct Removal;
+      template<Cid>                         friend struct Emplacement;
+      template<Cid, bool>                   friend struct OwnershipEmergent;
 
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this will not dereference previous allocation          

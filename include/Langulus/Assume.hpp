@@ -337,7 +337,7 @@ namespace Langulus
    ///   @param m1 optional main error message if condition doesn't hold      
    ///   @param location optional location of the error                       
    ///   @param mn additional information to log                              
-   template<unsigned LEVEL, class E = Exception, class...MORE>
+   template<uint LEVEL, class E = Exception, class...MORE>
    constexpr void AssumeInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,
@@ -383,7 +383,7 @@ namespace Langulus
    ///   @param m1 optional main warning message if condition doesn't hold    
    ///   @param location optional location of the error                       
    ///   @param mn additional information to log                              
-   template<unsigned LEVEL, class...MORE>
+   template<uint LEVEL, class...MORE>
    constexpr void AssumeWarnInner(
       bool condition,
       [[maybe_unused]] const char* location = nullptr,

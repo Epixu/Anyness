@@ -46,8 +46,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
-      /*template<unsigned, class>      friend struct Insertion;
-      template<unsigned, CT::Sparse> friend struct HeapMovable;*/
+      /*template<Cid, class>      friend struct Insertion;
+      template<Cid, CT::Sparse> friend struct HeapMovable;*/
       template<Cid, class> friend struct Merging;
 
       /// Get the start of the hash table (inner)                             
@@ -57,7 +57,7 @@ namespace Langulus::Anyness::Component
 
       /// This method is called upon allocation to nullify table              
       constexpr void ConstructHeapRequest(this auto& self) noexcept {
-         memset(self.GetHashTableInner(), 0, self.GetReserved());
+         memset(self.GetHashTableInner(), 0, self.GetReserved() * sizeof(TableType));
       }
 
       /// Browse table, converting contiguous index into table index.         

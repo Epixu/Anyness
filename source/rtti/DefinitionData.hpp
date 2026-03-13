@@ -36,11 +36,10 @@ namespace Langulus::RTTI
    ///                                                                        
    class DefinitionData final : public Inner::Definition {
    protected:
-      friend class Registry;
-      friend class Definition;
-      friend struct Inner::MetaDataNaked;
-      template<unsigned, unsigned>
-      friend struct Inner::MetaDataStructured_XY;
+                           friend class Registry;
+                           friend class Definition;
+                           friend struct Inner::MetaDataNaked;
+      template<uint, uint> friend struct Inner::MetaDataStructured_XY;
 
       // The origin type, with all qualifiers and sparseness removed.   
       // Will be null for incomplete types.                             

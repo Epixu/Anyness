@@ -203,13 +203,13 @@ namespace Langulus
          return ForEach(LglsFwd(lambda));
       }
 
-      template<unsigned I>
+      template<uint I>
       static consteval auto AtInner() {
          static_assert(I == 0, "Index is out of type list bounds (list has one type)");
          return Types<T> {};
       }
 
-      template<unsigned I>
+      template<uint I>
       using At = typename decltype(AtInner<I>())::First;
 
       /// Generate a type list by providing a consteval generator lambda      
@@ -308,7 +308,7 @@ namespace Langulus
             return No {};
       }
 
-      template<unsigned IDX = 0>
+      template<uint IDX = 0>
       static constexpr void ForEachIndexed(auto&& lambda) {
          static_assert(requires{ lambda.template operator()<T1,0>(); },
             "Provided argument is not a lambda of the form []<class,index>");
@@ -322,7 +322,7 @@ namespace Langulus
           }
       }
 
-      template<unsigned IDX = 0>
+      template<uint IDX = 0>
       static constexpr bool ForEachIndexedAnd(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1,0>()} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
@@ -338,7 +338,7 @@ namespace Langulus
          else return false;
       }
 
-      template<unsigned IDX = 0>
+      template<uint IDX = 0>
       static constexpr bool ForEachIndexedOr(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T1,0>()} -> ::std::convertible_to<bool>; },
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
@@ -360,7 +360,7 @@ namespace Langulus
          return lambda.template operator()<T1, T2, TN...>();
       }
 
-      template<unsigned I>
+      template<uint I>
       static consteval auto AtInner() {
          if constexpr (I == 0)
             return Types<T1> {};
@@ -372,7 +372,7 @@ namespace Langulus
             static_assert(false, "Index is out of type list bounds");
       }
 
-      template<unsigned I>
+      template<uint I>
       using At = typename decltype(AtInner<I>())::First;
 
       /// Generate a type list by providing a consteval generator lambda      

@@ -14,11 +14,11 @@
 
 namespace Langulus::RTTI::Inner
 {
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    constexpr MetaVerbStructured_X8<ID_SIZE>::MetaVerbStructured_X8(nullptr_t) noexcept
       : Base {0} {}
 
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    constexpr MetaVerbStructured_X8<ID_SIZE>::MetaVerbStructured_X8(DefinitionVerb const* d) noexcept
       : Base {d ? d->mID : 0} {
       if (d) {
@@ -27,14 +27,14 @@ namespace Langulus::RTTI::Inner
       }
    }
 
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    constexpr auto MetaVerbStructured_X8<ID_SIZE>::operator = (nullptr_t)
    noexcept -> MetaVerbStructured_X8& {
       Base::operator = (0);
       return *this;
    }
 
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    constexpr auto MetaVerbStructured_X8<ID_SIZE>::operator = (DefinitionVerb const* d)
    noexcept -> MetaVerbStructured_X8& {
       Base::operator = (d ? d->mID : 0);
@@ -46,13 +46,13 @@ namespace Langulus::RTTI::Inner
       return *this;
    }
 
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    constexpr bool MetaVerbStructured_X8<ID_SIZE>::operator == (const MetaVerbStructured_X8& rhs) const noexcept {
       return Base::operator == (rhs);
    }
    
    /// Get the C++ name of the verb                                           
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetCppName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
@@ -61,7 +61,7 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get any reflected information about the verb                           
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetInfo() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
@@ -70,7 +70,7 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get the verb's hash                                                    
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetHash() const noexcept -> Hash {
       const auto id = Base::GetID();
       if (id)
@@ -79,8 +79,8 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get major verb version                                                 
-   template<unsigned ID_SIZE>
-   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor()  const noexcept -> unsigned {
+   template<uint ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMajor() const noexcept -> uint {
       const auto id = Base::GetID();
       if (id)
          return Instance.GetMetaVerbByID(id)->mVersionMajor;
@@ -88,8 +88,8 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get minor verb version                                                 
-   template<unsigned ID_SIZE>
-   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMinor()  const noexcept -> unsigned {
+   template<uint ID_SIZE>
+   auto MetaVerbStructured_X8<ID_SIZE>::GetVersionMinor() const noexcept -> uint {
       const auto id = Base::GetID();
       if (id)
          return Instance.GetMetaVerbByID(id)->mVersionMinor;
@@ -97,7 +97,7 @@ namespace Langulus::RTTI::Inner
    }
    
    /// Get the reflected boundaries                                           
-   template<unsigned ID_SIZE> auto MetaVerbStructured_X8<ID_SIZE>::GetBoundaries()
+   template<uint ID_SIZE> auto MetaVerbStructured_X8<ID_SIZE>::GetBoundaries()
    const noexcept -> Definition::BoundarySet const& {
       const auto id = Base::GetID();
       if (id)
@@ -109,7 +109,7 @@ namespace Langulus::RTTI::Inner
 
 
    /// Get the positive verb token                                            
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
@@ -118,7 +118,7 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the negative verb token, a.k.a. the antonym                        
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeName() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
@@ -127,7 +127,7 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the positive reflected operator token                              
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPositiveOperator() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
@@ -136,7 +136,7 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the negative reflected operator token                              
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetNegativeOperator() const noexcept -> Token {
       const auto id = Base::GetID();
       if (id)
@@ -145,7 +145,7 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the default reflected precedence for the verb                      
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetPrecedence() const noexcept -> float {
       const auto id = Base::GetID();
       if (id)
@@ -154,7 +154,7 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Get the contextless execution routine if such was defined              
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    auto MetaVerbStructured_X8<ID_SIZE>::GetContextless() const noexcept -> DefinitionVerb::FContextless {
       return contextless
          ? Instance.GetMetaVerbByID(Base::GetID())->mCurrentBoundary.mContextless
@@ -162,19 +162,19 @@ namespace Langulus::RTTI::Inner
    }
 
    /// Check if the verb has a negative token defined                         
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsReversible() const noexcept {
       return reversible;
    }
 
    /// Check if the verb provides a contextless execution routine             
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    constexpr bool MetaVerbStructured_X8<ID_SIZE>::IsContextless() const noexcept {
       return contextless;
    }
 
 #if LANGULUS(SAFE)
-   template<unsigned ID_SIZE>
+   template<uint ID_SIZE>
    MetaVerbStructured_X8<ID_SIZE>::operator bool() const noexcept {
       if (Base::operator bool()) {
          LglsAssert(Instance.GetMetaVerbByID(Base::GetID()),

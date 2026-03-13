@@ -517,6 +517,9 @@
 ///                                                                           
 namespace Langulus
 {
+   using uint = unsigned int;
+   using ulong = unsigned long;
+   using ulonger = unsigned long long;
    using ::std::nullptr_t;
    using ::std::size_t;
 
@@ -639,7 +642,8 @@ namespace Langulus
    /// These are undefined when MANAGED_MEMORY is disabled, but are left here 
    /// so that the compiler doesn't complain about missing symbols            
    struct PooledBySize;
-   template<unsigned = MinimalPoolSize>
+
+   template<uint = MinimalPoolSize>
    struct PooledByType;
 
    /// Align a value to a given alignment                                     

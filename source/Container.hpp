@@ -125,7 +125,7 @@ namespace Langulus::Anyness
       template<class, class, bool, Cid> friend struct Com::TypedStack;
       template<CT::NotVoid, Cid>        friend struct Com::Stack;
       template<Cid, CT::Sparse>         friend struct Com::HeapReference;
-      template<Cid, unsigned, unsigned, CT::Sparse> friend struct Com::HeapMovable;
+      template<Cid, uint, uint, CT::Sparse> friend struct Com::HeapMovable;
       template<Cid, bool>               friend struct Com::OwnershipStack;
       template<Cid, bool>               friend struct Com::OwnershipDeepReference;
       template<Cid, bool>               friend struct Com::OwnershipDeepHeap;
@@ -175,7 +175,8 @@ namespace Langulus::Anyness
                static_cast<size_t>(self.GetIndirections())
             );
             auto heap = reinterpret_cast<Tmut<SELF, uint8_t*, uint8_t const*>>(
-               self.GetRawReserveEnd()) + offset;
+               DecvqAllCast(self.GetRawReserveEnd())
+            ) + offset;
 
             if constexpr (requires { R::AllocatedPerIndirection; }) {
                if constexpr (requires { R::Type::AllocatedPerElement; }) {

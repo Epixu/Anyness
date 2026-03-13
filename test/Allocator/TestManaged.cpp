@@ -24,7 +24,7 @@ SCENARIO("Testing FastLog2 calls") {
    };
    static_assert(sizeof(numbers) == sizeof(results), "Oops");
 
-   for (unsigned i = 0; i < sizeof(numbers) / sizeof(size_t); ++i) {
+   for (uint i = 0; i < sizeof(numbers) / sizeof(size_t); ++i) {
       REQUIRE(Fractalloc::FastLog2(numbers[i]) == results[i]);
    }
 }

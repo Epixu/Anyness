@@ -811,7 +811,7 @@ TEMPLATE_TEST_CASE(
       }
 
       WHEN("Maps are iterated with ranged-for") {
-         unsigned i = 0;
+         uint i = 0;
          for (auto pair : map) {
             static_assert(CT::Untyped<T> or CT::Reference<decltype(pair.GetKey())>,
                "Pair key type is not a reference for statically optimized map");
@@ -827,7 +827,7 @@ TEMPLATE_TEST_CASE(
       }
 
       WHEN("ForEach flat dense key (immutable)") {
-         unsigned i = 0;
+         uint i = 0;
          const auto done = map.ForEachKey([&](const K& key) {
             // Pointers are always random, can't ensure order           
             (void) key;

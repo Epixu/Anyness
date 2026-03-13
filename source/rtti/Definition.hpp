@@ -28,7 +28,7 @@ namespace Langulus::RTTI
    namespace Inner
    {
       struct MetaDataNaked;
-      template<unsigned, unsigned>
+      template<uint, uint>
       struct MetaDataStructured_XY;
 
       struct MetaTagNaked;
@@ -38,7 +38,7 @@ namespace Langulus::RTTI
       struct MetaConstPacked_16;
 
       struct MetaVerbNaked;
-      template<unsigned>
+      template<uint>
       struct MetaVerbStructured_X8;
    }   
 
@@ -140,9 +140,9 @@ namespace Langulus::RTTI::Inner
       ::std::string mInfoOf;
 
       // Major version                                                  
-      unsigned mVersionMajor IF_SAFE(= 1);
+      uint mVersionMajor IF_SAFE(= 1);
       // Minor version                                                  
-      unsigned mVersionMinor IF_SAFE(= 0);
+      uint mVersionMinor IF_SAFE(= 0);
 
       #if LANGULUS_FEATURE(MANAGED_REFLECTION)
          // Precomputed lowercase nameof                                

@@ -281,24 +281,24 @@ void State::Write(ColorExt c_with_flags) const noexcept {
    if (mStyleStack.empty())
       mStyleStack.push(GetCurrentStyle());
 
-   if (static_cast<unsigned>(c_with_flags)
-     & static_cast<unsigned>(ColorExt::PreviousColor)) {
+   if (static_cast<uint>(c_with_flags)
+     & static_cast<uint>(ColorExt::PreviousColor)) {
       // We have to pop                                                 
       if (mStyleStack.size() > 1)
          mStyleStack.pop();
    }
 
-   if (static_cast<unsigned>(c_with_flags)
-     & static_cast<unsigned>(ColorExt::NextColor)) {
+   if (static_cast<uint>(c_with_flags)
+     & static_cast<uint>(ColorExt::NextColor)) {
       // We have to push                                                
       mStyleStack.push(mStyleStack.top());
    }
 
    // Strip the mixing bits from the color                              
    const Color c = static_cast<Color>(
-      static_cast<unsigned>(c_with_flags) & (~(
-          static_cast<unsigned>(ColorExt::PreviousColor)
-        | static_cast<unsigned>(ColorExt::NextColor)
+      static_cast<uint>(c_with_flags) & (~(
+          static_cast<uint>(ColorExt::PreviousColor)
+        | static_cast<uint>(ColorExt::NextColor)
       ))
    );
 

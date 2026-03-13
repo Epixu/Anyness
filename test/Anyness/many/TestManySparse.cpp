@@ -1438,7 +1438,7 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack.GetReserved() >= 5);
          REQUIRE(pack.template IsExact<E>());
          REQUIRE(pack.GetRaw());
-         for (unsigned i = 0; i < pack.GetCount(); ++i)
+         for (uint i = 0; i < pack.GetCount(); ++i)
             REQUIRE(pack[i] == darray1[i]);
          REQUIRE_FALSE(pack.IsConstant());
       }
@@ -1450,9 +1450,9 @@ TEMPLATE_TEST_CASE("Sparse Many/TMany", "[many]",
          REQUIRE(pack.GetReserved() >= 10);
          REQUIRE(pack.template IsExact<E>());
 
-         for (unsigned i = 0; i < 5; ++i)
+         for (uint i = 0; i < 5; ++i)
             REQUIRE(pack[i] == darray1[i]);
-         for (unsigned i = 5; i < pack.GetCount(); ++i)
+         for (uint i = 5; i < pack.GetCount(); ++i)
             REQUIRE(pack[i] == darray2[i-5]);
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)

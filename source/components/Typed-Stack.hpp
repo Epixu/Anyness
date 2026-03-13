@@ -41,10 +41,10 @@ namespace Langulus::Anyness::Component
       static constexpr bool Dense  = not TypeErased and CT::Dense<TYPE>;
 
    protected:
-      template<Cid>                                 friend struct Removal;
-      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                                 friend struct Emplacement;
-      template<Cid>                                 friend struct IndexedCommon;
+      template<Cid>                         friend struct Removal;
+      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                         friend struct Emplacement;
+      template<Cid>                         friend struct IndexedCommon;
 
       /// Reset the type of the container, unless it's type-constrained.      
       /// If this container isn't type-erased, this call is a no-op.          

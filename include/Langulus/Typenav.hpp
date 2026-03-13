@@ -231,7 +231,7 @@ namespace Langulus
 
          /// Removes a pointer from the type. Supports custom pointers.       
          ///   @attention if an incomplete type is reached the nesting ceases 
-         template<class T, unsigned TIMES>
+         template<class T, uint TIMES>
          consteval auto NestedDeptr() {
             static_assert(not ::std::is_reference_v<T>,
                "Shed all references prior to this call");
@@ -305,7 +305,7 @@ namespace Langulus
    /// Remove a number of pointers from type. Supports custom pointer types.  
    ///   @attention may result in a reference                                 
    ///   @attention if an incomplete type is reached the nesting ceases       
-   template<class T, unsigned TIMES = 1>
+   template<class T, uint TIMES = 1>
    using Deptr = typename decltype(CT::Inner::NestedDeptr<ShedDeref<T>, TIMES>())::First;
 
    namespace Inner
@@ -481,16 +481,16 @@ namespace Langulus
    /// The default PointerSpecification with all members initialized to zero  
    /// corresponds to a pointer with sizeof(void*) and thus not packed.       
    struct PointerSpecification {
-      unsigned PoolBits = 0;
-      unsigned EntryBits = 0;
-      unsigned OffsetBits = 0;
+      uint PoolBits = 0;
+      uint EntryBits = 0;
+      uint OffsetBits = 0;
 
-      constexpr unsigned GetTotalBits() const noexcept {
+      constexpr uint GetTotalBits() const noexcept {
          const auto total = PoolBits + EntryBits + OffsetBits;
          return total ? total : sizeof(void*)*8;
       }
       
-      constexpr unsigned GetTotalBytes() const noexcept {
+      constexpr uint GetTotalBytes() const noexcept {
          const auto total = PoolBits + EntryBits + OffsetBits;
          return total ? total/8u : sizeof(void*);
       }

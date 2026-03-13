@@ -91,8 +91,14 @@ namespace Langulus::Anyness::Component
       ///   @return reference to self                                         
       template<CT::Container C, class A>
       C& Assign(this C& self, A&& argument)
-      requires (CT::RangeAssignable<C, A> and CT::Contiguous<C>) {
-         if constexpr (not CT::HeapAllocated<C>) {
+      requires (CT::RangeAssignable<C, A> /*and CT::Contiguous<C>*/) {
+         if constexpr (not CT::Contiguous<C>) {
+            // Assignment for maps/sets falls back to insert/merge      
+            self.Clear();
+                 if_available(self.Insert(LglsFwd(argument)))
+            else if_available(self.Merge (LglsFwd(argument)))
+         }
+         else if constexpr (not CT::HeapAllocated<C>) {
             // This container is on the stack, and by extension         
             // statically-typed and always initialized                  
             auto& data = self.template AccessProvider<ID>();
@@ -156,14 +162,14 @@ namespace Langulus::Anyness::Component
       /// Assignment for discontiguous containers falls back to insert/merge. 
       ///   @param argument the argument to insert                            
       ///   @return reference to self                                         
-      template<CT::Container C, class A>
+      /*template<CT::Container C, class A>
       C& Assign(this C& self, A&& argument)
       requires (CT::RangeAssignable<C, A> and not CT::Contiguous<C>) {
          self.Clear();
               if_available(self.Insert(LglsFwd(argument)))
          else if_available(self.Merge (LglsFwd(argument)))
          return self;
-      }
+      }*/
 
    protected:
       friend struct Conversion;
@@ -223,14 +229,19 @@ namespace Langulus::Anyness::Component
                // But we have to destroy all trailing elements          
                // Just make sure indirections are dereferenced          
                // for the first element, in case it's sparse            
-               auto item = IterateHandles(self).begin() + (self.IsSparse() ? 0 : 1);
-               while (item) {
-                  item->DestroyElement();
+               auto first = self.GetHandle();
+               auto item = first + (self.IsSparse() ? 0 : 1);
+               auto const itemsEnd = first + self.GetCount();
+               while (item.GetRaw() != itemsEnd.GetRaw()) {
+                  item.DestroyElement();
                   ++item;
                }
+               if_available(first.ResetEntries());
             }
-            else if (self.IsSparse())
-               self.DestroyElement();            
+            else if (self.IsSparse()) {
+               self.DestroyElement();
+               if_available(self.ResetEntries());
+            }
             return true;
          }
 

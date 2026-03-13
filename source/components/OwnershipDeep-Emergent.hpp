@@ -40,11 +40,11 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = 2000;
 
    protected:
-      template<Cid, CT::Sparse>                     friend struct HeapReference;
-      template<Cid, unsigned, unsigned, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                                 friend struct Removal;
-      template<Cid>                                 friend struct Emplacement;
-      template<Cid, bool>                           friend struct OwnershipEmergent;
+      template<Cid, CT::Sparse>             friend struct HeapReference;
+      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                         friend struct Removal;
+      template<Cid>                         friend struct Emplacement;
+      template<Cid, bool>                   friend struct OwnershipEmergent;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -76,7 +76,7 @@ namespace Langulus::Anyness::Component
 
             if (T.IsSparse()) {
                auto entries = self.GetEntriesInner();
-               if (not entries/* or not *entries*/)
+               if (not entries)
                   return;
 
                const auto subT = T.GetDeptr();
@@ -85,10 +85,8 @@ namespace Langulus::Anyness::Component
 
                if (subT.IsSparse()) {
                   // Pointer to pointer                                 
-                  if (auto subEntry = entries + 1) {
-                     DecideHandle<C> temp {ptr, subEntry, subT};
-                     temp.KeepElementDeepStandardPointers();
-                  }
+                  DecideHandle<C> temp {ptr, entries + 1, subT};
+                  temp.KeepElementDeepStandardPointers();
                }
                else if constexpr (REF_INDIVIDUAL) {
                   if (const auto referencer = subT.GetReferencer()) {
@@ -116,7 +114,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Sparse<T>) {
                using DT = Deptr<T>;
                auto entries = self.GetEntriesInner();
-               if (not entries /*or not *entries*/)
+               if (not entries)
                   return;
 
                auto& ptr = *self.template GetRawAs<T>();
@@ -124,8 +122,7 @@ namespace Langulus::Anyness::Component
 
                if constexpr (CT::Sparse<DT>) {
                   // Pointer to pointer                                 
-                  using DenserH = typename DecideHandle<C>::Denser;
-                  DenserH temp {ptr, entries + 1};
+                  typename DecideHandle<C>::Denser temp {ptr, entries + 1};
                   temp.KeepElementDeepStandardPointers();
                }
                else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
@@ -176,12 +173,8 @@ namespace Langulus::Anyness::Component
             DMeta T = self.GetType();
             LglsAssumeDev(T.IsSparse(), "Sparseness mismatch");
 
-            /*auto indirections = T.GetIndirections();
-            if (not indirections)
-               return;*/
-
             void const* src = self.GetRaw();
-            while (/**entries and*/ src and T.IsSparse()) {
+            while (src and T.IsSparse()) {
                auto nextT = T.GetDeptr();
                if constexpr (FIND_MISSING) {
                   if (not *entries) {
@@ -239,7 +232,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention assumes there are no custom pointers involved!         
-      ///   @attention doesn't change any container state                     
+      ///   @attention doesn't change any container state or entry            
       template<bool DESTROY = true, CT::Container C>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
@@ -260,7 +253,7 @@ namespace Langulus::Anyness::Component
             
             if (T.IsSparse()) {
                auto entries = self.GetEntriesInner();
-               if (not entries /*or not *entries*/)
+               if (not entries)
                   return;
 
                // If T is Text**, subT is Text*                         
@@ -290,8 +283,6 @@ namespace Langulus::Anyness::Component
                      }
                      else destructor(ptr);
                   }
-
-                  Allocator::Deallocate(DecvqAllCast(*entries));
                }
                else {
                   if (subT.IsSparse()) {
@@ -314,9 +305,16 @@ namespace Langulus::Anyness::Component
                            subT.GetDestructor()(ptr);
                      }
                   }
+               }
 
-                  if (*entries)
-                     DecvqAllCast(*entries)->AddRef(-1);
+               // Deallocate or dereference                             
+               if (*entries) {
+                  auto& mutable_entries = DecvqAllCast(*entries);
+                  if (1 == (*entries)->GetUses())
+                     Allocator::Deallocate(mutable_entries);
+                  else
+                     mutable_entries->AddRef(-1);
+                  //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
                }
             }
             else if constexpr (DESTROY) {
@@ -362,8 +360,6 @@ namespace Langulus::Anyness::Component
                      }
                      else ptr->~DT();
                   }
-
-                  Allocator::Deallocate(DecvqAllCast(*entries));
                }
                else {
                   if constexpr (CT::Sparse<DT>) {
@@ -383,9 +379,16 @@ namespace Langulus::Anyness::Component
                      if (ptr->Reference(-1) == 0)
                         ptr->~DT();
                   }
+               }
 
-                  if (*entries)
-                     DecvqAllCast(*entries)->AddRef(-1);
+               // Deallocate or dereference                             
+               if (*entries) {
+                  auto& mutable_entries = DecvqAllCast(*entries);
+                  if (1 == (*entries)->GetUses())
+                     Allocator::Deallocate(mutable_entries);
+                  else
+                     mutable_entries->AddRef(-1);
+                  //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
                }
             }
             else if constexpr (DESTROY and CT::Destroyable<T>) {
@@ -429,7 +432,7 @@ namespace Langulus::Anyness::Component
                return;
             
             void const* src = self.GetRaw();
-            while (/**entries and */src and T.IsSparse()) {
+            while (src and T.IsSparse()) {
                auto nextT = T.GetDeptr();
                const bool nextDense = nextT.IsDense();
                if (not nextDense) {
@@ -469,10 +472,12 @@ namespace Langulus::Anyness::Component
 
                // Deallocate or dereference                             
                if (*entries) {
+                  auto& mutable_entries = DecvqAllCast(*entries);
                   if (1 == (*entries)->GetUses())
-                     Allocator::Deallocate(DecvqAllCast(*entries));
+                     Allocator::Deallocate(mutable_entries);
                   else
-                     DecvqAllCast(*entries)->AddRef(-1);
+                     mutable_entries->AddRef(-1);
+                  //mutable_entries = nullptr; //not allowed! we may be modifying memory owned by another container!!
                }
 
                // Move to next indirection                              
@@ -499,7 +504,10 @@ namespace Langulus::Anyness::Component
       ///   @attention emplacing using a handle is faster due to carrying     
       ///      allocation data with itself when sparse, rather than searching 
       ///      for it on demand.                                              
-      ///   @param intent entries will be copied/sought if handle/sparse      
+      ///   @attention items (not entries) are referenced even if disowned,   
+      ///      when REF_INDIVIDUAL is enabled and items are CT::Referenced.   
+      ///   @param intent entries will be copied/sought if handle/sparse,     
+      ///      unless I is disowned                                           
       template<CT::Container C, CT::Intent I>
       void EmplaceEntries(this C& self, I&& intent) {
          static_assert(CT::ContainsOne<C>,
@@ -515,33 +523,34 @@ namespace Langulus::Anyness::Component
          const auto entries_size = sizeof(AllocationPtr) * indirections;
          auto entries = self.GetEntriesInner();
 
-         if constexpr (CT::Disowned<I>) {
+         /*if constexpr (CT::Disowned<I>) {
             // Disowning zeroes all entries. Nothing gets referenced.   
-            memset(DecvqAllCast(entries), 0, entries_size);
+            //memset(DecvqAllCast(entries), 0, entries_size); //should be zeroed before this call anyways
          }
-         else if constexpr (CT::Handle<I>) {
+         else*/ if constexpr (CT::Handle<I>) {
             // Copy all entries and reference them, unless we're moving 
             // a handle                                                 
             using H = TypeOf<I>;
             LglsAssumeDev(self.IsSame(rhs.GetType()), "Type mismatch");
 
-            if constexpr (requires { rhs.GetEntriesInner(); }) {
+            if constexpr (not CT::Disowned<I>
+            and requires { rhs.GetEntriesInner(); }) {
                // We can copy entries from RHS handle                   
                auto entries_src = rhs.GetEntriesInner();
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
                   if constexpr (CT::AutoOwned<H> and I::IsMoved())
-                     memset(DecvqAllCast(entries_src), 0, entries_size);
+                     memset(DecvqAllCast(entries_src), 0, entries_size); //TODO make sure we modify rhs memory only if it has exactly 1 use
                }
-               else {
+               /*else {
                   // Source entries might be nullptr if disowned        
                   memset(DecvqAllCast(entries), 0, entries_size);
-               }
+               }*/
             }
-            else {
+            /*else {
                // RHS might be a disowned handle                        
                memset(DecvqAllCast(entries), 0, entries_size);
-            }
+            }*/
 
             if (not I::IsMoved()) {
                // We are not moving, so we have to reference all        
@@ -560,16 +569,38 @@ namespace Langulus::Anyness::Component
 
             // We're forced to reference even on abandon/move           
             // because we can't abandon/move a raw pointer. Missing     
-            // entries will be sought and referenced as well.           
+            // entries will be sought and referenced as well, unless    
+            // inserted pointer is disowned.                            
+            constexpr bool sought = not CT::Disowned<I>;
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                if constexpr (CT::CustomPointer<T>)
-                  self.template KeepElementDeepCustomPointers<true>();
+                  self.template KeepElementDeepCustomPointers<sought>();
                else
-                  self.template KeepElementDeepStandardPointers<true>();
+                  self.template KeepElementDeepStandardPointers<sought>();
             #else
-               self.template KeepElementDeepStandardPointers<true>();
+               self.template KeepElementDeepStandardPointers<sought>();
             #endif
          }
+      }
+
+      /// Reset all entries for the first element                             
+      ///   @attention this overwrites previous entries without dereferencing 
+      template<CT::Container C>
+      void ResetEntries(this C&& self) {
+         static_assert(CT::ContainsOne<C>,
+            "Resetting entries for first element in a container with many. GetHandle() first?");
+         LglsAssumeDev(self.IsSparse(),
+            "ResetEntries shouldn't be called on dense containers");
+
+         if constexpr (not CT::Handle<C>) {
+            LglsAssumeDev(self.GetUses() == 1,
+               "ResetEntries shouldn't be called on memory used from multiple places");
+         }
+
+         const auto indirections = self.GetIndirections();
+         const auto entries_size = sizeof(AllocationPtr) * indirections;
+         auto entries = self.GetEntriesInner();
+         memset(DecvqAllCast(entries), 0, entries_size);
       }
    };
 }

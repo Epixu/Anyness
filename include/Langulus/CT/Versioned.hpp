@@ -12,10 +12,10 @@
 namespace Langulus
 {
    /// Useful for setting CTTI_Versioned                                      
-   template<unsigned MAJOR, unsigned MINOR>
+   template<uint MAJOR, uint MINOR>
    struct Version {
-      static constexpr unsigned Major = MAJOR;
-      static constexpr unsigned Minor = MINOR;
+      static constexpr uint Major = MAJOR;
+      static constexpr uint Minor = MINOR;
       static constexpr bool Enabled = true;
    };
 }
