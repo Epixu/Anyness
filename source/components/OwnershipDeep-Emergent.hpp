@@ -173,20 +173,30 @@ namespace Langulus::Anyness::Component
             DMeta T = self.GetType();
             LglsAssumeDev(T.IsSparse(), "Sparseness mismatch");
 
-            void const* src = self.GetRaw();
+            void* src = DecvqAllCast(self.GetHeapInner());
             while (src and T.IsSparse()) {
                auto nextT = T.GetDeptr();
                if constexpr (FIND_MISSING) {
                   if (not *entries) {
-                     DecvqAllCast(*entries) = DecvqAllCast(Allocator::FindPackedPointer(
-                        T.GetPointerSpecification(), nextT, reinterpret_cast<uintptr_t>(src)
-                     ));
+                     const auto srcSpec = T.GetPointerSpecification();
+                     if (srcSpec.IsPacked()) {
+                        uintptr_t derefSrc = 0;
+                        memcpy(&derefSrc, src, srcSpec.GetTotalBytes());
+                        DecvqAllCast(*entries) =
+                           DecvqAllCast(Allocator::FindPackedPointer(
+                              srcSpec, nextT, derefSrc
+                           ));
+                     }
+                     else {
+                        DecvqAllCast(*entries) =
+                           DecvqAllCast(Allocator::Find(*static_cast<void**>(src)));
+                     }
                   }
                }
 
                if (nextT.IsSparse()) {
                   // Pointer T -> Pointer nextT                         
-                  T.GetDereffer()(const_cast<void*>(src), &src);
+                  T.GetDereffer()(src, &src);
                }
                else if constexpr (REF_INDIVIDUAL) {
                   if (const auto referencer = nextT.GetReferencer()) {

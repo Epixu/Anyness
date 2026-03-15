@@ -46,7 +46,7 @@ struct ScopedElementPacked {
    using Allocator = Langulus::Allocator;
    static constexpr bool Managed = true;
 
-   T element = nullptr;
+   T* element = nullptr;
    AllocationPtr entries[Langulus::IndirectsOf<T> + 1] = {};
 
 protected:
@@ -105,15 +105,23 @@ protected:
 public:
    template<class...A>
    ScopedElementPacked(A&&...arguments) {
-      NestedConstructor(element, entries, LglsFwd(arguments)...);
+      *entries = Allocator::Allocate(Langulus::MetaDataOf<T>(), pot_t(Roof2(sizeof(T))));
+      element = reinterpret_cast<T*>((*entries)->GetBlockStart());
+
+      NestedConstructor(*element, entries + 1, LglsFwd(arguments)...);
    }
    
    ~ScopedElementPacked() {
-      NestedDestructor(element, entries);
+      NestedDestructor(*element, entries);
    }
 
-   auto operator *  ()       -> Type&        {return element;}
+   auto operator *  ()       -> T&       {return *element;}
+   auto operator *  () const -> T const& {return *element;}
+   auto operator -> ()       -> T*       {return  element;}
+   auto operator -> () const -> T const* {return  element;}
+
+   /*auto operator *  ()       -> Type&        {return element;}
    auto operator *  () const -> Type const&  {return element;}
    auto operator -> ()       -> Inner*       {return element.Unpack();}
-   auto operator -> () const -> Inner const* {return element.Unpack();}
+   auto operator -> () const -> Inner const* {return element.Unpack();}*/
 };
