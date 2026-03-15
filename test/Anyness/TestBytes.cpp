@@ -224,10 +224,13 @@ SCENARIO("Testing byte container") {
       auto memory = data.GetRaw();
 
       REQUIRE(data.GetCount() == 5 * sizeof(int));
-      REQUIRE(data.GetReserved() >= 5 * sizeof(int));
+      REQUIRE(data.GetReserved() == 0);
+      //REQUIRE(data.GetReserved() >= 5 * sizeof(int));
       REQUIRE(data.IsExact<Byte>());
-      REQUIRE(data.GetRaw() != nullptr);
-      REQUIRE(data.GetAllocation());
+      REQUIRE(data.GetRaw() == reinterpret_cast<Byte const*>(randomStuff));
+      //REQUIRE(data.GetRaw() != nullptr);
+      //REQUIRE(data.GetAllocation());
+      REQUIRE(data.GetAllocation() == nullptr);
 
       WHEN("Nothing happens") {
          REQUIRE(true);
@@ -239,7 +242,8 @@ SCENARIO("Testing byte container") {
 
          REQUIRE(data.GetCount() == 8 * sizeof(int));
          REQUIRE(data.GetReserved() >= 8 * sizeof(int));
-         IF_LANGULUS_MANAGED_MEMORY(REQUIRE(data.GetRaw() == memory));
+         //IF_LANGULUS_MANAGED_MEMORY(REQUIRE(data.GetRaw() == memory));
+         REQUIRE(data.GetRaw() != memory);
          REQUIRE(data.GetAllocation());
          REQUIRE(data.Is<Byte>());
       }
@@ -249,7 +253,8 @@ SCENARIO("Testing byte container") {
 
          REQUIRE(data.GetCount() == 5 * sizeof(int));
          REQUIRE(data.GetReserved() >= 40);
-         IF_LANGULUS_MANAGED_MEMORY(REQUIRE(data.GetRaw() == memory));
+         //IF_LANGULUS_MANAGED_MEMORY(REQUIRE(data.GetRaw() == memory));
+         REQUIRE(data.GetRaw() != memory);
          REQUIRE(data.GetAllocation());
       }
 

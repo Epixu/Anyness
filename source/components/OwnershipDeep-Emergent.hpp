@@ -508,15 +508,21 @@ namespace Langulus::Anyness::Component
       ///      when REF_INDIVIDUAL is enabled and items are CT::Referenced.   
       ///   @param intent entries will be copied/sought if handle/sparse,     
       ///      unless I is disowned                                           
-      template<CT::Container C, CT::Intent I>
+      template<CT::Container C, CT::Intent I> requires (CT::TypeErased<C> or CT::Sparse<TypeOf<C>>)
       void EmplaceEntries(this C& self, I&& intent) {
+         if constexpr (CT::TypeErased<C>) {
+            // If container is type-erased, we need to make a runtime   
+            // sparsity check for an early exit.                        
+            if (not self.IsSparse())
+               return;
+         }
+
          static_assert(CT::ContainsOne<C>,
-            "Emplacing only first element in a container with many. GetHandle() first?");
+            "Emplacing only first element in a container with many. "
+            "GetHandle() first?");
          static_assert(not CT::Cloned<I>,
             "EmplaceEntries shouldn't be called when cloning, "
             "because it will overwrite/reference new allocations");
-         LglsAssumeDev(self.IsSparse(),
-            "EmplaceEntries shouldn't be called on dense containers");
 
          decltype(auto) rhs = LglsFwd(intent.what);
          const auto indirections = self.GetIndirections();
@@ -531,7 +537,9 @@ namespace Langulus::Anyness::Component
             // Copy all entries and reference them, unless we're moving 
             // a handle                                                 
             using H = TypeOf<I>;
-            LglsAssumeDev(self.IsSame(rhs.GetType()), "Type mismatch");
+            LglsAssumeDev(self.IsSame(rhs.GetType()),
+               "Type mismatch: ", self.GetType(), " is not same as ", rhs.GetType()
+            );
 
             if constexpr (not CT::Disowned<I>
             and requires { rhs.GetEntriesInner(); }) {
@@ -562,10 +570,12 @@ namespace Langulus::Anyness::Component
                #endif
             }
          }
-         else if constexpr (CT::Sparse<TypeOf<I>>) {
+         else if constexpr (CT::Sparse<Deint<I>>) {
             // Reference each indirection of a raw pointer              
-            using T = TypeOf<I>;
-            LglsAssumeDev(self.template IsSame<T>(), "Type mismatch");
+            using T = Decvq<Deref<Deint<I>>>;
+            LglsAssumeDev(self.template IsSame<T>(),
+               "Type mismatch: ", self.GetType(), " is not same as ", NameOf<T>()
+            );
 
             // We're forced to reference even on abandon/move           
             // because we can't abandon/move a raw pointer. Missing     
@@ -585,16 +595,22 @@ namespace Langulus::Anyness::Component
 
       /// Reset all entries for the first element                             
       ///   @attention this overwrites previous entries without dereferencing 
-      template<CT::Container C>
+      template<CT::Container C> requires (CT::TypeErased<C> or CT::Sparse<TypeOf<C>>)
       void ResetEntries(this C&& self) {
+         if constexpr (CT::TypeErased<C>) {
+            // If container is type-erased, we need to make a runtime   
+            // sparsity check for an early exit.                        
+            if (not self.IsSparse())
+               return;
+         }
+
          static_assert(CT::ContainsOne<C>,
-            "Resetting entries for first element in a container with many. GetHandle() first?");
-         LglsAssumeDev(self.IsSparse(),
-            "ResetEntries shouldn't be called on dense containers");
+            "Resetting entries for first element in a container with many. "
+            "GetHandle() first?");
 
          if constexpr (not CT::Handle<C>) {
             LglsAssumeDev(self.GetUses() == 1,
-               "ResetEntries shouldn't be called on memory used from multiple places");
+               "ResetEntries shouldn't be called for shared memory");
          }
 
          const auto indirections = self.GetIndirections();

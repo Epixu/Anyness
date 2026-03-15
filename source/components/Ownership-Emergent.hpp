@@ -121,13 +121,26 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::DeeplyOwned<C>) {
             // Reference all indirections and (optionally) items        
-            self.Apply([](auto& item) {
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  item.KeepElementDeepCustomPointers();
-               #else
-                  item.KeepElementDeepStandardPointers();
-               #endif
-            });
+            if constexpr (CT::TypeErased<C>) {
+               if (self.IsSparse()) {
+                  self.Apply([](auto& item) {
+                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                        item.KeepElementDeepCustomPointers();
+                     #else
+                        item.KeepElementDeepStandardPointers();
+                     #endif
+                  });
+               }
+            }
+            else if constexpr (CT::Sparse<TypeOf<C>>) {
+               self.Apply([](auto& item) {
+                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                     item.KeepElementDeepCustomPointers();
+                  #else
+                     item.KeepElementDeepStandardPointers();
+                  #endif
+               });
+            }
          }
       }
 

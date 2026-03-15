@@ -392,9 +392,7 @@ namespace Langulus::Anyness::Component
                else
                   static_assert(false, "Unrecognized intent");
 
-               if (T.IsSparse()) {
-                  if_available(self.EmplaceEntries(LglsFwd(intent)));
-               }
+               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
             else {
                //                                                       
@@ -411,9 +409,7 @@ namespace Langulus::Anyness::Component
                else
                   IntentNew(self.GetHeapInner(), Refer(*rhs.template GetRawAs<T>()));
 
-               if constexpr (CT::Sparse<T>) {
-                  if_available(self.EmplaceEntries(LglsFwd(intent)));
-               }
+               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
          }
          else {
@@ -436,9 +432,7 @@ namespace Langulus::Anyness::Component
                else
                   static_assert(false, "Unrecognized intent");
 
-               if (T.IsSparse()) {
-                  if_available(self.EmplaceEntries(LglsFwd(intent)));
-               }
+               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
             else {
                //                                                       
@@ -447,13 +441,10 @@ namespace Langulus::Anyness::Component
                   static_assert(Same<TypeOf<C>, IT>, "Type mismatch");
                else
                   LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
-               using T = Tif<CT::Typed<C>, TypeOf<C>, IT>;
 
                IntentNew(self.GetHeapInnerAsVoid(), LglsFwd(intent));
 
-               if constexpr (CT::Sparse<T>) {
-                  if_available(self.EmplaceEntries(LglsFwd(intent)));
-               }
+               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
          }
       }
@@ -470,6 +461,9 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't modify count                                   
       template<AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C>
       void EmplaceDefault(this C& self) {
+         static_assert(CT::ContainsOne<C>,
+            "Emplacing only first element in a container with many. GetHandle() first?");
+
          if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
             if_available(self.ResetState());
          }
@@ -566,8 +560,11 @@ namespace Langulus::Anyness::Component
       ///      it, and without destroying anything                            
       template<AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C, class...A>
       void EmplaceConstruct(this C& self, A&&...arguments) {
+         static_assert(STRAT != AllocationStrategy::NoStateChange or CT::ContainsOne<C>,
+            "Emplacing only first element in a container with many. GetHandle() first?");
          static_assert(sizeof...(A) > 0,
             "No arguments - use EmplaceDefault instead");
+
          if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
             if_available(self.ResetState());
          }
@@ -647,7 +644,7 @@ namespace Langulus::Anyness::Component
 
                // Construct the first element                           
                if constexpr (CT::Dense<E>)
-                  self.GetHandle().EmplaceWithIntent(Abandon{E {LglsFwd(arguments)...}});
+                  self.EmplaceWithIntent(Abandon{E {LglsFwd(arguments)...}});
                else static_assert(false,
                   "Too many arguments for emplacing a sparse instance");
             }
@@ -679,7 +676,7 @@ namespace Langulus::Anyness::Component
                   self.GetHandle().EmplaceWithIntent(FWDIntent(arguments)...);
             }
             else if constexpr (CT::Dense<T>)
-               self.GetHandle().EmplaceWithIntent(Abandon {Decvq<T> {LglsFwd(arguments)...}});
+               self.EmplaceWithIntent(Abandon {Decvq<T> {LglsFwd(arguments)...}});
             else static_assert(false,
                "Too many arguments for emplacing a sparse instance");
          }
@@ -791,6 +788,7 @@ namespace Langulus::Anyness::Component
                // Need to destroy and overwrite only the first element. 
                auto item = self.GetHandle();
                item.DestroyElement();
+               if_available(item.ResetEntries());
 
                // Emplace a new element on the first position.          
                // Any state change is forbidden - container is full.    

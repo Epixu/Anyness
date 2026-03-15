@@ -38,7 +38,11 @@ namespace Langulus::CT
          static_assert(NotReference<T>, "Strip references first");
          static_assert(NotSheddable<T>, "Strip sheddable types first");
 
-         if constexpr (Void<T>) {
+         if constexpr (not Complete<T>) {
+            // Incomplete types are never reflectable                   
+            return NoTypes {};
+         }
+         else if constexpr (Void<T>) {
             // Void types are never reflectable                         
             return NoTypes {};
          }

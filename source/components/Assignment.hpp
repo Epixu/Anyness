@@ -302,9 +302,7 @@ namespace Langulus::Anyness::Component
                else
                   static_assert(false, "Unrecognized intent");
 
-               if (T.IsSparse()) {
-                  if_available(self.EmplaceEntries(LglsFwd(intent)));
-               }
+               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
             else {
                //                                                       
@@ -315,9 +313,7 @@ namespace Langulus::Anyness::Component
                T* data = static_cast<T*>(self.template AccessProvider<ID>());
                IntentAssign(*data, I::Nest(*rhs.GetRaw()));
 
-               if constexpr (CT::Sparse<T>) {
-                  if_available(self.EmplaceEntries(LglsFwd(intent)));
-               }
+               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
          }
          else {
@@ -340,9 +336,7 @@ namespace Langulus::Anyness::Component
                else
                   static_assert(false, "Unrecognized intent");
 
-               if (T.IsSparse()) {
-                  if_available(self.EmplaceEntries(LglsFwd(intent)));
-               }
+               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
             else {
                //                                                       
@@ -352,9 +346,7 @@ namespace Langulus::Anyness::Component
                T* data = static_cast<T*>(self.template AccessProvider<ID>());
                IntentAssign(*data, LglsFwd(intent));
 
-               if constexpr (CT::Sparse<T>) {
-                  if_available(self.EmplaceEntries(LglsFwd(intent)));
-               }
+               if_available(self.EmplaceEntries(LglsFwd(intent)));
             }
          }
       }

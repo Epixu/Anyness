@@ -32,7 +32,8 @@ namespace Langulus
    }
 
    /// True if decayed T1 matches all decayed TN types                        
-   ///   @attention ignores type density, references, and cv-qualifications   
+   ///   @attention ignores type density, references, and cv-qualifications,  
+   ///      as well as any sheddables                                         
    template<class T1, class...TN>
    concept Akin = CT::PartialValidate<TN...>
        and (::std::same_as<Decay<T1>, Decay<TN>> and ...);

@@ -78,13 +78,17 @@ protected:
    static void NestedDestructor(INNER* place, AllocationPtr* entry) {
       using namespace Langulus;
       if constexpr (CT::Dense<INNER>) {
-         #if not LANGULUS_FEATURE(NEWDELETE)
-            if constexpr (CT::Referenced<INNER>)
-               place->Reference(-1);
-         #endif
+         int individual_refs = 0;
+         if constexpr (CT::Referenced<INNER>)
+            individual_refs = place->Reference(-1);
 
-         if (not *entry)
+         if (not *entry) {
+            LglsAssert(individual_refs == 0,
+               "Unmanaged CT::Referenced instance memory was deleted before references reach zero"
+               " - revise your test to avoid false positives."
+            );
             delete place;
+         }
          else if constexpr (MANAGED) {
             LglsAssumeDev((*entry)->GetUses() >= 1);
             if ((*entry)->GetUses() == 1) {

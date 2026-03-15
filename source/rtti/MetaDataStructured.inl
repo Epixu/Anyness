@@ -123,7 +123,16 @@ namespace Langulus::RTTI::Inner
    ///   @return true if types match                                          
    TEMPLATE()
    constexpr bool ME()::IsSame(const MetaDataStructured_XY& other) const noexcept {
-      return Base::operator == (other);
+      const auto lid = Base::GetID();
+      const auto rid = other.Base::GetID();
+      //if (lid != rid)
+      //   return false;
+      if (lid and rid) {
+         auto o1 = Instance.GetMetaDataByID(lid,       sparse,       constant)->mDecvqAll;
+         auto o2 = Instance.GetMetaDataByID(rid, other.sparse, other.constant)->mDecvqAll;
+         return o1 == o2;
+      }
+      return false;
    }
 
    /// Get the size of the type                                               
