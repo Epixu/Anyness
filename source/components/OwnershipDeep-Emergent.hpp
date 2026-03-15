@@ -86,7 +86,7 @@ namespace Langulus::Anyness::Component
                if (subT.IsSparse()) {
                   // Pointer to pointer                                 
                   DecideHandle<C> temp {ptr, entries + 1, subT};
-                  temp.KeepElementDeepStandardPointers();
+                  temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
                }
                else if constexpr (REF_INDIVIDUAL) {
                   if (const auto referencer = subT.GetReferencer()) {
@@ -123,7 +123,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Sparse<DT>) {
                   // Pointer to pointer                                 
                   typename DecideHandle<C>::Denser temp {ptr, entries + 1};
-                  temp.KeepElementDeepStandardPointers();
+                  temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
                }
                else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
                   // Pointer to dense                                   
@@ -208,10 +208,10 @@ namespace Langulus::Anyness::Component
             static_assert(CT::Sparse<T>, "Sparseness mismatch");
 
             auto ptr = self.Get();
-            ForEachIndirection(*ptr, [&entries](auto& i) {
+            ForEachIndirection(ptr, [&entries](auto& i) {
                if constexpr (FIND_MISSING) {
                   if (not *entries)
-                     DecvqAllCast(*entries) = Allocator::Find(i);
+                     DecvqAllCast(*entries) = DecvqAllCast(Allocator::Find(i));
                }
 
                // Reference valid entries if not zero                   

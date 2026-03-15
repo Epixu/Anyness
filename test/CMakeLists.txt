@@ -40,17 +40,17 @@ add_langulus_test(LangulusAnynessTest
                Anyness/TestTRef.cpp
                Anyness/TestTOwn.cpp
                
-               #Anyness/any/TestAny-Empty.cpp
-               #Anyness/any/TestAny-Absorb.cpp
-               #Anyness/any/TestAny-Piecewise.cpp
-               #Anyness/any/TestAny-Convert.cpp
-               #
-               #Anyness/many/TestMany-Empty.cpp
-               #Anyness/many/TestMany-Absorb.cpp
-               #Anyness/many/TestMany-Piecewise.cpp
-               #Anyness/many/TestMany-Convert.cpp
-               #
-               #Anyness/set/TestSet-Empty.cpp
+               Anyness/any/TestAny-Empty.cpp
+               Anyness/any/TestAny-Absorb.cpp
+               Anyness/any/TestAny-Piecewise.cpp
+               Anyness/any/TestAny-Convert.cpp
+               
+               Anyness/many/TestMany-Empty.cpp
+               Anyness/many/TestMany-Absorb.cpp
+               Anyness/many/TestMany-Piecewise.cpp
+               Anyness/many/TestMany-Convert.cpp
+
+               Anyness/set/TestSet-Empty.cpp
 
    LIBRARIES   doctest
                LangulusAnyness

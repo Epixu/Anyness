@@ -10,7 +10,7 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
-   , Types<Any, Text**, ScopedElement<Text**>>
+   , Types<Any, pptr8, ScopedElementPacked<pptr8>>
 
    // Elements are not allocated by the memory manager                  
    , Types<Any, Text,   ScopedElement<Text>>
@@ -25,6 +25,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<Any, RT*,    ScopedElement<RT*>>
    , Types<Any, char*,  ScopedElement<char*>>
 
+   , Types<Any, Text**, ScopedElement<Text**>>
    , Types<Any, int**,  ScopedElement<int**>>
    , Types<Any, Any**,  ScopedElement<Any**>>
    , Types<Any, RT**,   ScopedElement<RT**>>
@@ -36,7 +37,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<TAny<RT>,     RT,     ScopedElement<RT>>
    , Types<TAny<char>,   char,   ScopedElement<char>>
                                  
-   , Types<TAny<Text*>,  Text*,  ScopedElement<Text*>>
+   , Types<TAny<Text*>, Text*, ScopedElement<Text*>>
    , Types<TAny<int*>,   int*,   ScopedElement<int*>>
    , Types<TAny<Any*>,   Any*,   ScopedElement<Any*>>
    , Types<TAny<RT*>,    RT*,    ScopedElement<RT*>>
@@ -87,7 +88,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
    , Types<TAny<char**>, char**, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Any, pptr8,  ScopedElementPacked<pptr8>>
    , Types<Any, pptr16, ScopedElementPacked<pptr16>>
    , Types<Any, pptr32, ScopedElementPacked<pptr32>>
 

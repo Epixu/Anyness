@@ -635,11 +635,11 @@ namespace Langulus
    /// so that if you provide argument as void***, three lambdas will be      
    /// generated and executed, with 'ptr' being void***, void** and void*.    
    template<class T>
-   void ForEachIndirection(T pointer, auto&& lambda) {
+   void ForEachIndirection(T& pointer, auto&& lambda) {
       if constexpr (CT::Sparse<T>) {
          lambda(pointer);
          if constexpr (CT::Sparse<Deptr<T>>)
-            ForEachIndirection(*pointer, LglsFwd(lambda));
+            ForEachIndirection((*pointer), LglsFwd(lambda));
       }
    }
 }
