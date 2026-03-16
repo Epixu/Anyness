@@ -125,14 +125,12 @@ namespace Langulus::RTTI::Inner
    constexpr bool ME()::IsSame(const MetaDataStructured_XY& other) const noexcept {
       const auto lid = Base::GetID();
       const auto rid = other.Base::GetID();
-      //if (lid != rid)
-      //   return false;
       if (lid and rid) {
          auto o1 = Instance.GetMetaDataByID(lid,       sparse,       constant)->mDecvqAll;
          auto o2 = Instance.GetMetaDataByID(rid, other.sparse, other.constant)->mDecvqAll;
          return o1 == o2;
       }
-      return false;
+      return not lid and not rid;
    }
 
    /// Get the size of the type                                               
@@ -288,9 +286,11 @@ namespace Langulus::RTTI::Inner
       if (not id or not sparse)
          return 0;
 
-      size_t result = 0;
       auto d = Instance.GetMetaDataByID(id, sparse, constant);
+      size_t result = 0;
       while (d->mDeptr) {
+         if (reinterpret_cast<uintptr_t>(d->mDeptr) == 1u)
+            return result + 1;
          ++result;
          d = d->mDeptr;
       }

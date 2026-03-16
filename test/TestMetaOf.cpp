@@ -327,17 +327,27 @@ TEST_CASE("Testing empty meta data") {
    REQUIRE(meta.GetDeptr() == nullptr);
    REQUIRE(meta.GetDecvqAll() == nullptr);
    REQUIRE(meta.GetDecvq() == nullptr);
+   REQUIRE(meta.GetIndirections() == 0);
+   REQUIRE(not meta.GetPointerSpecification().IsPacked());
    REQUIRE(meta.AddPtr() == nullptr);
    REQUIRE(meta.AddConst() == nullptr);
    
    REQUIRE(meta.GetSize() == 0);
    REQUIRE(meta.GetAlignment() == Alignment);
    REQUIRE(meta.IsConstant() == false);
+   REQUIRE(meta.IsMutable());
+   REQUIRE(not meta.IsExecutable());
    REQUIRE(meta.IsDeep() == false);
    REQUIRE(meta.IsPOD() == false);
    REQUIRE(meta.IsNullable() == false);
    REQUIRE(meta.IsAbstract() == false);
+   REQUIRE(meta.IsSparse() == false);
+   REQUIRE(meta.IsDense());
    REQUIRE(meta.HasGetHashMethod() == false);
+
+   REQUIRE(meta.Is(meta));
+   REQUIRE(meta.IsSame(meta));
+   REQUIRE(meta.IsExact(meta));
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       REQUIRE(meta.GetMinPoolsize() == MinimalPoolSize);
@@ -353,6 +363,7 @@ TEST_CASE("Testing empty meta data") {
    REQUIRE(meta.GetMoveConstructor()    == nullptr);
    REQUIRE(meta.GetAbandonConstructor() == nullptr);
    
+   REQUIRE(meta.GetDereffer()        == nullptr);
    REQUIRE(meta.GetDestructor()      == nullptr);
    REQUIRE(meta.GetComparer()        == nullptr);
    REQUIRE(meta.GetComparerEqual()   == nullptr);
@@ -376,6 +387,8 @@ TEST_CASE("Testing empty meta data") {
    REQUIRE(meta.GetBases().size() == 0);
    REQUIRE(meta.GetMorphismsTo().size() == 0);
    REQUIRE(meta.GetMorphismsFrom().size() == 0);
+   REQUIRE(meta.GetMorphism(meta).convert == nullptr);
+   REQUIRE(meta.GetMorphism(meta).serialize == nullptr);
    REQUIRE(meta.GetNamedValues().size() == 0);
 }
 
@@ -423,12 +436,16 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    
    REQUIRE(meta.GetDecvqAll() == MetaDataOf<DecvqAll<Deref<T>>>());
    REQUIRE(meta.GetDecvq() == MetaDataOf<Decvq<Deref<T>>>());
+   REQUIRE(meta.GetIndirections() == IndirectsOf<T>);
+   REQUIRE(not meta.GetPointerSpecification().IsPacked());
    REQUIRE_THROWS(meta.AddPtr() == nullptr);
    REQUIRE_THROWS(meta.AddConst() == nullptr);
    
    REQUIRE(meta.GetSize() == sizeof(Deref<T>));
    REQUIRE(meta.GetAlignment() == alignof(Deref<T>));
    REQUIRE(meta.IsConstant() == CT::Constant<T>);
+   REQUIRE(meta.IsMutable() == CT::Mutable<T>);
+   REQUIRE(not meta.IsExecutable());
    if constexpr (CT::Complete<Decay<T>>)
       REQUIRE(meta.IsDeep() == CT::Deep<T>);
    else
@@ -437,6 +454,12 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    REQUIRE(meta.IsNullable() == CT::Nullable<Deref<T>>);
    REQUIRE(meta.IsAbstract() == CT::Abstract<Deref<T>>);
    REQUIRE(meta.HasGetHashMethod() == false);
+
+   REQUIRE(meta.Is(MetaDataOf<Decay<T>*>()));
+   REQUIRE(meta.Is(meta));
+   REQUIRE(meta.IsSame(MetaDataOf<DecvqAll<T>>()));
+   REQUIRE(meta.IsSame(meta));
+   REQUIRE(meta.IsExact(meta));
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       REQUIRE(meta.GetMinPoolsize() == CT::GetMinPool<Deref<T>>());
@@ -452,6 +475,11 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    REQUIRE(meta.GetMoveConstructor()    != nullptr);
    REQUIRE(meta.GetAbandonConstructor() != nullptr);
    
+   if constexpr (IndirectsOf<T> == 1)
+      REQUIRE(meta.GetDereffer()   == nullptr);
+   else
+      REQUIRE(meta.GetDereffer()   != nullptr);
+
    REQUIRE(meta.GetDestructor()    == nullptr);
    REQUIRE(meta.GetComparer()      != nullptr);
    REQUIRE(meta.GetComparerEqual() != nullptr);
@@ -485,6 +513,8 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    REQUIRE(meta.GetBases().size() == 0);
    REQUIRE(meta.GetMorphismsTo().size() == 0);
    REQUIRE(meta.GetMorphismsFrom().size() == 0);
+   REQUIRE(meta.GetMorphism(meta).convert == nullptr);
+   REQUIRE(meta.GetMorphism(meta).serialize == nullptr);
    REQUIRE(meta.GetNamedValues().size() == 0);
 }
 
@@ -888,6 +918,12 @@ SCENARIO("A type reflected with all traits") {
    REQUIRE(meta.GetNamedValues().size() == 0);
    REQUIRE(meta.GetMorphismsTo().size() == 1);
    REQUIRE(meta.GetMorphismsFrom().size() == 1);
+
+   REQUIRE(meta.Is(MetaDataOf<ImplicitlyReflectedDataWithTraits***>()));
+   REQUIRE(meta.Is(meta));
+   REQUIRE(meta.IsSame(MetaDataOf<ImplicitlyReflectedDataWithTraits const>()));
+   REQUIRE(meta.IsSame(meta));
+   REQUIRE(meta.IsExact(meta));
 
    const auto int_definition = RTTI::DefinitionData::Reflect<int>();
    const auto pi_definition  = RTTI::DefinitionData::Reflect<Pi>();

@@ -548,7 +548,9 @@ namespace Langulus
       ///   @return the number of pointers in a type                          
       template<class T>
       consteval size_t CountIndirections() {
-         if constexpr (CT::Sparse<T>)
+         if constexpr (not CT::Complete<T>)
+            return 0;
+         else if constexpr (CT::Sparse<T>)
             return 1 + CountIndirections<Deptr<T>>();
          else
             return 0;
