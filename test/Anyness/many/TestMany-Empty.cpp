@@ -99,6 +99,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    using T = typename TestType::First;
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
+   constexpr bool Managed = ScopedE::Managed;
 
    if constexpr (CT::Untyped<T>) {
       // All type-erased containers should have all intent              
@@ -560,6 +561,14 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
             auto movable = *element; T temp,
             temp.Emplace(::std::move(movable))
          );
+
+         if constexpr (not Managed) {
+            // On unmanaged tests i666 will be destroyed at the end of this scope,
+            // and the container will be left with a dangling pointer.
+            // Make sure this isn't happening. When inserting raw unmanaged pointers, 
+            // safety is solely in the hands of the user.
+            pack.Reset();
+         }
       }
 
       WHEN("Emplace (insert, describe)") {

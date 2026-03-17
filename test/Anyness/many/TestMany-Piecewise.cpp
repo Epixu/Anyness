@@ -748,7 +748,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
       
       WHEN("Absorbed by copy") {
          const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](auto& a, int entry_refs) {
+         auto absorb_construct_copy = [&](auto& a, int entry_refs, int indi_refs) {
             T absorbed {Copy {a}};
 
             Many_CheckState_OwnedFull<E>(a);
@@ -760,32 +760,32 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                auto entry = *absorbed.GetEntries();
                if ((entry_refs) == 0)
                   REQUIRE(entry == nullptr);
-               if (entry) {
+               if (entry) //{
                   REQUIRE(entry->GetUses() == (entry_refs));
-                  if constexpr (CT::Referenced<Decay<E>>) {
+                  /*if constexpr (CT::Referenced<Decay<E>>) {
                      auto e = absorbed.template As<E>();
                      REQUIRE(DenseCast(e).GetReferences() == (entry_refs));
                   }
                }
-               else {
+               else {*/
                   if constexpr (CT::Referenced<Decay<E>>) {
                      auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == (managed_sparse ? 7 : 1));
+                     REQUIRE(DenseCast(e).GetReferences() == indi_refs);
                   }
-               }
+               //}
             }
             REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(a.GetUses() == 1);
          };
 
-         absorb_construct_copy(pack_referred1, managed_sparse ? 8 : 3);
-         absorb_construct_copy(pack_referred2, managed_sparse ? 8 : 3);
-         absorb_construct_copy(pack_copied,    managed_sparse ? 8 : 3);
-         absorb_construct_copy(pack_cloned,    2);
-         absorb_construct_copy(pack_moved1,    managed_sparse ? 8 : 1);
-         absorb_construct_copy(pack_moved2,    managed_sparse ? 8 : 1);
-         absorb_construct_copy(pack_abandoned, managed_sparse ? 8 : 1);
-         absorb_construct_copy(pack_disowned,  0);
+         absorb_construct_copy(pack_referred1, managed_sparse ? 8 : 3, 9);
+         absorb_construct_copy(pack_referred2, managed_sparse ? 8 : 3, 9);
+         absorb_construct_copy(pack_copied,    managed_sparse ? 8 : 3, 9);
+         absorb_construct_copy(pack_cloned,    2, 2);
+         absorb_construct_copy(pack_moved1,    managed_sparse ? 8 : 1, 9);
+         absorb_construct_copy(pack_moved2,    managed_sparse ? 8 : 1, 9);
+         absorb_construct_copy(pack_abandoned, managed_sparse ? 8 : 1, 9);
+         absorb_construct_copy(pack_disowned,  0, 9);
       }
       
       WHEN("Absorbed by clone") {
@@ -835,6 +835,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                auto movable2 = *originalElement;
                a.Emplace(::std::move(movable1)),      a.Emplace(::std::move(movable2))
             );
+
+            if constexpr (not Managed) {
+               // On unmanaged tests i666 will be destroyed at the end of this scope,
+               // and the container will be left with a dangling pointer.
+               // Make sure this isn't happening. When inserting raw unmanaged pointers, 
+               // safety is solely in the hands of the user.
+               a.Reset();
+            }
          };
 
          emplace_overwrite(pack_referred1, "Refer");

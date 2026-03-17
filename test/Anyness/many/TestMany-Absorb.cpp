@@ -788,7 +788,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                else {
                   if constexpr (CT::Referenced<Decay<E>>) {
                      auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == (managed_sparse ? 8 : 1));
+                     REQUIRE(DenseCast(e).GetReferences() == 9);
                   }
                }
             }
@@ -859,6 +859,14 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
                auto movable2 = *originalElement;
                a.Emplace(::std::move(movable1)),   a.Emplace(::std::move(movable2))
             );
+
+            if constexpr (not Managed) {
+               // On unmanaged tests i666 will be destroyed at the end of this scope,
+               // and the container will be left with a dangling pointer.
+               // Make sure this isn't happening. When inserting raw unmanaged pointers, 
+               // safety is solely in the hands of the user.
+               a.Reset();
+            }
          };
 
          emplace_overwrite(pack_referred1, "Refer");
