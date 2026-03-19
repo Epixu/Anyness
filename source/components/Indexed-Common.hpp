@@ -77,7 +77,7 @@ namespace Langulus::Anyness::Component
                LglsAssumeDev(self.IsTyped(), "Block is not typed");
                const auto indirections = self.GetIndirections();
 
-               if (indirections == IndirectsOf<TH>) {
+               if (indirections + 1 == IndirectsOf<THP>) {
                   // No difference in indirections                      
                   const auto offset = self.SimplifyIndex(idx);
                   const auto byte_offset = self.GetStride() * offset;
@@ -86,7 +86,7 @@ namespace Langulus::Anyness::Component
                   );
                   return static_cast<THP>(heap);
                }
-               else if (indirections > IndirectsOf<TH>) {
+               else if (indirections + 1 > IndirectsOf<THP>) {
                   // We need to dereference. Supports packed pointers.  
                   auto diff = indirections - IndirectsOf<TH>;
                   using Deep = typename Deref<C>::DeepType;
@@ -95,7 +95,7 @@ namespace Langulus::Anyness::Component
                }
                else {
                   // We are allowed to add one additional indirection   
-                  LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
+                  LglsAssumeDev(indirections + 1 == IndirectsOf<THP>,
                      "Too many indirections");
                   const auto offset = self.SimplifyIndex(idx);
                   const auto byte_offset = self.GetStride() * offset;
@@ -169,12 +169,12 @@ namespace Langulus::Anyness::Component
          else {
             // Access directly or wrapped in a container                
             if constexpr (CT::TypeErased<C>) {
-               if (self.template Is<AS>()) {
+               auto T = self.GetType();
+
+               if (T.Is(MetaDataOf<AS>())) {
                   // Access directly                                    
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
                      return Decvq<AS> {Absorb, *self.template GetAt<AS>(LglsFwd(idx))};
-                  //else if constexpr (CT::Dense<AS>)
-                  //   return *self.template GetAt<AS>(LglsFwd(idx));
                   else
                      return *self.template GetAt<AS>(LglsFwd(idx));
                }
@@ -184,12 +184,9 @@ namespace Langulus::Anyness::Component
                }
                else {
                   // Runtime type mismatch error                        
-                  LglsError("Type mismatch", ": ", self.GetType(),
+                  LglsError("Type mismatch", ": ", T,
                      " not akin to ", MetaDataOf<AS>());
-                  /*if constexpr (CT::Dense<AS>)
-                     return *self.template GetAt<AS>(LglsFwd(idx));
-                  else*/
-                     return *self.template GetAt<AS>(LglsFwd(idx));
+                  return *self.template GetAt<AS>(LglsFwd(idx));
                }
             }
             else {

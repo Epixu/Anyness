@@ -48,8 +48,22 @@ namespace Langulus::Anyness::Component
       template<CT::Container C> requires CT::Indexed<C>
       auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
       -> Allocation const* const* {
-         if (self.IsSparse() and self.GetRaw() and self.GetAllocation())
-            return self.GetEntriesInner() + self.SimplifyIndex(LglsFwd(idx));
+         if constexpr (CT::TypeErased<C>) {
+            auto T = self.GetType();
+            if (T.IsSparse() and self.GetRaw() and self.GetAllocation()) {
+               return self.GetEntriesInner()
+                    + self.SimplifyIndex(LglsFwd(idx)) * T.GetIndirections();
+            }
+         }
+         else {
+            using T = TypeOf<C>;
+            if constexpr (CT::Sparse<T>) {
+               if (self.GetRaw() and self.GetAllocation()) {
+                  return self.GetEntriesInner()
+                       + self.SimplifyIndex(LglsFwd(idx)) + IndirectsOf<T>;
+               }
+            }
+         }
          return nullptr;
       }
 
