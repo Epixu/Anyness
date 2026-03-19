@@ -135,8 +135,94 @@ void Many_CheckState_Abandoned(const C& many) {
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Many_VerifyAccessorInterface(T const& many, I&& e_with_intent) {
+   using E = typename Decay<Deint<I>>::Type;
+
+   // Generally, the Get method always adds a pointer, because it       
+   // interfaces the heap directly                                      
+   static_assert(requires {
+      {many.template GetAt<Decay<E>      >(0)} -> ::std::same_as<const Decay<E>*>;
+      {many.template GetAt<Decay<E> const>(0)} -> ::std::same_as<const Decay<E>*>;
+   });
+   static_assert(requires {
+      {many.template GetAt<E      >(0)} -> ::std::same_as<ConstAll<E> const*>;
+      {many.template GetAt<E const>(0)} -> ::std::same_as<ConstAll<E> const*>;
+   });
+
+   // AsAt dereferences that pointer and/or wraps inside handles or     
+   // containers. Element won't be wrapped, if container contains the   
+   // wrapper type.                                                     
+   if constexpr (CT::Deep<E> and CT::Dense<E> and (not Same<TypeOf<T>, E> or CT::TypeErased<T>)) {
+      static_assert(requires {
+         {many.template AsAt<E>(0)} -> ::std::same_as<Decay<E>>;
+      });
+   }
+   else {
+      static_assert(requires {
+         {many.template AsAt<E>(0)} -> ::std::same_as<ConstAll<E> const&>;
+      });
+   }
+
+   if constexpr (CT::Dense<E> and CT::Typed<T>) {
+      // One additional indirection is always acceptable                
+      // A static container will static_assert if too many indirects    
+      static_assert(requires {
+         {many.template GetAt<Decay<E>      *>(0)} -> ::std::same_as<Decay<E> const*>;
+         {many.template GetAt<Decay<E> const*>(0)} -> ::std::same_as<Decay<E> const*>;
+      });
+      static_assert(requires {
+         {many.template AsAt<Decay<E>*>(0)} -> ::std::same_as<Decay<E> const*>;
+      });
+
+      /* shouldn't compile, too many indirections
+      static_assert(requires {
+         {many.template GetAt<Decay<E>      **>(0)} -> ::std::same_as<Decay<E> const* const*>;
+         {many.template GetAt<Decay<E> const**>(0)} -> ::std::same_as<Decay<E> const* const*>;
+      });
+      static_assert(requires {
+         {many.template AsAt<Decay<E>**>(0)} -> ::std::same_as<Decay<E> const* const* const&>;
+      });
+      */
+   }
+   else if constexpr (not CT::CustomPointer<E>) {                             //TODO access via custom pointers needs more rigorous testing
+      // One additional indirection is always acceptible                
+      // Type-erased containers will throw an exception at runtime, if  
+      // too many indirects were requested                              
+      static_assert(requires {
+         {many.template GetAt<Decay<E>      *>(0)} -> ::std::same_as<Decay<E> const* const*>;
+         {many.template GetAt<Decay<E> const*>(0)} -> ::std::same_as<Decay<E> const* const*>;
+      });
+      static_assert(requires {
+         {many.template AsAt<Decay<E>*>(0)} -> ::std::same_as<Decay<E> const* const&>;
+      });
+
+      if constexpr (IndirectsOf<E> >= 2 or CT::TypeErased<T>) {
+         static_assert(requires {
+            {many.template GetAt<Decay<E>      **>(0)} -> ::std::same_as<Decay<E> const* const* const*>;
+            {many.template GetAt<Decay<E> const**>(0)} -> ::std::same_as<Decay<E> const* const* const*>;
+         });
+
+         static_assert(requires {
+            {many.template AsAt<Decay<E>**>(0)} -> ::std::same_as<Decay<E> const* const* const&>;
+         });
+      }
+      else {
+         static_assert(requires {
+            {many.template GetAt<Decay<E>      **>(0)} -> ::std::same_as<Decay<E> const* const*>;
+            {many.template GetAt<Decay<E> const**>(0)} -> ::std::same_as<Decay<E> const* const*>;
+         });
+
+         static_assert(requires {
+            {many.template AsAt<Decay<E>**>(0)} -> ::std::same_as<Decay<E> const* const*>;
+         });
+      }
+   }
+}
+
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Many_CheckState_ContainsOne(T const& many, I&& e_with_intent, int uses = 1) {
    Any_CheckState_ContainsOne(many, LglsFwd(e_with_intent), uses);
+   Many_VerifyAccessorInterface(many, LglsFwd(e_with_intent));
 
    auto& e = e_with_intent.what;
    using E = typename Decay<Deint<I>>::Type;

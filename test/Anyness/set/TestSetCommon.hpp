@@ -134,11 +134,13 @@ void Set_CheckState_Abandoned(const C& set) {
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
+   Many_VerifyAccessorInterface(set, LglsFwd(e_with_intent));
+
    auto& e = e_with_intent.what;
    using E = typename Decay<Deint<I>>::Type;
 
    if constexpr (CT::Deep<E> and CT::Dense<E>)
-      REQUIRE(set.template GetAt<E*>(0)->template IsSame<int>());
+      REQUIRE(set.template AsAt<E*>(0)->template IsSame<int>());
 
    REQUIRE(set.GetCount() == 1);
    REQUIRE(set.GetUses() == uses);

@@ -54,73 +54,78 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @return the chosen element                                        
       template<class AS = void, CT::Container C>
-      CT::Sparse auto GetAt(this C&& self, CT::Index auto&& idx) assumptious {
+      auto* GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
-         using TC  = TypeOf<C>*;
-         using TCP = LglsMutIf(C, TC);
-         using TH  = Tif<CT::Void<AS>, TC, AS>;
-         //using TH  = Tif<CT::Void<AS>, TC, Tif<CT::Sparse<AS>, AS, AS*>>;
-         //using THS = Tif<CT::Sparse<TH>, TH, TH*>;
-         //using THP = LglsMutIf(C, THS);
-         using THP = LglsMutIf(C, TH);
+         using TC   = LglsMutIf(C, TypeOf<C>);
+         using TCP  = LglsMutIf(C, TC*);
+         using TH   = Tif<CT::Void<AS>, TC, AS>;
+         using THP  = LglsMutIf(C, TH*);
+         auto* heap = DecvqAllCast(self.GetHeapInner());
 
-         // Offset to the proper heap pointer                           
-         const auto offset = self.SimplifyIndex(idx);
-         const auto byte_offset = self.GetStride() * offset;
-         void* heap = DecvqAllCast(self.GetHeapInner());
-         heap = reinterpret_cast<void*>(
-            reinterpret_cast<uint8_t*>(heap) + byte_offset
-         );
-
-         // Dereference it if we have to                                
          if constexpr (CT::TypeErased<C>) {
             if constexpr (CT::Void<AS>) {
-               // Unknown type, just return the offsetted heap pointer  
-               return heap;
+               // Unknown type, just return the heap pointer reference  
+               const auto offset = self.SimplifyIndex(idx);
+               const auto byte_offset = self.GetStride() * offset;
+               return reinterpret_cast<void*>(
+                  reinterpret_cast<uint8_t*>(heap) + byte_offset
+               );
             }
             else {
                // Casting to a desired runtime type                     
                LglsAssumeDev(self.IsTyped(), "Block is not typed");
-               const     auto tci = self.GetIndirections() + 1;
-               constexpr auto thi = IndirectsOf<TH>;
+               const auto indirections = self.GetIndirections();
 
-               if (tci == thi) {
+               if (indirections == IndirectsOf<TH>) {
                   // No difference in indirections                      
-                  return static_cast<THP>(static_cast<TCP>(heap));
+                  const auto offset = self.SimplifyIndex(idx);
+                  const auto byte_offset = self.GetStride() * offset;
+                  heap = reinterpret_cast<void*>(
+                     reinterpret_cast<uint8_t*>(heap) + byte_offset
+                  );
+                  return static_cast<THP>(heap);
                }
-               else if (tci > thi) {
+               else if (indirections > IndirectsOf<TH>) {
                   // We need to dereference. Supports packed pointers.  
-                  auto diff = tci - thi;
-                  Deep<C> denser = Disown(self.GetDenseAt(idx, diff)); //TODO does a redundant offset
+                  auto diff = indirections - IndirectsOf<TH>;
+                  using Deep = typename Deref<C>::DeepType;
+                  Deep denser = Disown(self.GetDenseAt(LglsFwd(idx), diff));
                   return static_cast<THP>(denser.GetHeapInner());
                }
                else {
                   // We are allowed to add one additional indirection   
-                  LglsAssumeDev(tci + 1 == thi, "Too many indirections");
-                  return static_cast<THP>(static_cast<TCP>(heap));
+                  LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
+                     "Too many indirections");
+                  const auto offset = self.SimplifyIndex(idx);
+                  const auto byte_offset = self.GetStride() * offset;
+                  heap = reinterpret_cast<void*>(
+                     reinterpret_cast<uint8_t*>(heap) + byte_offset
+                  );
+                  return static_cast<THP>(heap);
                }
             }
          }
          else {
-            // Casting to a desired static type                         
-            constexpr auto tci = IndirectsOf<TC/*TypeOf<C>*/>;
-            constexpr auto thi = IndirectsOf<TH>;
+            const auto offset = self.SimplifyIndex(idx);
+            heap += offset;
 
-            if constexpr (tci == thi) {
+            // Casting to a desired static type                         
+            if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
                // No difference in indirections                         
-               return static_cast<THP>(static_cast<TCP>(heap));
+               return static_cast<THP>(heap);
             }
-            else if constexpr (tci > thi) {
+            else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
                // We need to dereference. Can be done without a         
                // reinterpret_cast, and thus be constexpr-friendly.     
                // Supports packed pointers as well.                     
-               return static_cast<THP>(DenseCast<tci - thi>(static_cast<TCP>(heap)));
+               return static_cast<THP>(DenseCast<IndirectsOf<TC> - IndirectsOf<TH>>(heap));
             }
             else {
                // We are allowed to add one additional indirection      
-               static_assert(tci + 1 == thi, "Too many indirections");
-               return static_cast<THP>(static_cast<TCP>(heap));
+               static_assert(IndirectsOf<TCP> == IndirectsOf<TH>,
+                  "Too many indirections");
+               return static_cast<LglsMutIf(C, TH)>(heap);
             }
          }
       }
@@ -167,11 +172,11 @@ namespace Langulus::Anyness::Component
                if (self.template Is<AS>()) {
                   // Access directly                                    
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
-                     return Decvq<AS> {Absorb, *self.template GetAt<AS*>(LglsFwd(idx))};
-                  else if constexpr (CT::Dense<AS>)
-                     return *self.template GetAt<AS*>(LglsFwd(idx));
+                     return Decvq<AS> {Absorb, *self.template GetAt<AS>(LglsFwd(idx))};
+                  //else if constexpr (CT::Dense<AS>)
+                  //   return *self.template GetAt<AS>(LglsFwd(idx));
                   else
-                     return  self.template GetAt<AS >(LglsFwd(idx));
+                     return *self.template GetAt<AS>(LglsFwd(idx));
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
@@ -181,19 +186,21 @@ namespace Langulus::Anyness::Component
                   // Runtime type mismatch error                        
                   LglsError("Type mismatch", ": ", self.GetType(),
                      " not akin to ", MetaDataOf<AS>());
-                  if constexpr (CT::Dense<AS>)
-                     return *self.template GetAt<AS*>(LglsFwd(idx));
-                  else
-                     return  self.template GetAt<AS >(LglsFwd(idx));
+                  /*if constexpr (CT::Dense<AS>)
+                     return *self.template GetAt<AS>(LglsFwd(idx));
+                  else*/
+                     return *self.template GetAt<AS>(LglsFwd(idx));
                }
             }
             else {
-               if constexpr (Akin<TypeOf<C>, AS>) {
+               using T = TypeOf<C>;
+
+               if constexpr (Akin<T, AS>) {
                   // Access directly                                    
-                  if constexpr (CT::Dense<AS>)
-                     return *self.template GetAt<AS*>(LglsFwd(idx));
+                  if constexpr (IndirectsOf<AS> <= IndirectsOf<T>)
+                     return *self.template GetAt<AS>(LglsFwd(idx));
                   else
-                     return  self.template GetAt<AS >(LglsFwd(idx));
+                     return  self.template GetAt<AS>(LglsFwd(idx));
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
@@ -298,29 +305,27 @@ namespace Langulus::Anyness::Component
             }
          }
 
-         auto T = self.GetType();
-         while (count and T.IsSparse()) {
-            auto nextT = T.GetDeptr();
-            
+         auto     T = self.GetType();
+         auto nextT = T.GetDeptr();
+
+         while (count and T.IsSparse()) {            
             if (nextT.IsSparse()) {
                // Pointer T -> Pointer nextT                            
                T.GetDereffer()(heap, &heap);
+               T = nextT;
+               nextT = T.GetDeptr();
+               --count;
             }
-            else {
-               // Pointer T -> Dense nextT                              
-               D temp;
-               temp.SetTypeInner(nextT);
-               temp.SetHeapInner(UnpackPointer(T, nextT, heap));
-               if_available(temp.SetCountInner(1));
-               return temp;
-            }
-
-            T = nextT;
-            --count;
+            else break;
          }
          
-         LglsError("Should never be reached");
-         return D {};
+         // Pointer T** -> Pointer T* for example (partial deref)       
+         // or just Pointer T** -> Dense T (full deref)                 
+         D temp;
+         temp.SetTypeInner(nextT);
+         temp.SetHeapInner(UnpackPointer(T, nextT, heap));
+         if_available(temp.SetCountInner(1));
+         return temp;
       }
 
       template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>

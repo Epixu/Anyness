@@ -70,6 +70,9 @@ namespace Langulus::Anyness
          constexpr Iterator() noexcept = default;
          constexpr Iterator(Iterator const&) noexcept = default;
          constexpr Iterator(Iterator&&) noexcept = default;
+         constexpr Iterator(Deptr<H> const& it, C* range) noexcept requires CT::Sparse<H>
+            : mIt    {&it}
+            , mRange {range} {}
          constexpr Iterator(H const& it, C* range) noexcept
             : mIt    {it}
             , mRange {range} {}
