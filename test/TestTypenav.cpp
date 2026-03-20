@@ -11,6 +11,7 @@
 
 using namespace Langulus;
 
+//TODO test custom pointers with all these!!
 
 ///                                                                           
 /// CT::Sheddable                                                             

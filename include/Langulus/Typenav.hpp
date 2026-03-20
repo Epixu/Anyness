@@ -513,7 +513,7 @@ namespace Langulus
       }
 
       /// Removes all const/volatile qualifiers from all indirections.        
-      /// Preserves references.                                               
+      /// Supports custom pointers. Preserves references.                     
       template<class T>
       consteval CT::Typelist auto NestedDecvq() {
          if constexpr (::std::is_rvalue_reference_v<T>)
@@ -524,12 +524,17 @@ namespace Langulus
             return Types<typename decltype(NestedDecvq<::std::remove_pointer_t<T>>())::First*> {};
          else if constexpr (::std::is_bounded_array_v<T>)
             return Types<typename decltype(NestedDecvq<::std::remove_extent_t<T>>())::First [::std::extent_v<T>]> {};
-         else
-            return Types<::std::remove_cv_t<T>> {};
+         else if constexpr (CT::Complete<T>) {
+            if constexpr (CT::CustomPointer<T>)
+               return Types<typename T::MakeDecvqAll> {};
+            else
+               return Types<::std::remove_cv_t<T>> {};
+         }
+         else return Types<::std::remove_cv_t<T>> {};
       }
 
-      /// Adds const qualifier to all levels of indirection.                  
-      /// Preserves references.                                               
+      /// Adds const qualifier to all levels of indirection except the top.   
+      /// Supports custom pointers. Preserves references.                     
       template<class T>
       consteval CT::Typelist auto NestedConst() {
          if constexpr (::std::is_rvalue_reference_v<T>)
@@ -540,8 +545,13 @@ namespace Langulus
             return Types<typename decltype(NestedConst<::std::remove_pointer_t<T>>())::First const*> {};
          else if constexpr (::std::is_bounded_array_v<T>)
             return Types<typename decltype(NestedConst<::std::remove_extent_t<T>>())::First const [::std::extent_v<T>]> {};
-         else
-            return Types<const T> {};
+         else if constexpr (CT::Complete<T>) {
+            if constexpr (CT::CustomPointer<T>)
+               return Types<typename T::MakeConstAll> {};
+            else
+               return Types</*const*/ T> {};
+         }
+         else return Types</*const*/ T> {};
       }
 
       /// Count the number of indirections, including custom pointers.        
@@ -564,9 +574,10 @@ namespace Langulus
    template<class T>
    using DecvqAll = typename decltype(Inner::NestedDecvq<T>())::First;
 
-   /// Adds const qualifiers to all levels of indirection of a type.          
+   /// Adds const qualifiers to all levels of indirection of a type, except   
+   /// the top one. You can always do `const ConstAll<T>` to fix that.        
    /// Preserves references, makes them constant.                             
-   /// For example: `void**` becomes `void const* const* const`.              
+   /// For example: `void**` becomes `void const* const*`.                    
    ///              `void*&` becomes `void const* const&`.                    
    template<class T>
    using ConstAll = typename decltype(Inner::NestedConst<T>())::First;

@@ -47,6 +47,11 @@ namespace Langulus::Fractalloc
       using CTTI_Sparse = Yes<>;
       using Type = T;
 
+      using MakeDecvq    = PackedPointer<Decvq<T>,    POOL_BITS, ENTRY_BITS, OFFSET_BITS>;
+      using MakeConst    = PackedPointer<const T,     POOL_BITS, ENTRY_BITS, OFFSET_BITS>;
+      using MakeDecvqAll = PackedPointer<DecvqAll<T>, POOL_BITS, ENTRY_BITS, OFFSET_BITS>;
+      using MakeConstAll = PackedPointer<ConstAll<T>, POOL_BITS, ENTRY_BITS, OFFSET_BITS>;
+
       static constexpr PointerSpecification Specification {POOL_BITS, ENTRY_BITS, OFFSET_BITS};
       static constexpr uint TotalBits = POOL_BITS + ENTRY_BITS + OFFSET_BITS;
       static_assert(TotalBits == 8 or TotalBits == 16 or TotalBits == 32);

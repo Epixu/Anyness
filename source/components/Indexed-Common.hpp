@@ -175,8 +175,12 @@ namespace Langulus::Anyness::Component
                   // Access directly                                    
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
                      return Decvq<AS> {Absorb, *self.template GetAt<AS>(LglsFwd(idx))};
-                  else
+                  else if constexpr (CT::Dense<AS>)
                      return *self.template GetAt<AS>(LglsFwd(idx));
+                  else if constexpr (CT::CustomPointer<AS>)
+                     return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
+                  else
+                     return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
@@ -186,7 +190,12 @@ namespace Langulus::Anyness::Component
                   // Runtime type mismatch error                        
                   LglsError("Type mismatch", ": ", T,
                      " not akin to ", MetaDataOf<AS>());
-                  return *self.template GetAt<AS>(LglsFwd(idx));
+                  if constexpr (CT::Dense<AS>)
+                     return *self.template GetAt<AS>(LglsFwd(idx));
+                  else if constexpr (CT::CustomPointer<AS>)
+                     return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
+                  else
+                     return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
                }
             }
             else {
@@ -194,10 +203,12 @@ namespace Langulus::Anyness::Component
 
                if constexpr (Akin<T, AS>) {
                   // Access directly                                    
-                  if constexpr (IndirectsOf<AS> <= IndirectsOf<T>)
+                  if constexpr (CT::Dense<AS>)
                      return *self.template GetAt<AS>(LglsFwd(idx));
+                  else if constexpr (CT::CustomPointer<AS>)
+                     return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
                   else
-                     return  self.template GetAt<AS>(LglsFwd(idx));
+                     return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                

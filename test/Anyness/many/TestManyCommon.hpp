@@ -138,8 +138,8 @@ template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
 void Many_VerifyAccessorInterface(T const& many, I&& e_with_intent) {
    using E = typename Decay<Deint<I>>::Type;
 
-   // Generally, the Get method always adds a pointer, because it       
-   // interfaces the heap directly                                      
+   // The Get method always adds a pointer, because it interfaces the   
+   // heap directly                                                     
    static_assert(requires {
       {many.template GetAt<Decay<E>      >(0)} -> ::std::same_as<const Decay<E>*>;
       {many.template GetAt<Decay<E> const>(0)} -> ::std::same_as<const Decay<E>*>;
@@ -159,7 +159,7 @@ void Many_VerifyAccessorInterface(T const& many, I&& e_with_intent) {
    }
    else {
       static_assert(requires {
-         {many.template AsAt<E>(0)} -> ::std::same_as<ConstAll<E> const&>;
+         {many.template AsAt<E>(0)} -> ::std::same_as<Tif<CT::Sparse<E>, ConstAll<E>, ConstAll<E> const&>>;
       });
    }
 
@@ -193,7 +193,7 @@ void Many_VerifyAccessorInterface(T const& many, I&& e_with_intent) {
          {many.template GetAt<Decay<E> const*>(0)} -> ::std::same_as<Decay<E> const* const*>;
       });
       static_assert(requires {
-         {many.template AsAt<Decay<E>*>(0)} -> ::std::same_as<Decay<E> const* const&>;
+         {many.template AsAt<Decay<E>*>(0)} -> ::std::same_as<Decay<E> const*>;
       });
 
       if constexpr (IndirectsOf<E> >= 2 or CT::TypeErased<T>) {
@@ -203,7 +203,7 @@ void Many_VerifyAccessorInterface(T const& many, I&& e_with_intent) {
          });
 
          static_assert(requires {
-            {many.template AsAt<Decay<E>**>(0)} -> ::std::same_as<Decay<E> const* const* const&>;
+            {many.template AsAt<Decay<E>**>(0)} -> ::std::same_as<Decay<E> const* const*>;
          });
       }
       else {
