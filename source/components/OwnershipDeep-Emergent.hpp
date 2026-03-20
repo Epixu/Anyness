@@ -475,7 +475,7 @@ namespace Langulus::Anyness::Component
                      // reached 0. This can happen when hive elements   
                      // are dereferenced.                               
                      src = UnpackPointer(T, nextT, src);
-                     if (referencer(const_cast<void*>(src), -1) == 0)
+                     if (src and referencer(const_cast<void*>(src), -1) == 0)
                         nextT.GetDestructor()(const_cast<void*>(src));
                   }
                }
@@ -539,11 +539,7 @@ namespace Langulus::Anyness::Component
          const auto entries_size = sizeof(AllocationPtr) * indirections;
          auto entries = self.GetEntriesInner();
 
-         /*if constexpr (CT::Disowned<I>) {
-            // Disowning zeroes all entries. Nothing gets referenced.   
-            //memset(DecvqAllCast(entries), 0, entries_size); //should be zeroed before this call anyways
-         }
-         else*/ if constexpr (CT::Handle<I>) {
+         if constexpr (CT::Handle<I>) {
             // Copy all entries and reference them, unless we're moving 
             // a handle                                                 
             using H = TypeOf<I>;
@@ -557,18 +553,18 @@ namespace Langulus::Anyness::Component
                auto entries_src = rhs.GetEntriesInner();
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
-                  if constexpr (CT::AutoOwned<H> and I::IsMoved())
-                     memset(DecvqAllCast(entries_src), 0, entries_size); //TODO make sure we modify rhs memory only if it has exactly 1 use
+
+                  if constexpr (CT::AutoOwned<H> and I::IsMoved()) {
+                     // We are moving/abandoning, and we have to make   
+                     // sure that source entries are zeroes, because    
+                     // otherwise they will be dereferenced when H goes 
+                     // out of scope.                                   
+                     LglsAssumeDev(rhs.GetUses() == 1,
+                        "Can't move out from used memory");
+                     memset(DecvqAllCast(entries_src), 0, entries_size);
+                  }
                }
-               /*else {
-                  // Source entries might be nullptr if disowned        
-                  memset(DecvqAllCast(entries), 0, entries_size);
-               }*/
             }
-            /*else {
-               // RHS might be a disowned handle                        
-               memset(DecvqAllCast(entries), 0, entries_size);
-            }*/
 
             if (not I::IsMoved()) {
                // We are not moving, so we have to reference all        
@@ -578,6 +574,16 @@ namespace Langulus::Anyness::Component
                #else
                   self.KeepElementDeepStandardPointers();
                #endif
+            }
+            else if constexpr (CT::AutoOwned<H> and REF_INDIVIDUAL) {
+               // We are moving/abandoning, but since individual items  
+               // are referenced (even if they have no corresponding    
+               // entry), we need to zero the source pointer, so that   
+               // we avoid them getting dereferenced later.             
+               LglsAssumeDev(rhs.GetUses() == 1,
+                  "Can't move out from used memory");
+               auto pointers_src = rhs.GetRaw();
+               memset(DecvqAllCast(pointers_src), 0, rhs.GetBytesize());
             }
          }
          else if constexpr (CT::Sparse<Deint<I>>) {

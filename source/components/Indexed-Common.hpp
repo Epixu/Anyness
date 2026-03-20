@@ -64,29 +64,37 @@ namespace Langulus::Anyness::Component
          auto* heap = DecvqAllCast(self.GetHeapInner());
 
          if constexpr (CT::TypeErased<C>) {
-            if constexpr (CT::Void<AS>) {
-               // Unknown type, just return the heap pointer reference  
+            const auto offset_heap = [&self, &heap, &idx] {
                const auto offset = self.SimplifyIndex(idx);
                const auto byte_offset = self.GetStride() * offset;
-               return reinterpret_cast<void*>(
+               heap = reinterpret_cast<void*>(
                   reinterpret_cast<uint8_t*>(heap) + byte_offset
                );
+            };
+
+            if constexpr (CT::Void<AS>) {
+               // Unknown type, just return the heap pointer reference  
+               offset_heap();
+               return heap;
             }
             else {
                // Casting to a desired runtime type                     
                LglsAssumeDev(self.IsTyped(), "Block is not typed");
                const auto indirections = self.GetIndirections();
 
-               if (indirections + 1 == IndirectsOf<THP>) {
+               if (indirections == IndirectsOf<TH>) {
                   // No difference in indirections                      
-                  const auto offset = self.SimplifyIndex(idx);
-                  const auto byte_offset = self.GetStride() * offset;
-                  heap = reinterpret_cast<void*>(
-                     reinterpret_cast<uint8_t*>(heap) + byte_offset
-                  );
+                  offset_heap();
                   return static_cast<THP>(heap);
                }
-               else if (indirections + 1 > IndirectsOf<THP>) {
+               else if (indirections > IndirectsOf<TH>) {
+                  if (indirections == IndirectsOf<THP>) {
+                     // If we're going to add the same pointer later,   
+                     // then avoid dereferencing altogether.            
+                     offset_heap();
+                     return *static_cast<THP*>(heap);
+                  }
+
                   // We need to dereference. Supports packed pointers.  
                   auto diff = indirections - IndirectsOf<TH>;
                   using Deep = typename Deref<C>::DeepType;
@@ -95,13 +103,9 @@ namespace Langulus::Anyness::Component
                }
                else {
                   // We are allowed to add one additional indirection   
-                  LglsAssumeDev(indirections + 1 == IndirectsOf<THP>,
+                  LglsAssumeDev(indirections + 1 == IndirectsOf<TH>,
                      "Too many indirections");
-                  const auto offset = self.SimplifyIndex(idx);
-                  const auto byte_offset = self.GetStride() * offset;
-                  heap = reinterpret_cast<void*>(
-                     reinterpret_cast<uint8_t*>(heap) + byte_offset
-                  );
+                  offset_heap();
                   return static_cast<THP>(heap);
                }
             }
@@ -125,6 +129,8 @@ namespace Langulus::Anyness::Component
                // We are allowed to add one additional indirection      
                static_assert(IndirectsOf<TCP> == IndirectsOf<TH>,
                   "Too many indirections");
+               static_assert(CT::Sparse<TH>,
+                  "Casting to a dense shouldn't happen here");
                return static_cast<LglsMutIf(C, TH)>(heap);
             }
          }
