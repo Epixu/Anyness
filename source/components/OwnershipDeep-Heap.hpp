@@ -60,7 +60,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Sparse<T>) {
                if (self.GetRaw() and self.GetAllocation()) {
                   return self.GetEntriesInner()
-                       + self.SimplifyIndex(LglsFwd(idx)) + IndirectsOf<T>;
+                       + self.SimplifyIndex(LglsFwd(idx)) * IndirectsOf<T>;
                }
             }
          }
