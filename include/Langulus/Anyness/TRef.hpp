@@ -98,7 +98,7 @@ namespace Langulus::Anyness
          if constexpr (CT::ContainsOne<A>)
             return this->AssignAbsorb(FWDIntent(pointer));
          else if constexpr (CT::Sparse<A>) {
-            if (DeintCast(pointer) == this->GetRaw())
+            if (DeintCast(pointer) == this->GetHeapInner())
                return *this;
          
             if (DeintCast(pointer)) {

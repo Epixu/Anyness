@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Heap-Reference.hpp"
-#include "Iteration-Range.hpp"
+//#include "Iteration-Range.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -109,7 +109,36 @@ namespace Langulus::Anyness::Component
             if_available(self.SetCountInner(count));
 
             if constexpr (CT::ContainsMany<C, IT>) {
-               auto src = IterateHandles(from).begin();
+               auto const srcBeg = from.GetHandle();
+               auto const srcEnd = srcBeg + count;
+               auto src = srcBeg;
+               auto dst = self.GetHandle();
+               try {
+                  while (src.GetRaw() != srcEnd.GetRaw()) {
+                     if constexpr (CT::Copied<I>)
+                        dst.EmplaceWithIntent(Refer(src));
+                     else
+                        dst.EmplaceWithIntent(Clone(src));
+                     ++dst; ++src;
+                  }
+               }
+               catch (...) {
+                  // Partial success                                    
+                  auto n = src - srcBeg;
+                  if constexpr (not requires { self.SetCountInner(1); }) {
+                     // Partial success is not allowed - we have to     
+                     // destroy everything we initialized               
+                     while (n) {
+                        dst.DestroyElement();
+                        --dst;
+                        --n;
+                     }
+                  }
+                  self.PartialSuccess(n);
+                  throw;
+               }
+
+               /*auto src = IterateHandles(from).begin();
                auto dst = IterateHandles(self).begin();
                try {
                   while (src) {
@@ -121,20 +150,7 @@ namespace Langulus::Anyness::Component
                   }
                }
                catch (...) {
-                  // Partial success                                    
-                  auto n = src - IterateHandles(from).begin();
-                  if constexpr (not requires { self.SetCountInner(1); }) {
-                     // Partial success is not allowed - we have to     
-                     // destroy everything we initialized               
-                     while (n) {
-                        dst->DestroyElement();
-                        --dst;
-                        --n;
-                     }
-                  }
-                  self.PartialSuccess(n);
-                  throw;
-               }
+               }*/
             }
             else {
                auto src = from.GetHandle();
@@ -281,10 +297,20 @@ namespace Langulus::Anyness::Component
                   // Memory moved, and we should move all elements with 
                   // it. We're moving to new memory, so no reverse is   
                   // required.                                          
-                  auto from = IterateHandles(previous).begin();
-                  for (auto to : IterateHandles(self)) {
-                     to.EmplaceWithIntent(Abandon(*from));
-                     ++from;
+                  auto const fromBeg = previous.GetHandle();
+                  auto const fromEnd = fromBeg + previous.GetCount();
+                  auto from = fromBeg;
+                  auto to = self.GetHandle();
+                  try {
+                     while (from.GetRaw() != fromEnd.GetRaw()) {
+                        to.EmplaceWithIntent(Abandon(from));
+                        ++from;
+                        ++to;
+                     }
+                  }
+                  catch (...) {
+                     self.SetCountInner(from - fromBeg);
+                     throw;
                   }
                }
             }
@@ -309,10 +335,39 @@ namespace Langulus::Anyness::Component
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
          static_assert(CT::ContainsMany<C>,
             "This makes sense to be called only by containers that support many elements");
+         const auto al = DecvqAllCast(self.GetAllocation());
+         if (not al) {
+            //                                                          
+            // We have to branch out                                    
+            const C backup{Abandon{self}};
+            self.AllocateFresh(self.RequestHeap(desiredReserve));
+
+            // Reinsert only the relevant items.                        
+            auto count = backup.GetCount() < desiredReserve
+               ? backup.GetCount()
+               : desiredReserve;
+            auto const fromBeg = backup.GetHandle();
+            auto const fromEnd = fromBeg + count;
+            auto from = fromBeg;
+            auto to = self.GetHandle();
+            try {
+               while (from.GetRaw() != fromEnd.GetRaw()) {
+                  to.EmplaceWithIntent(Refer(from));
+                  ++from;
+                  ++to;
+               }
+            }
+            catch (...) {
+               self.SetCountInner(from - fromBeg);
+               throw;
+            }
+
+            self.SetCountInner(count);
+            return;
+         }
+
          LglsAssumeDev(desiredReserve <= self.GetReserved(),
             "Can't shrink allocation using more elements");
-         const auto al = DecvqAllCast(self.GetAllocation());
-         LglsAssumeDev(al, "Invalid allocation");
          LglsAssumeDev(al->GetUses() == 1,
             "Can't reuse memory of a block used from multiple places");
 
@@ -445,9 +500,10 @@ namespace Langulus::Anyness::Component
 
             // Reinsert the old items.                                  
             auto count = backup.GetCount();
-            auto from = backup.GetHandle();
+            auto const fromBeg = backup.GetHandle();
+            auto const fromEnd = fromBeg + count;
+            auto from = fromBeg;
             auto to = self.GetHandle();
-            auto const fromEnd = from + count;
             try {
                while (from.GetRaw() != fromEnd.GetRaw()) {
                   to.EmplaceWithIntent(Refer(from));
@@ -456,7 +512,7 @@ namespace Langulus::Anyness::Component
                }
             }
             catch (...) {
-               self.SetCountInner(fromEnd - from);
+               self.SetCountInner(from - fromBeg);
                throw;
             }
 

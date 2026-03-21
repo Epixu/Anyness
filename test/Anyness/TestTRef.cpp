@@ -47,7 +47,8 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
       T pointer {nullptr};
       T pointer2 {nullptr};
 
-      REQUIRE_FALSE(pointer.GetRaw());
+      //REQUIRE_FALSE(pointer.GetRaw());
+      REQUIRE(pointer.IsEmpty());
       REQUIRE_FALSE(pointer);
       REQUIRE(pointer == pointer2);
    }
@@ -57,7 +58,7 @@ TEST_CASE_TEMPLATE("Shared pointer", TestType
       T pointer2;
       const ScopedE raw {3};
 
-      REQUIRE_FALSE(pointer.GetRaw());
+      REQUIRE(pointer.IsEmpty());
       REQUIRE_FALSE(pointer);
       REQUIRE(pointer == pointer2);
 

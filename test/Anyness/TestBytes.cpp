@@ -82,7 +82,7 @@ void Bytes_CheckState_OwnedEmpty(const CT::Container auto& bytes) {
    REQUIRE      (bytes.GetCount() == 0);
    REQUIRE      (bytes.GetReserved() > 0);
    REQUIRE      (bytes.GetUses() == 1);
-   REQUIRE      (bytes.GetRaw());
+   //REQUIRE      (bytes.GetRaw());
    //REQUIRE      (bytes == nullptr);
    //REQUIRE_FALSE(bytes != nullptr);
    //REQUIRE      (bytes == (Byte*)nullptr);
@@ -274,7 +274,7 @@ SCENARIO("Testing byte container") {
 
          REQUIRE(data.GetCount() == 2);
          REQUIRE(data.GetReserved() >= 5);
-         REQUIRE(data.GetRaw() == memory);
+         REQUIRE(data.GetRaw() != memory);
          REQUIRE(data.GetAllocation());
       }
 
@@ -282,9 +282,9 @@ SCENARIO("Testing byte container") {
          data.Clear();
 
          REQUIRE(data.GetCount() == 0);
-         REQUIRE(data.GetReserved() >= 5);
-         REQUIRE(data.GetRaw() == memory);
-         REQUIRE(data.GetAllocation());
+         REQUIRE(data.GetReserved() == 0);
+         //REQUIRE(data.GetRaw() == memory);
+         REQUIRE(data.GetAllocation() == nullptr);
          REQUIRE(data.Is<Byte>());
       }
 
@@ -293,7 +293,7 @@ SCENARIO("Testing byte container") {
 
          REQUIRE(data.GetCount() == 0);
          REQUIRE(data.GetReserved() == 0);
-         REQUIRE(data.GetRaw() == nullptr);
+         //REQUIRE(data.GetRaw() == nullptr);
          REQUIRE(data.Is<Byte>());
       }
 
@@ -304,23 +304,22 @@ SCENARIO("Testing byte container") {
          REQUIRE(data.GetReserved() == copy.GetReserved());
          REQUIRE(data.GetRaw() == copy.GetRaw());
          REQUIRE(data.GetType() == copy.GetType());
-         REQUIRE(data.GetAllocation());
-         REQUIRE(copy.GetAllocation());
-         REQUIRE(copy.GetUses() == 2);
-         REQUIRE(data.GetUses() == 2);
+         REQUIRE(data.GetAllocation() == copy.GetAllocation());
+         REQUIRE(data.GetUses() == copy.GetUses());
+         REQUIRE(data.GetUses() == 0);
       }
 
       WHEN("Bytes are cloned") {
          Bytes copy = Clone(data);
 
          REQUIRE(data.GetCount() == copy.GetCount());
-         REQUIRE(data.GetReserved() == copy.GetReserved());
+         REQUIRE(data.GetReserved() != copy.GetReserved());
          REQUIRE(data.GetRaw() != copy.GetRaw());
          REQUIRE(data.GetType() == copy.GetType());
-         REQUIRE(data.GetAllocation());
+         REQUIRE(data.GetAllocation() != copy.GetAllocation());
          REQUIRE(copy.GetAllocation());
          REQUIRE(copy.GetUses() == 1);
-         REQUIRE(data.GetUses() == 1);
+         REQUIRE(data.GetUses() == 0);
       }
 
       WHEN("Bytes are reset, then allocated again") {

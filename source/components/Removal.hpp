@@ -108,6 +108,8 @@ namespace Langulus::Anyness::Component
 
       /// Destroy all elements, deallocate block and reset state and type,    
       /// if type-erased.                                                     
+      ///   @attention notice that heap pointer is not zeroed here, as it     
+      ///      is not a requirement. It is UB if you GetRaw while count is 0! 
       void Reset(this auto& self) {
          self.Free();
          if_available(self.SetAllocationInner(nullptr));

@@ -62,13 +62,13 @@ namespace Langulus::Anyness::Component
       /// Reserve a number of elements without initializing them.             
       /// If reserved data is smaller than currently initialized count, the   
       /// excess elements will be dereferenced/destroyed.                     
-      ///   @param count number of elements to reserve                        
+      ///   @param reserve number of elements to reserve                      
       template<CT::ContainsMany C>
-      C& Reserve(this C& self, const T count) {
-         if (count < self.GetCount())
-            self.AllocateLess(count);
+      C& Reserve(this C& self, const T reserve) {
+         if (reserve < self.GetCount())
+            self.AllocateLess(reserve);
          else
-            self.AllocateMore(count);
+            self.AllocateMore(reserve);
          return self;
       }
    };

@@ -77,7 +77,8 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Get a direct access to the heap memory                              
-      ///   @attention accessing this while GetCount() is zero is undefined   
+      ///   @attention using raw pointer while self.IsEmpty() may lead to     
+      ///      undefined behavior                                             
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, POINTER_TYPE);
@@ -85,7 +86,8 @@ namespace Langulus::Anyness::Component
       }
       
       /// Get a direct access to the heap memory as a different type          
-      ///   @attention accessing this while GetCount() is zero is undefined   
+      ///   @attention using raw pointer while self.IsEmpty() may lead to     
+      ///      undefined behavior                                             
       template<class T, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, T*);
@@ -94,7 +96,6 @@ namespace Langulus::Anyness::Component
 
       /// Get a direct access to the initialized heap memory's end.           
       ///   @attention this makes sense only when heap is contiguous.         
-      ///   @attention accessing this while GetCount() is zero is undefined   //why though???
       template<CT::Container C> requires CT::Contiguous<C>
       constexpr auto GetRawEnd(this C&& self) noexcept {
          if constexpr (CT::TypeErased<C>)
