@@ -159,7 +159,7 @@ void Many_VerifyAccessorInterface(T const& many, I&& e_with_intent) {
    }
    else {
       static_assert(requires {
-         {many.template AsAt<E>(0)} -> ::std::same_as<Tif<CT::Sparse<E>, ConstAll<E>, ConstAll<E> const&>>;
+         {many.template AsAt<E>(0)} -> ::std::same_as<Tif<CT::Sparse<E> and not CT::CustomPointer<E>, ConstAll<E>, ConstAll<E> const&>>;
       });
    }
 

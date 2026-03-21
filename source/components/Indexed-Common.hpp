@@ -64,9 +64,12 @@ namespace Langulus::Anyness::Component
          auto* heap = DecvqAllCast(self.GetHeapInner());
 
          if constexpr (CT::TypeErased<C>) {
-            const auto offset_heap = [&self, &heap, &idx] {
+            const auto T = self.GetType();
+            LglsAssumeDev(T, "Block is not typed");
+
+            const auto offset_heap = [&self, &heap, &idx, &T] {
                const auto offset = self.SimplifyIndex(idx);
-               const auto byte_offset = self.GetStride() * offset;
+               const auto byte_offset = T.GetSize() * offset;
                heap = reinterpret_cast<void*>(
                   reinterpret_cast<uint8_t*>(heap) + byte_offset
                );
@@ -79,8 +82,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Casting to a desired runtime type                     
-               LglsAssumeDev(self.IsTyped(), "Block is not typed");
-               const auto indirections = self.GetIndirections();
+               const auto indirections = T.GetIndirections();
 
                if (indirections == IndirectsOf<TH>) {
                   // No difference in indirections                      
@@ -91,6 +93,9 @@ namespace Langulus::Anyness::Component
                   if (indirections == IndirectsOf<THP>) {
                      // If we're going to add the same pointer later,   
                      // then avoid dereferencing altogether.            
+                     // Unfortunately this can't support packed pointers
+                     LglsAssumeDev(T.IsSame(MetaDataOf<THP>()), "Type mismatch",
+                        ": ", self.GetType(), " not same as ", MetaDataOf<THP>());
                      offset_heap();
                      return *static_cast<THP*>(heap);
                   }
@@ -181,10 +186,10 @@ namespace Langulus::Anyness::Component
                   // Access directly                                    
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
                      return Decvq<AS> {Absorb, *self.template GetAt<AS>(LglsFwd(idx))};
-                  else if constexpr (CT::Dense<AS>)
+                  else if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
                      return *self.template GetAt<AS>(LglsFwd(idx));
-                  else if constexpr (CT::CustomPointer<AS>)
-                     return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
+                  //else if constexpr (CT::CustomPointer<AS>)
+                  //   return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
                   else
                      return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
                }
@@ -196,10 +201,10 @@ namespace Langulus::Anyness::Component
                   // Runtime type mismatch error                        
                   LglsError("Type mismatch", ": ", T,
                      " not akin to ", MetaDataOf<AS>());
-                  if constexpr (CT::Dense<AS>)
+                  if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
                      return *self.template GetAt<AS>(LglsFwd(idx));
-                  else if constexpr (CT::CustomPointer<AS>)
-                     return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
+                  //else if constexpr (CT::CustomPointer<AS>)
+                  //   return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
                   else
                      return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
                }
@@ -209,10 +214,10 @@ namespace Langulus::Anyness::Component
 
                if constexpr (Akin<T, AS>) {
                   // Access directly                                    
-                  if constexpr (CT::Dense<AS>)
+                  if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
                      return *self.template GetAt<AS>(LglsFwd(idx));
-                  else if constexpr (CT::CustomPointer<AS>)
-                     return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
+                  //else if constexpr (CT::CustomPointer<AS>)
+                  //   return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
                   else
                      return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
                }

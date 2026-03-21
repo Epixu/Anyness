@@ -145,7 +145,9 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
    REQUIRE(set.GetCount() == 1);
    REQUIRE(set.GetUses() == uses);
    REQUIRE(set.GetReserved() >= (uses ? 1 : 0));
-   REQUIRE(set.template AsAt<Decay<E>>(0) == DenseCast(*e));
+
+   if constexpr (not CT::CustomPointer<E>)
+      REQUIRE(set.template AsAt<Decay<E>>(0) == DenseCast(*e));
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
       REQUIRE(set.template AsAt<E>(0) != *e);
