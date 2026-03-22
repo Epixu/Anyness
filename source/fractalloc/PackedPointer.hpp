@@ -143,6 +143,11 @@ namespace Langulus::Fractalloc
             Specification, MetaDataOf<T>(), mAll
          ));
       }
+
+      /// Hash the packed pointer                                             
+      auto GetHash() const noexcept -> Hash {
+         return HashOf(mAll);
+      }
    };
    #pragma pack(pop)
 }

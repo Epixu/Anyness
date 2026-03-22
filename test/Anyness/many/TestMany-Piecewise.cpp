@@ -893,7 +893,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             BenchmarkManyStd(
                std::string("Piecewise/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
                T temp = a,                               temp.Clear(),
-               ::std::vector<E> temp_std (1, *element),  temp_std.reset()
+               ::std::vector<E> temp_std (1, *element),  temp_std.clear()
             );
 
             a.Clear();

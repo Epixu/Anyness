@@ -260,7 +260,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
          BenchmarkSetStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
             T temp,                           temp.Assign(*element),
-            ::std::unordered_set<E> temp_std, temp_std.emplace_back(*element)
+            ::std::unordered_set<E> temp_std, temp_std.emplace(*element)
          );
       }
 
@@ -311,7 +311,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             auto movable = *element;
             T temp,                             temp.Assign(::std::move(movable)),
             auto movable = *element;
-            ::std::unordered_set<E> temp_std,   temp_std.emplace_back(::std::move(movable))
+            ::std::unordered_set<E> temp_std,   temp_std.emplace(::std::move(movable))
          );
       }
 
@@ -338,7 +338,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
                auto movable = *element;
                T temp,                                   temp.AssignAbsorb(::std::move(movable)),
                ::std::unordered_set<E> movable (1, 555);
-               ::std::unordered_set<E> temp_std,         temp_std.emplace_back(::std::move(movable))
+               ::std::unordered_set<E> temp_std,         temp_std.emplace(::std::move(movable))
             );
          }
       }
@@ -357,7 +357,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
          BenchmarkSetStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
             T temp,                            temp.Assign(Copy(*element)),
-            ::std::unordered_set<E> temp_std,  temp_std.emplace_back(*element)
+            ::std::unordered_set<E> temp_std,  temp_std.emplace(*element)
          );
       }
 
@@ -405,7 +405,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
          BenchmarkSetStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
             T temp,                             temp.Assign(Clone(*element)),
-            ::std::unordered_set<E> temp_std,   temp_std.emplace_back(*element)
+            ::std::unordered_set<E> temp_std,   temp_std.emplace(*element)
          );
       }
 
@@ -452,7 +452,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
 
          BenchmarkSetStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
             T temp,                             temp.Assign(Disown(*element)),
-            ::std::unordered_set<E> temp_std,   temp_std.emplace_back(*element)
+            ::std::unordered_set<E> temp_std,   temp_std.emplace(*element)
          );
       }
 
@@ -505,7 +505,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
             auto movable = *element;
             T temp,                             temp.Assign(Abandon(movable)),
             auto movable = *element;
-            ::std::unordered_set<E> temp_std,   temp_std.emplace_back(::std::move(movable))
+            ::std::unordered_set<E> temp_std,   temp_std.emplace(::std::move(movable))
          );
       }
 
