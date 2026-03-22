@@ -916,13 +916,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                Any_CheckState_Default<E>(a, true);
             }
 
-            if constexpr (not Managed) {
+            /*if constexpr (not Managed) {
                // On unmanaged tests i666 will be destroyed at the end of this scope,
                // and the container will be left with a dangling pointer.
                // Make sure this isn't happening. When inserting raw unmanaged pointers, 
                // safety is solely in the hands of the user.
                a.Reset();
-            }
+            }*/
          };
 
          emplace_overwrite_describe(pack_referred1, "Refer");
