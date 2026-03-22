@@ -262,7 +262,8 @@ namespace Langulus
       constexpr compact_tuple() = default;
 
       explicit constexpr compact_tuple(T const&...t)
-         : storage_type {::std::_Unpack_tuple_t{}, forward_shuffled(to_interface{}, t...)} {
+         //: storage_type {::std::_Unpack_tuple_t{}, forward_shuffled(to_interface{}, t...)} {
+         : storage_type {::std::make_from_tuple<storage_type>(forward_shuffled(to_interface{}, t...))} {
          static_assert((std::is_copy_constructible_v<T> and ...),
             "All elements must be copy-constructible");
       }
@@ -270,7 +271,8 @@ namespace Langulus
       template<class...U>
       requires (std::is_convertible_v<U, T> and ...)
       explicit constexpr compact_tuple(U&&...u)
-         : storage_type {::std::_Unpack_tuple_t{}, forward_shuffled(to_interface{}, LglsFwd(u)...)} {}
+         //: storage_type {::std::_Unpack_tuple_t{}, forward_shuffled(to_interface{}, LglsFwd(u)...)} {}
+         : storage_type {::std::make_from_tuple<storage_type>(forward_shuffled(to_interface{}, LglsFwd(u)...))} {}
 
       constexpr compact_tuple(compact_tuple const&) = default;
       constexpr compact_tuple(compact_tuple&&) = default;
@@ -278,12 +280,14 @@ namespace Langulus
       template<class...U>
       requires (std::is_constructible_v<T, U const&> and ...)
       constexpr compact_tuple(compact_tuple<U...> const& t)
-         : storage_type {::std::_Unpack_tuple_t{}, forward_shuffled_tuple(MapFor<U...>{}, t)} {}
+         //: storage_type {::std::_Unpack_tuple_t{}, forward_shuffled_tuple(MapFor<U...>{}, t)} {}
+         : storage_type {::std::make_from_tuple<storage_type>(forward_shuffled_tuple(MapFor<U...>{}, t))} {}
       
       template<class...U>
       requires (std::is_constructible_v<T, U&&> and ...)
       constexpr compact_tuple(compact_tuple<U...>&& t)
-         : storage_type {::std::_Unpack_tuple_t{}, forward_shuffled_tuple(MapFor<U...>{}, LglsMov(t))} {}
+         //: storage_type {::std::_Unpack_tuple_t{}, forward_shuffled_tuple(MapFor<U...>{}, LglsMov(t))} {}
+         : storage_type {::std::make_from_tuple<storage_type>(forward_shuffled_tuple(MapFor<U...>{}, LglsMov(t)))} {}
 
       template<class U1, class U2>
       requires (std::is_convertible_v<U1 const&, Inner::PackElement<0, T...>>
