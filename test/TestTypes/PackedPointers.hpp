@@ -44,6 +44,7 @@ struct ScopedElementPacked {
    using Allocation = Langulus::Allocation;
    using AllocationPtr = Langulus::AllocationPtr;
    using Allocator = Langulus::Allocator;
+   using pot_t = Langulus::pot_t;
    static constexpr bool Managed = true;
 
    T* element = nullptr;
