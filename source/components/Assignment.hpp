@@ -371,8 +371,8 @@ namespace Langulus::Anyness::Component
                memcpy(self.Get(), rhs.Get(),  S);
                memcpy(rhs.Get(),  &tmp,       S);
 
-               auto lhs_entry = GetEntries();
-               auto rhs_entry = GetEntries();
+               auto lhs_entry = self.GetEntries();
+               auto rhs_entry = rhs.GetEntries();
                for (int i = 0; i < T.GetIndirections(); ++i) {
                   ::std::swap(*lhs_entry, *rhs_entry);
                   ++lhs_entry;
