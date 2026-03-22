@@ -33,9 +33,9 @@ protected:
       if constexpr (CT::Dense<INNER>) {
          if constexpr (MANAGED) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Roof2(sizeof(INNER))));
+               *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Langulus::Roof2(sizeof(INNER))));
             #else
-               *entry = Allocator::Allocate(pot_t(alignof(INNER)), pot_t(Roof2(sizeof(INNER))));
+               *entry = Allocator::Allocate(pot_t(alignof(INNER)), pot_t(Langulus::Roof2(sizeof(INNER))));
             #endif
 
             place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());
@@ -59,9 +59,9 @@ protected:
       else {
          if constexpr (MANAGED) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Roof2(sizeof(INNER))));
+               *entry = Allocator::Allocate(Langulus::MetaDataOf<INNER>(), pot_t(Langulus::Roof2(sizeof(INNER))));
             #else
-               *entry = Allocator::Allocate(pot_t(alignof(INNER)), pot_t(Roof2(sizeof(INNER))));
+               *entry = Allocator::Allocate(pot_t(alignof(INNER)), pot_t(Langulus::Roof2(sizeof(INNER))));
             #endif
 
             place = reinterpret_cast<INNER*>((*entry)->GetBlockStart());

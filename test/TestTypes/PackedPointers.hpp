@@ -65,7 +65,7 @@ protected:
       else {
          using NEXT_T = Deptr<INNER>;
          *entry = Allocator::AllocatePacked<INNER>(
-            Langulus::MetaDataOf<NEXT_T>(), pot_t(Roof2(sizeof(NEXT_T))));
+            Langulus::MetaDataOf<NEXT_T>(), pot_t(Langulus::Roof2(sizeof(NEXT_T))));
          place = (*entry)->GetBlockStartPackedAs<INNER>();
          
          NestedConstructor(*place, entry + 1, LglsFwd(arguments)...);
@@ -105,7 +105,7 @@ protected:
 public:
    template<class...A>
    ScopedElementPacked(A&&...arguments) {
-      *entries = Allocator::Allocate(Langulus::MetaDataOf<T>(), pot_t(Roof2(sizeof(T))));
+      *entries = Allocator::Allocate(Langulus::MetaDataOf<T>(), pot_t(Langulus::Roof2(sizeof(T))));
       element = reinterpret_cast<T*>((*entries)->GetBlockStart());
 
       NestedConstructor(*element, entries + 1, LglsFwd(arguments)...);
