@@ -184,6 +184,7 @@ namespace Langulus::Anyness::Component
 
       /// Get first element as a handle, or any desired wrapping type.        
       /// Conversion or copying may occur, depending on type.                 
+      ///   @attention will throw if incompatible type is provided            
       ///   @tparam AS the type we're wrapping in                             
       ///   @return the element, as a reference if possible                   
       template<CT::NotVoid AS, CT::Container C> requires CT::Contiguous<C>

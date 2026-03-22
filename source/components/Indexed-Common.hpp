@@ -143,11 +143,12 @@ namespace Langulus::Anyness::Component
 
       /// Get Nth element as a handle, or any desired wrapping type.          
       /// Conversion or copying may occur, depending on type.                 
+      ///   @attention will throw if incompatible type is provided            
       ///   @tparam AS the type we're wrapping in                             
       ///   @param idx the index                                              
       ///   @return the element, as a reference if possible                   
       template<CT::NotVoid AS, CT::Container C>
-      decltype(auto) AsAt(this C&& self, CT::Index auto&& idx) assumptious {
+      decltype(auto) AsAt(this C&& self, CT::Index auto&& idx) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
          if constexpr (CT::Handle<AS>) {
