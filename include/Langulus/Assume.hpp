@@ -18,7 +18,7 @@
    #endif
 
    #ifndef LANGULUS_DEFAULT_STACK_DEPTH
-      #define LANGULUS_DEFAULT_STACK_DEPTH 15
+      #define LANGULUS_DEFAULT_STACK_DEPTH 3
    #endif
 #endif
 
@@ -46,7 +46,13 @@ namespace Langulus
                   continue;
                }
 
-               Logger::Line(std::to_string(frame));
+               try {
+                  Logger::Line(std::to_string(frame));
+               }
+               catch (...) {
+                  Logger::Line("<error while logging stack frame>");
+               }
+
                --dumped;
                if (not dumped)
                   break;

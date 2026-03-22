@@ -588,10 +588,12 @@ namespace Langulus::Anyness::Component
          }
          else if constexpr (CT::Sparse<Deint<I>>) {
             // Reference each indirection of a raw pointer              
+            #if LANGULUS_FEATURE(MANAGED_MEMORY) or LANGULUS(SAFE) > 1
             using T = Decvq<Deref<Deint<I>>>;
             LglsAssumeDev(self.template IsSame<T>(),
                "Type mismatch: ", self.GetType(), " is not same as ", NameOf<T>()
             );
+            #endif
 
             // We're forced to reference even on abandon/move           
             // because we can't abandon/move a raw pointer. Missing     
