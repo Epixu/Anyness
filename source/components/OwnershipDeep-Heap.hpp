@@ -80,11 +80,23 @@ namespace Langulus::Anyness::Component
       }
 
       /// This method is called upon allocation to nullify entries            
-      constexpr void ConstructHeapRequest(this auto& self) noexcept {
-         memset(
-            self.GetEntriesInner(), 0,
-            self.GetReserved() * self.GetIndirections() * sizeof(AllocationPtr)
-         );
+      template<CT::Container C>
+      constexpr void ConstructHeapRequest(this C& self) noexcept {
+         const auto reserved = self.GetReserved();
+         if constexpr (CT::TypeErased<C>) {
+            auto T = self.GetType();
+            memset(
+               self.GetEntriesInner(), 0,
+               reserved * T.GetIndirections() * sizeof(AllocationPtr)
+            );
+         }
+         else {
+            using T = TypeOf<C>;
+            memset(
+               self.GetEntriesInner(), 0,
+               reserved * IndirectsOf<T> * sizeof(AllocationPtr)
+            );
+         }
       }
    };
 }

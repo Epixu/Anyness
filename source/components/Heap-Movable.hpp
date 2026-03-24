@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "Heap-Reference.hpp"
-//#include "Iteration-Range.hpp"
 
 
 namespace Langulus::Anyness::Component
@@ -231,7 +230,7 @@ namespace Langulus::Anyness::Component
          
          self.SetHeapInner(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
          self.SetAllocationInner(al);
-         if_available(self.SetReserveInner(request.mReserved));
+         if_available(self.SetReservedInner(request.mReserved));
          self.ConstructHeapDefault();
          return al;
       }
@@ -322,7 +321,7 @@ namespace Langulus::Anyness::Component
                previous.SetAllocationInner(nullptr);
             }
 
-            if_available(self.SetReserveInner(request.mReserved));
+            if_available(self.SetReservedInner(request.mReserved));
          }
       }
 
@@ -391,7 +390,7 @@ namespace Langulus::Anyness::Component
             self.SetAllocationInner(Allocator::Reallocate(request.mTotalBytes, al));
          #endif
 
-         if_available(self.SetReserveInner(request.mReserved));
+         if_available(self.SetReservedInner(request.mReserved));
       }
 
       /// Remap footer requests onto the new reserve                          

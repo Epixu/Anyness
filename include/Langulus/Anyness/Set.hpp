@@ -10,7 +10,7 @@
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
 #include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Emergent.hpp"
+#include "../../../source/components/Reserve-Stack.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/OwnershipDeep-Heap.hpp"
 #include "../../../source/components/Hash-Heap.hpp"
@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Inner
       Com::TypedStack<DMeta>,          // Type-erased                   
       Com::HeapMovable<0, 8, 2>,       // Pointer to heap memory        
       Com::CountStack<>,               // Dynamically sized             
-      Com::ReserveEmergent<>,          // Reserve derived from alloc    
+      Com::ReserveStack<>,             // Reserve kept as member        
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashHeap<>,                 // Hash can be cached            

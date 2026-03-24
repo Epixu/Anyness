@@ -16,7 +16,7 @@ namespace Langulus::Anyness::Inner
       Com::TypedStack<DMeta, T>,       // Type-constrained              
       Com::HeapMovable<0, 0, 0, T*>,   // Pointer to heap memory        
       Com::CountStack<>,               // Dynamically sized             
-      Com::ReserveEmergent<>,          // Reserve derived from alloc    
+      Com::ReserveStack<>,             // Reserve kept as member        
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashStack<>,                // Hash can be cached            

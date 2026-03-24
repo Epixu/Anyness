@@ -111,9 +111,10 @@ namespace Langulus::Anyness
       static consteval size_t CountHeapFooterRequests() {
          size_t count = 0;
          ComponentList::ForEach([&count]<class C> {
-            if constexpr (requires { C::HeapRequest; }) {
-               if constexpr (requires { C::HeapRequest::AllocatedPerIndirection; }
-                          or requires { C::HeapRequest::AllocatedPerElement;     })
+            if constexpr (requires { typename C::HeapRequest; }) {
+               using R = typename C::HeapRequest;
+               if (requires { R::AllocatedPerIndirection; }
+               or  requires { R::AllocatedPerElement;     })
                   ++count;
             }
          });
@@ -130,6 +131,7 @@ namespace Langulus::Anyness
       template<Cid, bool>               friend struct Com::OwnershipDeepReference;
       template<Cid, bool>               friend struct Com::OwnershipDeepHeap;
       template<Cid, class>              friend struct Com::CountStack;
+      template<Cid, class>              friend struct Com::ReserveStack;
       template<Cid, class>              friend struct Com::HashStack;
       template<Cid, class>              friend struct Com::HashHeap;
       template<Cid, bool>               friend struct Com::Comparison;
@@ -166,8 +168,8 @@ namespace Langulus::Anyness
          using R = typename COM::HeapRequest;
 
          if constexpr (
-               requires { COM::HeapRequest::AllocatedPerIndirection; }
-            or requires { COM::HeapRequest::AllocatedPerElement; }
+               requires { R::AllocatedPerIndirection; }
+            or requires { R::AllocatedPerElement;     }
          ) {
             // Access footer heap                                       
             auto offset = Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
