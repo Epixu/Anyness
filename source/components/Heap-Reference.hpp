@@ -412,27 +412,59 @@ namespace Langulus::Anyness::Component
       Request RequestHeap(this C const& self, const size_t reserve) assumptious {
          Request result;
          result.mHeaderBytes = self.GetHeapHeaderSize();
-         result.mFooterBytes = self.GetHeapFooterSize(reserve);
-         
-         if constexpr (CT::TypeErased<C>) {
-            // Check for reflected minimal allocation at runtime        
-            const auto T = self.GetType();
-            LglsAssumeDev(T, "Requesting allocation size for an untyped container");
-            const auto size = T.GetSize();
-            result.mTotalBytes = Roof2(::std::max(
-               reserve * size + result.mHeaderBytes + result.mFooterBytes,
-               static_cast<size_t>(T.GetMinAllocation())
-            ));
-            result.mReserved = (result.mTotalBytes - (result.mHeaderBytes + result.mFooterBytes)) / size;
+
+         if constexpr (C::CountHeapFooterRequests()) {
+            // When there are footer requests (heap requests that          
+            // depend on count & indirections), we aren't allowed to       
+            // change the requested reserve to avoid heap corruptions.     
+            result.mFooterBytes = self.GetHeapFooterSize(reserve);
+
+            if constexpr (CT::TypeErased<C>) {
+               // Check for reflected minimal allocation at runtime        
+               const auto T = self.GetType();
+               LglsAssumeDev(T, "Requesting allocation size for an untyped container");
+               const auto size = T.GetSize();
+               result.mTotalBytes = Roof2(//::std::max(
+                  reserve * size + result.mHeaderBytes + result.mFooterBytes/*,
+                  static_cast<size_t>(T.GetMinAllocation())
+               )*/);
+            }
+            else {
+               // Check for reflected minimal allocation at compile-time   
+               using T = TypeOf<C>;
+               result.mTotalBytes = Roof2(//::std::max(
+                  reserve * sizeof(T) + result.mHeaderBytes + result.mFooterBytes/*,
+                  CT::GetMinAlloc<T>()
+               )*/);
+            }
+
+            result.mReserved = reserve;
          }
          else {
-            // Check for reflected minimal allocation at compile-time   
-            using T = TypeOf<C>;
-            result.mTotalBytes = Roof2(::std::max(
-               reserve * sizeof(T) + result.mHeaderBytes + result.mFooterBytes,
-               CT::GetMinAlloc<T>()
-            ));
-            result.mReserved = (result.mTotalBytes - (result.mHeaderBytes + result.mFooterBytes)) / sizeof(T);
+            // When there are no footer requests, we are allowed to        
+            // reserve more bytes than requested.                          
+            result.mFooterBytes = 0;
+
+            if constexpr (CT::TypeErased<C>) {
+               // Check for reflected minimal allocation at runtime        
+               const auto T = self.GetType();
+               LglsAssumeDev(T, "Requesting allocation size for an untyped container");
+               const auto size = T.GetSize();
+               result.mTotalBytes = Roof2(::std::max(
+                  reserve * size + result.mHeaderBytes,
+                  static_cast<size_t>(T.GetMinAllocation())
+               ));
+               result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / size;
+            }
+            else {
+               // Check for reflected minimal allocation at compile-time   
+               using T = TypeOf<C>;
+               result.mTotalBytes = Roof2(::std::max(
+                  reserve * sizeof(T) + result.mHeaderBytes,
+                  CT::GetMinAlloc<T>()
+               ));
+               result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / sizeof(T);
+            }
          }
 
          LglsAssumeDev(result.mReserved >= reserve);

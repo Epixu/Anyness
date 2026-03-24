@@ -193,6 +193,9 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
       static_assert(    requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
    }
 
+   static_assert(T::CountHeapProviders() == 1);
+   static_assert(T::CountHeapFooterRequests() == 1);
+
    constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);
    
    GIVEN("Gap test") {
