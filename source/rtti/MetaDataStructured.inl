@@ -98,7 +98,11 @@ namespace Langulus::RTTI::Inner
       if (lid and rid) {
          auto o1 = Instance.GetMetaDataByID(lid,       sparse,       constant)->mOrigin;
          auto o2 = Instance.GetMetaDataByID(rid, other.sparse, other.constant)->mOrigin;
-         return o1 == o2;
+         return o1 == o2 and o1;
+         //TODO figure this out: types can't be akin if incomplete, because we can't reflect incomplete types rn.
+         // this is inconsistent, because Akin actually allows incomplete types in C++.
+         // so reflect incomplete types, too? just... don't cache their properties?
+         // this would also simplify that pesky mDeptr == 1 all over the code, when a pointer to incomplete type...
       }
       return false;
    }
