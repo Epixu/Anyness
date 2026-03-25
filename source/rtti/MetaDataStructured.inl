@@ -289,7 +289,7 @@ namespace Langulus::RTTI::Inner
       auto d = Instance.GetMetaDataByID(id, sparse, constant);
       size_t result = 0;
       while (d->mDeptr) {
-         if (reinterpret_cast<uintptr_t>(d->mDeptr) == 1u)
+         if (reinterpret_cast<intptr_t>(d->mDeptr) == 1)
             return result + 1;
          ++result;
          d = d->mDeptr;

@@ -71,6 +71,7 @@ namespace Langulus::Anyness::Component
             auto count = from.GetCount();
             if (0 == count) {
                self.SetAllocationInner(nullptr);
+               if_available(self.SetReservedInner(0)); //TODO redundant?
                self.ResetCount();
                return;
             }
@@ -481,6 +482,7 @@ namespace Langulus::Anyness::Component
             (void) n;
             Allocator::Deallocate(DecvqAllCast(self.GetAllocationInner()));
             self.SetAllocationInner(nullptr);
+            if_available(self.SetReservedInner(0));
             self.ResetCount();
          }
       }

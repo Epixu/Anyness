@@ -117,6 +117,7 @@ namespace Langulus::Anyness::Component
             // Abandon/Move                                             
             if constexpr (requires { from.GetAllocationInner(); }) {
                self.SetAllocationInner(from.GetAllocationInner());
+
                if_available(from.SetAllocationInner(nullptr))
                else if constexpr (AUTO and CT::AutoOwned<I>) {
                   // We can't reset source allocation pointer, which    

@@ -84,6 +84,8 @@ namespace Langulus::RTTI::Inner
       size_t result = 0;
       auto d = mDefinition;
       while (d->mDeptr) {
+         if (reinterpret_cast<intptr_t>(d->mDeptr) == 1)
+            return result + 1;
          ++result;
          d = d->mDeptr;
       }

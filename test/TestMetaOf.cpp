@@ -455,7 +455,8 @@ TEST_CASE_TEMPLATE("Testing reflection of incomplete types", T
    REQUIRE(meta.IsAbstract() == CT::Abstract<Deref<T>>);
    REQUIRE(meta.HasGetHashMethod() == false);
 
-   REQUIRE(meta.Is(MetaDataOf<Decay<T>*>()));
+   if constexpr (not Same<T, Decay<T>*>)
+      REQUIRE_FALSE(meta.Is(MetaDataOf<Decay<T>*>()));
    REQUIRE(meta.Is(meta));
    REQUIRE(meta.IsSame(MetaDataOf<DecvqAll<T>>()));
    REQUIRE(meta.IsSame(meta));

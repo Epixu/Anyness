@@ -84,8 +84,7 @@ namespace Langulus::Anyness::Component
          }
          else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
             // Abandon/Move                                             
-            if constexpr (requires { from.SetAllocationInner(nullptr); })
-               from.SetAllocationInner(nullptr);
+            if_available(from.SetAllocationInner(nullptr))
             else if constexpr (AUTO and CT::AutoOwned<I>) {
                // We can't reset source allocation pointer, which means 
                // that source destructor will dereference when out of   

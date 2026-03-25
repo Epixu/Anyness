@@ -101,6 +101,7 @@ namespace Langulus::Anyness::Component
             // Dereference memory                                       
             DecvqAllCast(al)->AddRef(-1);
             if_available(self.SetAllocationInner(nullptr));
+            if_available(self.SetReservedInner(0));
          }
 
          self.ResetCount();
@@ -113,6 +114,7 @@ namespace Langulus::Anyness::Component
       void Reset(this auto& self) {
          self.Free();
          if_available(self.SetAllocationInner(nullptr));
+         if_available(self.SetReservedInner(0));
          self.ResetCount();
          if_available(self.ResetState());
          if_available(self.ResetType());

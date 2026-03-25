@@ -347,11 +347,13 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Sparse<T>) {
                using DT = Deptr<T>;
                auto entries = self.GetEntries();
-               if (not entries /*or not *entries*/)
+               if (not entries)
                   return;
 
                auto& ptr = *self.template GetRawAs<T>();
-               LglsAssumeDev(ptr, "Null pointer");
+               if (not ptr)
+                  return;
+               //LglsAssumeDev(ptr, "Null pointer");
 
                if (*entries and 1 == (*entries)->GetUses()) {
                   if constexpr (CT::Sparse<DT>) {

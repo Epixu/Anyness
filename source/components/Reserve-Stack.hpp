@@ -44,6 +44,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
+      template<Cid>                         friend struct Emplacement;
       template<Cid>                         friend struct Removal;
 
       /// Get reserved (inner)                                                
@@ -65,10 +66,15 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
-         decltype(auto) from = LglsFwd(intent.what);
-         if_available(self.SetReservedInner(from.GetReserved()));
-         if constexpr (I::ResetsOnMove()) {
-            if_available(from.SetReservedInner(0));
+         if constexpr (CT::Disowned<I>) {
+            if_available(self.SetReservedInner(0));
+         }
+         else if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+            decltype(auto) from = LglsFwd(intent.what);
+            if_available(self.SetReservedInner(from.GetReserved()));
+            if constexpr (I::ResetsOnMove()) {
+               if_available(from.SetReservedInner(0));
+            }
          }
       }
    };

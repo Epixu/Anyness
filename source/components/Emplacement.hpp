@@ -751,6 +751,7 @@ namespace Langulus::Anyness::Component
                }
                catch (...) {
                   self.SetAllocationInner(nullptr);
+                  if_available(self.SetReservedInner(0));
                   self.ResetCount();
                   throw;
                }
@@ -779,6 +780,7 @@ namespace Langulus::Anyness::Component
                }
                catch (...) {
                   self.SetAllocationInner(nullptr);
+                  if_available(self.SetReservedInner(0));
                   self.ResetCount();
                   throw;
                }
@@ -811,6 +813,7 @@ namespace Langulus::Anyness::Component
                   }
                   Allocator::Deallocate(DecvqAllCast(a));
                   self.SetAllocationInner(nullptr);
+                  if_available(self.SetReservedInner(0));
                   self.ResetCount();
                   throw;
                }
