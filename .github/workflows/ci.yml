@@ -53,7 +53,7 @@ jobs:
     runs-on: ${{matrix.os}}
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - if: matrix.os == 'ubuntu-24.04' && matrix.arch == 'x86'
         name: Prepare Linux for cross-compilation
@@ -103,7 +103,7 @@ jobs:
 
       - name: 'Upload artifacts'
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: "artifacts-${{matrix.os}}-${{matrix.cxx}}-${{matrix.build}}-${{matrix.arch}}${{matrix.suffix}}-${{github.ref_name}}-${{github.sha}}"
           path: build/bin/*.txt

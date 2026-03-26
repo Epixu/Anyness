@@ -105,9 +105,12 @@ namespace Langulus::Anyness::Component
 
             // Allocate new memory and set count, so that handle        
             // iteration is valid                                       
-            self.AllocateFresh(self.RequestHeap(count));
-            if_available(self.SetCountInner(count));
+            if constexpr (CT::IndexedLinearly<C>)
+               self.AllocateFresh(self.RequestHeap(count));
+            else
+               self.AllocateFresh(self.RequestHeap(from.GetReserved()));
 
+            if_available(self.SetCountInner(count));
             auto dst = self.GetHandle();
             try {
                from.Apply([&dst](auto const& src) {

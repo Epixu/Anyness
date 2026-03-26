@@ -151,13 +151,11 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
       REQUIRE(set.template AsAt<E>(0) != *e);
-      //if constexpr (IndirectsOf<E> < 2)
-         REQUIRE((*set.template AsAt<E*>(0)) != *e);
+      REQUIRE((*set.template AsAt<E*>(0)) != *e);
    }
    else {
       REQUIRE(set.template AsAt<E>(0) == *e);
-      //if constexpr (IndirectsOf<E> < 2)
-         REQUIRE((*set.template AsAt<E*>(0)) == *e);
+      REQUIRE((*set.template AsAt<E*>(0)) == *e);
    }
 
    if constexpr (CT::Dense<E>)

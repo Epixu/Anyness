@@ -189,8 +189,6 @@ namespace Langulus::Anyness::Component
                      return Decvq<AS> {Absorb, *self.template GetAt<AS>(LglsFwd(idx))};
                   else if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
                      return *self.template GetAt<AS>(LglsFwd(idx));
-                  //else if constexpr (CT::CustomPointer<AS>)
-                  //   return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
                   else
                      return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
                }
@@ -204,8 +202,6 @@ namespace Langulus::Anyness::Component
                      " not akin to ", MetaDataOf<AS>());
                   if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
                      return *self.template GetAt<AS>(LglsFwd(idx));
-                  //else if constexpr (CT::CustomPointer<AS>)
-                  //   return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
                   else
                      return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
                }
@@ -217,8 +213,6 @@ namespace Langulus::Anyness::Component
                   // Access directly                                    
                   if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
                      return *self.template GetAt<AS>(LglsFwd(idx));
-                  //else if constexpr (CT::CustomPointer<AS>)
-                  //   return static_cast<AS>(self.template GetAt<Deptr<AS>>(LglsFwd(idx)));
                   else
                      return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
                }
