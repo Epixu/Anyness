@@ -15,10 +15,17 @@ namespace Langulus::CT
    /// Check if any T is the built-in one that signifies lack of support      
    template<class...T>
    concept Unsupported = PartialValidate<T...>
-       and (::std::same_as<::Langulus::Unsupported, T> or ...);
+       and (::std::same_as<::Langulus::Unsupported, Decay<T>> or ...);
 
    /// Check if all T are supported                                           
    template<class...T>
    concept Supported = PartialValidate<T...>
        and ((not Unsupported<T>) and ...);
+}
+
+namespace Langulus
+{
+   consteval bool IsSupported(auto const& arg) {
+      return CT::Supported<decltype(arg)>;
+   }
 }

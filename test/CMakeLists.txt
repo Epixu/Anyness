@@ -51,6 +51,7 @@ add_langulus_test(LangulusAnynessTest
                Anyness/many/TestMany-Convert.cpp
                
                Anyness/set/TestSet-Empty.cpp
+               Anyness/set/TestSet-Absorb.cpp
 
    LIBRARIES   doctest
                LangulusAnyness

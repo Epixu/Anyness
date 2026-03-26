@@ -108,7 +108,35 @@ namespace Langulus::Anyness::Component
             self.AllocateFresh(self.RequestHeap(count));
             if_available(self.SetCountInner(count));
 
-            if constexpr (CT::ContainsMany<C, IT>) {
+            auto dst = self.GetHandle();
+            try {
+               from.Apply([&dst](auto const& src) {
+                  if constexpr (IsSupported(src)) {
+                     if constexpr (CT::Copied<I>)
+                        dst.EmplaceWithIntent(Refer(src));
+                     else
+                        dst.EmplaceWithIntent(Clone(src));
+                  }
+                  ++dst;
+               });
+            }
+            catch (...) {
+               // Partial success                                       
+               auto n = dst - self.GetHandle();
+               if constexpr (not requires { self.SetCountInner(1); }) {
+                  // Partial success is not allowed - we have to        
+                  // destroy everything we initialized                  
+                  while (n) {
+                     dst.DestroyElement();
+                     --dst;
+                     --n;
+                  }
+               }
+               self.PartialSuccess(n);
+               throw;
+            }
+
+            /*if constexpr (CT::ContainsMany<C, IT>) {
                auto const srcBeg = from.GetHandle();
                auto const srcEnd = srcBeg + count;
                auto src = srcBeg;
@@ -137,20 +165,6 @@ namespace Langulus::Anyness::Component
                   self.PartialSuccess(n);
                   throw;
                }
-
-               /*auto src = IterateHandles(from).begin();
-               auto dst = IterateHandles(self).begin();
-               try {
-                  while (src) {
-                     if constexpr (CT::Copied<I>)
-                        dst->EmplaceWithIntent(Refer(*src));
-                     else
-                        dst->EmplaceWithIntent(Clone(*src));
-                     ++dst; ++src;
-                  }
-               }
-               catch (...) {
-               }*/
             }
             else {
                auto src = from.GetHandle();
@@ -158,7 +172,7 @@ namespace Langulus::Anyness::Component
                   self.EmplaceWithIntent(Refer(src));
                else
                   self.EmplaceWithIntent(Clone(src));
-            }
+            }*/
                      
             // Full success                                             
             if constexpr (requires { from.GetHashInner(); }) {
@@ -297,7 +311,20 @@ namespace Langulus::Anyness::Component
                   // Memory moved, and we should move all elements with 
                   // it. We're moving to new memory, so no reverse is   
                   // required.                                          
-                  auto const fromBeg = previous.GetHandle();
+                  auto to = self.GetHandle();
+                  try {
+                     previous.Apply([&to](auto&& from) {
+                        if constexpr (IsSupported(from))
+                           to.EmplaceWithIntent(Abandon(from));
+                        ++to;
+                     });
+                  }
+                  catch (...) {
+                     self.SetCountInner(to - self.GetHandle());
+                     throw;
+                  }
+
+                  /*auto const fromBeg = previous.GetHandle();
                   auto const fromEnd = fromBeg + previous.GetCount();
                   auto from = fromBeg;
                   auto to = self.GetHandle();
@@ -311,7 +338,7 @@ namespace Langulus::Anyness::Component
                   catch (...) {
                      self.SetCountInner(from - fromBeg);
                      throw;
-                  }
+                  }*/
                }
             }
             else {
@@ -335,6 +362,7 @@ namespace Langulus::Anyness::Component
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
          static_assert(CT::ContainsMany<C>,
             "This makes sense to be called only by containers that support many elements");
+
          const auto al = DecvqAllCast(self.GetAllocation());
          if (not al) {
             //                                                          
@@ -342,27 +370,41 @@ namespace Langulus::Anyness::Component
             const C backup{Abandon{self}};
             self.AllocateFresh(self.RequestHeap(desiredReserve));
 
-            // Reinsert only the relevant items.                        
-            auto count = backup.GetCount() < desiredReserve
-               ? backup.GetCount()
-               : desiredReserve;
-            auto const fromBeg = backup.GetHandle();
-            auto const fromEnd = fromBeg + count;
-            auto from = fromBeg;
+            // Reinsert only the relevant items                         
             auto to = self.GetHandle();
             try {
-               while (from.GetRaw() != fromEnd.GetRaw()) {
+               backup.Apply([&to](auto& from) {
                   to.EmplaceWithIntent(Refer(from));
-                  ++from;
                   ++to;
-               }
+               });
             }
             catch (...) {
-               self.SetCountInner(from - fromBeg);
+               self.SetCountInner(to - self.GetHandle());
                throw;
             }
 
-            self.SetCountInner(count);
+            if constexpr (CT::IndexedLinearly<C>) {
+               auto count = backup.GetCount() < desiredReserve
+                  ? backup.GetCount()
+                  : desiredReserve;
+               /*auto const fromBeg = backup.GetHandle();
+               auto const fromEnd = fromBeg + count;
+               auto from = fromBeg;
+               auto to = self.GetHandle();
+               try {
+                  while (from.GetRaw() != fromEnd.GetRaw()) {
+                     to.EmplaceWithIntent(Refer(from));
+                     ++from;
+                     ++to;
+                  }
+               }
+               catch (...) {
+                  self.SetCountInner(from - fromBeg);
+                  throw;
+               }*/
+               self.SetCountInner(count);
+            }
+            else self.SetCountInner(backup.GetCount());
             return;
          }
 
@@ -469,6 +511,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Invoked to remedy the situation when element constructors throw     
+      ///   @param n the number of elements that were actually initialized    
       template<CT::Container C>
       void PartialSuccess(this C& self, Count<C> n) {
          if constexpr (requires { self.SetCountInner(1); }) {
@@ -500,7 +543,22 @@ namespace Langulus::Anyness::Component
             self.AllocateFresh(self.RequestHeap(newReserve));
 
             // Reinsert the old items.                                  
-            auto count = backup.GetCount();
+            auto to = self.GetHandle();
+            try {
+               backup.Apply([&to](auto const& from) {
+                  if constexpr (IsSupported(from))
+                     to.EmplaceWithIntent(Refer(from));
+                  ++to;
+               });
+            }
+            catch (...) {
+               self.SetCountInner(to - self.GetHandle());
+               throw;
+            }
+
+            self.SetCountInner(backup.GetCount());
+
+            /*auto count = backup.GetCount();
             auto const fromBeg = backup.GetHandle();
             auto const fromEnd = fromBeg + count;
             auto from = fromBeg;
@@ -517,7 +575,7 @@ namespace Langulus::Anyness::Component
                throw;
             }
 
-            self.SetCountInner(count);
+            self.SetCountInner(count);*/
          }
          else self.AllocateMore(newReserve);
       }

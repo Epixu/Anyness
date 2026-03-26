@@ -158,27 +158,38 @@ namespace Langulus::Anyness
 
       /// Access a variable on the heap associated with a component           
       ///   @attention always returns a pointer which may be null if container
-      ///      hasn't been heap-allocated yet. This is the price you pay for  
-      ///      keeping stuff on the heap - constant safety checks.            
+      ///      is disowned, or hasn't been heap-allocated yet. This is the    
+      ///      price you pay for keeping stuff on the heap - repeated safety  
+      ///      checks. Another drawback is when cached variables, like hashes,
+      ///      are cached only when containers aren't disowned, and fallback  
+      ///      to emergent behavior (being recomputed on demand) otherwise.   
       template<CT::Component COM, CT::Container SELF>
       constexpr auto* AccessHeap(this SELF&& self) noexcept {
          static_assert(requires { typename COM::HeapRequest; },
             "Component doesn't have data on the heap"
          );
+         auto al = self.GetAllocationInner();
+         LglsAssumeDevAndOptimize(al,
+            "Heap requests are available only when container has ownership. "
+            "Make sure you access them only then, and fallback to emergent "
+            "behavior otherwise, if possible.");
+         auto heap = al->GetBlockStart();
          using R = typename COM::HeapRequest;
 
-         if constexpr (
-               requires { R::AllocatedPerIndirection; }
-            or requires { R::AllocatedPerElement;     }
+         if constexpr (requires { R::AllocatedPerIndirection; }
+                    or requires { R::AllocatedPerElement;     }
          ) {
             // Access footer heap                                       
+            const auto reserved = self.GetReserved();
             auto offset = Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
-               static_cast<size_t>(self.GetReserved()),
+               static_cast<size_t>(reserved),
                static_cast<size_t>(self.GetIndirections())
             );
-            auto heap = reinterpret_cast<Tmut<SELF, uint8_t*, uint8_t const*>>(
-               DecvqAllCast(self.GetRawReserveEnd())
-            ) + offset;
+
+            if constexpr (CT::TypeErased<SELF>)
+               heap += reserved * self.GetStride() + offset;
+            else
+               heap += reserved * sizeof(TypeOf<SELF>) + offset;
 
             if constexpr (requires { R::AllocatedPerIndirection; }) {
                if constexpr (requires { R::Type::AllocatedPerElement; }) {
@@ -204,9 +215,8 @@ namespace Langulus::Anyness
          else {
             // Access header heap                                       
             auto offset = Inner::GetHeapHeaderOffset<COM, COMPONENTS...>();
-            auto heap = self.GetAllocationInner()->GetBlockStart() + offset;
             using RC = LglsMutIf(SELF, R*);
-            return reinterpret_cast<RC>(heap);
+            return reinterpret_cast<RC>(heap + offset);
          }
       }
       
@@ -260,7 +270,7 @@ namespace Langulus::Anyness
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { C::StackProvider; }) {
                if constexpr (C::StackProvider == ID)
-                  return (self.template AccessStack<C>()); //return (self.C);
+                  return (self.template AccessStack<C>());
                else
                   return No{};
             }
@@ -276,7 +286,7 @@ namespace Langulus::Anyness
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { C::HeapProvider; }) {
                if constexpr (C::HeapProvider == ID)
-                  return (self.template AccessStack<C>()); //return (self.C);
+                  return (self.template AccessStack<C>());
                else
                   return No {};
             }
@@ -284,14 +294,14 @@ namespace Langulus::Anyness
          });
       }
 
-      /// Explicitly call ConstructDefault in all of the components.          
+      /// Call ConstructDefault in all of components that implement it        
       constexpr void ConstructDefault(this auto& self) noexcept {
          ComponentList::ForEach([&]<class C>{
             if_available(self.C::ConstructDefault());
          });
       }
       
-      /// Explicitly call ConstructHeapRequest in all of the components.      
+      /// Call ConstructHeapRequest in all of components that implement it.   
       /// Used to initialize heap requests upon heap allocation.              
       constexpr void ConstructHeapDefault(this auto& self) noexcept {
          ComponentList::ForEach([&]<class C>{
@@ -299,8 +309,8 @@ namespace Langulus::Anyness
          });
       }
       
-      /// Call ConstructFrom whenever possible, fallback to                   
-      /// ConstructDefault otherwise                                          
+      /// Call ConstructFrom in all components that implement it.             
+      /// Fallback to ConstructDefault otherwise.                             
       template<CT::Container SELF, CT::Container FROM>
       constexpr void Absorb(this SELF& self, FROM&& from) {
          ComponentList::ForEach([&]<class C>{
@@ -309,7 +319,7 @@ namespace Langulus::Anyness
          });
       }
 
-      /// Call Destroy whenever possible                                      
+      /// Call Destroy in all components that implement it                    
       constexpr void Destroy(this auto& self) {
          if not consteval {
             ComponentList::ForEach([&]<class C> {
@@ -318,7 +328,7 @@ namespace Langulus::Anyness
          }
       }
 
-      /// Explicitly call AssignDefault in all of the components.             
+      /// Call AssignDefault in all of the components that implement it       
       constexpr auto& AssignDefault(this auto& self) noexcept {
          ComponentList::ForEach([&]<class C>{
             if_available(self.C::AssignDefault());
@@ -327,8 +337,8 @@ namespace Langulus::Anyness
       }
 
    public:
-      /// Call AssignFrom whenever possible, fallback to AssignDefault        
-      /// otherwise                                                           
+      /// Call AssignFrom in all components that implement it.                
+      /// Fallback to AssignDefault otherwise .                               
       template<CT::Container SELF, CT::Container FROM>
       constexpr SELF& AssignAbsorb(this SELF& self, FROM&& rhs) {
          ComponentList::ForEach([&]<class C>{

@@ -60,10 +60,6 @@ namespace Langulus::Anyness
       using CTTI_MapsTo   = Text;
       using CTTI_MapsFrom = Types<RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta>;
 
-      // Single element selections                                      
-      /*using Pick    = Byte const&;
-      using PickMut = Byte&;*/
-
       constexpr Bytes() noexcept {
          this->ConstructDefault();
       }

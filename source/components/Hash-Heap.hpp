@@ -35,8 +35,8 @@ namespace Langulus::Anyness::Component
          else if (self.GetUses() == 0)
             return self.HashRecompute();
 
-         auto heap = self.template AccessHeap<HashHeap>();
-         LglsAssumeDev(heap, "Invalid heap");
+         const auto heap = self.template AccessHeap<HashHeap>();
+         LglsAssumeDevAndOptimize( heap, "Invalid heap");
          if (not *heap)
             const_cast<H&>(*heap) = self.HashRecompute();
          return *heap;
@@ -46,21 +46,25 @@ namespace Langulus::Anyness::Component
       template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
                                             friend struct Conversion;
 
-      /// Get hash (inner) - will not recompute it                            
+      /// Get hash (inner) - will not recompute it, unless container is       
+      /// disowned.                                                           
       constexpr auto GetHashInner(this auto&& self) noexcept -> H const {
          if (self.IsEmpty())
             return H {1};
+         else if (self.GetUses() == 0)
+            return self.HashRecompute();
 
-         auto heap = self.template AccessHeap<HashHeap>();
+         const auto heap = self.template AccessHeap<HashHeap>();
          return heap ? *heap : H {0};
       }
       
       /// Set the hash (inner)                                                
+      ///   @attention will not work for disowned containers                  
       constexpr void SetHashInner(this auto& self, H h) noexcept {
          if (self.IsEmpty() or self.GetUses() == 0)
             return;
 
-         auto heap = self.template AccessHeap<HashHeap>();
+         const auto heap = self.template AccessHeap<HashHeap>();
          LglsAssumeDev(heap, "Invalid heap");
          const_cast<H&>(*heap) = h;
       }
@@ -68,15 +72,18 @@ namespace Langulus::Anyness::Component
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this is noop when constructing from deep intents,      
       ///      since element constructors might throw and stuff be partially  
-      ///      inserted. In those cases, hash is set by the heap components.  
+      ///      inserted. In those cases, hash is set by the heap provider.    
+      ///   @attention nothing is transferred when disowned, because hash     
+      ///      must be kept in heap memory relative to the allocation         
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) {
-         if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
+         if constexpr (not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
             self.SetHashInner(from.GetHashInner());
-            if constexpr (I::ResetsOnMove())
+            if constexpr (I::ResetsOnMove()) {
                if_available(from.SetHashInner(1));
+            }
          }
       }
    };

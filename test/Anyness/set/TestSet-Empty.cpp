@@ -146,6 +146,7 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
    {
       static_assert(CT::Deep<T>);
       static_assert(not CT::ContainsOne<T>);
+      static_assert(not CT::Handle<T>);
       static_assert(CT::ContainsMany<T>);
       static_assert(CT::HasVariableCount<T>);
       static_assert(CT::HeapAllocated<T>);

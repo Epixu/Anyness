@@ -496,7 +496,6 @@ namespace Langulus::Anyness::Component
             #else
                self.template DestroyElementDeepStandardPointers<false>();
             #endif
-            //else static_assert(false, "No destruction routine was called");
          }
       }
 
@@ -506,8 +505,12 @@ namespace Langulus::Anyness::Component
       template<bool DESTROY = true, CT::Container C>
       void DestroyAllElements(this C& self) assumptious {
          if constexpr (DESTROY or CT::DeeplyOwned<C>) {
-            self.Apply([](auto& item) {
-               item.template DestroyElement<DESTROY>();
+            if (self.IsEmpty())
+               return;
+
+            self.Apply([](auto&& item) {
+               if constexpr (IsSupported(item))
+                  item.template DestroyElement<DESTROY>();
             });
          }
       }
@@ -517,8 +520,13 @@ namespace Langulus::Anyness::Component
       ///   @param lambda the function to perform                             
       template<CT::Container C>
       void Apply(this C&& self, auto&& lambda) {
-         if constexpr (CT::ContainsOne<C>)
-            lambda(self);
+         LglsAssumeDev(not self.IsEmpty(), "Make sure container isn't empty");
+
+         if constexpr (CT::ContainsOne<C>) {
+            //TODO GetHandle here is redundant, but most use cases      
+            // of Apply require it.                                     
+            lambda(self.GetHandle());
+         }
          else {
             auto item = self.GetHandle();
             if constexpr (CT::IndexedLinearly<C>) {
@@ -535,6 +543,8 @@ namespace Langulus::Anyness::Component
                while (table != tableEnd) {
                   if (*table)
                      lambda(item);
+                  else
+                     lambda(Unsupported {});
                   ++item;
                   ++table;
                }

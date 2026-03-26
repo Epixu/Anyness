@@ -148,6 +148,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       static_assert(CT::Deep<T>);
       static_assert(CT::ContainsOne<T>);
       static_assert(not CT::ContainsMany<T>);
+      static_assert(not CT::Handle<T>);
       static_assert(CT::HasVariableCount<T>);
       static_assert(CT::HeapAllocated<T>);
       static_assert(CT::DeeplyOwned<T> == (CT::TypeErased<T> or CT::Sparse<TypeOf<T>>));

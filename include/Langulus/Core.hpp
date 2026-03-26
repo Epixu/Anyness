@@ -637,7 +637,9 @@ namespace Langulus
    }
 
    /// Used as a return type in unsupported functions                         
-   struct Unsupported {};
+   struct Unsupported {
+      using CTTI_ReflectAs = void;
+   };
 
    /// These are undefined when MANAGED_MEMORY is disabled, but are left here 
    /// so that the compiler doesn't complain about missing symbols            

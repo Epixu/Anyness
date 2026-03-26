@@ -160,6 +160,7 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
    using E = TypeOf<T>;
    static_assert(    CT::Typed<T>, "Container not typed");
    static_assert(not CT::Array<T>, "Wrongly typed container");
+   static_assert(not CT::Handle<T>);
    static_assert(    Exact<E, char>, "Wrongly typed container");
    static_assert(not CT::Deep<T>);
    static_assert(not CT::ContainsOne<T>);

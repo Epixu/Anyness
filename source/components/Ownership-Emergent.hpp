@@ -122,22 +122,26 @@ namespace Langulus::Anyness::Component
             // Reference all indirections and (optionally) items        
             if constexpr (CT::TypeErased<C>) {
                if (self.IsSparse()) {
-                  self.Apply([](auto& item) {
+                  self.Apply([](auto&& item) {
+                     if constexpr (IsSupported(item)) {
+                        #if LANGULUS_FEATURE(MANAGED_MEMORY)
+                           item.KeepElementDeepCustomPointers();
+                        #else
+                           item.KeepElementDeepStandardPointers();
+                        #endif
+                     }
+                  });
+               }
+            }
+            else if constexpr (CT::Sparse<TypeOf<C>>) {
+               self.Apply([](auto&& item) {
+                  if constexpr (IsSupported(item)) {
                      #if LANGULUS_FEATURE(MANAGED_MEMORY)
                         item.KeepElementDeepCustomPointers();
                      #else
                         item.KeepElementDeepStandardPointers();
                      #endif
-                  });
-               }
-            }
-            else if constexpr (CT::Sparse<TypeOf<C>>) {
-               self.Apply([](auto& item) {
-                  #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                     item.KeepElementDeepCustomPointers();
-                  #else
-                     item.KeepElementDeepStandardPointers();
-                  #endif
+                  }
                });
             }
          }

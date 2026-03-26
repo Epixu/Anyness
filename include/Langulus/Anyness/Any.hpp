@@ -71,12 +71,7 @@ namespace Langulus::Anyness
       using Base = Inner::AnyBase;
       using DefineState::Typed<>::IsTypeConstrained;
       using DefineState::Typed<>::EnableTypeConstrained;
-
-      /*using Pick          = Handle;
-      using PickMut       = HandleMut;
-      using HandleType    = Handle;
-      using HandleMutType = HandleMut;*/
-      using DeepType      = Any;
+      using DeepType = Any;
 
       constexpr Any() noexcept {
          this->ConstructDefault();

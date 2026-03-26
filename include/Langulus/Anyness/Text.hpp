@@ -72,10 +72,6 @@ namespace Langulus::Anyness
          RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta
       >;
 
-      // Single element selections                                      
-      /*using Pick    = char const&;
-      using PickMut = char&;*/
-
       constexpr Text() noexcept {
          this->ConstructDefault();
       }
