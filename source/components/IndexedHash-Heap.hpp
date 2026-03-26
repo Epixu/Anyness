@@ -46,9 +46,9 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
-      /*template<Cid, class>      friend struct Insertion;
-      template<Cid, CT::Sparse> friend struct HeapMovable;*/
-      template<Cid, class> friend struct Merging;
+      /*template<Cid, class>      friend struct Insertion;*/
+      template<Cid, uint, uint, CT::Sparse>  friend struct HeapMovable;
+      template<Cid, class>                   friend struct Merging;
 
       /// Get the start of the hash table (inner)                             
       constexpr auto* GetHashTableInner(this auto&& self) noexcept {
@@ -267,7 +267,7 @@ namespace Langulus::Anyness::Component
                      auto from   = handle + oldIndex;
                      auto to     = handle + newIndex;
                      to.EmplaceWithIntent(Abandon(from));
-                     from.FreeInner();
+                     from.DestroyElement();
 
                      tableBeg[newIndex] = attempt;
                      *table = 0;

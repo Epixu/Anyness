@@ -105,7 +105,7 @@ namespace Langulus::Anyness::Component
 
             // Allocate new memory and set count, so that handle        
             // iteration is valid                                       
-            if constexpr (CT::IndexedLinearly<C>)
+            if constexpr (CT::Contiguous<C>)
                self.AllocateFresh(self.RequestHeap(count));
             else
                self.AllocateFresh(self.RequestHeap(from.GetReserved()));
@@ -113,12 +113,19 @@ namespace Langulus::Anyness::Component
             if_available(self.SetCountInner(count));
             auto dst = self.GetHandle();
             try {
-               from.Apply([&dst](auto const& src) {
+               from.Apply([&dst,&self,&from](auto const& src) {
+                  (void) self; (void) from;
                   if constexpr (IsSupported(src)) {
                      if constexpr (CT::Copied<I>)
                         dst.EmplaceWithIntent(Refer(src));
                      else
                         dst.EmplaceWithIntent(Clone(src));
+
+                     if constexpr (not CT::Contiguous<C>) {
+                        // Copy hash table entry is well                
+                        const auto idx = dst - self.GetHandle();
+                        self.GetHashTableInner()[idx] = from.GetHashTableInner()[idx];
+                     }
                   }
                   ++dst;
                });
@@ -316,9 +323,17 @@ namespace Langulus::Anyness::Component
                   // required.                                          
                   auto to = self.GetHandle();
                   try {
-                     previous.Apply([&to](auto&& from) {
-                        if constexpr (IsSupported(from))
+                     previous.Apply([&to,&self,&previous](auto&& from) {
+                        (void) self; (void) previous;
+                        if constexpr (IsSupported(from)) {
                            to.EmplaceWithIntent(Abandon(from));
+
+                           if constexpr (not CT::Contiguous<C>) {
+                              // Copy hash table entry is well          
+                              const auto idx = to - self.GetHandle();
+                              self.GetHashTableInner()[idx] = previous.GetHashTableInner()[idx];
+                           }
+                        }
                         ++to;
                      });
                   }
@@ -386,7 +401,7 @@ namespace Langulus::Anyness::Component
                throw;
             }
 
-            if constexpr (CT::IndexedLinearly<C>) {
+            if constexpr (CT::Contiguous<C>) {
                auto count = backup.GetCount() < desiredReserve
                   ? backup.GetCount()
                   : desiredReserve;
@@ -521,6 +536,12 @@ namespace Langulus::Anyness::Component
             // Partial success is supported                             
             self.SetCountInner(n);
             self.ResetHash(); // If n == 0, hash is 1; 0 otherwise      
+
+            if constexpr (not CT::Contiguous<C>) {
+               // Partial success involving maps/sets might result in   
+               // gaps in the hash table that need to be accounted for. 
+               self.ShiftEntries();
+            }
          }
          else {
             // Partial success is not allowed - we have to deallocate   

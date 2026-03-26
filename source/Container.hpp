@@ -313,6 +313,9 @@ namespace Langulus::Anyness
       /// Fallback to ConstructDefault otherwise.                             
       template<CT::Container SELF, CT::Container FROM>
       constexpr void Absorb(this SELF& self, FROM&& from) {
+         static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
+            "You can't absorb from containers with different contiguousness");
+
          ComponentList::ForEach([&]<class C>{
                  if_available(self.C::ConstructFrom(FWDIntent(from)))
             else if_available(self.C::ConstructDefault())
@@ -341,6 +344,9 @@ namespace Langulus::Anyness
       /// Fallback to AssignDefault otherwise .                               
       template<CT::Container SELF, CT::Container FROM>
       constexpr SELF& AssignAbsorb(this SELF& self, FROM&& rhs) {
+         static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
+            "You can't assign-absorb from containers with different contiguousness");
+
          ComponentList::ForEach([&]<class C>{
                  if_available(self.C::AssignFrom(FWDIntent(rhs)))
             else if_available(self.C::AssignDefault())

@@ -529,7 +529,7 @@ namespace Langulus::Anyness::Component
          }
          else {
             auto item = self.GetHandle();
-            if constexpr (CT::IndexedLinearly<C>) {
+            if constexpr (CT::Contiguous<C>) {
                auto const end = item + self.GetCount();
                while (item.GetRaw() != end.GetRaw()) {
                   lambda(item);
