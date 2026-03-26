@@ -14,7 +14,7 @@
 #include "../../../source/components/Ownership-Stack.hpp"
 #include "../../../source/components/OwnershipDeep-Heap.hpp"
 #include "../../../source/components/Hash-Heap.hpp"
-#include "../../../source/components/IndexedHash-Heap.hpp"
+#include "../../../source/components/IndexedHash-Stack.hpp"
 #include "../../../source/components/Merging.hpp"
 #include "../../../source/components/MergingOperators.hpp"
 #include "../../../source/components/Assignment.hpp"
@@ -42,7 +42,7 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashHeap<>,                 // Hash can be cached            
-      Com::IndexedHashHeap<>,          // Indexed by hash table         
+      Com::IndexedHashStack<>,         // Indexed by hash table         
       Com::Merging<>,                  // Allows merging                
       Com::MergingOperators<>,         // <<= and >>= merging           
       Com::Assignment<>,               // Allows assignment             

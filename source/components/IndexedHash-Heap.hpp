@@ -19,6 +19,7 @@ namespace Langulus::Anyness::Component
    /// reallocations. Uses multiple cascading tables in order to minimze      
    /// moving things around when rehashing. Doesn't keep a local pointer to   
    /// the hash table, and instead recalculates it on demand from the heap.   
+   ///   @attention keeping the hash table on the heap disallows disownment   
    ///   @tparam ID the stack/heap we're indexing                             
    ///   @tparam HASH type of the hash                                        
    template<Cid ID, class HASH>

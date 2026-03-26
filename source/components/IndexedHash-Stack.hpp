@@ -17,10 +17,10 @@ namespace Langulus::Anyness::Component
    /// Provides random element access by hashing a value of the provided ID   
    /// Uses a modified Robin Hood algorithm to reuse table space and minimize 
    /// movement on rehash. Keeps a local pointer to the hash table for faster 
-   /// and more cache-friendly access.                                        
+   /// and more cache-friendly access. That also allows for disownment.       
    ///   @tparam ID the stack/heap we're indexing                             
    ///   @tparam HASH type of the hash                                        
-   template<Cid ID, class HASH = Hash>
+   template<Cid ID, class HASH>
    struct IndexedHashStack : IndexedCommon<ID> {
       using TableType        = uint8_t;
       using HeapRequest      = PerElement<TableType>;
@@ -28,7 +28,7 @@ namespace Langulus::Anyness::Component
       using IteratorCategory = ::std::random_access_iterator_tag;
 
       /// Get the start of the hash table                                     
-      constexpr T GetHashTable(this auto const& self) noexcept {
+      constexpr auto SetHashTableInner(this auto const& self) noexcept -> TableType const* {
          return self.GetCountInner();
       }
 
@@ -38,7 +38,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      friend struct IndexedCommon<ID>;
+      template<Cid, uint, uint, CT::Sparse>  friend struct HeapMovable;
+      template<Cid, class>                   friend struct Merging;
 
       /// Get hash table (inner)                                              
       constexpr auto& GetHashTableInner(this auto&& self) noexcept {

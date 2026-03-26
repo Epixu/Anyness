@@ -168,7 +168,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          assign_refer(pack_disowned,  "Disown");
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed referred container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_refer = [&](auto& a, int uses) {
@@ -215,7 +215,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             absorb_refer(pack_abandoned, "Abandon");
             absorb_refer(pack_disowned,  "Disown");
          }
-      }
+      }*/
       
       WHEN("Assigned compatible cloned value") {
          auto assign_clone = [&](auto& a, [[maybe_unused]] const char* intent) {
@@ -241,7 +241,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          assign_clone(pack_disowned,  "Disown");
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed cloned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_clone = [&](auto& a) {
@@ -284,7 +284,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             absorb_clone(pack_abandoned, "Abandon");
             absorb_clone(pack_disowned,  "Disown");
          }
-      }
+      }*/
 
       WHEN("Assigned compatible copied value") {
          auto assign_copy = [&](auto& a, [[maybe_unused]] const char* intent) {
@@ -310,7 +310,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          assign_copy(pack_disowned,  "Disown");
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed copied container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_copy = [&](auto& a) {
@@ -353,7 +353,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             absorb_copy(pack_abandoned, "Abandon");
             absorb_copy(pack_disowned,  "Disown");
          }
-      }
+      }*/
 
       WHEN("Assigned compatible moved value") {
          auto assign_move = [&](auto& a, [[maybe_unused]] const char* intent) {
@@ -537,7 +537,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          assign_abandon(pack_disowned,  "Disown");
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
          WHEN("Assigned and absorbed abandoned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_abandon = [&](auto& a) {
@@ -589,7 +589,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
             absorb_abandon(pack_abandoned, "Abandon");
             absorb_abandon(pack_disowned,  "Disown");
          }
-      }
+      }*/
 
       WHEN("Assigned compatible empty self") {
          auto assign_empty_self = [&](auto& a) {

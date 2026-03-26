@@ -20,7 +20,7 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashHeap<>,                 // Hash can be cached            
-      Com::IndexedHashHeap<>,          // Indexed by hash table         
+      Com::IndexedHashStack<>,         // Indexed by hash table         
       Com::Merging<>,                  // Allows merging                
       Com::MergingOperators<>,         // <<= and >>= merging           
       Com::Assignment<>,               // Allows assignment             

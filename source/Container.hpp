@@ -140,6 +140,7 @@ namespace Langulus::Anyness
       template<Cid, class>              friend struct Com::ReserveEmergent;
                                         friend struct Com::Conversion;
       template<Cid, class HASH>         friend struct Com::IndexedHashHeap;
+      template<Cid, class HASH>         friend struct Com::IndexedHashStack;
 
 
       // Here lies the stack. It is an optimized tuple that is filled   
@@ -341,7 +342,7 @@ namespace Langulus::Anyness
 
    public:
       /// Call AssignFrom in all components that implement it.                
-      /// Fallback to AssignDefault otherwise .                               
+      /// Fallback to AssignDefault otherwise.                                
       template<CT::Container SELF, CT::Container FROM>
       constexpr SELF& AssignAbsorb(this SELF& self, FROM&& rhs) {
          static_assert(CT::Contiguous<SELF> == CT::Contiguous<FROM>,
