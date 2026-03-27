@@ -42,6 +42,9 @@ namespace Langulus::Anyness::Component
       template<Cid, class>                   friend struct Merging;
                                              friend struct IndexedCommon<ID>;
                                              friend struct IndexedCommonHashed<ID, HASH>;
+      template<Cid, class>                   friend struct CountHeap;
+      template<Cid, class>                   friend struct CountStack;
+      template<auto COUNT>                   friend struct CountStatic;
 
       /// Get hash table (inner)                                              
       constexpr auto& GetHashTableInner(this auto&& self) noexcept {
@@ -60,9 +63,13 @@ namespace Langulus::Anyness::Component
 
       /// This method is called upon allocation to nullify table              
       constexpr void ConstructHeapRequest(this auto& self) noexcept {
-         auto* const table = self.template AccessHeap<IndexedHashStack>();
-         self.SetHashTableInner(table);
-         memset(table, 0, self.GetReserved() * sizeof(TableType));
+         self.SetHashTableInner(self.template AccessHeap<IndexedHashStack>());
+         self.ResetHashTable();
+      }
+
+      /// This method is called to erase the hash table                       
+      constexpr void ResetHashTable(this auto& self) noexcept {
+         memset(self.GetHashTableInner(), 0, self.GetReserved() * sizeof(TableType));
       }
 
       /// Transfer from any kind of container, respecting intents             
