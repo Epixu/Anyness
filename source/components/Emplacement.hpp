@@ -47,6 +47,7 @@ namespace Langulus::Anyness::Component
       template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
       template<Cid, class>                  friend struct Insertion;
       template<Cid, class>                  friend struct Merging;
+      template<Cid, class>                  friend struct IndexedCommonHashed;
 
       /// Clone the 'rhs'.                                                    
       /// Assumes all indirections are ordinary pointers, and is thus faster. 
@@ -732,6 +733,7 @@ namespace Langulus::Anyness::Component
             }
             catch (...) {
                // Reset heap count in case 'self' was disowned          
+               if_available(self.SetReservedInner(0));
                self.ResetCount();
                throw;
             }

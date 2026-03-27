@@ -6,9 +6,9 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../Container.hpp"
-#include "Indexed-Common.hpp"
-#include <Langulus/HashOf.hpp>
+//#include "../Container.hpp"
+#include "Indexed-Common-Hashed.hpp"
+//#include <Langulus/HashOf.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -21,15 +21,15 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID the stack/heap we're indexing                             
    ///   @tparam HASH type of the hash                                        
    template<Cid ID, class HASH>
-   struct IndexedHashStack : IndexedCommon<ID> {
-      using TableType        = uint8_t;
-      using HeapRequest      = PerElement<TableType>;
-      using StackRequest     = TableType*;
-      using IteratorCategory = ::std::random_access_iterator_tag;
+   struct IndexedHashStack : IndexedCommonHashed<ID, HASH> {
+      using TableType    = typename IndexedCommonHashed<ID, HASH>::TableType;
+      using HeapRequest  = PerElement<TableType>;
+      using StackRequest = TableType*;
+      //using IteratorCategory = ::std::random_access_iterator_tag;
 
       /// Get the start of the hash table                                     
-      constexpr auto SetHashTableInner(this auto const& self) noexcept -> TableType const* {
-         return self.GetCountInner();
+      constexpr auto GetHashTable(this auto const& self) noexcept -> TableType const* {
+         return self.GetHashTableInner();
       }
 
       /// Get the end of the hash table                                       
@@ -40,6 +40,8 @@ namespace Langulus::Anyness::Component
    protected:
       template<Cid, uint, uint, CT::Sparse>  friend struct HeapMovable;
       template<Cid, class>                   friend struct Merging;
+                                             friend struct IndexedCommon<ID>;
+                                             friend struct IndexedCommonHashed<ID, HASH>;
 
       /// Get hash table (inner)                                              
       constexpr auto& GetHashTableInner(this auto&& self) noexcept {
@@ -47,15 +49,22 @@ namespace Langulus::Anyness::Component
       }
       
       /// Set the number of initialized elements                              
-      constexpr void SetHashTableInner(this auto& self, TableType* c) noexcept {
-         self.GetHashTableInner() = c;
+      constexpr void SetHashTableInner(this auto& self, TableType const* c) noexcept {
+         self.GetHashTableInner() = const_cast<TableType*>(c);
       }
       
       /// Default-initialize hash table to zero                               
       constexpr void ConstructDefault(this auto& self) noexcept {
          self.SetHashTableInner(nullptr);
       }
-      
+
+      /// This method is called upon allocation to nullify table              
+      constexpr void ConstructHeapRequest(this auto& self) noexcept {
+         auto* const table = self.template AccessHeap<IndexedHashStack>();
+         self.SetHashTableInner(table);
+         memset(table, 0, self.GetReserved() * sizeof(TableType));
+      }
+
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this is noop when constructing from deep intents,      
       ///      since element constructors might throw and stuff be partially  

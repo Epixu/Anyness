@@ -126,7 +126,19 @@ void Many_CheckState_OwnedFull(const C& many) {
 
 template<class E, CT::Container C> requires CT::NoIntent<C>
 void Many_CheckState_DisownedFull(const C& many) {
-   Any_CheckState_DisownedFull<E>(many);
+   Any_Helper_TestType<E>(many);
+
+   REQUIRE(many.IsTypeConstrained() == CT::Typed<C>);
+   REQUIRE(many.IsConstant());
+   REQUIRE(many.IsValid());
+   REQUIRE_FALSE(many.GetAllocation());
+   REQUIRE_FALSE(many.IsEmpty());
+   REQUIRE(many.GetCount() > 0);
+   REQUIRE(many.GetReserved() > 0); // Many keeps its reserved count as a member, so it's allowed to be absorbed and passed around
+   REQUIRE(many.GetUses() == 0);
+   REQUIRE(many.GetRaw());
+   REQUIRE(many);
+   REQUIRE_FALSE(not many);
 }
 
 template<class E, CT::Container C> requires CT::NoIntent<C>

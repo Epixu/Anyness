@@ -83,6 +83,7 @@ namespace Langulus::Anyness::Component
          if (not al) {
             // Data is either static or unallocated.                    
             // Don't call destructors, just clear it up.                
+            if_available(self.SetReservedInner(0));
             self.ResetCount();
             return;
          }
