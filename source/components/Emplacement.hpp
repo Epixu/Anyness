@@ -734,6 +734,7 @@ namespace Langulus::Anyness::Component
             catch (...) {
                // Reset heap count in case 'self' was disowned          
                if_available(self.SetReservedInner(0));
+               if_available(self.SetHashTableInner(nullptr));
                self.ResetCount();
                throw;
             }
@@ -754,6 +755,7 @@ namespace Langulus::Anyness::Component
                catch (...) {
                   self.SetAllocationInner(nullptr);
                   if_available(self.SetReservedInner(0));
+                  if_available(self.SetHashTableInner(nullptr));
                   self.ResetCount();
                   throw;
                }
@@ -783,6 +785,7 @@ namespace Langulus::Anyness::Component
                catch (...) {
                   self.SetAllocationInner(nullptr);
                   if_available(self.SetReservedInner(0));
+                  if_available(self.SetHashTableInner(nullptr));
                   self.ResetCount();
                   throw;
                }
@@ -793,6 +796,7 @@ namespace Langulus::Anyness::Component
                auto item = self.GetHandle();
                item.DestroyElement();
                if_available(item.ResetEntries());
+               //TODO clear the correspnding hash table spot?
 
                // Emplace a new element on the first position.          
                // Any state change is forbidden - container is full.    
@@ -816,6 +820,7 @@ namespace Langulus::Anyness::Component
                   Allocator::Deallocate(DecvqAllCast(a));
                   self.SetAllocationInner(nullptr);
                   if_available(self.SetReservedInner(0));
+                  if_available(self.SetHashTableInner(nullptr));
                   self.ResetCount();
                   throw;
                }

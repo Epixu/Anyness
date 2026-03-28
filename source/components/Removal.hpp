@@ -84,6 +84,7 @@ namespace Langulus::Anyness::Component
             // Data is either static or unallocated.                    
             // Don't call destructors, just clear it up.                
             if_available(self.SetReservedInner(0));
+            if_available(self.SetHashTableInner(nullptr));
             self.ResetCount();
             return;
          }
@@ -93,6 +94,7 @@ namespace Langulus::Anyness::Component
             // destroy all elements. We will reuse the memory and type  
             // only if the container keeps track of the count separately
             self.DestroyAllElements();
+            if_available(self.ResetHashTable());
          }
          else {
             // If reached, then data is referenced from multiple places.
@@ -103,6 +105,7 @@ namespace Langulus::Anyness::Component
             DecvqAllCast(al)->AddRef(-1);
             if_available(self.SetAllocationInner(nullptr));
             if_available(self.SetReservedInner(0));
+            if_available(self.SetHashTableInner(nullptr));
          }
 
          self.ResetCount();
@@ -116,6 +119,7 @@ namespace Langulus::Anyness::Component
          self.Free();
          if_available(self.SetAllocationInner(nullptr));
          if_available(self.SetReservedInner(0));
+         if_available(self.SetHashTableInner(nullptr));
          self.ResetCount();
          if_available(self.ResetState());
          if_available(self.ResetType());

@@ -74,7 +74,6 @@ namespace Langulus::Anyness::Component
       constexpr void ResetCount(this C& self) noexcept {
          if_available(self.SetHeapInner(nullptr));
          if_available(self.SetHashInner(1));
-         if_available(self.ResetHashTable());
       }
    };
 }

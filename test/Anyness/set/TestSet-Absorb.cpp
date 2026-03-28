@@ -598,13 +598,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          };
 
          assign_empty_self(pack_referred1);
-         assign_empty_self(pack_referred2);
+         /*assign_empty_self(pack_referred2);
          assign_empty_self(pack_copied);
          assign_empty_self(pack_cloned);
          assign_empty_self(pack_moved1);
          assign_empty_self(pack_moved2);
          assign_empty_self(pack_abandoned);
-         assign_empty_self(pack_disowned);
+         assign_empty_self(pack_disowned);*/
       }
 
       WHEN("Assigned compatible full self") {

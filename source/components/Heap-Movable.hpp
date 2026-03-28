@@ -72,6 +72,7 @@ namespace Langulus::Anyness::Component
             if (0 == count) {
                self.SetAllocationInner(nullptr);
                if_available(self.SetReservedInner(0)); //TODO redundant?
+               if_available(self.SetHashTableInner(nullptr));
                self.ResetCount();
                return;
             }
@@ -550,6 +551,7 @@ namespace Langulus::Anyness::Component
             Allocator::Deallocate(DecvqAllCast(self.GetAllocationInner()));
             self.SetAllocationInner(nullptr);
             if_available(self.SetReservedInner(0));
+            if_available(self.SetHashTableInner(nullptr));
             self.ResetCount();
          }
       }

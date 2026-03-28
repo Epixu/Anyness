@@ -6,9 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-//#include "../Container.hpp"
 #include "Indexed-Common-Hashed.hpp"
-//#include <Langulus/HashOf.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -22,10 +20,10 @@ namespace Langulus::Anyness::Component
    ///   @tparam HASH type of the hash                                        
    template<Cid ID, class HASH>
    struct IndexedHashStack : IndexedCommonHashed<ID, HASH> {
-      using TableType    = typename IndexedCommonHashed<ID, HASH>::TableType;
-      using HeapRequest  = PerElement<TableType>;
-      using StackRequest = TableType*;
-      //using IteratorCategory = ::std::random_access_iterator_tag;
+      using TableType        = typename IndexedCommonHashed<ID, HASH>::TableType;
+      using HeapRequest      = PerElement<TableType>;
+      using StackRequest     = TableType*;
+      using IteratorCategory = typename IndexedCommonHashed<ID, HASH>::IteratorCategory;
 
       /// Get the start of the hash table                                     
       constexpr auto GetHashTable(this auto const& self) noexcept -> TableType const* {
@@ -42,9 +40,7 @@ namespace Langulus::Anyness::Component
       template<Cid, class>                   friend struct Merging;
                                              friend struct IndexedCommon<ID>;
                                              friend struct IndexedCommonHashed<ID, HASH>;
-      template<Cid, class>                   friend struct CountHeap;
-      template<Cid, class>                   friend struct CountStack;
-      template<auto COUNT>                   friend struct CountStatic;
+      template<Cid>                          friend struct Removal;
 
       /// Get hash table (inner)                                              
       constexpr auto& GetHashTableInner(this auto&& self) noexcept {
