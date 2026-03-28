@@ -10,6 +10,7 @@
 #include "Iteration-Range.hpp"
 #include <Langulus/CT/Resolvable.hpp>
 #include <Langulus/CT/MinAlloc.hpp>
+#include <Langulus/CT/Bool.hpp>
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/Utils/Pot.hpp>
 #include <Langulus/Allocator.hpp>
@@ -518,7 +519,8 @@ namespace Langulus::Anyness::Component
 
       /// Visit all element's handles and perform a function on them.         
       /// Handles both linear and non-linear containers gracefully.           
-      ///   @param lambda the function to perform                             
+      ///   @param lambda the function to perform. If the lambda returns bool,
+      ///      you can end the loop early by returning false.                 
       template<CT::Container C>
       void Apply(this C&& self, auto&& lambda) {
          LglsAssumeDev(not self.IsEmpty(), "Make sure container isn't empty");
@@ -533,7 +535,11 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Contiguous<C>) {
                auto const end = item + self.GetCount();
                while (item.GetRaw() != end.GetRaw()) {
-                  lambda(item);
+                  if constexpr (CT::Bool<decltype(lambda(item))>) {
+                     if (not lambda(item))
+                        return;
+                  }
+                  else lambda(item);
                   ++item;
                }
             }
@@ -542,10 +548,21 @@ namespace Langulus::Anyness::Component
                const auto tableEnd = tableBeg + self.GetReserved();
                auto table = tableBeg;
                while (table != tableEnd) {
-                  if (*table)
-                     lambda(item);
-                  else
-                     lambda(Unsupported {});
+                  if (*table) {
+                     if constexpr (CT::Bool<decltype(lambda(item))>) {
+                        if (not lambda(item))
+                           return;
+                     }
+                     else lambda(item);
+                  }
+                  else {
+                     if constexpr (CT::Bool<decltype(lambda(Unsupported{})) > ) {
+                        if (not lambda(Unsupported{}))
+                           return;
+                     }
+                     else lambda(Unsupported{});
+                  }
+
                   ++item;
                   ++table;
                }

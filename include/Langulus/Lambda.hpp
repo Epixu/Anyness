@@ -14,7 +14,7 @@ namespace Langulus
    namespace Inner
    {
       ///                                                                     
-      /// These function declarations are used to decompose lambdas.          
+      /// These function declarations are used to inspect lambdas.            
       /// You can use it to extract the argument types of functions by using  
       /// decltype on the function return.                                    
       /// Handles functors, member/standing function pointers and lambdas.    
@@ -22,48 +22,40 @@ namespace Langulus
       
       ///                                                                     
       template<class R, class F, class...AN>
-      // ReSharper disable once CppFunctionDoesntReturnValue            
       Types<AN...> GetFunctionArguments(R(F::*)(AN...) const) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
       template<class R, class F, class...AN>
-      // ReSharper disable once CppFunctionDoesntReturnValue            
       Types<AN...> GetFunctionArguments(R(F::*)(AN...)) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
 
       template<class R, class...AN>
-      // ReSharper disable once CppFunctionDoesntReturnValue            
       Types<AN...> GetFunctionArguments(R(*)(AN...)) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
 
       template<class F>
-      // ReSharper disable once CppFunctionDoesntReturnValue            
       decltype(GetFunctionArguments(&F::operator())) GetFunctionArguments(F) {
          static_assert(false, "Calling GetFunctionArguments is ill-formed");
       }
 
       ///                                                                     
       template<class R, class F, class...AN>
-      // ReSharper disable once CppFunctionDoesntReturnValue            
       R GetFunctionReturn(R(F::*)(AN...) const) {
          static_assert(false, "Calling GetFunctionReturn is ill-formed");
       }
       template<class R, class F, class...AN>
-      // ReSharper disable once CppFunctionDoesntReturnValue            
       R GetFunctionReturn(R(F::*)(AN...)) {
          static_assert(false, "Calling GetFunctionReturn is ill-formed");
       }
 
       template<class R, class...AN>
-      // ReSharper disable once CppFunctionDoesntReturnValue            
       R GetFunctionReturn(R(*)(AN...)) {
          static_assert(false, "Calling GetFunctionReturn is ill-formed");
       }
 
       template<class F>
-      // ReSharper disable once CppFunctionDoesntReturnValue            
       decltype(GetFunctionReturn(&F::operator())) GetFunctionReturn(F) {
          static_assert(false, "Calling GetFunctionReturn is ill-formed");
       }

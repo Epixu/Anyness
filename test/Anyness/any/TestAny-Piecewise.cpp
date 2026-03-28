@@ -157,7 +157,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
 
       WHEN("Assigned compatible referred value") {
-         auto assign_refer = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto assign_refer = [&](T& a, [[maybe_unused]] const char* intent) {
             a.Assign(*element);
 
             if constexpr (CT::Container<E>)
@@ -183,7 +183,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed referred container") {
             if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_refer = [&](auto& a) {
+               auto misabsorb_refer = [&](T& a) {
                   REQUIRE_THROWS(a.AssignAbsorb(*element));
                   Any_CheckState_OwnedFull<E>(a);
                   Any_CheckState_ContainsOne(a, Refer(originalElement));
@@ -200,7 +200,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                return;
             }
 
-            auto absorb_refer = [&](auto& a, [[maybe_unused]] const char* intent) {
+            auto absorb_refer = [&](T& a, [[maybe_unused]] const char* intent) {
                a.AssignAbsorb(*element);
 
                Any_Helper_TestSame(a, *element);
@@ -226,7 +226,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
       
       WHEN("Assigned compatible cloned value") {
-         auto assign_clone = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto assign_clone = [&](T& a, [[maybe_unused]] const char* intent) {
             a.Assign(Clone(*element));
 
             if constexpr (CT::Container<E>)
@@ -252,7 +252,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed cloned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_clone = [&](auto& a) {
+               auto misabsorb_clone = [&](T& a) {
                   REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
                   Any_CheckState_OwnedFull<E>(a);
                   Any_CheckState_ContainsOne(a, Clone(originalElement));
@@ -269,7 +269,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                return;
             }
 
-            auto absorb_clone = [&](auto& a, [[maybe_unused]] const char* intent) {
+            auto absorb_clone = [&](T& a, [[maybe_unused]] const char* intent) {
                a.AssignAbsorb(Clone(*element));
 
                if constexpr (CT::Container<E>)
@@ -296,7 +296,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
 
       WHEN("Assigned compatible copied value") {
-         auto assign_copy = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto assign_copy = [&](T& a, [[maybe_unused]] const char* intent) {
             a.Assign(Copy(*element));
 
             if constexpr (CT::Container<E>)
@@ -322,7 +322,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed copied container") {
             if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_copy = [&](auto& a) {
+               auto misabsorb_copy = [&](T& a) {
                   REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
                   Any_CheckState_OwnedFull<E>(a);
                   Any_CheckState_ContainsOne(a, Refer(originalElement));
@@ -339,7 +339,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                return;
             }
 
-            auto absorb_copy = [&](auto& a, [[maybe_unused]] const char* intent) {
+            auto absorb_copy = [&](T& a, [[maybe_unused]] const char* intent) {
                a.AssignAbsorb(Copy(*element));
 
                if constexpr (CT::Container<E>)
@@ -366,7 +366,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
 
       WHEN("Assigned compatible moved value") {
-         auto assign_move = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto assign_move = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
             a.Assign(::std::move(movable));
 
@@ -397,7 +397,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed moved container") {
             if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_move = [&](auto& a) {
+               auto misabsorb_move = [&](T& a) {
                   auto movable = *element;
                   REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
 
@@ -419,7 +419,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                return;
             };
 
-            auto absorb_move = [&](auto& a, [[maybe_unused]] const char* intent) {
+            auto absorb_move = [&](T& a, [[maybe_unused]] const char* intent) {
                auto movable = *element;
                a.AssignAbsorb(::std::move(movable));
 
@@ -449,7 +449,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
 
       WHEN("Assigned compatible disowned value") {
-         auto assign_disown = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto assign_disown = [&](T& a, [[maybe_unused]] const char* intent) {
             a.Assign(Disown(*element));
 
             Any_CheckState_OwnedFull<E>(a);
@@ -473,7 +473,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed disowned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_disown = [&](auto& a) {
+               auto misabsorb_disown = [&](T& a) {
                   REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
                   Any_CheckState_OwnedFull<E>(a);
                   Any_CheckState_ContainsOne(a, Disown(originalElement));
@@ -490,7 +490,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                return;
             }
 
-            auto absorb_disown = [&](auto& a, [[maybe_unused]] const char* intent) {
+            auto absorb_disown = [&](T& a, [[maybe_unused]] const char* intent) {
                a.AssignAbsorb(Disown(*element));
 
                REQUIRE(a.GetRaw() == element->GetRaw());
@@ -520,7 +520,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
       
       WHEN("Assigned compatible abandoned value") {
-         auto assign_abandon = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto assign_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
             auto movable = *element;
             a.Assign(Abandon(movable));
 
@@ -551,7 +551,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       if constexpr (CT::ContainsOne<E>) {
          WHEN("Assigned and absorbed abandoned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
-               auto misabsorb_abandon = [&](auto& a) {
+               auto misabsorb_abandon = [&](T& a) {
                   auto movable = *element;
                   REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable)));
 
@@ -573,7 +573,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
                return;
             }
 
-            auto absorb_abandon = [&](auto& a, [[maybe_unused]] const char* intent) {
+            auto absorb_abandon = [&](T& a, [[maybe_unused]] const char* intent) {
                auto movable = *element;
                a.AssignAbsorb(Abandon(movable));
 
@@ -604,7 +604,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
 
       WHEN("Assigned compatible empty self") {
-         auto assign_empty_self = [&](auto& a) {
+         auto assign_empty_self = [&](T& a) {
             a = T{};
             Any_CheckState_Default<E>(a);
          };
@@ -620,7 +620,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
 
       WHEN("Assigned compatible full self") {
-         auto assign_full_self = [&](auto& a) {
+         auto assign_full_self = [&](T& a) {
             auto backup = a;
             const auto uses_before = a.GetUses();
             LglsDisableWarningPush
@@ -642,7 +642,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
 
       WHEN("Absorbed by referral") {
-         auto absorb_construct_refer = [&](auto& a) {
+         auto absorb_construct_refer = [&](T& a) {
             T absorbed1 {a};
             T absorbed2{Refer {a}};
 
@@ -663,7 +663,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
       
       WHEN("Absorbed by move") {
-         auto absorb_construct_move1 = [&](auto& a) {
+         auto absorb_construct_move1 = [&](T& a) {
             T backup = a;
             T absorbed {::std::move(a)};
 
@@ -684,7 +684,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
       
       WHEN("Absorbed by move (alt)") {
-         auto absorb_construct_move2 = [&](auto& a) {
+         auto absorb_construct_move2 = [&](T& a) {
             T backup = a;
             T absorbed {Move(a)};
 
@@ -705,7 +705,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
       
       WHEN("Absorbed by abandon") {
-         auto absorb_construct_abandon = [&](auto& a) {
+         auto absorb_construct_abandon = [&](T& a) {
             T backup = a;
             T absorbed {Abandon {a}};
 
@@ -726,7 +726,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
       
       WHEN("Absorbed by disown") {
-         auto absorb_construct_disown = [&](auto& a) {
+         auto absorb_construct_disown = [&](T& a) {
             T absorbed {Disown {a}};
 
             Any_CheckState_OwnedFull<E>(a);
@@ -752,7 +752,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       
       WHEN("Absorbed by copy") {
          const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](auto& a, int entry_refs, int indi_refs) {
+         auto absorb_construct_copy = [&](T& a, int entry_refs, int indi_refs) {
             T absorbed {Copy {a}};
 
             Any_CheckState_OwnedFull<E>(a);
@@ -793,7 +793,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
       
       WHEN("Absorbed by clone") {
-         auto absorb_construct_clone = [&](auto& a) {
+         auto absorb_construct_clone = [&](T& a) {
             T absorbed {Clone {a}};
 
             Any_CheckState_OwnedFull<E>(a);
@@ -813,7 +813,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
       
       WHEN("Emplace (overwrite)") {
-         auto emplace_overwrite = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto emplace_overwrite = [&](T& a, [[maybe_unused]] const char* intent) {
             ScopedE i666{666};
             const auto i666backup = *i666;
             decltype(auto) instance = a.Emplace(::std::move(*i666));
@@ -858,7 +858,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
 
       WHEN("Emplace (overwrite, describe)") {
-         auto emplace_overwrite_describe = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto emplace_overwrite_describe = [&](T& a, [[maybe_unused]] const char* intent) {
             ScopedE i666{666};
             const auto i666backup = *i666;
             Many descriptor {Piecewise, ::std::move(*i666)};
@@ -893,7 +893,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
       
       WHEN("Cleared") {
-         auto clear_full = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto clear_full = [&](T& a, [[maybe_unused]] const char* intent) {
             BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
                T temp = a,                      temp.Clear(),
@@ -914,7 +914,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       }
 
       WHEN("Reset") {
-         auto reset_full = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
             BenchmarkAnyStd(
                std::string("Piecewise/") + intent + "/Reset(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
                T temp = a,                      temp.Reset(),
@@ -937,7 +937,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       if constexpr (LANGULUS_FEATURE(MANAGED_MEMORY) and not CT::Container<E>) {
          // Works only if E doesn't move entries around                 
          WHEN("Reset, and then immediately allocated again") {
-            auto reset_and_reallocate = [&](auto& a) {
+            auto reset_and_reallocate = [&](T& a) {
                const auto memory = a.GetRaw();
                a.Reset();
                a = *element;
@@ -960,7 +960,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
          T another_pack1 {Piecewise, *e1};
          T defaulted_pack;
 
-         auto compared_full = [&](auto& a, [[maybe_unused]] const char* intent) {
+         auto compared_full = [&](T& a, [[maybe_unused]] const char* intent) {
             T same_pack {a};
 
             REQUIRE      (a != another_pack1);
@@ -996,7 +996,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       WHEN("Contains when full") {
          ScopedE e1 {1};
          
-         auto contains_full = [&](auto& a) {
+         auto contains_full = [&](T& a) {
             REQUIRE      (a.Contains(*originalElement));
             REQUIRE_FALSE(a.Contains(*e1));
          };

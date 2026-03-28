@@ -105,16 +105,15 @@ namespace Langulus::Anyness::Component
                   if constexpr (HASH and CT::Hashable<LT, RT>) {
                      if (not lhs.CompareHashes(rhs)) {
                         // Early failure if valid hashes differ - no    
-                        // point  in comparing anything at all          
+                        // point in comparing anything at all           
                         LglsVerbose(Logger::Red, "Different hashes (typed)");
                         return false;
                      }
                   }
 
-                  const auto bytesize = lhs_count * sizeof(LT);
-                  if constexpr (CT::POD<LT>) {
+                  if constexpr (CT::POD<LT> and CT::Contiguous<LHS, RHS>) {
                      // Batch compare POD data, including pointers      
-                     const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), bytesize));
+                     const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
                      if (not same) {
                         LglsVerbose(Logger::Red,
                            "Different POD memory after memcmp (typed)");
@@ -125,19 +124,42 @@ namespace Langulus::Anyness::Component
                   }
                   else if constexpr (CT::ComparableEqual<LT, LT>) {
                      // Use comparison operator between all elements    
-                     auto t1 = lhs.GetRaw();
-                     auto t2 = rhs.GetRaw();
-                     const auto t1end = t1 + lhs_count;
-                     while (t1 < t1end and *t1 == *t2) {
-                        ++t1;
-                        ++t2;
-                     }
+                     bool result = true;
+                     auto t2 = rhs.GetHandle();
+                     lhs.Apply([&](auto&& t1) -> bool {
+                        if constexpr (IsSupported(t1)) {
+                           if constexpr (not CT::Contiguous<RHS>) {
+                              // Make sure hash table spot is valid     
+                              const auto idx = t1 - lhs.GetHandle();
+                              if (not rhs.GetHashTable()[idx]) {
+                                 LglsVerbose(Logger::Red,
+                                    "Element #", idx, " has no hash table equivalent (typed)");
+                                 return (result = false);
+                              }
+                           }
 
-                     if (t1 != t1end) {
-                        LglsVerbose(Logger::Red,
-                           "Element #", t1 - lhs.GetRaw(), " differs (typed)");
-                     }
-                     return t1 == t1end;
+                           if (*t1.GetRaw() != *t2.GetRaw()) {
+                              // Make sure all elements match           
+                              LglsVerbose(Logger::Red,
+                                 "Element #", t1 - lhs.GetHandle(), " differs (typed)");
+                              return (result = false);
+                           }
+                        }
+                        else if constexpr (not CT::Contiguous<RHS>) {
+                           // Spots on tables must both match           
+                           const auto idx = t2 - rhs.GetHandle();
+                           if (rhs.GetHashTable()[idx]) {
+                              LglsVerbose(Logger::Red,
+                                 "Element #", idx, " has no hash table equivalent (typed)");
+                              return (result = false);
+                           }
+                        }
+
+                        ++t2;
+                        return true;
+                     });
+
+                     return result;
                   }
                   else {
                      LglsVerbose(Logger::Red, "Type not comparable (typed): ", NameOf<LT>());
@@ -183,38 +205,59 @@ namespace Langulus::Anyness::Component
                   }
                }
 
-               const auto size = LT.GetSize();
-               const auto bytesize = lhs_count * size;
-               if (LT.IsPOD()) {
-                  // Batch-compare memory if POD or sparse              
-                  const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), bytesize));
-                  if (not same) {
-                     LglsVerbose(Logger::Red,
-                        "Different POD memory after memcmp (type-erased)");
-                     LglsVerbose(Logger::Red,
-                        "Most likely padding bytes filled with junk - pack your struct: ", LT);
+               if constexpr (CT::Contiguous<LHS, RHS>) {
+                  if (LT.IsPOD()) {
+                     // Batch-compare memory if POD or sparse           
+                     const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
+                     if (not same) {
+                        LglsVerbose(Logger::Red,
+                           "Different POD memory after memcmp (type-erased)");
+                        LglsVerbose(Logger::Red,
+                           "Most likely padding bytes filled with junk - pack your struct: ", LT);
+                     }
+                     return same;
                   }
-                  return same;
                }
 
                const auto comparer = LT.GetComparerEqual();
                if (comparer) {
-                  // Call compare operator for each element pair        
-                  auto t1 = lhs.template GetRawAs<uint8_t>();
-                  auto t2 = rhs.template GetRawAs<uint8_t>();
-                  [[maybe_unused]] const auto t1_start = t1;
-                  const auto t1end = t1 + bytesize;
-                  while (t1 < t1end) {
-                     if (not comparer(t1, t2)) {
-                        LglsVerbose(Logger::Red,
-                           "Element #", (t1 - t1_start) / size, " differs (type-erased)");
-                        return false;
+                  // Use comparison operator between all elements       
+                  bool result = true;
+                  auto t2 = rhs.GetHandle();
+                  lhs.Apply([&](auto&& t1) -> bool {
+                     if constexpr (IsSupported(t1)) {
+                        if constexpr (not CT::Contiguous<RHS>) {
+                           // Make sure hash table spot is valid        
+                           const auto idx = t1 - lhs.GetHandle();
+                           if (not rhs.GetHashTable()[idx]) {
+                              LglsVerbose(Logger::Red,
+                                 "Element #", idx, " has no hash table equivalent (typed)");
+                              return (result = false);
+                           }
+                        }
+
+                        if (not comparer (t1.GetRaw(), t2.GetRaw())) {
+                           // Make sure all elements match              
+                           LglsVerbose(Logger::Red,
+                              "Element #", t1 - lhs.GetHandle(), " differs (typed)");
+                           return (result = false);
+                        }
+                     }
+                     else if constexpr (not CT::Contiguous<RHS>) {
+                        // Spots on tables must both match              
+                        const auto idx = t2 - rhs.GetHandle();
+                        if (rhs.GetHashTable()[idx]) {
+                           LglsVerbose(Logger::Red,
+                              "Element #", idx, " has no hash table equivalent (typed)");
+                           return (result = false);
+                        }
                      }
 
-                     t1 += size;
-                     t2 += size;
-                  }
-                  return true;
+                     ++t2;
+                     return true;
+                  });
+
+                  return result;
                }
 
                LglsVerbose(Logger::Red, "Type not comparable (type-erased): ", LT);
