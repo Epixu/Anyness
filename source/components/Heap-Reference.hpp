@@ -533,10 +533,10 @@ namespace Langulus::Anyness::Component
          }
          else {
             auto item = self.GetHandle() + cookie;
-            LglsAssumeDev(cookie < self.GetCount(), "Limp cookie");
 
             if constexpr (CT::Contiguous<C>) {
                // Iterate a contiguous array of elements                
+               LglsAssumeDev(cookie < self.GetCount(), "Limp cookie (contiguous)");
                auto const end = item + (self.GetCount() - cookie);
                while (item.GetRaw() != end.GetRaw()) {
                   if constexpr (CT::Bool<decltype(lambda(item))>) {
@@ -550,6 +550,7 @@ namespace Langulus::Anyness::Component
             else {
                // Iterate a hash table - some cells might be empty,     
                // thus container might not be a contiguous array        
+               LglsAssumeDev(cookie < self.GetReserved(), "Limp cookie (discontiguous)");
                const auto tableBeg = self.GetHashTableInner() + cookie;
                const auto tableEnd = tableBeg + (self.GetReserved() - cookie);
                auto table = tableBeg;

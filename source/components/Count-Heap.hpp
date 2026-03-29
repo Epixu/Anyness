@@ -55,6 +55,7 @@ namespace Langulus::Anyness::Component
       template<Cid>             friend struct Removal;
       template<Cid>             friend struct Emplacement;
       template<Cid, class>      friend struct Insertion;
+      template<Cid>             friend struct IndexedCommon;
       template<Cid, class>      friend struct IndexedLinear;
       template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
                                 friend struct Conversion;
