@@ -107,6 +107,7 @@ namespace Langulus::RTTI
          PoolTactic mPoolTactic = PoolTactic::Default;
       #endif
 
+   public:
       //                                                                
       //    These methods are sought for each reflected type            
       //                                                                
@@ -129,6 +130,7 @@ namespace Langulus::RTTI
       using FUnpack        = FAccessMember;
       using FTypeRetriever = DefinitionData const* (*)();
       
+   protected:
       /// Type-erased member variable reflection                              
       struct Member {
          using CTTI_ReflectAs = void;

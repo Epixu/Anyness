@@ -28,7 +28,7 @@ namespace Langulus::Anyness::Component
       ///   @param offset the number of elements to offset                    
       ///   @return a shallow modified copy of this container                 
       template<CT::Container C>
-      constexpr C operator + (this C const& self, size_t offset) noexcept {
+      constexpr C operator + (this C const& self, size_t offset) assumptious {
          C copy = self;
          return copy += offset;
       }
@@ -38,18 +38,30 @@ namespace Langulus::Anyness::Component
       ///   @param offset the number of elements to offset                    
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
-      constexpr C& operator += (this C& self, size_t offset) noexcept {
+      constexpr C& operator += (this C& self, size_t offset) assumptious {
          auto& data = self.template AccessHeapProvider<ID>();
+         LglsAssumeDevAndOptimize(data, "Invalid heap");
+
          if constexpr (CT::TypeErased<C>) {
             data = static_cast<uint8_t*>(data) + self.GetStride() * offset;
-            if_available(self.template GetEntriesInner<ID>()
-               += self.GetIndirections() * offset);
+
+            if constexpr (requires { self.template GetEntriesInner<ID>(); }) {
+               auto& entries = self.template GetEntriesInner<ID>();
+               if (entries)
+                  entries += self.GetIndirections() * offset;
+            }
          }
          else {
             data += offset;
-            if_available(self.template GetEntriesInner<ID>()
-               += IndirectsOf<TypeOf<C>> * offset);
+
+            if constexpr (CT::Sparse<TypeOf<C>>
+            and requires { self.template GetEntriesInner<ID>(); }) {
+               auto& entries = self.template GetEntriesInner<ID>();
+               if (entries)
+                  entries += IndirectsOf<TypeOf<C>> * offset;
+            }
          }
+
          return self;
       }
 
@@ -57,28 +69,17 @@ namespace Langulus::Anyness::Component
       ///   @attention this doesn't check any boundaries, use carefully       
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
-      constexpr C& operator ++ (this C& self) noexcept {
-         auto& data = self.template AccessHeapProvider<ID>();
-         if constexpr (CT::TypeErased<C>) {
-            data = static_cast<uint8_t*>(data) + self.GetStride();
-            if_available(self.template GetEntriesInner<ID>()
-               += self.GetIndirections());
-         }
-         else {
-            ++data;
-            if_available(self.template GetEntriesInner<ID>()
-               += IndirectsOf<TypeOf<C>>);
-         }
-         return self;
+      constexpr C& operator ++ (this C& self) assumptious {
+         return (self += 1);
       }
 
       /// Suffix increment operator                                           
       ///   @attention this doesn't check any boundaries, use carefully       
       ///   @return a copy of the state, before modifying it                  
       template<CT::Container C>
-      constexpr C operator ++ (this C& self, int) noexcept {
+      constexpr C operator ++ (this C& self, int) assumptious {
          C backup = self;
-         ++self;
+         self += 1;
          return backup;
       }
       
@@ -103,9 +104,9 @@ namespace Langulus::Anyness::Component
       ///   @param offset the number of elements to offset                    
       ///   @return a shallow modified copy of this container                 
       template<CT::Container C>
-      constexpr C operator - (this C const& self, size_t offset) noexcept {
+      constexpr C operator - (this C const& self, size_t offset) assumptious {
          C copy = self;
-         return copy -= offset;
+         return (copy -= offset);
       }
 
       /// Offset first element to the left by the desired amount              
@@ -113,18 +114,30 @@ namespace Langulus::Anyness::Component
       ///   @param offset the number of elements to offset                    
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
-      constexpr C& operator -= (this C& self, size_t offset) noexcept {
+      constexpr C& operator -= (this C& self, size_t offset) assumptious {
          auto& data = self.template AccessHeapProvider<ID>();
+         LglsAssumeDevAndOptimize(data, "Invalid heap");
+
          if constexpr (CT::TypeErased<C>) {
             data = static_cast<uint8_t*>(data) - self.GetStride() * offset;
-            if_available(self.template GetEntriesInner<ID>()
-               -= self.GetIndirections() * offset);
+
+            if constexpr (requires { self.template GetEntriesInner<ID>(); }) {
+               auto& entries = self.template GetEntriesInner<ID>();
+               if (entries)
+                  entries -= self.GetIndirections() * offset;
+            }
          }
          else {
             data -= offset;
-            if_available(self.template GetEntriesInner<ID>()
-               -= IndirectsOf<TypeOf<C>> * offset);
+
+            if constexpr (CT::Sparse<TypeOf<C>>
+            and requires { self.template GetEntriesInner<ID>(); }) {
+               auto& entries = self.template GetEntriesInner<ID>();
+               if (entries)
+                  entries -= IndirectsOf<TypeOf<C>> * offset;
+            }
          }
+
          return self;
       }
 
@@ -132,28 +145,17 @@ namespace Langulus::Anyness::Component
       ///   @attention this doesn't check any boundaries, use carefully       
       ///   @return reference to this, after being modified                   
       template<CT::Container C>
-      constexpr C& operator -- (this C& self) noexcept {
-         auto& data = self.template AccessHeapProvider<ID>();
-         if constexpr (CT::TypeErased<C>) {
-            data = static_cast<uint8_t*>(data) - self.GetStride();
-            if_available(self.template GetEntriesInner<ID>()
-               -= self.GetIndirections());
-         }
-         else {
-            --data;
-            if_available(self.template GetEntriesInner<ID>()
-               -= IndirectsOf<TypeOf<C>>);
-         }
-         return self;
+      constexpr C& operator -- (this C& self) assumptious {
+         return (self -= 1);
       }
 
       /// Suffix decrement operator                                           
       ///   @attention this doesn't check any boundaries, use carefully       
       ///   @return a copy of the state, before modifying it                  
       template<CT::Container C>
-      constexpr C operator -- (this C& self, int) noexcept {
+      constexpr C operator -- (this C& self, int) assumptious {
          C backup = self;
-         --self;
+         self -= 1;
          return backup;
       }
    };

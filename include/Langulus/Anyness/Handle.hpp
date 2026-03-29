@@ -137,12 +137,14 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
-      constexpr HandleMut& operator = (HandleMut const& other) {
+      HandleMut& operator = (HandleMut const& other) = delete;
+      HandleMut& operator = (HandleMut&& other) = delete;
+      /*constexpr HandleMut& operator = (HandleMut const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
-      constexpr HandleMut& operator = (HandleMut&& other) noexcept {
+      constexpr HandleMut& operator = (HandleMut&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Move(other));
-      }
+      }*/
    };
    
 
@@ -183,12 +185,14 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
-      constexpr HandleDisownedMut& operator = (HandleDisownedMut const& other) {
+      HandleDisownedMut& operator = (HandleDisownedMut const& other) = delete;
+      HandleDisownedMut& operator = (HandleDisownedMut&& other) = delete;
+      /*constexpr HandleDisownedMut& operator = (HandleDisownedMut const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Disown(other));
       }
-      constexpr HandleDisownedMut& operator = (HandleDisownedMut&& other) noexcept {
+      constexpr HandleDisownedMut& operator = (HandleDisownedMut&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Disown(other));
-      }
+      }*/
    };
    
 
@@ -234,12 +238,14 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
-      constexpr Handle& operator = (Handle const& other) {
+      Handle& operator = (Handle const& other) = delete;
+      Handle& operator = (Handle&& other) = delete;
+      /*constexpr Handle& operator = (Handle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
-      constexpr Handle& operator = (Handle&& other) noexcept {
+      constexpr Handle& operator = (Handle&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Move(other));
-      }
+      }*/
    };
    
 
@@ -292,12 +298,14 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
-      constexpr HandleDisowned& operator = (HandleDisowned const& other) {
+      HandleDisowned& operator = (HandleDisowned const& other) = delete;
+      HandleDisowned& operator = (HandleDisowned&& other) = delete;
+      /*constexpr HandleDisowned& operator = (HandleDisowned const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Disown(other));
       }
-      constexpr HandleDisowned& operator = (HandleDisowned&& other) noexcept {
+      constexpr HandleDisowned& operator = (HandleDisowned&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Disown(other));
-      }
+      }*/
    };
 
 
@@ -348,12 +356,14 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
-      constexpr THandle& operator = (THandle const& other) {
+      THandle& operator = (THandle const& other) = delete;
+      THandle& operator = (THandle&& other) = delete;
+      /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
-      constexpr THandle& operator = (THandle&& other) noexcept {
+      constexpr THandle& operator = (THandle&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Move(other));
-      }
+      }*/
    };
    
    template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
@@ -389,12 +399,14 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
-      constexpr THandle& operator = (THandle const& other) {
+      THandle& operator = (THandle const& other) = delete;
+      THandle& operator = (THandle&& other) = delete;
+      /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
-      constexpr THandle& operator = (THandle&& other) noexcept {
+      constexpr THandle& operator = (THandle&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Move(other));
-      }
+      }*/
    };
    
 
@@ -430,12 +442,14 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
-      constexpr THandleDisowned& operator = (THandleDisowned const& other) {
+      THandleDisowned& operator = (THandleDisowned const& other) = delete;
+      THandleDisowned& operator = (THandleDisowned&& other) = delete;
+      /*constexpr THandleDisowned& operator = (THandleDisowned const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Disown(other));
       }
-      constexpr THandleDisowned& operator = (THandleDisowned&& other) noexcept {
+      constexpr THandleDisowned& operator = (THandleDisowned&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Disown(other));
-      }
+      }*/
    };
    
 
@@ -476,12 +490,14 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
-      constexpr THandle& operator = (THandle const& other) {
+      THandle& operator = (THandle const& other) = delete;
+      THandle& operator = (THandle&& other) = delete;
+      /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
-      constexpr THandle& operator = (THandle&& other) noexcept {
+      constexpr THandle& operator = (THandle&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Move(other));
-      }
+      }*/
    };
    
 
@@ -526,11 +542,13 @@ namespace Langulus::Anyness
       }
 
       /// Assignment                                                          
-      constexpr THandle& operator = (THandle const& other) {
+      THandle& operator = (THandle const& other) = delete;
+      THandle& operator = (THandle&& other) = delete;
+      /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
-      constexpr THandle& operator = (THandle&& other) noexcept {
+      constexpr THandle& operator = (THandle&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Move(other));
-      }
+      }*/
    };
 }

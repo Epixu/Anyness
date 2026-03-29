@@ -524,24 +524,65 @@ namespace Langulus::Anyness::Component
       ///   @param cookie resume search from a given index                    
       ///   @return the index of the found item, or 'npos' if none found      
       template<bool REVERSE = false, CT::ContainsMany C, CT::NoIntent T>
-      auto Find(this C const& self, T const& item, Count<C> cookie = 0) noexcept {
-         IterateNoDeref<REVERSE, const C> strategy(self);
-         auto handle = strategy.begin() + cookie;
-         while (handle) {
-            if constexpr (CT::TypeErased<C>) {
-               if (handle->CompareOneEqual(item))
-                  return handle;
-            }
-            else {
-               if (**handle == item)
-                  return handle;
-            }
+      auto Find(this C&& self, T const& item, size_t cookie = 0) noexcept -> DecideHandle<C> {
+         if (self.IsEmpty())
+            return {};
 
-            ++handle;
+         if constexpr (not CT::Contiguous<C>) {
+            // When iterating hash tables, we use the cookie to move    
+            // to the appropriate table entry                           
+            cookie = self.GetOffset(item);
          }
 
-         // If this is reached, then no match was found                 
-         return strategy.end();
+         [[maybe_unused]] RTTI::DefinitionData::FCompareEqual comparer = nullptr;
+         if constexpr (CT::TypeErased<C>) {
+            comparer = self.GetType().GetComparerEqual();
+            if (not comparer or not self.IsSame(MetaDataOf<T>()))
+               return {};
+         }
+
+         DecideHandle<C> result;
+         self.Apply([&](auto&& test) -> bool {
+            if constexpr (IsSupported(test)) {
+               if constexpr (not CT::Contiguous<C>) {
+                  const auto idx = test - self.GetHandle();
+                  const auto tab = self.GetHashTable();
+                  if (tab[idx] <= idx - cookie) {
+                     // Iterate hash table cells until we hit a spot w/ 
+                     // value smaller or equal to the expected spot -   
+                     // this signifies that another bucket had started. 
+                     // (or that an empty spot is hit)                  
+                     return false;
+                  }
+                  else if (tab[idx] > idx - cookie + 1) {
+                     // Skip spots that are larger than what's expected,
+                     // because this signifies that a bucket on the left
+                     // has already taken those spots.                  
+                     return true;
+                  }
+               }
+               
+               if constexpr (CT::TypeErased<C>) {
+                  if (comparer(test.GetRaw(), &item)) {
+                     // Match found                                     
+                     new (&result) DecideHandle<C> {test};
+                     return false;
+                  }
+               }
+               else {
+                  if (*test.GetRaw() == item) {
+                     // Match found                                     
+                     new (&result) DecideHandle<C> {test};
+                     return false;
+                  }
+               }
+            }
+            else return false;
+            return true;
+         }, cookie);
+
+         //TODO allow hash table to warp back to the beginning
+         return result;
       }
    
       /// Find a matching sequence of one or more matching elements           

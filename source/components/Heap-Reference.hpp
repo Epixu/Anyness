@@ -32,7 +32,7 @@ namespace Langulus::Anyness::Component
       static constexpr Cid  Id = ID;
       static constexpr Cid  HeapProvider = ID;
       static constexpr int  ComponentPrecedence = -2000;
-      static constexpr bool HeapCanBeNull = false;
+      static constexpr bool HeapCanBeNull = true;
 
    protected:
       template<Cid>             friend struct IterationOperators;
@@ -521,8 +521,9 @@ namespace Langulus::Anyness::Component
       /// Handles both linear and non-linear containers gracefully.           
       ///   @param lambda the function to perform. If the lambda returns bool,
       ///      you can end the loop early by returning false.                 
+      ///   @param cookie the element/hash table spot to start off from       
       template<CT::Container C>
-      void Apply(this C&& self, auto&& lambda) {
+      void Apply(this C&& self, auto&& lambda, [[maybe_unused]] size_t cookie = 0) {
          LglsAssumeDev(not self.IsEmpty(), "Make sure container isn't empty");
 
          if constexpr (CT::ContainsOne<C>) {
@@ -531,9 +532,12 @@ namespace Langulus::Anyness::Component
             lambda(self.GetHandle());
          }
          else {
-            auto item = self.GetHandle();
+            auto item = self.GetHandle() + cookie;
+            LglsAssumeDev(cookie < self.GetCount(), "Limp cookie");
+
             if constexpr (CT::Contiguous<C>) {
-               auto const end = item + self.GetCount();
+               // Iterate a contiguous array of elements                
+               auto const end = item + (self.GetCount() - cookie);
                while (item.GetRaw() != end.GetRaw()) {
                   if constexpr (CT::Bool<decltype(lambda(item))>) {
                      if (not lambda(item))
@@ -544,8 +548,10 @@ namespace Langulus::Anyness::Component
                }
             }
             else {
-               const auto tableBeg = self.GetHashTableInner();
-               const auto tableEnd = tableBeg + self.GetReserved();
+               // Iterate a hash table - some cells might be empty,     
+               // thus container might not be a contiguous array        
+               const auto tableBeg = self.GetHashTableInner() + cookie;
+               const auto tableEnd = tableBeg + (self.GetReserved() - cookie);
                auto table = tableBeg;
                while (table != tableEnd) {
                   if (*table) {
@@ -556,7 +562,7 @@ namespace Langulus::Anyness::Component
                      else lambda(item);
                   }
                   else {
-                     if constexpr (CT::Bool<decltype(lambda(Unsupported{})) > ) {
+                     if constexpr (CT::Bool<decltype(lambda(Unsupported{}))>) {
                         if (not lambda(Unsupported{}))
                            return;
                      }
