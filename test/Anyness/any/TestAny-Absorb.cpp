@@ -782,8 +782,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                Any_CheckState_DisownedFull<E>(a);
             else
                Any_CheckState_OwnedFull<E>(a);
+            REQUIRE(a.GetUses() == uses);
 
             Any_CheckState_OwnedFull<E>(absorbed);
+            REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
             REQUIRE(absorbed.GetRaw() != a.GetRaw());
             REQUIRE(absorbed.template As<E>() == a.template As<E>());
@@ -807,8 +809,6 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Any/TAny", TestType
                   }
                }
             }
-            REQUIRE(absorbed.GetUses() == 1);
-            REQUIRE(a.GetUses() == uses);
          };
 
          absorb_construct_copy(pack_referred1, 3, managed_sparse ? 9 : 3);

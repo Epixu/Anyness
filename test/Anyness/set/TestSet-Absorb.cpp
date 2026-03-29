@@ -10,7 +10,7 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
-   , Types<Set, Text*, ScopedElement<Text*>>
+   , Types<Set, RT*, ScopedElement<RT*>>
 
    // Elements are not allocated by the memory manager                  
    , Types<Set, Text,   ScopedElement<Text>>
@@ -19,9 +19,9 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
    , Types<Set, RT,     ScopedElement<RT>>
    , Types<Set, char,   ScopedElement<char>>
 
+   , Types<Set, Text*, ScopedElement<Text*>>
    , Types<Set, int*,   ScopedElement<int*>>
    , Types<Set, Many*,  ScopedElement<Many*>>
-   , Types<Set, RT*,    ScopedElement<RT*>>
    , Types<Set, char*,  ScopedElement<char*>>
 
    , Types<Set, Text**, ScopedElement<Text**>>
@@ -760,15 +760,17 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
       
       WHEN("Absorbed by copy") {
          const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) {
+         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs, int indi_refs) {
             T absorbed {Copy {a}};
 
             if (uses == 0)
                Set_CheckState_DisownedFull<E>(a);
             else
                Set_CheckState_OwnedFull<E>(a);
+            REQUIRE(a.GetUses() == uses);
 
             Set_CheckState_OwnedFull<E>(absorbed);
+            REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
             REQUIRE(absorbed.GetRaw() != a.GetRaw());
             REQUIRE(absorbed.template AsAt<E>(0) == a.template AsAt<E>(0));
@@ -777,33 +779,23 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
                auto entry = *absorbed.GetEntries();
                if ((entry_refs) == 0)
                   REQUIRE(entry == nullptr);
-
-               if (entry) {
+               if (entry)
                   REQUIRE(entry->GetUses() == (entry_refs));
-                  if constexpr (CT::Referenced<Decay<E>>) {
-                     auto e = absorbed.template AsAt<E>(0);
-                     REQUIRE(DenseCast(e).GetReferences() == (entry_refs));
-                  }
-               }
-               else {
-                  if constexpr (CT::Referenced<Decay<E>>) {
-                     auto e = absorbed.template AsAt<E>(0);
-                     REQUIRE(DenseCast(e).GetReferences() == 9);
-                  }
+               if constexpr (CT::Referenced<Decay<E>>) {
+                  auto e = absorbed.template AsAt<E>(0);
+                  REQUIRE(DenseCast(e).GetReferences() == indi_refs);
                }
             }
-            REQUIRE(absorbed.GetUses() == 1);
-            REQUIRE(a.GetUses() == uses);
          };
 
-         absorb_construct_copy(pack_referred1, 3, managed_sparse ? 9 : 3);
-         absorb_construct_copy(pack_referred2, 3, managed_sparse ? 9 : 3);
-         absorb_construct_copy(pack_copied,    1, managed_sparse ? 9 : 3);
-         absorb_construct_copy(pack_cloned,    1, 2);
-         absorb_construct_copy(pack_moved1,    1, managed_sparse ? 9 : 1);
-         absorb_construct_copy(pack_moved2,    1, managed_sparse ? 9 : 1);
-         absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 9 : 1);
-         absorb_construct_copy(pack_disowned,  0, 0);
+         absorb_construct_copy(pack_referred1, 3, managed_sparse ? 9 : 3, 9);
+         absorb_construct_copy(pack_referred2, 3, managed_sparse ? 9 : 3, 9);
+         absorb_construct_copy(pack_copied,    1, managed_sparse ? 9 : 3, 9);
+         absorb_construct_copy(pack_cloned,    1, 2, 2);
+         absorb_construct_copy(pack_moved1,    1, managed_sparse ? 9 : 1, 9);
+         absorb_construct_copy(pack_moved2,    1, managed_sparse ? 9 : 1, 9);
+         absorb_construct_copy(pack_abandoned, 1, managed_sparse ? 9 : 1, 9);
+         absorb_construct_copy(pack_disowned,  0, 0, 9);
       }
       
       WHEN("Absorbed by clone") {

@@ -752,30 +752,25 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             T absorbed {Copy {a}};
 
             Many_CheckState_OwnedFull<E>(a);
+            REQUIRE(a.GetUses() == 1);
+
             Many_CheckState_OwnedFull<E>(absorbed);
+            REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
             REQUIRE(absorbed.GetRaw() != a.GetRaw());
             REQUIRE(absorbed.template As<E>() == a.template As<E>());
+
             if constexpr (CT::Sparse<E>) {
                auto entry = *absorbed.GetEntries();
                if ((entry_refs) == 0)
                   REQUIRE(entry == nullptr);
-               if (entry) //{
+               if (entry)
                   REQUIRE(entry->GetUses() == (entry_refs));
-                  /*if constexpr (CT::Referenced<Decay<E>>) {
-                     auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == (entry_refs));
-                  }
+               if constexpr (CT::Referenced<Decay<E>>) {
+                  auto e = absorbed.template As<E>();
+                  REQUIRE(DenseCast(e).GetReferences() == indi_refs);
                }
-               else {*/
-                  if constexpr (CT::Referenced<Decay<E>>) {
-                     auto e = absorbed.template As<E>();
-                     REQUIRE(DenseCast(e).GetReferences() == indi_refs);
-                  }
-               //}
             }
-            REQUIRE(absorbed.GetUses() == 1);
-            REQUIRE(a.GetUses() == 1);
          };
 
          absorb_construct_copy(pack_referred1, managed_sparse ? 8 : 3, 9);
