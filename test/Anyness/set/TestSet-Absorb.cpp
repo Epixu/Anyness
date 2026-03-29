@@ -10,15 +10,15 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
-   , Types<Set, Many, ScopedElement<Many>>
+   , Types<Set, Text*, ScopedElement<Text*>>
 
    // Elements are not allocated by the memory manager                  
    , Types<Set, Text,   ScopedElement<Text>>
    , Types<Set, int,    ScopedElement<int>>
+   , Types<Set, Many,   ScopedElement<Many>>
    , Types<Set, RT,     ScopedElement<RT>>
    , Types<Set, char,   ScopedElement<char>>
 
-   , Types<Set, Text*,  ScopedElement<Text*>>
    , Types<Set, int*,   ScopedElement<int*>>
    , Types<Set, Many*,  ScopedElement<Many*>>
    , Types<Set, RT*,    ScopedElement<RT*>>

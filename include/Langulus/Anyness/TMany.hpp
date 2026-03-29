@@ -17,10 +17,10 @@ namespace Langulus::Anyness::Inner
       Com::HeapMovable<0, 0, 0, T*>,   // Pointer to heap memory        
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveStack<>,             // Reserve kept as member        
+      Com::IndexedLinear<>,            // Indexed directly              
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced
       Com::HashStack<>,                // Hash can be cached            
-      Com::IndexedLinear<>,            // Indexed directly              
       Com::Insertion<>,                // Allows insertion              
       Com::InsertionOperators<>,       // << and >> insertion           
       Com::Merging<>,                  // Allows merging                

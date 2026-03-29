@@ -37,6 +37,7 @@ namespace Langulus::Anyness
          Com::HeapMovable<0, 0, 0, Byte*>,// Pointer to heap memory     
          Com::CountStack<>,               // Variable count             
          Com::ReserveEmergent<>,          // Capacity derived from alloc
+         Com::IndexedLinear<>,            // Indexed directly           
          Com::OwnershipStack<>,           // Allocation is referenced   
          Com::HashStack<>,                // Variable hash (cached)     
          Com::Insertion<0, Bytes>,        // Serialize + insert         
@@ -45,7 +46,6 @@ namespace Langulus::Anyness
          Com::Assignment<>,               // Allows assignment          
          Com::Comparison<>,               // Allows for comparison      
          Com::Conversion,                 // Allows conversion          
-         Com::IndexedLinear<>,            // Indexed directly           
          Com::IterationForEach<>,         // ForEach iteration          
          Com::IterationRange<>            // Range iteration         😊
       >;

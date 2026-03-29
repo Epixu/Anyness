@@ -22,7 +22,7 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
 
       static constexpr bool Indexed = true;
-      static constexpr int  ComponentPrecedence = 3000;
+      static constexpr int  ComponentPrecedence = 0;
 
    protected:
       template<CT::Container C>

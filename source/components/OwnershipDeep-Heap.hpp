@@ -84,18 +84,22 @@ namespace Langulus::Anyness::Component
       constexpr void ConstructHeapRequest(this C& self) noexcept {
          const auto reserved = self.GetReserved();
          if constexpr (CT::TypeErased<C>) {
-            auto T = self.GetType();
-            memset(
-               self.GetEntriesInner(), 0,
-               reserved * T.GetIndirections() * sizeof(AllocationPtr)
-            );
+            const auto T = self.GetType();
+            if (T.IsSparse()) {
+               memset(
+                  self.GetEntriesInner(), 0,
+                  reserved * T.GetIndirections() * sizeof(AllocationPtr)
+               );
+            }
          }
          else {
             using T = TypeOf<C>;
-            memset(
-               self.GetEntriesInner(), 0,
-               reserved * IndirectsOf<T> * sizeof(AllocationPtr)
-            );
+            if constexpr (CT::Sparse<T>) {
+               memset(
+                  self.GetEntriesInner(), 0,
+                  reserved * IndirectsOf<T> * sizeof(AllocationPtr)
+               );
+            }
          }
       }
    };

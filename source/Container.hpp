@@ -182,10 +182,11 @@ namespace Langulus::Anyness
          ) {
             // Access footer heap                                       
             const auto reserved = self.GetReserved();
-            auto offset = Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
-               static_cast<size_t>(reserved),
-               static_cast<size_t>(self.GetIndirections())
-            );
+            const auto offset = self.GetHeapHeaderSize()
+                              + Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
+                                   static_cast<size_t>(reserved),
+                                   static_cast<size_t>(self.GetIndirections())
+                                );
 
             if constexpr (CT::TypeErased<SELF>)
                heap += reserved * self.GetStride() + offset;

@@ -18,7 +18,7 @@ namespace Langulus::Anyness::Component
       using CTTI_POD       = Yes<>;
       using CTTI_Nullable  = No;
       using CTTI_Component = Yes<>;
-      static constexpr int ComponentPrecedence = 0;
+      static constexpr int ComponentPrecedence = -1000;
 
       static constexpr Real DefaultMass = 1;
       static constexpr Real DefaultRate = 0;
