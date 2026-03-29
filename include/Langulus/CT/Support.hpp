@@ -22,10 +22,3 @@ namespace Langulus::CT
    concept Supported = PartialValidate<T...>
        and ((not Unsupported<T>) and ...);
 }
-
-namespace Langulus
-{
-   consteval bool IsSupported(auto const& arg) {
-      return CT::Supported<decltype(arg)>;
-   }
-}

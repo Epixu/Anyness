@@ -123,7 +123,7 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C>) {
                if (self.IsSparse()) {
                   self.Apply([](auto&& item) {
-                     if constexpr (IsSupported(item)) {
+                     if constexpr (CT::Supported<decltype(item)>) {
                         #if LANGULUS_FEATURE(MANAGED_MEMORY)
                            item.KeepElementDeepCustomPointers();
                         #else
@@ -135,7 +135,7 @@ namespace Langulus::Anyness::Component
             }
             else if constexpr (CT::Sparse<TypeOf<C>>) {
                self.Apply([](auto&& item) {
-                  if constexpr (IsSupported(item)) {
+                  if constexpr (CT::Supported<decltype(item)>) {
                      #if LANGULUS_FEATURE(MANAGED_MEMORY)
                         item.KeepElementDeepCustomPointers();
                      #else

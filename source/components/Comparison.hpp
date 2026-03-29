@@ -127,7 +127,7 @@ namespace Langulus::Anyness::Component
                      bool result = true;
                      auto t2 = rhs.GetHandle();
                      lhs.Apply([&](auto&& t1) -> bool {
-                        if constexpr (IsSupported(t1)) {
+                        if constexpr (CT::Supported<decltype(t1)>) {
                            if constexpr (not CT::Contiguous<RHS>) {
                               // Make sure hash table spot is valid     
                               const auto idx = t1 - lhs.GetHandle();
@@ -225,7 +225,7 @@ namespace Langulus::Anyness::Component
                   bool result = true;
                   auto t2 = rhs.GetHandle();
                   lhs.Apply([&](auto&& t1) -> bool {
-                     if constexpr (IsSupported(t1)) {
+                     if constexpr (CT::Supported<decltype(t1)>) {
                         if constexpr (not CT::Contiguous<RHS>) {
                            // Make sure hash table spot is valid        
                            const auto idx = t1 - lhs.GetHandle();
@@ -543,7 +543,7 @@ namespace Langulus::Anyness::Component
 
          DecideHandle<C> result;
          self.Apply([&](auto&& test) -> bool {
-            if constexpr (IsSupported(test)) {
+            if constexpr (CT::Supported<decltype(test)>) {
                if constexpr (not CT::Contiguous<C>) {
                   const auto idx = test - self.GetHandle();
                   const auto tab = self.GetHashTable();

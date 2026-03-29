@@ -116,7 +116,7 @@ namespace Langulus::Anyness::Component
             try {
                from.Apply([&dst,&self,&from](auto const& src) {
                   (void) self; (void) from;
-                  if constexpr (IsSupported(src)) {
+                  if constexpr (CT::Supported<decltype(src)>) {
                      if constexpr (CT::Copied<I>)
                         dst.EmplaceWithIntent(Refer(src));
                      else
@@ -326,7 +326,7 @@ namespace Langulus::Anyness::Component
                   try {
                      previous.Apply([&to,&self,&previous](auto&& from) {
                         (void) self; (void) previous;
-                        if constexpr (IsSupported(from)) {
+                        if constexpr (CT::Supported<decltype(from)>) {
                            to.EmplaceWithIntent(Abandon(from));
 
                            if constexpr (not CT::Contiguous<C>) {
@@ -572,7 +572,7 @@ namespace Langulus::Anyness::Component
             auto to = self.GetHandle();
             try {
                backup.Apply([&to](auto const& from) {
-                  if constexpr (IsSupported(from))
+                  if constexpr (CT::Supported<decltype(from)>)
                      to.EmplaceWithIntent(Refer(from));
                   ++to;
                });
