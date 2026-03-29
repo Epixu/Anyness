@@ -752,7 +752,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
       
       WHEN("Absorbed by copy") {
          const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](T& a, int entry_refs, int indi_refs) {
+         auto absorb_construct_copy = [&](T& a, int entry_refs, int indi_refs) { //TODO this test is probably wrong - check TestSet-Absorb for comparison
             T absorbed {Copy {a}};
 
             Any_CheckState_OwnedFull<E>(a);

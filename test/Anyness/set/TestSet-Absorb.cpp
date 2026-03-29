@@ -10,8 +10,6 @@
 
 
 TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
-   , Types<Set, RT*, ScopedElement<RT*>>
-
    // Elements are not allocated by the memory manager                  
    , Types<Set, Text,   ScopedElement<Text>>
    , Types<Set, int,    ScopedElement<int>>
@@ -19,9 +17,10 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
    , Types<Set, RT,     ScopedElement<RT>>
    , Types<Set, char,   ScopedElement<char>>
 
-   , Types<Set, Text*, ScopedElement<Text*>>
+   , Types<Set, Text*,  ScopedElement<Text*>>
    , Types<Set, int*,   ScopedElement<int*>>
    , Types<Set, Many*,  ScopedElement<Many*>>
+   , Types<Set, RT*,    ScopedElement<RT*>>
    , Types<Set, char*,  ScopedElement<char*>>
 
    , Types<Set, Text**, ScopedElement<Text**>>
@@ -599,13 +598,13 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Set/TSet", TestType
          };
 
          assign_empty_self(pack_referred1);
-         /*assign_empty_self(pack_referred2);
+         assign_empty_self(pack_referred2);
          assign_empty_self(pack_copied);
          assign_empty_self(pack_cloned);
          assign_empty_self(pack_moved1);
          assign_empty_self(pack_moved2);
          assign_empty_self(pack_abandoned);
-         assign_empty_self(pack_disowned);*/
+         assign_empty_self(pack_disowned);
       }
 
       WHEN("Assigned compatible full self") {

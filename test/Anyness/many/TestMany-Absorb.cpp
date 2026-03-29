@@ -759,7 +759,7 @@ TEST_CASE_TEMPLATE("Test absorb-constructed Many/TMany", TestType
       
       WHEN("Absorbed by copy") {
          const bool managed_sparse = CT::Sparse<E> and Managed;
-         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) {
+         auto absorb_construct_copy = [&](T& a, int uses, int entry_refs) { //TODO this test is probably wrong - check TestSet-Absorb for comparison
             T absorbed {Copy {a}};
 
             if (uses == 0)
