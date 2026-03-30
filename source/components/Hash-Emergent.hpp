@@ -28,9 +28,9 @@ namespace Langulus::Anyness::Component
          return self.HashRecompute();
       }
 
-      /// Generate a hash from the data                                       
+      /// Generate a hash from contiguous data. Allows for batch optimization.
       ///   @attention order matters                                          
-      template<CT::Container C>
+      template<CT::Container C> requires CT::Contiguous<C>
       H HashRecompute(this C const& self) {
          if (self.IsEmpty())
             return {1};
@@ -122,6 +122,46 @@ namespace Langulus::Anyness::Component
                   DefaultHashSeed
                );
             }
+         }
+      }
+
+      /// Generate a hash from discontiguous data. Basically disables batch   
+      /// optimizations.                                                      
+      ///   @attention order matters                                          
+      template<CT::Container C> requires CT::NotContiguous<C>
+      H HashRecompute(this C const& self) {
+         if (self.IsEmpty())
+            return {1};
+
+         // Do some assumption checking                                 
+         if constexpr (CT::TypeErased<C>) {
+            const DMeta T = self.GetType();
+            LglsAssumeDev(T, "Can't hash untyped container");
+            LglsAssumeDev(T.GetHasher(), "Not hashable");
+         }
+         else {
+            using T = TypeOf<C>;
+            static_assert(CT::Hashable<T>, "Not hashable");
+         }
+
+         // Hash all elements                                           
+         ::std::vector<H> h;
+         h.reserve(self.GetCount());
+         self.Apply([&h](auto const& item) {
+            if constexpr (CT::Supported<decltype(item)>)
+               h.emplace_back(HashOf(item));
+         });
+
+         if (h.size() == 1) {
+            // Single element always results in single hash             
+            return h[0];
+         }
+         else {
+            // Hash the array of hashes to get the final hash           
+            return HashBytes(
+               {reinterpret_cast<const uint8_t*>(h.data()), h.size() * sizeof(H)},
+               DefaultHashSeed
+            );
          }
       }
       

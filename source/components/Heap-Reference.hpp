@@ -47,6 +47,7 @@ namespace Langulus::Anyness::Component
       template<auto COUNT>      friend struct CountStatic;
       template<Cid, bool>       friend struct OwnershipEmergent;
       template<Cid, bool>       friend struct OwnershipDeepEmergent;
+      template<Cid, class>      friend struct HashEmergent;
       
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;

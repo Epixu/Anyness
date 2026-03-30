@@ -46,13 +46,12 @@ namespace Langulus::Anyness::Component
       template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
                                             friend struct Conversion;
 
-      /// Get hash (inner) - will not recompute it, unless container is       
-      /// disowned.                                                           
+      /// Get hash (inner) - will never recompute it                          
       constexpr auto GetHashInner(this auto&& self) noexcept -> H const {
          if (self.IsEmpty())
             return H {1};
          else if (self.GetUses() == 0)
-            return self.HashRecompute();
+            return H {0}; //self.HashRecompute();
 
          const auto heap = self.template AccessHeap<HashHeap>();
          return heap ? *heap : H {0};
@@ -80,6 +79,9 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this auto& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I> and not CT::Disowned<I>) {
             decltype(auto) from = LglsFwd(intent.what);
+            // Notice only the inner hash gets copied, to avoid         
+            // precomputation if rhs doesn't cache it. It will be       
+            // recomputed on demand on comparison either way.           
             self.SetHashInner(from.GetHashInner());
             if constexpr (I::ResetsOnMove()) {
                if_available(from.SetHashInner(1));

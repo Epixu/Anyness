@@ -13,6 +13,7 @@
 #include "../../../source/components/Reserve-Emergent.hpp"
 #include "../../../source/components/OwnershipDeep-Heap.hpp"
 #include "../../../source/components/OwnershipDeep-Reference.hpp"
+#include "../../../source/components/Hash-Emergent.hpp"
 #include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Emplacement.hpp"
 #include "../../../source/components/Comparison.hpp"
@@ -34,6 +35,7 @@ namespace Langulus::Anyness
          Com::CountStatic<1u>,
          Com::ReserveEmergent<>,
          Com::OwnershipStack<0, false>,
+         Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
          Com::Comparison<>,
@@ -47,6 +49,7 @@ namespace Langulus::Anyness
          Com::HeapReference<0, Deref<T>*>,
          Com::CountStatic<1u>,
          Com::OwnershipDeepReference<>,
+         Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
          Com::Comparison<>,
@@ -59,6 +62,7 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<0, Deref<T>*>,
          Com::CountStatic<1u>,
+         Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
          Com::Comparison<>,
@@ -73,6 +77,7 @@ namespace Langulus::Anyness
          Com::TypedStatic<DMeta, T>,
          Com::Stack<T>,
          Com::CountStatic<1u>,
+         Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
          Com::Comparison<>
@@ -88,6 +93,7 @@ namespace Langulus::Anyness
          Com::ReserveEmergent<>,
          Com::OwnershipStack<>,
          Com::OwnershipDeepHeap<>,
+         Com::HashEmergent<>,
          Com::Emplacement<>,
          Com::Assignment<>,
          Com::Comparison<>
@@ -106,6 +112,7 @@ namespace Langulus::Anyness
       Com::CountStatic<1u>,
       Com::ReserveEmergent<>,
       Com::OwnershipDeepReference<>,
+      Com::HashEmergent<>,
       Com::Assignment<>,
       Com::Emplacement<>,
       Com::Comparison<>,
@@ -155,6 +162,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
+      Com::HashEmergent<>,
       Com::Assignment<>,
       Com::Emplacement<>,
       Com::Comparison<>,
@@ -209,6 +217,7 @@ namespace Langulus::Anyness
       Com::HeapReference<>,
       Com::CountStatic<1u>,
       Com::OwnershipDeepReference<>,
+      Com::HashEmergent<>,
       Com::Comparison<>,
       Com::IterationOperators<>
    > {
@@ -256,6 +265,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<1u>,
+      Com::HashEmergent<>,
       Com::Comparison<>,
       Com::IterationOperators<>
    > {

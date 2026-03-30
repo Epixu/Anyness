@@ -106,7 +106,8 @@ namespace Langulus::Anyness::Component
                      if (not lhs.CompareHashes(rhs)) {
                         // Early failure if valid hashes differ - no    
                         // point in comparing anything at all           
-                        LglsVerbose(Logger::Red, "Different hashes (typed)");
+                        LglsVerbose(Logger::Red, "Different hashes (typed): ",
+                           Logger::Hex(lhs.GetHash()), " != ", Logger::Hex(rhs.GetHash()));
                         return false;
                      }
                   }
@@ -200,7 +201,8 @@ namespace Langulus::Anyness::Component
                   if (LT.GetHasher() and not lhs.CompareHashes(rhs)) {
                      // Early failure if valid hashes differ - no point 
                      // in comparing anything at all                    
-                     LglsVerbose(Logger::Red, "Different hashes (type-erased)");
+                     LglsVerbose(Logger::Red, "Different hashes (type-erased): ",
+                        Logger::Hex(lhs.GetHash()), " != ", Logger::Hex(rhs.GetHash()));
                      return false;
                   }
                }

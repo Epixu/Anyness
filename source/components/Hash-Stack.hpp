@@ -64,7 +64,10 @@ namespace Langulus::Anyness::Component
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>
          and requires { intent.what.GetHashInner(); }) {
             decltype(auto) from = LglsFwd(intent.what);
-            self.SetHashInner(from.GetHashInner()); // notice only the inner hash gets copied, to avoid precomputation if rhs doesn't cache it
+            // Notice only the inner hash gets copied, to avoid         
+            // precomputation if rhs doesn't cache it. It will be       
+            // recomputed on demand on comparison either way.           
+            self.SetHashInner(from.GetHashInner());
             if constexpr (I::ResetsOnMove())
                if_available(from.SetHashInner(1));
          }
