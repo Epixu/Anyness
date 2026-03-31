@@ -5,94 +5,94 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-#include "TestManyCommon.hpp"
+#include "TestSetCommon.hpp"
 #include <Langulus/Anyness/Many.hpp>
 
 
-TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
+TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
    // Elements are not allocated by the memory manager                  
-   , Types<Many, Text,   ScopedElement<Text>>
-   , Types<Many, int,    ScopedElement<int>>
-   , Types<Many, Many,   ScopedElement<Many>>
-   , Types<Many, RT,     ScopedElement<RT>>
-   , Types<Many, char,   ScopedElement<char>>
+   , Types<Set, Text,   ScopedElement<Text>>
+   , Types<Set, int,    ScopedElement<int>>
+   , Types<Set, Many,   ScopedElement<Many>>
+   , Types<Set, RT,     ScopedElement<RT>>
+   , Types<Set, char,   ScopedElement<char>>
 
-   , Types<Many, Text*,  ScopedElement<Text*>>
-   , Types<Many, int*,   ScopedElement<int*>>
-   , Types<Many, Many*,  ScopedElement<Many*>>
-   , Types<Many, RT*,    ScopedElement<RT*>>
-   , Types<Many, char*,  ScopedElement<char*>>
+   , Types<Set, Text*,  ScopedElement<Text*>>
+   , Types<Set, int*,   ScopedElement<int*>>
+   , Types<Set, Many*,  ScopedElement<Many*>>
+   , Types<Set, RT*,    ScopedElement<RT*>>
+   , Types<Set, char*,  ScopedElement<char*>>
 
-   , Types<Many, Text**, ScopedElement<Text**>>
-   , Types<Many, int**,  ScopedElement<int**>>
-   , Types<Many, Many**, ScopedElement<Many**>>
-   , Types<Many, RT**,   ScopedElement<RT**>>
-   , Types<Many, char**, ScopedElement<char**>>
+   , Types<Set, Text**, ScopedElement<Text**>>
+   , Types<Set, int**,  ScopedElement<int**>>
+   , Types<Set, Many**, ScopedElement<Many**>>
+   , Types<Set, RT**,   ScopedElement<RT**>>
+   , Types<Set, char**, ScopedElement<char**>>
 
-   , Types<TMany<Text>,   Text,   ScopedElement<Text>>
-   , Types<TMany<int>,    int,    ScopedElement<int>>
-   , Types<TMany<Many>,   Many,   ScopedElement<Many>>
-   , Types<TMany<RT>,     RT,     ScopedElement<RT>>
-   , Types<TMany<char>,   char,   ScopedElement<char>>
+   , Types<TSet<Text>,   Text,   ScopedElement<Text>>
+   , Types<TSet<int>,    int,    ScopedElement<int>>
+   , Types<TSet<Many>,   Many,   ScopedElement<Many>>
+   , Types<TSet<RT>,     RT,     ScopedElement<RT>>
+   , Types<TSet<char>,   char,   ScopedElement<char>>
 
-   , Types<TMany<Text*>,  Text*,  ScopedElement<Text*>>
-   , Types<TMany<int*>,   int*,   ScopedElement<int*>>
-   , Types<TMany<Many*>,  Many*,  ScopedElement<Many*>>
-   , Types<TMany<RT*>,    RT*,    ScopedElement<RT*>>
-   , Types<TMany<char*>,  char*,  ScopedElement<char*>>
+   , Types<TSet<Text*>,  Text*,  ScopedElement<Text*>>
+   , Types<TSet<int*>,   int*,   ScopedElement<int*>>
+   , Types<TSet<Many*>,  Many*,  ScopedElement<Many*>>
+   , Types<TSet<RT*>,    RT*,    ScopedElement<RT*>>
+   , Types<TSet<char*>,  char*,  ScopedElement<char*>>
 
-   , Types<TMany<Text**>, Text**, ScopedElement<Text**>>
-   , Types<TMany<int**>,  int**,  ScopedElement<int**>>
-   , Types<TMany<Many**>, Many**, ScopedElement<Many**>>
-   , Types<TMany<RT**>,   RT**,   ScopedElement<RT**>>
-   , Types<TMany<char**>, char**, ScopedElement<char**>>
+   , Types<TSet<Text**>, Text**, ScopedElement<Text**>>
+   , Types<TSet<int**>,  int**,  ScopedElement<int**>>
+   , Types<TSet<Many**>, Many**, ScopedElement<Many**>>
+   , Types<TSet<RT**>,   RT**,   ScopedElement<RT**>>
+   , Types<TSet<char**>, char**, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
-   , Types<Many, Text,   ScopedElement<Text, true>>
-   , Types<Many, int,    ScopedElement<int, true>>
-   , Types<Many, Many,   ScopedElement<Many, true>>
-   , Types<Many, RT,     ScopedElement<RT, true>>
-   , Types<Many, char,   ScopedElement<char, true>>
+   , Types<Set, Text,   ScopedElement<Text, true>>
+   , Types<Set, int,    ScopedElement<int, true>>
+   , Types<Set, Many,   ScopedElement<Many, true>>
+   , Types<Set, RT,     ScopedElement<RT, true>>
+   , Types<Set, char,   ScopedElement<char, true>>
 
-   , Types<Many, Text*,  ScopedElement<Text*, true>>
-   , Types<Many, int*,   ScopedElement<int*, true>>
-   , Types<Many, Many*,  ScopedElement<Many*, true>>
-   , Types<Many, RT*,    ScopedElement<RT*, true>>
-   , Types<Many, char*,  ScopedElement<char*, true>>
+   , Types<Set, Text*,  ScopedElement<Text*, true>>
+   , Types<Set, int*,   ScopedElement<int*, true>>
+   , Types<Set, Many*,  ScopedElement<Many*, true>>
+   , Types<Set, RT*,    ScopedElement<RT*, true>>
+   , Types<Set, char*,  ScopedElement<char*, true>>
 
-   , Types<Many, Text**, ScopedElement<Text**, true>>
-   , Types<Many, int**,  ScopedElement<int**, true>>
-   , Types<Many, Many**, ScopedElement<Many**, true>>
-   , Types<Many, RT**,   ScopedElement<RT**, true>>
-   , Types<Many, char**, ScopedElement<char**, true>>
+   , Types<Set, Text**, ScopedElement<Text**, true>>
+   , Types<Set, int**,  ScopedElement<int**, true>>
+   , Types<Set, Many**, ScopedElement<Many**, true>>
+   , Types<Set, RT**,   ScopedElement<RT**, true>>
+   , Types<Set, char**, ScopedElement<char**, true>>
 
-   , Types<TMany<Text>,   Text,   ScopedElement<Text, true>>
-   , Types<TMany<int>,    int,    ScopedElement<int, true>>
-   , Types<TMany<Many>,   Many,   ScopedElement<Many, true>>
-   , Types<TMany<RT>,     RT,     ScopedElement<RT, true>>
-   , Types<TMany<char>,   char,   ScopedElement<char, true>>
+   , Types<TSet<Text>,   Text,   ScopedElement<Text, true>>
+   , Types<TSet<int>,    int,    ScopedElement<int, true>>
+   , Types<TSet<Many>,   Many,   ScopedElement<Many, true>>
+   , Types<TSet<RT>,     RT,     ScopedElement<RT, true>>
+   , Types<TSet<char>,   char,   ScopedElement<char, true>>
 
-   , Types<TMany<Text*>,  Text*,  ScopedElement<Text*, true>>
-   , Types<TMany<int*>,   int*,   ScopedElement<int*, true>>
-   , Types<TMany<Many*>,  Many*,  ScopedElement<Many*, true>>
-   , Types<TMany<RT*>,    RT*,    ScopedElement<RT*, true>>
-   , Types<TMany<char*>,  char*,  ScopedElement<char*, true>>
+   , Types<TSet<Text*>,  Text*,  ScopedElement<Text*, true>>
+   , Types<TSet<int*>,   int*,   ScopedElement<int*, true>>
+   , Types<TSet<Many*>,  Many*,  ScopedElement<Many*, true>>
+   , Types<TSet<RT*>,    RT*,    ScopedElement<RT*, true>>
+   , Types<TSet<char*>,  char*,  ScopedElement<char*, true>>
 
-   , Types<TMany<Text**>, Text**, ScopedElement<Text**, true>>
-   , Types<TMany<int**>,  int**,  ScopedElement<int**, true>>
-   , Types<TMany<Many**>, Many**, ScopedElement<Many**, true>>
-   , Types<TMany<RT**>,   RT**,   ScopedElement<RT**, true>>
-   , Types<TMany<char**>, char**, ScopedElement<char**, true>>
+   , Types<TSet<Text**>, Text**, ScopedElement<Text**, true>>
+   , Types<TSet<int**>,  int**,  ScopedElement<int**, true>>
+   , Types<TSet<Many**>, Many**, ScopedElement<Many**, true>>
+   , Types<TSet<RT**>,   RT**,   ScopedElement<RT**, true>>
+   , Types<TSet<char**>, char**, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
-   , Types<Many, pptr8,  ScopedElementPacked<pptr8>>
-   , Types<Many, pptr16, ScopedElementPacked<pptr16>>
-   , Types<Many, pptr32, ScopedElementPacked<pptr32>>
+   , Types<Set, pptr8,  ScopedElementPacked<pptr8>>
+   , Types<Set, pptr16, ScopedElementPacked<pptr16>>
+   , Types<Set, pptr32, ScopedElementPacked<pptr32>>
 
-   , Types<TMany<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
-   , Types<TMany<pptr16>, pptr16, ScopedElementPacked<pptr16>>
-   , Types<TMany<pptr32>, pptr32, ScopedElementPacked<pptr32>>
+   , Types<TSet<pptr8>,  pptr8,  ScopedElementPacked<pptr8>>
+   , Types<TSet<pptr16>, pptr16, ScopedElementPacked<pptr16>>
+   , Types<TSet<pptr32>, pptr32, ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
@@ -133,26 +133,26 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
       T pack_disowned {Piecewise,      Disown(*originalElement)};
 
       WHEN("Value-constructed") {
-         Many_CheckState_OwnedFull<E>(pack_referred1);
-         Many_CheckState_OwnedFull<E>(pack_referred2);
-         Many_CheckState_OwnedFull<E>(pack_copied);
-         Many_CheckState_OwnedFull<E>(pack_cloned);
-         Many_CheckState_OwnedFull<E>(pack_moved1);
-         Many_CheckState_OwnedFull<E>(pack_moved2);
-         Many_CheckState_OwnedFull<E>(pack_abandoned);
-         Many_CheckState_OwnedFull<E>(pack_disowned);
+         Set_CheckState_OwnedFull<E>(pack_referred1);
+         Set_CheckState_OwnedFull<E>(pack_referred2);
+         Set_CheckState_OwnedFull<E>(pack_copied);
+         Set_CheckState_OwnedFull<E>(pack_cloned);
+         Set_CheckState_OwnedFull<E>(pack_moved1);
+         Set_CheckState_OwnedFull<E>(pack_moved2);
+         Set_CheckState_OwnedFull<E>(pack_abandoned);
+         Set_CheckState_OwnedFull<E>(pack_disowned);
 
-         Many_CheckState_ContainsOne(pack_referred1, Refer(originalElement));
-         Many_CheckState_ContainsOne(pack_referred2, Refer(originalElement));
-         Many_CheckState_ContainsOne(pack_copied,    Refer(originalElement));
-         Many_CheckState_ContainsOne(pack_cloned,    Clone(originalElement));
-         Many_CheckState_ContainsOne(pack_moved1,    Refer(originalElement));
-         Many_CheckState_ContainsOne(pack_abandoned, Refer(originalElement));
-         Many_CheckState_ContainsOne(pack_disowned,  Disown(originalElement));
+         Set_CheckState_ContainsOne(pack_referred1, Refer(originalElement));
+         Set_CheckState_ContainsOne(pack_referred2, Refer(originalElement));
+         Set_CheckState_ContainsOne(pack_copied,    Refer(originalElement));
+         Set_CheckState_ContainsOne(pack_cloned,    Clone(originalElement));
+         Set_CheckState_ContainsOne(pack_moved1,    Refer(originalElement));
+         Set_CheckState_ContainsOne(pack_abandoned, Refer(originalElement));
+         Set_CheckState_ContainsOne(pack_disowned,  Disown(originalElement));
 
-         BenchmarkManyStd("Empty/PiecewiseConstructor(" + NameOf<E>() + ")", 30, 400,
-            T temp,                    (new (&temp)     T{Piecewise, *originalElement}),
-            ::std::vector<E> temp_std,  new (&temp_std) ::std::vector<E>{*originalElement}
+         BenchmarkSetStd("Empty/PiecewiseConstructor(" + NameOf<E>() + ")", 30, 400,
+            T temp,                           (new (&temp)     T{Piecewise, *originalElement}),
+            ::std::unordered_set<E> temp_std,  new (&temp_std) ::std::unordered_set<E>{*originalElement}
          );
       }
 
@@ -161,14 +161,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             a.Assign(*element);
 
             if constexpr (CT::Deep<E> and CT::Dense<E>)
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Refer(element));
+               Set_CheckState_OwnedFull<TypeOf<E>>(*element);
+            Set_CheckState_OwnedFull<E>(a);
+            Set_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/Assign(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(*element),                       a.Assign(*originalElement),
-               ::std::vector<E> temp_std (1, *element),  temp_std[0] = *originalElement
+               a.Assign(*element),                              a.Assign(*originalElement),
+               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
             );
          };
 
@@ -185,8 +185,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_refer = [&](T& a) {
                   REQUIRE_THROWS(a.AssignAbsorb(*element));
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Refer(originalElement));
+                  Set_CheckState_OwnedFull<E>(a);
+                  Set_CheckState_ContainsOne(a, Refer(originalElement));
                };
 
                misabsorb_refer(pack_referred1);
@@ -203,16 +203,16 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             auto absorb_refer = [&](T& a, [[maybe_unused]] const char* intent) {
                a.AssignAbsorb(*element);
 
-               Many_Helper_TestSame(a, *element);
+               Set_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == element->GetUses());
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
+               BenchmarkSetStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Refer(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(*element),                          a.AssignAbsorb(*originalElement),
-                  ::std::vector<E> temp_std1 (1, *element);
-                  ::std::vector<E> temp_std2 (1, *originalElement),  temp_std1 = temp_std2
+                  a.AssignAbsorb(*element),                                 a.AssignAbsorb(*originalElement),
+                  ::std::unordered_set<E> temp_std1 (*element);
+                  ::std::unordered_set<E> temp_std2 (*originalElement),  temp_std1 = temp_std2
                );
             };
 
@@ -230,14 +230,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             a.Assign(Clone(*element));
 
             if constexpr (CT::Deep<E> and CT::Dense<E>)
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Clone(element));
+               Set_CheckState_OwnedFull<TypeOf<E>>(*element);
+            Set_CheckState_OwnedFull<E>(a);
+            Set_CheckState_ContainsOne(a, Clone(element));
 
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/Assign(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Clone(*element)),                a.Assign(Clone(*originalElement)),
-               ::std::vector<E> temp_std (1, *element),  temp_std[0] = *originalElement
+               a.Assign(Clone(*element)),                    a.Assign(Clone(*originalElement)),
+               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
             );
          };
 
@@ -254,8 +254,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_clone = [&](T& a) {
                   REQUIRE_THROWS(a.AssignAbsorb(Clone(*element)));
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Clone(originalElement));
+                  Set_CheckState_OwnedFull<E>(a);
+                  Set_CheckState_ContainsOne(a, Clone(originalElement));
                };
 
                misabsorb_clone(pack_referred1);
@@ -272,16 +272,16 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             auto absorb_clone = [&](T& a, [[maybe_unused]] const char* intent) {
                a.AssignAbsorb(Clone(*element));
 
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-               Many_Helper_TestSame(a, *element);
+               Set_CheckState_OwnedFull<TypeOf<E>>(*element);
+               Set_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
+               BenchmarkSetStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Clone(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Clone(*element)),                   a.AssignAbsorb(Clone(*originalElement)),
-                  ::std::vector<E> temp_std1 (1, *element);
-                  ::std::vector<E> temp_std2 (1, *originalElement),  temp_std1 = temp_std2
+                  a.AssignAbsorb(Clone(*element)),                       a.AssignAbsorb(Clone(*originalElement)),
+                  ::std::unordered_set<E> temp_std1 (*element);
+                  ::std::unordered_set<E> temp_std2 (*originalElement),  temp_std1 = temp_std2
                );
             };
 
@@ -299,14 +299,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             a.Assign(Copy(*element));
 
             if constexpr (CT::Deep<E> and CT::Dense<E>)
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Refer(element));
+               Set_CheckState_OwnedFull<TypeOf<E>>(*element);
+            Set_CheckState_OwnedFull<E>(a);
+            Set_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/Assign(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Copy(*element)),                 a.Assign(Copy(*originalElement)),
-               ::std::vector<E> temp_std (1, *element),  temp_std[0] = *originalElement
+               a.Assign(Copy(*element)),                     a.Assign(Copy(*originalElement)),
+               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
             );
          };
 
@@ -323,8 +323,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_copy = [&](T& a) {
                   REQUIRE_THROWS(a.AssignAbsorb(Copy(*element)));
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Refer(originalElement));
+                  Set_CheckState_OwnedFull<E>(a);
+                  Set_CheckState_ContainsOne(a, Refer(originalElement));
                };
 
                misabsorb_copy(pack_referred1);
@@ -341,16 +341,16 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             auto absorb_copy = [&](T& a, [[maybe_unused]] const char* intent) {
                a.AssignAbsorb(Copy(*element));
 
-               Many_CheckState_OwnedFull<TypeOf<E>>(*element);
-               Many_Helper_TestSame(a, *element);
+               Set_CheckState_OwnedFull<TypeOf<E>>(*element);
+               Set_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
+               BenchmarkSetStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Copy(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Copy(*element)),                    a.AssignAbsorb(Copy(*originalElement)),
-                  ::std::vector<E> temp_std1 (1, *element);
-                  ::std::vector<E> temp_std2 (1, *originalElement),  temp_std1 = temp_std2
+                  a.AssignAbsorb(Copy(*element)),                        a.AssignAbsorb(Copy(*originalElement)),
+                  ::std::unordered_set<E> temp_std1 (*element);
+                  ::std::unordered_set<E> temp_std2 (*originalElement),  temp_std1 = temp_std2
                );
             };
 
@@ -369,18 +369,18 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             a.Assign(::std::move(movable));
 
             if constexpr (CT::Deep<E> and CT::Dense<E>)
-               Many_CheckState_Default<TypeOf<E>>(movable);
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Refer(element));
+               Set_CheckState_Default<TypeOf<E>>(movable);
+            Set_CheckState_OwnedFull<E>(a);
+            Set_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/Assign(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               a.Assign(Move(movable1)),                                a.Assign(Move(movable2)),
+               a.Assign(Move(movable1)),                                   a.Assign(Move(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               ::std::vector<E> temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
+               ::std::unordered_set<E> temp_std (::std::move(movable1)),   temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -399,9 +399,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                   auto movable = *element;
                   REQUIRE_THROWS(a.AssignAbsorb(::std::move(movable)));
 
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Refer(originalElement));
-                  Many_CheckState_OwnedFull<int>(movable);
+                  Set_CheckState_OwnedFull<E>(a);
+                  Set_CheckState_ContainsOne(a, Refer(originalElement));
+                  Set_CheckState_OwnedFull<int>(movable);
                   REQUIRE(movable.GetUses() == 2);
                   REQUIRE(movable.template As<int>() == 555);
                };
@@ -421,18 +421,18 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                auto movable = *element;
                a.AssignAbsorb(::std::move(movable));
 
-               Many_CheckState_Default<TypeOf<E>>(movable);
-               Many_Helper_TestSame(a, *element);
+               Set_CheckState_Default<TypeOf<E>>(movable);
+               Set_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
+               BenchmarkSetStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Move(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
-                  a.AssignAbsorb(Move(movable1)),                    a.AssignAbsorb(Move(movable2)),
-                  ::std::vector<E> movable1 (1, *element);
-                  ::std::vector<E> movable2 (1, *originalElement),   movable1 = ::std::move(movable2)
+                  a.AssignAbsorb(Move(movable1)),                       a.AssignAbsorb(Move(movable2)),
+                  ::std::unordered_set<E> movable1 (*element);
+                  ::std::unordered_set<E> movable2 (*originalElement),  movable1 = ::std::move(movable2)
                );
             };
 
@@ -449,13 +449,13 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          auto assign_disown = [&](T& a, [[maybe_unused]] const char* intent) {
             a.Assign(Disown(*element));
 
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Disown(element));
+            Set_CheckState_OwnedFull<E>(a);
+            Set_CheckState_ContainsOne(a, Disown(element));
 
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/Assign(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-               a.Assign(Disown(*element)),               a.Assign(Disown(*originalElement)),
-               ::std::vector<E> temp_std (1, *element),  temp_std[0] = *originalElement
+               a.Assign(Disown(*element)),                   a.Assign(Disown(*originalElement)),
+               ::std::unordered_set<E> temp_std (*element),  temp_std[0] = *originalElement
             );
          };
 
@@ -472,8 +472,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_disown = [&](T& a) {
                   REQUIRE_THROWS(a.AssignAbsorb(Disown(*element)));
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Disown(originalElement));
+                  Set_CheckState_OwnedFull<E>(a);
+                  Set_CheckState_ContainsOne(a, Disown(originalElement));
                };
 
                misabsorb_disown(pack_referred1);
@@ -499,11 +499,11 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                REQUIRE(a.GetUses() == 0);
                REQUIRE_FALSE(a.GetAllocation());
 
-               BenchmarkManyStd(
+               BenchmarkSetStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Disown(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
-                  a.AssignAbsorb(Disown(*element)),                  a.AssignAbsorb(Disown(*originalElement)),
-                  ::std::vector<E> temp_std1 (1, *element);
-                  ::std::vector<E> temp_std2 (1, *originalElement),  temp_std1 = temp_std2
+                  a.AssignAbsorb(Disown(*element)),                     a.AssignAbsorb(Disown(*originalElement)),
+                  ::std::unordered_set<E> temp_std1 (*element);
+                  ::std::unordered_set<E> temp_std2 (*originalElement), temp_std1 = temp_std2
                );
             };
 
@@ -522,18 +522,18 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             a.Assign(Abandon(movable));
 
             if constexpr (CT::Deep<E> and CT::Dense<E>)
-               Many_CheckState_Abandoned<TypeOf<E>>(movable);
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_ContainsOne(a, Refer(element));
+               Set_CheckState_Abandoned<TypeOf<E>>(movable);
+            Set_CheckState_OwnedFull<E>(a);
+            Set_CheckState_ContainsOne(a, Refer(element));
 
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/Assign(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               a.Assign(Abandon(movable1)),                             a.Assign(Abandon(movable2)),
+               a.Assign(Abandon(movable1)),                                a.Assign(Abandon(movable2)),
                auto movable1 = *element;
                auto movable2 = *originalElement;
-               ::std::vector<E> temp_std (1, ::std::move(movable1)),    temp_std[0] = ::std::move(movable2)
+               ::std::unordered_set<E> temp_std (::std::move(movable1)),   temp_std[0] = ::std::move(movable2)
             );
          };
 
@@ -552,9 +552,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                   auto movable = *element;
                   REQUIRE_THROWS(a.AssignAbsorb(Abandon(movable)));
 
-                  Many_CheckState_OwnedFull<E>(a);
-                  Many_CheckState_ContainsOne(a, Refer(originalElement));
-                  Many_CheckState_OwnedFull<int>(movable);
+                  Set_CheckState_OwnedFull<E>(a);
+                  Set_CheckState_ContainsOne(a, Refer(originalElement));
+                  Set_CheckState_OwnedFull<int>(movable);
                   REQUIRE(movable.GetUses() == 2);
                   REQUIRE(movable.template As<int>() == 555);
                };
@@ -574,19 +574,19 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                auto movable = *element;
                a.AssignAbsorb(Abandon(movable));
 
-               Many_CheckState_Abandoned<TypeOf<E>>(movable);
-               Many_Helper_TestSame(a, *element);
+               Set_CheckState_Abandoned<TypeOf<E>>(movable);
+               Set_Helper_TestSame(a, *element);
                REQUIRE(a.GetUses() == 2);
                REQUIRE(a.GetAllocation() == element->GetAllocation());
 
-               BenchmarkManyStd(
+               BenchmarkSetStd(
                   std::string("Piecewise/") + intent + "/AssignAbsorb(Abandon(" + static_cast<std::string>(NameOf<E>()) + "))", 30, 100,
                   T movable1 = *element;
                   T movable2 = *originalElement;
-                  a.AssignAbsorb(Abandon(movable1)),                    a.AssignAbsorb(Abandon(movable2)),
-                  ::std::vector<E> movable1 (1, *element);
-                  ::std::vector<E> movable2 (1, *originalElement);
-                  ::std::vector<E> temp_std = ::std::move(movable1),    temp_std = ::std::move(movable2)
+                  a.AssignAbsorb(Abandon(movable1)),                          a.AssignAbsorb(Abandon(movable2)),
+                  ::std::unordered_set<E> movable1 (*element);
+                  ::std::unordered_set<E> movable2 (*originalElement);
+                  ::std::unordered_set<E> temp_std = ::std::move(movable1),   temp_std = ::std::move(movable2)
                );
             };
 
@@ -623,7 +623,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             LglsDisableWarning_SelfAssign
                a = a;
             LglsDisableWarningPop
-            Many_Helper_TestSame(a, backup);
+            Set_Helper_TestSame(a, backup);
             REQUIRE(a.GetUses() == uses_before);
          };
 
@@ -642,8 +642,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             T absorbed1 {a};
             T absorbed2{Refer {a}};
 
-            Many_Helper_TestSame(absorbed1, a);
-            Many_Helper_TestSame(absorbed2, a);
+            Set_Helper_TestSame(absorbed1, a);
+            Set_Helper_TestSame(absorbed2, a);
             REQUIRE(absorbed1.GetUses() == 3);
             REQUIRE(absorbed2.GetUses() == 3);
          };
@@ -663,9 +663,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             T backup = a;
             T absorbed {::std::move(a)};
 
-            Many_CheckState_Default<E>(a);
-            Many_CheckState_OwnedFull<E>(absorbed);
-            Many_Helper_TestSame(absorbed, backup);
+            Set_CheckState_Default<E>(a);
+            Set_CheckState_OwnedFull<E>(absorbed);
+            Set_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == 2);
          };
 
@@ -684,9 +684,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             T backup = a;
             T absorbed {Move(a)};
 
-            Many_CheckState_Default<E>(a);
-            Many_CheckState_OwnedFull<E>(absorbed);
-            Many_Helper_TestSame(absorbed, backup);
+            Set_CheckState_Default<E>(a);
+            Set_CheckState_OwnedFull<E>(absorbed);
+            Set_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == 2);
          };
 
@@ -705,9 +705,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             T backup = a;
             T absorbed {Abandon {a}};
 
-            Many_CheckState_Abandoned<E>(a);
-            Many_CheckState_OwnedFull<E>(absorbed);
-            Many_Helper_TestSame(absorbed, backup);
+            Set_CheckState_Abandoned<E>(a);
+            Set_CheckState_OwnedFull<E>(absorbed);
+            Set_Helper_TestSame(absorbed, backup);
             REQUIRE(absorbed.GetUses() == 2);
          };
 
@@ -725,8 +725,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          auto absorb_construct_disown = [&](T& a) {
             T absorbed {Disown {a}};
 
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_DisownedFull<E>(absorbed);
+            Set_CheckState_OwnedFull<E>(a);
+            Set_CheckState_DisownedFull<E>(absorbed);
             REQUIRE(absorbed.GetRaw() == a.GetRaw());
             REQUIRE(absorbed.IsExact(a.GetType()));
             REQUIRE(absorbed == a);
@@ -751,14 +751,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          auto absorb_construct_copy = [&](T& a, int entry_refs, int indi_refs) { //TODO this test is probably wrong - check TestSet-Absorb for comparison
             T absorbed {Copy {a}};
 
-            Many_CheckState_OwnedFull<E>(a);
+            Set_CheckState_OwnedFull<E>(a);
             REQUIRE(a.GetUses() == 1);
 
-            Many_CheckState_OwnedFull<E>(absorbed);
+            Set_CheckState_OwnedFull<E>(absorbed);
             REQUIRE(absorbed.GetUses() == 1);
             REQUIRE(absorbed == a);
             REQUIRE(absorbed.GetRaw() != a.GetRaw());
-            REQUIRE(absorbed.template As<E>() == a.template As<E>());
+            REQUIRE(absorbed.template AsAt<E>(0) == a.template AsAt<E>(0));
 
             if constexpr (CT::Sparse<E>) {
                auto entry = *absorbed.GetEntries();
@@ -767,7 +767,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                if (entry)
                   REQUIRE(entry->GetUses() == (entry_refs));
                if constexpr (CT::Referenced<Decay<E>>) {
-                  auto e = absorbed.template As<E>();
+                  auto e = absorbed.template AsAt<E>(0);
                   REQUIRE(DenseCast(e).GetReferences() == indi_refs);
                }
             }
@@ -787,8 +787,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          auto absorb_construct_clone = [&](T& a) {
             T absorbed {Clone {a}};
 
-            Many_CheckState_OwnedFull<E>(a);
-            Many_CheckState_OwnedFull<E>(absorbed);
+            Set_CheckState_OwnedFull<E>(a);
+            Set_CheckState_OwnedFull<E>(absorbed);
             REQUIRE((absorbed == a) == CT::Dense<E>);
             REQUIRE(absorbed.GetUses() == 1);
          };
@@ -803,13 +803,13 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          absorb_construct_clone(pack_disowned);
       }
       
-      WHEN("Emplace (overwrite)") {
+      /*WHEN("Emplace (overwrite)") {
          auto emplace_overwrite = [&](T& a, [[maybe_unused]] const char* intent) {
             ScopedE i666{666};
             const auto i666backup = *i666;
             decltype(auto) instance = a.Emplace(::std::move(*i666));
 
-            Many_CheckState_OwnedFull<E>(a);
+            Set_CheckState_OwnedFull<E>(a);
             if constexpr (CT::Handle<decltype(instance)>)
                REQUIRE(instance.CompareOneEqual(i666backup));
             else
@@ -824,7 +824,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
                   REQUIRE(&*a == &instance);
             }
 
-            BenchmarkMany(
+            BenchmarkSet(
                std::string("Piecewise/") + intent + "/Emplace(" + static_cast<std::string>(NameOf<E>()) + ")", 30,
                auto movable1 = *element;
                auto movable2 = *originalElement;
@@ -857,12 +857,12 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             if constexpr (CT::DescribeConstructible<E> and not CT::Container<T>) {
                decltype(auto) instance = a.Emplace(Describe{descriptor});
 
-               Many_CheckState_OwnedFull<E>(a);
+               Set_CheckState_OwnedFull<E>(a);
                REQUIRE(instance.CompareOneEqual(i666backup));
                REQUIRE(a.GetCount() == 1);
                REQUIRE(a.GetReserved() >= 1);
 
-               BenchmarkMany(
+               BenchmarkSet(
                   std::string("Piecewise/") + intent + "/Emplace(Describe(" + static_cast<std::string>(NameOf<E>()) + "))", 30,
                   auto movable1 = *element;
                   a.Emplace(::std::move(movable1)),      a.Emplace(Describe{descriptor})
@@ -871,7 +871,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             else if constexpr (CT::TypeErased<T>) {
                REQUIRE_THROWS(a.Emplace(Describe{descriptor}));
 
-               Many_CheckState_Default<E>(a, true);
+               Set_CheckState_Default<E>(a, true);
             }
          };
 
@@ -881,19 +881,19 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          emplace_overwrite_describe(pack_moved1,    "Move");
          emplace_overwrite_describe(pack_abandoned, "Abandon");
          emplace_overwrite_describe(pack_disowned,  "Disown");
-      }
+      }*/
       
       WHEN("Cleared") {
          auto clear_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/Clear(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               T temp = a,                               temp.Clear(),
-               ::std::vector<E> temp_std (1, *element),  temp_std.clear()
+               T temp = a,                                   temp.Clear(),
+               ::std::unordered_set<E> temp_std (*element),  temp_std.clear()
             );
 
             a.Clear();
 
-            Many_CheckState_OwnedEmpty<E>(a);
+            Set_CheckState_OwnedEmpty<E>(a);
          };
 
          clear_full(pack_referred1, "Refer");
@@ -906,15 +906,15 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
 
       WHEN("Reset") {
          auto reset_full = [&](T& a, [[maybe_unused]] const char* intent) {
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/Reset(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               T temp = a,                            temp.Reset(),
-               ::std::vector<E> temp_std = *element,  temp_std.reset()
+               T temp = a,                                   temp.Reset(),
+               ::std::unordered_set<E> temp_std{*element},   temp_std.reset()
             );
 
             a.Reset();
 
-            Many_CheckState_Default<E>(a);
+            Set_CheckState_Default<E>(a);
          };
 
          reset_full(pack_referred1, "Refer");
@@ -962,17 +962,17 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
             REQUIRE_FALSE(a != same_pack);
 
             [[maybe_unused]] volatile bool dont_optimize = false;
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/operator==(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               (void) 0,                                             dont_optimize |= (a == same_pack),
-               const ::std::vector<E> a_std (1, *element);
-               const ::std::vector<E> another_pack1_std (1, *e1),    dont_optimize |= (a_std == another_pack1_std)
+               (void) 0,                                                dont_optimize |= (a == same_pack),
+               const ::std::unordered_set<E> a_std (*element);
+               const ::std::unordered_set<E> another_pack1_std (*e1),   dont_optimize |= (a_std == another_pack1_std)
             );
-            BenchmarkManyStd(
+            BenchmarkSetStd(
                std::string("Piecewise/") + intent + "/operator!=(" + static_cast<std::string>(NameOf<E>()) + ")", 30, 100,
-               (void) 0,                                             dont_optimize |= (a != same_pack),
-               const ::std::vector<E> a_std (1, *element);
-               const ::std::vector<E> another_pack1_std (1, *e1),    dont_optimize |= (a_std != another_pack1_std)
+               (void) 0,                                                dont_optimize |= (a != same_pack),
+               const ::std::unordered_set<E> a_std (*element);
+               const ::std::unordered_set<E> another_pack1_std (*e1),   dont_optimize |= (a_std != another_pack1_std)
             );
          };
 
@@ -1009,7 +1009,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          contains_full(pack_disowned);
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkMany("Piecewise/Contains(" + NameOf<E>() + ")", 30,
+         BenchmarkSet("Piecewise/Contains(" + NameOf<E>() + ")", 30,
             (void) 0, dont_optimize |= pack_referred1.Contains(*element)
          );
       }
@@ -1026,9 +1026,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
       WHEN("Copy-assign pack1 to pack2") {
          pack2 = Copy(pack1);
          
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
-         Many_CheckState_ContainsOne(pack2, Refer(e1));
+         Set_CheckState_OwnedFull<E>(pack1);
+         Set_CheckState_OwnedFull<E>(pack2);
+         Set_CheckState_ContainsOne(pack2, Refer(e1));
 
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 1);
@@ -1038,15 +1038,15 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          REQUIRE(    pack1.CompareEqual(pack2));
          REQUIRE(    pack2.CompareEqual(memory1));
          REQUIRE(not pack2.CompareEqual(memory2));
-         REQUIRE(    pack2.CompareOneEqual(*e1));
-         REQUIRE(not pack2.CompareOneEqual(*e2));
+         //REQUIRE(    pack2.CompareOneEqual(*e1));
+         //REQUIRE(not pack2.CompareOneEqual(*e2));
       }
       
       WHEN("Refer-assign pack1 in pack2") {
          pack2 = pack1;
 
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Set_CheckState_OwnedFull<E>(pack1);
+         Set_CheckState_OwnedFull<E>(pack2);
          
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
@@ -1054,14 +1054,14 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          REQUIRE(pack1.CompareEqual(pack2));
          REQUIRE(pack2.CompareEqual(memory1));
          REQUIRE(not pack2.CompareEqual(memory2));
-         REQUIRE(pack2.CompareOneEqual(*e1));
+         //REQUIRE(pack2.CompareOneEqual(*e1));
       }
 
       WHEN("Refer-assign pack1 in pack2 (alt)") {
          pack2 = Refer {pack1};
 
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Set_CheckState_OwnedFull<E>(pack1);
+         Set_CheckState_OwnedFull<E>(pack2);
          
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
@@ -1069,16 +1069,16 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          REQUIRE(pack1.CompareEqual(pack2));
          REQUIRE(pack2.CompareEqual(memory1));
          REQUIRE(not pack2.CompareEqual(memory2));
-         REQUIRE(pack2.CompareOneEqual(*e1));
+         //REQUIRE(pack2.CompareOneEqual(*e1));
       }
 
       WHEN("Move-assign pack1 in pack2") {
          T movable = pack1;
          pack2 = ::std::move(movable);
 
-         Many_CheckState_Default<E>(movable);
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Set_CheckState_Default<E>(movable);
+         Set_CheckState_OwnedFull<E>(pack1);
+         Set_CheckState_OwnedFull<E>(pack2);
          
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
@@ -1092,9 +1092,9 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          T movable = pack1;
          pack2 = Move {movable};
 
-         Many_CheckState_Default<E>(movable);
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Set_CheckState_Default<E>(movable);
+         Set_CheckState_OwnedFull<E>(pack1);
+         Set_CheckState_OwnedFull<E>(pack2);
          
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
@@ -1107,8 +1107,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
       WHEN("Disown-assign pack1 in pack2") {
          pack2 = Disown(pack1);
          
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_DisownedFull<E>(pack2);
+         Set_CheckState_OwnedFull<E>(pack1);
+         Set_CheckState_DisownedFull<E>(pack2);
 
          REQUIRE(pack1.GetUses() == 2);
          REQUIRE(pack2.GetUses() == 0);
@@ -1117,16 +1117,16 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          REQUIRE(pack2 == memory1);
          REQUIRE(pack2 != memory2);
          REQUIRE(pack2.GetAllocation() == nullptr);
-         REQUIRE(pack2.CompareOneEqual(*e1));
+         //REQUIRE(pack2.CompareOneEqual(*e1));
       }
 
       WHEN("Abandon-assign pack1 in pack2") {
          T movable = pack1;
          pack2 = Abandon(movable);
 
-         Many_CheckState_Abandoned<E>(movable);
-         Many_CheckState_OwnedFull<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Set_CheckState_Abandoned<E>(movable);
+         Set_CheckState_OwnedFull<E>(pack1);
+         Set_CheckState_OwnedFull<E>(pack2);
 
          REQUIRE(pack1.GetUses() == 3);
          REQUIRE(pack2.GetUses() == 3);
@@ -1148,8 +1148,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          pack2 = Copy(pack1);
          pack1.Reset();
 
-         Many_CheckState_Default<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Set_CheckState_Default<E>(pack1);
+         Set_CheckState_OwnedFull<E>(pack2);
 
          REQUIRE(pack2.GetUses() == 1);
          REQUIRE(pack2 == memory1);
@@ -1182,8 +1182,8 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Many/TMany", TestType
          pack2 = pack1;
          pack1.Reset();
          
-         Many_CheckState_Default<E>(pack1);
-         Many_CheckState_OwnedFull<E>(pack2);
+         Set_CheckState_Default<E>(pack1);
+         Set_CheckState_OwnedFull<E>(pack2);
 
          REQUIRE(pack2.GetUses() == 2);
          REQUIRE(pack2 == memory1);

@@ -52,6 +52,7 @@ add_langulus_test(LangulusAnynessTest
                
                Anyness/set/TestSet-Empty.cpp
                Anyness/set/TestSet-Absorb.cpp
+               Anyness/set/TestSet-Piecewise.cpp
 
    LIBRARIES   doctest
                LangulusAnyness
