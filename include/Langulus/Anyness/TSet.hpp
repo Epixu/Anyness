@@ -91,7 +91,11 @@ namespace Langulus::Anyness
                );
                this->Absorb(LglsFwd(a1));
             }
-            else this->EmplaceConstruct(LglsFwd(a1));
+            else {
+               this->ConstructDefault();
+               this->Merge(LglsFwd(a1));
+               //this->EmplaceConstruct(LglsFwd(a1));
+            }
          }
          else {
             this->ConstructDefault();

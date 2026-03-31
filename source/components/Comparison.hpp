@@ -417,34 +417,36 @@ namespace Langulus::Anyness::Component
                   // Text types can be more loosely compared            
                   if (self.template IsSame<Text>()) {
                      // Implicitly make a text container                
-                     return self.template Get<Text>() == Text {Disown(rhs)};
+                     if constexpr (CT::Contiguous<C>)
+                        return self.template Get<Text>() == Text {Disown(rhs)};
+                     else
+                        return *self.template GetAt<Text>(0) == Text {Disown(rhs)};
                   }
                }
 
-               /*if constexpr (CT::Container<RT>) {
-                  // Containers can be more loosely compared            
-                  if (not self.IsSparse()) {
-                     auto deep = self.template GetDeep<RT>();
-                     return deep ? *deep == rhs : false;
-                  }
-                  else return false;
-               }
-               else*/ if constexpr (CT::ComparableEqual<RT, RT>) {
+               if constexpr (CT::ComparableEqual<RT, RT>) {
                   // Non-deep element compare                           
-                  if (self.template IsSame<RT>())
-                     return self.template Get<RT>() == rhs;
-                  return false;
+                  if (self.template IsSame<RT>()) {
+                     if constexpr (CT::Contiguous<C>)
+                        return self.template Get<RT>() == rhs;
+                     else
+                        return *self.template GetAt<RT>(0) == rhs;
+                  }
                }
-               else return false;
             }
             else {
                //                                                       
                // Both sides are statically typed                       
-               if constexpr (CT::ComparableEqual<TypeOf<C>, RT>)
-                  return *self.GetRaw() == rhs;
-               else
-                  return false;
+               using T = TypeOf<C>;
+               if constexpr (CT::ComparableEqual<T, RT>) {
+                  if constexpr (CT::Contiguous<C>)
+                     return *self.GetRaw() == rhs;
+                  else
+                     return *self.template GetAt<T>(0) == rhs;
+               }
             }
+
+            return false;
          }
       }
 
