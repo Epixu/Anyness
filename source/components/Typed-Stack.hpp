@@ -22,7 +22,7 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Defines the contained type as a member variable, allowing the use of   
-   /// type-erasure. You can optionally constrain the type.                   
+   /// type-erasure. You can optionally constrain the type at runtime.        
    ///   @tparam META the type of the meta                                    
    ///   @tparam TYPE optionally static type, use void for type-erasure       
    ///   @tparam CONSTRAIN override type-constraint                           
@@ -32,6 +32,7 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
       using StackRequest   = META;
+      //TODO using StateRequest = DefineState::Typed<>;
 
       static constexpr int  ComponentPrecedence = -3000;
       static constexpr bool TypeErased = CT::Void<TYPE>;

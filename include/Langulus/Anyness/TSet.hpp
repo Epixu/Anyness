@@ -49,7 +49,7 @@ namespace Langulus::Anyness
    template<CT::NotVoid T, State::StateValue SORT = State::Variable>
    struct TSet : Inner::TSetBase<T, SORT> {
       using CTTI_Set       = Yes<>;
-      using CTTI_ReflectAs = Many;
+      using CTTI_ReflectAs = Set;
       using CTTI_Deep      = Yes<>;
       using CTTI_MapsTo    = Text;
 

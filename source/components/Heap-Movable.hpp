@@ -123,7 +123,7 @@ namespace Langulus::Anyness::Component
                         dst.EmplaceWithIntent(Clone(src));
 
                      if constexpr (not CT::Contiguous<C>) {
-                        // Copy hash table entry is well                
+                        // Copy hash table entry as well                
                         const auto idx = dst - self.GetHandle();
                         self.GetHashTableInner()[idx] = from.GetHashTableInner()[idx];
                      }
@@ -146,44 +146,6 @@ namespace Langulus::Anyness::Component
                self.PartialSuccess(n);
                throw;
             }
-
-            /*if constexpr (CT::ContainsMany<C, IT>) {
-               auto const srcBeg = from.GetHandle();
-               auto const srcEnd = srcBeg + count;
-               auto src = srcBeg;
-               auto dst = self.GetHandle();
-               try {
-                  while (src.GetRaw() != srcEnd.GetRaw()) {
-                     if constexpr (CT::Copied<I>)
-                        dst.EmplaceWithIntent(Refer(src));
-                     else
-                        dst.EmplaceWithIntent(Clone(src));
-                     ++dst; ++src;
-                  }
-               }
-               catch (...) {
-                  // Partial success                                    
-                  auto n = src - srcBeg;
-                  if constexpr (not requires { self.SetCountInner(1); }) {
-                     // Partial success is not allowed - we have to     
-                     // destroy everything we initialized               
-                     while (n) {
-                        dst.DestroyElement();
-                        --dst;
-                        --n;
-                     }
-                  }
-                  self.PartialSuccess(n);
-                  throw;
-               }
-            }
-            else {
-               auto src = from.GetHandle();
-               if constexpr (CT::Copied<I>)
-                  self.EmplaceWithIntent(Refer(src));
-               else
-                  self.EmplaceWithIntent(Clone(src));
-            }*/
                      
             // Full success                                             
             if constexpr (requires { from.GetHashInner(); }) {
@@ -330,7 +292,7 @@ namespace Langulus::Anyness::Component
                            to.EmplaceWithIntent(Abandon(from));
 
                            if constexpr (not CT::Contiguous<C>) {
-                              // Copy hash table entry is well          
+                              // Copy hash table entry as well          
                               const auto idx = to - self.GetHandle();
                               self.GetHashTableInner()[idx] = previous.GetHashTableInner()[idx];
                            }
@@ -342,22 +304,6 @@ namespace Langulus::Anyness::Component
                      self.SetCountInner(to - self.GetHandle());
                      throw;
                   }
-
-                  /*auto const fromBeg = previous.GetHandle();
-                  auto const fromEnd = fromBeg + previous.GetCount();
-                  auto from = fromBeg;
-                  auto to = self.GetHandle();
-                  try {
-                     while (from.GetRaw() != fromEnd.GetRaw()) {
-                        to.EmplaceWithIntent(Abandon(from));
-                        ++from;
-                        ++to;
-                     }
-                  }
-                  catch (...) {
-                     self.SetCountInner(from - fromBeg);
-                     throw;
-                  }*/
                }
             }
             else {
@@ -403,25 +349,10 @@ namespace Langulus::Anyness::Component
             }
 
             if constexpr (CT::Contiguous<C>) {
-               auto count = backup.GetCount() < desiredReserve
+               self.SetCountInner(backup.GetCount() < desiredReserve
                   ? backup.GetCount()
-                  : desiredReserve;
-               /*auto const fromBeg = backup.GetHandle();
-               auto const fromEnd = fromBeg + count;
-               auto from = fromBeg;
-               auto to = self.GetHandle();
-               try {
-                  while (from.GetRaw() != fromEnd.GetRaw()) {
-                     to.EmplaceWithIntent(Refer(from));
-                     ++from;
-                     ++to;
-                  }
-               }
-               catch (...) {
-                  self.SetCountInner(from - fromBeg);
-                  throw;
-               }*/
-               self.SetCountInner(count);
+                  : desiredReserve
+               );
             }
             else self.SetCountInner(backup.GetCount());
             return;
@@ -568,7 +499,7 @@ namespace Langulus::Anyness::Component
             const C backup {Abandon{self}};
             self.AllocateFresh(self.RequestHeap(newReserve));
 
-            // Reinsert the old items.                                  
+            // Reinsert the old items                                   
             auto to = self.GetHandle();
             try {
                backup.Apply([&to](auto const& from) {
@@ -583,25 +514,6 @@ namespace Langulus::Anyness::Component
             }
 
             self.SetCountInner(backup.GetCount());
-
-            /*auto count = backup.GetCount();
-            auto const fromBeg = backup.GetHandle();
-            auto const fromEnd = fromBeg + count;
-            auto from = fromBeg;
-            auto to = self.GetHandle();
-            try {
-               while (from.GetRaw() != fromEnd.GetRaw()) {
-                  to.EmplaceWithIntent(Refer(from));
-                  ++from;
-                  ++to;
-               }
-            }
-            catch (...) {
-               self.SetCountInner(from - fromBeg);
-               throw;
-            }
-
-            self.SetCountInner(count);*/
          }
          else self.AllocateMore(newReserve);
       }

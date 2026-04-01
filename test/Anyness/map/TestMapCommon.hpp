@@ -5,196 +5,372 @@
 ///                                                                           
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
-
-/// INTENTIONALLY NOT GUARDED                                                 
-/// Include this file once in each cpp file, after all other headers          
+#pragma once
+#include "../set/TestSetCommon.hpp"
 #include <Langulus/Anyness/Map.hpp>
 #include <Langulus/Anyness/TMap.hpp>
 #include <Langulus/Anyness/Pair.hpp>
 #include <Langulus/Anyness/TPair.hpp>
-#include <Langulus/CT/Deep.hpp>
 #include <unordered_map>
-#include "../Common.hpp"
 
+#if LANGULUS(BENCHMARK)
+   /// Perform a persistent benchmark across build and verify performance     
+   #define BenchmarkMap(func, tolerance, my_init, my) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance); \
+   }
 
-///                                                                           
-/// Possible states:                                                          
-///   - uninitialized                                                         
-///   - default                                                               
-template<class K, class V>
-void Map_CheckState_Default(const auto&);
-///   - invariant                                                             
-template<class K, class V>
-void Map_CheckState_Invariant(const auto&);
-///   - owned-full                                                            
-template<class K, class V>
-void Map_CheckState_OwnedFull(const auto&);
-///   - owned-full-const                                                      
-template<class K, class V>
-void Map_CheckState_OwnedFullConst(const auto&);
-///   - owned-empty                                                           
-template<class K, class V>
-void Map_CheckState_OwnedEmpty(const auto&);
-///   - disowned-full                                                         
-template<class K, class V>
-void Map_CheckState_DisownedFull(const auto&);
-///   - disowned-full-const                                                   
-template<class K, class V>
-void Map_CheckState_DisownedFullConst(const auto&);
-///   - abandoned                                                             
-template<class K, class V>
-void Map_CheckState_Abandoned(const auto&);
+   /// Perform two persistent benchmarks across builds - one for Map and      
+   /// one for std::unordered_map. Make sure they don't deviate in a bad way. 
+   #define BenchmarkMapStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs) { \
+      const auto token = ::std::string("Test/") + static_cast<::std::string>(func) + " |" + static_cast<::std::string>(NameOf<T>()) + "|"; \
+      volatile int i = 0; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         my_init; \
+         my; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         my_init; \
+         { \
+            CTRACK_NAME_PERSIST(token.c_str()); \
+            my; \
+         } \
+      } \
+      i = 0; \
+      const auto token_std = ::std::string("Test/") + static_cast<::std::string>(func) + " |std::unordered_map|"; \
+      for (; i < BenchmarkWarmupCycles; i += 1) { \
+         theirs_init; \
+         theirs; \
+      } \
+      for (; i < BenchmarkWarmupCycles + BenchmarkMeasureCycles; i += 1) { \
+         theirs_init; \
+         { \
+            CTRACK_NAME(token_std.c_str()); \
+            theirs; \
+         } \
+      } \
+      auto results = ctrack::result_get_detail_table(); \
+      results.check_highscore(tolerance_highscore); \
+      REQUIRE(results.check_same(token.c_str(), token_std.c_str(), tolerance)); \
+   }
+#else
+   #define BenchmarkMap(func, tolerance, my_init, my)
+   #define BenchmarkMapStd(func, tolerance_highscore, tolerance, my_init, my, theirs_init, theirs)
+#endif
 
+namespace doctest
+{
+   template<Anyness::State::StateValue SORT>
+   struct StringMaker<Anyness::Inner::Map<SORT>> {
+      static String convert(Anyness::Inner::Map<SORT> const& value) {
+         return toString(static_cast<::std::string>(
+            NameOf<Anyness::Inner::Map<SORT>>() + "(" + Convert<Text>(value) + ")"
+         ));
+      }
+   };
 
-
-template<class K, class V>
-void Map_Helper_TestType(const auto& map) {
-   REQUIRE      (map.IsKeyTyped());
-   REQUIRE      (map.IsValueTyped());
-   REQUIRE_FALSE(map.IsKeyUntyped());
-   REQUIRE_FALSE(map.IsValueUntyped());
-
-   REQUIRE      (map.GetKeyType() == MetaDataOf<K>());
-   REQUIRE      (map.GetKeyType().template IsSimilar<const K>());
-   REQUIRE      (map.GetKeyType().template IsExact<K>());
-   REQUIRE      (map.GetKeyType().template Is<K*>());
-   REQUIRE      (map.IsKeyDense() == CT::Dense<K>);
-   REQUIRE      (map.IsKeySparse() == CT::Sparse<K>);
-   REQUIRE      (map.IsKeyDeep() == CT::Deep<K>);
-
-   REQUIRE      (map.GetValueType() == MetaDataOf<V>());
-   REQUIRE      (map.GetValueType().template IsSimilar<const V>());
-   REQUIRE      (map.GetValueType().template IsExact<V>());
-   REQUIRE      (map.GetValueType().template Is<V*>());
-   REQUIRE      (map.IsValueDense() == CT::Dense<V>);
-   REQUIRE      (map.IsValueSparse() == CT::Sparse<V>);
-   REQUIRE      (map.IsValueDeep() == CT::Deep<V>);
+   template<CT::NotVoid T, Anyness::State::StateValue SORT>
+   struct StringMaker<TMap<T, SORT>> {
+      static String convert(TMap<T, SORT> const& value) {
+         return toString(static_cast<::std::string>(
+            NameOf<TMap<T, SORT>>() + "(" + Convert<Text>(value) + ")"
+         ));
+      }
+   };
 }
 
-template<CT::Map LHS, CT::Map RHS>
+
+
+
+template<class K, class V, CT::Container C> requires CT::NoIntent<C>
+void Map_Helper_TestType(C const& map) {
+   if constexpr (CT::Void<K>) {
+      REQUIRE(    map.template IsKeySame<int>());
+      REQUIRE(    map.template IsKeyExact<int>());
+      REQUIRE(    map.template IsKey<int>());
+      REQUIRE(not map.IsKeySparse());
+      REQUIRE(not map.IsKeyDeep());
+      REQUIRE(    map.GetKeyType() == MetaDataOf<int>());
+   }
+   else {
+      REQUIRE(    map.template IsKeySame<K>());
+      REQUIRE(    map.template IsKeyExact<K>());
+      REQUIRE(    map.template IsKey<K>());
+      REQUIRE(    map.IsKeySparse() == CT::Sparse<K>);
+      REQUIRE(    map.IsKeyDeep() == CT::Deep<K>);
+      REQUIRE(    map.GetKeyType() == MetaDataOf<K>());      
+   }
+   
+   if constexpr (CT::Void<V>) {
+      REQUIRE(    map.template IsValSame<int>());
+      REQUIRE(    map.template IsValExact<int>());
+      REQUIRE(    map.template IsVal<int>());
+      REQUIRE(not map.IsValSparse());
+      REQUIRE(not map.IsValDeep());
+      REQUIRE(    map.GetValType() == MetaDataOf<int>());
+   }
+   else {
+      REQUIRE(    map.template IsValSame<V>());
+      REQUIRE(    map.template IsValExact<V>());
+      REQUIRE(    map.template IsVal<V>());
+      REQUIRE(    map.IsValSparse() == CT::Sparse<V>);
+      REQUIRE(    map.IsValDeep() == CT::Deep<V>);
+      REQUIRE(    map.GetValType() == MetaDataOf<V>());      
+   }
+   
+   REQUIRE(map.IsKeyTyped());
+   REQUIRE(map.IsValTyped());
+}
+
+template<class LHS, class RHS> requires (CT::Container<LHS, RHS> and CT::NoIntent<LHS, RHS>)
 void Map_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
-   REQUIRE(lhs.GetRaw() == rhs.GetRaw());
+   REQUIRE(lhs.GetCount() == rhs.GetCount());
+   if (not lhs.IsEmpty())
+      REQUIRE(lhs.GetRaw() == rhs.GetRaw()); // not really a requirement when containers are empty
    REQUIRE(lhs.IsKeyExact(rhs.GetKeyType()));
-   REQUIRE(lhs.IsValueExact(rhs.GetValueType()));
+   REQUIRE(lhs.IsValExact(rhs.GetValType()));
    REQUIRE(lhs == rhs);
-   REQUIRE(lhs.IsDeep() == rhs.IsDeep());
+   REQUIRE(lhs.IsKeyDeep() == rhs.IsKeyDeep());
+   REQUIRE(lhs.IsValDeep() == rhs.IsValDeep());
    REQUIRE(lhs.IsConstant() == rhs.IsConstant());
    REQUIRE(lhs.GetUnconstrainedState() == rhs.GetUnconstrainedState());
 }
 
-
-
-template<class K, class V>
-void Map_CheckState_Default(const auto& map) {
-   using T = Decay<decltype(map)>;
-
-   if constexpr (CT::Typed<T>) {
-      static_assert(CT::Exact<typename T::Key, K>);
-      static_assert(CT::Exact<typename T::Value, V>);
+///                                                                           
+/// Possible state test implementations                                       
+template<class K, class V, CT::Container C> requires CT::NoIntent<C>
+void Map_CheckState_Default(C const& map, bool typed = false) {
+   if constexpr (CT::Typed<C>) {
+      static_assert(Exact<typename TypeOf<C>::First,  K>);
+      static_assert(Exact<typename TypeOf<C>::Second, V>);
+      static_assert(Exact<typename C::Key,  K>);
+      static_assert(Exact<typename C::Val,  V>);
       Map_Helper_TestType<K, V>(map);
-      REQUIRE      (map.GetKeyState() == State::Typed);
-      REQUIRE      (map.GetValueState() == State::Typed);
+
+      if constexpr (requires { map.GetState(); })
+         REQUIRE(map.GetState() == State::Typed);
+   }
+   else if (not typed) {
+      REQUIRE_FALSE(map.IsKeyTyped());
+      REQUIRE      (map.GetKeyType() == nullptr);
+      REQUIRE_FALSE(map.IsKeySparse());
+      REQUIRE_FALSE(map.IsKeyDeep());
+
+      REQUIRE_FALSE(map.IsValTyped());
+      REQUIRE      (map.GetValType() == nullptr);
+      REQUIRE_FALSE(map.IsValSparse());
+      REQUIRE_FALSE(map.IsValDeep());
+
+      if constexpr (requires { map.GetState(); })
+         REQUIRE(map.GetState() == State::Default);
    }
    else {
-      REQUIRE_FALSE(map.IsKeyTyped());
-      REQUIRE_FALSE(map.IsValueTyped());
-      REQUIRE      (map.IsKeyUntyped());
-      REQUIRE      (map.IsValueUntyped());
-      REQUIRE      (map.GetKeyType() == nullptr);
-      REQUIRE      (map.GetValueType() == nullptr);
-      REQUIRE      (map.IsKeyDense());
-      REQUIRE      (map.IsValueDense());
-      REQUIRE_FALSE(map.IsKeySparse());
-      REQUIRE_FALSE(map.IsValueSparse());
-      REQUIRE      (map.GetKeyState() == State::Default);
-      REQUIRE      (map.GetValueState() == State::Default);
-      REQUIRE_FALSE(map.IsKeyDeep());
-      REQUIRE_FALSE(map.IsValueDeep());
+      Map_Helper_TestType<K, V>(map);
+
+      if constexpr (requires { map.GetState(); })
+         REQUIRE(map.GetState() == State::Default);
    }
 
-   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (map.IsValueTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(map.IsKeyCompressed());
-   REQUIRE_FALSE(map.IsValueCompressed());
-   REQUIRE      (map.IsKeyConstant() == CT::Constant<K>);
-   REQUIRE      (map.IsValueConstant() == CT::Constant<V>);
-   REQUIRE_FALSE(map.IsKeyEncrypted());
-   REQUIRE_FALSE(map.IsValueEncrypted());
-   REQUIRE_FALSE(map.IsKeyMissing());
-   REQUIRE_FALSE(map.IsValueMissing());
+   REQUIRE      (map.IsTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsConstant());
    REQUIRE_FALSE(map.IsValid());
-   REQUIRE      (map.IsInvalid());
-   REQUIRE_FALSE(map.GetKeys().GetAllocation());
-   REQUIRE_FALSE(map.GetVals().GetAllocation());
+   REQUIRE_FALSE(map.GetAllocation());
    REQUIRE      (map.IsEmpty());
    REQUIRE      (map.GetCount() == 0);
    REQUIRE      (map.GetReserved() == 0);
-   REQUIRE      (map.GetKeys().GetUses() == 0);
-   REQUIRE      (map.GetVals().GetUses() == 0);
-   REQUIRE      (map.GetRawKeysMemory() == nullptr);
-   REQUIRE      (map.GetRawValsMemory() == nullptr);
+   REQUIRE      (map.GetUses() == 0);
+   //REQUIRE      (map.GetRaw() == nullptr); // not really a requirement for the default state. Count being 0 is enough in most cases
    REQUIRE_FALSE(map);
    REQUIRE      (not map);
+
+   Many_CheckState_Default<K>(map.GetKeys());
+   Many_CheckState_Default<V>(map.GetVals());
+
+   REQUIRE_FALSE(map.IsCompressed());
+   REQUIRE_FALSE(map.IsEncrypted());
+   REQUIRE_FALSE(map.IsSorted());
 }
 
-template<class K, class V>
-void Map_CheckState_OwnedEmpty(const auto& map) {
-   using T = Decay<decltype(map)>;
-
+template<class K, class V, CT::Container C> requires CT::NoIntent<C>
+void Map_CheckState_OwnedEmpty(C const& map) {
    Map_Helper_TestType<K, V>(map);
 
-   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (map.IsValueTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(map.IsKeyCompressed());
-   REQUIRE_FALSE(map.IsValueCompressed());
-   REQUIRE      (map.IsKeyConstant() == CT::Constant<K>);
-   REQUIRE      (map.IsValueConstant() == CT::Constant<V>);
-   REQUIRE_FALSE(map.IsKeyEncrypted());
-   REQUIRE_FALSE(map.IsValueEncrypted());
-   REQUIRE_FALSE(map.IsKeyMissing());
-   REQUIRE_FALSE(map.IsValueMissing());
+   REQUIRE      (map.IsTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsConstant() == CT::Constant<V>);
    REQUIRE_FALSE(map.IsValid());
-   REQUIRE      (map.IsInvalid());
-   REQUIRE      (map.GetKeys().GetAllocation());
-   REQUIRE      (map.GetVals().GetAllocation());
+   REQUIRE      (map.GetAllocation());
    REQUIRE      (map.IsEmpty());
    REQUIRE      (map.GetCount() == 0);
    REQUIRE      (map.GetReserved() > 0);
-   REQUIRE      (map.GetKeys().GetUses() == 1);
-   REQUIRE      (map.GetVals().GetUses() == 1);
-   REQUIRE      (map.GetRawKeysMemory());
-   REQUIRE      (map.GetRawValsMemory());
+   REQUIRE      (map.GetUses() == 1);
+   //REQUIRE      (map.GetRaw() == nullptr); // not really a requirement for the owned-empty state. Count being 0 is enough in most cases
    REQUIRE_FALSE(map);
    REQUIRE      (not map);
+
+   Many_CheckState_OwnedEmpty<K>(map.GetKeys());
+   Many_CheckState_OwnedEmpty<V>(map.GetVals());
 }
 
-template<class K, class V>
-void Map_CheckState_OwnedFull(const auto& map) {
-   using T = Decay<decltype(map)>;
-
+template<class K, class V, CT::Container C> requires CT::NoIntent<C>
+void Map_CheckState_OwnedFull(C const& map) {
    Map_Helper_TestType<K, V>(map);
 
-   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<T>);
-   REQUIRE      (map.IsValueTypeConstrained() == CT::Typed<T>);
-   REQUIRE_FALSE(map.IsKeyCompressed());
-   REQUIRE_FALSE(map.IsValueCompressed());
-   REQUIRE      (map.IsKeyConstant() == CT::Constant<K>);
-   REQUIRE      (map.IsValueConstant() == CT::Constant<V>);
-   REQUIRE_FALSE(map.IsKeyEncrypted());
-   REQUIRE_FALSE(map.IsValueEncrypted());
-   REQUIRE_FALSE(map.IsKeyMissing());
-   REQUIRE_FALSE(map.IsValueMissing());
+   REQUIRE      (map.IsTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsConstant() == CT::Constant<V>);
    REQUIRE      (map.IsValid());
-   REQUIRE_FALSE(map.IsInvalid());
-   REQUIRE      (map.GetKeys().GetAllocation());
-   REQUIRE      (map.GetVals().GetAllocation());
+   REQUIRE      (map.GetAllocation());
    REQUIRE_FALSE(map.IsEmpty());
    REQUIRE      (map.GetCount() > 0);
    REQUIRE      (map.GetReserved() > 0);
-   REQUIRE      (map.GetKeys().GetUses() > 0);
-   REQUIRE      (map.GetVals().GetUses() > 0);
-   REQUIRE      (map.GetRawKeysMemory());
-   REQUIRE      (map.GetRawValsMemory());
+   REQUIRE      (map.GetUses() > 0);
+   REQUIRE      (map.GetRaw());
    REQUIRE      (map);
    REQUIRE_FALSE(not map);
+
+   Many_CheckState_OwnedFull<K>(map.GetKeys());
+   Many_CheckState_OwnedFull<V>(map.GetVals());
+}
+
+template<class K, class V, CT::Container C> requires CT::NoIntent<C>
+void Map_CheckState_DisownedFull(C const& map) {
+   Map_Helper_TestType<K, V>(map);
+
+   REQUIRE      (map.IsTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsConstant());
+   REQUIRE      (map.IsValid());
+   REQUIRE_FALSE(map.GetAllocation());
+   REQUIRE_FALSE(map.IsEmpty());
+   REQUIRE      (map.GetCount() > 0);
+   REQUIRE      (map.GetReserved() > 0); // Many keeps its reserved count as a member, so it's allowed to be absorbed and passed around
+   REQUIRE      (map.GetUses() == 0);
+   REQUIRE      (map.GetRaw());
+   REQUIRE      (map);
+   REQUIRE_FALSE(not map);
+
+   Many_CheckState_DisownedFull<K>(map.GetKeys());
+   Many_CheckState_DisownedFull<V>(map.GetVals());
+}
+
+template<class K, class V, CT::Container C> requires CT::NoIntent<C>
+void Map_CheckState_Abandoned(C const& map) {
+   REQUIRE_FALSE(map.GetAllocation());
+
+   Many_CheckState_Abandoned<K>(map.GetKeys());
+   Many_CheckState_Abandoned<V>(map.GetVals());
+}
+
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
+   Many_VerifyAccessorInterface(set, LglsFwd(e_with_intent));
+
+   auto& e = e_with_intent.what;
+   using E = typename Decay<Deint<I>>::Type;
+
+   if constexpr (CT::Deep<E> and CT::Dense<E>)
+      REQUIRE(set.template AsAt<E*>(0)->template IsSame<int>());
+
+   REQUIRE(set.GetCount() == 1);
+   REQUIRE(set.GetUses() == uses);
+   REQUIRE(set.GetReserved() >= (uses ? 1 : 0));
+
+   if constexpr (not CT::CustomPointer<E>)
+      REQUIRE(set.template AsAt<Decay<E>>(0) == DenseCast(*e));
+
+   if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
+      REQUIRE(set.template AsAt<E>(0) != *e);
+      REQUIRE((*set.template AsAt<E*>(0)) != *e);
+   }
+   else {
+      REQUIRE(set.template AsAt<E>(0) == *e);
+      REQUIRE((*set.template AsAt<E*>(0)) == *e);
+   }
+
+   if constexpr (CT::Dense<E>)
+      REQUIRE(set.GetEntries() == nullptr);
+   else if (uses) {
+      REQUIRE(set.GetEntries() != nullptr);
+
+      if constexpr (not CT::Disowned<I>) {
+         for (size_t i = 0; i < IndirectsOf<E>; ++i) {
+            if constexpr (CT::Cloned<I>)
+               REQUIRE(set.GetEntriesAt(0)[i] != e.entries[i + 1]);
+            else
+               REQUIRE(set.GetEntriesAt(0)[i] == e.entries[i + 1]);
+         }
+      }
+      else {
+         for (size_t i = 0; i < IndirectsOf<E>; ++i)
+            REQUIRE(set.GetEntriesAt(0)[i] == nullptr);
+      }
+   }
+
+   if constexpr (CT::TypeErased<T>) {
+      REQUIRE_THROWS(set.template AsAt<float>(0) == 0.0f);
+      REQUIRE_THROWS(set.template AsAt<float*>(0) == nullptr);
+   }
+
+   if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
+      //TODO test all kinds of ranged modifiers??
+      for (auto& it : set) {
+         if constexpr (CT::TypeErased<T>)
+            REQUIRE(not it.CompareOneEqual(*e));
+         else
+            REQUIRE(it != *e);
+      }
+   }
+   else {
+      //TODO test all kinds of ranged modifiers??
+      for (auto& it : set) {
+         if constexpr (CT::TypeErased<T>)
+            REQUIRE(it.CompareOneEqual(*e));
+         else
+            REQUIRE(it == *e);
+      }
+   }
+}
+
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Set_CheckState_ContainsN(size_t n, const T& set, I&& e_scoped_with_intent, int uses = 1) {
+   auto& e = e_scoped_with_intent.what;
+   //using E = typename Decay<Deint<I>>::Type;
+
+   REQUIRE(set.GetCount() == n);
+   REQUIRE(set.GetUses() == uses);
+   REQUIRE(set.GetReserved() >= n);
+
+   for (auto& it : set)
+      REQUIRE(it == e);
+
+   //TODO other kinds of iterations
+}
+
+template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
+void Set_CheckState_ContainsArray(const T& set, I&& e_scoped_array_with_intent) {
+   auto  e = e_scoped_array_with_intent.what;
+   //using E = typename Decay<Deint<I>>::Type;
+   constexpr size_t n = ExtentOf<decltype(e_scoped_array_with_intent.what)>;
+
+   REQUIRE(set.GetCount() == n);
+   REQUIRE(set.GetUses() == 1);
+   REQUIRE(set.GetReserved() >= n);
+
+   //TODO
+}
+
+template<CT::Container T, class E> requires CT::NoIntent<T>
+void Set_Helper_CompareOne(const T& set, const E& e) {
+   Many_Helper_CompareOne(set, e);
 }
