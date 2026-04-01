@@ -138,7 +138,7 @@ namespace Langulus::Anyness
       template<Cid>                     friend struct Com::Assignment;
       template<CT::State...>            friend struct Com::StateStack;
       template<Cid, class>              friend struct Com::ReserveEmergent;
-                                        friend struct Com::Conversion;
+      template<Cid>                     friend struct Com::Conversion;
       template<Cid, class HASH>         friend struct Com::IndexedHashHeap;
       template<Cid, class HASH>         friend struct Com::IndexedHashStack;
 

@@ -43,7 +43,7 @@ namespace Langulus::Anyness::Component
       template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
       template<Cid>             friend struct Emplacement;
       template<Cid, bool>       friend struct Comparison;
-                                friend struct Conversion;
+      template<Cid>             friend struct Conversion;
       template<auto COUNT>      friend struct CountStatic;
       template<Cid, bool>       friend struct OwnershipEmergent;
       template<Cid, bool>       friend struct OwnershipDeepEmergent;

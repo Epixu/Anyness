@@ -57,7 +57,7 @@ namespace Langulus::Anyness::Component
       template<Cid, class>      friend struct Insertion;
       template<Cid, class>      friend struct IndexedLinear;
       template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-                                friend struct Conversion;
+      template<Cid>             friend struct Conversion;
 
       /// Get count (inner)                                                   
       template<CT::Container C>

@@ -147,7 +147,7 @@ namespace Langulus::Anyness
       template<Cid = 0>                   struct Assignment;
                                           struct Charge;
       template<Cid = 0, bool HASH = true> struct Comparison;
-                                          struct Conversion;
+      template<Cid = 0>                   struct Conversion;
       template<Cid = 0, class T = size_t> struct CountHeap;
       template<Cid = 0, class T = size_t> struct CountStack;
       template<auto COUNT>                struct CountStatic;

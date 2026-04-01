@@ -25,7 +25,7 @@ namespace Langulus::Anyness::Inner
       Com::MergingOperators<>,         // <<= and >>= merging           
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
-      Com::Conversion,                 // Allows conversions            
+      Com::Conversion<>,               // Allows conversions            
       Com::Comparison<>,               // Allows comparisons            
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              

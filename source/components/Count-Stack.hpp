@@ -55,7 +55,7 @@ namespace Langulus::Anyness::Component
       template<Cid>             friend struct IndexedCommon;
       template<Cid, class>      friend struct IndexedLinear;
       template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-                                friend struct Conversion;
+      template<Cid>             friend struct Conversion;
 
       /// Get count (inner)                                                   
       constexpr auto& GetCountInner(this auto&& self) noexcept {

@@ -23,7 +23,7 @@ namespace Langulus::Anyness::Inner
       Com::Emplacement<>,              // Allows emplacement            
       Com::Assignment<>,               // Allows assignment             
       Com::Removal<>,                  // Allows clear/reset            
-      Com::Conversion,                 // Allows conversion             
+      Com::Conversion<>,               // Allows conversion             
       Com::Comparison<>,               // Allows comparisons            
       Com::StateStack<                 // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 

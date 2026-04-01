@@ -147,7 +147,7 @@ void Many_CheckState_Abandoned(const C& many) {
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
-void Many_VerifyAccessorInterface(T const& many, I&& e_with_intent) {
+void Many_VerifyAccessorInterface(T const& many, I&&) {
    using E = typename Decay<Deint<I>>::Type;
 
    // The Get method always adds a pointer, because it interfaces the   

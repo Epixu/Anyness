@@ -14,6 +14,7 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Implements conversion/serialization for containers                     
+   template<Cid ID>
    struct Conversion {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

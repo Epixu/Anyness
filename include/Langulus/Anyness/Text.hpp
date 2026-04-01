@@ -49,7 +49,7 @@ namespace Langulus::Anyness
          Com::Removal<>,                  // Allows removal             
          Com::Assignment<>,               // Allows assignment          
          Com::Comparison<>,               // Allows for comparison      
-         Com::Conversion,                 // Allows conversion          
+         Com::Conversion<>,               // Allows conversion          
          Com::IterationForEach<>,         // ForEach iteration          
          Com::IterationRange<>            // Range iteration            
       >;

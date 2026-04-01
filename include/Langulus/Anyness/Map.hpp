@@ -6,254 +6,188 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Langulus/Utils/Iterate-Handles.hpp>
 #include "../../../source/Container.hpp"
-#include "../../../source/components/Heap-Movable.hpp"
-#include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership-Heap.hpp"
-#include "../../../source/components/Hash-Heap.hpp"
-#include "../../../source/components/Indexed-Hash.hpp"
-#include "../../../source/components/Insertion.hpp"
-#include "../../../source/components/InsertionOperators.hpp"
-#include "../../../source/components/Emplacement.hpp"
-#include "../../../source/components/Removal.hpp"
-#include "../../../source/components/Assignment.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
+#include "../../../source/components/Heap-Movable.hpp"
+#include "../../../source/components/Heap-Reuse.hpp"
 #include "../../../source/components/Count-Stack.hpp"
 #include "../../../source/components/Reserve-Stack.hpp"
+#include "../../../source/components/Ownership-Stack.hpp"
+#include "../../../source/components/OwnershipDeep-Heap.hpp"
+#include "../../../source/components/Hash-Heap.hpp"
+#include "../../../source/components/IndexedHash-Stack.hpp"
+#include "../../../source/components/Merging.hpp"
+#include "../../../source/components/MergingOperators.hpp"
+#include "../../../source/components/Assignment.hpp"
+#include "../../../source/components/Removal.hpp"
+#include "../../../source/components/Conversion.hpp"
 #include "../../../source/components/Comparison.hpp"
 #include "../../../source/components/Iteration-ForEach.hpp"
 #include "../../../source/components/Iteration-Range.hpp"
 #include "../../../source/components/State-Stack.hpp"
+#include "../../../source/states/Typed.hpp"
 #include "../../../source/states/Sorted.hpp"
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
-#include "Handle.hpp"
 
+
+namespace Langulus::Anyness::Inner
+{
+   template<State::StateValue SORT>
+   using MapBase = Container<
+      Com::TypedStack<DMeta, void, false, 0>,  // Type-erased keys      
+      Com::TypedStack<DMeta, void, false, 1>,  // Type-erased values    
+      Com::HeapMovable<0, 8, 2>,       // Pointer to key & value memory 
+      Com::HeapReuse<1, 0>,            // Reuses HeapMovable<0>         
+      Com::CountStack<0>,              // Dynamically sized             
+      Com::CountReuse<1, 0>,           // Reuses CountStack<0>          
+      Com::ReserveStack<0>,            // Reserve kept as member        
+      Com::ReserveReuse<1, 0>,         // Reuses ReserveStack<0>        
+      Com::IndexedHashStack<0>,        // Indexed by hash table         
+      Com::IndexedHashReuse<1, 0>,     // Reuses IndexedHashStack<0>    
+      Com::OwnershipStack<0>,          // Allocation is referenced      
+      Com::OwnershipReuse<1, 0>,       // Reuses OwnershipStack<0>      
+      Com::OwnershipDeepHeap<0>,       // Sparse keys are referenced    
+      Com::OwnershipDeepHeap<1>,       // Sparse values are referenced  
+      Com::HashHeap<0>,                // Hash can be cached            
+      Com::HashReuse<1, 0>,            // Reuses HashHeap<0>            
+      Com::Merging<0>,                 // Allows merging keys           
+      Com::Insertion<1>,               // Allows inserting values       
+      Com::Assignment<1>,              // Allows assignment of values   
+      Com::Removal<0>,                 // Allows clear/reset of keys    
+      Com::Removal<1>,                 // Allows clear/reset of values  
+      Com::Conversion<0>,              // Allows conversions of keys    
+      Com::Conversion<1>,              // Allows conversions of values  
+      Com::Comparison<0>,              // Allows comparisons of keys    
+      Com::Comparison<1>,              // Allows comparisons of values  
+      Com::IterationForEach<0>,        // ForEach iteration of keys     
+      Com::IterationForEach<1>,        // ForEach iteration of values   
+      Com::IterationRange<0>,          // Ranged iteration of keys      
+      Com::IterationRange<1>,          // Ranged iteration of values    
+      Com::StateStack<                 // Variable state                
+         DefineState::Typed<>,         // Can be type-constrained       
+         DefineState::Sorted<SORT>,    // Maybe unsorted                
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
+      >
+   >;
+
+   ///                                                                        
+   /// A universal type-erased non-contiguous map of variable size.           
+   /// Emplacement is disabled for maps, because keys aren't allowed to       
+   /// change in-place. This also means that they are only const-iteratable.  
+   /// Values, on the other hand, are mutable.                                
+   template<State::StateValue SORTED = State::Variable>
+   struct Map : MapBase<SORTED> {
+      using CTTI_Map      = Yes<>;
+      using CTTI_Deep     = Yes<>;
+      using CTTI_MapsTo   = Text;
+
+      using Base          = MapBase<SORTED>;
+      using DeepType      = Many;
+
+      using DefineState::Typed<>::IsTypeConstrained;
+      using DefineState::Typed<>::EnableTypeConstrained;
+
+      constexpr Map() noexcept {
+         this->ConstructDefault();
+      }
+      constexpr Map(Map const& other) {
+         this->Absorb(Refer(other));
+      }
+      constexpr Map(Map&& other) noexcept  {
+         this->Absorb(Move(other));
+      }
+      constexpr ~Map() noexcept {
+         this->Destroy();
+      }
+
+      /// Construction that either absorbs the provided containers, or        
+      /// emplaces all A in the container                                     
+      template<class A1, class...AN>
+      constexpr Map(A1&& a1, AN&&...an) {
+         if constexpr (sizeof...(AN) == 0) {
+            if constexpr (CT::Map<A1>) {
+               LglsAssumeUser((Same<Deint<A1>, Map>),
+                  "Ambiguous use of construction "
+                  "- you should use tag-dispatch with first argument either Absorb "
+                  "(if you want to overwrite the container itself) or Piecewise "
+                  "(if you want to overwrite the first item) in order to clearly "
+                  "state your intent. Absorb will be used by default!"
+               );
+               this->Absorb(LglsFwd(a1));
+            }
+            else {
+               this->ConstructDefault();
+               this->Merge(LglsFwd(a1));
+            }
+         }
+         else {
+            this->ConstructDefault();
+            this->Insert(LglsFwd(a1), LglsFwd(an)...);
+         }
+      }
+      
+      /// Construction that absorbs the provided containers                   
+      template<class A1, class...AN>
+      constexpr Map(Inner::Absorb, A1&& a1, AN&&...an) {
+         if constexpr (sizeof...(AN) == 0)
+            this->Absorb(LglsFwd(a1));
+         else {
+            this->ConstructDefault();
+            this->Concat(LglsFwd(a1), LglsFwd(an)...);
+         }
+      }
+      
+      /// Construction that emplaces all arguments inside                     
+      template<class A1, class...AN>
+      constexpr Map(Inner::Piecewise, A1&& a1, AN&&...an) {
+         this->ConstructDefault();
+         this->Merge(LglsFwd(a1), LglsFwd(an)...);
+      }
+      
+      /// Assignment                                                          
+      constexpr Map& operator = (Map const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr Map& operator = (Map&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
+      }
+      
+      template<class A>
+      constexpr Map& operator = (A&& argument) {
+         if constexpr (CT::Map<A>) {
+            LglsAssumeUser((Same<Deint<A>, Map>),
+               "Ambiguous use of assignment "
+               "- you should use either AssignAbsorb (if you want to overwrite "
+               "the container itself) or Assign (if you want to overwrite the "
+               "first item) in order to clearly state your intent. "
+               "AssignAbsorb will be used by default!"
+            );
+            return this->AssignAbsorb(LglsFwd(argument));
+         }
+         else return this->Assign(LglsFwd(argument));
+      }
+
+      using Com::Comparison<>::operator <=>;
+      using Com::Comparison<>::operator ==;
+   };
+}
 
 namespace Langulus::Anyness
 {
-   ///                                                                        
-   /// Type-erased map of unspecified state                                   
-   ///                                                                        
-   struct Map : Container<
-      Com::HeapMovable<0>,             // Heap for keys                 
-      Com::HeapMovable<1>,             // Heap for values               
-      Com::OwnershipStack<0>,          // Keys allocation is referenced 
-      Com::OwnershipStack<1>,          // Vals allocation is referenced 
-      Com::DeepOwnershipHeap<0>,       // Sparse keys are referenced    
-      Com::DeepOwnershipHeap<1>,       // Sparse vals are referenced    
-      Com::HashHeap<0>,                // Keys can be hashed            
-      Com::HashHeap<1>,                // Values can be hashed          
-      Com::IndexedHash<0>,             // Indexed by hashing keys       
-      Com::Insertion<0>,               // Allows key insertion          
-      Com::Insertion<1>,               // Allows val insertion          
-      Com::InsertionOperators<0>,      // << and >> insertion of keys   
-      Com::InsertionOperators<1>,      // << and >> insertion of vals   
-      Com::Emplacement<0>,             // Allows emplacement of keys    
-      Com::Emplacement<1>,             // Allows emplacement of vals    
-      Com::Removal<0>,                 // Allows removal of keys        
-      Com::Removal<1>,                 // Allows removal of vals        
-      Com::Assignment<0>,              // Allows assignment of keys     
-      Com::Assignment<1>,              // Allows assignment of vals     
-      Com::TypedStack<DMeta, void, 0>, // Key type                      
-      Com::TypedStack<DMeta, void, 1>, // Value type                    
-      Com::CountStack<>,               // Variable count                
-      Com::ReserveStack<>,             // Variable capacity             
-      Com::Comparison,                 // Allows for comparison         
-      Com::IterationForEach<0>,        // Iterate keys using lambdas    
-      Com::IterationForEach<1>,        // Iterate vals using lambdas    
-      Com::IterationRange<0>,          // Iterate keys using ranges     
-      Com::IterationRange<1>,          // Iterate vals using ranges     
-      Com::StateStack<                 // Variable state                
-         DefineState::Sorted<>,        // Maybe unsorted                
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >
-   > {
-      using CTTI_Map = Yes<>;
+   using Map         = Inner::Map<State::Variable>;
+   using MapSorted   = Inner::Map<State::Enabled>;
+   using MapUnsorted = Inner::Map<State::Disabled>;
+}
 
-      using KeyMut = HandleMut;
-      using Key    = Handle;
-
-      using ValMut = HandleMut;
-      using Val    = Handle;
-
-      using IteratorMut = typename IterateTogether<const Many,       Many>::Iterator;
-      using Iterator    = typename IterateTogether<const Many, const Many>::Iterator;
-
-      static constexpr bool TypeErased = true;
-
-      ///                                                                     
-      ///   Construction                                                      
-      constexpr Map() noexcept = default;
-      constexpr Map(const Map&) noexcept = default;
-      constexpr Map(Map&&) noexcept = default;
-
-      template<class A1, class...AN>
-      Map(A1&&, AN&&...) requires CT::RangeInsertable<Map, A1, AN...>;
-
-      ///                                                                     
-      ///   Capsulation                                                       
-      Hash GetHash() const;
-
-      ///                                                                     
-      ///   Removal                                                           
-      auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
-      auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
-      auto RemovePair (const CT::Pair auto&) -> CountType;
-      void RemoveIt   (IteratorMut&);
-   };
-   
-
-   ///                                                                        
-   /// Unsorted type-erased map                                               
-   ///                                                                        
-   struct MapUnsorted : Container<
-      Com::HeapMovable<0>,             // Heap for keys                 
-      Com::HeapMovable<1>,             // Heap for values               
-      Com::OwnershipStack<0>,          // Keys allocation is referenced 
-      Com::OwnershipStack<1>,          // Vals allocation is referenced 
-      Com::DeepOwnershipHeap<0>,       // Sparse keys are referenced    
-      Com::DeepOwnershipHeap<1>,       // Sparse vals are referenced    
-      Com::HashHeap<0>,                // Keys can be hashed            
-      Com::HashHeap<1>,                // Values can be hashed          
-      Com::IndexedHash<0>,             // Indexed by hashing keys       
-      Com::Insertion<0>,               // Allows key insertion          
-      Com::Insertion<1>,               // Allows val insertion          
-      Com::InsertionOperators<0>,      // << and >> insertion of keys   
-      Com::InsertionOperators<1>,      // << and >> insertion of vals   
-      Com::Emplacement<0>,             // Allows emplacement of keys    
-      Com::Emplacement<1>,             // Allows emplacement of vals    
-      Com::Removal<0>,                 // Allows removal of keys        
-      Com::Removal<1>,                 // Allows removal of vals        
-      Com::Assignment<0>,              // Allows assignment of keys     
-      Com::Assignment<1>,              // Allows assignment of vals     
-      Com::TypedStack<DMeta, void, 0>, // Key type                      
-      Com::TypedStack<DMeta, void, 1>, // Value type                    
-      Com::CountStack<>,               // Variable count                
-      Com::ReserveStack<>,             // Variable capacity             
-      Com::Comparison,                 // Allows for comparison         
-      Com::IterationForEach<0>,        // Iterate keys using lambdas    
-      Com::IterationForEach<1>,        // Iterate vals using lambdas    
-      Com::IterationRange<0>,          // Iterate keys using ranges     
-      Com::IterationRange<1>,          // Iterate vals using ranges     
-      Com::StateStack<                 // Variable state                
-         DefineState::Sorted<State::Disabled>,  // Always unsorted      
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >
-   > {
-      using CTTI_ReflectAs = Map;
-      using CTTI_Map       = Yes<>;
-
-      using KeyMut = HandleMut;
-      using Key    = Handle;
-
-      using ValMut = HandleMut;
-      using Val    = Handle;
-
-      using IteratorMut = typename IterateTogether<const Many,       Many>::Iterator;
-      using Iterator    = typename IterateTogether<const Many, const Many>::Iterator;
-
-      static constexpr bool TypeErased = true;
-
-      ///                                                                     
-      ///   Construction                                                      
-      constexpr MapUnsorted() noexcept = default;
-      constexpr MapUnsorted(const MapUnsorted&) noexcept = default;
-      constexpr MapUnsorted(MapUnsorted&&) noexcept = default;
-
-      template<class A1, class...AN>
-      MapUnsorted(A1&&, AN&&...) requires CT::RangeInsertable<MapUnsorted, A1, AN...>;
-
-      ///                                                                     
-      ///   Capsulation                                                       
-      Hash GetHash() const;
-
-      ///                                                                     
-      ///   Removal                                                           
-      auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
-      auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
-      auto RemovePair (const CT::Pair auto&) -> CountType;
-      void RemoveIt   (IteratorMut&);
-   };
-   
-
-   ///                                                                        
-   /// Sorted type-erased map                                                 
-   ///                                                                        
-   struct MapSorted : Container<
-      Com::HeapMovable<0>,             // Heap for keys                 
-      Com::HeapMovable<1>,             // Heap for values               
-      Com::OwnershipStack<0>,          // Keys allocation is referenced 
-      Com::OwnershipStack<1>,          // Vals allocation is referenced 
-      Com::DeepOwnershipHeap<0>,       // Sparse keys are referenced    
-      Com::DeepOwnershipHeap<1>,       // Sparse vals are referenced    
-      Com::HashHeap<0>,                // Keys can be hashed            
-      Com::HashHeap<1>,                // Values can be hashed          
-      Com::IndexedHash<0>,             // Indexed by hashing keys       
-      Com::Insertion<0>,               // Allows key insertion          
-      Com::Insertion<1>,               // Allows val insertion          
-      Com::InsertionOperators<0>,      // << and >> insertion of keys   
-      Com::InsertionOperators<1>,      // << and >> insertion of vals   
-      Com::Emplacement<0>,             // Allows emplacement of keys    
-      Com::Emplacement<1>,             // Allows emplacement of vals    
-      Com::Removal<0>,                 // Allows removal of keys        
-      Com::Removal<1>,                 // Allows removal of vals        
-      Com::Assignment<0>,              // Allows assignment of keys     
-      Com::Assignment<1>,              // Allows assignment of vals     
-      Com::TypedStack<DMeta, void, 0>, // Key type                      
-      Com::TypedStack<DMeta, void, 1>, // Value type                    
-      Com::CountStack<>,               // Variable count                
-      Com::ReserveStack<>,             // Variable capacity             
-      Com::Comparison,                 // Allows for comparison         
-      Com::IterationForEach<0>,        // Iterate keys using lambdas    
-      Com::IterationForEach<1>,        // Iterate vals using lambdas    
-      Com::IterationRange<0>,          // Iterate keys using ranges     
-      Com::IterationRange<1>,          // Iterate vals using ranges     
-      Com::StateStack<                 // Variable state                
-         DefineState::Sorted<State::Enabled>,   // Always sorted        
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >
-   > {
-      using CTTI_ReflectAs = Map;
-      using CTTI_Map       = Yes<>;
-
-      using KeyMut = HandleMut;
-      using Key    = Handle;
-
-      using ValMut = HandleMut;
-      using Val    = Handle;
-
-      using IteratorMut = typename IterateTogether<const Many,       Many>::Iterator;
-      using Iterator    = typename IterateTogether<const Many, const Many>::Iterator;
-
-      static constexpr bool TypeErased = true;
-
-      ///                                                                     
-      ///   Construction                                                      
-      constexpr MapSorted() noexcept = default;
-      constexpr MapSorted(const MapSorted&) noexcept = default;
-      constexpr MapSorted(MapSorted&&) noexcept = default;
-
-      template<class A1, class...AN>
-      MapSorted(A1&&, AN&&...) requires CT::RangeInsertable<MapSorted, A1, AN...>;
-
-      ///                                                                     
-      ///   Capsulation                                                       
-      Hash GetHash() const;
-
-      ///                                                                     
-      ///   Removal                                                           
-      auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
-      auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
-      auto RemovePair (const CT::Pair auto&) -> CountType;
-      void RemoveIt   (IteratorMut&);
+namespace Langulus::CTTI
+{
+   /// Convert Map -> Text                                                    
+   template<Anyness::State::StateValue SORT>
+   struct Converter<Anyness::Inner::Map<SORT>, Anyness::Text> {
+      static constexpr auto Convert(Anyness::Inner::Map<SORT> const& from) -> Anyness::Text;
    };
 }

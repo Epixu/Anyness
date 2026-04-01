@@ -6,343 +6,176 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include <Langulus/Utils/Iterate-Handles.hpp>
-#include "../../../source/Container.hpp"
-#include "../../../source/components/Heap-Movable.hpp"
-#include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership-Heap.hpp"
-#include "../../../source/components/Hash-Heap.hpp"
-#include "../../../source/components/Indexed-Hash.hpp"
-#include "../../../source/components/Insertion.hpp"
-#include "../../../source/components/InsertionOperators.hpp"
-#include "../../../source/components/Emplacement.hpp"
-#include "../../../source/components/Removal.hpp"
-#include "../../../source/components/Assignment.hpp"
-#include "../../../source/components/Typed-Stack.hpp"
-#include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Stack.hpp"
-#include "../../../source/components/Comparison.hpp"
-#include "../../../source/components/Iteration-ForEach.hpp"
-#include "../../../source/components/Iteration-Range.hpp"
-#include "../../../source/components/State-Stack.hpp"
-#include "../../../source/states/Sorted.hpp"
-#include "../../../source/states/Compressed.hpp"
-#include "../../../source/states/Encrypted.hpp"
-#include "../../../source/states/Tracked.hpp"
-#include "THandle.hpp"
-#include "TPair.hpp"
-#include "TMany.hpp"
-#include <Langulus/Retype.hpp>
+#include "Map.hpp"
 
 
-namespace Langulus::CT
+namespace Langulus::Anyness::Inner
 {
-
-   /// Concept for recognizing arguments, with which a statically typed       
-   /// map can be constructed                                                 
-   template<class K, class V, class...A>
-   concept DeepMapConstructible = UnfoldConstructible<Anyness::TPair<K, V>, A...>
-        or (sizeof...(A) == 1 and Map<FirstOf<A...>> and (
-               IntentOf<FirstOf<A...>>::Shallow
-            or IntentConstructibleAlt<Retype<IntentOf<FirstOf<A...>>, Anyness::TPair<K, V>>>)
-        );
-
-   /// Concept for recognizing argument, with which a statically typed        
-   /// map can be assigned                                                    
-   template<class K, class V, class A>
-   concept DeepMapAssignable = UnfoldConstructible<Anyness::TPair<K, V>, A>
-        or (Map<A> and (
-               IntentOf<A>::Shallow
-            or IntentAssignableAlt<Retype<IntentOf<A>, Anyness::TPair<K, V>>>)
-        );
-
-} // namespace Langulus::CT
+   template<CT::NotVoid K, CT::NotVoid V, State::StateValue SORT>
+   using TMapBase = Container<
+      Com::TypedStack<DMeta, K, true, 0>,  // Type-constrained keys     
+      Com::TypedStack<DMeta, V, true, 1>,  // Type-constrained values   
+      Com::HeapMovable<0, 8, 2, K*>,   // Pointer to key & value memory 
+      Com::HeapReuse<1, 0, V*>,        // Reuses HeapMovable<0>         
+      Com::CountStack<0>,              // Dynamically sized             
+      Com::CountReuse<1, 0>,           // Reuses CountStack<0>          
+      Com::ReserveStack<0>,            // Reserve kept as member        
+      Com::ReserveReuse<1, 0>,         // Reuses ReserveStack<0>        
+      Com::IndexedHashStack<0>,        // Indexed by hash table         
+      Com::IndexedHashReuse<1, 0>,     // Reuses IndexedHashStack<0>    
+      Com::OwnershipStack<0>,          // Allocation is referenced      
+      Com::OwnershipReuse<1, 0>,       // Reuses OwnershipStack<0>      
+      Com::OwnershipDeepHeap<0>,       // Sparse keys are referenced    
+      Com::OwnershipDeepHeap<1>,       // Sparse values are referenced  
+      Com::HashHeap<0>,                // Hash can be cached            
+      Com::HashReuse<1, 0>,            // Reuses HashHeap<0>            
+      Com::Merging<0>,                 // Allows merging keys           
+      Com::Insertion<1>,               // Allows inserting values       
+      Com::Assignment<1>,              // Allows assignment of values   
+      Com::Removal<0>,                 // Allows clear/reset of keys    
+      Com::Removal<1>,                 // Allows clear/reset of values  
+      Com::Conversion<0>,              // Allows conversions of keys    
+      Com::Conversion<1>,              // Allows conversions of values  
+      Com::Comparison<0>,              // Allows comparisons of keys    
+      Com::Comparison<1>,              // Allows comparisons of values  
+      Com::IterationForEach<0>,        // ForEach iteration of keys     
+      Com::IterationForEach<1>,        // ForEach iteration of values   
+      Com::IterationRange<0>,          // Ranged iteration of keys      
+      Com::IterationRange<1>,          // Ranged iteration of values    
+      Com::StateStack<                 // Variable state                
+         DefineState::Typed<State::Enabled>, // Always type-constrained 
+         DefineState::Sorted<SORT>,    // Maybe unsorted                
+         DefineState::Compressed<>,    // Adds 'compressed' state       
+         DefineState::Encrypted<>,     // Adds 'encrypted' state        
+         DefineState::Tracked<>        // Adds 'tracked' state          
+      >
+   >;
+}
 
 namespace Langulus::Anyness
 {
-   namespace Inner
-   {
-      
-      ///                                                                     
-      template<CT::NotVoid K, CT::NotVoid V>
-      using TMapCommon = Container<
-         Com::HeapMovable<0, 8, 2, K*>,// Heap for keys                 
-         Com::HeapMovable<1, 8, 2, V*>,// Heap for values               
-         Com::OwnershipStack<0>,       // Keys allocation is referenced 
-         Com::OwnershipStack<1>,       // Vals allocation is referenced 
-         Com::HashHeap<0>,             // Keys can be hashed            
-         Com::HashHeap<1>,             // Values can be hashed          
-         Com::DeepOwnershipHeap<0>,    // Sparse keys are referenced    
-         Com::DeepOwnershipHeap<1>,    // Sparse vals are referenced    
-         Com::IndexedHash<0>,          // Indexed by hashing keys       
-         Com::Insertion<0>,            // Allows insertion of keys      
-         Com::Insertion<1>,            // Allows insertion of vals      
-         Com::InsertionOperators<0>,   // << and >> insertion of keys   
-         Com::InsertionOperators<1>,   // << and >> insertion of vals   
-         Com::Emplacement<0>,          // Allows emplacement of keys    
-         Com::Emplacement<1>,          // Allows emplacement of vals    
-         Com::Removal<0>,              // Allows removal of keys        
-         Com::Removal<1>,              // Allows removal of vals        
-         Com::Assignment<0>,           // Allows assignment             
-         Com::Assignment<1>,           // Allows assignment             
-         Com::TypedStack<DMeta, K, 0>, // Key type                      
-         Com::TypedStack<DMeta, V, 1>, // Value type                    
-         Com::CountStack<>,            // Variable count                
-         Com::ReserveStack<>,          // Variable capacity             
-         Com::Comparison,              // Allows for comparison         
-         Com::IterationRange<0>,       // Iterate keys                  
-         Com::IterationRange<1>        // Iterate values                
-      >;
-
-      ///                                                                     
-      template<CT::NotVoid K, CT::NotVoid V>
-      using TMapBase = typename TMapCommon<K, V>::template Include<
-         Com::StateStack<              // Variable state                
-            DefineState::Sorted<>,     // Maybe unsorted                
-            DefineState::Compressed<>, // Adds 'compressed' state       
-            DefineState::Encrypted<>,  // Adds 'encrypted' state        
-            DefineState::Tracked<>     // Adds 'tracked' state          
-         >
-      >;
-
-      ///                                                                     
-      template<CT::NotVoid K, CT::NotVoid V>
-      using TMapUnsortedBase = typename TMapCommon<K, V>::template Include<
-         Com::StateStack<              // Variable state                
-            DefineState::Sorted<State::Disabled>,  // Always unsorted   
-            DefineState::Compressed<>, // Adds 'compressed' state       
-            DefineState::Encrypted<>,  // Adds 'encrypted' state        
-            DefineState::Tracked<>     // Adds 'tracked' state          
-         >
-      >;
-      
-      ///                                                                     
-      template<CT::NotVoid K, CT::NotVoid V>
-      using TMapSortedBase = typename TMapCommon<K, V>::template Include<
-         Com::StateStack<              // Variable state                
-            DefineState::Sorted<State::Enabled>,   // Always sorted     
-            DefineState::Compressed<>, // Adds 'compressed' state       
-            DefineState::Encrypted<>,  // Adds 'encrypted' state        
-            DefineState::Tracked<>     // Adds 'tracked' state          
-         >
-      >;
-
-   } // namespace Langulus::Anyness::Inner
-
-   struct Map;
-
-
    ///                                                                        
-   /// Statically typed map of unspecified state                              
-   ///                                                                        
-   template<CT::NotVoid K, CT::NotVoid V>
-   struct TMap : Inner::TMapBase<K, V> {
-      using CTTI_ReflectAs = Map;
+   /// A statically-typed non-contiguous map of variable size that is         
+   /// binary-compatible with the type-erased alternative `Map`.              
+   /// Emplacement is disabled for maps, because keys aren't allowed to       
+   /// change in-place. This also means that they are only const-iteratable.  
+   /// Values, on the other hand, are mutable.                                
+   template<CT::NotVoid K, CT::NotVoid V, State::StateValue SORT = State::Variable>
+   struct TMap : Inner::TMapBase<K, V, SORT> {
       using CTTI_Map       = Yes<>;
-      using Base           = Inner::TMapBase<K, V>;
-
-      using KeyDenseMut  = K&;
-      using KeyDense     = K const&;
-      using KeySparseMut = THandle<K&>;
-      using KeySparse    = THandle<K const&>;
-      using Key          = Tif<CT::Sparse<K>, KeySparse,    KeyDense>;
-      using KeyMut       = Tif<CT::Sparse<K>, KeySparseMut, KeyDenseMut>;
-
-      using ValDenseMut  = V&;
-      using ValDense     = V const&;
-      using ValSparseMut = THandle<V&>;
-      using ValSparse    = THandle<V const&>;
-      using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
-      using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
-
-      using IteratorMut  = typename IterateTogether<const TMany<K>,       TMany<V>>::Iterator;
-      using Iterator     = typename IterateTogether<const TMany<K>, const TMany<V>>::Iterator;
-      using CountType    = typename Com::CountStack<>::CountType;
-
-      using PairType     = TPair<K const&, V const&>;
-      using PairTypeMut  = TPair<K const&, V&>;
-
-      ///                                                                     
-      ///   Construction                                                      
-      constexpr TMap() noexcept = default;
-      constexpr TMap(TMap const&) noexcept = default;
-      constexpr TMap(TMap&&) noexcept = default;
-
-      template<class T1, class...TN> requires CT::DeepMapConstructible<K, V, T1, TN...>
-      constexpr TMap(T1&&, TN&&...);
-
-      /*template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
-      constexpr TMap(I<M>&& other) noexcept
-         : Base {other.template Forward<typename M::Base>()} {}*/
-
-      /*template<CT::Map M1, CT::Map...MN>
-      TMap(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
-      
-      template<CT::Pair P1, CT::Pair...PN>
-      TMap(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;*/
-      
-      ///                                                                     
-      ///   Assignment                                                        
-      TMap& operator = (TMap const&) noexcept = default;
-      TMap& operator = (TMap&&) noexcept = default;
-
-      template<class A1> requires CT::RangeAssignable<TMap, A1>
-      TMap& operator = (A1&&);
-
-      ///                                                                     
-      ///   Capsulation                                                       
-      Hash GetHash() const;
-
-      ///                                                                     
-      ///   Removal                                                           
-      auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
-      auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
-      auto RemovePair (const CT::Pair auto&)     -> CountType;
-      void RemoveIt   (IteratorMut&);
-   };
-   
-
-   ///                                                                        
-   /// Unsorted statically typed map                                          
-   ///                                                                        
-   template<CT::NotVoid K, CT::NotVoid V>
-   struct TMapUnsorted : Inner::TMapUnsortedBase<K, V> {
       using CTTI_ReflectAs = Map;
-      using CTTI_Map       = Yes<>;
-      using Base           = Inner::TMapUnsortedBase<K, V>;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_MapsTo    = Text;
 
-      using KeyDenseMut  = K&;
-      using KeyDense     = K const&;
-      using KeySparseMut = THandle<K&>;
-      using KeySparse    = THandle<K const&>;
-      using Key          = Tif<CT::Sparse<K>, KeySparse,    KeyDense>;
-      using KeyMut       = Tif<CT::Sparse<K>, KeySparseMut, KeyDenseMut>;
+      using Base           = Inner::TMapBase<K, V, SORT>;
+      using DeepType       = Any;
 
-      using ValDenseMut  = V&;
-      using ValDense     = V const&;
-      using ValSparseMut = THandle<V&>;
-      using ValSparse    = THandle<V const&>;
-      using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
-      using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
-
-      using IteratorMut  = typename IterateTogether<const TMany<K>,       TMany<V>>::Iterator;
-      using Iterator     = typename IterateTogether<const TMany<K>, const TMany<V>>::Iterator;
-      using CountType    = typename Component::CountStack<>::CountType;
-
-      using PairType     = TPair<K const&, V const&>;
-      using PairTypeMut  = TPair<K const&, V&>;
-
-      ///                                                                     
-      ///   Construction                                                      
-      constexpr TMapUnsorted() noexcept = default;
-      constexpr TMapUnsorted(TMapUnsorted const&) noexcept = default;
-      constexpr TMapUnsorted(TMapUnsorted&&) noexcept = default;
-
-      template<class T1, class...TN> requires CT::DeepMapConstructible<K, V, T1, TN...>
-      constexpr TMapUnsorted(T1&&, TN&&...);
-
-
-      /*template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
-      constexpr TMapUnsorted(I<M>&& other) noexcept
-         : Base {FWD(other)} {}*/
-
-      //template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
-      //constexpr TMapUnsorted(I<M>&&) noexcept;
-
-      /*template<CT::Map M1, CT::Map...MN>
-      TMapUnsorted(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
+      constexpr TMap() noexcept {
+         this->ConstructDefault();
+      }
+      constexpr TMap(TMap const& other) {
+         this->Absorb(Refer(other));
+      }
+      constexpr TMap(TMap&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+      constexpr ~TMap() noexcept {
+         this->Destroy();
+      }
       
-      template<CT::Pair P1, CT::Pair...PN>
-      TMapUnsorted(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;*/
+      /// Construction that either absorbs the provided containers, or        
+      /// emplaces all A in the container                                     
+      template<class A1, class...AN>
+      constexpr TMap(A1&& a1, AN&&...an) {
+         if constexpr (sizeof...(AN) == 0) {
+            if constexpr (SameAsOneOf<Deint<A1>, 
+               TMap<K, V, State::Variable>, TMap<K, V, State::Enabled>, TMap<K, V, State::Disabled>,
+               Map, MapSorted, MapUnsorted>
+            ) {
+               LglsAssumeUser((not SameAsOneOf<K,
+                  TMap<K, V, State::Variable>, TMap<K, V, State::Enabled>, TMap<K, V, State::Disabled>,
+                  Map, MapSorted, MapUnsorted>),
+                  "Ambiguous use of construction "
+                  "- you should use tag-dispatch with first argument either Absorb "
+                  "(if you want to overwrite the container itself) or Piecewise "
+                  "(if you want to overwrite the first item) in order to clearly "
+                  "state your intent. Absorb will be used by default!"
+               );
+               this->Absorb(LglsFwd(a1));
+            }
+            else {
+               this->ConstructDefault();
+               this->Merge(LglsFwd(a1));
+            }
+         }
+         else {
+            this->ConstructDefault();
+            this->Insert(LglsFwd(a1), LglsFwd(an)...);
+         }
+      }
+      
+      /// Construction that absorbs the provided container                    
+      template<class A1, class...AN>
+      constexpr TMap(Inner::Absorb, A1&& a1, AN&&...an) {
+         if constexpr (sizeof...(AN) == 0)
+            this->Absorb(LglsFwd(a1));
+         else {
+            this->ConstructDefault();
+            this->Concat(LglsFwd(a1), LglsFwd(an)...);
+         }
+      }
+      
+      /// Construction that emplaces all arguments inside                     
+      template<class A1, class...AN>
+      constexpr TMap(Inner::Piecewise, A1&& a1, AN&&...an) {
+         this->ConstructDefault();
+         this->Merge(LglsFwd(a1), LglsFwd(an)...);
+      }
 
-      ///                                                                     
-      ///   Assignment                                                        
-      TMapUnsorted& operator = (TMapUnsorted const&) noexcept = default;
-      TMapUnsorted& operator = (TMapUnsorted&&) noexcept = default;
+      /// Assignment                                                          
+      constexpr TMap& operator = (TMap const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr TMap& operator = (TMap&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
+      }
 
-      template<class A1> requires CT::RangeAssignable<TMapUnsorted, A1>
-      TMapUnsorted& operator = (A1&&);
-
-      ///                                                                     
-      ///   Capsulation                                                       
-      Hash GetHash() const;
-
-      ///                                                                     
-      ///   Removal                                                           
-      auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
-      auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
-      auto RemovePair (const CT::Pair auto&) -> CountType;
-      void RemoveIt   (IteratorMut&);
-   };
-   
-
-   ///                                                                        
-   /// Sorted statically typed map                                            
-   ///                                                                        
-   template<CT::NotVoid K, CT::NotVoid V>
-   struct TMapSorted : Inner::TMapSortedBase<K, V> {
-      using CTTI_ReflectAs = Map;
-      using CTTI_Map       = Yes<>;
-      using Base           = Inner::TMapSortedBase<K, V>;
-
-      using KeyDenseMut  = K&;
-      using KeyDense     = K const&;
-      using KeySparseMut = THandle<K&>;
-      using KeySparse    = THandle<K const&>;
-      using Key          = Tif<CT::Sparse<K>, KeySparse,    KeyDense>;
-      using KeyMut       = Tif<CT::Sparse<K>, KeySparseMut, KeyDenseMut>;
-
-      using ValDenseMut  = V&;
-      using ValDense     = V const&;
-      using ValSparseMut = THandle<V&>;
-      using ValSparse    = THandle<V const&>;
-      using Val          = Tif<CT::Sparse<V>, ValSparse,    ValDense>;
-      using ValMut       = Tif<CT::Sparse<V>, ValSparseMut, ValDenseMut>;
-
-      using IteratorMut  = typename IterateTogether<const TMany<K>,       TMany<V>>::Iterator;
-      using Iterator     = typename IterateTogether<const TMany<K>, const TMany<V>>::Iterator;
-      using CountType    = typename Component::CountStack<>::CountType;
-
-      using PairType     = TPair<K const&, V const&>;
-      using PairTypeMut  = TPair<K const&, V&>;
-
-      ///                                                                     
-      ///   Construction                                                      
-      constexpr TMapSorted() noexcept = default;
-      constexpr TMapSorted(TMapSorted const&) noexcept = default;
-      constexpr TMapSorted(TMapSorted&&) noexcept = default;
-
-      template<class T1, class...TN> requires CT::DeepMapConstructible<K, V, T1, TN...>
-      constexpr TMapSorted(T1&&, TN&&...);
-
-      /*template<template<class> class I, CT::Map M> requires CT::Intent<I<M>>
-      constexpr TMapSorted(I<M>&& other) noexcept
-         : Base {other.template Forward<typename M::Base>()} {}*/
-
-      /*template<CT::Map M1, CT::Map...MN>
-      TMapSorted(M1&&, MN&&...) requires CT::PairConstructible<K, V, typename M1::PairType, typename MN::PairType...>;
-
-      template<CT::Pair P1, CT::Pair...PN>
-      TMapSorted(P1&&, PN&&...) requires CT::PairConstructible<K, V, P1, PN...>;*/
-
-      ///                                                                     
-      ///   Assignment                                                        
-      TMapSorted& operator = (TMapSorted const&) noexcept = default;
-      TMapSorted& operator = (TMapSorted&&) noexcept = default;
-
-      template<class A1> requires CT::RangeAssignable<TMapSorted, A1>
-      TMapSorted& operator = (A1&&);
-
-      ///                                                                     
-      ///   Capsulation                                                       
-      Hash GetHash() const;
-
-      ///                                                                     
-      ///   Removal                                                           
-      auto RemoveKey  (const CT::NoIntent auto&) -> CountType;
-      auto RemoveVal  (const CT::NoIntent auto&) -> CountType;
-      auto RemovePair (const CT::Pair auto&) -> CountType;
-      void RemoveIt   (IteratorMut&);
+      template<class A>
+      constexpr TMap& operator = (A&& argument) {
+         if constexpr (SameAsOneOf<Deint<A>,
+            TMap<T, State::Variable>, TMap<T, State::Enabled>, TMap<T, State::Disabled>,
+            Map, MapSorted, MapUnsorted>
+         ) {
+            LglsAssumeUser((not SameAsOneOf<K,
+               TMap<K, V, State::Variable>, TMap<K, V, State::Enabled>, TMap<T, State::Disabled>,
+               Map, MapSorted, MapUnsorted>),
+               "Ambiguous use of assignment "
+               "- you should use either AssignAbsorb (if you want to overwrite "
+               "the container itself) or Assign (if you want to overwrite the "
+               "first item) in order to clearly state your intent. "
+               "AssignAbsorb will be used by default!"
+            );
+            return this->AssignAbsorb(LglsFwd(argument));
+         }
+         else return this->Assign(LglsFwd(argument));
+      }
+      
+      using Com::Comparison<>::operator <=>;
+      using Com::Comparison<>::operator ==;
    };
 
-} // namespace Langulus::Anyness
+   template<CT::NotVoid K, CT::NotVoid V>
+   using TMapSorted = TMap<K, V, State::Enabled>;
+
+   template<CT::NotVoid K, CT::NotVoid V>
+   using TMapUnsorted = TMap<K, V, State::Disabled>;
+}
+
+namespace Langulus::CTTI
+{
+   /// Convert TMap -> Text                                                   
+   template<CT::NotVoid K, CT::NotVoid V, Anyness::State::StateValue SORT>
+   struct Converter<Anyness::TMap<K, V, SORT>, Anyness::Text> {
+      static constexpr auto Convert(Anyness::TMap<K, V, SORT> const&) -> Anyness::Text;
+   };
+}

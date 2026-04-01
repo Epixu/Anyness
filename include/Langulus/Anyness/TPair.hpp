@@ -6,7 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "THandle.hpp"
+#include "Handle.hpp"
 #include <Langulus/Retype.hpp>
 
 
