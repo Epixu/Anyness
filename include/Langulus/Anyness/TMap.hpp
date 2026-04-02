@@ -62,6 +62,8 @@ namespace Langulus::Anyness
       using Base           = Inner::TMapBase<K, V, SORT>;
       using DeepType       = Any;
 
+      static constexpr bool TypeErased = CT::Void<K> or CT::Void<V>;
+
       constexpr TMap() noexcept {
          this->ConstructDefault();
       }

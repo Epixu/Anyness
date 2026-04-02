@@ -96,10 +96,10 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    #endif
 ) {
    static MemoryState memoryState;
-   using T = typename TestType::First;
+   using T  = typename TestType::First;
    using E1 = typename TestType::Second;
-   using ScopedE1 = typename TestType::template At<2>;
    using E2 = typename TestType::template At<3>;
+   using ScopedE1 = typename TestType::template At<2>;
    using ScopedE2 = typename TestType::template At<4>;
 
    if constexpr (CT::Untyped<T>) {
@@ -264,8 +264,8 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       
          if constexpr (Ambiguous) {
             WHEN("Ambiguous assign value by referral") {
-               REQUIRE_THROWS(pack = *element);
-               REQUIRE_THROWS(pack = Refer(*element));
+               REQUIRE_THROWS(pack = {*element1, *element2});
+               REQUIRE_THROWS(pack = Refer({*element1, *element2}));
             }
          }
 
@@ -276,18 +276,18 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       }
 
       WHEN("Assigned value by referral") {
-         pack.Assign(*element);
+         pack.Assign(*element1, *element2);
 
          Map_CheckState_OwnedFull<E1, E2>(pack);
-         Map_CheckState_ContainsOne(pack, Refer(element));
+         Map_CheckState_ContainsOne(pack, Refer(element1), Refer(element2));
 
          BenchmarkMapStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
-            T temp,              temp.Assign(*element),
-            stdmap temp_std,     temp_std.emplace(*element)
+            T temp,              temp.Assign(*element1, *element2),
+            stdmap temp_std,     temp_std.emplace(*element1, *element2)
          );
       }
 
-      if constexpr (CT::Map<E1>) {
+      /*if constexpr (CT::Map<E1>) {
          WHEN("Assigned and absorbed by referral") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -318,27 +318,32 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE_THROWS(pack = ::std::move(movable));
             REQUIRE_THROWS(pack = Move(movable));
          }
-      }
+      }*/
       
       WHEN("Assigned value by move") {
-         auto movable = *element;
-         pack.Assign(::std::move(movable));
+         auto movable1 = *element1;
+         auto movable2 = *element2;
+         pack.Assign(::std::move(movable1), ::std::move(movable2));
          
-         if constexpr (CT::Set<E>)
-            Set_CheckState_Default<TypeOf<E>>(movable);
+         if constexpr (CT::Deep<E1> and CT::Dense<E1>)
+            Any_CheckState_Default<TypeOf<E1>>(movable1);
+         if constexpr (CT::Deep<E2> and CT::Dense<E2>)
+            Any_CheckState_Default<TypeOf<E2>>(movable2);
 
-         Set_CheckState_OwnedFull<E>(pack);
-         Set_CheckState_ContainsOne(pack, Refer(element));
+         Map_CheckState_OwnedFull<E1, E2>(pack);
+         Map_CheckState_ContainsOne(pack, Refer(element1), Refer(element2));
 
          BenchmarkMapStd("Empty/Assign(Move(" + NameOf<E>() + "))", 30, 100,
-            auto movable = *element;
-            T temp,                       temp.Assign(::std::move(movable)),
-            auto movable = *element;
-            stdmap temp_std,              temp_std.emplace(::std::move(movable))
+            auto movable1 = *element1;
+            auto movable2 = *element2;
+            T temp,                       temp.Assign(::std::move(movable1), ::std::move(movable2)),
+            auto movable1 = *element1;
+            auto movable2 = *element2;
+            stdmap temp_std,              temp_std.emplace(::std::move(movable1), ::std::move(movable2))
          );
       }
 
-      if constexpr (CT::Set<E>) {
+      /*if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed by move") {
             auto movable = *element;
 
@@ -370,21 +375,21 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          WHEN("Ambiguous assign copied value") {
             REQUIRE_THROWS(pack = Copy(*element));
          }
-      }
+      }*/
       
       WHEN("Assigned copied value") {
-         pack.Assign(Copy(*element));
+         pack.Assign(Copy(*element1), Copy(*element2));
 
-         Set_CheckState_OwnedFull<E>(pack);
-         Set_CheckState_ContainsOne(pack, Copy(element));
+         Set_CheckState_OwnedFull<E1, E2>(pack);
+         Set_CheckState_ContainsOne(pack, Copy(element1), Copy(element2));
 
          BenchmarkMapStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
-            T temp,              temp.Assign(Copy(*element)),
-            stdmap temp_std,     temp_std.emplace(*element)
+            T temp,              temp.Assign(Copy(*element1), Copy(*element2)),
+            stdmap temp_std,     temp_std.emplace(*element1, *element2)
          );
       }
 
-      if constexpr (CT::Set<E>) {
+      /*if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed copied value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -418,21 +423,21 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          WHEN("Ambiguous assign cloned value") {
             REQUIRE_THROWS(pack = Clone(*element));
          }
-      }
+      }*/
       
       WHEN("Assigned cloned value") {
-         pack.Assign(Clone(*element));
+         pack.Assign(Clone(*element1), Clone(*element1));
 
-         Set_CheckState_OwnedFull<E>(pack);
-         Set_CheckState_ContainsOne(pack, Clone(element));
+         Set_CheckState_OwnedFull<E1, E2>(pack);
+         Set_CheckState_ContainsOne(pack, Clone(element1), Clone(element2));
 
          BenchmarkMapStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
-            T temp,              temp.Assign(Clone(*element)),
-            stdmap temp_std,     temp_std.emplace(*element)
+            T temp,              temp.Assign(Clone(*element1), Clone(*element2)),
+            stdmap temp_std,     temp_std.emplace(*element1, *element2)
          );
       }
 
-      if constexpr (CT::Set<E>) {
+      /*if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed cloned value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -465,21 +470,21 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          WHEN("Ambiguous assign disowned value") {
             REQUIRE_THROWS(pack = Disown(*element));
          }
-      }
+      }*/
       
       WHEN("Assigned disowned value") {
-         pack.Assign(Disown(*element));
+         pack.Assign(Disown(*element1), Disown(*element2));
 
-         Set_CheckState_OwnedFull<E>(pack);
-         Set_CheckState_ContainsOne(pack, Disown(element));
+         Set_CheckState_OwnedFull<E1, E2>(pack);
+         Set_CheckState_ContainsOne(pack, Disown(element1), Disown(element2));
 
          BenchmarkMapStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
-            T temp,              temp.Assign(Disown(*element)),
-            stdmap temp_std,     temp_std.emplace(*element)
+            T temp,              temp.Assign(Disown(*element1), Disown(*element2)),
+            stdmap temp_std,     temp_std.emplace(*element1, *element2)
          );
       }
 
-      if constexpr (CT::Set<E>) {
+      /*if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed disowned value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -513,26 +518,30 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             auto movable = *element;
             REQUIRE_THROWS(pack = Abandon(movable));
          }
-      }
+      }*/
       
       WHEN("Assigned abandoned value") {
-         auto movable = *element;
-         pack.Assign(Abandon(movable));
+         auto movable1 = *element1;
+         auto movable2 = *element2;
+         pack.Assign(Abandon(movable1), Abandon(movable2));
 
-         if constexpr (CT::Set<E>)
-            Set_CheckState_Abandoned<E>(movable);
-         Set_CheckState_OwnedFull<E>(pack);
-         Set_CheckState_ContainsOne(pack, Refer(element));
+         if constexpr (CT::Dense<E1> and CT::Dense<E1>)
+            Any_CheckState_Abandoned<TypeOf<E1>>(movable1);
+         if constexpr (CT::Dense<E2> and CT::Dense<E2>)
+            Any_CheckState_Abandoned<TypeOf<E2>>(movable2);
+
+         Map_CheckState_OwnedFull<E1, E2>(pack);
+         Map_CheckState_ContainsOne(pack, Refer(element1), Refer(element2));
 
          BenchmarkMapStd("Empty/Assign(Abandon(" + NameOf<E>() + "))", 30, 100,
             auto movable = *element;
-            T temp,                    temp.Assign(Abandon(movable)),
+            T temp,                    temp.Assign(Abandon(movable1), Abandon(movable2)),
             auto movable = *element;
-            stdmap temp_std,           temp_std.emplace(::std::move(movable))
+            stdmap temp_std,           temp_std.emplace(::std::move(movable1), ::std::move(movable2))
          );
       }
 
-      if constexpr (CT::Set<E>) {
+      /*if constexpr (CT::Set<E>) {
          WHEN("Assigned and absorbed abandoned value") {
             auto movable = *element;
 
@@ -557,7 +566,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
                stdmap temp_std,            temp_std = ::std::move(movable)
             );
          }
-      }
+      }*/
 
       WHEN("Ambigous assigned empty self") {
          LglsDisableWarningPush
@@ -569,7 +578,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       WHEN("Assigned empty self") {
          pack.AssignAbsorb(pack);
 
-         Set_CheckState_Default<E>(pack);
+         Map_CheckState_Default<E1, E2>(pack);
       }
 
       /*WHEN("Emplace (insert)") {
@@ -624,7 +633,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       WHEN("Cleared") {
          pack.Clear();
 
-         Set_CheckState_Default<E>(pack);
+         Map_CheckState_Default<E1, E2>(pack);
 
          BenchmarkMapStd("Empty/Clear(" + NameOf<E>() + ")", 30, 100,
             T temp,              temp.Clear(),
@@ -635,7 +644,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       WHEN("Reset") {
          pack.Reset();
 
-         Set_CheckState_Default<E>(pack);
+         Map_CheckState_Default<E1, E2>(pack);
 
          BenchmarkMapStd("Empty/Reset(" + NameOf<E>() + ")", 30, 100,
             T temp,              temp.Reset(),
@@ -646,67 +655,67 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       WHEN("Referred empty") {
          T refer1 = pack;
 
-         Set_Helper_TestSame(refer1, pack);
-         Set_CheckState_Default<E>(refer1);
-         Set_CheckState_Default<E>(pack);
+         Map_Helper_TestSame(refer1, pack);
+         Map_CheckState_Default<E1, E2>(refer1);
+         Map_CheckState_Default<E1, E2>(pack);
 
          T refer2 = Refer(pack);
 
-         Set_Helper_TestSame(refer2, pack);
-         Set_CheckState_Default<E>(refer2);
-         Set_CheckState_Default<E>(pack);
+         Map_Helper_TestSame(refer2, pack);
+         Map_CheckState_Default<E1, E2>(refer2);
+         Map_CheckState_Default<E1, E2>(pack);
       }
 
       WHEN("Cloned empty") {
          T clone = Clone(pack);
 
-         Set_Helper_TestSame(clone, pack);
-         Set_CheckState_Default<E>(clone);
-         Set_CheckState_Default<E>(pack);
+         Map_Helper_TestSame(clone, pack);
+         Map_CheckState_Default<E1, E2>(clone);
+         Map_CheckState_Default<E1, E2>(pack);
       }
 
       WHEN("Disowned empty") {
          T disowned = Disown(pack);
 
-         Set_Helper_TestSame(disowned, pack);
-         Set_CheckState_Default<E>(disowned);
-         Set_CheckState_Default<E>(pack);
+         Map_Helper_TestSame(disowned, pack);
+         Map_CheckState_Default<E1, E2>(disowned);
+         Map_CheckState_Default<E1, E2>(pack);
       }
 
       WHEN("Copied empty") {
          T copy = Copy(pack);
 
-         Set_Helper_TestSame(copy, pack);
-         Set_CheckState_Default<E>(copy);
-         Set_CheckState_Default<E>(pack);
+         Map_Helper_TestSame(copy, pack);
+         Map_CheckState_Default<E1, E2>(copy);
+         Map_CheckState_Default<E1, E2>(pack);
       }
 
       WHEN("Moved empty") {
          T movable1 = pack;
          const T moved1 = ::std::move(movable1);
 
-         Set_CheckState_Default<E>(movable1);
-         Set_Helper_TestSame(moved1, pack);
-         Set_CheckState_Default<E>(moved1);
-         Set_CheckState_Default<E>(pack);
+         Map_CheckState_Default<E1, E2>(movable1);
+         Map_Helper_TestSame(moved1, pack);
+         Map_CheckState_Default<E1, E2>(moved1);
+         Map_CheckState_Default<E1, E2>(pack);
 
          T movable2 = pack;
          const T moved2 = Move(movable2);
 
-         Set_CheckState_Default<E>(movable2);
-         Set_Helper_TestSame(moved2, pack);
-         Set_CheckState_Default<E>(moved2);
-         Set_CheckState_Default<E>(pack);
+         Map_CheckState_Default<E1, E2>(movable2);
+         Map_Helper_TestSame(moved2, pack);
+         Map_CheckState_Default<E1, E2>(moved2);
+         Map_CheckState_Default<E1, E2>(pack);
       }
 
       WHEN("Abandoned empty") {
          T movable = pack;
          const T moved = Abandon(movable);
 
-         Set_CheckState_Default<E>(movable);
-         Set_Helper_TestSame(moved, pack);
-         Set_CheckState_Default<E>(moved);
-         Set_CheckState_Default<E>(pack);
+         Map_CheckState_Default<E1, E2>(movable);
+         Map_Helper_TestSame(moved, pack);
+         Map_CheckState_Default<E1, E2>(moved);
+         Map_CheckState_Default<E1, E2>(pack);
       }
 
       WHEN("Compared empty") {
@@ -729,18 +738,25 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       }
 
       WHEN("Contains when empty") {
-         REQUIRE_FALSE(pack.Contains(*element));
+         REQUIRE_FALSE(pack.Contains(*element1));
 
          [[maybe_unused]] volatile bool dont_optimize = false;
          BenchmarkMap("Empty/Contains(" + NameOf<E>() + ")", 30,
-            (void) 0, dont_optimize |= pack.Contains(*element)
+            (void) 0, dont_optimize |= pack.Contains(*element1)
          );
       }
 
-      if constexpr (Exact<E, Text>) {
-         WHEN("Given text that will be destroyed before the pack") {
+      if constexpr (Exact<E1, Text>) {
+         WHEN("Given text key that will be destroyed before the pack") {
             Text owned_text = "666";
-            pack = Text(owned_text.operator Token());
+            pack = {Text(owned_text.operator Token()), *element2};
+         }
+      }
+
+      if constexpr (Exact<E2, Text>) {
+         WHEN("Given text value that will be destroyed before the pack") {
+            Text owned_text = "666";
+            pack = {*element1, Text(owned_text.operator Token())};
          }
       }
    }

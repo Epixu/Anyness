@@ -79,6 +79,8 @@ namespace Langulus::Anyness::Inner
       using Base          = MapBase<SORTED>;
       using DeepType      = Many;
 
+      static constexpr bool TypeErased = true;
+
       using DefineState::Typed<>::IsTypeConstrained;
       using DefineState::Typed<>::EnableTypeConstrained;
 

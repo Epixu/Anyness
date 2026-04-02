@@ -35,7 +35,7 @@ namespace Langulus::Anyness::Component
       /// Get the hash, recompute it if uninitialized or of we don't own it.  
       H GetHash(this auto const& self) assumptious {
          if (self.IsEmpty())
-            return H{1};
+            return H {1};
          else if (self.GetUses() == 0)
             return self.HashRecompute();
 
@@ -48,7 +48,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid>                               friend struct Conversion;
+      template<Cid, Cid...>                       friend struct Conversion;
 
       /// Get hash (inner) - will never recompute it                          
       constexpr auto GetHashInner(this auto&& self) noexcept -> H const {

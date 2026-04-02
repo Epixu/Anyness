@@ -23,6 +23,7 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
 
       static constexpr bool Indexed = true;
+      static constexpr bool Shared = sizeof...(SHARED) > 0;
       static constexpr int  ComponentPrecedence = 0;
 
    protected:
@@ -36,7 +37,7 @@ namespace Langulus::Anyness::Component
       /// Subscript operator for accessing element at a specific index        
       ///   @param idx the index                                              
       ///   @return the picked element                                        
-      template<CT::Container C>
+      template<CT::Container C> requires (not Shared)
       decltype(auto) operator[] (this C&& self, CT::Index auto&& idx) assumptious {
          if constexpr (CT::TypeErased<C>)
             return self.template AsAt<DecidePick<C>>(LglsFwd(idx));
@@ -54,7 +55,7 @@ namespace Langulus::Anyness::Component
       ///      type of the container, if statically typed                     
       ///   @param idx the index                                              
       ///   @return the chosen element                                        
-      template<class AS = void, CT::Container C>
+      template<class AS = void, CT::Container C> requires (not Shared)
       auto* GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -148,7 +149,7 @@ namespace Langulus::Anyness::Component
       ///   @tparam AS the type we're wrapping in                             
       ///   @param idx the index                                              
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, CT::Container C>
+      template<CT::NotVoid AS, CT::Container C> requires (not Shared)
       decltype(auto) AsAt(this C&& self, CT::Index auto&& idx) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
@@ -230,7 +231,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparseness                                     
       ///   @param idx the deep index                                         
       ///   @return a pointer to the first deep item, or nullptr if not deep  
-      template<class AS = void, CT::Container C>
+      template<class AS = void, CT::Container C> requires (not Shared)
       auto GetDeepAt(this C&& self, CT::Index auto&&) noexcept {
          using D = Tif<CT::Void<AS>, LglsMutIf(C, Deep<C>*), LglsMutIf(C, AS*)>;
          if (self.IsEmpty() or not self.IsDeep())
@@ -241,7 +242,7 @@ namespace Langulus::Anyness::Component
       /// Get Nth element after being resolved to the most concrete type.     
       ///   @param idx the index                                              
       ///   @return the most concrete representation of the first item        
-      template<class AS = void, CT::Container C>
+      template<class AS = void, CT::Container C> requires (not Shared)
       auto GetResolvedAt(this C&& self, CT::Index auto&&) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -277,7 +278,7 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<class AS = void, CT::Container C>
+      template<class AS = void, CT::Container C> requires (not Shared)
       auto GetDenseAt(this C&& self, CT::Index auto&& idx, size_t count = -1) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -343,7 +344,7 @@ namespace Langulus::Anyness::Component
          return temp;
       }
 
-      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C>
+      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C> requires (not Shared)
       auto CastAt(this C const&, CT::Index auto&&) -> AS;
    };
 }

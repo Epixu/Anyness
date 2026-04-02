@@ -71,7 +71,6 @@ namespace Langulus::Anyness::Component
          self.GetTypeInner() = type;
       }
 
-   public:
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this is noop when constructing from deep intents,      
       ///      since element constructors might throw and stuff be partially  
@@ -99,7 +98,8 @@ namespace Langulus::Anyness::Component
             }
          }
       }
-      
+
+   public:
       /// Get the contained type - not possible at compile-time yet           
       constexpr META GetType(this auto const& self) noexcept {
          if consteval {
