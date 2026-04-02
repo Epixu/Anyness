@@ -16,8 +16,9 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Provides a common element access interface.                            
    /// Needs to be specialized, relying on a custom SimplifyIndex method.     
-   ///   @tparam ID the stack/heap we're indexing                             
-   template<Cid ID>
+   ///   @tparam ID the provider we're indexing                               
+   ///   @tparam SHARED providers that share the same indexing scheme         
+   template<Cid ID, Cid...SHARED>
    struct IndexedCommon {
       using CTTI_Component = Yes<>;
 

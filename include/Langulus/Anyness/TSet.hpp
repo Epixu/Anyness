@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Inner
    template<CT::NotVoid T, State::StateValue SORT>
    using TSetBase = Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
-      Com::HeapMovable<0, 8, 2, T*>,   // Pointer to heap memory        
+      Com::HeapMovable<0, 8, 2, HeapEntry<0, T*>>,
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveStack<>,             // Reserve kept as member        
       Com::IndexedHashStack<>,         // Indexed by hash table         

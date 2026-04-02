@@ -15,13 +15,17 @@ namespace Langulus::Anyness::Component
    /// A dynamic reserve derived from the allocation size directly.           
    /// As such, it will not increase container's stack size, but will require 
    /// an indirection (and a division) in order to read it.                   
-   ///   @tparam ID ID of the heap to track capacity for                      
-   ///   @tparam T type of the counter                                        
-   template<Cid ID, class T>
+   ///   @tparam ID provider ID to keep reserve of                            
+   ///   @tparam T the reserve type                                           
+   ///   @tparam SHARED provider IDs that share the same reserve variable     
+   template<Cid ID, class T, Cid...SHARED>
    struct ReserveEmergent {
       using CTTI_Component = Yes<>;
       using ReserveType = T;
       static constexpr int ComponentPrecedence = -1000;
+
+      static_assert(CT::Integer<T> and not CT::Signed<T>,
+         "Reserve type must be an unsigned integer");
 
       /// Get the number of reserved (maybe uninitialized) elements           
       template<CT::Container C>

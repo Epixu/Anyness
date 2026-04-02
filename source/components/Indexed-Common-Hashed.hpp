@@ -15,9 +15,11 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Provides a common hashed-table based access & insertion interface.     
-   ///   @tparam ID the stack/heap we're indexing                             
-   template<Cid ID, class HASH>
-   struct IndexedCommonHashed : IndexedCommon<ID> {
+   ///   @tparam ID the provider we're indexing                               
+   ///   @tparam HASH type of the hash                                        
+   ///   @tparam SHARED providers that share the same indexing scheme         
+   template<Cid ID, class HASH, Cid...SHARED>
+   struct IndexedCommonHashed : IndexedCommon<ID, SHARED...> {
       using TableType        = uint8_t;
       using IteratorCategory = ::std::random_access_iterator_tag;
 
@@ -27,8 +29,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
-      template<Cid, uint, uint, CT::Sparse>  friend struct HeapMovable;
-      template<Cid, class>                   friend struct Merging;
+      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
+      template<Cid, class>                         friend struct Merging;
 
       /// Browse table, converting contiguous index into table index.         
       /// Table is indexed the following way:                                 

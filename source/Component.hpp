@@ -116,6 +116,13 @@ namespace Langulus::CT
    /// Check if listed types are containers, and are linearly indexed         
    template<class...T>
    concept IndexedLinearly = Indexed<T...> and Contiguous<T...>;
+
+   /// Check if listed types are containers, and are linearly indexed         
+   template<class T>
+   concept HeapEntry = requires {
+      {T::TypeId} -> Same<uint>;
+      CT::Sparse<typename T::T>;
+   };
 }
 
 namespace Langulus::Anyness
@@ -141,51 +148,75 @@ namespace Langulus::Anyness
    /// A component ID                                                         
    using Cid = uint;
 
+   /// A helper structure for pairing heap components with type components    
+   ///   @tparam ID - the type component ID                                   
+   ///   @tparam POINTER_TYPE - associated heap pointer type - mainly a       
+   ///      customization point for packed pointer use.                       
+   template<Cid ID = 0, CT::Sparse POINTER_TYPE = void*>
+   struct HeapEntry {
+      static constexpr Cid TypeId = ID;
+      using T = POINTER_TYPE;
+   };
+
    namespace Component
    {
-      /// Components predeclared                                              
-      template<Cid = 0>                   struct Assignment;
+      /// Components, predeclared                                             
+      template<class META, class TYPE = void, bool CONSTRAIN = not ::std::is_void_v<TYPE>, Cid = 0> struct TypedStack;
+      template<class META, CT::NotVoid TYPE, Cid = 0> struct TypedStatic;
+
+      template<Cid = 0, uint = 0, uint = 0, CT::HeapEntry...> struct HeapImmovable;
+      template<Cid = 0, uint = 0, uint = 0, CT::HeapEntry...> struct HeapMovable;
+      template<Cid = 0, CT::HeapEntry...> struct HeapReference;
+      template<CT::NotVoid, Cid = 0>      struct Stack;
+
                                           struct Charge;
       template<Cid = 0, bool HASH = true> struct Comparison;
-      template<Cid = 0>                   struct Conversion;
-      template<Cid = 0, class T = size_t> struct CountHeap;
-      template<Cid = 0, class T = size_t> struct CountStack;
-      template<auto COUNT>                struct CountStatic;
-      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepEmergent;
-      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepHeap;
-      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepReference;
-                                          struct Descriptor;
+      template<Cid = 0, Cid...>           struct Conversion;
+
+      template<Cid = 0, class T = size_t, Cid...>     struct CountHeap;
+      template<Cid = 0, class T = size_t, Cid...>     struct CountStack;
+      template<Cid = 0, auto COUNT = 0u, Cid...>      struct CountStatic;
+
+      template<Cid = 0, class T = size_t, Cid...>     struct ReserveEmergent;
+      template<Cid = 0, class T = size_t, Cid...>     struct ReserveStack;
+      template<Cid = 0, auto COUNT = 0u, Cid...>      struct ReserveStatic;
+
+      template<Cid = 0, bool AUTO = true, Cid...>     struct OwnershipEmergent;
+      template<Cid = 0, bool AUTO = true, Cid...>     struct OwnershipStack;
+
+      template<Cid = 0, bool REF_INDIVIDUAL = true>   struct OwnershipDeepEmergent;
+      template<Cid = 0, bool REF_INDIVIDUAL = true>   struct OwnershipDeepHeap;
+      template<Cid = 0, bool REF_INDIVIDUAL = true>   struct OwnershipDeepReference;
+
+      template<Cid = 0, class H  = Hash, Cid...>      struct HashEmergent;
+      template<Cid = 0, class H  = Hash, Cid...>      struct HashHeap;
+      template<Cid = 0, class H  = Hash, Cid...>      struct HashStack;
+
+      template<Cid = 0, Cid...>                       struct IndexedCommon;
+      template<Cid = 0, Cid...>                       struct IndexedLinear;
+      template<Cid = 0, class H  = Hash, Cid...>      struct IndexedCommonHashed;
+      template<Cid = 0, class H  = Hash, Cid...>      struct IndexedHashHeap;
+      template<Cid = 0, class H  = Hash, Cid...>      struct IndexedHashStack;
+
       template<Cid = 0>                   struct Emplacement;
-                                          struct Extrapolation;
-      template<Cid, class H>              struct HashEmergent;
-      template<Cid, class H>              struct HashHeap;
-      template<Cid, class H>              struct HashStack;
-      template<Cid = 0, uint = 0, uint = 0, CT::Sparse POINTER_TYPE = void*> struct HeapImmovable;
-      template<Cid = 0, uint = 0, uint = 0, CT::Sparse POINTER_TYPE = void*> struct HeapMovable;
-      template<Cid = 0, CT::Sparse POINTER_TYPE = void*> struct HeapReference;
-      template<Cid = 0, class H  = Hash>  struct IndexedHashHeap;
-      template<Cid = 0, class H  = Hash>  struct IndexedHashStack;
-      template<Cid = 0, class T  = void>  struct IndexedLinear;
+      template<Cid = 0>                   struct Assignment;
       template<Cid = 0, class AS = void>  struct Insertion;
       template<Cid = 0, class AS = void>  struct InsertionOperators;
       template<Cid = 0, class AS = void>  struct Merging;
       template<Cid = 0, class AS = void>  struct MergingOperators;
-                                          struct Interpolation;
-      template<Cid = 0>                   struct IterationForEach;
+      template<Cid = 0, Cid...>           struct Removal;
+
+      template<Cid = 0, Cid...>           struct IterationForEach;
+      template<Cid = 0, Cid...>           struct IterationRange;
       template<Cid = 0>                   struct IterationOperators;
-      template<Cid = 0>                   struct IterationRange;
-      template<Cid = 0, bool AUTO = true> struct OwnershipEmergent;
-      template<Cid = 0, bool AUTO = true> struct OwnershipStack;
-      template<Cid = 0>                   struct Removal;
-      template<Cid = 0, class T = size_t> struct ReserveEmergent;
-      template<Cid = 0, class T = size_t> struct ReserveStack;
-      template<auto SIZE>                 struct ReserveStatic;
-      template<CT::NotVoid, Cid = 0>      struct Stack;
+
       template<CT::State...>              struct StateHeap;
       template<CT::State...>              struct StateStack;
       template<CT::State...>              struct StateStatic;
-      template<class META, class TYPE = void, bool CONSTRAIN = not ::std::is_void_v<TYPE>, Cid = 0> struct TypedStack;
-      template<class META, CT::NotVoid TYPE, Cid = 0> struct TypedStatic;
+
+                                          struct Descriptor;
+      template<Cid = 0>                   struct Extrapolation;
+      template<Cid = 0>                   struct Interpolation;
    }
    
    namespace Com = Component;

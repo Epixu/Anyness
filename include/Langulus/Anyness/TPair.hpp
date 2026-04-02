@@ -16,18 +16,18 @@ namespace Langulus::CT
    /// pair can be constructed                                                
    template<class K, class V, class...P>
    concept PairConstructible = NotReference<K, V> and Pair<P...>
-       and ((IntentOf<P>::Shallow or (
-               IntentConstructibleAlt<Retype<IntentOf<P>, K>>
-           and IntentConstructibleAlt<Retype<IntentOf<P>, V>>)
+       and ((IntentOfT<P>::Shallow or (
+               IntentConstructibleAlt<Retype<IntentOfT<P>, K>>
+           and IntentConstructibleAlt<Retype<IntentOfT<P>, V>>)
        ) and ...);
 
    /// Concept for recognizing argument, with which a statically typed        
    /// pair can be assigned                                                   
    template<class K, class V, class...P>
    concept PairAssignable = NotReference<K, V> and Pair<P...>
-       and ((IntentOf<P>::Shallow or (
-               IntentAssignableAlt<Retype<IntentOf<P>, K>>
-           and IntentAssignableAlt<Retype<IntentOf<P>, V>>)
+       and ((IntentOfT<P>::Shallow or (
+               IntentAssignableAlt<Retype<IntentOfT<P>, K>>
+           and IntentAssignableAlt<Retype<IntentOfT<P>, V>>)
        ) and ...);
 
    /// Concept for recognizing argument, against which a pair can be compared 
@@ -71,8 +71,8 @@ namespace Langulus::Anyness
 
       template<CT::Pair P>
       constexpr TPair(P&& other) requires CT::PairConstructible<K, V, P>
-         : mKey {IntentOf<decltype(other)>::Nest(DeintCast(FWD(other)).GetKey())}
-         , mVal {IntentOf<decltype(other)>::Nest(DeintCast(FWD(other)).GetVal())} {}
+         : mKey {IntentOf(other)::Nest(DeintCast(FWD(other)).GetKey())}
+         , mVal {IntentOf(other)::Nest(DeintCast(FWD(other)).GetVal())} {}
 
       template<class ALT_K, class ALT_V>
       requires (CT::NotReference<K, V>

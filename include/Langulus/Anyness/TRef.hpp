@@ -23,8 +23,8 @@ namespace Langulus::Anyness::Inner
    template<class T>
    using TRefBase = Container<
       Com::TypedStatic<DMeta, T>,         // Statically typed          
-      Com::HeapMovable<0, 0, 0, T*>,      // Data on the heap          
-      Com::CountStatic<1u>,               // Statically sized          
+      Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,
+      Com::CountStatic<0, 1u>,            // Statically sized          
       Com::ReserveEmergent<>,             // Reserve derived from alloc
       Com::OwnershipStack<>,              // Allocation is referenced  
       Com::OwnershipDeepHeap<>,           // Indirections referenced   

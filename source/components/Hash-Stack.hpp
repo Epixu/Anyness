@@ -13,11 +13,12 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Stores a precomputed hash on the stack.                                
-   /// The hash is calculated using the data from the given heap/stack ID.    
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0.  
-   ///   @tparam ID the stack/heap source for data                            
+   ///   @tparam ID the provider ID whose data will be hashed                 
    ///   @tparam H the hash type used                                         
-   template<Cid ID = 0, class H = Hash>
+   ///   @tparam SHARED additional provider IDs that are hashed together.     
+   ///      They will all share the same cached hash variable.                
+   template<Cid ID, class H, Cid...SHARED>
    struct HashStack : HashEmergent<ID, H> {
       using StackRequest = H;
       
@@ -35,8 +36,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                         friend struct Conversion;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      template<Cid, Cid...>                       friend struct Conversion;
 
       /// Get hash (inner) - will not recompute it                            
       constexpr auto& GetHashInner(this auto&& self) noexcept {

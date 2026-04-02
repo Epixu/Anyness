@@ -14,16 +14,19 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Interfaces a heap. Adds a member that points to the heap memory.       
    /// The heap is allowed to move on reallocation.                           
-   ///   @tparam ID multiple heaps are supported                              
+   ///   @tparam ID heap provider ID. Must have a matching type component ID. 
    ///   @tparam INITIAL_SIZE the initial size (in elements). Used in hashed  
    ///      containers in order to control hash table size. If 0, the heap    
    ///      will use reflected type properties only.                          
    ///   @tparam GROWTH_FACTOR growth factor on reallocation. Used in hashed  
    ///      containers in order to control hash table growth on reallocation. 
    ///      If 0, the heap will grow according to reflected type properties.  
-   ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
-   template<Cid ID, uint INITIAL_SIZE, uint GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
-   struct HeapMovable : HeapReference<ID, POINTER_TYPE> {
+   ///   @tparam ENTRIES optional extensions that include more data into      
+   ///      the heap allocation. Each ID must correspond to a matching type   
+   ///      component ID. Each entry also allows for pointer customization,   
+   ///      including support for packed pointers.                            
+   template<Cid ID, uint INITIAL_SIZE, uint GROWTH_FACTOR, CT::HeapEntry...ENTRIES>
+   struct HeapMovable : HeapReference<ID, ENTRIES...> {
       static constexpr Cid  Id = ID;
       static constexpr Cid  HeapProvider = ID;
       static constexpr int  ComponentPrecedence = -2000;
@@ -32,13 +35,13 @@ namespace Langulus::Anyness::Component
       static constexpr uint GrowthFactor = GROWTH_FACTOR;
 
    protected:
-      template<Cid, class> friend struct ReserveEmergent;
-      template<Cid>        friend struct IterationOperators;
-      template<Cid, class> friend struct Insertion;
-      template<Cid, class> friend struct Merging;
-      template<Cid>        friend struct Emplacement;
-      template<Cid>        friend struct Conversion;
-      template<Cid, bool>  friend struct OwnershipEmergent;
+      template<Cid, class, Cid...>  friend struct ReserveEmergent;
+      template<Cid>                 friend struct IterationOperators;
+      template<Cid, class>          friend struct Insertion;
+      template<Cid, class>          friend struct Merging;
+      template<Cid>                 friend struct Emplacement;
+      template<Cid, Cid...>         friend struct Conversion;
+      template<Cid, bool, Cid...>   friend struct OwnershipEmergent;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -46,7 +49,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
-      using Base = HeapReference<ID, POINTER_TYPE>;
+      using Base = HeapReference<ID, ENTRIES...>;
       using typename Base::Request;
       
       /// Default-initialize the heap pointer                                 

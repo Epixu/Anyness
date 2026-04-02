@@ -12,14 +12,15 @@
 namespace Langulus::Anyness::Component
 {
    ///                                                                        
-   /// Provides random element access by hashing a value of the provided ID   
+   /// Provides random element access by hashing a value of the provided ID.  
    /// Uses a modified Robin Hood algorithm to reuse table space and minimize 
    /// movement on rehash. Keeps a local pointer to the hash table for faster 
    /// and more cache-friendly access. That also allows for disownment.       
-   ///   @tparam ID the stack/heap we're indexing                             
+   ///   @tparam ID the provider we're indexing                               
    ///   @tparam HASH type of the hash                                        
-   template<Cid ID, class HASH>
-   struct IndexedHashStack : IndexedCommonHashed<ID, HASH> {
+   ///   @tparam SHARED providers that share the same indexing scheme         
+   template<Cid ID, class HASH, Cid...SHARED>
+   struct IndexedHashStack : IndexedCommonHashed<ID, HASH, SHARED...> {
       using TableType        = typename IndexedCommonHashed<ID, HASH>::TableType;
       using HeapRequest      = PerElement<TableType>;
       using StackRequest     = TableType*;
@@ -36,11 +37,11 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::Sparse>  friend struct HeapMovable;
-      template<Cid, class>                   friend struct Merging;
-                                             friend struct IndexedCommon<ID>;
-                                             friend struct IndexedCommonHashed<ID, HASH>;
-      template<Cid>                          friend struct Removal;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      template<Cid, class>    friend struct Merging;
+                              friend struct IndexedCommon<ID>;
+                              friend struct IndexedCommonHashed<ID, HASH>;
+      template<Cid, Cid...>   friend struct Removal;
 
       /// Get hash table (inner)                                              
       constexpr auto& GetHashTableInner(this auto&& self) noexcept {

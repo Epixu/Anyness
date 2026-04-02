@@ -14,16 +14,19 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// A dynamic reserve, stored as a member variable.                        
    /// Will increase container's stack size.                                  
-   ///   @tparam ID ID of the heap to track capacity for                      
-   ///   @tparam T type of the counter                                        
-   template<Cid ID, class T>
+   ///   @tparam ID provider ID to keep reserve of                            
+   ///   @tparam T the reserve type                                           
+   ///   @tparam SHARED provider IDs that share the same reserve variable     
+   template<Cid ID, class T, Cid...SHARED>
    struct ReserveStack {
       using CTTI_Component = Yes<>;
       using ReserveType = T;
       using StackRequest = T;
-
       static constexpr int ComponentPrecedence = -1000;
      
+      static_assert(CT::Integer<T> and not CT::Signed<T>,
+         "Reserve type must be an unsigned integer");
+
       /// Get the number of reserved (maybe uninitialized) elements           
       constexpr T GetReserved(this auto const& self) noexcept {
          return self.GetReservedInner();
@@ -43,9 +46,9 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                         friend struct Emplacement;
-      template<Cid>                         friend struct Removal;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      template<Cid>                               friend struct Emplacement;
+      template<Cid, Cid...>                       friend struct Removal;
 
       /// Get reserved (inner)                                                
       constexpr auto& GetReservedInner(this auto&& self) noexcept {

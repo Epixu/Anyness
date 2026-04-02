@@ -8,6 +8,8 @@
 #pragma once
 #include "../Container.hpp"
 #include <Langulus/CT/Index.hpp>
+#include <Langulus/CT/Signed.hpp>
+#include <Langulus/CT/Integer.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -22,17 +24,24 @@ namespace Langulus::Anyness::Component
    ///   In these cases, count is equal to COUNT if container has a heap      
    /// component that has been allocated - otherwise it is 0. If no heap      
    /// component exists or can't be null, then the count is always COUNT.     
-   template<auto COUNT>
+   ///   @tparam ID provider ID to keep count of                              
+   ///   @tparam COUNT the count type and value                               
+   ///   @tparam SHARED provider IDs that share the same count variable       
+   template<Cid ID, auto COUNT, Cid...SHARED>
    struct CountStatic {
       using CTTI_Component  = Yes<>;
       using CTTI_Contiguous = Maybe<COUNT == 1>;
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = COUNT > 1;
 
-      static_assert(COUNT > 0, "Can't have a container of zero or negative count");
       using CountType   = decltype(COUNT);
       using ReserveType = CountType;
       using IndexType   = Index::At<CountType>;
+
+      static_assert(COUNT > 0,
+         "Can't have a container of zero or negative count");
+      static_assert(CT::Integer<CountType> and not CT::Signed<CountType>,
+         "Count type must be an unsigned integer");
 
       /// Equal to COUNT if container has a heap component that has been      
       /// allocated - zero otherwise. If no heap component exists, then the   
@@ -52,12 +61,12 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid>             friend struct Removal;
-      template<Cid>             friend struct Emplacement;
-      template<Cid, class>      friend struct Insertion;
-      template<Cid, class>      friend struct IndexedLinear;
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>             friend struct Conversion;
+      template<Cid, Cid...>         friend struct Removal;
+      template<Cid>                 friend struct Emplacement;
+      template<Cid, class>          friend struct Insertion;
+      template<Cid, Cid...>         friend struct IndexedLinear;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      template<Cid, Cid...>         friend struct Conversion;
 
       /// Get count (inner)                                                   
       template<CT::Container C>

@@ -36,16 +36,16 @@ namespace Langulus::Anyness::Component
       static_assert(StateCount < 16, "Too many states");
 
    protected:
-      template<Cid>               friend struct Removal;      
-      template<State::StateValue> friend struct DefineState::Typed;
-      template<State::StateValue> friend struct DefineState::Tracked;
-      template<State::StateValue> friend struct DefineState::Sorted;
-      template<State::StateValue> friend struct DefineState::Past;
-      template<State::StateValue> friend struct DefineState::Or;
-      template<State::StateValue> friend struct DefineState::Future;
-      template<State::StateValue> friend struct DefineState::Encrypted;
-      template<State::StateValue> friend struct DefineState::Compressed;
-      template<Cid>               friend struct Emplacement;
+      template<Cid, Cid...>         friend struct Removal;
+      template<State::StateValue>   friend struct DefineState::Typed;
+      template<State::StateValue>   friend struct DefineState::Tracked;
+      template<State::StateValue>   friend struct DefineState::Sorted;
+      template<State::StateValue>   friend struct DefineState::Past;
+      template<State::StateValue>   friend struct DefineState::Or;
+      template<State::StateValue>   friend struct DefineState::Future;
+      template<State::StateValue>   friend struct DefineState::Encrypted;
+      template<State::StateValue>   friend struct DefineState::Compressed;
+      template<Cid>                 friend struct Emplacement;
 
       ///                                                                     
       /// The bitfield capable of containing all variable states              

@@ -31,8 +31,8 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
       using THandleEmbeddedDense = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<0, Deref<T>*>,
-         Com::CountStatic<1u>,
+         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::CountStatic<0, 1u>,
          Com::ReserveEmergent<>,
          Com::OwnershipStack<0, false>,
          Com::HashEmergent<>,
@@ -46,8 +46,8 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
       using THandleEmbeddedSparse = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<0, Deref<T>*>,
-         Com::CountStatic<1u>,
+         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::CountStatic<0, 1u>,
          Com::OwnershipDeepReference<>,
          Com::HashEmergent<>,
          Com::Assignment<>,
@@ -60,8 +60,8 @@ namespace Langulus::Anyness
       template<CT::Reference T> requires CT::NotSheddable<T>
       using THandleDisownedEmbedded = Container<
          Com::TypedStatic<DMeta, Deref<T>>,
-         Com::HeapReference<0, Deref<T>*>,
-         Com::CountStatic<1u>,
+         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::CountStatic<0, 1u>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -76,7 +76,7 @@ namespace Langulus::Anyness
       using THandleLocalDense = Container<
          Com::TypedStatic<DMeta, T>,
          Com::Stack<T>,
-         Com::CountStatic<1u>,
+         Com::CountStatic<0, 1u>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,
@@ -88,8 +88,8 @@ namespace Langulus::Anyness
       template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
       using THandleLocalSparse = Container<
          Com::TypedStatic<DMeta, T>,
-         Com::HeapMovable<0, 0, 0, T*>,
-         Com::CountStatic<1u>,
+         Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,
+         Com::CountStatic<0, 1u>,
          Com::ReserveEmergent<>,
          Com::OwnershipStack<>,
          Com::OwnershipDeepHeap<>,
@@ -109,7 +109,7 @@ namespace Langulus::Anyness
    struct HandleMut : Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
-      Com::CountStatic<1u>,
+      Com::CountStatic<0, 1u>,
       Com::ReserveEmergent<>,
       Com::OwnershipDeepReference<>,
       Com::HashEmergent<>,
@@ -161,7 +161,7 @@ namespace Langulus::Anyness
    struct HandleDisownedMut : Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
-      Com::CountStatic<1u>,
+      Com::CountStatic<0, 1u>,
       Com::HashEmergent<>,
       Com::Assignment<>,
       Com::Emplacement<>,
@@ -215,7 +215,7 @@ namespace Langulus::Anyness
    struct Handle : Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
-      Com::CountStatic<1u>,
+      Com::CountStatic<0, 1u>,
       Com::OwnershipDeepReference<>,
       Com::HashEmergent<>,
       Com::Comparison<>,
@@ -264,7 +264,7 @@ namespace Langulus::Anyness
    struct HandleDisowned : Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
-      Com::CountStatic<1u>,
+      Com::CountStatic<0, 1u>,
       Com::HashEmergent<>,
       Com::Comparison<>,
       Com::IterationOperators<>

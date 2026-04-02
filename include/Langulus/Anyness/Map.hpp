@@ -9,7 +9,6 @@
 #include "../../../source/Container.hpp"
 #include "../../../source/components/Typed-Stack.hpp"
 #include "../../../source/components/Heap-Movable.hpp"
-#include "../../../source/components/Heap-Reuse.hpp"
 #include "../../../source/components/Count-Stack.hpp"
 #include "../../../source/components/Reserve-Stack.hpp"
 #include "../../../source/components/Ownership-Stack.hpp"
@@ -38,39 +37,31 @@ namespace Langulus::Anyness::Inner
    using MapBase = Container<
       Com::TypedStack<DMeta, void, false, 0>,  // Type-erased keys      
       Com::TypedStack<DMeta, void, false, 1>,  // Type-erased values    
-      Com::HeapMovable<0, 8, 2>,       // Pointer to key & value memory 
-      Com::HeapReuse<1, 0>,            // Reuses HeapMovable<0>         
-      Com::CountStack<0>,              // Dynamically sized             
-      Com::CountReuse<1, 0>,           // Reuses CountStack<0>          
-      Com::ReserveStack<0>,            // Reserve kept as member        
-      Com::ReserveReuse<1, 0>,         // Reuses ReserveStack<0>        
-      Com::IndexedHashStack<0>,        // Indexed by hash table         
-      Com::IndexedHashReuse<1, 0>,     // Reuses IndexedHashStack<0>    
-      Com::OwnershipStack<0>,          // Allocation is referenced      
-      Com::OwnershipReuse<1, 0>,       // Reuses OwnershipStack<0>      
-      Com::OwnershipDeepHeap<0>,       // Sparse keys are referenced    
-      Com::OwnershipDeepHeap<1>,       // Sparse values are referenced  
-      Com::HashHeap<0>,                // Hash can be cached            
-      Com::HashReuse<1, 0>,            // Reuses HashHeap<0>            
-      Com::Merging<0>,                 // Allows merging keys           
-      Com::Insertion<1>,               // Allows inserting values       
-      Com::Assignment<1>,              // Allows assignment of values   
-      Com::Removal<0>,                 // Allows clear/reset of keys    
-      Com::Removal<1>,                 // Allows clear/reset of values  
-      Com::Conversion<0>,              // Allows conversions of keys    
-      Com::Conversion<1>,              // Allows conversions of values  
-      Com::Comparison<0>,              // Allows comparisons of keys    
-      Com::Comparison<1>,              // Allows comparisons of values  
-      Com::IterationForEach<0>,        // ForEach iteration of keys     
-      Com::IterationForEach<1>,        // ForEach iteration of values   
-      Com::IterationRange<0>,          // Ranged iteration of keys      
-      Com::IterationRange<1>,          // Ranged iteration of values    
-      Com::StateStack<                 // Variable state                
-         DefineState::Typed<>,         // Can be type-constrained       
-         DefineState::Sorted<SORT>,    // Maybe unsorted                
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
+      Com::HeapMovable<0, 8, 2,
+         HeapEntry<0, void*>,             // Key heap data              
+         HeapEntry<1, void*>              // Value heap data            
+      >,
+      Com::CountStack<0, size_t, 1>,      // Dynamically sized          
+      Com::ReserveStack<0, size_t, 1>,    // Reserve kept as member     
+      Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
+      Com::OwnershipStack<0, true, 1>,    // Allocation is referenced   
+      Com::OwnershipDeepHeap<0>,          // Separate key deep ownership
+      Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
+      Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
+      Com::Merging<0>,                    // Only merging for keys      
+      Com::Insertion<1>,                  // Allows inserting values    
+      Com::Assignment<1>,                 // Allows assignment of values
+      Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
+      Com::Conversion<0, 1>,              // Allows conversions of K/V  
+      Com::Comparison<0, 1>,              // Allows comparisons of K/V  
+      Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
+      Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
+      Com::StateStack<                    // Variable state             
+         DefineState::Typed<>,            // Can be type-constrained    
+         DefineState::Sorted<SORT>,       // Maybe unsorted             
+         DefineState::Compressed<>,       // Adds 'compressed' state    
+         DefineState::Encrypted<>,        // Adds 'encrypted' state     
+         DefineState::Tracked<>           // Adds 'tracked' state       
       >
    >;
 

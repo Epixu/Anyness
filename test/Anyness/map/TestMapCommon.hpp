@@ -82,11 +82,11 @@ namespace doctest
       }
    };
 
-   template<CT::NotVoid T, Anyness::State::StateValue SORT>
-   struct StringMaker<TMap<T, SORT>> {
-      static String convert(TMap<T, SORT> const& value) {
+   template<CT::NotVoid K, CT::NotVoid V, Anyness::State::StateValue SORT>
+   struct StringMaker<TMap<K, V, SORT>> {
+      static String convert(TMap<K, V, SORT> const& value) {
          return toString(static_cast<::std::string>(
-            NameOf<TMap<T, SORT>>() + "(" + Convert<Text>(value) + ")"
+            NameOf<TMap<K, V, SORT>>() + "(" + Convert<Text>(value) + ")"
          ));
       }
    };
@@ -273,58 +273,58 @@ void Map_CheckState_Abandoned(C const& map) {
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
-void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
-   Many_VerifyAccessorInterface(set, LglsFwd(e_with_intent));
+void Map_CheckState_ContainsOne(T const& map, I&& e_with_intent, int uses = 1) {
+   Map_VerifyAccessorInterface(map, LglsFwd(e_with_intent));
 
    auto& e = e_with_intent.what;
    using E = typename Decay<Deint<I>>::Type;
 
    if constexpr (CT::Deep<E> and CT::Dense<E>)
-      REQUIRE(set.template AsAt<E*>(0)->template IsSame<int>());
+      REQUIRE(map.template AsAt<E*>(0)->template IsSame<int>());
 
-   REQUIRE(set.GetCount() == 1);
-   REQUIRE(set.GetUses() == uses);
-   REQUIRE(set.GetReserved() >= (uses ? 1 : 0));
+   REQUIRE(map.GetCount() == 1);
+   REQUIRE(map.GetUses() == uses);
+   REQUIRE(map.GetReserved() >= (uses ? 1 : 0));
 
    if constexpr (not CT::CustomPointer<E>)
-      REQUIRE(set.template AsAt<Decay<E>>(0) == DenseCast(*e));
+      REQUIRE(map.template AsAt<Decay<E>>(0) == DenseCast(*e));
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
-      REQUIRE(set.template AsAt<E>(0) != *e);
-      REQUIRE((*set.template AsAt<E*>(0)) != *e);
+      REQUIRE(map.template AsAt<E>(0) != *e);
+      REQUIRE((*map.template AsAt<E*>(0)) != *e);
    }
    else {
-      REQUIRE(set.template AsAt<E>(0) == *e);
-      REQUIRE((*set.template AsAt<E*>(0)) == *e);
+      REQUIRE(map.template AsAt<E>(0) == *e);
+      REQUIRE((*map.template AsAt<E*>(0)) == *e);
    }
 
    if constexpr (CT::Dense<E>)
-      REQUIRE(set.GetEntries() == nullptr);
+      REQUIRE(map.GetEntries() == nullptr);
    else if (uses) {
-      REQUIRE(set.GetEntries() != nullptr);
+      REQUIRE(map.GetEntries() != nullptr);
 
       if constexpr (not CT::Disowned<I>) {
          for (size_t i = 0; i < IndirectsOf<E>; ++i) {
             if constexpr (CT::Cloned<I>)
-               REQUIRE(set.GetEntriesAt(0)[i] != e.entries[i + 1]);
+               REQUIRE(map.GetEntriesAt(0)[i] != e.entries[i + 1]);
             else
-               REQUIRE(set.GetEntriesAt(0)[i] == e.entries[i + 1]);
+               REQUIRE(map.GetEntriesAt(0)[i] == e.entries[i + 1]);
          }
       }
       else {
          for (size_t i = 0; i < IndirectsOf<E>; ++i)
-            REQUIRE(set.GetEntriesAt(0)[i] == nullptr);
+            REQUIRE(map.GetEntriesAt(0)[i] == nullptr);
       }
    }
 
    if constexpr (CT::TypeErased<T>) {
-      REQUIRE_THROWS(set.template AsAt<float>(0) == 0.0f);
-      REQUIRE_THROWS(set.template AsAt<float*>(0) == nullptr);
+      REQUIRE_THROWS(map.template AsAt<float>(0) == 0.0f);
+      REQUIRE_THROWS(map.template AsAt<float*>(0) == nullptr);
    }
 
    if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
       //TODO test all kinds of ranged modifiers??
-      for (auto& it : set) {
+      for (auto& it : map) {
          if constexpr (CT::TypeErased<T>)
             REQUIRE(not it.CompareOneEqual(*e));
          else
@@ -333,7 +333,7 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
    }
    else {
       //TODO test all kinds of ranged modifiers??
-      for (auto& it : set) {
+      for (auto& it : map) {
          if constexpr (CT::TypeErased<T>)
             REQUIRE(it.CompareOneEqual(*e));
          else
@@ -343,34 +343,34 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
 }
 
 template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
-void Set_CheckState_ContainsN(size_t n, const T& set, I&& e_scoped_with_intent, int uses = 1) {
+void Map_CheckState_ContainsN(size_t n, const T& map, I&& e_scoped_with_intent, int uses = 1) {
    auto& e = e_scoped_with_intent.what;
    //using E = typename Decay<Deint<I>>::Type;
 
-   REQUIRE(set.GetCount() == n);
-   REQUIRE(set.GetUses() == uses);
-   REQUIRE(set.GetReserved() >= n);
+   REQUIRE(map.GetCount() == n);
+   REQUIRE(map.GetUses() == uses);
+   REQUIRE(map.GetReserved() >= n);
 
-   for (auto& it : set)
+   for (auto& it : map)
       REQUIRE(it == e);
 
    //TODO other kinds of iterations
 }
 
 template<CT::Container T, CT::Intent I> requires (CT::NoIntent<T> and CT::Array<I>)
-void Set_CheckState_ContainsArray(const T& set, I&& e_scoped_array_with_intent) {
+void Map_CheckState_ContainsArray(const T& map, I&& e_scoped_array_with_intent) {
    auto  e = e_scoped_array_with_intent.what;
    //using E = typename Decay<Deint<I>>::Type;
    constexpr size_t n = ExtentOf<decltype(e_scoped_array_with_intent.what)>;
 
-   REQUIRE(set.GetCount() == n);
-   REQUIRE(set.GetUses() == 1);
-   REQUIRE(set.GetReserved() >= n);
+   REQUIRE(map.GetCount() == n);
+   REQUIRE(map.GetUses() == 1);
+   REQUIRE(map.GetReserved() >= n);
 
    //TODO
 }
 
 template<CT::Container T, class E> requires CT::NoIntent<T>
-void Set_Helper_CompareOne(const T& set, const E& e) {
-   Many_Helper_CompareOne(set, e);
+void Map_Helper_CompareOne(const T& map, const E& e) {
+   //TODO Many_Helper_CompareOne(map, e);
 }

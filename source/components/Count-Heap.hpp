@@ -20,9 +20,10 @@ namespace Langulus::Anyness::Component
    /// allocation, and requires an indirection everytime count is accessed.   
    /// It is a bit slower and less cache-friendly, but results in more        
    /// compact containers                                                     
-   ///   @tparam ID the heap ID to keep count of                              
+   ///   @tparam ID provider ID to keep count of                              
    ///   @tparam T the count type                                             
-   template<Cid ID, class T>
+   ///   @tparam SHARED provider IDs that share the same count variable       
+   template<Cid ID, class T, Cid...SHARED>
    struct CountHeap {
       using CTTI_Component = Yes<>;
       using CountType   = T;
@@ -32,6 +33,9 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
       
+      static_assert(CT::Integer<T> and not CT::Signed<T>,
+         "Count type must be an unsigned integer");
+
       /// Check if there are no initialized elements                          
       constexpr bool IsEmpty(this auto const& self) noexcept {
          return self.GetCountInner() == 0;
@@ -52,17 +56,17 @@ namespace Langulus::Anyness::Component
       T GetCountItemsDeep() const noexcept;
 
    protected:
-      template<Cid>             friend struct Removal;
-      template<Cid>             friend struct Emplacement;
-      template<Cid, class>      friend struct Insertion;
-      template<Cid>             friend struct IndexedCommon;
-      template<Cid, class>      friend struct IndexedLinear;
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-                                friend struct Conversion;
+      template<Cid, Cid...>      friend struct Removal;
+      template<Cid>              friend struct Emplacement;
+      template<Cid, class>       friend struct Insertion;
+      template<Cid>              friend struct IndexedCommon;
+      template<Cid, Cid...>      friend struct IndexedLinear;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      template<Cid>              friend struct Conversion;
 
       /// Get count (inner)                                                   
       constexpr auto& GetCountInner(this auto&& self) noexcept {
-         return self.template AccessHeap<CountStack>();
+         return self.template AccessHeap<CountHeap>();
       }
       
       /// Set the number of initialized elements                              

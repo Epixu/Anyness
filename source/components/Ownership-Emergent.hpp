@@ -18,12 +18,15 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Heap allocation will be searched on demand every time.                 
    /// Manage its ownership by referencing and dereferencing it.              
-   ///   @tparam ID which heap are we keeping track of?                       
+   /// Emergent ownership disallows disownment.                               
+   ///   @tparam ID provider we're keeping track of                           
    ///   @tparam AUTO whether ownership will be automatically applied on      
    ///      construction, reassignment and destruction. False if container is 
    ///      just a view, or in other cases where you want to carry an         
    ///      allocation pointer, but not necessarily reference it.             
-   template<Cid ID, bool AUTO>
+   ///   @tparam SHARED other providers that will share the same allocation   
+   ///      variable.                                                         
+   template<Cid ID, bool AUTO, Cid...SHARED>
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
 
@@ -61,11 +64,10 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, CT::Sparse>             friend struct HeapReference;
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                         friend struct Removal;
-      template<Cid>                         friend struct Emplacement;
-      template<Cid, bool>                   friend struct OwnershipEmergent;
+      template<Cid, CT::HeapEntry...>              friend struct HeapReference;
+      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
+      template<Cid, Cid...>                        friend struct Removal;
+      template<Cid>                                friend struct Emplacement;
 
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this will not dereference previous allocation          

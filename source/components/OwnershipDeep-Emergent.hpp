@@ -40,11 +40,11 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = 2000;
 
    protected:
-      template<Cid, CT::Sparse>             friend struct HeapReference;
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                         friend struct Removal;
-      template<Cid>                         friend struct Emplacement;
-      template<Cid, bool>                   friend struct OwnershipEmergent;
+      template<Cid, CT::HeapEntry...>              friend struct HeapReference;
+      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
+      template<Cid, Cid...>                        friend struct Removal;
+      template<Cid>                                friend struct Emplacement;
+      template<Cid, bool, Cid...>                  friend struct OwnershipEmergent;
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;

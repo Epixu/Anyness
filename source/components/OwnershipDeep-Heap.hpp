@@ -68,10 +68,10 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                         friend struct Removal;
-      template<Cid>                         friend struct Emplacement;
-      template<Cid, bool>                   friend struct OwnershipDeepEmergent;
+      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
+      template<Cid, Cid...>                        friend struct Removal;
+      template<Cid>                                friend struct Emplacement;
+      template<Cid, bool>                          friend struct OwnershipDeepEmergent;
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   

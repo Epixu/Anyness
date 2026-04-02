@@ -14,9 +14,6 @@ namespace Langulus::CTTI
    namespace Inner
    {
       /// Test if T is initializable with a signed fundamental                
-      /// std::is_signed_v is crap, because it assumes that all types are     
-      /// int-initializable. This one is better, because it allows tests for  
-      /// float- and double-initializables as well                            
       template<class T, CT::Fundamental F>
       consteval bool SignedInner() {
          if constexpr (::std::constructible_from<T, F>
@@ -28,6 +25,9 @@ namespace Langulus::CTTI
    }
 
    /// Affects CT::Signed<T>                                                  
+   /// std::is_signed_v is crap, because it assumes that all types are        
+   /// int-initializable. This one is better, because it allows tests for     
+   /// float- and double-initializables as well                               
    template<class T>
    struct Signed {
       static constexpr bool Default = true;

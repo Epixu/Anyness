@@ -18,10 +18,11 @@ namespace Langulus::Anyness::Component
    /// moving things around when rehashing. Doesn't keep a local pointer to   
    /// the hash table, and instead recalculates it on demand from the heap.   
    ///   @attention keeping the hash table on the heap disallows disownment   
-   ///   @tparam ID the stack/heap we're indexing                             
+   ///   @tparam ID the provider we're indexing                               
    ///   @tparam HASH type of the hash                                        
-   template<Cid ID, class HASH>
-   struct IndexedHashHeap : IndexedCommonHashed<ID, HASH> {
+   ///   @tparam SHARED providers that share the same indexing scheme         
+   template<Cid ID, class HASH, Cid...SHARED>
+   struct IndexedHashHeap : IndexedCommonHashed<ID, HASH, SHARED...> {
       using TableType        = typename IndexedCommonHashed<ID, HASH>::TableType;
       using HeapRequest      = PerElement<TableType>;
       using IteratorCategory = typename IndexedCommonHashed<ID, HASH>::IteratorCategory;
@@ -37,11 +38,11 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::Sparse>  friend struct HeapMovable;
-      template<Cid, class>                   friend struct Merging;
-                                             friend struct IndexedCommon<ID>;
-                                             friend struct IndexedCommonHashed<ID, HASH>;
-      template<Cid>                          friend struct Removal;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      template<Cid, class>    friend struct Merging;
+                              friend struct IndexedCommon<ID>;
+                              friend struct IndexedCommonHashed<ID, HASH>;
+      template<Cid, Cid...>   friend struct Removal;
 
       /// Get the start of the hash table (inner)                             
       constexpr auto* GetHashTableInner(this auto&& self) noexcept {

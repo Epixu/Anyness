@@ -13,13 +13,17 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Stores a precomputed hash inside the heap with the given ID.           
-   /// The hash is calculated using the data inside the given heap/stack ID.  
    /// The hash is recomputed if GetHash() is invoked when stored hash is 0.  
    ///   @attention since hash is stored on the heap, it is recomputed as     
-   ///      emergent when we have no ownership of that heap.                  
-   ///   @tparam ID the heap ID                                               
+   ///      emergent when we have no ownership of that heap, because we will  
+   ///      not be allowed to write that hash value down and cache it. This   
+   ///      means that disowned containers will suffer a big performance cost 
+   ///      every time they're hashed.                                        
+   ///   @tparam ID the provider ID whose data will be hashed                 
    ///   @tparam H the hash type used                                         
-   template<Cid ID = 0, class H = Hash>
+   ///   @tparam SHARED additional provider IDs that are hashed together.     
+   ///      They will all share the same cached hash variable.                
+   template<Cid ID, class H, Cid...SHARED>
    struct HashHeap : HashEmergent<ID, H> {
       using HeapRequest = H;
 
@@ -43,15 +47,15 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                         friend struct Conversion;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      template<Cid>                               friend struct Conversion;
 
       /// Get hash (inner) - will never recompute it                          
       constexpr auto GetHashInner(this auto&& self) noexcept -> H const {
          if (self.IsEmpty())
             return H {1};
          else if (self.GetUses() == 0)
-            return H {0}; //self.HashRecompute();
+            return H {0};
 
          const auto heap = self.template AccessHeap<HashHeap>();
          return heap ? *heap : H {0};

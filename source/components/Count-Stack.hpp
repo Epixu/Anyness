@@ -17,9 +17,10 @@ namespace Langulus::Anyness::Component
    /// Count shows how many elements inside a container are initialized       
    /// Stack-based counting increases the container size, but doesn't require 
    /// indirections, making count lookup faster and more cache-friendly       
-   ///   @tparam ID the heap/stack ID to keep count of                        
+   ///   @tparam ID provider ID to keep count of                              
    ///   @tparam T the count type                                             
-   template<Cid ID, class T>
+   ///   @tparam SHARED provider IDs that share the same count variable       
+   template<Cid ID, class T, Cid...SHARED>
    struct CountStack {
       using CTTI_Component = Yes<>;
       using CountType      = T;
@@ -28,6 +29,9 @@ namespace Langulus::Anyness::Component
 
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
+
+      static_assert(CT::Integer<T> and not CT::Signed<T>,
+         "Count type must be an unsigned integer");
 
       /// Check if there are no initialized elements                          
       constexpr bool IsEmpty(this auto const& self) noexcept {
@@ -48,14 +52,14 @@ namespace Langulus::Anyness::Component
       T GetCountItemsDeep() const noexcept;
 
    protected:
-      template<Cid>             friend struct Removal;
-      template<Cid>             friend struct Emplacement;
-      template<Cid, class>      friend struct Insertion;
-      template<Cid, class>      friend struct Merging;
-      template<Cid>             friend struct IndexedCommon;
-      template<Cid, class>      friend struct IndexedLinear;
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>             friend struct Conversion;
+      template<Cid, Cid...>      friend struct Removal;
+      template<Cid>              friend struct Emplacement;
+      template<Cid, class>       friend struct Insertion;
+      template<Cid, class>       friend struct Merging;
+      template<Cid, Cid...>      friend struct IndexedCommon;
+      template<Cid, Cid...>      friend struct IndexedLinear;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      template<Cid, Cid...>      friend struct Conversion;
 
       /// Get count (inner)                                                   
       constexpr auto& GetCountInner(this auto&& self) noexcept {

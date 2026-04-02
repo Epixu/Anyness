@@ -29,23 +29,23 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    , Types<Map, RT**,   ScopedElement<RT**>,    RT**,   ScopedElement<RT**>>
    , Types<Map, char**, ScopedElement<char**>,  char**, ScopedElement<char**>>
 
-   , Types<TMap<Text>,   Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
-   , Types<TMap<int>,    int,    ScopedElement<int>,     int,    ScopedElement<int>>
-   , Types<TMap<Any>,    Any,    ScopedElement<Any>,     Any,    ScopedElement<Any>>
-   , Types<TMap<RT>,     RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
-   , Types<TMap<char>,   char,   ScopedElement<char>,    char,   ScopedElement<char>>
+   , Types<TMap<Text,   Text>,   Text,   ScopedElement<Text>,    Text,   ScopedElement<Text>>
+   , Types<TMap<int,    int>,    int,    ScopedElement<int>,     int,    ScopedElement<int>>
+   , Types<TMap<Any,    Any>,    Any,    ScopedElement<Any>,     Any,    ScopedElement<Any>>
+   , Types<TMap<RT,     RT>,     RT,     ScopedElement<RT>,      RT,     ScopedElement<RT>>
+   , Types<TMap<char,   char>,   char,   ScopedElement<char>,    char,   ScopedElement<char>>
 
-   , Types<TMap<Text*>,  Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
-   , Types<TMap<int*>,   int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
-   , Types<TMap<Any*>,   Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
-   , Types<TMap<RT*>,    RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
-   , Types<TMap<char*>,  char*,  ScopedElement<char*>,   char*,  ScopedElement<char*>>
+   , Types<TMap<Text*,  Text*>,  Text*,  ScopedElement<Text*>,   Text*,  ScopedElement<Text*>>
+   , Types<TMap<int*,   int*>,   int*,   ScopedElement<int*>,    int*,   ScopedElement<int*>>
+   , Types<TMap<Any*,   Any*>,   Any*,   ScopedElement<Any*>,    Any*,   ScopedElement<Any*>>
+   , Types<TMap<RT*,    RT*>,    RT*,    ScopedElement<RT*>,     RT*,    ScopedElement<RT*>>
+   , Types<TMap<char*,  char*>,  char*,  ScopedElement<char*>,   char*,  ScopedElement<char*>>
 
-   , Types<TMap<Text**>, Text**, ScopedElement<Text**>,  Text**, ScopedElement<Text**>>
-   , Types<TMap<int**>,  int**,  ScopedElement<int**>,   int**,  ScopedElement<int**>>
-   , Types<TMap<Any**>,  Any**,  ScopedElement<Any**>,   Any**,  ScopedElement<Any**>>
-   , Types<TMap<RT**>,   RT**,   ScopedElement<RT**>,    RT**,   ScopedElement<RT**>>
-   , Types<TMap<char**>, char**, ScopedElement<char**>,  char**, ScopedElement<char**>>
+   , Types<TMap<Text**, Text**>, Text**, ScopedElement<Text**>,  Text**, ScopedElement<Text**>>
+   , Types<TMap<int**,  int**>,  int**,  ScopedElement<int**>,   int**,  ScopedElement<int**>>
+   , Types<TMap<Any**,  Any**>,  Any**,  ScopedElement<Any**>,   Any**,  ScopedElement<Any**>>
+   , Types<TMap<RT**,   RT**>,   RT**,   ScopedElement<RT**>,    RT**,   ScopedElement<RT**>>
+   , Types<TMap<char**, char**>, char**, ScopedElement<char**>,  char**, ScopedElement<char**>>
 
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
    // Elements are allocated by the memory manager                      
@@ -67,32 +67,32 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    , Types<Map, RT**,   ScopedElement<RT**, true>,    RT**,   ScopedElement<RT**, true>>
    , Types<Map, char**, ScopedElement<char**, true>,  char**, ScopedElement<char**, true>>
 
-   , Types<TMap<Text>,   Text,   ScopedElement<Text, true>,    Text,   ScopedElement<Text, true>>
-   , Types<TMap<int>,    int,    ScopedElement<int, true>,     int,    ScopedElement<int, true>>
-   , Types<TMap<Any>,    Any,    ScopedElement<Any, true>,     Any,    ScopedElement<Any, true>>
-   , Types<TMap<RT>,     RT,     ScopedElement<RT, true>,      RT,     ScopedElement<RT, true>>
-   , Types<TMap<char>,   char,   ScopedElement<char, true>,    char,   ScopedElement<char, true>>
+   , Types<TMap<Text,   Text>,   Text,   ScopedElement<Text, true>,    Text,   ScopedElement<Text, true>>
+   , Types<TMap<int,    int>,    int,    ScopedElement<int, true>,     int,    ScopedElement<int, true>>
+   , Types<TMap<Any,    Any>,    Any,    ScopedElement<Any, true>,     Any,    ScopedElement<Any, true>>
+   , Types<TMap<RT,     RT>,     RT,     ScopedElement<RT, true>,      RT,     ScopedElement<RT, true>>
+   , Types<TMap<char,   char>,   char,   ScopedElement<char, true>,    char,   ScopedElement<char, true>>
 
-   , Types<TMap<Text*>,  Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
-   , Types<TMap<int*>,   int*,   ScopedElement<int*, true>,    int*,   ScopedElement<int*, true>>
-   , Types<TMap<Any*>,   Any*,   ScopedElement<Any*, true>,    Any*,   ScopedElement<Any*, true>>
-   , Types<TMap<RT*>,    RT*,    ScopedElement<RT*, true>,     RT*,    ScopedElement<RT*, true>>
-   , Types<TMap<char*>,  char*,  ScopedElement<char*, true>,   char*,  ScopedElement<char*, true>>
+   , Types<TMap<Text*,  Text*>,  Text*,  ScopedElement<Text*, true>,   Text*,  ScopedElement<Text*, true>>
+   , Types<TMap<int*,   int*>,   int*,   ScopedElement<int*, true>,    int*,   ScopedElement<int*, true>>
+   , Types<TMap<Any*,   Any*>,   Any*,   ScopedElement<Any*, true>,    Any*,   ScopedElement<Any*, true>>
+   , Types<TMap<RT*,    RT*>,    RT*,    ScopedElement<RT*, true>,     RT*,    ScopedElement<RT*, true>>
+   , Types<TMap<char*,  char*>,  char*,  ScopedElement<char*, true>,   char*,  ScopedElement<char*, true>>
 
-   , Types<TMap<Text**>, Text**, ScopedElement<Text**, true>,  Text**, ScopedElement<Text**, true>>
-   , Types<TMap<int**>,  int**,  ScopedElement<int**, true>,   int**,  ScopedElement<int**, true>>
-   , Types<TMap<Any**>,  Any**,  ScopedElement<Any**, true>,   Any**,  ScopedElement<Any**, true>>
-   , Types<TMap<RT**>,   RT**,   ScopedElement<RT**, true>,    RT**,   ScopedElement<RT**, true>>
-   , Types<TMap<char**>, char**, ScopedElement<char**, true>,  char**, ScopedElement<char**, true>>
+   , Types<TMap<Text**, Text**>, Text**, ScopedElement<Text**, true>,  Text**, ScopedElement<Text**, true>>
+   , Types<TMap<int**,  int**>,  int**,  ScopedElement<int**, true>,   int**,  ScopedElement<int**, true>>
+   , Types<TMap<Any**,  Any**>,  Any**,  ScopedElement<Any**, true>,   Any**,  ScopedElement<Any**, true>>
+   , Types<TMap<RT**,   RT**>,   RT**,   ScopedElement<RT**, true>,    RT**,   ScopedElement<RT**, true>>
+   , Types<TMap<char**, char**>, char**, ScopedElement<char**, true>,  char**, ScopedElement<char**, true>>
 
    // Packed pointers                                                   
    , Types<Map, pptr8,  ScopedElementPacked<pptr8>,   pptr8,  ScopedElementPacked<pptr8>>
    , Types<Map, pptr16, ScopedElementPacked<pptr16>,  pptr16, ScopedElementPacked<pptr16>>
    , Types<Map, pptr32, ScopedElementPacked<pptr32>,  pptr32, ScopedElementPacked<pptr32>>
 
-   , Types<TMap<pptr8>,  pptr8,  ScopedElementPacked<pptr8>,   pptr8,  ScopedElementPacked<pptr8>>
-   , Types<TMap<pptr16>, pptr16, ScopedElementPacked<pptr16>,  pptr16, ScopedElementPacked<pptr16>>
-   , Types<TMap<pptr32>, pptr32, ScopedElementPacked<pptr32>,  pptr32, ScopedElementPacked<pptr32>>
+   , Types<TMap<pptr8,  pptr8>,  pptr8,  ScopedElementPacked<pptr8>,   pptr8,  ScopedElementPacked<pptr8>>
+   , Types<TMap<pptr16, pptr16>, pptr16, ScopedElementPacked<pptr16>,  pptr16, ScopedElementPacked<pptr16>>
+   , Types<TMap<pptr32, pptr32>, pptr32, ScopedElementPacked<pptr32>,  pptr32, ScopedElementPacked<pptr32>>
    #endif
 ) {
    static MemoryState memoryState;
@@ -126,37 +126,44 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    else {
       // Statically-typed containers behave the same as their inner     
       // type                                                           
-      static_assert(    Exact<TypeOf<T>, E>);
+      static_assert(    Exact<typename TypeOf<T>::First, E1>);
+      static_assert(    Exact<typename TypeOf<T>::Second, E2>);
+      static_assert(    Exact<typename T::Key, E1>);
+      static_assert(    Exact<typename T::Val, E2>);
       static_assert(not CT::TypeErased<T>);
-      static_assert(    CT::Comparable<TypeOf<T>, E>);
+      static_assert(    CT::Comparable<typename T::Key, E1>);
+      static_assert(    CT::Comparable<typename T::Val, E2>);
 
-      static_assert(CT::CopyConstructible<T>    == CT::CopyConstructible<E>);
-      static_assert(CT::ReferConstructible<T>   == CT::ReferConstructible<E>);
-      static_assert(CT::AbandonConstructible<T> == CT::AbandonConstructible<E>);
-      static_assert(CT::MoveConstructible<T>    == CT::MoveConstructible<E>);
-      static_assert(CT::CloneConstructible<T>   == CT::CloneConstructible<E>);
-      static_assert(CT::DisownConstructible<T>  == CT::DisownConstructible<E>);
+      static_assert(CT::CopyConstructible<T>    == CT::CopyConstructible<E1, E2>);
+      static_assert(CT::ReferConstructible<T>   == CT::ReferConstructible<E1, E2>);
+      static_assert(CT::AbandonConstructible<T> == CT::AbandonConstructible<E1, E2>);
+      static_assert(CT::MoveConstructible<T>    == CT::MoveConstructible<E1, E2>);
+      static_assert(CT::CloneConstructible<T>   == CT::CloneConstructible<E1, E2>);
+      static_assert(CT::DisownConstructible<T>  == CT::DisownConstructible<E1, E2>);
 
-      static_assert(CT::CopyAssignable<T>       == CT::CopyAssignable<E>);
-      static_assert(CT::ReferAssignable<T>      == CT::ReferAssignable<E>);
-      static_assert(CT::AbandonAssignable<T>    == CT::AbandonAssignable<E>);
-      static_assert(CT::MoveAssignable<T>       == CT::MoveAssignable<E>);
-      static_assert(CT::CloneAssignable<T>      == CT::CloneAssignable<E>);
-      static_assert(CT::DisownAssignable<T>     == CT::DisownAssignable<E>);      
+      static_assert(CT::CopyAssignable<T>       == CT::CopyAssignable<E1, E2>);
+      static_assert(CT::ReferAssignable<T>      == CT::ReferAssignable<E1, E2>);
+      static_assert(CT::AbandonAssignable<T>    == CT::AbandonAssignable<E1, E2>);
+      static_assert(CT::MoveAssignable<T>       == CT::MoveAssignable<E1, E2>);
+      static_assert(CT::CloneAssignable<T>      == CT::CloneAssignable<E1, E2>);
+      static_assert(CT::DisownAssignable<T>     == CT::DisownAssignable<E1, E2>);      
    }
    
    {
-      static_assert(CT::Deep<T>);
+      static_assert(    CT::Deep<T>);
       static_assert(not CT::ContainsOne<T>);
       static_assert(not CT::Handle<T>);
-      static_assert(CT::ContainsMany<T>);
-      static_assert(CT::HasVariableCount<T>);
-      static_assert(CT::HeapAllocated<T>);
-      static_assert(CT::DeeplyOwned<T> == (CT::TypeErased<T> or CT::Sparse<TypeOf<T>>));
-      static_assert(CT::Owned<T>);
-      static_assert(CT::AutoOwned<T>);
-      static_assert(CT::Comparable<T, T>);
-      static_assert(CT::Comparable<T, E>);
+      static_assert(    CT::ContainsMany<T>);
+      static_assert(    CT::HasVariableCount<T>);
+      static_assert(    CT::HeapAllocated<T>);
+      static_assert(    CT::DeeplyOwned<T> == (CT::TypeErased<T> or CT::Sparse<E1> or CT::Sparse<E2>));
+      static_assert(    CT::Owned<T>);
+      static_assert(    CT::AutoOwned<T>);
+      static_assert(    CT::Comparable<T, T>);
+      static_assert(not CT::Comparable<T, E1>);
+      static_assert(not CT::Comparable<T, E2>);
+      static_assert(    CT::Comparable<T, Pair>);
+      static_assert(    CT::Comparable<T, TPair<E1, E2>>);
 
       static_assert(::std::input_or_output_iterator<decltype(Fake<T>().begin())>);
       static_assert(::std::input_or_output_iterator<decltype(Fake<T>().end())>);
@@ -178,38 +185,50 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       }
 
       static_assert(    requires (T pack)         { pack.Get(); });
-      static_assert(not requires (T pack)         { pack.template As<E>(); });
+      static_assert(not requires (T pack)         { pack.template As<E1>(); });
+      static_assert(not requires (T pack)         { pack.template As<E2>(); });
       //static_assert(not requires (T pack)         { pack.GetDeep(); });
       static_assert(not requires (T pack)         { pack.GetResolved(); });
       static_assert(not requires (T pack)         { pack.GetDense(); });
-      static_assert(not requires (T pack)         { {pack +   pack} -> ::std::same_as<T >; });
-      static_assert(not requires (T pack, E item) { {pack +   item} -> ::std::same_as<T >; });
-      static_assert(not requires (T pack)         { {pack +=  pack} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { {pack +=  item} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { {pack >>  item} -> ::std::same_as<T&>; });
-      static_assert(    requires (T pack, E item) { {pack <<= item} -> ::std::same_as<T&>; });
-      static_assert(    requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
-      static_assert(not requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
-      static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
-      static_assert(not requires (T pack, E item) { pack.ConcatAt(Index::Back, pack); });
-      static_assert(not requires (T pack, E item) { pack.Concat(pack); });
-      static_assert(not requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
-      static_assert(not requires (T pack, E item) { pack.MergeRangeAt(Index::Back, pack); });
-      static_assert(    requires (T pack, E item) { pack.Merge(item); });
-      static_assert(    requires (T pack, E item) { pack.MergeRange(pack); });
-      static_assert(    requires (T pack, E item) { pack.Remove(item); });
-      static_assert(not requires (T pack, E item) { pack.RemoveAt(Index::Front); });
-      static_assert(    requires (T pack, E item) { pack.Reserve(20); });
-      static_assert(not requires (T pack, E item) { pack.EnableOr(); });
-      static_assert(not requires (T pack, E item) { pack.IsOr(); });
-      static_assert(    requires (T pack, E item) { pack.Find(item); });
-      static_assert(    requires (T pack, E item) { pack.ForEach([](const int&) {}); });
-      static_assert(    requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
+      static_assert(not requires (T pack)         { pack +   pack; });
+      static_assert(not requires (T pack, E1 item){ pack +   item; });
+      static_assert(not requires (T pack, E2 item){ pack +   item; });
+      static_assert(not requires (T pack)         { pack +=  pack; });
+      static_assert(not requires (T pack, E1 item){ pack +=  item; });
+      static_assert(not requires (T pack, E2 item){ pack +=  item; });
+      static_assert(not requires (T pack, E1 item){ pack <<  item; });
+      static_assert(not requires (T pack, E2 item){ pack <<  item; });
+      static_assert(not requires (T pack, E1 item){ pack >>  item; });
+      static_assert(not requires (T pack, E2 item){ pack >>  item; });
+      static_assert(not requires (T pack, E1 item){ pack <<= item; });
+      static_assert(not requires (T pack, E2 item){ pack <<= item; });
+      static_assert(not requires (T pack, E1 item){ pack >>= item; });
+      static_assert(not requires (T pack, E2 item){ pack >>= item; });
+      static_assert(not requires (T pack, E1 item){ pack.InsertAt(Index::Back, item); });
+      static_assert(not requires (T pack, E2 item){ pack.InsertAt(Index::Back, item); });
+      static_assert(not requires (T pack, E1 item){ pack.EmplaceAt(Index::Back, item); });
+      static_assert(not requires (T pack, E2 item){ pack.EmplaceAt(Index::Back, item); });
+      static_assert(not requires (T pack)         { pack.ConcatAt(Index::Back, pack); });
+      static_assert(not requires (T pack)         { pack.Concat(pack); });
+      static_assert(not requires (T pack, E1 item){ pack.MergeAt(Index::Back, item); });
+      static_assert(not requires (T pack, E2 item){ pack.MergeAt(Index::Back, item); });
+      static_assert(not requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
+      static_assert(    requires (T pack, E1 item){ pack.Merge(item); });
+      static_assert(    requires (T pack)         { pack.MergeRange(pack); });
+      static_assert(    requires (T pack, E1 item){ pack.Remove(item); });
+      static_assert(not requires (T pack)         { pack.RemoveAt(Index::Front); });
+      static_assert(    requires (T pack)         { pack.Reserve(20); });
+      static_assert(not requires (T pack)         { pack.EnableOr(); });
+      static_assert(not requires (T pack)         { pack.IsOr(); });
+      static_assert(    requires (T pack, E1 item){ pack.Find(item); });
+      static_assert(    requires (T pack)         { pack.ForEach([](const int&) {}); });
+      static_assert(    requires (T pack)         { pack.ForEachRev([](const int&) {}); });
    }
 
-   constexpr bool Ambiguous = not Same<T, E> and CT::Set<E> and LANGULUS(SAFE);
-   
+   constexpr bool Ambiguous = LANGULUS(SAFE) and ((not Same<T, E1> and CT::Map<E1>)
+                                               or (not Same<T, E2> and CT::Map<E2>));
+   using stdmap = ::std::unordered_map<E1, E2>;
+
    GIVEN("Gap test") {
       alignas(T) char unininitialized[sizeof(T)];
       memset(unininitialized, 254, sizeof(unininitialized));
@@ -217,7 +236,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       for (auto b : unininitialized) {
          REQUIRE(b != 254);
       }
-      Logger::Info("Size of ", NameOf<::std::unordered_set<E>>(), " container is: ", sizeof(::std::unordered_set<E>), " bytes");
+      Logger::Info("Size of ", NameOf<::std::unordered_map<E1, E2>>(), " container is: ", sizeof(::std::unordered_map<E1, E2>), " bytes");
       auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
       size_t accumulated_size = 0;
       size_t accumulated_stack_size = 0;
@@ -232,15 +251,16 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       Logger::Info("-----------------------------------------");
       Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
       Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      static_assert(sizeof(T) <= sizeof(::std::unordered_set<E>));
+      static_assert(sizeof(T) <= sizeof(::std::unordered_map<E1, E2>));
    }
 
    GIVEN("Default-constructed container") {
-      const ScopedE element {555};
+      const ScopedE1 element1 {555};
+      const ScopedE2 element2 {111};
       T pack;
 
       WHEN("Default-constructed") {
-         Set_CheckState_Default<E>(pack);
+         Map_CheckState_Default<E1, E2>(pack);
       
          if constexpr (Ambiguous) {
             WHEN("Ambiguous assign value by referral") {
@@ -249,45 +269,45 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             }
          }
 
-         BenchmarkSetStd("Empty/DefaultConstructor", 30, 40,
-            T temp,                           new (&temp)     T{},
-            ::std::unordered_set<E> temp_std, new (&temp_std) ::std::unordered_set<E>{}
+         BenchmarkMapStd("Empty/DefaultConstructor", 30, 40,
+            T temp,              new (&temp)     T{},
+            stdmap temp_std,     new (&temp_std) stdmap{}
          );
       }
 
       WHEN("Assigned value by referral") {
          pack.Assign(*element);
 
-         Set_CheckState_OwnedFull<E>(pack);
-         Set_CheckState_ContainsOne(pack, Refer(element));
+         Map_CheckState_OwnedFull<E1, E2>(pack);
+         Map_CheckState_ContainsOne(pack, Refer(element));
 
-         BenchmarkSetStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
-            T temp,                           temp.Assign(*element),
-            ::std::unordered_set<E> temp_std, temp_std.emplace(*element)
+         BenchmarkMapStd("Empty/Assign(Refer(" + NameOf<E>() + "))", 30, 100,
+            T temp,              temp.Assign(*element),
+            stdmap temp_std,     temp_std.emplace(*element)
          );
       }
 
-      if constexpr (CT::Set<E>) {
+      if constexpr (CT::Map<E1>) {
          WHEN("Assigned and absorbed by referral") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
                REQUIRE_THROWS(pack.AssignAbsorb(*element));
-               Set_CheckState_Default<E>(pack);
-               Set_Helper_TestSame(element_backup, *element);
+               Map_CheckState_Default<E1, E2>(pack);
+               Map_Helper_TestSame(element_backup, *element);
                return;
             }
 
             pack.AssignAbsorb(*element);
 
-            Set_Helper_TestSame(pack, *element);
+            Map_Helper_TestSame(pack, *element);
             REQUIRE(pack.GetUses() == element->GetUses());
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            [[maybe_unused]] ::std::unordered_set<E> src_std {1, *element};
-            BenchmarkSetStd("Empty/AssignAbsorb(Refer(" + NameOf<E>() + "))", 30, 100,
-               T temp,                           temp.AssignAbsorb(*element),
-               ::std::unordered_set<E> temp_std, temp_std = src_std;
+            [[maybe_unused]] stdmap src_std {1, *element};
+            BenchmarkMapStd("Empty/AssignAbsorb(Refer(" + NameOf<E>() + "))", 30, 100,
+               T temp,              temp.AssignAbsorb(*element),
+               stdmap temp_std,     temp_std = src_std;
             );
          }
       }
@@ -310,11 +330,11 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Refer(element));
 
-         BenchmarkSetStd("Empty/Assign(Move(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkMapStd("Empty/Assign(Move(" + NameOf<E>() + "))", 30, 100,
             auto movable = *element;
-            T temp,                             temp.Assign(::std::move(movable)),
+            T temp,                       temp.Assign(::std::move(movable)),
             auto movable = *element;
-            ::std::unordered_set<E> temp_std,   temp_std.emplace(::std::move(movable))
+            stdmap temp_std,              temp_std.emplace(::std::move(movable))
          );
       }
 
@@ -337,11 +357,11 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            BenchmarkSetStd("Empty/AssignAbsorb(Move(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkMapStd("Empty/AssignAbsorb(Move(" + NameOf<E>() + "))", 30, 100,
                auto movable = *element;
-               T temp,                                   temp.AssignAbsorb(::std::move(movable)),
-               ::std::unordered_set<E> movable (1, 555);
-               ::std::unordered_set<E> temp_std,         temp_std.emplace(::std::move(movable))
+               T temp,                    temp.AssignAbsorb(::std::move(movable)),
+               stdmap movable (1, 555);
+               stdmap temp_std,           temp_std.emplace(::std::move(movable))
             );
          }
       }
@@ -358,9 +378,9 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Copy(element));
 
-         BenchmarkSetStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
-            T temp,                            temp.Assign(Copy(*element)),
-            ::std::unordered_set<E> temp_std,  temp_std.emplace(*element)
+         BenchmarkMapStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
+            T temp,              temp.Assign(Copy(*element)),
+            stdmap temp_std,     temp_std.emplace(*element)
          );
       }
 
@@ -387,9 +407,9 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetAllocation());
 
             [[maybe_unused]] ::std::vector<E> src_std (1, *element);
-            BenchmarkSetStd("Empty/AssignAbsorb(Copy(" + NameOf<E>() + "))", 30, 100,
-               T temp,                             temp.AssignAbsorb(Copy(*element)),
-               ::std::unordered_set<E> temp_std,   temp_std = src_std
+            BenchmarkMapStd("Empty/AssignAbsorb(Copy(" + NameOf<E>() + "))", 30, 100,
+               T temp,              temp.AssignAbsorb(Copy(*element)),
+               stdmap temp_std,     temp_std = src_std
             );
          }
       }
@@ -406,9 +426,9 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Clone(element));
 
-         BenchmarkSetStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
-            T temp,                             temp.Assign(Clone(*element)),
-            ::std::unordered_set<E> temp_std,   temp_std.emplace(*element)
+         BenchmarkMapStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
+            T temp,              temp.Assign(Clone(*element)),
+            stdmap temp_std,     temp_std.emplace(*element)
          );
       }
 
@@ -433,10 +453,10 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetUses() == 1);
             REQUIRE(pack.GetAllocation());
 
-            [[maybe_unused]] ::std::unordered_set<E> src_std ({*element});
-            BenchmarkSetStd("Empty/AssignAbsorb(Clone(" + NameOf<E>() + "))", 30, 100,
-               T temp,                             temp.AssignAbsorb(Clone(*element)),
-               ::std::unordered_set<E> temp_std,   temp_std = src_std
+            [[maybe_unused]] stdmap src_std ({*element});
+            BenchmarkMapStd("Empty/AssignAbsorb(Clone(" + NameOf<E>() + "))", 30, 100,
+               T temp,              temp.AssignAbsorb(Clone(*element)),
+               stdmap temp_std,     temp_std = src_std
             );
          }
       }
@@ -453,9 +473,9 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Disown(element));
 
-         BenchmarkSetStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
-            T temp,                             temp.Assign(Disown(*element)),
-            ::std::unordered_set<E> temp_std,   temp_std.emplace(*element)
+         BenchmarkMapStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
+            T temp,              temp.Assign(Disown(*element)),
+            stdmap temp_std,     temp_std.emplace(*element)
          );
       }
 
@@ -480,10 +500,10 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetUses() == 0);
             REQUIRE_FALSE(pack.GetAllocation());
 
-            [[maybe_unused]] ::std::unordered_set<E> src_std (1, *element);
-            BenchmarkSetStd("Empty/AssignAbsorb(Disown(" + NameOf<E>() + "))", 30, 100,
-               T temp,                             temp.AssignAbsorb(Disown(*element)),
-               ::std::unordered_set<E> temp_std,   temp_std = src_std
+            [[maybe_unused]] stdmap src_std (1, *element);
+            BenchmarkMapStd("Empty/AssignAbsorb(Disown(" + NameOf<E>() + "))", 30, 100,
+               T temp,              temp.AssignAbsorb(Disown(*element)),
+               stdmap temp_std,     temp_std = src_std
             );
          }
       }
@@ -504,11 +524,11 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          Set_CheckState_OwnedFull<E>(pack);
          Set_CheckState_ContainsOne(pack, Refer(element));
 
-         BenchmarkSetStd("Empty/Assign(Abandon(" + NameOf<E>() + "))", 30, 100,
+         BenchmarkMapStd("Empty/Assign(Abandon(" + NameOf<E>() + "))", 30, 100,
             auto movable = *element;
-            T temp,                             temp.Assign(Abandon(movable)),
+            T temp,                    temp.Assign(Abandon(movable)),
             auto movable = *element;
-            ::std::unordered_set<E> temp_std,   temp_std.emplace(::std::move(movable))
+            stdmap temp_std,           temp_std.emplace(::std::move(movable))
          );
       }
 
@@ -530,11 +550,11 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
             REQUIRE(pack.GetUses() == 2);
             REQUIRE(pack.GetAllocation() == element->GetAllocation());
 
-            BenchmarkSetStd("Empty/AssignAbsorb(Abandon(" + NameOf<E>() + "))", 30, 100,
+            BenchmarkMapStd("Empty/AssignAbsorb(Abandon(" + NameOf<E>() + "))", 30, 100,
                auto movable = *element;
-               T temp,                                      temp.AssignAbsorb(Abandon(movable)),
-               ::std::unordered_set<E> movable (1, 555);
-               ::std::unordered_set<E> temp_std,            temp_std = ::std::move(movable)
+               T temp,                    temp.AssignAbsorb(Abandon(movable)),
+               stdmap movable (1, 555);
+               stdmap temp_std,            temp_std = ::std::move(movable)
             );
          }
       }
@@ -606,9 +626,9 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
 
          Set_CheckState_Default<E>(pack);
 
-         BenchmarkSetStd("Empty/Clear(" + NameOf<E>() + ")", 30, 100,
-            T temp,                             temp.Clear(),
-            ::std::unordered_set<E> temp_std,   temp_std.clear()
+         BenchmarkMapStd("Empty/Clear(" + NameOf<E>() + ")", 30, 100,
+            T temp,              temp.Clear(),
+            stdmap temp_std,     temp_std.clear()
          );
       }
 
@@ -617,9 +637,9 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
 
          Set_CheckState_Default<E>(pack);
 
-         BenchmarkSetStd("Empty/Reset(" + NameOf<E>() + ")", 30, 100,
-            T temp,                             temp.Reset(),
-            ::std::unordered_set<E> temp_std,   temp_std.clear()
+         BenchmarkMapStd("Empty/Reset(" + NameOf<E>() + ")", 30, 100,
+            T temp,              temp.Reset(),
+            stdmap temp_std,     temp_std.clear()
          );
       }
 
@@ -700,10 +720,10 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
 
          // Unfortunately, ::std::any aren't comparable when empty      
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkSet("Empty/operator==(" + NameOf<E>() + ")", 30,
+         BenchmarkMap("Empty/operator==(" + NameOf<E>() + ")", 30,
             (void) 0, dont_optimize |= (another_pack1 == another_pack2)
          );
-         BenchmarkSet("Empty/operator!=(" + NameOf<E>() + ")", 30,
+         BenchmarkMap("Empty/operator!=(" + NameOf<E>() + ")", 30,
             (void) 0, dont_optimize |= (another_pack1 != another_pack2)
          );
       }
@@ -712,7 +732,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          REQUIRE_FALSE(pack.Contains(*element));
 
          [[maybe_unused]] volatile bool dont_optimize = false;
-         BenchmarkSet("Empty/Contains(" + NameOf<E>() + ")", 30,
+         BenchmarkMap("Empty/Contains(" + NameOf<E>() + ")", 30,
             (void) 0, dont_optimize |= pack.Contains(*element)
          );
       }

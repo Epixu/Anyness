@@ -34,7 +34,7 @@ namespace Langulus::Anyness::Inner
    using AnyBase = Container<
       Com::TypedStack<DMeta>,          // Type-erased                   
       Com::HeapMovable<>,              // Pointer to heap memory        
-      Com::CountStatic<1u>,            // Statically sized to 1         
+      Com::CountStatic<0, 1u>,         // Statically sized to 1         
       Com::ReserveEmergent<>,          // Reserve derived from alloc    
       Com::OwnershipStack<>,           // Allocation is referenced      
       Com::OwnershipDeepHeap<>,        // Sparse elements are referenced

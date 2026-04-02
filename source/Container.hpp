@@ -122,25 +122,25 @@ namespace Langulus::Anyness
       }
 
    protected:
-      template<Cid>                     friend struct Com::IterationOperators;
-      template<class, class, bool, Cid> friend struct Com::TypedStack;
-      template<CT::NotVoid, Cid>        friend struct Com::Stack;
-      template<Cid, CT::Sparse>         friend struct Com::HeapReference;
-      template<Cid, uint, uint, CT::Sparse> friend struct Com::HeapMovable;
-      template<Cid, bool>               friend struct Com::OwnershipStack;
-      template<Cid, bool>               friend struct Com::OwnershipDeepReference;
-      template<Cid, bool>               friend struct Com::OwnershipDeepHeap;
-      template<Cid, class>              friend struct Com::CountStack;
-      template<Cid, class>              friend struct Com::ReserveStack;
-      template<Cid, class>              friend struct Com::HashStack;
-      template<Cid, class>              friend struct Com::HashHeap;
-      template<Cid, bool>               friend struct Com::Comparison;
-      template<Cid>                     friend struct Com::Assignment;
-      template<CT::State...>            friend struct Com::StateStack;
-      template<Cid, class>              friend struct Com::ReserveEmergent;
-      template<Cid>                     friend struct Com::Conversion;
-      template<Cid, class HASH>         friend struct Com::IndexedHashHeap;
-      template<Cid, class HASH>         friend struct Com::IndexedHashStack;
+      template<Cid>                       friend struct Com::IterationOperators;
+      template<class, class, bool, Cid>   friend struct Com::TypedStack;
+      template<CT::NotVoid, Cid>          friend struct Com::Stack;
+      template<Cid, CT::HeapEntry...>              friend struct Com::HeapReference;
+      template<Cid, uint, uint, CT::HeapEntry...>  friend struct Com::HeapMovable;
+      template<Cid, bool, Cid...>         friend struct Com::OwnershipStack;
+      template<Cid, bool>                 friend struct Com::OwnershipDeepReference;
+      template<Cid, bool>                 friend struct Com::OwnershipDeepHeap;
+      template<Cid, class, Cid...>        friend struct Com::CountStack;
+      template<Cid, class, Cid...>        friend struct Com::ReserveStack;
+      template<Cid, class, Cid...>        friend struct Com::HashStack;
+      template<Cid, class, Cid...>        friend struct Com::HashHeap;
+      template<Cid, bool>                 friend struct Com::Comparison;
+      template<Cid>                       friend struct Com::Assignment;
+      template<CT::State...>              friend struct Com::StateStack;
+      template<Cid, class, Cid...>        friend struct Com::ReserveEmergent;
+      template<Cid, Cid...>               friend struct Com::Conversion;
+      template<Cid, class, Cid...>        friend struct Com::IndexedHashHeap;
+      template<Cid, class, Cid...>        friend struct Com::IndexedHashStack;
 
 
       // Here lies the stack. It is an optimized tuple that is filled   

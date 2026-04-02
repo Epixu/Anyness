@@ -23,11 +23,19 @@ namespace Langulus::Anyness::Component
    /// No allocation interface is provided.                                   
    /// Increases the container's bytesize.                                    
    ///   @tparam ID heap's unique identifier                                  
-   ///   @tparam POINTER_TYPE heap pointer type (you can use packed pointers) 
-   template<Cid ID, CT::Sparse POINTER_TYPE>
+   ///   @tparam ENTRIES optional extensions that include more data into      
+   ///      the heap allocation. Each ID must correspond to a matching type   
+   ///      component ID. Each entry also allows for pointer customization,   
+   ///      including support for packed pointers.                            
+   ///   @attention only the first ENTRY::T type is used as a heap reference  
+   ///      variable on the stack. If no entries are defined, a void* is used.
+   template<Cid ID, CT::HeapEntry...ENTRIES>
    struct HeapReference {
       using CTTI_Component = Yes<>;
-      using StackRequest   = POINTER_TYPE;
+      using StackRequest   = typename decltype([] {
+         if constexpr (sizeof...(ENTRIES) == 0) return Types<void*> {};
+         else return Types<typename ENTRIES::T...> {};
+      }())::First;
 
       static constexpr Cid  Id = ID;
       static constexpr Cid  HeapProvider = ID;
@@ -35,19 +43,19 @@ namespace Langulus::Anyness::Component
       static constexpr bool HeapCanBeNull = true;
 
    protected:
-      template<Cid>             friend struct IterationOperators;
-      template<Cid>             friend struct Removal;
-      template<Cid>             friend struct IndexedCommon;
-      template<Cid, class>      friend struct IndexedCommonHashed;
-      template<Cid, class>      friend struct IndexedLinear;
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>             friend struct Emplacement;
-      template<Cid, bool>       friend struct Comparison;
-      template<Cid>             friend struct Conversion;
-      template<auto COUNT>      friend struct CountStatic;
-      template<Cid, bool>       friend struct OwnershipEmergent;
-      template<Cid, bool>       friend struct OwnershipDeepEmergent;
-      template<Cid, class>      friend struct HashEmergent;
+      template<Cid>                 friend struct IterationOperators;
+      template<Cid, Cid...>         friend struct Removal;
+      template<Cid, Cid...>         friend struct IndexedCommon;
+      template<Cid, class, Cid...>  friend struct IndexedCommonHashed;
+      template<Cid, Cid...>         friend struct IndexedLinear;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      template<Cid>                 friend struct Emplacement;
+      template<Cid, bool>           friend struct Comparison;
+      template<Cid, Cid...>         friend struct Conversion;
+      template<Cid, auto, Cid...>   friend struct CountStatic;
+      template<Cid, bool, Cid...>   friend struct OwnershipEmergent;
+      template<Cid, bool>           friend struct OwnershipDeepEmergent;
+      template<Cid, class, Cid...>  friend struct HashEmergent;
       
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -62,16 +70,24 @@ namespace Langulus::Anyness::Component
 
       /// Get the heap pointer as a void* (inner)                             
       constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
-         return static_cast<void*>(const_cast<DecvqAll<POINTER_TYPE>>(self.GetHeapInner()));
+         auto& p = self.GetHeapInner();
+         if constexpr (CT::CustomPointer<StackRequest>)
+            return const_cast<void*>(static_cast<void const*>(p.Unpack()));
+         else
+            return const_cast<void*>(static_cast<void const*>(p));
+         //else
+         //   return static_cast<void*>(const_cast<DecvqAll<StackRequest>>(p));
       }
 
       /// Set the heap pointer, any data pointer will do                      
       template<CT::Sparse P>
       /*constexpr*/ void SetHeapInner(this auto& self, P heap) assumptious { //can't be constexpr due to GCC ICE
-         if constexpr (CT::CustomPointer<P>)
-            self.GetHeapInner() = static_cast<POINTER_TYPE>(heap.Unpack());
+         if constexpr (Exact<P, StackRequest>)
+            self.GetHeapInner() = heap;
+         else if constexpr (CT::CustomPointer<P>)
+            self.GetHeapInner() = static_cast<StackRequest>(heap.Unpack());
          else
-            self.GetHeapInner() = static_cast<POINTER_TYPE>(DecvqAllCast(heap));
+            self.GetHeapInner() = static_cast<StackRequest>(DecvqAllCast(heap));
       }
 
       constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
@@ -84,7 +100,7 @@ namespace Langulus::Anyness::Component
       ///      undefined behavior                                             
       template<CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
-         using Tcvq = LglsMutIf(C, POINTER_TYPE);
+         using Tcvq = LglsMutIf(C, StackRequest);
          return static_cast<Tcvq>(self.GetHeapInner());
       }
       

@@ -14,13 +14,15 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Keep a pointer to the heap allocation as a member.                     
    /// Manage its ownership by referencing and dereferencing it.              
-   ///   @tparam ID which heap are we keeping track of?                       
+   ///   @tparam ID provider we're keeping track of                           
    ///   @tparam AUTO whether ownership will be automatically applied on      
    ///      construction, reassignment and destruction. False if container is 
    ///      just a view, or in other cases where you want to carry an         
    ///      allocation pointer, but not necessarily reference it.             
-   template<Cid ID, bool AUTO>
-   struct OwnershipStack : OwnershipEmergent<ID, AUTO> {
+   ///   @tparam SHARED other providers that will share the same allocation   
+   ///      variable.                                                         
+   template<Cid ID, bool AUTO, Cid...SHARED>
+   struct OwnershipStack : OwnershipEmergent<ID, AUTO, SHARED...> {
       using StackRequest = AllocationPtr;
 
       /// Get the allocation                                                  
@@ -55,10 +57,10 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, CT::Sparse>             friend struct HeapReference;
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
-      template<Cid>                         friend struct Removal;
-      template<Cid>                         friend struct Emplacement;
+      template<Cid, CT::HeapEntry...>              friend struct HeapReference;
+      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
+      template<Cid, Cid...>                        friend struct Removal;
+      template<Cid>                                friend struct Emplacement;
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   

@@ -14,7 +14,7 @@ namespace Langulus::Anyness::Inner
    template<CT::NotVoid T>
    using TManyBase = Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
-      Com::HeapMovable<0, 0, 0, T*>,   // Pointer to heap memory        
+      Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,
       Com::CountStack<>,               // Dynamically sized             
       Com::ReserveStack<>,             // Reserve kept as member        
       Com::IndexedLinear<>,            // Indexed directly              

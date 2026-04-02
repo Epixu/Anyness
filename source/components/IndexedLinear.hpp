@@ -18,11 +18,10 @@ namespace Langulus::Anyness::Component
    ///                                                                        
    /// Provides random element access based on a linear index, that is        
    /// mapped directly onto contiguous memory.                                
-   ///   @tparam ID the stack/heap we're indexing                             
-   ///   @tparam INDEX_CONSTRAINT constrain the type of allowed indices.      
-   ///      Leave as 'void' to allow for all the usual integer types          
-   template<Cid ID, class INDEX_CONSTRAINT>
-   struct IndexedLinear : IndexedCommon<ID> {
+   ///   @tparam ID the provider we're indexing                               
+   ///   @tparam SHARED providers that share the same indexing scheme         
+   template<Cid ID, Cid...SHARED>
+   struct IndexedLinear : IndexedCommon<ID, SHARED...> {
       using CTTI_Contiguous  = Yes<>;
       using IteratorCategory = ::std::contiguous_iterator_tag;
 

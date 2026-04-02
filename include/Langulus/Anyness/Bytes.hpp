@@ -33,21 +33,21 @@ namespace Langulus::Anyness
    namespace Inner
    {
       using BytesBase = Container<
-         Com::TypedStatic<DMeta, Byte>,   // Type-constrained           
-         Com::HeapMovable<0, 0, 0, Byte*>,// Pointer to heap memory     
-         Com::CountStack<>,               // Variable count             
-         Com::ReserveEmergent<>,          // Capacity derived from alloc
-         Com::IndexedLinear<>,            // Indexed directly           
-         Com::OwnershipStack<>,           // Allocation is referenced   
-         Com::HashStack<>,                // Variable hash (cached)     
-         Com::Insertion<0, Bytes>,        // Serialize + insert         
-         Com::InsertionOperators<0, Bytes>,// << and >> insertion       
-         Com::Removal<>,                  // Allows removal             
-         Com::Assignment<>,               // Allows assignment          
-         Com::Comparison<>,               // Allows for comparison      
-         Com::Conversion<>,               // Allows conversion          
-         Com::IterationForEach<>,         // ForEach iteration          
-         Com::IterationRange<>            // Range iteration         😊
+         Com::TypedStatic<DMeta, Byte>,      // Type-constrained        
+         Com::HeapMovable<0, 0, 0, HeapEntry<0, Byte*>>,
+         Com::CountStack<>,                  // Variable count          
+         Com::ReserveEmergent<>,             // Emergent reserve        
+         Com::IndexedLinear<>,               // Indexed directly        
+         Com::OwnershipStack<>,              // Allocation is referenced
+         Com::HashStack<>,                   // Variable hash (cached)  
+         Com::Insertion<0, Bytes>,           // Serialize + insert      
+         Com::InsertionOperators<0, Bytes>,  // << and >> insertion     
+         Com::Removal<>,                     // Allows removal          
+         Com::Assignment<>,                  // Allows assignment       
+         Com::Comparison<>,                  // Allows for comparison   
+         Com::Conversion<>,                  // Allows conversion       
+         Com::IterationForEach<>,            // ForEach iteration       
+         Com::IterationRange<>               // Range iteration       😊
       >;
    }
    

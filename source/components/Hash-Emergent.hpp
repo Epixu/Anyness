@@ -15,10 +15,10 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// Doesn't cache hash - recalculates it every time.                       
-   /// The hash is calculated using the data inside the given heap/stack ID.  
-   ///   @tparam ID the heap/stack ID                                         
-   ///   @tparam H  the hash type used                                        
-   template<Cid ID = 0, class H = Hash>
+   ///   @tparam ID the provider ID whose data will be hashed                 
+   ///   @tparam H the hash type used                                         
+   ///   @tparam SHARED additional provider IDs that are hashed together      
+   template<Cid ID, class H, Cid...SHARED>
    struct HashEmergent {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 2000;
@@ -166,7 +166,7 @@ namespace Langulus::Anyness::Component
       }
       
    protected:
-      template<Cid, uint, uint, CT::Sparse> friend struct HeapMovable;
+      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
 
       /// This always returns an invalid hash to enforce regeneration         
       constexpr H GetHashInner() const noexcept { return 0; }

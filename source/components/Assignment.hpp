@@ -172,8 +172,8 @@ namespace Langulus::Anyness::Component
       }*/
 
    protected:
-      template<Cid>        friend struct Conversion;
-      template<Cid, class> friend struct IndexedCommonHashed;
+                                    friend struct Conversion<ID>;
+      template<Cid, class, Cid...>  friend struct IndexedCommonHashed;
 
       /// A helper for clearing and allocating memory before construction.    
       /// Calls destructors on all elements, if any were initialized.         
