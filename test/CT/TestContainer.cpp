@@ -1,0 +1,50 @@
+///                                                                           
+/// Langulus::Core                                                            
+/// Copyright (c) 2012 Dimo Markov <team@langulus.com>                        
+/// Part of the Langulus framework, see https://langulus.com                  
+///                                                                           
+/// SPDX-License-Identifier: MIT                                              
+///                                                                           
+#include "../Main.hpp"
+#include "../TestTypes/CommonTypes.hpp"
+#include <Langulus/Anyness/Any.hpp>
+
+using namespace Langulus;
+
+
+///                                                                           
+/// CT::Container                                                             
+///                                                                           
+TEST_CASE_TEMPLATE("Testing CT::Container types", TestType
+   //, IncompleteType                  // shouldn't compile
+   //, IncompleteType const            // shouldn't compile
+   //, IncompleteType const&           // shouldn't compile
+   //, SheddableType<IncompleteType>   // shouldn't compile
+   //, SheddableType<IncompleteType>&  // shouldn't compile
+   , CustomContainer
+   , CustomContainer const
+   , CustomContainer&
+   , SheddableType<CustomContainer>
+) {
+   static_assert(CT::Container<TestType>);
+}
+
+TEST_CASE_TEMPLATE("Testing non CT::Container types", TestType
+   //, IncompleteType                  // shouldn't compile
+   //, IncompleteType const            // shouldn't compile
+   //, IncompleteType const&           // shouldn't compile
+   //, SheddableType<IncompleteType>   // shouldn't compile
+   //, SheddableType<IncompleteType>&  // shouldn't compile
+   , IncompleteType*
+   , void, void*
+   , int, int const, int const&, int&
+   , Types<void*>
+   , CustomContainer*
+   , SheddableType<CustomContainer*>
+) {
+   static_assert(not CT::Container<TestType>);
+}
+
+//static_assert(    CT::Container<>); // shouldn't compile at all
+static_assert(    CT::Container<CustomContainer, CustomContainer, CustomContainer>);
+static_assert(not CT::Container<CustomContainer, CustomContainer, int>);
