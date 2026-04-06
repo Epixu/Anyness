@@ -9,6 +9,7 @@
 #include "../../Main.hpp"
 #include "../../TestTypes/ScopedElement.hpp"
 #include "../../TestTypes/ReferencedType.hpp"
+#include "../../TestTypes/CommonTypes.hpp"
 #include <Langulus/Anyness/Any.hpp>
 #include <Langulus/Anyness/TAny.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>

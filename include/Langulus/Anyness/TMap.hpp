@@ -58,9 +58,15 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = Map;
       using CTTI_Deep      = Yes<>;
       using CTTI_MapsTo    = Text;
+      using CTTI_Typed     = Types<K, V>;
 
       using Base           = Inner::TMapBase<K, V, SORT>;
       using DeepType       = Any;
+
+      using HandleType     = THandlePair<THandle<K const&>, THandle<V const&>>;
+      using HandleMutType  = THandlePair<THandle<K const&>, THandle<V&>>;
+      using Pick           = HandleType;
+      using PickMut        = HandleMutType;
 
       static constexpr bool TypeErased = CT::Void<K> or CT::Void<V>;
 

@@ -53,20 +53,22 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes the container has valid memory                 
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the container, if statically typed                     
+      ///   @tparam SID can be used to access specific provider               
       ///   @param idx the index                                              
-      ///   @return the chosen element                                        
-      template<class AS = void, CT::Container C> requires (not Shared)
+      ///   @return pointer to the chosen element                             
+      template<class AS = void, Cid SID = ID, CT::Container C>
       auto* GetAt(this C&& self, CT::Index auto&& idx) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
+
          using TC   = LglsMutIf(C, TypeOf<C>);
          using TCP  = LglsMutIf(C, TC*);
          using TH   = Tif<CT::Void<AS>, TC, AS>;
          using THP  = LglsMutIf(C, TH*);
-         auto* heap = DecvqAllCast(self.GetHeapInner());
+         auto* heap = DecvqAllCast(self.template GetHeapInner<SID>());
 
          if constexpr (CT::TypeErased<C>) {
-            const auto T = self.GetType();
+            const auto T = self.template GetType<SID>();
             LglsAssumeDev(T, "Block is not typed");
 
             const auto offset_heap = [&self, &heap, &idx, &T] {
@@ -162,6 +164,91 @@ namespace Langulus::Anyness::Component
                   return AS {self.GetAt(LglsFwd(idx)), self.GetAllocation(), self.GetType()};
                else
                   return AS {self.GetAt(LglsFwd(idx)), self.GetType()};
+            }
+            else {
+               // Statically typed handle                               
+               using HT = Deref<TypeOf<AS>>;
+               if constexpr (CT::TypeErased<C>) {
+                  LglsAssert(self.template IsSame<HT>(), "Type mismatch",
+                     ": ", self.GetType(), " not same as ", MetaDataOf<HT>());
+               }
+               else static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
+
+               if constexpr (CT::DeeplyOwned<AS>)
+                  return AS {self.GetAt(LglsFwd(idx)), self.GetEntries()};
+               else if constexpr (CT::Owned<AS>)
+                  return AS {self.GetAt(LglsFwd(idx)), self.GetAllocation()};
+               else
+                  return AS {self.GetAt(LglsFwd(idx))};
+            }
+         }
+         else {
+            // Access directly or wrapped in a container                
+            if constexpr (CT::TypeErased<C>) {
+               auto T = self.GetType();
+
+               if (T.Is(MetaDataOf<AS>())) {
+                  // Access directly                                    
+                  if constexpr (CT::Deep<AS> and CT::Dense<AS>)
+                     return Decvq<AS> {Absorb, *self.template GetAt<AS>(LglsFwd(idx))};
+                  else if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
+                     return *self.template GetAt<AS>(LglsFwd(idx));
+                  else
+                     return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
+               }
+               else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
+                  // Wrap in a container                                
+                  return Decvq<AS> {Absorb, self.template AsAt<DecideHandle<C>>(LglsFwd(idx))};
+               }
+               else {
+                  // Runtime type mismatch error                        
+                  LglsError("Type mismatch", ": ", T,
+                     " not akin to ", MetaDataOf<AS>());
+                  if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
+                     return *self.template GetAt<AS>(LglsFwd(idx));
+                  else
+                     return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
+               }
+            }
+            else {
+               using T = TypeOf<C>;
+
+               if constexpr (Akin<T, AS>) {
+                  // Access directly                                    
+                  if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
+                     return *self.template GetAt<AS>(LglsFwd(idx));
+                  else
+                     return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
+               }
+               else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
+                  // Wrap in a container                                
+                  return Decvq<AS> {Absorb, self.template AsAt<DecideHandle<C>>(LglsFwd(idx))};
+               }
+               else static_assert(false, "Type mismatch");
+            }
+         }
+      }      
+
+      /// Get Nth element as a pair of handles, or any desired pair type.     
+      /// Conversion or copying may occur, depending on type.                 
+      ///   @attention will throw if incompatible type is provided            
+      ///   @tparam AS the pair we're wrapping in                             
+      ///   @param idx the index                                              
+      ///   @return the pair                                                  
+      template<CT::NotVoid AS, CT::Container C> requires Shared
+      auto AsAt(this C&& self, CT::Index auto&& idx) -> AS {
+         static_assert(not CT::Reference<AS>, "Strip references first");
+         static_assert(not CT::Pair<AS>, "AS must be a pair type");
+
+         if constexpr (CT::Handle<AS>) {
+            if constexpr (CT::TypeErased<AS>) {
+               // Type-erased handle                                    
+               if constexpr (CT::DeeplyOwned<AS>)
+                  return {self.GetAt(LglsFwd(idx)), self.GetEntries(), self.GetType()};
+               else if constexpr (CT::Owned<AS>)
+                  return {self.GetAt(LglsFwd(idx)), self.GetAllocation(), self.GetType()};
+               else
+                  return {self.GetAt(LglsFwd(idx)), self.GetType()};
             }
             else {
                // Statically typed handle                               

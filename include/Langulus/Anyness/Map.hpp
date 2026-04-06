@@ -29,6 +29,7 @@
 #include "../../../source/states/Compressed.hpp"
 #include "../../../source/states/Encrypted.hpp"
 #include "../../../source/states/Tracked.hpp"
+#include "HandlePair.hpp"
 
 
 namespace Langulus::Anyness::Inner
@@ -78,6 +79,11 @@ namespace Langulus::Anyness::Inner
 
       using Base          = MapBase<SORTED>;
       using DeepType      = Many;
+
+      using HandleType    = THandlePair<Handle, Handle>;
+      using HandleMutType = THandlePair<Handle, HandleMut>;
+      using Pick          = HandleType;
+      using PickMut       = HandleMutType;
 
       static constexpr bool TypeErased = true;
 

@@ -33,17 +33,8 @@ namespace Langulus::Anyness
 
    protected:
       using Pick = DecidePick<C>;
-      /*using Pick    = typename C::Pick;
-      using PickMut = typename C::PickMut;
-      using Count   = typename Deref<C>::CountType;*/
+      using H    = Tif<CT::Reference<Pick>, Deref<Pick>*, Pick>;
 
-      // The handle is either a pointer/THandle for statically-typed    
-      // containers, or Handle/HandleMut for type-erased ones           
-      /*using H = Tmut<C,
-         Tif<CT::Handle<PickMut>,   PickMut,          Deref<PickMut>*>,
-         Tif<CT::Handle<Pick>,      Pick,    ConstAll<Deref<Pick>*>>
-      >;*/
-      using H = Tif<CT::Reference<Pick>, Deref<Pick>*, Pick>;
       static_assert(CT::NotReference<H>,
          "Iterator can't be a reference");
       static_assert(CT::Handle<H> or CT::Sparse<H>,
