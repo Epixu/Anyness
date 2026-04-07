@@ -49,8 +49,8 @@ namespace Langulus::Anyness::Component
       template<Cid, class, Cid...>  friend struct IndexedCommonHashed;
       template<Cid, Cid...>         friend struct IndexedLinear;
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid>                 friend struct Emplacement;
-      template<Cid, bool>           friend struct Comparison;
+      template<Cid, Cid...>         friend struct Emplacement;
+      template<Cid, bool, Cid...>   friend struct Comparison;
       template<Cid, Cid...>         friend struct Conversion;
       template<Cid, auto, Cid...>   friend struct CountStatic;
       template<Cid, bool, Cid...>   friend struct OwnershipEmergent;
@@ -141,7 +141,7 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes the container has valid heap                   
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the container, if statically typed                     
-      template<class AS = void, CT::Container C>
+      template<class AS = void, Cid SID = ID, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
@@ -356,47 +356,95 @@ namespace Langulus::Anyness::Component
       /// No-op if C is already a handle, even if AS is specified.            
       ///   @attention element might be uninitialized if C is discontiguous   
       ///   @tparam AS the handle type, or void to decide automatically       
-      ///   @return the handle to the first element                           
-      template<class AS = void, CT::NotHandle C>
+      ///   @tparam SID the shared heap entry ID                              
+      ///   @return the handle to the first element. This element might not   
+      ///      be initialized if C is discontiguous!                          
+      template<class AS = void, Cid SID = ID, CT::NotHandle C>
       decltype(auto) GetHandle(this C&& self) {
          static_assert(CT::Handle<AS> or CT::Void<AS>,
             "Must be either a handle or void (which will use DecideHandle");
-         static_assert(not CT::Reference<AS>, "Strip references first");
-         static_assert(CT::Dense<AS>, "Must be dense");
+         static_assert(not CT::Reference<AS>,
+            "Strip references first");
+         static_assert(CT::Dense<AS>,
+            "Must be dense");
 
          using H = Tif<CT::Void<AS>, DecideHandle<C>, AS>;
-
-         if constexpr (CT::TypeErased<H>) {
-            // Type-erased handle                                       
-            if constexpr (CT::DeeplyOwned<H>)
-               return H {self.Get(), self.GetEntries(), self.GetType()};
-            else if constexpr (CT::Owned<H>)
-               return H {self.Get(), self.GetAllocation(), self.GetType()};
-            else
-               return H {self.Get(), self.GetType()};
+         if constexpr (CT::Pair<H>) {
+            // User desires a pair, so we give them a pair              
+            using H1 = decltype(H::key);
+            using H2 = decltype(H::val);
+            return H {
+               self.template GetHandle<H1, SID + 0>(),
+               self.template GetHandle<H2, SID + 1>()
+            };
          }
          else {
-            // Statically typed handle                                  
-            using HT = Deref<TypeOf<H>>;
-
-            if constexpr (CT::TypeErased<C>) {
-               LglsAssert(self.template IsSame<HT>(), "Type mismatch",
-                  ": ", self.GetType(), " not same as ", MetaDataOf<HT>());
+            // User desires a simple handle                             
+            if constexpr (CT::TypeErased<H>) {
+               // Type-erased handle                                    
+               if constexpr (CT::DeeplyOwned<H>) {
+                  return H {
+                     self.template Get<void, SID>(),
+                     self.template GetEntries<SID>(),
+                     self.template GetType<SID>()
+                  };
+               }
+               else if constexpr (CT::Owned<H>) {
+                  return H {
+                     self.template Get<void, SID>(),
+                     self.template GetAllocation<SID>(),
+                     self.template GetType<SID>()
+                  };
+               }
+               else {
+                  return H {
+                     self.template Get<void, SID>(),
+                     self.template GetType<SID>()
+                  };
+               }
             }
-            else static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
+            else {
+               // Statically typed handle                               
+               using HT = Deref<TypeOf<H>>;
 
-            if constexpr (CT::DeeplyOwned<H>)
-               return H {&self.Get(), self.GetEntries()};
-            else if constexpr (CT::Owned<H>)
-               return H {&self.Get(), self.GetAllocation()};
-            else
-               return H {&self.Get()};
+               if constexpr (CT::TypeErased<C>) {
+                  LglsAssert(self.template GetType<SID>().IsSame(MetaDataOf<HT>()),
+                     "Type mismatch: ", self.template GetType<SID>(),
+                     " not same as ", MetaDataOf<HT>()
+                  );
+               }
+               else if constexpr (CT::Map<C>) {
+                  static_assert(Same<typename TypeOf<C>::template At<SID>, HT>,
+                     "Type mismatch"
+                  );
+               }
+               else {
+                  static_assert(Same<TypeOf<C>, HT>,
+                     "Type mismatch"
+                  );
+               }
+
+               if constexpr (CT::DeeplyOwned<H>) {
+                  return H {
+                     &self.template Get<void, SID>(),
+                     self.template GetEntries<SID>()
+                  };
+               }
+               else if constexpr (CT::Owned<H>) {
+                  return H {
+                     &self.template Get<void, SID>(),
+                     self.template GetAllocation<SID>()
+                  };
+               }
+               else return H {&self.template Get<void, SID>()};
+            }
          }
       }
 
       /// No-op in case C is already a handle                                 
-      template<class AS = void, CT::Handle C>
+      template<class AS = void, Cid SID = ID, CT::Handle C>
       constexpr C&& GetHandle(this C&& self) noexcept {
+         static_assert(SID == 0);
          return LglsFwd(self);
       }
 

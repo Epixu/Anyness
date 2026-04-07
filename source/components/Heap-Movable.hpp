@@ -39,7 +39,7 @@ namespace Langulus::Anyness::Component
       template<Cid>                 friend struct IterationOperators;
       template<Cid, class>          friend struct Insertion;
       template<Cid, class>          friend struct Merging;
-      template<Cid>                 friend struct Emplacement;
+      template<Cid, Cid...>         friend struct Emplacement;
       template<Cid, Cid...>         friend struct Conversion;
       template<Cid, bool, Cid...>   friend struct OwnershipEmergent;
 

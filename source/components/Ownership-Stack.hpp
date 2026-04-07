@@ -26,7 +26,9 @@ namespace Langulus::Anyness::Component
       using StackRequest = AllocationPtr;
 
       /// Get the allocation                                                  
+      template<Cid SID = ID>
       constexpr auto GetAllocation(this auto const& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.GetAllocationInner();
       }
 
@@ -60,7 +62,7 @@ namespace Langulus::Anyness::Component
       template<Cid, CT::HeapEntry...>              friend struct HeapReference;
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
       template<Cid, Cid...>                        friend struct Removal;
-      template<Cid>                                friend struct Emplacement;
+      template<Cid, Cid...>                        friend struct Emplacement;
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   

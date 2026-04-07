@@ -20,7 +20,7 @@
 #endif
 
 
-namespace Langulus::CT
+/*namespace Langulus::CT
 {
    /// Check if container's elements are comparable                           
    ///   @attention type-erased elements are always insertable, but will fail 
@@ -29,7 +29,7 @@ namespace Langulus::CT
    concept RangeComparable = Container<C> and (
       Untyped<C> or UnfoldComparable<TypeOf<C>, T1, TN...>
    );
-}
+}*/
 
 namespace Langulus::Anyness
 {
@@ -44,21 +44,31 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID heap/stack we're comparing                                
    ///   @tparam HASH whether to compare hashes before elements. This is      
    ///      mostly useful when hash is cachable, otherwise kind of pointless. 
-   template<Cid ID, bool HASH>
+   ///   @tparam SHARED providers that share the same comparison scheme       
+   template<Cid ID, bool HASH, Cid...SHARED>
    struct Comparison {
       using CTTI_Component = Yes<>;
-      static constexpr int ComponentPrecedence = 3000;
+      static constexpr int  ComponentPrecedence = 3000;
+      static constexpr bool Shared = (sizeof...(SHARED) > 0);
 
    private:
+      template<Cid, class> friend struct Merging;
+
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
 
    public:
       /// Compare two containers for equality.                                
       /// This has much greater performance when hashed.                      
+      ///   @tparam ID the provider we're comparing                           
+      ///   @param lhs left container                                         
+      ///   @param rhs right container                                        
       ///   @return true if the two containers are identical                  
-      template<CT::Container LHS, CT::Container RHS>
+      template<Cid SID = ID, CT::Container LHS, CT::Container RHS>
       constexpr bool CompareEqual(this const LHS& lhs, const RHS& rhs) {
+         static_assert(SID == ID,
+            "All shared comparisons should happen at once");
+
          if consteval {
             // Heap should be empty at compile-time                     
             return true;
@@ -72,7 +82,7 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::Typed<LHS, RHS>) {
                //                                                       
-               // Both blocks are statically-typed - leverage it by     
+               // Both containers are statically-typed - leverage it by 
                // using static comparisons                              
                using LT = TypeOf<LHS>;
                using RT = TypeOf<RHS>;
@@ -170,10 +180,10 @@ namespace Langulus::Anyness::Component
             }
             else {
                //                                                       
-               // Both container are type-erased - all we can do is     
+               // Both containers are type-erased - all we can do is    
                // call the reflected comparison functions               
-               const DMeta LT = lhs.GetType();
-               const DMeta RT = rhs.GetType();
+               const DMeta LT = lhs.template GetType<SID>();
+               const DMeta RT = rhs.template GetType<SID>();
 
                if (not LT.IsSame(RT)) { //TODO but what if differently typed pointers to the same virtual objects?
                   LglsVerbose(Logger::Red, "Types differ (type-erased): ",
@@ -222,48 +232,48 @@ namespace Langulus::Anyness::Component
                }
 
                const auto comparer = LT.GetComparerEqual();
-               if (comparer) {
-                  // Use comparison operator between all elements       
-                  bool result = true;
-                  auto t2 = rhs.GetHandle();
-                  lhs.Apply([&](auto&& t1) -> bool {
-                     if constexpr (CT::Supported<decltype(t1)>) {
-                        if constexpr (not CT::Contiguous<RHS>) {
-                           // Make sure hash table spot is valid        
-                           const auto idx = t1 - lhs.GetHandle();
-                           if (not rhs.GetHashTable()[idx]) {
-                              LglsVerbose(Logger::Red,
-                                 "Element #", idx, " has no hash table equivalent (typed)");
-                              return (result = false);
-                           }
-                        }
+               if (not comparer) {
+                  LglsVerbose(Logger::Red, "Type not comparable (type-erased): ", LT);
+                  return false;
+               }
 
-                        if (not comparer (t1.GetRaw(), t2.GetRaw())) {
-                           // Make sure all elements match              
-                           LglsVerbose(Logger::Red,
-                              "Element #", t1 - lhs.GetHandle(), " differs (typed)");
-                           return (result = false);
-                        }
-                     }
-                     else if constexpr (not CT::Contiguous<RHS>) {
-                        // Spots on tables must both match              
-                        const auto idx = t2 - rhs.GetHandle();
-                        if (rhs.GetHashTable()[idx]) {
+               // Use comparison operator between all elements          
+               bool result = true;
+               auto t2 = rhs.template GetHandle<void, SID>();
+               lhs.Apply([&](auto&& t1) -> bool {
+                  if constexpr (CT::Supported<decltype(t1)>) {
+                     if constexpr (not CT::Contiguous<RHS>) {
+                        // Make sure hash table spot is valid           
+                        const auto idx = t1 - lhs.GetHandle();
+                        if (not rhs.GetHashTable()[idx]) {
                            LglsVerbose(Logger::Red,
                               "Element #", idx, " has no hash table equivalent (typed)");
                            return (result = false);
                         }
                      }
 
-                     ++t2;
-                     return true;
-                  });
+                     if (not comparer (t1.GetRaw(), t2.GetRaw())) {
+                        // Make sure all elements match                 
+                        LglsVerbose(Logger::Red,
+                           "Element #", t1 - lhs.GetHandle(), " differs (typed)");
+                        return (result = false);
+                     }
+                  }
+                  else if constexpr (not CT::Contiguous<RHS>) {
+                     // Spots on tables must both match                 
+                     const auto idx = t2 - rhs.GetHandle();
+                     if (rhs.GetHashTable()[idx]) {
+                        LglsVerbose(Logger::Red,
+                           "Element #", idx, " has no hash table equivalent (typed)");
+                        return (result = false);
+                     }
+                  }
 
-                  return result;
-               }
+                  ++t2;
+                  return true;
+               });
 
-               LglsVerbose(Logger::Red, "Type not comparable (type-erased): ", LT);
-               return false;
+               return result;
             }
          }
       }
@@ -523,72 +533,57 @@ namespace Langulus::Anyness::Component
       auto MatchesLoose(this const C1&, const C2&) noexcept -> Count<C1>;
       
       /// Find a single element's index inside container                      
-      ///   @tparam REVERSE true to perform search in reverse                 
+      ///   @tparam SID the data provider to search in                        
       ///   @param item the item to search for                                
       ///   @param cookie resume search from a given index                    
-      ///   @return the index of the found item, or 'npos' if none found      
-      template<bool REVERSE = false, CT::ContainsMany C, CT::NoIntent T>
-      auto Find(this C&& self, T const& item, size_t cookie = 0) noexcept -> DecideHandle<C> {
+      ///   @return handle of the found item                                  
+      template<Cid SID = ID, CT::ContainsMany C, CT::NoIntent T>
+      auto Find(this C&& self, T const& item, size_t cookie = 0) assumptious -> DecideHandle<C> {
          if (self.IsEmpty())
             return {};
 
          if constexpr (not CT::Contiguous<C>) {
             // When iterating hash tables, we use the cookie to move    
             // to the appropriate table entry                           
+            LglsAssumeUserWarn(not cookie, "Cookie argument will be overwritten");
             cookie = self.GetOffset(item);
          }
 
-         [[maybe_unused]] RTTI::DefinitionData::FCompareEqual comparer = nullptr;
          if constexpr (CT::TypeErased<C>) {
-            comparer = self.GetType().GetComparerEqual();
+            auto comparer = self.GetType().GetComparerEqual();
             if (not comparer or not self.IsSame(MetaDataOf<T>()))
                return {};
          }
 
-         DecideHandle<C> result;
-         self.Apply([&](auto&& test) -> bool {
-            if constexpr (CT::Supported<decltype(test)>) {
-               if constexpr (not CT::Contiguous<C>) {
-                  const auto idx = test - self.GetHandle();
-                  const auto tab = self.GetHashTable();
-                  if (tab[idx] <= idx - cookie) {
-                     // Iterate hash table cells until we hit a spot w/ 
-                     // value smaller or equal to the expected spot -   
-                     // this signifies that another bucket had started. 
-                     // (or that an empty spot is hit)                  
-                     return false;
-                  }
-                  else if (tab[idx] > idx - cookie + 1) {
-                     // Skip spots that are larger than what's expected,
-                     // because this signifies that a bucket on the left
-                     // has already taken those spots.                  
-                     return true;
-                  }
-               }
-               
-               if constexpr (CT::TypeErased<C>) {
-                  if (comparer(test.GetRaw(), &item)) {
-                     // Match found                                     
-                     new (&result) DecideHandle<C> {test};
-                     return false;
-                  }
-               }
-               else {
-                  if (*test.GetRaw() == item) {
-                     // Match found                                     
-                     new (&result) DecideHandle<C> {test};
-                     return false;
-                  }
-               }
-            }
-            else return false;
-            return true;
-         }, cookie);
-
-         //TODO allow hash table to warp back to the beginning
-         return result;
+         return self.template FindInner<false, SID>(item, cookie);
       }
-   
+
+      /// Find a single element's index inside container, searching in reverse
+      ///   @tparam SID the data provider to search in                        
+      ///   @param item the item to search for                                
+      ///   @param cookie resume search from a given index                    
+      ///   @return handle of the found item                                  
+      template<Cid SID = ID, CT::ContainsMany C, CT::NoIntent T>
+      auto FindReverse(this C&& self, T const& item, size_t cookie = 0) assumptious -> DecideHandle<C> {
+         if (self.IsEmpty())
+            return {};
+
+         if constexpr (not CT::Contiguous<C>) {
+            // When iterating hash tables, we use the cookie to move    
+            // to the appropriate table entry                           
+            LglsAssumeUserWarn(not cookie, "Cookie argument will be overwritten");
+            cookie = self.GetOffset(item);
+         }
+
+         if constexpr (CT::TypeErased<C>) {
+            auto comparer = self.GetType().GetComparerEqual();
+            if (not comparer or not self.IsSame(MetaDataOf<T>()))
+               return {};
+         }
+
+         return self.template FindInner<true, SID>(item, cookie);
+      }
+
       /// Find a matching sequence of one or more matching elements           
       ///   @tparam REVERSE true to perform search in reverse                 
       ///   @param range sequence of items to search for                      
@@ -702,7 +697,7 @@ namespace Langulus::Anyness::Component
          return lhs.Compare(rhs);
       }
 
-      template<CT::Container C, CT::NoIntent A>
+      template<CT::Container C, CT::NoIntent A> requires (not Shared)
       constexpr Compared operator <=> (this C const& lhs, A const& rhs) assumptious {
          if constexpr (CT::Deep<A> and CT::Dense<A>) {
             LglsAssumeUser((Same<A, C>) or (CT::Typed<C> and Same<TypeOf<A>, TypeOf<C>>),
@@ -723,7 +718,7 @@ namespace Langulus::Anyness::Component
          return lhs.CompareEqual(rhs);
       }
 
-      template<CT::Container C, CT::NoIntent A>
+      template<CT::Container C, CT::NoIntent A> requires (not Shared)
       constexpr bool operator == (this C const& lhs, A const& rhs) assumptious {
          if constexpr (CT::Deep<A> and CT::Dense<A>) {
             LglsAssumeUser((Same<A, C>) or (CT::Typed<C> and Same<TypeOf<A>, TypeOf<C>>),
@@ -731,11 +726,74 @@ namespace Langulus::Anyness::Component
                "- you should use either CompareEqual (if you want to compare "
                "containers) or CompareOneEqual (if you want to compare the "
                "first item) in order to clearly state your intent. "
-               "Compare will be used by default!"
+               "CompareEqual will be used by default!"
             );
             return lhs.CompareEqual(rhs);
          }
          else return lhs.CompareOneEqual(rhs);
+      }
+
+   protected:      
+      /// Find a single element's index inside container (inner)              
+      ///   @tparam REVERSE true to perform search in reverse                 
+      ///   @tparam SID the data provider to search in                        
+      ///   @attention assumes container is not empty                         
+      ///   @attention that container is of the same comparable type          
+      ///   @param item the item to search for                                
+      ///   @param cookie resume search from a given index                    
+      ///   @return handle of the found item                                  
+      template<bool REVERSE = false, Cid SID = ID, CT::ContainsMany C, CT::NoIntent T>
+      auto FindInner(this C&& self, T const& item, size_t cookie) assumptious -> DecideHandle<C> {
+         LglsAssumeDev(not self.IsEmpty(), "Container is assumed not emtpy");
+         [[maybe_unused]] RTTI::DefinitionData::FCompareEqual comparer = nullptr;
+         if constexpr (CT::TypeErased<C>) {
+            comparer = self.GetType().GetComparerEqual();
+            LglsAssumeDev(comparer, "Type-erased data not comparable");
+            LglsAssumeDev(self.IsSame(MetaDataOf<T>()), "Type mismatch");
+         }
+
+         DecideHandle<C> result;
+         self.Apply([&](auto&& test) -> bool {
+            if constexpr (CT::Supported<decltype(test)>) {
+               if constexpr (not CT::Contiguous<C>) {
+                  const auto idx = test - self.GetHandle();
+                  const auto tab = self.GetHashTable();
+                  if (tab[idx] <= idx - cookie) {
+                     // Iterate hash table cells until we hit a spot w/ 
+                     // value smaller or equal to the expected spot -   
+                     // this signifies that another bucket had started. 
+                     // (or that an empty spot is hit)                  
+                     return false;
+                  }
+                  else if (tab[idx] > idx - cookie + 1) {
+                     // Skip spots that are larger than what's expected,
+                     // because this signifies that a bucket on the left
+                     // has already taken those spots.                  
+                     return true;
+                  }
+               }
+               
+               if constexpr (CT::TypeErased<C>) {
+                  if (comparer(test.GetRaw(), &item)) {
+                     // Match found                                     
+                     new (&result) DecideHandle<C> {test};
+                     return false;
+                  }
+               }
+               else {
+                  if (*test.GetRaw() == item) {
+                     // Match found                                     
+                     new (&result) DecideHandle<C> {test};
+                     return false;
+                  }
+               }
+            }
+            else return false;
+            return true;
+         }, cookie);
+
+         //TODO allow hash table to warp back to the beginning
+         return result;
       }
    };
 }

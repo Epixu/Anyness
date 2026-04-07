@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
    protected:
       template<Cid, Cid...>                        friend struct Removal;
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
-      template<Cid>                                friend struct Emplacement;
+      template<Cid, Cid...>                        friend struct Emplacement;
       template<Cid, Cid...>                        friend struct IndexedCommon;
 
       /// Reset the type of the container, unless it's type-constrained.      
@@ -101,12 +101,15 @@ namespace Langulus::Anyness::Component
 
    public:
       /// Get the contained type - not possible at compile-time yet           
+      ///   @tparam SID - type selector                                       
+      template<Cid SID = ID>
       constexpr META GetType(this auto const& self) noexcept {
+         static_assert(SID == ID, "Type not supported");
          if consteval {
             return META {};
          }
          else {
-            META const& meta = self.GetTypeInner();
+            META const& meta = self.TypedStack<META, TYPE, CONSTRAIN, ID>::GetTypeInner();
             if constexpr (not TypeErased)
                const_cast<META&>(meta) = MetaDataOf<TYPE>();
             return meta;

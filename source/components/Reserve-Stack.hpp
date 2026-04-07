@@ -46,9 +46,9 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid>                               friend struct Emplacement;
-      template<Cid, Cid...>                       friend struct Removal;
+      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
+      template<Cid, Cid...>                        friend struct Emplacement;
+      template<Cid, Cid...>                        friend struct Removal;
 
       /// Get reserved (inner)                                                
       constexpr auto& GetReservedInner(this auto&& self) noexcept {

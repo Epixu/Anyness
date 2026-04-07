@@ -36,8 +36,10 @@ namespace Langulus::Anyness::Component
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
+      template<Cid SID = ID>
       auto GetEntries(this auto const& self) assumptious
       -> Allocation const* const* {
+         static_assert(SID == ID);
          if (self.IsSparse() and self.GetRaw() and self.GetAllocation())
             return self.GetEntriesInner();
          return nullptr;
@@ -45,9 +47,10 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<CT::Container C> requires CT::Indexed<C>
+      template<Cid SID = ID, CT::Container C> requires CT::Indexed<C>
       auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
       -> Allocation const* const* {
+         static_assert(SID == ID);
          if constexpr (CT::TypeErased<C>) {
             auto T = self.GetType();
             if (T.IsSparse() and self.GetRaw() and self.GetAllocation()) {
@@ -70,7 +73,7 @@ namespace Langulus::Anyness::Component
    protected:
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
       template<Cid, Cid...>                        friend struct Removal;
-      template<Cid>                                friend struct Emplacement;
+      template<Cid, Cid...>                        friend struct Emplacement;
       template<Cid, bool>                          friend struct OwnershipDeepEmergent;
 
       /// Get entry array if containing pointers (inner)                      

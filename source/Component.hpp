@@ -169,9 +169,9 @@ namespace Langulus::Anyness
       template<Cid = 0, CT::HeapEntry...> struct HeapReference;
       template<CT::NotVoid, Cid = 0>      struct Stack;
 
-                                          struct Charge;
-      template<Cid = 0, bool HASH = true> struct Comparison;
-      template<Cid = 0, Cid...>           struct Conversion;
+                                                      struct Charge;
+      template<Cid = 0, bool HASH = true, Cid...>     struct Comparison;
+      template<Cid = 0, Cid...>                       struct Conversion;
 
       template<Cid = 0, class T = size_t, Cid...>     struct CountHeap;
       template<Cid = 0, class T = size_t, Cid...>     struct CountStack;
@@ -198,7 +198,7 @@ namespace Langulus::Anyness
       template<Cid = 0, class H  = Hash, Cid...>      struct IndexedHashHeap;
       template<Cid = 0, class H  = Hash, Cid...>      struct IndexedHashStack;
 
-      template<Cid = 0>                   struct Emplacement;
+      template<Cid = 0, Cid...>           struct Emplacement;
       template<Cid = 0>                   struct Assignment;
       template<Cid = 0, class AS = void>  struct Insertion;
       template<Cid = 0, class AS = void>  struct InsertionOperators;

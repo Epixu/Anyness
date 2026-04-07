@@ -35,12 +35,18 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = 1000;
 
       /// Get the allocation                                                  
+      template<Cid SID = ID>
       auto GetAllocation(this auto const& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            return Allocator::Find(self.GetType(), self.GetHeapInner());
+            return Allocator::Find(
+               self.template GetType<SID>(),
+               self.template GetHeapInner<SID>()
+            );
          #else
             (void)self;
-            static_assert(false, "Emergent ownership is not allowed when managed memory is disabled");
+            static_assert(false, "Emergent ownership is not allowed "
+                                 "when managed memory is disabled");
          #endif
       }
 
@@ -67,7 +73,7 @@ namespace Langulus::Anyness::Component
       template<Cid, CT::HeapEntry...>              friend struct HeapReference;
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
       template<Cid, Cid...>                        friend struct Removal;
-      template<Cid>                                friend struct Emplacement;
+      template<Cid, Cid...>                        friend struct Emplacement;
 
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this will not dereference previous allocation          

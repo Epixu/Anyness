@@ -93,10 +93,9 @@ namespace Langulus::Anyness::Component
       C& Assign(this C& self, A&& argument)
       requires (CT::RangeAssignable<C, A> /*and CT::Contiguous<C>*/) {
          if constexpr (not CT::Contiguous<C>) {
-            // Assignment for maps/sets falls back to insert/merge      
+            // Assignment for maps/sets falls back to merge             
             self.Clear();
-                 if_available(self.Insert(LglsFwd(argument)))
-            else if_available(self.Merge (LglsFwd(argument)))
+            self.Merge(LglsFwd(argument));
          }
          else if constexpr (not CT::HeapAllocated<C>) {
             // This container is on the stack, and by extension         

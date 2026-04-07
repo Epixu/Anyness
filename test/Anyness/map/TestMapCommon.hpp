@@ -272,72 +272,118 @@ void Map_CheckState_Abandoned(C const& map) {
    Many_CheckState_Abandoned<V>(map.GetVals());
 }
 
-template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
-void Map_CheckState_ContainsOne(T const& map, I&& e_with_intent, int uses = 1) {
-   Map_VerifyAccessorInterface(map, LglsFwd(e_with_intent));
+template<CT::Container T, CT::Intent IK, CT::Intent IV> requires CT::NoIntent<T>
+void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_with_intent, int uses = 1) {
+   Map_VerifyAccessorInterface(map, LglsFwd(key_with_intent));
 
-   auto& e = e_with_intent.what;
-   using E = typename Decay<Deint<I>>::Type;
+   auto& e1 = key_with_intent.what;
+   auto& e2 = val_with_intent.what;
+   using E1 = typename Decay<Deint<IK>>::Type;
+   using E2 = typename Decay<Deint<IV>>::Type;
+   using P1 = TPair<E1, E2>;
+   using P2 = TPair<const E1&, E2&>;
+   using P3 = Anyness::Pair;
+   using P4 = TPair<E1*, E2*>;
 
-   if constexpr (CT::Deep<E> and CT::Dense<E>)
-      REQUIRE(map.template AsAt<E*>(0)->template IsSame<int>());
+   if constexpr (CT::Deep<E1> and CT::Dense<E1>) {
+      REQUIRE(map.template AsAt<P1>(0).key.template IsSame<int>());
+      REQUIRE(map.template AsAt<P2>(0).key.template IsSame<int>());
+      REQUIRE(map.template AsAt<P3>(0).key.template IsSame<int>());
+      REQUIRE(map.template AsAt<P4>(0).key->template IsSame<int>());
+   }
+
+   if constexpr (CT::Deep<E2> and CT::Dense<E2>) {
+      REQUIRE(map.template AsAt<P1>(0).val.template IsSame<int>());
+      REQUIRE(map.template AsAt<P2>(0).val.template IsSame<int>());
+      REQUIRE(map.template AsAt<P3>(0).val.template IsSame<int>());
+      REQUIRE(map.template AsAt<P4>(0).val->template IsSame<int>());
+   }
 
    REQUIRE(map.GetCount() == 1);
    REQUIRE(map.GetUses() == uses);
    REQUIRE(map.GetReserved() >= (uses ? 1 : 0));
 
-   if constexpr (not CT::CustomPointer<E>)
-      REQUIRE(map.template AsAt<Decay<E>>(0) == DenseCast(*e));
+   if constexpr (not CT::CustomPointer<E1>)
+      REQUIRE(map.template AsAt<TPair<Decay<E1>, E2>>(0).key == DenseCast(*e1));
+   if constexpr (not CT::CustomPointer<E2>)
+      REQUIRE(map.template AsAt<TPair<E1, Decay<E2>>>(0).val == DenseCast(*e2));
 
-   if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
-      REQUIRE(map.template AsAt<E>(0) != *e);
-      REQUIRE((*map.template AsAt<E*>(0)) != *e);
+   if constexpr (CT::Cloned<IK> and CT::Sparse<E1>) {
+      REQUIRE(map.template AsAt<P1>(0).key != *e1);
+      REQUIRE((*map.template AsAt<P4>(0).key) != *e1);
    }
    else {
-      REQUIRE(map.template AsAt<E>(0) == *e);
-      REQUIRE((*map.template AsAt<E*>(0)) == *e);
+      REQUIRE(map.template AsAt<P1>(0).key == *e1);
+      REQUIRE((*map.template AsAt<P4>(0).key) == *e1);
    }
 
-   if constexpr (CT::Dense<E>)
-      REQUIRE(map.GetEntries() == nullptr);
-   else if (uses) {
-      REQUIRE(map.GetEntries() != nullptr);
+   if constexpr (CT::Cloned<IV> and CT::Sparse<E2>) {
+      REQUIRE(map.template AsAt<P1>(0).val != *e2);
+      REQUIRE((*map.template AsAt<P4>(0).val) != *e2);
+   }
+   else {
+      REQUIRE(map.template AsAt<P1>(0).val == *e2);
+      REQUIRE((*map.template AsAt<P4>(0).val) == *e2);
+   }
 
-      if constexpr (not CT::Disowned<I>) {
-         for (size_t i = 0; i < IndirectsOf<E>; ++i) {
-            if constexpr (CT::Cloned<I>)
-               REQUIRE(map.GetEntriesAt(0)[i] != e.entries[i + 1]);
+   if constexpr (CT::Dense<E1>)
+      REQUIRE(map.GetKeyEntries() == nullptr);
+   else if (uses) {
+      REQUIRE(map.GetKeyEntries() != nullptr);
+
+      if constexpr (not CT::Disowned<IK>) {
+         for (size_t i = 0; i < IndirectsOf<E1>; ++i) {
+            if constexpr (CT::Cloned<IK>)
+               REQUIRE(map.GetKeyEntriesAt(0)[i] != e1.entries[i + 1]);
             else
-               REQUIRE(map.GetEntriesAt(0)[i] == e.entries[i + 1]);
+               REQUIRE(map.GetKeyEntriesAt(0)[i] == e1.entries[i + 1]);
          }
       }
       else {
-         for (size_t i = 0; i < IndirectsOf<E>; ++i)
-            REQUIRE(map.GetEntriesAt(0)[i] == nullptr);
+         for (size_t i = 0; i < IndirectsOf<E1>; ++i)
+            REQUIRE(map.GetKeyEntriesAt(0)[i] == nullptr);
+      }
+   }
+
+   if constexpr (CT::Dense<E2>)
+      REQUIRE(map.GetValEntries() == nullptr);
+   else if (uses) {
+      REQUIRE(map.GetValEntries() != nullptr);
+
+      if constexpr (not CT::Disowned<IV>) {
+         for (size_t i = 0; i < IndirectsOf<E2>; ++i) {
+            if constexpr (CT::Cloned<IV>)
+               REQUIRE(map.GetValEntriesAt(0)[i] != e2.entries[i + 1]);
+            else
+               REQUIRE(map.GetValEntriesAt(0)[i] == e2.entries[i + 1]);
+         }
+      }
+      else {
+         for (size_t i = 0; i < IndirectsOf<E2>; ++i)
+            REQUIRE(map.GetValEntriesAt(0)[i] == nullptr);
       }
    }
 
    if constexpr (CT::TypeErased<T>) {
-      REQUIRE_THROWS(map.template AsAt<float>(0) == 0.0f);
-      REQUIRE_THROWS(map.template AsAt<float*>(0) == nullptr);
+      REQUIRE_THROWS(map.template AsAt<float>(0));
+      REQUIRE_THROWS(map.template AsAt<float*>(0));
+      REQUIRE_THROWS(map.template AsAt<TPair<float, float>>(0));
+      REQUIRE_THROWS(map.template AsAt<TPair<float*, float*>>(0));
+      REQUIRE_THROWS(map.template AsAt<TPair<E1, float>>(0));
+      REQUIRE_THROWS(map.template AsAt<TPair<E1*, float*>>(0));
+      REQUIRE_THROWS(map.template AsAt<TPair<float, E2>>(0));
+      REQUIRE_THROWS(map.template AsAt<TPair<float*, E2*>>(0));
    }
 
-   if constexpr (CT::Cloned<I> and CT::Sparse<E>) {
-      //TODO test all kinds of ranged modifiers??
-      for (auto& it : map) {
-         if constexpr (CT::TypeErased<T>)
-            REQUIRE(not it.CompareOneEqual(*e));
-         else
-            REQUIRE(it != *e);
+   //TODO test all kinds of ranged modifiers??
+   for (auto& it : map) {
+      if constexpr (CT::TypeErased<T>) {
+         REQUIRE(it.key.CompareOneEqual(*e1) != (CT::Cloned<IK> and CT::Sparse<E1>));
+         REQUIRE(it.val.CompareOneEqual(*e2) != (CT::Cloned<IV> and CT::Sparse<E2>));
       }
-   }
-   else {
-      //TODO test all kinds of ranged modifiers??
-      for (auto& it : map) {
-         if constexpr (CT::TypeErased<T>)
-            REQUIRE(it.CompareOneEqual(*e));
-         else
-            REQUIRE(it == *e);
+      else {
+         REQUIRE((it.key != *e1) == (CT::Cloned<IK> and CT::Sparse<E1>));
+         REQUIRE((it.val != *e2) == (CT::Cloned<IV> and CT::Sparse<E2>));
       }
    }
 }

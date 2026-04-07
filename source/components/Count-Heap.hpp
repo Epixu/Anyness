@@ -57,7 +57,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<Cid, Cid...>      friend struct Removal;
-      template<Cid>              friend struct Emplacement;
+      template<Cid, Cid...>      friend struct Emplacement;
       template<Cid, class>       friend struct Insertion;
       template<Cid>              friend struct IndexedCommon;
       template<Cid, Cid...>      friend struct IndexedLinear;

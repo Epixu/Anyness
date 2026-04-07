@@ -190,9 +190,11 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       //static_assert(not requires (T pack)         { pack.GetDeep(); });
       static_assert(not requires (T pack)         { pack.GetResolved(); });
       static_assert(not requires (T pack)         { pack.GetDense(); });
-      static_assert(not requires (T pack)         { pack +   pack; });
-      static_assert(not requires (T pack, E1 item){ pack +   item; });
-      static_assert(not requires (T pack, E2 item){ pack +   item; });
+      static_assert(not requires (T pack)         { pack + pack; });
+      static_assert(    CT::Text<E1> or not requires (T pack, E1 item){  pack + item; });
+      static_assert(    CT::Text<E2> or not requires (T pack, E2 item){  pack + item; });
+      static_assert(not CT::Text<E1> or     requires (T pack, E1 item){ {pack + item} -> CT::Text; });
+      static_assert(not CT::Text<E2> or     requires (T pack, E2 item){ {pack + item} -> CT::Text; });
       static_assert(not requires (T pack)         { pack +=  pack; });
       static_assert(not requires (T pack, E1 item){ pack +=  item; });
       static_assert(not requires (T pack, E2 item){ pack +=  item; });
@@ -380,8 +382,8 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       WHEN("Assigned copied value") {
          pack.Assign(Copy(*element1), Copy(*element2));
 
-         Set_CheckState_OwnedFull<E1, E2>(pack);
-         Set_CheckState_ContainsOne(pack, Copy(element1), Copy(element2));
+         Map_CheckState_OwnedFull<E1, E2>(pack);
+         Map_CheckState_ContainsOne(pack, Copy(element1), Copy(element2));
 
          BenchmarkMapStd("Empty/Assign(Copy(" + NameOf<E>() + "))", 30, 100,
             T temp,              temp.Assign(Copy(*element1), Copy(*element2)),
@@ -428,8 +430,8 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       WHEN("Assigned cloned value") {
          pack.Assign(Clone(*element1), Clone(*element1));
 
-         Set_CheckState_OwnedFull<E1, E2>(pack);
-         Set_CheckState_ContainsOne(pack, Clone(element1), Clone(element2));
+         Map_CheckState_OwnedFull<E1, E2>(pack);
+         Map_CheckState_ContainsOne(pack, Clone(element1), Clone(element2));
 
          BenchmarkMapStd("Empty/Assign(Clone(" + NameOf<E>() + "))", 30, 100,
             T temp,              temp.Assign(Clone(*element1), Clone(*element2)),
@@ -475,8 +477,8 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       WHEN("Assigned disowned value") {
          pack.Assign(Disown(*element1), Disown(*element2));
 
-         Set_CheckState_OwnedFull<E1, E2>(pack);
-         Set_CheckState_ContainsOne(pack, Disown(element1), Disown(element2));
+         Map_CheckState_OwnedFull<E1, E2>(pack);
+         Map_CheckState_ContainsOne(pack, Disown(element1), Disown(element2));
 
          BenchmarkMapStd("Empty/Assign(Disown(" + NameOf<E>() + "))", 30, 100,
             T temp,              temp.Assign(Disown(*element1), Disown(*element2)),

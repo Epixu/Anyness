@@ -25,13 +25,14 @@ namespace Langulus::Anyness::Component
    template<Cid ID, bool REF_INDIVIDUAL>
    struct OwnershipDeepReference : OwnershipDeepEmergent<ID, REF_INDIVIDUAL> {
       using StackRequest = EntryPtr;
-      //using HeapRequest  = PerElement<PerIndirection<AllocationPtr>>;
 
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
+      template<Cid SID = ID>
       auto GetEntries(this auto const& self) assumptious
       -> Allocation const* const* {
+         static_assert(SID == ID);
          if (self.IsSparse()) {
             LglsAssumeDev(self.GetRaw(), "No memory available");
             return self.GetEntriesInner();
@@ -41,9 +42,10 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<CT::Container C> requires CT::Indexed<C>
+      template<Cid SID = ID, CT::Container C> requires CT::Indexed<C>
       auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
       -> Allocation const* const* {
+         static_assert(SID == ID);
          if (self.IsSparse()) {
             LglsAssumeDev(self.GetRaw(), "No memory available");
             return self.GetEntriesInner() + self.SimplifyIndex(LglsFwd(idx));
@@ -52,8 +54,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid>       friend struct Emplacement;
-      template<Cid, bool> friend struct OwnershipDeepEmergent;
+      template<Cid, Cid...>   friend struct Emplacement;
+      template<Cid, bool>     friend struct OwnershipDeepEmergent;
 
       /// Get the entry array (inner)                                         
       template<uint SELECTOR = ID> requires (SELECTOR == ID)

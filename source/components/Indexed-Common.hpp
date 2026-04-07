@@ -65,10 +65,10 @@ namespace Langulus::Anyness::Component
          using TCP  = LglsMutIf(C, TC*);
          using TH   = Tif<CT::Void<AS>, TC, AS>;
          using THP  = LglsMutIf(C, TH*);
-         auto* heap = DecvqAllCast(self.template GetHeapInner<SID>());
+         auto* heap = DecvqAllCast(self.GetHeapInner());
 
          if constexpr (CT::TypeErased<C>) {
-            const auto T = self.template GetType<SID>();
+            const auto T = self.GetType();
             LglsAssumeDev(T, "Block is not typed");
 
             const auto offset_heap = [&self, &heap, &idx, &T] {
@@ -104,7 +104,7 @@ namespace Langulus::Anyness::Component
                      return *static_cast<THP*>(heap);
                   }
 
-                  // We need to dereference. Supports packed pointers.  
+                  // We need to dereference. Supports packed pointers   
                   auto diff = indirections - IndirectsOf<TH>;
                   using Deep = typename Deref<C>::DeepType;
                   Deep denser = Disown(self.GetDenseAt(LglsFwd(idx), diff));

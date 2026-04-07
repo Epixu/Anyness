@@ -50,11 +50,10 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
       Com::Merging<0>,                    // Only merging for keys      
-      Com::Insertion<1>,                  // Allows inserting values    
       Com::Assignment<1>,                 // Allows assignment of values
       Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
       Com::Conversion<0, 1>,              // Allows conversions of K/V  
-      Com::Comparison<0, 1>,              // Allows comparisons of K/V  
+      Com::Comparison<0, true, 1>,        // Allows comparisons of K/V  
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
       Com::StateStack<                    // Variable state             
@@ -86,6 +85,8 @@ namespace Langulus::Anyness::Inner
       using PickMut       = HandleMutType;
 
       static constexpr bool TypeErased = true;
+      static constexpr bool DeeplyOwned = true;
+      static constexpr bool ReferenceElements = true;
 
       using DefineState::Typed<>::IsTypeConstrained;
       using DefineState::Typed<>::EnableTypeConstrained;
@@ -170,8 +171,65 @@ namespace Langulus::Anyness::Inner
          else return this->Assign(LglsFwd(argument));
       }
 
-      using Com::Comparison<>::operator <=>;
-      using Com::Comparison<>::operator ==;
+      /// Clear the map and assign a single pair                              
+      auto Assign(CT::Pair auto&& pair) -> Map& {
+         using I = IntentOf(pair);
+         this->Clear();
+         const auto bucket = this->MergeInner(I::Nest(pair.key));
+         (this->GetHandle().val + bucket.lastInsertedIndex).EmplaceWithIntent(I::Nest(pair.val));
+         return *this;
+      }
+
+      /// Clear the map and assign a key and a value                          
+      auto Assign(auto&& key, auto&& val) -> Map& {
+         this->Clear();
+         const auto bucket = this->MergeInner(LglsFwd(key));
+         (this->GetHandle().val + bucket.lastInsertedIndex).EmplaceWithIntent(FWDIntent(val));
+         return *this;
+      }
+
+      using Com::Comparison<0, true, 1>::operator <=>;
+      using Com::Comparison<0, true, 1>::operator ==;
+
+      /// Three-way comparison with pairs                                     
+      template<CT::Container C, CT::Pair P> requires CT::NoIntent<P>
+      constexpr Compared operator <=> (this C const& lhs, P const& rhs) assumptious {
+         const auto key_compare = lhs.template CompareOne<0>(rhs.key);
+         if (key_compare == Compared::Equivalent)
+            return lhs.template CompareOne<1>(rhs.val);
+         return key_compare;
+      }
+
+      /// Equality comparison with pairs                                      
+      template<CT::Container C, CT::Pair P> requires CT::NoIntent<P>
+      constexpr bool operator == (this C const& lhs, P const& rhs) assumptious {
+         return lhs.template CompareOneEqual<0>(rhs.key)
+            and lhs.template CompareOneEqual<1>(rhs.val);
+      }
+
+      /// Get the contained type                                              
+      ///   @tparam SELECTOR - 0 for key type, 1 for value type               
+      template<Cid SELECTOR>
+      constexpr DMeta GetType() const noexcept {
+         return this->Com::TypedStack<DMeta, void, false, SELECTOR>::GetType();
+      }
+
+      /// Get the key type                                                    
+      constexpr DMeta GetKeyType() const noexcept {
+         return GetType<0>();
+      }
+
+      /// Get the value type                                                  
+      constexpr DMeta GetValType() const noexcept {
+         return GetType<1>();
+      }
+
+      /// Get the deep referenced entries                                     
+      ///   @tparam SELECTOR - 0 for key entries, 1 for value entries         
+      template<Cid SELECTOR>
+      auto GetEntries() const assumptious {
+         return this->Com::OwnershipDeepHeap<SELECTOR>::GetEntries();
+      }
    };
 }
 

@@ -43,81 +43,100 @@ namespace Langulus::Anyness::Component
       /// Merge one or more elements at the performance-optimal position.     
       /// This usually means at the back of a contiguous container. Supports  
       /// intents and arrays.                                                 
-      ///   @param a1, an elements (and their intents) to merge               
-      ///   @return the number of merged elements                             
-      template<class A1, class...AN, CT::ContainsMany C>
-      auto Merge(this C& self, A1&& a1, AN&&...an) -> Count<C> {
-         // Gather the number of all elements and types.                
-         // Empty containers can't change type. If one of the type      
-         // changes raises a conflict, this function will throw.        
-         Count<C> rhs_count = 0;
-          self.PrepareForMerge(LglsFwd(a1), rhs_count);
-         (self.PrepareForMerge(LglsFwd(an), rhs_count), ...);
-         if (not rhs_count)
-            return 0;
-
-         // Reallocate/branch out                                       
-         const Count<C> lhs_count = self.GetCount();
-         const Count<C> all_count = lhs_count + rhs_count;
-         self.BranchOut(all_count);
-
-         // Insert the new elements if they're not contained yet        
-         Count<C> inserted = 0;
-         auto insert = [&]<class E>(E&& a) {
-            if (self.Contains(DeintCast(a)))
-               return;
-
-            if constexpr (CT::Contiguous<C>) {
-               // Contiguous merge                                      
-               auto to = self.GetHandle() + lhs_count;
-               if constexpr (CT::Copied<IntentOf(a)>)
-                  to.EmplaceWithIntent(Refer(LglsFwd(a)));
-               else
-                  to.EmplaceWithIntent(FWDIntent(a));
-            }
-            else {
-               // Hash table merge                                      
-               // Move the element to a temporary swapper first         
-               Count<C> bucket = self.GetOffset(DeintCast(a));
-               THandle<Decvq<Deref<Deint<E>>>> swapper {Piecewise, LglsFwd(a)};
-               self.TableEmplace(bucket, swapper);
-            }
-
-            ++inserted;
-         };
-
-         try {
-             insert(LglsFwd(a1));
-            (insert(LglsFwd(an)), ...);
-         }
-         catch (...) {
-            // Account for throws inside constructors                   
-            self.SetCountInner(lhs_count + inserted);
-            throw;
-         }
-
-         self.SetCountInner(lhs_count + inserted);
-         return inserted;
+      ///   @param a element or an array of elements (and their intent)       
+      ///   @return the number of inserted elements                           
+      template<class A, CT::ContainsMany C>
+      auto Merge(this C& self, A&& a) -> Count<C> {
+         return static_cast<Count<C>>(self.MergeInner(LglsFwd(a)).itemsInserted);
       }
 
       template<CT::Container C>
       auto MergeRange(this C&, CT::Container auto&&) -> Count<C>;
       
    protected:
-      /// Helper function that gathers the number of elements and types.      
-      /// An incompatible type will result in a throw.                        
-      template<CT::Container C, class A>
-      void PrepareForMerge(this C& self, A&& a, Count<C>& out_count) {
+      /// Helper struct for returning insertion status                        
+      struct MergeResult {
+         size_t itemsInserted = 0;
+         size_t lastInsertedIndex = 0;
+      };
+
+      /// Merge one or more elements at the performance-optimal position.     
+      /// This usually means at the back of a contiguous container. Supports  
+      /// intents and arrays.                                                 
+      ///   @param a an element or array of elements (and its intent) to merge
+      ///   @attention when 'a' is an array, you have to be careful with      
+      ///      using MergeResult::insertedAt, as it will show only the        
+      ///      position of the last insertion! Merge elements one-by-one, in  
+      ///      order to get the proper offsets.                               
+      ///   @return 1 if element was inserted, and the position where it was  
+      ///      inserted or found at (if it was already existing)              
+      template<class A, CT::ContainsMany C>
+      auto MergeInner(this C& self, A&& a) -> MergeResult {
+         // Gather the number of all elements and types.                
+         // Empty containers can't change type. If one of the type      
+         // changes raises a conflict, this function will throw.        
+         size_t rhs_count;
          if constexpr (CT::Array<A>) {
             using E = Decvq<Deref<DeextAll<Deint<A>>>>;
             self.template SetType<E>();
-            out_count += GetAllExtentsOf(a);
+            rhs_count = GetAllExtentsOf(a);
          }
          else {
             using E = Decvq<Deref<Deint<A>>>;
             self.template SetType<E>();
-            ++out_count;
+            rhs_count = 1;
          }
+
+         // Reallocate/branch out                                       
+         const size_t lhs_count = self.GetCount();
+         const size_t all_count = lhs_count + rhs_count;
+         self.BranchOut(all_count);
+
+         // Insert the new elements if they're not contained yet        
+         MergeResult result;
+         auto insert = [&]<class E>(E&& item) {
+            if constexpr (CT::Contiguous<C>) {
+               // Contiguous merge                                      
+               const auto found = self.FindInner(DeintCast(item), 0);
+               if (found) {
+                  result.lastInsertedIndex = found - self.GetHandle();
+                  return;
+               }
+
+               auto to = self.GetHandle() + lhs_count;
+               if constexpr (CT::Copied<IntentOf(item)>)
+                  to.EmplaceWithIntent(Refer(LglsFwd(item)));
+               else
+                  to.EmplaceWithIntent(FWDIntent(item));
+            }
+            else {
+               // Hash table merge                                      
+               const auto bucket = self.GetOffset(DeintCast(item));
+               const auto found = self.FindInner(DeintCast(item), bucket);
+               if (found) {
+                  result.lastInsertedIndex = found - self.GetHandle();
+                  return;
+               }
+
+               // Move the element to a temporary local swapper first   
+               THandle<Decvq<Deref<Deint<E>>>> swapper {Piecewise, LglsFwd(item)};
+               result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
+            }
+
+            ++result.itemsInserted;
+         };
+
+         try {
+            insert(LglsFwd(a));
+         }
+         catch (...) {
+            // Account for throws inside constructors                   
+            self.SetCountInner(lhs_count + result.itemsInserted);
+            throw;
+         }
+
+         self.SetCountInner(lhs_count + result.itemsInserted);
+         return result;
       }
    };
 }

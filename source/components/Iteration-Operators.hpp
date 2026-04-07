@@ -15,8 +15,8 @@ namespace Langulus::Anyness::Component
    /// Adds +, -, +=, -=, ++ prefix/suffix, -- prefix/suffix operators.       
    /// Adds - operator for difference between two containers.                 
    /// These operators are fundamentally unsafe so the API is protected.      
-   /// Used mainly by handles. For maps and sets, these handles may point to  
-   /// uninitialized values.                                                  
+   /// Used mainly by handles. For discontiguous container, these handles may 
+   /// point to uninitialized values.                                         
    ///   @tparam ID heap provider we're iterating                             
    template<Cid ID>
    struct IterationOperators {

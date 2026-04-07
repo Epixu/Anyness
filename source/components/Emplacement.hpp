@@ -13,7 +13,7 @@
 #include <Langulus/MetaOf.hpp>
 
 
-namespace Langulus::CT
+/*namespace Langulus::CT
 {
    /// Check if container's elements are emplaceable using the provided       
    /// argument list. Use empty list to test if default-constructible.        
@@ -24,7 +24,7 @@ namespace Langulus::CT
    concept RangeEmplaceable = Container<C> and (
       Untyped<C> or ::std::constructible_from<TypeOf<C>, A...>
    );
-}
+}*/
 
 namespace Langulus::Anyness
 {
@@ -37,8 +37,9 @@ namespace Langulus::Anyness::Component
    /// Implements emplacement for containers.                                 
    /// Unlike insertion, emplacement reuses the same memory space and         
    /// guarantees that nothing moves around.                                  
-   ///   @tparam ID heap we're emplacing to                                   
-   template<Cid ID>
+   ///   @tparam ID the data provider we're emplacing into                    
+   ///   @tparam SHARED other providers that share emplacement behavior       
+   template<Cid ID, Cid...SHARED>
    struct Emplacement {
       using CTTI_Component = Yes<>;
       static constexpr int ComponentPrecedence = 3000;

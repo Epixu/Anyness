@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Inner
       Com::Assignment<1>,                 // Allows assignment of values
       Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
       Com::Conversion<0, 1>,              // Allows conversions of K/V  
-      Com::Comparison<0, 1>,              // Allows comparisons of K/V  
+      Com::Comparison<0, true, 1>,        // Allows comparisons of K/V  
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
       Com::StateStack<                    // Variable state             
