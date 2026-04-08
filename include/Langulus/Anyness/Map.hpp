@@ -108,25 +108,20 @@ namespace Langulus::Anyness::Inner
       /// emplaces all A in the container                                     
       template<class A1, class...AN>
       constexpr Map(A1&& a1, AN&&...an) {
-         if constexpr (sizeof...(AN) == 0) {
-            if constexpr (CT::Map<A1>) {
-               LglsAssumeUser((Same<Deint<A1>, Map>),
-                  "Ambiguous use of construction "
-                  "- you should use tag-dispatch with first argument either Absorb "
-                  "(if you want to overwrite the container itself) or Piecewise "
-                  "(if you want to overwrite the first item) in order to clearly "
-                  "state your intent. Absorb will be used by default!"
-               );
-               this->Absorb(LglsFwd(a1));
-            }
-            else {
-               this->ConstructDefault();
-               this->Merge(LglsFwd(a1));
-            }
+         if constexpr (CT::Map<A1> and sizeof...(AN) == 0) {
+            LglsAssumeUser((Same<Deint<A1>, Map>),
+               "Ambiguous use of construction "
+               "- you should use tag-dispatch with first argument either Absorb "
+               "(if you want to overwrite the container itself) or Piecewise "
+               "(if you want to overwrite the first item) in order to clearly "
+               "state your intent. Absorb will be used by default!"
+            );
+            this->Absorb(LglsFwd(a1));
          }
          else {
             this->ConstructDefault();
-            this->Insert(LglsFwd(a1), LglsFwd(an)...);
+            this->Merge(LglsFwd(a1));
+           (this->Merge(LglsFwd(an)), ...);
          }
       }
       

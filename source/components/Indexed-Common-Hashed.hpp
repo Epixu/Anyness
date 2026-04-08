@@ -30,6 +30,7 @@ namespace Langulus::Anyness::Component
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
+      template<Cid, Cid...>                        friend struct IndexedCommon;
       template<Cid, class>                         friend struct Merging;
 
       /// Browse table, converting contiguous index into table index.         

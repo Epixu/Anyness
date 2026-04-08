@@ -144,6 +144,7 @@ namespace Langulus::Anyness::Component
       template<class AS = void, Cid SID = ID, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) assumptious {
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
+         static_assert(not CT::Pair<AS>,      "AS can't be a pair");
          static_assert(not CT::Reference<AS>, "Strip references first");
          using TC   = LglsMutIf(C, TypeOf<C>);
          using TCP  = LglsMutIf(C, TC*);
@@ -409,7 +410,7 @@ namespace Langulus::Anyness::Component
 
                if constexpr (CT::TypeErased<C>) {
                   LglsAssert(self.template GetType<SID>().IsSame(MetaDataOf<HT>()),
-                     "Type mismatch: ", self.template GetType<SID>(),
+                     "Type mismatch", ": ", self.template GetType<SID>(),
                      " not same as ", MetaDataOf<HT>()
                   );
                }

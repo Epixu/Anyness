@@ -195,7 +195,8 @@ namespace Langulus::Anyness::Component
             auto t1 = self.GetType();
             auto t2 = from.GetType();
             if (t1 and t2) {
-               LglsAssert(t1.IsSame(t2), "Type mismatch: ", t1, " is not same as ", t2);
+               LglsAssert(t1.IsSame(t2), "Type mismatch", ": ",
+                  t1, " is not same as ", t2);
             }
          }
          else static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");

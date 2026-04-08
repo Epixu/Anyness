@@ -546,7 +546,8 @@ namespace Langulus::Anyness::Component
             // a handle                                                 
             using H = TypeOf<I>;
             LglsAssumeDev(self.IsSame(rhs.GetType()),
-               "Type mismatch: ", self.GetType(), " is not same as ", rhs.GetType()
+               "Type mismatch", ": ", self.GetType(),
+               " is not same as ", rhs.GetType()
             );
 
             if constexpr (not CT::Disowned<I>
@@ -593,7 +594,8 @@ namespace Langulus::Anyness::Component
             #if LANGULUS_FEATURE(MANAGED_MEMORY) or LANGULUS(SAFE) > 1
             using T = Decvq<Deref<Deint<I>>>;
             LglsAssumeDev(self.template IsSame<T>(),
-               "Type mismatch: ", self.GetType(), " is not same as ", NameOf<T>()
+               "Type mismatch", ": ", self.GetType(),
+               " is not same as ", NameOf<T>()
             );
             #endif
 

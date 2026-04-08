@@ -38,10 +38,10 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid, class>    friend struct Merging;
-                              friend struct IndexedCommon<ID>;
-                              friend struct IndexedCommonHashed<ID, HASH>;
-      template<Cid, Cid...>   friend struct Removal;
+      template<Cid, Cid...>         friend struct IndexedCommon;
+      template<Cid, class, Cid...>  friend struct IndexedCommonHashed;
+      template<Cid, class>          friend struct Merging;
+      template<Cid, Cid...>         friend struct Removal;
 
       /// Get hash table (inner)                                              
       constexpr auto& GetHashTableInner(this auto&& self) noexcept {

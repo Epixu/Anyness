@@ -40,8 +40,10 @@ namespace Langulus::Anyness::Component
       auto GetEntries(this auto const& self) assumptious
       -> Allocation const* const* {
          static_assert(SID == ID);
-         if (self.IsSparse() and self.GetRaw() and self.GetAllocation())
-            return self.GetEntriesInner();
+         if (self.template IsSparse<SID>()
+         and self.template GetRaw<SID>()
+         and self.template GetAllocation<SID>())
+            return self.OwnershipDeepHeap<ID, REF_INDIVIDUAL>::GetEntriesInner();
          return nullptr;
       }
 
