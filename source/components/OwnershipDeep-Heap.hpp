@@ -11,6 +11,10 @@
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.OwnershipDeepHeap<ID, REF_INDIVIDUAL>
+
    ///                                                                        
    /// Reserves a part of the heap to keep track of sparse element's          
    /// allocations. The pointer to the array of allocations is recomputed     
@@ -41,9 +45,8 @@ namespace Langulus::Anyness::Component
       -> Allocation const* const* {
          static_assert(SID == ID);
          if (self.template IsSparse<SID>()
-         and self.template GetRaw<SID>()
-         and self.template GetAllocation<SID>())
-            return self.OwnershipDeepHeap<ID, REF_INDIVIDUAL>::GetEntriesInner();
+         and self.template GetRaw<SID>() and self.template GetAllocation<SID>())
+            return ThisCom::GetEntriesInner();
          return nullptr;
       }
 
@@ -56,7 +59,7 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::TypeErased<C>) {
             auto T = self.GetType();
             if (T.IsSparse() and self.GetRaw() and self.GetAllocation()) {
-               return self.GetEntriesInner()
+               return ThisCom::GetEntriesInner()
                     + self.SimplifyIndex(LglsFwd(idx)) * T.GetIndirections();
             }
          }
@@ -64,7 +67,7 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C>;
             if constexpr (CT::Sparse<T>) {
                if (self.GetRaw() and self.GetAllocation()) {
-                  return self.GetEntriesInner()
+                  return ThisCom::GetEntriesInner()
                        + self.SimplifyIndex(LglsFwd(idx)) * IndirectsOf<T>;
                }
             }
@@ -92,7 +95,7 @@ namespace Langulus::Anyness::Component
             const auto T = self.GetType();
             if (T.IsSparse()) {
                memset(
-                  self.GetEntriesInner(), 0,
+                  ThisCom::GetEntriesInner(), 0,
                   reserved * T.GetIndirections() * sizeof(AllocationPtr)
                );
             }
@@ -101,7 +104,7 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C>;
             if constexpr (CT::Sparse<T>) {
                memset(
-                  self.GetEntriesInner(), 0,
+                  ThisCom::GetEntriesInner(), 0,
                   reserved * IndirectsOf<T> * sizeof(AllocationPtr)
                );
             }

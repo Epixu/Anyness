@@ -32,7 +32,7 @@ namespace Langulus::Anyness
 
    namespace Inner
    {
-      using BytesBase = Container<
+      using BytesBase = Com::Container<
          Com::TypedStatic<DMeta, Byte>,      // Type-constrained        
          Com::HeapMovable<0, 0, 0, HeapEntry<0, Byte*>>,
          Com::CountStack<>,                  // Variable count          

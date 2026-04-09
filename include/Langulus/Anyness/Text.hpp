@@ -36,7 +36,7 @@ namespace Langulus::Anyness
 
    namespace Inner
    {
-      using TextBase = Container<
+      using TextBase = Com::Container<
          Com::TypedStatic<DMeta, char>,   // Type-constrained           
          Com::HeapMovable<0, 0, 0, HeapEntry<0, char*>>,
          Com::CountStack<>,               // Variable count             

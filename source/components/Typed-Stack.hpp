@@ -20,6 +20,8 @@ namespace Langulus::Anyness
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
    #define ThisCom self.TypedStack<META, TYPE, CONSTRAIN, ID>
 
    ///                                                                        

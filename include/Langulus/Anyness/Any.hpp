@@ -31,7 +31,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   using AnyBase = Container<
+   using AnyBase = Com::Container<
       Com::TypedStack<DMeta>,          // Type-erased                   
       Com::HeapMovable<>,              // Pointer to heap memory        
       Com::CountStatic<0, 1u>,         // Statically sized to 1         

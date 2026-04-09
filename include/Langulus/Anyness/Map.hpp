@@ -35,7 +35,7 @@
 namespace Langulus::Anyness::Inner
 {
    template<State::StateValue SORT>
-   using MapBase = Container<
+   using MapBase = Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,  // Type-erased keys      
       Com::TypedStack<DMeta, void, false, 1>,  // Type-erased values    
       Com::HeapMovable<0, 8, 2,

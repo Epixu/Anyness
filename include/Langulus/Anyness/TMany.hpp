@@ -12,7 +12,7 @@
 namespace Langulus::Anyness::Inner
 {
    template<CT::NotVoid T>
-   using TManyBase = Container<
+   using TManyBase = Com::Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
       Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,
       Com::CountStack<>,               // Dynamically sized             

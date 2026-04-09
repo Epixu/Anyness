@@ -12,7 +12,7 @@
 namespace Langulus::Anyness::Inner
 {
    template<CT::NotVoid T, State::StateValue SORT>
-   using TSetBase = Container<
+   using TSetBase = Com::Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
       Com::HeapMovable<0, 8, 2, HeapEntry<0, T*>>,
       Com::CountStack<>,               // Dynamically sized             

@@ -293,8 +293,8 @@ namespace Langulus
              or (... or lambda.template operator()<TN>());
       }
 
-      /// Doesn't generate code for further loops if lambda returns a Yes     
-      /// instead of a No (utilizes a compile-time short-circuit)             
+      /// Doesn't generate code for further loops if lambda returns anything  
+      /// but a No (utilizes a compile-time short-circuit)                    
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
          if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<T1>())>) {
             return lambda.template operator()<T1>();

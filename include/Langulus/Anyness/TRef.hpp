@@ -21,7 +21,7 @@
 namespace Langulus::Anyness::Inner
 {
    template<class T>
-   using TRefBase = Container<
+   using TRefBase = Com::Container<
       Com::TypedStatic<DMeta, T>,         // Statically typed          
       Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,
       Com::CountStatic<0, 1u>,            // Statically sized          

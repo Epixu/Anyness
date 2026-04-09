@@ -12,7 +12,7 @@
 namespace Langulus::Anyness::Inner
 {
    template<CT::NotVoid K, CT::NotVoid V, State::StateValue SORT>
-   using TMapBase = Container<
+   using TMapBase = Com::Container<
       Com::TypedStack<DMeta, K, true, 0>, // Type-constrained keys      
       Com::TypedStack<DMeta, V, true, 1>, // Type-constrained values    
       Com::HeapMovable<0, 8, 2,

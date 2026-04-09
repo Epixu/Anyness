@@ -50,7 +50,7 @@ namespace Langulus::Anyness::Component
       template<Cid, Cid...>         friend struct IndexedLinear;
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
       template<Cid, Cid...>         friend struct Emplacement;
-      template<Cid, bool, Cid...>   friend struct Comparison;
+      LglsComComparison(friend);
       template<Cid, Cid...>         friend struct Conversion;
       template<Cid, auto, Cid...>   friend struct CountStatic;
       template<Cid, bool, Cid...>   friend struct OwnershipEmergent;
@@ -62,74 +62,47 @@ namespace Langulus::Anyness::Component
 
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
-      
-      /// Get the heap pointer (inner)                                        
-      constexpr auto& GetHeapInner(this auto&& self) noexcept {
-         return self.template AccessStack<HeapReference>();
-      }
-
-      /// Get the heap pointer as a void* (inner)                             
-      constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
-         auto& p = self.GetHeapInner();
-         if constexpr (CT::CustomPointer<StackRequest>)
-            return const_cast<void*>(static_cast<void const*>(p.Unpack()));
-         else
-            return const_cast<void*>(static_cast<void const*>(p));
-         //else
-         //   return static_cast<void*>(const_cast<DecvqAll<StackRequest>>(p));
-      }
-
-      /// Set the heap pointer, any data pointer will do                      
-      template<CT::Sparse P>
-      /*constexpr*/ void SetHeapInner(this auto& self, P heap) assumptious { //can't be constexpr due to GCC ICE
-         if constexpr (Exact<P, StackRequest>)
-            self.GetHeapInner() = heap;
-         else if constexpr (CT::CustomPointer<P>)
-            self.GetHeapInner() = static_cast<StackRequest>(heap.Unpack());
-         else
-            self.GetHeapInner() = static_cast<StackRequest>(DecvqAllCast(heap));
-      }
-
-      constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
-         self.GetHeapInner() = nullptr;
-      }
 
    public:
       /// Get a direct access to the heap memory                              
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          using Tcvq = LglsMutIf(C, StackRequest);
-         return static_cast<Tcvq>(self.GetHeapInner());
+         return static_cast<Tcvq>(self.template GetHeapInner<SID>());
       }
       
       /// Get a direct access to the heap memory as a different type          
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
-      template<class T, CT::Container C>
+      template<class T, Cid SID = ID, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          using Tcvq = LglsMutIf(C, T*);
-         return static_cast<Tcvq>(self.GetHeapInnerAsVoid());
+         return static_cast<Tcvq>(self.template GetHeapInnerAsVoid<SID>());
       }
 
       /// Get a direct access to the initialized heap memory's end.           
       ///   @attention this makes sense only when heap is contiguous.         
-      template<CT::Container C> requires CT::Contiguous<C>
+      template<Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
       constexpr auto GetRawEnd(this C&& self) noexcept {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (CT::TypeErased<C>)
-            return self.template GetRawAs<uint8_t>() + self.GetBytesize();
+            return self.template GetRawAs<uint8_t, SID>() + self.template GetBytesize<SID>();
          else
-            return self.GetRaw() + self.GetCount();
+            return self.template GetRaw<SID>() + self.template GetCount<SID>();
       }
     
       /// Get a direct access to the entire heap reserve's end.               
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       constexpr auto GetRawReserveEnd(this C&& self) noexcept {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (CT::TypeErased<C>)
-            return self.template GetRawAs<uint8_t>() + self.GetReserved() * self.GetStride();
+            return self.template GetRawAs<uint8_t, SID>() + self.template GetReserved<SID>() * self.template GetStride<SID>();
          else
-            return self.GetRaw() + self.GetReserved();
+            return self.template GetRaw<SID>() + self.template GetReserved<SID>();
       }
     
       /// Get reference to first element as sparse or dense, depending on T.  
@@ -150,7 +123,7 @@ namespace Langulus::Anyness::Component
          using TCP  = LglsMutIf(C, TC*);
          using TH   = Tif<CT::Void<AS>, TC, AS>;
          using THP  = LglsMutIf(C, TH*);
-         auto& heap = self.GetHeapInner();
+         auto& heap = self.template GetHeapInner<SID>();
 
          if constexpr (CT::TypeErased<C>) {
             if constexpr (CT::Void<AS>) {
@@ -159,8 +132,8 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Casting to a desired runtime type                     
-               LglsAssumeDev(self.IsTyped(), "Block is not typed");
-               const auto indirections = self.GetIndirections();
+               LglsAssumeDev(self.template IsTyped<SID>(), "Block is not typed");
+               const auto indirections = self.template GetIndirections<SID>();
 
                if (indirections == IndirectsOf<TH>) {
                   // No difference in indirections                      
@@ -352,7 +325,42 @@ namespace Langulus::Anyness::Component
          return D {Absorb, Disown(self)};
       }
 
-   protected:      
+   protected:
+      /// Get the heap pointer (inner)                                        
+      template<Cid SID = ID>
+      constexpr auto& GetHeapInner(this auto&& self) noexcept {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
+         return self.template AccessStack<HeapReference>();
+      }
+
+      /// Get the heap pointer as a void* (inner)                             
+      template<Cid SID = ID>
+      constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
+         auto& p = self.GetHeapInner();
+         if constexpr (CT::CustomPointer<StackRequest>)
+            return const_cast<void*>(static_cast<void const*>(p.Unpack()));
+         else
+            return const_cast<void*>(static_cast<void const*>(p));
+         //else
+         //   return static_cast<void*>(const_cast<DecvqAll<StackRequest>>(p));
+      }
+
+      /// Set the heap pointer, any data pointer will do                      
+      template<CT::Sparse P>
+      /*constexpr*/ void SetHeapInner(this auto& self, P heap) assumptious { //can't be constexpr due to GCC ICE
+         if constexpr (Exact<P, StackRequest>)
+            self.GetHeapInner() = heap;
+         else if constexpr (CT::CustomPointer<P>)
+            self.GetHeapInner() = static_cast<StackRequest>(heap.Unpack());
+         else
+            self.GetHeapInner() = static_cast<StackRequest>(DecvqAllCast(heap));
+      }
+
+      constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
+         self.GetHeapInner() = nullptr;
+      }
+
       /// Get first element as a handle. Very useful for internal use.        
       /// No-op if C is already a handle, even if AS is specified.            
       ///   @attention element might be uninitialized if C is discontiguous   

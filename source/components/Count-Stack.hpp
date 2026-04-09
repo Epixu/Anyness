@@ -34,12 +34,16 @@ namespace Langulus::Anyness::Component
          "Count type must be an unsigned integer");
 
       /// Check if there are no initialized elements                          
+      template<Cid SID = ID>
       constexpr bool IsEmpty(this auto const& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.GetCountInner() == 0;
       }
 
       /// Get the number of initialized elements                              
+      template<Cid SID = ID>
       constexpr T GetCount(this auto const& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.GetCountInner();
       }
 

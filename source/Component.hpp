@@ -120,7 +120,7 @@ namespace Langulus::CT
    /// Check if listed types are containers, and are linearly indexed         
    template<class T>
    concept HeapEntry = requires {
-      {T::TypeId} -> Same<uint>;
+      {T::Id} -> Same<uint>;
       CT::Sparse<typename T::T>;
    };
 }
@@ -154,7 +154,7 @@ namespace Langulus::Anyness
    ///      customization point for packed pointer use.                       
    template<Cid ID = 0, CT::Sparse POINTER_TYPE = void*>
    struct HeapEntry {
-      static constexpr Cid TypeId = ID;
+      static constexpr Cid Id = ID;
       using T = POINTER_TYPE;
    };
 
@@ -169,8 +169,12 @@ namespace Langulus::Anyness
       template<Cid = 0, CT::HeapEntry...> struct HeapReference;
       template<CT::NotVoid, Cid = 0>      struct Stack;
 
-                                                      struct Charge;
-      template<Cid = 0, bool HASH = true, Cid...>     struct Comparison;
+      struct Charge;
+      #define LglsComCharge(modifier) modifier struct Charge
+
+      template<Cid = 0, bool HASH = true, Cid...> struct Comparison;
+      #define LglsComComparison(modifier) template<Cid, bool, Cid...> modifier struct Comparison
+
       template<Cid = 0, Cid...>                       struct Conversion;
 
       template<Cid = 0, class T = size_t, Cid...>     struct CountHeap;
@@ -200,6 +204,8 @@ namespace Langulus::Anyness
 
       template<Cid = 0, Cid...>           struct Emplacement;
       template<Cid = 0>                   struct Assignment;
+      #define LglsComAssignment(modifier) template<Cid ID> modifier struct Assignment
+
       template<Cid = 0, class AS = void>  struct Insertion;
       template<Cid = 0, class AS = void>  struct InsertionOperators;
       template<Cid = 0, class AS = void>  struct Merging;

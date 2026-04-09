@@ -47,6 +47,8 @@ namespace Langulus::Anyness
    constexpr Inner::Absorb    Absorb {};
    
 
+   namespace Component
+   {
    ///                                                                        
    /// A container definition using composition                               
    ///   @tparam COMPONENTS list of components that define the container      
@@ -122,25 +124,25 @@ namespace Langulus::Anyness
       }
 
    protected:
-      template<Cid>                       friend struct Com::IterationOperators;
-      template<class, class, bool, Cid>   friend struct Com::TypedStack;
-      template<CT::NotVoid, Cid>          friend struct Com::Stack;
-      template<Cid, CT::HeapEntry...>              friend struct Com::HeapReference;
-      template<Cid, uint, uint, CT::HeapEntry...>  friend struct Com::HeapMovable;
-      template<Cid, bool, Cid...>         friend struct Com::OwnershipStack;
-      template<Cid, bool>                 friend struct Com::OwnershipDeepReference;
-      template<Cid, bool>                 friend struct Com::OwnershipDeepHeap;
-      template<Cid, class, Cid...>        friend struct Com::CountStack;
-      template<Cid, class, Cid...>        friend struct Com::ReserveStack;
-      template<Cid, class, Cid...>        friend struct Com::HashStack;
-      template<Cid, class, Cid...>        friend struct Com::HashHeap;
-      template<Cid, bool,  Cid...>        friend struct Com::Comparison;
-      template<Cid>                       friend struct Com::Assignment;
-      template<CT::State...>              friend struct Com::StateStack;
-      template<Cid, class, Cid...>        friend struct Com::ReserveEmergent;
-      template<Cid, Cid...>               friend struct Com::Conversion;
-      template<Cid, class, Cid...>        friend struct Com::IndexedHashHeap;
-      template<Cid, class, Cid...>        friend struct Com::IndexedHashStack;
+      template<Cid>                       friend struct IterationOperators;
+      template<class, class, bool, Cid>   friend struct TypedStack;
+      template<CT::NotVoid, Cid>          friend struct Stack;
+      template<Cid, CT::HeapEntry...>              friend struct HeapReference;
+      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
+      template<Cid, bool, Cid...>         friend struct OwnershipStack;
+      template<Cid, bool>                 friend struct OwnershipDeepReference;
+      template<Cid, bool>                 friend struct OwnershipDeepHeap;
+      template<Cid, class, Cid...>        friend struct CountStack;
+      template<Cid, class, Cid...>        friend struct ReserveStack;
+      template<Cid, class, Cid...>        friend struct HashStack;
+      template<Cid, class, Cid...>        friend struct HashHeap;
+      LglsComComparison(friend);
+      LglsComAssignment(friend);
+      template<CT::State...>              friend struct StateStack;
+      template<Cid, class, Cid...>        friend struct ReserveEmergent;
+      template<Cid, Cid...>               friend struct Conversion;
+      template<Cid, class, Cid...>        friend struct IndexedHashHeap;
+      template<Cid, class, Cid...>        friend struct IndexedHashStack;
 
 
       // Here lies the stack. It is an optimized tuple that is filled   
@@ -162,8 +164,8 @@ namespace Langulus::Anyness
       ///      is disowned, or hasn't been heap-allocated yet. This is the    
       ///      price you pay for keeping stuff on the heap - repeated safety  
       ///      checks. Another drawback is when cached variables, like hashes,
-      ///      are cached only when containers aren't disowned, and fallback  
-      ///      to emergent behavior (being recomputed on demand) otherwise.   
+      ///      are cached only when containers aren't disowned, thus fallback 
+      ///      to emergent behavior - being recomputed on demand.             
       template<CT::Component COM, CT::Container SELF>
       constexpr auto* AccessHeap(this SELF&& self) noexcept {
          static_assert(requires { typename COM::HeapRequest; },
@@ -342,6 +344,12 @@ namespace Langulus::Anyness
       }
 
    public:
+      ///                                                                     
+      /// THE UNIFYING INTERFACE                                              
+      ///                                                                     
+      /// All the following methods exist only if the appropriate method      
+      /// equivalents exist in one or more components.                        
+      
       /// Call AssignFrom in all components that implement it.                
       /// Fallback to AssignDefault otherwise.                                
       template<CT::Container SELF, CT::Container FROM>
@@ -355,7 +363,19 @@ namespace Langulus::Anyness
          });
          return self;
       }
+
+      /// Check if container contains pointers                                
+      ///   @return true if the block contains pointers                       
+      template<Cid ID = 0>
+      constexpr bool IsSparse(this auto const& self) noexcept {
+         return ComponentList::ForEachConstOr([&]<class C>{
+            if constexpr (requires { self.C::template IsSparse<ID>(); })
+               return self.C::template IsSparse<ID>();
+            else return No {};
+         });
+      }
    };
+   }
 
    namespace State
    {

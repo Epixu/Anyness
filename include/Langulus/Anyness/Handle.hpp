@@ -29,7 +29,7 @@ namespace Langulus::Anyness
 
       /// Statically typed handle to a dense element held inside a container  
       template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
-      using THandleEmbeddedDense = Container<
+      using THandleEmbeddedDense = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<0, 1u>,
@@ -44,7 +44,7 @@ namespace Langulus::Anyness
       
       /// Statically typed handle to a sparse element held inside a container 
       template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
-      using THandleEmbeddedSparse = Container<
+      using THandleEmbeddedSparse = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<0, 1u>,
@@ -58,7 +58,7 @@ namespace Langulus::Anyness
       
       /// Statically typed handle to a disowned element held inside container 
       template<CT::Reference T> requires CT::NotSheddable<T>
-      using THandleDisownedEmbedded = Container<
+      using THandleDisownedEmbedded = Com::Container<
          Com::TypedStatic<DMeta, Deref<T>>,
          Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<0, 1u>,
@@ -73,7 +73,7 @@ namespace Langulus::Anyness
       /// (isomorphic to TOwn)                                                
       //TODO inherit TOwn from this?
       template<CT::NotReference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
-      using THandleLocalDense = Container<
+      using THandleLocalDense = Com::Container<
          Com::TypedStatic<DMeta, T>,
          Com::Stack<T>,
          Com::CountStatic<0, 1u>,
@@ -86,7 +86,7 @@ namespace Langulus::Anyness
       /// Statically typed handle to a local sparse value.                    
       ///   @attention this handle is local and has strong ownership!         
       template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
-      using THandleLocalSparse = Container<
+      using THandleLocalSparse = Com::Container<
          Com::TypedStatic<DMeta, T>,
          Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,
          Com::CountStatic<0, 1u>,
@@ -106,7 +106,7 @@ namespace Langulus::Anyness
    /// It refers to a picked element inside a type-erased container.          
    ///   @attention handles are never (de)referenced upon construction and    
    ///      destruction - only on reassignment                                
-   struct HandleMut : Container<
+   struct HandleMut : Com::Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<0, 1u>,
@@ -158,7 +158,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased mutable handle without ownership.                        
    /// It refers to a picked element inside a type-erased container.          
-   struct HandleDisownedMut : Container<
+   struct HandleDisownedMut : Com::Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<0, 1u>,
@@ -212,7 +212,7 @@ namespace Langulus::Anyness
    ///      mutable, this isn't possible either, however the handle still     
    ///      carries ownership information, so that it can be used on demand   
    ///      instead of sought from the memory manager every time.             
-   struct Handle : Container<
+   struct Handle : Com::Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<0, 1u>,
@@ -261,7 +261,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A type-erased immutable handle without ownership.                      
    /// It refers to a picked element inside a type-erased container.          
-   struct HandleDisowned : Container<
+   struct HandleDisowned : Com::Container<
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<0, 1u>,
