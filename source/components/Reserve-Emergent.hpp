@@ -22,16 +22,19 @@ namespace Langulus::Anyness::Component
    struct ReserveEmergent {
       using CTTI_Component = Yes<>;
       using ReserveType = T;
+
+      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = -1000;
 
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Reserve type must be an unsigned integer");
 
       /// Get the number of reserved (maybe uninitialized) elements           
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       constexpr T GetReserved(this const C& self) noexcept {
-         if constexpr (requires { self.GetAllocation(); }) {
-            const auto al = self.GetAllocation();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         if constexpr (requires { self.template GetAllocation<SID>(); }) {
+            const auto al = self.template GetAllocation<SID>();
             if (not al)
                return 0;
 
@@ -45,11 +48,8 @@ namespace Langulus::Anyness::Component
                   "reserved elements beforehand."
                );
 
-               const size_t header = self.GetHeapHeaderSize();
-               if constexpr (CT::TypeErased<C>)
-                  return (al->GetSize() - header) / self.GetStride();
-               else
-                  return (al->GetSize() - header) / sizeof(TypeOf<C>);
+               const size_t header = self.template GetHeapHeaderSize<SID>();
+               return (al->GetSize() - header) / self.template GetStride<SID>();
             }
          }
          else if constexpr (CT::ContainsOne<C>)
@@ -67,12 +67,13 @@ namespace Langulus::Anyness::Component
       /// If reserved data is smaller than currently initialized count, the   
       /// excess elements will be dereferenced/destroyed.                     
       ///   @param reserve number of elements to reserve                      
-      template<CT::ContainsMany C>
+      template<Cid SID = ID, CT::ContainsMany C>
       C& Reserve(this C& self, const T reserve) {
-         if (reserve < self.GetCount())
-            self.AllocateLess(reserve);
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         if (reserve < self.template GetCount<SID>())
+            self.template AllocateLess<SID>(reserve);
          else
-            self.AllocateMore(reserve);
+            self.template AllocateMore<SID>(reserve);
          return self;
       }
    };

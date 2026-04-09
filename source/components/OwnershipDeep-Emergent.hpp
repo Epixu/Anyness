@@ -35,6 +35,7 @@ namespace Langulus::Anyness::Component
    struct OwnershipDeepEmergent {
       using CTTI_Component = Yes<>;
       
+      static constexpr Cid  Id = ID;
       static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = REF_INDIVIDUAL;
       static constexpr int  ComponentPrecedence = 2000;

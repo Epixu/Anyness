@@ -334,7 +334,7 @@ namespace Langulus::Anyness
       /// Go through all components and accumulate their heap requests into   
       /// a byte amount, used for header size when allocating                 
       ///   @return the size of the heap header in bytes                      
-      template<class C1, class...CN>
+      template<Cid ID, class C1, class...CN>
       consteval size_t DefineHeapHeader() {
          if constexpr (requires { typename C1::HeapRequest; }) {
             size_t offset = 0;
@@ -343,16 +343,17 @@ namespace Langulus::Anyness
                ;
             else if constexpr (requires { R::AllocatedPerElement; })
                ;
-            else offset += sizeof(R);
+            else if constexpr (C1::Id == ID)
+               offset += sizeof(R);
             
             if constexpr (sizeof...(CN))
-               return offset + DefineHeapHeader<CN...>();
+               return offset + DefineHeapHeader<ID, CN...>();
             else
                return offset;
          }
          else {
             if constexpr (sizeof...(CN))
-               return DefineHeapHeader<CN...>();
+               return DefineHeapHeader<ID, CN...>();
             else
                return 0;
          }

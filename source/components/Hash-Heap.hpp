@@ -27,22 +27,28 @@ namespace Langulus::Anyness::Component
    struct HashHeap : HashEmergent<ID, H> {
       using HeapRequest = H;
 
+      static constexpr Cid Id = ID;
+
       /// Reset the hash. It will be recomputed on next comparison.           
+      template<Cid SID = ID>
       void ResetHash(this auto& self) noexcept {
-         self.SetHashInner(self.IsEmpty() ? 1 : 0);
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         self.template SetHashInner<SID>(self.template IsEmpty<SID>() ? 1 : 0);
       }
 
       /// Get the hash, recompute it if uninitialized or of we don't own it.  
+      template<Cid SID = ID>
       H GetHash(this auto const& self) assumptious {
-         if (self.IsEmpty())
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         if (self.template IsEmpty<SID>())
             return H {1};
-         else if (self.GetUses() == 0)
-            return self.HashRecompute();
+         else if (self.template GetUses<SID>() == 0)
+            return self.template HashRecompute<SID>();
 
          const auto heap = self.template AccessHeap<HashHeap>();
-         LglsAssumeDevAndOptimize( heap, "Invalid heap");
+         LglsAssumeDevAndOptimize(heap, "Invalid heap");
          if (not *heap)
-            const_cast<H&>(*heap) = self.HashRecompute();
+            const_cast<H&>(*heap) = self.template HashRecompute<SID>();
          return *heap;
       }
 
@@ -51,10 +57,12 @@ namespace Langulus::Anyness::Component
       template<Cid, Cid...>                       friend struct Conversion;
 
       /// Get hash (inner) - will never recompute it                          
+      template<Cid SID = ID>
       constexpr auto GetHashInner(this auto&& self) noexcept -> H const {
-         if (self.IsEmpty())
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         if (self.template IsEmpty<SID>())
             return H {1};
-         else if (self.GetUses() == 0)
+         else if (self.template GetUses<SID>() == 0)
             return H {0};
 
          const auto heap = self.template AccessHeap<HashHeap>();
@@ -63,8 +71,10 @@ namespace Langulus::Anyness::Component
       
       /// Set the hash (inner)                                                
       ///   @attention will not work for disowned containers                  
+      template<Cid SID = ID>
       constexpr void SetHashInner(this auto& self, H h) noexcept {
-         if (self.IsEmpty() or self.GetUses() == 0)
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         if (self.template IsEmpty<SID>() or self.template GetUses<SID>() == 0)
             return;
 
          const auto heap = self.template AccessHeap<HashHeap>();

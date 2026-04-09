@@ -15,9 +15,11 @@ namespace Langulus::Anyness::Component
    template<CT::State...STATES>
    struct StateHeap {
       using CTTI_Component = Yes<>;
-      static constexpr int ComponentPrecedence = -1000;
 
+      //static constexpr Cid Id = ID;
+      static constexpr int ComponentPrecedence = -1000;
       static constexpr size_t StateCount = sizeof...(STATES);
+
       using StateType = Tif<sizeof...(STATES) <= 8, uint8_t, uint16_t>;
 
       template<class Self>

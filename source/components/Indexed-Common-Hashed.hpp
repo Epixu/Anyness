@@ -26,6 +26,7 @@ namespace Langulus::Anyness::Component
    protected:
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
+
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 

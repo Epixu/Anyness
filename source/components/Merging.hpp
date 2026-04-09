@@ -21,6 +21,11 @@ namespace Langulus::Anyness::Component
    ///      and text containers. Use void to insert without serialization.    
    template<Cid ID, class AS>
    struct Merging {
+      using CTTI_Component = Yes<>;
+
+      static constexpr Cid Id = ID;
+      static constexpr int ComponentPrecedence = 3000;
+
    private:
       template<CT::Container C>
       using Count = typename C::CountType;
@@ -28,9 +33,6 @@ namespace Langulus::Anyness::Component
       using Deep = typename C::DeepType;
 
    public:
-      using CTTI_Component = Yes<>;
-      static constexpr int ComponentPrecedence = 3000;
-
       /// Merging at specific index                                           
       template<class A1, class...AN, CT::IndexedLinearly C>
       auto MergeAt(this C&, CT::Index auto, A1&&, AN&&...)

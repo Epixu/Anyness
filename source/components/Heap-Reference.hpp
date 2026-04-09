@@ -347,8 +347,9 @@ namespace Langulus::Anyness::Component
       }
 
       /// Set the heap pointer, any data pointer will do                      
-      template<CT::Sparse P>
+      template<Cid SID = ID, CT::Sparse P>
       /*constexpr*/ void SetHeapInner(this auto& self, P heap) assumptious { //can't be constexpr due to GCC ICE
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (Exact<P, StackRequest>)
             self.GetHeapInner() = heap;
          else if constexpr (CT::CustomPointer<P>)
@@ -357,7 +358,9 @@ namespace Langulus::Anyness::Component
             self.GetHeapInner() = static_cast<StackRequest>(DecvqAllCast(heap));
       }
 
+      template<Cid SID = ID>
       constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          self.GetHeapInner() = nullptr;
       }
 
@@ -484,10 +487,10 @@ namespace Langulus::Anyness::Component
       
       /// Get a size based on reflected allocation page and count             
       ///   @param reserve the number of elements to request                  
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       Request RequestHeap(this C const& self, const size_t reserve) assumptious {
          Request result;
-         result.mHeaderBytes = self.GetHeapHeaderSize();
+         result.mHeaderBytes = self.template GetHeapHeaderSize<SID>();
 
          if constexpr (C::CountHeapFooterRequests()) {
             // When there are footer requests (heap requests that          

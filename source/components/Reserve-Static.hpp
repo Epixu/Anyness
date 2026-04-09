@@ -13,16 +13,22 @@ namespace Langulus::Anyness::Component
 {
    ///                                                                        
    /// A static reserve                                                       
-   template<auto SIZE>
+   template<Cid ID, auto SIZE, Cid...SHARED>
    struct ReserveStatic {
       using CTTI_Component = Yes<>;
       using ReserveType = decltype(SIZE);
+
+      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = -1000;
 
       static_assert(SIZE > 0,
          "Can't have a container of zero or negative capacity");
 
       /// Get the number of reserved (maybe uninitialized) elements           
-      constexpr auto GetReserved() const noexcept -> ReserveType { return SIZE; }
+      template<Cid SID = ID>
+      constexpr auto GetReserved() const noexcept -> ReserveType {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         return SIZE;
+      }
    };
 }

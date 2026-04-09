@@ -22,16 +22,22 @@ namespace Langulus::Anyness::Component
    struct HashStack : HashEmergent<ID, H> {
       using StackRequest = H;
       
+      static constexpr Cid Id = ID;
+
       /// Reset the hash. It will be recomputed on next comparison.           
+      template<Cid SID = ID>
       void ResetHash(this auto& self) noexcept {
-         self.SetHashInner(self.IsEmpty() ? 1 : 0);
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         self.template SetHashInner<SID>(self.template IsEmpty<SID>() ? 1 : 0);
       }
 
       /// Get the hash, recompute it if uninitialized                         
+      template<Cid SID = ID>
       H GetHash(this auto const& self) noexcept {
-         auto& cached = self.GetHashInner();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         auto& cached = self.template GetHashInner<SID>();
          if (not cached)
-            const_cast<H&>(cached) = self.HashRecompute();
+            const_cast<H&>(cached) = self.template HashRecompute<SID>();
          return cached;
       }
 
@@ -40,19 +46,25 @@ namespace Langulus::Anyness::Component
       template<Cid, Cid...>                       friend struct Conversion;
 
       /// Get hash (inner) - will not recompute it                            
+      template<Cid SID = ID>
       constexpr auto& GetHashInner(this auto&& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template AccessStack<HashStack>();
       }
       
       /// Set the hash (inner)                                                
+      template<Cid SID = ID>
       constexpr void SetHashInner(this auto& self, H h) noexcept {
-         self.GetHashInner() = h;
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         self.template GetHashInner<SID>() = h;
       }
 
       /// Hash is default-initialized to 1, because that's a universal value  
       /// for an empty container. Prevents rehash until something is pushed.  
+      template<Cid SID = ID>
       constexpr void ConstructDefault(this auto& self) noexcept {
-         self.SetHashInner(1);
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         self.template SetHashInner<SID>(1);
       }
       
       /// Transfer from any kind of container, respecting intents             

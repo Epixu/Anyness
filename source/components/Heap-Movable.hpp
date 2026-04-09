@@ -27,10 +27,10 @@ namespace Langulus::Anyness::Component
    ///      including support for packed pointers.                            
    template<Cid ID, uint INITIAL_SIZE, uint GROWTH_FACTOR, CT::HeapEntry...ENTRIES>
    struct HeapMovable : HeapReference<ID, ENTRIES...> {
-      static constexpr Cid  Id = ID;
-      static constexpr Cid  HeapProvider = ID;
-      static constexpr int  ComponentPrecedence = -2000;
-      static constexpr bool HeapCanBeNull = true;
+      //static constexpr Cid  Id = ID;
+      //static constexpr Cid  HeapProvider = ID;
+      //static constexpr int  ComponentPrecedence = -2000;
+      //static constexpr bool HeapCanBeNull = true;
       static constexpr uint InitialSize = INITIAL_SIZE;
       static constexpr uint GrowthFactor = GROWTH_FACTOR;
 
@@ -69,14 +69,14 @@ namespace Langulus::Anyness::Component
             // When copying, we're cloning just the first layer, so we  
             // guarantee that data is no longer static and constant at  
             // the first level of indirection.                          
-            auto type = from.GetType().GetDecvq();
-            self.SetType(type);
-            auto count = from.GetCount();
+            auto type = from.template GetType<ID>().GetDecvq();
+            self.template SetType<ID>(type);
+            auto count = from.template GetCount<ID>();
             if (0 == count) {
-               self.SetAllocationInner(nullptr);
-               if_available(self.SetReservedInner(0)); //TODO redundant?
-               if_available(self.SetHashTableInner(nullptr));
-               self.ResetCount();
+               self.template SetAllocationInner<ID>(nullptr);
+               if_available(self.template SetReservedInner<ID>(0)); //TODO redundant?
+               if_available(self.template SetHashTableInner<ID>(nullptr));
+               self.template ResetCount<ID>();
                return;
             }
 
@@ -112,10 +112,10 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Contiguous<C>)
                self.AllocateFresh(self.RequestHeap(count));
             else
-               self.AllocateFresh(self.RequestHeap(from.GetReserved()));
+               self.AllocateFresh(self.RequestHeap(from.template GetReserved<ID>()));
 
-            if_available(self.SetCountInner(count));
-            auto dst = self.GetHandle();
+            if_available(self.template SetCountInner<ID>(count));
+            auto dst = self.template GetHandle<void, ID>();
             try {
                from.Apply([&dst,&self,&from](auto const& src) {
                   (void) self; (void) from;
@@ -127,8 +127,8 @@ namespace Langulus::Anyness::Component
 
                      if constexpr (not CT::Contiguous<C>) {
                         // Copy hash table entry as well                
-                        const auto idx = dst - self.GetHandle();
-                        self.GetHashTableInner()[idx] = from.GetHashTableInner()[idx];
+                        const auto idx = dst - self.template GetHandle<void, ID>();
+                        self.template GetHashTableInner<ID>()[idx] = from.template GetHashTableInner<ID>()[idx];
                      }
                   }
                   ++dst;
@@ -136,8 +136,8 @@ namespace Langulus::Anyness::Component
             }
             catch (...) {
                // Partial success                                       
-               auto n = dst - self.GetHandle();
-               if constexpr (not requires { self.SetCountInner(1); }) {
+               auto n = dst - self.template GetHandle<void, ID>();
+               if constexpr (not requires { self.template SetCountInner<ID>(1); }) {
                   // Partial success is not allowed - we have to        
                   // destroy everything we initialized                  
                   while (n) {
@@ -146,29 +146,29 @@ namespace Langulus::Anyness::Component
                      --n;
                   }
                }
-               self.PartialSuccess(n);
+               self.template PartialSuccess<ID>(n);
                throw;
             }
                      
             // Full success                                             
-            if constexpr (requires { from.GetHashInner(); }) {
-                    if_available(self.SetHashInner(from.GetHashInner()))
-               else if_available(self.ResetHash())
+            if constexpr (requires { from.template GetHashInner<ID>(); }) {
+                    if_available(self.template SetHashInner<ID>(from.template GetHashInner<ID>()))
+               else if_available(self.template ResetHash<ID>())
             }
          }
          else {
             // Move/Refer/Abandon/Disown other                          
             static_assert(I::IsShallow());
-            self.SetType(from.GetType());
-            self.SetHeapInner(from.GetHeapInner());
+            self.template SetType<ID>(from.template GetType<ID>());
+            self.template SetHeapInner<ID>(from.template GetHeapInner<ID>());
 
             if constexpr (I::IsKept()) {
                if constexpr (I::IsMoved()) {
                   // Move                                               
                   if constexpr (CT::AutoOwned<I>) {
-                     from.SetHeapInner(nullptr);
-                     if_available(from.ResetState());
-                     if_available(from.ResetType());
+                     from.template SetHeapInner<ID>(nullptr);
+                     if_available(from.template ResetState<ID>());
+                     if_available(from.template ResetType<ID>());
                   }
                }
                else static_assert(CT::Referred<I>);
@@ -230,8 +230,9 @@ namespace Langulus::Anyness::Component
       /// Allocate a number of elements, relying on the type of the container 
       ///   @attention assumes container is typed                             
       ///   @param elements number of elements to allocate                    
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       void AllocateMore(this C& self, Count<C> elements) {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (InitialSize and GrowthFactor) {
             // We override allocation size with predefined parameters,  
             // if such are defined                                      
@@ -242,6 +243,7 @@ namespace Langulus::Anyness::Component
                while (elements > InitialSize + growth)
                   growth *= GrowthFactor;
                elements = InitialSize + growth;
+               //TODO when pagefile size is reached, start growing linearly by pagefile-sized intervals. this way we minimize cache misses in huge hash tables
             }
          }
 
@@ -327,8 +329,9 @@ namespace Langulus::Anyness::Component
       /// When MANAGED_MEMORY is enabled we have a strong guarantee that      
       /// allocations never move when shrinking.                              
       ///   @param desiredReserve number of elements to reserve               
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       void AllocateLess(this C& self, const Count<C> desiredReserve) {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(CT::ContainsMany<C>,
             "This makes sense to be called only by containers that support many elements");
 
@@ -392,8 +395,9 @@ namespace Langulus::Anyness::Component
 
       /// Remap footer requests onto the new reserve                          
       ///   @param newReserved the newly reserved number of elements          
-      template<CT::Container C> requires (C::CountHeapFooterRequests() > 0)
+      template<Cid SID = ID, CT::Container C> requires (C::CountHeapFooterRequests() > 0)
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          const auto size     = self.GetStride();
          const auto reserved = self.GetReserved();
          const auto indirect = self.GetIndirections();
@@ -405,39 +409,40 @@ namespace Langulus::Anyness::Component
          
          C::ComponentList::ForEach([&]<class COM>{
             if constexpr (requires { typename COM::HeapRequest; }) {
-               using R = typename COM::HeapRequest;
-
-               if constexpr (requires { R::AllocatedPerIndirection; }) {
-                  if constexpr (requires { R::Type::AllocatedPerElement; }) {
-                     const size_t shift = sizeof(typename R::Type::Type) * indirect;
+               if constexpr (COM::Id == SID) {
+                  using R = typename COM::HeapRequest;
+                  if constexpr (requires { R::AllocatedPerIndirection; }) {
+                     if constexpr (requires { R::Type::AllocatedPerElement; }) {
+                        const size_t shift = sizeof(typename R::Type::Type) * indirect;
+                        from[idx] = from[idx-1] + shift * reserved;
+                        to  [idx] = to  [idx-1] + shift * newReserved;
+                     }
+                     else {
+                        const size_t shift = sizeof(typename R::Type) * indirect;
+                        from[idx] = from[idx-1] + shift;
+                        to  [idx] = to  [idx-1] + shift;
+                     }
+                  
+                     ++idx;
+                  }
+                  else if constexpr (requires { R::AllocatedPerElement; }) {
+                     size_t shift;
+                     if constexpr (requires { R::Type::AllocatedPerIndirection; })
+                        shift = sizeof(typename R::Type::Type) * indirect;
+                     else
+                        shift = sizeof(typename R::Type);
+                  
                      from[idx] = from[idx-1] + shift * reserved;
                      to  [idx] = to  [idx-1] + shift * newReserved;
-                  }
-                  else {
-                     const size_t shift = sizeof(typename R::Type) * indirect;
-                     from[idx] = from[idx-1] + shift;
-                     to  [idx] = to  [idx-1] + shift;
-                  }
-                  
-                  ++idx;
-               }
-               else if constexpr (requires { R::AllocatedPerElement; }) {
-                  size_t shift;
-                  if constexpr (requires { R::Type::AllocatedPerIndirection; })
-                     shift = sizeof(typename R::Type::Type) * indirect;
-                  else
-                     shift = sizeof(typename R::Type);
-                  
-                  from[idx] = from[idx-1] + shift * reserved;
-                  to  [idx] = to  [idx-1] + shift * newReserved;
 
-                  ++idx;
+                     ++idx;
+                  }
                }
             }            
          });
 
-         const auto footer = self.GetAllocation()->GetBlockStart()
-                           + self.GetHeapHeaderSize();
+         const auto footer = self.template GetAllocation<SID>()->GetBlockStart()
+                           + self.template GetHeapHeaderSize<SID>();
          const auto to_footer = footer + newReserved * size;
          const auto from_footer = footer + reserved * size;
 
@@ -466,28 +471,29 @@ namespace Langulus::Anyness::Component
 
       /// Invoked to remedy the situation when element constructors throw     
       ///   @param n the number of elements that were actually initialized    
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       void PartialSuccess(this C& self, Count<C> n) {
-         if constexpr (requires { self.SetCountInner(1); }) {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
+         if constexpr (requires { self.template SetCountInner<SID>(1); }) {
             // Partial success is supported                             
-            self.SetCountInner(n);
-            self.ResetHash(); // If n == 0, hash is 1; 0 otherwise      
+            self.template SetCountInner<SID>(n);
+            self.template ResetHash<SID>(); // If n == 0, hash is 1; 0 otherwise      
 
             if constexpr (not CT::Contiguous<C>) {
                // Partial success involving maps/sets might result in   
                // gaps in the hash table that need to be accounted for. 
-               self.ShiftEntries();
+               self.template ShiftEntries<SID>();
             }
          }
          else {
             // Partial success is not allowed - we have to deallocate   
             // and make sure CountStatic reports as empty.              
             (void) n;
-            Allocator::Deallocate(DecvqAllCast(self.GetAllocationInner()));
-            self.SetAllocationInner(nullptr);
-            if_available(self.SetReservedInner(0));
-            if_available(self.SetHashTableInner(nullptr));
-            self.ResetCount();
+            Allocator::Deallocate(DecvqAllCast(self.template GetAllocationInner<SID>()));
+            self.template SetAllocationInner<SID>(nullptr);
+            if_available(self.template SetReservedInner<SID>(0));
+            if_available(self.template SetHashTableInner<SID>(nullptr));
+            self.template ResetCount<SID>();
          }
       }
 

@@ -202,28 +202,14 @@ namespace Langulus::Anyness::Inner
             and lhs.template CompareOneEqual<1>(rhs.val);
       }
 
-      /// Get the contained type                                              
-      ///   @tparam SELECTOR - 0 for key type, 1 for value type               
-      template<Cid SELECTOR>
-      constexpr DMeta GetType() const noexcept {
-         return this->Com::TypedStack<DMeta, void, false, SELECTOR>::GetType();
-      }
-
       /// Get the key type                                                    
       constexpr DMeta GetKeyType() const noexcept {
-         return GetType<0>();
+         return this->template GetType<0>();
       }
 
       /// Get the value type                                                  
       constexpr DMeta GetValType() const noexcept {
-         return GetType<1>();
-      }
-
-      /// Get the deep referenced entries                                     
-      ///   @tparam SELECTOR - 0 for key entries, 1 for value entries         
-      template<Cid SELECTOR>
-      auto GetEntries() const assumptious {
-         return this->Com::OwnershipDeepHeap<SELECTOR>::GetEntries();
+         return this->template GetType<1>();
       }
    };
 }

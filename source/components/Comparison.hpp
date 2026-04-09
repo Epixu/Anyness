@@ -48,6 +48,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, bool HASH, Cid...SHARED>
    struct Comparison {
       using CTTI_Component = Yes<>;
+      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = 3000;
       static constexpr bool Shared = (sizeof...(SHARED) > 0);
 

@@ -22,6 +22,7 @@ namespace Langulus::Anyness::Component
    struct IndexedCommon {
       using CTTI_Component = Yes<>;
 
+      static constexpr Cid  Id = ID;
       static constexpr bool Indexed = true;
       static constexpr bool Shared = sizeof...(SHARED) > 0;
       static constexpr int  ComponentPrecedence = 0;

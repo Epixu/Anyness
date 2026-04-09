@@ -28,13 +28,17 @@ namespace Langulus::Anyness::Component
       using IteratorCategory = typename IndexedCommonHashed<ID, HASH>::IteratorCategory;
 
       /// Get the start of the hash table                                     
+      template<Cid SID = ID>
       constexpr auto GetHashTable(this auto const& self) noexcept -> TableType const* {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template AccessHeap<IndexedHashHeap>();
       }
 
       /// Get the end of the hash table                                       
+      template<Cid SID = ID>
       constexpr auto GetHashTableEnd(this auto const& self) noexcept -> TableType const* {
-         return self.GetHashTable() + self.GetReserved();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         return self.template GetHashTable<SID>() + self.template GetReserved<SID>();
       }
 
    protected:
@@ -45,18 +49,25 @@ namespace Langulus::Anyness::Component
       template<Cid, Cid...>         friend struct Removal;
 
       /// Get the start of the hash table (inner)                             
+      template<Cid SID = ID>
       constexpr auto* GetHashTableInner(this auto&& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template AccessHeap<IndexedHashHeap>();
+      }
+
+      /// This method is called to erase the hash table                       
+      template<Cid SID = ID>
+      constexpr void ResetHashTable(this auto& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         memset(
+            self.template GetHashTableInner<SID>(), 0,
+            self.template GetReserved<SID>() * sizeof(TableType)
+         );
       }
 
       /// This method is called upon allocation to nullify table              
       constexpr void ConstructHeapRequest(this auto& self) noexcept {
          self.ResetHashTable();
-      }
-
-      /// This method is called to erase the hash table                       
-      constexpr void ResetHashTable(this auto& self) noexcept {
-         memset(self.GetHashTableInner(), 0, self.GetReserved() * sizeof(TableType));
       }
    };
 }

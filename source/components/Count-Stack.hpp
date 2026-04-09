@@ -27,6 +27,7 @@ namespace Langulus::Anyness::Component
       using IndexType      = Index::At<T>;
       using StackRequest   = T;
 
+      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
 
@@ -66,12 +67,16 @@ namespace Langulus::Anyness::Component
       template<Cid, Cid...>      friend struct Conversion;
 
       /// Get count (inner)                                                   
+      template<Cid SID = ID>
       constexpr auto& GetCountInner(this auto&& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template AccessStack<CountStack>();
       }
       
       /// Set the number of initialized elements                              
+      template<Cid SID = ID>
       constexpr void SetCountInner(this auto& self, T c) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          self.GetCountInner() = c;
       }
       
@@ -98,10 +103,11 @@ namespace Langulus::Anyness::Component
 
       /// Reset count (inner)                                                 
       ///   @attention doesn't destroy elements, only resets hash and count   
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       constexpr void ResetCount(this C& self) noexcept {
-         self.SetCountInner(0);
-         if_available(self.SetHashInner(1));
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         self.template SetCountInner<SID>(0);
+         if_available(self.template SetHashInner<SID>(1));
       }
    };
 }

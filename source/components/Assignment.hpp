@@ -80,6 +80,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID>
    struct Assignment {
       using CTTI_Component = Yes<>;
+      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 3000;
 
       //template<CT::Container C, class A>

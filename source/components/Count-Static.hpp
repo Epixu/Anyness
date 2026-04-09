@@ -36,6 +36,8 @@ namespace Langulus::Anyness::Component
    struct CountStatic {
       using CTTI_Component  = Yes<>;
       using CTTI_Contiguous = Maybe<COUNT == 1>;
+
+      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = COUNT > 1;
 

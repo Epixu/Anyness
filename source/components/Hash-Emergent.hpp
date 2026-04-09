@@ -21,30 +21,35 @@ namespace Langulus::Anyness::Component
    template<Cid ID, class H, Cid...SHARED>
    struct HashEmergent {
       using CTTI_Component = Yes<>;
+
+      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 2000;
 
       /// Get the hash, recompute it every time                               
+      template<Cid SID = ID>
       H GetHash(this auto const& self) {
-         return self.HashRecompute();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         return self.template HashRecompute<SID>();
       }
 
       /// Generate a hash from contiguous data. Allows for batch optimization.
       ///   @attention order matters                                          
-      template<CT::Container C> requires CT::Contiguous<C>
+      template<Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
       H HashRecompute(this C const& self) {
-         if (self.IsEmpty())
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         if (self.template IsEmpty<SID>())
             return {1};
 
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Container is type-erased                                 
-            const DMeta T = self.GetType();
+            const DMeta T = self.template GetType<SID>();
             LglsAssumeDev(T, "Can't hash untyped container");
             const auto hasher = T.GetHasher();
             LglsAssumeDev(hasher, "Not hashable");
 
-            const auto data = const_cast<void*>(self.GetRaw());
-            if (self.GetCount() == 1) {
+            const auto data = const_cast<void*>(self.template GetRaw<SID>());
+            if (self.template GetCount<SID>() == 1) {
                // Exactly one element means exactly one hash            
                return hasher(data);
             }
@@ -55,7 +60,7 @@ namespace Langulus::Anyness::Component
                // Hash all PODs at once, this includes any pointers     
                // That is unless T::GetHash() method exists             
                return HashBytes(
-                  {static_cast<uint8_t*>(data), self.GetBytesize()},
+                  {static_cast<uint8_t*>(data), self.template GetBytesize<SID>()},
                   DefaultHashSeed
                );
             }
@@ -71,7 +76,7 @@ namespace Langulus::Anyness::Component
                // Hash each element, and then combine hashes            
                // @note this is reached only if GetCount() > 1          
                ::std::vector<H> h;
-               h.reserve(self.GetCount());
+               h.reserve(self.template GetCount<SID>());
                for (auto element : self)
                   h.emplace_back(hasher(element.GetRaw()));
 
@@ -87,9 +92,9 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C>;
             static_assert(CT::Hashable<T>, "Not hashable");
 
-            if (self.GetCount() == 1) {
+            if (self.template GetCount<SID>() == 1) {
                // Exactly one element means exactly one hash            
-               return HashOf(*self.GetRaw());
+               return HashOf(*self.template GetRaw<SID>());
             }
 
             // Hashing multiple elements                                
@@ -98,7 +103,7 @@ namespace Langulus::Anyness::Component
                // Hash all PODs at once, this includes any pointers     
                // That is unless T::GetHash() method exists             
                return HashBytes(
-                  {reinterpret_cast<const uint8_t*>(self.GetRaw()), self.GetBytesize()},
+                  {reinterpret_cast<const uint8_t*>(self.template GetRaw<SID>()), self.template GetBytesize<SID>()},
                   DefaultHashSeed
                );
             }
@@ -107,13 +112,13 @@ namespace Langulus::Anyness::Component
                // @note this is reached only if GetCount() > 1, so      
                // technically shouldn't ever be reached, but iteration  
                // won't work on single-element containers either way.   
-               return HashOf(*self.GetRaw());
+               return HashOf(*self.template GetRaw<SID>());
             }
             else {
                // Hash each element, and then combine hashes            
                // @note this is reached only if GetCount() > 1          
                ::std::vector<H> h;
-               h.reserve(self.GetCount());
+               h.reserve(self.template GetCount<SID>());
                for (T const& element : self)
                   h.emplace_back(HashOf(element));
                
@@ -128,14 +133,15 @@ namespace Langulus::Anyness::Component
       /// Generate a hash from discontiguous data. Basically disables batch   
       /// optimizations.                                                      
       ///   @attention order matters                                          
-      template<CT::Container C> requires CT::NotContiguous<C>
+      template<Cid SID = ID, CT::Container C> requires CT::NotContiguous<C>
       H HashRecompute(this C const& self) {
-         if (self.IsEmpty())
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         if (self.template IsEmpty<SID>())
             return {1};
 
          // Do some assumption checking                                 
          if constexpr (CT::TypeErased<C>) {
-            const DMeta T = self.GetType();
+            const DMeta T = self.template GetType<SID>();
             LglsAssumeDev(T, "Can't hash untyped container");
             LglsAssumeDev(T.GetHasher(), "Not hashable");
          }
@@ -146,7 +152,7 @@ namespace Langulus::Anyness::Component
 
          // Hash all elements                                           
          ::std::vector<H> h;
-         h.reserve(self.GetCount());
+         h.reserve(self.template GetCount<SID>());
          self.Apply([&h](auto const& item) {
             if constexpr (CT::Supported<decltype(item)>)
                h.emplace_back(HashOf(item));
@@ -169,6 +175,10 @@ namespace Langulus::Anyness::Component
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
 
       /// This always returns an invalid hash to enforce regeneration         
-      constexpr H GetHashInner() const noexcept { return 0; }
+      template<Cid SID = ID>
+      constexpr H GetHashInner() const noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         return 0;
+      }
    };
 }

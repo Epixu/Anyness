@@ -30,6 +30,7 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
 
+      static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -3000;
       static constexpr bool TypeErased = false;
       static constexpr bool Sparse     = CT::Sparse<TYPE>;

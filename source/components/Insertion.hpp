@@ -82,6 +82,8 @@ namespace Langulus::Anyness::Component
    template<Cid ID, class AS>
    struct Insertion {
       using CTTI_Component = Yes<>;
+
+      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 3000;
 
    private:

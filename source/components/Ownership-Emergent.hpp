@@ -14,7 +14,7 @@
 namespace Langulus::Anyness::Component
 {
    using RTTI::DMeta;
-   
+
    ///                                                                        
    /// Heap allocation will be searched on demand every time.                 
    /// Manage its ownership by referencing and dereferencing it.              
@@ -30,6 +30,7 @@ namespace Langulus::Anyness::Component
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
 
+      static constexpr Cid  Id = ID;
       static constexpr bool Owned = true;
       static constexpr bool AutoOwned = AUTO;
       static constexpr int  ComponentPrecedence = 1000;
@@ -51,20 +52,29 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get the memory reference count                                      
+      template<Cid SID = ID>
       auto GetUses(this auto const& self) noexcept {
-         auto a = self.GetAllocation();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         auto a = self.template GetAllocation<SID>();
          return a ? a->GetUses() : 0;
       }
 
       /// Shallow-copy all initialized elements in memory to another          
       /// allocation, that is owned once only by this container.              
       ///   @attention does nothing if we already have ownership              
-      template<CT::Container C> requires CT::HeapAllocated<C>
+      ///   @attention when emergent, this will copy data only if not owned   
+      ///      by the memory manager.                                         
+      template<Cid SID = ID, CT::Container C> requires CT::HeapAllocated<C>
       void TakeOwnership(this C& self) {
-         if (not self.GetHeapInner() or self.GetAllocation())
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         if (not self.template GetHeapInner<SID>()
+              or self.template GetAllocation<SID>())
             return;
 
          // Shallow-copy all elements in a fresh allocation             
+         // Notice this works on the entire container, not the SID only.
+         // SID is used only for early exit, and it should stop copying 
+         // the moment ownership has been provided.                     
          C temp {Copy {self}};
          self = Abandon {temp};
       }

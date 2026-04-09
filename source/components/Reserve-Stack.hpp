@@ -22,13 +22,17 @@ namespace Langulus::Anyness::Component
       using CTTI_Component = Yes<>;
       using ReserveType = T;
       using StackRequest = T;
+
+      static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = -1000;
      
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Reserve type must be an unsigned integer");
 
       /// Get the number of reserved (maybe uninitialized) elements           
+      template<Cid SID = ID>
       constexpr T GetReserved(this auto const& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.GetReservedInner();
       }
 
@@ -36,12 +40,13 @@ namespace Langulus::Anyness::Component
       /// If reserved data is smaller than currently initialized count, the   
       /// excess elements will be dereferenced/destroyed.                     
       ///   @param reserve number of elements to reserve                      
-      template<CT::ContainsMany C>
+      template<Cid SID = ID, CT::ContainsMany C>
       C& Reserve(this C& self, const T reserve) {
-         if (reserve < self.GetCount())
-            self.AllocateLess(reserve);
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         if (reserve < self.template GetCount<SID>())
+            self.template AllocateLess<SID>(reserve);
          else
-            self.AllocateMore(reserve);
+            self.template AllocateMore<SID>(reserve);
          return self;
       }
 

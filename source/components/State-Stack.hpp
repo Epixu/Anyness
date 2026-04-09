@@ -27,12 +27,13 @@ namespace Langulus::Anyness::Component
    template<CT::State...STATES>
    struct LANGULUS_EBCO StateStack : STATES... {
       using CTTI_Component = Yes<>;
-      static constexpr int ComponentPrecedence = 4000;
-
       using StateList = Types<STATES...>;
       using StateType = Tif<sizeof...(STATES) < 8, uint8_t, uint16_t>;
+
+      //static constexpr Cid Id = ID;
+      static constexpr int ComponentPrecedence = 4000;
       static constexpr StateType StateCount = sizeof...(STATES);
-      static_assert(StateCount >  0, "Has to have at least one state");
+      static_assert(StateCount > 0, "Has to have at least one state");
       static_assert(StateCount < 16, "Too many states");
 
    protected:

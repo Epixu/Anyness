@@ -40,10 +40,9 @@ namespace Langulus::Anyness::Component
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires (SID == ID)
       auto GetEntries(this auto const& self) assumptious
       -> Allocation const* const* {
-         static_assert(SID == ID);
          if (self.template IsSparse<SID>()
          and self.template GetRaw<SID>() and self.template GetAllocation<SID>())
             return ThisCom::GetEntriesInner();
@@ -52,7 +51,7 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<Cid SID = ID, CT::Container C> requires CT::Indexed<C>
+      template<Cid SID = ID, CT::Container C> requires (SID == ID and CT::Indexed<C>)
       auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
       -> Allocation const* const* {
          static_assert(SID == ID);

@@ -35,8 +35,9 @@ namespace Langulus::Anyness::Component
       /// Shallow-copy all initialized elements in memory to another          
       /// allocation, that is owned once only by this container.              
       ///   @attention if we already own the memory just Keep() it once       
-      template<CT::Container C> requires CT::HeapAllocated<C>
+      template<Cid SID = ID, CT::Container C> requires CT::HeapAllocated<C>
       void TakeOwnership(this C& self) {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          if (not self.GetHeapInner())
             return;
 
@@ -66,20 +67,26 @@ namespace Langulus::Anyness::Component
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   
+      template<Cid SID = ID>
       constexpr auto& GetAllocationInner(this auto&& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template AccessStack<OwnershipStack>();
       }
       
       /// Set allocation (inner)                                              
       ///   @attention this will not dereference previous allocation          
+      template<Cid SID = ID>
       constexpr void SetAllocationInner(this auto& self, Allocation const* a) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          self.GetAllocationInner() = const_cast<Allocation*>(a);
       }
 
       /// Automatically set the allocation by searching for it using the heap 
       /// pointer. If allocation wasn't found, it will be set to nullptr.     
       ///   @attention this will not dereference previous allocation          
+      template<Cid SID = ID>
       void FindAllocationInner(this auto& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             if (auto found = Allocator::Find(self.GetHeapInner())) {
                self.SetAllocationInner(found);

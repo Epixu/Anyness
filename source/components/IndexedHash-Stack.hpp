@@ -27,13 +27,17 @@ namespace Langulus::Anyness::Component
       using IteratorCategory = typename IndexedCommonHashed<ID, HASH>::IteratorCategory;
 
       /// Get the start of the hash table                                     
+      template<Cid SID = ID>
       constexpr auto GetHashTable(this auto const& self) noexcept -> TableType const* {
-         return self.GetHashTableInner();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         return self.template GetHashTableInner<SID>();
       }
 
       /// Get the end of the hash table                                       
+      template<Cid SID = ID>
       constexpr auto GetHashTableEnd(this auto const& self) noexcept -> TableType const* {
-         return self.GetHashTable() + self.GetReserved();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         return self.template GetHashTable<SID>() + self.template GetReserved<SID>();
       }
 
    protected:
@@ -44,15 +48,29 @@ namespace Langulus::Anyness::Component
       template<Cid, Cid...>         friend struct Removal;
 
       /// Get hash table (inner)                                              
+      template<Cid SID = ID>
       constexpr auto& GetHashTableInner(this auto&& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          return self.template AccessStack<IndexedHashStack>();
       }
       
       /// Set the number of initialized elements                              
+      template<Cid SID = ID>
       constexpr void SetHashTableInner(this auto& self, TableType const* c) noexcept {
-         self.GetHashTableInner() = const_cast<TableType*>(c);
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         self.template GetHashTableInner<SID>() = const_cast<TableType*>(c);
       }
-      
+
+      /// This method is called to erase the hash table                       
+      template<Cid SID = ID>
+      constexpr void ResetHashTable(this auto& self) noexcept {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         memset(
+            self.template GetHashTableInner<SID>(), 0,
+            self.template GetReserved<SID>() * sizeof(TableType)
+         );
+      }
+
       /// Default-initialize hash table to zero                               
       constexpr void ConstructDefault(this auto& self) noexcept {
          self.SetHashTableInner(nullptr);
@@ -62,11 +80,6 @@ namespace Langulus::Anyness::Component
       constexpr void ConstructHeapRequest(this auto& self) noexcept {
          self.SetHashTableInner(self.template AccessHeap<IndexedHashStack>());
          self.ResetHashTable();
-      }
-
-      /// This method is called to erase the hash table                       
-      constexpr void ResetHashTable(this auto& self) noexcept {
-         memset(self.GetHashTableInner(), 0, self.GetReserved() * sizeof(TableType));
       }
 
       /// Transfer from any kind of container, respecting intents             

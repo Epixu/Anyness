@@ -169,9 +169,8 @@ namespace Langulus::Anyness
       template<CT::Component COM, CT::Container SELF>
       constexpr auto* AccessHeap(this SELF&& self) noexcept {
          static_assert(requires { typename COM::HeapRequest; },
-            "Component doesn't have data on the heap"
-         );
-         auto al = self.GetAllocationInner();
+            "Component doesn't have data on the heap");
+         auto al = self.template GetAllocationInner<COM::Id>();
          LglsAssumeDevAndOptimize(al,
             "Heap requests are available only when container has ownership. "
             "Make sure you access them only then, and fallback to emergent "
@@ -183,17 +182,14 @@ namespace Langulus::Anyness
                     or requires { R::AllocatedPerElement;     }
          ) {
             // Access footer heap                                       
-            const auto reserved = self.GetReserved();
-            const auto offset = self.GetHeapHeaderSize()
-                              + Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
-                                   static_cast<size_t>(reserved),
-                                   static_cast<size_t>(self.GetIndirections())
-                                );
-
-            if constexpr (CT::TypeErased<SELF>)
-               heap += reserved * self.GetStride() + offset;
-            else
-               heap += reserved * sizeof(TypeOf<SELF>) + offset;
+            // Footer offset depends on the number of reserved elements 
+            const auto reserved = self.template GetReserved<COM::Id>();
+            const auto offset = self.template GetHeapHeaderSize<COM::Id>()
+               + Inner::GetHeapFooterOffset<COM, COMPONENTS...>(
+                    static_cast<size_t>(reserved),
+                    static_cast<size_t>(self.template GetIndirections<COM::Id>())
+                 );
+            heap += reserved * self.template GetStride<COM::Id>() + offset;
 
             if constexpr (requires { R::AllocatedPerIndirection; }) {
                if constexpr (requires { R::Type::AllocatedPerElement; }) {
@@ -225,15 +221,15 @@ namespace Langulus::Anyness
       }
       
       /// Calculate the heap header size, aligned to the contained type       
-      template<CT::Container C>
+      template<Cid ID, CT::Container C>
       constexpr size_t GetHeapHeaderSize(this C const& self) assumptious {
-         constexpr size_t header = Inner::DefineHeapHeader<COMPONENTS...>();
+         constexpr size_t header = Inner::DefineHeapHeader<ID, COMPONENTS...>();
          if constexpr (CT::TypeErased<C>) {
-            const auto type = self.GetType();
+            const auto type = self.template GetType<ID>();
             LglsAssumeDev(type, "Requesting header size for an untyped container");
             return Align(header, type.GetAlignment());
          }
-         else return Align(header, alignof(TypeOf<C>));
+         else return Align(header, self.template GetAlignment<ID>());
       }
 
       /// Calculate the heap footer size                                      
@@ -364,16 +360,71 @@ namespace Langulus::Anyness
          return self;
       }
 
-      /// Check if container contains pointers                                
-      ///   @return true if the block contains pointers                       
-      template<Cid ID = 0>
-      constexpr bool IsSparse(this auto const& self) noexcept {
-         return ComponentList::ForEachConstOr([&]<class C>{
-            if constexpr (requires { self.C::template IsSparse<ID>(); })
-               return self.C::template IsSparse<ID>();
-            else return No {};
-         });
-      }
+      #define unify_getter(name) \
+         template<Cid ID = 0> \
+         constexpr auto name(this auto const& self) noexcept requires ( \
+            not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ID>(); }) \
+                  return self.C::template name<ID>(); \
+               else return No{}; \
+         }))>) { \
+            return ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ID>(); }) \
+                  return self.C::template name<ID>(); \
+               else return No{}; \
+            }); \
+         }
+
+      #define unify_setter(name) \
+         template<Cid ID = 0> \
+         constexpr auto name(this auto& self, auto&&...arguments) noexcept requires ( \
+            not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) { \
+                  self.C::template name<ID>(LglsFwd(arguments)...); \
+                  return Yes<>{}; \
+               } \
+               else return No{}; \
+         }))>) { \
+            ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) { \
+                  self.C::template name<ID>(LglsFwd(arguments)...); \
+                  return Yes<>{}; \
+               } \
+               else return No{}; \
+            }); \
+         }
+
+      #define unify_setter_templated(name) \
+         template<class ARG, Cid ID = 0> \
+         constexpr auto name(this auto& self) noexcept requires ( \
+            not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ARG, ID>(); }) { \
+                  self.C::template name<ARG, ID>(); \
+                  return Yes<>{}; \
+               } \
+               else return No{}; \
+         }))>) { \
+            ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ARG, ID>(); }) { \
+                  self.C::template name<ARG, ID>(); \
+                  return Yes<>{}; \
+               } \
+               else return No{}; \
+            }); \
+         }
+
+      unify_getter(GetType);
+      unify_getter(IsSparse);
+      unify_getter(GetIndirections);
+      unify_getter(GetStride);
+      unify_getter(GetEntries);
+
+      unify_setter(SetType);
+      unify_setter_templated(SetType);
+
+      #undef unify_getter
+      #undef unify_setter
+      #undef unify_setter_templated
    };
    }
 
