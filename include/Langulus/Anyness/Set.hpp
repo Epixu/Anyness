@@ -64,7 +64,7 @@ namespace Langulus::Anyness::Inner
    /// A universal type-erased non-contiguous set of variable size.           
    /// Emplacement is disabled for sets, because elements aren't allowed to   
    /// change in-place. This also means that they are only const-iteratable.  
-   template<State::StateValue SORTED = State::Variable>
+   template<State::StateValue SORTED>
    struct Set : SetBase<SORTED> {
       using CTTI_Set      = Yes<>;
       using CTTI_Deep     = Yes<>;
@@ -72,6 +72,11 @@ namespace Langulus::Anyness::Inner
 
       using Base          = SetBase<SORTED>;
       using DeepType      = Many;
+
+      using HandleType    = Handle;
+      using HandleMutType = Handle;
+      using Pick          = Handle;
+      using PickMut       = Handle;
 
       using DefineState::Typed<>::IsTypeConstrained;
       using DefineState::Typed<>::EnableTypeConstrained;

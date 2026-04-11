@@ -38,7 +38,7 @@ namespace Langulus::Anyness::Component
       template<Cid, class, Cid...>  friend struct ReserveEmergent;
       template<Cid>                 friend struct IterationOperators;
       template<Cid, class>          friend struct Insertion;
-      template<Cid, class>          friend struct Merging;
+      LglsComMerging(friend);
       template<Cid, Cid...>         friend struct Emplacement;
       template<Cid, Cid...>         friend struct Conversion;
       template<Cid, bool, Cid...>   friend struct OwnershipEmergent;
@@ -121,9 +121,9 @@ namespace Langulus::Anyness::Component
                   (void) self; (void) from;
                   if constexpr (CT::Supported<decltype(src)>) {
                      if constexpr (CT::Copied<I>)
-                        dst.EmplaceWithIntent(Refer(src));
+                        dst.ForceMutable().EmplaceWithIntent(Refer(src));
                      else
-                        dst.EmplaceWithIntent(Clone(src));
+                        dst.ForceMutable().EmplaceWithIntent(Clone(src));
 
                      if constexpr (not CT::Contiguous<C>) {
                         // Copy hash table entry as well                
@@ -295,7 +295,7 @@ namespace Langulus::Anyness::Component
                      previous.Apply([&to,&self,&previous](auto&& from) {
                         (void) self; (void) previous;
                         if constexpr (CT::Supported<decltype(from)>) {
-                           to.EmplaceWithIntent(Abandon(from));
+                           to.ForceMutable().EmplaceWithIntent(Abandon(from));
 
                            if constexpr (not CT::Contiguous<C>) {
                               // Copy hash table entry as well          
@@ -514,7 +514,7 @@ namespace Langulus::Anyness::Component
             try {
                backup.Apply([&to](auto const& from) {
                   if constexpr (CT::Supported<decltype(from)>)
-                     to.EmplaceWithIntent(Refer(from));
+                     to.ForceMutable().EmplaceWithIntent(Refer(from));
                   ++to;
                });
             }

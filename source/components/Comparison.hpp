@@ -53,7 +53,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool Shared = (sizeof...(SHARED) > 0);
 
    private:
-      template<Cid, class> friend struct Merging;
+      LglsComMerging(friend);
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;

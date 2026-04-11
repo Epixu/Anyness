@@ -46,7 +46,7 @@ namespace Langulus::Anyness
    /// binary-compatible with the type-erased alternative `Set`.              
    /// Emplacement is disabled for sets, because elements aren't allowed to   
    /// change in-place. This also means that they are only const-iteratable.  
-   template<CT::NotVoid T, State::StateValue SORT = State::Variable>
+   template<CT::NotVoid T, State::StateValue SORT>
    struct TSet : Inner::TSetBase<T, SORT> {
       using CTTI_Set       = Yes<>;
       using CTTI_ReflectAs = Set;
@@ -55,6 +55,11 @@ namespace Langulus::Anyness
 
       using Base           = Inner::TSetBase<T, SORT>;
       using DeepType       = Any;
+
+      using HandleType    = THandle<T const&>;
+      using HandleMutType = THandle<T const&>;
+      using Pick          = T const&;
+      using PickMut       = T const&;
 
       using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 

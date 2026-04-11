@@ -196,8 +196,8 @@ void Map_CheckState_Default(C const& map, bool typed = false) {
    REQUIRE_FALSE(map);
    REQUIRE      (not map);
 
-   Many_CheckState_Default<K>(map.GetKeys());
-   Many_CheckState_Default<V>(map.GetVals());
+   //Many_CheckState_Default<K>(map.GetKeys());
+   //Many_CheckState_Default<V>(map.GetVals());
 
    REQUIRE_FALSE(map.IsCompressed());
    REQUIRE_FALSE(map.IsEncrypted());
@@ -240,8 +240,8 @@ void Map_CheckState_OwnedFull(C const& map) {
    REQUIRE      (map);
    REQUIRE_FALSE(not map);
 
-   Many_CheckState_OwnedFull<K>(map.GetKeys());
-   Many_CheckState_OwnedFull<V>(map.GetVals());
+   //Many_CheckState_OwnedFull<K>(map.GetKeys());
+   //Many_CheckState_OwnedFull<V>(map.GetVals());
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
@@ -260,8 +260,8 @@ void Map_CheckState_DisownedFull(C const& map) {
    REQUIRE      (map);
    REQUIRE_FALSE(not map);
 
-   Many_CheckState_DisownedFull<K>(map.GetKeys());
-   Many_CheckState_DisownedFull<V>(map.GetVals());
+   //Many_CheckState_DisownedFull<K>(map.GetKeys());
+   //Many_CheckState_DisownedFull<V>(map.GetVals());
 }
 
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>

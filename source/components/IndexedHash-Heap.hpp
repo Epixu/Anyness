@@ -45,7 +45,7 @@ namespace Langulus::Anyness::Component
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
       template<Cid, Cid...>         friend struct IndexedCommon;
       template<Cid, class, Cid...>  friend struct IndexedCommonHashed;
-      template<Cid, class>          friend struct Merging;
+      LglsComMerging(friend);
       template<Cid, Cid...>         friend struct Removal;
 
       /// Get the start of the hash table (inner)                             

@@ -26,7 +26,7 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipDeepHeap<0>,          // Separate key deep ownership
       Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
-      Com::Merging<0>,                    // Only merging for keys      
+      Com::Merging<0, void, 1>,           // Only merging for keys      
       Com::Insertion<1>,                  // Allows inserting values    
       Com::Assignment<1>,                 // Allows assignment of values
       Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
@@ -52,7 +52,7 @@ namespace Langulus::Anyness
    /// Emplacement is disabled for maps, because keys aren't allowed to       
    /// change in-place. This also means that they are only const-iteratable.  
    /// Values, on the other hand, are mutable.                                
-   template<CT::NotVoid K, CT::NotVoid V, State::StateValue SORT = State::Variable>
+   template<CT::NotVoid K, CT::NotVoid V, State::StateValue SORT>
    struct TMap : Inner::TMapBase<K, V, SORT> {
       using CTTI_Map       = Yes<>;
       using CTTI_ReflectAs = Map;

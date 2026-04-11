@@ -122,6 +122,8 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       using DeepType       = HandleDisowned;
 
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
+
       /// Handles can't be piecewise-initialized                              
       HandleMut(Inner::Piecewise, auto&&) = delete;
 
@@ -146,6 +148,13 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       HandleMut& operator = (HandleMut const& other) = delete;
       HandleMut& operator = (HandleMut&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> HandleMut {
+         return *this;
+      }
+
       /*constexpr HandleMut& operator = (HandleMut const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
@@ -195,6 +204,13 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       HandleDisownedMut& operator = (HandleDisownedMut const& other) = delete;
       HandleDisownedMut& operator = (HandleDisownedMut&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> HandleDisownedMut {
+         return *this;
+      }
+
       /*constexpr HandleDisownedMut& operator = (HandleDisownedMut const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Disown(other));
       }
@@ -225,6 +241,8 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       using DeepType       = HandleDisowned;
 
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
+
       /// Handles can't be piecewise-initialized                              
       Handle(Inner::Piecewise, auto&&) = delete;
 
@@ -249,6 +267,13 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       Handle& operator = (Handle const& other) = delete;
       Handle& operator = (Handle&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> HandleMut {
+         return *reinterpret_cast<HandleMut const*>(this);
+      }
+
       /*constexpr Handle& operator = (Handle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
@@ -310,6 +335,13 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       HandleDisowned& operator = (HandleDisowned const& other) = delete;
       HandleDisowned& operator = (HandleDisowned&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> HandleDisownedMut {
+         return *reinterpret_cast<HandleDisownedMut const*>(this);
+      }
+
       /*constexpr HandleDisowned& operator = (HandleDisowned const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Disown(other));
       }
@@ -368,6 +400,16 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() noexcept -> THandle<Decvq<Deref<T>>&>& {
+         return *reinterpret_cast<THandle<Decvq<Deref<T>>&>*>(this);
+      }
+      auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> const& {
+         return *reinterpret_cast<THandle<Decvq<Deref<T>>&> const*>(this);
+      }
+
       /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
@@ -411,6 +453,13 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> {
+         return *this;
+      }
+
       /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
@@ -454,6 +503,13 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       THandleDisowned& operator = (THandleDisowned const& other) = delete;
       THandleDisowned& operator = (THandleDisowned&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> THandleDisowned<Decvq<Deref<T>>&> {
+         return *this;
+      }
+
       /*constexpr THandleDisowned& operator = (THandleDisowned const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Disown(other));
       }
@@ -502,6 +558,13 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> THandle<Decvq<T>> {
+         return *this;
+      }
+
       /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }
@@ -554,6 +617,13 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       THandle& operator = (THandle const& other) = delete;
       THandle& operator = (THandle&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> THandle<Decvq<T>> {
+         return *this;
+      }
+
       /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly
          return this->AssignAbsorb(Refer(other));
       }

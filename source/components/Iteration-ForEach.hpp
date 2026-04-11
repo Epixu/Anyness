@@ -15,10 +15,10 @@
 #include <Langulus/MetaOf.hpp>
 
 
-namespace Langulus::Anyness
+/*namespace Langulus::Anyness
 {
-   class Neat;
-}
+   struct Neat;
+}*/
 
 namespace Langulus::Anyness::Component
 {

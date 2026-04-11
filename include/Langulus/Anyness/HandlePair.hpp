@@ -11,8 +11,12 @@
 
 namespace Langulus::Anyness
 {
+   ///                                                                        
+   /// Pair of handles                                                        
+   //TODO this is a temporary setup. A better one would probably be to       
+   // concatenate the components of the two handles, offsetting the IDs of   
+   // V, and thus composing a new container to represent the pair.           
    template<CT::Handle K, CT::Handle V>
-   requires(CT::NoIntent<K,V> and CT::Decayed<K,V>)
    struct THandlePair {
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
@@ -21,8 +25,14 @@ namespace Langulus::Anyness
       //using Denser         = Types<typename K::Denser,   typename V::Denser>;
       //using DeepType       = Types<typename K::DeepType, typename V::DeepType>;
 
+      static_assert(CT::NoIntent<K, V> and CT::Decayed<K, V>);
+
       K key;
       V val;
+
+      constexpr explicit operator bool() const noexcept {
+         return static_cast<bool>(key);
+      }
 
       /// Get raw data associated with the key                                
       auto GetRaw() const noexcept {
@@ -34,6 +44,37 @@ namespace Langulus::Anyness
          return key.GetHash() ^ val.GetHash();
       }
       
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept {
+         return THandlePair<decltype(key.ForceMutable()), decltype(val.ForceMutable())> {
+            key.ForceMutable(),
+            val.ForceMutable()
+         };
+      }
+
+      void SwapInner(CT::ContainsOne auto& rhs) {
+         key.SwapInner(LglsFwd(rhs));
+         val.SwapInner(LglsFwd(rhs));
+      }
+
+      template<CT::Intent I> requires CT::Pair<I>
+      void EmplaceWithIntent(I&& intent) {
+         key.EmplaceWithIntent(I::Nest(intent.what.key));
+         val.EmplaceWithIntent(I::Nest(intent.what.val));
+      }
+
+      template<bool DESTROY = true>
+      void DestroyElement() {
+         key.template DestroyElement<DESTROY>();
+         val.template DestroyElement<DESTROY>();
+      }
+
+      void KeepElementDeepCustomPointers() {
+         key.KeepElementDeepCustomPointers();
+         val.KeepElementDeepCustomPointers();
+      }
+
       /// Offset pair to the right by the desired amount                      
       ///   @attention this doesn't check any boundaries, use carefully       
       ///   @param offset the number of elements to offset                    

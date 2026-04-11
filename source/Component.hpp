@@ -158,6 +158,28 @@ namespace Langulus::Anyness
       using T = POINTER_TYPE;
    };
 
+   namespace State
+   {
+      enum StateValue {
+         Variable = 0,
+         Enabled = 1,
+         Disabled = 2
+      };
+   }
+
+   namespace DefineState
+   {
+      struct Default;
+      template<State::StateValue = State::Variable> struct Compressed;
+      template<State::StateValue = State::Variable> struct Encrypted;
+      template<State::StateValue = State::Variable> struct Future;
+      template<State::StateValue = State::Variable> struct Or;
+      template<State::StateValue = State::Variable> struct Past;
+      template<State::StateValue = State::Variable> struct Sorted;
+      template<State::StateValue = State::Variable> struct Tracked;
+      template<State::StateValue = State::Variable> struct Typed;
+   }
+
    namespace Component
    {
       /// Components, predeclared                                             
@@ -208,7 +230,9 @@ namespace Langulus::Anyness
 
       template<Cid = 0, class AS = void>  struct Insertion;
       template<Cid = 0, class AS = void>  struct InsertionOperators;
-      template<Cid = 0, class AS = void>  struct Merging;
+      template<Cid = 0, class AS = void, Cid...>  struct Merging;
+      #define LglsComMerging(modifier) template<Cid, class, Cid...> modifier struct Merging
+
       template<Cid = 0, class AS = void>  struct MergingOperators;
       template<Cid = 0, Cid...>           struct Removal;
 

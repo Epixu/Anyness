@@ -19,12 +19,14 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID heap we're merging to                                     
    ///   @tparam AS type to serialize as before merging. Useful for byte      
    ///      and text containers. Use void to insert without serialization.    
-   template<Cid ID, class AS>
+   ///   @tparam SHARED other providers that share merge behavior             
+   template<Cid ID, class AS, Cid...SHARED>
    struct Merging {
       using CTTI_Component = Yes<>;
 
-      static constexpr Cid Id = ID;
-      static constexpr int ComponentPrecedence = 3000;
+      static constexpr Cid  Id = ID;
+      static constexpr int  ComponentPrecedence = 3000;
+      static constexpr bool Shared = sizeof...(SHARED) > 0;
 
    private:
       template<CT::Container C>
@@ -62,17 +64,17 @@ namespace Langulus::Anyness::Component
          size_t lastInsertedIndex = 0;
       };
 
-      /// Merge one or more elements at the performance-optimal position.     
+      /// Merge a new element at the performance-optimal position.            
       /// This usually means at the back of a contiguous container. Supports  
       /// intents and arrays.                                                 
       ///   @param a an element or array of elements (and its intent) to merge
       ///   @attention when 'a' is an array, you have to be careful with      
-      ///      using MergeResult::insertedAt, as it will show only the        
+      ///      using MergeResult::lastInsertedIndex, as it will show only the 
       ///      position of the last insertion! Merge elements one-by-one, in  
       ///      order to get the proper offsets.                               
       ///   @return 1 if element was inserted, and the position where it was  
       ///      inserted or found at (if it was already existing)              
-      template<class A, CT::ContainsMany C>
+      template<CT::NotPair A, CT::ContainsMany C> requires (not Shared)
       auto MergeInner(this C& self, A&& a) -> MergeResult {
          // Gather the number of all elements and types.                
          // Empty containers can't change type. If one of the type      
@@ -129,6 +131,87 @@ namespace Langulus::Anyness::Component
          };
 
          try {
+            //TODO actual array insertion
+            insert(LglsFwd(a));
+         }
+         catch (...) {
+            // Account for throws inside constructors                   
+            self.SetCountInner(lhs_count + result.itemsInserted);
+            throw;
+         }
+
+         self.SetCountInner(lhs_count + result.itemsInserted);
+         return result;
+      }
+
+      /// Merge a pair at the performance-optimal position.                   
+      /// This usually means at the back of a contiguous container. Supports  
+      /// intents and arrays.                                                 
+      ///   @param a an element or array of elements (and its intent) to merge
+      ///   @attention when 'a' is an array, you have to be careful with      
+      ///      using MergeResult::lastInsertedIndex, as it will show only the 
+      ///      position of the last insertion! Merge elements one-by-one, in  
+      ///      order to get the proper offsets.                               
+      ///   @return 1 if element was inserted, and the position where it was  
+      ///      inserted or found at (if it was already existing)              
+      template<CT::Pair A, CT::ContainsMany C> requires Shared
+      auto MergeInner(this C& self, A&& a) -> MergeResult {
+         // Gather the number of all elements and types.                
+         // Empty containers can't change type. If one of the type      
+         // changes raises a conflict, this function will throw.        
+         size_t rhs_count;
+         if constexpr (CT::Array<A>) {
+            using E = Decvq<Deref<DeextAll<Deint<A>>>>;
+            self.template SetType<E>();
+            rhs_count = GetAllExtentsOf(a);
+         }
+         else {
+            using E = Decvq<Deref<Deint<A>>>;
+            self.template SetType<E>();
+            rhs_count = 1;
+         }
+
+         // Reallocate/branch out                                       
+         const size_t lhs_count = self.GetCount();
+         const size_t all_count = lhs_count + rhs_count;
+         self.BranchOut(all_count);
+
+         // Insert the new elements if they're not contained yet        
+         MergeResult result;
+         auto insert = [&]<class E>(E&& item) {
+            if constexpr (CT::Contiguous<C>) {
+               // Contiguous merge                                      
+               const auto found = self.FindInner(DeintCast(item), 0);
+               if (found) {
+                  result.lastInsertedIndex = found - self.GetHandle();
+                  return;
+               }
+
+               auto to = self.GetHandle() + lhs_count;
+               if constexpr (CT::Copied<IntentOf(item)>)
+                  to.EmplaceWithIntent(Refer(LglsFwd(item)));
+               else
+                  to.EmplaceWithIntent(FWDIntent(item));
+            }
+            else {
+               // Hash table merge                                      
+               const auto bucket = self.GetOffset(DeintCast(item));
+               const auto found = self.FindInner(DeintCast(item), bucket);
+               if (found) {
+                  result.lastInsertedIndex = found - self.GetHandle();
+                  return;
+               }
+
+               // Move the element to a temporary local swapper first   
+               THandle<Decvq<Deref<Deint<E>>>> swapper {Piecewise, LglsFwd(item)};
+               result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
+            }
+
+            ++result.itemsInserted;
+         };
+
+         try {
+            //TODO actual array insertion
             insert(LglsFwd(a));
          }
          catch (...) {

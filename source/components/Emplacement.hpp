@@ -48,9 +48,12 @@ namespace Langulus::Anyness::Component
 
    protected:
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid, class>          friend struct Insertion;
-      template<Cid, class>          friend struct Merging;
-      template<Cid, class, Cid...>  friend struct IndexedCommonHashed;
+      template<Cid, class>             friend struct Insertion;
+      LglsComMerging(friend);
+      template<Cid, class, Cid...>     friend struct IndexedCommonHashed;
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
+      //template<State::StateValue>      friend struct Anyness::Inner::Map;
+
 
       /// Clone the 'rhs'.                                                    
       /// Assumes all indirections are ordinary pointers, and is thus faster. 

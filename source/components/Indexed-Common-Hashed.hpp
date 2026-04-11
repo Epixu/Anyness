@@ -32,7 +32,7 @@ namespace Langulus::Anyness::Component
 
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
       template<Cid, Cid...>                        friend struct IndexedCommon;
-      template<Cid, class>                         friend struct Merging;
+      LglsComMerging(friend);
 
       /// Browse table, converting contiguous index into table index.         
       /// Table is indexed the following way:                                 
@@ -194,9 +194,10 @@ namespace Langulus::Anyness::Component
       }
    
       /// Shift elements left whereever possible                              
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       void ShiftEntries(this C& self) {
-         const auto reserved = self.GetReserved();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         const auto reserved = self.template GetReserved<SID>();
          int moves_performed;
          do {
             moves_performed = 0;
@@ -226,7 +227,7 @@ namespace Langulus::Anyness::Component
                      auto handle = self.GetHandle();
                      auto from   = handle + oldIndex;
                      auto to     = handle + newIndex;
-                     to.EmplaceWithIntent(Abandon(from));
+                     to.ForceMutable().EmplaceWithIntent(Abandon(from));
                      from.DestroyElement();
 
                      tableBeg[newIndex] = attempt;
@@ -247,6 +248,7 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, CT::Handle H> 
       auto TableEmplace(this C& self, Count<C> const start, H& swapper)
       -> Count<C> requires CT::NoIntent<H> {
+         static_assert((not Shared and CT::NotPair<H>) or (Shared and CT::Pair<H>), "Swapper handle must match the ");
          // Get the starting index based on the key hash                
          const auto reserved = self.GetReserved();
          const auto tableBeg = self.GetHashTableInner();
@@ -260,7 +262,7 @@ namespace Langulus::Anyness::Component
             const auto index = table - tableBeg;
             if (attempts > *table) {
                // The value we're inserting is closer to bucket, so swap
-               (handle + index).SwapInner(swapper);
+               (handle + index).ForceMutable().SwapInner(swapper);
                ::std::swap(attempts, *table);
                if (insertedAt == reserved)
                   insertedAt = index;
@@ -275,7 +277,7 @@ namespace Langulus::Anyness::Component
 
          // If reached, then empty slot found, so put the value there   
          const auto index = table - tableBeg;
-         (handle + index).EmplaceWithIntent(Abandon(swapper));
+         (handle + index).ForceMutable().EmplaceWithIntent(Abandon(swapper));
          if (insertedAt == reserved)
             insertedAt = index;
 

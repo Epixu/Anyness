@@ -24,11 +24,36 @@ namespace Langulus::Anyness
    struct HandleMut;
    struct HandleDisowned;
    struct HandleDisownedMut;
-   template<class T> struct THandle;
-   template<class T> struct THandleDisowned;
+   template<class> struct THandle;
+   template<class> struct THandleDisowned;
+   template<CT::Handle, CT::Handle> struct THandlePair;
+
+   struct Any;
+   struct Bytes;
+   struct Construct;
+   struct Many;
+   struct Neat;
+   struct Pair;
+   struct Path;
+   struct Text;
+   struct Tag;
+
+   template<CT::NotVoid> struct TOwn;
+   template<class>       struct TRef;
+   template<CT::NotVoid> struct TTag;
+   template<CT::NotVoid> struct TAny;
+   template<CT::NotVoid, CT::NotVoid> struct TPair;
+   template<CT::NotVoid> struct THive;
+   template<CT::NotVoid> struct TMany;
+
+   template<CT::NotVoid, CT::NotVoid, State::StateValue SORT = State::Variable> struct TMap;
+   template<CT::NotVoid, State::StateValue SORT = State::Variable> struct TSet;
 
    namespace Inner
    {
+      template<State::StateValue SORT = State::Variable> struct Map;
+      template<State::StateValue SORT = State::Variable> struct Set;
+
       /// Tag for calling container constructors that initalize the           
       /// internal stack tuple. Extensively used by handles and iterators.    
       struct Stackwise {};
@@ -375,6 +400,36 @@ namespace Langulus::Anyness
             }); \
          }
 
+      #define unify_getter_argumented(name) \
+         template<Cid ID = 0> \
+         constexpr auto name(this auto const& self, auto&&...arguments) noexcept requires ( \
+            not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) \
+                  return self.C::template name<ID>(LglsFwd(arguments)...); \
+               else return No{}; \
+         }))>) { \
+            return ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) \
+                  return self.C::template name<ID>(LglsFwd(arguments)...); \
+               else return No{}; \
+            }); \
+         }
+
+      #define unify_getter_templated(name) \
+         template<class ARG, Cid ID = 0> \
+         constexpr auto name(this auto const& self) noexcept requires ( \
+            not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ARG, ID>(); }) \
+                  return self.C::template name<ARG, ID>(); \
+               else return No{}; \
+         }))>) { \
+            return ComponentList::ForEachConstOr([&]<class C>{ \
+               if constexpr (requires { self.C::template name<ARG, ID>(); }) \
+                  return self.C::template name<ARG, ID>(); \
+               else return No{}; \
+            }); \
+         }
+
       #define unify_setter(name) \
          template<Cid ID = 0> \
          constexpr auto name(this auto& self, auto&&...arguments) noexcept requires ( \
@@ -414,40 +469,28 @@ namespace Langulus::Anyness
          }
 
       unify_getter(GetType);
+      unify_getter(IsTyped);
       unify_getter(IsSparse);
+      unify_getter(IsDeep);
+      unify_getter(IsConstant);
       unify_getter(GetIndirections);
       unify_getter(GetStride);
       unify_getter(GetEntries);
+      unify_getter_argumented(Is);
+      unify_getter_argumented(IsSame);
+      unify_getter_argumented(IsExact);
+      unify_getter_templated(Is);
+      unify_getter_templated(IsSame);
+      unify_getter_templated(IsExact);
 
       unify_setter(SetType);
       unify_setter_templated(SetType);
 
       #undef unify_getter
+      #undef unify_getter_templated
       #undef unify_setter
       #undef unify_setter_templated
    };
-   }
-
-   namespace State
-   {
-      enum StateValue {
-         Variable = 0,
-         Enabled = 1,
-         Disabled = 2
-      };
-   }
-
-   namespace DefineState
-   {
-      struct Default;
-      template<State::StateValue = State::Variable> struct Compressed;
-      template<State::StateValue = State::Variable> struct Encrypted;
-      template<State::StateValue = State::Variable> struct Future;
-      template<State::StateValue = State::Variable> struct Or;
-      template<State::StateValue = State::Variable> struct Past;
-      template<State::StateValue = State::Variable> struct Sorted;
-      template<State::StateValue = State::Variable> struct Tracked;
-      template<State::StateValue = State::Variable> struct Typed;
    }
 }
 

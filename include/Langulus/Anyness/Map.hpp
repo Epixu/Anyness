@@ -49,8 +49,8 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipDeepHeap<0>,          // Separate key deep ownership
       Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
-      Com::Merging<0>,                    // Only merging for keys      
-      Com::Assignment<1>,                 // Allows assignment of values
+      Com::Merging<0, void, 1>,           // Only merging for keys      
+      Com::Assignment<1>,                 // Assignment of values       
       Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
       Com::Conversion<0, 1>,              // Allows conversions of K/V  
       Com::Comparison<0, true, 1>,        // Allows comparisons of K/V  
@@ -70,7 +70,7 @@ namespace Langulus::Anyness::Inner
    /// Emplacement is disabled for maps, because keys aren't allowed to       
    /// change in-place. This also means that they are only const-iteratable.  
    /// Values, on the other hand, are mutable.                                
-   template<State::StateValue SORTED = State::Variable>
+   template<State::StateValue SORTED>
    struct Map : MapBase<SORTED> {
       using CTTI_Map      = Yes<>;
       using CTTI_Deep     = Yes<>;
@@ -170,16 +170,18 @@ namespace Langulus::Anyness::Inner
       auto Assign(CT::Pair auto&& pair) -> Map& {
          using I = IntentOf(pair);
          this->Clear();
-         const auto bucket = this->MergeInner(I::Nest(pair.key));
-         (this->GetHandle().val + bucket.lastInsertedIndex).EmplaceWithIntent(I::Nest(pair.val));
+         //const auto bucket =
+         this->MergeInner(I::Nest(pair.key));
+         //(this->GetHandle().val + bucket.lastInsertedIndex).EmplaceWithIntent(I::Nest(pair.val));
          return *this;
       }
 
       /// Clear the map and assign a key and a value                          
       auto Assign(auto&& key, auto&& val) -> Map& {
          this->Clear();
-         const auto bucket = this->MergeInner(LglsFwd(key));
-         (this->GetHandle().val + bucket.lastInsertedIndex).EmplaceWithIntent(FWDIntent(val));
+         //const auto bucket =
+         this->MergeInner(TPair<decltype(key), decltype(val)> {LglsFwd(key), LglsFwd(val)});
+         //(this->GetHandle().val + bucket.lastInsertedIndex).EmplaceWithIntent(FWDIntent(val));
          return *this;
       }
 
@@ -202,12 +204,55 @@ namespace Langulus::Anyness::Inner
             and lhs.template CompareOneEqual<1>(rhs.val);
       }
 
-      /// Get the key type                                                    
+      constexpr bool IsKeyTyped() const noexcept {
+         return this->template IsTyped<0>();
+      }
+      constexpr bool IsValTyped() const noexcept {
+         return this->template IsTyped<1>();
+      }
+
+      constexpr bool IsKeySparse() const noexcept {
+         return this->template IsSparse<0>();
+      }
+      constexpr bool IsValSparse() const noexcept {
+         return this->template IsSparse<1>();
+      }
+
+      constexpr bool IsKeyDeep() const noexcept {
+         return this->template IsDeep<0>();
+      }
+      constexpr bool IsValDeep() const noexcept {
+         return this->template IsDeep<1>();
+      }
+
+      template<class T>
+      constexpr bool IsKey() const noexcept {
+         return this->template Is<T, 0>();
+      }
+      template<class T>
+      constexpr bool IsVal() const noexcept {
+         return this->template Is<T, 1>();
+      }
+      template<class T>
+      constexpr bool IsKeySame() const noexcept {
+         return this->template IsSame<T, 0>();
+      }
+      template<class T>
+      constexpr bool IsValSame() const noexcept {
+         return this->template IsSame<T, 1>();
+      }
+      template<class T>
+      constexpr bool IsKeyExact() const noexcept {
+         return this->template IsExact<T, 0>();
+      }
+      template<class T>
+      constexpr bool IsValExact() const noexcept {
+         return this->template IsExact<T, 1>();
+      }
+
       constexpr DMeta GetKeyType() const noexcept {
          return this->template GetType<0>();
       }
-
-      /// Get the value type                                                  
       constexpr DMeta GetValType() const noexcept {
          return this->template GetType<1>();
       }
