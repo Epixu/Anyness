@@ -136,18 +136,19 @@ namespace Langulus
       static constexpr size_t Count = 0;
       using First = void;
 
-      template<class...N>
-      // ReSharper disable once CppFunctionIsNotImplemented             
+      /*template<class...N>
       static consteval auto Concat(Types<N...>&&) -> Types<N...>;
-      // ReSharper disable once CppFunctionIsNotImplemented             
       template<class N>
       static consteval auto Concat(N&&) -> Types<N>;
 
       template<class N>
-      using Cat = decltype(Concat(Fake<N&&>()));
+      using Cat = decltype(Concat(Fake<N&&>()));*/
 
       using Tuple = ::std::tuple<>;
       using TupleOptimized = compact_tuple<>;
+
+      template<class...N>
+      consteval auto operator + (Types<N...>&&) const -> Types<N...> { return {}; }
    };
 
    using NoTypes = Types<>;
@@ -251,13 +252,16 @@ namespace Langulus
          return {lambda.template operator()<T>()};
       }
 
-      template<class...N>
+      /*template<class...N>
       static consteval auto Concat(Types<N...>&&) -> Types<T, N...>;
       template<class N>
       static consteval auto Concat(N&&) -> Types<T, N>;
 
       template<class N>
-      using Cat = decltype(Concat(Fake<N&&>()));
+      using Cat = decltype(Concat(Fake<N&&>()));*/
+
+      template<class...N>
+      consteval auto operator + (Types<N...>&&) const -> Types<T, N...> { return {}; }
 
       template<class N>
       static constexpr bool Contains = ::std::same_as<N, T>;
@@ -415,15 +419,16 @@ namespace Langulus
          };
       }
 
-      template<class...N>
-      // ReSharper disable once CppFunctionIsNotImplemented             
+      /*template<class...N>
       static consteval auto Concat(Types<N...>&&) -> Types<T1, T2, TN..., N...>;
       template<class N>
-      // ReSharper disable once CppFunctionIsNotImplemented             
       static consteval auto Concat(N&&) -> Types<T1, T2, TN..., N>;
 
       template<class N>
-      using Cat = decltype(Concat(Fake<N&&>()));
+      using Cat = decltype(Concat(Fake<N&&>()));*/
+
+      template<class...N>
+      consteval auto operator + (Types<N...>&&) const -> Types<T1, T2, TN..., N...> { return {}; }
 
       template<class N>
       static constexpr bool Contains = decltype(ForEachConstOr([]<class A> {

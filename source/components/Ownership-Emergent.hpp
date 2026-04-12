@@ -144,9 +144,9 @@ namespace Langulus::Anyness::Component
                   self.Apply([](auto&& item) {
                      if constexpr (CT::Supported<decltype(item)>) {
                         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                           item.template KeepElementDeepCustomPointers<SID>();
+                           item.KeepElementDeepCustomPointers();
                         #else
-                           item.template KeepElementDeepStandardPointers<SID>();
+                           item.KeepElementDeepStandardPointers();
                         #endif
                      }
                   });
@@ -156,9 +156,9 @@ namespace Langulus::Anyness::Component
                self.Apply([](auto&& item) {
                   if constexpr (CT::Supported<decltype(item)>) {
                      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        item.template KeepElementDeepCustomPointers<SID>();
+                        item.KeepElementDeepCustomPointers();
                      #else
-                        item.template KeepElementDeepStandardPointers<SID>();
+                        item.KeepElementDeepStandardPointers();
                      #endif
                   }
                });

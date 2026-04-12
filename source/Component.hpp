@@ -326,9 +326,12 @@ namespace Langulus::Anyness
       template<class T>
       struct StackVariable {
          T value;
-         constexpr StackVariable() noexcept {};
-         constexpr StackVariable(T const& v) noexcept : value {v} {}
-         constexpr StackVariable(T&& v) noexcept : value {LglsFwd(v)} {}
+
+         constexpr StackVariable() noexcept requires (CT::NotReference<T>) {};
+         constexpr StackVariable(T const& v) noexcept requires (CT::NotReference<T>)
+            : value {v} {}
+         constexpr StackVariable(T&& v) noexcept
+            : value {LglsFwd(v)} {}
       };
       
       /// Go through all components and accumulate their stack requests into  
@@ -336,16 +339,18 @@ namespace Langulus::Anyness
       template<class C1, class...CN>
       consteval auto DefineStack() {
          if constexpr (requires { typename C1::StackRequest; }) {
+            Types<StackVariable<typename C1::StackRequest>> first;
+
             if constexpr (sizeof...(CN))
-               return decltype(Types<StackVariable<typename C1::StackRequest>>::Concat(DefineStack<CN...>())) {};
+               return first + DefineStack<CN...>();
             else
-               return Types<StackVariable<typename C1::StackRequest>> {};
+               return first;
          }
          else {
             if constexpr (sizeof...(CN))
                return DefineStack<CN...>();
             else
-               return Types<>{};
+               return NoTypes {};
          }
       }
 

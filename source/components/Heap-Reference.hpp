@@ -594,7 +594,7 @@ namespace Langulus::Anyness::Component
 
             self.Apply([](auto&& item) {
                if constexpr (CT::Supported<decltype(item)>)
-                  item.template DestroyElement<DESTROY, SID>();
+                  item.template DestroyElement<DESTROY>();
             });
          }
       }

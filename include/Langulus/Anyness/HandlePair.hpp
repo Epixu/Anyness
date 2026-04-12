@@ -70,9 +70,10 @@ namespace Langulus::Anyness
          val.template DestroyElement<DESTROY>();
       }
 
+      template<bool FIND_MISSING = false>
       void KeepElementDeepCustomPointers() {
-         key.KeepElementDeepCustomPointers();
-         val.KeepElementDeepCustomPointers();
+         key.template KeepElementDeepCustomPointers<FIND_MISSING>();
+         val.template KeepElementDeepCustomPointers<FIND_MISSING>();
       }
 
       /// Offset pair to the right by the desired amount                      
@@ -153,4 +154,6 @@ namespace Langulus::Anyness
          return backup;
       }
    };
+
+   static_assert(not CT::Intent<THandlePair<Handle, Handle>>);
 }

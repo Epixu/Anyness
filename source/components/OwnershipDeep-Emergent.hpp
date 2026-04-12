@@ -579,9 +579,9 @@ namespace Langulus::Anyness::Component
                // We are not moving, so we have to reference all        
                // elements.                                             
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  self.template KeepElementDeepCustomPointers<true, SID>();
+                  self.template KeepElementDeepCustomPointers<false, SID>();
                #else
-                  self.template KeepElementDeepStandardPointers<true, SID>();
+                  self.template KeepElementDeepStandardPointers<false, SID>();
                #endif
             }
             else if constexpr (CT::AutoOwned<H> and REF_INDIVIDUAL) {

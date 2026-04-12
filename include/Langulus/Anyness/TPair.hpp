@@ -35,7 +35,7 @@ namespace Langulus::Anyness::Inner
 namespace Langulus::Anyness
 {
    ///                                                                        
-   /// A statically-typed pair                                                
+   /// A statically-typed pair. Supports holding references.                  
    ///   @attention not-binary compatible with its type-erased Pair           
    template<CT::NotVoid K, CT::NotVoid V>
    struct TPair : Inner::TPairBase<K, V> {
@@ -51,24 +51,29 @@ namespace Langulus::Anyness
       using KeyType  = K;
       using ValType  = V;
 
-      constexpr TPair() noexcept {
+      constexpr TPair() noexcept requires CT::NotReference<K, V> {
          this->ConstructDefault();
       }
-      constexpr TPair(TPair const& other) {
+      constexpr TPair(TPair const& other) requires CT::NotReference<K, V> {
          this->Absorb(Refer(other));
       }
-      constexpr TPair(TPair&& other) noexcept {
+      constexpr TPair(TPair&& other) noexcept requires CT::NotReference<K, V> {
          this->Absorb(Move(other));
       }
-      constexpr ~TPair() noexcept {
-         this->Destroy();
-      }
-
-      constexpr TPair(auto&& a1, auto&& a2) {
+      constexpr TPair(auto&& a1, auto&& a2) requires CT::NotReference<K, V> {
          this->template EmplaceConstruct<0>(LglsFwd(a1));
          this->template EmplaceConstruct<1>(LglsFwd(a2));
       }
-      
+      constexpr ~TPair() noexcept requires CT::NotReference<K, V> {
+         this->Destroy();
+      }
+
+      /// Reference constructor                                               
+      constexpr TPair(auto&& a1, auto&& a2) requires CT::Reference<K, V>
+         : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {}
+
+      constexpr ~TPair() noexcept requires CT::Reference<K, V> {}
+
       /// Construction that absorbs the provided pair                         
       constexpr TPair(Inner::Absorb, CT::Pair auto&& pair) {
          this->Absorb(LglsFwd(pair));
