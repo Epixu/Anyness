@@ -73,7 +73,7 @@ namespace Langulus::Anyness::Component
       ///      position of the last insertion! Merge elements one-by-one, in  
       ///      order to get the proper offsets.                               
       ///   @return 1 if element was inserted, and the position where it was  
-      ///      inserted or found at (if it was already existing)              
+      ///      inserted (or found at, if it was already existing)             
       template<class A, CT::ContainsMany C> requires (not Shared)
       auto MergeInner(this C& self, A&& a) -> MergeResult {
          // Gather the number of all elements and types.                
@@ -148,10 +148,11 @@ namespace Langulus::Anyness::Component
       /// This usually means at the back of a contiguous container.           
       ///   @param a pair of elements (and its intent) to merge               
       ///   @return 1 if element was inserted, and the position where it was  
-      ///      inserted or found at (if it was already existing)              
+      ///      inserted (or found at, if it was already existing)             
       template<CT::Pair P, CT::ContainsMany C> requires Shared
       auto MergeInner(this C& self, P&& a) -> MergeResult {
          static_assert(not CT::Array<P>);
+         using I = IntentOf(a);
 
          // Gather the number of all elements and types.                
          // Empty containers can't change type. If one of the type      
@@ -165,6 +166,7 @@ namespace Langulus::Anyness::Component
             self.template SetType<typename Decay<P>::ValType, 1>();
          }
 
+         // If this is reached, then P's types are the same             
          // Reallocate/branch out                                       
          const size_t lhs_count = self.GetCount();
          const size_t all_count = lhs_count + 1;
@@ -197,7 +199,14 @@ namespace Langulus::Anyness::Component
                }
 
                // Move the element to a temporary local swapper first   
-               THandle<Decvq<Deref<Deint<E>>>> swapper {Piecewise, LglsFwd(item)};
+               THandlePair<
+                  THandle<Decvq<Deref<TypeOf<Deint<E>, 0>>>>,
+                  THandle<Decvq<Deref<TypeOf<Deint<E>, 1>>>>
+               > swapper {
+                  I::Nest(DeintCast(item).template Get<void, 0>()),
+                  I::Nest(DeintCast(item).template Get<void, 1>())
+               };
+
                result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
             }
 

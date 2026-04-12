@@ -153,7 +153,7 @@ namespace Langulus::Anyness
    ///      specializations will bloat code generation significantly and slow 
    ///      builds down a lot...                                              
    template<CT::Component...COMPONENTS>
-   requires (Inner::ValidateComponentOrder<0, COMPONENTS...>())
+   requires ValidComponentOrder<COMPONENTS...>
    struct LANGULUS_EBCO Container : COMPONENTS... {
       using CTTI_Container = Yes<>;
       using ComponentList = Types<COMPONENTS...>;
@@ -618,13 +618,13 @@ namespace Langulus::Anyness
 
       #define unify_getter(name) \
          template<Cid ID = 0> \
-         constexpr auto name(this auto const& self) noexcept requires ( \
+         constexpr decltype(auto) name(this auto const& self) noexcept requires ( \
             not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
                if constexpr (requires { self.C::template name<ID>(); }) \
                   return self.C::template name<ID>(); \
                else return No{}; \
          }))>) { \
-            return ComponentList::ForEachConstOr([&]<class C>{ \
+            return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(); }) \
                   return self.C::template name<ID>(); \
                else return No{}; \
@@ -633,13 +633,13 @@ namespace Langulus::Anyness
 
       #define unify_getter_argumented(name) \
          template<Cid ID = 0> \
-         constexpr auto name(this auto const& self, auto&&...arguments) noexcept requires ( \
+         constexpr decltype(auto) name(this auto const& self, auto&&...arguments) noexcept requires ( \
             not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) \
                   return self.C::template name<ID>(LglsFwd(arguments)...); \
                else return No{}; \
          }))>) { \
-            return ComponentList::ForEachConstOr([&]<class C>{ \
+            return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) \
                   return self.C::template name<ID>(LglsFwd(arguments)...); \
                else return No{}; \
@@ -648,13 +648,13 @@ namespace Langulus::Anyness
 
       #define unify_getter_templated(name) \
          template<class ARG, Cid ID = 0> \
-         constexpr auto name(this auto const& self) noexcept requires ( \
+         constexpr decltype(auto) name(this auto const& self) noexcept requires ( \
             not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) \
                   return self.C::template name<ARG, ID>(); \
                else return No{}; \
          }))>) { \
-            return ComponentList::ForEachConstOr([&]<class C>{ \
+            return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) \
                   return self.C::template name<ARG, ID>(); \
                else return No{}; \
@@ -663,18 +663,16 @@ namespace Langulus::Anyness
 
       #define unify_setter(name) \
          template<Cid ID = 0> \
-         constexpr auto name(this auto& self, auto&&...arguments) noexcept requires ( \
+         constexpr decltype(auto) name(this auto& self, auto&&...arguments) noexcept requires ( \
             not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) { \
-                  self.C::template name<ID>(LglsFwd(arguments)...); \
-                  return Yes<>{}; \
+                  self.C::template name<ID>(LglsFwd(arguments)...); return 1; \
                } \
                else return No{}; \
          }))>) { \
-            ComponentList::ForEachConstOr([&]<class C>{ \
+            ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) { \
-                  self.C::template name<ID>(LglsFwd(arguments)...); \
-                  return Yes<>{}; \
+                  self.C::template name<ID>(LglsFwd(arguments)...); return 1; \
                } \
                else return No{}; \
             }); \
@@ -682,18 +680,16 @@ namespace Langulus::Anyness
 
       #define unify_setter_templated(name) \
          template<class ARG, Cid ID = 0> \
-         constexpr auto name(this auto& self) noexcept requires ( \
+         constexpr decltype(auto) name(this auto& self) noexcept requires ( \
             not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) { \
-                  self.C::template name<ARG, ID>(); \
-                  return Yes<>{}; \
+                  self.C::template name<ARG, ID>(); return 1; \
                } \
                else return No{}; \
          }))>) { \
-            ComponentList::ForEachConstOr([&]<class C>{ \
+            ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) { \
-                  self.C::template name<ARG, ID>(); \
-                  return Yes<>{}; \
+                  self.C::template name<ARG, ID>(); return 1; \
                } \
                else return No{}; \
             }); \
@@ -714,11 +710,25 @@ namespace Langulus::Anyness
       unify_getter_templated(IsSame);
       unify_getter_templated(IsExact);
 
+      template<class AS = void, Cid ID = 0, class CON>
+      constexpr decltype(auto) Get(this CON&& self) assumptious requires (
+         not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([]<class C>{
+            if constexpr (requires (CON&& s) { s.C::template Get<AS, ID>(); }) return 1;
+            else return No{};
+      }))>) {
+         return ComponentList::ForEachConstOr([&]<class C> assumptious -> decltype(auto) {
+            if constexpr (requires { self.C::template Get<AS, ID>(); })
+               return self.C::template Get<AS, ID>();
+            else return No{};
+         });
+      }
+
       unify_setter(SetType);
       unify_setter_templated(SetType);
 
       #undef unify_getter
       #undef unify_getter_templated
+      #undef unify_getter_argumented
       #undef unify_setter
       #undef unify_setter_templated
    };

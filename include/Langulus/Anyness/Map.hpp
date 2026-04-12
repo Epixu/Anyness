@@ -168,20 +168,15 @@ namespace Langulus::Anyness::Inner
 
       /// Clear the map and assign a single pair                              
       auto Assign(CT::Pair auto&& pair) -> Map& {
-         using I = IntentOf(pair);
          this->Clear();
-         //const auto bucket =
-         this->MergeInner(I::Nest(pair.key));
-         //(this->GetHandle().val + bucket.lastInsertedIndex).EmplaceWithIntent(I::Nest(pair.val));
+         this->MergeInner(LglsFwd(pair));
          return *this;
       }
 
       /// Clear the map and assign a key and a value                          
       auto Assign(auto&& key, auto&& val) -> Map& {
          this->Clear();
-         //const auto bucket =
          this->MergeInner(TPair<decltype(key), decltype(val)> {LglsFwd(key), LglsFwd(val)});
-         //(this->GetHandle().val + bucket.lastInsertedIndex).EmplaceWithIntent(FWDIntent(val));
          return *this;
       }
 

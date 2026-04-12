@@ -13,36 +13,28 @@
 namespace Langulus::CTTI
 {
    /// Affects CT::State<T>                                                   
-   template<class T>
-   struct State;
+   template<class T> struct State;
    
    /// Affects CT::Component<T>                                               
-   template<class T>
-   struct Component;
+   template<class T> struct Component;
    
    /// Affects CT::Container<T>                                               
-   template<class T>
-   struct Container;
+   template<class T> struct Container;
    
    /// Affects CT::Map<T>                                                     
-   template<class T>
-   struct Map;
+   template<class T> struct Map;
    
    /// Affects CT::Set<T>                                                     
-   template<class T>
-   struct Set;
+   template<class T> struct Set;
    
    /// Affects CT::Pair<T>                                                    
-   template<class T>
-   struct Pair;
+   template<class T> struct Pair;
 
    /// Affects CT::Handle<T>                                                  
-   template<class T>
-   struct Handle;
+   template<class T> struct Handle;
 
    /// Affects CT::Iterator<T>                                                
-   template<class T>
-   struct Iterator;
+   template<class T> struct Iterator;
 }
 
 LANGULUS_CTTI_CONCEPT_DECVQ(State);
@@ -182,7 +174,9 @@ namespace Langulus::Anyness
 
    namespace Component
    {
-      /// Components, predeclared                                             
+      ///                                                                     
+      ///   COMPONENT CATALOGUE                                               
+      ///                                                                     
       template<class META, class TYPE = void, bool CONSTRAIN = not ::std::is_void_v<TYPE>, Cid = 0> struct TypedStack;
       template<class META, CT::NotVoid TYPE, Cid = 0> struct TypedStatic;
 
@@ -268,19 +262,15 @@ namespace Langulus::Anyness
 
    namespace Inner
    {
+      
       /// Validate all used components in a container are properly ordered,   
-      /// of standard layout, and containing proper ID sequences.             
-      ///   @tparam ACC accumulated number of stack/heap providers            
-      ///   @tparam C1, C2, CN... components                                  
-      template<uint ACC, class C1, class C2, class...CN>
-      consteval bool ValidateComponentOrder() {
-         static_assert(::std::is_standard_layout_v<C1>);
-         static_assert(::std::is_standard_layout_v<C2>);
-
-         static_assert(C1::ComponentPrecedence <= C2::ComponentPrecedence,
+      /// of standard layout, and containing proper sequential provider IDs.  
+      ///   @tparam ACC accumulated stack/heap provider IDs                   
+      ///   @tparam C1, CN... components                                      
+      template<int ACC, int PRECEDENCE, class C1, class...CN>
+      consteval bool ValidateComponentOrderNested() {
+         static_assert(C1::ComponentPrecedence >= PRECEDENCE,
             "Wrong component order");
-         static_assert(sizeof(C1) == 1 and sizeof(C2) == 1,
-            "Use StackRequest instead of adding non-static members in components");
          
          if constexpr (requires { C1::StackProvider; }) {
             static_assert(C1::StackProvider == ACC,
@@ -288,13 +278,10 @@ namespace Langulus::Anyness
             static_assert(not requires { C1::HeapProvider; }, 
                "Component can't be both a stack and a heap provider");
 
-            if constexpr (sizeof...(CN))
-               return ValidateComponentOrder<ACC + 1, C2, CN...>();
-            else {
-               static_assert(ACC > 0,
-                  "Container must have at least one heap or stack provider");
+            if constexpr (sizeof...(CN) > 0)
+               return ValidateComponentOrderNested<ACC + 1, C1::ComponentPrecedence, CN...>();
+            else
                return true;
-            }
          }
          else if constexpr (requires { C1::HeapProvider; }) {
             static_assert(C1::HeapProvider == ACC,
@@ -302,17 +289,14 @@ namespace Langulus::Anyness
             static_assert(not requires { C1::StackProvider; },
                "Component can't be both a stack and a heap provider");
 
-            if constexpr (sizeof...(CN))
-               return ValidateComponentOrder<ACC + 1, C2, CN...>();
-            else {
-               static_assert(ACC > 0,
-                  "Container must have at least one heap or stack provider");
+            if constexpr (sizeof...(CN) > 0)
+               return ValidateComponentOrderNested<ACC + 1, C1::ComponentPrecedence, CN...>();
+            else
                return true;
-            }
          }
          else {
-            if constexpr (sizeof...(CN))
-               return ValidateComponentOrder<ACC, C2, CN...>();
+            if constexpr (sizeof...(CN) > 0)
+               return ValidateComponentOrderNested<ACC, C1::ComponentPrecedence, CN...>();
             else {
                static_assert(ACC > 0,
                   "Container must have at least one heap or stack provider");
@@ -320,6 +304,26 @@ namespace Langulus::Anyness
             }
          }
       }
+
+      /// Validate all used components in a container are properly ordered,   
+      /// of standard layout, and containing proper sequential provider IDs.  
+      ///   @tparam CN... components                                          
+      template<class...CN>
+      consteval bool ValidateComponentOrder() {
+         static_assert(CT::Component<CN...>,
+            "All elements must be components");
+         static_assert((::std::is_standard_layout_v<CN> and ...),
+            "All components must have standard layouts");
+         static_assert((sizeof(CN) * ...) == 1,
+            "Use StackRequest instead of adding non-static members to components");
+         static_assert(sizeof...(CN) > 0,
+            "Composed container must posses at least one heap/stack provider");
+         if constexpr (sizeof...(CN) > 0)
+            return ValidateComponentOrderNested<0, -1000000, CN...>();
+         else
+            return false;
+      }
+
 
       /// std::tuple default-initializes variables to zero, so I use this     
       /// wrapper to get back to the biblically accurate behavior             
@@ -520,4 +524,7 @@ namespace Langulus::Anyness
          }
       }
    }
+
+   template<class...CN>
+   concept ValidComponentOrder = Inner::ValidateComponentOrder<CN...>();
 }

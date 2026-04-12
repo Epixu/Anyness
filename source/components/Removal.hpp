@@ -16,6 +16,7 @@ namespace Langulus::Anyness::Component
    /// and other destruction-associated services.                             
    ///   @tparam ID provider we're removing from                              
    ///   @tparam SHARED additional providers we're removing from              
+   //TODO add bool ORDER_PRESERVING as an optimization. if order is not required, we can do 'swap & pop tactic in contiguous containers for faster removal
    template<Cid ID, Cid...SHARED>
    struct Removal {
       using CTTI_Component = Yes<>;

@@ -655,6 +655,7 @@ namespace Langulus
    /// Can carry a constant with itself                                       
    template<Literal VALUE = 0>
    struct Yes {
+      using CTTI_ReflectAs = void;
       static constexpr auto Constant = VALUE;
       static constexpr bool Enabled = true;
    };
@@ -663,12 +664,14 @@ namespace Langulus
    /// Can carry a constant with itself                                       
    template<bool CONDITION, Literal VALUE = 0>
    struct Maybe {
+      using CTTI_ReflectAs = void;
       static constexpr auto Constant = VALUE;
       static constexpr bool Enabled = CONDITION;
    };
 
    /// Equivalent to ::std::false_type, but without the silly nomenclature    
    struct No {
+      using CTTI_ReflectAs = void;
       using CTTI_Void = Yes<>;
       static constexpr bool Enabled = false;
    };
