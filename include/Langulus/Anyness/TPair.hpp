@@ -10,91 +10,89 @@
 #include <Langulus/Retype.hpp>
 
 
-namespace Langulus::CT
+namespace Langulus::Anyness::Inner
 {
-   /// Concept for recognizing arguments, with which a statically typed       
-   /// pair can be constructed                                                
-   template<class K, class V, class...P>
-   concept PairConstructible = NotReference<K, V> and Pair<P...>
-       and ((IntentOfT<P>::Shallow or (
-               IntentConstructibleAlt<Retype<IntentOfT<P>, K>>
-           and IntentConstructibleAlt<Retype<IntentOfT<P>, V>>)
-       ) and ...);
-
-   /// Concept for recognizing argument, with which a statically typed        
-   /// pair can be assigned                                                   
-   template<class K, class V, class...P>
-   concept PairAssignable = NotReference<K, V> and Pair<P...>
-       and ((IntentOfT<P>::Shallow or (
-               IntentAssignableAlt<Retype<IntentOfT<P>, K>>
-           and IntentAssignableAlt<Retype<IntentOfT<P>, V>>)
-       ) and ...);
-
-   /// Concept for recognizing argument, against which a pair can be compared 
-   template<class K, class V, class...P>
-   concept PairComparable = Pair<P...> and ((
-           Comparable<K, typename Deint<P>::Key>
-       and Comparable<V, typename Deint<P>::Val>
-      ) and ...);
+   template<CT::NotVoid K, CT::NotVoid V>
+   using TPairBase = Com::Container<
+      Com::TypedStatic<DMeta, K, 0>,
+      Com::TypedStatic<DMeta, V, 1>,
+      Com::Stack<K, 0>,
+      Com::Stack<V, 1>,
+      Com::CountStatic<0, 1u, 1>,         // Statically sized to 1      
+      Com::ReserveStatic<0, 1u, 1>,       // Statically reserved to 1   
+      Com::OwnershipDeepEmergent<0>,      // Separate key deep ownership
+      Com::OwnershipDeepEmergent<1>,      // Separate val deep onwership
+      Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  
+      Com::Emplacement<0, 1>,             // Allows emplacement         
+      Com::Assignment<0, 1>,              // Allows assignment          
+      Com::Removal<0, 1>,                 // Allows clear/reset         
+      Com::Conversion<0, 1>,              // Allows conversion          
+      Com::Comparison<0, true, 1>         // Allows comparisons         
+   >;
 }
+
 
 namespace Langulus::Anyness
 {
    ///                                                                        
-   ///   A helper structure for pairing keys and values of any type           
-   ///                                                                        
-   ///   This is the statically typed pair, and it can be used with           
-   /// references, as well as dense or sparse values. When key or value types 
-   /// are references, the TPair acts as a simple intermediate type, often    
-   /// used to access elements inside maps.                                   
-   ///   @attention TPair is not binary-compatible with its type-erased       
-   ///      counterpart Pair                                                  
-   ///                                                                        
+   /// A statically-typed pair                                                
+   ///   @attention not-binary compatible with its type-erased Pair           
    template<CT::NotVoid K, CT::NotVoid V>
-   struct TPair {
-   private:
-      THandle<K> mKey;
-      THandle<V> mVal;
+   struct TPair : Inner::TPairBase<K, V> {
+      using CTTI_Deep   = Yes<>;
+      using CTTI_Pair   = Yes<>;
+      using CTTI_MapsTo = Text;
+      using CTTI_Typed  = Types<K, V>;
 
-   public:
-      using CTTI_Typed = Types<K, V>;
-      using CTTI_Pair  = Yes<>;
+      static constexpr bool TypeErased = false;
 
-      using Key = K;
-      using Val = V;
+      using Base     = Inner::TPairBase<K, V>;
+      using DeepType = Any;
+      using KeyType  = K;
+      using ValType  = V;
 
-      ///                                                                     
-      ///   Construction                                                      
-      constexpr TPair() noexcept = default;
-      constexpr TPair(TPair const&) noexcept = default;
-      constexpr TPair(TPair&&) noexcept = default;
+      constexpr TPair() noexcept {
+         this->ConstructDefault();
+      }
+      constexpr TPair(TPair const& other) {
+         this->Absorb(Refer(other));
+      }
+      constexpr TPair(TPair&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+      constexpr ~TPair() noexcept {
+         this->Destroy();
+      }
 
-      template<CT::Pair P>
-      constexpr TPair(P&& other) requires CT::PairConstructible<K, V, P>
-         : mKey {IntentOf(other)::Nest(DeintCast(FWD(other)).GetKey())}
-         , mVal {IntentOf(other)::Nest(DeintCast(FWD(other)).GetVal())} {}
+      constexpr TPair(auto&& a1, auto&& a2) {
+         this->template EmplaceConstruct<0>(LglsFwd(a1));
+         this->template EmplaceConstruct<1>(LglsFwd(a2));
+      }
+      
+      /// Construction that absorbs the provided pair                         
+      constexpr TPair(Inner::Absorb, CT::Pair auto&& pair) {
+         this->Absorb(LglsFwd(pair));
+      }
+      
+      /// Construction that emplaces A inside, leaves value as default        
+      constexpr TPair(Inner::Piecewise, auto&& a1) {
+         this->template EmplaceConstruct<0>(LglsFwd(a1));
+         this->template EmplaceDefault<1>();
+      }
+      
+      /// Assignment                                                          
+      constexpr TPair& operator = (TPair const& other) {
+         return this->AssignAbsorb(Refer(other));
+      }
+      constexpr TPair& operator = (TPair&& other) noexcept {
+         return this->AssignAbsorb(Move(other));
+      }
+      
+      constexpr TPair& operator = (CT::Pair auto&& pair) {
+         return this->AssignAbsorb(LglsFwd(pair));
+      }
 
-      template<class ALT_K, class ALT_V>
-      requires (CT::NotReference<K, V>
-           and  CT::ConstructibleFrom<K, ALT_K>
-           and  CT::ConstructibleFrom<V, ALT_V>)
-      constexpr TPair(ALT_K&&, ALT_V&&);
-
-      constexpr TPair(K, V) noexcept requires CT::Reference<K, V>;
-
-      ///                                                                     
-      ///   Assignment                                                        
-      TPair& operator = (TPair const&) noexcept = default;
-      TPair& operator = (TPair&&) noexcept = default;
-
-      template<CT::Pair P> requires CT::PairAssignable<K, V, P>
-      TPair& operator = (P&&);
-
-      ///                                                                     
-      ///   Capsulation                                                       
-      Hash GetHash() const;
-
-      auto& GetKey(this auto&& self) noexcept { return self.mKey; }
-      auto& GetVal(this auto&& self) noexcept { return self.mVal; }
+      using Com::Comparison<0, true, 1>::operator <=>;
+      using Com::Comparison<0, true, 1>::operator ==;
    };
 }

@@ -77,7 +77,8 @@ namespace Langulus::Anyness::Component
    /// For discontiguous containers, like sets and maps, the assignment falls 
    /// back to insertion.                                                     
    ///   @tparam ID heap/stack we're assigning to                             
-   template<Cid ID>
+   ///   @tparam SHARED other providers that share assignment behavior        
+   template<Cid ID, Cid...SHARED>
    struct Assignment {
       using CTTI_Component = Yes<>;
       static constexpr Cid Id = ID;
@@ -172,8 +173,8 @@ namespace Langulus::Anyness::Component
       }*/
 
    protected:
-                                    friend struct Conversion<ID>;
-      template<Cid, class, Cid...>  friend struct IndexedCommonHashed;
+      LglsComIndexedCommonHashed(friend);
+      friend struct Conversion<ID>;
 
       /// A helper for clearing and allocating memory before construction.    
       /// Calls destructors on all elements, if any were initialized.         

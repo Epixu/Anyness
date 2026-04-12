@@ -37,11 +37,11 @@ namespace Langulus::Anyness::Component
    protected:
       template<Cid, class, Cid...>  friend struct ReserveEmergent;
       template<Cid>                 friend struct IterationOperators;
-      template<Cid, class>          friend struct Insertion;
+      LglsComInsertion(friend);
       LglsComMerging(friend);
-      template<Cid, Cid...>         friend struct Emplacement;
+      LglsComEmplacement(friend);
       template<Cid, Cid...>         friend struct Conversion;
-      template<Cid, bool, Cid...>   friend struct OwnershipEmergent;
+      LglsComOwnershipEmergent(friend);
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -211,18 +211,19 @@ namespace Langulus::Anyness::Component
       /// Allocate a fresh allocation                                         
       ///   @attention changes allocation, heap pointer and reserve count only
       ///   @param request request to fulfill                                 
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       auto AllocateFresh(this C& self, const Request& request) -> Allocation* {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            auto al = Allocator::Allocate(self.GetType(), request.mTotalBytes);
+            auto al = Allocator::Allocate(self.template GetType<SID>(), request.mTotalBytes);
          #else
-            auto al = Allocator::Allocate(self.GetAlignment(), request.mTotalBytes);
+            auto al = Allocator::Allocate(self.template GetAlignment<SID>(), request.mTotalBytes);
          #endif
          LglsAssert(al, "Out of memory");
          
-         self.SetHeapInner(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
-         self.SetAllocationInner(al);
-         if_available(self.SetReservedInner(request.mReserved));
+         self.template SetHeapInner<SID>(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
+         self.template SetAllocationInner<SID>(al);
+         if_available(self.template SetReservedInner<SID>(request.mReserved));
          self.ConstructHeapDefault();
          return al;
       }
@@ -247,16 +248,16 @@ namespace Langulus::Anyness::Component
             }
          }
 
-         LglsAssumeDev(elements > self.GetCount(), "Bad element count");
+         LglsAssumeDev(elements > self.template GetCount<SID>(), "Bad element count");
          if constexpr (CT::ContainsOne<C>)
             LglsAssumeDev(elements == 1, "Container allows only one allocated element");
-         const auto al = DecvqAllCast(self.GetAllocation());
-         const auto request = self.RequestHeap(elements);
+         const auto al = DecvqAllCast(self.template GetAllocation<SID>());
+         const auto request = self.template RequestHeap<SID>(elements);
 
          if (not al) {
             //                                                          
             // Allocate a fresh set of elements                         
-            self.AllocateFresh(request);
+            self.template AllocateFresh<SID>(request);
             return;
          }
 
@@ -266,7 +267,7 @@ namespace Langulus::Anyness::Component
          );
 
          if constexpr (CT::ContainsMany<C>) {
-            if (self.GetReserved() >= elements) {
+            if (self.template GetReserved<SID>() >= elements) {
                // Required memory is already available                  
                return;
             }
@@ -275,16 +276,16 @@ namespace Langulus::Anyness::Component
             // Reallocate                                               
             C previous {Abandon {self}};
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               auto reallocated = Allocator::Reallocate(self.GetType(), request.mTotalBytes, al);
+               auto reallocated = Allocator::Reallocate(self.template GetType<SID>(), request.mTotalBytes, al);
             #else
                auto reallocated = Allocator::Reallocate(request.mTotalBytes, al);
             #endif
             LglsAssert(reallocated, "Out of memory");
 
-            self.SetAllocationInner(reallocated);
+            self.template SetAllocationInner<SID>(reallocated);
 
             if (reallocated != al) {
-               self.SetHeapInner(static_cast<void*>(reallocated->GetBlockStart() + request.mHeaderBytes));
+               self.template SetHeapInner<SID>(static_cast<void*>(reallocated->GetBlockStart() + request.mHeaderBytes));
 
                if (previous.GetCount()) {
                   // Memory moved, and we should move all elements with 
@@ -307,7 +308,7 @@ namespace Langulus::Anyness::Component
                      });
                   }
                   catch (...) {
-                     self.SetCountInner(to - self.GetHandle());
+                     self.template SetCountInner<SID>(to - self.GetHandle());
                      throw;
                   }
                }
@@ -316,11 +317,11 @@ namespace Langulus::Anyness::Component
                // Memory didn't move, but reserved count changed so all 
                // HeapRequests which are PerElement need to be moved    
                // around.                                               
-               if_available(self.RemapHeapRequests(request.mReserved));
-               previous.SetAllocationInner(nullptr);
+               if_available(self.template RemapHeapRequests<SID>(request.mReserved));
+               previous.template SetAllocationInner<SID>(nullptr);
             }
 
-            if_available(self.SetReservedInner(request.mReserved));
+            if_available(self.template SetReservedInner<SID>(request.mReserved));
          }
       }
 
@@ -335,12 +336,12 @@ namespace Langulus::Anyness::Component
          static_assert(CT::ContainsMany<C>,
             "This makes sense to be called only by containers that support many elements");
 
-         const auto al = DecvqAllCast(self.GetAllocation());
+         const auto al = DecvqAllCast(self.template GetAllocation<SID>());
          if (not al) {
             //                                                          
             // We have to branch out                                    
             const C backup{Abandon{self}};
-            self.AllocateFresh(self.RequestHeap(desiredReserve));
+            self.template AllocateFresh<SID>(self.template RequestHeap<SID>(desiredReserve));
 
             // Reinsert only the relevant items                         
             auto to = self.GetHandle();
@@ -351,46 +352,50 @@ namespace Langulus::Anyness::Component
                });
             }
             catch (...) {
-               self.SetCountInner(to - self.GetHandle());
+               self.template SetCountInner<SID>(to - self.GetHandle());
                throw;
             }
 
             if constexpr (CT::Contiguous<C>) {
-               self.SetCountInner(backup.GetCount() < desiredReserve
-                  ? backup.GetCount()
+               self.template SetCountInner<SID>(backup.template GetCount<SID>() < desiredReserve
+                  ? backup.template GetCount<SID>()
                   : desiredReserve
                );
             }
-            else self.SetCountInner(backup.GetCount());
+            else self.template SetCountInner<SID>(backup.template GetCount<SID>());
             return;
          }
 
-         LglsAssumeDev(desiredReserve <= self.GetReserved(),
+         LglsAssumeDev(desiredReserve <= self.template GetReserved<SID>(),
             "Can't shrink allocation using more elements");
          LglsAssumeDev(al->GetUses() == 1,
             "Can't reuse memory of a block used from multiple places");
 
-         if (self.GetCount() > desiredReserve) {
+         if (self.template GetCount<SID>() > desiredReserve) {
             auto temp = self.SelectInner(desiredReserve);
-            temp.DestroyAllElements();
-            if_available(self.SetCountInner(desiredReserve));
+            temp.template DestroyAllElements<SID>();
+            if_available(self.template SetCountInner<SID>(desiredReserve));
          }
 
-         const auto request = self.RequestHeap(desiredReserve);
+         const auto request = self.template RequestHeap<SID>(desiredReserve);
          if (request.mTotalBytes == al->GetSize())
             return;
 
          // Memory doesn't move, but reserved count changed so all      
          // HeapRequests which are PerElement need to be moved around.  
-         if_available(self.RemapHeapRequests(request.mReserved));
+         if_available(self.template RemapHeapRequests<SID>(request.mReserved));
 
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            self.SetAllocationInner(Allocator::Reallocate(self.GetType(), request.mTotalBytes, al));
+            self.template SetAllocationInner<SID>(
+               Allocator::Reallocate(self.template GetType<SID>(), request.mTotalBytes, al)
+            );
          #else
-            self.SetAllocationInner(Allocator::Reallocate(request.mTotalBytes, al));
+            self.template SetAllocationInner<SID>(
+               Allocator::Reallocate(request.mTotalBytes, al)
+            );
          #endif
 
-         if_available(self.SetReservedInner(request.mReserved));
+         if_available(self.template SetReservedInner<SID>(request.mReserved));
       }
 
       /// Remap footer requests onto the new reserve                          
@@ -398,9 +403,9 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID, CT::Container C> requires (C::CountHeapFooterRequests() > 0)
       void RemapHeapRequests(this C& self, const Count<C> newReserved) {
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
-         const auto size     = self.GetStride();
-         const auto reserved = self.GetReserved();
-         const auto indirect = self.GetIndirections();
+         const auto size     = self.template GetStride<SID>();
+         const auto reserved = self.template GetReserved<SID>();
+         const auto indirect = self.template GetIndirections<SID>();
 
          size_t from[C::CountHeapFooterRequests() + 1];
          size_t to  [C::CountHeapFooterRequests() + 1];

@@ -83,7 +83,7 @@ namespace Langulus::Anyness::Component
       template<Cid, CT::HeapEntry...>              friend struct HeapReference;
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
       template<Cid, Cid...>                        friend struct Removal;
-      template<Cid, Cid...>                        friend struct Emplacement;
+      LglsComEmplacement(friend);
 
       /// Transfer from any kind of container, respecting intents             
       ///   @attention this will not dereference previous allocation          
@@ -128,9 +128,10 @@ namespace Langulus::Anyness::Component
       /// Reference the allocation once.                                      
       /// If container has DeepOwnership component, all entries will be       
       /// individually referenced as well.                                    
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       void Keep(this C& self) noexcept {
-         auto a = self.GetAllocation();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         auto a = self.template GetAllocation<SID>();
          if (not a)
             return; // Container is disowned, and nothing gets reffed   
 
@@ -139,25 +140,25 @@ namespace Langulus::Anyness::Component
          if constexpr (CT::DeeplyOwned<C>) {
             // Reference all indirections and (optionally) items        
             if constexpr (CT::TypeErased<C>) {
-               if (self.IsSparse()) {
+               if (self.template IsSparse<SID>()) {
                   self.Apply([](auto&& item) {
                      if constexpr (CT::Supported<decltype(item)>) {
                         #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                           item.KeepElementDeepCustomPointers();
+                           item.template KeepElementDeepCustomPointers<SID>();
                         #else
-                           item.KeepElementDeepStandardPointers();
+                           item.template KeepElementDeepStandardPointers<SID>();
                         #endif
                      }
                   });
                }
             }
-            else if constexpr (CT::Sparse<TypeOf<C>>) {
+            else if constexpr (CT::Sparse<TypeOf<C, SID>>) {
                self.Apply([](auto&& item) {
                   if constexpr (CT::Supported<decltype(item)>) {
                      #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        item.KeepElementDeepCustomPointers();
+                        item.template KeepElementDeepCustomPointers<SID>();
                      #else
-                        item.KeepElementDeepStandardPointers();
+                        item.template KeepElementDeepStandardPointers<SID>();
                      #endif
                   }
                });
@@ -168,9 +169,10 @@ namespace Langulus::Anyness::Component
       /// Dereference memory block once and destroy all elements if data was  
       /// fully dereferenced                                                  
       ///   @attention this never modifies any state                          
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       void Free(this C& self) noexcept {
-         auto a = self.GetAllocation();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         auto a = self.template GetAllocation<SID>();
          if (not a)
             return;
 
@@ -178,13 +180,13 @@ namespace Langulus::Anyness::Component
          if (a->GetUses() == 1) {
             // Dereference, and eventually destroy all elements - all   
             // indirections, as well as dense elements.                 
-            self.DestroyAllElements();
+            self.template DestroyAllElements<true, SID>();
             Allocator::Deallocate(DecvqAllCast(a));
          }
          else {
             // Dereference, and eventually destroy all elements -       
             // affect indirections and elements behind them only!       
-            self.template DestroyAllElements<false>();
+            self.template DestroyAllElements<false, SID>();
             DecvqAllCast(a)->AddRef(-1);
          }
       }
@@ -193,29 +195,30 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't perform any referencing or indirection         
       ///   @attention assumes first element is validly constructed           
       ///   @attention does not modify any container state                    
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       void DestroyElementShallow(this C& self) noexcept {
          //static_assert(CT::ContainsOne<C>,
          //   "Destroying only first element in a container with many");
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          static_assert(not CT::DeeplyOwned<C>,
             "Can't shallow-destroy a deeply-owned container");
 
-         if (self.IsEmpty())
+         if (self.template IsEmpty<SID>())
             return;
 
          if constexpr (CT::TypeErased<C>) {
             // Destroying a type-erased element                         
-            auto T = self.GetType();
+            auto T = self.template GetType<SID>();
             if (const auto destructor = T.GetDestructor()) {
-               const auto ptr = self.GetRaw();
+               const auto ptr = self.template GetRaw<SID>();
                destructor(ptr);
             }
          }
          else {
             // Destroying a statically-typed element                    
-            using T = TypeOf<C>;
+            using T = TypeOf<C, SID>;
             if constexpr (CT::Destroyable<T>) {
-               auto& element = self.Get();
+               auto& element = self.template Get<void, SID>();
                element.~T();
             }
          }

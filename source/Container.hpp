@@ -10,6 +10,7 @@
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Sequence.hpp>
 #include <Langulus/HashOf.hpp>
+#include <Langulus/CT/Bool.hpp>
 
 /// Make the rest of the code aware, that Langulus::Anyness has been included 
 #define LANGULUS_LIBRARY_ANYNESS() 1
@@ -65,12 +66,81 @@ namespace Langulus::Anyness
       /// Tag for calling container constructors that absorb container.       
       /// Often used to disambiguate and state clear intent.                  
       struct Absorb {};
+
+      /// Inner function that picks the best possible handle type, depending  
+      /// on a container's constness and type-erasedness, as well as member   
+      /// types HandleType and HandleMutType. Guarantees to always result in  
+      /// a handle. No-op if C is already a handle.                           
+      template<CT::Container C> 
+      consteval auto DecideHandleType() {
+         static_assert(not CT::Sheddable<C>, "Strip sheddables first");
+         static_assert(not CT::Reference<C>, "Strip references first");
+
+         if constexpr (CT::Handle<C>) {
+            // No-op                                                    
+            return Types<C> {};
+         }
+         else if constexpr (requires {typename C::HandleType; typename C::HandleMutType; }) {
+            // Always prioritize custom handle types if defined         
+            return Types<Tmut<C, typename C::HandleMutType, typename C::HandleType>> {};
+         }
+         else if constexpr (CT::TypeErased<C>) {
+            // Type-erased handle                                       
+            if constexpr (CT::Owned<C>)
+               return Types<Tmut<C, HandleMut,         Handle>> {};
+            else
+               return Types<Tmut<C, HandleDisownedMut, HandleDisowned>> {};
+         }
+         else {
+            // Statically-typed handle                                  
+            using T     = TypeOf<C>;
+            using Inner = Tmut<C, T&, ConstAll<T&>>;
+            if constexpr (CT::Owned<C>)
+               return Types<THandle        <Inner>> {};
+            else
+               return Types<THandleDisowned<Inner>> {};
+         }
+      }
+
+      /// Inner function that picks the best possible handle or reference     
+      /// type, depending on a container's constness and type-erasedness, as  
+      /// well as member types HandleType and HandleMutType. Unlike           
+      /// DecideHandleType, this one will prefer to use references whenever   
+      /// possible.                                                           
+      template<CT::Container C> 
+      consteval auto DecidePickType() {
+         static_assert(not CT::Sheddable<C>, "Strip sheddables first");
+         static_assert(not CT::Reference<C>, "Strip references first");
+
+         if constexpr (requires {typename C::Pick; typename C::PickMut; }) {
+            // Always prioritize custom pick types if defined           
+            return Types<Tmut<C, typename C::PickMut, typename C::Pick>> {};
+         }
+         else if constexpr (CT::TypeErased<C>) {
+            // Type-erased containers always result in handle picks     
+            return DecideHandleType<C>();
+         }
+         else {
+            // Statically-typed container - always prefer a reference,  
+            // unless we're referencing an owned pointer                
+            using T = TypeOf<C>;
+            if constexpr (CT::Owned<C> and CT::Sparse<T> and CT::Mutable<C>)
+               return DecideHandleType<C>();
+            else
+               return Types<ConstAll<T&>> {};
+         }
+      }
    }
 
    constexpr Inner::Stackwise Stackwise {};
    constexpr Inner::Piecewise Piecewise {};
    constexpr Inner::Absorb    Absorb {};
    
+   template<CT::Container C>
+   using DecideHandle = typename decltype(Inner::DecideHandleType<Deref<C>>())::First;
+
+   template<CT::Container C>
+   using DecidePick = typename decltype(Inner::DecidePickType<Deref<C>>())::First;
 
    namespace Component
    {
@@ -154,21 +224,26 @@ namespace Langulus::Anyness
       template<CT::NotVoid, Cid>          friend struct Stack;
       template<Cid, CT::HeapEntry...>              friend struct HeapReference;
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
-      template<Cid, bool, Cid...>         friend struct OwnershipStack;
+      LglsComOwnershipEmergent(friend);
+      LglsComOwnershipStack(friend);
       template<Cid, bool>                 friend struct OwnershipDeepReference;
       template<Cid, bool>                 friend struct OwnershipDeepHeap;
       template<Cid, class, Cid...>        friend struct CountStack;
       template<Cid, class, Cid...>        friend struct ReserveStack;
       template<Cid, class, Cid...>        friend struct HashStack;
       template<Cid, class, Cid...>        friend struct HashHeap;
+      LglsComHashEmergent(friend);
       LglsComComparison(friend);
+      LglsComEmplacement(friend);
       LglsComAssignment(friend);
+      LglsComInsertion(friend);
+      LglsComMerging(friend);
       template<CT::State...>              friend struct StateStack;
       template<Cid, class, Cid...>        friend struct ReserveEmergent;
       template<Cid, Cid...>               friend struct Conversion;
       template<Cid, class, Cid...>        friend struct IndexedHashHeap;
       template<Cid, class, Cid...>        friend struct IndexedHashStack;
-
+      LglsComIndexedCommonHashed(friend);
 
       // Here lies the stack. It is an optimized tuple that is filled   
       // with requests from components.                                 
@@ -246,22 +321,22 @@ namespace Langulus::Anyness
       }
       
       /// Calculate the heap header size, aligned to the contained type       
-      template<Cid ID, CT::Container C>
+      template<Cid SID, CT::Container C>
       constexpr size_t GetHeapHeaderSize(this C const& self) assumptious {
-         constexpr size_t header = Inner::DefineHeapHeader<ID, COMPONENTS...>();
+         constexpr size_t header = Inner::DefineHeapHeader<SID, COMPONENTS...>();
          if constexpr (CT::TypeErased<C>) {
-            const auto type = self.template GetType<ID>();
+            const auto type = self.template GetType<SID>();
             LglsAssumeDev(type, "Requesting header size for an untyped container");
             return Align(header, type.GetAlignment());
          }
-         else return Align(header, self.template GetAlignment<ID>());
+         else return Align(header, self.template GetAlignment<SID>());
       }
 
       /// Calculate the heap footer size                                      
-      template<CT::Container C>
+      template<Cid SID, CT::Container C>
       constexpr size_t GetHeapFooterSize(this C const& self, size_t reserve) noexcept {
          return Inner::DefineHeapFooter<COMPONENTS...>(
-            reserve, self.GetIndirections()
+            reserve, self.template GetIndirections<SID>()
          );
       }
 
@@ -362,6 +437,162 @@ namespace Langulus::Anyness
             if_available(self.C::AssignDefault());
          });
          return self;
+      }
+      
+      /// Get a handle to the first element(s). Very useful for internal use. 
+      /// No-op if C is already a handle, even if AS is specified.            
+      ///   @attention element might be uninitialized if C is discontiguous   
+      ///   @tparam AS the handle type, or void to decide automatically       
+      ///   @tparam SID the shared heap entry ID                              
+      ///   @return the handle to the first element. This element might not   
+      ///      be initialized if C is discontiguous!                          
+      template<class AS = void, Cid SID = 0, CT::NotHandle C>
+      decltype(auto) GetHandle(this C&& self) {
+         static_assert(CT::Handle<AS> or CT::Void<AS>,
+            "Must be either a handle or void (which will use DecideHandle");
+         static_assert(not CT::Reference<AS>,
+            "Strip references first");
+         static_assert(CT::Dense<AS>,
+            "Must be dense");
+
+         using H = Tif<CT::Void<AS>, DecideHandle<C>, AS>;
+         if constexpr (CT::Pair<H>) {
+            // User desires a pair, so we give them a pair              
+            using H1 = decltype(H::key);
+            using H2 = decltype(H::val);
+            return H {
+               self.template GetHandle<H1, SID + 0>(),
+               self.template GetHandle<H2, SID + 1>()
+            };
+         }
+         else {
+            // User desires a simple handle                             
+            if constexpr (CT::TypeErased<H>) {
+               // Type-erased handle                                    
+               if constexpr (CT::DeeplyOwned<H>) {
+                  return H {
+                     self.template Get<void, SID>(),
+                     self.template GetEntries<SID>(),
+                     self.template GetType<SID>()
+                  };
+               }
+               else if constexpr (CT::Owned<H>) {
+                  return H {
+                     self.template Get<void, SID>(),
+                     self.template GetAllocation<SID>(),
+                     self.template GetType<SID>()
+                  };
+               }
+               else {
+                  return H {
+                     self.template Get<void, SID>(),
+                     self.template GetType<SID>()
+                  };
+               }
+            }
+            else {
+               // Statically typed handle                               
+               using HT = Deref<TypeOf<H>>;
+
+               if constexpr (CT::TypeErased<C>) {
+                  LglsAssert(self.template GetType<SID>().IsSame(MetaDataOf<HT>()),
+                     "Type mismatch", ": ", self.template GetType<SID>(),
+                     " not same as ", MetaDataOf<HT>()
+                  );
+               }
+               else if constexpr (CT::Map<C>) {
+                  static_assert(Same<typename TypeOf<C>::template At<SID>, HT>,
+                     "Type mismatch"
+                  );
+               }
+               else {
+                  static_assert(Same<TypeOf<C>, HT>,
+                     "Type mismatch"
+                  );
+               }
+
+               if constexpr (CT::DeeplyOwned<H>) {
+                  return H {
+                     &self.template Get<void, SID>(),
+                     self.template GetEntries<SID>()
+                  };
+               }
+               else if constexpr (CT::Owned<H>) {
+                  return H {
+                     &self.template Get<void, SID>(),
+                     self.template GetAllocation<SID>()
+                  };
+               }
+               else return H {&self.template Get<void, SID>()};
+            }
+         }
+      }
+
+      /// No-op in case C is already a handle                                 
+      template<class = void, Cid SID = 0, CT::Handle C>
+      constexpr C&& GetHandle(this C&& self) noexcept {
+         static_assert(SID == 0);//TODO maybe not noop? what if we want to get the first subhandle from a pair-handle?
+         return LglsFwd(self);
+      }
+      
+      /// Visit all element's handles and perform a function on them.         
+      /// Handles both linear and non-linear containers gracefully.           
+      ///   @param lambda the function to perform. If the lambda returns bool,
+      ///      you can end the loop early by returning false.                 
+      ///   @param cookie the element/hash table spot to start off from       
+      template<CT::Container C>
+      void Apply(this C&& self, auto&& lambda, [[maybe_unused]] size_t cookie = 0) {
+         LglsAssumeDev(not self.IsEmpty(), "Make sure container isn't empty");
+
+         if constexpr (CT::ContainsOne<C>) {
+            //TODO GetHandle here is redundant, but most use cases      
+            // of Apply require it.                                     
+            lambda(self.GetHandle());
+         }
+         else {
+            auto item = self.GetHandle() + cookie;
+
+            if constexpr (CT::Contiguous<C>) {
+               // Iterate a contiguous array of elements                
+               LglsAssumeDev(cookie < self.GetCount(), "Limp cookie (contiguous)");
+               auto const end = item + (self.GetCount() - cookie);
+               while (item.GetRaw() != end.GetRaw()) {
+                  if constexpr (CT::Bool<decltype(lambda(item))>) {
+                     if (not lambda(item))
+                        return;
+                  }
+                  else lambda(item);
+                  ++item;
+               }
+            }
+            else {
+               // Iterate a hash table - some cells might be empty,     
+               // thus container might not be a contiguous array        
+               LglsAssumeDev(cookie < self.GetReserved(), "Limp cookie (discontiguous)");
+               const auto tableBeg = self.GetHashTableInner() + cookie;
+               const auto tableEnd = tableBeg + (self.GetReserved() - cookie);
+               auto table = tableBeg;
+               while (table != tableEnd) {
+                  if (*table) {
+                     if constexpr (CT::Bool<decltype(lambda(item))>) {
+                        if (not lambda(item))
+                           return;
+                     }
+                     else lambda(item);
+                  }
+                  else {
+                     if constexpr (CT::Bool<decltype(lambda(Unsupported{}))>) {
+                        if (not lambda(Unsupported{}))
+                           return;
+                     }
+                     else lambda(Unsupported{});
+                  }
+
+                  ++item;
+                  ++table;
+               }
+            }
+         }
       }
 
    public:
@@ -533,80 +764,4 @@ namespace Langulus
       /// End this iterating function and jump immediately to the next        
       constexpr LoopControl NextLoop = LoopControl::NextLoop;
    }
-}
-
-namespace Langulus::Anyness
-{
-   namespace Inner
-   {
-      /// Inner function that picks the best possible handle type, depending  
-      /// on a container's constness and type-erasedness, as well as member   
-      /// types HandleType and HandleMutType. Guarantees to always result in  
-      /// a handle. No-op if C is already a handle.                           
-      template<CT::Container C> 
-      consteval auto DecideHandleType() {
-         static_assert(not CT::Sheddable<C>, "Strip sheddables first");
-         static_assert(not CT::Reference<C>, "Strip references first");
-
-         if constexpr (CT::Handle<C>) {
-            // No-op                                                    
-            return Types<C> {};
-         }
-         else if constexpr (requires {typename C::HandleType; typename C::HandleMutType; }) {
-            // Always prioritize custom handle types if defined         
-            return Types<Tmut<C, typename C::HandleMutType, typename C::HandleType>> {};
-         }
-         else if constexpr (CT::TypeErased<C>) {
-            // Type-erased handle                                       
-            if constexpr (CT::Owned<C>)
-               return Types<Tmut<C, HandleMut,         Handle>> {};
-            else
-               return Types<Tmut<C, HandleDisownedMut, HandleDisowned>> {};
-         }
-         else {
-            // Statically-typed handle                                  
-            using T     = TypeOf<C>;
-            using Inner = Tmut<C, T&, ConstAll<T&>>;
-            if constexpr (CT::Owned<C>)
-               return Types<THandle        <Inner>> {};
-            else
-               return Types<THandleDisowned<Inner>> {};
-         }
-      }
-
-      /// Inner function that picks the best possible handle or reference     
-      /// type, depending on a container's constness and type-erasedness, as  
-      /// well as member types HandleType and HandleMutType. Unlike           
-      /// DecideHandleType, this one will prefer to use references whenever   
-      /// possible.                                                           
-      template<CT::Container C> 
-      consteval auto DecidePickType() {
-         static_assert(not CT::Sheddable<C>, "Strip sheddables first");
-         static_assert(not CT::Reference<C>, "Strip references first");
-
-         if constexpr (requires {typename C::Pick; typename C::PickMut; }) {
-            // Always prioritize custom pick types if defined           
-            return Types<Tmut<C, typename C::PickMut, typename C::Pick>> {};
-         }
-         else if constexpr (CT::TypeErased<C>) {
-            // Type-erased containers always result in handle picks     
-            return DecideHandleType<C>();
-         }
-         else {
-            // Statically-typed container - always prefer a reference,  
-            // unless we're referencing an owned pointer                
-            using T = TypeOf<C>;
-            if constexpr (CT::Owned<C> and CT::Sparse<T> and CT::Mutable<C>)
-               return DecideHandleType<C>();
-            else
-               return Types<ConstAll<T&>> {};
-         }
-      }
-   }
-
-   template<CT::Container C>
-   using DecideHandle = typename decltype(Inner::DecideHandleType<Deref<C>>())::First;
-
-   template<CT::Container C>
-   using DecidePick = typename decltype(Inner::DecidePickType<Deref<C>>())::First;
 }

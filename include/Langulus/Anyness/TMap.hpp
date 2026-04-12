@@ -68,7 +68,7 @@ namespace Langulus::Anyness
       using Pick           = HandleType;
       using PickMut        = HandleMutType;
 
-      static constexpr bool TypeErased = CT::Void<K> or CT::Void<V>;
+      static constexpr bool TypeErased = false;
 
       constexpr TMap() noexcept {
          this->ConstructDefault();

@@ -43,45 +43,48 @@ namespace Langulus::Anyness::Component
    struct Emplacement {
       using CTTI_Component = Yes<>;
 
-      static constexpr Cid Id = ID;
-      static constexpr int ComponentPrecedence = 3000;
+      static constexpr Cid  Id = ID;
+      static constexpr int  ComponentPrecedence = 3000;
+      static constexpr bool Shared = sizeof...(SHARED) > 0;
 
    protected:
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid, class>             friend struct Insertion;
+      LglsComInsertion(friend);
       LglsComMerging(friend);
-      template<Cid, class, Cid...>     friend struct IndexedCommonHashed;
+      LglsComIndexedCommonHashed(friend);
       template<CT::Handle, CT::Handle> friend struct THandlePair;
-      //template<State::StateValue>      friend struct Anyness::Inner::Map;
-
 
       /// Clone the 'rhs'.                                                    
       /// Assumes all indirections are ordinary pointers, and is thus faster. 
-      template<CT::Container C, CT::NoIntent IT>
+      template<Cid SID = ID, CT::Container C, CT::NoIntent IT>
       void EmplaceByCloningStandardPointers(this C& self, IT const& rhs) {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          static_assert(CT::ContainsOne<C>,
-            "Emplacing only first element in a container with many. GetHandle() first?");
+            "Emplacing only first element in a container with many. "
+            "GetHandle() first?"
+         );
 
-         constexpr bool has_entries = requires { self.GetEntries(); };
+         constexpr bool has_entries = requires { self.template GetEntries<SID>(); };
          [[maybe_unused]] DMeta T;
          // If T is Text**, then dst/src are Text***                    
-         void** dst = static_cast<void**>(self.GetHeapInnerAsVoid());
+         void** dst = static_cast<void**>(self.template GetHeapInnerAsVoid<SID>());
          void** src;
          
          if constexpr (CT::Handle<IT>) {
+            static_assert(not CT::Pair<IT>);
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>) {
                T = rhs.GetTypeInner();
-               LglsAssumeDev(self.IsSame(T), "Type mismatch");               
+               LglsAssumeDev(self.template IsSame<SID>(T), "Type mismatch");               
             }
-            else static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
+            else static_assert(Same<TypeOf<C, SID>, TypeOf<IT>>, "Type mismatch");
             src = static_cast<void**>(rhs.GetHeapInnerAsVoid());
          }
          else {
             if constexpr (CT::TypeErased<C>) {
-               LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
-               T = self.GetTypeInner();
+               LglsAssumeDev((self.template IsSame<IT, SID>()), "Type mismatch");
+               T = self.template GetTypeInner<SID>();
             }
-            else static_assert(Same<TypeOf<C>, IT>, "Type mismatch");   
+            else static_assert(Same<TypeOf<C, SID>, IT>, "Type mismatch");   
             src = static_cast<void**>(const_cast<void*>(static_cast<const void*>(&rhs)));
          }
 
@@ -106,7 +109,7 @@ namespace Langulus::Anyness::Component
                // If T is Text**, ent is Allocation*[2]                 
                [[maybe_unused]] Allocation const* const* ent;
                if constexpr (has_entries)
-                  ent = self.GetEntriesInner();
+                  ent = self.template GetEntriesInner<SID>();
                
                if (indirects > 1) {
                   // Allocate multiple indirections                     
@@ -175,7 +178,7 @@ namespace Langulus::Anyness::Component
             //                                                          
             // Both sides are statically-typed and we can benefit       
             // from a lot of compile-time optimizations.                
-            using T = TypeOf<C>;
+            using T = TypeOf<C, SID>;
             constexpr size_t indirects = IndirectsOf<T>;
             if constexpr (indirects > 0) {
                // Clone the origin first                                
@@ -194,7 +197,7 @@ namespace Langulus::Anyness::Component
                LglsAssert(cloned_origin, "Out of memory");
                [[maybe_unused]] Allocation const* const* ent;
                if constexpr (has_entries)
-                  ent = self.GetEntries();
+                  ent = self.template GetEntries<SID>();
 
                if constexpr (indirects > 1) {
                   // Multiple indirections                              
@@ -255,31 +258,35 @@ namespace Langulus::Anyness::Component
       /// Clone the 'rhs'.                                                    
       /// This is a more generic approach that is considerably slower.        
       //TODO could benefit from static optimization                          
-      template<CT::Container C, CT::NoIntent IT>
+      template<Cid SID = ID, CT::Container C, CT::NoIntent IT>
       void EmplaceByCloningCustomPointers(this C& self, IT const& rhs) {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          static_assert(CT::ContainsOne<C>,
-            "Emplacing only first element in a container with many. GetHandle() first?");
+            "Emplacing only first element in a container with many. "
+            "GetHandle() first?"
+         );
 
          void const* src_origin;         
          if constexpr (CT::Handle<IT>) {
+            static_assert(not CT::Pair<IT>);
             if constexpr (CT::TypeErased<C> or CT::TypeErased<IT>)
-               LglsAssumeDev(self.IsSame(rhs.GetTypeInner()), "Type mismatch");
+               LglsAssumeDev(self.template IsSame<SID>(rhs.GetTypeInner()), "Type mismatch");
             else
-               static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
+               static_assert(Same<TypeOf<C, SID>, TypeOf<IT>>, "Type mismatch");
             
             src_origin = rhs.GetDense().GetRaw();
          }
          else {
             if constexpr (CT::TypeErased<C>)
-               LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
+               LglsAssumeDev((self.template IsSame<IT, SID>()), "Type mismatch");
             else
-               static_assert(Same<TypeOf<C>, IT>, "Type mismatch");
+               static_assert(Same<TypeOf<C, SID>, IT>, "Type mismatch");
             
             src_origin = static_cast<const void*>(&DenseCast(rhs));
          }
 
          // Clone the origin first                                      
-         const DMeta T = self.GetType();
+         const DMeta T = self.template GetType<SID>();
          auto indirections = T.GetIndirections();
 
          if (indirections) {
@@ -301,7 +308,7 @@ namespace Langulus::Anyness::Component
             // Then clone all indirection layers in reverse order       
             [[maybe_unused]] EntryPtr entries;
             if constexpr (CT::DeeplyOwned<C>) {
-               entries = self.GetEntriesInner();
+               entries = self.template GetEntriesInner<SID>();
                DecvqAllCast(entries[indirections]) = cloned;
             }
          
@@ -326,13 +333,13 @@ namespace Langulus::Anyness::Component
             }
 
             // The final indirection is stored in mHeap                 
-            memcpy(self.GetHeapInnerAsVoid(), &next_pointer, T.GetSize());
+            memcpy(self.template GetHeapInnerAsVoid<SID>(), &next_pointer, T.GetSize());
          }
          else {
             // Containing dense data                                    
             T.GetCloneConstructor()(
                const_cast<void*>(src_origin),
-               self.GetHeapInner()
+               self.template GetHeapInner<SID>()
             );
          }
       }
@@ -347,13 +354,16 @@ namespace Langulus::Anyness::Component
       ///   @param intent constructor argument. If this container             
       ///      is statically typed, this can be any constructor argument,     
       ///      otherwise it has to be an instance of the contained type.      
-      template<CT::Container C, CT::Intent I>
+      template<Cid SID = ID, CT::Container C, CT::Intent I>
       void EmplaceWithIntent(this C&& self, I&& intent) {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          static_assert(CT::ContainsOne<C>,
-            "Emplacing only first element in a container with many. GetHandle() first?");
+            "Emplacing only first element in a container with many. "
+            "GetHandle() first?"
+         );
          using IT = Decvq<Deref<TypeOf<I>>>;
-         LglsAssumeDev(self.GetRaw(), "Invalid heap");
-         LglsAssumeDev(self.IsTyped(), "Invalid type");
+         LglsAssumeDev(self.template GetRaw<SID>(), "Invalid heap");
+         LglsAssumeDev(self.template IsTyped<SID>(), "Invalid type");
          decltype(auto) rhs = LglsFwd(intent.what);
          static_assert(not CT::Copied<I>,
             "Since this function assumes container has been preallocated, "
@@ -362,12 +372,13 @@ namespace Langulus::Anyness::Component
 
          if constexpr (CT::Cloned<I>) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               self.EmplaceByCloningCustomPointers(rhs);
+               self.template EmplaceByCloningCustomPointers<SID>(rhs);
             #else
-               self.EmplaceByCloningStandardPointers(rhs);
+               self.template EmplaceByCloningStandardPointers<SID>(rhs);
             #endif
          }
          else if constexpr (CT::Handle<IT>) {
+            //TODO what if handle is a pair?
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership.   
@@ -375,19 +386,19 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C, IT>) {
                //                                                       
                // Either this container or the handle is type-erased    
-               auto T = rhs.GetType();
-               LglsAssumeDev(self.IsSame(T), "Type mismatch");
-               auto src = const_cast<void*>(static_cast<const void*>(rhs.GetRaw()));
-               auto dst = self.GetRaw();
+               auto T = rhs.template GetType<SID>();
+               LglsAssumeDev(self.template IsSame<SID>(T), "Type mismatch");
+               auto src = const_cast<void*>(static_cast<const void*>(rhs.template GetRaw<SID>()));
+               auto dst = self.template GetRaw<SID>();
                
                if constexpr (CT::Moved<I>) {
-                  if (rhs.IsConstant())
+                  if (rhs.template IsConstant<SID>())
                      T.GetReferConstructor()(src, dst);
                   else
                      T.GetMoveConstructor()(src, dst);
                }
                else if constexpr (CT::Abandoned<I>) {
-                  if (rhs.IsConstant())
+                  if (rhs.template IsConstant<SID>())
                      T.GetReferConstructor()(src, dst);
                   else
                      T.GetAbandonConstructor()(src, dst);
@@ -399,34 +410,34 @@ namespace Langulus::Anyness::Component
                else
                   static_assert(false, "Unrecognized intent");
 
-               if_available(self.EmplaceEntries(LglsFwd(intent)));
+               if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
             }
             else {
                //                                                       
                // Both sides are statically-typed and we can benefit    
                // from a lot of compile-time optimizations.             
                if constexpr (CT::Typed<C, IT>)
-                  static_assert(Same<TypeOf<C>, TypeOf<IT>>, "Type mismatch");
+                  static_assert(Same<TypeOf<C, SID>, TypeOf<IT, SID>>, "Type mismatch");
                else
-                  LglsAssumeDev(self.IsSame(rhs), "Type mismatch");
-               using T = Tif<CT::Typed<C>, TypeOf<C>, TypeOf<IT>>;
+                  LglsAssumeDev(self.template IsSame<SID>(rhs), "Type mismatch");
+               using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT, SID>>;
 
                if constexpr (CT::Mutable<T> or not I::IsMoved())
-                  IntentNew(self.GetHeapInner(), I::Nest(*rhs.template GetRawAs<T>()));
+                  IntentNew(self.template GetHeapInner<SID>(), I::Nest(*rhs.template GetRawAs<T, SID>()));
                else
-                  IntentNew(self.GetHeapInner(), Refer(*rhs.template GetRawAs<T>()));
+                  IntentNew(self.template GetHeapInner<SID>(), Refer(*rhs.template GetRawAs<T, SID>()));
 
-               if_available(self.EmplaceEntries(LglsFwd(intent)));
+               if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
             }
          }
          else {
             if constexpr (CT::TypeErased<C, IT>) {
                //                                                       
                // This container is type-erased                         
-               LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
-               auto T = self.GetType();
+               LglsAssumeDev((self.template IsSame<IT, SID>()), "Type mismatch");
+               auto T = self.template GetType<SID>();
                const auto src = const_cast<void*>(static_cast<const void*>(&rhs));
-               const auto dst = self.GetRaw();
+               const auto dst = self.template GetRaw<SID>();
                
                if constexpr (CT::Moved<I>)
                   T.GetMoveConstructor()(src, dst);
@@ -439,19 +450,19 @@ namespace Langulus::Anyness::Component
                else
                   static_assert(false, "Unrecognized intent");
 
-               if_available(self.EmplaceEntries(LglsFwd(intent)));
+               if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
             }
             else {
                //                                                       
                // This container is statically-typed                    
                if constexpr (CT::Typed<C>)
-                  static_assert(Same<TypeOf<C>, IT>, "Type mismatch");
+                  static_assert(Same<TypeOf<C, SID>, IT>, "Type mismatch");
                else
-                  LglsAssumeDev(self.template IsSame<IT>(), "Type mismatch");
+                  LglsAssumeDev((self.template IsSame<IT, SID>()), "Type mismatch");
 
-               IntentNew(self.GetHeapInnerAsVoid(), LglsFwd(intent));
+               IntentNew(self.template GetHeapInnerAsVoid<SID>(), LglsFwd(intent));
 
-               if_available(self.EmplaceEntries(LglsFwd(intent)));
+               if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
             }
          }
       }
@@ -466,13 +477,16 @@ namespace Langulus::Anyness::Component
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
       ///   @attention doesn't modify count                                   
-      template<AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C>
+      template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C>
       void EmplaceDefault(this C& self) {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          static_assert(CT::ContainsOne<C>,
-            "Emplacing only first element in a container with many. GetHandle() first?");
+            "Emplacing only first element in a container with many. "
+            "GetHandle() first?"
+         );
 
          if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-            if_available(self.ResetState());
+            if_available(self.template ResetState<SID>());
          }
 
          if constexpr (CT::TypeErased<C>) {
@@ -480,30 +494,30 @@ namespace Langulus::Anyness::Component
             // This container is type-erased                            
             if constexpr (STRAT != AllocationStrategy::NoStateChange) {
                if constexpr (CT::NotVoid<E>)
-                  self.template SetType<E>();
+                  self.template SetType<E, SID>();
             }
 
             if constexpr (CT::NotVoid<E>) {
                // The type we're constructing is statically known       
                static_assert(CT::Defaultable<E>,
                   "Contained type is not default-constructible");
-               LglsAssumeDev(self.template IsSame<E>(), "Type mismatch");
+               LglsAssumeDev((self.template IsSame<E, SID>()), "Type mismatch");
 
                // Allocate if we have to                                
                if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
-                  self.AllocateFresh(self.RequestHeap(1));
+                  self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
-                  self.AllocateMore(1);
+                  self.template AllocateMore<SID>(1);
 
                // Construct the first element                           
-               new (self.GetRaw()) E {};
+               new (self.template GetRaw<SID>()) E {};
 
                if constexpr (CT::Sparse<E>)
-                  if_available(*self.GetEntries() = nullptr);
+                  if_available(*self.template GetEntries<SID>() = nullptr);
             }
             else {
                // The type we're constructing isn't statically known    
-               auto T = self.GetTypeInner();
+               auto T = self.template GetTypeInner<SID>();
                auto constructor = T.GetDefaultConstructor();
                LglsAssert(constructor,
                   "Contained type is not default-constructible");
@@ -511,16 +525,16 @@ namespace Langulus::Anyness::Component
                // Allocate if we have to. Do it only after we're sure   
                // that construction is possible                         
                if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
-                  self.AllocateFresh(self.RequestHeap(1));
+                  self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
-                  self.AllocateMore(1);
+                  self.template AllocateMore<SID>(1);
 
                // Construct the first element                           
-               constructor(self.GetRaw());
+               constructor(self.template GetRaw<SID>());
 
-               if constexpr (requires { self.GetEntries(); }) {
+               if constexpr (requires { self.template GetEntries<SID>(); }) {
                   if (T.IsSparse())
-                     *self.GetEntries() = nullptr;
+                     *self.template GetEntries<SID>() = nullptr;
                }
             }
          }
@@ -529,35 +543,35 @@ namespace Langulus::Anyness::Component
             // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
             if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-               self.GetType();
-               self.AllocateFresh(self.RequestHeap(1));
+               self.template GetType<SID>();
+               self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
             }
             else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate) {
-               self.GetType();
-               self.AllocateMore(1);
+               self.template GetType<SID>();
+               self.template AllocateMore<SID>(1);
             }
 
             // Construct the first element                              
-            using T = TypeOf<C>;
-            LglsAssumeDev(self.template IsSame<T>(), "Type mismatch");
-            new (self.GetRaw()) T {};
+            using T = TypeOf<C, SID>;
+            LglsAssumeDev((self.template IsSame<T, SID>()), "Type mismatch");
+            new (self.template GetRaw<SID>()) T {};
             
             if constexpr (CT::Sparse<T>)
-               if_available(*self.GetEntries() = nullptr);
+               if_available(*self.template GetEntries<SID>() = nullptr);
          }
 
          // Update count                                                
          if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-            if_available(self.SetCountInner(1));
+            if_available(self.template SetCountInner<SID>(1));
          }
          else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate
-         and requires { self.SetCountInner(1); }) {
-            if (self.IsEmpty())
-               self.SetCountInner(1);
+         and requires { self.template SetCountInner<SID>(1); }) {
+            if (self.template IsEmpty<SID>())
+               self.template SetCountInner<SID>(1);
          }
 
          // Update hash                                                 
-         if_available(self.SetHashInner(0));
+         if_available(self.template SetHashInner<SID>(0));
       }
 
       /// Emplace a new manually constructed item at the first position.      
@@ -565,15 +579,18 @@ namespace Langulus::Anyness::Component
       /// Supports describe-construction and handles.                         
       ///   @attention this overwrites previous handle without dereferencing  
       ///      it, and without destroying anything                            
-      template<AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C, class...A>
+      template<Cid SID = ID, AllocationStrategy STRAT = AllocationStrategy::TypeAndFreshAllocate, class E = void, CT::Container C, class...A>
       void EmplaceConstruct(this C& self, A&&...arguments) {
+         static_assert(SID == ID or ((SID == SHARED) or ...));
          static_assert(STRAT != AllocationStrategy::NoStateChange or CT::ContainsOne<C>,
-            "Emplacing only first element in a container with many. GetHandle() first?");
+            "Emplacing only first element in a container with many. "
+            "GetHandle() first?"
+         );
          static_assert(sizeof...(A) > 0,
             "No arguments - use EmplaceDefault instead");
 
          if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-            if_available(self.ResetState());
+            if_available(self.template ResetState<SID>());
          }
 
          if constexpr (CT::TypeErased<C>) {
@@ -585,11 +602,11 @@ namespace Langulus::Anyness::Component
                // Set type if we have to                                
                if constexpr (STRAT != AllocationStrategy::NoStateChange) {
                   if constexpr (CT::NotVoid<E>)
-                     self.template SetType<E>();
+                     self.template SetType<E, SID>();
                   else if constexpr (CT::Handle<A1>)
-                     self.SetType(DeintCast(arguments...).GetType());
+                     self.template SetType<SID>(DeintCast(arguments...).template GetType<SID>());
                   else if constexpr (not Same<A1, Describe>)
-                     self.SetType(MetaDataOf<Decvq<Deref<Deint<A1>>>>());
+                     self.template SetType<SID>(MetaDataOf<Decvq<Deref<Deint<A1>>>>());
                }
 
                if constexpr (Same<A1, Describe>) {
@@ -600,19 +617,19 @@ namespace Langulus::Anyness::Component
                         "Describe-construction works only for dense data");
                      static_assert(CT::DescribeConstructible<E>,
                         "Contained type is not describe-constructible");
-                     LglsAssumeDev(self.template IsSame<E>(), "Type mismatch");
+                     LglsAssumeDev((self.template IsSame<E, SID>()), "Type mismatch");
 
                      // Allocate if we have to                          
                      if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
-                        self.AllocateFresh(self.RequestHeap(1));
+                        self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                      else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
-                        self.AllocateMore(1);
+                        self.template AllocateMore<SID>(1);
 
-                     new (self.GetRaw()) E {LglsFwd(arguments)...};
+                     new (self.template GetRaw<SID>()) E {LglsFwd(arguments)...};
                   }
                   else {
                      // The type we're describing isn't known statically
-                     auto T = self.GetTypeInner();
+                     auto T = self.template GetTypeInner<SID>();
                      LglsAssert(T.IsDense(),
                         "Describe-construction works only for dense data");
                      auto constructor = T.GetDescribeConstructor();
@@ -622,36 +639,36 @@ namespace Langulus::Anyness::Component
                      // Allocate if we have to. Do it only after we're  
                      // sure that construction is possible              
                      if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
-                        self.AllocateFresh(self.RequestHeap(1));
+                        self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                      else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
-                        self.AllocateMore(1);
+                        self.template AllocateMore<SID>(1);
 
                      // Describe-construct the first element            
-                     constructor(self.GetRaw(), LglsFwd(arguments.what)...);
+                     constructor(self.template GetRaw<SID>(), LglsFwd(arguments.what)...);
                   }
                }
                else {
                   // Allocate if we have to                             
                   if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate)
-                     self.AllocateFresh(self.RequestHeap(1));
+                     self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
                   else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate)
-                     self.AllocateMore(1);
+                     self.template AllocateMore<SID>(1);
 
                   // Construct the first element                        
                   if constexpr (CT::Copied<IntentOf(arguments)...>)
-                     self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(arguments))...);
+                     self.GetHandle().template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                   else
-                     self.GetHandle().EmplaceWithIntent(FWDIntent(arguments)...);
+                     self.GetHandle().template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
                }
             }
             else if constexpr (CT::NotVoid<E>) {
                // Set type if we have to                                
                if constexpr (STRAT != AllocationStrategy::NoStateChange)
-                  self.template SetType<E>();
+                  self.template SetType<E, SID>();
 
                // Construct the first element                           
                if constexpr (CT::Dense<E>)
-                  self.EmplaceWithIntent(Abandon{E {LglsFwd(arguments)...}});
+                  self.template EmplaceWithIntent<SID>(Abandon{E {LglsFwd(arguments)...}});
                else static_assert(false,
                   "Too many arguments for emplacing a sparse instance");
             }
@@ -666,40 +683,40 @@ namespace Langulus::Anyness::Component
             // This container is statically-typed. E is ignored.        
             // Allocate if we have to                                   
             if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-               self.GetType();
-               self.AllocateFresh(self.RequestHeap(1));
+               self.template GetType<SID>();
+               self.template AllocateFresh<SID>(self.template RequestHeap<SID>(1));
             }
             else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate) {
-               self.GetType();
-               self.AllocateMore(1);
+               self.template GetType<SID>();
+               self.template AllocateMore<SID>(1);
             }
 
             // Construct the first element                              
-            using T = TypeOf<C>;
+            using T = TypeOf<C, SID>;
             if constexpr (sizeof...(A) == 1 and (CT::Sparse<T> or Same<T, Deint<A>...>)) {
                if constexpr (CT::Copied<IntentOf(arguments)...>)
-                  self.GetHandle().EmplaceWithIntent(Refer(LglsFwd(arguments))...);
+                  self.GetHandle().template EmplaceWithIntent<SID>(Refer(LglsFwd(arguments))...);
                else
-                  self.GetHandle().EmplaceWithIntent(FWDIntent(arguments)...);
+                  self.GetHandle().template EmplaceWithIntent<SID>(FWDIntent(arguments)...);
             }
             else if constexpr (CT::Dense<T>)
-               self.EmplaceWithIntent(Abandon {Decvq<T> {LglsFwd(arguments)...}});
+               self.template EmplaceWithIntent<SID>(Abandon {Decvq<T> {LglsFwd(arguments)...}});
             else static_assert(false,
                "Too many arguments for emplacing a sparse instance");
          }
          
          // Update count                                                
          if constexpr (STRAT == AllocationStrategy::TypeAndFreshAllocate) {
-            if_available(self.SetCountInner(1));
+            if_available(self.template SetCountInner<SID>(1));
          }
          else if constexpr (STRAT == AllocationStrategy::TypeAndReallocate
-         and requires { self.SetCountInner(1); }) {
-            if (self.IsEmpty())
-               self.SetCountInner(1);
+         and requires { self.template SetCountInner<SID>(1); }) {
+            if (self.template IsEmpty<SID>())
+               self.template SetCountInner<SID>(1);
          }
 
          // Update hash                                                 
-         if_available(self.SetHashInner(0));
+         if_available(self.template SetHashInner<SID>(0));
       }
 
    public:
@@ -711,11 +728,12 @@ namespace Langulus::Anyness::Component
       ///   @param arguments Constructor arguments for initializing an        
       ///      element. If C is type-erased, argument must be Describe.       
       ///   @return a reference or handle to the newly created element        
-      template<class E = void, CT::ContainsMany C, class...A>
+      template<class E = void, Cid SID = ID, CT::ContainsMany C, class...A>
       auto EmplaceAt(this C& self, CT::Index auto&& at, A&&...arguments)
       -> DecidePick<C> requires CT::IndexedLinearly<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
-         DecidePick<C> pick = self.template AsAt<DecidePick<C>>(LglsFwd(at));
-         pick.Emplace(LglsFwd(arguments)...);
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         DecidePick<C> pick = self.template AsAt<DecidePick<C>, SID>(LglsFwd(at));
+         pick.template Emplace<E, SID>(LglsFwd(arguments)...);
          return pick;
       }
 
@@ -725,27 +743,28 @@ namespace Langulus::Anyness::Component
       ///      container is statically-typed.                                 
       ///   @param arguments Constructor arguments                            
       ///   @return a reference or handle to the newly created element        
-      template<class E = void, CT::Container C, class...A>
+      template<class E = void, Cid SID = ID, CT::Container C, class...A>
       auto Emplace(this C& self, A&&...arguments)
       -> DecidePick<C> /*requires CT::RangeEmplaceable<C, A...>*/ {
-         auto a = self.GetAllocation();
+         static_assert(SID == ID or ((SID == SHARED) or ...));
+         auto a = self.template GetAllocation<SID>();
          if (not a) {
             // No ownership, just fresh-allocate                        
             try {
                if constexpr (sizeof...(arguments) > 0)
-                  self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                  self.template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
                else
-                  self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
+                  self.template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
             }
             catch (...) {
                // Reset heap count in case 'self' was disowned          
-               if_available(self.SetReservedInner(0));
-               if_available(self.SetHashTableInner(nullptr));
-               self.ResetCount();
+               if_available(self.template SetReservedInner<SID>(0));
+               if_available(self.template SetHashTableInner<SID>(nullptr));
+               self.template ResetCount<SID>();
                throw;
             }
          }
-         else if (self.IsEmpty()) {
+         else if (self.template IsEmpty<SID>()) {
             // The container is empty, but an allocation is available   
             if (a->GetUses() != 1) {
                // We're not the only owner of this memory.              
@@ -754,15 +773,15 @@ namespace Langulus::Anyness::Component
 
                try {
                   if constexpr (sizeof...(arguments) > 0)
-                     self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                     self.template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
                   else
-                     self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
+                     self.template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
                }
                catch (...) {
-                  self.SetAllocationInner(nullptr);
-                  if_available(self.SetReservedInner(0));
-                  if_available(self.SetHashTableInner(nullptr));
-                  self.ResetCount();
+                  self.template SetAllocationInner<SID>(nullptr);
+                  if_available(self.template SetReservedInner<SID>(0));
+                  if_available(self.template SetHashTableInner<SID>(nullptr));
+                  self.template ResetCount<SID>();
                   throw;
                }
             }
@@ -770,9 +789,9 @@ namespace Langulus::Anyness::Component
                // Emplace a new element on the first position.          
                // We're allowed to reuse the memory.                    
                if constexpr (sizeof...(arguments) > 0)
-                  self.template EmplaceConstruct<AllocationStrategy::TypeAndReallocate, E>(LglsFwd(arguments)...);
+                  self.template EmplaceConstruct<SID, AllocationStrategy::TypeAndReallocate, E>(LglsFwd(arguments)...);
                else
-                  self.template EmplaceDefault<AllocationStrategy::TypeAndReallocate, E>();
+                  self.template EmplaceDefault<SID, AllocationStrategy::TypeAndReallocate, E>();
             }
          }
          else {
@@ -780,61 +799,62 @@ namespace Langulus::Anyness::Component
             if (a->GetUses() != 1) {
                // We're not the only owner of this memory.              
                // We have to branch off with a fresh allocation.        
-               self.Free();
+               self.template Free<SID>();
 
                try {
                   if constexpr (sizeof...(arguments) > 0)
-                     self.template EmplaceConstruct<AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
+                     self.template EmplaceConstruct<SID, AllocationStrategy::TypeAndFreshAllocate, E>(LglsFwd(arguments)...);
                   else
-                     self.template EmplaceDefault<AllocationStrategy::TypeAndFreshAllocate, E>();
+                     self.template EmplaceDefault<SID, AllocationStrategy::TypeAndFreshAllocate, E>();
                }
                catch (...) {
-                  self.SetAllocationInner(nullptr);
-                  if_available(self.SetReservedInner(0));
-                  if_available(self.SetHashTableInner(nullptr));
-                  self.ResetCount();
+                  self.template SetAllocationInner<SID>(nullptr);
+                  if_available(self.template SetReservedInner<SID>(0));
+                  if_available(self.template SetHashTableInner<SID>(nullptr));
+                  self.template ResetCount<SID>();
                   throw;
                }
             }
             else {
                // We're allowed to reuse the memory.                    
                // Need to destroy and overwrite only the first element. 
-               auto item = self.GetHandle();
-               item.DestroyElement();
-               if_available(item.ResetEntries());
+               auto item = self.template GetHandle<void, SID>();
+               item.template DestroyElement<SID>();
+               if_available(item.template ResetEntries<SID>());
                //TODO clear the correspnding hash table spot?
 
                // Emplace a new element on the first position.          
                // Any state change is forbidden - container is full.    
                try {
                   if constexpr (sizeof...(arguments) > 0)
-                     item.template EmplaceConstruct<AllocationStrategy::NoStateChange, E>(LglsFwd(arguments)...);
+                     item.template EmplaceConstruct<SID, AllocationStrategy::NoStateChange, E>(LglsFwd(arguments)...);
                   else
-                     item.template EmplaceDefault<AllocationStrategy::NoStateChange, E>();
+                     item.template EmplaceDefault<SID, AllocationStrategy::NoStateChange, E>();
                }
                catch (...) {
                   // If emplacement fails, we are forced to destroy     
                   // all remaining elements as well.                    
                   if constexpr (CT::ContainsMany<C>) {
                      item += 1;
-                     const auto itemsEnd = self.GetHandle() + self.GetCount();
+                     const auto itemsEnd = self.template GetHandle<void, SID>() + self.template GetCount<SID>();
                      while (item.GetRaw() != itemsEnd.GetRaw()) {
-                        item.DestroyElement();
+                        item.template DestroyElement<SID>();
                         ++item;
                      }
                   }
+
                   Allocator::Deallocate(DecvqAllCast(a));
-                  self.SetAllocationInner(nullptr);
-                  if_available(self.SetReservedInner(0));
-                  if_available(self.SetHashTableInner(nullptr));
-                  self.ResetCount();
+                  self.template SetAllocationInner<SID>(nullptr);
+                  if_available(self.template SetReservedInner<SID>(0));
+                  if_available(self.template SetHashTableInner<SID>(nullptr));
+                  self.template ResetCount<SID>();
                   throw;
                }
             }
          }
 
          // Return a reference/handle to the newly emplaced element     
-         return self.template As<Deref<DecidePick<C>>>();
+         return self.template As<Deref<DecidePick<C>>, SID>();
       }
    };
 }

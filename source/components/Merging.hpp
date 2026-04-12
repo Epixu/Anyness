@@ -74,7 +74,7 @@ namespace Langulus::Anyness::Component
       ///      order to get the proper offsets.                               
       ///   @return 1 if element was inserted, and the position where it was  
       ///      inserted or found at (if it was already existing)              
-      template<CT::NotPair A, CT::ContainsMany C> requires (not Shared)
+      template<class A, CT::ContainsMany C> requires (not Shared)
       auto MergeInner(this C& self, A&& a) -> MergeResult {
          // Gather the number of all elements and types.                
          // Empty containers can't change type. If one of the type      
@@ -145,35 +145,29 @@ namespace Langulus::Anyness::Component
       }
 
       /// Merge a pair at the performance-optimal position.                   
-      /// This usually means at the back of a contiguous container. Supports  
-      /// intents and arrays.                                                 
-      ///   @param a an element or array of elements (and its intent) to merge
-      ///   @attention when 'a' is an array, you have to be careful with      
-      ///      using MergeResult::lastInsertedIndex, as it will show only the 
-      ///      position of the last insertion! Merge elements one-by-one, in  
-      ///      order to get the proper offsets.                               
+      /// This usually means at the back of a contiguous container.           
+      ///   @param a pair of elements (and its intent) to merge               
       ///   @return 1 if element was inserted, and the position where it was  
       ///      inserted or found at (if it was already existing)              
-      template<CT::Pair A, CT::ContainsMany C> requires Shared
-      auto MergeInner(this C& self, A&& a) -> MergeResult {
+      template<CT::Pair P, CT::ContainsMany C> requires Shared
+      auto MergeInner(this C& self, P&& a) -> MergeResult {
+         static_assert(not CT::Array<P>);
+
          // Gather the number of all elements and types.                
          // Empty containers can't change type. If one of the type      
          // changes raises a conflict, this function will throw.        
-         size_t rhs_count;
-         if constexpr (CT::Array<A>) {
-            using E = Decvq<Deref<DeextAll<Deint<A>>>>;
-            self.template SetType<E>();
-            rhs_count = GetAllExtentsOf(a);
+         if constexpr (CT::TypeErased<P>) {
+            self.template SetType<0>(DeintCast(a).GetKeyType());
+            self.template SetType<1>(DeintCast(a).GetValType());
          }
          else {
-            using E = Decvq<Deref<Deint<A>>>;
-            self.template SetType<E>();
-            rhs_count = 1;
+            self.template SetType<typename Decay<P>::KeyType, 0>();
+            self.template SetType<typename Decay<P>::ValType, 1>();
          }
 
          // Reallocate/branch out                                       
          const size_t lhs_count = self.GetCount();
-         const size_t all_count = lhs_count + rhs_count;
+         const size_t all_count = lhs_count + 1;
          self.BranchOut(all_count);
 
          // Insert the new elements if they're not contained yet        
@@ -211,7 +205,6 @@ namespace Langulus::Anyness::Component
          };
 
          try {
-            //TODO actual array insertion
             insert(LglsFwd(a));
          }
          catch (...) {

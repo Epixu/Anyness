@@ -44,8 +44,8 @@ namespace Langulus::Anyness::Component
       template<Cid, CT::HeapEntry...>              friend struct HeapReference;
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
       template<Cid, Cid...>                        friend struct Removal;
-      template<Cid, Cid...>                        friend struct Emplacement;
-      template<Cid, bool, Cid...>                  friend struct OwnershipEmergent;
+      LglsComEmplacement(friend);
+      LglsComOwnershipEmergent(friend);
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -57,37 +57,38 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes container is not disowned!                     
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
-      template<bool FIND_MISSING = false, CT::Container C>
+      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
+         static_assert(SID == ID);
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many. GetHandle() first?");
 
          if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.GetAllocation(),
+            LglsAssumeDev(self.template GetAllocation<SID>(),
                "Can't keep anything in a container without ownership");
          }
 
-         if (self.IsEmpty())
+         if (self.template IsEmpty<SID>())
             return;
 
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Referencing a type-erased element                        
-            const auto T = self.GetType();
+            const auto T = self.template GetType<SID>();
 
             if (T.IsSparse()) {
-               auto entries = self.GetEntriesInner();
+               auto entries = self.template GetEntriesInner<SID>();
                if (not entries)
                   return;
 
                const auto subT = T.GetDeptr();
-               const auto ptr = *static_cast<void**>(const_cast<void*>(self.GetRaw()));
+               const auto ptr = *static_cast<void**>(const_cast<void*>(self.template GetRaw<SID>()));
                LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
                if (subT.IsSparse()) {
                   // Pointer to pointer                                 
                   DecideHandle<C> temp {ptr, entries + 1, subT};
-                  temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
+                  temp.template KeepElementDeepStandardPointers<FIND_MISSING, SID>();
                }
                else if constexpr (REF_INDIVIDUAL) {
                   if (const auto referencer = subT.GetReferencer()) {
@@ -110,21 +111,21 @@ namespace Langulus::Anyness::Component
          else {
             //                                                          
             // Referencing a statically-typed element                   
-            using T = TypeOf<C>;         
+            using T = TypeOf<C, SID>;         
 
             if constexpr (CT::Sparse<T>) {
                using DT = Deptr<T>;
-               auto entries = self.GetEntriesInner();
+               auto entries = self.template GetEntriesInner<SID>();
                if (not entries)
                   return;
 
-               auto& ptr = *self.template GetRawAs<T>();
+               auto& ptr = *self.template GetRawAs<T, SID>();
                LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
                if constexpr (CT::Sparse<DT>) {
                   // Pointer to pointer                                 
                   typename DecideHandle<C>::Denser temp {ptr, entries + 1};
-                  temp.template KeepElementDeepStandardPointers<FIND_MISSING>();
+                  temp.template KeepElementDeepStandardPointers<FIND_MISSING, SID>();
                }
                else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
                   // Pointer to dense                                   
@@ -152,29 +153,30 @@ namespace Langulus::Anyness::Component
       ///      it in the memory manager, if MANAGED_MEMORY feature is enabled 
       ///   @attention assumes container is not disowned!                     
       ///   @attention doesn't change any container state                     
-      template<bool FIND_MISSING = false, CT::Container C>
+      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
+         static_assert(SID == ID);
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many. GetHandle() first?");
-         LglsAssumeDev(not self.IsEmpty(),
+         LglsAssumeDev(not self.template IsEmpty<SID>(),
             "No point in calling this on an empty container");
 
          if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.GetAllocation(),
+            LglsAssumeDev(self.template GetAllocation<SID>(),
                "Can't keep anything in a container without ownership");
          }
 
          // Check if disowned/outside authority                         
-         auto entries = self.GetEntriesInner();
+         auto entries = self.template GetEntriesInner<SID>();
          if (not entries)
             return;
 
          if constexpr (CT::TypeErased<C>) {
             // Check if containing indirections                         
-            DMeta T = self.GetType();
+            auto T = self.template GetType<SID>();
             LglsAssumeDev(T.IsSparse(), "Sparseness mismatch");
 
-            void* src = DecvqAllCast(self.GetHeapInner());
+            void* src = DecvqAllCast(self.template GetHeapInner<SID>());
             while (src and T.IsSparse()) {
                auto nextT = T.GetDeptr();
                if constexpr (FIND_MISSING) {
@@ -215,10 +217,10 @@ namespace Langulus::Anyness::Component
             }
          }
          else {
-            using T = TypeOf<C>;
+            using T = TypeOf<C, SID>;
             static_assert(CT::Sparse<T>, "Sparseness mismatch");
 
-            auto ptr = self.Get();
+            auto ptr = self.template Get<SID>();
             ForEachIndirection(ptr, [&entries](auto& i) {
                if constexpr (FIND_MISSING) {
                   if (not *entries)
@@ -244,33 +246,33 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes there's exactly 1 use of the allocation!       
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state or entry            
-      template<bool DESTROY = true, CT::Container C>
+      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
+         static_assert(SID == ID);
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
          if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.GetAllocation(),
+            LglsAssumeDev(self.template GetAllocation<SID>(),
                "Can't destroy anything in a container without ownership");
-            LglsAssumeDev(not DESTROY or self.GetUses() == 1,
+            LglsAssumeDev(not DESTROY or self.template GetUses<SID>() == 1,
                "Can't destroy data used from multiple locations");
-            if (self.IsEmpty())
+            if (self.template IsEmpty<SID>())
                return;
          }
 
          if constexpr (CT::TypeErased<C>) {
             //                                                          
             // Destroying a type-erased element                         
-            const auto T = self.GetType();
-            
+            const auto T = self.template GetType<SID>();            
             if (T.IsSparse()) {
-               auto entries = self.GetEntriesInner();
+               auto entries = self.template GetEntriesInner<SID>();
                if (not entries)
                   return;
 
                // If T is Text**, subT is Text*                         
                const auto subT = T.GetDeptr();
                // If T is Text**, ptr becomes Text**                    
-               const auto ptr = *static_cast<void**>(self.GetRaw());
+               const auto ptr = *static_cast<void**>(self.template GetRaw<SID>());
                LglsAssumeDevAndOptimize(ptr, "Null pointer");
 
                if (*entries and 1 == (*entries)->GetUses()) {
@@ -279,7 +281,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      if (auto subEntry = entries + 1) {
                         DecideHandle<C> temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeepStandardPointers<DESTROY>();
+                        temp.template DestroyElementDeepStandardPointers<DESTROY, SID>();
                      }
                   }
                   else if (auto destructor = subT.GetDestructor()) {
@@ -301,7 +303,7 @@ namespace Langulus::Anyness::Component
                      // Dereference all indirection layers.             
                      if (auto subEntry = entries + 1) {
                         DecideHandle<C> temp {ptr, subEntry, subT};
-                        temp.template DestroyElementDeepStandardPointers<DESTROY>();
+                        temp.template DestroyElementDeepStandardPointers<DESTROY, SID>();
                      }
                   }
                   else if constexpr (REF_INDIVIDUAL) {
@@ -331,7 +333,7 @@ namespace Langulus::Anyness::Component
             else if constexpr (DESTROY) {
                if (const auto destructor = T.GetDestructor()) {
                   // Call destructor of dense element                   
-                  const auto ptr = self.GetRaw();
+                  const auto ptr = self.template GetRaw<SID>();
                   if constexpr (REF_INDIVIDUAL) {
                      IF_SAFE(if (const auto referencer = T.GetReferencer())
                         referencer(ptr, -1));
@@ -343,15 +345,15 @@ namespace Langulus::Anyness::Component
          else {
             //                                                          
             // Destroying a statically-typed element                    
-            using T = TypeOf<C>;
+            using T = TypeOf<C, SID>;
             
             if constexpr (CT::Sparse<T>) {
                using DT = Deptr<T>;
-               auto entries = self.GetEntries();
+               auto entries = self.template GetEntries<SID>();
                if (not entries)
                   return;
 
-               auto& ptr = *self.template GetRawAs<T>();
+               auto& ptr = *self.template GetRawAs<T, SID>();
                if (not ptr)
                   return;
                //LglsAssumeDev(ptr, "Null pointer");
@@ -362,7 +364,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      using DenserH = typename DecideHandle<C>::Denser;
                      DenserH temp{ptr, entries + 1};
-                     temp.template DestroyElementDeepStandardPointers<DESTROY>();
+                     temp.template DestroyElementDeepStandardPointers<DESTROY, SID>();
                   }
                   else if constexpr (CT::Destroyable<DT>) {
                      // Pointer to a complete, destroyable dense.       
@@ -380,7 +382,7 @@ namespace Langulus::Anyness::Component
                      // Destroy all nested indirection layers.          
                      using DenserH = typename DecideHandle<C>::Denser;
                      DenserH temp {ptr, entries + 1};
-                     temp.template DestroyElementDeepStandardPointers<DESTROY>();
+                     temp.template DestroyElementDeepStandardPointers<DESTROY, SID>();
                   }
                   else if constexpr (REF_INDIVIDUAL and CT::Referenced<DT>) {
                      // This element occurs in more than one place.     
@@ -422,29 +424,30 @@ namespace Langulus::Anyness::Component
       ///   @attention doesn't change any container state                     
       ///   @tparam DESTROY will never destroy a dense element if true        
       //TODO could use some statically-typed optimizations
-      template<bool DESTROY = true, CT::Container C>
+      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
+         static_assert(SID == ID);
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
 
          if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.GetAllocation(),
+            LglsAssumeDev(self.template GetAllocation<SID>(),
                "Can't destroy anything in a container without ownership");
-            LglsAssumeDev(not DESTROY or self.GetUses() == 1,
+            LglsAssumeDev(not DESTROY or self.template GetUses<SID>() == 1,
                "Can't destroy data used from multiple locations");
-            if (self.IsEmpty())
+            if (self.template IsEmpty<SID>())
                return;
          }
 
          //                                                             
          // Destroying a type-erased element                            
-         DMeta T = self.GetType();
+         auto T = self.template GetType<SID>();
          if (T.IsSparse()) {
-            auto entries = self.GetEntriesInner();
+            auto entries = self.template GetEntriesInner<SID>();
             if (not entries)
                return;
             
-            void const* src = self.GetRaw();
+            void const* src = self.template GetRaw<SID>();
             while (src and T.IsSparse()) {
                auto nextT = T.GetDeptr();
                const bool nextDense = nextT.IsDense();
@@ -521,12 +524,14 @@ namespace Langulus::Anyness::Component
       ///      when REF_INDIVIDUAL is enabled and items are CT::Referenced.   
       ///   @param intent entries will be copied/sought if handle/sparse,     
       ///      unless I is disowned                                           
-      template<CT::Container C, CT::Intent I> requires (CT::TypeErased<C> or CT::Sparse<TypeOf<C>>)
+      template<Cid SID = ID, CT::Container C, CT::Intent I>
+      requires(CT::TypeErased<C> or CT::Sparse<TypeOf<C>>)
       void EmplaceEntries(this C& self, I&& intent) {
+         static_assert(SID == ID);
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   
             // sparsity check for an early exit.                        
-            if (not self.IsSparse())
+            if (not self.template IsSparse<SID>())
                return;
          }
 
@@ -538,23 +543,23 @@ namespace Langulus::Anyness::Component
             "because it will overwrite/reference new allocations");
 
          decltype(auto) rhs = LglsFwd(intent.what);
-         const auto indirections = self.GetIndirections();
+         const auto indirections = self.template GetIndirections<SID>();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
-         auto entries = self.GetEntriesInner();
+         auto entries = self.template GetEntriesInner<SID>();
 
          if constexpr (CT::Handle<I>) {
             // Copy all entries and reference them, unless we're moving 
             // a handle                                                 
             using H = TypeOf<I>;
-            LglsAssumeDev(self.IsSame(rhs.GetType()),
-               "Type mismatch", ": ", self.GetType(),
-               " is not same as ", rhs.GetType()
+            LglsAssumeDev(self.template IsSame<SID>(rhs.template GetType<SID>()),
+               "Type mismatch", ": ", self.template GetType<SID>(),
+               " is not same as ", rhs.template GetType<SID>()
             );
 
             if constexpr (not CT::Disowned<I>
-            and requires { rhs.GetEntriesInner(); }) {
+            and requires { rhs.template GetEntriesInner<SID>(); }) {
                // We can copy entries from RHS handle                   
-               auto entries_src = rhs.GetEntriesInner();
+               auto entries_src = rhs.template GetEntriesInner<SID>();
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
@@ -563,7 +568,7 @@ namespace Langulus::Anyness::Component
                      // sure that source entries are zeroes, because    
                      // otherwise they will be dereferenced when H goes 
                      // out of scope.                                   
-                     LglsAssumeDev(rhs.GetUses() == 1,
+                     LglsAssumeDev(rhs.template GetUses<SID>() == 1,
                         "Can't move out from used memory");
                      memset(DecvqAllCast(entries_src), 0, entries_size);
                   }
@@ -574,9 +579,9 @@ namespace Langulus::Anyness::Component
                // We are not moving, so we have to reference all        
                // elements.                                             
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  self.KeepElementDeepCustomPointers();
+                  self.template KeepElementDeepCustomPointers<true, SID>();
                #else
-                  self.KeepElementDeepStandardPointers();
+                  self.template KeepElementDeepStandardPointers<true, SID>();
                #endif
             }
             else if constexpr (CT::AutoOwned<H> and REF_INDIVIDUAL) {
@@ -584,18 +589,18 @@ namespace Langulus::Anyness::Component
                // are referenced (even if they have no corresponding    
                // entry), we need to zero the source pointer, so that   
                // we avoid them getting dereferenced later.             
-               LglsAssumeDev(rhs.GetUses() == 1,
+               LglsAssumeDev(rhs.template GetUses<SID>() == 1,
                   "Can't move out from used memory");
-               auto pointers_src = rhs.GetRaw();
-               memset(DecvqAllCast(pointers_src), 0, rhs.GetBytesize());
+               auto pointers_src = rhs.template GetRaw<SID>();
+               memset(DecvqAllCast(pointers_src), 0, rhs.template GetBytesize<SID>());
             }
          }
          else if constexpr (CT::Sparse<Deint<I>>) {
             // Reference each indirection of a raw pointer              
             #if LANGULUS_FEATURE(MANAGED_MEMORY) or LANGULUS(SAFE) > 1
             using T = Decvq<Deref<Deint<I>>>;
-            LglsAssumeDev(self.template IsSame<T>(),
-               "Type mismatch", ": ", self.GetType(),
+            LglsAssumeDev((self.template IsSame<T, SID>()),
+               "Type mismatch", ": ", self.template GetType<SID>(),
                " is not same as ", NameOf<T>()
             );
             #endif
@@ -607,23 +612,25 @@ namespace Langulus::Anyness::Component
             constexpr bool sought = not CT::Disowned<I>;
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                if constexpr (CT::CustomPointer<T>)
-                  self.template KeepElementDeepCustomPointers<sought>();
+                  self.template KeepElementDeepCustomPointers<sought, SID>();
                else
-                  self.template KeepElementDeepStandardPointers<sought>();
+                  self.template KeepElementDeepStandardPointers<sought, SID>();
             #else
-               self.template KeepElementDeepStandardPointers<sought>();
+               self.template KeepElementDeepStandardPointers<sought, SID>();
             #endif
          }
       }
 
       /// Reset all entries for the first element                             
       ///   @attention this overwrites previous entries without dereferencing 
-      template<CT::Container C> requires (CT::TypeErased<C> or CT::Sparse<TypeOf<C>>)
+      template<Cid SID = ID, CT::Container C>
+      requires(CT::TypeErased<C> or CT::Sparse<TypeOf<C>>)
       void ResetEntries(this C&& self) {
+         static_assert(SID == ID);
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   
             // sparsity check for an early exit.                        
-            if (not self.IsSparse())
+            if (not self.template IsSparse<SID>())
                return;
          }
 
@@ -632,13 +639,13 @@ namespace Langulus::Anyness::Component
             "GetHandle() first?");
 
          if constexpr (not CT::Handle<C>) {
-            LglsAssumeDev(self.GetUses() == 1,
+            LglsAssumeDev(self.template GetUses<SID>() == 1,
                "ResetEntries shouldn't be called for shared memory");
          }
 
-         const auto indirections = self.GetIndirections();
+         const auto indirections = self.template GetIndirections<SID>();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
-         auto entries = self.GetEntriesInner();
+         auto entries = self.template GetEntriesInner<SID>();
          memset(DecvqAllCast(entries), 0, entries_size);
       }
    };

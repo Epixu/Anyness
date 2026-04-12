@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Component
    protected:
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
       template<Cid, Cid...>         friend struct IndexedCommon;
-      template<Cid, class, Cid...>  friend struct IndexedCommonHashed;
+      LglsComIndexedCommonHashed(friend);
       LglsComMerging(friend);
       template<Cid, Cid...>         friend struct Removal;
 

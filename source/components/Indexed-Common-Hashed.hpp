@@ -22,6 +22,7 @@ namespace Langulus::Anyness::Component
    struct IndexedCommonHashed : IndexedCommon<ID, SHARED...> {
       using TableType        = uint8_t;
       using IteratorCategory = ::std::random_access_iterator_tag;
+      static constexpr bool Shared = sizeof...(SHARED) > 0;
 
    protected:
       template<CT::Container C>
@@ -248,7 +249,9 @@ namespace Langulus::Anyness::Component
       template<CT::Container C, CT::Handle H> 
       auto TableEmplace(this C& self, Count<C> const start, H& swapper)
       -> Count<C> requires CT::NoIntent<H> {
-         static_assert((not Shared and CT::NotPair<H>) or (Shared and CT::Pair<H>), "Swapper handle must match the ");
+         static_assert(not Shared or CT::Pair<H>,
+            "Swapper handle must match the number of shared providers");
+
          // Get the starting index based on the key hash                
          const auto reserved = self.GetReserved();
          const auto tableBeg = self.GetHashTableInner();

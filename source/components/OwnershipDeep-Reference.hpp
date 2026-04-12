@@ -30,12 +30,11 @@ namespace Langulus::Anyness::Component
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
       template<Cid SID = ID>
-      auto GetEntries(this auto const& self) assumptious
-      -> Allocation const* const* {
+      auto GetEntries(this auto const& self) assumptious -> Allocation const* const* {
          static_assert(SID == ID);
-         if (self.IsSparse()) {
-            LglsAssumeDev(self.GetRaw(), "No memory available");
-            return self.GetEntriesInner();
+         if (self.template IsSparse<SID>()) {
+            LglsAssumeDev(self.template GetRaw<SID>(), "No memory available");
+            return self.template GetEntriesInner<SID>();
          }
          return nullptr;
       }
@@ -43,30 +42,29 @@ namespace Langulus::Anyness::Component
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
       template<Cid SID = ID, CT::Container C> requires CT::Indexed<C>
-      auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
-      -> Allocation const* const* {
+      auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious -> Allocation const* const* {
          static_assert(SID == ID);
-         if (self.IsSparse()) {
-            LglsAssumeDev(self.GetRaw(), "No memory available");
-            return self.GetEntriesInner() + self.SimplifyIndex(LglsFwd(idx));
+         if (self.template IsSparse<SID>()) {
+            LglsAssumeDev(self.template GetRaw<SID>(), "No memory available");
+            return self.template GetEntriesInner<SID>() + self.template SimplifyIndex<SID>(LglsFwd(idx));
          }
          return nullptr;
       }
 
    protected:
-      template<Cid, Cid...>   friend struct Emplacement;
       template<Cid, bool>     friend struct OwnershipDeepEmergent;
+      LglsComEmplacement(friend);
 
       /// Get the entry array (inner)                                         
-      template<uint SELECTOR = ID> requires (SELECTOR == ID)
+      template<Cid SID = ID> requires (SID == ID)
       constexpr auto& GetEntriesInner(this auto&& self) noexcept {
          return self.template AccessStack<OwnershipDeepReference>();
       }
 
       /// Set the entry array (inner)                                         
-      template<uint SELECTOR = ID> requires (SELECTOR == ID)
+      template<Cid SID = ID> requires (SID == ID)
       constexpr void SetEntriesInner(this auto& self, EntryPtr entries) noexcept {
-         self.template GetEntriesInner<SELECTOR>() = DecvqAllCast(entries);
+         self.template GetEntriesInner<SID>() = DecvqAllCast(entries);
       }
       
       /// Transfer from any kind of container.                                

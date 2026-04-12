@@ -46,7 +46,7 @@ namespace Langulus::Anyness::Component
       template<State::StateValue>   friend struct DefineState::Future;
       template<State::StateValue>   friend struct DefineState::Encrypted;
       template<State::StateValue>   friend struct DefineState::Compressed;
-      template<Cid, Cid...>         friend struct Emplacement;
+      LglsComEmplacement(friend);
 
       ///                                                                     
       /// The bitfield capable of containing all variable states              

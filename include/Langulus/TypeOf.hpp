@@ -21,36 +21,79 @@ namespace Langulus::CTTI
 namespace Langulus::CT::Inner
 {
    /// Helper function to extract underlying type                             
-   template<class T>
+   ///   @tparam T the type to inspect                                        
+   ///   @tparam INDEX used in case inner type is a Types<...> typelist, in   
+   ///      which case it retrieves the specified type in the sequence.       
+   ///      It is unspecified (-1) by default, which will spew a compile-time 
+   ///      error, if the underlying type is a list of types. If you provide  
+   ///      and INDEX larger than 0, but inner type is not a type list, it    
+   ///      will produce a compile-time error as well.                        
+   template<class T, int INDEX>
    consteval auto GetUnderlyingType() {
       static_assert(not ::std::is_reference_v<T>, "Strip references first");
 
-      if constexpr (::std::is_bounded_array_v<T>)
+      if constexpr (::std::is_bounded_array_v<T>) {
+         // Get the type of a bounded array (int[5] -> int)             
+         static_assert(INDEX <= 0, "Bounded arrays have exactly one inner type");
          return Types<Deext<T>> {};
+      }
       else if constexpr (Complete<CTTI::Typed<T>>) {
          // Checked externally, T doesn't have to be complete           
-         return Types<typename CTTI::Typed<T>::Type> {};
+         using InnerT = typename CTTI::Typed<T>::Type;
+         if constexpr (CT::Typelist<InnerT>) {
+            static_assert(INDEX >= 0,
+               "Inner type is a type-list - use INDEX to pick one of the types");
+            return Types<typename InnerT::template At<INDEX>> {};
+         }
+         else {
+            static_assert(INDEX <= 0, "Outer type has exactly one inner type");
+            return Types<InnerT> {};
+         }
       }
-      else if constexpr (::std::is_enum_v<T>)
+      else if constexpr (::std::is_enum_v<T>) {
+         // Get the type of an enum (enum stuff : char {...}; -> char)  
+         static_assert(INDEX <= 0, "Enums have exactly one inner type");
          return Types<::std::underlying_type_t<T>> {};
+      }
       else if constexpr (::std::is_class_v<T>) {
          // Checked internally, T has to be a complete type             
          static_assert(Complete<T>,
             "Can't get inner type of an incomplete outer type");
+
          if constexpr (requires { typename T::CTTI_Typed; }) {
+            // Inner type defined by a langulus protocol (CTTI_Typed)   
             using InnerT = typename T::CTTI_Typed;
             if constexpr (::std::is_void_v<InnerT> or ::std::same_as<InnerT, No>)
                return NoTypes {};
             else {
                static_assert(not ::std::same_as<InnerT, Yes<>>,
-                  "Instead of Yes<> pick a type for CTTI_Typed");
+                  "Instead of Yes<> pick a type(list) for CTTI_Typed");
+
+               if constexpr (CT::Typelist<InnerT>) {
+                  static_assert(INDEX >= 0,
+                     "Inner type is a type-list - use INDEX to pick one of the types");
+                  return Types<typename InnerT::template At<INDEX>> {};
+               }
+               else {
+                  static_assert(INDEX <= 0, "Outer type has exactly one inner type");
+                  return Types<InnerT> {};
+               }
+            }
+         }
+         else if constexpr (requires { typename T::value_type; }) {
+            // Inner type defined by a std protocol (value_type)        
+            using InnerT = typename T::value_type;
+            if constexpr (CT::Typelist<InnerT>) {
+               static_assert(INDEX >= 0,
+                  "Inner type is a type-list - use INDEX to pick one of the types");
+               return Types<typename InnerT::template At<INDEX>> {};
+            }
+            else {
+               static_assert(INDEX <= 0, "Outer type has exactly one inner type");
                return Types<InnerT> {};
             }
          }
-         else if constexpr (requires { typename T::value_type; })
-            return Types<typename T::value_type> {};
-         else
-            return NoTypes {};
+         else return NoTypes {};
       }
       else return NoTypes {};
    };
@@ -67,8 +110,8 @@ namespace Langulus
    ///   - if T is an enum -> return the underlying type                      
    ///   - if T has CTTI_Typed/value_type -> return the inner type(s)         
    ///   - otherwise just return a void type                                  
-   template<class T>
-   using TypeOf = typename decltype(CT::Inner::GetUnderlyingType<Deref<T>>())::First;
+   template<class T, int INDEX = -1>
+   using TypeOf = typename decltype(CT::Inner::GetUnderlyingType<Deref<T>, INDEX>())::First;
 
    namespace CT
    {

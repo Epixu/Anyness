@@ -63,7 +63,7 @@ namespace Langulus::Anyness::Component
       template<Cid, CT::HeapEntry...>              friend struct HeapReference;
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
       template<Cid, Cid...>                        friend struct Removal;
-      template<Cid, Cid...>                        friend struct Emplacement;
+      LglsComEmplacement(friend);
 
       /// Get allocation (inner)                                              
       ///   @attention may be uninitialized                                   

@@ -418,31 +418,34 @@ namespace Langulus::Anyness::Component
    protected:
       template<Cid, Cid...>                        friend struct Removal;
       template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
-      template<Cid, Cid...>                        friend struct Emplacement;
       template<Cid, Cid...>                        friend struct IndexedCommon;
+      LglsComEmplacement(friend);
 
       /// Reset the type of the container, unless it's type-constrained.      
       /// If this container isn't type-erased, this call is a no-op.          
       ///   @attention allocation remains the same, and might not correspond  
       ///      to the next type which is set                                  
+      template<Cid SID = ID> requires (SID == ID)
       constexpr void ResetType(this auto& self) noexcept {
          if constexpr (TypeErased) {
             if constexpr (requires { self.IsTypeConstrained(); }) {
-               if (not self.IsTypeConstrained())
-                  self.SetTypeInner({});
+               if (not self.IsTypeConstrained())//TODO should probably be based on ID, however implement this after StateRequests are added
+                  ThisCom::SetTypeInner({});
             }
-            else self.SetTypeInner({});
+            else ThisCom::SetTypeInner({});
          }
       }
       
       /// Get the contained type (inner)                                      
+      template<Cid SID = ID> requires (SID == ID)
       constexpr auto& GetTypeInner(this auto&& self) noexcept {
          return self.template AccessStack<TypedStack>();
       }
 
       /// Set the contained type (inner)                                      
+      template<Cid SID = ID> requires (SID == ID)
       constexpr void SetTypeInner(this auto& self, const META& type) noexcept {
-         self.GetTypeInner() = type;
+         ThisCom::GetTypeInner() = type;
       }
 
       /// Transfer from any kind of container, respecting intents             
@@ -454,21 +457,21 @@ namespace Langulus::Anyness::Component
       void ConstructFrom(this C& self, I&& intent) {
          if constexpr (not CT::Copied<I> and not CT::Cloned<I>) {
             if constexpr (CT::TypeErased<C>) {
-               self.SetType(intent->GetType());
+               ThisCom::SetType(intent->template GetType<ID>());
 
                // While we are interfacing external memory, we have to  
                // keep the type-constrained state, otherwise we risk    
                // interpreting contents the wrong way                   
-               if constexpr (not CT::TypeErased<I>)
+               if constexpr (CT::TypeErased<I>)
                   self.EnableTypeConstrained();
-               else if (intent->IsTypeConstrained())
+               else if (intent->IsTypeConstrained())//TODO should probably be based on ID, however implement this after StateRequests are added
                   self.EnableTypeConstrained();
             }
             else {
-               if constexpr (not CT::TypeErased<I>)
-                  self.template SetType<TypeOf<Deint<I>>>();
+               if constexpr (CT::TypeErased<I>)
+                  ThisCom::SetType(intent->template GetType<ID>());
                else
-                  self.SetType(intent->GetType());
+                  ThisCom::template SetType<TypeOf<Deint<I>, ID>>();
             }
          }
       }

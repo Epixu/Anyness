@@ -27,38 +27,46 @@ namespace Langulus::Anyness::Component
       
    protected:
       /// Get the heap pointer (inner)                                        
+      template<Cid SID = ID>
       constexpr auto& GetStackInner(this auto&& self) noexcept {
+         static_assert(SID == ID);
          return self.template AccessStack<Stack>();
       }
 
+      template<Cid SID = ID>
       constexpr void SetStackInner(this auto& self, T&& data) noexcept {
-         self.GetStackInner() = LglsFwd(data);
+         static_assert(SID == ID);
+         self.template GetStackInner<SID>() = LglsFwd(data);
       }
 
    public:
       /// Get a direct access to the stack memory                             
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       constexpr auto GetRaw(this C&& self) noexcept {
-         return &self.GetStackInner();
+         static_assert(SID == ID);
+         return &self.template GetStackInner<SID>();
       }
 
       /// Get a direct access to the stack memory as a different type         
-      template<class AS, CT::Container C>
+      template<class AS, Cid SID = ID, CT::Container C>
       constexpr auto GetRawAs(this C&& self) noexcept {
+         static_assert(SID == ID);
          using AScvq = LglsMutIf(C, AS*);
-         return static_cast<AScvq>(self.GetRaw());
+         return static_cast<AScvq>(self.template GetRaw<SID>());
       }
 
       /// Get a direct access to the stack memory's end                       
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       constexpr auto GetRawEnd(this C&& self) noexcept {
-         return self.GetRaw() + 1;
+         static_assert(SID == ID);
+         return self.template GetRaw<SID>() + 1;
       }
 
       /// Get a direct access to the stack memory's end                       
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C>
       constexpr auto GetRawReserveEnd(this C&& self) noexcept {
-         return self.GetRawEnd();
+         static_assert(SID == ID);
+         return self.template GetRawEnd<SID>();
       }
 
       /// Get reference to first element as sparse or dense, depending on T.  
@@ -67,15 +75,17 @@ namespace Langulus::Anyness::Component
       ///   @attention no type-safety                                         
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the stack                                              
-      template<class AS = void, CT::Container C>
+      template<class AS = void, Cid SID = ID, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) assumptious {
+         static_assert(SID == ID);
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
+
          using TC   = LglsMutIf(C, T);
          using TCP  = LglsMutIf(C, TC*);
          using TH   = Tif<CT::Void<AS>, TC, AS>;
          using THP  = LglsMutIf(C, TH*);
-         auto& stack = self.GetStackInner();
+         auto& stack = self.template GetStackInner<SID>();
 
          // Casting to a desired static type                            
          if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
@@ -100,8 +110,9 @@ namespace Langulus::Anyness::Component
       /// Conversion or copying may occur, depending on type.                 
       ///   @tparam AS the type we're wrapping in                             
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, CT::Container C> requires CT::Contiguous<C>
+      template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
       decltype(auto) As(this C&& self) {
+         static_assert(SID == ID);
          static_assert(not CT::Reference<AS>, "Strip references first");
 
          if constexpr (CT::Handle<AS>)
@@ -110,7 +121,7 @@ namespace Langulus::Anyness::Component
             // Access directly or wrapped in a container                
             if constexpr (Akin<T, AS>) {
                // Access directly                                       
-               return self.template Get<AS>();
+               return self.template Get<AS, SID>();
             }
             else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                // Wrap in a container                                   
@@ -199,7 +210,7 @@ namespace Langulus::Anyness::Component
       ///   @attention element might be uninitialized if C is discontiguous   
       ///   @tparam AS the handle type, or void to decide automatically       
       ///   @return the handle to the first element                           
-      template<class AS = void, CT::Container C>
+      /*template<class AS = void, CT::Container C>
       decltype(auto) GetHandle(this C&& self) {
          static_assert(CT::Handle<AS> or CT::Void<AS>,
             "Must be either a handle or void (which will use DecideHandle");
@@ -234,7 +245,7 @@ namespace Langulus::Anyness::Component
             else
                return H {&self.Get()};
          }
-      }
+      }*/
 
       /// Default-initialize count to zero                                    
       constexpr void ConstructDefault(this auto& self) noexcept {

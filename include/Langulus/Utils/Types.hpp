@@ -198,7 +198,16 @@ namespace Langulus
             "Provided argument is not a lambda of the form []<class,index> -> convertible to bool");
          return lambda.template operator()<T,0>();
       }
-      
+
+      /// Doesn't generate code for further loops if lambda returns anything  
+      /// but a No (utilizes a compile-time short-circuit)                    
+      static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
+         if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<T>())>)
+            return lambda.template operator()<T>();
+         else
+            return No {};
+      }
+
       static constexpr auto Expand(auto&& lambda) {
          return ForEach(LglsFwd(lambda));
       }
@@ -217,7 +226,6 @@ namespace Langulus
       ///      the lambda may or may not return a type list, which will be    
       ///      concatenated along if so                                       
       ///   @return a type list, containing the generated types               
-      // ReSharper disable once CppEntityUsedOnlyInUnevaluatedContext   
       static consteval CT::Typelist auto GenerateTypes(auto&& lambda) {
          static_assert(requires{ {lambda.template operator()<T>()} -> CT::NotVoid; },
             "Provided argument is not a lambda of the form []<class> -> non-void type");
@@ -244,10 +252,8 @@ namespace Langulus
       }
 
       template<class...N>
-      // ReSharper disable once CppFunctionIsNotImplemented             
       static consteval auto Concat(Types<N...>&&) -> Types<T, N...>;
       template<class N>
-      // ReSharper disable once CppFunctionIsNotImplemented             
       static consteval auto Concat(N&&) -> Types<T, N>;
 
       template<class N>

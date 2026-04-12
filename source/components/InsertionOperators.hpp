@@ -16,7 +16,7 @@ namespace Langulus::Anyness::Component
    ///   @tparam ID heap we're inserting to                                   
    ///   @tparam AS type to serialize as before inserting. Useful for byte    
    ///      and text containers. Use void to insert without serialization     
-   template<Cid ID, class AS>
+   template<Cid ID, class AS, Cid...SHARED>
    struct InsertionOperators {
       using CTTI_Component = Yes<>;
 

@@ -10,7 +10,6 @@
 #include "Iteration-Range.hpp"
 #include <Langulus/CT/Resolvable.hpp>
 #include <Langulus/CT/MinAlloc.hpp>
-#include <Langulus/CT/Bool.hpp>
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/Utils/Pot.hpp>
 #include <Langulus/Allocator.hpp>
@@ -46,16 +45,16 @@ namespace Langulus::Anyness::Component
       template<Cid>                 friend struct IterationOperators;
       template<Cid, Cid...>         friend struct Removal;
       template<Cid, Cid...>         friend struct IndexedCommon;
-      template<Cid, class, Cid...>  friend struct IndexedCommonHashed;
+      LglsComIndexedCommonHashed(friend);
       template<Cid, Cid...>         friend struct IndexedLinear;
       template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid, Cid...>         friend struct Emplacement;
+      LglsComEmplacement(friend);
       LglsComComparison(friend);
       template<Cid, Cid...>         friend struct Conversion;
       template<Cid, auto, Cid...>   friend struct CountStatic;
-      template<Cid, bool, Cid...>   friend struct OwnershipEmergent;
+      LglsComOwnershipEmergent(friend);
       template<Cid, bool>           friend struct OwnershipDeepEmergent;
-      template<Cid, class, Cid...>  friend struct HashEmergent;
+      LglsComHashEmergent(friend);
       
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;
@@ -116,8 +115,8 @@ namespace Langulus::Anyness::Component
       ///      type of the container, if statically typed                     
       template<class AS = void, Cid SID = ID, CT::Container C>
       constexpr decltype(auto) Get(this C&& self) assumptious {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
-         static_assert(not CT::Pair<AS>,      "AS can't be a pair");
          static_assert(not CT::Reference<AS>, "Strip references first");
          using TC   = LglsMutIf(C, TypeOf<C>);
          using TCP  = LglsMutIf(C, TC*);
@@ -180,8 +179,9 @@ namespace Langulus::Anyness::Component
       ///   @attention will throw if incompatible type is provided            
       ///   @tparam AS the type we're wrapping in                             
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, CT::Container C> requires CT::Contiguous<C>
+      template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
       decltype(auto) As(this C&& self) {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(not CT::Reference<AS>, "Strip references first");
 
          if constexpr (CT::Handle<AS>)
@@ -189,39 +189,39 @@ namespace Langulus::Anyness::Component
          else {
             // Access directly or wrapped in a container                
             if constexpr (CT::TypeErased<C>) {
-               if (self.template Is<AS>()) {
+               if (self.template Is<AS, SID>()) {
                   // Access directly                                    
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
-                     return Decvq<AS> {Absorb, self.template Get<AS>()};
+                     return Decvq<AS> {Absorb, self.template Get<AS, SID>()};
                   else
-                     return self.template Get<AS>();
+                     return self.template Get<AS, SID>();
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
                   Decvq<AS> temp {Absorb, self};
-                  if_available(temp.SetCountInner(1));
+                  if_available(temp.template SetCountInner<SID>(1));
                   return temp;
                }
                else {
                   // Runtime type mismatch error                        
-                  LglsError("Type mismatch", ": ", self.GetType(),
+                  LglsError("Type mismatch", ": ", self.template GetType<SID>(),
                      " not akin to ", MetaDataOf<AS>());
 
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
                      return Decvq<AS> {};
                   else
-                     return self.template Get<AS>();
+                     return self.template Get<AS, SID>();
                }
             }
             else {
-               if constexpr (Akin<TypeOf<C>, AS>) {
+               if constexpr (Akin<TypeOf<C, SID>, AS>) {
                   // Access directly                                    
-                  return self.template Get<AS>();
+                  return self.template Get<AS, SID>();
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
                   Decvq<AS> temp {Absorb, self};
-                  if_available(temp.SetCountInner(1));
+                  if_available(temp.template SetCountInner<SID>(1));
                   return temp;
                }
                else static_assert(false, "Type mismatch");
@@ -232,33 +232,34 @@ namespace Langulus::Anyness::Component
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<class AS = void, CT::Container C> requires CT::Contiguous<C>
+      template<Cid SID = ID, class AS = void, CT::Container C> requires CT::Contiguous<C>
       auto GetResolved(this C&& self)
       requires requires { typename Deref<C>::DeepType; } {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(CT::Container<D>, "D must result in a container type");
          static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
 
-         if (self.IsEmpty())
+         if (self.template IsEmpty<SID>())
             return D {};
-         if (not self.IsSparse())
-            return self.template As<D>();
+         if (not self.template IsSparse<SID>())
+            return self.template As<D, SID>();
 
          if constexpr (CT::TypeErased<C>) {
-            const auto T = self.GetType();
+            const auto T = self.template GetType<SID>();
             const auto resolver = T.GetResolver();
             if (resolver)
-               return D {resolver(self.GetDense().GetRaw())};
+               return D {resolver(self.template GetDense<SID>().GetRaw())};
             else
-               return self.template GetDense<D>();
+               return self.template GetDense<SID, D>();
 
          }
          else {
-            using T = TypeOf<C>;
+            using T = TypeOf<C, SID>;
             if constexpr (CT::Resolvable<T>)
-               return D {DenseCast(self.template Get<T>()).GetResolved()};
+               return D {DenseCast(self.template Get<T, SID>()).GetResolved()};
             else
-               return D {DenseCast(self.template Get<T>())};
+               return D {DenseCast(self.template Get<T, SID>())};
          }
       }
 
@@ -270,37 +271,40 @@ namespace Langulus::Anyness::Component
       ///   @param self deduced this                                          
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<class AS = void, CT::Container C> requires CT::Contiguous<C>
+      template<Cid SID = ID, class AS = void, CT::Container C> requires CT::Contiguous<C>
       auto GetDense(this C&& self, Count<C> count = CountMax<C>)
       requires requires { typename Deref<C>::DeepType; } {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(CT::Container<D>, "D must result in a container type");
-         LglsAssert(not self.IsEmpty(), "Can't GetDense from empty container");
-         if (not self.IsSparse() or count <= 0)
+
+         if (self.template IsEmpty<SID>())
+            return D {};
+         if (count <= 0 or not self.template IsSparse<SID>())
             return D {Absorb, Disown(self)};
 
          // Check if origin type is complete before attempting anything 
          if constexpr (CT::TypeErased<C>) {
-            const auto T = self.GetType();
+            const auto T = self.template GetType<SID>();
             if (count >= T.GetIndirections()) {
                LglsAssert(T.GetOrigin(),
-                  "Trying to interface incomplete data `", self.GetType(),
+                  "Trying to interface incomplete data `", self.template GetType<SID>(),
                   "` as dense"
                );
             }
          }
          else {
-            using T = TypeOf<C>;
+            using T = TypeOf<C, SID>;
             if (count >= IndirectsOf<T>) {
                LglsAssert(CT::Complete<Decay<T>>,
-                  "Trying to interface incomplete data `", self.GetType(),
+                  "Trying to interface incomplete data `", self.template GetType<SID>(),
                   "` as dense"
                );
             }
          }
 
-         void* src = DecvqAllCast(self.GetHeapInner());
-         auto T = self.GetType();
+         void* src = DecvqAllCast(self.template GetHeapInner<SID>());
+         auto T = self.template GetType<SID>();
          while (count and T.IsSparse()) {
             auto nextT = T.GetDeptr();
             
@@ -337,13 +341,11 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID>
       constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
-         auto& p = self.GetHeapInner();
+         auto& p = self.template GetHeapInner<SID>();
          if constexpr (CT::CustomPointer<StackRequest>)
             return const_cast<void*>(static_cast<void const*>(p.Unpack()));
          else
             return const_cast<void*>(static_cast<void const*>(p));
-         //else
-         //   return static_cast<void*>(const_cast<DecvqAll<StackRequest>>(p));
       }
 
       /// Set the heap pointer, any data pointer will do                      
@@ -351,27 +353,27 @@ namespace Langulus::Anyness::Component
       /*constexpr*/ void SetHeapInner(this auto& self, P heap) assumptious { //can't be constexpr due to GCC ICE
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (Exact<P, StackRequest>)
-            self.GetHeapInner() = heap;
+            self.template GetHeapInner<SID>() = heap;
          else if constexpr (CT::CustomPointer<P>)
-            self.GetHeapInner() = static_cast<StackRequest>(heap.Unpack());
+            self.template GetHeapInner<SID>() = static_cast<StackRequest>(heap.Unpack());
          else
-            self.GetHeapInner() = static_cast<StackRequest>(DecvqAllCast(heap));
+            self.template GetHeapInner<SID>() = static_cast<StackRequest>(DecvqAllCast(heap));
       }
 
       template<Cid SID = ID>
       constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
-         self.GetHeapInner() = nullptr;
+         self.template GetHeapInner<SID>() = nullptr;
       }
 
-      /// Get first element as a handle. Very useful for internal use.        
+      /// Get a handle to the first element(s). Very useful for internal use. 
       /// No-op if C is already a handle, even if AS is specified.            
       ///   @attention element might be uninitialized if C is discontiguous   
       ///   @tparam AS the handle type, or void to decide automatically       
       ///   @tparam SID the shared heap entry ID                              
       ///   @return the handle to the first element. This element might not   
       ///      be initialized if C is discontiguous!                          
-      template<class AS = void, Cid SID = ID, CT::NotHandle C>
+      /*template<class AS = void, Cid SID = ID, CT::NotHandle C>
       decltype(auto) GetHandle(this C&& self) {
          static_assert(CT::Handle<AS> or CT::Void<AS>,
             "Must be either a handle or void (which will use DecideHandle");
@@ -454,11 +456,11 @@ namespace Langulus::Anyness::Component
       }
 
       /// No-op in case C is already a handle                                 
-      template<class AS = void, Cid SID = ID, CT::Handle C>
+      template<class = void, Cid SID = ID, CT::Handle C>
       constexpr C&& GetHandle(this C&& self) noexcept {
          static_assert(SID == 0);
          return LglsFwd(self);
-      }
+      }*/
 
       /// Default-initialization of this component                            
       void ConstructDefault(this auto& self) noexcept {
@@ -489,6 +491,7 @@ namespace Langulus::Anyness::Component
       ///   @param reserve the number of elements to request                  
       template<Cid SID = ID, CT::Container C>
       Request RequestHeap(this C const& self, const size_t reserve) assumptious {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          Request result;
          result.mHeaderBytes = self.template GetHeapHeaderSize<SID>();
 
@@ -496,11 +499,11 @@ namespace Langulus::Anyness::Component
             // When there are footer requests (heap requests that          
             // depend on count & indirections), we aren't allowed to       
             // change the requested reserve to avoid heap corruptions.     
-            result.mFooterBytes = self.GetHeapFooterSize(reserve);
+            result.mFooterBytes = self.template GetHeapFooterSize<SID>(reserve);
 
             if constexpr (CT::TypeErased<C>) {
                // Check for reflected minimal allocation at runtime        
-               const auto T = self.GetType();
+               const auto T = self.template GetType<SID>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
                const auto size = T.GetSize();
                result.mTotalBytes = Roof2(//::std::max(
@@ -510,7 +513,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Check for reflected minimal allocation at compile-time   
-               using T = TypeOf<C>;
+               using T = TypeOf<C, SID>;
                result.mTotalBytes = Roof2(//::std::max(
                   reserve * sizeof(T) + result.mHeaderBytes + result.mFooterBytes/*,
                   CT::GetMinAlloc<T>()
@@ -526,7 +529,7 @@ namespace Langulus::Anyness::Component
 
             if constexpr (CT::TypeErased<C>) {
                // Check for reflected minimal allocation at runtime        
-               const auto T = self.GetType();
+               const auto T = self.template GetType<SID>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
                const auto size = T.GetSize();
                result.mTotalBytes = Roof2(::std::max(
@@ -537,7 +540,7 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Check for reflected minimal allocation at compile-time   
-               using T = TypeOf<C>;
+               using T = TypeOf<C, SID>;
                result.mTotalBytes = Roof2(::std::max(
                   reserve * sizeof(T) + result.mHeaderBytes,
                   CT::GetMinAlloc<T>()
@@ -553,27 +556,28 @@ namespace Langulus::Anyness::Component
       /// Destroys only the first element.                                    
       ///   @tparam DESTROY set to 'false' if you only want to dereference    
       ///      and destroy only fully dereferenced indirections               
-      template<bool DESTROY = true, CT::Container C>
+      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
       void DestroyElement(this C& self) assumptious {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
 
          if constexpr (DESTROY) {
             if constexpr (CT::DeeplyOwned<C>) {
                #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  self.DestroyElementDeepCustomPointers();
+                  self.template DestroyElementDeepCustomPointers<true, SID>();
                #else
-                  self.DestroyElementDeepStandardPointers();
+                  self.template DestroyElementDeepStandardPointers<true, SID>();
                #endif
             }
-            else if_available(self.DestroyElementShallow())
+            else if_available(self.template DestroyElementShallow<SID>())
             else static_assert(false, "No destruction routine was called");
          }
          else if constexpr (CT::DeeplyOwned<C>) {
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               self.template DestroyElementDeepCustomPointers<false>();
+               self.template DestroyElementDeepCustomPointers<false, SID>();
             #else
-               self.template DestroyElementDeepStandardPointers<false>();
+               self.template DestroyElementDeepStandardPointers<false, SID>();
             #endif
          }
       }
@@ -581,76 +585,17 @@ namespace Langulus::Anyness::Component
       /// Destroys all elements.                                              
       ///   @tparam DESTROY set to 'false' if you only want to dereference    
       ///      and destroy only fully dereferenced indirections               
-      template<bool DESTROY = true, CT::Container C>
+      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
       void DestroyAllElements(this C& self) assumptious {
+         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (DESTROY or CT::DeeplyOwned<C>) {
-            if (self.IsEmpty())
+            if (self.template IsEmpty<SID>())
                return;
 
             self.Apply([](auto&& item) {
                if constexpr (CT::Supported<decltype(item)>)
-                  item.template DestroyElement<DESTROY>();
+                  item.template DestroyElement<DESTROY, SID>();
             });
-         }
-      }
-
-      /// Visit all element's handles and perform a function on them.         
-      /// Handles both linear and non-linear containers gracefully.           
-      ///   @param lambda the function to perform. If the lambda returns bool,
-      ///      you can end the loop early by returning false.                 
-      ///   @param cookie the element/hash table spot to start off from       
-      template<CT::Container C>
-      void Apply(this C&& self, auto&& lambda, [[maybe_unused]] size_t cookie = 0) {
-         LglsAssumeDev(not self.IsEmpty(), "Make sure container isn't empty");
-
-         if constexpr (CT::ContainsOne<C>) {
-            //TODO GetHandle here is redundant, but most use cases      
-            // of Apply require it.                                     
-            lambda(self.GetHandle());
-         }
-         else {
-            auto item = self.GetHandle() + cookie;
-
-            if constexpr (CT::Contiguous<C>) {
-               // Iterate a contiguous array of elements                
-               LglsAssumeDev(cookie < self.GetCount(), "Limp cookie (contiguous)");
-               auto const end = item + (self.GetCount() - cookie);
-               while (item.GetRaw() != end.GetRaw()) {
-                  if constexpr (CT::Bool<decltype(lambda(item))>) {
-                     if (not lambda(item))
-                        return;
-                  }
-                  else lambda(item);
-                  ++item;
-               }
-            }
-            else {
-               // Iterate a hash table - some cells might be empty,     
-               // thus container might not be a contiguous array        
-               LglsAssumeDev(cookie < self.GetReserved(), "Limp cookie (discontiguous)");
-               const auto tableBeg = self.GetHashTableInner() + cookie;
-               const auto tableEnd = tableBeg + (self.GetReserved() - cookie);
-               auto table = tableBeg;
-               while (table != tableEnd) {
-                  if (*table) {
-                     if constexpr (CT::Bool<decltype(lambda(item))>) {
-                        if (not lambda(item))
-                           return;
-                     }
-                     else lambda(item);
-                  }
-                  else {
-                     if constexpr (CT::Bool<decltype(lambda(Unsupported{}))>) {
-                        if (not lambda(Unsupported{}))
-                           return;
-                     }
-                     else lambda(Unsupported{});
-                  }
-
-                  ++item;
-                  ++table;
-               }
-            }
          }
       }
    };
