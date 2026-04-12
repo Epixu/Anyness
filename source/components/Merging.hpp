@@ -152,7 +152,7 @@ namespace Langulus::Anyness::Component
       template<CT::Pair P, CT::ContainsMany C> requires Shared
       auto MergeInner(this C& self, P&& a) -> MergeResult {
          static_assert(not CT::Array<P>);
-         using I = IntentOf(a);
+         //using I = IntentOf(a);
 
          // Gather the number of all elements and types.                
          // Empty containers can't change type. If one of the type      
@@ -199,15 +199,23 @@ namespace Langulus::Anyness::Component
                }
 
                // Move the element to a temporary local swapper first   
-               THandlePair<
+               /*THandlePair<
                   THandle<Decvq<Deref<TypeOf<Deint<E>, 0>>>>,
                   THandle<Decvq<Deref<TypeOf<Deint<E>, 1>>>>
                > swapper {
                   I::Nest(DeintCast(item).template Get<void, 0>()),
                   I::Nest(DeintCast(item).template Get<void, 1>())
-               };
+               };*/
 
-               result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
+               /*if constexpr (CT::NotHandle<P>) {
+                  // We can directly use the pair as a swapper          
+                  result.lastInsertedIndex = self.TableEmplace(bucket, DeintCast(item));
+               }
+               else {*/
+                  // Make a local pair to use as a swapper              
+                  TPair swapper {LglsFwd(item)}; //TODO Copy maybe?
+                  result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
+               //}
             }
 
             ++result.itemsInserted;

@@ -213,7 +213,7 @@ namespace Langulus::Anyness::Component
    protected:
       /// Default-initialize the variable                                     
       constexpr void ConstructDefault(this auto& self) noexcept requires CT::NotReference<T> {
-         self.SetStackInner({});
+         ThisCom::SetStackInner({});
       }
    };
 

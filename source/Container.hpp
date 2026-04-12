@@ -618,7 +618,7 @@ namespace Langulus::Anyness
 
       #define unify_getter(name) \
          template<Cid ID = 0> \
-         constexpr decltype(auto) name(this auto const& self) noexcept requires ( \
+         constexpr decltype(auto) name(this auto&& self) noexcept requires ( \
             not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
                if constexpr (requires { self.C::template name<ID>(); }) \
                   return self.C::template name<ID>(); \
@@ -633,7 +633,7 @@ namespace Langulus::Anyness
 
       #define unify_getter_argumented(name) \
          template<Cid ID = 0> \
-         constexpr decltype(auto) name(this auto const& self, auto&&...arguments) noexcept requires ( \
+         constexpr decltype(auto) name(this auto&& self, auto&&...arguments) noexcept requires ( \
             not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) \
                   return self.C::template name<ID>(LglsFwd(arguments)...); \
@@ -648,7 +648,7 @@ namespace Langulus::Anyness
 
       #define unify_getter_templated(name) \
          template<class ARG, Cid ID = 0> \
-         constexpr decltype(auto) name(this auto const& self) noexcept requires ( \
+         constexpr decltype(auto) name(this auto&& self) noexcept requires ( \
             not ::std::same_as<No, decltype(ComponentList::ForEachConstOr([&]<class C>{ \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) \
                   return self.C::template name<ARG, ID>(); \
@@ -695,6 +695,7 @@ namespace Langulus::Anyness
             }); \
          }
 
+      unify_getter(GetRaw);
       unify_getter(GetType);
       unify_getter(IsTyped);
       unify_getter(IsSparse);

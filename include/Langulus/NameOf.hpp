@@ -367,7 +367,7 @@ namespace Langulus::RTTI
          Token with;
       } ReplacePatterns[] = {
          #if LANGULUS_COMPILER(MSVC)
-            {"`anonymous-namespace'::", ""},
+            {"`anonymous-namespace'::", ""}, //TODO disallow reflecting anonymous namespaces thingies through here somewhere
          #elif LANGULUS_COMPILER(CLANG)
             {"(anonymous namespace)::", ""},
          #else

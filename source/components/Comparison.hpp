@@ -314,18 +314,25 @@ namespace Langulus::Anyness::Component
                   lhs_count, " != ", rhs_count);
                return Compared::Unordered;
             }
-            else {
-               if (not lhs_count)
-                  return Compared::Equal;   // Both empty               
-               else if (lhs.GetHeapInner() == rhs.GetHeapInner())
-                  return Compared::Equal;   // Both point to same memory
-            }
+
+            if (not lhs_count)
+               return Compared::Equal;    // Both empty                 
 
             const auto comparer = LT.GetComparer();
             if (comparer) {
-               // Call compare operator for each element pair           
                auto t1 = lhs.template GetRawAs<uint8_t>();
                auto t2 = rhs.template GetRawAs<uint8_t>();
+               if (t1 == t2) {
+                  // Both point to the same memory and have same        
+                  // count. Notice that this is valid optimization only 
+                  // when the types are comparable. If you have weird   
+                  // types that can be different despite occupying same 
+                  // memory, you'll have to delete their comparison     
+                  // operator.                                          
+                  return Compared::Equal;
+               }
+
+               // Call compare operator for each element pair           
                [[maybe_unused]] const auto t1_start = t1;
                const auto size = LT.GetSize();
                const auto t1end = t1 + lhs_count * size;
@@ -371,17 +378,26 @@ namespace Langulus::Anyness::Component
                      lhs_count, " != ", rhs_count);
                   return ::std::partial_ordering::unordered;
                }
-               else {
-                  if (not lhs_count)
-                     return ::std::partial_ordering::equivalent;
-                  else if (lhs.GetHeapInner() == rhs.GetHeapInner())
-                     return ::std::partial_ordering::equivalent;
-               }
 
+               if (not lhs_count) {
+                  // Both empty                                         
+                  return ::std::partial_ordering::equivalent;
+               }
+               
                if constexpr (CT::Comparable<LT, LT>) {
-                  // Use comparison operator between all elements       
                   auto t1 = lhs.GetRaw();
                   auto t2 = rhs.GetRaw();
+                  if (t1 == t2) {
+                     // Both point to the same memory and have same     
+                     // count. Notice that this is valid only when      
+                     // the types are comparable. If you have weird     
+                     // types that can be different despite occupying   
+                     // same memory, you'll have to delete their        
+                     // comparison operator.                            
+                     return ::std::partial_ordering::equivalent;
+                  }
+
+                  // Use comparison operator between all elements       
                   const auto t1end = t1 + lhs_count;
                   auto last_compare = ::std::partial_ordering::unordered;
                   while (t1 < t1end and ((last_compare = (*t1 <=> *t2)) == ::std::partial_ordering::equivalent)) {

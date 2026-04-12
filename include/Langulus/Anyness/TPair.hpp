@@ -60,16 +60,16 @@ namespace Langulus::Anyness
       constexpr TPair(TPair&& other) noexcept requires CT::NotReference<K, V> {
          this->Absorb(Move(other));
       }
-      constexpr TPair(auto&& a1, auto&& a2) requires CT::NotReference<K, V> {
+      /*constexpr TPair(auto&& a1, auto&& a2) requires CT::NotReference<K, V> {
          this->template EmplaceConstruct<0>(LglsFwd(a1));
          this->template EmplaceConstruct<1>(LglsFwd(a2));
-      }
+      }*/
       constexpr ~TPair() noexcept requires CT::NotReference<K, V> {
          this->Destroy();
       }
 
       /// Reference constructor                                               
-      constexpr TPair(auto&& a1, auto&& a2) requires CT::Reference<K, V>
+      constexpr TPair(auto&& a1, auto&& a2) //requires CT::Reference<K, V>
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {}
 
       constexpr ~TPair() noexcept requires CT::Reference<K, V> {}
@@ -100,4 +100,7 @@ namespace Langulus::Anyness
       using Com::Comparison<0, true, 1>::operator <=>;
       using Com::Comparison<0, true, 1>::operator ==;
    };
+
+   template<class K, class V>
+   TPair(K&&, V&&) -> TPair<Decvq<Deref<Deint<K>>>, Decvq<Deref<Deint<V>>>>;
 }

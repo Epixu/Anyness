@@ -176,7 +176,7 @@ namespace Langulus::Anyness::Inner
       /// Clear the map and assign a key and a value                          
       auto Assign(auto&& key, auto&& val) -> Map& {
          this->Clear();
-         this->MergeInner(TPair<decltype(key), decltype(val)> {LglsFwd(key), LglsFwd(val)});
+         this->MergeInner(TPair {LglsFwd(key), LglsFwd(val)});
          return *this;
       }
 
