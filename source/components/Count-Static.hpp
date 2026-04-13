@@ -39,7 +39,7 @@ namespace Langulus::Anyness::Component
 
       static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
-      static constexpr bool ContainsMany = COUNT > 1;
+      static constexpr bool ContainsMany = (COUNT > 1) or (sizeof...(SHARED) > 0);
 
       using CountType   = decltype(COUNT);
       using ReserveType = CountType;

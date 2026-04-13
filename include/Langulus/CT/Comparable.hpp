@@ -23,8 +23,7 @@ namespace Langulus
    };
 
    template<class T>
-   constexpr auto ToPartialOrdering(T c) noexcept
-   -> ::std::partial_ordering {
+   constexpr auto ToPartialOrdering(T c) noexcept -> ::std::partial_ordering {
       if constexpr (::std::same_as<T, Compared>) {
          switch (c) {
          case Compared::Unordered:
@@ -43,8 +42,7 @@ namespace Langulus
    }
 
    template<class T>
-   constexpr auto ToStrongOrdering(T c)
-   -> ::std::strong_ordering {
+   constexpr auto ToStrongOrdering(T c) -> ::std::strong_ordering {
       if constexpr (::std::same_as<T, Compared>) {
          switch (c) {
          case Compared::Unordered:
@@ -63,8 +61,7 @@ namespace Langulus
    }
 
    template<class T>
-   constexpr auto ToWeakOrdering(T c)
-   -> ::std::weak_ordering {
+   constexpr auto ToWeakOrdering(T c) -> ::std::weak_ordering {
       if constexpr (::std::same_as<T, Compared>) {
          switch (c) {
          case Compared::Unordered:

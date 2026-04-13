@@ -500,6 +500,10 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
+      constexpr THandleDisowned(Deref<T>* ptr) noexcept {
+         this->SetHeapInner(ptr);
+      }
+
       /// Assignment                                                          
       THandleDisowned& operator = (THandleDisowned const& other) = delete;
       THandleDisowned& operator = (THandleDisowned&& other) = delete;

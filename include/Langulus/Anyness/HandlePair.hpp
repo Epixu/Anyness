@@ -53,9 +53,15 @@ namespace Langulus::Anyness
          };
       }
 
-      void SwapInner(CT::ContainsOne auto& rhs) {
+      /*void SwapInner(CT::ContainsOne auto& rhs) {
          key.SwapInner(LglsFwd(rhs));
          val.SwapInner(LglsFwd(rhs));
+      }*/
+
+      template<CT::Pair P> requires CT::NoIntent<P>
+      void SwapInner(P& rhs) {
+         key.SwapInner(rhs.key);
+         val.SwapInner(rhs.val);
       }
 
       template<CT::Intent I> requires CT::Pair<I>

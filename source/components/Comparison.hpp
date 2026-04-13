@@ -106,35 +106,38 @@ namespace Langulus::Anyness::Component
                         lhs.GetCount(), " != ", rhs.GetCount());
                      return false;
                   }
-                  else {
-                     if (not lhs_count)
-                        return true;   // Both empty                    
-                     else if (lhs.GetHeapInner() == rhs.GetHeapInner())
+
+                  if (not lhs_count)
+                     return true;   // Both empty                       
+
+                  if constexpr (CT::ComparableEqual<LT, LT>) {
+                     const auto raw1 = lhs.GetRaw();
+                     const auto raw2 = rhs.GetRaw();
+                     if (raw1 == raw2)
                         return true;   // Both point to same memory     
-                  }
 
-                  if constexpr (HASH and CT::Hashable<LT, RT>) {
-                     if (not lhs.CompareHashes(rhs)) {
-                        // Early failure if valid hashes differ - no    
-                        // point in comparing anything at all           
-                        LglsVerbose(Logger::Red, "Different hashes (typed): ",
-                           Logger::Hex(lhs.GetHash()), " != ", Logger::Hex(rhs.GetHash()));
-                        return false;
+                     if constexpr (HASH and CT::Hashable<LT, RT>) {
+                        if (not lhs.CompareHashes(rhs)) {
+                           // Early failure if valid hashes differ - no 
+                           // point in comparing anything at all        
+                           LglsVerbose(Logger::Red, "Different hashes (typed): ",
+                              Logger::Hex(lhs.GetHash()), " != ", Logger::Hex(rhs.GetHash()));
+                           return false;
+                        }
                      }
-                  }
 
-                  if constexpr (CT::POD<LT> and CT::Contiguous<LHS, RHS>) {
-                     // Batch compare POD data, including pointers      
-                     const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
-                     if (not same) {
-                        LglsVerbose(Logger::Red,
-                           "Different POD memory after memcmp (typed)");
-                        LglsVerbose(Logger::Red,
-                           "Most likely padding bytes filled with junk - pack your struct: ", NameOf<LT>());
+                     if constexpr (CT::POD<LT> and CT::Contiguous<LHS, RHS>) {
+                        // Batch compare POD data, including pointers   
+                        const bool same = (0 == ::std::memcmp(raw1, raw2, lhs.GetBytesize()));
+                        if (not same) {
+                           LglsVerbose(Logger::Red,
+                              "Different POD memory after memcmp (typed)");
+                           LglsVerbose(Logger::Red,
+                              "Most likely padding bytes filled with junk - pack your struct: ", NameOf<LT>());
+                        }
+                        return same;
                      }
-                     return same;
-                  }
-                  else if constexpr (CT::ComparableEqual<LT, LT>) {
+
                      // Use comparison operator between all elements    
                      bool result = true;
                      auto t2 = rhs.GetHandle();
@@ -201,12 +204,20 @@ namespace Langulus::Anyness::Component
                      lhs_count, " != ", rhs_count);
                   return false;
                }
-               else {
-                  if (not lhs_count)
-                     return true;   // Both empty                       
-                  else if (lhs.GetHeapInner() == rhs.GetHeapInner())
-                     return true;   // Both point to same memory        
+
+               if (not lhs_count)
+                  return true;   // Both empty                          
+
+               const auto comparer = LT.GetComparerEqual();
+               if (not comparer) {
+                  LglsVerbose(Logger::Red, "Type not comparable (type-erased): ", LT);
+                  return false;
                }
+               
+               const auto raw1 = lhs.GetRaw();
+               const auto raw2 = rhs.GetRaw();
+               if (raw1 == raw2)
+                  return true;   // Both point to same memory           
 
                if constexpr (requires { lhs.CompareHashes(rhs); }) {
                   if (LT.GetHasher() and not lhs.CompareHashes(rhs)) {
@@ -221,7 +232,7 @@ namespace Langulus::Anyness::Component
                if constexpr (CT::Contiguous<LHS, RHS>) {
                   if (LT.IsPOD()) {
                      // Batch-compare memory if POD or sparse           
-                     const bool same = (0 == ::std::memcmp(lhs.GetRaw(), rhs.GetRaw(), lhs.GetBytesize()));
+                     const bool same = (0 == ::std::memcmp(raw1, raw2, lhs.GetBytesize()));
                      if (not same) {
                         LglsVerbose(Logger::Red,
                            "Different POD memory after memcmp (type-erased)");
@@ -230,12 +241,6 @@ namespace Langulus::Anyness::Component
                      }
                      return same;
                   }
-               }
-
-               const auto comparer = LT.GetComparerEqual();
-               if (not comparer) {
-                  LglsVerbose(Logger::Red, "Type not comparable (type-erased): ", LT);
-                  return false;
                }
 
                // Use comparison operator between all elements          
@@ -414,7 +419,7 @@ namespace Langulus::Anyness::Component
                else {
                   LglsVerbose(Logger::Red,
                      "Type not comparable (typed): ", NameOf<LT>());
-                  return ::std::partial_ordering::unordered;;
+                  return ::std::partial_ordering::unordered;
                }
             }
          }
@@ -498,7 +503,10 @@ namespace Langulus::Anyness::Component
                // Text types can be more loosely compared               
                if (self.template IsSame<Text>()) {
                   // Implicitly make a text container                   
-                  return FromOrdering(self.template Get<Text>() <=> Text {Disown(rhs)});
+                  if constexpr (CT::Contiguous<C>)
+                     return FromOrdering( self.template Get<Text>() <=> Text{Disown(rhs)});
+                  else
+                     return FromOrdering(*self.template GetAt<Text>(0) <=> Text{Disown(rhs)});
                }
             }
 
@@ -512,8 +520,12 @@ namespace Langulus::Anyness::Component
             }
             else*/ if constexpr (CT::Comparable<RT, RT>) {
                // Non-deep element compare                              
-               if (self.template IsSame<RT>())
-                  return FromOrdering(self.template Get<RT>() <=> rhs);
+               if (self.template IsSame<RT>()) {
+                  if constexpr (CT::Contiguous<C>)
+                     return FromOrdering( self.template Get<RT>() <=> rhs);
+                  else
+                     return FromOrdering(*self.template GetAt<RT>(0) <=> rhs);
+               }
                return Compared::Unordered;
             }
             else return Compared::Unordered;
@@ -524,10 +536,13 @@ namespace Langulus::Anyness::Component
             if (self.GetCount() != 1)
                return ::std::partial_ordering::unordered;
             
-            if constexpr (CT::Comparable<TypeOf<C>, RT>)
-               return ToPartialOrdering(*self.GetRaw() <=> rhs);
-            else
-               return ::std::partial_ordering::unordered;
+            if constexpr (CT::Comparable<TypeOf<C>, RT>) {
+               if constexpr (CT::Contiguous<C>)
+                  return ToPartialOrdering( self.Get() <=> rhs);
+               else
+                  return ToPartialOrdering(*self.GetAt(0) <=> rhs);
+            }
+            else return ::std::partial_ordering::unordered;
          }
       }
 
@@ -710,12 +725,12 @@ namespace Langulus::Anyness::Component
 
       /// Three-way comparison                                                
       template<CT::Container C>
-      constexpr Compared operator <=> (this C const& lhs, C const& rhs) noexcept {
+      constexpr auto operator <=> (this C const& lhs, C const& rhs) noexcept {
          return lhs.Compare(rhs);
       }
 
       template<CT::Container C, CT::NoIntent A> requires (not Shared)
-      constexpr Compared operator <=> (this C const& lhs, A const& rhs) assumptious {
+      constexpr auto operator <=> (this C const& lhs, A const& rhs) assumptious {
          if constexpr (CT::Deep<A> and CT::Dense<A>) {
             LglsAssumeUser((Same<A, C>) or (CT::Typed<C> and Same<TypeOf<A>, TypeOf<C>>),
                "Ambiguous use of three-way comparison "

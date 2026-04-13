@@ -104,3 +104,12 @@ namespace Langulus::Anyness
    template<class K, class V>
    TPair(K&&, V&&) -> TPair<Decvq<Deref<Deint<K>>>, Decvq<Deref<Deint<V>>>>;
 }
+
+namespace Langulus::CTTI
+{
+   /// Convert TPair -> Text                                                  
+   template<class K, class V>
+   struct Converter<Anyness::TPair<K, V>, Anyness::Text> {
+      static constexpr auto Convert(Anyness::TPair<K, V> const&) -> Anyness::Text;
+   };
+}

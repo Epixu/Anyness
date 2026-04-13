@@ -17,6 +17,10 @@
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.HeapReference<ID, ENTRIES...>
+
    ///                                                                        
    /// Adds a variable to a container that only references a remote heap.     
    /// No allocation interface is provided.                                   
@@ -70,7 +74,7 @@ namespace Langulus::Anyness::Component
       constexpr auto GetRaw(this C&& self) noexcept {
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          using Tcvq = LglsMutIf(C, StackRequest);
-         return static_cast<Tcvq>(self.template GetHeapInner<SID>());
+         return static_cast<Tcvq>(ThisCom::GetHeapInner());
       }
       
       /// Get a direct access to the heap memory as a different type          
@@ -80,7 +84,7 @@ namespace Langulus::Anyness::Component
       constexpr auto GetRawAs(this C&& self) noexcept {
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          using Tcvq = LglsMutIf(C, T*);
-         return static_cast<Tcvq>(self.template GetHeapInnerAsVoid<SID>());
+         return static_cast<Tcvq>(ThisCom::GetHeapInnerAsVoid());
       }
 
       /// Get a direct access to the initialized heap memory's end.           
@@ -89,9 +93,9 @@ namespace Langulus::Anyness::Component
       constexpr auto GetRawEnd(this C&& self) noexcept {
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (CT::TypeErased<C>)
-            return self.template GetRawAs<uint8_t, SID>() + self.template GetBytesize<SID>();
+            return ThisCom::template GetRawAs<uint8_t, SID>() + self.template GetBytesize<SID>();
          else
-            return self.template GetRaw<SID>() + self.template GetCount<SID>();
+            return ThisCom::template GetRaw<SID>() + self.template GetCount<SID>();
       }
     
       /// Get a direct access to the entire heap reserve's end.               
@@ -99,9 +103,9 @@ namespace Langulus::Anyness::Component
       constexpr auto GetRawReserveEnd(this C&& self) noexcept {
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (CT::TypeErased<C>)
-            return self.template GetRawAs<uint8_t, SID>() + self.template GetReserved<SID>() * self.template GetStride<SID>();
+            return ThisCom::template GetRawAs<uint8_t, SID>() + self.template GetReserved<SID>() * self.template GetStride<SID>();
          else
-            return self.template GetRaw<SID>() + self.template GetReserved<SID>();
+            return ThisCom::template GetRaw<SID>() + self.template GetReserved<SID>();
       }
     
       /// Get reference to first element as sparse or dense, depending on T.  
@@ -122,7 +126,7 @@ namespace Langulus::Anyness::Component
          using TCP  = LglsMutIf(C, TC*);
          using TH   = Tif<CT::Void<AS>, TC, AS>;
          using THP  = LglsMutIf(C, TH*);
-         auto& heap = self.template GetHeapInner<SID>();
+         auto& heap = ThisCom::GetHeapInner();
 
          if constexpr (CT::TypeErased<C>) {
             if constexpr (CT::Void<AS>) {
@@ -142,7 +146,7 @@ namespace Langulus::Anyness::Component
                   // We need to dereference. Supports packed pointers.  
                   auto diff = indirections - IndirectsOf<TH>;
                   using Deep = typename Deref<C>::DeepType;
-                  Deep denser = Disown(self.GetDense(diff));
+                  Deep denser = Disown(ThisCom::template GetDense<SID>(diff));
                   return *static_cast<THP>(denser.GetHeapInner());
                }
                else {
@@ -192,9 +196,9 @@ namespace Langulus::Anyness::Component
                if (self.template Is<AS, SID>()) {
                   // Access directly                                    
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
-                     return Decvq<AS> {Absorb, self.template Get<AS, SID>()};
+                     return Decvq<AS> {Absorb, ThisCom::template Get<AS, SID>()};
                   else
-                     return self.template Get<AS, SID>();
+                     return ThisCom::template Get<AS, SID>();
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
@@ -210,13 +214,13 @@ namespace Langulus::Anyness::Component
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
                      return Decvq<AS> {};
                   else
-                     return self.template Get<AS, SID>();
+                     return ThisCom::template Get<AS, SID>();
                }
             }
             else {
                if constexpr (Akin<TypeOf<C, SID>, AS>) {
                   // Access directly                                    
-                  return self.template Get<AS, SID>();
+                  return ThisCom::template Get<AS, SID>();
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
@@ -243,23 +247,23 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<SID>())
             return D {};
          if (not self.template IsSparse<SID>())
-            return self.template As<D, SID>();
+            return ThisCom::template As<D, SID>();
 
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.template GetType<SID>();
             const auto resolver = T.GetResolver();
             if (resolver)
-               return D {resolver(self.template GetDense<SID>().GetRaw())};
+               return D {resolver(ThisCom::template GetDense<SID>().GetRaw())};
             else
-               return self.template GetDense<SID, D>();
+               return ThisCom::template GetDense<SID, D>();
 
          }
          else {
             using T = TypeOf<C, SID>;
             if constexpr (CT::Resolvable<T>)
-               return D {DenseCast(self.template Get<T, SID>()).GetResolved()};
+               return D {DenseCast(ThisCom::template Get<T, SID>()).GetResolved()};
             else
-               return D {DenseCast(self.template Get<T, SID>())};
+               return D {DenseCast(ThisCom::template Get<T, SID>())};
          }
       }
 
@@ -303,7 +307,7 @@ namespace Langulus::Anyness::Component
             }
          }
 
-         void* src = DecvqAllCast(self.template GetHeapInner<SID>());
+         void* src = DecvqAllCast(ThisCom::GetHeapInner());
          auto T = self.template GetType<SID>();
          while (count and T.IsSparse()) {
             auto nextT = T.GetDeptr();
@@ -341,7 +345,7 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID>
       constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
-         auto& p = self.template GetHeapInner<SID>();
+         auto& p = ThisCom::GetHeapInner();
          if constexpr (CT::CustomPointer<StackRequest>)
             return const_cast<void*>(static_cast<void const*>(p.Unpack()));
          else
@@ -353,118 +357,22 @@ namespace Langulus::Anyness::Component
       /*constexpr*/ void SetHeapInner(this auto& self, P heap) assumptious { //can't be constexpr due to GCC ICE
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (Exact<P, StackRequest>)
-            self.template GetHeapInner<SID>() = heap;
+            ThisCom::GetHeapInner() = heap;
          else if constexpr (CT::CustomPointer<P>)
-            self.template GetHeapInner<SID>() = static_cast<StackRequest>(heap.Unpack());
+            ThisCom::GetHeapInner() = static_cast<StackRequest>(heap.Unpack());
          else
-            self.template GetHeapInner<SID>() = static_cast<StackRequest>(DecvqAllCast(heap));
+            ThisCom::GetHeapInner() = static_cast<StackRequest>(DecvqAllCast(heap));
       }
 
       template<Cid SID = ID>
       constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
          static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
-         self.template GetHeapInner<SID>() = nullptr;
+         ThisCom::GetHeapInner() = nullptr;
       }
-
-      /// Get a handle to the first element(s). Very useful for internal use. 
-      /// No-op if C is already a handle, even if AS is specified.            
-      ///   @attention element might be uninitialized if C is discontiguous   
-      ///   @tparam AS the handle type, or void to decide automatically       
-      ///   @tparam SID the shared heap entry ID                              
-      ///   @return the handle to the first element. This element might not   
-      ///      be initialized if C is discontiguous!                          
-      /*template<class AS = void, Cid SID = ID, CT::NotHandle C>
-      decltype(auto) GetHandle(this C&& self) {
-         static_assert(CT::Handle<AS> or CT::Void<AS>,
-            "Must be either a handle or void (which will use DecideHandle");
-         static_assert(not CT::Reference<AS>,
-            "Strip references first");
-         static_assert(CT::Dense<AS>,
-            "Must be dense");
-
-         using H = Tif<CT::Void<AS>, DecideHandle<C>, AS>;
-         if constexpr (CT::Pair<H>) {
-            // User desires a pair, so we give them a pair              
-            using H1 = decltype(H::key);
-            using H2 = decltype(H::val);
-            return H {
-               self.template GetHandle<H1, SID + 0>(),
-               self.template GetHandle<H2, SID + 1>()
-            };
-         }
-         else {
-            // User desires a simple handle                             
-            if constexpr (CT::TypeErased<H>) {
-               // Type-erased handle                                    
-               if constexpr (CT::DeeplyOwned<H>) {
-                  return H {
-                     self.template Get<void, SID>(),
-                     self.template GetEntries<SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
-               else if constexpr (CT::Owned<H>) {
-                  return H {
-                     self.template Get<void, SID>(),
-                     self.template GetAllocation<SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
-               else {
-                  return H {
-                     self.template Get<void, SID>(),
-                     self.template GetType<SID>()
-                  };
-               }
-            }
-            else {
-               // Statically typed handle                               
-               using HT = Deref<TypeOf<H>>;
-
-               if constexpr (CT::TypeErased<C>) {
-                  LglsAssert(self.template GetType<SID>().IsSame(MetaDataOf<HT>()),
-                     "Type mismatch", ": ", self.template GetType<SID>(),
-                     " not same as ", MetaDataOf<HT>()
-                  );
-               }
-               else if constexpr (CT::Map<C>) {
-                  static_assert(Same<typename TypeOf<C>::template At<SID>, HT>,
-                     "Type mismatch"
-                  );
-               }
-               else {
-                  static_assert(Same<TypeOf<C>, HT>,
-                     "Type mismatch"
-                  );
-               }
-
-               if constexpr (CT::DeeplyOwned<H>) {
-                  return H {
-                     &self.template Get<void, SID>(),
-                     self.template GetEntries<SID>()
-                  };
-               }
-               else if constexpr (CT::Owned<H>) {
-                  return H {
-                     &self.template Get<void, SID>(),
-                     self.template GetAllocation<SID>()
-                  };
-               }
-               else return H {&self.template Get<void, SID>()};
-            }
-         }
-      }
-
-      /// No-op in case C is already a handle                                 
-      template<class = void, Cid SID = ID, CT::Handle C>
-      constexpr C&& GetHandle(this C&& self) noexcept {
-         static_assert(SID == 0);
-         return LglsFwd(self);
-      }*/
 
       /// Default-initialization of this component                            
       void ConstructDefault(this auto& self) noexcept {
-         self.SetHeapInner(nullptr);
+         ThisCom::SetHeapInner(nullptr);
       }
       
       /// Transfer from any kind of container.                                
@@ -475,7 +383,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) noexcept {
-         self.SetHeapInner(intent.what.GetRaw());
+         ThisCom::SetHeapInner(intent.what.GetRaw());//TODO raw pointer mistaken as inner heap pointer will lead to errors in maps
       }
 
       /// A simple request for allocating memory, which includes heap         
@@ -506,18 +414,16 @@ namespace Langulus::Anyness::Component
                const auto T = self.template GetType<SID>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
                const auto size = T.GetSize();
-               result.mTotalBytes = Roof2(//::std::max(
-                  reserve * size + result.mHeaderBytes + result.mFooterBytes/*,
-                  static_cast<size_t>(T.GetMinAllocation())
-               )*/);
+               result.mTotalBytes = Roof2(
+                  reserve * size + result.mHeaderBytes + result.mFooterBytes
+               );
             }
             else {
                // Check for reflected minimal allocation at compile-time   
                using T = TypeOf<C, SID>;
-               result.mTotalBytes = Roof2(//::std::max(
-                  reserve * sizeof(T) + result.mHeaderBytes + result.mFooterBytes/*,
-                  CT::GetMinAlloc<T>()
-               )*/);
+               result.mTotalBytes = Roof2(
+                  reserve * sizeof(T) + result.mHeaderBytes + result.mFooterBytes
+               );
             }
 
             result.mReserved = reserve;
@@ -599,4 +505,6 @@ namespace Langulus::Anyness::Component
          }
       }
    };
+
+   #undef ThisCom
 }
