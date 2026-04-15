@@ -73,12 +73,18 @@ namespace Langulus::Anyness
       static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = true;
 
-      using Base = Inner::PairBase;
+      using Base     = Inner::PairBase;
+      using DeepType = Any;
+      using KeyType  = void;
+      using ValType  = void;
+
+      using HandleType    = THandlePair<Handle, Handle>;
+      using HandleMutType = THandlePair<Handle, HandleMut>;
+      using Pick          = HandleType;
+      using PickMut       = HandleMutType;
+
       using DefineState::Typed<>::IsTypeConstrained;
       using DefineState::Typed<>::EnableTypeConstrained;
-      using DeepType = Any;
-      using KeyType = void;
-      using ValType = void;
 
       constexpr Pair() noexcept {
          this->ConstructDefault();
@@ -123,6 +129,13 @@ namespace Langulus::Anyness
 
       using Com::Comparison<0, true, 1>::operator <=>;
       using Com::Comparison<0, true, 1>::operator ==;
+
+      decltype(auto) GetKey(this auto&& self) noexcept {
+         return self.GetHandle().GetKey();
+      }
+      decltype(auto) GetVal(this auto&& self) noexcept {
+         return self.GetHandle().GetVal();
+      }
    };
 
    static_assert(CT::TypeErased<Pair>);

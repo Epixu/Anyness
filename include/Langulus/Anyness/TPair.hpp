@@ -51,6 +51,11 @@ namespace Langulus::Anyness
       using KeyType  = K;
       using ValType  = V;
 
+      using HandleType     = THandlePair<THandle<K const&>, THandle<V const&>>;
+      using HandleMutType  = THandlePair<THandle<K&>, THandle<V&>>;
+      using Pick           = HandleType;
+      using PickMut        = HandleMutType;
+
       constexpr TPair() noexcept requires CT::NotReference<K, V> {
          this->ConstructDefault();
       }
@@ -99,6 +104,13 @@ namespace Langulus::Anyness
 
       using Com::Comparison<0, true, 1>::operator <=>;
       using Com::Comparison<0, true, 1>::operator ==;
+
+      decltype(auto) GetKey(this auto&& self) noexcept {
+         return self.GetHandle().GetKey();
+      }
+      decltype(auto) GetVal(this auto&& self) noexcept {
+         return self.GetHandle().GetVal();
+      }
    };
 
    template<class K, class V>

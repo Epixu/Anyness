@@ -34,6 +34,13 @@ namespace Langulus::Anyness
          return static_cast<bool>(key);
       }
 
+      auto& GetKey(this auto&& self) noexcept {
+         return self.key;
+      }
+      auto& GetVal(this auto&& self) noexcept {
+         return self.val;
+      }
+
       /// Get raw data associated with the key                                
       auto GetRaw() const noexcept {
          return key.GetRaw();
@@ -60,14 +67,14 @@ namespace Langulus::Anyness
 
       template<CT::Pair P> requires CT::NoIntent<P>
       void SwapInner(P& rhs) {
-         key.SwapInner(rhs.key);
-         val.SwapInner(rhs.val);
+         key.SwapInner(rhs.GetKey());
+         val.SwapInner(rhs.GetVal());
       }
 
       template<CT::Intent I> requires CT::Pair<I>
       void EmplaceWithIntent(I&& intent) {
-         key.EmplaceWithIntent(I::Nest(intent.what.key));
-         val.EmplaceWithIntent(I::Nest(intent.what.val));
+         key.EmplaceWithIntent(I::Nest(intent->GetKey()));
+         val.EmplaceWithIntent(I::Nest(intent->GetVal()));
       }
 
       template<bool DESTROY = true>
