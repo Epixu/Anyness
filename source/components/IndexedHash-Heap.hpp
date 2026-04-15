@@ -42,11 +42,11 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid, Cid...>         friend struct IndexedCommon;
+      LglsComHeapMovable(friend);
+      LglsComIndexedCommon(friend);
       LglsComIndexedCommonHashed(friend);
       LglsComMerging(friend);
-      template<Cid, Cid...>         friend struct Removal;
+      LglsComRemoval(friend);
 
       /// Get the start of the hash table (inner)                             
       template<Cid SID = ID>

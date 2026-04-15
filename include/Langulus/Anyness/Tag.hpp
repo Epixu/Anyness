@@ -1,6 +1,6 @@
 #pragma once
 #include "Many.hpp"
-#include "../../../source/rtti/MetaTag.hpp"
+#include <source/rtti/MetaTag.hpp>
 #include <Langulus/Tag.hpp>
 
 

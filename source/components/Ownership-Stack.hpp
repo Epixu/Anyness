@@ -60,9 +60,9 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, CT::HeapEntry...>              friend struct HeapReference;
-      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
-      template<Cid, Cid...>                        friend struct Removal;
+      LglsComHeapReference(friend);
+      LglsComHeapMovable(friend);
+      LglsComRemoval(friend);
       LglsComEmplacement(friend);
 
       /// Get allocation (inner)                                              

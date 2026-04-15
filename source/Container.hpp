@@ -219,30 +219,30 @@ namespace Langulus::Anyness
       }
 
    protected:
-      template<Cid>                       friend struct IterationOperators;
-      template<class, class, bool, Cid>   friend struct TypedStack;
-      template<CT::NotVoid, Cid>          friend struct Stack;
-      template<Cid, CT::HeapEntry...>              friend struct HeapReference;
-      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
+      LglsComIterationOperators(friend);
+      LglsComTypedStack(friend);
+      LglsComStack(friend);
+      LglsComHeapReference(friend);
+      LglsComHeapMovable(friend);
       LglsComOwnershipEmergent(friend);
       LglsComOwnershipStack(friend);
-      template<Cid, bool>                 friend struct OwnershipDeepReference;
-      template<Cid, bool>                 friend struct OwnershipDeepHeap;
-      template<Cid, class, Cid...>        friend struct CountStack;
-      template<Cid, class, Cid...>        friend struct ReserveStack;
-      template<Cid, class, Cid...>        friend struct HashStack;
-      template<Cid, class, Cid...>        friend struct HashHeap;
+      LglsComCountStack(friend);
+      LglsComReserveStack(friend);
+      LglsComOwnershipDeepHeap(friend);
+      LglsComOwnershipDeepReference(friend);
+      LglsComHashStack(friend);
+      LglsComHashHeap(friend);
       LglsComHashEmergent(friend);
       LglsComComparison(friend);
       LglsComEmplacement(friend);
       LglsComAssignment(friend);
       LglsComInsertion(friend);
       LglsComMerging(friend);
-      template<CT::State...>              friend struct StateStack;
-      template<Cid, class, Cid...>        friend struct ReserveEmergent;
-      template<Cid, Cid...>               friend struct Conversion;
-      template<Cid, class, Cid...>        friend struct IndexedHashHeap;
-      template<Cid, class, Cid...>        friend struct IndexedHashStack;
+      LglsComConversion(friend);
+      LglsComReserveEmergent(friend);
+      LglsComIndexedHashHeap(friend);
+      LglsComIndexedHashStack(friend);
+      LglsComStateStack(friend);
       LglsComIndexedCommonHashed(friend);
 
       // Here lies the stack. It is an optimized tuple that is filled   

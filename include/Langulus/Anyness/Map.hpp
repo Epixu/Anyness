@@ -6,29 +6,28 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/Container.hpp"
-#include "../../../source/components/Typed-Stack.hpp"
-#include "../../../source/components/Heap-Movable.hpp"
-#include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Stack.hpp"
-#include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/OwnershipDeep-Heap.hpp"
-#include "../../../source/components/Hash-Heap.hpp"
-#include "../../../source/components/IndexedHash-Stack.hpp"
-#include "../../../source/components/Merging.hpp"
-#include "../../../source/components/MergingOperators.hpp"
-#include "../../../source/components/Assignment.hpp"
-#include "../../../source/components/Removal.hpp"
-#include "../../../source/components/Conversion.hpp"
-#include "../../../source/components/Comparison.hpp"
-#include "../../../source/components/Iteration-ForEach.hpp"
-#include "../../../source/components/Iteration-Range.hpp"
-#include "../../../source/components/State-Stack.hpp"
-#include "../../../source/states/Typed.hpp"
-#include "../../../source/states/Sorted.hpp"
-#include "../../../source/states/Compressed.hpp"
-#include "../../../source/states/Encrypted.hpp"
-#include "../../../source/states/Tracked.hpp"
+#include <source/components/Typed-Stack.hpp>
+#include <source/components/Heap-Movable.hpp>
+#include <source/components/Count-Stack.hpp>
+#include <source/components/Reserve-Stack.hpp>
+#include <source/components/Ownership-Stack.hpp>
+#include <source/components/OwnershipDeep-Heap.hpp>
+#include <source/components/Hash-Heap.hpp>
+#include <source/components/IndexedHash-Stack.hpp>
+#include <source/components/Merging.hpp>
+#include <source/components/MergingOperators.hpp>
+#include <source/components/Assignment.hpp>
+#include <source/components/Removal.hpp>
+#include <source/components/Conversion.hpp>
+#include <source/components/Comparison.hpp>
+#include <source/components/Iteration-ForEach.hpp>
+#include <source/components/Iteration-Range.hpp>
+#include <source/components/State-Stack.hpp>
+#include <source/states/Typed.hpp>
+#include <source/states/Sorted.hpp>
+#include <source/states/Compressed.hpp>
+#include <source/states/Encrypted.hpp>
+#include <source/states/Tracked.hpp>
 #include "HandlePair.hpp"
 
 

@@ -52,7 +52,7 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, bool>     friend struct OwnershipDeepEmergent;
+      LglsComOwnershipDeepEmergent(friend);
       LglsComEmplacement(friend);
 
       /// Get the entry array (inner)                                         

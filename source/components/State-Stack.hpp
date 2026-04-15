@@ -37,7 +37,7 @@ namespace Langulus::Anyness::Component
       static_assert(StateCount < 16, "Too many states");
 
    protected:
-      template<Cid, Cid...>         friend struct Removal;
+      LglsComRemoval(friend);
       template<State::StateValue>   friend struct DefineState::Typed;
       template<State::StateValue>   friend struct DefineState::Tracked;
       template<State::StateValue>   friend struct DefineState::Sorted;

@@ -7,15 +7,14 @@
 ///                                                                           
 #pragma once
 #include <Langulus/Utils/Iterate-Handles.hpp>
-#include "../../../source/Container.hpp"
-#include "../../../source/components/Heap-Immovable.hpp"
-#include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/DeepOwnership-Heap.hpp"
-#include "../../../source/components/Emplacement.hpp"
-#include "../../../source/components/Removal.hpp"
-#include "../../../source/components/Typed-Static.hpp"
-#include "../../../source/components/Count-Stack.hpp"
-#include "../../../source/components/Reserve-Heap.hpp"
+#include <source/components/Heap-Immovable.hpp>
+#include <source/components/Ownership-Stack.hpp>
+#include <source/components/DeepOwnership-Heap.hpp>
+#include <source/components/Emplacement.hpp>
+#include <source/components/Removal.hpp>
+#include <source/components/Typed-Static.hpp>
+#include <source/components/Count-Stack.hpp>
+#include <source/components/Reserve-Heap.hpp>
 #include "THandle.hpp"
 
 

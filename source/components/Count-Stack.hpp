@@ -57,14 +57,14 @@ namespace Langulus::Anyness::Component
       T GetCountItemsDeep() const noexcept;
 
    protected:
-      template<Cid, Cid...>      friend struct Removal;
+      LglsComRemoval(friend);
       LglsComEmplacement(friend);
       LglsComInsertion(friend);
       LglsComMerging(friend);
-      template<Cid, Cid...>      friend struct IndexedCommon;
-      template<Cid, Cid...>      friend struct IndexedLinear;
-      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid, Cid...>      friend struct Conversion;
+      LglsComIndexedCommon(friend);
+      LglsComIndexedLinear(friend);
+      LglsComHeapMovable(friend);
+      LglsComConversion(friend);
 
       /// Get count (inner)                                                   
       template<Cid SID = ID>

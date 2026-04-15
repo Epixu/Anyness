@@ -46,18 +46,18 @@ namespace Langulus::Anyness::Component
       static constexpr bool HeapCanBeNull = true;
 
    protected:
-      template<Cid>                 friend struct IterationOperators;
-      template<Cid, Cid...>         friend struct Removal;
-      template<Cid, Cid...>         friend struct IndexedCommon;
+      LglsComIterationOperators(friend);
+      LglsComRemoval(friend);
+      LglsComIndexedCommon(friend);
       LglsComIndexedCommonHashed(friend);
-      template<Cid, Cid...>         friend struct IndexedLinear;
-      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      LglsComIndexedLinear(friend);
+      LglsComHeapMovable(friend);
       LglsComEmplacement(friend);
       LglsComComparison(friend);
-      template<Cid, Cid...>         friend struct Conversion;
-      template<Cid, auto, Cid...>   friend struct CountStatic;
+      LglsComConversion(friend);
+      LglsComCountStatic(friend);
       LglsComOwnershipEmergent(friend);
-      template<Cid, bool>           friend struct OwnershipDeepEmergent;
+      LglsComOwnershipDeepEmergent(friend);
       LglsComHashEmergent(friend);
       
       template<CT::Container C>

@@ -39,7 +39,8 @@ namespace Langulus::Anyness::Component
 
       static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
-      static constexpr bool ContainsMany = (COUNT > 1) or (sizeof...(SHARED) > 0);
+      static constexpr bool ContainsMany = COUNT > 1;
+      static constexpr bool Dimensions = 1 + sizeof...(SHARED);
 
       using CountType   = decltype(COUNT);
       using ReserveType = CountType;
@@ -74,12 +75,12 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, Cid...>         friend struct Removal;
+      LglsComRemoval(friend);
       LglsComEmplacement(friend);
       LglsComInsertion(friend);
-      template<Cid, Cid...>         friend struct IndexedLinear;
-      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid, Cid...>         friend struct Conversion;
+      LglsComIndexedLinear(friend);
+      LglsComHeapMovable(friend);
+      LglsComConversion(friend);
 
       /// Get count (inner)                                                   
       template<Cid SID = ID, CT::Container C>

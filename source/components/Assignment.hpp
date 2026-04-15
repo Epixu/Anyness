@@ -174,7 +174,7 @@ namespace Langulus::Anyness::Component
 
    protected:
       LglsComIndexedCommonHashed(friend);
-      friend struct Conversion<ID>;
+      LglsComConversion(friend);
 
       /// A helper for clearing and allocating memory before construction.    
       /// Calls destructors on all elements, if any were initialized.         

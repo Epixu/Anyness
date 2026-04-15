@@ -31,8 +31,8 @@ namespace Langulus::Anyness::Component
       template<CT::Container C>
       static constexpr auto CountMax = ::std::numeric_limits<Count<C>>::max();
 
-      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
-      template<Cid, Cid...>                        friend struct IndexedCommon;
+      LglsComHeapMovable(friend);
+      LglsComIndexedCommon(friend);
       LglsComMerging(friend);
 
       /// Browse table, converting contiguous index into table index.         

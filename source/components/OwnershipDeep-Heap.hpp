@@ -73,9 +73,9 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
-      template<Cid, Cid...>                        friend struct Removal;
-      template<Cid, bool>                          friend struct OwnershipDeepEmergent;
+      LglsComHeapMovable(friend);
+      LglsComRemoval(friend);
+      LglsComOwnershipDeepEmergent(friend);
       LglsComEmplacement(friend);
 
       /// Get entry array if containing pointers (inner)                      

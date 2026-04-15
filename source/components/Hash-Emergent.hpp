@@ -172,7 +172,7 @@ namespace Langulus::Anyness::Component
       }
       
    protected:
-      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      LglsComHeapMovable(friend);
 
       /// This always returns an invalid hash to enforce regeneration         
       template<Cid SID = ID>

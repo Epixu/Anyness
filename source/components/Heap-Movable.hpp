@@ -35,12 +35,12 @@ namespace Langulus::Anyness::Component
       static constexpr uint GrowthFactor = GROWTH_FACTOR;
 
    protected:
-      template<Cid, class, Cid...>  friend struct ReserveEmergent;
-      template<Cid>                 friend struct IterationOperators;
+      LglsComIterationOperators(friend);
+      LglsComReserveEmergent(friend);
       LglsComInsertion(friend);
       LglsComMerging(friend);
       LglsComEmplacement(friend);
-      template<Cid, Cid...>         friend struct Conversion;
+      LglsComConversion(friend);
       LglsComOwnershipEmergent(friend);
 
       template<CT::Container C>

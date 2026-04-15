@@ -6,25 +6,25 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/components/Typed-Stack.hpp"
-#include "../../../source/components/Heap-Movable.hpp"
-#include "../../../source/components/Count-Static.hpp"
-#include "../../../source/components/Reserve-Static.hpp"
-#include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/OwnershipDeep-Heap.hpp"
-#include "../../../source/components/Hash-Emergent.hpp"
-#include "../../../source/components/Emplacement.hpp"
-#include "../../../source/components/Assignment.hpp"
-#include "../../../source/components/Removal.hpp"
-#include "../../../source/components/Conversion.hpp"
-#include "../../../source/components/Comparison.hpp"
-#include "../../../source/components/State-Stack.hpp"
-#include "../../../source/states/Typed.hpp"
-#include "../../../source/states/Future.hpp"
-#include "../../../source/states/Past.hpp"
-#include "../../../source/states/Compressed.hpp"
-#include "../../../source/states/Encrypted.hpp"
-#include "../../../source/states/Tracked.hpp"
+#include <source/components/Typed-Stack.hpp>
+#include <source/components/Heap-Movable.hpp>
+#include <source/components/Count-Static.hpp>
+#include <source/components/Reserve-Static.hpp>
+#include <source/components/Ownership-Stack.hpp>
+#include <source/components/OwnershipDeep-Heap.hpp>
+#include <source/components/Hash-Emergent.hpp>
+#include <source/components/Emplacement.hpp>
+#include <source/components/Assignment.hpp>
+#include <source/components/Removal.hpp>
+#include <source/components/Conversion.hpp>
+#include <source/components/Comparison.hpp>
+#include <source/components/State-Stack.hpp>
+#include <source/states/Typed.hpp>
+#include <source/states/Future.hpp>
+#include <source/states/Past.hpp>
+#include <source/states/Compressed.hpp>
+#include <source/states/Encrypted.hpp>
+#include <source/states/Tracked.hpp>
 #include "Handle.hpp"
 
 

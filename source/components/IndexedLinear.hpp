@@ -26,7 +26,7 @@ namespace Langulus::Anyness::Component
       using IteratorCategory = ::std::contiguous_iterator_tag;
 
    protected:
-      friend struct IndexedCommon<ID>;
+      LglsComIndexedCommon(friend);
 
       template<CT::Container C>
       using Count = typename Deref<C>::CountType;

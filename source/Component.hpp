@@ -177,85 +177,189 @@ namespace Langulus::Anyness
       ///                                                                     
       ///   COMPONENT CATALOGUE                                               
       ///                                                                     
+      
+      /// Type providers                                                      
       template<class META, class TYPE = void, bool CONSTRAIN = not ::std::is_void_v<TYPE>, Cid = 0> struct TypedStack;
+      #define LglsComTypedStack(modifier) \
+         template<class, class, bool, Cid> modifier struct TypedStack
+
       template<class META, CT::NotVoid TYPE, Cid = 0> struct TypedStatic;
+      #define LglsComTypedStatic(modifier) \
+         template<class, CT::NotVoid, Cid> modifier struct TypedStatic
+
+      /// Data providers                                                      
+      template<Cid = 0, CT::HeapEntry...> struct HeapReference;
+      #define LglsComHeapReference(modifier) \
+         template<Cid, CT::HeapEntry...> modifier struct HeapReference
 
       template<Cid = 0, uint = 0, uint = 0, CT::HeapEntry...> struct HeapImmovable;
+      #define LglsComHeapImmovable(modifier) \
+         template<Cid, uint, uint, CT::HeapEntry...> modifier struct HeapImmovable
+
       template<Cid = 0, uint = 0, uint = 0, CT::HeapEntry...> struct HeapMovable;
-      template<Cid = 0, CT::HeapEntry...> struct HeapReference;
-      template<CT::NotVoid, Cid = 0>      struct Stack;
+      #define LglsComHeapMovable(modifier) \
+         template<Cid, uint, uint, CT::HeapEntry...> modifier struct HeapMovable
 
-      struct Charge;
-      #define LglsComCharge(modifier) modifier struct Charge
+      template<CT::NotVoid, Cid = 0> struct Stack;
+      #define LglsComStack(modifier) \
+         template<CT::NotVoid, Cid> modifier struct Stack
 
+      /// Count, reserve, dimensions                                          
+      template<Cid = 0, class T = size_t, Cid...> struct CountHeap;
+      #define LglsComCountHeap(modifier) \
+         template<Cid, class, Cid...> modifier struct CountHeap
+
+      template<Cid = 0, class T = size_t, Cid...> struct CountStack;
+      #define LglsComCountStack(modifier) \
+         template<Cid, class, Cid...> modifier struct CountStack
+
+      template<Cid = 0, auto COUNT = 0u, Cid...> struct CountStatic;
+      #define LglsComCountStatic(modifier) \
+         template<Cid, auto, Cid...> modifier struct CountStatic
+
+      template<Cid = 0, class T = size_t, Cid...> struct ReserveEmergent;
+      #define LglsComReserveEmergent(modifier) \
+         template<Cid, class, Cid...> modifier struct ReserveEmergent
+
+      template<Cid = 0, class T = size_t, Cid...> struct ReserveStack;
+      #define LglsComReserveStack(modifier) \
+         template<Cid, class, Cid...> modifier struct ReserveStack
+
+      template<Cid = 0, auto COUNT = 0u, Cid...> struct ReserveStatic;
+      #define LglsComReserveStatic(modifier) \
+         template<Cid, auto, Cid...> modifier struct ReserveStatic
+      
+      /// Ownership                                                           
+      template<Cid = 0, bool AUTO = true, Cid...> struct OwnershipEmergent;
+      #define LglsComOwnershipEmergent(modifier) \
+         template<Cid, bool, Cid...> modifier struct OwnershipEmergent
+
+      template<Cid = 0, bool AUTO = true, Cid...> struct OwnershipStack;
+      #define LglsComOwnershipStack(modifier) \
+         template<Cid, bool, Cid...> modifier struct OwnershipStack
+
+      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepReference;
+      #define LglsComOwnershipDeepReference(modifier) \
+         template<Cid, bool> modifier struct OwnershipDeepReference
+
+      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepEmergent;
+      #define LglsComOwnershipDeepEmergent(modifier) \
+         template<Cid, bool> modifier struct OwnershipDeepEmergent
+
+      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepHeap;
+      #define LglsComOwnershipDeepHeap(modifier) \
+         template<Cid, bool> modifier struct OwnershipDeepHeap
+
+      /// Hashing                                                             
+      template<Cid = 0, class H = Hash, Cid...> struct HashEmergent;
+      #define LglsComHashEmergent(modifier) \
+         template<Cid, class, Cid...> modifier struct HashEmergent
+
+      template<Cid = 0, class H = Hash, Cid...> struct HashHeap;
+      #define LglsComHashHeap(modifier) \
+         template<Cid, class, Cid...> modifier struct HashHeap
+
+      template<Cid = 0, class H = Hash, Cid...> struct HashStack;
+      #define LglsComHashStack(modifier) \
+         template<Cid, class, Cid...> modifier struct HashStack
+
+      /// Indexing                                                            
+      template<Cid = 0, Cid...> struct IndexedCommon;
+      #define LglsComIndexedCommon(modifier) \
+         template<Cid, Cid...> modifier struct IndexedCommon
+
+      template<Cid = 0, Cid...> struct IndexedLinear;
+      #define LglsComIndexedLinear(modifier) \
+         template<Cid, Cid...> modifier struct IndexedLinear
+
+      template<Cid = 0, class H = Hash, Cid...> struct IndexedCommonHashed;
+      #define LglsComIndexedCommonHashed(modifier) \
+         template<Cid, class, Cid...> modifier struct IndexedCommonHashed
+
+      template<Cid = 0, class H = Hash, Cid...> struct IndexedHashHeap;
+      #define LglsComIndexedHashHeap(modifier) \
+         template<Cid, class, Cid...> modifier struct IndexedHashHeap
+
+      template<Cid = 0, class H = Hash, Cid...> struct IndexedHashStack;
+      #define LglsComIndexedHashStack(modifier) \
+         template<Cid, class, Cid...> modifier struct IndexedHashStack
+
+      /// Iteration                                                           
+      template<Cid = 0, Cid...> struct IterationForEach;
+      #define LglsComIterationForEach(modifier) \
+         template<Cid, Cid...> modifier struct IterationForEach
+
+      template<Cid = 0, Cid...> struct IterationRange;
+      #define LglsComIterationRange(modifier) \
+         template<Cid, Cid...> modifier struct IterationRange
+
+      template<Cid = 0> struct IterationOperators;
+      #define LglsComIterationOperators(modifier) \
+         template<Cid> modifier struct IterationOperators
+
+      /// States                                                              
+      template<CT::State...> struct StateHeap;
+      #define LglsComStateHeap(modifier) \
+         template<CT::State...> modifier struct StateHeap
+
+      template<CT::State...> struct StateStack;
+      #define LglsComStateStack(modifier) \
+         template<CT::State...> modifier struct StateStack
+
+      template<CT::State...> struct StateStatic;
+      #define LglsComStateStatic(modifier) \
+         template<CT::State...> modifier struct StateStatic
+
+      /// Comparison, search, pattern matching                                
       template<Cid = 0, bool HASH = true, Cid...> struct Comparison;
-      #define LglsComComparison(modifier) template<Cid, bool, Cid...> modifier struct Comparison
+      #define LglsComComparison(modifier) \
+         template<Cid, bool, Cid...> modifier struct Comparison
 
-      template<Cid = 0, Cid...>                       struct Conversion;
+      /// Conversion                                                          
+      template<Cid = 0, Cid...> struct Conversion;
+      #define LglsComConversion(modifier) \
+         template<Cid, Cid...> modifier struct Conversion
 
-      template<Cid = 0, class T = size_t, Cid...>     struct CountHeap;
-      template<Cid = 0, class T = size_t, Cid...>     struct CountStack;
-      template<Cid = 0, auto COUNT = 0u, Cid...>      struct CountStatic;
+      /// Emplacement, insertion, merging, concatenation, removal             
+      template<Cid = 0, Cid...> struct Emplacement;
+      #define LglsComEmplacement(modifier) \
+         template<Cid, Cid...> modifier struct Emplacement
 
-      template<Cid = 0, class T = size_t, Cid...>     struct ReserveEmergent;
-      template<Cid = 0, class T = size_t, Cid...>     struct ReserveStack;
-      template<Cid = 0, auto COUNT = 0u, Cid...>      struct ReserveStatic;
+      template<Cid = 0, Cid...> struct Assignment;
+      #define LglsComAssignment(modifier) \
+         template<Cid, Cid...> modifier struct Assignment
 
-      template<Cid = 0, bool AUTO = true, Cid...>     struct OwnershipEmergent;
-      #define LglsComOwnershipEmergent(modifier) template<Cid, bool, Cid...> modifier struct OwnershipEmergent
+      template<Cid = 0, class AS = void, Cid...> struct Insertion;
+      #define LglsComInsertion(modifier) \
+         template<Cid, class, Cid...> modifier struct Insertion
 
-      template<Cid = 0, bool AUTO = true, Cid...>     struct OwnershipStack;
-      #define LglsComOwnershipStack(modifier) template<Cid, bool, Cid...> modifier struct OwnershipStack
+      template<Cid = 0, class AS = void, Cid...> struct InsertionOperators;
+      #define LglsComInsertionOperators(modifier) \
+         template<Cid, class, Cid...> modifier struct InsertionOperators
 
-      template<Cid = 0, bool REF_INDIVIDUAL = true>   struct OwnershipDeepEmergent;
-      template<Cid = 0, bool REF_INDIVIDUAL = true>   struct OwnershipDeepHeap;
-      template<Cid = 0, bool REF_INDIVIDUAL = true>   struct OwnershipDeepReference;
+      template<Cid = 0, class AS = void, Cid...> struct Merging;
+      #define LglsComMerging(modifier) \
+         template<Cid, class, Cid...> modifier struct Merging
 
-      template<Cid = 0, class H  = Hash, Cid...>      struct HashEmergent;
-      #define LglsComHashEmergent(modifier) template<Cid, class, Cid...> modifier struct HashEmergent
+      template<Cid = 0, class AS = void, Cid...> struct MergingOperators;
+      #define LglsComMergingOperators(modifier) \
+         template<Cid, class, Cid...> modifier struct MergingOperators
 
-      template<Cid = 0, class H  = Hash, Cid...>      struct HashHeap;
-      template<Cid = 0, class H  = Hash, Cid...>      struct HashStack;
+      template<Cid = 0, Cid...> struct Removal;
+      #define LglsComRemoval(modifier) \
+         template<Cid, Cid...> modifier struct Removal
 
-      template<Cid = 0, Cid...>                       struct IndexedCommon;
-      template<Cid = 0, Cid...>                       struct IndexedLinear;
-      template<Cid = 0, class H  = Hash, Cid...>      struct IndexedCommonHashed;
-      #define LglsComIndexedCommonHashed(modifier) template<Cid, class, Cid...> modifier struct IndexedCommonHashed
+      /// Other services                                                      
+      struct Descriptor;
+      struct Charge;
 
-      template<Cid = 0, class H  = Hash, Cid...>      struct IndexedHashHeap;
-      template<Cid = 0, class H  = Hash, Cid...>      struct IndexedHashStack;
+      template<Cid = 0> struct Extrapolation;
+      #define LglsComExtrapolation(modifier) \
+            template<Cid> modifier struct Extrapolation
 
-      template<Cid = 0, Cid...>           struct Emplacement;
-      #define LglsComEmplacement(modifier) template<Cid, Cid...> modifier struct Emplacement
-
-      template<Cid = 0, Cid...>           struct Assignment;
-      #define LglsComAssignment(modifier) template<Cid, Cid...> modifier struct Assignment
-
-      template<Cid = 0, class AS = void, Cid...>  struct Insertion;
-      #define LglsComInsertion(modifier) template<Cid, class, Cid...> modifier struct Insertion
-
-      template<Cid = 0, class AS = void, Cid...>  struct InsertionOperators;
-      #define LglsComInsertionOperators(modifier) template<Cid, class, Cid...> modifier struct InsertionOperators
-
-      template<Cid = 0, class AS = void, Cid...>  struct Merging;
-      #define LglsComMerging(modifier) template<Cid, class, Cid...> modifier struct Merging
-
-      template<Cid = 0, class AS = void, Cid...>  struct MergingOperators;
-      #define LglsComMergingOperators(modifier) template<Cid, class, Cid...> modifier struct MergingOperators
-
-      template<Cid = 0, Cid...>           struct Removal;
-
-      template<Cid = 0, Cid...>           struct IterationForEach;
-      template<Cid = 0, Cid...>           struct IterationRange;
-      template<Cid = 0>                   struct IterationOperators;
-
-      template<CT::State...>              struct StateHeap;
-      template<CT::State...>              struct StateStack;
-      template<CT::State...>              struct StateStatic;
-
-                                          struct Descriptor;
-      template<Cid = 0>                   struct Extrapolation;
-      template<Cid = 0>                   struct Interpolation;
+      template<Cid = 0> struct Interpolation;
+      #define LglsComInterpolation(modifier) \
+         template<Cid> modifier struct Interpolation
    }
    
    namespace Com = Component;

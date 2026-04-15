@@ -410,15 +410,16 @@ namespace Langulus::Anyness::Component
             // This container is statically typed                       
             if (not t)
                t = MetaDataOf<TYPE>();
+
             LglsAssert(t.IsExact(type), "Type mismatch", ": ", t,
                " is not exactly ", type);
          }
       }
       
    protected:
-      template<Cid, Cid...>                        friend struct Removal;
-      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
-      template<Cid, Cid...>                        friend struct IndexedCommon;
+      LglsComRemoval(friend);
+      LglsComHeapMovable(friend);
+      LglsComIndexedCommon(friend);
       LglsComEmplacement(friend);
 
       /// Reset the type of the container, unless it's type-constrained.      

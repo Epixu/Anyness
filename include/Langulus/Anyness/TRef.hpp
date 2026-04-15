@@ -6,16 +6,15 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #pragma once
-#include "../../../source/Container.hpp"
-#include "../../../source/components/Typed-Static.hpp"
-#include "../../../source/components/Heap-Movable.hpp"
-#include "../../../source/components/Ownership-Stack.hpp"
-#include "../../../source/components/Count-Static.hpp"
-#include "../../../source/components/Reserve-Emergent.hpp"
-#include "../../../source/components/Emplacement.hpp"
-#include "../../../source/components/Assignment.hpp"
-#include "../../../source/components/Comparison.hpp"
-#include "../../../source/components/Removal.hpp"
+#include <source/components/Typed-Static.hpp>
+#include <source/components/Heap-Movable.hpp>
+#include <source/components/Ownership-Stack.hpp>
+#include <source/components/Count-Static.hpp>
+#include <source/components/Reserve-Emergent.hpp>
+#include <source/components/Emplacement.hpp>
+#include <source/components/Assignment.hpp>
+#include <source/components/Comparison.hpp>
+#include <source/components/Removal.hpp>
 
 
 namespace Langulus::Anyness::Inner

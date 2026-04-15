@@ -41,9 +41,9 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = 2000;
 
    protected:
-      template<Cid, CT::HeapEntry...>              friend struct HeapReference;
-      template<Cid, uint, uint, CT::HeapEntry...>  friend struct HeapMovable;
-      template<Cid, Cid...>                        friend struct Removal;
+      LglsComHeapReference(friend);
+      LglsComHeapMovable(friend);
+      LglsComRemoval(friend);
       LglsComEmplacement(friend);
       LglsComOwnershipEmergent(friend);
 

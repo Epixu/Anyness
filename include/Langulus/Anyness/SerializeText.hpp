@@ -86,7 +86,9 @@ namespace Langulus::CTTI
    }
 
    /// A rule for serializing any deep container that contains single item.   
-   /// This includes Any, Handle, Own, Ref and their templated equivalents.   
+   /// This includes Any, Handle, Own, Ref, Pair and their templated          
+   /// equivalents. Notice that Pair technically contains one item, but with  
+   /// two dimensions.                                                        
    template<CT::Deep C>
    void SerializationRule<Anyness::Text, C>::Serialize(C const& self, Anyness::Text& out, Context* context)
    requires CT::ContainsOne<C> {
@@ -113,14 +115,14 @@ namespace Langulus::CTTI
          //                                                             
          // Serialize a statically-typed container                      
          using T = TypeOf<C>;
-         if constexpr (CT::Deep<T>) {
+         /*if constexpr (CT::Deep<T>) {
             Decay<T> const& item = DenseCast(*self);
             Langulus::Serialize(item, out, context);
          }
-         else {
+         else {*/
             Decay<T> const& item = DenseCast(*self);
             Langulus::Serialize(item, out, context);
-         }
+         //}
       }
    }
 

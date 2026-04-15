@@ -48,7 +48,7 @@ namespace Langulus::Anyness::Component
       static constexpr bool Shared = sizeof...(SHARED) > 0;
 
    protected:
-      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
+      LglsComHeapMovable(friend);
       LglsComInsertion(friend);
       LglsComMerging(friend);
       LglsComIndexedCommonHashed(friend);

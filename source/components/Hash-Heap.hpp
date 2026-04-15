@@ -53,8 +53,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<Cid, uint, uint, CT::HeapEntry...> friend struct HeapMovable;
-      template<Cid, Cid...>                       friend struct Conversion;
+      LglsComHeapMovable(friend);
+      LglsComConversion(friend);
 
       /// Get hash (inner) - will never recompute it                          
       template<Cid SID = ID>
