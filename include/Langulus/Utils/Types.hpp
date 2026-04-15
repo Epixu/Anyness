@@ -306,12 +306,10 @@ namespace Langulus
       /// Doesn't generate code for further loops if lambda returns anything  
       /// but a No (utilizes a compile-time short-circuit)                    
       static constexpr decltype(auto) ForEachConstOr(auto&& lambda) {
-         if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<T1>())>) {
+         if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<T1>())>)
             return lambda.template operator()<T1>();
-         }
-         else if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<T2>())>) {
+         else if constexpr (not ::std::same_as<No, decltype(lambda.template operator()<T2>())>)
             return lambda.template operator()<T2>();
-         }
          else if constexpr (sizeof...(TN))
             return Types<TN...>::ForEachConstOr(lambda);
          else

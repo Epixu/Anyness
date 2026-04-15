@@ -417,6 +417,6 @@ void Map_CheckState_ContainsArray(const T& map, I&& e_scoped_array_with_intent) 
 }
 
 template<CT::Container T, class E> requires CT::NoIntent<T>
-void Map_Helper_CompareOne(const T& map, const E& e) {
+void Map_Helper_CompareOne(const T&, const E&) {
    //TODO Many_Helper_CompareOne(map, e);
 }

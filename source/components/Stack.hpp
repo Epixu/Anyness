@@ -30,47 +30,28 @@ namespace Langulus::Anyness::Component
       static constexpr Cid StackProvider = ID;
       static constexpr int ComponentPrecedence = -2000;
       
-   protected:
-      /// Get the heap pointer (inner)                                        
-      //template<Cid SID = ID>
-      constexpr auto& GetStackInner(this auto&& self) noexcept {
-         //static_assert(SID == ID);
-         return self.template AccessStack<Stack>();
-      }
-
-      //template<Cid SID = ID>
-      constexpr void SetStackInner(this auto& self, T&& data) noexcept {
-         //static_assert(SID == ID);
-         ThisCom::GetStackInner() = LglsFwd(data);
-      }
-
-   public:
       /// Get a direct access to the stack memory                             
-      template<Cid SID = ID, CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr auto GetRaw(this C&& self) noexcept {
-         static_assert(SID == ID);
          return &ThisCom::GetStackInner();
       }
 
       /// Get a direct access to the stack memory as a different type         
-      template<class AS, Cid SID = ID, CT::Container C>
+      template<class AS, Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr auto GetRawAs(this C&& self) noexcept {
-         static_assert(SID == ID);
          using AScvq = LglsMutIf(C, AS*);
          return static_cast<AScvq>(ThisCom::GetRaw());
       }
 
       /// Get a direct access to the stack memory's end                       
-      template<Cid SID = ID, CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr auto GetRawEnd(this C&& self) noexcept {
-         static_assert(SID == ID);
          return ThisCom::GetRaw() + 1;
       }
 
       /// Get a direct access to the stack memory's end                       
-      template<Cid SID = ID, CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr auto GetRawReserveEnd(this C&& self) noexcept {
-         static_assert(SID == ID);
          return ThisCom::GetRawEnd();
       }
 
@@ -114,9 +95,9 @@ namespace Langulus::Anyness::Component
       /// Conversion or copying may occur, depending on type.                 
       ///   @tparam AS the type we're wrapping in                             
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
+      template<CT::NotVoid AS, Cid SID = ID, CT::Container C>
+      requires (SID == ID and CT::Contiguous<C>)
       decltype(auto) As(this C&& self) {
-         static_assert(SID == ID);
          static_assert(not CT::Reference<AS>, "Strip references first");
 
          if constexpr (CT::Handle<AS>)
@@ -140,9 +121,9 @@ namespace Langulus::Anyness::Component
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<class AS = void, Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
-      auto GetResolved(this C&& self) requires requires { typename Deref<C>::DeepType; } {
-         static_assert(SID == ID);
+      template<class AS = void, Cid SID = ID, CT::Container C>
+      requires (SID == ID and CT::Contiguous<C> and requires { typename Deref<C>::DeepType; })
+      auto GetResolved(this C&& self) {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
          static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
@@ -166,9 +147,9 @@ namespace Langulus::Anyness::Component
       ///   @param self deduced this                                          
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<class AS = void, Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
-      auto GetDense(this C&& self, size_t count = -1) requires requires { typename Deref<C>::DeepType; } {
-         static_assert(SID == ID);
+      template<class AS = void, Cid SID = ID, CT::Container C>
+      requires (SID == ID and CT::Contiguous<C> and requires { typename Deref<C>::DeepType; })
+      auto GetDense(this C&& self, size_t count = -1) {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
          LglsAssert(not self.IsEmpty(), "Can't GetDense from empty container");
@@ -213,6 +194,16 @@ namespace Langulus::Anyness::Component
       /// Default-initialize the variable                                     
       constexpr void ConstructDefault(this auto& self) noexcept requires CT::NotReference<T> {
          ThisCom::SetStackInner({});
+      }
+
+      /// Get the heap pointer (inner)                                        
+      constexpr auto& GetStackInner(this auto&& self) noexcept {
+         return self.template AccessStack<Stack>();
+      }
+
+      /// Set the heap pointer (inner)                                        
+      constexpr void SetStackInner(this auto& self, T&& data) noexcept {
+         ThisCom::GetStackInner() = LglsFwd(data);
       }
    };
 

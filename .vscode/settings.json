@@ -18,7 +18,7 @@
    "clangd.arguments": [
       "--enable-config"
    ],
-   "editor.fontSize": 11,
+   "editor.fontSize": 10,
    "editor.fontLigatures": true,
    "editor.fontFamily": "'Cascadia Code', Consolas, 'Courier New', monospace",
    "editor.inlayHints.enabled": "offUnlessPressed",
@@ -130,5 +130,7 @@
       "**/Thumbs.db": true
    },
    "hide-files.files": [],
-   "workbench.colorTheme": "Dark 2026"
+  "workbench.colorTheme": "Dark 2026",
+  "debug.console.fontSize": 10,
+  "terminal.integrated.fontSize": 10
 }
