@@ -92,38 +92,34 @@ namespace Langulus::CTTI
    template<CT::Deep C>
    void SerializationRule<Anyness::Text, C>::Serialize(C const& self, Anyness::Text& out, Context* context)
    requires CT::ContainsOne<C> {
-      if constexpr (CT::TypeErased<C>) {
-         //                                                             
-         // Serialize a type-erased container                           
-         const auto T = self.GetType();
-         if (T.IsDeep()) {
-            auto item = self.template As<typename C::DeepType>();
-            try { Langulus::Serialize(item, out, context); }
-            catch (...) {
+      C::Dimensions::ForEach([&]<uint ID> {
+         if constexpr (CT::TypeErased<C>) {
+            //                                                          
+            // Serialize a type-erased container                        
+            const auto T = self.template GetType<ID>();
+            if (T.IsDeep()) {
+               auto item = self.template As<typename C::DeepType, ID>();
+               try { Langulus::Serialize(item, out, context); }
+               catch (...) {
                   
+               }
+            }
+            else {
+               const auto text_meta = MetaDataOf<Anyness::Text>();
+               const auto serializer = T.GetMorphism(text_meta).serialize;
+               LglsAssert(serializer, "Missing serializer",
+                  " from ", T.GetName(), " to ", text_meta.GetName());
+               serializer(DecvqAllCast(self.template Get<void, ID>()), &out, context);
             }
          }
          else {
-            const auto text_meta = MetaDataOf<Anyness::Text>();
-            const auto serializer = T.GetMorphism(text_meta).serialize;
-            LglsAssert(serializer, "Missing serializer",
-               " from ", T.GetName(), " to ", text_meta.GetName());
-            serializer(DecvqAllCast(self.Get()), &out, context);
-         }
-      }
-      else {
-         //                                                             
-         // Serialize a statically-typed container                      
-         using T = TypeOf<C>;
-         /*if constexpr (CT::Deep<T>) {
-            Decay<T> const& item = DenseCast(*self);
+            //                                                          
+            // Serialize a statically-typed container                   
+            using T = TypeOf<C, ID>;
+            Decay<T> const& item = DenseCast(self.template Get<void, ID>());
             Langulus::Serialize(item, out, context);
          }
-         else {*/
-            Decay<T> const& item = DenseCast(*self);
-            Langulus::Serialize(item, out, context);
-         //}
-      }
+      });
    }
 
    /// Rule for serializing Code to Text. Wraps it in {} symbols.             

@@ -80,9 +80,8 @@ namespace Langulus::Anyness::Component
       ///   @attention no type-safety                                         
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the stack                                              
-      template<class AS = void, Cid SID = ID, CT::Container C>
+      template<class AS = void, Cid SID = ID, CT::Container C> requires (SID == ID)
       constexpr decltype(auto) Get(this C&& self) assumptious {
-         static_assert(SID == ID);
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
 

@@ -10,6 +10,7 @@
 #include <Langulus/CT/Index.hpp>
 #include <Langulus/CT/Signed.hpp>
 #include <Langulus/CT/Integer.hpp>
+#include <Langulus/Utils/Values.hpp>
 
 
 namespace Langulus::Anyness::Component
@@ -40,8 +41,8 @@ namespace Langulus::Anyness::Component
       static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = COUNT > 1;
-      static constexpr bool Dimensions = 1 + sizeof...(SHARED);
 
+      using Dimensions  = Values<ID, SHARED...>;
       using CountType   = decltype(COUNT);
       using ReserveType = CountType;
       using IndexType   = Index::At<CountType>;
