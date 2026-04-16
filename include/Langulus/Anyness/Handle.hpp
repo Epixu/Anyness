@@ -34,7 +34,7 @@ namespace Langulus::Anyness
          Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
          Com::CountStatic<0, 1u>,
          Com::ReserveEmergent<>,
-         Com::OwnershipStack<0, false>,
+         Com::OwnershipStack<0, Com::WeakOwnership>,
          Com::HashEmergent<>,
          Com::Assignment<>,
          Com::Emplacement<>,

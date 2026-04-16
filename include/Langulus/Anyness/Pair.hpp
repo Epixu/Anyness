@@ -39,7 +39,7 @@ namespace Langulus::Anyness::Inner
       >,
       Com::CountStatic<0, 1u, 1>,         // Statically sized to 1      
       Com::ReserveStatic<0, 1u, 1>,       // Statically reserved to 1   
-      Com::OwnershipStack<0, true, 1>,    // Allocation is referenced   
+      Com::OwnershipStack<0, Com::StrongOwnership, 1>,
       Com::OwnershipDeepHeap<0>,          // Separate key deep ownership
       Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  

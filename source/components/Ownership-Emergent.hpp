@@ -7,7 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "Iteration-Range.hpp"
+//#include "Iteration-Range.hpp"
 #include <Langulus/Allocator.hpp>
 
 
@@ -17,22 +17,21 @@ namespace Langulus::Anyness::Component
 
    ///                                                                        
    /// Heap allocation will be searched on demand every time.                 
-   /// Manage its ownership by referencing and dereferencing it.              
+   /// Manage its ownership by referencing and dereferencing it, if enabled.  
    /// Emergent ownership disallows disownment.                               
    ///   @tparam ID provider we're keeping track of                           
-   ///   @tparam AUTO whether ownership will be automatically applied on      
-   ///      construction, reassignment and destruction. False if container is 
-   ///      just a view, or in other cases where you want to carry an         
+   ///   @tparam STYLE whether ownership will be automatically applied on     
+   ///      construction, reassignment and destruction. Usually 0 if container
+   ///      is just a view, or in other cases where you want to carry an      
    ///      allocation pointer, but not necessarily reference it.             
    ///   @tparam SHARED other providers that will share the same allocation   
    ///      variable.                                                         
-   template<Cid ID, bool AUTO, Cid...SHARED>
+   template<Cid ID, uint STYLE, Cid...SHARED>
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
 
       static constexpr Cid  Id = ID;
-      static constexpr bool Owned = true;
-      static constexpr bool AutoOwned = AUTO;
+      static constexpr uint Owned = STYLE;
       static constexpr int  ComponentPrecedence = 1000;
 
       /// Get the allocation                                                  
@@ -97,13 +96,13 @@ namespace Langulus::Anyness::Component
          //    in case something throws an exception while constructing 
          if constexpr (CT::Referred<I>) {
             // Refer                                                    
-            if constexpr (AUTO)
+            if constexpr (STYLE & OnCreate)
                self.Keep();
          }
          else if constexpr (CT::Abandoned<I> or CT::Moved<I>) {
             // Abandon/Move                                             
             if_available(from.SetAllocationInner(nullptr))
-            else if constexpr (AUTO and CT::AutoOwned<I>) {
+            else if constexpr ((STYLE & OnCreate) and CT::StronglyOwned<I>) {
                // We can't reset source allocation pointer, which means 
                // that source destructor will dereference when out of   
                // scope. We have to reference the data here.            
@@ -121,7 +120,7 @@ namespace Langulus::Anyness::Component
 
       /// Called on container destruction                                     
       ///   @attention this never modifies any state                          
-      void Destroy(this auto& self) noexcept requires AUTO {
+      void Destroy(this auto& self) noexcept requires ((STYLE & OnDestroy) != 0) {
          self.Free();
       }
 

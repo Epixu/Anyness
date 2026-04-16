@@ -15,14 +15,14 @@ namespace Langulus::Anyness::Component
    /// Keep a pointer to the heap allocation as a member.                     
    /// Manage its ownership by referencing and dereferencing it.              
    ///   @tparam ID provider we're keeping track of                           
-   ///   @tparam AUTO whether ownership will be automatically applied on      
-   ///      construction, reassignment and destruction. False if container is 
-   ///      just a view, or in other cases where you want to carry an         
+   ///   @tparam STYLE whether ownership will be automatically applied on     
+   ///      construction, reassignment and destruction. Usually 0 if container
+   ///      is just a view, or in other cases where you want to carry an      
    ///      allocation pointer, but not necessarily reference it.             
    ///   @tparam SHARED other providers that will share the same allocation   
    ///      variable.                                                         
-   template<Cid ID, bool AUTO, Cid...SHARED>
-   struct OwnershipStack : OwnershipEmergent<ID, AUTO, SHARED...> {
+   template<Cid ID, uint STYLE, Cid...SHARED>
+   struct OwnershipStack : OwnershipEmergent<ID, STYLE, SHARED...> {
       using StackRequest = AllocationPtr;
 
       /// Get the allocation                                                  
@@ -90,7 +90,7 @@ namespace Langulus::Anyness::Component
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
             if (auto found = Allocator::Find(self.GetHeapInner())) {
                self.SetAllocationInner(found);
-               if constexpr (AUTO)
+               if constexpr (STYLE & OnCreate)
                   self.Keep();
             }
             else
@@ -119,7 +119,7 @@ namespace Langulus::Anyness::Component
             // Refer                                                    
             if constexpr (requires { from.GetAllocationInner(); }) {
                self.SetAllocationInner(from.GetAllocationInner());
-               if constexpr (AUTO)
+               if constexpr (STYLE & OnCreate)
                   self.Keep();
             }
             else self.FindAllocationInner();
@@ -130,7 +130,7 @@ namespace Langulus::Anyness::Component
                self.SetAllocationInner(from.GetAllocationInner());
 
                if_available(from.SetAllocationInner(nullptr))
-               else if constexpr (AUTO and CT::AutoOwned<I>) {
+               else if constexpr (STYLE & OnCreate and CT::StronglyOwned<I>) {
                   // We can't reset source allocation pointer, which    
                   // means that source destructor will dereference when 
                   // out of scope. We have to reference the data here.  

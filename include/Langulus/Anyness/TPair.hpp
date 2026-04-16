@@ -20,6 +20,7 @@ namespace Langulus::Anyness::Inner
       Com::Stack<V, 1>,
       Com::CountStatic<0, 1u, 1>,         // Statically sized to 1      
       Com::ReserveStatic<0, 1u, 1>,       // Statically reserved to 1   
+      Com::OwnershipEmergent<0, Com::NoOwnership, 1>,
       Com::OwnershipDeepEmergent<0>,      // Separate key deep ownership
       Com::OwnershipDeepEmergent<1>,      // Separate val deep onwership
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  

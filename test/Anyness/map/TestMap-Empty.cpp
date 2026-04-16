@@ -158,7 +158,7 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       static_assert(    CT::HeapAllocated<T>);
       static_assert(    CT::DeeplyOwned<T> == (CT::TypeErased<T> or CT::Sparse<E1> or CT::Sparse<E2>));
       static_assert(    CT::Owned<T>);
-      static_assert(    CT::AutoOwned<T>);
+      static_assert(    CT::StronglyOwned<T>);
       static_assert(    CT::Comparable<T, T>);
       static_assert(not CT::Comparable<T, E1>);
       static_assert(not CT::Comparable<T, E2>);

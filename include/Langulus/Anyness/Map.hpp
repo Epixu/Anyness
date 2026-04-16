@@ -44,7 +44,7 @@ namespace Langulus::Anyness::Inner
       Com::CountStack<0, size_t, 1>,      // Dynamically sized          
       Com::ReserveStack<0, size_t, 1>,    // Reserve kept as member     
       Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
-      Com::OwnershipStack<0, true, 1>,    // Allocation is referenced   
+      Com::OwnershipStack<0, Com::StrongOwnership, 1>,
       Com::OwnershipDeepHeap<0>,          // Separate key deep ownership
       Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         

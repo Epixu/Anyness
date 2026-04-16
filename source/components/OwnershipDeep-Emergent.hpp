@@ -563,7 +563,7 @@ namespace Langulus::Anyness::Component
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 
-                  if constexpr (CT::AutoOwned<H> and I::IsMoved()) {
+                  if constexpr (CT::StronglyOwned<H> and I::IsMoved()) {
                      // We are moving/abandoning, and we have to make   
                      // sure that source entries are zeroes, because    
                      // otherwise they will be dereferenced when H goes 
@@ -584,7 +584,7 @@ namespace Langulus::Anyness::Component
                   self.template KeepElementDeepStandardPointers<false, SID>();
                #endif
             }
-            else if constexpr (CT::AutoOwned<H> and REF_INDIVIDUAL) {
+            else if constexpr (CT::StronglyOwned<H> and REF_INDIVIDUAL) {
                // We are moving/abandoning, but since individual items  
                // are referenced (even if they have no corresponding    
                // entry), we need to zero the source pointer, so that   

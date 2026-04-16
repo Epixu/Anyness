@@ -169,7 +169,7 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
    static_assert(    CT::HeapAllocated<T>);
    static_assert(not CT::DeeplyOwned<T>);
    static_assert(    CT::Owned<T>);
-   static_assert(    CT::AutoOwned<T>);
+   static_assert(    CT::StronglyOwned<T>);
    static_assert(    CT::Comparable<T, T>);
    static_assert(    CT::Comparable<T, E>);
    static_assert(    ::std::ranges::range<T>);

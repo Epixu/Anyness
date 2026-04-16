@@ -46,19 +46,32 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Pair);
 LANGULUS_CTTI_CONCEPT_DECVQ(Handle);
 LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
+namespace Langulus::Anyness::Component
+{
+   enum OwnershipStyle {
+      NoOwnership = 0,
+      OnCreate = 1,
+      OnAssign = 2,
+      OnDestroy = 4
+   };
+
+   constexpr uint WeakOwnership = OnAssign;
+   constexpr uint StrongOwnership = OnCreate | OnAssign | OnDestroy;
+}
+
 namespace Langulus::CT
 {
    /// Check if listed types are containers with any kind of Ownership        
    /// component                                                              
    template<class...T>
    concept Owned = Container<T...>
-       and (ShedDeref<T>::Owned and ...);
+       and ((ShedDeref<T>::Owned != 0) and ...);
 
    /// Check if listed containers are referenced upon construction/assignment 
    /// and then automatically dereferenced on destruction                     
    template<class...T>
-   concept AutoOwned = Container<T...>
-       and ((ShedDeref<T>::AutoOwned) and ...);
+   concept StronglyOwned = Container<T...>
+       and (((ShedDeref<T>::Owned & Anyness::Component::StrongOwnership) != 0) and ...);
    
    /// Check if listed types are containers with any kind of heap memory      
    template<class...T>
@@ -230,13 +243,13 @@ namespace Langulus::Anyness
          template<Cid, auto, Cid...> modifier struct ReserveStatic
       
       /// Ownership                                                           
-      template<Cid = 0, bool AUTO = true, Cid...> struct OwnershipEmergent;
+      template<Cid = 0, uint = StrongOwnership, Cid...> struct OwnershipEmergent;
       #define LglsComOwnershipEmergent(modifier) \
-         template<Cid, bool, Cid...> modifier struct OwnershipEmergent
+         template<Cid, uint, Cid...> modifier struct OwnershipEmergent
 
-      template<Cid = 0, bool AUTO = true, Cid...> struct OwnershipStack;
+      template<Cid = 0, uint = StrongOwnership, Cid...> struct OwnershipStack;
       #define LglsComOwnershipStack(modifier) \
-         template<Cid, bool, Cid...> modifier struct OwnershipStack
+         template<Cid, uint, Cid...> modifier struct OwnershipStack
 
       template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepReference;
       #define LglsComOwnershipDeepReference(modifier) \

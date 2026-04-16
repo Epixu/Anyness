@@ -165,7 +165,7 @@ namespace Langulus::Anyness::Component
             if constexpr (I::IsKept()) {
                if constexpr (I::IsMoved()) {
                   // Move                                               
-                  if constexpr (CT::AutoOwned<I>) {
+                  if constexpr (CT::StronglyOwned<I>) {
                      from.template SetHeapInner<ID>(nullptr);
                      if_available(from.template ResetState<ID>());
                      if_available(from.template ResetType<ID>());
