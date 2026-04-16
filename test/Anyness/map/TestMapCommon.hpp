@@ -272,6 +272,144 @@ void Map_CheckState_Abandoned(C const& map) {
    Many_CheckState_Abandoned<V>(map.GetVals());
 }
 
+template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
+void Map_VerifyAccessorInterface(T const& map, I&&) {
+   using E1 = typename Decay<Deint<I>>::KeyType;
+   using E2 = typename Decay<Deint<I>>::ValType;
+
+   // The Get method always adds a pointer, because it interfaces the   
+   // heap directly                                                     
+   static_assert(requires {
+      {map.template GetAt<Decay<E1>      , 0>(0)} -> ::std::same_as<const Decay<E1>*>;
+      {map.template GetAt<Decay<E1> const, 0>(0)} -> ::std::same_as<const Decay<E1>*>;
+      {map.template GetAt<Decay<E2>      , 1>(0)} -> ::std::same_as<const Decay<E2>*>;
+      {map.template GetAt<Decay<E2> const, 1>(0)} -> ::std::same_as<const Decay<E2>*>;
+   });
+   static_assert(requires {
+      {map.template GetAt<E1      , 0>(0)} -> ::std::same_as<ConstAll<E1> const*>;
+      {map.template GetAt<E1 const, 0>(0)} -> ::std::same_as<ConstAll<E1> const*>;
+      {map.template GetAt<E2      , 1>(0)} -> ::std::same_as<ConstAll<E2> const*>;
+      {map.template GetAt<E2 const, 1>(0)} -> ::std::same_as<ConstAll<E2> const*>;
+   });
+
+   // AsAt dereferences that pointer and/or wraps inside handles or     
+   // containers. Element won't be wrapped, if container contains the   
+   // wrapper type.                                                     
+   if constexpr (CT::Deep<E1> and CT::Dense<E1> and (not Same<TypeOf<T>, E1> or CT::TypeErased<T>)) {
+      static_assert(requires {
+         {map.template AsAt<E1, 0>(0)} -> ::std::same_as<Decay<E1>>;
+      });
+   }
+   else {
+      using innerT = Tif<(CT::Sparse<E1> and not CT::CustomPointer<E1>), ConstAll<E1>, ConstAll<E1> const&>;
+      static_assert(requires {
+         {map.template AsAt<E1, 0>(0)} -> ::std::same_as<innerT>;
+      });
+   }
+
+   if constexpr (CT::Deep<E2> and CT::Dense<E2> and (not Same<TypeOf<T>, E2> or CT::TypeErased<T>)) {
+      static_assert(requires {
+         {map.template AsAt<E2, 1>(0)} -> ::std::same_as<Decay<E2>>;
+      });
+   }
+   else {
+      using innerT = Tif<(CT::Sparse<E2> and not CT::CustomPointer<E2>), ConstAll<E2>, ConstAll<E2> const&>;
+      static_assert(requires {
+         {map.template AsAt<E2, 1>(0)} -> ::std::same_as<innerT>;
+      });
+   }
+
+   if constexpr (CT::Dense<E1> and CT::Typed<T>) {
+      // One additional indirection is always acceptable                
+      // A static container will static_assert if too many indirects    
+      static_assert(requires {
+         {map.template GetAt<Decay<E1>      *, 0>(0)} -> ::std::same_as<Decay<E1> const*>;
+         {map.template GetAt<Decay<E1> const*, 0>(0)} -> ::std::same_as<Decay<E1> const*>;
+      });
+      static_assert(requires {
+         {map.template AsAt<Decay<E1>*, 0>(0)} -> ::std::same_as<Decay<E1> const*>;
+      });
+   }
+   else if constexpr (not CT::CustomPointer<E1>) {
+      // One additional indirection is always acceptible                
+      // Type-erased containers will throw an exception at runtime, if  
+      // too many indirects were requested                              
+      static_assert(requires {
+         {map.template GetAt<Decay<E1>      *, 0>(0)} -> ::std::same_as<Decay<E1> const* const*>;
+         {map.template GetAt<Decay<E1> const*, 0>(0)} -> ::std::same_as<Decay<E1> const* const*>;
+      });
+      static_assert(requires {
+         {map.template AsAt<Decay<E1>*, 0>(0)} -> ::std::same_as<Decay<E1> const*>;
+      });
+
+      if constexpr (IndirectsOf<E1> >= 2 or CT::TypeErased<T>) {
+         static_assert(requires {
+            {map.template GetAt<Decay<E1>      **, 0>(0)} -> ::std::same_as<Decay<E1> const* const* const*>;
+            {map.template GetAt<Decay<E1> const**, 0>(0)} -> ::std::same_as<Decay<E1> const* const* const*>;
+         });
+
+         static_assert(requires {
+            {map.template AsAt<Decay<E1>**, 0>(0)} -> ::std::same_as<Decay<E1> const* const*>;
+         });
+      }
+      else {
+         static_assert(requires {
+            {map.template GetAt<Decay<E1>      **, 0>(0)} -> ::std::same_as<Decay<E1> const* const*>;
+            {map.template GetAt<Decay<E1> const**, 0>(0)} -> ::std::same_as<Decay<E1> const* const*>;
+         });
+
+         static_assert(requires {
+            {map.template AsAt<Decay<E1>**, 0>(0)} -> ::std::same_as<Decay<E1> const* const*>;
+         });
+      }
+   }
+
+   if constexpr (CT::Dense<E2> and CT::Typed<T>) {
+      // One additional indirection is always acceptable                
+      // A static container will static_assert if too many indirects    
+      static_assert(requires {
+         {map.template GetAt<Decay<E2>      *, 1>(0)} -> ::std::same_as<Decay<E2> const*>;
+         {map.template GetAt<Decay<E2> const*, 1>(0)} -> ::std::same_as<Decay<E2> const*>;
+      });
+      static_assert(requires {
+         {map.template AsAt<Decay<E2>*, 1>(0)} -> ::std::same_as<Decay<E2> const*>;
+      });
+   }
+   else if constexpr (not CT::CustomPointer<E2>) {
+      // One additional indirection is always acceptible                
+      // Type-erased containers will throw an exception at runtime, if  
+      // too many indirects were requested                              
+      static_assert(requires {
+         {map.template GetAt<Decay<E2>      *, 1>(0)} -> ::std::same_as<Decay<E2> const* const*>;
+         {map.template GetAt<Decay<E2> const*, 1>(0)} -> ::std::same_as<Decay<E2> const* const*>;
+      });
+      static_assert(requires {
+         {map.template AsAt<Decay<E2>*, 1>(0)} -> ::std::same_as<Decay<E2> const*>;
+      });
+
+      if constexpr (IndirectsOf<E2> >= 2 or CT::TypeErased<T>) {
+         static_assert(requires {
+            {map.template GetAt<Decay<E2>      **, 1>(0)} -> ::std::same_as<Decay<E2> const* const* const*>;
+            {map.template GetAt<Decay<E2> const**, 1>(0)} -> ::std::same_as<Decay<E2> const* const* const*>;
+         });
+
+         static_assert(requires {
+            {map.template AsAt<Decay<E2>**, 1>(0)} -> ::std::same_as<Decay<E2> const* const*>;
+         });
+      }
+      else {
+         static_assert(requires {
+            {map.template GetAt<Decay<E2>      **, 1>(0)} -> ::std::same_as<Decay<E2> const* const*>;
+            {map.template GetAt<Decay<E2> const**, 1>(0)} -> ::std::same_as<Decay<E2> const* const*>;
+         });
+
+         static_assert(requires {
+            {map.template AsAt<Decay<E2>**, 1>(0)} -> ::std::same_as<Decay<E2> const* const*>;
+         });
+      }
+   }
+}
+
 template<CT::Container T, CT::Intent IK, CT::Intent IV> requires CT::NoIntent<T>
 void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_with_intent, int uses = 1) {
    Map_VerifyAccessorInterface(map, LglsFwd(key_with_intent));
@@ -304,26 +442,26 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
    REQUIRE(map.GetReserved() >= (uses ? 1 : 0));
 
    if constexpr (not CT::CustomPointer<E1>)
-      REQUIRE(map.template AsAt<TPair<Decay<E1>, E2>>(0).key == DenseCast(*e1));
+      REQUIRE(map.template AsAt<TPair<Decay<E1>, E2>>(0).GetKey() == DenseCast(*e1));
    if constexpr (not CT::CustomPointer<E2>)
-      REQUIRE(map.template AsAt<TPair<E1, Decay<E2>>>(0).val == DenseCast(*e2));
+      REQUIRE(map.template AsAt<TPair<E1, Decay<E2>>>(0).GetVal() == DenseCast(*e2));
 
    if constexpr (CT::Cloned<IK> and CT::Sparse<E1>) {
-      REQUIRE(map.template AsAt<P1>(0).key != *e1);
-      REQUIRE((*map.template AsAt<P4>(0).key) != *e1);
+      REQUIRE(map.template AsAt<P1>(0).GetKey() != *e1);
+      REQUIRE((*map.template AsAt<P4>(0).GetKey()) != *e1);
    }
    else {
-      REQUIRE(map.template AsAt<P1>(0).key == *e1);
-      REQUIRE((*map.template AsAt<P4>(0).key) == *e1);
+      REQUIRE(map.template AsAt<P1>(0).GetKey() == *e1);
+      REQUIRE((*map.template AsAt<P4>(0).GetKey()) == *e1);
    }
 
    if constexpr (CT::Cloned<IV> and CT::Sparse<E2>) {
-      REQUIRE(map.template AsAt<P1>(0).val != *e2);
-      REQUIRE((*map.template AsAt<P4>(0).val) != *e2);
+      REQUIRE(map.template AsAt<P1>(0).GetVal() != *e2);
+      REQUIRE((*map.template AsAt<P4>(0).GetVal()) != *e2);
    }
    else {
-      REQUIRE(map.template AsAt<P1>(0).val == *e2);
-      REQUIRE((*map.template AsAt<P4>(0).val) == *e2);
+      REQUIRE(map.template AsAt<P1>(0).GetVal() == *e2);
+      REQUIRE((*map.template AsAt<P4>(0).GetVal()) == *e2);
    }
 
    if constexpr (CT::Dense<E1>)

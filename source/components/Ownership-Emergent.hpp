@@ -39,10 +39,7 @@ namespace Langulus::Anyness::Component
       auto GetAllocation(this auto const& self) noexcept {
          static_assert(SID == ID or ((SID == SHARED) or ...));
          #if LANGULUS_FEATURE(MANAGED_MEMORY)
-            return Allocator::Find(
-               self.template GetType<SID>(),
-               self.template GetHeapInner<SID>()
-            );
+            return Allocator::Find(self.template GetRaw<SID>());
          #else
             (void)self;
             static_assert(false, "Emergent ownership is not allowed "

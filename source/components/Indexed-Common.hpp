@@ -65,7 +65,7 @@ namespace Langulus::Anyness::Component
          static_assert(SID == ID or ((SID == SHARED) or ...),
             "SID must be one of the IDs that share the same indexing method");
 
-         using TC   = LglsMutIf(C, TypeOf<C>);
+         using TC   = LglsMutIf(C, TypeOf<C, SID>);
          using TCP  = LglsMutIf(C, TC*);
          using TH   = Tif<CT::Void<AS>, TC, AS>;
          using THP  = LglsMutIf(C, TH*);
@@ -103,7 +103,7 @@ namespace Langulus::Anyness::Component
                      // then avoid dereferencing altogether.            
                      // Unfortunately this can't support packed pointers
                      LglsAssumeDev(T.IsSame(MetaDataOf<THP>()), "Type mismatch",
-                        ": ", self.GetType(), " not same as ", MetaDataOf<THP>());
+                        ": ", T, " not same as ", MetaDataOf<THP>());
                      offset_heap();
                      return *static_cast<THP*>(heap);
                   }
@@ -111,7 +111,7 @@ namespace Langulus::Anyness::Component
                   // We need to dereference. Supports packed pointers   
                   auto diff = indirections - IndirectsOf<TH>;
                   using Deep = typename Deref<C>::DeepType;
-                  Deep denser = Disown(self.GetDenseAt(LglsFwd(idx), diff));
+                  Deep denser = Disown(self.template GetDenseAt<SID>(LglsFwd(idx), diff));
                   return static_cast<THP>(denser.GetHeapInner());
                }
                else {
@@ -160,18 +160,18 @@ namespace Langulus::Anyness::Component
       decltype(auto) AsAt(this C&& self, CT::Index auto&& idx) {
          static_assert(not CT::Reference<AS>, "Strip references first");
 
-         if constexpr (CT::Pair<AS>) {
-            // User desires a pair, so we give them a pair              
-            static_assert(Shared, "Indexing must be shared to access as a pair");
-            using AS1 = decltype(AS::key);
-            using AS2 = decltype(AS::val);
-            return AS {
-               self.template AsAt<AS1, SID + 0>(idx),
-               self.template AsAt<AS2, SID + 1>(idx)
-            };
-         }
-         else if constexpr (CT::Handle<AS>) {
-            if constexpr (CT::TypeErased<AS>) {
+         if constexpr (CT::Handle<AS>) {
+            if constexpr (CT::Pair<AS>) {
+               // User desires a pair, so we give them a pair           
+               static_assert(Shared, "Indexing must be shared to access as a pair");
+               using AS1 = decltype(AS::key);
+               using AS2 = decltype(AS::val);
+               return AS {
+                  self.template AsAt<Decvq<Deref<AS1>>, SID + 0>(idx),
+                  self.template AsAt<Decvq<Deref<AS2>>, SID + 1>(idx)
+               };
+            }
+            else if constexpr (CT::TypeErased<AS>) {
                // Type-erased handle                                    
                if constexpr (CT::DeeplyOwned<AS>) {
                   return AS {
@@ -197,11 +197,14 @@ namespace Langulus::Anyness::Component
             else {
                // Statically typed handle                               
                using HT = Deref<TypeOf<AS>>;
+
                if constexpr (CT::TypeErased<C>) {
-                  LglsAssert(self.template IsSame<HT>(), "Type mismatch",
-                     ": ", self.GetType(), " not same as ", MetaDataOf<HT>());
+                  auto type = self.template GetType<SID>();
+                  auto requested = MetaDataOf<HT>();
+                  LglsAssert(type.IsSame(requested), "Type mismatch",
+                     ": ", type, " not same as ", requested);
                }
-               else static_assert(Same<TypeOf<C>, HT>, "Type mismatch");
+               else static_assert(Same<TypeOf<C, SID>, HT>, "Type mismatch");
 
                if constexpr (CT::DeeplyOwned<AS>) {
                   return AS {
@@ -215,50 +218,66 @@ namespace Langulus::Anyness::Component
                      self.template GetAllocation<SID>()
                   };
                }
-               else return AS {self.template GetAt<void, SID>(LglsFwd(idx))};
+               else return AS {
+                  self.template GetAt<void, SID>(LglsFwd(idx))
+               };
             }
          }
          else {
             // Access directly or wrapped in a container                
-            if constexpr (CT::TypeErased<C>) {
-               auto T = self.GetType();
+            if constexpr (CT::Pair<AS>) {
+               // User desires a pair, so we give them a pair           
+               static_assert(Shared, "Indexing must be shared to access as a pair");
+               using AS1 = TypeOf<AS, 0>;
+               using AS2 = TypeOf<AS, 1>;
+               return AS {
+                  self.template AsAt<Decvq<Deref<AS1>>, SID + 0>(idx),
+                  self.template AsAt<Decvq<Deref<AS2>>, SID + 1>(idx)
+               };
+            }
+            else if constexpr (CT::TypeErased<C>) {
+               auto type = self.template GetType<SID>();
+               auto requested = MetaDataOf<AS>();
 
-               if (T.Is(MetaDataOf<AS>())) {
+               if (type.Is(requested)) {
                   // Access directly                                    
                   if constexpr (CT::Deep<AS> and CT::Dense<AS>)
-                     return Decvq<AS> {Absorb, *self.template GetAt<AS>(LglsFwd(idx))};
+                     return Decvq<AS> {Absorb, *self.template GetAt<AS, SID>(LglsFwd(idx))};
                   else if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
-                     return *self.template GetAt<AS>(LglsFwd(idx));
+                     return *self.template GetAt<AS, SID>(LglsFwd(idx));
                   else
-                     return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
+                     return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
-                  return Decvq<AS> {Absorb, self.template AsAt<DecideHandle<C>>(LglsFwd(idx))};
+                  return Decvq<AS> {Absorb, 
+                     self.template AsAt<DecideHandle<C>, SID>(LglsFwd(idx))
+                  };
                }
                else {
                   // Runtime type mismatch error                        
-                  LglsError("Type mismatch", ": ", T,
-                     " not akin to ", MetaDataOf<AS>());
+                  LglsError("Type mismatch", ": ", type, " not akin to ", requested);
                   if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
-                     return *self.template GetAt<AS>(LglsFwd(idx));
+                     return *self.template GetAt<AS, SID>(LglsFwd(idx));
                   else
-                     return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
+                     return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
                }
             }
             else {
-               using T = TypeOf<C>;
+               using T = TypeOf<C, SID>;
 
                if constexpr (Akin<T, AS>) {
                   // Access directly                                    
                   if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
-                     return *self.template GetAt<AS>(LglsFwd(idx));
+                     return *self.template GetAt<AS, SID>(LglsFwd(idx));
                   else
-                     return self.template GetAt<Deptr<AS>>(LglsFwd(idx));
+                     return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
-                  return Decvq<AS> {Absorb, self.template AsAt<DecideHandle<C>>(LglsFwd(idx))};
+                  return Decvq<AS> {Absorb,
+                     self.template AsAt<DecideHandle<C>, SID>(LglsFwd(idx))
+                  };
                }
                else static_assert(false, "Type mismatch");
             }
@@ -269,7 +288,7 @@ namespace Langulus::Anyness::Component
       ///   @attention ignores sparseness                                     
       ///   @param idx the deep index                                         
       ///   @return a pointer to the first deep item, or nullptr if not deep  
-      template<class AS = void, CT::Container C> requires (not Shared)
+      template<class AS = void, CT::Container C> //requires (not Shared)
       auto GetDeepAt(this C&& self, CT::Index auto&&) noexcept {
          using D = Tif<CT::Void<AS>, LglsMutIf(C, Deep<C>*), LglsMutIf(C, AS*)>;
          if (self.IsEmpty() or not self.IsDeep())
@@ -280,7 +299,7 @@ namespace Langulus::Anyness::Component
       /// Get Nth element after being resolved to the most concrete type.     
       ///   @param idx the index                                              
       ///   @return the most concrete representation of the first item        
-      template<class AS = void, CT::Container C> requires (not Shared)
+      template<class AS = void, CT::Container C> //requires (not Shared)
       auto GetResolvedAt(this C&& self, CT::Index auto&&) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -316,7 +335,7 @@ namespace Langulus::Anyness::Component
       ///   @param idx the index                                              
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<class AS = void, CT::Container C> requires (not Shared)
+      template<Cid SID = ID, class AS = void, CT::Container C> //requires (not Shared)
       auto GetDenseAt(this C&& self, CT::Index auto&& idx, size_t count = -1) {
          using D = Tif<CT::Void<AS>, Deep<C>, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -382,7 +401,7 @@ namespace Langulus::Anyness::Component
          return temp;
       }
 
-      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C> requires (not Shared)
+      template<CT::NotVoid AS, bool FATAL_FAILURE = true, CT::Container C> //requires (not Shared)
       auto CastAt(this C const&, CT::Index auto&&) -> AS;
    };
 }

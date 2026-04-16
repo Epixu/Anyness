@@ -525,7 +525,8 @@ namespace Langulus::Anyness::Component
       ///   @param intent entries will be copied/sought if handle/sparse,     
       ///      unless I is disowned                                           
       template<Cid SID = ID, CT::Container C, CT::Intent I>
-      requires(CT::TypeErased<C> or CT::Sparse<TypeOf<C>>)
+      requires((CT::TypeErased<C>        or CT::Sparse<TypeOf<C>>)
+           and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>>>))
       void EmplaceEntries(this C& self, I&& intent) {
          static_assert(SID == ID);
          if constexpr (CT::TypeErased<C>) {
@@ -545,7 +546,7 @@ namespace Langulus::Anyness::Component
          decltype(auto) rhs = LglsFwd(intent.what);
          const auto indirections = self.template GetIndirections<SID>();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
-         auto entries = self.template GetEntriesInner<SID>();
+         const auto entries = self.template GetEntriesInner<SID>();
 
          if constexpr (CT::Handle<I>) {
             // Copy all entries and reference them, unless we're moving 

@@ -209,9 +209,8 @@ namespace Langulus::Anyness
          size_t count = 0;
          ComponentList::ForEach([&count]<class C> {
             if constexpr (requires { typename C::HeapRequest; }) {
-               using R = typename C::HeapRequest;
-               if (requires { R::AllocatedPerIndirection; }
-               or  requires { R::AllocatedPerElement;     })
+               if (requires { C::HeapRequest::AllocatedPerIndirection; }
+               or  requires { C::HeapRequest::AllocatedPerElement;     })
                   ++count;
             }
          });

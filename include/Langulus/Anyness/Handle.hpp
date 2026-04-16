@@ -387,12 +387,12 @@ namespace Langulus::Anyness
          this->Destroy();
       }
 
-      constexpr THandle(T ptr, AllocationPtr alloc) noexcept {
+      /*constexpr THandle(T ptr, AllocationPtr alloc) noexcept {
          this->SetHeapInner(&ptr);
          this->SetAllocationInner(alloc);
-      }
+      }*/
 
-      constexpr THandle(Deref<T>* ptr, AllocationPtr alloc) noexcept {
+      constexpr THandle(void const* ptr, AllocationPtr alloc) noexcept {
          this->SetHeapInner(ptr);
          this->SetAllocationInner(alloc);
       }

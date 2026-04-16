@@ -449,11 +449,14 @@ namespace Langulus::Anyness
          T value;
 
          constexpr StackVariable() noexcept requires (CT::NotReference<T>) {};
-         constexpr StackVariable(T const& v) noexcept requires (CT::NotReference<T>)
-            : value {v} {}
-         constexpr StackVariable(T&& v) noexcept
+         //constexpr StackVariable(T const& v) noexcept requires (CT::NotReference<T>)
+         //   : value {v} {}
+         constexpr StackVariable(auto&& v) noexcept
             : value {LglsFwd(v)} {}
       };
+
+      /*template<class T>
+      StackVariable(T&&) -> StackVariable<T>;*/
       
       /// Go through all components and accumulate their stack requests into  
       /// a tuple                                                             

@@ -628,7 +628,7 @@ namespace Langulus
          ::std::type_identity<NO>
       >::type;
 
-   #define LglsMutIf(CONDITION_TYPE, TYPE) Tmut<CONDITION_TYPE, TYPE, ConstAll<TYPE>>
+   #define LglsMutIf(CONDITION_TYPE, ...) Tmut<CONDITION_TYPE, __VA_ARGS__, ConstAll<__VA_ARGS__>>
 
    /// Execute a lambda for each indirection inside a type T                  
    /// The provided lambda must be of the form: [whatever]<class C>{...},     
