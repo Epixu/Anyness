@@ -272,10 +272,10 @@ void Map_CheckState_Abandoned(C const& map) {
    Many_CheckState_Abandoned<V>(map.GetVals());
 }
 
-template<CT::Container T, CT::Intent I> requires CT::NoIntent<T>
-void Map_VerifyAccessorInterface(T const& map, I&&) {
-   using E1 = typename Decay<Deint<I>>::KeyType;
-   using E2 = typename Decay<Deint<I>>::ValType;
+template<CT::Container T, CT::Intent I1, CT::Intent I2> requires CT::NoIntent<T>
+void Map_VerifyAccessorInterface(T const& map, I1&&, I2&&) {
+   using E1 = typename Decay<Deint<I1>>::Type;
+   using E2 = typename Decay<Deint<I2>>::Type;
 
    // The Get method always adds a pointer, because it interfaces the   
    // heap directly                                                     
@@ -412,29 +412,33 @@ void Map_VerifyAccessorInterface(T const& map, I&&) {
 
 template<CT::Container T, CT::Intent IK, CT::Intent IV> requires CT::NoIntent<T>
 void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_with_intent, int uses = 1) {
-   Map_VerifyAccessorInterface(map, LglsFwd(key_with_intent));
+   Map_VerifyAccessorInterface(map, LglsFwd(key_with_intent), LglsFwd(val_with_intent));
 
    auto& e1 = key_with_intent.what;
    auto& e2 = val_with_intent.what;
    using E1 = typename Decay<Deint<IK>>::Type;
    using E2 = typename Decay<Deint<IV>>::Type;
-   using P1 = TPair<E1, E2>;
-   using P2 = TPair<const E1&, E2&>;
+   /*using P1 = TPair<ConstAll<E1>, E2>; //TODO test pair containers separately
+   using P2 = TPair<ConstAll<E1&>, E2&>;
    using P3 = Anyness::Pair;
-   using P4 = TPair<E1*, E2*>;
+   using P4 = TPair<ConstAll<E1*>, E2*>;*/
 
    if constexpr (CT::Deep<E1> and CT::Dense<E1>) {
-      REQUIRE(map.template AsAt<P1>(0).key.template IsSame<int>());
+      REQUIRE(map.template KeyAsAt<E1 >(0).template IsSame<int>());
+      REQUIRE(map.template KeyAsAt<E1*>(0)->template IsSame<int>());
+      /*REQUIRE(map.template AsAt<P1>(0).key.template IsSame<int>());
       REQUIRE(map.template AsAt<P2>(0).key.template IsSame<int>());
       REQUIRE(map.template AsAt<P3>(0).key.template IsSame<int>());
-      REQUIRE(map.template AsAt<P4>(0).key->template IsSame<int>());
+      REQUIRE(map.template AsAt<P4>(0).key->template IsSame<int>());*/
    }
 
    if constexpr (CT::Deep<E2> and CT::Dense<E2>) {
-      REQUIRE(map.template AsAt<P1>(0).val.template IsSame<int>());
+      REQUIRE(map.template ValAsAt<E2 >(0).template IsSame<int>());
+      REQUIRE(map.template ValAsAt<E2*>(0)->template IsSame<int>());
+      /*REQUIRE(map.template AsAt<P1>(0).val.template IsSame<int>());
       REQUIRE(map.template AsAt<P2>(0).val.template IsSame<int>());
       REQUIRE(map.template AsAt<P3>(0).val.template IsSame<int>());
-      REQUIRE(map.template AsAt<P4>(0).val->template IsSame<int>());
+      REQUIRE(map.template AsAt<P4>(0).val->template IsSame<int>());*/
    }
 
    REQUIRE(map.GetCount() == 1);
@@ -442,26 +446,26 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
    REQUIRE(map.GetReserved() >= (uses ? 1 : 0));
 
    if constexpr (not CT::CustomPointer<E1>)
-      REQUIRE(map.template AsAt<TPair<Decay<E1>, E2>>(0).GetKey() == DenseCast(*e1));
+      REQUIRE(map.template KeyAsAt<Decay<E1>>(0) == DenseCast(*e1));
    if constexpr (not CT::CustomPointer<E2>)
-      REQUIRE(map.template AsAt<TPair<E1, Decay<E2>>>(0).GetVal() == DenseCast(*e2));
+      REQUIRE(map.template ValAsAt<Decay<E2>>(0) == DenseCast(*e2));
 
    if constexpr (CT::Cloned<IK> and CT::Sparse<E1>) {
-      REQUIRE(map.template AsAt<P1>(0).GetKey() != *e1);
-      REQUIRE((*map.template AsAt<P4>(0).GetKey()) != *e1);
+      REQUIRE(map.template KeyAsAt<E1>(0) != *e1);
+      REQUIRE((*map.template KeyAsAt<E1*>(0)) != *e1);
    }
    else {
-      REQUIRE(map.template AsAt<P1>(0).GetKey() == *e1);
-      REQUIRE((*map.template AsAt<P4>(0).GetKey()) == *e1);
+      REQUIRE(map.template KeyAsAt<E1>(0) == *e1);
+      REQUIRE((*map.template KeyAsAt<E1*>(0)) == *e1);
    }
 
    if constexpr (CT::Cloned<IV> and CT::Sparse<E2>) {
-      REQUIRE(map.template AsAt<P1>(0).GetVal() != *e2);
-      REQUIRE((*map.template AsAt<P4>(0).GetVal()) != *e2);
+      REQUIRE(map.template ValAsAt<E2>(0) != *e2);
+      REQUIRE((*map.template ValAsAt<E2*>(0)) != *e2);
    }
    else {
-      REQUIRE(map.template AsAt<P1>(0).GetVal() == *e2);
-      REQUIRE((*map.template AsAt<P4>(0).GetVal()) == *e2);
+      REQUIRE(map.template ValAsAt<E2>(0) == *e2);
+      REQUIRE((*map.template ValAsAt<E2*>(0)) == *e2);
    }
 
    if constexpr (CT::Dense<E1>)

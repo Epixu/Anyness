@@ -894,8 +894,12 @@ static_assert(::std::same_as<DecvqAll<int const* const* const>,   int**>);
 static_assert(::std::same_as<DecvqAll<int const* const* const volatile>, int**>);
 
 TEST_CASE_TEMPLATE("Testing DecvqAllCast", TestType
+   , SheddableType<int>
+   , SheddableType<int> const
    , SheddableType<int>&
    , SheddableType<int> const&
+   , int
+   , int const
    , int*
    , int const*
    , int const* const
@@ -904,7 +908,7 @@ TEST_CASE_TEMPLATE("Testing DecvqAllCast", TestType
    , int const* const* const
    , int*&
    , int const* const&
-   //int const* const&&
+   //int const* const&& //TODO explain why this is commented???
    , int[15]
    , const int[15]
    , int(&)[15]

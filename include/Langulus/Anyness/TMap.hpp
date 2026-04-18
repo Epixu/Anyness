@@ -63,8 +63,8 @@ namespace Langulus::Anyness
       using Base           = Inner::TMapBase<K, V, SORT>;
       using DeepType       = Any;
 
-      using HandleType     = THandlePair<THandle<K const&>, THandle<V const&>>;
-      using HandleMutType  = THandlePair<THandle<K const&>, THandle<V&>>;
+      using HandleType     = THandlePair<THandle<ConstAll<K&>>, THandle<ConstAll<V&>>>;
+      using HandleMutType  = THandlePair<THandle<ConstAll<K&>>, THandle<V&>>;
       using Pick           = HandleType;
       using PickMut        = HandleMutType;
 
@@ -162,6 +162,87 @@ namespace Langulus::Anyness
       
       using Com::Comparison<>::operator <=>;
       using Com::Comparison<>::operator ==;
+
+      constexpr bool IsKeyTyped() const noexcept {
+         return true;
+      }
+      constexpr bool IsValTyped() const noexcept {
+         return true;
+      }
+
+      constexpr bool IsKeySparse() const noexcept {
+         return CT::Sparse<K>;
+      }
+      constexpr bool IsValSparse() const noexcept {
+         return CT::Sparse<V>;
+      }
+
+      constexpr bool IsKeyDeep() const noexcept {
+         return this->template IsDeep<0>();
+      }
+      constexpr bool IsValDeep() const noexcept {
+         return this->template IsDeep<1>();
+      }
+
+      template<class T>
+      constexpr bool IsKey() const noexcept {
+         return this->template Is<T, 0>();
+      }
+      template<class T>
+      constexpr bool IsVal() const noexcept {
+         return this->template Is<T, 1>();
+      }
+      template<class T>
+      constexpr bool IsKeySame() const noexcept {
+         return this->template IsSame<T, 0>();
+      }
+      template<class T>
+      constexpr bool IsValSame() const noexcept {
+         return this->template IsSame<T, 1>();
+      }
+      template<class T>
+      constexpr bool IsKeyExact() const noexcept {
+         return this->template IsExact<T, 0>();
+      }
+      template<class T>
+      constexpr bool IsValExact() const noexcept {
+         return this->template IsExact<T, 1>();
+      }
+
+      constexpr bool IsKey(DMeta type) const noexcept {
+         return this->template Is<0>(type);
+      }
+      constexpr bool IsVal(DMeta type) const noexcept {
+         return this->template Is<1>(type);
+      }
+      constexpr bool IsKeySame(DMeta type) const noexcept {
+         return this->template IsSame<0>(type);
+      }
+      constexpr bool IsValSame(DMeta type) const noexcept {
+         return this->template IsSame<1>(type);
+      }
+      constexpr bool IsKeyExact(DMeta type) const noexcept {
+         return this->template IsExact<0>(type);
+      }
+      constexpr bool IsValExact(DMeta type) const noexcept {
+         return this->template IsExact<1>(type);
+      }
+
+      constexpr DMeta GetKeyType() const noexcept {
+         return this->template GetType<0>();
+      }
+      constexpr DMeta GetValType() const noexcept {
+         return this->template GetType<1>();
+      }
+
+      template<CT::NotVoid AS>
+      decltype(auto) KeyAsAt(CT::Index auto&& idx) {
+         return this->template AsAt<AS, 0>(LglsFwd(idx));
+      }
+      template<CT::NotVoid AS>
+      decltype(auto) ValAsAt(CT::Index auto&& idx) {
+         return this->template AsAt<AS, 1>(LglsFwd(idx));
+      }
    };
 
    template<CT::NotVoid K, CT::NotVoid V>

@@ -22,8 +22,8 @@ namespace Langulus::Anyness::Component
    ///      avoid referencing altogether if you use the Disown intent.        
    ///      To be more specific - when GetReference() is nullptr and the      
    ///      entire container is considered disowned.                          
-   template<Cid ID, bool REF_INDIVIDUAL>
-   struct OwnershipDeepReference : OwnershipDeepEmergent<ID, REF_INDIVIDUAL> {
+   template<Cid ID, bool REF_INDIVIDUAL, Cid...SHARED>
+   struct OwnershipDeepReference : OwnershipDeepEmergent<ID, REF_INDIVIDUAL, SHARED...> {
       using StackRequest = EntryPtr;
 
       /// Get entry array if containing pointers                              

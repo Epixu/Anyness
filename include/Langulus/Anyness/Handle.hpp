@@ -456,8 +456,11 @@ namespace Langulus::Anyness
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
-      auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> {
-         return *this;
+      auto ForceMutable() noexcept -> THandle<Decvq<Deref<T>>&>& {
+         return *reinterpret_cast<THandle<Decvq<Deref<T>>&>*>(this);
+      }
+      auto ForceMutable() const noexcept -> THandle<Decvq<Deref<T>>&> const& {
+         return *reinterpret_cast<THandle<Decvq<Deref<T>>&> const*>(this);
       }
 
       /*constexpr THandle& operator = (THandle const& other) { //TODO doesn't work properly

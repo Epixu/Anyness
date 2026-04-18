@@ -52,9 +52,17 @@ namespace Langulus
       constexpr Hash(Hash const&) noexcept = default;
       constexpr Hash(Hash &&) noexcept = default;
       constexpr Hash(InnerType v) noexcept : value(v) {}
+
       constexpr Hash& operator = (InnerType v) noexcept { value = v; return *this; }
       constexpr Hash& operator = (Hash const&) noexcept = default;
       constexpr Hash& operator = (Hash&&) noexcept = default;
+
+      constexpr Hash operator ^ (const Hash& rhs) const noexcept {
+         return {value ^ value};
+      }
+      constexpr Hash& operator ^= (const Hash& rhs) noexcept {
+         value ^= value; return *this;
+      }
    };
 
    /// Default hash seed used in Langulus                                     

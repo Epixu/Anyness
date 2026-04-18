@@ -31,7 +31,7 @@ namespace Langulus::Anyness::Component
    ///      avoid referencing altogether if you use the Disown intent.        
    ///      To be more specific - when GetReference() is nullptr and the      
    ///      entire container is considered disowned.                          
-   template<Cid ID, bool REF_INDIVIDUAL>
+   template<Cid ID, bool REF_INDIVIDUAL, Cid...SHARED>
    struct OwnershipDeepEmergent {
       using CTTI_Component = Yes<>;
       
@@ -220,7 +220,7 @@ namespace Langulus::Anyness::Component
             using T = TypeOf<C, SID>;
             static_assert(CT::Sparse<T>, "Sparseness mismatch");
 
-            auto ptr = self.template Get<SID>();
+            auto ptr = self.template Get<void, SID>();
             ForEachIndirection(ptr, [&entries](auto& i) {
                if constexpr (FIND_MISSING) {
                   if (not *entries)

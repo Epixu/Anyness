@@ -251,17 +251,17 @@ namespace Langulus::Anyness
       #define LglsComOwnershipStack(modifier) \
          template<Cid, uint, Cid...> modifier struct OwnershipStack
 
-      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepReference;
+      template<Cid = 0, bool REF_INDIVIDUAL = true, Cid...> struct OwnershipDeepReference;
       #define LglsComOwnershipDeepReference(modifier) \
-         template<Cid, bool> modifier struct OwnershipDeepReference
+         template<Cid, bool, Cid...> modifier struct OwnershipDeepReference
 
-      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepEmergent;
+      template<Cid = 0, bool REF_INDIVIDUAL = true, Cid...> struct OwnershipDeepEmergent;
       #define LglsComOwnershipDeepEmergent(modifier) \
-         template<Cid, bool> modifier struct OwnershipDeepEmergent
+         template<Cid, bool, Cid...> modifier struct OwnershipDeepEmergent
 
-      template<Cid = 0, bool REF_INDIVIDUAL = true> struct OwnershipDeepHeap;
+      template<Cid = 0, bool REF_INDIVIDUAL = true, Cid...> struct OwnershipDeepHeap;
       #define LglsComOwnershipDeepHeap(modifier) \
-         template<Cid, bool> modifier struct OwnershipDeepHeap
+         template<Cid, bool, Cid...> modifier struct OwnershipDeepHeap
 
       /// Hashing                                                             
       template<Cid = 0, class H = Hash, Cid...> struct HashEmergent;
@@ -448,15 +448,19 @@ namespace Langulus::Anyness
       struct StackVariable {
          T value;
 
+         /// Default initialization shouldn't initialize anything, but also   
+         /// completely fail if T is a reference type.                        
          constexpr StackVariable() noexcept requires (CT::NotReference<T>) {};
-         //constexpr StackVariable(T const& v) noexcept requires (CT::NotReference<T>)
-         //   : value {v} {}
-         constexpr StackVariable(auto&& v) noexcept
-            : value {LglsFwd(v)} {}
-      };
 
-      /*template<class T>
-      StackVariable(T&&) -> StackVariable<T>;*/
+         /// Constructs directly if possible                                  
+         constexpr StackVariable(auto&& v) noexcept requires (    requires { T{LglsFwd(DecvqAllCast(v))}; })
+            : value {LglsFwd(DecvqAllCast(v))} {}
+
+         /// Strips intents before constructing in case first attempt         
+         /// fails. Useful for primitive types that don't support intents.    
+         constexpr StackVariable(auto&& v) noexcept requires (not requires { T{LglsFwd(DecvqAllCast(v))}; })
+            : value {LglsFwd(DecvqAllCast(DeintCast(v)))} {}
+      };
       
       /// Go through all components and accumulate their stack requests into  
       /// a tuple                                                             

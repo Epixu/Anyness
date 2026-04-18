@@ -527,9 +527,9 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
          auto movable2 = *element2;
          pack.Assign(Abandon(movable1), Abandon(movable2));
 
-         if constexpr (CT::Dense<E1> and CT::Dense<E1>)
+         if constexpr (CT::Deep<E1> and CT::Dense<E1>)
             Any_CheckState_Abandoned<TypeOf<E1>>(movable1);
-         if constexpr (CT::Dense<E2> and CT::Dense<E2>)
+         if constexpr (CT::Deep<E2> and CT::Dense<E2>)
             Any_CheckState_Abandoned<TypeOf<E2>>(movable2);
 
          Map_CheckState_OwnedFull<E1, E2>(pack);
@@ -751,14 +751,14 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       if constexpr (Exact<E1, Text>) {
          WHEN("Given text key that will be destroyed before the pack") {
             Text owned_text = "666";
-            pack = {Text(owned_text.operator Token()), *element2};
+            pack = TPair {Text(owned_text.operator Token()), *element2};
          }
       }
 
       if constexpr (Exact<E2, Text>) {
          WHEN("Given text value that will be destroyed before the pack") {
             Text owned_text = "666";
-            pack = {*element1, Text(owned_text.operator Token())};
+            pack = TPair {*element1, Text(owned_text.operator Token())};
          }
       }
    }

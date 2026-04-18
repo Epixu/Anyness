@@ -118,9 +118,10 @@ namespace Langulus::Anyness::Inner
             this->Absorb(LglsFwd(a1));
          }
          else {
+            static_assert(CT::Pair<A1, AN...>, "Arguments must be pairs");
             this->ConstructDefault();
-            this->Merge(LglsFwd(a1));
-           (this->Merge(LglsFwd(an)), ...);
+            this->MergeInner(LglsFwd(a1));
+           (this->MergeInner(LglsFwd(an)), ...);
          }
       }
       
@@ -131,15 +132,17 @@ namespace Langulus::Anyness::Inner
             this->Absorb(LglsFwd(a1));
          else {
             this->ConstructDefault();
-            this->Concat(LglsFwd(a1), LglsFwd(an)...);
+            this->MergeRange(LglsFwd(a1));
+           (this->MergeRange(LglsFwd(an)), ...);
          }
       }
       
       /// Construction that emplaces all arguments inside                     
-      template<class A1, class...AN>
+      template<CT::Pair A1, CT::Pair...AN>
       constexpr Map(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->Merge(LglsFwd(a1), LglsFwd(an)...);
+         this->MergeInner(LglsFwd(a1));
+        (this->MergeInner(LglsFwd(an)), ...);
       }
       
       /// Assignment                                                          
@@ -162,7 +165,10 @@ namespace Langulus::Anyness::Inner
             );
             return this->AssignAbsorb(LglsFwd(argument));
          }
-         else return this->Assign(LglsFwd(argument));
+         else {
+            static_assert(CT::Pair<A>, "Argument must be pair or map");
+            return this->Assign(LglsFwd(argument));
+         }
       }
 
       /// Clear the map and assign a single pair                              
@@ -244,11 +250,46 @@ namespace Langulus::Anyness::Inner
          return this->template IsExact<T, 1>();
       }
 
+      constexpr bool IsKey(DMeta type) const noexcept {
+         return this->template Is<0>(type);
+      }
+      constexpr bool IsVal(DMeta type) const noexcept {
+         return this->template Is<1>(type);
+      }
+      constexpr bool IsKeySame(DMeta type) const noexcept {
+         return this->template IsSame<0>(type);
+      }
+      constexpr bool IsValSame(DMeta type) const noexcept {
+         return this->template IsSame<1>(type);
+      }
+      constexpr bool IsKeyExact(DMeta type) const noexcept {
+         return this->template IsExact<0>(type);
+      }
+      constexpr bool IsValExact(DMeta type) const noexcept {
+         return this->template IsExact<1>(type);
+      }
+
       constexpr DMeta GetKeyType() const noexcept {
          return this->template GetType<0>();
       }
       constexpr DMeta GetValType() const noexcept {
          return this->template GetType<1>();
+      }
+
+      template<CT::NotVoid AS>
+      decltype(auto) KeyAsAt(this auto&& self, CT::Index auto&& idx) {
+         return self.template AsAt<AS, 0>(LglsFwd(idx));
+      }
+      template<CT::NotVoid AS>
+      decltype(auto) ValAsAt(this auto&& self, CT::Index auto&& idx) {
+         return self.template AsAt<AS, 1>(LglsFwd(idx));
+      }
+
+      constexpr auto GetKeyEntries() const noexcept {
+         return this->template GetEntries<0>();
+      }
+      constexpr auto GetValEntries() const noexcept {
+         return this->template GetEntries<1>();
       }
    };
 }

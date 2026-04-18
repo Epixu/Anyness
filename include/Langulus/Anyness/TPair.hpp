@@ -21,8 +21,7 @@ namespace Langulus::Anyness::Inner
       Com::CountStatic<0, 1u, 1>,         // Statically sized to 1      
       Com::ReserveStatic<0, 1u, 1>,       // Statically reserved to 1   
       Com::OwnershipEmergent<0, Com::NoOwnership, 1>,
-      Com::OwnershipDeepEmergent<0>,      // Separate key deep ownership
-      Com::OwnershipDeepEmergent<1>,      // Separate val deep onwership
+      Com::OwnershipDeepEmergent<0, true, 1>,
       Com::HashEmergent<0, Hash, 1>,      // Hash retrieved from items  
       Com::Emplacement<0, 1>,             // Allows emplacement         
       Com::Assignment<0, 1>,              // Allows assignment          
@@ -52,7 +51,7 @@ namespace Langulus::Anyness
       using KeyType  = K;
       using ValType  = V;
 
-      using HandleType     = THandlePair<THandle<K const&>, THandle<V const&>>;
+      using HandleType     = THandlePair<THandle<ConstAll<K&>>, THandle<ConstAll<V&>>>; //TODO having OwnershipDeepEmergent, these handles should be THandleEmergent or something, because GetEntries doesnt exist for pair
       using HandleMutType  = THandlePair<THandle<K&>, THandle<V&>>;
       using Pick           = HandleType;
       using PickMut        = HandleMutType;
@@ -66,16 +65,12 @@ namespace Langulus::Anyness
       constexpr TPair(TPair&& other) noexcept requires CT::NotReference<K, V> {
          this->Absorb(Move(other));
       }
-      /*constexpr TPair(auto&& a1, auto&& a2) requires CT::NotReference<K, V> {
-         this->template EmplaceConstruct<0>(LglsFwd(a1));
-         this->template EmplaceConstruct<1>(LglsFwd(a2));
-      }*/
       constexpr ~TPair() noexcept requires CT::NotReference<K, V> {
          this->Destroy();
       }
 
-      /// Reference constructor                                               
-      constexpr TPair(auto&& a1, auto&& a2) //requires CT::Reference<K, V>
+      /// Manual constructor                                                  
+      constexpr TPair(auto&& a1, auto&& a2)
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {}
 
       constexpr ~TPair() noexcept requires CT::Reference<K, V> {}
@@ -86,10 +81,8 @@ namespace Langulus::Anyness
       }
       
       /// Construction that emplaces A inside, leaves value as default        
-      constexpr TPair(Inner::Piecewise, auto&& a1) {
-         this->template EmplaceConstruct<0>(LglsFwd(a1));
-         this->template EmplaceDefault<1>();
-      }
+      constexpr TPair(Inner::Piecewise, auto&& a1)
+         : Base{Stackwise, LglsFwd(a1), {}} {}
       
       /// Assignment                                                          
       constexpr TPair& operator = (TPair const& other) {

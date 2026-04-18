@@ -594,7 +594,10 @@ namespace Langulus
    template<class T> requires (not ::std::is_bounded_array_v<T>)
    LANGULUS(ALWAYS_INLINED)
    constexpr auto DecvqAllCast(T&& what) noexcept -> DecvqAll<T> {
-      return const_cast<DecvqAll<T>>(what);
+      if constexpr (CT::Reference<T> or CT::Sparse<T>)
+         return const_cast<DecvqAll<T>>(what);
+      else
+         return LglsFwd(what);
    }
    
    template<class T> requires ::std::is_bounded_array_v<T>
