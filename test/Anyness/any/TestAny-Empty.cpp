@@ -153,7 +153,7 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       static_assert(CT::HeapAllocated<T>);
       static_assert(CT::DeeplyOwned<T> == (CT::TypeErased<T> or CT::Sparse<TypeOf<T>>));
       static_assert(CT::Owned<T>);
-      static_assert(CT::AutoOwned<T>);
+      static_assert(CT::StronglyOwned<T>);
       static_assert(CT::Comparable<T, T>);
       static_assert(CT::Comparable<T, E>);
       static_assert(not ::std::ranges::range<T>);

@@ -145,17 +145,18 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    }
    
    {
-      static_assert(CT::Deep<T>);
+      static_assert(    CT::Deep<T>);
       static_assert(not CT::ContainsOne<T>);
       static_assert(not CT::Handle<T>);
-      static_assert(CT::ContainsMany<T>);
-      static_assert(CT::HasVariableCount<T>);
-      static_assert(CT::HeapAllocated<T>);
-      static_assert(CT::DeeplyOwned<T> == (CT::TypeErased<T> or CT::Sparse<TypeOf<T>>));
-      static_assert(CT::Owned<T>);
-      static_assert(CT::AutoOwned<T>);
-      static_assert(CT::Comparable<T, T>);
-      static_assert(CT::Comparable<T, E>);
+      static_assert(    CT::ContainsMany<T>);
+      static_assert(    CT::HasVariableCount<T>);
+      static_assert(    CT::HeapAllocated<T>);
+      static_assert(    CT::DeeplyOwned<T> == (CT::TypeErased<T> or CT::Sparse<TypeOf<T>>));
+      static_assert(    CT::Owned<T>);
+      static_assert(    CT::StronglyOwned<T>);
+      static_assert(    CT::Comparable<T, T>);
+      static_assert(    CT::Comparable<T, E>);
+
       static_assert(::std::ranges::range<T>);
 
       // Can't be recognized as contiguous_range when iterators are handles

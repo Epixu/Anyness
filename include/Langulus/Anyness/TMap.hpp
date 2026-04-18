@@ -243,6 +243,20 @@ namespace Langulus::Anyness
       decltype(auto) ValAsAt(CT::Index auto&& idx) {
          return this->template AsAt<AS, 1>(LglsFwd(idx));
       }
+
+      constexpr auto GetKeyEntries() const noexcept {
+         return this->template GetEntries<0>();
+      }
+      constexpr auto GetValEntries() const noexcept {
+         return this->template GetEntries<1>();
+      }
+
+      auto GetKeyEntriesAt(CT::Index auto&& idx) const assumptious {
+         return this->template GetEntriesAt<0>(LglsFwd(idx));
+      }
+      auto GetValEntriesAt(CT::Index auto&& idx) const assumptious {
+         return this->template GetEntriesAt<1>(LglsFwd(idx));
+      }
    };
 
    template<CT::NotVoid K, CT::NotVoid V>

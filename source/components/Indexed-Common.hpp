@@ -250,9 +250,17 @@ namespace Langulus::Anyness::Component
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
-                  return Decvq<AS> {Absorb, 
-                     self.template AsAt<DecideHandle<C>, SID>(LglsFwd(idx))
-                  };
+                  using H = DecideHandle<C>;
+                  if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
+                     //TODO magic numbers here
+                     if constexpr (SID == 0)
+                        return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandleType, 0>(LglsFwd(idx))};
+                     else if constexpr (SID == 1)
+                        return Decvq<AS> {Absorb, self.template AsAt<typename H::ValHandleType, 1>(LglsFwd(idx))};
+                     else
+                        static_assert(false, "Unsupported SID");
+                  }
+                  else return Decvq<AS> {Absorb, self.template AsAt<H, SID>(LglsFwd(idx))};
                }
                else {
                   // Runtime type mismatch error                        
@@ -275,9 +283,17 @@ namespace Langulus::Anyness::Component
                }
                else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
                   // Wrap in a container                                
-                  return Decvq<AS> {Absorb,
-                     self.template AsAt<DecideHandle<C>, SID>(LglsFwd(idx))
-                  };
+                  using H = DecideHandle<C>;
+                  if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
+                     //TODO magic numbers here
+                     if constexpr (SID == 0)
+                        return Decvq<AS> {Absorb, self.template AsAt<typename H::KeyHandleType, 0>(LglsFwd(idx))};
+                     else if constexpr (SID == 1)
+                        return Decvq<AS> {Absorb, self.template AsAt<typename H::ValHandleType, 1>(LglsFwd(idx))};
+                     else
+                        static_assert(false, "Unsupported SID");
+                  }
+                  else return Decvq<AS> {Absorb, self.template AsAt<H, SID>(LglsFwd(idx))};
                }
                else static_assert(false, "Type mismatch");
             }

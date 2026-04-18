@@ -25,6 +25,9 @@ namespace Langulus::Anyness
       //using Denser         = Types<typename K::Denser,   typename V::Denser>;
       //using DeepType       = Types<typename K::DeepType, typename V::DeepType>;
 
+      using KeyHandleType = K;
+      using ValHandleType = V;
+
       static_assert(CT::NoIntent<K, V> and CT::Decayed<K, V>);
 
       K key;

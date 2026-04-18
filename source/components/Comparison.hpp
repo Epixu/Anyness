@@ -405,7 +405,7 @@ namespace Langulus::Anyness::Component
                   // Use comparison operator between all elements       
                   const auto t1end = t1 + lhs_count;
                   auto last_compare = ::std::partial_ordering::unordered;
-                  while (t1 < t1end and ((last_compare = (*t1 <=> *t2)) == ::std::partial_ordering::equivalent)) {
+                  while (t1 < t1end and ((last_compare = ToPartialOrdering(*t1 <=> *t2)) == ::std::partial_ordering::equivalent)) {
                      ++t1;
                      ++t2;
                   }

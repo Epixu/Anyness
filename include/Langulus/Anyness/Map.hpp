@@ -291,6 +291,13 @@ namespace Langulus::Anyness::Inner
       constexpr auto GetValEntries() const noexcept {
          return this->template GetEntries<1>();
       }
+
+      auto GetKeyEntriesAt(CT::Index auto&& idx) const assumptious {
+         return this->template GetEntriesAt<0>(LglsFwd(idx));
+      }
+      auto GetValEntriesAt(CT::Index auto&& idx) const assumptious {
+         return this->template GetEntriesAt<1>(LglsFwd(idx));
+      }
    };
 }
 
