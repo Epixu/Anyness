@@ -11,6 +11,7 @@
 #include "TAny.hpp"
 #include "TMany.hpp"
 #include "TSet.hpp"
+#include "TMap.hpp"
 
 
 namespace Langulus::CTTI
@@ -233,6 +234,34 @@ namespace Langulus::CTTI
    /// Convert TSet -> Text                                                   
    template<CT::NotVoid T, Anyness::State::StateValue SORT>
    constexpr auto Converter<Anyness::TSet<T, SORT>, Anyness::Text>::Convert(Anyness::TSet<T, SORT> const& from) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+
+
+   
+   ///                                                                        
+   /// Map/TMap                                                               
+   ///                                                                        
+
+   /// Convert Map -> Text                                                    
+   template<Anyness::State::StateValue SORT>
+   constexpr auto Converter<Anyness::Inner::Map<SORT>, Anyness::Text>::Convert(Anyness::Inner::Map<SORT> const& from) -> Anyness::Text {
+      if (from.IsEmpty())
+         return {};
+
+      Anyness::Text result;
+      Serialize(from, result);
+      return result;
+   }
+   
+   /// Convert TMap -> Text                                                   
+   template<CT::NotVoid K, CT::NotVoid V, Anyness::State::StateValue SORT>
+   constexpr auto Converter<Anyness::TMap<K, V, SORT>, Anyness::Text>::Convert(Anyness::TMap<K, V, SORT> const& from) -> Anyness::Text {
       if (from.IsEmpty())
          return {};
 
