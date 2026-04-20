@@ -690,6 +690,7 @@ namespace Langulus::Anyness
       unify_getter(GetIndirections);
       unify_getter(GetStride);
       unify_getter(GetBytesize);
+      unify_getter(GetAlignment);
       unify_getter(GetEntries);
       unify_getter(GetAllocation);
       unify_getter_argumented(Is);

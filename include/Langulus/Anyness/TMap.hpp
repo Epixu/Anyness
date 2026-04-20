@@ -27,8 +27,8 @@ namespace Langulus::Anyness::Inner
       Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
       Com::Merging<0, void, 1>,           // Only merging for keys      
-      Com::Insertion<1>,                  // Allows inserting values    
-      Com::Assignment<1>,                 // Allows assignment of values
+      //Com::Insertion<1>,                  // Allows inserting values    
+      //Com::Assignment<1>,                 // Allows assignment of values
       Com::Removal<0, 1>,                 // Allows clear/reset of K/V  
       Com::Conversion<0, 1>,              // Allows conversions of K/V  
       Com::Comparison<0, true, 1>,        // Allows comparisons of K/V  
@@ -239,12 +239,12 @@ namespace Langulus::Anyness
       }
 
       template<CT::NotVoid AS>
-      decltype(auto) KeyAsAt(CT::Index auto&& idx) {
-         return this->template AsAt<AS, 0>(LglsFwd(idx));
+      decltype(auto) KeyAsAt(this auto&& self, CT::Index auto&& idx) {
+         return self.template AsAt<AS, 0>(LglsFwd(idx));
       }
       template<CT::NotVoid AS>
-      decltype(auto) ValAsAt(CT::Index auto&& idx) {
-         return this->template AsAt<AS, 1>(LglsFwd(idx));
+      decltype(auto) ValAsAt(this auto&& self, CT::Index auto&& idx) {
+         return self.template AsAt<AS, 1>(LglsFwd(idx));
       }
 
       constexpr auto GetKeyEntries() const noexcept {

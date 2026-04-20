@@ -350,6 +350,10 @@ namespace Langulus::Anyness
       #define LglsComInsertionOperators(modifier) \
          template<Cid, class, Cid...> modifier struct InsertionOperators
 
+      template<Cid = 0, class AS = void, Cid...> struct InsertionOperatorsConcat;
+      #define LglsComInsertionOperatorsConcat(modifier) \
+         template<Cid, class, Cid...> modifier struct InsertionOperatorsConcat
+
       template<Cid = 0, class AS = void, Cid...> struct Merging;
       #define LglsComMerging(modifier) \
          template<Cid, class, Cid...> modifier struct Merging

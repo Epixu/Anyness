@@ -154,10 +154,10 @@ void Map_Helper_TestSame(const LHS& lhs, const RHS& rhs) {
 template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_Default(C const& map, bool typed = false) {
    if constexpr (CT::Typed<C>) {
-      static_assert(Exact<typename TypeOf<C>::First,  K>);
-      static_assert(Exact<typename TypeOf<C>::Second, V>);
-      static_assert(Exact<typename C::Key,  K>);
-      static_assert(Exact<typename C::Val,  V>);
+      static_assert(Exact<TypeOf<C, 0>, K>);
+      static_assert(Exact<TypeOf<C, 1>, V>);
+      static_assert(Exact<typename C::Key, K>);
+      static_assert(Exact<typename C::Val, V>);
       Map_Helper_TestType<K, V>(map);
 
       if constexpr (requires { map.GetState(); })
