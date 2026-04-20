@@ -69,22 +69,28 @@ namespace Langulus::Anyness
       constexpr ~TPair() noexcept requires CT::NotReference<K, V> {
          this->Destroy();
       }
+      constexpr ~TPair() noexcept requires CT::Reference<K, V> {}
 
       /// Manual constructor                                                  
-      constexpr TPair(auto&& a1, auto&& a2)
+      constexpr TPair(CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
          : Base {Stackwise, LglsFwd(a1), LglsFwd(a2)} {}
 
-      constexpr ~TPair() noexcept requires CT::Reference<K, V> {}
+      constexpr TPair(CT::Handle auto&& a1, CT::Handle auto&& a2) {
+         this->template EmplaceWithIntent<0>(FWDIntent(a1));
+         this->template EmplaceWithIntent<1>(FWDIntent(a2));
+      }
+      constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1, CT::NotHandle auto&& a2)
+         : Base{Stackwise, LglsFwd(a1), LglsFwd(a2)} {
+      }
+      constexpr TPair(Inner::Piecewise, CT::NotHandle auto&& a1)
+         : Base{Stackwise, LglsFwd(a1), {}} {
+      }
 
       /// Construction that absorbs the provided pair                         
       constexpr TPair(Inner::Absorb, CT::Pair auto&& pair) {
          this->Absorb(LglsFwd(pair));
       }
-      
-      /// Construction that emplaces A inside, leaves value as default        
-      constexpr TPair(Inner::Piecewise, auto&& a1)
-         : Base{Stackwise, LglsFwd(a1), {}} {}
-      
+     
       /// Assignment                                                          
       constexpr TPair& operator = (TPair const& other) {
          return this->AssignAbsorb(Refer(other));

@@ -730,8 +730,8 @@ namespace Langulus
 }
 
 #define IntentOf(a) ::Langulus::IntentOfT<decltype(a)>
-//#define FWDIntent(a) IntentOf(a) {LglsFwd(a)}
-#define FWDIntent(a) ::Langulus::DeduceIntent(LglsFwd(a))
+#define FWDIntent(a) IntentOf(a) {LglsFwd(a)} // for some reason this doesn't work on clang 22
+//#define FWDIntent(a) ::Langulus::DeduceIntent(LglsFwd(a))
 
 /// A handy constructor & assignment pattern that adds all possible intents   
 /// and collapses them for a given type. Useful when you don't want intents   

@@ -379,7 +379,9 @@ namespace Langulus::Anyness::Component
             #endif
          }
          else if constexpr (CT::Handle<IT>) {
-            //TODO what if handle is a pair?
+            static_assert(not CT::Pair<IT>,
+               "You have to emplace each dimension separately");
+
             // We're emplacing using a handle, which can be faster due  
             // to carrying allocation data with itself when sparse,     
             // instead of searching for it when having DeepOwnership.   
@@ -418,15 +420,15 @@ namespace Langulus::Anyness::Component
                // Both sides are statically-typed and we can benefit    
                // from a lot of compile-time optimizations.             
                if constexpr (CT::Typed<C, IT>)
-                  static_assert(Same<TypeOf<C, SID>, TypeOf<IT, SID>>, "Type mismatch");
+                  static_assert(Same<TypeOf<C, SID>, TypeOf<IT>>, "Type mismatch");
                else
                   LglsAssumeDev(self.template IsSame<SID>(rhs), "Type mismatch");
-               using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT, SID>>;
+               using T = Tif<CT::Typed<C>, TypeOf<C, SID>, TypeOf<IT>>;
 
                if constexpr (CT::Mutable<T> or not I::IsMoved())
-                  IntentNew(self.template GetHeapInner<SID>(), I::Nest(*rhs.template GetRawAs<T, SID>()));
+                  IntentNew(self.template GetRaw<SID>(), I::Nest(*rhs.template GetRawAs<T>()));
                else
-                  IntentNew(self.template GetHeapInner<SID>(), Refer(*rhs.template GetRawAs<T, SID>()));
+                  IntentNew(self.template GetRaw<SID>(), Refer(*rhs.template GetRawAs<T>()));
 
                if_available(self.template EmplaceEntries<SID>(LglsFwd(intent)));
             }

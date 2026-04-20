@@ -478,13 +478,13 @@ namespace Langulus::Anyness
          constexpr StackVariable() noexcept requires (CT::NotReference<T>) {};
 
          /// Constructs directly if possible                                  
-         constexpr StackVariable(auto&& v) noexcept requires (    requires { T{LglsFwd(DecvqAllCast(v))}; })
-            : value {LglsFwd(DecvqAllCast(v))} {}
+         constexpr StackVariable(auto&& v) noexcept requires (    requires { T{LglsFwd(v)}; })
+            : value {LglsFwd(v)} {}
 
          /// Strips intents before constructing in case first attempt         
          /// fails. Useful for primitive types that don't support intents.    
-         constexpr StackVariable(auto&& v) noexcept requires (not requires { T{LglsFwd(DecvqAllCast(v))}; })
-            : value {LglsFwd(DecvqAllCast(DeintCast(v)))} {}
+         constexpr StackVariable(auto&& v) noexcept requires (not requires { T{LglsFwd(v)}; })
+            : value {LglsFwd(DeintCast(v))} {}
       };
       
       /// Go through all components and accumulate their stack requests into  
