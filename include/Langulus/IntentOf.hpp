@@ -717,10 +717,21 @@ namespace Langulus
             Refer<Decq<Deref<T>>>
          >
       >;
+
+   template<class T> LANGULUS(ALWAYS_INLINED)
+   constexpr decltype(auto) DeduceIntent(T&& arg) noexcept {
+      if constexpr (CT::Intent<T>)
+         return LglsFwd(arg);
+      else if constexpr (CT::Mutable<T>)
+         return Move {LglsFwd(arg)};
+      else
+         return Refer {arg};
+   }
 }
 
 #define IntentOf(a) ::Langulus::IntentOfT<decltype(a)>
-#define FWDIntent(a) IntentOf(a) {LglsFwd(a)}
+//#define FWDIntent(a) IntentOf(a) {LglsFwd(a)}
+#define FWDIntent(a) ::Langulus::DeduceIntent(LglsFwd(a))
 
 /// A handy constructor & assignment pattern that adds all possible intents   
 /// and collapses them for a given type. Useful when you don't want intents   

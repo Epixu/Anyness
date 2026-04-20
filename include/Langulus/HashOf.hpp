@@ -58,10 +58,10 @@ namespace Langulus
       constexpr Hash& operator = (Hash&&) noexcept = default;
 
       constexpr Hash operator ^ (const Hash& rhs) const noexcept {
-         return {value ^ value};
+         return {value ^ rhs.value};
       }
       constexpr Hash& operator ^= (const Hash& rhs) noexcept {
-         value ^= value; return *this;
+         value ^= rhs.value; return *this;
       }
    };
 
