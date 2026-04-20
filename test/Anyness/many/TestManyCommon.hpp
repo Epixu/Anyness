@@ -164,7 +164,7 @@ void Many_VerifyAccessorInterface(T const& many, I&&) {
    // AsAt dereferences that pointer and/or wraps inside handles or     
    // containers. Element won't be wrapped, if container contains the   
    // wrapper type.                                                     
-   if constexpr (CT::Deep<E> and CT::Dense<E> and (not Same<TypeOf<T>, E> or CT::TypeErased<T>)) {
+   if constexpr (CT::DeepDense<E> and (not Same<TypeOf<T>, E> or CT::TypeErased<T>)) {
       static_assert(requires {
          {many.template AsAt<E>(0)} -> ::std::same_as<Decay<E>>;
       });

@@ -46,6 +46,12 @@ LANGULUS_CTTI_CONCEPT_DECVQ(Pair);
 LANGULUS_CTTI_CONCEPT_DECVQ(Handle);
 LANGULUS_CTTI_CONCEPT_DECVQ(Iterator);
 
+namespace Langulus::Anyness
+{
+   /// A component ID                                                         
+   using Cid = uint;
+}
+
 namespace Langulus::Anyness::Component
 {
    enum OwnershipStyle {
@@ -57,6 +63,14 @@ namespace Langulus::Anyness::Component
 
    constexpr uint WeakOwnership = OnAssign;
    constexpr uint StrongOwnership = OnCreate | OnAssign | OnDestroy;
+
+   /// Get the dimensions of a container                                      
+   /// This is usually defined in the count component, and depicts the        
+   /// 'horizontal' size of a container. A pair, for example, has two         
+   /// dimensions, despite having a count of 1. A fair analogy would be a     
+   /// matrix: where a 4x4 matrix will have count of 4 in 4 dimensions.       
+   template<class T>
+   using Dimensions = typename ShedDeref<T>::Dimensions;
 }
 
 namespace Langulus::CT
@@ -66,6 +80,13 @@ namespace Langulus::CT
    template<class...T>
    concept Owned = Container<T...>
        and ((ShedDeref<T>::Owned != 0) and ...);
+
+   /// Check if two containers/elements have the same dimensions              
+   template<class LHS, class RHS>
+   concept CompatibleDimensions =
+      (Container<LHS, RHS> and Same<Anyness::Component::Dimensions<LHS>, Anyness::Component::Dimensions<RHS>>)
+        or (Container<LHS> and not Container<RHS> and Same<Anyness::Component::Dimensions<LHS>, Values<Anyness::Cid(0)>>)
+        or (Container<RHS> and not Container<LHS> and Same<Anyness::Component::Dimensions<RHS>, Values<Anyness::Cid(0)>>);
 
    /// Check if listed containers are referenced upon construction/assignment 
    /// and then automatically dereferenced on destruction                     
@@ -149,9 +170,6 @@ namespace Langulus::Anyness
       static constexpr bool AllocatedPerIndirection = true;
       using Type = T;
    };
-
-   /// A component ID                                                         
-   using Cid = uint;
 
    /// A helper structure for pairing heap components with type components    
    ///   @tparam ID - the type component ID                                   

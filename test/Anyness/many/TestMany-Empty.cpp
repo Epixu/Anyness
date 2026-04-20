@@ -199,7 +199,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
    static_assert(T::CountHeapProviders() == 1);
    static_assert(T::CountHeapFooterRequests() == 1);
 
-   constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);
+   constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
    
    GIVEN("Gap test") {
       alignas(T) char unininitialized[sizeof(T)];
@@ -258,7 +258,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed by referral") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -295,7 +295,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          auto movable = *element;
          pack.Assign(::std::move(movable));
          
-         if constexpr (CT::Deep<E> and CT::Dense<E>)
+         if constexpr (CT::DeepDense<E>)
             Many_CheckState_Default<TypeOf<E>>(movable);
 
          Many_CheckState_OwnedFull<E>(pack);
@@ -309,7 +309,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed by move") {
             auto movable = *element;
 
@@ -355,7 +355,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed copied value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -403,7 +403,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed cloned value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -450,7 +450,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed disowned value") {
             if (CT::Typed<T> and not pack.IsSame(element->GetType())) {
                const auto element_backup = *element;
@@ -490,7 +490,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          auto movable = *element;
          pack.Assign(Abandon(movable));
 
-         if constexpr (CT::Deep<E> and CT::Dense<E>)
+         if constexpr (CT::DeepDense<E>)
             Many_CheckState_Abandoned<E>(movable);
          Many_CheckState_OwnedFull<E>(pack);
          Many_CheckState_ContainsOne(pack, Refer(element));
@@ -503,7 +503,7 @@ TEST_CASE_TEMPLATE("Test empty Many/TMany", TestType
          );
       }
 
-      if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed abandoned value") {
             auto movable = *element;
 

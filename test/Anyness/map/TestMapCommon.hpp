@@ -295,7 +295,7 @@ void Map_VerifyAccessorInterface(T const& map, I1&&, I2&&) {
    // AsAt dereferences that pointer and/or wraps inside handles or     
    // containers. Element won't be wrapped, if container contains the   
    // wrapper type.                                                     
-   if constexpr (CT::Deep<E1> and CT::Dense<E1> and (not Same<TypeOf<T>, E1> or CT::TypeErased<T>)) {
+   if constexpr (CT::DeepDense<E1> and (not Same<TypeOf<T>, E1> or CT::TypeErased<T>)) {
       static_assert(requires {
          {map.template AsAt<E1, 0>(0)} -> ::std::same_as<Decay<E1>>;
       });
@@ -307,7 +307,7 @@ void Map_VerifyAccessorInterface(T const& map, I1&&, I2&&) {
       });
    }
 
-   if constexpr (CT::Deep<E2> and CT::Dense<E2> and (not Same<TypeOf<T>, E2> or CT::TypeErased<T>)) {
+   if constexpr (CT::DeepDense<E2> and (not Same<TypeOf<T>, E2> or CT::TypeErased<T>)) {
       static_assert(requires {
          {map.template AsAt<E2, 1>(0)} -> ::std::same_as<Decay<E2>>;
       });
@@ -423,7 +423,7 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
    using P3 = Anyness::Pair;
    using P4 = TPair<ConstAll<E1*>, E2*>;*/
 
-   if constexpr (CT::Deep<E1> and CT::Dense<E1>) {
+   if constexpr (CT::DeepDense<E1>) {
       REQUIRE(map.template KeyAsAt<E1 >(0).template IsSame<int>());
       REQUIRE(map.template KeyAsAt<E1*>(0)->template IsSame<int>());
       /*REQUIRE(map.template AsAt<P1>(0).key.template IsSame<int>());
@@ -432,7 +432,7 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
       REQUIRE(map.template AsAt<P4>(0).key->template IsSame<int>());*/
    }
 
-   if constexpr (CT::Deep<E2> and CT::Dense<E2>) {
+   if constexpr (CT::DeepDense<E2>) {
       REQUIRE(map.template ValAsAt<E2 >(0).template IsSame<int>());
       REQUIRE(map.template ValAsAt<E2*>(0)->template IsSame<int>());
       /*REQUIRE(map.template AsAt<P1>(0).val.template IsSame<int>());

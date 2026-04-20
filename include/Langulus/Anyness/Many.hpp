@@ -107,7 +107,7 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       constexpr Many(A1&& a1, AN&&...an) {
          if constexpr (sizeof...(AN) == 0) {
-            if constexpr (CT::Deep<Deint<A1>> and CT::Dense<Deint<A1>>) {
+            if constexpr (CT::DeepDense<Deint<A1>>) {
                LglsAssumeUser((Same<Deint<A1>, Many>),
                   "Ambiguous use of construction "
                   "- you should use tag-dispatch with first argument either Absorb "
@@ -157,7 +157,7 @@ namespace Langulus::Anyness
       
       template<class A>
       constexpr Many& operator = (A&& argument) {
-         if constexpr (CT::Deep<Deint<A>> and CT::Dense<Deint<A>>) {
+         if constexpr (CT::DeepDense<Deint<A>>) {
             LglsAssumeUser((Same<Deint<A>, Many>),
                "Ambiguous use of assignment "
                "- you should use either AssignAbsorb (if you want to overwrite "

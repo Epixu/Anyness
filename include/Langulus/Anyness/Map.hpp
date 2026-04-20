@@ -189,7 +189,7 @@ namespace Langulus::Anyness::Inner
       using Com::Comparison<0, true, 1>::operator ==;
 
       /// Three-way comparison with pairs                                     
-      template<CT::Container C, CT::Pair P> requires CT::NoIntent<P>
+      /*template<CT::Container C, CT::Pair P> requires CT::NoIntent<P>
       constexpr Compared operator <=> (this C const& lhs, P const& rhs) assumptious {
          const auto key_compare = lhs.template CompareOne<0>(rhs.key);
          if (key_compare == Compared::Equivalent)
@@ -202,7 +202,7 @@ namespace Langulus::Anyness::Inner
       constexpr bool operator == (this C const& lhs, P const& rhs) assumptious {
          return lhs.template CompareOneEqual<0>(rhs.key)
             and lhs.template CompareOneEqual<1>(rhs.val);
-      }
+      }*/
 
       constexpr bool IsKeyTyped() const noexcept {
          return this->template IsTyped<0>();

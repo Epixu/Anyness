@@ -139,7 +139,7 @@ void Set_CheckState_ContainsOne(T const& set, I&& e_with_intent, int uses = 1) {
    auto& e = e_with_intent.what;
    using E = typename Decay<Deint<I>>::Type;
 
-   if constexpr (CT::Deep<E> and CT::Dense<E>)
+   if constexpr (CT::DeepDense<E>)
       REQUIRE(set.template AsAt<E*>(0)->template IsSame<int>());
 
    REQUIRE(set.GetCount() == 1);

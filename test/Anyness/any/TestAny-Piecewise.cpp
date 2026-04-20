@@ -100,7 +100,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
    using E = typename TestType::Second;
    using ScopedE = typename TestType::template At<2>;
    constexpr bool Managed = ScopedE::Managed;
-   constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);
+   constexpr bool Ambiguous = not Same<T, E> and CT::DeepDense<E> and LANGULUS(SAFE);
 
    if constexpr (Ambiguous) {
       GIVEN("Piecewise-constructed container (ambiguously)") {
@@ -1205,7 +1205,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Any/TAny", TestType
 
          static_assert(not static_cast<bool>(T{}));
 
-         if constexpr (CT::Deep<E> and CT::Dense<E>) {
+         if constexpr (CT::DeepDense<E>) {
             static_assert(     T{} == E{} );
             static_assert(not (T{} != E{}));
             static_assert(     E{} == T{} );

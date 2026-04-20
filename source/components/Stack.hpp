@@ -108,7 +108,7 @@ namespace Langulus::Anyness::Component
                // Access directly                                       
                return ThisCom::template Get<AS>();
             }
-            else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
+            else if constexpr (CT::DeepDense<AS>) {
                // Wrap in a container                                   
                Decvq<AS> temp {Absorb, self};
                if_available(temp.SetCountInner(1));

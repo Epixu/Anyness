@@ -191,8 +191,8 @@ namespace Langulus::Anyness::Component
             }
             else {
                // Hash table merge                                      
-               const auto bucket = self.GetOffset(DeintCast(item));
-               const auto found = self.FindInner(DeintCast(item), bucket);
+               const auto bucket = self.GetOffset(DeintCast(item).GetKey());
+               const auto found = self.FindInner(DeintCast(item).GetKey(), bucket);
                if (found) {
                   result.lastInsertedIndex = found - self.GetHandle();
                   return;

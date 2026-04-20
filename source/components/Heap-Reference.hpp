@@ -195,12 +195,12 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C>) {
                if (self.template Is<AS, SID>()) {
                   // Access directly                                    
-                  if constexpr (CT::Deep<AS> and CT::Dense<AS>)
+                  if constexpr (CT::DeepDense<AS>)
                      return Decvq<AS> {Absorb, ThisCom::template Get<AS, SID>()};
                   else
                      return ThisCom::template Get<AS, SID>();
                }
-               else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
+               else if constexpr (CT::DeepDense<AS>) {
                   // Wrap in a container                                
                   Decvq<AS> temp {Absorb, self};
                   if_available(temp.template SetCountInner<SID>(1));
@@ -211,7 +211,7 @@ namespace Langulus::Anyness::Component
                   LglsError("Type mismatch", ": ", self.template GetType<SID>(),
                      " not akin to ", MetaDataOf<AS>());
 
-                  if constexpr (CT::Deep<AS> and CT::Dense<AS>)
+                  if constexpr (CT::DeepDense<AS>)
                      return Decvq<AS> {};
                   else
                      return ThisCom::template Get<AS, SID>();
@@ -222,7 +222,7 @@ namespace Langulus::Anyness::Component
                   // Access directly                                    
                   return ThisCom::template Get<AS, SID>();
                }
-               else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
+               else if constexpr (CT::DeepDense<AS>) {
                   // Wrap in a container                                
                   Decvq<AS> temp {Absorb, self};
                   if_available(temp.template SetCountInner<SID>(1));
@@ -334,6 +334,8 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
+
       /// Get the heap pointer (inner)                                        
       template<Cid SID = ID>
       constexpr auto& GetHeapInner(this auto&& self) noexcept {

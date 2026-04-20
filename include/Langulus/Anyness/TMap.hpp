@@ -162,7 +162,21 @@ namespace Langulus::Anyness
          }
          else return this->Assign(LglsFwd(argument));
       }
-      
+
+      /// Clear the map and assign a single pair                              
+      auto Assign(CT::Pair auto&& pair) -> TMap& {
+         this->Clear();
+         this->MergeInner(LglsFwd(pair));
+         return *this;
+      }
+
+      /// Clear the map and assign a key and a value                          
+      auto Assign(auto&& key, auto&& val) -> TMap& {
+         this->Clear();
+         this->MergeInner(TPair {LglsFwd(key), LglsFwd(val)});
+         return *this;
+      }
+
       using Com::Comparison<0, true, 1>::operator <=>;
       using Com::Comparison<0, true, 1>::operator ==;
 
@@ -259,6 +273,10 @@ namespace Langulus::Anyness
       }
       auto GetValEntriesAt(CT::Index auto&& idx) const assumptious {
          return this->template GetEntriesAt<1>(LglsFwd(idx));
+      }
+
+      constexpr bool IsTypeConstrained() const noexcept {
+         return true;
       }
    };
 

@@ -57,10 +57,10 @@ namespace Langulus::Anyness
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
       auto ForceMutable() const noexcept {
-         return THandlePair<decltype(key.ForceMutable()), decltype(val.ForceMutable())> {
-            key.ForceMutable(),
-            val.ForceMutable()
-         };
+         return THandlePair<
+            Decay<decltype(key.ForceMutable())>,
+            Decay<decltype(val.ForceMutable())>
+         > {key.ForceMutable(), val.ForceMutable()};
       }
 
       /*void SwapInner(CT::ContainsOne auto& rhs) {
@@ -172,4 +172,7 @@ namespace Langulus::Anyness
    };
 
    static_assert(not CT::Intent<THandlePair<Handle, Handle>>);
+
+   template<CT::Handle K, CT::Handle V>
+   THandlePair(K&&, V&&) -> THandlePair<Decay<K>, Decay<V>>;
 }

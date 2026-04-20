@@ -211,6 +211,8 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       using DeepType       = HandleDisowned;
 
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
+
       /// Handles can't be piecewise-initialized                              
       HandleDisownedMut(Inner::Piecewise, auto&&) = delete;
 
@@ -328,6 +330,8 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       using DeepType       = HandleDisowned;
 
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
+
       /// Handles can't be piecewise-initialized                              
       HandleDisowned(Inner::Piecewise, auto&&) = delete;
 
@@ -398,6 +402,8 @@ namespace Langulus::Anyness
       using Denser         = THandle;
       using DeepType       = HandleDisowned;
 
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
+
       /// Handles can't be piecewise-initialized                              
       THandle(Inner::Piecewise, auto&&) = delete;
 
@@ -455,6 +461,8 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;
+
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
       THandle(Inner::Piecewise, auto&&) = delete;
@@ -517,6 +525,8 @@ namespace Langulus::Anyness
 
       static constexpr bool Emergent = true;
 
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
+
       /// Handles can't be piecewise-initialized                              
       THandleEmergent(Inner::Piecewise, auto&&) = delete;
 
@@ -564,6 +574,8 @@ namespace Langulus::Anyness
       using DeepType       = HandleDisowned;
 
       static constexpr bool Emergent = true;
+
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
       THandleEmergent(Inner::Piecewise, auto&&) = delete;
@@ -614,6 +626,8 @@ namespace Langulus::Anyness
       using CTTI_ReflectAs = void;
       using Denser         = THandle<Deptr<T>&>;
       using DeepType       = HandleDisowned;
+
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Handles can't be piecewise-initialized                              
       THandleDisowned(Inner::Piecewise, auto&&) = delete;
@@ -668,6 +682,8 @@ namespace Langulus::Anyness
       using Denser         = THandle<T&>; // avoids nested local handles (and thus copies) by adding a reference
       using DeepType       = HandleDisowned;
       using Base           = typename Inner::THandleLocalDense<T>::Base;
+
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       constexpr THandle(Inner::Piecewise, auto&& a)
       requires requires { T{LglsFwd(a)}; }
@@ -726,6 +742,8 @@ namespace Langulus::Anyness
       using Denser         = THandle<Deptr<T>&>; // avoids nested local handles (and thus copies) by adding a reference
       using DeepType       = HandleDisowned;
       using Base           = typename Inner::THandleLocalSparse<T>::Base;
+
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       constexpr THandle() noexcept {
          this->ConstructDefault();

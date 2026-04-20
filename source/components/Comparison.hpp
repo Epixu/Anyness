@@ -72,6 +72,7 @@ namespace Langulus::Anyness::Component
 
          if consteval {
             // Heap should be empty at compile-time                     
+            //TODO what about stacks??
             return true;
          }
          else {
@@ -724,15 +725,17 @@ namespace Langulus::Anyness::Component
       }
 
       /// Three-way comparison                                                
-      template<CT::Container C>
-      constexpr auto operator <=> (this C const& lhs, C const& rhs) noexcept {
+      /*template<CT::Container LHS, CT::Container RHS>
+      constexpr auto operator <=> (this LHS const& lhs, RHS const& rhs) noexcept {
          return lhs.Compare(rhs);
-      }
+      }*/
 
-      template<CT::Container C, CT::NoIntent A> requires (not Shared)
-      constexpr auto operator <=> (this C const& lhs, A const& rhs) assumptious {
-         if constexpr (CT::Deep<A> and CT::Dense<A>) {
-            LglsAssumeUser((Same<A, C>) or (CT::Typed<C> and Same<TypeOf<A>, TypeOf<C>>),
+      template<CT::Container LHS, CT::NoIntent RHS> requires CT::CompatibleDimensions<LHS, RHS>
+      constexpr auto operator <=> (this LHS const& lhs, RHS const& rhs) assumptious {
+         if constexpr (Same<LHS, RHS>)
+            return lhs.Compare(rhs);
+         else if constexpr (CT::DeepDense<RHS>) {
+            LglsAssumeUser((CT::Typed<LHS> and Same<TypeOf<LHS>, TypeOf<RHS>>),
                "Ambiguous use of three-way comparison "
                "- you should use either Compare (if you want to compare "
                "containers) or CompareOne (if you want to compare the "
@@ -745,15 +748,17 @@ namespace Langulus::Anyness::Component
       }
 
       /// Equality comparison                                                 
-      template<CT::Container C>
-      constexpr bool operator == (this C const& lhs, C const& rhs) noexcept {
+      /*template<CT::Container LHS, CT::Container RHS>
+      constexpr bool operator == (this LHS const& lhs, RHS const& rhs) noexcept {
          return lhs.CompareEqual(rhs);
-      }
+      }*/
 
-      template<CT::Container C, CT::NoIntent A> requires (not Shared)
-      constexpr bool operator == (this C const& lhs, A const& rhs) assumptious {
-         if constexpr (CT::Deep<A> and CT::Dense<A>) {
-            LglsAssumeUser((Same<A, C>) or (CT::Typed<C> and Same<TypeOf<A>, TypeOf<C>>),
+      template<CT::Container LHS, CT::NoIntent RHS> requires CT::CompatibleDimensions<LHS, RHS>
+      constexpr bool operator == (this LHS const& lhs, RHS const& rhs) assumptious {
+         if constexpr (Same<LHS, RHS>)
+            return lhs.CompareEqual(rhs);
+         else if constexpr (CT::DeepDense<RHS>) {
+            LglsAssumeUser((CT::Typed<LHS> and Same<TypeOf<LHS>, TypeOf<RHS>>),
                "Ambiguous use of equality comparison "
                "- you should use either CompareEqual (if you want to compare "
                "containers) or CompareOneEqual (if you want to compare the "
@@ -776,6 +781,7 @@ namespace Langulus::Anyness::Component
       ///   @return handle of the found item                                  
       template<bool REVERSE = false, Cid SID = ID, CT::ContainsMany C, CT::NoIntent T>
       auto FindInner(this C&& self, T const& item, size_t cookie) assumptious -> DecideHandle<C> {
+         static_assert(not CT::Handle<T>, "T shouldn't be a handle");
          LglsAssumeDev(not self.IsEmpty(), "Container is assumed not emtpy");
          [[maybe_unused]] RTTI::DefinitionData::FCompareEqual comparer = nullptr;
          if constexpr (CT::TypeErased<C>) {

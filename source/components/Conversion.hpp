@@ -33,7 +33,7 @@ namespace Langulus::Anyness::Component
       ///   @param out what are we converting to?                             
       ///   @return the number of converted elements inserted in 'out'.       
       ///      this will be smaller than self.GetCount() on partial success   
-      template<CT::Container C, CT::Deep OUT> requires CT::Dense<OUT>
+      template<CT::Container C, CT::DeepDense OUT>
       auto ConvertTo(this C const& self, OUT& out) -> Count<C> {
          if (self.IsEmpty())
             return 0;

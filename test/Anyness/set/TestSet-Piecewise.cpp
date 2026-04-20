@@ -160,7 +160,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
          auto assign_refer = [&](T& a, [[maybe_unused]] const char* intent) {
             a.Assign(*element);
 
-            if constexpr (CT::Deep<E> and CT::Dense<E>)
+            if constexpr (CT::DeepDense<E>)
                Set_CheckState_OwnedFull<TypeOf<E>>(*element);
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Refer(element));
@@ -180,7 +180,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
          assign_refer(pack_disowned,  "Disown");
       }
 
-      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed referred container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_refer = [&](T& a) {
@@ -229,7 +229,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
          auto assign_clone = [&](T& a, [[maybe_unused]] const char* intent) {
             a.Assign(Clone(*element));
 
-            if constexpr (CT::Deep<E> and CT::Dense<E>)
+            if constexpr (CT::DeepDense<E>)
                Set_CheckState_OwnedFull<TypeOf<E>>(*element);
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Clone(element));
@@ -249,7 +249,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
          assign_clone(pack_disowned,  "Disown");
       }
 
-      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed cloned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_clone = [&](T& a) {
@@ -298,7 +298,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
          auto assign_copy = [&](T& a, [[maybe_unused]] const char* intent) {
             a.Assign(Copy(*element));
 
-            if constexpr (CT::Deep<E> and CT::Dense<E>)
+            if constexpr (CT::DeepDense<E>)
                Set_CheckState_OwnedFull<TypeOf<E>>(*element);
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Refer(element));
@@ -318,7 +318,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
          assign_copy(pack_disowned,  "Disown");
       }
 
-      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed copied container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_copy = [&](T& a) {
@@ -368,7 +368,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
             auto movable = *element;
             a.Assign(::std::move(movable));
 
-            if constexpr (CT::Deep<E> and CT::Dense<E>)
+            if constexpr (CT::DeepDense<E>)
                Many_CheckState_Default<TypeOf<E>>(movable);
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Refer(element));
@@ -392,7 +392,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
          assign_move(pack_disowned,  "Disown");
       }
 
-      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed moved container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_move = [&](T& a) {
@@ -467,7 +467,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
          assign_disown(pack_disowned,  "Disown");
       }
 
-      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed disowned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_disown = [&](T& a) {
@@ -521,7 +521,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
             auto movable = *element;
             a.Assign(Abandon(movable));
 
-            if constexpr (CT::Deep<E> and CT::Dense<E>)
+            if constexpr (CT::DeepDense<E>)
                Set_CheckState_Abandoned<TypeOf<E>>(movable);
             Set_CheckState_OwnedFull<E>(a);
             Set_CheckState_ContainsOne(a, Refer(element));
@@ -545,7 +545,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
          assign_abandon(pack_disowned,  "Disown");
       }
 
-      /*if constexpr (CT::Deep<E> and CT::Dense<E>) {
+      /*if constexpr (CT::DeepDense<E>) {
          WHEN("Assigned and absorbed abandoned container") {
             if (not pack_referred1.IsSame(element->GetType())) {
                auto misabsorb_abandon = [&](T& a) {
@@ -1201,7 +1201,7 @@ TEST_CASE_TEMPLATE("Test piecewise-constructed Set/TSet", TestType
 
          static_assert(not static_cast<bool>(T{}));
 
-         if constexpr (CT::Deep<E> and CT::Dense<E>) {
+         if constexpr (CT::DeepDense<E>) {
             static_assert(     T{} == E{} );
             static_assert(not (T{} != E{}));
             static_assert(     E{} == T{} );

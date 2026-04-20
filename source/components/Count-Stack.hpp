@@ -31,6 +31,8 @@ namespace Langulus::Anyness::Component
       static constexpr int  ComponentPrecedence = -1000;
       static constexpr bool ContainsMany = true;
 
+      using Dimensions = Values<ID, SHARED...>;
+
       static_assert(CT::Integer<T> and not CT::Signed<T>,
          "Count type must be an unsigned integer");
 

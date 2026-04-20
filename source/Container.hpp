@@ -219,6 +219,8 @@ namespace Langulus::Anyness
       }
 
    protected:
+      template<CT::Handle, CT::Handle> friend struct THandlePair;
+
       LglsComIterationOperators(friend);
       LglsComTypedStack(friend);
       LglsComStack(friend);

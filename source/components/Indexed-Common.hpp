@@ -241,14 +241,14 @@ namespace Langulus::Anyness::Component
 
                if (type.Is(requested)) {
                   // Access directly                                    
-                  if constexpr (CT::Deep<AS> and CT::Dense<AS>)
+                  if constexpr (CT::DeepDense<AS>)
                      return Decvq<AS> {Absorb, *self.template GetAt<AS, SID>(LglsFwd(idx))};
                   else if constexpr (CT::Dense<AS> or CT::CustomPointer<AS>)
                      return *self.template GetAt<AS, SID>(LglsFwd(idx));
                   else
                      return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
                }
-               else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
+               else if constexpr (CT::DeepDense<AS>) {
                   // Wrap in a container                                
                   using H = DecideHandle<C>;
                   if constexpr (CT::Pair<H> and not CT::Pair<AS>) {
@@ -281,7 +281,7 @@ namespace Langulus::Anyness::Component
                   else
                      return self.template GetAt<Deptr<AS>, SID>(LglsFwd(idx));
                }
-               else if constexpr (CT::Deep<AS> and CT::Dense<AS>) {
+               else if constexpr (CT::DeepDense<AS>) {
                   // Wrap in a container                                
                   using H = DecideHandle<C>;
                   if constexpr (CT::Pair<H> and not CT::Pair<AS>) {

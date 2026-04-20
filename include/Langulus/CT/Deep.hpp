@@ -31,4 +31,9 @@ namespace Langulus::CT
    /// Same as CT::NotDeep                                                    
    template<class...T>
    concept Flat = NotDeep<T...>;
+
+   /// CT::Deep works regardless if T are sparse or not. This makes sure      
+   /// T are dense as well.                                                   
+   template<class...T>
+   concept DeepDense = Deep<T...> and Dense<T...>;
 }
