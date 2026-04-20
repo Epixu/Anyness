@@ -108,8 +108,11 @@ namespace Langulus::Anyness
       }
    };
 
-   template<class K, class V>
+   template<CT::NotHandle K, CT::NotHandle V>
    TPair(K&&, V&&) -> TPair<Decvq<Deref<Deint<K>>>, Decvq<Deref<Deint<V>>>>;
+
+   template<CT::Handle K, CT::Handle V>
+   TPair(K&&, V&&) -> TPair<TypeOf<Deint<K>>, TypeOf<Deint<V>>>;
 }
 
 namespace Langulus::CTTI
