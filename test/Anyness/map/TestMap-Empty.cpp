@@ -126,8 +126,8 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
    else {
       // Statically-typed containers behave the same as their inner     
       // type                                                           
-      static_assert(    Exact<typename TypeOf<T>::First, E1>);
-      static_assert(    Exact<typename TypeOf<T>::Second, E2>);
+      static_assert(    Exact<TypeOf<T, 0>, E1>);
+      static_assert(    Exact<TypeOf<T, 1>, E2>);
       static_assert(    Exact<typename T::Key, E1>);
       static_assert(    Exact<typename T::Val, E2>);
       static_assert(not CT::TypeErased<T>);
@@ -191,10 +191,10 @@ TEST_CASE_TEMPLATE("Test empty Map/TMap", TestType
       static_assert(not requires (T pack)         { pack.GetResolved(); });
       static_assert(not requires (T pack)         { pack.GetDense(); });
       static_assert(not requires (T pack)         { pack + pack; });
-      static_assert(    CT::Text<E1> or not requires (T pack, E1 item){  pack + item; });
-      static_assert(    CT::Text<E2> or not requires (T pack, E2 item){  pack + item; });
-      static_assert(not CT::Text<E1> or     requires (T pack, E1 item){ {pack + item} -> CT::Text; });
-      static_assert(not CT::Text<E2> or     requires (T pack, E2 item){ {pack + item} -> CT::Text; });
+      static_assert(    CT::TextRange<E1> or not requires (T pack, E1 item){  pack + item; });
+      static_assert(    CT::TextRange<E2> or not requires (T pack, E2 item){  pack + item; });
+      static_assert(not CT::TextRange<E1> or     requires (T pack, E1 item){ {pack + item} -> CT::Text; });
+      static_assert(not CT::TextRange<E2> or     requires (T pack, E2 item){ {pack + item} -> CT::Text; });
       static_assert(not requires (T pack)         { pack +=  pack; });
       static_assert(not requires (T pack, E1 item){ pack +=  item; });
       static_assert(not requires (T pack, E2 item){ pack +=  item; });

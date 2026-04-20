@@ -26,6 +26,7 @@ namespace Langulus::Anyness
    struct HandleDisowned;
    struct HandleDisownedMut;
    template<class> struct THandle;
+   template<class> struct THandleEmergent;
    template<class> struct THandleDisowned;
    template<CT::Handle, CT::Handle> struct THandlePair;
 
@@ -499,28 +500,32 @@ namespace Langulus::Anyness
                      " not same as ", MetaDataOf<HT>()
                   );
                }
-               else if constexpr (CT::Map<C>) {
+               /*else if constexpr (CT::Map<C>) {
                   static_assert(Same<typename TypeOf<C>::template At<SID>, HT>,
                      "Type mismatch"
                   );
-               }
-               else {
-                  static_assert(Same<TypeOf<C>, HT>,
-                     "Type mismatch"
-                  );
-               }
+               }*/
+               else static_assert(Same<TypeOf<C, SID>, HT>, "Type mismatch");
 
                if constexpr (CT::DeeplyOwned<H>) {
-                  return H {
-                     &self.template Get<void, SID>(),
-                     self.template GetEntries<SID>()
-                  };
+                  if constexpr (requires { H::Emergent; })
+                     return H {&self.template Get<void, SID>()};
+                  else {
+                     return H {
+                        &self.template Get<void, SID>(),
+                        self.template GetEntries<SID>()
+                     };
+                  }
                }
                else if constexpr (CT::Owned<H>) {
-                  return H {
-                     &self.template Get<void, SID>(),
-                     self.template GetAllocation<SID>()
-                  };
+                  if constexpr (requires { H::Emergent; })
+                     return H {&self.template Get<void, SID>()};
+                  else {
+                     return H {
+                        &self.template Get<void, SID>(),
+                        self.template GetAllocation<SID>()
+                     };
+                  }
                }
                else return H {&self.template Get<void, SID>()};
             }

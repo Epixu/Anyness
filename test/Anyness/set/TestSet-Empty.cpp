@@ -181,8 +181,8 @@ TEST_CASE_TEMPLATE("Test empty Set/TSet", TestType
       static_assert(not requires (T pack)         { pack.GetResolved(); });
       static_assert(not requires (T pack)         { pack.GetDense(); });
       static_assert(not requires (T pack)         { pack +   pack; });
-      static_assert(    CT::Text<E> or not requires (T pack, E item) { pack + item; });
-      static_assert(not CT::Text<E> or     requires (T pack, E item) { {pack + item} -> CT::Text; });
+      static_assert(    CT::TextRange<E> or not requires (T pack, E item) { pack + item; });
+      static_assert(not CT::TextRange<E> or     requires (T pack, E item) { {pack + item} -> CT::Text; });
       static_assert(not requires (T pack)         { pack +=  pack; });
       static_assert(not requires (T pack, E item) { pack +=  item; });
       static_assert(not requires (T pack, E item) { pack <<  item; });

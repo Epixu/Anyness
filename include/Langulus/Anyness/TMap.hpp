@@ -70,6 +70,9 @@ namespace Langulus::Anyness
 
       static constexpr bool TypeErased = false;
 
+      using Key = K;
+      using Val = V;
+
       constexpr TMap() noexcept {
          this->ConstructDefault();
       }
@@ -160,8 +163,8 @@ namespace Langulus::Anyness
          else return this->Assign(LglsFwd(argument));
       }
       
-      using Com::Comparison<>::operator <=>;
-      using Com::Comparison<>::operator ==;
+      using Com::Comparison<0, true, 1>::operator <=>;
+      using Com::Comparison<0, true, 1>::operator ==;
 
       constexpr bool IsKeyTyped() const noexcept {
          return true;

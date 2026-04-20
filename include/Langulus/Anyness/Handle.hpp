@@ -56,6 +56,36 @@ namespace Langulus::Anyness
          Com::IterationOperators<>
       >;
       
+      /// Statically typed handle to a dense element held inside a container  
+      template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
+      using THandleEmbeddedDenseEmergent = Com::Container<
+         Com::TypedStatic<DMeta, Deref<T>>,
+         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::CountStatic<0, 1u>,
+         Com::ReserveEmergent<>,
+         Com::OwnershipEmergent<0, Com::WeakOwnership>,
+         Com::HashEmergent<>,
+         Com::Assignment<>,
+         Com::Emplacement<>,
+         Com::Comparison<>,
+         Com::IterationOperators<>
+      >;
+
+      /// Statically typed handle to a sparse element held inside a container 
+      /// (with emergent deep ownership)                                      
+      template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
+      using THandleEmbeddedSparseEmergent = Com::Container<
+         Com::TypedStatic<DMeta, Deref<T>>,
+         Com::HeapReference<0, HeapEntry<0, Deref<T>*>>,
+         Com::CountStatic<0, 1u>,
+         Com::OwnershipDeepEmergent<>,
+         Com::HashEmergent<>,
+         Com::Assignment<>,
+         Com::Emplacement<>,
+         Com::Comparison<>,
+         Com::IterationOperators<>
+      >;
+      
       /// Statically typed handle to a disowned element held inside container 
       template<CT::Reference T> requires CT::NotSheddable<T>
       using THandleDisownedEmbedded = Com::Container<
@@ -469,6 +499,107 @@ namespace Langulus::Anyness
       constexpr THandle& operator = (THandle&& other) noexcept { //TODO doesn't work properly
          return this->AssignAbsorb(Move(other));
       }*/
+   };
+   
+   
+   ///                                                                        
+   /// When T is a reference, then element is embedded inside container       
+   ///   @attention memory is never (de)referenced upon construction and      
+   ///      destruction - only on reassignment                                
+   ///   @tparam T the contained type                                         
+   template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
+   struct THandleEmergent<T> : Inner::THandleEmbeddedDenseEmergent<T> {
+      using CTTI_Handle    = Yes<>;
+      using CTTI_Typed     = Deref<T>;
+      using CTTI_ReflectAs = void;
+      using Denser         = THandleEmergent;
+      using DeepType       = HandleDisowned;
+
+      static constexpr bool Emergent = true;
+
+      /// Handles can't be piecewise-initialized                              
+      THandleEmergent(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandleEmergent() noexcept {
+         this->ConstructDefault();
+      }
+
+      constexpr THandleEmergent(THandleEmergent const& other) {
+         this->Absorb(Refer(other));
+      }
+
+      constexpr THandleEmergent(THandleEmergent&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+
+      constexpr ~THandleEmergent() noexcept {
+         this->Destroy();
+      }
+
+      constexpr THandleEmergent(void const* ptr) noexcept {
+         this->SetHeapInner(ptr);
+      }
+
+      /// Assignment                                                          
+      THandleEmergent& operator = (THandleEmergent const& other) = delete;
+      THandleEmergent& operator = (THandleEmergent&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() noexcept -> THandleEmergent<Decvq<Deref<T>>&>& {
+         return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&>*>(this);
+      }
+      auto ForceMutable() const noexcept -> THandleEmergent<Decvq<Deref<T>>&> const& {
+         return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&> const*>(this);
+      }
+   };
+
+
+   template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
+   struct THandleEmergent<T> : Inner::THandleEmbeddedSparseEmergent<T> {
+      using CTTI_Handle    = Yes<>;
+      using CTTI_Typed     = Deref<T>;
+      using CTTI_ReflectAs = void;
+      using Denser         = THandleEmergent<Deptr<T>&>;
+      using DeepType       = HandleDisowned;
+
+      static constexpr bool Emergent = true;
+
+      /// Handles can't be piecewise-initialized                              
+      THandleEmergent(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandleEmergent() noexcept {
+         this->ConstructDefault();
+      }
+
+      constexpr THandleEmergent(THandleEmergent const& other) {
+         this->Absorb(Refer(other));
+      }
+
+      constexpr THandleEmergent(THandleEmergent&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+
+      constexpr ~THandleEmergent() noexcept {
+         this->Destroy();
+      }
+
+      constexpr THandleEmergent(Deref<T>* ptr) noexcept {
+         this->SetHeapInner(ptr);
+      }
+
+      /// Assignment                                                          
+      THandleEmergent& operator = (THandleEmergent const& other) = delete;
+      THandleEmergent& operator = (THandleEmergent&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() noexcept -> THandleEmergent<Decvq<Deref<T>>&>& {
+         return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&>*>(this);
+      }
+      auto ForceMutable() const noexcept -> THandleEmergent<Decvq<Deref<T>>&> const& {
+         return *reinterpret_cast<THandleEmergent<Decvq<Deref<T>>&> const*>(this);
+      }
    };
    
 

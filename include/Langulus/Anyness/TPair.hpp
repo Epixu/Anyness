@@ -51,8 +51,8 @@ namespace Langulus::Anyness
       using KeyType  = K;
       using ValType  = V;
 
-      using HandleType     = THandlePair<THandle<ConstAll<K&>>, THandle<ConstAll<V&>>>; //TODO having OwnershipDeepEmergent, these handles should be THandleEmergent or something, because GetEntries doesnt exist for pair
-      using HandleMutType  = THandlePair<THandle<K&>, THandle<V&>>;
+      using HandleType     = THandlePair<THandleEmergent<ConstAll<K&>>, THandleEmergent<ConstAll<V&>>>;
+      using HandleMutType  = THandlePair<THandleEmergent<K&>,           THandleEmergent<V&>>;
       using Pick           = HandleType;
       using PickMut        = HandleMutType;
 

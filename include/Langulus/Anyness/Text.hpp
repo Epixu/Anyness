@@ -12,6 +12,7 @@
 #include <source/components/IndexedLinear.hpp>
 #include <source/components/Insertion.hpp>
 #include <source/components/InsertionOperators.hpp>
+#include <source/components/InsertionOperatorsConcat.hpp>
 #include <source/components/Removal.hpp>
 #include <source/components/Assignment.hpp>
 #include <source/components/Typed-Static.hpp>
@@ -45,6 +46,7 @@ namespace Langulus::Anyness
          Com::HashStack<>,                // Variable hash (cached)     
          Com::Insertion<0, Text>,         // Serialize + insert         
          Com::InsertionOperators<0, Text>,// << and >> insertion        
+         Com::InsertionOperatorsConcat<0, Text>,// + and += concat      
          Com::Removal<>,                  // Allows removal             
          Com::Assignment<>,               // Allows assignment          
          Com::Comparison<>,               // Allows for comparison      

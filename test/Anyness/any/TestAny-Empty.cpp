@@ -163,8 +163,9 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       //static_assert(    requires (T pack)         { pack.GetDeep(); });
       static_assert(    requires (T pack)         { pack.GetResolved(); });
       static_assert(    requires (T pack)         { pack.GetDense(); });
-      static_assert(not requires (T pack)         { {pack +   pack} -> ::std::same_as<T >; });
-      static_assert(not requires (T pack, E item) { {pack +   item} -> ::std::same_as<T >; });
+      static_assert(not requires (T pack)         { pack + pack; });
+      static_assert(    CT::TextRange<E> or not requires (T pack, E item){  pack + item; });
+      static_assert(not CT::TextRange<E> or     requires (T pack, E item){ {pack + item} -> CT::Text; });
       static_assert(not requires (T pack)         { {pack +=  pack} -> ::std::same_as<T&>; });
       static_assert(not requires (T pack, E item) { {pack +=  item} -> ::std::same_as<T&>; });
       static_assert(not requires (T pack, E item) { {pack <<  item} -> ::std::same_as<T&>; });
@@ -173,20 +174,20 @@ TEST_CASE_TEMPLATE("Test empty Any/TAny", TestType
       static_assert(not requires (T pack, E item) { {pack >>= item} -> ::std::same_as<T&>; });
       static_assert(not requires (T pack, E item) { pack.InsertAt(Index::Back, item); });
       static_assert(not requires (T pack, E item) { pack.EmplaceAt(Index::Back, item); });
-      static_assert(not requires (T pack, E item) { pack.ConcatAt(Index::Back, pack); });
-      static_assert(not requires (T pack, E item) { pack.Concat(pack); });
+      static_assert(not requires (T pack)         { pack.ConcatAt(Index::Back, pack); });
+      static_assert(not requires (T pack)         { pack.Concat(pack); });
       static_assert(not requires (T pack, E item) { pack.MergeAt(Index::Back, item); });
-      static_assert(not requires (T pack, E item) { pack.MergeRangeAt(Index::Back, pack); });
+      static_assert(not requires (T pack)         { pack.MergeRangeAt(Index::Back, pack); });
       static_assert(not requires (T pack, E item) { pack.Merge(item); });
-      static_assert(not requires (T pack, E item) { pack.MergeRange(pack); });
+      static_assert(not requires (T pack)         { pack.MergeRange(pack); });
       static_assert(not requires (T pack, E item) { pack.Remove(item); });
-      static_assert(not requires (T pack, E item) { pack.RemoveAt(Index::Front); });
-      static_assert(not requires (T pack, E item) { pack.Reserve(20); });
-      static_assert(not requires (T pack, E item) { pack.EnableOr(); });
-      static_assert(not requires (T pack, E item) { pack.IsOr(); });
+      static_assert(not requires (T pack)         { pack.RemoveAt(Index::Front); });
+      static_assert(not requires (T pack)         { pack.Reserve(20); });
+      static_assert(not requires (T pack)         { pack.EnableOr(); });
+      static_assert(not requires (T pack)         { pack.IsOr(); });
       static_assert(not requires (T pack, E item) { pack.Find(item); });
-      static_assert(not requires (T pack, E item) { pack.ForEach([](const int&) {}); });
-      static_assert(not requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
+      static_assert(not requires (T pack)         { pack.ForEach([](const int&) {}); });
+      static_assert(not requires (T pack)         { pack.ForEachRev([](const int&) {}); });
    }
 
    constexpr bool Ambiguous = not Same<T, E> and CT::Deep<E> and CT::Dense<E> and LANGULUS(SAFE);

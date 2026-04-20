@@ -161,7 +161,7 @@ namespace Langulus::Anyness::Component
             // Casting to a desired static type                         
             if constexpr (IndirectsOf<TC> == IndirectsOf<TH>) {
                // No difference in indirections                         
-               return *static_cast<THP>(static_cast<TCP>(heap));
+               return *const_cast<THP>(static_cast<ConstAll<THP>>(static_cast<ConstAll<TCP>>(heap)));
             }
             else if constexpr (IndirectsOf<TC> > IndirectsOf<TH>) {
                // We need to dereference. Can be done without a         

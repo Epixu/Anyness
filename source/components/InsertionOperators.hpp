@@ -30,35 +30,5 @@ namespace Langulus::Anyness::Component
       /// Push front                                                          
       template<CT::Container C, class A>
       C& operator >> (this C&, A&&) requires CT::RangeInsertable<C, A>;
-
-      /// Copy left side and push back rhs                                    
-      template<CT::Container C>
-      C operator + (this C const& lhs, CT::NotContainer auto&& rhs) {
-         return C {Copy {lhs}} << LglsFwd(rhs);
-      }
-
-      /// Same as push back operator (<<)                                     
-      template<CT::Container C>
-      C& operator += (this C& self, CT::NotContainer auto&& rhs) {
-         return self << LglsFwd(rhs);
-      }
-
-      /// Concatenate another container at the back, resulting in a new one   
-      template<CT::Container C>
-      C operator + (this C const& lhs, CT::Container auto&& rhs) {
-         if (lhs.IsEmpty())
-            return C {LglsFwd(rhs)};
-
-         C shallowCopy = lhs;
-         shallowCopy.Concat(LglsFwd(rhs));
-         return shallowCopy;
-      }
-
-      /// Concatenate another container at the back, reusing this one         
-      template<CT::Container C>
-      C& operator += (this C& self, CT::Container auto&& rhs) {
-         self.Concat(LglsFwd(rhs));
-         return self;
-      }
    };
 }
