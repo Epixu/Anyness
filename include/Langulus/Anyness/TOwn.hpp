@@ -17,7 +17,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<CT::NotVoid T>
+   template<CT::NotVoid T> requires (CT::NotHandle<T> and CT::NotReference<T>)
    using TOwnBase = Com::Container<
       Com::TypedStatic<DMeta, T>,         // Statically typed           
       Com::Stack<T>,                      // Element on the stack       

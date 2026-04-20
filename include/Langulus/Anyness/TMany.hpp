@@ -11,7 +11,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<CT::NotVoid T>
+   template<CT::NotVoid T> requires (CT::NotHandle<T> and CT::NotReference<T>)
    using TManyBase = Com::Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
       Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,
@@ -49,7 +49,7 @@ namespace Langulus::Anyness
    ///                                                                        
    /// A statically-typed contiguous container of variable size that is       
    /// binary-compatible with the type-erased alternative `Many`.             
-   template<CT::NotVoid T>
+   template<CT::NotVoid T> 
    struct TMany : Inner::TManyBase<T> {
       using CTTI_ReflectAs = Many;
       using CTTI_Deep      = Yes<>;

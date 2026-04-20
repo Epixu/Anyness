@@ -308,7 +308,8 @@ namespace Langulus::Anyness::Component
             // Then clone all indirection layers in reverse order       
             [[maybe_unused]] EntryPtr entries;
             if constexpr (CT::DeeplyOwned<C>) {
-               entries = self.template GetEntriesInner<SID>();
+               //entries = self.template GetEntriesInner<SID>();
+               entries = self.template GetEntries<SID>();
                DecvqAllCast(entries[indirections]) = cloned;
             }
          

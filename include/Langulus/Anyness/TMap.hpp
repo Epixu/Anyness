@@ -12,6 +12,7 @@
 namespace Langulus::Anyness::Inner
 {
    template<CT::NotVoid K, CT::NotVoid V, State::StateValue SORT>
+   requires (CT::NotHandle<K, V> and CT::NotReference<K, V>)
    using TMapBase = Com::Container<
       Com::TypedStack<DMeta, K, true, 0>, // Type-constrained keys      
       Com::TypedStack<DMeta, V, true, 1>, // Type-constrained values    
@@ -23,8 +24,7 @@ namespace Langulus::Anyness::Inner
       Com::ReserveStack<0, size_t, 1>,    // Reserve kept as member     
       Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
       Com::OwnershipStack<0, Com::StrongOwnership, 1>,
-      Com::OwnershipDeepHeap<0>,          // Separate key deep ownership
-      Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
+      Com::OwnershipDeepHeap<0, true, 1>, // Separate key deep ownership
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
       Com::Merging<0, void, 1>,           // Only merging for keys      
       //Com::Insertion<1>,                  // Allows inserting values    
@@ -165,15 +165,16 @@ namespace Langulus::Anyness
 
       /// Clear the map and assign a single pair                              
       auto Assign(CT::Pair auto&& pair) -> TMap& {
+         using I = IntentOf(pair);
          this->Clear();
-         this->MergeInner(LglsFwd(pair));
+         this->MergeInner(I::Nest(pair.GetKey()), I::Nest(pair.GetVal()));
          return *this;
       }
 
       /// Clear the map and assign a key and a value                          
       auto Assign(auto&& key, auto&& val) -> TMap& {
          this->Clear();
-         this->MergeInner(TPair {LglsFwd(key), LglsFwd(val)});
+         this->MergeInner(LglsFwd(key), LglsFwd(val));
          return *this;
       }
 

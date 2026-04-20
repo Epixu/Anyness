@@ -16,7 +16,7 @@ namespace Langulus::Anyness
    //TODO this is a temporary setup. A better one would probably be to       
    // concatenate the components of the two handles, offsetting the IDs of   
    // V, and thus composing a new container to represent the pair.           
-   template<CT::Handle K, CT::Handle V>
+   template<CT::Handle K, CT::Handle V> 
    struct THandlePair {
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;

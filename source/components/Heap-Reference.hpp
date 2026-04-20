@@ -363,7 +363,7 @@ namespace Langulus::Anyness::Component
          else if constexpr (CT::CustomPointer<P>)
             ThisCom::GetHeapInner() = static_cast<StackRequest>(heap.Unpack());
          else
-            ThisCom::GetHeapInner() = static_cast<StackRequest>(DecvqAllCast(heap));
+            ThisCom::GetHeapInner() = const_cast<StackRequest>(static_cast<DecvqAll<StackRequest>>(DecvqAllCast(heap)));
       }
 
       template<Cid SID = ID>

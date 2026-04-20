@@ -781,14 +781,18 @@ namespace Langulus::Anyness::Component
       ///   @return handle of the found item                                  
       template<bool REVERSE = false, Cid SID = ID, CT::ContainsMany C, CT::NoIntent T>
       auto FindInner(this C&& self, T const& item, size_t cookie) assumptious -> DecideHandle<C> {
-         static_assert(not CT::Handle<T>, "T shouldn't be a handle");
-         LglsAssumeDev(not self.IsEmpty(), "Container is assumed not emtpy");
+         LglsAssumeDev(not self.template IsEmpty<SID>(), "Container is assumed not emtpy");
          [[maybe_unused]] RTTI::DefinitionData::FCompareEqual comparer = nullptr;
          if constexpr (CT::TypeErased<C>) {
-            comparer = self.GetType().GetComparerEqual();
+            if constexpr (CT::Handle<T>)
+               LglsAssumeDev(self.template IsSame<SID>(item.GetType()), "Type mismatch");
+            else
+               LglsAssumeDev(self.template IsSame<SID>(MetaDataOf<T>()), "Type mismatch");
+
+            comparer = self.template GetType<SID>().GetComparerEqual();
             LglsAssumeDev(comparer, "Type-erased data not comparable");
-            LglsAssumeDev(self.IsSame(MetaDataOf<T>()), "Type mismatch");
          }
+         else static_assert(CT::Comparable<TypeOf<C, SID>, T>, "Type not comparable");
 
          DecideHandle<C> result;
          self.Apply([&](auto&& test) -> bool {
@@ -812,19 +816,31 @@ namespace Langulus::Anyness::Component
                }
                
                if constexpr (CT::TypeErased<C>) {
-                  if (comparer(test.GetRaw(), &item)) {
-                     // Match found                                     
-                     new (&result) DecideHandle<C> {test};
-                     return false;
+                  if constexpr (CT::Handle<T>) {
+                     if (not comparer(test.GetRaw(), item.GetRaw()))
+                        return true;   // Continue searching            
                   }
+                  else {
+                     if (not comparer(test.GetRaw(), &item))
+                        return true;   // Continue searching            
+                  }
+
                }
                else {
-                  if (*test.GetRaw() == item) {
-                     // Match found                                     
-                     new (&result) DecideHandle<C> {test};
-                     return false;
+                  if constexpr (CT::Handle<T>) {
+                     if (*test.GetRaw() != *item.GetRaw())
+                        return true;   // Continue searching            
+                  }
+                  else {
+                     if (*test.GetRaw() != item)
+                        return true;   // Continue searching            
                   }
                }
+
+               //                                                       
+               // If reached, then match found                          
+               new (&result) DecideHandle<C> {test};
+               return false;
             }
             else return false;
             return true;

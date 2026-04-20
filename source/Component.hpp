@@ -71,6 +71,9 @@ namespace Langulus::Anyness::Component
    /// matrix: where a 4x4 matrix will have count of 4 in 4 dimensions.       
    template<class T>
    using Dimensions = typename ShedDeref<T>::Dimensions;
+
+   template<Cid SID, Cid ID, Cid...SHARED>
+   concept IdMatch = (SID == ID) or ((SID == SHARED) or ...);
 }
 
 namespace Langulus::CT

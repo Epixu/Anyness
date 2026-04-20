@@ -45,8 +45,7 @@ namespace Langulus::Anyness::Inner
       Com::ReserveStack<0, size_t, 1>,    // Reserve kept as member     
       Com::IndexedHashStack<0, Hash, 1>,  // Indexed by hash table      
       Com::OwnershipStack<0, Com::StrongOwnership, 1>,
-      Com::OwnershipDeepHeap<0>,          // Separate key deep ownership
-      Com::OwnershipDeepHeap<1>,          // Separate val deep onwership
+      Com::OwnershipDeepHeap<0, true, 1>, // Separate key deep ownership
       Com::HashHeap<0, Hash, 1>,          // Hash can be cached         
       Com::Merging<0, void, 1>,           // Only merging for keys      
       //Com::Assignment<1>,                 // Assignment of values       
@@ -173,15 +172,16 @@ namespace Langulus::Anyness::Inner
 
       /// Clear the map and assign a single pair                              
       auto Assign(CT::Pair auto&& pair) -> Map& {
+         using I = IntentOf(pair);
          this->Clear();
-         this->MergeInner(LglsFwd(pair));
+         this->MergeInner(I::Nest(pair.GetKey()), I::Nest(pair.GetVal()));
          return *this;
       }
 
       /// Clear the map and assign a key and a value                          
       auto Assign(auto&& key, auto&& val) -> Map& {
          this->Clear();
-         this->MergeInner(TPair {LglsFwd(key), LglsFwd(val)});
+         this->MergeInner(LglsFwd(key), LglsFwd(val));
          return *this;
       }
 

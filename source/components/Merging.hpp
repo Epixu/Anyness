@@ -149,24 +149,22 @@ namespace Langulus::Anyness::Component
       ///   @param a pair of elements (and its intent) to merge               
       ///   @return 1 if element was inserted, and the position where it was  
       ///      inserted (or found at, if it was already existing)             
-      template<CT::Pair P, CT::ContainsMany C> requires Shared
-      auto MergeInner(this C& self, P&& a) -> MergeResult {
-         static_assert(not CT::Array<P>);
-         //using I = IntentOf(a);
+      template<class K, class V, CT::ContainsMany C> requires Shared
+      auto MergeInner(this C& self, K&& key, V&& val) -> MergeResult {
+         static_assert(not CT::Array<K, V>);
+         static_assert(not CT::Contiguous<C>);
 
-         // Gather the number of all elements and types.                
-         // Empty containers can't change type. If one of the type      
-         // changes raises a conflict, this function will throw.        
-         if constexpr (CT::TypeErased<P>) {
-            self.template SetType<0>(DeintCast(a).GetKeyType());
-            self.template SetType<1>(DeintCast(a).GetValType());
-         }
-         else {
-            self.template SetType<typename Decay<P>::KeyType, 0>();
-            self.template SetType<typename Decay<P>::ValType, 1>();
-         }
+         if constexpr (CT::Handle<K>)
+            self.template SetType<0>(DeintCast(key).GetType());
+         else
+            self.template SetType<Decvq<Deref<Deint<K>>>, 0>();
 
-         // If this is reached, then P's types are the same             
+         if constexpr (CT::Handle<V>)
+            self.template SetType<1>(DeintCast(val).GetType());
+         else
+            self.template SetType<Decvq<Deref<Deint<V>>>, 1>();
+
+         // If this is reached, then types are the same                 
          // Reallocate/branch out                                       
          const size_t lhs_count = self.GetCount();
          const size_t all_count = lhs_count + 1;
@@ -174,55 +172,23 @@ namespace Langulus::Anyness::Component
 
          // Insert the new elements if they're not contained yet        
          MergeResult result;
-         auto insert = [&]<class E>(E&& item) {
-            if constexpr (CT::Contiguous<C>) {
-               // Contiguous merge                                      
-               const auto found = self.FindInner(DeintCast(item), 0);
-               if (found) {
-                  result.lastInsertedIndex = found - self.GetHandle();
-                  return;
-               }
-
-               auto to = self.GetHandle() + lhs_count;
-               if constexpr (CT::Copied<IntentOf(item)>)
-                  to.EmplaceWithIntent(Refer(LglsFwd(item)));
-               else
-                  to.EmplaceWithIntent(FWDIntent(item));
-            }
-            else {
-               // Hash table merge                                      
-               const auto bucket = self.GetOffset(DeintCast(item).GetKey());
-               const auto found = self.FindInner(DeintCast(item).GetKey(), bucket);
-               if (found) {
-                  result.lastInsertedIndex = found - self.GetHandle();
-                  return;
-               }
-
-               // Move the element to a temporary local swapper first   
-               /*THandlePair<
-                  THandle<Decvq<Deref<TypeOf<Deint<E>, 0>>>>,
-                  THandle<Decvq<Deref<TypeOf<Deint<E>, 1>>>>
-               > swapper {
-                  I::Nest(DeintCast(item).template Get<void, 0>()),
-                  I::Nest(DeintCast(item).template Get<void, 1>())
-               };*/
-
-               /*if constexpr (CT::NotHandle<P>) {
-                  // We can directly use the pair as a swapper          
-                  result.lastInsertedIndex = self.TableEmplace(bucket, DeintCast(item));
-               }
-               else {*/
-                  // Make a local pair to use as a swapper              
-                  TPair swapper {LglsFwd(item)}; //TODO Copy maybe?
-                  result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
-               //}
+         auto insert = [&self,&result](K&& k, V&& v) {
+            // Hash table merge only                                    
+            const auto bucket = self.GetOffset(DeintCast(k));
+            const auto found = self.FindInner(DeintCast(k), bucket);
+            if (found) {
+               result.lastInsertedIndex = found - self.GetHandle();
+               return;
             }
 
+            // Make a local pair to use as a swapper                    
+            TPair swapper {LglsFwd(k), LglsFwd(v)}; //TODO Copy maybe?
+            result.lastInsertedIndex = self.TableEmplace(bucket, swapper);
             ++result.itemsInserted;
          };
 
          try {
-            insert(LglsFwd(a));
+            insert(LglsFwd(key), LglsFwd(val));
          }
          catch (...) {
             // Account for throws inside constructors                   

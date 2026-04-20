@@ -19,7 +19,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<class T>
+   template<class T> requires (CT::NotHandle<T> and CT::NotReference<T>)
    using TRefBase = Com::Container<
       Com::TypedStatic<DMeta, T>,         // Statically typed          
       Com::HeapMovable<0, 0, 0, HeapEntry<0, T*>>,

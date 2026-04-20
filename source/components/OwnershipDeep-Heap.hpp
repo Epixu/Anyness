@@ -13,7 +13,7 @@ namespace Langulus::Anyness::Component
 {
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
-   #define ThisCom self.OwnershipDeepHeap<ID, REF_INDIVIDUAL>
+   #define ThisCom self.OwnershipDeepHeap<ID, REF_INDIVIDUAL, SHARED...>
 
    ///                                                                        
    /// Reserves a part of the heap to keep track of sparse element's          
@@ -40,7 +40,7 @@ namespace Langulus::Anyness::Component
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
-      template<Cid SID = ID> requires (SID == ID)
+      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
       auto GetEntries(this auto const& self) assumptious -> Allocation const* const* {
          if (self.template IsSparse<SID>()
          and self.template GetRaw<SID>() and self.template GetAllocation<SID>())
@@ -50,9 +50,8 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<Cid SID = ID, CT::Container C> requires (SID == ID and CT::Indexed<C>)
+      template<Cid SID = ID, CT::Container C> requires (IdMatch<SID, ID, SHARED...> and CT::Indexed<C>)
       auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious -> Allocation const* const* {
-         static_assert(SID == ID);
          if constexpr (CT::TypeErased<C>) {
             auto T = self.GetType();
             if (T.IsSparse() and self.GetRaw() and self.GetAllocation()) {
@@ -80,7 +79,7 @@ namespace Langulus::Anyness::Component
 
       /// Get entry array if containing pointers (inner)                      
       ///   @attention may be uninitialized                                   
-      template<Cid SID = ID> requires (SID == ID)
+      //template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
       constexpr auto GetEntriesInner(this auto&& self) noexcept {
          return self.template AccessHeap<OwnershipDeepHeap>();
       }

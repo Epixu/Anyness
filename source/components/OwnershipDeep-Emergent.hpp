@@ -443,7 +443,8 @@ namespace Langulus::Anyness::Component
          // Destroying a type-erased element                            
          auto T = self.template GetType<SID>();
          if (T.IsSparse()) {
-            auto entries = self.template GetEntriesInner<SID>();
+            //auto entries = self.template GetEntriesInner<SID>();
+            auto entries = self.template GetEntries<SID>();
             if (not entries)
                return;
             
@@ -646,7 +647,8 @@ namespace Langulus::Anyness::Component
 
          const auto indirections = self.template GetIndirections<SID>();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
-         auto entries = self.template GetEntriesInner<SID>();
+         //auto entries = self.template GetEntriesInner<SID>();
+         auto entries = self.template GetEntries<SID>();
          memset(DecvqAllCast(entries), 0, entries_size);
       }
    };

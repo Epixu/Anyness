@@ -13,6 +13,7 @@
 namespace Langulus::Anyness::Inner
 {
    template<CT::NotVoid K, CT::NotVoid V>
+   requires (CT::NotHandle<K, V> and CT::NotReference<K, V>)
    using TPairBase = Com::Container<
       Com::TypedStatic<DMeta, K, 0>,
       Com::TypedStatic<DMeta, V, 1>,
