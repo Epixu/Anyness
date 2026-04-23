@@ -541,13 +541,16 @@ namespace Langulus::Anyness
          return LglsFwd(self);
       }
       
+   public:
       /// Visit all element's handles and perform a function on them.         
       /// Handles both linear and non-linear containers gracefully.           
       ///   @param lambda the function to perform. If the lambda returns bool,
       ///      you can end the loop early by returning false.                 
       ///   @param cookie the element/hash table spot to start off from       
+      ///   @attention this will ignore any ordering                          
+      ///   @attention assumes container isn't empty                          
       template<CT::Container C>
-      void Apply(this C&& self, auto&& lambda, [[maybe_unused]] size_t cookie = 0) {
+      void Apply(this C& self, auto&& lambda, [[maybe_unused]] size_t cookie = 0) {
          LglsAssumeDev(not self.IsEmpty(), "Make sure container isn't empty");
 
          if constexpr (CT::ContainsOne<C>) {
@@ -689,6 +692,17 @@ namespace Langulus::Anyness
       unify_getter(IsSparse);
       unify_getter(IsDeep);
       unify_getter(IsConstant);
+
+      template<Cid ID = 0>
+      constexpr bool IsExecutable(this auto const& self) noexcept
+      if_implements(IsExecutable<ID>()) {
+         return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
+            if constexpr (requires { self.C::template IsExecutable<ID>(); })
+               return self.C::template IsExecutable<ID>();
+            else return No{};
+         });
+      }
+
       unify_getter(GetIndirections);
       unify_getter(GetStride);
       unify_getter(GetBytesize);

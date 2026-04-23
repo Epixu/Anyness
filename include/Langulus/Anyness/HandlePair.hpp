@@ -18,6 +18,7 @@ namespace Langulus::Anyness
    // V, and thus composing a new container to represent the pair.           
    template<CT::Handle K, CT::Handle V> 
    struct THandlePair {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
       using CTTI_Typed     = Types<TypeOf<K>, TypeOf<V>>;

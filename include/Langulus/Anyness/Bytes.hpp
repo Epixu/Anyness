@@ -148,6 +148,7 @@ namespace Langulus::Anyness
          static constexpr bool SkipElements = false;
 
          static void BeginScope(const CT::Container auto& from, Bytes& to, Context* context) {
+            //TODO multidimensional containers like maps have multiple types
             if constexpr (requires { from.GetType(); }) {
                if (context) {
                   const auto typeId = context->mDMetaBank.Define(from.GetType());

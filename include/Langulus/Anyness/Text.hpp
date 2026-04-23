@@ -537,18 +537,14 @@ namespace Langulus::Anyness
          static constexpr bool SkipElements = true;
 
          static void BeginScope(const CT::Container auto& from, Text& to, Context*) {
+            //TODO multidimensional containers like maps have multiple types
             const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
-            if (scoped) {
-               if (from.IsPast())
-                  to += Serial::Past;
-               else if (from.IsFuture())
-                  to += Serial::Future;
-
+            if (scoped)
                to += Serial::OpenScope;
-            }
          }
          
          static void EndScope(const CT::Container auto& from, Text& to, Context*) {
+            //TODO multidimensional containers like maps have multiple types
             const bool scoped = from.GetCount() > 1 or not from.IsValid() or from.IsExecutable(); //TODO could carry in context and check verb precedence to avoid scoping in some cases
             if (scoped)
                to += Serial::CloseScope;

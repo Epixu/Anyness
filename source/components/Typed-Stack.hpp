@@ -256,13 +256,26 @@ namespace Langulus::Anyness::Component
          if (self.template IsEmpty<ID>())
             return false;
 
-         if constexpr (TypeErased) {
+         if constexpr (ThisCom::TypeErased) {
             // Type-erased                                              
             const auto T = ThisCom::GetTypeInner();
             if (T.IsExecutable())
                return true;
             else if (T.IsDeep()) {
-               if constexpr (CT::ContainsMany<C>) {
+               bool result = false;
+               self.Apply([&result](auto const& item) noexcept {
+                  if constexpr (CT::Supported<decltype(item)>) {
+                     if (item.template As<typename C::DeepType const, SID>().template IsExecutable<ID>()) {
+                        result = true;
+                        return false;
+                     }
+                     else return true;
+                  }
+                  else return true;
+               });
+               return result;
+
+               /*if constexpr (CT::ContainsMany<C>) {
                   bool result = false;
                   self.ForEach([&result](typename C::DeepType const& inner) noexcept {
                      if (inner.template IsExecutable<ID>()) {
@@ -273,7 +286,7 @@ namespace Langulus::Anyness::Component
                   });
                   return result;
                }
-               else return self.template As<typename C::DeepType const>().template IsExecutable<ID>();
+               else return self.template As<typename C::DeepType const>().template IsExecutable<ID>();*/
             }
             else return false;
          }
@@ -282,14 +295,18 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Executable<TYPE>)
                return true;
             else if constexpr (CT::Deep<TYPE>) {
-               if constexpr (CT::ContainsMany<C>) {
-                  for (TYPE const& inner : self) {
-                     if (DenseCast(inner).template IsExecutable<ID>())
-                        return true;
+               bool result = false;
+               self.Apply([&result](auto const& item) noexcept {
+                  if constexpr (CT::Supported<decltype(item)>) {
+                     if (item.template Get<Decay<TYPE>, SID>().template IsExecutable<ID>()) {
+                        result = true;
+                        return false;
+                     }
+                     else return true;
                   }
-                  return false;
-               }
-               else return self.template As<typename C::DeepType const>().template IsExecutable<ID>();
+                  else return true;
+               });
+               return result;
             }
             else return false;
          }

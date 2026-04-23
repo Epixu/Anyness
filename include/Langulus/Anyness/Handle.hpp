@@ -148,6 +148,7 @@ namespace Langulus::Anyness
       Com::Comparison<>,
       Com::IterationOperators<>
    > {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using DeepType       = HandleDisowned;
@@ -207,6 +208,7 @@ namespace Langulus::Anyness
       Com::Comparison<>,
       Com::IterationOperators<>
    > {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using DeepType       = HandleDisowned;
@@ -269,6 +271,7 @@ namespace Langulus::Anyness
       Com::Comparison<>,
       Com::IterationOperators<>
    > {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using DeepType       = HandleDisowned;
@@ -326,6 +329,7 @@ namespace Langulus::Anyness
       Com::Comparison<>,
       Com::IterationOperators<>
    > {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using DeepType       = HandleDisowned;
@@ -396,6 +400,7 @@ namespace Langulus::Anyness
    ///   @tparam T the contained type                                         
    template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleEmbeddedDense<T> {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
@@ -456,6 +461,7 @@ namespace Langulus::Anyness
    
    template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleEmbeddedSparse<T> {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
@@ -517,6 +523,7 @@ namespace Langulus::Anyness
    ///   @tparam T the contained type                                         
    template<CT::Reference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
    struct THandleEmergent<T> : Inner::THandleEmbeddedDenseEmergent<T> {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
@@ -567,6 +574,7 @@ namespace Langulus::Anyness
 
    template<CT::Reference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
    struct THandleEmergent<T> : Inner::THandleEmbeddedSparseEmergent<T> {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
@@ -621,6 +629,7 @@ namespace Langulus::Anyness
    ///   @tparam T the contained type                                         
    template<CT::Reference T> requires CT::NotSheddable<T>
    struct THandleDisowned<T> : Inner::THandleDisownedEmbedded<T> {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
@@ -677,6 +686,7 @@ namespace Langulus::Anyness
    ///   @tparam T the contained type                                         
    template<CT::NotReference T> requires (CT::Dense<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleLocalDense<T> {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle<T&>; // avoids nested local handles (and thus copies) by adding a reference
@@ -737,6 +747,7 @@ namespace Langulus::Anyness
    ///   @tparam T the contained sparse type                                  
    template<CT::NotReference T> requires (CT::Sparse<T> and CT::NotSheddable<T>)
    struct THandle<T> : Inner::THandleLocalSparse<T> {
+      using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle<Deptr<T>&>; // avoids nested local handles (and thus copies) by adding a reference
