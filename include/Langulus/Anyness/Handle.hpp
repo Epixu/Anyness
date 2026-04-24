@@ -140,7 +140,7 @@ namespace Langulus::Anyness
       Com::TypedStack<DMeta, void, true>,
       Com::HeapReference<>,
       Com::CountStatic<0, 1u>,
-      Com::ReserveEmergent<>,
+      //Com::ReserveEmergent<>,
       Com::OwnershipDeepReference<>,
       Com::HashEmergent<>,
       Com::Assignment<>,

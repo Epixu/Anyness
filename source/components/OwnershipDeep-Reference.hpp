@@ -11,6 +11,10 @@
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.OwnershipDeepReference<ID, REF_INDIVIDUAL, SHARED...>
+
    ///                                                                        
    /// The pointer to the array of allocations for each element and           
    /// indirection is kept locally. Useful to carry allocation data inside    
@@ -29,24 +33,25 @@ namespace Langulus::Anyness::Component
       /// Get entry array if containing pointers                              
       ///   @attention may contain invalid data for discontiguous containers  
       ///   @return the array of entries                                      
-      template<Cid SID = ID>
-      auto GetEntries(this auto const& self) assumptious -> Allocation const* const* {
-         static_assert(SID == ID);
+      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
+      auto GetEntries(this auto const& self) assumptious
+      -> Allocation const* const* {
          if (self.template IsSparse<SID>()) {
             LglsAssumeDev(self.template GetRaw<SID>(), "No memory available");
-            return self.template GetEntriesInner<SID>();
+            return ThisCom::GetEntriesInner();
          }
          return nullptr;
       }
 
       /// Get entry array for all indirections of a specific element          
       ///   @return the array of entries                                      
-      template<Cid SID = ID, CT::Container C> requires CT::Indexed<C>
-      auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious -> Allocation const* const* {
-         static_assert(SID == ID);
+      template<Cid SID = ID, CT::Container C>
+      requires (IdMatch<SID, ID, SHARED...> and CT::Indexed<C>)
+      auto GetEntriesAt(this C const& self, CT::Index auto&& idx) assumptious
+      -> Allocation const* const* {
          if (self.template IsSparse<SID>()) {
             LglsAssumeDev(self.template GetRaw<SID>(), "No memory available");
-            return self.template GetEntriesInner<SID>() + self.template SimplifyIndex<SID>(LglsFwd(idx));
+            return ThisCom::GetEntriesInner() + self.template SimplifyIndex<SID>(LglsFwd(idx));
          }
          return nullptr;
       }
@@ -56,15 +61,15 @@ namespace Langulus::Anyness::Component
       LglsComEmplacement(friend);
 
       /// Get the entry array (inner)                                         
-      template<Cid SID = ID> requires (SID == ID)
+      //template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
       constexpr auto& GetEntriesInner(this auto&& self) noexcept {
          return self.template AccessStack<OwnershipDeepReference>();
       }
 
       /// Set the entry array (inner)                                         
-      template<Cid SID = ID> requires (SID == ID)
+      //template<Cid SID = ID> requires (SID == ID)
       constexpr void SetEntriesInner(this auto& self, EntryPtr entries) noexcept {
-         self.template GetEntriesInner<SID>() = DecvqAllCast(entries);
+         ThisCom::GetEntriesInner() = DecvqAllCast(entries);
       }
       
       /// Transfer from any kind of container.                                
@@ -74,7 +79,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) noexcept {
-         self.SetEntriesInner(intent.what.GetEntriesInner());
+         ThisCom::SetEntriesInner(intent.what.GetEntries());
       }
 
       /// Transfer from any kind of container, respecting intents             
@@ -97,4 +102,6 @@ namespace Langulus::Anyness::Component
          }
       }*/
    };
+
+   #undef ThisCom
 }

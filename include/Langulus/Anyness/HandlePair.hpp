@@ -11,18 +11,141 @@
 
 namespace Langulus::Anyness
 {
+   /// Type-erased immutable handle                                           
+   template<>
+   struct THandlePair<Handle, Handle> : Com::Container<
+      Com::TypedStack<DMeta, void, false, 0>,
+      Com::TypedStack<DMeta, void, false, 1>,
+      Com::HeapReference<0>,
+      Com::HeapReference<1>,
+      Com::CountStatic<0, 1u, 1>,
+      Com::OwnershipDeepReference<0>,
+      Com::OwnershipDeepReference<1>,
+      Com::HashEmergent<0, Hash, 1>,
+      Com::Comparison<0, true, 1>,
+      Com::IterationOperators<0, 1>
+   > {
+      using CTTI_Deep      = Yes<>;
+      using CTTI_Handle    = Yes<>;
+      using CTTI_ReflectAs = void;
+
+      static constexpr bool TypeErased = true;
+
+      /// Handles can't be piecewise-initialized                              
+      THandlePair(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandlePair() noexcept {
+         this->ConstructDefault();
+      }
+
+      constexpr THandlePair(THandlePair const& other) {
+         this->Absorb(Refer(other));
+      }
+
+      constexpr THandlePair(THandlePair&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+
+      constexpr THandlePair(
+         void const* ptr0, EntryPtr entry0, DMeta type0,
+         void const* ptr1, EntryPtr entry1, DMeta type1
+      ) noexcept {
+         this->Com::HeapReference<0>::SetHeapInner(ptr0);
+         this->Com::HeapReference<1>::SetHeapInner(ptr1);
+         this->Com::OwnershipDeepReference<0>::SetEntriesInner(entry0);
+         this->Com::OwnershipDeepReference<1>::SetEntriesInner(entry1);
+         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(type0);
+         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(type1);
+      }
+
+      /// Assignment                                                          
+      THandlePair& operator = (THandlePair const& other) = delete;
+      THandlePair& operator = (THandlePair&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> THandlePair<HandleMut, HandleMut> const& {
+         return *reinterpret_cast<THandlePair<HandleMut, HandleMut> const*>(this);
+      }
+   };
+   
+   /// Type-erased mutable handle                                             
+   template<>
+   struct THandlePair<HandleMut, HandleMut> : Com::Container<
+      Com::TypedStack<DMeta, void, false, 0>,
+      Com::TypedStack<DMeta, void, false, 1>,
+      Com::HeapReference<0>,
+      Com::HeapReference<1>,
+      Com::CountStatic<0, 1u, 1>,
+      Com::OwnershipDeepReference<0>,
+      Com::OwnershipDeepReference<1>,
+      Com::HashEmergent<0, Hash, 1>,
+      Com::Assignment<0, 1>,
+      Com::Emplacement<0, 1>,
+      Com::Comparison<0, true, 1>,
+      Com::IterationOperators<0, 1>
+   > {
+      using CTTI_Deep      = Yes<>;
+      using CTTI_Handle    = Yes<>;
+      using CTTI_ReflectAs = void;
+
+      static constexpr bool TypeErased = true;
+
+      /// Handles can't be piecewise-initialized                              
+      THandlePair(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandlePair() noexcept {
+         this->ConstructDefault();
+      }
+
+      constexpr THandlePair(THandlePair const& other) {
+         this->Absorb(Refer(other));
+      }
+
+      constexpr THandlePair(THandlePair&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+
+      constexpr THandlePair(
+         void const* ptr0, EntryPtr entry0, DMeta type0,
+         void const* ptr1, EntryPtr entry1, DMeta type1
+      ) noexcept {
+         this->Com::HeapReference<0>::SetHeapInner(ptr0);
+         this->Com::HeapReference<1>::SetHeapInner(ptr1);
+         this->Com::OwnershipDeepReference<0>::SetEntriesInner(entry0);
+         this->Com::OwnershipDeepReference<1>::SetEntriesInner(entry1);
+         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(type0);
+         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(type1);
+      }
+
+      /// Assignment                                                          
+      THandlePair& operator = (THandlePair const& other) = delete;
+      THandlePair& operator = (THandlePair&& other) = delete;
+
+      /// Already as mutable as it gets                                       
+      auto ForceMutable() const noexcept -> THandlePair const& {
+         return *this;
+      }
+   };
+
+
    ///                                                                        
    /// Pair of handles                                                        
    //TODO this is a temporary setup. A better one would probably be to       
    // concatenate the components of the two handles, offsetting the IDs of   
    // V, and thus composing a new container to represent the pair.           
-   template<CT::Handle K, CT::Handle V> 
+   /*template<CT::Handle K, CT::Handle V> 
    struct THandlePair {
+      using CTTI_Container = Yes<>;
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_Pair      = Yes<>;
       using CTTI_Typed     = Types<TypeOf<K>, TypeOf<V>>;
       using CTTI_ReflectAs = void;
+
+      static constexpr bool ContainsMany = false;
+      using Dimensions = Values<0, 1>;
+
       //using Denser         = Types<typename K::Denser,   typename V::Denser>;
       //using DeepType       = Types<typename K::DeepType, typename V::DeepType>;
 
@@ -62,14 +185,14 @@ namespace Langulus::Anyness
             Decay<decltype(key.ForceMutable())>,
             Decay<decltype(val.ForceMutable())>
          > {key.ForceMutable(), val.ForceMutable()};
-      }
+      }*/
 
       /*void SwapInner(CT::ContainsOne auto& rhs) {
          key.SwapInner(LglsFwd(rhs));
          val.SwapInner(LglsFwd(rhs));
       }*/
 
-      template<CT::Pair P> requires CT::NoIntent<P>
+      /*template<CT::Pair P> requires CT::NoIntent<P>
       void SwapInner(P& rhs) {
          key.SwapInner(rhs.GetKey());
          val.SwapInner(rhs.GetVal());
@@ -172,7 +295,7 @@ namespace Langulus::Anyness
       }
    };
 
-   static_assert(not CT::Intent<THandlePair<Handle, Handle>>);
+   static_assert(not CT::Intent<THandlePair<Handle, Handle>>);*/
 
    template<CT::Handle K, CT::Handle V>
    THandlePair(K&&, V&&) -> THandlePair<Decay<K>, Decay<V>>;

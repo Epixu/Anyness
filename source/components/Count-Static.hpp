@@ -15,7 +15,6 @@
 
 namespace Langulus::Anyness::Component
 {
-
    /// Refers back to this particular component instance through the deduced  
    /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
    #define ThisCom self.CountStatic<ID, COUNT, SHARED...>
@@ -55,18 +54,14 @@ namespace Langulus::Anyness::Component
       /// Equal to COUNT if container has a heap component that has been      
       /// allocated - zero otherwise. If no heap component exists, then the   
       /// count is always COUNT.                                              
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
       constexpr auto GetCount(this auto const& self) noexcept -> CountType {
-         static_assert(SID == ID or ((SID == SHARED) or ...),
-            "Wrong count instance");
          return ThisCom::template GetCountInner<SID>();
       }
       
       /// Check if empty                                                      
-      template<Cid SID = ID>
+      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
       constexpr bool IsEmpty(this auto const& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...),
-            "Wrong count instance");
          return ThisCom::template GetCountInner<SID>() == CountType {0};
       }
 
@@ -84,24 +79,18 @@ namespace Langulus::Anyness::Component
       LglsComConversion(friend);
 
       /// Get count (inner)                                                   
-      template<Cid SID = ID, CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
       constexpr auto GetCountInner(this C const& self) noexcept -> CountType {
-         static_assert(SID == ID or ((SID == SHARED) or ...),
-            "Wrong count instance");
-
          if constexpr (CT::HasVariableCount<C>)
-            return self.template GetHeapInner<SID>() ? COUNT : CountType {0};
+            return self.template GetRaw<SID>() ? COUNT : CountType {0};
          else
             return COUNT;
       }
 
       /// Reset count (inner)                                                 
       ///   @attention doesn't destroy elements, only resets hash and count   
-      template<Cid SID = ID, CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
       constexpr void ResetCount(this C& self) noexcept {
-         static_assert(SID == ID or ((SID == SHARED) or ...),
-            "Wrong count instance");
-
          if_available(self.template SetHeapInner<SID>(nullptr));
          if_available(self.template SetHashInner<SID>(1));
       }

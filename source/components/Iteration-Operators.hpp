@@ -18,7 +18,8 @@ namespace Langulus::Anyness::Component
    /// Used mainly by handles. For discontiguous container, these handles may 
    /// point to uninitialized values.                                         
    ///   @tparam ID heap provider we're iterating                             
-   template<Cid ID>
+   ///   @tparam SHARED other heap providers that get iterated together       
+   template<Cid ID, Cid...SHARED>
    struct IterationOperators {
       using CTTI_Component = Yes<>;
 

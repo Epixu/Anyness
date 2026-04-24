@@ -167,7 +167,7 @@ namespace Langulus::Anyness::Component
          }
 
          // Check if disowned/outside authority                         
-         auto entries = self.template GetEntriesInner<SID>();
+         auto entries = self.template GetEntries<SID>();
          if (not entries)
             return;
 
@@ -176,7 +176,8 @@ namespace Langulus::Anyness::Component
             auto T = self.template GetType<SID>();
             LglsAssumeDev(T.IsSparse(), "Sparseness mismatch");
 
-            void* src = DecvqAllCast(self.template GetHeapInner<SID>());
+            //void* src = DecvqAllCast(self.template GetHeapInner<SID>());
+            void* src = DecvqAllCast(self.template GetRaw<SID>());
             while (src and T.IsSparse()) {
                auto nextT = T.GetDeptr();
                if constexpr (FIND_MISSING) {

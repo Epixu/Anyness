@@ -72,8 +72,8 @@ namespace Langulus::Anyness::Component
    template<class T>
    using Dimensions = typename ShedDeref<T>::Dimensions;
 
-   template<Cid SID, Cid ID, Cid...SHARED>
-   concept IdMatch = (SID == ID) or ((SID == SHARED) or ...);
+   template<Cid SID, Cid...IDS>
+   concept IdMatch = ((SID == IDS) or ...);
 }
 
 namespace Langulus::CT
@@ -327,9 +327,9 @@ namespace Langulus::Anyness
       #define LglsComIterationRange(modifier) \
          template<Cid, Cid...> modifier struct IterationRange
 
-      template<Cid = 0> struct IterationOperators;
+      template<Cid = 0, Cid...> struct IterationOperators;
       #define LglsComIterationOperators(modifier) \
-         template<Cid> modifier struct IterationOperators
+         template<Cid, Cid...> modifier struct IterationOperators
 
       /// States                                                              
       template<CT::State...> struct StateHeap;

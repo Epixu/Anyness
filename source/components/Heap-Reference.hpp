@@ -71,8 +71,8 @@ namespace Langulus::Anyness::Component
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
       template<Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr auto GetRaw(this C&& self) noexcept {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          using Tcvq = LglsMutIf(C, StackRequest);
          return static_cast<Tcvq>(ThisCom::GetHeapInner());
       }
@@ -81,17 +81,17 @@ namespace Langulus::Anyness::Component
       ///   @attention using raw pointer while self.IsEmpty() may lead to     
       ///      undefined behavior                                             
       template<class T, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr auto GetRawAs(this C&& self) noexcept {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          using Tcvq = LglsMutIf(C, T*);
          return static_cast<Tcvq>(ThisCom::GetHeapInnerAsVoid());
       }
 
       /// Get a direct access to the initialized heap memory's end.           
       ///   @attention this makes sense only when heap is contiguous.         
-      template<Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
+      template<Cid SID = ID, CT::Container C>
+      requires (CT::Contiguous<C> and IdMatch<SID, ID, ENTRIES::Id...>)
       constexpr auto GetRawEnd(this C&& self) noexcept {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (CT::TypeErased<C>)
             return ThisCom::template GetRawAs<uint8_t, SID>() + self.template GetBytesize<SID>();
          else
@@ -100,8 +100,8 @@ namespace Langulus::Anyness::Component
     
       /// Get a direct access to the entire heap reserve's end.               
       template<Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr auto GetRawReserveEnd(this C&& self) noexcept {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (CT::TypeErased<C>)
             return ThisCom::template GetRawAs<uint8_t, SID>() + self.template GetReserved<SID>() * self.template GetStride<SID>();
          else
@@ -118,8 +118,8 @@ namespace Langulus::Anyness::Component
       ///   @tparam AS the type of data we're accessing - use void to use the 
       ///      type of the container, if statically typed                     
       template<class AS = void, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr decltype(auto) Get(this C&& self) assumptious {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(not CT::Handle<AS>,    "AS can't be a handle");
          static_assert(not CT::Reference<AS>, "Strip references first");
          using TC   = LglsMutIf(C, TypeOf<C>);
@@ -183,9 +183,9 @@ namespace Langulus::Anyness::Component
       ///   @attention will throw if incompatible type is provided            
       ///   @tparam AS the type we're wrapping in                             
       ///   @return the element, as a reference if possible                   
-      template<CT::NotVoid AS, Cid SID = ID, CT::Container C> requires CT::Contiguous<C>
+      template<CT::NotVoid AS, Cid SID = ID, CT::Container C>
+      requires (CT::Contiguous<C> and IdMatch<SID, ID, ENTRIES::Id...>)
       decltype(auto) As(this C&& self) {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(not CT::Reference<AS>, "Strip references first");
 
          if constexpr (CT::Handle<AS>)
@@ -236,11 +236,11 @@ namespace Langulus::Anyness::Component
       /// A safe way to get the first sparse entry after being resolved to    
       /// the most concrete type. Available only if container has DeepType.   
       ///   @return the most concrete representation of the first item        
-      template<Cid SID = ID, class AS = void, CT::Container C> requires CT::Contiguous<C>
+      template<Cid SID = ID, class AS = void, CT::Container C>
+      requires (CT::Contiguous<C> and IdMatch<SID, ID, ENTRIES::Id...>)
       auto GetResolved(this C&& self)
       requires requires { typename Deref<C>::DeepType; } {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(CT::Container<D>, "D must result in a container type");
          static_assert(CT::HasVariableCount<D>, "D must allow for being empty");
 
@@ -275,11 +275,11 @@ namespace Langulus::Anyness::Component
       ///   @param self deduced this                                          
       ///   @param count how many levels of indirection to remove?            
       ///   @return the dense first element                                   
-      template<Cid SID = ID, class AS = void, CT::Container C> requires CT::Contiguous<C>
+      template<Cid SID = ID, class AS = void, CT::Container C>
+      requires (CT::Contiguous<C> and IdMatch<SID, ID, ENTRIES::Id...>)
       auto GetDense(this C&& self, Count<C> count = CountMax<C>)
       requires requires { typename Deref<C>::DeepType; } {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(CT::Container<D>, "D must result in a container type");
 
          if (self.template IsEmpty<SID>())
@@ -334,19 +334,19 @@ namespace Langulus::Anyness::Component
       }
 
    protected:
-      template<CT::Handle, CT::Handle> friend struct THandlePair;
+      //template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Get the heap pointer (inner)                                        
-      template<Cid SID = ID>
+      //template<Cid SID = ID>
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
+         //static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          return self.template AccessStack<HeapReference>();
       }
 
       /// Get the heap pointer as a void* (inner)                             
-      template<Cid SID = ID>
+      //template<Cid SID = ID>
       constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
+         //static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          auto& p = ThisCom::GetHeapInner();
          if constexpr (CT::CustomPointer<StackRequest>)
             return const_cast<void*>(static_cast<void const*>(p.Unpack()));
@@ -355,9 +355,9 @@ namespace Langulus::Anyness::Component
       }
 
       /// Set the heap pointer, any data pointer will do                      
-      template<Cid SID = ID, CT::Sparse P>
+      template</*Cid SID = ID,*/ CT::Sparse P>
       /*constexpr*/ void SetHeapInner(this auto& self, P heap) assumptious { //can't be constexpr due to GCC ICE
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
+         //static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (Exact<P, StackRequest>)
             ThisCom::GetHeapInner() = heap;
          else if constexpr (CT::CustomPointer<P>)
@@ -366,9 +366,9 @@ namespace Langulus::Anyness::Component
             ThisCom::GetHeapInner() = const_cast<StackRequest>(static_cast<DecvqAll<StackRequest>>(DecvqAllCast(heap)));
       }
 
-      template<Cid SID = ID>
+      //template<Cid SID = ID>
       constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
+         //static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          ThisCom::GetHeapInner() = nullptr;
       }
 
@@ -385,7 +385,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) noexcept {
-         ThisCom::SetHeapInner(intent.what.GetRaw());//TODO raw pointer mistaken as inner heap pointer will lead to errors in maps
+         ThisCom::SetHeapInner(intent.what.GetRaw());//TODO raw pointer mistaken as inner heap pointer may lead to errors in maps?
       }
 
       /// A simple request for allocating memory, which includes heap         
@@ -400,8 +400,8 @@ namespace Langulus::Anyness::Component
       /// Get a size based on reflected allocation page and count             
       ///   @param reserve the number of elements to request                  
       template<Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, ENTRIES::Id...>
       Request RequestHeap(this C const& self, const size_t reserve) assumptious {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          Request result;
          result.mHeaderBytes = self.template GetHeapHeaderSize<SID>();
 
@@ -465,8 +465,8 @@ namespace Langulus::Anyness::Component
       ///   @tparam DESTROY set to 'false' if you only want to dereference    
       ///      and destroy only fully dereferenced indirections               
       template<bool DESTROY = true, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, ENTRIES::Id...>
       void DestroyElement(this C& self) assumptious {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
 
@@ -494,8 +494,8 @@ namespace Langulus::Anyness::Component
       ///   @tparam DESTROY set to 'false' if you only want to dereference    
       ///      and destroy only fully dereferenced indirections               
       template<bool DESTROY = true, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, ENTRIES::Id...>
       void DestroyAllElements(this C& self) assumptious {
-         static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          if constexpr (DESTROY or CT::DeeplyOwned<C>) {
             if (self.template IsEmpty<SID>())
                return;
