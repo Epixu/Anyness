@@ -57,9 +57,11 @@ namespace Langulus::Anyness
    /// A continuous byte container of variable size                           
    ///                                                                        
    struct Bytes : Inner::BytesBase {
-      using CountType     = Base::CountType;
-      using CTTI_MapsTo   = Text;
-      using CTTI_MapsFrom = Types<RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta>;
+      using CTTI_ReflectAs = Bytes;
+      using CTTI_MapsTo    = Text;
+      using CTTI_MapsFrom  = Types<RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta>;
+
+      using CountType = Base::CountType;
 
       constexpr Bytes() noexcept {
          this->ConstructDefault();

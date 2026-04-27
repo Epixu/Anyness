@@ -50,14 +50,6 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<0, true, 1>,        // Allows comparisons         
       Com::State::Future<>,               // Toggle future linking      
       Com::State::Past<>                  // Toggle past linking        
-      /*Com::StateStack<                    // Variable state             
-         DefineState::Typed<>,            // Can be type-constrained    
-         DefineState::Future<>,           // 'missing future' state     
-         DefineState::Past<>,             // 'missing past' state       
-         DefineState::Compressed<>,       // Adds 'compressed' state    
-         DefineState::Encrypted<>,        // Adds 'encrypted' state     
-         DefineState::Tracked<>           // Adds 'tracked' state       
-      >*/
    >;
 }
 
@@ -67,9 +59,10 @@ namespace Langulus::Anyness
    /// A type-erased pair.                                                    
    ///   @attention not binary-compatible with its templated equivalent TPair 
    struct Pair : Inner::PairBase {
-      using CTTI_Deep   = Yes<>;
-      using CTTI_Pair   = Yes<>;
-      using CTTI_MapsTo = Text;
+      using CTTI_ReflectAs = Pair;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_Pair      = Yes<>;
+      using CTTI_MapsTo    = Text;
 
       static constexpr bool TypeErased = true;
       static constexpr bool DeeplyOwned = true;
@@ -84,9 +77,6 @@ namespace Langulus::Anyness
       using HandleMutType = THandlePair<Handle, HandleMut>;
       using Pick          = HandleType;
       using PickMut       = HandleMutType;
-
-      /*using DefineState::Typed<>::IsTypeConstrained;
-      using DefineState::Typed<>::EnableTypeConstrained;*/
 
       constexpr Pair() noexcept {
          this->ConstructDefault();

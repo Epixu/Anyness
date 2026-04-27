@@ -61,10 +61,10 @@ namespace Langulus::Anyness
    /// A continuous text container of variable size                           
    ///                                                                        
    struct Text : Inner::TextBase {
-      using CountType     = Base::CountType;
-      using CTTI_Text     = Yes<>;
-      using CTTI_MapsTo   = Text;
-      using CTTI_MapsFrom = Types<
+      using CTTI_ReflectAs = Text;
+      using CTTI_Text      = Yes<>;
+      using CTTI_MapsTo    = Text;
+      using CTTI_MapsFrom  = Types<
          bool, char, /*wchar_t, char8_t, char16_t, char32_t,*/
          int8_t, int16_t, int32_t, int64_t,
          uint8_t, uint16_t, uint32_t, uint64_t,
@@ -72,6 +72,8 @@ namespace Langulus::Anyness
          Hash, Byte,
          RTTI::DMeta, RTTI::TMeta, RTTI::CMeta, RTTI::VMeta
       >;
+
+      using CountType = Base::CountType;
 
       constexpr Text() noexcept {
          this->ConstructDefault();

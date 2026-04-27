@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "../Main.hpp"
+#include "any/TestAnyCommon.hpp"
 #include <Langulus/Anyness/Bytes.hpp>
 #include <Langulus/Anyness/SerializeBytes.hpp>
 
@@ -153,34 +154,12 @@ SCENARIO("Testing byte container") {
    static_assert(not CT::Array<T>, "Wrongly typed container");
    static_assert(    Exact<TypeOf<T>, Byte>, "Wrongly typed container");
 
-   GIVEN("Gap test") {
-      alignas(T) char unininitialized[sizeof(T)];
-      memset(unininitialized, 254, sizeof(unininitialized));
-      new (unininitialized) T {};
-      for (auto b : unininitialized) {
-         REQUIRE(b != 254);
-      }
-      Logger::Info("Size of ", NameOf<::std::vector<Byte>>(), " container is: ", sizeof(::std::vector<Byte>), " bytes");
-      auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
-      size_t accumulated_size = 0;
-      size_t accumulated_stack_size = 0;
-      T::ComponentList::ForEach([&]<class C> {
-         if constexpr (requires { typename C::StackRequest; }) {
-            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", sizeof(typename C::StackRequest), " bytes on the stack)");
-            accumulated_stack_size += sizeof(typename C::StackRequest);
-         }
-         else Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
-         accumulated_size += sizeof(C);
-      });
-      Logger::Info("-----------------------------------------");
-      Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
-      Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      // Due to the additional cached hash member, byte container exceeds std::vector b
-      /*static_assert(
-            (Byteness == 8 and sizeof(T) <= sizeof(::std::vector<Byte>))
-         or (sizeof(T) <= 16) // Due to the additional cached hash member, byte container exceeds std::vector b
-      );*/
-   }
+   Common_GapTest<T, ::std::vector<Byte>>();
+   // Due to the additional cached hash member, byte container exceeds std::vector b
+   /*static_assert(
+         (Byteness == 8 and sizeof(T) <= sizeof(::std::vector<Byte>))
+      or (sizeof(T) <= 16) // Due to the additional cached hash member, byte container exceeds std::vector b
+   );*/
 
    GIVEN("Default byte container") {
       T bytes;

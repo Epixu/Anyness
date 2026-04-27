@@ -45,14 +45,6 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<>,               // Allows comparisons            
       Com::State::Future<>,            // Allows future linking         
       Com::State::Past<>               // Allows past linking           
-      /*Com::StateStack<                 // Variable state                
-         DefineState::Typed<>,         // Can be type-constrained       
-         DefineState::Future<>,        // Adds a 'missing future' state 
-         DefineState::Past<>,          // Adds a 'missing past' state   
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >*/
    >;
 }
 
@@ -66,12 +58,11 @@ namespace Langulus::Anyness
    /// using Own or Ref instead. If you want to contain a number of similar   
    /// elements use Many instead.                                             
    struct Any : Inner::AnyBase {
-      using CTTI_Deep   = Yes<>;
-      using CTTI_MapsTo = Text;
+      using CTTI_ReflectAs = Any;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_MapsTo    = Text;
 
       using Base = Inner::AnyBase;
-      //using DefineState::Typed<>::IsTypeConstrained;
-      //using DefineState::Typed<>::EnableTypeConstrained;
       using DeepType = Any;
 
       constexpr Any() noexcept {

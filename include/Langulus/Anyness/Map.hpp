@@ -55,13 +55,6 @@ namespace Langulus::Anyness::Inner
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
       Com::State::Sorted<SORT>            // Toggle ordered map         
-      /*Com::StateStack<                    // Variable state             
-         DefineState::Typed<>,            // Can be type-constrained    
-         DefineState::Sorted<SORT>,       // Maybe unsorted             
-         DefineState::Compressed<>,       // Adds 'compressed' state    
-         DefineState::Encrypted<>,        // Adds 'encrypted' state     
-         DefineState::Tracked<>           // Adds 'tracked' state       
-      >*/
    >;
 
    ///                                                                        
@@ -71,9 +64,10 @@ namespace Langulus::Anyness::Inner
    /// Values, on the other hand, are mutable.                                
    template<StateValue SORTED>
    struct Map : MapBase<SORTED> {
-      using CTTI_Map      = Yes<>;
-      using CTTI_Deep     = Yes<>;
-      using CTTI_MapsTo   = Text;
+      using CTTI_ReflectAs = Map;
+      using CTTI_Map       = Yes<>;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_MapsTo    = Text;
 
       using Base          = MapBase<SORTED>;
       using DeepType      = Many;
@@ -86,9 +80,6 @@ namespace Langulus::Anyness::Inner
       static constexpr bool TypeErased = true;
       static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = true;
-
-      /*using DefineState::Typed<>::IsTypeConstrained;
-      using DefineState::Typed<>::EnableTypeConstrained;*/
 
       constexpr Map() noexcept {
          this->ConstructDefault();

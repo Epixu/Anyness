@@ -31,13 +31,6 @@ namespace Langulus::Anyness::Inner
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
       Com::State::Sorted<SORT>         // Toggle ordered set            
-      /*Com::StateStack<                 // Variable state                
-         DefineState::Typed<State::Enabled>, // Always type-constrained 
-         DefineState::Sorted<SORT>,    // Maybe unsorted                
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >*/
    >;
 }
 
@@ -50,8 +43,8 @@ namespace Langulus::Anyness
    /// change in-place. This also means that they are only const-iteratable.  
    template<CT::NotVoid T, StateValue SORT>
    struct TSet : Inner::TSetBase<T, SORT> {
-      using CTTI_Set       = Yes<>;
       using CTTI_ReflectAs = Set;
+      using CTTI_Set       = Yes<>;
       using CTTI_Deep      = Yes<>;
       using CTTI_MapsTo    = Text;
 

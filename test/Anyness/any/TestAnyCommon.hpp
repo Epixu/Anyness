@@ -81,6 +81,94 @@ using namespace Anyness;
    #include "../../TestTypes/PackedPointers.hpp"
 #endif
 
+template<class T, class COMPARE_WITH>
+void Common_GapTest() {
+   alignas(T) char unininitialized[sizeof(T)];
+   memset(unininitialized, 254, sizeof(unininitialized));
+   new (unininitialized) T {};
+   for (auto b : unininitialized) {
+      REQUIRE(b != 254);
+   }
+   Logger::Info("Size of ", NameOf<COMPARE_WITH>(), " container is: ",
+      sizeof(COMPARE_WITH), " bytes");
+   auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ",
+      sizeof(T), " bytes");
+
+   size_t size = 0;
+   size_t stack_size = 0;
+   size_t heap_size = 0;
+   size_t heap_size_per_element = 0;
+   size_t heap_size_per_indirection = 0;
+   size_t heap_size_per_element_times_indirection = 0;
+   T::ComponentList::ForEach([&]<class C> {
+      if constexpr (requires { typename C::StackRequest; }) {
+         // Scan all stack requests                                     
+         using R = typename C::StackRequest;
+         if constexpr (CT::NotVoid<R>) {
+            Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
+               " bytes (reserves ", sizeof(R), " bytes on the stack)");
+            stack_size += sizeof(R);
+         }
+      }
+
+      if constexpr (requires { typename C::HeapRequest; }) {
+         // Scan all heap requests                                      
+         using R = typename C::HeapRequest;
+         if constexpr (CT::NotVoid<R>) {
+            if constexpr (requires { R::AllocatedPerIndirection; }) {
+               if constexpr (requires { R::Type::AllocatedPerElement; }) {
+                  Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
+                     " bytes (reserves ", sizeof(typename R::Type::Type), 
+                     " bytes per indirection per element on the heap footer)");
+                  heap_size_per_element_times_indirection += sizeof(typename R::Type::Type);
+               }
+               else {
+                  Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
+                     " bytes (reserves ", sizeof(typename R::Type), 
+                     " bytes per indirection on the heap footer)");
+                  heap_size_per_indirection += sizeof(typename R::Type);
+               }
+            }
+            else if constexpr (requires { R::AllocatedPerElement; }) {
+               if constexpr (requires { R::Type::AllocatedPerIndirection; }) {
+                  Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
+                     " bytes (reserves ", sizeof(typename R::Type::Type),
+                     " bytes per indirection per element on the heap footer)");
+                  heap_size_per_element_times_indirection += sizeof(typename R::Type::Type);
+               }
+               else {
+                  Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
+                     " bytes (reserves ", sizeof(typename R::Type),
+                     " bytes per element on the heap footer)");
+                  heap_size_per_element += sizeof(typename R::Type);
+               }
+            }
+            else {
+               Logger::Info(NameOf<C>(), " component is: ", sizeof(C),
+                  " bytes (reserves ", sizeof(R), 
+                  " bytes on the heap header)");
+               heap_size += sizeof(R);
+            }
+         }
+      }
+
+      size += sizeof(C);
+   });
+
+   Logger::Info("-----------------------------------------");
+   Logger::Info("For a total of ", size,
+      " bytes in components (should be optimized-out as empty bases)");
+   Logger::Info("For a total of ", stack_size,
+      " bytes on the stack");
+   Logger::Info("For a total of ", heap_size,
+      " bytes on the heap header");
+   Logger::Info("For a total of ", heap_size_per_element,
+      " bytes per element on the heap footer");
+   Logger::Info("For a total of ", heap_size_per_indirection,
+      " bytes per indirection on the heap footer");
+   Logger::Info("For a total of ", heap_size_per_element_times_indirection,
+      " bytes per indirection per element on the heap footer");
+}
 
 namespace doctest
 {

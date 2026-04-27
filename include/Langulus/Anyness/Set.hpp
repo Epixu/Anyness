@@ -51,13 +51,6 @@ namespace Langulus::Anyness::Inner
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
       Com::State::Sorted<SORT>         // Enable/disable ordered set    
-      /*Com::StateStack<                 // Variable state
-         DefineState::Typed<>,         // Can be type-constrained       
-         DefineState::Sorted<SORT>,    // Maybe unsorted                
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >*/
    >;
 
    ///                                                                        
@@ -66,9 +59,10 @@ namespace Langulus::Anyness::Inner
    /// change in-place. This also means that they are only const-iteratable.  
    template<StateValue SORTED>
    struct Set : SetBase<SORTED> {
-      using CTTI_Set      = Yes<>;
-      using CTTI_Deep     = Yes<>;
-      using CTTI_MapsTo   = Text;
+      using CTTI_ReflectAs = Set;
+      using CTTI_Set       = Yes<>;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_MapsTo    = Text;
 
       using Base          = SetBase<SORTED>;
       using DeepType      = Many;
@@ -77,9 +71,6 @@ namespace Langulus::Anyness::Inner
       using HandleMutType = Handle;
       using Pick          = Handle;
       using PickMut       = Handle;
-
-      /*using DefineState::Typed<>::IsTypeConstrained;
-      using DefineState::Typed<>::EnableTypeConstrained;*/
 
       constexpr Set() noexcept {
          this->ConstructDefault();
@@ -98,26 +89,20 @@ namespace Langulus::Anyness::Inner
       /// emplaces all A in the container                                     
       template<class A1, class...AN>
       constexpr Set(A1&& a1, AN&&...an) {
-         if constexpr (sizeof...(AN) == 0) {
-            if constexpr (CT::Set<A1>) {
-               LglsAssumeUser((Same<Deint<A1>, Set>),
-                  "Ambiguous use of construction "
-                  "- you should use tag-dispatch with first argument either Absorb "
-                  "(if you want to overwrite the container itself) or Piecewise "
-                  "(if you want to overwrite the first item) in order to clearly "
-                  "state your intent. Absorb will be used by default!"
-               );
-               this->Absorb(LglsFwd(a1));
-            }
-            else {
-               this->ConstructDefault();
-               this->Merge(LglsFwd(a1));
-               //this->EmplaceConstruct(LglsFwd(a1));
-            }
+         if constexpr (sizeof...(AN) == 0 and CT::Set<A1>) {
+            LglsAssumeUser((Same<Deint<A1>, Set>),
+               "Ambiguous use of construction "
+               "- you should use tag-dispatch with first argument either Absorb "
+               "(if you want to overwrite the container itself) or Piecewise "
+               "(if you want to overwrite the first item) in order to clearly "
+               "state your intent. Absorb will be used by default!"
+            );
+            this->Absorb(LglsFwd(a1));
          }
          else {
             this->ConstructDefault();
-            this->Insert(LglsFwd(a1), LglsFwd(an)...);
+            this->Merge(LglsFwd(a1));
+           (this->Merge(LglsFwd(an)), ...);
          }
       }
       
@@ -128,19 +113,17 @@ namespace Langulus::Anyness::Inner
             this->Absorb(LglsFwd(a1));
          else {
             this->ConstructDefault();
-            this->Concat(LglsFwd(a1), LglsFwd(an)...);
+            this->MergeRange(LglsFwd(a1));
+           (this->MergeRange(LglsFwd(an)), ...);
          }
       }
       
       /// Construction that emplaces all arguments inside                     
       template<class A1, class...AN>
       constexpr Set(Inner::Piecewise, A1&& a1, AN&&...an) {
-         //if constexpr (sizeof...(AN) == 0)
-         //   this->EmplaceConstruct(LglsFwd(a1));
-         //else {
-            this->ConstructDefault();
-            this->Merge(LglsFwd(a1), LglsFwd(an)...);
-         //}
+         this->ConstructDefault();
+         this->Merge(LglsFwd(a1));
+        (this->Merge(LglsFwd(an)), ...);
       }
       
       /// Assignment                                                          

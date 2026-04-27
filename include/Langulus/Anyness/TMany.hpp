@@ -32,17 +32,9 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<>,               // Allows comparisons            
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
-      Com::State::Future<>,            // Allows future linking         
-      Com::State::Past<>               // Allows past linking           
-      /*Com::StateStack<                 // Variable state
-         DefineState::Typed<State::Enabled>, // Always type-constrained 
-         DefineState::Future<>,        // Adds a 'missing future' state 
-         DefineState::Past<>,          // Adds a 'missing past' state   
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Or<>,            // Adds 'or' state               
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >*/
+      Com::State::Future<>,            // Toggle future linking         
+      Com::State::Past<>,              // Toggle past linking           
+      Com::State::Or<>                 // Toggle disjunction            
    >;
 }
 
@@ -59,8 +51,6 @@ namespace Langulus::Anyness
 
       using Base          = Inner::TManyBase<T>;
       using DeepType      = Any;
-
-      using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       constexpr TMany() noexcept {
          this->ConstructDefault();

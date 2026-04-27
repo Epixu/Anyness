@@ -549,7 +549,7 @@ namespace Langulus::Anyness::Component
          decltype(auto) rhs = LglsFwd(intent.what);
          const auto indirections = self.template GetIndirections<SID>();
          const auto entries_size = sizeof(AllocationPtr) * indirections;
-         const auto entries = self.template GetEntriesInner<SID>();
+         const auto entries = self.template GetEntries<SID>();
 
          if constexpr (CT::Handle<I>) {
             // Copy all entries and reference them, unless we're moving 
@@ -561,9 +561,9 @@ namespace Langulus::Anyness::Component
             );
 
             if constexpr (not CT::Disowned<I>
-            and requires { rhs.template GetEntriesInner<SID>(); }) {
+            and requires { rhs.template GetEntries<SID>(); }) {
                // We can copy entries from RHS handle                   
-               auto entries_src = rhs.template GetEntriesInner<SID>();
+               auto entries_src = rhs.template GetEntries<SID>();
                if (entries_src) {
                   memcpy(DecvqAllCast(entries), entries_src, entries_size);
 

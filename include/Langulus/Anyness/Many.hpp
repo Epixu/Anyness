@@ -58,17 +58,9 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<>,               // Allows comparisons            
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
-      Com::State::Future<>,            // Allows future linking         
-      Com::State::Past<>               // Allows past linking           
-      /*Com::StateStack<                 // Variable state                
-         DefineState::Typed<>,         // Can be type-constrained       
-         DefineState::Future<>,        // Adds a 'missing future' state 
-         DefineState::Past<>,          // Adds a 'missing past' state   
-         DefineState::Compressed<>,    // Adds 'compressed' state       
-         DefineState::Encrypted<>,     // Adds 'encrypted' state        
-         DefineState::Or<>,            // Adds 'or' state               
-         DefineState::Tracked<>        // Adds 'tracked' state          
-      >*/
+      Com::State::Future<>,            // Toggle future linking         
+      Com::State::Past<>,              // Toggle past linking           
+      Com::State::Or<>                 // Toggle disjunction            
    >;
 }
 
@@ -82,14 +74,12 @@ namespace Langulus::Anyness
    /// linking, and so on. If you want to contain a single element, consider  
    /// using Any instead, for a bit shorter and faster representation.        
    struct Many : Inner::ManyBase {
-      using CTTI_Deep     = Yes<>;
-      using CTTI_MapsTo   = Text;
+      using CTTI_ReflectAs = Many;
+      using CTTI_Deep      = Yes<>;
+      using CTTI_MapsTo    = Text;
 
-      using Base          = Inner::ManyBase;
-      using DeepType      = Many;
-
-      /*using DefineState::Typed<>::IsTypeConstrained;
-      using DefineState::Typed<>::EnableTypeConstrained;*/
+      using Base        = Inner::ManyBase;
+      using DeepType    = Many;
 
       constexpr Many() noexcept {
          this->ConstructDefault();

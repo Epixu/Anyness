@@ -35,13 +35,6 @@ namespace Langulus::Anyness::Inner
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
       Com::State::Sorted<SORT>            // Toggle ordered map         
-      /*Com::StateStack<                    // Variable state             
-         DefineState::Typed<State::Enabled>, // Always type-constrained 
-         DefineState::Sorted<SORT>,       // Maybe unsorted             
-         DefineState::Compressed<>,       // Adds 'compressed' state    
-         DefineState::Encrypted<>,        // Adds 'encrypted' state     
-         DefineState::Tracked<>           // Adds 'tracked' state       
-      >*/
    >;
 }
 
@@ -55,8 +48,8 @@ namespace Langulus::Anyness
    /// Values, on the other hand, are mutable.                                
    template<CT::NotVoid K, CT::NotVoid V, StateValue SORT>
    struct TMap : Inner::TMapBase<K, V, SORT> {
-      using CTTI_Map       = Yes<>;
       using CTTI_ReflectAs = Map;
+      using CTTI_Map       = Yes<>;
       using CTTI_Deep      = Yes<>;
       using CTTI_MapsTo    = Text;
       using CTTI_Typed     = Types<K, V>;

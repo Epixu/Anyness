@@ -159,9 +159,6 @@ void Map_CheckState_Default(C const& map, bool typed = false) {
       static_assert(Exact<typename C::Key, K>);
       static_assert(Exact<typename C::Val, V>);
       Map_Helper_TestType<K, V>(map);
-
-      if constexpr (requires { map.GetState(); })
-         REQUIRE(map.GetState() == State::Typed);
    }
    else if (not typed) {
       REQUIRE_FALSE(map.IsKeyTyped());
@@ -173,17 +170,12 @@ void Map_CheckState_Default(C const& map, bool typed = false) {
       REQUIRE      (map.GetValType() == nullptr);
       REQUIRE_FALSE(map.IsValSparse());
       REQUIRE_FALSE(map.IsValDeep());
-
-      if constexpr (requires { map.GetState(); })
-         REQUIRE(map.GetState() == State::Default);
    }
    else {
       Map_Helper_TestType<K, V>(map);
-
-      if constexpr (requires { map.GetState(); })
-         REQUIRE(map.GetState() == State::Default);
    }
 
+   REQUIRE      (map.IsDefaultState());
    REQUIRE      (map.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (map.IsConstant());
    REQUIRE_FALSE(map.IsValid());
