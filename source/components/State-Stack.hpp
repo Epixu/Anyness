@@ -30,29 +30,21 @@ namespace Langulus::Anyness::Component
    struct /*LANGULUS_EBCO*/ StateStack /*: STATES...*/ {
       using CTTI_Component = Yes<>;
       using CTTI_ReflectAs = void;
-      using StateList = Types<STATES...>;
-      using StateType = Tif<sizeof...(STATES) < 8, uint8_t, uint16_t>;
 
-      static constexpr int       ComponentPrecedence = 8000;
-      static constexpr StateType StateCount = sizeof...(STATES);
-      static constexpr bool      HasStates = StateCount > 0;
+      static constexpr int    ComponentPrecedence = 8000;
+      static constexpr size_t StateCount = sizeof...(STATES);
+      static constexpr bool   HasStates = StateCount > 0;
+      template<CT::State S>
+      static constexpr bool   HasState = HasStates and AkinAsOneOf<S, STATES...>;
+      static constexpr bool   CanBeMissing = CheckCanBeMissing();
 
       //static_assert(StateCount > 0, "Has to have at least one state");
       static_assert(StateCount < 16, "Too many states");
 
-   protected:
-      LglsComEmplacement(friend);
-      LglsComRemoval(friend);
-      //LglsComTypedStack(friend);
-
-      LglsStateCompressed(friend);
-      LglsStateEncrypted(friend);
-      LglsStateFuture(friend);
-      LglsStateOr(friend);
-      LglsStatePast(friend);
-      LglsStateSorted(friend);
-      LglsStateTracked(friend);
-      LglsStateTyped(friend);
+      struct StateWrapper;
+      using StateList      = Types<STATES...>;
+      using StateType      = Tif<StateCount < 8, uint8_t, uint16_t>;
+      using StackRequest   = Tif<HasStates, StateWrapper, void>;
 
       ///                                                                     
       /// The bitfield capable of containing all variable states              
@@ -95,6 +87,68 @@ namespace Langulus::Anyness::Component
          }
       };
 
+      
+      /// Get the current state of the container                              
+      constexpr auto GetState(this auto const& self) noexcept
+      -> StateWrapper requires HasStates {
+         return self.GetStateInner();
+      }
+
+      /// Get the relevant state when relaying one container to another.      
+      /// Relevant states exclude size and type constraints, as well as       
+      /// tracking in order to avoid changes in behavior due to debugging.    
+      ///   @return the current unconstrained container state                 
+      constexpr auto GetUnconstrainedState(this auto const& self) noexcept
+      -> StateWrapper requires HasStates {
+         StateWrapper r = self.GetStateInner();
+         StateList::ForEach([&r]<class S>{
+            if constexpr (S::UID == StateUid::Typed or S::UID == StateUid::Tracked)
+               r -= S {};
+         });
+         return r;
+      }
+
+      /// Check if container is marked as missing past/future                 
+      ///   @return true if this container is marked as missing               
+      constexpr bool IsMissing(this auto const& self) noexcept requires CanBeMissing {
+         bool r = false;
+         StateList::ForEachConstOr([&]<class S>{
+            if constexpr (S::UID == StateUid::Past or S::UID == StateUid::Future) {
+               if constexpr (S::Static) {
+                  if constexpr (S::Enable) {
+                     r = true;
+                     return true;
+                  }
+                  else return No {};
+               }
+               else {
+                  r |= self.GetStateInner() & S {};
+                  return No {};
+               }
+            }
+         });
+         return r;
+      }
+
+      /// Check if container has either created elements, or a relevant state 
+      ///   @return true if either contains state, or has stuff inserted      
+      constexpr bool IsValid(this auto const& self) noexcept requires HasStates {
+         return static_cast<bool>(self.GetUnconstrainedState());
+      }
+
+   protected:
+      LglsComEmplacement(friend);
+      LglsComRemoval(friend);
+
+      LglsStateCompressed(friend);
+      LglsStateEncrypted(friend);
+      LglsStateFuture(friend);
+      LglsStateOr(friend);
+      LglsStatePast(friend);
+      LglsStateSorted(friend);
+      LglsStateTracked(friend);
+      LglsStateTyped(friend);
+
       /// Get the value of a specific state                                   
       template<CT::State B>
       static StateType GetStateBit() requires HasStates {
@@ -130,10 +184,6 @@ namespace Langulus::Anyness::Component
          return result;
       }
 
-      template<CT::State S>
-      static constexpr bool HasState = HasStates and AkinAsOneOf<S, STATES...>;
-      static constexpr bool CanBeMissing = CheckCanBeMissing();
-
       /// Clear the state to the default value                                
       constexpr void ResetState(this auto& self) noexcept requires HasStates {
          self.SetStateInner(GetDefaultState());
@@ -165,59 +215,6 @@ namespace Langulus::Anyness::Component
                from.ResetState();
          }
          else self.SetStateInner(C::GetDefaultState());
-      }
-      
-   public:
-      using StackRequest = Tif<HasStates, StateWrapper, void>;
-
-      /// Get the current state of the container                              
-      constexpr auto GetState(this auto const& self) noexcept
-      -> StateWrapper requires HasStates {
-         return self.GetStateInner();
-      }
-
-      /// Get the relevant state when relaying one container to another.      
-      /// Relevant states exclude size and type constraints, as well as       
-      /// tracking in order to avoid changes in behavior due to debugging.    
-      ///   @return the current unconstrained container state                 
-      constexpr auto GetUnconstrainedState(this auto const& self) noexcept
-      -> StateWrapper requires HasStates {
-         StateType i = 0;
-         StateType r = self.GetStateInner();
-         StateList::ForEach([&r,&i]<class S>{
-            if constexpr (S::UID == StateUid::Typed or S::UID == StateUid::Tracked)
-               r &= ~(StateType {1} << i);
-            ++i;
-         });
-         return r;
-      }
-
-      /// Check if container is marked as missing past/future                 
-      ///   @return true if this container is marked as missing               
-      constexpr bool IsMissing(this auto const& self) noexcept requires CanBeMissing {
-         bool r = false;
-         StateList::ForEachConstOr([&]<class S>{
-            if constexpr (S::UID == StateUid::Past or S::UID == StateUid::Future) {
-               if constexpr (S::Static) {
-                  if constexpr (S::Enable) {
-                     r = true;
-                     return true;
-                  }
-                  else return No {};
-               }
-               else {
-                  r |= self.GetStateInner() & S {};
-                  return No {};
-               }
-            }
-         });
-         return r;
-      }
-
-      /// Check if container has either created elements, or a relevant state 
-      ///   @return true if either contains state, or has stuff inserted      
-      constexpr bool IsValid(this auto const& self) noexcept requires HasStates {
-         return static_cast<bool>(self.GetUnconstrainedState());
       }
    };
 }

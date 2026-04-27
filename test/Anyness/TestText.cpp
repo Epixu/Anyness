@@ -6,6 +6,7 @@
 /// SPDX-License-Identifier: GPL-3.0-or-later                                 
 ///                                                                           
 #include "../Main.hpp"
+#include "any/TestAnyCommon.hpp"
 #include <Langulus/Anyness/Text.hpp>
 #include <Langulus/Anyness/SerializeText.hpp>
 
@@ -200,31 +201,9 @@ TEST_CASE_TEMPLATE("Testing text containers", T,
    static_assert(    requires (T pack, E item) { pack.ForEach([](const int&) {}); });
    static_assert(    requires (T pack, E item) { pack.ForEachRev([](const int&) {}); });
 
-   GIVEN("Gap test") {
-      alignas(T) char unininitialized[sizeof(T)];
-      memset(unininitialized, 254, sizeof(unininitialized));
-      new (unininitialized) T {};
-      for (auto b : unininitialized) {
-         REQUIRE(b != 254);
-      }
-      Logger::Info("Size of ", NameOf<::std::string>(), " container is: ", sizeof(::std::string), " bytes");
-      auto s = Logger::Section("Size of ", NameOf<T>(), " container is: ", sizeof(T), " bytes");
-      size_t accumulated_size = 0;
-      size_t accumulated_stack_size = 0;
-      T::ComponentList::ForEach([&]<class C> {
-         if constexpr (requires { typename C::StackRequest; }) {
-            Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes (reserves ", sizeof(typename C::StackRequest), " bytes on the stack)");
-            accumulated_stack_size += sizeof(typename C::StackRequest);
-         }
-         else Logger::Info(NameOf<C>(), " component is: ", sizeof(C), " bytes");
-         accumulated_size += sizeof(C);
-      });
-      Logger::Info("-----------------------------------------");
-      Logger::Info("For a total of ", accumulated_size, " bytes in components (should be optimized-out as empty bases)");
-      Logger::Info("For a total of ", accumulated_stack_size, " bytes on the stack");
-      static_assert(sizeof(T) <= sizeof(::std::string));
-   }
-   
+   Common_GapTest<T, ::std::string>();
+   static_assert(sizeof(T) <= sizeof(::std::string));
+
    GIVEN("Default text container") {
       T text;
 
