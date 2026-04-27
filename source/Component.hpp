@@ -184,27 +184,23 @@ namespace Langulus::Anyness
       using T = POINTER_TYPE;
    };
 
-   namespace State
-   {
-      enum StateValue {
-         Variable = 0,
-         Enabled = 1,
-         Disabled = 2
-      };
-   }
+   enum class StateValue {
+      Variable = 0,
+      Enabled  = 1,
+      Disabled = 2
+   };
 
-   namespace DefineState
-   {
-      struct Default;
-      template<State::StateValue = State::Variable> struct Compressed;
-      template<State::StateValue = State::Variable> struct Encrypted;
-      template<State::StateValue = State::Variable> struct Future;
-      template<State::StateValue = State::Variable> struct Or;
-      template<State::StateValue = State::Variable> struct Past;
-      template<State::StateValue = State::Variable> struct Sorted;
-      template<State::StateValue = State::Variable> struct Tracked;
-      template<State::StateValue = State::Variable> struct Typed;
-   }
+   enum class StateUid {
+      Invalid,
+      Compressed,
+      Encrypted,
+      Future,
+      Past,
+      Or,
+      Sorted,
+      Tracked,
+      Typed
+   };
 
    namespace Component
    {
@@ -332,17 +328,94 @@ namespace Langulus::Anyness
          template<Cid, Cid...> modifier struct IterationOperators
 
       /// States                                                              
-      template<CT::State...> struct StateHeap;
+      /*template<CT::State...> struct StateHeap;
       #define LglsComStateHeap(modifier) \
-         template<CT::State...> modifier struct StateHeap
+         template<CT::State...> modifier struct StateHeap*/
 
       template<CT::State...> struct StateStack;
       #define LglsComStateStack(modifier) \
          template<CT::State...> modifier struct StateStack
 
-      template<CT::State...> struct StateStatic;
+      /*template<CT::State...> struct StateStatic;
       #define LglsComStateStatic(modifier) \
-         template<CT::State...> modifier struct StateStatic
+         template<CT::State...> modifier struct StateStatic*/
+
+      namespace State
+      {
+         template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Compressed;
+         #define LglsStateCompressed(modifier) \
+            template<StateValue, Cid, Cid...> modifier struct State::Compressed
+
+         template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Encrypted;
+         #define LglsStateEncrypted(modifier) \
+            template<StateValue, Cid, Cid...> modifier struct State::Encrypted
+
+         template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Future;
+         #define LglsStateFuture(modifier) \
+            template<StateValue, Cid, Cid...> modifier struct State::Future
+
+         template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Or;
+         #define LglsStateOr(modifier) \
+            template<StateValue, Cid, Cid...> modifier struct State::Or
+
+         template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Past;
+         #define LglsStatePast(modifier) \
+            template<StateValue, Cid, Cid...> modifier struct State::Past
+
+         template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Sorted;
+         #define LglsStateSorted(modifier) \
+            template<StateValue, Cid, Cid...> modifier struct State::Sorted
+
+         template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Tracked;
+         #define LglsStateTracked(modifier) \
+            template<StateValue, Cid, Cid...> modifier struct State::Tracked
+
+         template<StateValue = StateValue::Variable, Cid = 0, Cid...> struct Typed;
+         #define LglsStateTyped(modifier) \
+            template<StateValue, Cid, Cid...> modifier struct State::Typed
+      }
+
+      namespace StateInner
+      {
+         /// Go through all components and accumulate their state requests    
+         /// into a StateStack component                                      
+         template<CT::Component C1, CT::Component...CN>
+         consteval auto DefineStates() {
+            if constexpr (requires { typename C1::StateRequest; }) {
+               if constexpr (CT::NotVoid<typename C1::StateRequest>) {
+                  static_assert(CT::State<typename C1::StateRequest>);
+                  Types<typename C1::StateRequest> first;
+
+                  if constexpr (sizeof...(CN))
+                     return first + DefineStates<CN...>();
+                  else
+                     return first;
+               }
+               else {
+                  if constexpr (sizeof...(CN))
+                     return DefineStates<CN...>();
+                  else
+                     return NoTypes {};
+               }
+            }
+            else {
+               if constexpr (sizeof...(CN))
+                  return DefineStates<CN...>();
+               else
+                  return NoTypes {};
+            }
+         }
+
+         template<CT::State...STATES>
+         consteval auto DecideStateComponent(Types<STATES...>) -> StateStack<STATES...>;
+      }
+
+      template<CT::Component...COMPONENTS>
+      using DecideStateComponent = decltype(
+         StateInner::DecideStateComponent(
+            decltype(StateInner::DefineStates<COMPONENTS...>()) {}
+         )
+      );
 
       /// Comparison, search, pattern matching                                
       template<Cid = 0, bool HASH = true, Cid...> struct Comparison;
@@ -466,7 +539,6 @@ namespace Langulus::Anyness
             return false;
       }
 
-
       /// std::tuple default-initializes variables to zero, so I use this     
       /// wrapper to get back to the biblically accurate behavior             
       template<class T>
@@ -492,12 +564,20 @@ namespace Langulus::Anyness
       template<class C1, class...CN>
       consteval auto DefineStack() {
          if constexpr (requires { typename C1::StackRequest; }) {
-            Types<StackVariable<typename C1::StackRequest>> first;
+            if constexpr (CT::NotVoid<typename C1::StackRequest>) {
+               Types<StackVariable<typename C1::StackRequest>> first;
 
-            if constexpr (sizeof...(CN))
-               return first + DefineStack<CN...>();
-            else
-               return first;
+               if constexpr (sizeof...(CN))
+                  return first + DefineStack<CN...>();
+               else
+                  return first;
+            }
+            else {
+               if constexpr (sizeof...(CN))
+                  return DefineStack<CN...>();
+               else
+                  return NoTypes{};
+            }
          }
          else {
             if constexpr (sizeof...(CN))
@@ -506,7 +586,7 @@ namespace Langulus::Anyness
                return NoTypes {};
          }
       }
-
+      
       /// Go through all components until PICK is reached, and accumulate     
       /// the offset up to that point, to get the index in the stack tuple    
       template<class PICK, class C1, class...CN>
@@ -518,8 +598,10 @@ namespace Langulus::Anyness
             return 0;
          else {
             size_t offset = 0;
-            if constexpr (requires { typename C1::StackRequest; })
-               ++offset;
+            if constexpr (requires { typename C1::StackRequest; }) {
+               if constexpr (CT::NotVoid<typename C1::StackRequest>)
+                  ++offset;
+            }
          
             if constexpr (sizeof...(CN))
                return offset + GetStackOffset<PICK, CN...>();

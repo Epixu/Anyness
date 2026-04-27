@@ -7,7 +7,6 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
-#include "../states/Default.hpp"
 #include "../states/Typed.hpp"
 #include "../states/Past.hpp"
 #include "../states/Future.hpp"
@@ -23,30 +22,37 @@ namespace Langulus::Anyness::Component
    /// Adds a variable state to a container.                                  
    /// Increases the container's bytesize to the smallest possible integer    
    /// capable of containing all state bits.                                  
+   /// The states will be gathered from StateRequests in other components.    
+   /// There can only be one StateStack/StateHeap/StateStatic component in    
+   /// a container.                                                           
    ///   @tparam STATES... the possible states                                
    template<CT::State...STATES>
-   struct LANGULUS_EBCO StateStack : STATES... {
+   struct /*LANGULUS_EBCO*/ StateStack /*: STATES...*/ {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
       using StateList = Types<STATES...>;
       using StateType = Tif<sizeof...(STATES) < 8, uint8_t, uint16_t>;
 
-      //static constexpr Cid Id = ID;
-      static constexpr int ComponentPrecedence = 4000;
+      static constexpr int       ComponentPrecedence = 8000;
       static constexpr StateType StateCount = sizeof...(STATES);
-      static_assert(StateCount > 0, "Has to have at least one state");
+      static constexpr bool      HasStates = StateCount > 0;
+
+      //static_assert(StateCount > 0, "Has to have at least one state");
       static_assert(StateCount < 16, "Too many states");
 
    protected:
-      LglsComRemoval(friend);
-      template<State::StateValue>   friend struct DefineState::Typed;
-      template<State::StateValue>   friend struct DefineState::Tracked;
-      template<State::StateValue>   friend struct DefineState::Sorted;
-      template<State::StateValue>   friend struct DefineState::Past;
-      template<State::StateValue>   friend struct DefineState::Or;
-      template<State::StateValue>   friend struct DefineState::Future;
-      template<State::StateValue>   friend struct DefineState::Encrypted;
-      template<State::StateValue>   friend struct DefineState::Compressed;
       LglsComEmplacement(friend);
+      LglsComRemoval(friend);
+      //LglsComTypedStack(friend);
+
+      LglsStateCompressed(friend);
+      LglsStateEncrypted(friend);
+      LglsStateFuture(friend);
+      LglsStateOr(friend);
+      LglsStatePast(friend);
+      LglsStateSorted(friend);
+      LglsStateTracked(friend);
+      LglsStateTyped(friend);
 
       ///                                                                     
       /// The bitfield capable of containing all variable states              
@@ -70,9 +76,9 @@ namespace Langulus::Anyness::Component
             return mState & StateStack::template GetStateBit<S>();
          }
          
-         constexpr bool operator == (DefineState::Default) const noexcept {
+         /*constexpr bool operator == (DefineState::Default) const noexcept {
             return mState == 0;
-         }
+         }*/
          
          template<CT::State S>
          constexpr bool operator == (S) const noexcept {
@@ -91,7 +97,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the value of a specific state                                   
       template<CT::State B>
-      static StateType GetStateBit() {
+      static StateType GetStateBit() requires HasStates {
          StateType i = 0;
          StateType accumulator = 0;
          StateList::ForEach([&]<class S>{
@@ -103,7 +109,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get the default set of state bits                                   
-      static consteval StateType GetDefaultState() {
+      static consteval StateType GetDefaultState() requires HasStates {
          StateType i = 0;
          StateType accumulator = 0;
          StateList::ForEach([&]<class S>{
@@ -115,7 +121,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Check if container has future/past linking point states             
-      static consteval bool CheckCanBeMissing() {
+      static consteval bool CheckCanBeMissing() requires HasStates {
          bool result = false;
          StateList::ForEach([&result]<class S>{
             if constexpr (requires { S::CanBeMissing; })
@@ -125,32 +131,32 @@ namespace Langulus::Anyness::Component
       }
 
       template<CT::State S>
-      static constexpr bool HasState = AkinAsOneOf<S, STATES...>;
+      static constexpr bool HasState = HasStates and AkinAsOneOf<S, STATES...>;
       static constexpr bool CanBeMissing = CheckCanBeMissing();
 
       /// Clear the state to the default value                                
-      constexpr void ResetState(this auto& self) noexcept {
+      constexpr void ResetState(this auto& self) noexcept requires HasStates {
          self.SetStateInner(GetDefaultState());
       }
 
       /// Get the contained state (inner)                                     
-      constexpr auto& GetStateInner(this auto&& self) noexcept {
+      constexpr auto& GetStateInner(this auto&& self) noexcept requires HasStates {
          return self.template AccessStack<StateStack>();
       }
 
       /// Set the contained state (inner)                                     
-      constexpr void SetStateInner(this auto& self, const StateType& type) noexcept {
+      constexpr void SetStateInner(this auto& self, const StateType& type) noexcept requires HasStates {
          self.GetStateInner().mState = type;
       }
       
       /// Default-initialize state                                            
-      constexpr void ConstructDefault(this auto& self) noexcept {
+      constexpr void ConstructDefault(this auto& self) noexcept requires HasStates {
          self.ResetState();
       }
       
       /// Transfer from any kind of container, respecting intents             
       ///   @param intent the intent and container to transfer from           
-      template<CT::Intent I, CT::Container C> requires CT::Container<I>
+      template<CT::Intent I, CT::Container C> requires (HasStates and CT::Container<I>)
       void ConstructFrom(this C& self, I&& intent) {
          decltype(auto) from = LglsFwd(intent.what);
          if constexpr (requires { from.GetStateInner(); }) {
@@ -162,10 +168,11 @@ namespace Langulus::Anyness::Component
       }
       
    public:
-      using StackRequest = StateWrapper;
+      using StackRequest = Tif<HasStates, StateWrapper, void>;
 
       /// Get the current state of the container                              
-      constexpr auto GetState(this auto const& self) noexcept -> StateWrapper {
+      constexpr auto GetState(this auto const& self) noexcept
+      -> StateWrapper requires HasStates {
          return self.GetStateInner();
       }
 
@@ -173,30 +180,43 @@ namespace Langulus::Anyness::Component
       /// Relevant states exclude size and type constraints, as well as       
       /// tracking in order to avoid changes in behavior due to debugging.    
       ///   @return the current unconstrained container state                 
-      constexpr auto GetUnconstrainedState(this auto const& self) noexcept -> StateWrapper {
-         auto r = self.GetStateInner();
-         r -= State::Typed;
-         DEBUGGERY(r -= State::Tracked);
+      constexpr auto GetUnconstrainedState(this auto const& self) noexcept
+      -> StateWrapper requires HasStates {
+         StateType i = 0;
+         StateType r = self.GetStateInner();
+         StateList::ForEach([&r,&i]<class S>{
+            if constexpr (S::UID == StateUid::Typed or S::UID == StateUid::Tracked)
+               r &= ~(StateType {1} << i);
+            ++i;
+         });
          return r;
       }
 
       /// Check if container is marked as missing past/future                 
       ///   @return true if this container is marked as missing               
       constexpr bool IsMissing(this auto const& self) noexcept requires CanBeMissing {
-         if constexpr (HasState<DefineState::Past   <State::Enabled >>
-                    or HasState<DefineState::Future <State::Enabled >>) {
-            (void)self;
-            return true;
-         }
-         else {
-            auto& state = self.GetStateInner();
-            return state & State::Past or state & State::Future;
-         }
+         bool r = false;
+         StateList::ForEachConstOr([&]<class S>{
+            if constexpr (S::UID == StateUid::Past or S::UID == StateUid::Future) {
+               if constexpr (S::Static) {
+                  if constexpr (S::Enable) {
+                     r = true;
+                     return true;
+                  }
+                  else return No {};
+               }
+               else {
+                  r |= self.GetStateInner() & S {};
+                  return No {};
+               }
+            }
+         });
+         return r;
       }
 
       /// Check if container has either created elements, or a relevant state 
       ///   @return true if either contains state, or has stuff inserted      
-      constexpr bool IsValid(this auto const& self) noexcept {
+      constexpr bool IsValid(this auto const& self) noexcept requires HasStates {
          return static_cast<bool>(self.GetUnconstrainedState());
       }
    };

@@ -29,6 +29,7 @@ namespace Langulus::Anyness::Component
    struct TypedStatic {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
+      using CTTI_ReflectAs = void;
 
       static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -3000;

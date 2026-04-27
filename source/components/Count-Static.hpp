@@ -35,6 +35,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, auto COUNT, Cid...SHARED>
    struct CountStatic {
       using CTTI_Component  = Yes<>;
+      using CTTI_ReflectAs  = void;
       using CTTI_Contiguous = Maybe<COUNT == 1>;
 
       static constexpr Cid  Id = ID;

@@ -21,6 +21,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, class T, Cid...SHARED>
    struct ReserveEmergent {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
       using ReserveType = T;
 
       static constexpr Cid Id = ID;

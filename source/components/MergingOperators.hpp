@@ -20,6 +20,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, class AS, Cid...SHARED>
    struct MergingOperators {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
 
       static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 3000;

@@ -9,48 +9,57 @@
 #include "../Container.hpp"
 
 
-namespace Langulus::Anyness::DefineState
+namespace Langulus::Anyness::Component::State
 {
    ///                                                                        
    /// If enabled, data is considered disjunct instead of conjunct.           
    /// Useful to encode alternative arguments or branched execution.          
    /// This simple bit is crucial for handling ambiguity.                     
    ///   @tparam V decides whether state is dynamic or static                 
-   template<State::StateValue V>
+   template<StateValue V, Cid ID, Cid...SHARED>
    struct Or {
-      using CTTI_State = Yes<>;
-      static constexpr bool Static  = V != State::Variable;
-      static constexpr bool Dynamic = V == State::Variable;
-      static constexpr bool Enable  = V == State::Enabled;
+      using CTTI_Component = Yes<>;
+      using CTTI_State     = Yes<>;
+      using CTTI_ReflectAs = void;
+
+      static constexpr Cid  Id = ID;
+      static constexpr int  ComponentPrecedence = 3000;
+      static constexpr bool Static  = V != StateValue::Variable;
+      static constexpr bool Dynamic = not Static;
+      static constexpr bool Enable  = V == StateValue::Enabled;
       
+      using StateRequest = Tif<Dynamic, Or, void>;
+
       // Every state needs a unique ID in order to find matches even    
       // when template arguments are different                          
-      static constexpr int UID = 3;
+      static constexpr StateUid UID = StateUid::Or;
 
+      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
       constexpr bool IsOr() const requires Static {
          return Enable;
       }
 
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
       constexpr bool IsOr(this const C& self) noexcept requires Dynamic {
-         return self.GetStateInner() & Or {};
+         return self.GetStateInner() & Or<V, ID, SHARED...> {};
       }
 
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
       auto EnableOr(this C& self) noexcept -> C& requires Dynamic {
-         self.GetStateInner() += Or {};
+         self.GetStateInner() += Or<V, ID, SHARED...> {};
          return self;
       }
 
-      template<CT::Container C>
+      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
       auto DisableOr(this C& self) noexcept -> C& requires Dynamic {
-         self.GetStateInner() -= Or {};
+         self.GetStateInner() -= Or<V, ID, SHARED...> {};
          return self;
       }
    };
 }
 
-namespace Langulus::Anyness::State
+/*namespace Langulus::Anyness::State
 {
    constexpr DefineState::Or<> Or = {};
 }
+*/

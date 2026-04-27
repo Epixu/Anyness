@@ -26,6 +26,8 @@ namespace Langulus::Anyness::Component
    template<Cid ID, class T, Cid...SHARED>
    struct CountHeap {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
+
       using CountType   = T;
       using IndexType   = Index::At<T>;
       using HeapRequest = T;

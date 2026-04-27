@@ -22,6 +22,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, Cid...SHARED>
    struct IterationOperators {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
 
       static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 3000;

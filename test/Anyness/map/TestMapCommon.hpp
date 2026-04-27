@@ -73,7 +73,7 @@
 
 namespace doctest
 {
-   template<Anyness::State::StateValue SORT>
+   template<Anyness::StateValue SORT>
    struct StringMaker<Anyness::Inner::Map<SORT>> {
       static String convert(Anyness::Inner::Map<SORT> const& value) {
          return toString(static_cast<::std::string>(
@@ -82,7 +82,7 @@ namespace doctest
       }
    };
 
-   template<CT::NotVoid K, CT::NotVoid V, Anyness::State::StateValue SORT>
+   template<CT::NotVoid K, CT::NotVoid V, Anyness::StateValue SORT>
    struct StringMaker<TMap<K, V, SORT>> {
       static String convert(TMap<K, V, SORT> const& value) {
          return toString(static_cast<::std::string>(

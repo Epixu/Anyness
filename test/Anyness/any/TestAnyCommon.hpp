@@ -145,26 +145,16 @@ void Common_CheckState_Default(const C& any, bool typed = false) {
    if constexpr (CT::Typed<C>) {
       static_assert(Exact<TypeOf<C>, E>);
       Any_Helper_TestType<E>(any);
-
-      if constexpr (requires { any.GetState(); })
-         REQUIRE(any.GetState() == State::Typed);
    }
    else if (not typed) {
       REQUIRE_FALSE(any.IsTyped());
       REQUIRE      (any.GetType() == nullptr);
       REQUIRE_FALSE(any.IsSparse());
       REQUIRE_FALSE(any.IsDeep());
-
-      if constexpr (requires { any.GetState(); })
-         REQUIRE(any.GetState() == State::Default);
    }
-   else {
-      Any_Helper_TestType<E>(any);
+   else Any_Helper_TestType<E>(any);
 
-      if constexpr (requires { any.GetState(); })
-         REQUIRE(any.GetState() == State::Default);
-   }
-
+   REQUIRE      (any.IsDefaultState());
    REQUIRE      (any.IsTypeConstrained() == CT::Typed<C>);
    REQUIRE      (any.IsConstant());
    REQUIRE_FALSE(any.IsValid());

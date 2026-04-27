@@ -21,6 +21,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, Cid...SHARED>
    struct IndexedCommon {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
 
       static constexpr Cid  Id = ID;
       static constexpr bool Indexed = true;

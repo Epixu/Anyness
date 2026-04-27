@@ -28,6 +28,8 @@ namespace Langulus::Anyness::Component
    template<Cid ID, uint INITIAL_SIZE, uint GROWTH_FACTOR, CT::Sparse POINTER_TYPE>
    struct HeapImmovable {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
+
       static constexpr Cid  Id = ID;
       static constexpr Cid  HeapProvider = ID;
       static constexpr int  ComponentPrecedence = -2000;

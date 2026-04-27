@@ -11,7 +11,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<CT::NotVoid K, CT::NotVoid V, State::StateValue SORT>
+   template<CT::NotVoid K, CT::NotVoid V, StateValue SORT>
    requires (CT::NotHandle<K, V> and CT::NotReference<K, V>)
    using TMapBase = Com::Container<
       Com::TypedStack<DMeta, K, true, 0>, // Type-constrained keys      
@@ -34,13 +34,14 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<0, true, 1>,        // Allows comparisons of K/V  
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
-      Com::StateStack<                    // Variable state             
+      Com::State::Sorted<SORT>            // Toggle ordered map         
+      /*Com::StateStack<                    // Variable state             
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Sorted<SORT>,       // Maybe unsorted             
          DefineState::Compressed<>,       // Adds 'compressed' state    
          DefineState::Encrypted<>,        // Adds 'encrypted' state     
          DefineState::Tracked<>           // Adds 'tracked' state       
-      >
+      >*/
    >;
 }
 
@@ -52,7 +53,7 @@ namespace Langulus::Anyness
    /// Emplacement is disabled for maps, because keys aren't allowed to       
    /// change in-place. This also means that they are only const-iteratable.  
    /// Values, on the other hand, are mutable.                                
-   template<CT::NotVoid K, CT::NotVoid V, State::StateValue SORT>
+   template<CT::NotVoid K, CT::NotVoid V, StateValue SORT>
    struct TMap : Inner::TMapBase<K, V, SORT> {
       using CTTI_Map       = Yes<>;
       using CTTI_ReflectAs = Map;
@@ -90,30 +91,12 @@ namespace Langulus::Anyness
       /// emplaces all A in the container                                     
       template<class A1, class...AN>
       constexpr TMap(A1&& a1, AN&&...an) {
-         if constexpr (sizeof...(AN) == 0) {
-            if constexpr (SameAsOneOf<Deint<A1>, 
-               TMap<K, V, State::Variable>, TMap<K, V, State::Enabled>, TMap<K, V, State::Disabled>,
-               Map, MapSorted, MapUnsorted>
-            ) {
-               LglsAssumeUser((not SameAsOneOf<K,
-                  TMap<K, V, State::Variable>, TMap<K, V, State::Enabled>, TMap<K, V, State::Disabled>,
-                  Map, MapSorted, MapUnsorted>),
-                  "Ambiguous use of construction "
-                  "- you should use tag-dispatch with first argument either Absorb "
-                  "(if you want to overwrite the container itself) or Piecewise "
-                  "(if you want to overwrite the first item) in order to clearly "
-                  "state your intent. Absorb will be used by default!"
-               );
-               this->Absorb(LglsFwd(a1));
-            }
-            else {
-               this->ConstructDefault();
-               this->Merge(LglsFwd(a1));
-            }
-         }
+         if constexpr (sizeof...(AN) == 0 and CT::Map<A1>)
+            this->Absorb(LglsFwd(a1));
          else {
             this->ConstructDefault();
-            this->Insert(LglsFwd(a1), LglsFwd(an)...);
+            this->Merge(LglsFwd(a1));
+           (this->Merge(LglsFwd(an)), ...);
          }
       }
       
@@ -124,7 +107,8 @@ namespace Langulus::Anyness
             this->Absorb(LglsFwd(a1));
          else {
             this->ConstructDefault();
-            this->Concat(LglsFwd(a1), LglsFwd(an)...);
+            this->MergeRange(LglsFwd(a1));
+           (this->MergeRange(LglsFwd(an)), ...);
          }
       }
       
@@ -132,7 +116,8 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       constexpr TMap(Inner::Piecewise, A1&& a1, AN&&...an) {
          this->ConstructDefault();
-         this->Merge(LglsFwd(a1), LglsFwd(an)...);
+         this->Merge(LglsFwd(a1));
+        (this->Merge(LglsFwd(an)), ...);
       }
 
       /// Assignment                                                          
@@ -145,22 +130,10 @@ namespace Langulus::Anyness
 
       template<class A>
       constexpr TMap& operator = (A&& argument) {
-         if constexpr (SameAsOneOf<Deint<A>,
-            TMap<K, V, State::Variable>, TMap<K, V, State::Enabled>, TMap<K, V, State::Disabled>,
-            Map, MapSorted, MapUnsorted>
-         ) {
-            LglsAssumeUser((not SameAsOneOf<K,
-               TMap<K, V, State::Variable>, TMap<K, V, State::Enabled>, TMap<K, V, State::Disabled>,
-               Map, MapSorted, MapUnsorted>),
-               "Ambiguous use of assignment "
-               "- you should use either AssignAbsorb (if you want to overwrite "
-               "the container itself) or Assign (if you want to overwrite the "
-               "first item) in order to clearly state your intent. "
-               "AssignAbsorb will be used by default!"
-            );
+         if constexpr (CT::Map<A>)
             return this->AssignAbsorb(LglsFwd(argument));
-         }
-         else return this->Assign(LglsFwd(argument));
+         else
+            return this->Assign(LglsFwd(argument));
       }
 
       /// Clear the map and assign a single pair                              
@@ -282,16 +255,16 @@ namespace Langulus::Anyness
    };
 
    template<CT::NotVoid K, CT::NotVoid V>
-   using TMapSorted = TMap<K, V, State::Enabled>;
+   using TMapSorted = TMap<K, V, StateValue::Enabled>;
 
    template<CT::NotVoid K, CT::NotVoid V>
-   using TMapUnsorted = TMap<K, V, State::Disabled>;
+   using TMapUnsorted = TMap<K, V, StateValue::Disabled>;
 }
 
 namespace Langulus::CTTI
 {
    /// Convert TMap -> Text                                                   
-   template<CT::NotVoid K, CT::NotVoid V, Anyness::State::StateValue SORT>
+   template<CT::NotVoid K, CT::NotVoid V, Anyness::StateValue SORT>
    struct Converter<Anyness::TMap<K, V, SORT>, Anyness::Text> {
       static constexpr auto Convert(Anyness::TMap<K, V, SORT> const&) -> Anyness::Text;
    };

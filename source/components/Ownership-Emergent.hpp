@@ -29,6 +29,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, uint STYLE, Cid...SHARED>
    struct OwnershipEmergent {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
 
       static constexpr Cid  Id = ID;
       static constexpr uint Owned = STYLE;

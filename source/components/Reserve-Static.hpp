@@ -16,6 +16,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, auto SIZE, Cid...SHARED>
    struct ReserveStatic {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
       using ReserveType = decltype(SIZE);
 
       static constexpr Cid Id = ID;

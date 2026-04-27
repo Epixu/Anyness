@@ -21,6 +21,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, class H, Cid...SHARED>
    struct HashEmergent {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
 
       static constexpr Cid Id = ID;
       static constexpr int ComponentPrecedence = 2000;

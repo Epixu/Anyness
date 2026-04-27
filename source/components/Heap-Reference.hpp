@@ -35,6 +35,8 @@ namespace Langulus::Anyness::Component
    template<Cid ID, CT::HeapEntry...ENTRIES>
    struct HeapReference {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
+
       using StackRequest   = typename decltype([] {
          if constexpr (sizeof...(ENTRIES) == 0) return Types<void*> {};
          else return Types<typename ENTRIES::T...> {};
@@ -337,16 +339,14 @@ namespace Langulus::Anyness::Component
       //template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       /// Get the heap pointer (inner)                                        
-      //template<Cid SID = ID>
+      template<Cid SID = ID> requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr auto& GetHeapInner(this auto&& self) noexcept {
-         //static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          return self.template AccessStack<HeapReference>();
       }
 
       /// Get the heap pointer as a void* (inner)                             
-      //template<Cid SID = ID>
+      template<Cid SID = ID> requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
-         //static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          auto& p = ThisCom::GetHeapInner();
          if constexpr (CT::CustomPointer<StackRequest>)
             return const_cast<void*>(static_cast<void const*>(p.Unpack()));
@@ -355,9 +355,8 @@ namespace Langulus::Anyness::Component
       }
 
       /// Set the heap pointer, any data pointer will do                      
-      template</*Cid SID = ID,*/ CT::Sparse P>
-      /*constexpr*/ void SetHeapInner(this auto& self, P heap) assumptious { //can't be constexpr due to GCC ICE
-         //static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
+      template<Cid SID = ID, CT::Sparse P> requires IdMatch<SID, ID, ENTRIES::Id...>
+      constexpr void SetHeapInner(this auto& self, P heap) assumptious {
          if constexpr (Exact<P, StackRequest>)
             ThisCom::GetHeapInner() = heap;
          else if constexpr (CT::CustomPointer<P>)
@@ -366,9 +365,9 @@ namespace Langulus::Anyness::Component
             ThisCom::GetHeapInner() = const_cast<StackRequest>(static_cast<DecvqAll<StackRequest>>(DecvqAllCast(heap)));
       }
 
-      //template<Cid SID = ID>
+      /// Reset the heap pointer to null                                      
+      template<Cid SID = ID> requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr void SetHeapInner(this auto& self, nullptr_t) noexcept {
-         //static_assert(SID == ID or ((SID == ENTRIES::Id) or ...));
          ThisCom::GetHeapInner() = nullptr;
       }
 

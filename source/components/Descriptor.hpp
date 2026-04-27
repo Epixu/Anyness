@@ -12,6 +12,8 @@ namespace Langulus::Anyness::Component
 {
    struct Descriptor {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
+
       static constexpr int ComponentPrecedence = 3000;
    };
 }

@@ -32,7 +32,9 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<>,               // Allows comparisons            
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
-      Com::StateStack<                 // Variable state                
+      Com::State::Future<>,            // Allows future linking         
+      Com::State::Past<>               // Allows past linking           
+      /*Com::StateStack<                 // Variable state
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Future<>,        // Adds a 'missing future' state 
          DefineState::Past<>,          // Adds a 'missing past' state   
@@ -40,7 +42,7 @@ namespace Langulus::Anyness::Inner
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
          DefineState::Or<>,            // Adds 'or' state               
          DefineState::Tracked<>        // Adds 'tracked' state          
-      >
+      >*/
    >;
 }
 

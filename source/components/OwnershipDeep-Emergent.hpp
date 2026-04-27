@@ -34,6 +34,7 @@ namespace Langulus::Anyness::Component
    template<Cid ID, bool REF_INDIVIDUAL, Cid...SHARED>
    struct OwnershipDeepEmergent {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
       
       static constexpr Cid  Id = ID;
       static constexpr bool DeeplyOwned = true;

@@ -230,7 +230,7 @@ namespace Langulus::CTTI
    ///                                                                        
 
    /// Convert Set -> Text                                                    
-   template<Anyness::State::StateValue SORT>
+   template<Anyness::StateValue SORT>
    constexpr auto Converter<Anyness::Inner::Set<SORT>, Anyness::Text>::Convert(
       Anyness::Inner::Set<SORT> const& from
    ) -> Anyness::Text {
@@ -243,7 +243,7 @@ namespace Langulus::CTTI
    }
    
    /// Convert TSet -> Text                                                   
-   template<CT::NotVoid T, Anyness::State::StateValue SORT>
+   template<CT::NotVoid T, Anyness::StateValue SORT>
    constexpr auto Converter<Anyness::TSet<T, SORT>, Anyness::Text>::Convert(
       Anyness::TSet<T, SORT> const& from
    ) -> Anyness::Text {
@@ -262,7 +262,7 @@ namespace Langulus::CTTI
    ///                                                                        
 
    /// Convert Map -> Text                                                    
-   template<Anyness::State::StateValue SORT>
+   template<Anyness::StateValue SORT>
    constexpr auto Converter<Anyness::Inner::Map<SORT>, Anyness::Text>::Convert(
       Anyness::Inner::Map<SORT> const& from
    ) -> Anyness::Text {
@@ -275,7 +275,7 @@ namespace Langulus::CTTI
    }
    
    /// Convert TMap -> Text                                                   
-   template<CT::NotVoid K, CT::NotVoid V, Anyness::State::StateValue SORT>
+   template<CT::NotVoid K, CT::NotVoid V, Anyness::StateValue SORT>
    constexpr auto Converter<Anyness::TMap<K, V, SORT>, Anyness::Text>::Convert(
       Anyness::TMap<K, V, SORT> const& from
    ) -> Anyness::Text {

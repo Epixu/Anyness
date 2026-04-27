@@ -48,14 +48,16 @@ namespace Langulus::Anyness::Inner
       Com::Removal<0, 1>,                 // Allows clear/reset         
       Com::Conversion<0, 1>,              // Allows conversion          
       Com::Comparison<0, true, 1>,        // Allows comparisons         
-      Com::StateStack<                    // Variable state             
+      Com::State::Future<>,               // Toggle future linking      
+      Com::State::Past<>                  // Toggle past linking        
+      /*Com::StateStack<                    // Variable state             
          DefineState::Typed<>,            // Can be type-constrained    
          DefineState::Future<>,           // 'missing future' state     
          DefineState::Past<>,             // 'missing past' state       
          DefineState::Compressed<>,       // Adds 'compressed' state    
          DefineState::Encrypted<>,        // Adds 'encrypted' state     
          DefineState::Tracked<>           // Adds 'tracked' state       
-      >
+      >*/
    >;
 }
 
@@ -83,8 +85,8 @@ namespace Langulus::Anyness
       using Pick          = HandleType;
       using PickMut       = HandleMutType;
 
-      using DefineState::Typed<>::IsTypeConstrained;
-      using DefineState::Typed<>::EnableTypeConstrained;
+      /*using DefineState::Typed<>::IsTypeConstrained;
+      using DefineState::Typed<>::EnableTypeConstrained;*/
 
       constexpr Pair() noexcept {
          this->ConstructDefault();

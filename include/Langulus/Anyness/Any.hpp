@@ -43,14 +43,16 @@ namespace Langulus::Anyness::Inner
       Com::Removal<>,                  // Allows clear/reset            
       Com::Conversion<>,               // Allows conversion             
       Com::Comparison<>,               // Allows comparisons            
-      Com::StateStack<                 // Variable state                
+      Com::State::Future<>,            // Allows future linking         
+      Com::State::Past<>               // Allows past linking           
+      /*Com::StateStack<                 // Variable state                
          DefineState::Typed<>,         // Can be type-constrained       
          DefineState::Future<>,        // Adds a 'missing future' state 
          DefineState::Past<>,          // Adds a 'missing past' state   
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
          DefineState::Tracked<>        // Adds 'tracked' state          
-      >
+      >*/
    >;
 }
 
@@ -68,8 +70,8 @@ namespace Langulus::Anyness
       using CTTI_MapsTo = Text;
 
       using Base = Inner::AnyBase;
-      using DefineState::Typed<>::IsTypeConstrained;
-      using DefineState::Typed<>::EnableTypeConstrained;
+      //using DefineState::Typed<>::IsTypeConstrained;
+      //using DefineState::Typed<>::EnableTypeConstrained;
       using DeepType = Any;
 
       constexpr Any() noexcept {

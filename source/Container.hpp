@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "Component.hpp"
+#include "components/State-Stack.hpp"
 #include <Langulus/IntentOf.hpp>
 #include <Langulus/Sequence.hpp>
 #include <Langulus/HashOf.hpp>
@@ -44,17 +45,17 @@ namespace Langulus::Anyness
    template<class>       struct TRef;
    template<CT::NotVoid> struct TTag;
    template<CT::NotVoid> struct TAny;
-   template<CT::NotVoid, CT::NotVoid> struct TPair;
    template<CT::NotVoid> struct THive;
    template<CT::NotVoid> struct TMany;
 
-   template<CT::NotVoid, CT::NotVoid, State::StateValue SORT = State::Variable> struct TMap;
-   template<CT::NotVoid, State::StateValue SORT = State::Variable> struct TSet;
+   template<CT::NotVoid,              StateValue SORT = StateValue::Variable> struct TSet;
+   template<CT::NotVoid, CT::NotVoid, StateValue SORT = StateValue::Variable> struct TMap;
+   template<CT::NotVoid, CT::NotVoid> struct TPair;
 
    namespace Inner
    {
-      template<State::StateValue SORT = State::Variable> struct Map;
-      template<State::StateValue SORT = State::Variable> struct Set;
+      template<StateValue SORT = StateValue::Variable> struct Map;
+      template<StateValue SORT = StateValue::Variable> struct Set;
 
       /// Tag for calling container constructors that initalize the           
       /// internal stack tuple. Extensively used by handles and iterators.    
@@ -155,9 +156,9 @@ namespace Langulus::Anyness
    ///      builds down a lot...                                              
    template<CT::Component...COMPONENTS>
    requires ValidComponentOrder<COMPONENTS...>
-   struct LANGULUS_EBCO Container : COMPONENTS... {
+   struct LANGULUS_EBCO Container : COMPONENTS..., DecideStateComponent<COMPONENTS...> {
       using CTTI_Container = Yes<>;
-      using ComponentList = Types<COMPONENTS...>;
+      using ComponentList = Types<COMPONENTS..., DecideStateComponent<COMPONENTS...>>;
       using Base = Container;
 
       /// Generate a new container type with additional components            
@@ -193,7 +194,8 @@ namespace Langulus::Anyness
       
       /// Check if a component is included at compile-time                    
       template<class C>
-      static constexpr bool HasComponent = AkinAsOneOf<C, COMPONENTS...>;
+      static constexpr bool HasComponent
+         = AkinAsOneOf<C, COMPONENTS..., DecideStateComponent<COMPONENTS...>>;
 
       /// Get the number of heap providers                                    
       static consteval size_t CountHeapProviders() {
@@ -249,13 +251,13 @@ namespace Langulus::Anyness
 
       // Here lies the stack. It is an optimized tuple that is filled   
       // with requests from components.                                 
-      typename decltype(Inner::DefineStack<COMPONENTS...>())::TupleOptimized mStack;
+      typename decltype(Inner::DefineStack<COMPONENTS..., DecideStateComponent<COMPONENTS...>>())::TupleOptimized mStack;
 
       /// Access a variable on the stack associated with a component          
       ///   @attention always returns a reference to valid memory             
       template<class COM, class SELF>
       constexpr auto& AccessStack(this SELF&& self) noexcept {
-         constexpr size_t IDX = Inner::GetStackOffset<COM, COMPONENTS...>();
+         constexpr size_t IDX = Inner::GetStackOffset<COM, COMPONENTS..., DecideStateComponent<COMPONENTS...>>();
          auto& result = ::Langulus::get<IDX>(self.mStack).value;
          using ConstOrNot = LglsMutIf(SELF, decltype(result));
          return const_cast<ConstOrNot>(result);

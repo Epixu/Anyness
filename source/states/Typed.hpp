@@ -9,49 +9,56 @@
 #include "../Container.hpp"
 
 
-namespace Langulus::Anyness::DefineState
+namespace Langulus::Anyness::Component::State
 {
    ///                                                                        
    /// If enabled, data won't ever change type. Very useful when a type-      
    /// erased container has to represent a templated counterpart.             
    /// Needed to constrain the memory manipulations for safety.               
    ///   @tparam V decides whether state is dynamic or static                 
-   template<State::StateValue V>
+   template<StateValue V, Cid ID, Cid...SHARED>
    struct Typed {
-      using CTTI_State = Yes<>;
-      static constexpr bool Static  = V != State::Variable;
+      using CTTI_Component = Yes<>;
+      using CTTI_State     = Yes<>;
+      using CTTI_ReflectAs = void;
+
+      static constexpr Cid  Id = ID;
+      static constexpr int  ComponentPrecedence = 3000;
+      static constexpr bool Static  = V != StateValue::Variable;
       static constexpr bool Dynamic = not Static;
-      static constexpr bool Enable  = V == State::Enabled;
+      static constexpr bool Enable  = V == StateValue::Enabled;
       
+      using StateRequest = Tif<Dynamic, Typed, void>;
+
       // Every state needs a unique ID in order to find matches even    
       // when template arguments are different                          
-      static constexpr int UID = 7;
+      static constexpr StateUid UID = StateUid::Typed;
 
-      template<CT::TypeErased C>
-      constexpr bool IsTypeConstrained(this const C&) requires Static {
+      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
+      constexpr bool IsTypeConstrained() const requires Static {
          return Enable;
       }
 
-      template<CT::TypeErased C>
+      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
       constexpr bool IsTypeConstrained(this const C& self) noexcept requires Dynamic {
-         return self.GetStateInner() & Typed {};
+         return self.GetStateInner() & Typed<V, ID, SHARED...> {};
       }
 
-      template<CT::TypeErased C>
+      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
       auto EnableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
-         self.GetStateInner() += Typed {};
+         self.GetStateInner() += Typed<V, ID, SHARED...> {};
          return self;
       }
 
-      template<CT::TypeErased C>
+      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
       auto DisableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
-         self.GetStateInner() -= Typed {};
+         self.GetStateInner() -= Typed<V, ID, SHARED...> {};
          return self;
       }
    };
 }
 
-namespace Langulus::Anyness::State
+/*namespace Langulus::Anyness::State
 {
    constexpr DefineState::Typed<> Typed = {};
-}
+}*/

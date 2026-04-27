@@ -7,6 +7,7 @@
 ///                                                                           
 #pragma once
 #include "../Container.hpp"
+#include "../states/Typed.hpp"
 #include <Langulus/MetaOf.hpp>
 #include <Langulus/CT/Akin.hpp>
 #include <Langulus/CT/Deep.hpp>
@@ -32,11 +33,11 @@ namespace Langulus::Anyness::Component
    ///   @tparam CONSTRAIN override type-constraint                           
    ///   @tparam ID data provider that gets typed                             
    template<class META, class TYPE, bool CONSTRAIN, Cid ID>
-   struct TypedStack {
+   struct TypedStack : State::Typed<CONSTRAIN or CT::NotVoid<TYPE> ? StateValue::Enabled : StateValue::Variable, ID> {
       using CTTI_Component = Yes<>;
       using CTTI_Typed     = TYPE;
+      using CTTI_ReflectAs = void;
       using StackRequest   = META;
-      //TODO using StateRequest = DefineState::Typed<>;
 
       static constexpr Cid  Id = ID;
       static constexpr int  ComponentPrecedence = -3000;
@@ -46,13 +47,15 @@ namespace Langulus::Anyness::Component
       /// @attention valid only if not TypeErased                             
       static constexpr bool Dense  = not TypeErased and CT::Dense<TYPE>;
 
+      /*using InnerState = State::Typed<CONSTRAIN or CT::NotVoid<TYPE> ? StateValue::Enabled : StateValue::Variable, ID>;
+      using InnerState::IsTypeConstrained;
+      using InnerState::EnableTypeConstrained;*/
+
       /// Get the contained type - not possible at compile-time yet           
       ///   @tparam SID - type selector                                       
       template<Cid SID = ID> requires (SID == ID)
       constexpr META GetType(this auto const& self) noexcept {
-         if consteval {
-            return META {};
-         }
+         if consteval { return META {}; }
          else {
             META const& meta = ThisCom::GetTypeInner();
             if constexpr (not ThisCom::TypeErased)
@@ -313,7 +316,7 @@ namespace Langulus::Anyness::Component
       }
 
       /// Returns true if a type constraint is specified                      
-      template<Cid SID = ID> requires (SID == ID)
+      /*template<Cid SID = ID> requires (SID == ID)
       constexpr bool IsTypeConstrained() const noexcept {
          return CONSTRAIN;
       }
@@ -332,7 +335,7 @@ namespace Langulus::Anyness::Component
             "Can't disable type-constraint in a statically-typed container. "
             "Make sure you've added Typed state and properly disambiguated it"
          );
-      }
+      }*/
 
       /// Get the size of the type times the contained elements               
       ///   @return the size of all elements in bytes                         
@@ -402,7 +405,7 @@ namespace Langulus::Anyness::Component
                return;
             }
 
-            LglsAssert(not self.IsTypeConstrained(), //TODO should probably be based on ID, however implement this after StateRequests are added
+            LglsAssert(not ThisCom::IsTypeConstrained(),
                "Attempting to mutate type-locked container"
                " of type ", t, " to type ", type
             );
@@ -446,8 +449,8 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID> requires (SID == ID)
       constexpr void ResetType(this auto& self) noexcept {
          if constexpr (ThisCom::TypeErased) {
-            if constexpr (requires { self.IsTypeConstrained(); }) {
-               if (not self.IsTypeConstrained())//TODO should probably be based on ID, however implement this after StateRequests are added
+            if constexpr (requires { self.template IsTypeConstrained<SID>(); }) {
+               if (not self.template IsTypeConstrained<SID>())
                   ThisCom::SetTypeInner({});
             }
             else ThisCom::SetTypeInner({});
@@ -480,10 +483,12 @@ namespace Langulus::Anyness::Component
                // While we are interfacing external memory, we have to  
                // keep the type-constrained state, otherwise we risk    
                // interpreting contents the wrong way                   
-               if constexpr (CT::TypeErased<I>)
-                  self.EnableTypeConstrained();
-               else if (intent->IsTypeConstrained())//TODO should probably be based on ID, however implement this after StateRequests are added
-                  self.EnableTypeConstrained();
+               if constexpr (not CONSTRAIN) {
+                  if constexpr (CT::TypeErased<I>)
+                     ThisCom::EnableTypeConstrained();
+                  else if (intent->IsTypeConstrained())
+                     ThisCom::EnableTypeConstrained();
+               }
             }
             else {
                if constexpr (CT::TypeErased<I>)

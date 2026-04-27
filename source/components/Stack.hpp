@@ -24,6 +24,7 @@ namespace Langulus::Anyness::Component
    template<CT::NotVoid T, Cid ID>
    struct Stack {
       using CTTI_Component = Yes<>;
+      using CTTI_ReflectAs = void;
       using StackRequest   = T;
       
       static constexpr Cid Id = ID;

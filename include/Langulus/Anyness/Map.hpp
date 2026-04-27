@@ -33,7 +33,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<State::StateValue SORT>
+   template<StateValue SORT>
    using MapBase = Com::Container<
       Com::TypedStack<DMeta, void, false, 0>,  // Type-erased keys      
       Com::TypedStack<DMeta, void, false, 1>,  // Type-erased values    
@@ -54,13 +54,14 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<0, true, 1>,        // Allows comparisons of K/V  
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
-      Com::StateStack<                    // Variable state             
+      Com::State::Sorted<SORT>            // Toggle ordered map         
+      /*Com::StateStack<                    // Variable state             
          DefineState::Typed<>,            // Can be type-constrained    
          DefineState::Sorted<SORT>,       // Maybe unsorted             
          DefineState::Compressed<>,       // Adds 'compressed' state    
          DefineState::Encrypted<>,        // Adds 'encrypted' state     
          DefineState::Tracked<>           // Adds 'tracked' state       
-      >
+      >*/
    >;
 
    ///                                                                        
@@ -68,7 +69,7 @@ namespace Langulus::Anyness::Inner
    /// Emplacement is disabled for maps, because keys aren't allowed to       
    /// change in-place. This also means that they are only const-iteratable.  
    /// Values, on the other hand, are mutable.                                
-   template<State::StateValue SORTED>
+   template<StateValue SORTED>
    struct Map : MapBase<SORTED> {
       using CTTI_Map      = Yes<>;
       using CTTI_Deep     = Yes<>;
@@ -86,8 +87,8 @@ namespace Langulus::Anyness::Inner
       static constexpr bool DeeplyOwned = true;
       static constexpr bool ReferenceElements = true;
 
-      using DefineState::Typed<>::IsTypeConstrained;
-      using DefineState::Typed<>::EnableTypeConstrained;
+      /*using DefineState::Typed<>::IsTypeConstrained;
+      using DefineState::Typed<>::EnableTypeConstrained;*/
 
       constexpr Map() noexcept {
          this->ConstructDefault();
@@ -303,15 +304,15 @@ namespace Langulus::Anyness::Inner
 
 namespace Langulus::Anyness
 {
-   using Map         = Inner::Map<State::Variable>;
-   using MapSorted   = Inner::Map<State::Enabled>;
-   using MapUnsorted = Inner::Map<State::Disabled>;
+   using Map         = Inner::Map<StateValue::Variable>;
+   using MapSorted   = Inner::Map<StateValue::Enabled>;
+   using MapUnsorted = Inner::Map<StateValue::Disabled>;
 }
 
 namespace Langulus::CTTI
 {
    /// Convert Map -> Text                                                    
-   template<Anyness::State::StateValue SORT>
+   template<Anyness::StateValue SORT>
    struct Converter<Anyness::Inner::Map<SORT>, Anyness::Text> {
       static constexpr auto Convert(Anyness::Inner::Map<SORT> const& from) -> Anyness::Text;
    };

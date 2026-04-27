@@ -11,7 +11,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<CT::NotVoid T, State::StateValue SORT>
+   template<CT::NotVoid T, StateValue SORT>
    requires (CT::NotHandle<T> and CT::NotReference<T>)
    using TSetBase = Com::Container<
       Com::TypedStack<DMeta, T>,       // Type-constrained              
@@ -30,13 +30,14 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<>,               // Allows comparisons            
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
-      Com::StateStack<                 // Variable state                
+      Com::State::Sorted<SORT>         // Toggle ordered set            
+      /*Com::StateStack<                 // Variable state                
          DefineState::Typed<State::Enabled>, // Always type-constrained 
          DefineState::Sorted<SORT>,    // Maybe unsorted                
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
          DefineState::Tracked<>        // Adds 'tracked' state          
-      >
+      >*/
    >;
 }
 
@@ -47,7 +48,7 @@ namespace Langulus::Anyness
    /// binary-compatible with the type-erased alternative `Set`.              
    /// Emplacement is disabled for sets, because elements aren't allowed to   
    /// change in-place. This also means that they are only const-iteratable.  
-   template<CT::NotVoid T, State::StateValue SORT>
+   template<CT::NotVoid T, StateValue SORT>
    struct TSet : Inner::TSetBase<T, SORT> {
       using CTTI_Set       = Yes<>;
       using CTTI_ReflectAs = Set;
@@ -61,8 +62,6 @@ namespace Langulus::Anyness
       using HandleMutType = THandle<ConstAll<T&>>;
       using Pick          = ConstAll<T&>;
       using PickMut       = ConstAll<T&>;
-
-      using Com::TypedStack<DMeta, T>::IsTypeConstrained;
 
       constexpr TSet() noexcept {
          this->ConstructDefault();
@@ -82,13 +81,8 @@ namespace Langulus::Anyness
       template<class A1, class...AN>
       constexpr TSet(A1&& a1, AN&&...an) {
          if constexpr (sizeof...(AN) == 0) {
-            if constexpr (SameAsOneOf<Deint<A1>, 
-               TSet<T, State::Variable>, TSet<T, State::Enabled>, TSet<T, State::Disabled>,
-               Set, SetSorted, SetUnsorted>
-            ) {
-               LglsAssumeUser((not SameAsOneOf<T,
-                  TSet<T, State::Variable>, TSet<T, State::Enabled>, TSet<T, State::Disabled>,
-                  Set, SetSorted, SetUnsorted>),
+            if constexpr (CT::Set<A1>) {
+               LglsAssumeUser(CT::NotSet<T>,
                   "Ambiguous use of construction "
                   "- you should use tag-dispatch with first argument either Absorb "
                   "(if you want to overwrite the container itself) or Piecewise "
@@ -100,12 +94,12 @@ namespace Langulus::Anyness
             else {
                this->ConstructDefault();
                this->Merge(LglsFwd(a1));
-               //this->EmplaceConstruct(LglsFwd(a1));
             }
          }
          else {
             this->ConstructDefault();
-            this->Insert(LglsFwd(a1), LglsFwd(an)...);
+            this->Merge(LglsFwd(a1));
+           (this->Merge(LglsFwd(an)), ...);
          }
       }
       
@@ -116,19 +110,17 @@ namespace Langulus::Anyness
             this->Absorb(LglsFwd(a1));
          else {
             this->ConstructDefault();
-            this->Concat(LglsFwd(a1), LglsFwd(an)...);
+            this->MergeRange(LglsFwd(a1));
+           (this->MergeRange(LglsFwd(an)), ...);
          }
       }
       
       /// Construction that emplaces all arguments inside                     
       template<class A1, class...AN>
       constexpr TSet(Inner::Piecewise, A1&& a1, AN&&...an) {
-         /*if constexpr (sizeof...(AN) == 0)
-            this->EmplaceConstruct(LglsFwd(a1));
-         else {*/
-            this->ConstructDefault();
-            this->Merge(LglsFwd(a1), LglsFwd(an)...);
-         //}
+         this->ConstructDefault();
+         this->Merge(LglsFwd(a1));
+        (this->Merge(LglsFwd(an)), ...);
       }
 
       /// Assignment                                                          
@@ -141,13 +133,8 @@ namespace Langulus::Anyness
 
       template<class A>
       constexpr TSet& operator = (A&& argument) {
-         if constexpr (SameAsOneOf<Deint<A>,
-            TSet<T, State::Variable>, TSet<T, State::Enabled>, TSet<T, State::Disabled>,
-            Set, SetSorted, SetUnsorted>
-         ) {
-            LglsAssumeUser((not SameAsOneOf<T,
-               TSet<T, State::Variable>, TSet<T, State::Enabled>, TSet<T, State::Disabled>,
-               Set, SetSorted, SetUnsorted>),
+         if constexpr (CT::Set<A>) {
+            LglsAssumeUser(CT::NotSet<T>,
                "Ambiguous use of assignment "
                "- you should use either AssignAbsorb (if you want to overwrite "
                "the container itself) or Assign (if you want to overwrite the "
@@ -168,16 +155,16 @@ namespace Langulus::Anyness
    };
 
    template<CT::NotVoid T>
-   using TSetSorted = TSet<T, State::Enabled>;
+   using TSetSorted = TSet<T, StateValue::Enabled>;
 
    template<CT::NotVoid T>
-   using TSetUnsorted = TSet<T, State::Disabled>;
+   using TSetUnsorted = TSet<T, StateValue::Disabled>;
 }
 
 namespace Langulus::CTTI
 {
    /// Convert TSet -> Text                                                   
-   template<CT::NotVoid T, Anyness::State::StateValue SORT>
+   template<CT::NotVoid T, Anyness::StateValue SORT>
    struct Converter<Anyness::TSet<T, SORT>, Anyness::Text> {
       static constexpr auto Convert(Anyness::TSet<T, SORT> const&) -> Anyness::Text;
    };

@@ -32,7 +32,7 @@
 
 namespace Langulus::Anyness::Inner
 {
-   template<State::StateValue SORT>
+   template<StateValue SORT>
    using SetBase = Com::Container<
       Com::TypedStack<DMeta>,          // Type-erased                   
       Com::HeapMovable<0, 8, 2>,       // Pointer to heap memory        
@@ -50,20 +50,21 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<>,               // Allows comparisons            
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
-      Com::StateStack<                 // Variable state                
+      Com::State::Sorted<SORT>         // Enable/disable ordered set    
+      /*Com::StateStack<                 // Variable state
          DefineState::Typed<>,         // Can be type-constrained       
          DefineState::Sorted<SORT>,    // Maybe unsorted                
          DefineState::Compressed<>,    // Adds 'compressed' state       
          DefineState::Encrypted<>,     // Adds 'encrypted' state        
          DefineState::Tracked<>        // Adds 'tracked' state          
-      >
+      >*/
    >;
 
    ///                                                                        
    /// A universal type-erased non-contiguous set of variable size.           
    /// Emplacement is disabled for sets, because elements aren't allowed to   
    /// change in-place. This also means that they are only const-iteratable.  
-   template<State::StateValue SORTED>
+   template<StateValue SORTED>
    struct Set : SetBase<SORTED> {
       using CTTI_Set      = Yes<>;
       using CTTI_Deep     = Yes<>;
@@ -77,8 +78,8 @@ namespace Langulus::Anyness::Inner
       using Pick          = Handle;
       using PickMut       = Handle;
 
-      using DefineState::Typed<>::IsTypeConstrained;
-      using DefineState::Typed<>::EnableTypeConstrained;
+      /*using DefineState::Typed<>::IsTypeConstrained;
+      using DefineState::Typed<>::EnableTypeConstrained;*/
 
       constexpr Set() noexcept {
          this->ConstructDefault();
@@ -172,15 +173,15 @@ namespace Langulus::Anyness::Inner
 
 namespace Langulus::Anyness
 {
-   using Set         = Inner::Set<State::Variable>;
-   using SetSorted   = Inner::Set<State::Enabled>;
-   using SetUnsorted = Inner::Set<State::Disabled>;
+   using Set         = Inner::Set<StateValue::Variable>;
+   using SetSorted   = Inner::Set<StateValue::Enabled>;
+   using SetUnsorted = Inner::Set<StateValue::Disabled>;
 }
 
 namespace Langulus::CTTI
 {
    /// Convert Set -> Text                                                    
-   template<Anyness::State::StateValue SORT>
+   template<Anyness::StateValue SORT>
    struct Converter<Anyness::Inner::Set<SORT>, Anyness::Text> {
       static constexpr auto Convert(Anyness::Inner::Set<SORT> const& from) -> Anyness::Text;
    };
