@@ -70,7 +70,7 @@ namespace Langulus::Anyness::Component
          using TCP  = LglsMutIf(C, TC*);
          using TH   = Tif<CT::Void<AS>, TC, AS>;
          using THP  = LglsMutIf(C, TH*);
-         auto* heap = DecvqAllCast(self.GetHeapInner());
+         auto* heap = DecvqAllCast(self.template GetRaw<SID>());
 
          if constexpr (CT::TypeErased<C>) {
             const auto T = self.template GetType<SID>();
@@ -113,7 +113,7 @@ namespace Langulus::Anyness::Component
                   auto diff = indirections - IndirectsOf<TH>;
                   using Deep = typename Deref<C>::DeepType;
                   Deep denser = Disown(self.template GetDenseAt<SID>(LglsFwd(idx), diff));
-                  return static_cast<THP>(denser.GetHeapInner());
+                  return static_cast<THP>(denser.GetRaw());
                }
                else {
                   // We are allowed to add one additional indirection   
@@ -359,7 +359,7 @@ namespace Langulus::Anyness::Component
          LglsAssert(not self.IsEmpty(), "Can't GetDense from empty container");
 
          // Offset the heap                                             
-         void* heap = DecvqAllCast(self.GetHeapInner());
+         void* heap = DecvqAllCast(self.template GetRaw<SID>());
          const auto offset = self.SimplifyIndex(idx);
          const auto byte_offset = self.GetStride() * offset;
          heap = reinterpret_cast<void*>(

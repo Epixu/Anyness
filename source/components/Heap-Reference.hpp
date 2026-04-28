@@ -384,7 +384,7 @@ namespace Langulus::Anyness::Component
       ///   @param intent the intent and container to transfer from           
       template<CT::Intent I> requires CT::Container<I>
       void ConstructFrom(this auto& self, I&& intent) noexcept {
-         ThisCom::SetHeapInner(intent.what.GetRaw());//TODO raw pointer mistaken as inner heap pointer may lead to errors in maps?
+         ThisCom::SetHeapInner(intent.what.GetHeapInner());
       }
 
       /// A simple request for allocating memory, which includes heap         
@@ -405,13 +405,13 @@ namespace Langulus::Anyness::Component
          result.mHeaderBytes = self.template GetHeapHeaderSize<SID>();
 
          if constexpr (C::CountHeapFooterRequests()) {
-            // When there are footer requests (heap requests that          
-            // depend on count & indirections), we aren't allowed to       
-            // change the requested reserve to avoid heap corruptions.     
+            // When there are footer requests (heap requests that       
+            // depend on count & indirections), we aren't allowed to    
+            // change the requested reserve to avoid heap corruptions.  
             result.mFooterBytes = self.template GetHeapFooterSize<SID>(reserve);
 
             if constexpr (CT::TypeErased<C>) {
-               // Check for reflected minimal allocation at runtime        
+               // Check for reflected minimal allocation at runtime     
                const auto T = self.template GetType<SID>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
                const auto size = T.GetSize();
@@ -420,7 +420,7 @@ namespace Langulus::Anyness::Component
                );
             }
             else {
-               // Check for reflected minimal allocation at compile-time   
+               // Check for reflected minimal allocation at compile-time
                using T = TypeOf<C, SID>;
                result.mTotalBytes = Roof2(
                   reserve * sizeof(T) + result.mHeaderBytes + result.mFooterBytes
@@ -430,12 +430,12 @@ namespace Langulus::Anyness::Component
             result.mReserved = reserve;
          }
          else {
-            // When there are no footer requests, we are allowed to        
-            // reserve more bytes than requested.                          
+            // When there are no footer requests, we are allowed to     
+            // reserve more bytes than requested.                       
             result.mFooterBytes = 0;
 
             if constexpr (CT::TypeErased<C>) {
-               // Check for reflected minimal allocation at runtime        
+               // Check for reflected minimal allocation at runtime     
                const auto T = self.template GetType<SID>();
                LglsAssumeDev(T, "Requesting allocation size for an untyped container");
                const auto size = T.GetSize();
@@ -446,7 +446,7 @@ namespace Langulus::Anyness::Component
                result.mReserved = (result.mTotalBytes - result.mHeaderBytes) / size;
             }
             else {
-               // Check for reflected minimal allocation at compile-time   
+               // Check for reflected minimal allocation at compile-time
                using T = TypeOf<C, SID>;
                result.mTotalBytes = Roof2(::std::max(
                   reserve * sizeof(T) + result.mHeaderBytes,
@@ -483,17 +483,18 @@ namespace Langulus::Anyness::Component
       }
 
       /// Destroys all elements.                                              
-      ///   @tparam DESTROY set to 'false' if you only want to dereference    
-      ///      and destroy only fully dereferenced indirections               
-      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
+      ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
+      ///      It will still destroy the element, but only when fully         
+      ///      dereferenced in all its indirections.                          
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C>
       requires IdMatch<SID, ID, ENTRIES::Id...>
       void DestroyAllElements(this C& self) assumptious {
-         if constexpr (DESTROY or CT::DeeplyOwned<C>) {
+         if constexpr (FORCE_DESTROY or CT::DeeplyOwned<C>) {
             if (self.template IsEmpty<SID>())
                return;
 
             self.Apply([](auto&& item) {
-               item.template DestroyElement<DESTROY>();
+               item.template DestroyElement<FORCE_DESTROY>();
             });
          }
       }
