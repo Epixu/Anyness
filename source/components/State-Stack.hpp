@@ -36,7 +36,6 @@ namespace Langulus::Anyness::Component
       static constexpr bool   HasStates = StateCount > 0;
       template<CT::State S>
       static constexpr bool   HasState = HasStates and AkinAsOneOf<S, STATES...>;
-      static constexpr bool   CanBeMissing = CheckCanBeMissing();
 
       //static_assert(StateCount > 0, "Has to have at least one state");
       static_assert(StateCount < 16, "Too many states");
@@ -108,6 +107,20 @@ namespace Langulus::Anyness::Component
          return r;
       }
 
+   protected:
+      /// Check if container has future/past linking point states             
+      static consteval bool CheckCanBeMissing() requires HasStates {
+         bool result = false;
+         StateList::ForEach([&result]<class S>{
+            if constexpr (requires { S::CanBeMissing; })
+               result = result or S::CanBeMissing;
+         });
+         return result;
+      }
+
+   public:
+      static constexpr bool CanBeMissing = CheckCanBeMissing();
+
       /// Check if container is marked as missing past/future                 
       ///   @return true if this container is marked as missing               
       constexpr bool IsMissing(this auto const& self) noexcept requires CanBeMissing {
@@ -136,6 +149,12 @@ namespace Langulus::Anyness::Component
          return static_cast<bool>(self.GetUnconstrainedState());
       }
 
+      /// Check if container is in the default state                          
+      ///   @return true if either contains state, or has stuff inserted      
+      constexpr bool IsDefaultState(this auto const& self) noexcept requires HasStates {
+         return self.GetState().mState == self.GetDefaultState();
+      }
+
    protected:
       LglsComEmplacement(friend);
       LglsComRemoval(friend);
@@ -151,7 +170,7 @@ namespace Langulus::Anyness::Component
 
       /// Get the value of a specific state                                   
       template<CT::State B>
-      static StateType GetStateBit() requires HasStates {
+      static consteval StateType GetStateBit() requires HasStates {
          StateType i = 0;
          StateType accumulator = 0;
          StateList::ForEach([&]<class S>{
@@ -172,16 +191,6 @@ namespace Langulus::Anyness::Component
             ++i;
          });
          return accumulator;
-      }
-
-      /// Check if container has future/past linking point states             
-      static consteval bool CheckCanBeMissing() requires HasStates {
-         bool result = false;
-         StateList::ForEach([&result]<class S>{
-            if constexpr (requires { S::CanBeMissing; })
-               result = result or S::CanBeMissing;
-         });
-         return result;
       }
 
       /// Clear the state to the default value                                

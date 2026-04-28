@@ -144,7 +144,7 @@ namespace Langulus::Anyness::Component
                      // Use comparison operator between all elements    
                      bool result = true;
                      auto t2 = rhs.GetHandle();
-                     lhs.Apply([&](auto&& t1) -> bool {
+                     lhs.template Apply<false>([&](auto&& t1) -> bool {
                         if constexpr (CT::Supported<decltype(t1)>) {
                            if constexpr (not CT::Contiguous<RHS>) {
                               // Make sure hash table spot is valid     
@@ -249,7 +249,7 @@ namespace Langulus::Anyness::Component
                // Use comparison operator between all elements          
                bool result = true;
                auto t2 = rhs.template GetHandle<void, SID>();
-               lhs.Apply([&](auto&& t1) -> bool {
+               lhs.template Apply<false>([&](auto&& t1) -> bool {
                   if constexpr (CT::Supported<decltype(t1)>) {
                      if constexpr (not CT::Contiguous<RHS>) {
                         // Make sure hash table spot is valid           
@@ -797,7 +797,7 @@ namespace Langulus::Anyness::Component
          else static_assert(CT::Comparable<TypeOf<C, SID>, T>, "Type not comparable");
 
          DecideHandle<C> result;
-         self.Apply([&](auto&& test) -> bool {
+         self.template Apply<false>([&](auto&& test) -> bool {
             if constexpr (CT::Supported<decltype(test)>) {
                if constexpr (not CT::Contiguous<C>) {
                   const auto idx = test - self.GetHandle();

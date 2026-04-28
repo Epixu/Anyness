@@ -60,7 +60,9 @@ namespace Langulus::Anyness::Inner
       Com::IterationRange<>,           // Ranged iteration              
       Com::State::Future<>,            // Toggle future linking         
       Com::State::Past<>,              // Toggle past linking           
-      Com::State::Or<>                 // Toggle disjunction            
+      Com::State::Or<>,                // Toggle disjunction            
+      Com::State::Compressed<>,        // Toggle compression            
+      Com::State::Encrypted<>          // Toggle encryption             
    >;
 }
 

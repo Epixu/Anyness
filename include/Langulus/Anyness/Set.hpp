@@ -50,7 +50,9 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<>,               // Allows comparisons            
       Com::IterationForEach<>,         // ForEach iteration             
       Com::IterationRange<>,           // Ranged iteration              
-      Com::State::Sorted<SORT>         // Enable/disable ordered set    
+      Com::State::Sorted<SORT>,        // Toggle ordering               
+      Com::State::Compressed<>,        // Toggle compression            
+      Com::State::Encrypted<>          // Toggle encryption             
    >;
 
    ///                                                                        

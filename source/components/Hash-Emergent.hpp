@@ -155,8 +155,7 @@ namespace Langulus::Anyness::Component
          ::std::vector<H> h;
          h.reserve(self.template GetCount<SID>());
          self.Apply([&h](auto const& item) {
-            if constexpr (CT::Supported<decltype(item)>)
-               h.emplace_back(HashOf(item));
+            h.emplace_back(HashOf(item));
          });
 
          if (h.size() == 1) {

@@ -461,32 +461,25 @@ namespace Langulus::Anyness::Component
       }
 
       /// Destroys only the first element.                                    
-      ///   @tparam DESTROY set to 'false' if you only want to dereference    
-      ///      and destroy only fully dereferenced indirections               
-      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
+      ///   @tparam FORCE_DESTROY set to 'false' to only dereference.         
+      ///      It will still destroy the element, but only when fully         
+      ///      dereferenced in all its indirections.                          
+      template<bool FORCE_DESTROY = true, Cid SID = ID, CT::Container C>
       requires IdMatch<SID, ID, ENTRIES::Id...>
       void DestroyElement(this C& self) assumptious {
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
 
-         if constexpr (DESTROY) {
-            if constexpr (CT::DeeplyOwned<C>) {
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  self.template DestroyElementDeepCustomPointers<true, SID>();
-               #else
-                  self.template DestroyElementDeepStandardPointers<true, SID>();
-               #endif
-            }
+         if constexpr (FORCE_DESTROY) {
+            //if constexpr (CT::DeeplyOwned<C>)
+            //   self.template DestroyElementDeep<true, SID>();
+                 if_available(self.template DestroyElementDeep<true, SID>())
             else if_available(self.template DestroyElementShallow<SID>())
             else static_assert(false, "No destruction routine was called");
          }
-         else if constexpr (CT::DeeplyOwned<C>) {
-            #if LANGULUS_FEATURE(MANAGED_MEMORY)
-               self.template DestroyElementDeepCustomPointers<false, SID>();
-            #else
-               self.template DestroyElementDeepStandardPointers<false, SID>();
-            #endif
-         }
+         else if_available(self.template DestroyElementDeep<false, SID>());
+            //if constexpr (CT::DeeplyOwned<C>)
+            //self.template DestroyElementDeep<false, SID>();
       }
 
       /// Destroys all elements.                                              
@@ -500,8 +493,7 @@ namespace Langulus::Anyness::Component
                return;
 
             self.Apply([](auto&& item) {
-               if constexpr (CT::Supported<decltype(item)>)
-                  item.template DestroyElement<DESTROY>();
+               item.template DestroyElement<DESTROY>();
             });
          }
       }

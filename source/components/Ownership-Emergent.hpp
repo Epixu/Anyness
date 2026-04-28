@@ -139,25 +139,13 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::TypeErased<C>) {
                if (self.template IsSparse<SID>()) {
                   self.Apply([](auto&& item) {
-                     if constexpr (CT::Supported<decltype(item)>) {
-                        #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                           item.KeepElementDeepCustomPointers();
-                        #else
-                           item.KeepElementDeepStandardPointers();
-                        #endif
-                     }
+                     item.KeepElementDeep();
                   });
                }
             }
             else if constexpr (CT::Sparse<TypeOf<C, SID>>) {
                self.Apply([](auto&& item) {
-                  if constexpr (CT::Supported<decltype(item)>) {
-                     #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                        item.KeepElementDeepCustomPointers();
-                     #else
-                        item.KeepElementDeepStandardPointers();
-                     #endif
-                  }
+                  item.KeepElementDeep();
                });
             }
          }

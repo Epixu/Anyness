@@ -118,7 +118,7 @@ namespace Langulus::Anyness::Component
             //auto dst = self.template GetHandle<void, ID>();
             auto dst = self.GetHandle();
             try {
-               from.Apply([&dst,&self,&from](auto const& src) {
+               from.template Apply<false>([&dst,&self,&from](auto const& src) {
                   (void) self; (void) from;
                   if constexpr (CT::Supported<decltype(src)>) {
                      if constexpr (CT::Copied<I>)
@@ -231,7 +231,7 @@ namespace Langulus::Anyness::Component
          ThisCom::SetHeapInner(static_cast<void*>(al->GetBlockStart() + request.mHeaderBytes));
          self.template SetAllocationInner<SID>(al);
          if_available(self.template SetReservedInner<SID>(request.mReserved));
-         self.ConstructHeapDefault();
+         if_available(self.ConstructHeapRequest());
          return al;
       }
 
@@ -303,7 +303,7 @@ namespace Langulus::Anyness::Component
                   // required.                                          
                   auto to = self.GetHandle();
                   try {
-                     previous.Apply([&to,&self,&previous](auto&& from) {
+                     previous.template Apply<false>([&to,&self,&previous](auto&& from) {
                         (void) self; (void) previous;
                         if constexpr (CT::Supported<decltype(from)>) {
                            to.ForceMutable().EmplaceWithIntent(Abandon(from));
@@ -358,7 +358,7 @@ namespace Langulus::Anyness::Component
             auto to = self.GetHandle();
             try {
                backup.Apply([&to](auto& from) {
-                  to.EmplaceWithIntent(Refer(from));
+                  to.EmplaceWithIntent(Refer(from)); //TODO won't work for maps/sets
                   ++to;
                });
             }
@@ -529,7 +529,7 @@ namespace Langulus::Anyness::Component
             // Reinsert the old items                                   
             auto to = self.GetHandle();
             try {
-               backup.Apply([&to](auto const& from) {
+               backup.template Apply<false>([&to](auto const& from) {
                   if constexpr (CT::Supported<decltype(from)>)
                      to.ForceMutable().EmplaceWithIntent(Refer(from));
                   ++to;

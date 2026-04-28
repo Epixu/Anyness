@@ -27,7 +27,11 @@ namespace Langulus::Anyness
    > {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
+      using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
+
+      using KeyHandle = Handle;
+      using ValHandle = Handle;
 
       static constexpr bool TypeErased = true;
 
@@ -46,7 +50,7 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
-      constexpr THandlePair(
+      /*constexpr THandlePair(
          void const* ptr0, EntryPtr entry0, DMeta type0,
          void const* ptr1, EntryPtr entry1, DMeta type1
       ) noexcept {
@@ -56,12 +60,22 @@ namespace Langulus::Anyness
          this->Com::OwnershipDeepReference<1>::SetEntriesInner(entry1);
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(type0);
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(type1);
+      }*/
+
+      constexpr THandlePair(Handle&& key, Handle&& val) noexcept {
+         this->Com::HeapReference<0>::SetHeapInner(key.GetHeapInner());
+         this->Com::HeapReference<1>::SetHeapInner(val.GetHeapInner());
+         this->Com::OwnershipDeepReference<0>::SetEntriesInner(key.GetEntriesInner());
+         this->Com::OwnershipDeepReference<1>::SetEntriesInner(val.GetEntriesInner());
+         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
+         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
 
       /// Assignment                                                          
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
+   protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
       auto ForceMutable() const noexcept -> THandlePair<HandleMut, HandleMut> const& {
@@ -87,7 +101,11 @@ namespace Langulus::Anyness
    > {
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
+      using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
+
+      using KeyHandle = HandleMut;
+      using ValHandle = HandleMut;
 
       static constexpr bool TypeErased = true;
 
@@ -106,7 +124,7 @@ namespace Langulus::Anyness
          this->Absorb(Move(other));
       }
 
-      constexpr THandlePair(
+      /*constexpr THandlePair(
          void const* ptr0, EntryPtr entry0, DMeta type0,
          void const* ptr1, EntryPtr entry1, DMeta type1
       ) noexcept {
@@ -116,6 +134,15 @@ namespace Langulus::Anyness
          this->Com::OwnershipDeepReference<1>::SetEntriesInner(entry1);
          this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(type0);
          this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(type1);
+      }*/
+
+      constexpr THandlePair(HandleMut&& key, HandleMut&& val) noexcept {
+         this->Com::HeapReference<0>::SetHeapInner(key.GetHeapInner());
+         this->Com::HeapReference<1>::SetHeapInner(val.GetHeapInner());
+         this->Com::OwnershipDeepReference<0>::SetEntriesInner(key.GetEntriesInner());
+         this->Com::OwnershipDeepReference<1>::SetEntriesInner(val.GetEntriesInner());
+         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
+         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
       }
 
       /// Assignment                                                          
@@ -125,6 +152,80 @@ namespace Langulus::Anyness
       /// Already as mutable as it gets                                       
       auto ForceMutable() const noexcept -> THandlePair const& {
          return *this;
+      }
+   };
+   
+   /// Type-erased immutable key paired with mutable value                    
+   /// Often used for mutable access in maps, where keys can't be modified    
+   template<>
+   struct THandlePair<Handle, HandleMut> : Com::Container<
+      Com::TypedStack<DMeta, void, false, 0>,
+      Com::TypedStack<DMeta, void, false, 1>,
+      Com::HeapReference<0>,
+      Com::HeapReference<1>,
+      Com::CountStatic<0, 1u, 1>,
+      Com::OwnershipDeepReference<0>,
+      Com::OwnershipDeepReference<1>,
+      Com::HashEmergent<0, Hash, 1>,
+      Com::Assignment<1>,
+      Com::Emplacement<1>,
+      Com::Comparison<0, true, 1>,
+      Com::IterationOperators<0, 1>
+   > {
+      using CTTI_Deep      = Yes<>;
+      using CTTI_Handle    = Yes<>;
+      using CTTI_Pair      = Yes<>;
+      using CTTI_ReflectAs = void;
+
+      using KeyHandle = Handle;
+      using ValHandle = HandleMut;
+
+      static constexpr bool TypeErased = true;
+
+      /// Handles can't be piecewise-initialized                              
+      THandlePair(Inner::Piecewise, auto&&) = delete;
+
+      constexpr THandlePair() noexcept {
+         this->ConstructDefault();
+      }
+
+      constexpr THandlePair(THandlePair const& other) {
+         this->Absorb(Refer(other));
+      }
+
+      constexpr THandlePair(THandlePair&& other) noexcept {
+         this->Absorb(Move(other));
+      }
+
+      /*constexpr THandlePair(
+         void const* ptr0, EntryPtr entry0, DMeta type0,
+         void const* ptr1, EntryPtr entry1, DMeta type1
+      ) noexcept {
+         this->Com::HeapReference<0>::SetHeapInner(ptr0);
+         this->Com::HeapReference<1>::SetHeapInner(ptr1);
+         this->Com::OwnershipDeepReference<0>::SetEntriesInner(entry0);
+         this->Com::OwnershipDeepReference<1>::SetEntriesInner(entry1);
+         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(type0);
+         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(type1);
+      }*/
+
+      constexpr THandlePair(Handle&& key, HandleMut&& val) noexcept {
+         this->Com::HeapReference<0>::SetHeapInner(key.GetHeapInner());
+         this->Com::HeapReference<1>::SetHeapInner(val.GetHeapInner());
+         this->Com::OwnershipDeepReference<0>::SetEntriesInner(key.GetEntriesInner());
+         this->Com::OwnershipDeepReference<1>::SetEntriesInner(val.GetEntriesInner());
+         this->Com::TypedStack<DMeta, void, false, 0>::SetTypeInner(key.GetTypeInner());
+         this->Com::TypedStack<DMeta, void, false, 1>::SetTypeInner(val.GetTypeInner());
+      }
+
+      /// Assignment                                                          
+      THandlePair& operator = (THandlePair const& other) = delete;
+      THandlePair& operator = (THandlePair&& other) = delete;
+
+      /// Force the handle to become mutable, so that we have methods like    
+      /// emplacement in constructors.                                        
+      auto ForceMutable() const noexcept -> THandlePair<HandleMut, HandleMut> const& {
+         return *reinterpret_cast<THandlePair<HandleMut, HandleMut> const*>(this);
       }
    };
 

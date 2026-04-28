@@ -527,6 +527,9 @@ namespace Langulus::Anyness
       consteval bool ValidateComponentOrder() {
          static_assert(CT::Component<CN...>,
             "All elements must be components");
+         static_assert(((not requires { typename CN::StateList; }) and ...),
+            "The state component will be added automatically - remove it, and just "
+            "rely on StateRequest(s) in other components.");
          static_assert((::std::is_standard_layout_v<CN> and ...),
             "All components must have standard layouts");
          static_assert((sizeof(CN) * ...) == 1,

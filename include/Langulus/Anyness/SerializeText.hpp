@@ -29,13 +29,11 @@ namespace Langulus::CTTI
 
       size_t counter = 0;
       self.Apply([&](auto const& item) {
-         if constexpr (CT::Supported<decltype(item)>) {
-            if (counter)
-               S::Separate(self, out, context);
+         if (counter)
+            S::Separate(self, out, context);
 
-            Langulus::Serialize(item, out, context);
-            ++counter;
-         }
+         Langulus::Serialize(item, out, context);
+         ++counter;
       });
 
       S::EndScope(self, out, context);

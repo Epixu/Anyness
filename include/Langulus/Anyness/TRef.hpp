@@ -106,7 +106,7 @@ namespace Langulus::Anyness
                if constexpr (not CT::Disowned<A>)
                   this->FindAllocationInner();
             }
-            else return this->AssignDefault();
+            //else this->AssignDefault();
          }
          else static_assert(false, "A must be a pointer (intent is optional)");
          return *this;

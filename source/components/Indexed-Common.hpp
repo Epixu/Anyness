@@ -165,11 +165,11 @@ namespace Langulus::Anyness::Component
             if constexpr (CT::Pair<AS>) {
                // User desires a pair, so we give them a pair           
                static_assert(Shared, "Indexing must be shared to access as a pair");
-               using AS1 = decltype(AS::key);
-               using AS2 = decltype(AS::val);
+               using AS1 = typename AS::KeyHandle;
+               using AS2 = typename AS::ValHandle;
                return AS {
-                  self.template AsAt<Decvq<Deref<AS1>>, SID + 0>(idx),
-                  self.template AsAt<Decvq<Deref<AS2>>, SID + 1>(idx)
+                  self.template AsAt<AS1>, SID + 0>(idx),
+                  self.template AsAt<AS2>, SID + 1>(idx)
                };
             }
             else if constexpr (CT::TypeErased<AS>) {

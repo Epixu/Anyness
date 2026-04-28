@@ -21,6 +21,10 @@ namespace Langulus::Anyness
 
 namespace Langulus::Anyness::Component
 {
+   /// Refers back to this particular component instance through the deduced  
+   /// 'this'. Just for convenience. It is #undef-ed at the end of this file. 
+   #define ThisCom self.OwnershipDeepEmergent<ID, REF_INDIVIDUAL, SHARED...>
+
    ///                                                                        
    /// Manages deep ownership by searching for an allocation every time.      
    /// Also used as base for other deep ownership components.                 
@@ -59,8 +63,8 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state                     
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, SHARED...>
       void KeepElementDeepStandardPointers(this C& self) assumptious {
-         static_assert(SID == ID);
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many. GetHandle() first?");
 
@@ -146,7 +150,6 @@ namespace Langulus::Anyness::Component
          }
       }
 
-
    #if LANGULUS_FEATURE(MANAGED_MEMORY)
       /// Nests through all indirection layers and references elements and    
       /// their entries. Supports any number or custom pointer indirections.  
@@ -155,8 +158,8 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes container is not disowned!                     
       ///   @attention doesn't change any container state                     
       template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, SHARED...>
       void KeepElementDeepCustomPointers(this C& self) assumptious {
-         static_assert(SID == ID);
          static_assert(CT::ContainsOne<C>,
             "Referencing only first element in a container with many. GetHandle() first?");
          LglsAssumeDev(not self.template IsEmpty<SID>(),
@@ -242,6 +245,16 @@ namespace Langulus::Anyness::Component
       }
    #endif
 
+      template<bool FIND_MISSING = false, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, SHARED...>
+      void KeepElementDeep(this C& self) assumptious {
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            ThisCom::template KeepElementDeepCustomPointers<FIND_MISSING>();
+         #else
+            ThisCom::template KeepElementDeepStandardPointers<FIND_MISSING>();
+         #endif
+      }
+
       /// Nests through all indirection layers and destroys elements and      
       /// their entries if they are fully dereferenced.                       
       ///   @attention assumes container is not disowned!                     
@@ -249,8 +262,8 @@ namespace Langulus::Anyness::Component
       ///   @attention assumes there are no custom pointers involved!         
       ///   @attention doesn't change any container state or entry            
       template<bool DESTROY = true, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, SHARED...>
       void DestroyElementDeepStandardPointers(this C& self) assumptious {
-         static_assert(SID == ID);
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
          if constexpr (not CT::Handle<C>) {
@@ -427,8 +440,8 @@ namespace Langulus::Anyness::Component
       ///   @tparam DESTROY will never destroy a dense element if true        
       //TODO could use some statically-typed optimizations
       template<bool DESTROY = true, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, SHARED...>
       void DestroyElementDeepCustomPointers(this C& self) assumptious {
-         static_assert(SID == ID);
          static_assert(CT::ContainsOne<C>,
             "Destroying only first element in a container with many. GetHandle() first?");
 
@@ -518,6 +531,16 @@ namespace Langulus::Anyness::Component
       }
    #endif
 
+      template<bool DESTROY = true, Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, SHARED...>
+      void DestroyElementDeep(this C& self) assumptious {
+         #if LANGULUS_FEATURE(MANAGED_MEMORY)
+            ThisCom::template DestroyElementDeepCustomPointers<DESTROY>();
+         #else
+            ThisCom::template DestroyElementDeepStandardPointers<DESTROY>();
+         #endif
+      }
+
       /// Emplace on top of the first element using an intent                 
       ///   @attention this overwrites previous entries without dereferencing 
       ///   @attention emplacing using a handle is faster due to carrying     
@@ -528,10 +551,10 @@ namespace Langulus::Anyness::Component
       ///   @param intent entries will be copied/sought if handle/sparse,     
       ///      unless I is disowned                                           
       template<Cid SID = ID, CT::Container C, CT::Intent I>
-      requires((CT::TypeErased<C>        or CT::Sparse<TypeOf<C>>)
+      requires(IdMatch<SID, ID, SHARED...>
+           and (CT::TypeErased<C>        or CT::Sparse<TypeOf<C>>)
            and (CT::TypeErased<Deint<I>> or CT::Sparse<TypeOf<Deint<I>>>))
       void EmplaceEntries(this C& self, I&& intent) {
-         static_assert(SID == ID);
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   
             // sparsity check for an early exit.                        
@@ -579,14 +602,10 @@ namespace Langulus::Anyness::Component
                }
             }
 
-            if (not I::IsMoved()) {
+            if constexpr (not I::IsMoved()) {
                // We are not moving, so we have to reference all        
                // elements.                                             
-               #if LANGULUS_FEATURE(MANAGED_MEMORY)
-                  self.template KeepElementDeepCustomPointers<false, SID>();
-               #else
-                  self.template KeepElementDeepStandardPointers<false, SID>();
-               #endif
+               ThisCom::template KeepElementDeep<false>();
             }
             else if constexpr (CT::StronglyOwned<H> and REF_INDIVIDUAL) {
                // We are moving/abandoning, but since individual items  
@@ -616,11 +635,11 @@ namespace Langulus::Anyness::Component
             constexpr bool sought = not CT::Disowned<I>;
             #if LANGULUS_FEATURE(MANAGED_MEMORY)
                if constexpr (CT::CustomPointer<T>)
-                  self.template KeepElementDeepCustomPointers<sought, SID>();
+                  ThisCom::template KeepElementDeepCustomPointers<sought>();
                else
-                  self.template KeepElementDeepStandardPointers<sought, SID>();
+                  ThisCom::template KeepElementDeepStandardPointers<sought>();
             #else
-               self.template KeepElementDeepStandardPointers<sought, SID>();
+               ThisCom::template KeepElementDeepStandardPointers<sought>();
             #endif
          }
       }
@@ -628,9 +647,9 @@ namespace Langulus::Anyness::Component
       /// Reset all entries for the first element                             
       ///   @attention this overwrites previous entries without dereferencing 
       template<Cid SID = ID, CT::Container C>
-      requires(CT::TypeErased<C> or CT::Sparse<TypeOf<C>>)
+      requires(IdMatch<SID, ID, SHARED...>
+          and (CT::TypeErased<C> or CT::Sparse<TypeOf<C>>))
       void ResetEntries(this C&& self) {
-         static_assert(SID == ID);
          if constexpr (CT::TypeErased<C>) {
             // If container is type-erased, we need to make a runtime   
             // sparsity check for an early exit.                        
@@ -654,4 +673,6 @@ namespace Langulus::Anyness::Component
          memset(DecvqAllCast(entries), 0, entries_size);
       }
    };
+
+   #undef ThisCom
 }

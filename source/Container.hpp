@@ -17,7 +17,7 @@
 #define LANGULUS_LIBRARY_ANYNESS() 1
 #define LANGULUS_ANYNESS_VERBOSITY_MASTER_SWITCH() 0
 
-#define if_available(WHAT) if constexpr (requires { WHAT; }) { WHAT; }
+#define if_available(...) if constexpr (requires { __VA_ARGS__; }) { __VA_ARGS__; }
 
 
 namespace Langulus::Anyness
@@ -221,7 +221,7 @@ namespace Langulus::Anyness
       }
 
    protected:
-      template<CT::Handle, CT::Handle> friend struct THandlePair;
+      //template<CT::Handle, CT::Handle> friend struct THandlePair;
 
       LglsComIterationOperators(friend);
       LglsComTypedStack(friend);
@@ -398,20 +398,24 @@ namespace Langulus::Anyness
          });
       }
 
-      /// Call ConstructDefault in all of components that implement it        
-      constexpr void ConstructDefault(this auto& self) noexcept {
-         ComponentList::ForEach([&]<class C>{
-            if_available(self.C::ConstructDefault());
-         });
-      }
-      
-      /// Call ConstructHeapRequest in all of components that implement it.   
-      /// Used to initialize heap requests upon heap allocation.              
-      constexpr void ConstructHeapDefault(this auto& self) noexcept {
-         ComponentList::ForEach([&]<class C>{
-            if_available(self.C::ConstructHeapRequest());
-         });
-      }
+      /// Checks whether at least one of the components has a method with the 
+      /// given name and signature. Undefined at the end of this container.   
+      #define if_implements(...) requires ( \
+         requires (COMPONENTS t) { self.decltype(t):: __VA_ARGS__; } or ... \
+      )
+
+      /// Propagates method, by calling it in all components where it exists. 
+      /// Entirely disables the method for the container, if not found.       
+      /// Macro is #undeffed at the end of this container to avoid pollution. 
+      #define unify_compose(name) \
+         constexpr void name(this auto&& self) noexcept if_implements(name()) { \
+            ComponentList::ForEach([&]<class C>{ \
+               if_available(self.C::name()); \
+            }); \
+         }
+
+      unify_compose(ConstructDefault);
+      unify_compose(ConstructHeapRequest);
       
       /// Call ConstructFrom in all components that implement it.             
       /// Fallback to ConstructDefault otherwise.                             
@@ -435,12 +439,23 @@ namespace Langulus::Anyness
          }
       }
 
-      /// Call AssignDefault in all of the components that implement it       
-      constexpr auto& AssignDefault(this auto& self) noexcept {
-         ComponentList::ForEach([&]<class C>{
-            if_available(self.C::AssignDefault());
+      //unify_compose(AssignDefault);
+      //unify_compose(KeepElementDeep);
+
+      template<bool FIND_MISSING = false>
+      void KeepElementDeep(this auto& self) noexcept
+      if_implements(template KeepElementDeep<FIND_MISSING>()) {
+         ComponentList::ForEach([&]<class C> {
+            if_available(self.C::template KeepElementDeep<FIND_MISSING>());
          });
-         return self;
+      }
+
+      template<bool FORCE_DESTROY = false>
+      void DestroyElement(this auto& self) noexcept
+      if_implements(template DestroyElement<FORCE_DESTROY>()) {
+         ComponentList::ForEach([&]<class C> {
+            if_available(self.C::template DestroyElement<FORCE_DESTROY>());
+         });
       }
       
       /// Get a handle to the first element(s). Very useful for internal use. 
@@ -462,8 +477,8 @@ namespace Langulus::Anyness
          using H = Tif<CT::Void<AS>, DecideHandle<C>, AS>;
          if constexpr (CT::Pair<H>) {
             // User desires a pair, so we give them a pair              
-            using H1 = decltype(H::key);
-            using H2 = decltype(H::val);
+            using H1 = typename H::KeyHandle;
+            using H2 = typename H::ValHandle;
             return H {
                self.template GetHandle<H1, SID + 0>(),
                self.template GetHandle<H2, SID + 1>()
@@ -546,12 +561,15 @@ namespace Langulus::Anyness
    public:
       /// Visit all element's handles and perform a function on them.         
       /// Handles both linear and non-linear containers gracefully.           
+      ///   @tparam SKIP_EMPTY whether or not to skip empty elements inside   
+      ///      maps/sets. If set to false, you have to check whether the      
+      ///      current lambda argument is `if constexpr(CT::Supported)`       
       ///   @param lambda the function to perform. If the lambda returns bool,
       ///      you can end the loop early by returning false.                 
       ///   @param cookie the element/hash table spot to start off from       
       ///   @attention this will ignore any ordering                          
       ///   @attention assumes container isn't empty                          
-      template<CT::Container C>
+      template<bool SKIP_EMPTY = true, CT::Container C>
       void Apply(this C& self, auto&& lambda, [[maybe_unused]] size_t cookie = 0) {
          LglsAssumeDev(not self.IsEmpty(), "Make sure container isn't empty");
 
@@ -591,7 +609,7 @@ namespace Langulus::Anyness
                      }
                      else lambda(item);
                   }
-                  else {
+                  else if constexpr (not SKIP_EMPTY) {
                      if constexpr (CT::Bool<decltype(lambda(Unsupported{}))>) {
                         if (not lambda(Unsupported{}))
                            return;
@@ -621,20 +639,16 @@ namespace Langulus::Anyness
             "You can't assign-absorb from containers with different contiguousness");
 
          ComponentList::ForEach([&]<class C>{
-                 if_available(self.C::AssignFrom(FWDIntent(rhs)))
-            else if_available(self.C::AssignDefault())
+            if_available(self.C::AssignFrom(FWDIntent(rhs)))
+            //else if_available(self.C::AssignDefault())
          });
          return self;
       }
    
-      #define if_implements(...) requires ( \
-            requires (COMPONENTS t) { self.decltype(t)::template __VA_ARGS__; } or ... \
-         )
-
       #define unify_getter(name) \
          template<Cid ID = 0> \
          constexpr decltype(auto) name(this auto&& self) noexcept \
-         if_implements(name<ID>()) { \
+         if_implements(template name<ID>()) { \
             return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(); }) \
                   return self.C::template name<ID>(); \
@@ -645,7 +659,7 @@ namespace Langulus::Anyness
       #define unify_getter_argumented(name) \
          template<Cid ID = 0> \
          constexpr decltype(auto) name(this auto&& self, auto&&...arguments) noexcept \
-         if_implements(name<ID>(LglsFwd(arguments)...)) { \
+         if_implements(template name<ID>(LglsFwd(arguments)...)) { \
             return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) \
                   return self.C::template name<ID>(LglsFwd(arguments)...); \
@@ -656,7 +670,7 @@ namespace Langulus::Anyness
       #define unify_getter_templated(name) \
          template<class ARG, Cid ID = 0> \
          constexpr decltype(auto) name(this auto&& self) noexcept \
-         if_implements(name<ARG, ID>()) { \
+         if_implements(template name<ARG, ID>()) { \
             return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) \
                   return self.C::template name<ARG, ID>(); \
@@ -667,7 +681,7 @@ namespace Langulus::Anyness
       #define unify_setter(name) \
          template<Cid ID = 0> \
          constexpr decltype(auto) name(this auto& self, auto&&...arguments) noexcept \
-         if_implements(name<ID>(LglsFwd(arguments)...)) { \
+         if_implements(template name<ID>(LglsFwd(arguments)...)) { \
             ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ID>(LglsFwd(arguments)...); }) { \
                   self.C::template name<ID>(LglsFwd(arguments)...); return 1; \
@@ -679,7 +693,7 @@ namespace Langulus::Anyness
       #define unify_setter_templated(name) \
          template<class ARG, Cid ID = 0> \
          constexpr decltype(auto) name(this auto& self) noexcept \
-         if_implements(name<ARG, ID>()) { \
+         if_implements(template name<ARG, ID>()) { \
             ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) { \
                if constexpr (requires { self.C::template name<ARG, ID>(); }) { \
                   self.C::template name<ARG, ID>(); return 1; \
@@ -697,7 +711,7 @@ namespace Langulus::Anyness
 
       template<Cid ID = 0>
       constexpr bool IsExecutable(this auto const& self) noexcept
-      if_implements(IsExecutable<ID>()) {
+      if_implements(template IsExecutable<ID>()) {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
             if constexpr (requires { self.C::template IsExecutable<ID>(); })
                return self.C::template IsExecutable<ID>();
@@ -720,7 +734,7 @@ namespace Langulus::Anyness
       unify_getter_templated(IsExact);
 
       template<class AS = void, Cid ID = 0, class CON>
-      constexpr decltype(auto) Get(this CON&& self) assumptious if_implements(Get<AS, ID>()) {
+      constexpr decltype(auto) Get(this CON&& self) assumptious if_implements(template Get<AS, ID>()) {
          return ComponentList::ForEachConstOr([&]<class C> assumptious -> decltype(auto) {
             if constexpr (requires { self.C::template Get<AS, ID>(); })
                return self.C::template Get<AS, ID>();
@@ -732,6 +746,7 @@ namespace Langulus::Anyness
       unify_setter_templated(SetType);
 
       #undef if_implements
+      #undef unify_compose
       #undef unify_getter
       #undef unify_getter_templated
       #undef unify_getter_argumented
