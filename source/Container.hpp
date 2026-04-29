@@ -439,14 +439,27 @@ namespace Langulus::Anyness
          }
       }
 
-      //unify_compose(AssignDefault);
-      //unify_compose(KeepElementDeep);
+      template<bool FIND_MISSING = false, Cid ID = 0>
+      void KeepElementDeep(this auto&& self) noexcept
+      if_inherits(template KeepElementDeep<FIND_MISSING, ID>()) {
+         ComponentList::ForEachConstOr([&]<class C> {
+            if constexpr (requires { self.C::template KeepElementDeep<FIND_MISSING, ID>(); }) {
+               self.C::template KeepElementDeep<FIND_MISSING, ID>();
+               return true;
+            }
+            else return No {};
+         });
+      }
 
-      template<bool FIND_MISSING = false>
-      void KeepElementDeep(this auto& self) noexcept
-      if_inherits(template KeepElementDeep<FIND_MISSING>()) {
-         ComponentList::ForEach([&]<class C> {
-            if_available(self.C::template KeepElementDeep<FIND_MISSING>());
+      template<bool FORCE_DESTROY = false, Cid ID = 0>
+      void DestroyElementDeep(this auto&& self) noexcept
+      if_inherits(template DestroyElementDeep<FORCE_DESTROY, ID>()) {
+         ComponentList::ForEachConstOr([&]<class C> {
+            if constexpr (requires { self.C::template DestroyElementDeep<FORCE_DESTROY, ID>(); }) {
+               self.C::template DestroyElementDeep<FORCE_DESTROY, ID>();
+               return true;
+            }
+            else return No {};
          });
       }
 
@@ -729,6 +742,7 @@ namespace Langulus::Anyness
       unify_getter_argumented(IsSame);
       unify_getter_argumented(IsExact);
       unify_getter_argumented(GetEntriesAt);
+      unify_getter_templated(GetRawAs);
       unify_getter_templated(Is);
       unify_getter_templated(IsSame);
       unify_getter_templated(IsExact);

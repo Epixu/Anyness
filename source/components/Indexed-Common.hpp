@@ -168,8 +168,8 @@ namespace Langulus::Anyness::Component
                using AS1 = typename AS::KeyHandle;
                using AS2 = typename AS::ValHandle;
                return AS {
-                  self.template AsAt<AS1>, SID + 0>(idx),
-                  self.template AsAt<AS2>, SID + 1>(idx)
+                  self.template AsAt<AS1, SID + 0>(idx),
+                  self.template AsAt<AS2, SID + 1>(idx)
                };
             }
             else if constexpr (CT::TypeErased<AS>) {

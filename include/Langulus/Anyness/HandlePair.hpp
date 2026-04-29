@@ -33,7 +33,8 @@ namespace Langulus::Anyness
       using KeyHandle = Handle;
       using ValHandle = Handle;
 
-      static constexpr bool TypeErased = true;
+      static constexpr bool TypeErased  = true;
+      static constexpr bool DeeplyOwned = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -107,7 +108,8 @@ namespace Langulus::Anyness
       using KeyHandle = HandleMut;
       using ValHandle = HandleMut;
 
-      static constexpr bool TypeErased = true;
+      static constexpr bool TypeErased  = true;
+      static constexpr bool DeeplyOwned = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;
@@ -180,7 +182,8 @@ namespace Langulus::Anyness
       using KeyHandle = Handle;
       using ValHandle = HandleMut;
 
-      static constexpr bool TypeErased = true;
+      static constexpr bool TypeErased  = true;
+      static constexpr bool DeeplyOwned = true;
 
       /// Handles can't be piecewise-initialized                              
       THandlePair(Inner::Piecewise, auto&&) = delete;

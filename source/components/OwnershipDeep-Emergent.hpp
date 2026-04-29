@@ -520,7 +520,7 @@ namespace Langulus::Anyness::Component
          else if constexpr (DESTROY) {
             if (const auto destructor = T.GetDestructor()) {
                // Call destructor of dense element                      
-               void* const ptr = self.GetHeapInnerAsVoid();
+               void* const ptr = self.GetRaw();// self.GetHeapInnerAsVoid();
                if constexpr (REF_INDIVIDUAL) {
                   IF_SAFE(if (const auto referencer = T.GetReferencer())
                      referencer(ptr, -1));

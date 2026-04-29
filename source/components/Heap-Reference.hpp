@@ -471,15 +471,14 @@ namespace Langulus::Anyness::Component
             "Destroying only first element in a container with many. GetHandle() first?");
 
          if constexpr (FORCE_DESTROY) {
-            //if constexpr (CT::DeeplyOwned<C>)
-            //   self.template DestroyElementDeep<true, SID>();
-                 if_available(self.template DestroyElementDeep<true, SID>())
-            else if_available(self.template DestroyElementShallow<SID>())
+            if constexpr (CT::DeeplyOwned<C>)
+               self.template DestroyElementDeep<true, SID>();
+            else if constexpr (CT::Owned<C>)
+               self.template DestroyElementShallow<SID>();
             else static_assert(false, "No destruction routine was called");
          }
-         else if_available(self.template DestroyElementDeep<false, SID>());
-            //if constexpr (CT::DeeplyOwned<C>)
-            //self.template DestroyElementDeep<false, SID>();
+         else if constexpr (CT::DeeplyOwned<C>)
+            self.template DestroyElementDeep<false, SID>();
       }
 
       /// Destroys all elements.                                              
