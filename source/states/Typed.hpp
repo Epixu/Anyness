@@ -27,6 +27,9 @@ namespace Langulus::Anyness::Component::State
       static constexpr bool Static  = V != StateValue::Variable;
       static constexpr bool Dynamic = not Static;
       static constexpr bool Enable  = V == StateValue::Enabled;
+
+      template<Cid SID>
+      static constexpr bool Relevant = IdMatch<SID, ID, SHARED...>;
       
       using StateRequest = Tif<Dynamic, Typed, void>;
 
@@ -34,23 +37,23 @@ namespace Langulus::Anyness::Component::State
       // when template arguments are different                          
       static constexpr StateUid UID = StateUid::Typed;
 
-      template<Cid SID = ID> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID> requires Relevant<SID>
       constexpr bool IsTypeConstrained() const requires Static {
          return Enable;
       }
 
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       constexpr bool IsTypeConstrained(this const C& self) noexcept requires Dynamic {
          return self.GetStateInner() & Typed<V, ID, SHARED...> {};
       }
 
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto EnableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
          self.GetStateInner() += Typed<V, ID, SHARED...> {};
          return self;
       }
 
-      template<Cid SID = ID, CT::Container C> requires IdMatch<SID, ID, SHARED...>
+      template<Cid SID = ID, CT::Container C> requires Relevant<SID>
       auto DisableTypeConstrained(this C& self) noexcept -> C& requires Dynamic {
          self.GetStateInner() -= Typed<V, ID, SHARED...> {};
          return self;

@@ -721,8 +721,10 @@ namespace Langulus::Anyness
       unify_getter(IsSparse);
       unify_getter(IsDeep);
       unify_getter(IsConstant);
+      unify_getter(IsExecutable);
+      unify_getter(IsTypeConstrained);
 
-      template<Cid ID = 0>
+      /*template<Cid ID = 0>
       constexpr bool IsExecutable(this auto const& self) noexcept
       if_inherits(template IsExecutable<ID>()) {
          return ComponentList::ForEachConstOr([&]<class C> -> decltype(auto) {
@@ -730,7 +732,7 @@ namespace Langulus::Anyness
                return self.C::template IsExecutable<ID>();
             else return No{};
          });
-      }
+      }*/
 
       unify_getter(GetIndirections);
       unify_getter(GetStride);
@@ -766,6 +768,16 @@ namespace Langulus::Anyness
             else return No{};
          });
       }
+
+      /*template<Cid ID = 0, class CON>
+      constexpr bool IsTypeConstrained(this CON&& self) noexcept 
+      if_inherits(template IsTypeConstrained<ID>()) {
+         return ComponentList::ForEachConstOr([&]<class C> noexcept {
+            if constexpr (requires { self.C::template IsTypeConstrained<ID>(); })
+               return self.C::template IsTypeConstrained<ID>();
+            else return No{};
+         });
+      }*/
 
       unify_setter(SetType);
       unify_setter_templated(SetType);

@@ -34,7 +34,9 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<0, true, 1>,        // Allows comparisons of K/V  
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
-      Com::State::Sorted<SORT>            // Toggle ordered map         
+      Com::State::Sorted<SORT>,           // Toggle ordered map         
+      Com::State::Compressed<>,           // Toggle compression         
+      Com::State::Encrypted<>             // Toggle encryption          
    >;
 }
 

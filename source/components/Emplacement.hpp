@@ -348,7 +348,7 @@ namespace Langulus::Anyness::Component
             // Containing dense data                                    
             T.GetCloneConstructor()(
                const_cast<void*>(src_origin),
-               self.template GetRaw<SID>()
+               self.template GetRawVoid<SID>()
             );
          }
       }

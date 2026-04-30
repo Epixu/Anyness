@@ -54,7 +54,9 @@ namespace Langulus::Anyness::Inner
       Com::Comparison<0, true, 1>,        // Allows comparisons of K/V  
       Com::IterationForEach<0, 1>,        // ForEach iteration of K/V   
       Com::IterationRange<0, 1>,          // Ranged iteration of K/V    
-      Com::State::Sorted<SORT>            // Toggle ordered map         
+      Com::State::Sorted<SORT>,           // Toggle ordered map         
+      Com::State::Compressed<>,           // Toggle compression         
+      Com::State::Encrypted<>             // Toggle encryption          
    >;
 
    ///                                                                        
@@ -215,6 +217,13 @@ namespace Langulus::Anyness::Inner
       }
       constexpr bool IsValDeep() const noexcept {
          return this->template IsDeep<1>();
+      }
+
+      constexpr bool IsKeyTypeConstrained() const noexcept {
+         return this->template IsTypeConstrained<0>();
+      }
+      constexpr bool IsValTypeConstrained() const noexcept {
+         return this->template IsTypeConstrained<1>();
       }
 
       template<class T>

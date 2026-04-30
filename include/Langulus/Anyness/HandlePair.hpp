@@ -30,7 +30,7 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
 
-      using DeepType  = THandlePair;
+      using DeepType  = HandleDisowned; // TODO why disowned?
       using KeyHandle = Handle;
       using ValHandle = Handle;
 
@@ -106,7 +106,7 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
 
-      using DeepType  = THandlePair;
+      using DeepType  = HandleDisowned; // TODO why disowned?
       using KeyHandle = HandleMut;
       using ValHandle = HandleMut;
 
@@ -181,7 +181,7 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
 
-      using DeepType  = THandlePair;
+      using DeepType  = HandleDisowned; // TODO why disowned?
       using KeyHandle = Handle;
       using ValHandle = HandleMut;
 

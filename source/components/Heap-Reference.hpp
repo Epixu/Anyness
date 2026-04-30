@@ -260,7 +260,6 @@ namespace Langulus::Anyness::Component
                return D {resolver(ThisCom::template GetDense<SID>().GetRaw())};
             else
                return ThisCom::template GetDense<SID, D>();
-
          }
          else {
             using T = TypeOf<C, SID>;
