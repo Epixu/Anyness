@@ -30,6 +30,7 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
 
+      using DeepType  = THandlePair;
       using KeyHandle = Handle;
       using ValHandle = Handle;
 
@@ -105,6 +106,7 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
 
+      using DeepType  = THandlePair;
       using KeyHandle = HandleMut;
       using ValHandle = HandleMut;
 
@@ -179,6 +181,7 @@ namespace Langulus::Anyness
       using CTTI_Pair      = Yes<>;
       using CTTI_ReflectAs = void;
 
+      using DeepType  = THandlePair;
       using KeyHandle = Handle;
       using ValHandle = HandleMut;
 

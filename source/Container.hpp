@@ -748,10 +748,21 @@ namespace Langulus::Anyness
       unify_getter_templated(IsExact);
 
       template<class AS = void, Cid ID = 0, class CON>
-      constexpr decltype(auto) Get(this CON&& self) assumptious if_inherits(template Get<AS, ID>()) {
+      constexpr decltype(auto) Get(this CON&& self) assumptious
+      if_inherits(template Get<AS, ID>()) {
          return ComponentList::ForEachConstOr([&]<class C> assumptious -> decltype(auto) {
             if constexpr (requires { self.C::template Get<AS, ID>(); })
                return self.C::template Get<AS, ID>();
+            else return No{};
+         });
+      }
+
+      template<Cid ID = 0, class AS = void, class CON>
+      constexpr auto GetDense(this CON&& self, size_t count = -1) assumptious
+      if_inherits(template GetDense<ID, AS>(count)) {
+         return ComponentList::ForEachConstOr([&]<class C> assumptious {
+            if constexpr (requires { self.C::template GetDense<ID, AS>(count); })
+               return self.C::template GetDense<ID, AS>(count);
             else return No{};
          });
       }
@@ -761,6 +772,7 @@ namespace Langulus::Anyness
 
    protected:
       unify_getter(GetHeapInner);
+      unify_getter(GetRawVoid);
 
       #undef if_inherits
       #undef unify_compose

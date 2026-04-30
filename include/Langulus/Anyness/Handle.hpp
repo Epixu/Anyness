@@ -151,7 +151,7 @@ namespace Langulus::Anyness
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using DeepType       = HandleDisowned;
+      using DeepType       = HandleDisowned; //TODO why disowned??
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
@@ -211,7 +211,7 @@ namespace Langulus::Anyness
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using DeepType       = HandleDisowned;
+      using DeepType       = HandleDisowned; //TODO why disowned??
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
@@ -274,7 +274,7 @@ namespace Langulus::Anyness
       using CTTI_Deep      = Yes<>;
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
-      using DeepType       = HandleDisowned;
+      using DeepType       = HandleDisowned; //TODO why disowned???
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
@@ -405,7 +405,7 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle;
-      using DeepType       = HandleDisowned;
+      using DeepType       = HandleDisowned; //TODO why disowned??
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
@@ -466,7 +466,7 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle<Deptr<T>&>;
-      using DeepType       = HandleDisowned;
+      using DeepType       = HandleDisowned; //TODO why disowned??
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
 
@@ -528,7 +528,7 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandleEmergent;
-      using DeepType       = HandleDisowned;
+      using DeepType       = HandleDisowned; //TODO why disowned??
 
       static constexpr bool Emergent = true;
 
@@ -579,7 +579,7 @@ namespace Langulus::Anyness
       using CTTI_Typed     = Deref<T>;
       using CTTI_ReflectAs = void;
       using Denser         = THandleEmergent<Deptr<T>&>;
-      using DeepType       = HandleDisowned;
+      using DeepType       = HandleDisowned; //TODO why disowned??
 
       static constexpr bool Emergent = true;
 
@@ -690,7 +690,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle<T&>; // avoids nested local handles (and thus copies) by adding a reference
-      using DeepType       = HandleDisowned;
+      using DeepType       = HandleDisowned; //TODO why disowned??
       using Base           = typename Inner::THandleLocalDense<T>::Base;
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;
@@ -751,7 +751,7 @@ namespace Langulus::Anyness
       using CTTI_Handle    = Yes<>;
       using CTTI_ReflectAs = void;
       using Denser         = THandle<Deptr<T>&>; // avoids nested local handles (and thus copies) by adding a reference
-      using DeepType       = HandleDisowned;
+      using DeepType       = HandleDisowned; //TODO why disowned??
       using Base           = typename Inner::THandleLocalSparse<T>::Base;
 
       template<CT::Handle, CT::Handle> friend struct THandlePair;

@@ -575,6 +575,9 @@ namespace Langulus::Anyness::Component
          const auto entries = self.template GetEntries<SID>();
 
          if constexpr (CT::Handle<I>) {
+            static_assert(not CT::Pair<I>,
+               "You have to emplace each dimension separately");
+
             // Copy all entries and reference them, unless we're moving 
             // a handle                                                 
             using H = TypeOf<I>;

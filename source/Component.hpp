@@ -74,6 +74,9 @@ namespace Langulus::Anyness::Component
 
    template<Cid SID, Cid...IDS>
    concept IdMatch = ((SID == IDS) or ...);
+
+   template<class C1, class...CN>
+   concept DimensionMatch = (Same<Dimensions<C1>, Dimensions<CN>> and ...);
 }
 
 namespace Langulus::CT

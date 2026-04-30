@@ -29,6 +29,8 @@ namespace Langulus::Anyness::Component
       using Count = typename Deref<C>::CountType;
 
    public:
+      //TODO add dimensionality
+
       /// Convert block's contents to another block of contents, by iterating 
       /// all elements, and converting them one by one. Each contained item   
       /// will be converted to a corresponding item in 'out'.                 
@@ -82,7 +84,7 @@ namespace Langulus::Anyness::Component
                }
 
                try {
-                  converter.convert(self.GetHeapInnerAsVoid(), out.GetHeapInnerAsVoid());
+                  converter.convert(self.GetRawVoid(), out.GetRawVoid());
                }
                catch (...) {
                   out.ResetCount();

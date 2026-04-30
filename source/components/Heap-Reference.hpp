@@ -77,6 +77,7 @@ namespace Langulus::Anyness::Component
       constexpr auto GetRaw(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, StackRequest);
          return static_cast<Tcvq>(ThisCom::GetHeapInner());
+         //TODO offset pointer based on dimension
       }
       
       /// Get a direct access to the heap memory as a different type          
@@ -86,7 +87,7 @@ namespace Langulus::Anyness::Component
       requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr auto GetRawAs(this C&& self) noexcept {
          using Tcvq = LglsMutIf(C, T*);
-         return static_cast<Tcvq>(ThisCom::GetHeapInnerAsVoid());
+         return static_cast<Tcvq>(ThisCom::GetRawVoid());
       }
 
       /// Get a direct access to the initialized heap memory's end.           
@@ -104,10 +105,11 @@ namespace Langulus::Anyness::Component
       template<Cid SID = ID, CT::Container C>
       requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr auto GetRawReserveEnd(this C&& self) noexcept {
+         const auto reserved = self.template GetReserved<SID>();
          if constexpr (CT::TypeErased<C>)
-            return ThisCom::template GetRawAs<uint8_t, SID>() + self.template GetReserved<SID>() * self.template GetStride<SID>();
+            return ThisCom::template GetRawAs<uint8_t, SID>() + reserved * self.template GetStride<SID>();
          else
-            return ThisCom::template GetRaw<SID>() + self.template GetReserved<SID>();
+            return ThisCom::template GetRaw<SID>() + reserved;
       }
     
       /// Get reference to first element as sparse or dense, depending on T.  
@@ -279,7 +281,7 @@ namespace Langulus::Anyness::Component
       ///   @return the dense first element                                   
       template<Cid SID = ID, class AS = void, CT::Container C>
       requires (CT::Contiguous<C> and IdMatch<SID, ID, ENTRIES::Id...>)
-      auto GetDense(this C&& self, Count<C> count = CountMax<C>)
+      auto GetDense(this C&& self, size_t count = -1 /*Count<C> count = CountMax<C>*/)
       requires requires { typename Deref<C>::DeepType; } {
          using D = Tif<CT::Void<AS>, typename Deref<C>::DeepType, AS>;
          static_assert(CT::Container<D>, "D must result in a container type");
@@ -345,13 +347,22 @@ namespace Langulus::Anyness::Component
       }
 
       /// Get the heap pointer as a void* (inner)                             
-      template<Cid SID = ID> requires IdMatch<SID, ID, ENTRIES::Id...>
+      /*template<Cid SID = ID> requires IdMatch<SID, ID, ENTRIES::Id...>
       constexpr void* GetHeapInnerAsVoid(this auto&& self) noexcept {
          auto& p = ThisCom::GetHeapInner();
          if constexpr (CT::CustomPointer<StackRequest>)
             return const_cast<void*>(static_cast<void const*>(p.Unpack()));
          else
             return const_cast<void*>(static_cast<void const*>(p));
+      }*/
+
+      /// Get a direct access to the heap memory                              
+      ///   @attention using raw pointer while self.IsEmpty() may lead to     
+      ///      undefined behavior                                             
+      template<Cid SID = ID, CT::Container C>
+      requires IdMatch<SID, ID, ENTRIES::Id...>
+      constexpr void* GetRawVoid(this C&& self) noexcept {
+         return const_cast<void*>(static_cast<const void*>(self.template GetRaw<SID>()));
       }
 
       /// Set the heap pointer, any data pointer will do                      
