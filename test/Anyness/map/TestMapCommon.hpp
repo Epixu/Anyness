@@ -176,8 +176,10 @@ void Map_CheckState_Default(C const& map, bool typed = false) {
    }
 
    REQUIRE      (map.IsDefaultState());
-   REQUIRE      (map.IsTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsConstant());
+   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsValTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsKeyConstant());
+   REQUIRE      (map.IsValConstant());
    REQUIRE_FALSE(map.IsValid());
    REQUIRE_FALSE(map.GetAllocation());
    REQUIRE      (map.IsEmpty());
@@ -200,8 +202,10 @@ template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_OwnedEmpty(C const& map) {
    Map_Helper_TestType<K, V>(map);
 
-   REQUIRE      (map.IsTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsConstant() == CT::Constant<V>);
+   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsValTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsKeyConstant());
+   REQUIRE      (map.IsValConstant() == CT::Constant<V>);
    REQUIRE_FALSE(map.IsValid());
    REQUIRE      (map.GetAllocation());
    REQUIRE      (map.IsEmpty());
@@ -220,8 +224,10 @@ template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_OwnedFull(C const& map) {
    Map_Helper_TestType<K, V>(map);
 
-   REQUIRE      (map.IsTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsConstant() == CT::Constant<V>);
+   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsValTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsKeyConstant());
+   REQUIRE      (map.IsValConstant() == CT::Constant<V>);
    REQUIRE      (map.IsValid());
    REQUIRE      (map.GetAllocation());
    REQUIRE_FALSE(map.IsEmpty());
@@ -240,8 +246,10 @@ template<class K, class V, CT::Container C> requires CT::NoIntent<C>
 void Map_CheckState_DisownedFull(C const& map) {
    Map_Helper_TestType<K, V>(map);
 
-   REQUIRE      (map.IsTypeConstrained() == CT::Typed<C>);
-   REQUIRE      (map.IsConstant());
+   REQUIRE      (map.IsKeyTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsValTypeConstrained() == CT::Typed<C>);
+   REQUIRE      (map.IsKeyConstant());
+   REQUIRE      (map.IsValConstant());
    REQUIRE      (map.IsValid());
    REQUIRE_FALSE(map.GetAllocation());
    REQUIRE_FALSE(map.IsEmpty());
@@ -515,12 +523,12 @@ void Map_CheckState_ContainsOne(T const& map, IK&& key_with_intent, IV&& val_wit
    //TODO test all kinds of ranged modifiers??
    for (auto& it : map) {
       if constexpr (CT::TypeErased<T>) {
-         REQUIRE(it.key.CompareOneEqual(*e1) != (CT::Cloned<IK> and CT::Sparse<E1>));
-         REQUIRE(it.val.CompareOneEqual(*e2) != (CT::Cloned<IV> and CT::Sparse<E2>));
+         REQUIRE(it.GetKey().CompareOneEqual(*e1) != (CT::Cloned<IK> and CT::Sparse<E1>));
+         REQUIRE(it.GetVal().CompareOneEqual(*e2) != (CT::Cloned<IV> and CT::Sparse<E2>));
       }
       else {
-         REQUIRE((it.key != *e1) == (CT::Cloned<IK> and CT::Sparse<E1>));
-         REQUIRE((it.val != *e2) == (CT::Cloned<IV> and CT::Sparse<E2>));
+         REQUIRE((it.GetKey() != *e1) == (CT::Cloned<IK> and CT::Sparse<E1>));
+         REQUIRE((it.GetVal() != *e2) == (CT::Cloned<IV> and CT::Sparse<E2>));
       }
    }
 }

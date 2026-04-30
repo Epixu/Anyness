@@ -226,6 +226,13 @@ namespace Langulus::Anyness::Inner
          return this->template IsTypeConstrained<1>();
       }
 
+      constexpr bool IsKeyConstant() const noexcept {
+         return true;
+      }
+      constexpr bool IsValConstant() const noexcept {
+         return this->template IsConstant<1>();
+      }
+
       template<class T>
       constexpr bool IsKey() const noexcept {
          return this->template Is<T, 0>();

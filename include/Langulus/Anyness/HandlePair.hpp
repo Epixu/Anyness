@@ -77,6 +77,22 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
+      Handle GetKey() {
+         return {
+            this->Com::HeapReference<0>::GetHeapInner(),
+            this->Com::OwnershipDeepReference<0>::GetEntriesInner(),
+            this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
+         };
+      }
+
+      Handle GetVal() {
+         return {
+            this->Com::HeapReference<1>::GetHeapInner(),
+            this->Com::OwnershipDeepReference<1>::GetEntriesInner(),
+            this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
+         };
+      }
+
    protected:
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        
@@ -153,6 +169,22 @@ namespace Langulus::Anyness
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
 
+      HandleMut GetKey() {
+         return {
+            this->Com::HeapReference<0>::GetHeapInner(),
+            this->Com::OwnershipDeepReference<0>::GetEntriesInner(),
+            this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
+         };
+      }
+
+      HandleMut GetVal() {
+         return {
+            this->Com::HeapReference<1>::GetHeapInner(),
+            this->Com::OwnershipDeepReference<1>::GetEntriesInner(),
+            this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
+         };
+      }
+
       /// Already as mutable as it gets                                       
       auto ForceMutable() const noexcept -> THandlePair const& {
          return *this;
@@ -227,6 +259,22 @@ namespace Langulus::Anyness
       /// Assignment                                                          
       THandlePair& operator = (THandlePair const& other) = delete;
       THandlePair& operator = (THandlePair&& other) = delete;
+
+      Handle GetKey() {
+         return {
+            this->Com::HeapReference<0>::GetHeapInner(),
+            this->Com::OwnershipDeepReference<0>::GetEntriesInner(),
+            this->Com::TypedStack<DMeta, void, false, 0>::GetTypeInner()
+         };
+      }
+
+      HandleMut GetVal() {
+         return {
+            this->Com::HeapReference<1>::GetHeapInner(),
+            this->Com::OwnershipDeepReference<1>::GetEntriesInner(),
+            this->Com::TypedStack<DMeta, void, false, 1>::GetTypeInner()
+         };
+      }
 
       /// Force the handle to become mutable, so that we have methods like    
       /// emplacement in constructors.                                        

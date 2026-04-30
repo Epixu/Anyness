@@ -744,6 +744,7 @@ namespace Langulus::Anyness
       unify_getter_argumented(IsSame);
       unify_getter_argumented(IsExact);
       unify_getter_argumented(GetEntriesAt);
+      unify_getter_templated(As);
       unify_getter_templated(GetRawAs);
       unify_getter_templated(Is);
       unify_getter_templated(IsSame);

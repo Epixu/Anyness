@@ -170,6 +170,20 @@ namespace Langulus::Anyness
          return this->template IsDeep<1>();
       }
 
+      constexpr bool IsKeyTypeConstrained() const noexcept {
+         return this->template IsTypeConstrained<0>();
+      }
+      constexpr bool IsValTypeConstrained() const noexcept {
+         return this->template IsTypeConstrained<1>();
+      }
+
+      constexpr bool IsKeyConstant() const noexcept {
+         return true;
+      }
+      constexpr bool IsValConstant() const noexcept {
+         return this->template IsConstant<1>();
+      }
+
       template<class T>
       constexpr bool IsKey() const noexcept {
          return this->template Is<T, 0>();
@@ -242,10 +256,6 @@ namespace Langulus::Anyness
       }
       auto GetValEntriesAt(CT::Index auto&& idx) const assumptious {
          return this->template GetEntriesAt<1>(LglsFwd(idx));
-      }
-
-      constexpr bool IsTypeConstrained() const noexcept {
-         return true;
       }
    };
 
